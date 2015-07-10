@@ -12,9 +12,13 @@ PFNET is a C library for modeling and analyzing electric power networks. It prov
 
 BSD 2-clause license.
 
+## Documentation ##
+
+The documentation for this library can be found in http://ttinoco.github.io/PFNET.
+
 ## Download ##
 
-To be determined soon.
+The latest version of the library can be downloaded from https://github.com/ttinoco/PFNET.
 
 ## Dependencies ##
 
@@ -33,7 +37,7 @@ To build the library without raw parsing capabilities (no ``libraw_parser`` depe
 
 Wrappers for PFNET are available for the following languages:
 
-* Python
+* [Python](http://ttinoco.github.io/PFNET/python)
 
 ## Citing PFNET ##
 
@@ -43,7 +47,7 @@ If you use PFNET in your work, please cite the software as follows:
 @misc{pfnet,
   author={Tomas Tinoco De Rubira},
   title={{PFNET}: A library for modeling and analyzing electric power networks},
-  howpublished={\url{some_UR}},
+  howpublished={\url{https://github.com/ttinoco/PFNET}},
   month={July},
   year={2015}
 }

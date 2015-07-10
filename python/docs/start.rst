@@ -24,7 +24,7 @@ PFNET has the following dependencies:
 Download
 ========
 
-The latest version of PFNET can be downloaded `here <some_URL>`_.
+The latest version of PFNET can be downloaded from `<https://github.com/ttinoco/PFNET>`_.
 
 .. _start_installation:
 

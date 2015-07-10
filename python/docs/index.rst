@@ -23,7 +23,7 @@ If you use PFNET in your work, please cite the software as follows::
   @misc{pfnet,
      author={Tomas Tinoco De Rubira},
      title={{PFNET}: A library for modeling and analyzing electric power networks},
-     howpublished={\url{some_UR}},
+     howpublished={\url{https://github.com/ttinoco/PFNET}},
      month={July},
      year={2015}
   } 
