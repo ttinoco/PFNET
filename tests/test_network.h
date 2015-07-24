@@ -12,10 +12,14 @@
 
 static char* test_net_new() {
 
+  Net* net;
+
   printf("test_net_new ... ");
 
-  Net* net = NET_new();
+  net = NET_new();
+
   Assert("error - failed to create net",net != NULL);
+
   NET_del(net);
   printf("ok\n");
   return 0;
@@ -23,24 +27,27 @@ static char* test_net_new() {
 
 static char* test_net_load() {
 
+  Net* net;
+
   printf("test_net_load ... ");
 
-  Net *net;
   net = NET_new();
   Assert("error - invalid number of buses",NET_get_num_buses(net) == 0);
   NET_load(net,test_case);
   Assert("error - failed to parse case",!NET_has_error(net));
   Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
+
   NET_del(net);
   printf("ok\n");
   return 0;
 }
 
 static char* test_net_check() {
+  
+  Net* net;
 
   printf("test_net_check ... ");
-  
-  Net *net;
+
   net = NET_new();				
   NET_load(net,test_case);
   Assert("error - net check failed",NET_check(net,0));
@@ -50,11 +57,14 @@ static char* test_net_check() {
 }
 
 static char* test_net_variables() {
+  
+  int num = 0;
+  Net* net;
 
   printf("test_net_variables ... ");
   
-  int num = 0;
-  Net *net = NET_new();				
+  net = NET_new();				
+
   NET_load(net,test_case);
 
   Assert("error - wrong number of variables",NET_get_num_vars(net) == num);
@@ -94,10 +104,13 @@ static char* test_net_variables() {
 
 static char* test_net_fixed() {
 
+  int num = 0;
+  Net* net;
+
   printf("test_net_fixed ... ");
 
-  int num = 0;
-  Net *net = NET_new();				
+  net = NET_new();	
+			
   NET_load(net,test_case);
   
   Assert("error - wrong number of variables",NET_get_num_fixed(net) == num);
@@ -141,15 +154,17 @@ static char* test_net_fixed() {
 
 static char* test_net_properties() {
 
-  printf("test_net_properties ... ");
-
   Bus* bus;
   Gen* gen;
   REAL busvmax = 0;
   REAL genQvio = 0;
   REAL dQ;
-  Net* net = NET_new();
+  Net* net;
   int i;
+
+  printf("test_net_properties ... ");
+
+  net = NET_new();
 
   NET_load(net,test_case);
 
@@ -188,13 +203,15 @@ static char* test_net_properties() {
 
 static char* test_net_init_point() {
 
-  printf("test_net_init_point ... ");
-
   Bus* bus;
   Gen* gen;
-  Net* net = NET_new();
+  Net* net;
   Vec* point;
   int i;
+
+  printf("test_net_init_point ... ");
+
+  net = NET_new();
 
   NET_load(net,test_case);
   

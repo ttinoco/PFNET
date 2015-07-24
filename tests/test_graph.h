@@ -12,11 +12,14 @@
 #include <pfnet/graph.h>
 
 static char* test_graph_basic() {
-
-  printf("test_graph_basic ...");
   
   Graph* g;
-  Net* net = NET_new();
+  Net* net;
+
+  printf("test_graph_basic ...");
+
+  net = NET_new();
+
   NET_load(net,test_case);
 
   g = GRAPH_new(net);

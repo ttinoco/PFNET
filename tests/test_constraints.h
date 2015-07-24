@@ -11,8 +11,6 @@
 #include <pfnet/pfnet.h>
 
 static char* test_constr_BOUND() {
-
-  printf("test_constr_BOUND ...");
   
   // Local variables
   Net *net;
@@ -21,6 +19,8 @@ static char* test_constr_BOUND() {
   int num;
   Vec* f;
   Mat* J;
+
+  printf("test_constr_BOUND ...");
 
   // Load
   net = NET_new();
@@ -105,8 +105,6 @@ static char* test_constr_BOUND() {
 }
 
 static char* test_constr_FIX() {
-
-  printf("test_constr_FIX ...");
   
   // Local variables
   Net *net;
@@ -115,6 +113,8 @@ static char* test_constr_FIX() {
   int num;
   Vec* b;
   Mat* A;
+
+  printf("test_constr_FIX ...");
 
   // Load
   net = NET_new();
@@ -200,8 +200,6 @@ static char* test_constr_FIX() {
 }
 
 static char* test_constr_PAR_GEN() {
-
-  printf("test_constr_PAR_GEN ...");
   
   // Local variables
   Net *net;
@@ -213,6 +211,8 @@ static char* test_constr_PAR_GEN() {
   Mat* A;
   Bus* bus;
   int i;
+
+  printf("test_constr_PAR_GEN ...");
 
   // Load
   net = NET_new();
@@ -315,8 +315,6 @@ static char* test_constr_PAR_GEN() {
 }
 
 static char* test_constr_PF() {
-
-  printf("test_constr_PF ...");
   
   // Local variables
   Net *net;
@@ -331,6 +329,8 @@ static char* test_constr_PF() {
   int* Hcounter;
   int size;
   int i;
+
+  printf("test_constr_PF ...");
 
   // Load
   net = NET_new();
@@ -460,8 +460,6 @@ static char* test_constr_PF() {
 }
 
 static char* test_constr_REG_GEN() {
-
-  printf("test_constr_REG_GEN ...");
   
   // Local variables
   Net *net;
@@ -477,6 +475,8 @@ static char* test_constr_REG_GEN() {
   int num;
   int i;
   Bus* bus;
+
+  printf("test_constr_REG_GEN ...");
 
   // Load
   net = NET_new();
@@ -580,8 +580,6 @@ static char* test_constr_REG_GEN() {
 }
 
 static char* test_constr_REG_TRAN() {
-
-  printf("test_constr_REG_TRAN ...");
   
   // Local variables
   Net *net;
@@ -597,6 +595,8 @@ static char* test_constr_REG_TRAN() {
   int num;
   int i;
   Bus* bus;
+
+  printf("test_constr_REG_TRAN ...");
 
   // Load
   net = NET_new();
@@ -692,8 +692,6 @@ static char* test_constr_REG_TRAN() {
 }
 
 static char* test_constr_REG_SHUNT() {
-
-  printf("test_constr_REG_SHUNT ...");
   
   // Local variables
   Net *net;
@@ -709,6 +707,8 @@ static char* test_constr_REG_SHUNT() {
   int num;
   int i;
   Bus* bus;
+
+  printf("test_constr_REG_SHUNT ...");
 
   // Load
   net = NET_new();
