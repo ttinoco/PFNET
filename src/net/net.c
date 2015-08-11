@@ -811,6 +811,96 @@ Vec* NET_get_var_values(Net* net) {
   return values;  
 }
 
+Mat* NET_get_var_projection(Net* net, char obj_type, char var) {
+
+  // Local variables
+  int num_subvars;
+  Mat* proj;
+  int i;
+
+  int num;
+  void* obj;
+  void* array;
+  void* (*get_element)(void* array, int index);
+  BOOL (*has_flags)(void*,char,char);
+  int (*get_var_index)(void*,char);
+
+  // Check
+  if (!net)
+    return NULL;
+
+  // Set pointers
+  switch (obj_type) {
+  case OBJ_BUS:
+    num = net->num_buses;
+    array = net->bus;
+    get_element = &BUS_array_get;
+    has_flags = &BUS_has_flags;
+    get_var_index = &BUS_get_var_index;
+    break;
+  case OBJ_GEN:
+    num = net->num_gens;
+    array = net->gen;
+    get_element = &GEN_array_get;
+    has_flags = &GEN_has_flags;
+    get_var_index = &GEN_get_var_index;
+    break;
+  case OBJ_BRANCH:
+    num = net->num_branches;
+    array = net->branch;
+    get_element = &BRANCH_array_get;
+    has_flags = &BRANCH_has_flags;
+    get_var_index = &BRANCH_get_var_index;
+    break;
+  case OBJ_SHUNT:
+    num = net->num_shunts;
+    array = net->shunt;
+    get_element = &SHUNT_array_get;
+    has_flags = &SHUNT_has_flags;
+    get_var_index = &SHUNT_get_var_index;
+    break;
+  case OBJ_VARGEN:
+    num = net->num_vargens;
+    array = net->vargen;
+    get_element = &VARGEN_array_get;
+    has_flags = &VARGEN_has_flags;
+    get_var_index = &VARGEN_get_var_index;
+    break;
+  default:
+    sprintf(net->error_string,"invalid object type");
+    net->error_flag = TRUE;
+    return NULL;
+  }
+    
+  // Count
+  num_subvars = 0;
+  for (i = 0; i < num; i++) {
+    obj = get_element(array,i);
+    if (has_flags(obj,FLAG_VARS,var))
+      num_subvars++;
+  }
+
+  // Allocate
+  proj = MAT_new(num_subvars,
+		 net->num_vars,
+		 num_subvars);
+  
+  // Fill
+  num_subvars = 0;
+  for (i = 0; i < num; i++) {
+    obj = get_element(array,i);
+    if (has_flags(obj,FLAG_VARS,var)) {
+      MAT_set_i(proj,num_subvars,num_subvars);
+      MAT_set_j(proj,num_subvars,get_var_index(obj,var));
+      MAT_set_d(proj,num_subvars,1.);
+      num_subvars++;
+    }
+  }
+       
+  // Return
+  return proj;
+}
+
 REAL NET_get_bus_v_max(Net* net) {
   if (net)
     return net->bus_v_max;

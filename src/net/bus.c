@@ -605,6 +605,18 @@ void BUS_get_var_values(Bus* bus, Vec* values) {
   }
 }
 
+int BUS_get_var_index(void* vbus, char var) {
+  Bus* bus = (Bus*)vbus;
+  if (!bus)
+    return 0;
+  if (var == BUS_VAR_VMAG)
+    return bus->index_v_mag;
+  if (var == BUS_VAR_VANG)
+    return bus->index_v_ang;
+  else
+    return 0;
+}
+
 REAL BUS_get_sens_P_balance(Bus* bus) {
   if (bus)
     return bus->sens_P_balance;
@@ -768,7 +780,8 @@ REAL BUS_get_quantity(Bus* bus, int qtype) {
   }
 }
 
-BOOL BUS_has_flags(Bus* bus, char flag_type, char mask) {
+BOOL BUS_has_flags(void* vbus, char flag_type, char mask) {
+  Bus* bus = (Bus*)vbus;
   if (bus) {
     if (flag_type == FLAG_VARS)
       return (bus->vars & mask);

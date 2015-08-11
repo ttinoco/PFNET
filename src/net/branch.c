@@ -311,6 +311,17 @@ void BRANCH_get_var_values(Branch* br, Vec* values) {
   }    
 }
 
+int BRANCH_get_var_index(void* vbr, char var) {
+  Branch* br = (Branch*)vbr;
+  if (!br)
+    return 0;
+  if (var == BRANCH_VAR_RATIO)
+    return br->index_ratio;
+  if (var == BRANCH_VAR_PHASE)
+    return br->index_phase;
+  return 0;
+}
+
 BOOL BRANCH_has_pos_ratio_v_sens(Branch* branch) {
   if (branch)
     return branch->pos_ratio_v_sens;
@@ -318,7 +329,8 @@ BOOL BRANCH_has_pos_ratio_v_sens(Branch* branch) {
     return FALSE;
 }
 
-BOOL BRANCH_has_flags(Branch* br, char flag_type, char mask) {
+BOOL BRANCH_has_flags(void* vbr, char flag_type, char mask) {
+  Branch* br = (Branch*)vbr;
   if (br) {
     if (flag_type == FLAG_VARS)
       return (br->vars & mask);
