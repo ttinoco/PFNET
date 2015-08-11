@@ -256,7 +256,7 @@ void GEN_init(Gen* gen) {
   gen->Q_min = 0;
   gen->cost_coeff_Q0 = 0;
   gen->cost_coeff_Q1 = 20.;
-  gen->cost_coeff_Q2 = 0.01;
+  gen->cost_coeff_Q2 = 0.01*100; 
   gen->index = 0;
   gen->index_P = 0;
   gen->index_Q = 0;
