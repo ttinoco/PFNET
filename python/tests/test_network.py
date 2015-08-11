@@ -10,6 +10,7 @@ import pfnet as pf
 import unittest
 import test_cases
 import numpy as np
+from scipy.sparse import coo_matrix
 
 class TestNetwork(unittest.TestCase):
     
@@ -384,6 +385,8 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(vargen.P_max,0.)
                 self.assertEqual(vargen.index,i)
                 self.assertRaises(pf.BusError,lambda : vargen.bus)
+                vargen.P = np.pi
+                self.assertEqual(vargen.P,np.pi)
 
             # Set buses
             net.set_vargen_buses(load_buses)
@@ -847,6 +850,191 @@ class TestNetwork(unittest.TestCase):
             for bus in net.buses:
                 if bus.is_regulated_by_gen():
                     self.assertEqual(bus.v_mag,bus.v_set)
+
+    def test_projections(self):
+       
+        net = self.net
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+            
+            self.assertEqual(net.num_vars,0)
+            self.assertEqual(net.num_vargens,0)
+
+            # Add vargens
+            load_buses = net.get_load_buses()
+            vargen_array = pf.VarGeneratorArray(len(load_buses))
+            net.set_vargen_array(vargen_array)
+            net.set_vargen_buses(load_buses)
+            self.assertGreater(net.num_vargens,0)
+
+            # bus vmag and vang
+            net.set_flags(pf.OBJ_BUS,
+                          pf.FLAG_VARS,
+                          pf.BUS_PROP_NOT_SLACK,
+                          pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
+            
+            # gen powers
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_SLACK,
+                          pf.GEN_VAR_P)
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_REG,
+                          pf.GEN_VAR_Q)
+            
+            # branch ratio and phase
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_VARS,
+                          pf.BRANCH_PROP_TAP_CHANGER_V,
+                          pf.BRANCH_VAR_RATIO)
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_VARS,
+                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          pf.BRANCH_VAR_PHASE)
+            
+            # shunt
+            net.set_flags(pf.OBJ_SHUNT,
+                          pf.FLAG_VARS,
+                          pf.SHUNT_PROP_SWITCHED_V,
+                          pf.SHUNT_VAR_SUSC)
+
+            # vargens
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P)
+
+            self.assertEqual(net.num_vars,
+                             (2*(net.num_buses-1) +
+                              net.get_num_slack_gens() +
+                              net.get_num_reg_gens() +
+                              net.get_num_tap_changers_v() +
+                              net.get_num_phase_shifters() +
+                              net.get_num_switched_shunts() +
+                              net.get_num_vargens()))
+
+            # set vargens
+            for vargen in net.var_generators:
+                vargen.P = np.pi*vargen.index
+
+            # var values
+            x = net.get_var_values()
+
+            # bus vmag
+            P = net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VMAG)
+            self.assertTrue(isinstance(P,coo_matrix))
+            self.assertEqual(P.shape[0],net.num_buses-1)
+            self.assertEqual(P.shape[1],net.num_vars)
+            self.assertEqual(P.nnz,net.num_buses-1)
+            vmag = P*x
+            index = 0
+            for i in range(net.num_buses):
+                bus = net.get_bus(i)
+                if bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VMAG):
+                    self.assertEqual(vmag[index],bus.v_mag)
+                    index += 1
+
+            # bus vang
+            P = net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VANG)
+            self.assertTrue(isinstance(P,coo_matrix))
+            self.assertEqual(P.shape[0],net.num_buses-1)
+            self.assertEqual(P.shape[1],net.num_vars)
+            self.assertEqual(P.nnz,net.num_buses-1)
+            vang = P*x
+            index = 0
+            for i in range(net.num_buses):
+                bus = net.get_bus(i)
+                if bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VANG):
+                    self.assertEqual(vang[index],bus.v_ang)
+                    index += 1
+
+            # gen active power
+            P = net.get_var_projection(pf.OBJ_GEN,pf.GEN_VAR_P)
+            self.assertTrue(isinstance(P,coo_matrix))
+            self.assertEqual(P.shape[0],net.get_num_slack_gens())
+            self.assertEqual(P.shape[1],net.num_vars)
+            self.assertEqual(P.nnz,net.get_num_slack_gens())
+            gP = P*x
+            index = 0
+            for i in range(net.num_gens):
+                gen = net.get_gen(i)
+                if gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P):
+                    self.assertEqual(gP[index],gen.P)
+                    index += 1
+
+            # gen reactive power
+            P = net.get_var_projection(pf.OBJ_GEN,pf.GEN_VAR_Q)
+            self.assertTrue(isinstance(P,coo_matrix))
+            self.assertEqual(P.shape[0],net.get_num_reg_gens())
+            self.assertEqual(P.shape[1],net.num_vars)
+            self.assertEqual(P.nnz,net.get_num_reg_gens())
+            gQ = P*x
+            index = 0
+            for i in range(net.num_gens):
+                gen = net.get_gen(i)
+                if gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_Q):
+                    self.assertEqual(gQ[index],gen.Q)
+                    index += 1
+                    
+            # tap changer ratio
+            P = net.get_var_projection(pf.OBJ_BRANCH,pf.BRANCH_VAR_RATIO)
+            self.assertTrue(isinstance(P,coo_matrix))
+            self.assertEqual(P.shape[0],net.get_num_tap_changers_v())
+            self.assertEqual(P.shape[1],net.num_vars)
+            self.assertEqual(P.nnz,net.get_num_tap_changers_v())
+            bR = P*x
+            index = 0
+            for i in range(net.num_branches):
+                br = net.get_branch(i)
+                if br.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_RATIO):
+                    self.assertEqual(bR[index],br.ratio)
+                    index += 1
+                    
+            # phase shifter
+            P = net.get_var_projection(pf.OBJ_BRANCH,pf.BRANCH_VAR_PHASE)
+            self.assertTrue(isinstance(P,coo_matrix))
+            self.assertEqual(P.shape[0],net.get_num_phase_shifters())
+            self.assertEqual(P.shape[1],net.num_vars)
+            self.assertEqual(P.nnz,net.get_num_phase_shifters())
+            bP = P*x
+            index = 0
+            for i in range(net.num_branches):
+                br = net.get_branch(i)
+                if br.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_PHASE):
+                    self.assertEqual(bP[index],br.phase)
+                    index += 1
+                    
+            # shunt susceptance
+            P = net.get_var_projection(pf.OBJ_SHUNT,pf.SHUNT_VAR_SUSC)
+            self.assertTrue(isinstance(P,coo_matrix))
+            self.assertEqual(P.shape[0],net.get_num_switched_shunts())
+            self.assertEqual(P.shape[1],net.num_vars)
+            self.assertEqual(P.nnz,net.get_num_switched_shunts())
+            sS = P*x
+            index = 0
+            for i in range(net.num_shunts):
+                shunt = net.get_shunt(i)
+                if shunt.has_flags(pf.FLAG_VARS,pf.SHUNT_VAR_SUSC):
+                    self.assertEqual(sS[index],shunt.b)
+                    index += 1
+                
+            # vargen active power
+            P = net.get_var_projection(pf.OBJ_VARGEN,pf.VARGEN_VAR_P)
+            self.assertTrue(isinstance(P,coo_matrix))
+            self.assertEqual(P.shape[0],net.num_vargens)
+            self.assertEqual(P.shape[1],net.num_vars)
+            self.assertEqual(P.nnz,net.num_vargens)
+            vgP = P*x
+            index = 0
+            for i in range(net.num_vargens):
+                vargen = net.get_vargen(i)
+                if vargen.has_flags(pf.FLAG_VARS,pf.VARGEN_VAR_P):
+                    self.assertEqual(vgP[index],vargen.P)
+                    self.assertEqual(vgP[index],vargen.index*np.pi)
+                    index += 1
                 
     def tearDown(self):
         

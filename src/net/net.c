@@ -807,6 +807,10 @@ Vec* NET_get_var_values(Net* net) {
 
   // Loads
 
+  // Variable generators
+  for (i = 0; i < net->num_vargens; i++) 
+    VARGEN_get_var_values(VARGEN_array_get(net->vargen,i),values);
+
   // Return
   return values;  
 }
@@ -1188,6 +1192,13 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, char
     set_flags = &SHUNT_set_flags;
     has_properties = &SHUNT_has_properties;
     break;
+  case OBJ_VARGEN:
+    num = net->num_vargens;
+    array = net->vargen;
+    get_element = &VARGEN_array_get;
+    set_flags = &VARGEN_set_flags;
+    has_properties = &VARGEN_has_properties;
+    break;
   default:
     sprintf(net->error_string,"invalid object type");
     net->error_flag = TRUE;
@@ -1235,6 +1246,10 @@ void NET_set_var_values(Net* net, Vec* values) {
     SHUNT_set_var_values(SHUNT_array_get(net->shunt,i),values);
 
   // Loads
+
+  // Vargens
+  for (i = 0; i < net->num_vargens; i++) 
+    VARGEN_set_var_values(VARGEN_array_get(net->vargen,i),values);
 }
 
 void NET_show_components(Net *net) {

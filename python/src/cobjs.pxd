@@ -12,6 +12,8 @@ cdef extern from "pfnet/obj_types.h":
     cdef char OBJ_GEN
     cdef char OBJ_BRANCH
     cdef char OBJ_SHUNT
+    cdef char OBJ_LOAD
+    cdef char OBJ_VARGEN
 
 
 

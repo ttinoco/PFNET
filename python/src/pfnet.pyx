@@ -28,7 +28,6 @@ cimport cprob
 import numpy as np
 cimport numpy as np
 
-from subprocess import call
 from scipy import misc
 import tempfile
 
@@ -44,6 +43,8 @@ OBJ_BUS = cobjs.OBJ_BUS
 OBJ_GEN = cobjs.OBJ_GEN
 OBJ_BRANCH = cobjs.OBJ_BRANCH
 OBJ_SHUNT = cobjs.OBJ_SHUNT
+OBJ_LOAD = cobjs.OBJ_LOAD
+OBJ_VARGEN = cobjs.OBJ_VARGEN
 
 # Flags
 FLAG_VARS = cflags.FLAG_VARS
@@ -1256,6 +1257,7 @@ cdef class VarGenerator:
     property P:
         """ Variable generator active power (p.u. system base MVA) (float). """
         def __get__(self): return cvargen.VARGEN_get_P(self._c_gen)
+        def __set__(self,P): cvargen.VARGEN_set_P(self._c_gen,P)
 
     property P_max:
         """ Variable generator active power upper limit (p.u. system base MVA) (float). """
@@ -1553,6 +1555,18 @@ cdef class Network:
         values : :class:`ndarray <numpy.ndarray>`
         """
         return Vector(cnet.NET_get_var_values(self._c_net),owndata=True)
+
+    def get_var_projection(self,obj_type,var):
+        """
+        Gets projection matrix for specific object variables.
+
+        Parameters
+        ----------
+        obj_type : int (:ref:`ref_net_obj`)
+        var : int (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`)
+        """
+        
+        return Matrix(cnet.NET_get_var_projection(self._c_net,obj_type,var),owndata=True)
 
     def get_num_buses(self):
         """

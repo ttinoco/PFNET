@@ -151,7 +151,10 @@ BOOL VARGEN_has_flags(void* vgen, char flag_type, char mask) {
 }
 
 BOOL VARGEN_has_properties(void* vgen, char prop) {
-  return FALSE;
+  Vargen* gen = (Vargen*)vgen;
+  if (!gen)
+    return FALSE;
+  return TRUE;
 }
 
 void VARGEN_init(Vargen* gen) {
