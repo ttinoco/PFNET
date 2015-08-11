@@ -7,6 +7,7 @@
 #***************************************************#
 
 cimport cvec
+cimport cmat
 cimport cbus
 cimport cbranch
 cimport cgen
@@ -76,6 +77,7 @@ cdef extern from "pfnet/net.h":
     REAL NET_get_shunt_b_vio(Net* net)
     int NET_get_num_actions(Net* net)
     cvec.Vec* NET_get_var_values(Net* net)
+    cmat.Mat* NET_get_var_projection(Net* net, char obj_type, char var)
     bint NET_has_error(Net* net)
     void NET_load(Net* net, char* filename)
     Net* NET_new()
