@@ -197,7 +197,19 @@ void GEN_get_var_values(Gen* gen, Vec* values) {
     VEC_set(values,gen->index_Q,gen->Q);
 }
 
-BOOL GEN_has_flags(Gen* gen, char flag_type, char mask) {
+int GEN_get_var_index(void* vgen, char var) {
+  Gen* gen = (Gen*)vgen;
+  if (!gen)
+    return 0;
+  if (var == GEN_VAR_P)
+    return gen->index_P;
+  if (var == GEN_VAR_Q)
+    return gen->index_Q;
+  return 0;
+}
+
+BOOL GEN_has_flags(void* vgen, char flag_type, char mask) {
+  Gen* gen = (Gen*)vgen;
   if (gen) {
     if (flag_type == FLAG_VARS)
       return (gen->vars & mask);

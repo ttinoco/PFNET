@@ -124,7 +124,17 @@ void VARGEN_get_var_values(Vargen* gen, Vec* values) {
     VEC_set(values,gen->index_P,gen->P);
 }
 
-BOOL VARGEN_has_flags(Vargen* gen, char flag_type, char mask) {
+int VARGEN_get_var_index(void* vgen, char var) {
+  Vargen* gen = (Vargen*)vgen;
+  if (!gen)
+    return 0;
+  if (var == VARGEN_VAR_P)
+    return gen->index_P;
+  return 0;
+}
+
+BOOL VARGEN_has_flags(void* vgen, char flag_type, char mask) {
+  Vargen* gen = (Vargen*)vgen;
   if (gen) {
     if (flag_type == FLAG_VARS)
       return (gen->vars & mask);

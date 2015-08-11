@@ -192,7 +192,17 @@ void SHUNT_get_var_values(Shunt* shunt, Vec* values) {
   }    
 }
 
-BOOL SHUNT_has_flags(Shunt* shunt, char flag_type, char mask) {
+int SHUNT_get_var_index(void* vshunt, char var) {
+  Shunt* shunt = (Shunt*)vshunt;
+  if (!shunt)
+    return 0;
+  if (var == SHUNT_VAR_SUSC)
+    return shunt->index_b;
+  return 0;
+}
+
+BOOL SHUNT_has_flags(void* vshunt, char flag_type, char mask) {
+  Shunt* shunt = (Shunt*)vshunt;
   if (shunt) {
     if (flag_type == FLAG_VARS)
       return (shunt->vars & mask);

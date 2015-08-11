@@ -20,6 +20,7 @@
 #include "shunt.h"
 #include "vargen.h"
 #include "vector.h"
+#include "matrix.h"
 
 // Controls
 #define NET_CONTROL_EPS 1e-4      /**< @brief Safeguard for small control ranges (p.u.). */
@@ -88,6 +89,7 @@ REAL NET_get_total_gen_Q(Net* net);
 REAL NET_get_total_load_P(Net* net);
 REAL NET_get_total_load_Q(Net* net);
 Vec* NET_get_var_values(Net* net);
+Mat* NET_get_var_projection(Net* net, char obj_type, char var);
 REAL NET_get_bus_v_max(Net* net);
 REAL NET_get_bus_v_min(Net* net);
 REAL NET_get_bus_v_vio(Net* net);
