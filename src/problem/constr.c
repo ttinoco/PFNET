@@ -10,6 +10,7 @@
 
 #include <pfnet/constr.h>
 #include <pfnet/constr_PF.h>
+#include <pfnet/constr_DCPF.h>
 #include <pfnet/constr_FIX.h>
 #include <pfnet/constr_BOUND.h>
 #include <pfnet/constr_PAR_GEN.h>
@@ -454,6 +455,16 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_eval_branch = &CONSTR_PF_eval_branch;
     c->func_store_sens_branch = &CONSTR_PF_store_sens_branch;
     c->func_free = &CONSTR_PF_free;
+  }
+  else if (type == CONSTR_TYPE_DCPF) { // DC power flow
+    c->func_init = &CONSTR_DCPF_init;
+    c->func_count_branch = &CONSTR_DCPF_count_branch;
+    c->func_allocate = &CONSTR_DCPF_allocate;
+    c->func_clear = &CONSTR_DCPF_clear;
+    c->func_analyze_branch = &CONSTR_DCPF_analyze_branch;
+    c->func_eval_branch = &CONSTR_DCPF_eval_branch;
+    c->func_store_sens_branch = &CONSTR_DCPF_store_sens_branch;
+    c->func_free = &CONSTR_DCPF_free;
   }
   else if (type == CONSTR_TYPE_PAR_GEN) { // generator participation
     c->func_init = &CONSTR_PAR_GEN_init;

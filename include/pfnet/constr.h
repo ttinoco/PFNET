@@ -26,12 +26,13 @@
  */
 #define CONSTR_TYPE_UNKNOWN -1  /**< @brief Constraint type: unknown */
 #define CONSTR_TYPE_PF 0        /**< @brief Constraint type: power flow equations */
-#define CONSTR_TYPE_FIX 1       /**< @brief Constraint type: variable fixing */
-#define CONSTR_TYPE_BOUND 2     /**< @brief Constraint type: variable bounds */
-#define CONSTR_TYPE_PAR_GEN 3   /**< @brief Constraint type: generator participation */
-#define CONSTR_TYPE_REG_GEN 4   /**< @brief Constraint type: voltage regualtion by generators */
-#define CONSTR_TYPE_REG_TRAN 5  /**< @brief Constraint type: voltage regulation by transformers */
-#define CONSTR_TYPE_REG_SHUNT 6 /**< @brief Constraint type: voltage regulation by shunt devices */
+#define CONSTR_TYPE_DCPF 1      /**< @brief Constraint type: DC power flow quations */
+#define CONSTR_TYPE_FIX 2       /**< @brief Constraint type: variable fixing */
+#define CONSTR_TYPE_BOUND 3     /**< @brief Constraint type: variable bounds */
+#define CONSTR_TYPE_PAR_GEN 4   /**< @brief Constraint type: generator participation */
+#define CONSTR_TYPE_REG_GEN 5   /**< @brief Constraint type: voltage regualtion by generators */
+#define CONSTR_TYPE_REG_TRAN 6  /**< @brief Constraint type: voltage regulation by transformers */
+#define CONSTR_TYPE_REG_SHUNT 7 /**< @brief Constraint type: voltage regulation by shunt devices */
 /** @} */
 
 // Constraint
