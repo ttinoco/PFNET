@@ -38,6 +38,7 @@ struct Bus {
   Shunt* reg_shunt;    /**< @brief List of shunt devices regulating the voltage magnitude of bus */
   Branch* branch_from; /**< @brief List of branches having this bus on the "from" side */
   Branch* branch_to;   /**< @brief List of branches having this bus on the "to" side */
+  Vargen* vargen;      /**< @brief List of variable generators connected to bus */
   
   // Indices
   int index;         /**< @brief Bus index */
@@ -106,6 +107,11 @@ void BUS_add_branch_from(Bus* bus, Branch* branch) {
 void BUS_add_branch_to(Bus* bus, Branch* branch) {
   if (bus)
     bus->branch_to = BRANCH_list_to_add(bus->branch_to,branch);
+}
+
+void BUS_add_vargen(Bus* bus, Vargen* gen) {
+  if (bus)
+    bus->vargen = VARGEN_list_add(bus->vargen,gen);
 }
 
 BOOL BUS_array_check(Bus* bus, int num, BOOL verbose) {
@@ -353,6 +359,13 @@ int BUS_get_num_reg_shunts(Bus* bus) {
     return 0;
 }
 
+int BUS_get_num_vargens(Bus* bus) {
+  if (bus)
+    return VARGEN_list_len(bus->vargen);
+  else
+    return 0;
+}
+
 Gen* BUS_get_gen(Bus* bus) {
   if (bus)
     return bus->gen;
@@ -406,6 +419,13 @@ Branch* BUS_get_branch_to(Bus* bus) {
   if (bus)
     return bus->branch_to;
   else
+    return NULL;
+}
+
+Vargen* BUS_get_vargen(Bus* bus) {
+  if (bus)
+    return bus->vargen;
+  else 
     return NULL;
 }
 
@@ -827,6 +847,7 @@ void BUS_init(Bus* bus) {
   bus->shunt = NULL;
   bus->branch_from = NULL;
   bus->branch_to = NULL;
+  bus->vargen = NULL;
 
   bus->index = 0;
   bus->index_v_mag = 0;
@@ -888,7 +909,12 @@ BOOL BUS_is_slack(Bus* bus) {
     return FALSE;
 }
 
-Bus* BUS_list_add(Bus* bus_list, Bus* bus_new, int sort_by) {
+Bus* BUS_list_add(Bus* bus_list, Bus* bus_new) {
+    LIST_add(bus_list,bus_new,next);
+    return bus_list;
+}
+
+Bus* BUS_list_add_sorting(Bus* bus_list, Bus* bus_new, int sort_by) {
 
   // Local variables
   Bus* bus;

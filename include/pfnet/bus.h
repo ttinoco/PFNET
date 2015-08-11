@@ -16,6 +16,7 @@
 #include "gen.h"
 #include "load.h"
 #include "shunt.h"
+#include "vargen.h"
 #include "branch.h"
 #include "uthash.h"
 #include "vector.h"
@@ -92,6 +93,9 @@ void BUS_add_reg_shunt(Bus* bus, Shunt* reg_shunt);
 /** @brief Adds shunt to list of shunts connected to bus. */
 void BUS_add_shunt(Bus* bus, Shunt* shunt);
 
+/** @brief Adds variable generator to list of variable generators connected to bus. */
+void BUS_add_vargen(Bus* bus, Vargen* gen);
+
 void BUS_add_branch_from(Bus* bus, Branch* branch);
 void BUS_add_branch_to(Bus* bus, Branch* branch);
 BOOL BUS_array_check(Bus* bus, int num, BOOL verbose);
@@ -118,6 +122,7 @@ int BUS_get_number(Bus* bus);
 int BUS_get_num_gens(Bus* bus);
 int BUS_get_num_loads(Bus* bus);
 int BUS_get_num_shunts(Bus* bus);
+int BUS_get_num_vargens(Bus* bus);
 int BUS_get_num_reg_gens(Bus* bus);
 int BUS_get_num_reg_trans(Bus* bus);
 int BUS_get_num_reg_shunts(Bus* bus);
@@ -129,6 +134,7 @@ Shunt* BUS_get_reg_shunt(Bus* bus);
 Shunt* BUS_get_shunt(Bus* bus);
 Branch* BUS_get_branch_from(Bus* bus);
 Branch* BUS_get_branch_to(Bus* bus);
+Vargen* BUS_get_vargen(Bus* bus);
 REAL BUS_get_P_mis(Bus* bus);
 REAL BUS_get_Q_mis(Bus* bus);
 REAL BUS_get_total_gen_P(Bus* bus);
@@ -172,7 +178,8 @@ BOOL BUS_is_regulated_by_gen(Bus* bus);
 BOOL BUS_is_regulated_by_tran(Bus* bus);
 BOOL BUS_is_regulated_by_shunt(Bus* bus);
 BOOL BUS_is_slack(Bus* bus);
-Bus* BUS_list_add(Bus* bus_list, Bus* bus, int sort_by);
+Bus* BUS_list_add(Bus* bus_list, Bus* bus);
+Bus* BUS_list_add_sorting(Bus* bus_list, Bus* bus, int sort_by);
 int BUS_list_len(Bus* bus_list);
 Bus* BUS_new(void);
 void BUS_set_number(Bus* bus, int number);
