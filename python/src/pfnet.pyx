@@ -71,7 +71,7 @@ cdef Vector(cvec.Vec* v, owndata=False):
 # Matrix
 ########
 
-cdef Matrix(cmat.Mat* m):
+cdef Matrix(cmat.Mat* m, owndata=False):
      cdef np.npy_intp shape[1]
      if m is not NULL:
          shape[0] = <np.npy_intp> cmat.MAT_get_nnz(m)
@@ -80,6 +80,10 @@ cdef Matrix(cmat.Mat* m):
          row = np.PyArray_SimpleNewFromData(1,shape,np.NPY_INT,cmat.MAT_get_row_array(m))
          col = np.PyArray_SimpleNewFromData(1,shape,np.NPY_INT,cmat.MAT_get_col_array(m))
          data = np.PyArray_SimpleNewFromData(1,shape,np.NPY_DOUBLE,cmat.MAT_get_data_array(m))
+         if owndata:
+             PyArray_ENABLEFLAGS(row,np.NPY_OWNDATA)
+             PyArray_ENABLEFLAGS(col,np.NPY_OWNDATA)
+             PyArray_ENABLEFLAGS(data,np.NPY_OWNDATA)
          return coo_matrix((data,(row,col)),shape=(size1,size2))
      else:
          return coo_matrix(([],([],[])),shape=(0,0))
