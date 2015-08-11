@@ -17,6 +17,7 @@ cimport cshunt
 cimport cbus
 cimport cbranch
 cimport cload
+cimport cvargen
 cimport cnet
 cimport cgraph
 cimport cconstr
@@ -562,6 +563,16 @@ cdef class Bus:
                 loads.append(new_Load(l))
                 l = cload.LOAD_get_next(l)
             return loads
+
+    property vargens:
+        """ List of :class:`variable generators <pfnet.VarGenerator>` connected to this bus (list). """
+        def __get__(self):
+            vargens = []
+            cdef cvargen.Vargen* g = cbus.BUS_get_vargen(self._c_bus)
+            while g is not NULL:
+                vargens.append(new_VarGenerator(g))
+                g = cvargen.VARGEN_get_next(g)
+            return vargens
 
 cdef new_Bus(cbus.Bus* b):
     if b is not NULL:
@@ -1159,6 +1170,123 @@ cdef new_Load(cload.Load* l):
     else:
         raise LoadError('no load data')
 
+# Variable Generator
+####################
+
+# Properties
+VARGEN_PROP_ANY = cvargen.VARGEN_PROP_ANY
+
+# Variables
+VARGEN_VAR_P = cvargen.VARGEN_VAR_P
+
+class VarGeneratorError(Exception):
+    """ 
+    Variable generator error exception.
+    """
+    
+    def __init__(self,value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+cdef class VarGenerator:
+    """
+    Variable generator class.
+    """
+
+    cdef cvargen.Vargen* _c_gen
+
+    def __init__(self,alloc=True):
+        """
+        Variable generator class.
+
+        Parameters
+        ----------
+        alloc : {``True``, ``False``}
+        """
+
+        pass
+
+    def __cinit__(self,alloc=True):
+        
+        if alloc:
+            self._c_gen = cvargen.VARGEN_new()
+        else:
+            self._c_gen = NULL
+
+    def has_flags(self,fmask,vmask):
+        """ 
+        Determines whether the variable generator has the flags associated with
+        certain quantities set. 
+
+        Parameters
+        ----------
+        fmask : int (:ref:`ref_net_flag`)
+        vmask : int (:ref:`ref_vargen_var`)
+        
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+
+        return cvargen.VARGEN_has_flags(self._c_gen,fmask,vmask)
+
+    property index:
+        """ Variable generator index (int). """
+        def __get__(self): return cvargen.VARGEN_get_index(self._c_gen)
+        
+    property index_P:
+        """ Index of variable generator active power variable (int). """
+        def __get__(self): return cvargen.VARGEN_get_index_P(self._c_gen)
+
+    property bus:
+        """ :class:`Bus <pfnet.Bus>` to which variable generator is connected. """
+        def __get__(self): return new_Bus(cvargen.VARGEN_get_bus(self._c_gen))
+
+    property P:
+        """ Variable generator active power (p.u. system base MVA) (float). """
+        def __get__(self): return cvargen.VARGEN_get_P(self._c_gen)
+
+    property P_max:
+        """ Variable generator active power upper limit (p.u. system base MVA) (float). """
+        def __get__(self): return cvargen.VARGEN_get_P_max(self._c_gen)
+
+cdef class VarGeneratorArray:
+    """
+    Variable generator array class.
+    """
+
+    cdef cvargen.Vargen* _c_gen
+    cdef int size
+
+    def __init__(self,size):
+        """
+        Variable generator array class.
+
+        Parameters
+        ----------
+        size : int
+        """
+
+        pass
+
+    def __cinit__(self,size):
+        
+        self._c_gen = cvargen.VARGEN_array_new(size)
+        self.size = size
+
+    property size:
+        """ Array size (int). """
+        def __get__(self): return self.size
+
+cdef new_VarGenerator(cvargen.Vargen* g):
+    if g is not NULL:
+        gen = VarGenerator(alloc=False)
+        gen._c_gen = g
+        return gen
+    else:
+        raise VarGeneratorError('no vargen data')
+
 # Network
 #########
 
@@ -1370,6 +1498,41 @@ cdef class Network:
             return new_Load(ptr)
         else:
             raise NetworkError('invalid load index')
+
+    def get_vargen(self,index):
+        """
+        Gets variable generator with the given index.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        vargen : :class:`VarGenerator <pfnet.VarGenerator>`
+        """
+
+        ptr = cnet.NET_get_vargen(self._c_net,index)
+        if ptr is not NULL:
+            return new_VarGenerator(ptr)
+        else:
+            raise NetworkError('invalid vargen index')
+
+    def get_load_buses(self):
+        """
+        Gets list of buses where loads are connected.
+
+        Returns
+        -------
+        buses : list
+        """
+        
+        buses = []
+        cdef cbus.Bus* b = cnet.NET_get_load_buses(self._c_net)
+        while b is not NULL:
+            buses.append(new_Bus(b))
+            b = cbus.BUS_get_next(b)
+        return buses
 
     def get_var_values(self):
         """
@@ -1596,6 +1759,17 @@ cdef class Network:
 
         return cnet.NET_get_num_switched_shunts(self._c_net)
 
+    def get_num_vargens(self):
+        """
+        Gets number of variable generators in the network.
+
+        Returns
+        -------
+        num : int
+        """
+        
+        return cnet.NET_get_num_vargens(self._c_net)
+
     def get_properties(self):
         """
         Gets network properties.
@@ -1669,6 +1843,31 @@ cdef class Network:
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if values.size else NULL
         cnet.NET_set_var_values(self._c_net,v)
 
+    def set_vargen_buses(self,buses):
+        """
+        Connects the variable generator buses to the given buses in order.
+
+        Parameters
+        ----------
+        buses : list
+        """
+        
+        cdef Bus b = buses[0] if buses else None
+        if b:
+            cnet.NET_set_vargen_buses(self._c_net,b._c_bus);
+
+    def set_vargen_array(self,gen_array):
+        """
+        Sets array of variable generators.
+
+        Parameters
+        ----------
+        gen_array : VarGeneratorArray
+        """
+        
+        cdef VarGeneratorArray ga = gen_array
+        cnet.NET_set_vargen_array(self._c_net, ga._c_gen, ga.size)
+        
     def show_components(self):
         """
         Shows information about the number of network components of each type.
@@ -1750,6 +1949,11 @@ cdef class Network:
         """ List of network :class:`loads <pfnet.Load>` (list). """
         def __get__(self):
             return [self.get_load(i) for i in range(self.num_loads)]
+
+    property var_generators:
+        """ List of network :class:`variable generators <pfnet.VarGenerator>` (list). """
+        def __get__(self):
+            return [self.get_vargen(i) for i in range(self.num_vargens)]
     
     property num_buses:
         """ Number of buses in the network (int). """
@@ -1770,6 +1974,10 @@ cdef class Network:
     property num_shunts:
         """ Number of shunt devices in the network (int). """
         def __get__(self): return cnet.NET_get_num_shunts(self._c_net)
+
+    property num_vargens:
+        """ Number of variable generators in the network (int). """
+        def __get__(self): return cnet.NET_get_num_vargens(self._c_net)
 
     property num_vars:
         """ Number of network quantities that have been set to variable (int). """
