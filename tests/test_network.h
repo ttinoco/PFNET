@@ -254,7 +254,8 @@ static char* test_net_init_point() {
       Assert("error - bad vars flag of gen",!GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q));
     }
   }
-  
+
+  VEC_del(point);
   NET_del(net);
   printf("ok\n");
   return 0;

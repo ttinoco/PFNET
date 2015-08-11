@@ -54,11 +54,17 @@ FLAG_SPARSE = cflags.FLAG_SPARSE
 # Vector
 ########
 
-cdef Vector(cvec.Vec* v):
+cdef extern from "numpy/arrayobject.h":
+    void PyArray_ENABLEFLAGS(np.ndarray arr, int flags)
+
+cdef Vector(cvec.Vec* v, owndata=False):
      cdef np.npy_intp shape[1]
      if v is not NULL:
          shape[0] = <np.npy_intp> cvec.VEC_get_size(v)
-         return np.PyArray_SimpleNewFromData(1,shape,np.NPY_DOUBLE,cvec.VEC_get_data(v))
+         arr = np.PyArray_SimpleNewFromData(1,shape,np.NPY_DOUBLE,cvec.VEC_get_data(v))
+         if owndata:
+             PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
+         return arr
      else:
          return np.zeros(0)
 
@@ -1542,7 +1548,7 @@ cdef class Network:
         -------
         values : :class:`ndarray <numpy.ndarray>`
         """
-        return Vector(cnet.NET_get_var_values(self._c_net))
+        return Vector(cnet.NET_get_var_values(self._c_net),owndata=True)
 
     def get_num_buses(self):
         """
@@ -2714,7 +2720,7 @@ cdef class Problem:
         point : :class:`ndarray <numpy.ndarray>`
         """
 
-        return Vector(cprob.PROB_get_init_point(self._c_prob))
+        return Vector(cprob.PROB_get_init_point(self._c_prob),owndata=True)
 
     def get_network(self):
         """

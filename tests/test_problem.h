@@ -98,7 +98,8 @@ static char* test_problem_basic() {
 
   Assert("error - problem failed on eval",!PROB_has_error(p));
   Assert("error - bad objective value",PROB_get_phi(p) > 0.);
-    
+
+  VEC_del(x);
   PROB_del(p);
   NET_del(net);
   printf("ok\n");

@@ -28,9 +28,6 @@ struct Prob {
   // Network
   Net* net;       /**< @brief Power flow network */
 
-  // Point
-  Vec* point;     /**< @brief Vector of problem variables */
-
   // Objective function
   REAL phi;       /**< @brief Combined objective value */
   Vec* gphi;      /**< @brief Gradient of combined objective function */
@@ -233,7 +230,6 @@ void PROB_clear(Prob* p) {
     CONSTR_list_del(p->constr);
     FUNC_list_del(p->func);
     HEUR_list_del(p->heur);
-    VEC_del(p->point);
     VEC_del(p->b);
     MAT_del(p->A);
     MAT_del(p->Z);
@@ -871,11 +867,10 @@ Heur* PROB_get_heur(Prob* p) {
 }
 
 Vec* PROB_get_init_point(Prob* p) {
-  if (p) {
-    p->point = NET_get_var_values(p->net);
-    return p->point;
-  } 
-  return NULL;
+  if (p)
+    return NET_get_var_values(p->net);
+  else
+    return NULL;
 }
 
 Net* PROB_get_network(Prob* p) {
@@ -965,7 +960,6 @@ void PROB_init(Prob* p) {
     p->constr = NULL;
     p->func = NULL;
     p->heur = NULL;
-    p->point = NULL;
     p->net = NULL;
     p->phi = 0;
     p->gphi = NULL;
