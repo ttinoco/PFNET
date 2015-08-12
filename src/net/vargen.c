@@ -118,10 +118,22 @@ REAL VARGEN_get_P_max(Vargen* gen) {
 }
 
 void VARGEN_get_var_values(Vargen* gen, Vec* values, int code) {  
+
   if (!gen)
     return;
-  if (gen->vars & VARGEN_VAR_P)
-    VEC_set(values,gen->index_P,gen->P);
+
+  if (gen->vars & VARGEN_VAR_P) { // active power
+    switch(code) {
+    case UPPER_LIMITS:
+      VEC_set(values,gen->index_P,gen->P_max);
+      break;
+    case LOWER_LIMITS:
+      VEC_set(values,gen->index_P,0.);
+      break;
+    default:
+      VEC_set(values,gen->index_P,gen->P);
+    }
+  }
 }
 
 int VARGEN_get_var_index(void* vgen, char var) {

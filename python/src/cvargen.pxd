@@ -26,3 +26,4 @@ cdef extern from "pfnet/vargen.h":
     bint VARGEN_has_flags(Vargen* gen, char flag_type, char mask)
     Vargen* VARGEN_new()
     void VARGEN_set_P(Vargen* gen, REAL P)
+    void VARGEN_set_P_max(Vargen* gen, REAL P_max)

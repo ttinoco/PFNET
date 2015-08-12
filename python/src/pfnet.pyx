@@ -39,6 +39,12 @@ np.import_array()
 # Constants
 ###########
 
+# Infinity
+INF = cconstants.INF
+
+# Pi
+PI = cconstants.PI
+
 # Var values
 CURRENT= cconstants.CURRENT
 UPPER_LIMITS = cconstants.UPPER_LIMITS
@@ -1268,6 +1274,7 @@ cdef class VarGenerator:
     property P_max:
         """ Variable generator active power upper limit (p.u. system base MVA) (float). """
         def __get__(self): return cvargen.VARGEN_get_P_max(self._c_gen)
+        def __set__(self,P): cvargen.VARGEN_set_P_max(self._c_gen,P)
 
 cdef class VarGeneratorArray:
     """

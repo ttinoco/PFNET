@@ -1050,6 +1050,132 @@ class TestNetwork(unittest.TestCase):
             for i in range(10):
                 x = np.random.randn(net.num_vars)
                 self.assertLess(np.linalg.norm(x-P.T*P*x),1e-12)
+
+    def test_variable_limits(self):
+
+        net = self.net
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+
+            self.assertGreater(net.num_buses,0)            
+            self.assertEqual(net.num_vars,0)
+            
+            # vargens
+            load_buses = net.get_load_buses()
+            vargen_array = pf.VarGeneratorArray(len(load_buses))
+            net.set_vargen_array(vargen_array)
+            net.set_vargen_buses(load_buses)
+            self.assertGreater(net.num_vargens,0)
+
+            # vars
+            net.set_flags(pf.OBJ_BUS,
+                          pf.FLAG_VARS,
+                          pf.BUS_PROP_ANY,
+                          pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG|pf.BUS_VAR_VDEV|pf.BUS_VAR_VVIO)
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_ANY,
+                          pf.GEN_VAR_P|pf.GEN_VAR_Q)
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P)
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_VARS,
+                          pf.BRANCH_PROP_ANY,
+                          pf.BRANCH_VAR_RATIO|pf.BRANCH_VAR_RATIO_DEV|pf.BRANCH_VAR_PHASE)
+            net.set_flags(pf.OBJ_SHUNT,
+                          pf.FLAG_VARS,
+                          pf.SHUNT_PROP_ANY,
+                          pf.SHUNT_VAR_SUSC|pf.SHUNT_VAR_SUSC_DEV)
+            self.assertEqual(net.num_vars,
+                             (6*net.num_buses +
+                              2*net.num_gens + 
+                              net.num_vargens +
+                              4*net.num_branches + 
+                              3*net.num_shunts))
+            
+            # Add some interesting vargen values
+            for vargen in net.var_generators:
+                vargen.P = 2*vargen.index
+                vargen.P_max = 3*vargen.index
+
+            # current
+            x = net.get_var_values()
+            self.assertEqual(x.size,net.num_vars)
+            for bus in net.buses:
+                self.assertEqual(x[bus.index_v_mag],bus.v_mag)
+                self.assertEqual(x[bus.index_v_ang],bus.v_ang)
+                self.assertEqual(x[bus.index_y],np.maximum(bus.v_mag-bus.v_set,0))
+                self.assertEqual(x[bus.index_z],np.maximum(bus.v_set-bus.v_mag,0))
+                self.assertEqual(x[bus.index_vl],0.)
+                self.assertEqual(x[bus.index_vh],0.)
+            for br in net.branches:
+                self.assertEqual(x[br.index_ratio],br.ratio)
+                self.assertEqual(x[br.index_ratio_y],0.)
+                self.assertEqual(x[br.index_ratio_z],0.)
+                self.assertEqual(x[br.index_phase],br.phase)
+            for gen in net.generators:
+                self.assertEqual(x[gen.index_P],gen.P)
+                self.assertEqual(x[gen.index_Q],gen.Q)
+            for vargen in net.var_generators:
+                self.assertEqual(x[vargen.index_P],vargen.P)
+            for shunt in net.shunts:
+                self.assertEqual(x[shunt.index_b],shunt.b)
+                self.assertEqual(x[shunt.index_y],0.)
+                self.assertEqual(x[shunt.index_z],0.)
+                
+            # upper limits
+            x = net.get_var_values(pf.UPPER_LIMITS)
+            self.assertEqual(x.size,net.num_vars)
+            for bus in net.buses:
+                self.assertEqual(x[bus.index_v_mag],bus.v_max)
+                self.assertEqual(x[bus.index_v_ang],pf.PI)
+                self.assertEqual(x[bus.index_y],pf.INF)
+                self.assertEqual(x[bus.index_z],pf.INF)
+                self.assertEqual(x[bus.index_vl],pf.INF)
+                self.assertEqual(x[bus.index_vh],pf.INF)
+            for br in net.branches:
+                self.assertEqual(x[br.index_ratio],br.ratio_max)
+                self.assertEqual(x[br.index_ratio_y],pf.INF)
+                self.assertEqual(x[br.index_ratio_z],pf.INF)
+                self.assertEqual(x[br.index_phase],br.phase_max)
+            for gen in net.generators:
+                self.assertEqual(x[gen.index_P],gen.P_max)
+                self.assertEqual(x[gen.index_Q],gen.Q_max)
+            for vargen in net.var_generators:
+                self.assertEqual(x[vargen.index_P],vargen.P_max)
+            for shunt in net.shunts:
+                self.assertEqual(x[shunt.index_b],shunt.b_max)
+                self.assertEqual(x[shunt.index_y],pf.INF)
+                self.assertEqual(x[shunt.index_z],pf.INF)
+
+            # lower limits
+            x = net.get_var_values(pf.LOWER_LIMITS)
+            self.assertEqual(x.size,net.num_vars)
+            for bus in net.buses:
+                self.assertEqual(x[bus.index_v_mag],bus.v_min)
+                self.assertEqual(x[bus.index_v_ang],-pf.PI)
+                self.assertEqual(x[bus.index_y],-pf.INF)
+                self.assertEqual(x[bus.index_z],-pf.INF)
+                self.assertEqual(x[bus.index_vl],-pf.INF)
+                self.assertEqual(x[bus.index_vh],-pf.INF)
+            for br in net.branches:
+                self.assertEqual(x[br.index_ratio],br.ratio_min)
+                self.assertEqual(x[br.index_ratio_y],-pf.INF)
+                self.assertEqual(x[br.index_ratio_z],-pf.INF)
+                self.assertEqual(x[br.index_phase],br.phase_min)
+            for gen in net.generators:
+                self.assertEqual(x[gen.index_P],gen.P_min)
+                self.assertEqual(x[gen.index_Q],gen.Q_min)
+            for vargen in net.var_generators:
+                self.assertEqual(x[vargen.index_P],0.)
+            for shunt in net.shunts:
+                self.assertEqual(x[shunt.index_b],shunt.b_min)
+                self.assertEqual(x[shunt.index_y],-pf.INF)
+                self.assertEqual(x[shunt.index_z],-pf.INF)
                 
     def tearDown(self):
         
