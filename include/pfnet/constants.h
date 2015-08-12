@@ -21,7 +21,7 @@
 /** @} */
 
 // Infinity
-#define INF 1E+20
+#define INF 1e20
 
 // Pi
 #define PI 3.14159265359
