@@ -199,7 +199,7 @@ static char* test_constr_FIX() {
   return 0;
 }
 
-static char* test_constr_PAR_GEN() {
+static char* test_constr_PAR_GEN_P() {
   
   // Local variables
   Net *net;
@@ -212,7 +212,7 @@ static char* test_constr_PAR_GEN() {
   Bus* bus;
   int i;
 
-  printf("test_constr_PAR_GEN ...");
+  printf("test_constr_PAR_GEN_P ...");
 
   // Load
   net = NET_new();
@@ -242,10 +242,10 @@ static char* test_constr_PAR_GEN() {
   
   Assert("error - empty network",NET_get_num_vars(net) > 0);
   Assert("error - wrong number of variables",
-	    NET_get_num_vars(net) == (NET_get_num_buses(net)-NET_get_num_buses_reg_by_gen(net)+
-				      NET_get_num_buses(net)-NET_get_num_slack_buses(net)+
-				      NET_get_num_slack_gens(net)+
-				      NET_get_num_reg_gens(net)));
+	 NET_get_num_vars(net) == (NET_get_num_buses(net)-NET_get_num_buses_reg_by_gen(net)+
+				   NET_get_num_buses(net)-NET_get_num_slack_buses(net)+
+				   NET_get_num_slack_gens(net)+
+				   NET_get_num_reg_gens(net)));
 
   x = NET_get_var_values(net,CURRENT);
 
@@ -260,13 +260,134 @@ static char* test_constr_PAR_GEN() {
       num += BUS_get_num_gens(bus)-1;
       nnz += 2*(BUS_get_num_gens(bus)-1);
     }
+  }
+
+  c = CONSTR_new(CONSTR_TYPE_PAR_GEN_P,net);
+  Assert("error - unable to create new constraint",c != NULL);
+  Assert("error - bad constraint initialization",CONSTR_get_b(c) == NULL);
+  Assert("error - bad constraint initialization",CONSTR_get_A(c) == NULL);
+  Assert("error - bad constraint initialization",CONSTR_get_f(c) == NULL);
+  Assert("error - bad constraint initialization",CONSTR_get_J(c) == NULL);
+  Assert("error - bad constraint initialization",CONSTR_get_H_array(c) == NULL);
+  Assert("error - bad constraint initialization",CONSTR_get_H_combined(c) == NULL);
+  Assert("error - unable to create new constraint",c != NULL);
+  Assert("error - bad constraint initialization",CONSTR_get_b(c) == NULL);
+  Assert("error - bad constraint initialization",CONSTR_get_A(c) == NULL);
+  Assert("error - bad constraint initialization",CONSTR_get_f(c) == NULL);
+  Assert("error - bad constraint initialization",CONSTR_get_J(c) == NULL);
+  Assert("error - bad constraint initialization",CONSTR_get_H_array(c) == NULL);
+  Assert("error - bad constraint initialization",CONSTR_get_H_combined(c) == NULL);
+  
+  Assert("error - wrong A counter",CONSTR_get_Acounter(c) == 0);
+  Assert("error - wrong A counter",CONSTR_get_Aconstr_index(c) == 0);
+  CONSTR_count(c);
+  Assert("error - wrong A counter",CONSTR_get_Acounter(c) == nnz);
+  Assert("error - wrong A counter",CONSTR_get_Aconstr_index(c) == num);  
+  CONSTR_allocate(c);
+  Assert("error - wrong A counter",CONSTR_get_Acounter(c) == nnz);
+  Assert("error - wrong A counter",CONSTR_get_Aconstr_index(c) == num);  
+  CONSTR_analyze(c);
+  Assert("error - wrong A counter",CONSTR_get_Acounter(c) == nnz);
+  Assert("error - wrong A counter",CONSTR_get_Aconstr_index(c) == num);  
+  CONSTR_eval(c,x);
+  Assert("error - wrong A counter",CONSTR_get_Acounter(c) == 0);
+  Assert("error - wrong A counter",CONSTR_get_Aconstr_index(c) == 0);  
+  CONSTR_store_sens(c,NULL);
+  Assert("error - wrong A counter",CONSTR_get_Acounter(c) == 0);
+  Assert("error - wrong A counter",CONSTR_get_Aconstr_index(c) == 0);  
+  
+  b = CONSTR_get_b(c);
+  A = CONSTR_get_A(c);
+
+  Assert("error - NULL b",b != NULL);
+  Assert("error - NULL A",A != NULL);
+  Assert("error - bad b size", VEC_get_size(b) == num);
+  Assert("error - bad A size", MAT_get_size1(A) == num);
+  Assert("error - bad A size", MAT_get_size2(A) == NET_get_num_vars(net));
+  Assert("error - bad A size", MAT_get_nnz(A) == nnz);
+  
+  CONSTR_clear(c);
+  Assert("error - wrong A counter",CONSTR_get_Acounter(c) == 0);
+  Assert("error - wrong A counter",CONSTR_get_Aconstr_index(c) == 0);
+
+  VEC_del(x);
+  CONSTR_del(c);
+  NET_del(net);
+  printf("ok\n");
+  return 0;
+}
+
+static char* test_constr_PAR_GEN_Q() {
+  
+  // Local variables
+  Net *net;
+  Vec* x;
+  Constr* c;
+  int num;
+  int nnz;
+  Vec* b;
+  Mat* A;
+  Bus* bus;
+  int i;
+
+  printf("test_constr_PAR_GEN_Q ...");
+
+  // Load
+  net = NET_new();
+  NET_load(net,test_case);
+
+  // Set flags
+  NET_set_flags(net,
+		OBJ_BUS,
+		FLAG_VARS,
+		BUS_PROP_NOT_REG_BY_GEN,
+		BUS_VAR_VMAG);
+  NET_set_flags(net,
+		OBJ_BUS,
+		FLAG_VARS,
+		BUS_PROP_NOT_SLACK,
+		BUS_VAR_VANG);
+  NET_set_flags(net,
+		OBJ_GEN,
+		FLAG_VARS,
+		GEN_PROP_SLACK,
+		GEN_VAR_P|GEN_VAR_Q);
+  NET_set_flags(net,
+		OBJ_GEN,
+		FLAG_VARS,
+		GEN_PROP_REG,
+		GEN_VAR_Q);
+  
+  Assert("error - empty network",NET_get_num_vars(net) > 0);
+  Assert("error - wrong number of variables",
+	 NET_get_num_vars(net) == (NET_get_num_buses(net)-NET_get_num_buses_reg_by_gen(net)+
+				   NET_get_num_buses(net)-NET_get_num_slack_buses(net)+
+				   NET_get_num_slack_gens(net)+
+				   NET_get_num_reg_gens(net)));
+
+  x = NET_get_var_values(net,CURRENT);
+
+  Assert("error - NULL vector of var values",x != NULL);
+  Assert("error - vector of var values has wrong shape",VEC_get_size(x) == NET_get_num_vars(net));
+
+  num = 0;
+  nnz = 0;
+  for (i = 0; i < NET_get_num_buses(net); i++) {
+    bus = NET_get_bus(net,i);
     if (BUS_is_regulated_by_gen(bus)) {
       num += BUS_get_num_reg_gens(bus)-1;
       nnz += 2*(BUS_get_num_reg_gens(bus)-1);
     }       
   }
 
-  c = CONSTR_new(CONSTR_TYPE_PAR_GEN,net);
+  c = CONSTR_new(CONSTR_TYPE_PAR_GEN_Q,net);
+  Assert("error - unable to create new constraint",c != NULL);
+  Assert("error - bad constraint initialization",CONSTR_get_b(c) == NULL);
+  Assert("error - bad constraint initialization",CONSTR_get_A(c) == NULL);
+  Assert("error - bad constraint initialization",CONSTR_get_f(c) == NULL);
+  Assert("error - bad constraint initialization",CONSTR_get_J(c) == NULL);
+  Assert("error - bad constraint initialization",CONSTR_get_H_array(c) == NULL);
+  Assert("error - bad constraint initialization",CONSTR_get_H_combined(c) == NULL);
   Assert("error - unable to create new constraint",c != NULL);
   Assert("error - bad constraint initialization",CONSTR_get_b(c) == NULL);
   Assert("error - bad constraint initialization",CONSTR_get_A(c) == NULL);

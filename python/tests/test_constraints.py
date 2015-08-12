@@ -154,7 +154,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(not np.any(np.isinf(b)))
             self.assertTrue(not np.any(np.isnan(b)))
             
-    def test_constr_PAR_GEN(self):
+    def test_constr_PAR_GEN_P(self):
         
         net = self.net
 
@@ -180,7 +180,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Constraint
-            constr = pf.Constraint(pf.CONSTR_TYPE_PAR_GEN,net)
+            constr = pf.Constraint(pf.CONSTR_TYPE_PAR_GEN_P,net)
 
             f = constr.f
             J = constr.J
@@ -210,9 +210,6 @@ class TestConstraints(unittest.TestCase):
                 if bus.is_slack():
                     num_constr += len(bus.gens)-1 # P participation
                     nnz += 2*(len(bus.gens)-1)
-                if bus.is_regulated_by_gen():
-                    num_constr += len(bus.reg_gens)-1 # Q participation
-                    nnz += 2*(len(bus.reg_gens)-1)
             
             constr.analyze()
             self.assertEqual(nnz,constr.Acounter)
@@ -270,6 +267,118 @@ class TestConstraints(unittest.TestCase):
                             self.assertEqual(Ad[i],-1.)
                             i += 1
                             row += 1
+            self.assertEqual(i,nnz)
+
+            # Last check
+            x = np.zeros(net.num_vars)
+            for i in range(net.num_buses):
+                bus = net.get_bus(i)
+                if bus.is_slack():
+                    self.assertGreater(len(bus.gens),0)
+                    for g in bus.gens:
+                        self.assertTrue(g.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
+                        x[g.index_P] = 10.
+            self.assertGreater(np.linalg.norm(x),0)
+            self.assertTrue(np.linalg.norm(A*x-b) < 1e-10)
+
+    def test_constr_PAR_GEN_Q(self):
+        
+        net = self.net
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+            self.assertEqual(net.num_vars,0)
+            
+            # Vars
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_SLACK,
+                          [pf.GEN_VAR_P,pf.GEN_VAR_Q])
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_REG,
+                          pf.GEN_VAR_Q)
+            self.assertGreater(net.num_vars,0)
+            self.assertEqual(net.num_vars,net.get_num_slack_gens()+net.get_num_reg_gens())
+            
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+            
+            # Constraint
+            constr = pf.Constraint(pf.CONSTR_TYPE_PAR_GEN_Q,net)
+
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            
+            # Before 
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(0,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,0))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(0,0))
+            self.assertEqual(A.nnz,0)
+            
+            self.assertEqual(constr.Jcounter,0)
+            self.assertEqual(constr.Acounter,0)
+
+            # Manual count
+            nnz = 0
+            num_constr = 0
+            for i in range(net.num_buses):
+                bus = net.get_bus(i)
+                if bus.is_regulated_by_gen():
+                    num_constr += len(bus.reg_gens)-1 # Q participation
+                    nnz += 2*(len(bus.reg_gens)-1)
+            
+            constr.analyze()
+            self.assertEqual(nnz,constr.Acounter)
+            constr.eval(x0)
+            self.assertEqual(0,constr.Acounter)
+            
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            
+            # After
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(num_constr,))
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(num_constr,net.num_vars))
+            self.assertEqual(A.nnz,nnz)
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,net.num_vars))
+            self.assertEqual(J.nnz,0)
+            
+            self.assertTrue(not np.any(np.isinf(b)))
+            self.assertTrue(not np.any(np.isnan(b)))
+
+            # Detailed check
+            Ai = A.row
+            Aj = A.col
+            Ad = A.data
+            self.assertEqual(Ai.size,nnz)
+            self.assertEqual(Aj.size,nnz)
+            self.assertEqual(Ad.size,nnz)
+            i = 0
+            row = 0
+            counted = {}
+            for k in range(net.num_branches):
+                br = net.get_branch(k)
+                for bus in [br.bus_from,br.bus_to]:
+                    if counted.has_key(bus.number):
+                        continue
+                    counted[bus.number] = True
                     if bus.is_regulated_by_gen():
                         reg_gens = bus.reg_gens
                         self.assertGreater(len(reg_gens),0)
@@ -293,11 +402,6 @@ class TestConstraints(unittest.TestCase):
             x = np.zeros(net.num_vars)
             for i in range(net.num_buses):
                 bus = net.get_bus(i)
-                if bus.is_slack():
-                    self.assertGreater(len(bus.gens),0)
-                    for g in bus.gens:
-                        self.assertTrue(g.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
-                        x[g.index_P] = 10.
                 if bus.is_regulated_by_gen():
                     self.assertGreater(len(bus.reg_gens),0)
                     for g in bus.reg_gens:
@@ -1433,7 +1537,8 @@ class TestConstraints(unittest.TestCase):
 
             constraints = [pf.Constraint(pf.CONSTR_TYPE_BOUND,net),
                            pf.Constraint(pf.CONSTR_TYPE_FIX,net),
-                           pf.Constraint(pf.CONSTR_TYPE_PAR_GEN,net),
+                           pf.Constraint(pf.CONSTR_TYPE_PAR_GEN_P,net),
+                           pf.Constraint(pf.CONSTR_TYPE_PAR_GEN_Q,net),
                            pf.Constraint(pf.CONSTR_TYPE_PF,net),
                            pf.Constraint(pf.CONSTR_TYPE_REG_GEN,net),
                            pf.Constraint(pf.CONSTR_TYPE_REG_SHUNT,net),

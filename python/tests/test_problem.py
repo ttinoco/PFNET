@@ -96,13 +96,14 @@ class TestProblem(unittest.TestCase):
                              
             # Constraints
             p.add_constraint(pf.CONSTR_TYPE_PF)
-            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN)
+            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_P)
+            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_Q)
             p.add_constraint(pf.CONSTR_TYPE_FIX)
-            self.assertEqual(len(p.constraints),3)
+            self.assertEqual(len(p.constraints),4)
 
             # Check adding redundant constraints
-            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN)
-            self.assertEqual(len(p.constraints),3)
+            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_P)
+            self.assertEqual(len(p.constraints),4)
             
             # Functions
             self.assertEqual(len(p.functions),0)
@@ -343,15 +344,16 @@ class TestProblem(unittest.TestCase):
                              
             # Constraints
             p.add_constraint(pf.CONSTR_TYPE_PF)
-            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN)
+            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_P)
+            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_Q)
             p.add_constraint(pf.CONSTR_TYPE_REG_GEN)
             p.add_constraint(pf.CONSTR_TYPE_REG_TRAN)
             p.add_constraint(pf.CONSTR_TYPE_REG_SHUNT)
-            self.assertEqual(len(p.constraints),5)
+            self.assertEqual(len(p.constraints),6)
 
             # Check adding redundant constraints
             p.add_constraint(pf.CONSTR_TYPE_PF)
-            self.assertEqual(len(p.constraints),5)
+            self.assertEqual(len(p.constraints),6)
             
             # Functions
             p.add_function(pf.FUNC_TYPE_REG_VMAG,1.)
