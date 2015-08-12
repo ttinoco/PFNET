@@ -578,30 +578,78 @@ REAL BUS_get_v_min(Bus* bus) {
     return bus->v_min;
 }
 
-void BUS_get_var_values(Bus* bus, Vec* values) {
+void BUS_get_var_values(Bus* bus, Vec* values, int code) {
 
   // No bus
   if (!bus)
     return;
 
-  // Voltage
-  if (bus->vars & BUS_VAR_VMAG)      // voltage magnitude
-    VEC_set(values,bus->index_v_mag,bus->v_mag);
-  if (bus->vars & BUS_VAR_VANG)      // voltage angle
-    VEC_set(values,bus->index_v_ang,bus->v_ang);
-  if (bus->vars & BUS_VAR_VDEV) {
-    if (bus->v_mag > bus->v_set) { // pos voltage mag deviation
-      VEC_set(values,bus->index_y,bus->v_mag-bus->v_set); 
-      VEC_set(values,bus->index_z,0.);
-    }
-    else {                         // neg voltage mag deviation
-      VEC_set(values,bus->index_y,0.);
-      VEC_set(values,bus->index_z,bus->v_set-bus->v_mag); 
+  // Voltage magnitude
+  if (bus->vars & BUS_VAR_VMAG) {
+    switch (code) {
+    case UPPER_LIMITS:
+      VEC_set(values,bus->index_v_mag,bus->v_max);
+      break;
+    case LOWER_LIMITS:
+      VEC_set(values,bus->index_v_mag,bus->v_min);
+      break;
+    default:
+      VEC_set(values,bus->index_v_mag,bus->v_mag);
     }    
   }
-  if (bus->vars & BUS_VAR_VVIO) { // max min mag bound violations
-    VEC_set(values,bus->index_vl,0.);
-    VEC_set(values,bus->index_vh,0.);
+
+  // Voltage angle
+  if (bus->vars & BUS_VAR_VANG) {
+    switch(code) {
+    case UPPER_LIMITS:
+      VEC_set(values,bus->index_v_ang,PI);
+      break;
+    case LOWER_LIMITS:
+      VEC_set(values,bus->index_v_ang,-PI);
+      break;
+    default:
+      VEC_set(values,bus->index_v_ang,bus->v_ang);
+    }
+  }
+  
+  // Voltage magnitude deviations
+  if (bus->vars & BUS_VAR_VDEV) {
+    switch(code) {
+    case UPPER_LIMITS:
+      VEC_set(values,bus->index_y,INF); 
+      VEC_set(values,bus->index_z,INF);
+      break;
+    case LOWER_LIMITS:
+      VEC_set(values,bus->index_y,-INF); 
+      VEC_set(values,bus->index_z,-INF);
+      break;
+    default:
+      if (bus->v_mag > bus->v_set) { // pos voltage mag deviation
+	VEC_set(values,bus->index_y,bus->v_mag-bus->v_set); 
+	VEC_set(values,bus->index_z,0.);
+      }
+      else {                         // neg voltage mag deviation
+	VEC_set(values,bus->index_y,0.);
+	VEC_set(values,bus->index_z,bus->v_set-bus->v_mag); 
+      }
+    }
+  }
+
+  // Voltage magnitude bound violations
+  if (bus->vars & BUS_VAR_VVIO) {
+    switch(code) {
+    case UPPER_LIMITS:
+      VEC_set(values,bus->index_vl,INF);
+      VEC_set(values,bus->index_vh,INF);
+      break;
+    case LOWER_LIMITS:
+      VEC_set(values,bus->index_vl,-INF);
+      VEC_set(values,bus->index_vh,-INF);
+      break;
+    default:
+      VEC_set(values,bus->index_vl,0.);
+      VEC_set(values,bus->index_vh,0.);
+    }
   }
 }
 

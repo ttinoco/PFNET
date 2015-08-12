@@ -868,7 +868,7 @@ Heur* PROB_get_heur(Prob* p) {
 
 Vec* PROB_get_init_point(Prob* p) {
   if (p)
-    return NET_get_var_values(p->net);
+    return NET_get_var_values(p->net,CURRENT);
   else
     return NULL;
 }

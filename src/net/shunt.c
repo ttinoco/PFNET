@@ -177,7 +177,7 @@ Shunt* SHUNT_get_reg_next(Shunt* shunt) {
     return NULL;
 }
 
-void SHUNT_get_var_values(Shunt* shunt, Vec* values) {
+void SHUNT_get_var_values(Shunt* shunt, Vec* values, int code) {
 
   // No shunt
   if (!shunt)

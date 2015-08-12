@@ -231,7 +231,7 @@ static char* test_net_init_point() {
 	 NET_get_num_vars(net) == (2*NET_get_num_buses(net)+
 				   2*NET_get_num_slack_gens(net)));
 
-  point = NET_get_var_values(net);
+  point = NET_get_var_values(net,CURRENT);
 
   Assert("error - NULL init point",point != NULL);
   Assert("error - invalid vector size",VEC_get_size(point) == NET_get_num_vars(net));

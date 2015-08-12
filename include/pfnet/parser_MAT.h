@@ -17,9 +17,6 @@
 #include "types.h"
 #include "parser_CSV.h"
 
-// Pi
-#define PI 3.14159265359
-
 // Buffer
 #define MAT_PARSER_BUFFER_SIZE 1024
 

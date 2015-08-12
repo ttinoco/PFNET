@@ -77,7 +77,7 @@ REAL BRANCH_get_phase_min(Branch* br);
 REAL BRANCH_get_ratingA(Branch* br);
 REAL BRANCH_get_ratingB(Branch* br);
 REAL BRANCH_get_ratingC(Branch* br);
-void BRANCH_get_var_values(Branch* br, Vec* values);
+void BRANCH_get_var_values(Branch* br, Vec* values, int code);
 int BRANCH_get_var_index(void* br, char var);
 BOOL BRANCH_has_flags(void* br, char flag_type, char mask);
 BOOL BRANCH_has_pos_ratio_v_sens(Branch* br);

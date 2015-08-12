@@ -14,9 +14,6 @@
 #include <math.h>
 #include "constr.h"
 
-// Constants
-#define PI 3.1416
-
 // Parameters
 #define CONSTR_BOUND_PARAM 1e-4
 

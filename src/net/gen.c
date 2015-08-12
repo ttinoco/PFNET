@@ -187,14 +187,35 @@ REAL GEN_get_Q_min(Gen* gen) {
   return gen->Q_min;
 }
 
-void GEN_get_var_values(Gen* gen, Vec* values) {
+void GEN_get_var_values(Gen* gen, Vec* values, int code) {
   
   if (!gen)
     return;
-  if (gen->vars & GEN_VAR_P)
-    VEC_set(values,gen->index_P,gen->P);
-  if (gen->vars & GEN_VAR_Q)
-    VEC_set(values,gen->index_Q,gen->Q);
+
+  if (gen->vars & GEN_VAR_P) { // active power
+    switch(code) {
+    case UPPER_LIMITS:
+      VEC_set(values,gen->index_P,gen->P_max);
+      break;
+    case LOWER_LIMITS:
+      VEC_set(values,gen->index_P,gen->P_min);
+      break;
+    default:
+      VEC_set(values,gen->index_P,gen->P);
+    }
+  }
+  if (gen->vars & GEN_VAR_Q) { // reactive power
+    switch(code) {
+    case UPPER_LIMITS:
+      VEC_set(values,gen->index_Q,gen->Q_max);
+      break;
+    case LOWER_LIMITS:
+      VEC_set(values,gen->index_Q,gen->Q_min);
+      break;
+    default:
+      VEC_set(values,gen->index_Q,gen->Q);
+    }
+  }
 }
 
 int GEN_get_var_index(void* vgen, char var) {

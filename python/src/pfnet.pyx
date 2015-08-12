@@ -8,6 +8,7 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
+cimport cconstants
 cimport cflags
 cimport cobjs
 cimport cvec
@@ -37,6 +38,11 @@ np.import_array()
 
 # Constants
 ###########
+
+# Var values
+CURRENT= cconstants.CURRENT
+UPPER_LIMITS = cconstants.UPPER_LIMITS
+LOWER_LIMITS = cconstants.LOWER_LIMITS
 
 # Objects
 OBJ_BUS = cobjs.OBJ_BUS
@@ -1546,15 +1552,19 @@ cdef class Network:
             b = cbus.BUS_get_next(b)
         return buses
 
-    def get_var_values(self):
+    def get_var_values(self,code=CURRENT):
         """
         Gets network variable values.
+
+        Parameters
+        ----------
+        code : int (See var values)
 
         Returns
         -------
         values : :class:`ndarray <numpy.ndarray>`
         """
-        return Vector(cnet.NET_get_var_values(self._c_net),owndata=True)
+        return Vector(cnet.NET_get_var_values(self._c_net,code),owndata=True)
 
     def get_var_projection(self,obj_type,var):
         """
