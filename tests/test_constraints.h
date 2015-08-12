@@ -57,7 +57,7 @@ static char* test_constr_BOUND() {
   Assert("error - wrong number of variables",num == NET_get_num_vars(net));
   Assert("error - wrong number of bounded quantities",num == NET_get_num_bounded(net));
   
-  x = NET_get_var_values(net);
+  x = NET_get_var_values(net,CURRENT);
 
   Assert("error - NULL vector of var values",x != NULL);
   Assert("error - vector of var values has wrong shape",VEC_get_size(x) == NET_get_num_vars(net));
@@ -152,7 +152,7 @@ static char* test_constr_FIX() {
   Assert("error - wrong number of variables",num == NET_get_num_vars(net));
   Assert("error - wrong number of fixed quantities",num == NET_get_num_fixed(net));
 
-  x = NET_get_var_values(net);
+  x = NET_get_var_values(net,CURRENT);
 
   Assert("error - NULL vector of var values",x != NULL);
   Assert("error - vector of var values has wrong shape",VEC_get_size(x) == NET_get_num_vars(net));
@@ -247,7 +247,7 @@ static char* test_constr_PAR_GEN() {
 				      NET_get_num_slack_gens(net)+
 				      NET_get_num_reg_gens(net)));
 
-  x = NET_get_var_values(net);
+  x = NET_get_var_values(net,CURRENT);
 
   Assert("error - NULL vector of var values",x != NULL);
   Assert("error - vector of var values has wrong shape",VEC_get_size(x) == NET_get_num_vars(net));
@@ -382,7 +382,7 @@ static char* test_constr_PF() {
 				      NET_get_num_phase_shifters(net)+
 				      NET_get_num_switched_shunts(net)));
 
-  x = NET_get_var_values(net);
+  x = NET_get_var_values(net,CURRENT);
 
   Assert("error - NULL vector of var values",x != NULL);
   Assert("error - vector of var values has wrong shape",VEC_get_size(x) == NET_get_num_vars(net));
@@ -515,7 +515,7 @@ static char* test_constr_REG_GEN() {
 	      NET_get_num_reg_gens(net));
   Assert("error - invalid number of varibles",num_vars == NET_get_num_vars(net));
 
-  x = NET_get_var_values(net);
+  x = NET_get_var_values(net,CURRENT);
 
   Assert("error - NULL vector of var values",x != NULL);
   Assert("error - vector of var values has wrong shape",VEC_get_size(x) == NET_get_num_vars(net));
@@ -628,7 +628,7 @@ static char* test_constr_REG_TRAN() {
 	      3*NET_get_num_tap_changers_v(net));
   Assert("error - invalid number of varibles",num_vars == NET_get_num_vars(net));
 
-  x = NET_get_var_values(net);
+  x = NET_get_var_values(net,CURRENT);
 
   Assert("error - NULL vector of var values",x != NULL);
   Assert("error - vector of var values has wrong shape",VEC_get_size(x) == NET_get_num_vars(net));
@@ -740,7 +740,7 @@ static char* test_constr_REG_SHUNT() {
 	      3*NET_get_num_switched_shunts(net));
   Assert("error - invalid number of varibles",num_vars == NET_get_num_vars(net));
 
-  x = NET_get_var_values(net);
+  x = NET_get_var_values(net,CURRENT);
 
   Assert("error - NULL vector of var values",x != NULL);
   Assert("error - vector of var values has wrong shape",VEC_get_size(x) == NET_get_num_vars(net));

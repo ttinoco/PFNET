@@ -117,7 +117,7 @@ REAL VARGEN_get_P_max(Vargen* gen) {
     return 0;
 }
 
-void VARGEN_get_var_values(Vargen* gen, Vec* values) {  
+void VARGEN_get_var_values(Vargen* gen, Vec* values, int code) {  
   if (!gen)
     return;
   if (gen->vars & VARGEN_VAR_P)

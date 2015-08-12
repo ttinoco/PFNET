@@ -777,7 +777,7 @@ REAL NET_get_total_load_Q(Net* net) {
   return Q*net->base_power; // MVAr
 }
 
-Vec* NET_get_var_values(Net* net) {
+Vec* NET_get_var_values(Net* net, int code) {
 
   // Local variables
   int i;
@@ -791,25 +791,25 @@ Vec* NET_get_var_values(Net* net) {
   
   // Buses
   for (i = 0; i < net->num_buses; i++)
-    BUS_get_var_values(BUS_array_get(net->bus,i),values);
+    BUS_get_var_values(BUS_array_get(net->bus,i),values,code);
 
   // Generators
   for (i = 0; i < net->num_gens; i++) 
-    GEN_get_var_values(GEN_array_get(net->gen,i),values);
+    GEN_get_var_values(GEN_array_get(net->gen,i),values,code);
 
   // Branches
   for (i = 0; i < net->num_branches; i++) 
-    BRANCH_get_var_values(BRANCH_array_get(net->branch,i),values);
+    BRANCH_get_var_values(BRANCH_array_get(net->branch,i),values,code);
   
   // Shunts
   for (i = 0; i < net->num_shunts; i++) 
-    SHUNT_get_var_values(SHUNT_array_get(net->shunt,i),values);
+    SHUNT_get_var_values(SHUNT_array_get(net->shunt,i),values,code);
 
   // Loads
 
   // Variable generators
   for (i = 0; i < net->num_vargens; i++) 
-    VARGEN_get_var_values(VARGEN_array_get(net->vargen,i),values);
+    VARGEN_get_var_values(VARGEN_array_get(net->vargen,i),values,code);
 
   // Return
   return values;  

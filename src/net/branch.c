@@ -268,7 +268,7 @@ REAL BRANCH_get_phase_min(Branch* b) {
     return 0;
 }
 
-void BRANCH_get_var_values(Branch* br, Vec* values) {
+void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
 
   // No branch
   if (!br)

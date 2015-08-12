@@ -1,5 +1,5 @@
 /** @file types.h
- *  @brief This files defines scalar types.
+ *  @brief This file defines scalar types.
  *
  * This file is part of PFNET.
  *
@@ -15,6 +15,7 @@
 #include <stddef.h>
 #include "flag_types.h"
 #include "obj_types.h"
+#include "constants.h"
 
 // Real
 typedef double REAL;
