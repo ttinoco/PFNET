@@ -19,7 +19,8 @@ cdef extern from "pfnet/constr.h":
     cdef char CONSTR_TYPE_DCPF
     cdef char CONSTR_TYPE_FIX
     cdef char CONSTR_TYPE_BOUND
-    cdef char CONSTR_TYPE_PAR_GEN
+    cdef char CONSTR_TYPE_PAR_GEN_P
+    cdef char CONSTR_TYPE_PAR_GEN_Q
     cdef char CONSTR_TYPE_REG_GEN
     cdef char CONSTR_TYPE_REG_TRAN
     cdef char CONSTR_TYPE_REG_SHUNT

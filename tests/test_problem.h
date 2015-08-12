@@ -61,12 +61,14 @@ static char* test_problem_basic() {
 				   NET_get_num_reg_gens(net)));
 
   PROB_add_constr(p,CONSTR_TYPE_PF);
-  PROB_add_constr(p,CONSTR_TYPE_PAR_GEN);
+  PROB_add_constr(p,CONSTR_TYPE_PAR_GEN_P);
+  PROB_add_constr(p,CONSTR_TYPE_PAR_GEN_Q);
 
   PROB_add_func(p,FUNC_TYPE_REG_VMAG,3.4);
 
   Assert("error - cannot find constraint",PROB_find_constr(p,CONSTR_TYPE_PF));
-  Assert("error - cannot find constraint",PROB_find_constr(p,CONSTR_TYPE_PAR_GEN));
+  Assert("error - cannot find constraint",PROB_find_constr(p,CONSTR_TYPE_PAR_GEN_P));
+  Assert("error - cannot find constraint",PROB_find_constr(p,CONSTR_TYPE_PAR_GEN_Q));
   Assert("error - finds nonexisting constraint",!PROB_find_constr(p,CONSTR_TYPE_REG_GEN));
   
   x = PROB_get_init_point(p);

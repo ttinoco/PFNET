@@ -29,10 +29,11 @@
 #define CONSTR_TYPE_DCPF 1      /**< @brief Constraint type: DC power flow quations */
 #define CONSTR_TYPE_FIX 2       /**< @brief Constraint type: variable fixing */
 #define CONSTR_TYPE_BOUND 3     /**< @brief Constraint type: variable bounds */
-#define CONSTR_TYPE_PAR_GEN 4   /**< @brief Constraint type: generator participation */
-#define CONSTR_TYPE_REG_GEN 5   /**< @brief Constraint type: voltage regualtion by generators */
-#define CONSTR_TYPE_REG_TRAN 6  /**< @brief Constraint type: voltage regulation by transformers */
-#define CONSTR_TYPE_REG_SHUNT 7 /**< @brief Constraint type: voltage regulation by shunt devices */
+#define CONSTR_TYPE_PAR_GEN_P 4 /**< @brief Constraint type: generator participation (active power) */
+#define CONSTR_TYPE_PAR_GEN_Q 5 /**< @brief Constraint type: generator participation (reactive power) */
+#define CONSTR_TYPE_REG_GEN 6   /**< @brief Constraint type: voltage regualtion by generators */
+#define CONSTR_TYPE_REG_TRAN 7  /**< @brief Constraint type: voltage regulation by transformers */
+#define CONSTR_TYPE_REG_SHUNT 8 /**< @brief Constraint type: voltage regulation by shunt devices */
 /** @} */
 
 // Constraint

@@ -33,7 +33,8 @@ static char * all_tests() {
   // Constraints
   run_test(test_constr_BOUND);
   run_test(test_constr_FIX);
-  run_test(test_constr_PAR_GEN);
+  run_test(test_constr_PAR_GEN_P);
+  run_test(test_constr_PAR_GEN_Q);
   run_test(test_constr_PF);
   run_test(test_constr_REG_GEN);
   run_test(test_constr_REG_TRAN);

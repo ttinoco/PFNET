@@ -13,7 +13,8 @@
 #include <pfnet/constr_DCPF.h>
 #include <pfnet/constr_FIX.h>
 #include <pfnet/constr_BOUND.h>
-#include <pfnet/constr_PAR_GEN.h>
+#include <pfnet/constr_PAR_GEN_P.h>
+#include <pfnet/constr_PAR_GEN_Q.h>
 #include <pfnet/constr_REG_GEN.h>
 #include <pfnet/constr_REG_TRAN.h>
 #include <pfnet/constr_REG_SHUNT.h>
@@ -466,15 +467,25 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_store_sens_branch = &CONSTR_DCPF_store_sens_branch;
     c->func_free = &CONSTR_DCPF_free;
   }
-  else if (type == CONSTR_TYPE_PAR_GEN) { // generator participation
-    c->func_init = &CONSTR_PAR_GEN_init;
-    c->func_count_branch = &CONSTR_PAR_GEN_count_branch;
-    c->func_allocate = &CONSTR_PAR_GEN_allocate;
-    c->func_clear = &CONSTR_PAR_GEN_clear;
-    c->func_analyze_branch = &CONSTR_PAR_GEN_analyze_branch;
-    c->func_eval_branch = &CONSTR_PAR_GEN_eval_branch;
-    c->func_store_sens_branch = &CONSTR_PAR_GEN_store_sens_branch;
-    c->func_free = &CONSTR_PAR_GEN_free;
+  else if (type == CONSTR_TYPE_PAR_GEN_P) { // generator participation (active power)
+    c->func_init = &CONSTR_PAR_GEN_P_init;
+    c->func_count_branch = &CONSTR_PAR_GEN_P_count_branch;
+    c->func_allocate = &CONSTR_PAR_GEN_P_allocate;
+    c->func_clear = &CONSTR_PAR_GEN_P_clear;
+    c->func_analyze_branch = &CONSTR_PAR_GEN_P_analyze_branch;
+    c->func_eval_branch = &CONSTR_PAR_GEN_P_eval_branch;
+    c->func_store_sens_branch = &CONSTR_PAR_GEN_P_store_sens_branch;
+    c->func_free = &CONSTR_PAR_GEN_P_free;
+  }
+  else if (type == CONSTR_TYPE_PAR_GEN_Q) { // generator participation (reactive power)
+    c->func_init = &CONSTR_PAR_GEN_Q_init;
+    c->func_count_branch = &CONSTR_PAR_GEN_Q_count_branch;
+    c->func_allocate = &CONSTR_PAR_GEN_Q_allocate;
+    c->func_clear = &CONSTR_PAR_GEN_Q_clear;
+    c->func_analyze_branch = &CONSTR_PAR_GEN_Q_analyze_branch;
+    c->func_eval_branch = &CONSTR_PAR_GEN_Q_eval_branch;
+    c->func_store_sens_branch = &CONSTR_PAR_GEN_Q_store_sens_branch;
+    c->func_free = &CONSTR_PAR_GEN_Q_free;
   }
   else if (type == CONSTR_TYPE_FIX) { // variable fixing
     c->func_init = &CONSTR_FIX_init;
