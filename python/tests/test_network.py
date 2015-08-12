@@ -10,7 +10,7 @@ import pfnet as pf
 import unittest
 import test_cases
 import numpy as np
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix, bmat
 
 class TestNetwork(unittest.TestCase):
     
@@ -1035,6 +1035,21 @@ class TestNetwork(unittest.TestCase):
                     self.assertEqual(vgP[index],vargen.P)
                     self.assertEqual(vgP[index],vargen.index*np.pi)
                     index += 1
+
+            # All
+            Plist = [net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VMAG),
+                     net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VANG),
+                     net.get_var_projection(pf.OBJ_GEN,pf.GEN_VAR_P),
+                     net.get_var_projection(pf.OBJ_GEN,pf.GEN_VAR_Q),           
+                     net.get_var_projection(pf.OBJ_BRANCH,pf.BRANCH_VAR_RATIO),
+                     net.get_var_projection(pf.OBJ_BRANCH,pf.BRANCH_VAR_PHASE),
+                     net.get_var_projection(pf.OBJ_SHUNT,pf.SHUNT_VAR_SUSC),
+                     net.get_var_projection(pf.OBJ_VARGEN,pf.VARGEN_VAR_P)]
+            P = bmat([[P] for P in Plist if P.shape[0] > 0])
+            self.assertTupleEqual(P.shape,(net.num_vars,net.num_vars))
+            for i in range(10):
+                x = np.random.randn(net.num_vars)
+                self.assertLess(np.linalg.norm(x-P.T*P*x),1e-12)
                 
     def tearDown(self):
         
