@@ -1553,6 +1553,136 @@ class TestConstraints(unittest.TestCase):
                 else:
                     self.assertTupleEqual(c.get_H_single(0).shape,(0,0))
 
+    def test_constr_DCPF(self):
+        
+        # Constants
+        h = 1e-10
+        
+        net = self.net
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+
+            self.assertEqual(net.num_vars,0)
+            self.assertEqual(net.num_vargens,0)
+            
+            # Add vargens
+            load_buses = net.get_load_buses()
+            vargen_array = pf.VarGeneratorArray(len(load_buses))
+            net.set_vargen_array(vargen_array)
+            net.set_vargen_buses(load_buses)
+            self.assertGreater(net.num_vargens,0)
+            self.assertEqual(net.num_vargens,len([b for b in net.buses if b.loads]))
+            for b in net.buses:
+                if b.loads:
+                    self.assertGreater(len(b.vargens),0)
+                    for vargen in b.vargens:
+                        self.assertEqual(vargen.bus,b)
+
+            # Variables
+            net.set_flags(pf.OBJ_BUS,
+                          pf.FLAG_VARS,
+                          pf.BUS_PROP_NOT_SLACK,
+                          pf.BUS_VAR_VANG)
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_ANY,
+                          pf.GEN_VAR_P)
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P)
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_VARS,
+                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          pf.BRANCH_VAR_PHASE)
+            self.assertEqual(net.num_vars,
+                             (net.num_buses-net.get_num_slack_buses() +
+                              net.num_gens + 
+                              net.num_vargens +
+                              net.get_num_phase_shifters()))
+            
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+            
+            # Constraint
+            constr = pf.Constraint(pf.CONSTR_TYPE_DCPF,net)
+            
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+
+            # Before 
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(0,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,0))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(0,0))
+            self.assertEqual(A.nnz,0)
+            self.assertEqual(constr.Jcounter,0)
+            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.Jconstr_index,0)
+            self.assertEqual(constr.Aconstr_index,0)
+
+            r = 0
+            for b in net.buses:
+                if b.is_slack():
+                    r += len(b.branches)
+            
+            # Analyze
+            constr.analyze()
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            self.assertEqual(constr.Jcounter,0)
+            self.assertEqual(constr.Jconstr_index,0)
+            self.assertEqual(constr.Aconstr_index,0)
+            self.assertEqual(constr.Acounter,
+                             (net.num_gens +
+                              net.num_vargens +
+                              4*net.num_branches - 
+                              2*r +
+                              2*net.get_num_phase_shifters()))
+            self.assertTupleEqual(b.shape,(net.num_buses,))
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTupleEqual(A.shape,(net.num_buses,net.num_vars))
+            self.assertEqual(A.nnz,constr.Acounter)
+            self.assertTupleEqual(J.shape,(0,net.num_vars))            
+            
+            constr.eval(x0)
+            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(A.nnz,
+                             (net.num_gens +
+                              net.num_vargens +
+                              4*net.num_branches - 
+                              2*r +
+                              2*net.get_num_phase_shifters()))
+            
+            # Extract pieces
+            P1 = net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VANG)
+            P2 = net.get_var_projection(pf.OBJ_GEN,pf.GEN_VAR_P)
+            P3 = net.get_var_projection(pf.OBJ_VARGEN,pf.VARGEN_VAR_P)
+            P4 = net.get_var_projection(pf.OBJ_BRANCH,pf.BRANCH_VAR_PHASE)
+            
+            G = A*P2.T
+            R = A*P3.T
+            Atheta = -A*P1.T
+            Aphi = -A*P4.T
+            x = np.random.randn(net.num_vars)
+            p = P2*x
+            r = P3*x
+            theta = P1*x
+            phi = P4*x
+            self.assertLess(np.linalg.norm((G*p+R*r-Atheta*theta-Aphi*phi)-A*x),1e-10)            
+
     def tearDown(self):
         
         pass
