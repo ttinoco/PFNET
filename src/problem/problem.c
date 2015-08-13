@@ -876,6 +876,20 @@ Vec* PROB_get_init_point(Prob* p) {
     return NULL;
 }
 
+Vec* PROB_get_upper_limits(Prob* p) {
+  if (p)
+    return NET_get_var_values(p->net,UPPER_LIMITS);
+  else
+    return NULL;
+}
+
+Vec* PROB_get_lower_limits(Prob* p) {
+  if (p)
+    return NET_get_var_values(p->net,LOWER_LIMITS);
+  else
+    return NULL;
+}
+
 Net* PROB_get_network(Prob* p) {
   if (p)
     return p->net;

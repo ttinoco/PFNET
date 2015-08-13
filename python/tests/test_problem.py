@@ -607,6 +607,33 @@ class TestProblem(unittest.TestCase):
             self.assertTrue(np.all(Z.row == np.array(range(3*net.get_num_switched_shunts()))))
             self.assertTrue(np.all(Z.col == np.array(range(3*net.get_num_switched_shunts()))))
 
+    def test_problem_limits(self):
+
+        p = self.p
+        net = self.net
+
+        for case in test_cases.CASES:
+            
+            p.clear()
+            net.load(case)
+            p.network = net
+
+            net.set_flags(pf.OBJ_BUS,
+                          pf.FLAG_VARS,
+                          pf.BUS_PROP_ANY,
+                          pf.BUS_VAR_VMAG)
+            self.assertEqual(net.num_vars,net.num_buses)
+
+            l = p.get_lower_limits()
+            u = p.get_upper_limits()
+            self.assertTrue(isinstance(l,np.ndarray))
+            self.assertTrue(isinstance(u,np.ndarray))
+            self.assertTupleEqual(l.shape,(net.num_buses,))
+            self.assertTupleEqual(u.shape,(net.num_buses,))
+            for bus in net.buses:
+                self.assertEqual(bus.v_max,u[bus.index_v_mag])
+                self.assertEqual(bus.v_min,l[bus.index_v_mag])
+
     def tearDown(self):
         
         pass

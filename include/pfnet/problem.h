@@ -40,6 +40,8 @@ char* PROB_get_error_string(Prob* p);
 Func* PROB_get_func(Prob* p);
 Heur* PROB_get_heur(Prob* p);
 Vec* PROB_get_init_point(Prob* p);
+Vec* PROB_get_upper_limits(Prob* p);
+Vec* PROB_get_lower_limits(Prob* p);
 Net* PROB_get_network(Prob* p);
 REAL PROB_get_phi(Prob* p);
 Vec* PROB_get_gphi(Prob* p);
