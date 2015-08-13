@@ -2759,6 +2759,28 @@ cdef class Problem:
 
         return Vector(cprob.PROB_get_init_point(self._c_prob),owndata=True)
 
+    def get_upper_limits(self):
+        """
+        Gets vector of upper limits for the network variables.
+
+        Returns
+        -------
+        limits : :class:`ndarray <numpy.ndarray>`
+        """
+
+        return Vector(cprob.PROB_get_upper_limits(self._c_prob),owndata=True)
+
+    def get_lower_limits(self):
+        """
+        Gets vector of lower limits for the network variables.
+        
+        Returns
+        -------
+        limits : :class:`ndarray <numpy.ndarray>`
+        """
+
+        return Vector(cprob.PROB_get_lower_limits(self._c_prob),owndata=True)
+
     def get_network(self):
         """
         Gets the power network associated with this optimization problem.
