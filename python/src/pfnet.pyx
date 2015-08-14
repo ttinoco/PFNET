@@ -850,6 +850,7 @@ GEN_PROP_SLACK = cgen.GEN_PROP_SLACK
 GEN_PROP_REG = cgen.GEN_PROP_REG
 GEN_PROP_NOT_REG = cgen.GEN_PROP_NOT_REG
 GEN_PROP_NOT_SLACK = cgen.GEN_PROP_NOT_SLACK
+GEN_PROP_P_ADJUST = cgen.GEN_PROP_P_ADJUST
 
 # Variables
 GEN_VAR_P = cgen.GEN_VAR_P
@@ -911,6 +912,17 @@ cdef class Generator:
         """
         
         return cgen.GEN_is_regulator(self._c_gen)
+
+    def is_P_adjustable(self):
+        """ 
+        Determines whether generator has adjustable active power.
+        
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+        
+        return cgen.GEN_is_P_adjustable(self._c_gen)
 
     def has_flags(self,fmask,vmask):
         """ 
@@ -1755,6 +1767,17 @@ cdef class Network:
         """
 
         return cnet.NET_get_num_slack_gens(self._c_net)
+
+    def get_num_P_adjust_gens(self):
+        """
+        Gets number of generators in the network that have adjustable active powers.
+
+        Returns
+        -------
+        num : int
+        """
+
+        return cnet.NET_get_num_P_adjust_gens(self._c_net)
 
     def get_num_loads(self):
         """

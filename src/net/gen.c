@@ -258,6 +258,8 @@ BOOL GEN_has_properties(void* vgen, char prop) {
     return FALSE;
   if ((prop & GEN_PROP_NOT_SLACK) && GEN_is_slack(gen))
     return FALSE;
+  if ((prop & GEN_PROP_P_ADJUST) && !GEN_is_P_adjustable(gen))
+    return FALSE;
   return TRUE;
 }
 
@@ -283,6 +285,13 @@ void GEN_init(Gen* gen) {
   gen->index_Q = 0;
   gen->next = NULL;
   gen->reg_next = NULL;
+}
+
+BOOL GEN_is_P_adjustable(Gen* gen) {
+  if (gen)
+    return gen->P_min < gen->P_max;
+  else
+    return FALSE;
 }
 
 BOOL GEN_is_regulator(Gen* gen) {
