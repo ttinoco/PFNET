@@ -61,6 +61,31 @@ class TestNetwork(unittest.TestCase):
             self.assertRaises(pf.NetworkError,net.get_load,net.num_loads)
             self.assertRaises(pf.NetworkError,net.get_vargen,-1)
             self.assertRaises(pf.NetworkError,net.get_vargen,net.num_vargens)            
+
+            # Counters
+            self.assertEqual(net.get_num_P_adjust_gens(),
+                             len([g for g in net.generators if g.P_min < g.P_max]))
+
+    def test_variables(self):
+
+        net = self.net
+
+        for case in test_cases.CASES:
+
+            net.clear_properties()
+            net.load(case)
+            net.clear_flags()
+
+            self.assertEqual(net.num_vars,0)
+            self.assertGreater(net.get_num_P_adjust_gens(),0)
+
+            # P adjust gens
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_P_ADJUST,
+                          pf.GEN_VAR_P)
+            self.assertEqual(net.num_vars,
+                             net.get_num_P_adjust_gens())
             
     def test_buses(self):
 
@@ -260,6 +285,12 @@ class TestNetwork(unittest.TestCase):
                     self.assertTrue(gen.reg_bus.is_regulated_by_gen())
                 else:
                     self.assertRaises(pf.BusError,lambda : gen.reg_bus)
+
+                # p adjustable
+                if gen.P_min < gen.P_max:
+                    self.assertTrue(gen.is_P_adjustable())
+                else:
+                    self.assertFalse(gen.is_P_adjustable())
 
     def test_branches(self):
         

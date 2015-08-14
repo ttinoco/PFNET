@@ -75,6 +75,7 @@ int NET_get_num_tap_changers_Q(Net* net);
 int NET_get_num_gens(Net* net);
 int NET_get_num_reg_gens(Net* net);
 int NET_get_num_slack_gens(Net* net);
+int NET_get_num_P_adjust_gens(Net* net);
 int NET_get_num_loads(Net* net);
 int NET_get_num_shunts(Net* net);
 int NET_get_num_fixed_shunts(Net* net);

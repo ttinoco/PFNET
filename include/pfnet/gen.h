@@ -33,6 +33,7 @@
 #define GEN_PROP_REG 0x02       /**< @brief Property: regulating generator */
 #define GEN_PROP_NOT_REG 0x04   /**< @brief Property: non-regulating generator */
 #define GEN_PROP_NOT_SLACK 0x08 /**< @brief Property: non-slack generator */
+#define GEN_PROP_P_ADJUST 0x10  /**< @brief Property: P adjustable (Pmin < Pmax) */
 /** @} */
 
 // Generator
@@ -64,6 +65,7 @@ int GEN_get_var_index(void* gen, char var);
 BOOL GEN_has_flags(void* gen, char flag_type, char mask);
 BOOL GEN_has_properties(void* gen, char prop);
 void GEN_init(Gen* gen);
+BOOL GEN_is_P_adjustable(Gen* gen);
 BOOL GEN_is_regulator(Gen* gen);
 BOOL GEN_is_slack(Gen* gen);
 Gen* GEN_list_add(Gen* gen_list, Gen* gen);
