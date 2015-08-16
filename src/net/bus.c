@@ -602,10 +602,10 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
   if (bus->vars & BUS_VAR_VANG) {
     switch(code) {
     case UPPER_LIMITS:
-      VEC_set(values,bus->index_v_ang,PI);
+      VEC_set(values,bus->index_v_ang,INF);
       break;
     case LOWER_LIMITS:
-      VEC_set(values,bus->index_v_ang,-PI);
+      VEC_set(values,bus->index_v_ang,-INF);
       break;
     default:
       VEC_set(values,bus->index_v_ang,bus->v_ang);
