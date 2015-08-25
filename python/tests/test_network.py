@@ -292,6 +292,11 @@ class TestNetwork(unittest.TestCase):
                 else:
                     self.assertFalse(gen.is_P_adjustable())
 
+                # setting P_min
+                self.assertNotEqual(gen.P_min,np.pi)
+                gen.P_min = np.pi
+                self.assertEqual(gen.P_min,np.pi)
+
     def test_branches(self):
         
         net = self.net
@@ -1163,7 +1168,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(x.size,net.num_vars)
             for bus in net.buses:
                 self.assertEqual(x[bus.index_v_mag],bus.v_max)
-                self.assertEqual(x[bus.index_v_ang],pf.INF)
+                self.assertEqual(x[bus.index_v_ang],pf.PI)
                 self.assertEqual(x[bus.index_y],pf.INF)
                 self.assertEqual(x[bus.index_z],pf.INF)
                 self.assertEqual(x[bus.index_vl],pf.INF)
@@ -1188,7 +1193,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(x.size,net.num_vars)
             for bus in net.buses:
                 self.assertEqual(x[bus.index_v_mag],bus.v_min)
-                self.assertEqual(x[bus.index_v_ang],-pf.INF)
+                self.assertEqual(x[bus.index_v_ang],-pf.PI)
                 self.assertEqual(x[bus.index_y],-pf.INF)
                 self.assertEqual(x[bus.index_z],-pf.INF)
                 self.assertEqual(x[bus.index_vl],-pf.INF)

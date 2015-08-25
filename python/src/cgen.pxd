@@ -43,3 +43,4 @@ cdef extern from "pfnet/gen.h":
     bint GEN_is_slack(Gen* gen)
     bint GEN_has_flags(Gen* gen, char flag_type, char mask)
     Gen* GEN_new()
+    void GEN_set_P_min(Gen* gen, REAL P_min)
