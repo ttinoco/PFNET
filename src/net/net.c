@@ -319,6 +319,91 @@ Bus* NET_create_sorted_bus_list(Net* net, int sort_by) {
   return bus_list;
 }
 
+Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
+  /* This function constructs a covariance matrix for the active powers of
+   * variable generators. The matrix is constructed such that the correlation 
+   * coefficients of the (variable) active powers of vargens that are less than 
+   * "spread" branches away is equal to "corr". Only the lower triangular part 
+   * of the resulting matrix is stored. The resulting matrix should be checked 
+   * to make sure it is a valid covariance matrix.
+   */
+
+  // Local variables
+  Bus* bus;
+  Branch* br;
+  Vargen* vgen_main;
+  Vargen* vgen;
+  Vargen* vg;
+
+  char* queued;
+  int* neighbors;
+  int neighbor_total;
+  int neighbor_curr;
+  int num_new;
+
+  int nnz_counter;
+  int i;
+  int j;
+  int k;
+
+  // Check
+  if (!net)
+    return NULL;
+
+  // Allocate and initialize arrays
+  queued = (char*)malloc(net->num_vargens*sizeof(char));
+  neighbors = (int*)malloc(net->num_vargens*sizeof(int));
+  for (i = 0; i < net->num_vargens; i++) {
+    neighbors[i] = 0;
+    queued = FALSE;
+  }
+
+  // Count nnz
+  nnz_counter = 0;
+  for (i = 0; i < net->num_vargens; i++) {
+    
+    // Main
+    vgen_main = NET_get_vargen(net,i);
+
+    // Add self to be processed
+    neighbor_total = 1;
+    neighbors[0] = VARGEN_get_index(vgen_main);
+    queued[VARGEN_get_index(vgen_main)] = TRUE;
+
+    // neighbors
+    neighbor_curr = 0;
+    for (j = 0; j <= spread; j++) {
+      num_new = 0;
+      while (neighbor_curr < neighbor_total) {
+	vgen = NET_get_vargen(net,neighbors[neighbor_curr]);
+	bus = VARGEN_get_bus(vgen);
+	for (br = BUS_get_branch_from(bus); br != NULL; br = BRANCH_get_from_next(br)) {
+	  for (vg = BUS_get_vargen(BRANCH_get_bus_to(br)); vg != NULL; vg = VARGEN_get_next(vg)) {
+	    if (!queued[VARGEN_get_index(vg)]) {
+	      neighbors[neighbor_total+num_new] = VARGEN_get_index(vg);
+	      queued[VARGEN_get_index(vg)] = TRUE;
+	      num_new++;
+	    }
+	  }
+	}
+	for (br = BUS_get_branch_to(bus); br != NULL; br = BRANCH_get_to_next(br)) {
+	  for (vg = BUS_get_vargen(BRANCH_get_bus_from(br)); vg != NULL; vg = VARGEN_get_next(vg)) {
+	    if (!queued[VARGEN_get_index(vg)]) {
+	      neighbors[neighbor_total+num_new] = VARGEN_get_index(vg);
+	      queued[VARGEN_get_index(vg)] = TRUE;
+	      num_new++;
+	    }
+	  }
+	}
+	neighbor_curr++;
+      }
+      neighbor_total += num_new;
+    }
+  }
+
+  return NULL;
+}
+
 void NET_del(Net* net) {
   if (net) {    
     NET_clear_data(net);

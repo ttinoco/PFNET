@@ -46,6 +46,7 @@ void NET_clear_flags(Net* net);
 void NET_clear_properties(Net* net);
 void NET_clear_sensitivities(Net* net);
 Bus* NET_create_sorted_bus_list(Net* net, int sort_by);
+Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr);
 void NET_del(Net* net);
 void NET_init(Net* net);
 REAL NET_get_base_power(Net* net);
