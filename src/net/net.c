@@ -330,12 +330,13 @@ Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
 
   // Local variables
   Mat* sigma;
-  Bus* bus;
+  Bus* bus_main;
+  Bus* bus1;
+  Bus* bus2;
   Branch* br;
   Vargen* vgen_main;
-  Vargen* vgen;
-  Vargen* vg;
-
+  Vargen* vg1;
+  
   char* queued;
   int* neighbors;
   int neighbors_total;
@@ -351,8 +352,8 @@ Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
     return NULL;
 
   // Allocate arrays
-  queued = (char*)malloc(net->num_vargens*sizeof(char));
-  neighbors = (int*)malloc(net->num_vargens*sizeof(int));
+  queued = (char*)malloc(net->num_buses*sizeof(char));
+  neighbors = (int*)malloc(net->num_buses*sizeof(int));
 
   // Count nnz
   //**********
@@ -360,13 +361,14 @@ Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
   for (i = 0; i < net->num_vargens; i++) {
 
     // Clear arrays
-    for (j = 0; j < net->num_vargens; j++) {
+    for (j = 0; j < net->num_buses; j++) {
       neighbors[j] = 0;
       queued[j] = FALSE;
     }
     
     // Main
     vgen_main = NET_get_vargen(net,i);
+    bus_main = VARGEN_get_bus(vgen_main);
 
     // Check variable
     if (!VARGEN_has_flags(vgen_main,FLAG_VARS,VARGEN_VAR_P))
@@ -374,64 +376,61 @@ Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
 
     // Add self to be processed
     neighbors_total = 1;
-    neighbors[0] = VARGEN_get_index(vgen_main);
-    queued[VARGEN_get_index(vgen_main)] = TRUE;
+    neighbors[0] = BUS_get_index(bus_main);
+    queued[BUS_get_index(bus_main)] = TRUE;
 
     // Neighbors
     neighbors_curr = 0;
     for (j = 0; j < spread; j++) {
       num_new = 0;
       while (neighbors_curr < neighbors_total) {
-	vgen = NET_get_vargen(net,neighbors[neighbors_curr]);
-	bus = VARGEN_get_bus(vgen);
-	for (br = BUS_get_branch_from(bus); br != NULL; br = BRANCH_get_from_next(br)) {
-	  if (bus != BRANCH_get_bus_from(br)) {
+	bus1 = NET_get_bus(net,neighbors[neighbors_curr]);
+	for (br = BUS_get_branch_from(bus1); br != NULL; br = BRANCH_get_from_next(br)) {
+	  if (bus1 != BRANCH_get_bus_from(br)) {
 	    sprintf(net->error_string,"unable to construct covariance matrix");
 	    net->error_flag = TRUE;
 	  }
-	  for (vg = BUS_get_vargen(BRANCH_get_bus_to(br)); vg != NULL; vg = VARGEN_get_next(vg)) {
-	    if (!queued[VARGEN_get_index(vg)]) {
-	      neighbors[neighbors_total+num_new] = VARGEN_get_index(vg);
-	      queued[VARGEN_get_index(vg)] = TRUE;
-	      num_new++;
-	    }
+	  bus2 = BRANCH_get_bus_to(br);
+	  if (!queued[BUS_get_index(bus2)]) {
+	    neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
+	    queued[BUS_get_index(bus2)] = TRUE;
+	    num_new++;
 	  }
 	}
-	for (br = BUS_get_branch_to(bus); br != NULL; br = BRANCH_get_to_next(br)) {
-	  if (bus != BRANCH_get_bus_to(br)) {
+	for (br = BUS_get_branch_to(bus1); br != NULL; br = BRANCH_get_to_next(br)) {
+	  if (bus1 != BRANCH_get_bus_to(br)) {
 	    sprintf(net->error_string,"unable to construct covariance matrix");
 	    net->error_flag = TRUE;
 	  }
-	  for (vg = BUS_get_vargen(BRANCH_get_bus_from(br)); vg != NULL; vg = VARGEN_get_next(vg)) {
-	    if (!queued[VARGEN_get_index(vg)]) {
-	      neighbors[neighbors_total+num_new] = VARGEN_get_index(vg);
-	      queued[VARGEN_get_index(vg)] = TRUE;
-	      num_new++;
-	    }
+	  bus2 = BRANCH_get_bus_from(br);
+	  if (!queued[BUS_get_index(bus2)]) {
+	    neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
+	    queued[BUS_get_index(bus2)] = TRUE;
+	    num_new++;
 	  }
 	}
 	neighbors_curr++;
       }
       neighbors_total += num_new;
+      if (num_new == 0)
+	break;
     }
-
-    printf("vargen %d neighbors %d\n",VARGEN_get_index(vgen_main),neighbors_total);
 
     // Diagonal
     nnz_counter++;
 
     // Off diagonals
     for (j = 0; j < neighbors_total; j++) {
-      vgen = NET_get_vargen(net,neighbors[j]);
-      if (VARGEN_has_flags(vgen,FLAG_VARS,VARGEN_VAR_P) &&
-	  VARGEN_get_index_P(vgen_main) > VARGEN_get_index_P(vgen)) {
-	nnz_counter++;
+      bus1 = NET_get_bus(net,neighbors[j]);
+      for (vg1 = BUS_get_vargen(bus1); vg1 != NULL; vg1 = VARGEN_get_next(vg1)) {
+	if (VARGEN_has_flags(vg1,FLAG_VARS,VARGEN_VAR_P) &&
+	    VARGEN_get_index_P(vgen_main) > VARGEN_get_index_P(vg1)) {
+	  nnz_counter++;
+	}
       }
     }    
   }
-
-  printf("NNZ %d NUM_VG %d\n",nnz_counter,net->num_vargens);
-
+  
   // Allocate
   //*********
   sigma = MAT_new(net->num_vars,
@@ -444,13 +443,14 @@ Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
   for (i = 0; i < net->num_vargens; i++) {
 
     // Clear arrays
-    for (j = 0; j < net->num_vargens; j++) {
+    for (j = 0; j < net->num_buses; j++) {
       neighbors[j] = 0;
       queued[j] = FALSE;
     }
     
     // Main
     vgen_main = NET_get_vargen(net,i);
+    bus_main = VARGEN_get_bus(vgen_main);
 
     // Check variable
     if (!VARGEN_has_flags(vgen_main,FLAG_VARS,VARGEN_VAR_P))
@@ -458,46 +458,44 @@ Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
 
     // Add self to be processed
     neighbors_total = 1;
-    neighbors[0] = VARGEN_get_index(vgen_main);
-    queued[VARGEN_get_index(vgen_main)] = TRUE;
+    neighbors[0] = BUS_get_index(bus_main);
+    queued[BUS_get_index(bus_main)] = TRUE;
 
     // Neighbors
     neighbors_curr = 0;
-    for (j = 0; j < spread; j++) {      
+    for (j = 0; j < spread; j++) {
       num_new = 0;
       while (neighbors_curr < neighbors_total) {
-	vgen = NET_get_vargen(net,neighbors[neighbors_curr]);
-	bus = VARGEN_get_bus(vgen);
-	for (br = BUS_get_branch_from(bus); br != NULL; br = BRANCH_get_from_next(br)) {
-	  if (bus != BRANCH_get_bus_from(br)) {
+	bus1 = NET_get_bus(net,neighbors[neighbors_curr]);
+	for (br = BUS_get_branch_from(bus1); br != NULL; br = BRANCH_get_from_next(br)) {
+	  if (bus1 != BRANCH_get_bus_from(br)) {
 	    sprintf(net->error_string,"unable to construct covariance matrix");
 	    net->error_flag = TRUE;
 	  }
-	  for (vg = BUS_get_vargen(BRANCH_get_bus_to(br)); vg != NULL; vg = VARGEN_get_next(vg)) {
-	    if (!queued[VARGEN_get_index(vg)]) {
-	      neighbors[neighbors_total+num_new] = VARGEN_get_index(vg);
-	      queued[VARGEN_get_index(vg)] = TRUE;
-	      num_new++;
-	    }
+	  bus2 = BRANCH_get_bus_to(br);
+	  if (!queued[BUS_get_index(bus2)]) {
+	    neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
+	    queued[BUS_get_index(bus2)] = TRUE;
+	    num_new++;
 	  }
 	}
-	for (br = BUS_get_branch_to(bus); br != NULL; br = BRANCH_get_to_next(br)) {
-	  if (bus != BRANCH_get_bus_to(br)) {
+	for (br = BUS_get_branch_to(bus1); br != NULL; br = BRANCH_get_to_next(br)) {
+	  if (bus1 != BRANCH_get_bus_to(br)) {
 	    sprintf(net->error_string,"unable to construct covariance matrix");
 	    net->error_flag = TRUE;
 	  }
-	  for (vg = BUS_get_vargen(BRANCH_get_bus_from(br)); vg != NULL; vg = VARGEN_get_next(vg)) {
-	    if (!queued[VARGEN_get_index(vg)]) {
-	      neighbors[neighbors_total+num_new] = VARGEN_get_index(vg);
-	      queued[VARGEN_get_index(vg)] = TRUE;
-	      num_new++;
-	    }
+	  bus2 = BRANCH_get_bus_from(br);
+	  if (!queued[BUS_get_index(bus2)]) {
+	    neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
+	    queued[BUS_get_index(bus2)] = TRUE;
+	    num_new++;
 	  }
 	}
 	neighbors_curr++;
       }
       neighbors_total += num_new;
-      printf("spread %d new %d\n",j,num_new);	    
+      if (num_new == 0)
+	break;
     }
 
     // Diagonal
@@ -508,14 +506,16 @@ Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
 
     // Off diagonals
     for (j = 0; j < neighbors_total; j++) {
-      vgen = NET_get_vargen(net,neighbors[j]);
-      if (VARGEN_has_flags(vgen,FLAG_VARS,VARGEN_VAR_P) &&
-	  VARGEN_get_index_P(vgen_main) > VARGEN_get_index_P(vgen)) {
-	MAT_set_i(sigma,nnz_counter,VARGEN_get_index_P(vgen_main));
-	MAT_set_j(sigma,nnz_counter,VARGEN_get_index_P(vgen));
-	MAT_set_d(sigma,nnz_counter,
-		  VARGEN_get_P_std(vgen_main)*VARGEN_get_P_std(vgen)*corr);
-	nnz_counter++;
+      bus1 = NET_get_bus(net,neighbors[j]);
+      for (vg1 = BUS_get_vargen(bus1); vg1 != NULL; vg1 = VARGEN_get_next(vg1)) {
+	if (VARGEN_has_flags(vg1,FLAG_VARS,VARGEN_VAR_P) &&
+	    VARGEN_get_index_P(vgen_main) > VARGEN_get_index_P(vg1)) {
+	  MAT_set_i(sigma,nnz_counter,VARGEN_get_index_P(vgen_main));
+	  MAT_set_j(sigma,nnz_counter,VARGEN_get_index_P(vg1));
+	  MAT_set_d(sigma,nnz_counter,
+		    VARGEN_get_P_std(vgen_main)*VARGEN_get_P_std(vg1)*corr);
+	  nnz_counter++;
+	}
       }
     } 
   }
@@ -525,8 +525,6 @@ Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
     sprintf(net->error_string,"unable to construct covariance matrix");
     net->error_flag = TRUE;
   }
-
-  printf("TODO BIEN\n");
  
   // Clean up
   free(queued);

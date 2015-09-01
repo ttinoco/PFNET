@@ -10,7 +10,7 @@ import pfnet as pf
 import unittest
 import test_cases
 import numpy as np
-from scipy.sparse import coo_matrix, bmat
+from scipy.sparse import coo_matrix, bmat, triu
 
 class TestNetwork(unittest.TestCase):
     
@@ -1212,6 +1212,71 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(x[shunt.index_b],shunt.b_min)
                 self.assertEqual(x[shunt.index_y],-pf.INF)
                 self.assertEqual(x[shunt.index_z],-pf.INF)
+
+    def test_vargen_P_sigma(self):
+
+        net = self.net
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+
+            spread = 2
+            corr = 0.1
+            P_MIN = 1e-5
+        
+            # Add renewable sources (at load buses)
+            self.assertEqual(net.num_vargens,0)
+            load_buses = net.get_load_buses()
+            vargen_array = pf.VarGeneratorArray(len(load_buses))
+            net.set_vargen_array(vargen_array)
+            net.set_vargen_buses(load_buses)
+            self.assertEqual(net.num_vargens,len([b for b in net.buses if b.loads]))
+            for vg in net.var_generators:
+                self.assertEqual(vg.P,0)
+                self.assertEqual(vg.P_max,0)
+                self.assertEqual(vg.P_std,0)
+                self.assertGreater(len(vg.bus.loads),0)
+                vg.P_max = np.maximum(vg.bus.get_total_load_P(),P_MIN)
+                vg.P_std = 0.25*vg.P_max
+                self.assertGreater(vg.P_max,0)
+                self.assertGreater(vg.P_std,0)
+            self.assertGreaterEqual(sum([vg.P_max for vg in net.var_generators]),
+                                    sum([l.P for l in net.loads]))
+
+            # Variables
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P)
+            self.assertEqual(net.num_vars,net.num_vargens)
+            
+            # Correlation
+            sigma = net.create_vargen_P_sigma(spread,corr)
+
+            # Check
+            self.assertTrue(np.all(sigma.row >= sigma.col))
+            indexP2vargen = {}
+            for vg in net.var_generators:
+                indexP2vargen[vg.index_P] = vg
+            for k in range(sigma.nnz):
+                i = sigma.row[k]
+                j = sigma.col[k]
+                d = sigma.data[k]
+                vg1 = indexP2vargen[i]
+                vg2 = indexP2vargen[j]
+                if i == j:
+                    self.assertLess(np.abs(d - vg1.P_std**2.),1e-12)
+                else:
+                    self.assertLess(np.abs(d - corr*vg1.P_std*vg2.P_std),1e-12)
+            
+            # Posdef
+            try:
+                from scikits.sparse.cholmod import cholesky
+                sigma = (sigma + sigma.T - triu(sigma)).tocoo()
+                factor = cholesky(sigma.tocsc())
+            except ImportError:
+                pass
                 
     def tearDown(self):
         
