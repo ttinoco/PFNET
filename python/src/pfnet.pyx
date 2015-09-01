@@ -1436,7 +1436,8 @@ cdef class Network:
         sigma : :class:`coo_matrix <scipy.sparse.coo_matrix>`
         """
 
-        sigma = Matrix(cnet.NET_create_vargen_P_sigma(self._c_net,spread,corr))
+        sigma = Matrix(cnet.NET_create_vargen_P_sigma(self._c_net,spread,corr),
+                       owndata=True)
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
         else:
