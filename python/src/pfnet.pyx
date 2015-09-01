@@ -968,6 +968,7 @@ cdef class Generator:
     property P_max:
         """ Generator active power upper limit (p.u. system base MVA) (float). """
         def __get__(self): return cgen.GEN_get_P_max(self._c_gen)
+        def __set__(self,P): cgen.GEN_set_P_max(self._c_gen,P)
 
     property P_min:
         """ Generator active power lower limit (p.u. system base MVA) (float). """
