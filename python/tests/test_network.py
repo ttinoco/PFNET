@@ -419,10 +419,12 @@ class TestNetwork(unittest.TestCase):
                 vargen = net.get_vargen(i)
                 self.assertEqual(vargen.P,0.)
                 self.assertEqual(vargen.P_max,0.)
+                self.assertEqual(vargen.P_std,0.)
                 self.assertEqual(vargen.index,i)
                 self.assertRaises(pf.BusError,lambda : vargen.bus)
                 vargen.P = np.pi
                 self.assertEqual(vargen.P,np.pi)
+                vargen.P = 0.
 
             # Set buses
             net.set_vargen_buses(load_buses)
@@ -432,6 +434,20 @@ class TestNetwork(unittest.TestCase):
                 self.assertTrue(vargen.bus)
                 self.assertEqual(vargen.bus,load_buses[i])
                 self.assertTrue(vargen.index in [vg.index for vg in load_buses[i].vargens])
+
+            # Set P,P_max,P_std
+            self.assertGreater(net.num_vargens,0)
+            self.assertGreater(len(net.var_generators),0)
+            for vg in net.var_generators:
+                self.assertEqual(vg.P,0.)
+                self.assertEqual(vg.P_max,0.)
+                self.assertEqual(vg.P_std,0.)
+                vg.P = 1.
+                vg.P_max = 2.
+                vg.P_std = 3.
+                self.assertEqual(vg.P,1.)
+                self.assertEqual(vg.P_max,2.)
+                self.assertEqual(vg.P_std,3)                
                 
     def test_clear_flags(self):
        
