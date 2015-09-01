@@ -48,6 +48,11 @@ struct Branch {
   REAL P_min;        /**< @brief Minimum active power flow (p.u.) */
   REAL Q_max;        /**< @brief Maximum reactive power flow (p.u.) */
   REAL Q_min;        /**< @brief Minimum reactive power flow (p.u.) */
+
+  // Power ratings
+  REAL ratingA;      /**< @brief Power rating A (p.u. system base MVA) */
+  REAL ratingB;      /**< @brief Power rating B (p.u. system base MVA) */
+  REAL ratingC;      /**< @brief Power rating C (p.u. system base MVA) */  
    
   // Flags
   BOOL pos_ratio_v_sens; /**< @brief Flag for positive ratio-voltage sensitivity */
@@ -268,6 +273,27 @@ REAL BRANCH_get_phase_min(Branch* b) {
     return 0;
 }
 
+REAL BRANCH_get_ratingA(Branch* b) {
+  if (b)
+    return b->ratingA;
+  else
+    return 0;
+}
+
+REAL BRANCH_get_ratingB(Branch* b) {
+  if (b)
+    return b->ratingB;
+  else
+    return 0;
+}
+
+REAL BRANCH_get_ratingC(Branch* b) {
+  if (b)
+    return b->ratingC;
+  else
+    return 0;
+}
+
 void BRANCH_get_var_values(Branch* br, Vec* values) {
 
   // No branch
@@ -324,32 +350,44 @@ BOOL BRANCH_has_properties(void* vbr, char prop) {
 }
 
 void BRANCH_init(Branch* br) {  
+
   br->type = BRANCH_TYPE_LINE;
+
   br->bus_from = NULL;
   br->bus_to = NULL;
   br->reg_bus = NULL;
+
   br->g = 0;
   br->g_from = 0;
   br->g_to = 0;
   br->b = 0;
   br->b_from = 0;
   br->b_to = 0;
+
   br->ratio = 1;
   br->ratio_max = 1;
   br->ratio_min = 1;
   br->num_ratios = 1;
+
   br->phase = 0;
   br->phase_max = 0;
   br->phase_min = 0;
+
   br->P_max = 0;
   br->P_min = 0;
   br->Q_max = 0;
   br->Q_min = 0;
+
+  br->ratingA = 0;
+  br->ratingB = 0;
+  br->ratingC = 0;
+
   br->pos_ratio_v_sens = TRUE;
   br->vars = 0x00;
   br->fixed = 0x00;
   br->bounded = 0x00;
   br->sparse = 0x00;
+
   br->index = 0;
   br->index_ratio = 0;
   br->index_ratio_y = 0;
@@ -357,6 +395,7 @@ void BRANCH_init(Branch* br) {
   br->index_phase = 0;
   br->index_P = 0;
   br->index_Q = 0;
+
   br->reg_next = NULL;
   br->from_next = NULL;
   br->to_next = NULL;
@@ -527,6 +566,21 @@ void BRANCH_set_Q_max(Branch* br, REAL Q_max) {
 void BRANCH_set_Q_min(Branch* br, REAL Q_min) {
   if (br)
     br->Q_min = Q_min;
+}
+
+void BRANCH_set_ratingA(Branch* br, REAL r) {
+  if (br)
+    br->ratingA = r;
+}
+
+void BRANCH_set_ratingB(Branch* br, REAL r) {
+  if (br)
+    br->ratingB = r;
+}
+
+void BRANCH_set_ratingC(Branch* br, REAL r) {
+  if (br)
+    br->ratingC = r;
 }
 
 void BRANCH_set_var_values(Branch* br, Vec* values) {
