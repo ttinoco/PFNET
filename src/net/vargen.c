@@ -29,7 +29,7 @@ struct Vargen {
   REAL P;              /**< @brief Variable generator active power (p.u. system base power) */
   REAL P_max;          /**< @brief Maximum variable generator active power (p.u.) */
   REAL P_std;          /**< @brief Standard deviation of active power (p.u. system base power) */
-
+  
   // Indices
   int index;           /**< @brief Generator index */
   int index_P;         /**< @brief Active power index */
@@ -224,23 +224,28 @@ Vargen* VARGEN_new(void) {
 }
 
 void VARGEN_set_bus(Vargen* gen, void* bus) {
-  gen->bus = (Bus*)bus;
+  if (gen)
+    gen->bus = (Bus*)bus;
 }
 
 void VARGEN_set_index(Vargen* gen, int index) {
-  gen->index = index;
+  if (gen)
+    gen->index = index;
 }
 
 void VARGEN_set_P(Vargen* gen, REAL P) {
-  gen->P = P;
+  if (gen)
+    gen->P = P;
 }
 
 void VARGEN_set_P_max(Vargen* gen, REAL P_max) {
-  gen->P_max = P_max;
+  if (gen)
+    gen->P_max = P_max;
 }
 
 void VARGEN_set_P_std(Vargen* gen, REAL P_std) {
-  gen->P_std = P_std;
+  if (gen)
+    gen->P_std = P_std;
 }
 
 int VARGEN_set_flags(void* vgen, char flag_type, char mask, int index) {

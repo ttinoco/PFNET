@@ -1289,6 +1289,11 @@ cdef class VarGenerator:
         def __get__(self): return cvargen.VARGEN_get_P_max(self._c_gen)
         def __set__(self,P): cvargen.VARGEN_set_P_max(self._c_gen,P)
 
+    property P_std:
+        """ Variable generator active power standard deviation (p.u. system base MVA) (float). """
+        def __get__(self): return cvargen.VARGEN_get_P_std(self._c_gen)
+        def __set__(self,P): cvargen.VARGEN_set_P_std(self._c_gen,P)
+
 cdef class VarGeneratorArray:
     """
     Variable generator array class.
@@ -1413,6 +1418,29 @@ cdef class Network:
             buses.append(new_Bus(b))
             b = cbus.BUS_get_next(b)
         return buses
+
+    def create_vargen_P_sigma(self,spread,corr):
+        """
+        Creates covariance matrix (lower triangular part) for
+        variable vargen active powers. 
+
+        Parameters
+        ----------
+        spead : int
+                Determines correlation neighborhood in terms of number of edges.
+        corr : float 
+               Desired correlation coefficient for neighboring vargens.
+        
+        Returns
+        -------
+        sigma : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        """
+
+        sigma = Matrix(cnet.NET_create_vargen_P_sigma(self._c_net,spread,corr))
+        if cnet.NET_has_error(self._c_net):
+            raise NetworkError(cnet.NET_get_error_string(self._c_net))
+        else:
+            return sigma
         
     def get_bus_by_number(self,number):
         """
