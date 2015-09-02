@@ -35,5 +35,16 @@ assert(sh.index == 0);
 load = net.get_load(9);
 assert(load.index == 9);
 
+% Variables
 
+assert(net.num_vars == 0);
 
+net.set_flags(OBJ_BUS,....
+	      FLAG_VARS,...
+	      BUS_PROP_ANY,...
+	      BUS_VAR_VMAG);
+assert(net.num_vars > 0);
+assert(net.num_vars == net.num_buses);
+
+x = net.get_var_values();
+assert(all(size(x) == [1 net.num_vars]));
