@@ -1246,22 +1246,22 @@ class TestNetwork(unittest.TestCase):
         
             # Add renewable sources (at load buses)
             self.assertEqual(net.num_vargens,0)
-            load_buses = net.get_load_buses()
-            vargen_array = pf.VarGeneratorArray(len(load_buses))
+            gen_buses = net.get_gen_buses()
+            total_load = sum([l.P for l in net.loads])
+            vargen_array = pf.VarGeneratorArray(len(gen_buses))
             net.set_vargen_array(vargen_array)
-            net.set_vargen_buses(load_buses)
-            self.assertEqual(net.num_vargens,len([b for b in net.buses if b.loads]))
+            net.set_vargen_buses(gen_buses)
+            self.assertEqual(net.num_vargens,len([b for b in net.buses if b.gens]))
             for vg in net.var_generators:
                 self.assertEqual(vg.P,0)
                 self.assertEqual(vg.P_max,0)
                 self.assertEqual(vg.P_std,0)
-                self.assertGreater(len(vg.bus.loads),0)
-                vg.P_max = np.maximum(vg.bus.get_total_load_P(),P_MIN)
+                self.assertGreater(len(vg.bus.gens),0)
+                vg.P_max = total_load/net.num_vargens
                 vg.P_std = 0.25*vg.P_max
                 self.assertGreater(vg.P_max,0)
                 self.assertGreater(vg.P_std,0)
-            self.assertGreaterEqual(sum([vg.P_max for vg in net.var_generators]),
-                                    sum([l.P for l in net.loads]))
+            self.assertLess(np.abs(sum([vg.P_max for vg in net.var_generators])-total_load),1e-10)
 
             # Variables
             net.set_flags(pf.OBJ_VARGEN,

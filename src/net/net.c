@@ -660,6 +660,23 @@ Vargen* NET_get_vargen(Net* net, int index) {
     return VARGEN_array_get(net->vargen,index);
 }
 
+Bus* NET_get_gen_buses(Net* net) {
+  
+  Bus* bus_list = NULL;
+  Bus* bus;
+  int i;
+  
+  if (!net)
+    return bus_list;
+  
+  for (i = 0; i < net->num_buses; i++) {
+    bus = NET_get_bus(net,i);
+    if (BUS_get_gen(bus))
+      bus_list = BUS_list_add(bus_list,bus);
+  }
+  return bus_list;
+}
+
 Bus* NET_get_load_buses(Net* net) {
   
   Bus* bus_list = NULL;

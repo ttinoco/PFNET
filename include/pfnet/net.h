@@ -58,6 +58,7 @@ Gen* NET_get_gen(Net* net, int index);
 Load* NET_get_load(Net* net, int index);
 Shunt* NET_get_shunt(Net* net, int index);
 Vargen* NET_get_vargen(Net* net, int index);
+Bus* NET_get_gen_buses(Net* net);
 Bus* NET_get_load_buses(Net* net);
 int NET_get_num_buses(Net* net);
 int NET_get_num_slack_buses(Net* net);
