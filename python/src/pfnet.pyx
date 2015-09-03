@@ -1586,6 +1586,22 @@ cdef class Network:
         else:
             raise NetworkError('invalid vargen index')
 
+    def get_gen_buses(self):
+        """
+        Gets list of buses where generators are connected.
+
+        Returns
+        -------
+        buses : list
+        """
+        
+        buses = []
+        cdef cbus.Bus* b = cnet.NET_get_gen_buses(self._c_net)
+        while b is not NULL:
+            buses.append(new_Bus(b))
+            b = cbus.BUS_get_next(b)
+        return buses
+
     def get_load_buses(self):
         """
         Gets list of buses where loads are connected.

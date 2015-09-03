@@ -37,6 +37,7 @@ cdef extern from "pfnet/net.h":
     cload.Load* NET_get_load(Net* net, int index)
     cvargen.Vargen* NET_get_vargen(Net* net, int index)
     cbus.Bus* NET_get_load_buses(Net* net)
+    cbus.Bus* NET_get_gen_buses(Net* net)
     int NET_get_num_buses(Net* net)
     int NET_get_num_slack_buses(Net* net)
     int NET_get_num_buses_reg_by_gen(Net* net)
