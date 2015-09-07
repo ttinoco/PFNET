@@ -389,10 +389,10 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
   // Costs
   for (mat_cost = parser->cost_list; mat_cost != NULL; mat_cost = mat_cost->next) {
     if (mat_cost->gen_index < NET_get_num_gens(net)) {
-      //gen = NET_get_gen(net,mat_cost->gen_index);
-      //GEN_set_cost_coeff_Q2(gen,mat_cost->Q2*100.);
-      //GEN_set_cost_coeff_Q1(gen,mat_cost->Q1);
-      //GEN_set_cost_coeff_Q0(gen,mat_cost->Q0/100.);
+      gen = NET_get_gen(net,mat_cost->gen_index);
+      GEN_set_cost_coeff_Q2(gen,mat_cost->Q2*100.);
+      GEN_set_cost_coeff_Q1(gen,mat_cost->Q1);
+      GEN_set_cost_coeff_Q0(gen,mat_cost->Q0/100.);
     }
   }
 }
