@@ -58,6 +58,14 @@ struct MAT_Branch {
   struct MAT_Branch* next;
 };
 
+struct MAT_Cost {
+  int gen_index;
+  REAL Q2;       // $/(hr MW^2)
+  REAL Q1;       // $/(hr MW)
+  REAL Q0;       // $/(hr)
+  struct MAT_Cost* next;
+};
+
 struct MAT_Parser {
 
   // Error
@@ -85,6 +93,10 @@ struct MAT_Parser {
   // Branches
   MAT_Branch* branch;
   MAT_Branch* branch_list;
+
+  // Cost
+  MAT_Cost* cost;
+  MAT_Cost* cost_list;
 };
 
 void MAT_PARSER_clear_token(MAT_Parser* parser) {
@@ -123,6 +135,10 @@ MAT_Parser* MAT_PARSER_new(void) {
   // Branches
   parser->branch = NULL;
   parser->branch_list = NULL;
+
+  // Cost
+  parser->cost = NULL;
+  parser->cost_list = NULL;
 
   // Return
   return parser;
@@ -173,6 +189,7 @@ void MAT_PARSER_show(MAT_Parser* parser) {
   int len_bus_list;
   int len_gen_list;
   int len_branch_list;
+  int len_cost_list;
 
   if (!parser)
     return;
@@ -181,6 +198,7 @@ void MAT_PARSER_show(MAT_Parser* parser) {
   LIST_len(MAT_Bus,parser->bus_list,next,len_bus_list);
   LIST_len(MAT_Gen,parser->gen_list,next,len_gen_list);
   LIST_len(MAT_Branch,parser->branch_list,next,len_branch_list);
+  LIST_len(MAT_Cost,parser->cost_list,next,len_cost_list);
 
   // Show
   printf("\nParsed Data\n");
@@ -189,6 +207,7 @@ void MAT_PARSER_show(MAT_Parser* parser) {
   printf("bus hash   : %d\n",HASH_COUNT(parser->bus_hash));
   printf("gen list   : %d\n",len_gen_list);
   printf("branch list: %d\n",len_branch_list);
+  printf("cost list  : %d\n",len_cost_list);
 }
 
 void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
@@ -203,6 +222,7 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
   MAT_Bus* mat_bus;
   MAT_Gen* mat_gen;
   MAT_Branch* mat_branch;
+  MAT_Cost* mat_cost;
   Bus* bus;
   Bus* busA;
   Bus* busB;
@@ -365,6 +385,16 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
     BRANCH_set_b_to(branch,mat_branch->b/2.);              // per unit
     index++;
   }
+
+  // Costs
+  for (mat_cost = parser->cost_list; mat_cost != NULL; mat_cost = mat_cost->next) {
+    if (mat_cost->gen_index < NET_get_num_gens(net)) {
+      //gen = NET_get_gen(net,mat_cost->gen_index);
+      //GEN_set_cost_coeff_Q2(gen,mat_cost->Q2*100.);
+      //GEN_set_cost_coeff_Q1(gen,mat_cost->Q1);
+      //GEN_set_cost_coeff_Q0(gen,mat_cost->Q0/100.);
+    }
+  }
 }
 
 void MAT_PARSER_del(MAT_Parser* parser) {
@@ -382,6 +412,9 @@ void MAT_PARSER_del(MAT_Parser* parser) {
 
   // Branches
   LIST_map(MAT_Branch,parser->branch_list,branch,next,{free(branch);});
+
+  // Costs
+  LIST_map(MAT_Cost,parser->cost_list,cost,next,{free(cost);});
 
   // Parser
   free(parser);  
@@ -423,6 +456,9 @@ void MAT_PARSER_callback_field(char* s, void* data) {
   case MAT_PARSER_STATE_BRANCH:
     MAT_PARSER_parse_branch_field((char*)s,parser);
     break;
+  case MAT_PARSER_STATE_COST:
+    MAT_PARSER_parse_cost_field((char*)s,parser);
+    break;
   }
     
   // Update field
@@ -452,6 +488,9 @@ void MAT_PARSER_callback_row(void *data) {
   case MAT_PARSER_STATE_BRANCH:
     MAT_PARSER_parse_branch_row(parser);
     break;
+  case MAT_PARSER_STATE_COST:
+    MAT_PARSER_parse_cost_row(parser);
+    break;
   }
 }
 
@@ -467,6 +506,11 @@ void MAT_PARSER_parse_token_field(char* s, MAT_Parser* parser) {
   }
   else if (strcmp(s,BRANCH_TOKEN) == 0) {
     parser->state = MAT_PARSER_STATE_BRANCH;
+    parser->field = 0;
+    parser->record = -2;
+  }
+  else if (strcmp(s,COST_TOKEN) == 0) {
+    parser->state = MAT_PARSER_STATE_COST;
     parser->field = 0;
     parser->record = -2;
   }
@@ -733,3 +777,55 @@ void MAT_PARSER_parse_branch_row(MAT_Parser* parser) {
   parser->record++;  
 }
 
+void MAT_PARSER_parse_cost_field(char* s, MAT_Parser* parser) {
+
+  if (!parser)
+    return;
+
+  // Token
+  if (strstr(s,END_TOKEN) != NULL) {
+    parser->state = MAT_PARSER_STATE_TOKEN;
+    parser->field = 0;
+    parser->record = 0;
+    return;
+  }
+
+  // Labels
+  if (parser->record < 0)
+    return;
+
+  // New cost
+  if (parser->field == 0) {
+    parser->cost = (MAT_Cost*)malloc(sizeof(MAT_Cost));
+  }
+
+  // Fields
+  if (parser->cost) {
+    switch (parser->field) {
+    case 0: 
+      parser->cost->gen_index = atoi(s);
+      break;
+    case 1: 
+      parser->cost->Q2 = atof(s);
+      break;
+    case 2: 
+      parser->cost->Q1 = atof(s);
+      break;
+    case 3: 
+      parser->cost->Q0 = atof(s);
+      break;
+    }
+  }
+}
+
+void MAT_PARSER_parse_cost_row(MAT_Parser* parser) {
+
+  if (!parser)
+    return;
+  
+  if (parser->cost && parser->record >= 0)
+    LIST_add(parser->cost_list,parser->cost,next);
+  parser->cost = NULL;
+  parser->field = 0;
+  parser->record++;
+}
