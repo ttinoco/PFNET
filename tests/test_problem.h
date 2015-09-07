@@ -88,7 +88,7 @@ static char* test_problem_basic() {
 
   A = PROB_get_A(p);
   Z = PROB_get_Z(p);
-
+  
   Assert("error - bad objective value init",PROB_get_phi(p) == 0.);
 
   Assert("error - bad A shape",MAT_get_size2(A) == NET_get_num_vars(net));

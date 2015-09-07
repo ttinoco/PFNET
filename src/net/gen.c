@@ -277,9 +277,9 @@ void GEN_init(Gen* gen) {
   gen->Q = 0;
   gen->Q_max = 0;
   gen->Q_min = 0;
-  gen->cost_coeff_Q0 = 0;
+  gen->cost_coeff_Q0 = 0/100.;
   gen->cost_coeff_Q1 = 20.;
-  gen->cost_coeff_Q2 = 0.01*100; 
+  gen->cost_coeff_Q2 = 0.01*100.;
   gen->index = 0;
   gen->index_P = 0;
   gen->index_Q = 0;
@@ -334,6 +334,21 @@ Gen* GEN_new(void) {
   Gen* gen = (Gen*)malloc(sizeof(Gen));
   GEN_init(gen);
   return gen;
+}
+
+void GEN_set_cost_coeff_Q0(Gen* gen, REAL q) {
+  if (gen)
+    gen->cost_coeff_Q0 = q;
+}
+
+void GEN_set_cost_coeff_Q1(Gen* gen, REAL q) {
+  if (gen)
+    gen->cost_coeff_Q1 = q;
+}
+
+void GEN_set_cost_coeff_Q2(Gen* gen, REAL q) {
+  if (gen)
+    gen->cost_coeff_Q2 = q;
 }
 
 void GEN_set_bus(Gen* gen, void* bus) {
