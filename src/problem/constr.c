@@ -18,6 +18,7 @@
 #include <pfnet/constr_REG_GEN.h>
 #include <pfnet/constr_REG_TRAN.h>
 #include <pfnet/constr_REG_SHUNT.h>
+#include <pfnet/constr_DC_FLOW_LIM.h>
 
 struct Constr {
 
@@ -31,21 +32,22 @@ struct Constr {
   // Type
   int type; /**< @brief Constraint type */
 
-  // Nonlinear
+  // Nonlinear (f(x) = 0)
   Vec* f;           /**< @brief Vector of nonlinear constraint violations */
   Mat* J;           /**< @brief Jacobian matrix of nonlinear constraints */
   Mat* H_array;     /**< @brief Array of Hessian matrices of nonlinear constraints */
   int H_array_size; /**< @brief Size of Hessian array */
   Mat* H_combined;  /**< @brief Linear combination of Hessians of the nonlinear constraints */
 
-  // Linear equality
-  Mat* A; /**< @brief Matrix of constraint normals of linear equality constraints */
-  Vec* b; /**< @brief Right-hand side vector of linear equality constraints */
+  // Linear equality (Ax = b)
+  Mat* A;           /**< @brief Matrix of constraint normals of linear equality constraints */
+  Vec* b;           /**< @brief Right-hand side vector of linear equality constraints */
 
-  // Linear inequality
-  Mat* G; /** @brief Matrix of constraint normals of linear inequality constraints */
-  Vec* h; /** @brief Right-hand side vector of linear inequality contraints */
-
+  // Linear inequalities (hl <= Gx <= hu)
+  Mat* G;           /** @brief Matrix of constraint normals of linear inequality constraints */
+  Vec* hl;          /** @brief Lower bound for linear inequality contraints */
+  Vec* hu;          /** @brief Upper bound for linear inequality contraints */
+  
   // Utils
   int Acounter;         /**< @brief Counter for nonzeros of matrix A */
   int Jcounter;         /**< @brief Counter for nonzeros of matrix J */
@@ -142,7 +144,8 @@ void CONSTR_del(Constr* c) {
     VEC_del(c->f);
     MAT_del(c->J);
     MAT_del(c->G);
-    VEC_del(c->h);
+    VEC_del(c->hl);
+    VEC_del(c->hu);
     MAT_array_del(c->H_array,c->H_array_size);
     MAT_del(c->H_combined);
 
@@ -179,9 +182,16 @@ Mat* CONSTR_get_A(Constr* c) {
     return NULL;
 }
 
-Vec* CONSTR_get_h(Constr* c) {
+Vec* CONSTR_get_hl(Constr* c) {
   if (c)
-    return c->h;
+    return c->hl;
+  else
+    return NULL;
+}
+
+Vec* CONSTR_get_hu(Constr* c) {
+  if (c)
+    return c->hu;
   else
     return NULL;
 }
@@ -484,7 +494,8 @@ Constr* CONSTR_new(int type, Net* net) {
   c->A = NULL;
   c->b = NULL;
   c->G = NULL;
-  c->h = NULL;
+  c->hl = NULL;
+  c->hu = NULL;
   c->Acounter = 0;
   c->Jcounter = 0;
   c->Gcounter = 0;
@@ -592,6 +603,16 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_store_sens_branch = &CONSTR_BOUND_store_sens_branch;
     c->func_free = &CONSTR_BOUND_free;
   }
+  else if (type == CONSTR_TYPE_DC_FLOW_LIM) { // DC branch flow limits
+    c->func_init = &CONSTR_DC_FLOW_LIM_init;
+    c->func_count_branch = &CONSTR_DC_FLOW_LIM_count_branch;
+    c->func_allocate = &CONSTR_DC_FLOW_LIM_allocate;
+    c->func_clear = &CONSTR_DC_FLOW_LIM_clear;
+    c->func_analyze_branch = &CONSTR_DC_FLOW_LIM_analyze_branch;
+    c->func_eval_branch = &CONSTR_DC_FLOW_LIM_eval_branch;
+    c->func_store_sens_branch = &CONSTR_DC_FLOW_LIM_store_sens_branch;
+    c->func_free = &CONSTR_DC_FLOW_LIM_free;
+  }
   else { // unknown 
     c->func_init = NULL;
     c->func_count_branch = NULL;
@@ -619,9 +640,14 @@ void CONSTR_set_A(Constr* c, Mat* A) {
     c->A = A;
 }
 
-void CONSTR_set_h(Constr* c, Vec* h) {
+void CONSTR_set_hl(Constr* c, Vec* hl) {
   if (c)
-    c->h = h;
+    c->hl = hl;
+}
+
+void CONSTR_set_hu(Constr* c, Vec* hu) {
+  if (c)
+    c->hu = hu;
 }
 
 void CONSTR_set_G(Constr* c, Mat* G) {
