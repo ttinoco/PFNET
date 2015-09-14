@@ -832,6 +832,11 @@ cdef class Branch:
     property phase_min:
         """ Transformer phase shift lower limit (radians) (float). """
         def __get__(self): return cbranch.BRANCH_get_phase_min(self._c_branch)
+
+    property ratingA:
+        """ Branch thermal rating A (p.u. system base power) (float). """
+        def __get__(self): return cbranch.BRANCH_get_ratingA(self._c_branch)
+        def __set__(self,r): cbranch.BRANCH_set_ratingA(self._c_branch,r)
    
 cdef new_Branch(cbranch.Branch* b):
     if b is not NULL:
@@ -2460,6 +2465,7 @@ CONSTR_TYPE_PAR_GEN_Q = cconstr.CONSTR_TYPE_PAR_GEN_Q
 CONSTR_TYPE_REG_GEN = cconstr.CONSTR_TYPE_REG_GEN
 CONSTR_TYPE_REG_TRAN = cconstr.CONSTR_TYPE_REG_TRAN
 CONSTR_TYPE_REG_SHUNT = cconstr.CONSTR_TYPE_REG_SHUNT
+CONSTR_TYPE_DC_FLOW_LIM = cconstr.CONSTR_TYPE_DC_FLOW_LIM
 
 class ConstraintError(Exception):
     """
@@ -2606,6 +2612,10 @@ cdef class Constraint:
         """ Number of nonzero entries in the matrix of linear equality constraints (int). """
         def __get__(self): return cconstr.CONSTR_get_Acounter(self._c_constr)
 
+    property Gcounter:
+        """ Number of nonzero entries in the matrix of linear inequality constraints (int). """
+        def __get__(self): return cconstr.CONSTR_get_Gcounter(self._c_constr)
+
     property Jcounter:
         """ Number of nonzero entries in the Jacobian matrix of the nonlinear equality constraints (int). """
         def __get__(self): return cconstr.CONSTR_get_Jcounter(self._c_constr)
@@ -2613,6 +2623,10 @@ cdef class Constraint:
     property Aconstr_index:
         """ Index of linear equality constraint (int). """
         def __get__(self): return cconstr.CONSTR_get_Aconstr_index(self._c_constr)
+
+    property Gconstr_index:
+        """ Index of linear ineqquality constraint (int). """
+        def __get__(self): return cconstr.CONSTR_get_Gconstr_index(self._c_constr)
 
     property Jconstr_index:
         """ Index of nonlinear equality constraint (int). """
@@ -2631,8 +2645,20 @@ cdef class Constraint:
         def __get__(self): return Vector(cconstr.CONSTR_get_b(self._c_constr))
         
     property A:
-        """ Matrix of linear equality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
+        """ Matrix for linear equality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
         def __get__(self): return Matrix(cconstr.CONSTR_get_A(self._c_constr))
+
+    property hl:
+        """ Lower bound vector of linear inequality constraints (:class:`ndarray <numpy.ndarray>`). """
+        def __get__(self): return Vector(cconstr.CONSTR_get_hl(self._c_constr))
+
+    property hu:
+        """ Upper bound vector of linear inequality constraints (:class:`ndarray <numpy.ndarray>`). """
+        def __get__(self): return Vector(cconstr.CONSTR_get_hu(self._c_constr))
+
+    property G:
+        """ Matrix for linear inequality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
+        def __get__(self): return Matrix(cconstr.CONSTR_get_G(self._c_constr))
 
     property H_combined:
         """ Linear combination of Hessian matrices of individual nonlinear equality constraints (only the lower triangular part) (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """

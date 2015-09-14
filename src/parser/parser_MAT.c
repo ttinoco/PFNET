@@ -383,6 +383,9 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
     BRANCH_set_b(branch,b);                                // per unit
     BRANCH_set_b_from(branch,mat_branch->b/2.);            // per unit
     BRANCH_set_b_to(branch,mat_branch->b/2.);              // per unit
+    BRANCH_set_ratingA(branch,mat_branch->rateA/parser->base_power); // p.u.
+    BRANCH_set_ratingB(branch,mat_branch->rateB/parser->base_power); // p.u.
+    BRANCH_set_ratingC(branch,mat_branch->rateC/parser->base_power); // p.u.
     index++;
   }
 

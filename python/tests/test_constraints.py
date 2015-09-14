@@ -1659,10 +1659,7 @@ class TestConstraints(unittest.TestCase):
                     self.assertTupleEqual(c.get_H_single(0).shape,(0,0))
 
     def test_constr_DCPF(self):
-        
-        # Constants
-        h = 1e-10
-        
+                
         net = self.net
 
         for case in test_cases.CASES:
@@ -1786,7 +1783,98 @@ class TestConstraints(unittest.TestCase):
             r = P3*x
             theta = P1*x
             phi = P4*x
-            self.assertLess(np.linalg.norm((G*p+R*r-Atheta*theta-Aphi*phi)-A*x),1e-10)            
+            self.assertLess(np.linalg.norm((G*p+R*r-Atheta*theta-Aphi*phi)-A*x),1e-10)
+
+    def test_constr_DC_FLOW_LIM(self):
+                
+        net = self.net
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+
+            self.assertEqual(net.num_vars,0)
+            
+            # Variables
+            net.set_flags(pf.OBJ_BUS,
+                          pf.FLAG_VARS,
+                          pf.BUS_PROP_NOT_SLACK,
+                          pf.BUS_VAR_VANG)
+            self.assertEqual(net.num_vars,net.num_buses-net.get_num_slack_buses())
+            
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+            
+            # Constraint
+            constr = pf.Constraint(pf.CONSTR_TYPE_DC_FLOW_LIM,net)
+            
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            G = constr.G
+            hl = constr.hl
+            hu = constr.hu
+
+            # Before 
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(0,))
+            self.assertTrue(type(hl) is np.ndarray)
+            self.assertTupleEqual(hl.shape,(0,))
+            self.assertTrue(type(hu) is np.ndarray)
+            self.assertTupleEqual(hu.shape,(0,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,0))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(0,0))
+            self.assertEqual(A.nnz,0)
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(0,0))
+            self.assertEqual(G.nnz,0)
+            self.assertEqual(constr.Jcounter,0)
+            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.Gcounter,0)
+            self.assertEqual(constr.Jconstr_index,0)
+            self.assertEqual(constr.Aconstr_index,0)
+            self.assertEqual(constr.Gconstr_index,0)
+            
+            # Analyze
+            constr.analyze()
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            hl = constr.hl
+            hu = constr.hu
+            G = constr.G
+            self.assertEqual(constr.Jcounter,0)
+            self.assertEqual(constr.Jconstr_index,0)
+            self.assertEqual(constr.Aconstr_index,0)
+            self.assertEqual(constr.Gconstr_index,0)
+
+            self.assertTupleEqual(b.shape,(0,))
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTupleEqual(hl.shape,(net.num_branches,))
+            self.assertTupleEqual(hu.shape,(net.num_branches,))
+            
+            self.assertTupleEqual(A.shape,(0,net.num_vars)) 
+            self.assertTupleEqual(J.shape,(0,net.num_vars))
+            self.assertTupleEqual(G.shape,(net.num_branches,net.num_vars))
+            self.assertEqual(G.nnz,constr.Gcounter)
+            
+            self.assertTrue(np.all(hl <= hu))
+
+            num = 0
+            for br in net.branches:
+                if not br.bus_from.is_slack():
+                    num += 1
+                if not br.bus_to.is_slack():
+                    num += 1
+            self.assertEqual(num,constr.Gcounter)
 
     def tearDown(self):
         

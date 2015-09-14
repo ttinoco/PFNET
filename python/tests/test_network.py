@@ -311,7 +311,7 @@ class TestNetwork(unittest.TestCase):
             self.assertTrue(net.num_branches > 0)
 
             self.assertEqual(net.num_branches,len(net.branches))
-
+            
             for i in range(net.num_branches):
 
                 branch = net.get_branch(i)
@@ -323,6 +323,11 @@ class TestNetwork(unittest.TestCase):
                 self.assertTrue(branch.bus_from)
                 self.assertTrue(branch.bus_to)
                 self.assertGreater(branch.ratio,0)
+
+                self.assertGreaterEqual(branch.ratingA,0.)
+                r = np.random.rand()
+                branch.ratingA = r
+                self.assertEqual(r,branch.ratingA)
 
                 # tap changer v
                 if branch.is_tap_changer_v():
