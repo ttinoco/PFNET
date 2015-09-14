@@ -38,17 +38,23 @@ struct Constr {
   int H_array_size; /**< @brief Size of Hessian array */
   Mat* H_combined;  /**< @brief Linear combination of Hessians of the nonlinear constraints */
 
-  // Linear
-  Mat* A; /**< @brief Matrix of constraint normals of linear cosntraints */
-  Vec* b; /**< @brief Right-hand side vector of linear constraints */
+  // Linear equality
+  Mat* A; /**< @brief Matrix of constraint normals of linear equality constraints */
+  Vec* b; /**< @brief Right-hand side vector of linear equality constraints */
+
+  // Linear inequality
+  Mat* G; /** @brief Matrix of constraint normals of linear inequality constraints */
+  Vec* h; /** @brief Right-hand side vector of linear inequality contraints */
 
   // Utils
   int Acounter;         /**< @brief Counter for nonzeros of matrix A */
-  int Jcounter;         /**< @brief Counter for nonzeros matrix J */
+  int Jcounter;         /**< @brief Counter for nonzeros of matrix J */
+  int Gcounter;         /**< @brief Counter for nonzeros of matrix G */
   int* Hcounter;        /**< @brief Array of counters of nonzeros of nonlinear constraint Hessians */
   int Hcounter_size;    /**< @brief Size of array of counter of Hessian nonzeros */
-  int Aconstr_index;    /**< @brief Index for linear constraints */
+  int Aconstr_index;    /**< @brief Index for linear equality constraints */
   int Jconstr_index;    /**< @brief Index for nonlinear constraints */
+  int Gconstr_index;    /**< @brief Index for linear inequality constraints */
   char* bus_counted;    /**< @brief Flag for processing buses */
   int bus_counted_size; /**< @brief Size of array of flags for processing buses */
   int branch_counter;   /**< @brief Counter for processing branches */
@@ -135,6 +141,8 @@ void CONSTR_del(Constr* c) {
     MAT_del(c->A);
     VEC_del(c->f);
     MAT_del(c->J);
+    MAT_del(c->G);
+    VEC_del(c->h);
     MAT_array_del(c->H_array,c->H_array_size);
     MAT_del(c->H_combined);
 
@@ -167,6 +175,20 @@ Vec* CONSTR_get_b(Constr* c) {
 Mat* CONSTR_get_A(Constr* c) {
   if (c)
     return c->A;
+  else
+    return NULL;
+}
+
+Vec* CONSTR_get_h(Constr* c) {
+  if (c)
+    return c->h;
+  else
+    return NULL;
+}
+
+Mat* CONSTR_get_G(Constr* c) {
+  if (c)
+    return c->G;
   else
     return NULL;
 }
@@ -227,6 +249,20 @@ int* CONSTR_get_Acounter_ptr(Constr* c) {
     return NULL;
 }
 
+int CONSTR_get_Gcounter(Constr* c) {
+  if (c)
+    return c->Gcounter;
+  else
+    return 0;
+}
+
+int* CONSTR_get_Gcounter_ptr(Constr* c) {
+  if (c)
+    return &(c->Gcounter);
+  else
+    return NULL;
+}
+
 int CONSTR_get_Jcounter(Constr* c) {
   if (c)
     return c->Jcounter;
@@ -262,6 +298,27 @@ int CONSTR_get_Aconstr_index(Constr* c) {
     return 0;
 }
 
+int* CONSTR_get_Aconstr_index_ptr(Constr* c) {
+  if (c)
+    return &(c->Aconstr_index);
+  else
+    return NULL;
+}
+
+int CONSTR_get_Gconstr_index(Constr* c) {
+  if (c)
+    return c->Gconstr_index;
+  else
+    return 0;
+}
+
+int* CONSTR_get_Gconstr_index_ptr(Constr* c) {
+  if (c)
+    return &(c->Gconstr_index);
+  else
+    return NULL;
+}
+
 int CONSTR_get_Jconstr_index(Constr* c) {
   if (c)
     return c->Jconstr_index;
@@ -269,12 +326,6 @@ int CONSTR_get_Jconstr_index(Constr* c) {
     return 0;
 }
 
-int* CONSTR_get_Aconstr_index_ptr(Constr* c) {
-  if (c)
-    return &(c->Aconstr_index);
-  else
-    return NULL;
-}
 
 int* CONSTR_get_Jconstr_index_ptr(Constr* c) {
   if (c)
@@ -432,12 +483,16 @@ Constr* CONSTR_new(int type, Net* net) {
   c->H_combined = NULL;
   c->A = NULL;
   c->b = NULL;
+  c->G = NULL;
+  c->h = NULL;
   c->Acounter = 0;
   c->Jcounter = 0;
+  c->Gcounter = 0;
   c->Hcounter = NULL;
   c->Hcounter_size = 0;
   c->Aconstr_index = 0;
   c->Jconstr_index = 0;
+  c->Gconstr_index = 0;
   c->branch_counter = 0;
   c->data = NULL;
   c->next = NULL;
@@ -564,6 +619,16 @@ void CONSTR_set_A(Constr* c, Mat* A) {
     c->A = A;
 }
 
+void CONSTR_set_h(Constr* c, Vec* h) {
+  if (c)
+    c->h = h;
+}
+
+void CONSTR_set_G(Constr* c, Mat* G) {
+  if (c)
+    c->G = G;
+}
+
 void CONSTR_set_f(Constr* c, Vec* f) {
   if (c)
     c->f = f;
@@ -591,6 +656,11 @@ void CONSTR_set_Acounter(Constr* c, int counter) {
     c->Acounter = counter;
 }
 
+void CONSTR_set_Gcounter(Constr* c, int counter) {
+  if (c)
+    c->Gcounter = counter;
+}
+
 void CONSTR_set_Jcounter(Constr* c, int counter) {
   if (c)
     c->Jcounter = counter;
@@ -606,6 +676,11 @@ void CONSTR_set_Hcounter(Constr* c, int* counter, int size) {
 void CONSTR_set_Aconstr_index(Constr* c, int index) {
   if (c)
     c->Aconstr_index = index;
+}
+
+void CONSTR_set_Gconstr_index(Constr* c, int index) {
+  if (c)
+    c->Gconstr_index = index;
 }
 
 void CONSTR_set_Jconstr_index(Constr* c, int index) {
