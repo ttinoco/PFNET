@@ -1876,6 +1876,27 @@ class TestConstraints(unittest.TestCase):
                     num += 1
             self.assertEqual(num,constr.Gcounter)
 
+            counter = 0
+            for br in net.branches:
+                off = 0
+                if br.bus_from.is_slack():
+                    off = br.b*br.bus_from.v_ang
+                else:
+                    self.assertEqual(G.row[counter],br.index)
+                    self.assertEqual(G.col[counter],br.bus_from.index_v_ang)
+                    self.assertEqual(G.data[counter],-br.b)
+                    counter += 1
+                if br.bus_to.is_slack():
+                    off = -br.b*br.bus_to.v_ang
+                else:
+                    self.assertEqual(G.row[counter],br.index)
+                    self.assertEqual(G.col[counter],br.bus_to.index_v_ang)
+                    self.assertEqual(G.data[counter],br.b)
+                    counter += 1
+                self.assertEqual(hl[br.index],-br.ratingA+off-br.b*br.phase)
+                self.assertEqual(hu[br.index],br.ratingA+off-br.b*br.phase)
+            self.assertEqual(counter,G.nnz)
+
     def tearDown(self):
         
         pass
