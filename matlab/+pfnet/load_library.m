@@ -1,17 +1,28 @@
 function load_library
- 
+
+  % Load GRAPHVIZ
+  %%%%%%%%%%%%%%%
+  %root = getenv('GRAPHVIZ')
+  %header = fullfile(root,'include','graphviz','cgraph_new.h')
+  %lib = fullfile(root,'lib','libcgraph')
+  %if ~libisloaded('libcgraph')
+  %   [notfound,warnings] = loadlibrary(lib,header);
+  %end
+
+  % Load PFNET
+  %%%%%%%%%%%%
+
   root = getenv('PFNET');
   header = fullfile(root,'include','pfnet','pfnet.h');
   lib = fullfile(root,'lib','libpfnet.so');
 
-  % Load library
-  %%%%%%%%%%%%%%
   if libisloaded('libpfnet')
      unloadlibrary libpfnet
   end
   [notfound,warnings] = loadlibrary(lib,header,...
 				    'addheader','types.h',...
 				    'addheader','net.h',...
+				    'addheader','graph.h',...
 				    'addheader','bus.h',...
 				    'addheader','branch.h',...
 				    'addheader','gen.h',...
@@ -33,6 +44,7 @@ function load_library
 	     fullfile(root,'include','pfnet','load.h'),...
 	     fullfile(root,'include','pfnet','shunt.h'),...
 	     fullfile(root,'include','pfnet','net.h'),...
+	     fullfile(root,'include','pfnet','graph.h'),...
 	     fullfile(root,'include','pfnet','func.h'),...
 	     fullfile(root,'include','pfnet','constr.h'),...
 	     fullfile(root,'include','pfnet','problem.h')};
@@ -47,7 +59,8 @@ function load_library
         if strfind(e{1}{2},'x')
            evalin('caller',strcat(e{1}{1},'=',num2str(sscanf(e{1}{2},'%x')),';'));
         else
-           evalin('caller',strcat(e{1}{1},'=',e{1}{2},';'));
+           value = strrep(e{1}{2},'"','''');
+           evalin('caller',strcat(e{1}{1},'=',value,';'));
         end
        end
        counter = counter+1;
