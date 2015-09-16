@@ -26,6 +26,7 @@ ifeq ($(NO_GRAPHVIZ),1)
 	CFLAGS += -DNO_GRAPHVIZ
 else
 	LDLIBS += -lgvc
+        CFLAGS += -I$(GRAPHVIZ)/include
 endif
 
 SOURCES_LIB = $(shell echo src/*/*.c src/*/*/*.c)

@@ -13,5 +13,6 @@
 
 #include "net.h"
 #include "problem.h"
+#include "graph.h"
 
 #endif
