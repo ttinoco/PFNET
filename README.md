@@ -22,7 +22,7 @@ The latest version of the library can be downloaded from https://github.com/ttin
 
 ## Dependencies ##
 
-* [Graphviz](http://www.graphviz.org/) (``libgvc``>= 2.36) (Optional)
+* [Graphviz](http://www.graphviz.org/) (``libgvc``>= 2.38) (Optional)
 * Raw parser (``libraw_parser``) (Optional)
 
 ## Build Instructions ##
@@ -38,6 +38,7 @@ To build the library without raw parsing capabilities (no ``libraw_parser`` depe
 Wrappers for PFNET are available for the following languages:
 
 * [Python](http://ttinoco.github.io/PFNET/python)
+* [Matlab](http://ttinoco.github.io/PFNET/matlab) (getting started)
 
 ## Citing PFNET ##
 

@@ -5,7 +5,7 @@
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
-BUILDDIR      = ../../../pfnet-docs/python
+BUILDDIR      = ../../../pfnet-docs/matlab
 PDFBUILDDIR   = /tmp
 PDF           = ../manual.pdf
 
