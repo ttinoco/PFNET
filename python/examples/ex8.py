@@ -17,11 +17,11 @@ g = pf.Graph(net)
 
 g.set_layout()
 
-g.color_nodes_by_mismatch(pf.BUS_MIS_REACTIVE)
+#g.color_nodes_by_mismatch(pf.BUS_MIS_REACTIVE)
 
 #g.set_edges_property("color","black")
 #g.set_nodes_property("color","black")
 
-g.write('png','graph.png')
+g.write('pdf','graph.pdf')
 
 g.view()
