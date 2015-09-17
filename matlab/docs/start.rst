@@ -22,15 +22,38 @@ PFNET for Matlab has the following dependencies:
 Download
 ========
 
-The latest version of PFNET can be downloaded from `<https://github.com/ttinoco/PFNET>`_.
+The latest version of PFNET can be downloaded from `<https://github.com/ttinoco/PFNET>`_. Right now the Matlab wrapper is on the branch ``tomas-matlab``. 
 
 .. _start_installation:
 
-Installation
-============
+Installation (Linux)
+====================
+
+To use PFNET from Matlab, the library first needs to be loaded. This can be done by first navigating to the directory ``$PFNET/matlab``, where ``$PFNET`` is the root directory of the PFNET library, and then typing the command::
+
+  >> pfnet.load_library
+
+The environment variable ``$PFNET`` is used by this routine to find the required header files and shared library. The command::
+
+  >> libfunctions libpfnet
+
+can be used to list all the loaded functions of PFNET and hence check whether the library was loaded successfully.
+
+If PFNET was built with visualization capabilities, then Matlab needs to be loaded with the Graphviz shared libraries ``libcgraph.so`` and ``libgvc.so``. This can be done by starting Matlab using the command::
+
+  > LD_PRELOAD=${GRAPHVIZ}/lib/libcgraph.so:${GRAPHVIZ}/lib/libgvc.so matlab
+
+where ``$GRAPHVIZ`` is the Graphviz installation directory, or more conveniently, by defining::
+
+  alias matlab='LD_PRELOAD=${GRAPHVIZ}/lib/libcgraph.so:${GRAPHVIZ}/lib/libgvc.so matlab'
+
+and then starting Matlab with the redefined command ``matlab``. 
 
 .. _start_example:
 
 Example
 =======
+
+
+
 
