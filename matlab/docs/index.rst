@@ -43,6 +43,7 @@ If you have any questions about PFNET or if you are interested in collaborating,
    :maxdepth: 3
 
    Getting Started<start>
+   Visualization<graph>
 
 Indices and tables
 ==================

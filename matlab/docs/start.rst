@@ -29,15 +29,19 @@ The latest version of PFNET can be downloaded from `<https://github.com/ttinoco/
 Installation (Linux)
 ====================
 
-To use PFNET from Matlab, the library first needs to be loaded. This can be done by first navigating to the directory ``$PFNET/matlab``, where ``$PFNET`` is the root directory of the PFNET library, and then typing the command::
+To use PFNET from Matlab, the location of the package needs to be added to Matlab's search path. This can be done within Matlab using::
 
-  >> pfnet.load_library
+  >>> addpath(strcat(getenv('PFNET'),'/matlab'));
 
-The environment variable ``$PFNET`` is used by this routine to find the required header files and shared library. The command::
+where ``$PFNET`` is the root directory of the PFNET library. Then, the library needs to be loaded using::
 
-  >> libfunctions libpfnet
+  >>> pfnet.load_library
 
-can be used to list all the loaded functions of PFNET and hence check whether the library was loaded successfully.
+The environment variable ``$PFNET`` is needed by this routine to find the required header files and shared library. The command::
+
+  >>> libfunctions libpfnet
+
+can be used to list all the loaded functions of PFNET and hence to check whether the library was loaded successfully.
 
 If PFNET was built with visualization capabilities, then Matlab needs to be loaded with the Graphviz shared libraries ``libcgraph.so`` and ``libgvc.so``. This can be done by starting Matlab using the command::
 
@@ -53,6 +57,26 @@ and then starting Matlab with the redefined command ``matlab``.
 
 Example
 =======
+
+As a quick example of how to use the PFNET Matlab package, consider the task of constructing a power network from a `MATPOWER <http://www.pserc.cornell.edu//matpower/>`_-converted power flow file and computing the average bus degree. This can be done as follows::
+  
+  >>> addpath(strcat(getenv('PFNET'),'/matlab'));
+
+  >>> pfnet.load_library
+
+  >>> net = pfnet.Network();
+  >>> net.load('ieee14.mat');
+
+  >>> deg = 0;
+  >>> for i=1:net.num_buses
+  >>>     bus = net.get_bus(i-1);
+  >>>     deg = deg + bus.degree/net.num_buses;
+  >>> end
+  >>> disp(deg);
+  2.86
+
+
+
 
 
 
