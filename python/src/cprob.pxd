@@ -39,7 +39,6 @@ cdef extern from "pfnet/problem.h":
     Mat* PROB_get_Hphi(Prob* p)
     Vec* PROB_get_b(Prob* p)
     Mat* PROB_get_A(Prob* p)
-    Mat* PROB_get_Z(Prob* p)
     Vec* PROB_get_f(Prob* p)
     Mat* PROB_get_J(Prob* p)
     Mat* PROB_get_H_combined(Prob* p)

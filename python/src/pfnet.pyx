@@ -2939,15 +2939,6 @@ cdef class Problem:
         """ Constraint matrix of linear equality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
         def __get__(self): return Matrix(cprob.PROB_get_A(self._c_prob))
 
-    property Z:
-        """ Matrix whose columns are a basis for the null space of A (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
-        def __get__(self): 
-            Z = Matrix(cprob.PROB_get_Z(self._c_prob))
-            if cprob.PROB_has_error(self._c_prob):
-                raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
-            else:
-                return Z
-
     property b:
         """ Right hand side vectors of the linear equality constraints (:class:`ndarray <numpy.ndarray>`). """
         def __get__(self): return Vector(cprob.PROB_get_b(self._c_prob))
@@ -2975,3 +2966,17 @@ cdef class Problem:
     property H_combined:
         """ Linear combination of Hessian matrices of individual nonlinear equality constraints (only the lower triangular part) (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
         def __get__(self): return Matrix(cprob.PROB_get_H_combined(self._c_prob))
+
+    property x:
+        """ Initial primal point (:class:`ndarray <numpy.ndarray>`). """
+        def __get__(self): return self.get_init_point()
+
+    property lam:
+        """ Initial dual point (:class:`ndarray <numpy.ndarray>`). """
+        def __get__(self): return None
+
+    property nu:
+        """ Initial dual point (:class:`ndarray <numpy.ndarray>`). """
+        def __get__(self): return None
+        
+    
