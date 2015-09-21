@@ -96,13 +96,14 @@ class TestProblem(unittest.TestCase):
                              
             # Constraints
             p.add_constraint(pf.CONSTR_TYPE_PF)
-            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN)
+            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_P)
+            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_Q)
             p.add_constraint(pf.CONSTR_TYPE_FIX)
-            self.assertEqual(len(p.constraints),3)
+            self.assertEqual(len(p.constraints),4)
 
             # Check adding redundant constraints
-            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN)
-            self.assertEqual(len(p.constraints),3)
+            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_P)
+            self.assertEqual(len(p.constraints),4)
             
             # Functions
             self.assertEqual(len(p.functions),0)
@@ -111,6 +112,7 @@ class TestProblem(unittest.TestCase):
             x0 = p.get_init_point()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
+            self.assertTrue(np.all(x0 == p.x))
             
             # Before
             phi = p.phi
@@ -120,7 +122,6 @@ class TestProblem(unittest.TestCase):
             f = p.f
             b = p.b
             A = p.A
-            Z = p.Z
             J = p.J
             
             self.assertTrue(type(phi) is float)
@@ -137,9 +138,6 @@ class TestProblem(unittest.TestCase):
             self.assertTrue(type(A) is coo_matrix)
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
-            self.assertTrue(type(Z) is coo_matrix)
-            self.assertTupleEqual(Z.shape,(0,0))
-            self.assertEqual(Z.nnz,0)
             self.assertTrue(type(Hphi) is coo_matrix)
             self.assertTupleEqual(Hphi.shape,(0,0))
             self.assertEqual(Hphi.nnz,0)
@@ -157,7 +155,6 @@ class TestProblem(unittest.TestCase):
             b = p.b.copy()
             A = p.A.copy()
             J = p.J.copy()
-            Z = p.Z
                         
             # phi
             self.assertTrue(type(phi) is float)
@@ -194,26 +191,6 @@ class TestProblem(unittest.TestCase):
             A_size = sum(c.A.shape[0] for c in p.constraints)
             self.assertTupleEqual(A.shape,(A_size,net.num_vars))
             self.assertGreater(A.nnz,0)
-
-            # Z            
-            Znnz = 0
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                if not bus.is_slack():
-                    Znnz += 1 # w
-                if not bus.is_slack() and not bus.is_regulated_by_gen():
-                    Znnz += 1 # v
-                if bus.is_slack():
-                    for g in bus.gens:
-                        Znnz += 1 # P
-                if bus.is_regulated_by_gen():
-                    for g in bus.reg_gens:
-                        Znnz += 1 # Q
-            self.assertTrue(type(Z) is coo_matrix)
-            self.assertTupleEqual(Z.shape,(net.num_vars,net.num_vars-A.shape[0]))
-            self.assertGreater(Z.nnz,0)
-            self.assertEqual(Z.nnz,Znnz)
-            self.assertLess(np.linalg.norm((A*Z).data),1e-10)
             
             # Check J
             f0 = f.copy()
@@ -343,15 +320,16 @@ class TestProblem(unittest.TestCase):
                              
             # Constraints
             p.add_constraint(pf.CONSTR_TYPE_PF)
-            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN)
+            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_P)
+            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_Q)
             p.add_constraint(pf.CONSTR_TYPE_REG_GEN)
             p.add_constraint(pf.CONSTR_TYPE_REG_TRAN)
             p.add_constraint(pf.CONSTR_TYPE_REG_SHUNT)
-            self.assertEqual(len(p.constraints),5)
+            self.assertEqual(len(p.constraints),6)
 
             # Check adding redundant constraints
             p.add_constraint(pf.CONSTR_TYPE_PF)
-            self.assertEqual(len(p.constraints),5)
+            self.assertEqual(len(p.constraints),6)
             
             # Functions
             p.add_function(pf.FUNC_TYPE_REG_VMAG,1.)
@@ -362,9 +340,11 @@ class TestProblem(unittest.TestCase):
             self.assertEqual(len(p.functions),5)
                 
             # Init point
-            x0 = p.get_init_point()+np.random.randn(net.num_vars)
+            r = np.random.randn(net.num_vars)
+            x0 = p.get_init_point()+r
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
+            self.assertTrue(np.all(x0 == p.x+r))
             
             # Before
             phi = p.phi
@@ -374,7 +354,6 @@ class TestProblem(unittest.TestCase):
             f = p.f
             b = p.b
             A = p.A
-            Z = p.Z
             J = p.J
             
             self.assertTrue(type(phi) is float)
@@ -391,9 +370,6 @@ class TestProblem(unittest.TestCase):
             self.assertTrue(type(A) is coo_matrix)
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
-            self.assertTrue(type(Z) is coo_matrix)
-            self.assertTupleEqual(Z.shape,(0,0))
-            self.assertEqual(Z.nnz,0)
             self.assertTrue(type(Hphi) is coo_matrix)
             self.assertTupleEqual(Hphi.shape,(0,0))
             self.assertEqual(Hphi.nnz,0)
@@ -411,7 +387,6 @@ class TestProblem(unittest.TestCase):
             b = p.b.copy()
             A = p.A.copy()
             J = p.J.copy()
-            Z = p.Z
                         
             # phi
             self.assertTrue(type(phi) is float)
@@ -451,34 +426,6 @@ class TestProblem(unittest.TestCase):
             A_size = sum(c.A.shape[0] for c in p.constraints)
             self.assertTupleEqual(A.shape,(A_size,net.num_vars))
             self.assertGreater(A.nnz,0)
-
-            # Z            
-            Znnz = 0
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                if not bus.is_slack():
-                    Znnz += 1 # w
-                if not bus.is_slack() and not bus.is_regulated_by_gen():
-                    Znnz += 1 # v
-                if bus.is_regulated_by_gen() and not bus.is_slack():
-                    Znnz += 2 # vy
-                    Znnz += 2 # vz
-                if bus.is_regulated_by_tran() or bus.is_regulated_by_shunt():
-                    Znnz += 1 # vl
-                    Znnz += 1 # vh
-                if bus.is_slack():
-                    for g in bus.gens:
-                        Znnz += 1
-                if bus.is_regulated_by_gen():
-                    for g in bus.reg_gens:
-                        Znnz += 1
-            Znnz += 4*net.get_num_tap_changers_v()
-            Znnz += 4*net.get_num_switched_shunts()
-            self.assertTrue(type(Z) is coo_matrix)
-            self.assertTupleEqual(Z.shape,(net.num_vars,net.num_vars-A.shape[0]))
-            self.assertGreater(Z.nnz,0)
-            self.assertEqual(Z.nnz,Znnz)
-            self.assertLess(np.linalg.norm((A*Z).data),1e-10)
             
             # Check gphi
             phi0 = phi
@@ -579,7 +526,7 @@ class TestProblem(unittest.TestCase):
                 self.assertEqual(bus.sens_Q_balance,sens[2*bus.index+1+offset])
             self.assertRaises(pf.ProblemError,p.store_sensitivities,np.zeros(p.f.size+5))
 
-    def test_problem_Z_shunts(self):
+    def test_problem_limits(self):
 
         p = self.p
         net = self.net
@@ -590,20 +537,21 @@ class TestProblem(unittest.TestCase):
             net.load(case)
             p.network = net
 
-            net.set_flags(pf.OBJ_SHUNT,
+            net.set_flags(pf.OBJ_BUS,
                           pf.FLAG_VARS,
-                          pf.SHUNT_PROP_SWITCHED_V,
-                          pf.SHUNT_VAR_SUSC|pf.SHUNT_VAR_SUSC_DEV)
+                          pf.BUS_PROP_ANY,
+                          pf.BUS_VAR_VMAG)
+            self.assertEqual(net.num_vars,net.num_buses)
 
-            p.analyze()
-            
-            Z = p.Z
-
-            self.assertTupleEqual(Z.shape,(3*net.get_num_switched_shunts(),
-                                           3*net.get_num_switched_shunts()))
-            self.assertTrue(np.all(Z.data == 1))
-            self.assertTrue(np.all(Z.row == np.array(range(3*net.get_num_switched_shunts()))))
-            self.assertTrue(np.all(Z.col == np.array(range(3*net.get_num_switched_shunts()))))
+            l = p.get_lower_limits()
+            u = p.get_upper_limits()
+            self.assertTrue(isinstance(l,np.ndarray))
+            self.assertTrue(isinstance(u,np.ndarray))
+            self.assertTupleEqual(l.shape,(net.num_buses,))
+            self.assertTupleEqual(u.shape,(net.num_buses,))
+            for bus in net.buses:
+                self.assertEqual(bus.v_max,u[bus.index_v_mag])
+                self.assertEqual(bus.v_min,l[bus.index_v_mag])
 
     def tearDown(self):
         

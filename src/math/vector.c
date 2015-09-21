@@ -107,6 +107,5 @@ void VEC_show(Vec* v) {
     printf("size : %d\n",(int)(v->size));
     printf("max  : %.5e\n",VEC_get_max(v));
     printf("min  : %.5e\n",VEC_get_min(v));
-    //gsl_vector_fprintf(stdout,v,"%e");
   }
 }

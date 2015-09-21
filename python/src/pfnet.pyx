@@ -8,6 +8,7 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
+cimport cconstants
 cimport cflags
 cimport cobjs
 cimport cvec
@@ -17,6 +18,7 @@ cimport cshunt
 cimport cbus
 cimport cbranch
 cimport cload
+cimport cvargen
 cimport cnet
 cimport cgraph
 cimport cconstr
@@ -27,7 +29,6 @@ cimport cprob
 import numpy as np
 cimport numpy as np
 
-from subprocess import call
 from scipy import misc
 import tempfile
 
@@ -38,11 +39,24 @@ np.import_array()
 # Constants
 ###########
 
+# Infinity
+INF = cconstants.INF
+
+# Pi
+PI = cconstants.PI
+
+# Var values
+CURRENT= cconstants.CURRENT
+UPPER_LIMITS = cconstants.UPPER_LIMITS
+LOWER_LIMITS = cconstants.LOWER_LIMITS
+
 # Objects
 OBJ_BUS = cobjs.OBJ_BUS
 OBJ_GEN = cobjs.OBJ_GEN
 OBJ_BRANCH = cobjs.OBJ_BRANCH
 OBJ_SHUNT = cobjs.OBJ_SHUNT
+OBJ_LOAD = cobjs.OBJ_LOAD
+OBJ_VARGEN = cobjs.OBJ_VARGEN
 
 # Flags
 FLAG_VARS = cflags.FLAG_VARS
@@ -53,18 +67,24 @@ FLAG_SPARSE = cflags.FLAG_SPARSE
 # Vector
 ########
 
-cdef Vector(cvec.Vec* v):
+cdef extern from "numpy/arrayobject.h":
+    void PyArray_ENABLEFLAGS(np.ndarray arr, int flags)
+
+cdef Vector(cvec.Vec* v, owndata=False):
      cdef np.npy_intp shape[1]
      if v is not NULL:
          shape[0] = <np.npy_intp> cvec.VEC_get_size(v)
-         return np.PyArray_SimpleNewFromData(1,shape,np.NPY_DOUBLE,cvec.VEC_get_data(v))
+         arr = np.PyArray_SimpleNewFromData(1,shape,np.NPY_DOUBLE,cvec.VEC_get_data(v))
+         if owndata:
+             PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
+         return arr
      else:
          return np.zeros(0)
 
 # Matrix
 ########
 
-cdef Matrix(cmat.Mat* m):
+cdef Matrix(cmat.Mat* m, owndata=False):
      cdef np.npy_intp shape[1]
      if m is not NULL:
          shape[0] = <np.npy_intp> cmat.MAT_get_nnz(m)
@@ -73,6 +93,10 @@ cdef Matrix(cmat.Mat* m):
          row = np.PyArray_SimpleNewFromData(1,shape,np.NPY_INT,cmat.MAT_get_row_array(m))
          col = np.PyArray_SimpleNewFromData(1,shape,np.NPY_INT,cmat.MAT_get_col_array(m))
          data = np.PyArray_SimpleNewFromData(1,shape,np.NPY_DOUBLE,cmat.MAT_get_data_array(m))
+         if owndata:
+             PyArray_ENABLEFLAGS(row,np.NPY_OWNDATA)
+             PyArray_ENABLEFLAGS(col,np.NPY_OWNDATA)
+             PyArray_ENABLEFLAGS(data,np.NPY_OWNDATA)
          return coo_matrix((data,(row,col)),shape=(size1,size2))
      else:
          return coo_matrix(([],([],[])),shape=(0,0))
@@ -563,6 +587,16 @@ cdef class Bus:
                 l = cload.LOAD_get_next(l)
             return loads
 
+    property vargens:
+        """ List of :class:`variable generators <pfnet.VarGenerator>` connected to this bus (list). """
+        def __get__(self):
+            vargens = []
+            cdef cvargen.Vargen* g = cbus.BUS_get_vargen(self._c_bus)
+            while g is not NULL:
+                vargens.append(new_VarGenerator(g))
+                g = cvargen.VARGEN_get_next(g)
+            return vargens
+
 cdef new_Bus(cbus.Bus* b):
     if b is not NULL:
         bus = Bus(alloc=False)
@@ -798,6 +832,11 @@ cdef class Branch:
     property phase_min:
         """ Transformer phase shift lower limit (radians) (float). """
         def __get__(self): return cbranch.BRANCH_get_phase_min(self._c_branch)
+
+    property ratingA:
+        """ Branch thermal rating A (p.u. system base power) (float). """
+        def __get__(self): return cbranch.BRANCH_get_ratingA(self._c_branch)
+        def __set__(self,r): cbranch.BRANCH_set_ratingA(self._c_branch,r)
    
 cdef new_Branch(cbranch.Branch* b):
     if b is not NULL:
@@ -816,6 +855,7 @@ GEN_PROP_SLACK = cgen.GEN_PROP_SLACK
 GEN_PROP_REG = cgen.GEN_PROP_REG
 GEN_PROP_NOT_REG = cgen.GEN_PROP_NOT_REG
 GEN_PROP_NOT_SLACK = cgen.GEN_PROP_NOT_SLACK
+GEN_PROP_P_ADJUST = cgen.GEN_PROP_P_ADJUST
 
 # Variables
 GEN_VAR_P = cgen.GEN_VAR_P
@@ -878,6 +918,17 @@ cdef class Generator:
         
         return cgen.GEN_is_regulator(self._c_gen)
 
+    def is_P_adjustable(self):
+        """ 
+        Determines whether generator has adjustable active power.
+        
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+        
+        return cgen.GEN_is_P_adjustable(self._c_gen)
+
     def has_flags(self,fmask,vmask):
         """ 
         Determines whether the generator has the flags associated with
@@ -922,10 +973,12 @@ cdef class Generator:
     property P_max:
         """ Generator active power upper limit (p.u. system base MVA) (float). """
         def __get__(self): return cgen.GEN_get_P_max(self._c_gen)
+        def __set__(self,P): cgen.GEN_set_P_max(self._c_gen,P)
 
     property P_min:
         """ Generator active power lower limit (p.u. system base MVA) (float). """
         def __get__(self): return cgen.GEN_get_P_min(self._c_gen)
+        def __set__(self,P): cgen.GEN_set_P_min(self._c_gen,P)
             
     property Q:
         """ Generator reactive power (p.u. system base MVA) (float). """
@@ -1159,6 +1212,130 @@ cdef new_Load(cload.Load* l):
     else:
         raise LoadError('no load data')
 
+# Variable Generator
+####################
+
+# Properties
+VARGEN_PROP_ANY = cvargen.VARGEN_PROP_ANY
+
+# Variables
+VARGEN_VAR_P = cvargen.VARGEN_VAR_P
+
+class VarGeneratorError(Exception):
+    """ 
+    Variable generator error exception.
+    """
+    
+    def __init__(self,value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+cdef class VarGenerator:
+    """
+    Variable generator class.
+    """
+
+    cdef cvargen.Vargen* _c_gen
+
+    def __init__(self,alloc=True):
+        """
+        Variable generator class.
+
+        Parameters
+        ----------
+        alloc : {``True``, ``False``}
+        """
+
+        pass
+
+    def __cinit__(self,alloc=True):
+        
+        if alloc:
+            self._c_gen = cvargen.VARGEN_new()
+        else:
+            self._c_gen = NULL
+
+    def has_flags(self,fmask,vmask):
+        """ 
+        Determines whether the variable generator has the flags associated with
+        certain quantities set. 
+
+        Parameters
+        ----------
+        fmask : int (:ref:`ref_net_flag`)
+        vmask : int (:ref:`ref_vargen_var`)
+        
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+
+        return cvargen.VARGEN_has_flags(self._c_gen,fmask,vmask)
+
+    property index:
+        """ Variable generator index (int). """
+        def __get__(self): return cvargen.VARGEN_get_index(self._c_gen)
+        
+    property index_P:
+        """ Index of variable generator active power variable (int). """
+        def __get__(self): return cvargen.VARGEN_get_index_P(self._c_gen)
+
+    property bus:
+        """ :class:`Bus <pfnet.Bus>` to which variable generator is connected. """
+        def __get__(self): return new_Bus(cvargen.VARGEN_get_bus(self._c_gen))
+
+    property P:
+        """ Variable generator active power (p.u. system base MVA) (float). """
+        def __get__(self): return cvargen.VARGEN_get_P(self._c_gen)
+        def __set__(self,P): cvargen.VARGEN_set_P(self._c_gen,P)
+
+    property P_max:
+        """ Variable generator active power upper limit (p.u. system base MVA) (float). """
+        def __get__(self): return cvargen.VARGEN_get_P_max(self._c_gen)
+        def __set__(self,P): cvargen.VARGEN_set_P_max(self._c_gen,P)
+
+    property P_std:
+        """ Variable generator active power standard deviation (p.u. system base MVA) (float). """
+        def __get__(self): return cvargen.VARGEN_get_P_std(self._c_gen)
+        def __set__(self,P): cvargen.VARGEN_set_P_std(self._c_gen,P)
+
+cdef class VarGeneratorArray:
+    """
+    Variable generator array class.
+    """
+
+    cdef cvargen.Vargen* _c_gen
+    cdef int size
+
+    def __init__(self,size):
+        """
+        Variable generator array class.
+
+        Parameters
+        ----------
+        size : int
+        """
+
+        pass
+
+    def __cinit__(self,size):
+        
+        self._c_gen = cvargen.VARGEN_array_new(size)
+        self.size = size
+
+    property size:
+        """ Array size (int). """
+        def __get__(self): return self.size
+
+cdef new_VarGenerator(cvargen.Vargen* g):
+    if g is not NULL:
+        gen = VarGenerator(alloc=False)
+        gen._c_gen = g
+        return gen
+    else:
+        raise VarGeneratorError('no vargen data')
+
 # Network
 #########
 
@@ -1247,6 +1424,30 @@ cdef class Network:
             buses.append(new_Bus(b))
             b = cbus.BUS_get_next(b)
         return buses
+
+    def create_vargen_P_sigma(self,spread,corr):
+        """
+        Creates covariance matrix (lower triangular part) for
+        variable vargen active powers. 
+
+        Parameters
+        ----------
+        spead : int
+                Determines correlation neighborhood in terms of number of edges.
+        corr : float 
+               Desired correlation coefficient for neighboring vargens.
+        
+        Returns
+        -------
+        sigma : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        """
+
+        sigma = Matrix(cnet.NET_create_vargen_P_sigma(self._c_net,spread,corr),
+                       owndata=True)
+        if cnet.NET_has_error(self._c_net):
+            raise NetworkError(cnet.NET_get_error_string(self._c_net))
+        else:
+            return sigma
         
     def get_bus_by_number(self,number):
         """
@@ -1371,15 +1572,82 @@ cdef class Network:
         else:
             raise NetworkError('invalid load index')
 
-    def get_var_values(self):
+    def get_vargen(self,index):
+        """
+        Gets variable generator with the given index.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        vargen : :class:`VarGenerator <pfnet.VarGenerator>`
+        """
+
+        ptr = cnet.NET_get_vargen(self._c_net,index)
+        if ptr is not NULL:
+            return new_VarGenerator(ptr)
+        else:
+            raise NetworkError('invalid vargen index')
+
+    def get_gen_buses(self):
+        """
+        Gets list of buses where generators are connected.
+
+        Returns
+        -------
+        buses : list
+        """
+        
+        buses = []
+        cdef cbus.Bus* b = cnet.NET_get_gen_buses(self._c_net)
+        while b is not NULL:
+            buses.append(new_Bus(b))
+            b = cbus.BUS_get_next(b)
+        return buses
+
+    def get_load_buses(self):
+        """
+        Gets list of buses where loads are connected.
+
+        Returns
+        -------
+        buses : list
+        """
+        
+        buses = []
+        cdef cbus.Bus* b = cnet.NET_get_load_buses(self._c_net)
+        while b is not NULL:
+            buses.append(new_Bus(b))
+            b = cbus.BUS_get_next(b)
+        return buses
+
+    def get_var_values(self,code=CURRENT):
         """
         Gets network variable values.
+
+        Parameters
+        ----------
+        code : int (See var values)
 
         Returns
         -------
         values : :class:`ndarray <numpy.ndarray>`
         """
-        return Vector(cnet.NET_get_var_values(self._c_net))
+        return Vector(cnet.NET_get_var_values(self._c_net,code),owndata=True)
+
+    def get_var_projection(self,obj_type,var):
+        """
+        Gets projection matrix for specific object variables.
+
+        Parameters
+        ----------
+        obj_type : int (:ref:`ref_net_obj`)
+        var : int (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`)
+        """
+        
+        return Matrix(cnet.NET_get_var_projection(self._c_net,obj_type,var),owndata=True)
 
     def get_num_buses(self):
         """
@@ -1552,6 +1820,17 @@ cdef class Network:
 
         return cnet.NET_get_num_slack_gens(self._c_net)
 
+    def get_num_P_adjust_gens(self):
+        """
+        Gets number of generators in the network that have adjustable active powers.
+
+        Returns
+        -------
+        num : int
+        """
+
+        return cnet.NET_get_num_P_adjust_gens(self._c_net)
+
     def get_num_loads(self):
         """
         Gets number of loads in the network.
@@ -1595,6 +1874,17 @@ cdef class Network:
         """
 
         return cnet.NET_get_num_switched_shunts(self._c_net)
+
+    def get_num_vargens(self):
+        """
+        Gets number of variable generators in the network.
+
+        Returns
+        -------
+        num : int
+        """
+        
+        return cnet.NET_get_num_vargens(self._c_net)
 
     def get_properties(self):
         """
@@ -1669,6 +1959,31 @@ cdef class Network:
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if values.size else NULL
         cnet.NET_set_var_values(self._c_net,v)
 
+    def set_vargen_buses(self,buses):
+        """
+        Connects the variable generator buses to the given buses in order.
+
+        Parameters
+        ----------
+        buses : list
+        """
+        
+        cdef Bus b = buses[0] if buses else None
+        if b:
+            cnet.NET_set_vargen_buses(self._c_net,b._c_bus);
+
+    def set_vargen_array(self,gen_array):
+        """
+        Sets array of variable generators.
+
+        Parameters
+        ----------
+        gen_array : VarGeneratorArray
+        """
+        
+        cdef VarGeneratorArray ga = gen_array
+        cnet.NET_set_vargen_array(self._c_net, ga._c_gen, ga.size)
+        
     def show_components(self):
         """
         Shows information about the number of network components of each type.
@@ -1750,6 +2065,11 @@ cdef class Network:
         """ List of network :class:`loads <pfnet.Load>` (list). """
         def __get__(self):
             return [self.get_load(i) for i in range(self.num_loads)]
+
+    property var_generators:
+        """ List of network :class:`variable generators <pfnet.VarGenerator>` (list). """
+        def __get__(self):
+            return [self.get_vargen(i) for i in range(self.num_vargens)]
     
     property num_buses:
         """ Number of buses in the network (int). """
@@ -1770,6 +2090,10 @@ cdef class Network:
     property num_shunts:
         """ Number of shunt devices in the network (int). """
         def __get__(self): return cnet.NET_get_num_shunts(self._c_net)
+
+    property num_vargens:
+        """ Number of variable generators in the network (int). """
+        def __get__(self): return cnet.NET_get_num_vargens(self._c_net)
 
     property num_vars:
         """ Number of network quantities that have been set to variable (int). """
@@ -2133,12 +2457,15 @@ cdef new_Function(cfunc.Func* f, cnet.Net* n):
 
 # Types
 CONSTR_TYPE_PF = cconstr.CONSTR_TYPE_PF
+CONSTR_TYPE_DCPF = cconstr.CONSTR_TYPE_DCPF
 CONSTR_TYPE_FIX = cconstr.CONSTR_TYPE_FIX
 CONSTR_TYPE_BOUND = cconstr.CONSTR_TYPE_BOUND
-CONSTR_TYPE_PAR_GEN = cconstr.CONSTR_TYPE_PAR_GEN
+CONSTR_TYPE_PAR_GEN_P = cconstr.CONSTR_TYPE_PAR_GEN_P
+CONSTR_TYPE_PAR_GEN_Q = cconstr.CONSTR_TYPE_PAR_GEN_Q
 CONSTR_TYPE_REG_GEN = cconstr.CONSTR_TYPE_REG_GEN
 CONSTR_TYPE_REG_TRAN = cconstr.CONSTR_TYPE_REG_TRAN
 CONSTR_TYPE_REG_SHUNT = cconstr.CONSTR_TYPE_REG_SHUNT
+CONSTR_TYPE_DC_FLOW_LIM = cconstr.CONSTR_TYPE_DC_FLOW_LIM
 
 class ConstraintError(Exception):
     """
@@ -2285,6 +2612,10 @@ cdef class Constraint:
         """ Number of nonzero entries in the matrix of linear equality constraints (int). """
         def __get__(self): return cconstr.CONSTR_get_Acounter(self._c_constr)
 
+    property Gcounter:
+        """ Number of nonzero entries in the matrix of linear inequality constraints (int). """
+        def __get__(self): return cconstr.CONSTR_get_Gcounter(self._c_constr)
+
     property Jcounter:
         """ Number of nonzero entries in the Jacobian matrix of the nonlinear equality constraints (int). """
         def __get__(self): return cconstr.CONSTR_get_Jcounter(self._c_constr)
@@ -2292,6 +2623,10 @@ cdef class Constraint:
     property Aconstr_index:
         """ Index of linear equality constraint (int). """
         def __get__(self): return cconstr.CONSTR_get_Aconstr_index(self._c_constr)
+
+    property Gconstr_index:
+        """ Index of linear ineqquality constraint (int). """
+        def __get__(self): return cconstr.CONSTR_get_Gconstr_index(self._c_constr)
 
     property Jconstr_index:
         """ Index of nonlinear equality constraint (int). """
@@ -2310,8 +2645,20 @@ cdef class Constraint:
         def __get__(self): return Vector(cconstr.CONSTR_get_b(self._c_constr))
         
     property A:
-        """ Matrix of linear equality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
+        """ Matrix for linear equality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
         def __get__(self): return Matrix(cconstr.CONSTR_get_A(self._c_constr))
+
+    property hl:
+        """ Lower bound vector of linear inequality constraints (:class:`ndarray <numpy.ndarray>`). """
+        def __get__(self): return Vector(cconstr.CONSTR_get_hl(self._c_constr))
+
+    property hu:
+        """ Upper bound vector of linear inequality constraints (:class:`ndarray <numpy.ndarray>`). """
+        def __get__(self): return Vector(cconstr.CONSTR_get_hu(self._c_constr))
+
+    property G:
+        """ Matrix for linear inequality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
+        def __get__(self): return Matrix(cconstr.CONSTR_get_G(self._c_constr))
 
     property H_combined:
         """ Linear combination of Hessian matrices of individual nonlinear equality constraints (only the lower triangular part) (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
@@ -2506,7 +2853,29 @@ cdef class Problem:
         point : :class:`ndarray <numpy.ndarray>`
         """
 
-        return Vector(cprob.PROB_get_init_point(self._c_prob))
+        return Vector(cprob.PROB_get_init_point(self._c_prob),owndata=True)
+
+    def get_upper_limits(self):
+        """
+        Gets vector of upper limits for the network variables.
+
+        Returns
+        -------
+        limits : :class:`ndarray <numpy.ndarray>`
+        """
+
+        return Vector(cprob.PROB_get_upper_limits(self._c_prob),owndata=True)
+
+    def get_lower_limits(self):
+        """
+        Gets vector of lower limits for the network variables.
+        
+        Returns
+        -------
+        limits : :class:`ndarray <numpy.ndarray>`
+        """
+
+        return Vector(cprob.PROB_get_lower_limits(self._c_prob),owndata=True)
 
     def get_network(self):
         """
@@ -2570,15 +2939,6 @@ cdef class Problem:
         """ Constraint matrix of linear equality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
         def __get__(self): return Matrix(cprob.PROB_get_A(self._c_prob))
 
-    property Z:
-        """ Matrix whose columns are a basis for the null space of A (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
-        def __get__(self): 
-            Z = Matrix(cprob.PROB_get_Z(self._c_prob))
-            if cprob.PROB_has_error(self._c_prob):
-                raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
-            else:
-                return Z
-
     property b:
         """ Right hand side vectors of the linear equality constraints (:class:`ndarray <numpy.ndarray>`). """
         def __get__(self): return Vector(cprob.PROB_get_b(self._c_prob))
@@ -2606,3 +2966,17 @@ cdef class Problem:
     property H_combined:
         """ Linear combination of Hessian matrices of individual nonlinear equality constraints (only the lower triangular part) (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
         def __get__(self): return Matrix(cprob.PROB_get_H_combined(self._c_prob))
+
+    property x:
+        """ Initial primal point (:class:`ndarray <numpy.ndarray>`). """
+        def __get__(self): return self.get_init_point()
+
+    property lam:
+        """ Initial dual point (:class:`ndarray <numpy.ndarray>`). """
+        def __get__(self): return None
+
+    property nu:
+        """ Initial dual point (:class:`ndarray <numpy.ndarray>`). """
+        def __get__(self): return None
+        
+    

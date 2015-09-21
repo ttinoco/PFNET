@@ -177,22 +177,52 @@ Shunt* SHUNT_get_reg_next(Shunt* shunt) {
     return NULL;
 }
 
-void SHUNT_get_var_values(Shunt* shunt, Vec* values) {
+void SHUNT_get_var_values(Shunt* shunt, Vec* values, int code) {
 
   // No shunt
   if (!shunt)
     return;
 
-  // Get variables
-  if (shunt->vars & SHUNT_VAR_SUSC)      // susceptance
-    VEC_set(values,shunt->index_b,shunt->b);
-  if (shunt->vars & SHUNT_VAR_SUSC_DEV) {   // susceptance deviations
-    VEC_set(values,shunt->index_y,0.);
-    VEC_set(values,shunt->index_z,0.);
+  if (shunt->vars & SHUNT_VAR_SUSC) { // susceptance
+    switch(code) {
+    case UPPER_LIMITS:
+      VEC_set(values,shunt->index_b,shunt->b_max);
+      break;
+    case LOWER_LIMITS:
+      VEC_set(values,shunt->index_b,shunt->b_min);
+      break;
+    default:
+      VEC_set(values,shunt->index_b,shunt->b);
+    }
+  }
+  if (shunt->vars & SHUNT_VAR_SUSC_DEV) { // susceptance deviations
+    switch(code) {
+    case UPPER_LIMITS:
+      VEC_set(values,shunt->index_y,INF);
+      VEC_set(values,shunt->index_z,INF);
+      break;
+    case LOWER_LIMITS:
+      VEC_set(values,shunt->index_y,-INF);
+      VEC_set(values,shunt->index_z,-INF);
+      break;
+    default:
+      VEC_set(values,shunt->index_y,0.);
+      VEC_set(values,shunt->index_z,0.);
+    }
   }    
 }
 
-BOOL SHUNT_has_flags(Shunt* shunt, char flag_type, char mask) {
+int SHUNT_get_var_index(void* vshunt, char var) {
+  Shunt* shunt = (Shunt*)vshunt;
+  if (!shunt)
+    return 0;
+  if (var == SHUNT_VAR_SUSC)
+    return shunt->index_b;
+  return 0;
+}
+
+BOOL SHUNT_has_flags(void* vshunt, char flag_type, char mask) {
+  Shunt* shunt = (Shunt*)vshunt;
   if (shunt) {
     if (flag_type == FLAG_VARS)
       return (shunt->vars & mask);

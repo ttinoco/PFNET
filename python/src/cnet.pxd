@@ -7,11 +7,13 @@
 #***************************************************#
 
 cimport cvec
+cimport cmat
 cimport cbus
 cimport cbranch
 cimport cgen
 cimport cload
 cimport cshunt
+cimport cvargen
 
 cdef extern from "pfnet/net.h":
 
@@ -24,6 +26,7 @@ cdef extern from "pfnet/net.h":
     void NET_clear_properties(Net* net)
     void NET_clear_sensitivities(Net* net)
     cbus.Bus* NET_create_sorted_bus_list(Net* net, int sort_by)
+    cmat.Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr)
     void NET_del(Net* net)
     REAL NET_get_base_power(Net* net)
     cbus.Bus* NET_get_bus(Net* net, int index)
@@ -32,6 +35,9 @@ cdef extern from "pfnet/net.h":
     cgen.Gen* NET_get_gen(Net* net, int index)
     cshunt.Shunt* NET_get_shunt(Net* net, int index)
     cload.Load* NET_get_load(Net* net, int index)
+    cvargen.Vargen* NET_get_vargen(Net* net, int index)
+    cbus.Bus* NET_get_load_buses(Net* net)
+    cbus.Bus* NET_get_gen_buses(Net* net)
     int NET_get_num_buses(Net* net)
     int NET_get_num_slack_buses(Net* net)
     int NET_get_num_buses_reg_by_gen(Net* net)
@@ -49,10 +55,12 @@ cdef extern from "pfnet/net.h":
     int NET_get_num_gens(Net* net)
     int NET_get_num_reg_gens(Net* net)
     int NET_get_num_slack_gens(Net* net)
+    int NET_get_num_P_adjust_gens(Net* net)
     int NET_get_num_loads(Net* net)
     int NET_get_num_shunts(Net* net)
     int NET_get_num_fixed_shunts(Net* net)
     int NET_get_num_switched_shunts(Net* net)
+    int NET_get_num_vargens(Net* net)
     int NET_get_num_vars(Net* net)
     int NET_get_num_fixed(Net* net)
     int NET_get_num_bounded(Net* net)
@@ -71,12 +79,15 @@ cdef extern from "pfnet/net.h":
     REAL NET_get_shunt_v_vio(Net* net)
     REAL NET_get_shunt_b_vio(Net* net)
     int NET_get_num_actions(Net* net)
-    cvec.Vec* NET_get_var_values(Net* net)
+    cvec.Vec* NET_get_var_values(Net* net, int code)
+    cmat.Mat* NET_get_var_projection(Net* net, char obj_type, char var)
     bint NET_has_error(Net* net)
     void NET_load(Net* net, char* filename)
     Net* NET_new()
     void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, char val_mask)
     void NET_set_var_values(Net* net, cvec.Vec* values)
+    void NET_set_vargen_array(Net* net, cvargen.Vargen* gen, int num)
+    void NET_set_vargen_buses(Net* net, cbus.Bus* bus_list)
     void NET_show_components(Net* net)
     void NET_show_properties(Net* net)
     void NET_show_buses(Net* net, int number, int sort_by)

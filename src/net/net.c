@@ -25,6 +25,7 @@ struct Net {
   Gen* gen;          /**< @brief Gen array */
   Load* load;        /**< @brief Load array */
   Shunt* shunt;      /**< @brief Shunt array */
+  Vargen* vargen;    /**< @brief Vargen array */
 
   // Number of components
   int num_buses;     /**< @brief Number of buses (size of Bus array) */
@@ -32,6 +33,7 @@ struct Net {
   int num_gens;      /**< @brief Number of generators (size of Gen array) */
   int num_loads;     /**< @brief Number of loads (size of Load array) */
   int num_shunts;    /**< @brief Number of shunts (size of Shunt array) */
+  int num_vargens;   /**< @brief Number of variable generators (size of Vargen array) */
 
   // Number of flags
   int num_vars;      /**< @brief Number of variable quantities. */
@@ -170,6 +172,8 @@ BOOL NET_check(Net* net, BOOL verbose) {
 
   // Shunt
 
+  // Vargens
+
   // Overall
   return (base_ok & bus_ok);
 
@@ -185,6 +189,7 @@ void NET_clear_data(Net* net) {
     free(net->gen);
     free(net->load);
     SHUNT_array_free(net->shunt,net->num_shunts);
+    free(net->vargen);
     free(net->bus_counted);
 
     // Re-initialize
@@ -198,6 +203,7 @@ void NET_clear_flags(Net* net) {
   Gen* gen;
   Bus* bus;
   Shunt* shunt;
+  Vargen* vargen;
 
   if (!net)
     return;
@@ -239,6 +245,15 @@ void NET_clear_flags(Net* net) {
   }
 
   // Loads
+
+  // Vargens
+  for (i = 0; i < net->num_vargens; i++) {
+    vargen = VARGEN_array_get(net->vargen,i);
+    VARGEN_clear_flags(vargen,FLAG_VARS);
+    VARGEN_clear_flags(vargen,FLAG_FIXED);
+    VARGEN_clear_flags(vargen,FLAG_BOUNDED);
+    VARGEN_clear_flags(vargen,FLAG_SPARSE);
+  }
 
   // Clear counters
   net->num_vars = 0;
@@ -300,8 +315,222 @@ Bus* NET_create_sorted_bus_list(Net* net, int sort_by) {
     return bus_list;
   
   for (i = 0; i < net->num_buses; i++)
-    bus_list = BUS_list_add(bus_list,BUS_array_get(net->bus,i),sort_by);
+    bus_list = BUS_list_add_sorting(bus_list,BUS_array_get(net->bus,i),sort_by);
   return bus_list;
+}
+ 
+Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
+  /* This function constructs a covariance matrix for the active powers of
+   * variable generators. The matrix is constructed such that the correlation 
+   * coefficients of the (variable) active powers of vargens that are less than 
+   * "spread" branches away is equal to "corr". Only the lower triangular part 
+   * of the covaraicen matrix is stored. The resulting matrix should be checked 
+   * to make sure it is a valid covariance matrix.
+   */
+
+  // Local variables
+  Mat* sigma;
+  Bus* bus_main;
+  Bus* bus1;
+  Bus* bus2;
+  Branch* br;
+  Vargen* vgen_main;
+  Vargen* vg1;
+  
+  char* queued;
+  int* neighbors;
+  int neighbors_total;
+  int neighbors_curr;
+  int num_new;
+  
+  int nnz_counter;
+  int i;
+  int j;
+
+  // Check
+  if (!net)
+    return NULL;
+
+  // Allocate arrays
+  queued = (char*)malloc(net->num_buses*sizeof(char));
+  neighbors = (int*)malloc(net->num_buses*sizeof(int));
+
+  // Count nnz
+  //**********
+  nnz_counter = 0;
+  for (i = 0; i < net->num_vargens; i++) {
+
+    // Clear arrays
+    for (j = 0; j < net->num_buses; j++) {
+      neighbors[j] = 0;
+      queued[j] = FALSE;
+    }
+    
+    // Main
+    vgen_main = NET_get_vargen(net,i);
+    bus_main = VARGEN_get_bus(vgen_main);
+
+    // Check variable
+    if (!VARGEN_has_flags(vgen_main,FLAG_VARS,VARGEN_VAR_P))
+      continue;
+
+    // Add self to be processed
+    neighbors_total = 1;
+    neighbors[0] = BUS_get_index(bus_main);
+    queued[BUS_get_index(bus_main)] = TRUE;
+
+    // Neighbors
+    neighbors_curr = 0;
+    for (j = 0; j < spread; j++) {
+      num_new = 0;
+      while (neighbors_curr < neighbors_total) {
+	bus1 = NET_get_bus(net,neighbors[neighbors_curr]);
+	for (br = BUS_get_branch_from(bus1); br != NULL; br = BRANCH_get_from_next(br)) {
+	  if (bus1 != BRANCH_get_bus_from(br)) {
+	    sprintf(net->error_string,"unable to construct covariance matrix");
+	    net->error_flag = TRUE;
+	  }
+	  bus2 = BRANCH_get_bus_to(br);
+	  if (!queued[BUS_get_index(bus2)]) {
+	    neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
+	    queued[BUS_get_index(bus2)] = TRUE;
+	    num_new++;
+	  }
+	}
+	for (br = BUS_get_branch_to(bus1); br != NULL; br = BRANCH_get_to_next(br)) {
+	  if (bus1 != BRANCH_get_bus_to(br)) {
+	    sprintf(net->error_string,"unable to construct covariance matrix");
+	    net->error_flag = TRUE;
+	  }
+	  bus2 = BRANCH_get_bus_from(br);
+	  if (!queued[BUS_get_index(bus2)]) {
+	    neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
+	    queued[BUS_get_index(bus2)] = TRUE;
+	    num_new++;
+	  }
+	}
+	neighbors_curr++;
+      }
+      neighbors_total += num_new;
+      if (num_new == 0)
+	break;
+    }
+
+    // Diagonal
+    nnz_counter++;
+
+    // Off diagonals
+    for (j = 0; j < neighbors_total; j++) {
+      bus1 = NET_get_bus(net,neighbors[j]);
+      for (vg1 = BUS_get_vargen(bus1); vg1 != NULL; vg1 = VARGEN_get_next(vg1)) {
+	if (VARGEN_has_flags(vg1,FLAG_VARS,VARGEN_VAR_P) &&
+	    VARGEN_get_index_P(vgen_main) > VARGEN_get_index_P(vg1)) {
+	  nnz_counter++;
+	}
+      }
+    }    
+  }
+  
+  // Allocate
+  //*********
+  sigma = MAT_new(net->num_vars,
+		  net->num_vars,
+		  nnz_counter);
+
+  // Fill
+  //*****
+  nnz_counter = 0;
+  for (i = 0; i < net->num_vargens; i++) {
+
+    // Clear arrays
+    for (j = 0; j < net->num_buses; j++) {
+      neighbors[j] = 0;
+      queued[j] = FALSE;
+    }
+    
+    // Main
+    vgen_main = NET_get_vargen(net,i);
+    bus_main = VARGEN_get_bus(vgen_main);
+
+    // Check variable
+    if (!VARGEN_has_flags(vgen_main,FLAG_VARS,VARGEN_VAR_P))
+      continue;
+
+    // Add self to be processed
+    neighbors_total = 1;
+    neighbors[0] = BUS_get_index(bus_main);
+    queued[BUS_get_index(bus_main)] = TRUE;
+
+    // Neighbors
+    neighbors_curr = 0;
+    for (j = 0; j < spread; j++) {
+      num_new = 0;
+      while (neighbors_curr < neighbors_total) {
+	bus1 = NET_get_bus(net,neighbors[neighbors_curr]);
+	for (br = BUS_get_branch_from(bus1); br != NULL; br = BRANCH_get_from_next(br)) {
+	  if (bus1 != BRANCH_get_bus_from(br)) {
+	    sprintf(net->error_string,"unable to construct covariance matrix");
+	    net->error_flag = TRUE;
+	  }
+	  bus2 = BRANCH_get_bus_to(br);
+	  if (!queued[BUS_get_index(bus2)]) {
+	    neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
+	    queued[BUS_get_index(bus2)] = TRUE;
+	    num_new++;
+	  }
+	}
+	for (br = BUS_get_branch_to(bus1); br != NULL; br = BRANCH_get_to_next(br)) {
+	  if (bus1 != BRANCH_get_bus_to(br)) {
+	    sprintf(net->error_string,"unable to construct covariance matrix");
+	    net->error_flag = TRUE;
+	  }
+	  bus2 = BRANCH_get_bus_from(br);
+	  if (!queued[BUS_get_index(bus2)]) {
+	    neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
+	    queued[BUS_get_index(bus2)] = TRUE;
+	    num_new++;
+	  }
+	}
+	neighbors_curr++;
+      }
+      neighbors_total += num_new;
+      if (num_new == 0)
+	break;
+    }
+
+    // Diagonal
+    MAT_set_i(sigma,nnz_counter,VARGEN_get_index_P(vgen_main));
+    MAT_set_j(sigma,nnz_counter,VARGEN_get_index_P(vgen_main));
+    MAT_set_d(sigma,nnz_counter,pow(VARGEN_get_P_std(vgen_main),2.));
+    nnz_counter++;
+
+    // Off diagonals
+    for (j = 0; j < neighbors_total; j++) {
+      bus1 = NET_get_bus(net,neighbors[j]);
+      for (vg1 = BUS_get_vargen(bus1); vg1 != NULL; vg1 = VARGEN_get_next(vg1)) {
+	if (VARGEN_has_flags(vg1,FLAG_VARS,VARGEN_VAR_P) &&
+	    VARGEN_get_index_P(vgen_main) > VARGEN_get_index_P(vg1)) {
+	  MAT_set_i(sigma,nnz_counter,VARGEN_get_index_P(vgen_main));
+	  MAT_set_j(sigma,nnz_counter,VARGEN_get_index_P(vg1));
+	  MAT_set_d(sigma,nnz_counter,
+		    VARGEN_get_P_std(vgen_main)*VARGEN_get_P_std(vg1)*corr);
+	  nnz_counter++;
+	}
+      }
+    } 
+  }
+
+  // Check
+  if (nnz_counter != MAT_get_nnz(sigma)) {
+    sprintf(net->error_string,"unable to construct covariance matrix");
+    net->error_flag = TRUE;
+  }
+ 
+  // Clean up
+  free(queued);
+  free(neighbors);
+ 
+  return sigma;
 }
 
 void NET_del(Net* net) {
@@ -328,6 +557,7 @@ void NET_init(Net* net) {
   net->gen = NULL;
   net->load = NULL;
   net->shunt = NULL;
+  net->vargen = NULL;
 
   // Number components
   net->num_buses = 0;
@@ -335,6 +565,7 @@ void NET_init(Net* net) {
   net->num_gens = 0;
   net->num_loads = 0;
   net->num_shunts = 0;
+  net->num_vargens = 0;
 
   // Number flags 
   net->num_vars = 0;
@@ -420,6 +651,47 @@ Shunt* NET_get_shunt(Net* net, int index) {
     return NULL;
   else
     return SHUNT_array_get(net->shunt,index);
+}
+
+Vargen* NET_get_vargen(Net* net, int index) {
+  if (!net || index < 0 || index >= net->num_vargens)
+    return NULL;
+  else
+    return VARGEN_array_get(net->vargen,index);
+}
+
+Bus* NET_get_gen_buses(Net* net) {
+  
+  Bus* bus_list = NULL;
+  Bus* bus;
+  int i;
+  
+  if (!net)
+    return bus_list;
+  
+  for (i = 0; i < net->num_buses; i++) {
+    bus = NET_get_bus(net,i);
+    if (BUS_get_gen(bus))
+      bus_list = BUS_list_add(bus_list,bus);
+  }
+  return bus_list;
+}
+
+Bus* NET_get_load_buses(Net* net) {
+  
+  Bus* bus_list = NULL;
+  Bus* bus;
+  int i;
+  
+  if (!net)
+    return bus_list;
+  
+  for (i = 0; i < net->num_buses; i++) {
+    bus = NET_get_bus(net,i);
+    if (BUS_get_load(bus))
+      bus_list = BUS_list_add(bus_list,bus);
+  }
+  return bus_list;
 }
 
 int NET_get_num_buses(Net* net) {
@@ -619,6 +891,18 @@ int NET_get_num_slack_gens(Net* net) {
   return n;
 }
 
+int NET_get_num_P_adjust_gens(Net* net) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  for(i = 0; i < net->num_gens; i++) {
+    if (GEN_is_P_adjustable(GEN_array_get(net->gen,i)))
+      n++;
+  }
+  return n;
+}
+
 int NET_get_num_loads(Net* net) {
   if (net)
     return net->num_loads;
@@ -655,6 +939,13 @@ int NET_get_num_switched_shunts(Net* net) {
       n++;
   }
   return n;
+}
+
+int NET_get_num_vargens(Net* net) {
+  if (net)
+    return net->num_vargens;
+  else
+    return 0;
 }
 
 int NET_get_num_bounded(Net* net) {
@@ -729,7 +1020,7 @@ REAL NET_get_total_load_Q(Net* net) {
   return Q*net->base_power; // MVAr
 }
 
-Vec* NET_get_var_values(Net* net) {
+Vec* NET_get_var_values(Net* net, int code) {
 
   // Local variables
   int i;
@@ -743,24 +1034,118 @@ Vec* NET_get_var_values(Net* net) {
   
   // Buses
   for (i = 0; i < net->num_buses; i++)
-    BUS_get_var_values(BUS_array_get(net->bus,i),values);
+    BUS_get_var_values(BUS_array_get(net->bus,i),values,code);
 
   // Generators
   for (i = 0; i < net->num_gens; i++) 
-    GEN_get_var_values(GEN_array_get(net->gen,i),values);
+    GEN_get_var_values(GEN_array_get(net->gen,i),values,code);
 
   // Branches
   for (i = 0; i < net->num_branches; i++) 
-    BRANCH_get_var_values(BRANCH_array_get(net->branch,i),values);
+    BRANCH_get_var_values(BRANCH_array_get(net->branch,i),values,code);
   
   // Shunts
   for (i = 0; i < net->num_shunts; i++) 
-    SHUNT_get_var_values(SHUNT_array_get(net->shunt,i),values);
+    SHUNT_get_var_values(SHUNT_array_get(net->shunt,i),values,code);
 
   // Loads
 
+  // Variable generators
+  for (i = 0; i < net->num_vargens; i++) 
+    VARGEN_get_var_values(VARGEN_array_get(net->vargen,i),values,code);
+
   // Return
   return values;  
+}
+
+Mat* NET_get_var_projection(Net* net, char obj_type, char var) {
+
+  // Local variables
+  int num_subvars;
+  Mat* proj;
+  int i;
+
+  int num;
+  void* obj;
+  void* array;
+  void* (*get_element)(void* array, int index);
+  BOOL (*has_flags)(void*,char,char);
+  int (*get_var_index)(void*,char);
+
+  // Check
+  if (!net)
+    return NULL;
+
+  // Set pointers
+  switch (obj_type) {
+  case OBJ_BUS:
+    num = net->num_buses;
+    array = net->bus;
+    get_element = &BUS_array_get;
+    has_flags = &BUS_has_flags;
+    get_var_index = &BUS_get_var_index;
+    break;
+  case OBJ_GEN:
+    num = net->num_gens;
+    array = net->gen;
+    get_element = &GEN_array_get;
+    has_flags = &GEN_has_flags;
+    get_var_index = &GEN_get_var_index;
+    break;
+  case OBJ_BRANCH:
+    num = net->num_branches;
+    array = net->branch;
+    get_element = &BRANCH_array_get;
+    has_flags = &BRANCH_has_flags;
+    get_var_index = &BRANCH_get_var_index;
+    break;
+  case OBJ_SHUNT:
+    num = net->num_shunts;
+    array = net->shunt;
+    get_element = &SHUNT_array_get;
+    has_flags = &SHUNT_has_flags;
+    get_var_index = &SHUNT_get_var_index;
+    break;
+  case OBJ_VARGEN:
+    num = net->num_vargens;
+    array = net->vargen;
+    get_element = &VARGEN_array_get;
+    has_flags = &VARGEN_has_flags;
+    get_var_index = &VARGEN_get_var_index;
+    break;
+  default:
+    sprintf(net->error_string,"invalid object type");
+    net->error_flag = TRUE;
+    return NULL;
+  }
+    
+  // Count
+  num_subvars = 0;
+  for (i = 0; i < num; i++) {
+    obj = get_element(array,i);
+    if (has_flags(obj,FLAG_VARS,var))
+      num_subvars++;
+  }
+
+  // Allocate
+  proj = MAT_new(num_subvars,
+		 net->num_vars,
+		 num_subvars);
+  
+  // Fill
+  num_subvars = 0;
+  for (i = 0; i < num; i++) {
+    obj = get_element(array,i);
+    if (has_flags(obj,FLAG_VARS,var)) {
+      MAT_set_i(proj,num_subvars,num_subvars);
+      MAT_set_j(proj,num_subvars,get_var_index(obj,var));
+      MAT_set_d(proj,num_subvars,1.);
+      num_subvars++;
+    }
+  }
+       
+  // Return
+  return proj;
 }
 
 REAL NET_get_bus_v_max(Net* net) {
@@ -978,6 +1363,33 @@ void NET_set_gen_array(Net* net, Gen* gen, int num) {
   }
 }
 
+void NET_set_vargen_array(Net* net, Vargen* gen, int num) {
+  if (net) {
+    net->vargen = gen;
+    net->num_vargens = num;
+  }
+}
+
+void NET_set_vargen_buses(Net* net, Bus* bus_list) {
+  
+  int i;
+  Bus* bus;
+  Vargen* gen;
+
+  if (!net)
+    return;
+
+  i = 0;
+  bus = bus_list;
+  while (i < net->num_vargens && bus) {
+    gen = VARGEN_array_get(net->vargen,i);
+    VARGEN_set_bus(gen,bus);
+    BUS_add_vargen(bus,gen);
+    bus = BUS_get_next(bus);
+    i++;
+  }
+}
+
 void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, char val_mask) {
 
   // Local variables
@@ -1022,6 +1434,13 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, char
     get_element = &SHUNT_array_get;
     set_flags = &SHUNT_set_flags;
     has_properties = &SHUNT_has_properties;
+    break;
+  case OBJ_VARGEN:
+    num = net->num_vargens;
+    array = net->vargen;
+    get_element = &VARGEN_array_get;
+    set_flags = &VARGEN_set_flags;
+    has_properties = &VARGEN_has_properties;
     break;
   default:
     sprintf(net->error_string,"invalid object type");
@@ -1070,6 +1489,10 @@ void NET_set_var_values(Net* net, Vec* values) {
     SHUNT_set_var_values(SHUNT_array_get(net->shunt,i),values);
 
   // Loads
+
+  // Vargens
+  for (i = 0; i < net->num_vargens; i++) 
+    VARGEN_set_var_values(VARGEN_array_get(net->vargen,i),values);
 }
 
 void NET_show_components(Net *net) {
@@ -1094,6 +1517,7 @@ void NET_show_components(Net *net) {
   printf("  slack          : %d\n",NET_get_num_slack_gens(net));
   printf("  reg            : %d\n",NET_get_num_reg_gens(net));
   printf("loads            : %d\n",NET_get_num_loads(net));
+  printf("vargens          : %d\n",NET_get_num_vargens(net));
 }
 
 void NET_show_properties(Net* net) {

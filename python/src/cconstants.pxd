@@ -6,14 +6,14 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
-cdef extern from "pfnet/obj_types.h":
+cdef extern from "pfnet/constants.h":
 
-    cdef char OBJ_BUS
-    cdef char OBJ_GEN
-    cdef char OBJ_BRANCH
-    cdef char OBJ_SHUNT
-    cdef char OBJ_LOAD
-    cdef char OBJ_VARGEN
+    cdef double PI
+    cdef double INF
+
+    cdef char CURRENT
+    cdef char UPPER_LIMITS
+    cdef char LOWER_LIMITS
 
 
 

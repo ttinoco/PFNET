@@ -88,6 +88,17 @@ for i=1:size(mpc.branch)(1)
 end
 fprintf(fid,'END\n');
 
+%% cost
+fprintf(fid,'COST\n');
+fprintf(fid,'gen index,Q2 ($/hr MW2),Q1 ($/hr MW),Q0 ($/hr)\n');
+for i=1:size(mpc.gencost)(1)
+    fprintf(fid,'%d,',i-1);
+    fprintf(fid,'%.8f,',0.04*rand()+0.01);
+    fprintf(fid,'%.8f,',40.*rand()+10.);
+    fprintf(fid,'%.8f\n',0.);
+end
+fprintf(fid,'END\n');
+
 %% close
 disp('Done');
 fclose(fid);

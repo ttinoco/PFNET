@@ -42,6 +42,7 @@ cdef extern from "pfnet/branch.h":
     REAL BRANCH_get_phase(Branch* br)
     REAL BRANCH_get_phase_max(Branch* br)
     REAL BRANCH_get_phase_min(Branch* br)
+    REAL BRANCH_get_ratingA(Branch* br)
     Branch* BRANCH_get_reg_next(Branch* br)
     Branch* BRANCH_get_from_next(Branch* br)
     Branch* BRANCH_get_to_next(Branch* br)
@@ -56,4 +57,4 @@ cdef extern from "pfnet/branch.h":
     Branch* BRANCH_new()
     void BRANCH_set_ratio_max(Branch* br, REAL ratio)
     void BRANCH_set_ratio_min(Branch* br, REAL ratio)
-    
+    void BRANCH_set_ratingA(Branch* br, REAL r)

@@ -1,5 +1,5 @@
-/** @file constr_PAR_GEN.c
- *  @brief This file defines the data structure and routines associated with the constraint of type PAR_GEN.
+/** @file constr_PAR_GEN_Q.c
+ *  @brief This file defines the data structure and routines associated with the constraint of type PAR_GEN_Q.
  *
  * This file is part of PFNET.
  *
@@ -8,16 +8,16 @@
  * PFNET is released under the BSD 2-clause license.
  */
 
-#include <pfnet/constr_PAR_GEN.h>
+#include <pfnet/constr_PAR_GEN_Q.h>
 #include <assert.h>
 
-void CONSTR_PAR_GEN_init(Constr* c) {
+void CONSTR_PAR_GEN_Q_init(Constr* c) {
   
   // Init
   CONSTR_set_data(c,NULL);
 }
 
-void CONSTR_PAR_GEN_clear(Constr* c) {
+void CONSTR_PAR_GEN_Q_clear(Constr* c) {
   
   // Counters
   CONSTR_set_Acounter(c,0);
@@ -27,7 +27,7 @@ void CONSTR_PAR_GEN_clear(Constr* c) {
   CONSTR_clear_bus_counted(c);
 }
 
-void CONSTR_PAR_GEN_count_branch(Constr* c, Branch* br) {
+void CONSTR_PAR_GEN_Q_count_branch(Constr* c, Branch* br) {
   
   // Local variables
   Bus* buses[2];
@@ -58,18 +58,6 @@ void CONSTR_PAR_GEN_count_branch(Constr* c, Branch* br) {
     
     if (!bus_counted[BUS_get_index(bus)]) {
       
-      // Active power of slack generators
-      if (BUS_is_slack(bus)) {
-	gen1 = BUS_get_gen(bus);
-	for (gen2 = GEN_get_next(gen1); gen2 != NULL; gen2 = GEN_get_next(gen2)) {
-	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_P))
-	    (*Acounter)++;
-	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_P))
-	    (*Acounter)++;
-	  (*Aconstr_index)++;
-	}
-      }
-
       // Reactive power of regulating generators
       if (BUS_is_regulated_by_gen(bus)) {
 	gen1 = BUS_get_reg_gen(bus);
@@ -88,7 +76,7 @@ void CONSTR_PAR_GEN_count_branch(Constr* c, Branch* br) {
   }
 }
 
-void CONSTR_PAR_GEN_allocate(Constr *c) {
+void CONSTR_PAR_GEN_Q_allocate(Constr *c) {
   
   // Local variables
   int num_constr;
@@ -112,7 +100,7 @@ void CONSTR_PAR_GEN_allocate(Constr *c) {
 			 Acounter)); // nnz
 }
 
-void CONSTR_PAR_GEN_analyze_branch(Constr* c, Branch* br) {
+void CONSTR_PAR_GEN_Q_analyze_branch(Constr* c, Branch* br) {
   
   // Local variables
   Bus* buses[2];
@@ -151,43 +139,18 @@ void CONSTR_PAR_GEN_analyze_branch(Constr* c, Branch* br) {
     
     if (!bus_counted[BUS_get_index(bus)]) {
       
-      // Active power of slack generators
-      if (BUS_is_slack(bus)) {	
-	gen1 = BUS_get_gen(bus);
-	for (gen2 = GEN_get_next(gen1); gen2 != NULL; gen2 = GEN_get_next(gen2)) {
-	  VEC_set(b,*Aconstr_index,0.);
-	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_P)) {
-	    MAT_set_i(A,*Acounter,*Aconstr_index);
-	    MAT_set_j(A,*Acounter,GEN_get_index_P(gen1));
-	    MAT_set_d(A,*Acounter,1.);
-	    (*Acounter)++;
-	  }
-	  else
-	    VEC_add_to_entry(b,*Aconstr_index,-GEN_get_P(gen1));
-	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_P)) {
-	    MAT_set_i(A,*Acounter,*Aconstr_index);
-	    MAT_set_j(A,*Acounter,GEN_get_index_P(gen2));
-	    MAT_set_d(A,*Acounter,-1.);
-	    (*Acounter)++;
-	  }
-	  else
-	    VEC_add_to_entry(b,*Aconstr_index,GEN_get_P(gen2));
-	  (*Aconstr_index)++;
-	}
-      }
-
       // Reactive power of regulating generators
       if (BUS_is_regulated_by_gen(bus)) {
 	gen1 = BUS_get_reg_gen(bus);
 	Qmin1 = GEN_get_Q_min(gen1);
 	dQ1 = GEN_get_Q_max(gen1)-Qmin1;
-	if (dQ1 < CONSTR_PAR_GEN_PARAM)
-	  dQ1 = CONSTR_PAR_GEN_PARAM;
+	if (dQ1 < CONSTR_PAR_GEN_Q_PARAM)
+	  dQ1 = CONSTR_PAR_GEN_Q_PARAM;
 	for (gen2 = GEN_get_reg_next(gen1); gen2 != NULL; gen2 = GEN_get_reg_next(gen2)) {
 	  Qmin2 = GEN_get_Q_min(gen2);
 	  dQ2 = GEN_get_Q_max(gen2)-Qmin2;
-	  if (dQ2 < CONSTR_PAR_GEN_PARAM)
-	    dQ2 = CONSTR_PAR_GEN_PARAM;
+	  if (dQ2 < CONSTR_PAR_GEN_Q_PARAM)
+	    dQ2 = CONSTR_PAR_GEN_Q_PARAM;
 	  VEC_set(b,*Aconstr_index,Qmin1/dQ1-Qmin2/dQ2);
 	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q)) {
 	    MAT_set_i(A,*Acounter,*Aconstr_index);
@@ -215,14 +178,14 @@ void CONSTR_PAR_GEN_analyze_branch(Constr* c, Branch* br) {
   }  
 }
 
-void CONSTR_PAR_GEN_eval_branch(Constr* c, Branch* br, Vec* var_values) {
+void CONSTR_PAR_GEN_Q_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   // Nothing to do
 }
 
-void CONSTR_PAR_GEN_store_sens_branch(Constr* c, Branch* br, Vec* sens) {
+void CONSTR_PAR_GEN_Q_store_sens_branch(Constr* c, Branch* br, Vec* sens) {
   // Nothing
 }
 
-void CONSTR_PAR_GEN_free(Constr* c) {
+void CONSTR_PAR_GEN_Q_free(Constr* c) {
   // Nothing to do
 }

@@ -28,9 +28,6 @@ struct Prob {
   // Network
   Net* net;       /**< @brief Power flow network */
 
-  // Point
-  Vec* point;     /**< @brief Vector of problem variables */
-
   // Objective function
   REAL phi;       /**< @brief Combined objective value */
   Vec* gphi;      /**< @brief Gradient of combined objective function */
@@ -233,7 +230,6 @@ void PROB_clear(Prob* p) {
     CONSTR_list_del(p->constr);
     FUNC_list_del(p->func);
     HEUR_list_del(p->heur);
-    VEC_del(p->point);
     VEC_del(p->b);
     MAT_del(p->A);
     MAT_del(p->Z);
@@ -296,7 +292,8 @@ void PROB_construct_Z(Prob* p) {
   BOOL has_REG_TRAN = FALSE;
   BOOL has_REG_SHUNT = FALSE;
   BOOL has_FIX = FALSE;
-  BOOL has_PAR = FALSE;
+  BOOL has_PAR_P = FALSE;
+  BOOL has_PAR_Q = FALSE;
   int Znnz;
   int Zcol;
   int i;
@@ -317,8 +314,10 @@ void PROB_construct_Z(Prob* p) {
       has_FIX = TRUE;
     if (CONSTR_get_type(c) == CONSTR_TYPE_REG_GEN)
       has_REG_GEN = TRUE;
-    if (CONSTR_get_type(c) == CONSTR_TYPE_PAR_GEN)
-      has_PAR = TRUE;
+    if (CONSTR_get_type(c) == CONSTR_TYPE_PAR_GEN_P)
+      has_PAR_P = TRUE;
+    if (CONSTR_get_type(c) == CONSTR_TYPE_PAR_GEN_Q)
+      has_PAR_Q = TRUE;
     if (CONSTR_get_type(c) == CONSTR_TYPE_REG_TRAN)
       has_REG_TRAN = TRUE;
     if (CONSTR_get_type(c) == CONSTR_TYPE_REG_SHUNT)
@@ -373,7 +372,7 @@ void PROB_construct_Z(Prob* p) {
     }
 
     // slack gens P
-    if (has_PAR && BUS_is_slack(bus)) {
+    if (has_PAR_P && BUS_is_slack(bus)) {
 
       // number of free
       num_free_P = 0;
@@ -391,7 +390,7 @@ void PROB_construct_Z(Prob* p) {
     }
     
     // reg gen Q
-    if (has_PAR && BUS_is_regulated_by_gen(bus)) {
+    if (has_PAR_Q && BUS_is_regulated_by_gen(bus)) {
 
       // number of free
       num_free_Q = 0;
@@ -416,12 +415,12 @@ void PROB_construct_Z(Prob* p) {
 
     if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) &&
 	(!has_FIX || !GEN_has_flags(gen,FLAG_FIXED,GEN_VAR_P)) &&
-	(!has_PAR || !GEN_is_slack(gen)))
+	(!has_PAR_P || !GEN_is_slack(gen)))
       Znnz++; // P free
     
     if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q) &&
 	(!has_FIX || !GEN_has_flags(gen,FLAG_FIXED,GEN_VAR_Q)) &&
-	(!has_PAR || !GEN_is_regulator(gen)))
+	(!has_PAR_Q || !GEN_is_regulator(gen)))
       Znnz++; // Q free
   }
 
@@ -601,7 +600,7 @@ void PROB_construct_Z(Prob* p) {
     }
 
     // slack gens P
-    if (has_PAR && BUS_is_slack(bus)) {
+    if (has_PAR_P && BUS_is_slack(bus)) {
 
       // number of free
       num_free_P = 0;
@@ -624,7 +623,7 @@ void PROB_construct_Z(Prob* p) {
     }
     
     // reg gen Q
-    if (has_PAR && BUS_is_regulated_by_gen(bus)) {
+    if (has_PAR_Q && BUS_is_regulated_by_gen(bus)) {
 
       // number of free
       max_dQ = 0;
@@ -658,7 +657,7 @@ void PROB_construct_Z(Prob* p) {
 
     if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) &&
 	(!has_FIX || !GEN_has_flags(gen,FLAG_FIXED,GEN_VAR_P)) &&
-	(!has_PAR || !GEN_is_slack(gen))) {
+	(!has_PAR_P || !GEN_is_slack(gen))) {
       MAT_set_i(p->Z,Znnz,GEN_get_index_P(gen));
       MAT_set_j(p->Z,Znnz,Zcol);
       MAT_set_d(p->Z,Znnz,1.);
@@ -668,7 +667,7 @@ void PROB_construct_Z(Prob* p) {
     
     if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q) &&
 	(!has_FIX || !GEN_has_flags(gen,FLAG_FIXED,GEN_VAR_Q)) &&
-	(!has_PAR || !GEN_is_regulator(gen))) {
+	(!has_PAR_Q || !GEN_is_regulator(gen))) {
       MAT_set_i(p->Z,Znnz,GEN_get_index_Q(gen));
       MAT_set_j(p->Z,Znnz,Zcol);
       MAT_set_d(p->Z,Znnz,1.);
@@ -871,11 +870,24 @@ Heur* PROB_get_heur(Prob* p) {
 }
 
 Vec* PROB_get_init_point(Prob* p) {
-  if (p) {
-    p->point = NET_get_var_values(p->net);
-    return p->point;
-  } 
-  return NULL;
+  if (p)
+    return NET_get_var_values(p->net,CURRENT);
+  else
+    return NULL;
+}
+
+Vec* PROB_get_upper_limits(Prob* p) {
+  if (p)
+    return NET_get_var_values(p->net,UPPER_LIMITS);
+  else
+    return NULL;
+}
+
+Vec* PROB_get_lower_limits(Prob* p) {
+  if (p)
+    return NET_get_var_values(p->net,LOWER_LIMITS);
+  else
+    return NULL;
 }
 
 Net* PROB_get_network(Prob* p) {
@@ -965,7 +977,6 @@ void PROB_init(Prob* p) {
     p->constr = NULL;
     p->func = NULL;
     p->heur = NULL;
-    p->point = NULL;
     p->net = NULL;
     p->phi = 0;
     p->gphi = NULL;

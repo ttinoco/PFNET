@@ -187,17 +187,50 @@ REAL GEN_get_Q_min(Gen* gen) {
   return gen->Q_min;
 }
 
-void GEN_get_var_values(Gen* gen, Vec* values) {
+void GEN_get_var_values(Gen* gen, Vec* values, int code) {
   
   if (!gen)
     return;
-  if (gen->vars & GEN_VAR_P)
-    VEC_set(values,gen->index_P,gen->P);
-  if (gen->vars & GEN_VAR_Q)
-    VEC_set(values,gen->index_Q,gen->Q);
+
+  if (gen->vars & GEN_VAR_P) { // active power
+    switch(code) {
+    case UPPER_LIMITS:
+      VEC_set(values,gen->index_P,gen->P_max);
+      break;
+    case LOWER_LIMITS:
+      VEC_set(values,gen->index_P,gen->P_min);
+      break;
+    default:
+      VEC_set(values,gen->index_P,gen->P);
+    }
+  }
+  if (gen->vars & GEN_VAR_Q) { // reactive power
+    switch(code) {
+    case UPPER_LIMITS:
+      VEC_set(values,gen->index_Q,gen->Q_max);
+      break;
+    case LOWER_LIMITS:
+      VEC_set(values,gen->index_Q,gen->Q_min);
+      break;
+    default:
+      VEC_set(values,gen->index_Q,gen->Q);
+    }
+  }
 }
 
-BOOL GEN_has_flags(Gen* gen, char flag_type, char mask) {
+int GEN_get_var_index(void* vgen, char var) {
+  Gen* gen = (Gen*)vgen;
+  if (!gen)
+    return 0;
+  if (var == GEN_VAR_P)
+    return gen->index_P;
+  if (var == GEN_VAR_Q)
+    return gen->index_Q;
+  return 0;
+}
+
+BOOL GEN_has_flags(void* vgen, char flag_type, char mask) {
+  Gen* gen = (Gen*)vgen;
   if (gen) {
     if (flag_type == FLAG_VARS)
       return (gen->vars & mask);
@@ -225,6 +258,8 @@ BOOL GEN_has_properties(void* vgen, char prop) {
     return FALSE;
   if ((prop & GEN_PROP_NOT_SLACK) && GEN_is_slack(gen))
     return FALSE;
+  if ((prop & GEN_PROP_P_ADJUST) && !GEN_is_P_adjustable(gen))
+    return FALSE;
   return TRUE;
 }
 
@@ -242,14 +277,21 @@ void GEN_init(Gen* gen) {
   gen->Q = 0;
   gen->Q_max = 0;
   gen->Q_min = 0;
-  gen->cost_coeff_Q0 = 0;
+  gen->cost_coeff_Q0 = 0/100.;
   gen->cost_coeff_Q1 = 20.;
-  gen->cost_coeff_Q2 = 0.01;
+  gen->cost_coeff_Q2 = 0.01*100.;
   gen->index = 0;
   gen->index_P = 0;
   gen->index_Q = 0;
   gen->next = NULL;
   gen->reg_next = NULL;
+}
+
+BOOL GEN_is_P_adjustable(Gen* gen) {
+  if (gen)
+    return gen->P_min < gen->P_max;
+  else
+    return FALSE;
 }
 
 BOOL GEN_is_regulator(Gen* gen) {
@@ -292,6 +334,21 @@ Gen* GEN_new(void) {
   Gen* gen = (Gen*)malloc(sizeof(Gen));
   GEN_init(gen);
   return gen;
+}
+
+void GEN_set_cost_coeff_Q0(Gen* gen, REAL q) {
+  if (gen)
+    gen->cost_coeff_Q0 = q;
+}
+
+void GEN_set_cost_coeff_Q1(Gen* gen, REAL q) {
+  if (gen)
+    gen->cost_coeff_Q1 = q;
+}
+
+void GEN_set_cost_coeff_Q2(Gen* gen, REAL q) {
+  if (gen)
+    gen->cost_coeff_Q2 = q;
 }
 
 void GEN_set_bus(Gen* gen, void* bus) {

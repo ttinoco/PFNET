@@ -24,14 +24,17 @@
 /** \defgroup constr_types Constraint Types
  *  @{
  */
-#define CONSTR_TYPE_UNKNOWN -1  /**< @brief Constraint type: unknown */
-#define CONSTR_TYPE_PF 0        /**< @brief Constraint type: power flow equations */
-#define CONSTR_TYPE_FIX 1       /**< @brief Constraint type: variable fixing */
-#define CONSTR_TYPE_BOUND 2     /**< @brief Constraint type: variable bounds */
-#define CONSTR_TYPE_PAR_GEN 3   /**< @brief Constraint type: generator participation */
-#define CONSTR_TYPE_REG_GEN 4   /**< @brief Constraint type: voltage regualtion by generators */
-#define CONSTR_TYPE_REG_TRAN 5  /**< @brief Constraint type: voltage regulation by transformers */
-#define CONSTR_TYPE_REG_SHUNT 6 /**< @brief Constraint type: voltage regulation by shunt devices */
+#define CONSTR_TYPE_UNKNOWN -1    /**< @brief Constraint type: unknown */
+#define CONSTR_TYPE_PF 0          /**< @brief Constraint type: power flow equations */
+#define CONSTR_TYPE_DCPF 1        /**< @brief Constraint type: DC power flow quations */
+#define CONSTR_TYPE_FIX 2         /**< @brief Constraint type: variable fixing */
+#define CONSTR_TYPE_BOUND 3       /**< @brief Constraint type: variable bounds */
+#define CONSTR_TYPE_PAR_GEN_P 4   /**< @brief Constraint type: generator participation (active power) */
+#define CONSTR_TYPE_PAR_GEN_Q 5   /**< @brief Constraint type: generator participation (reactive power) */
+#define CONSTR_TYPE_REG_GEN 6     /**< @brief Constraint type: voltage regualtion by generators */
+#define CONSTR_TYPE_REG_TRAN 7    /**< @brief Constraint type: voltage regulation by transformers */
+#define CONSTR_TYPE_REG_SHUNT 8   /**< @brief Constraint type: voltage regulation by shunt devices */
+#define CONSTR_TYPE_DC_FLOW_LIM 9 /**< @brief Constraint type: DC branch flow limits */
 /** @} */
 
 // Constraint
@@ -45,6 +48,9 @@ void CONSTR_del(Constr* constr);
 int CONSTR_get_type(Constr* c);
 Vec* CONSTR_get_b(Constr* c);
 Mat* CONSTR_get_A(Constr* c);
+Vec* CONSTR_get_hl(Constr* c);
+Vec* CONSTR_get_hu(Constr* c);
+Mat* CONSTR_get_G(Constr* c);
 Vec* CONSTR_get_f(Constr* c);
 Mat* CONSTR_get_J(Constr* c);
 Mat* CONSTR_get_H_array(Constr* c);
@@ -53,12 +59,16 @@ Mat* CONSTR_get_H_single(Constr* c, int i);
 Mat* CONSTR_get_H_combined(Constr* c);
 int CONSTR_get_Acounter(Constr* c);
 int* CONSTR_get_Acounter_ptr(Constr* c);
+int CONSTR_get_Gcounter(Constr* c);
+int* CONSTR_get_Gcounter_ptr(Constr* c);
 int CONSTR_get_Jcounter(Constr* c);
 int* CONSTR_get_Jcounter_ptr(Constr* c);
 int* CONSTR_get_Hcounter(Constr* c);
 int CONSTR_get_Hcounter_size(Constr* c);
 int CONSTR_get_Aconstr_index(Constr* c);
 int* CONSTR_get_Aconstr_index_ptr(Constr* c);
+int CONSTR_get_Gconstr_index(Constr* c);
+int* CONSTR_get_Gconstr_index_ptr(Constr* c);
 int CONSTR_get_Jconstr_index(Constr* c);
 int* CONSTR_get_Jconstr_index_ptr(Constr* c);
 char* CONSTR_get_bus_counted(Constr *c);
@@ -80,14 +90,19 @@ void CONSTR_list_store_sens_branch(Constr* clist, Branch* br, Vec* sens);
 Constr* CONSTR_new(int type, Net* net);
 void CONSTR_set_b(Constr* c, Vec* b);
 void CONSTR_set_A(Constr* c, Mat* A);
+void CONSTR_set_hl(Constr* c, Vec* hl);
+void CONSTR_set_hu(Constr* c, Vec* hu);
+void CONSTR_set_G(Constr* c, Mat* G);
 void CONSTR_set_f(Constr* c, Vec* f);
 void CONSTR_set_J(Constr* c, Mat* J);
 void CONSTR_set_H_array(Constr* c, Mat* H_array, int size);
 void CONSTR_set_H_combined(Constr* c, Mat* H_combined);
 void CONSTR_set_Acounter(Constr* c, int counter);
+void CONSTR_set_Gcounter(Constr* c, int counter);
 void CONSTR_set_Jcounter(Constr* c, int counter);
 void CONSTR_set_Hcounter(Constr* c, int* counter, int size);
 void CONSTR_set_Aconstr_index(Constr* c, int index);
+void CONSTR_set_Gconstr_index(Constr* c, int index);
 void CONSTR_set_Jconstr_index(Constr* c, int index);
 void CONSTR_set_bus_counted(Constr* c, char* counted, int size);
 void CONSTR_set_data(Constr* c, void* data);

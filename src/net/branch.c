@@ -294,21 +294,62 @@ REAL BRANCH_get_ratingC(Branch* b) {
     return 0;
 }
 
-void BRANCH_get_var_values(Branch* br, Vec* values) {
+void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
 
   // No branch
   if (!br)
     return;
 
-  // Get variables
-  if (br->vars & BRANCH_VAR_RATIO) // taps ratio
-    VEC_set(values,br->index_ratio,br->ratio);
-  if (br->vars & BRANCH_VAR_PHASE) // phase shift
-    VEC_set(values,br->index_phase,br->phase);
+  if (br->vars & BRANCH_VAR_RATIO) { // taps ratio
+    switch(code) {
+    case UPPER_LIMITS:
+      VEC_set(values,br->index_ratio,br->ratio_max);
+      break;
+    case LOWER_LIMITS:
+      VEC_set(values,br->index_ratio,br->ratio_min);
+      break;
+    default:
+      VEC_set(values,br->index_ratio,br->ratio);
+    }
+  }
+  if (br->vars & BRANCH_VAR_PHASE) { // phase shift
+    switch(code) {
+    case UPPER_LIMITS:
+      VEC_set(values,br->index_phase,br->phase_max);
+      break;
+    case LOWER_LIMITS:
+      VEC_set(values,br->index_phase,br->phase_min);
+      break;
+    default:
+      VEC_set(values,br->index_phase,br->phase);
+    }
+  }
   if (br->vars & BRANCH_VAR_RATIO_DEV) { // tap ratio deviations
-    VEC_set(values,br->index_ratio_y,0.);
-    VEC_set(values,br->index_ratio_z,0.);
-  }    
+    switch(code) {
+    case UPPER_LIMITS:
+      VEC_set(values,br->index_ratio_y,INF);
+      VEC_set(values,br->index_ratio_z,INF);
+      break;
+    case LOWER_LIMITS:
+      VEC_set(values,br->index_ratio_y,-INF);
+      VEC_set(values,br->index_ratio_z,-INF);
+      break;
+    default:
+      VEC_set(values,br->index_ratio_y,0.);
+      VEC_set(values,br->index_ratio_z,0.);
+    }
+  }   
+}
+
+int BRANCH_get_var_index(void* vbr, char var) {
+  Branch* br = (Branch*)vbr;
+  if (!br)
+    return 0;
+  if (var == BRANCH_VAR_RATIO)
+    return br->index_ratio;
+  if (var == BRANCH_VAR_PHASE)
+    return br->index_phase;
+  return 0;
 }
 
 BOOL BRANCH_has_pos_ratio_v_sens(Branch* branch) {
@@ -318,7 +359,8 @@ BOOL BRANCH_has_pos_ratio_v_sens(Branch* branch) {
     return FALSE;
 }
 
-BOOL BRANCH_has_flags(Branch* br, char flag_type, char mask) {
+BOOL BRANCH_has_flags(void* vbr, char flag_type, char mask) {
+  Branch* br = (Branch*)vbr;
   if (br) {
     if (flag_type == FLAG_VARS)
       return (br->vars & mask);

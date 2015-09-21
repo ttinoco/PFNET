@@ -10,12 +10,15 @@
 
 #include <pfnet/constr.h>
 #include <pfnet/constr_PF.h>
+#include <pfnet/constr_DCPF.h>
 #include <pfnet/constr_FIX.h>
 #include <pfnet/constr_BOUND.h>
-#include <pfnet/constr_PAR_GEN.h>
+#include <pfnet/constr_PAR_GEN_P.h>
+#include <pfnet/constr_PAR_GEN_Q.h>
 #include <pfnet/constr_REG_GEN.h>
 #include <pfnet/constr_REG_TRAN.h>
 #include <pfnet/constr_REG_SHUNT.h>
+#include <pfnet/constr_DC_FLOW_LIM.h>
 
 struct Constr {
 
@@ -29,24 +32,31 @@ struct Constr {
   // Type
   int type; /**< @brief Constraint type */
 
-  // Nonlinear
+  // Nonlinear (f(x) = 0)
   Vec* f;           /**< @brief Vector of nonlinear constraint violations */
   Mat* J;           /**< @brief Jacobian matrix of nonlinear constraints */
   Mat* H_array;     /**< @brief Array of Hessian matrices of nonlinear constraints */
   int H_array_size; /**< @brief Size of Hessian array */
   Mat* H_combined;  /**< @brief Linear combination of Hessians of the nonlinear constraints */
 
-  // Linear
-  Mat* A; /**< @brief Matrix of constraint normals of linear cosntraints */
-  Vec* b; /**< @brief Right-hand side vector of linear constraints */
+  // Linear equality (Ax = b)
+  Mat* A;           /**< @brief Matrix of constraint normals of linear equality constraints */
+  Vec* b;           /**< @brief Right-hand side vector of linear equality constraints */
 
+  // Linear inequalities (hl <= Gx <= hu)
+  Mat* G;           /** @brief Matrix of constraint normals of linear inequality constraints */
+  Vec* hl;          /** @brief Lower bound for linear inequality contraints */
+  Vec* hu;          /** @brief Upper bound for linear inequality contraints */
+  
   // Utils
   int Acounter;         /**< @brief Counter for nonzeros of matrix A */
-  int Jcounter;         /**< @brief Counter for nonzeros matrix J */
+  int Jcounter;         /**< @brief Counter for nonzeros of matrix J */
+  int Gcounter;         /**< @brief Counter for nonzeros of matrix G */
   int* Hcounter;        /**< @brief Array of counters of nonzeros of nonlinear constraint Hessians */
   int Hcounter_size;    /**< @brief Size of array of counter of Hessian nonzeros */
-  int Aconstr_index;    /**< @brief Index for linear constraints */
+  int Aconstr_index;    /**< @brief Index for linear equality constraints */
   int Jconstr_index;    /**< @brief Index for nonlinear constraints */
+  int Gconstr_index;    /**< @brief Index for linear inequality constraints */
   char* bus_counted;    /**< @brief Flag for processing buses */
   int bus_counted_size; /**< @brief Size of array of flags for processing buses */
   int branch_counter;   /**< @brief Counter for processing branches */
@@ -133,6 +143,9 @@ void CONSTR_del(Constr* c) {
     MAT_del(c->A);
     VEC_del(c->f);
     MAT_del(c->J);
+    MAT_del(c->G);
+    VEC_del(c->hl);
+    VEC_del(c->hu);
     MAT_array_del(c->H_array,c->H_array_size);
     MAT_del(c->H_combined);
 
@@ -165,6 +178,27 @@ Vec* CONSTR_get_b(Constr* c) {
 Mat* CONSTR_get_A(Constr* c) {
   if (c)
     return c->A;
+  else
+    return NULL;
+}
+
+Vec* CONSTR_get_hl(Constr* c) {
+  if (c)
+    return c->hl;
+  else
+    return NULL;
+}
+
+Vec* CONSTR_get_hu(Constr* c) {
+  if (c)
+    return c->hu;
+  else
+    return NULL;
+}
+
+Mat* CONSTR_get_G(Constr* c) {
+  if (c)
+    return c->G;
   else
     return NULL;
 }
@@ -225,6 +259,20 @@ int* CONSTR_get_Acounter_ptr(Constr* c) {
     return NULL;
 }
 
+int CONSTR_get_Gcounter(Constr* c) {
+  if (c)
+    return c->Gcounter;
+  else
+    return 0;
+}
+
+int* CONSTR_get_Gcounter_ptr(Constr* c) {
+  if (c)
+    return &(c->Gcounter);
+  else
+    return NULL;
+}
+
 int CONSTR_get_Jcounter(Constr* c) {
   if (c)
     return c->Jcounter;
@@ -260,6 +308,27 @@ int CONSTR_get_Aconstr_index(Constr* c) {
     return 0;
 }
 
+int* CONSTR_get_Aconstr_index_ptr(Constr* c) {
+  if (c)
+    return &(c->Aconstr_index);
+  else
+    return NULL;
+}
+
+int CONSTR_get_Gconstr_index(Constr* c) {
+  if (c)
+    return c->Gconstr_index;
+  else
+    return 0;
+}
+
+int* CONSTR_get_Gconstr_index_ptr(Constr* c) {
+  if (c)
+    return &(c->Gconstr_index);
+  else
+    return NULL;
+}
+
 int CONSTR_get_Jconstr_index(Constr* c) {
   if (c)
     return c->Jconstr_index;
@@ -267,12 +336,6 @@ int CONSTR_get_Jconstr_index(Constr* c) {
     return 0;
 }
 
-int* CONSTR_get_Aconstr_index_ptr(Constr* c) {
-  if (c)
-    return &(c->Aconstr_index);
-  else
-    return NULL;
-}
 
 int* CONSTR_get_Jconstr_index_ptr(Constr* c) {
   if (c)
@@ -430,12 +493,17 @@ Constr* CONSTR_new(int type, Net* net) {
   c->H_combined = NULL;
   c->A = NULL;
   c->b = NULL;
+  c->G = NULL;
+  c->hl = NULL;
+  c->hu = NULL;
   c->Acounter = 0;
   c->Jcounter = 0;
+  c->Gcounter = 0;
   c->Hcounter = NULL;
   c->Hcounter_size = 0;
   c->Aconstr_index = 0;
   c->Jconstr_index = 0;
+  c->Gconstr_index = 0;
   c->branch_counter = 0;
   c->data = NULL;
   c->next = NULL;
@@ -455,15 +523,35 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_store_sens_branch = &CONSTR_PF_store_sens_branch;
     c->func_free = &CONSTR_PF_free;
   }
-  else if (type == CONSTR_TYPE_PAR_GEN) { // generator participation
-    c->func_init = &CONSTR_PAR_GEN_init;
-    c->func_count_branch = &CONSTR_PAR_GEN_count_branch;
-    c->func_allocate = &CONSTR_PAR_GEN_allocate;
-    c->func_clear = &CONSTR_PAR_GEN_clear;
-    c->func_analyze_branch = &CONSTR_PAR_GEN_analyze_branch;
-    c->func_eval_branch = &CONSTR_PAR_GEN_eval_branch;
-    c->func_store_sens_branch = &CONSTR_PAR_GEN_store_sens_branch;
-    c->func_free = &CONSTR_PAR_GEN_free;
+  else if (type == CONSTR_TYPE_DCPF) { // DC power flow
+    c->func_init = &CONSTR_DCPF_init;
+    c->func_count_branch = &CONSTR_DCPF_count_branch;
+    c->func_allocate = &CONSTR_DCPF_allocate;
+    c->func_clear = &CONSTR_DCPF_clear;
+    c->func_analyze_branch = &CONSTR_DCPF_analyze_branch;
+    c->func_eval_branch = &CONSTR_DCPF_eval_branch;
+    c->func_store_sens_branch = &CONSTR_DCPF_store_sens_branch;
+    c->func_free = &CONSTR_DCPF_free;
+  }
+  else if (type == CONSTR_TYPE_PAR_GEN_P) { // generator participation (active power)
+    c->func_init = &CONSTR_PAR_GEN_P_init;
+    c->func_count_branch = &CONSTR_PAR_GEN_P_count_branch;
+    c->func_allocate = &CONSTR_PAR_GEN_P_allocate;
+    c->func_clear = &CONSTR_PAR_GEN_P_clear;
+    c->func_analyze_branch = &CONSTR_PAR_GEN_P_analyze_branch;
+    c->func_eval_branch = &CONSTR_PAR_GEN_P_eval_branch;
+    c->func_store_sens_branch = &CONSTR_PAR_GEN_P_store_sens_branch;
+    c->func_free = &CONSTR_PAR_GEN_P_free;
+  }
+  else if (type == CONSTR_TYPE_PAR_GEN_Q) { // generator participation (reactive power)
+    c->func_init = &CONSTR_PAR_GEN_Q_init;
+    c->func_count_branch = &CONSTR_PAR_GEN_Q_count_branch;
+    c->func_allocate = &CONSTR_PAR_GEN_Q_allocate;
+    c->func_clear = &CONSTR_PAR_GEN_Q_clear;
+    c->func_analyze_branch = &CONSTR_PAR_GEN_Q_analyze_branch;
+    c->func_eval_branch = &CONSTR_PAR_GEN_Q_eval_branch;
+    c->func_store_sens_branch = &CONSTR_PAR_GEN_Q_store_sens_branch;
+    c->func_free = &CONSTR_PAR_GEN_Q_free;
   }
   else if (type == CONSTR_TYPE_FIX) { // variable fixing
     c->func_init = &CONSTR_FIX_init;
@@ -515,6 +603,16 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_store_sens_branch = &CONSTR_BOUND_store_sens_branch;
     c->func_free = &CONSTR_BOUND_free;
   }
+  else if (type == CONSTR_TYPE_DC_FLOW_LIM) { // DC branch flow limits
+    c->func_init = &CONSTR_DC_FLOW_LIM_init;
+    c->func_count_branch = &CONSTR_DC_FLOW_LIM_count_branch;
+    c->func_allocate = &CONSTR_DC_FLOW_LIM_allocate;
+    c->func_clear = &CONSTR_DC_FLOW_LIM_clear;
+    c->func_analyze_branch = &CONSTR_DC_FLOW_LIM_analyze_branch;
+    c->func_eval_branch = &CONSTR_DC_FLOW_LIM_eval_branch;
+    c->func_store_sens_branch = &CONSTR_DC_FLOW_LIM_store_sens_branch;
+    c->func_free = &CONSTR_DC_FLOW_LIM_free;
+  }
   else { // unknown 
     c->func_init = NULL;
     c->func_count_branch = NULL;
@@ -540,6 +638,21 @@ void CONSTR_set_b(Constr* c, Vec* b) {
 void CONSTR_set_A(Constr* c, Mat* A) {
   if (c)
     c->A = A;
+}
+
+void CONSTR_set_hl(Constr* c, Vec* hl) {
+  if (c)
+    c->hl = hl;
+}
+
+void CONSTR_set_hu(Constr* c, Vec* hu) {
+  if (c)
+    c->hu = hu;
+}
+
+void CONSTR_set_G(Constr* c, Mat* G) {
+  if (c)
+    c->G = G;
 }
 
 void CONSTR_set_f(Constr* c, Vec* f) {
@@ -569,6 +682,11 @@ void CONSTR_set_Acounter(Constr* c, int counter) {
     c->Acounter = counter;
 }
 
+void CONSTR_set_Gcounter(Constr* c, int counter) {
+  if (c)
+    c->Gcounter = counter;
+}
+
 void CONSTR_set_Jcounter(Constr* c, int counter) {
   if (c)
     c->Jcounter = counter;
@@ -584,6 +702,11 @@ void CONSTR_set_Hcounter(Constr* c, int* counter, int size) {
 void CONSTR_set_Aconstr_index(Constr* c, int index) {
   if (c)
     c->Aconstr_index = index;
+}
+
+void CONSTR_set_Gconstr_index(Constr* c, int index) {
+  if (c)
+    c->Gconstr_index = index;
 }
 
 void CONSTR_set_Jconstr_index(Constr* c, int index) {
