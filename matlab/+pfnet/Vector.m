@@ -5,4 +5,4 @@ function vec = Vector(v)
 
   setdatatype(data,'doublePtr',1,size);
   vec = data.Value;
-  
+end

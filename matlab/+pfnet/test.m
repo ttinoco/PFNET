@@ -45,7 +45,7 @@ bus.v_max;
 bus.v_min;
 assert(size(bus.gens,1)>0);
 assert(size(bus.gens,2)==1);
-bus.gens{1}
+assert(bus.gens{1}.bus.index==13);
 
 % Branches
 %%%%%%%%%%
@@ -90,3 +90,16 @@ assert(all(size(x) == [1 net.num_vars]));
 g = pfnet.Graph(net);
 g.set_layout()
 %g.write('ps2','graph.ps2');
+
+% Function
+%%%%%%%%%%
+
+f = pfnet.Function(FUNC_TYPE_REG_VMAG,2.5,net);
+assert(f.type==FUNC_TYPE_REG_VMAG);
+assert(f.type~=FUNC_TYPE_REG_VANG);
+assert(f.weight==2.5);
+assert(f.phi==0.);
+f.analyze();
+f.eval(x);
+assert(f.phi>0.);
+assert(all(size(f.gphi)==size(x)));
