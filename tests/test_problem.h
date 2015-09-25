@@ -18,7 +18,6 @@ static char* test_problem_basic() {
   Prob* p;
   Vec* x;
   Mat* A;
-  Mat* Z;
 
   printf("test_problem_basic ...");
 
@@ -87,14 +86,10 @@ static char* test_problem_basic() {
   Assert("error - bad problem Hcomb allocation",PROB_get_H_combined(p) != NULL);
 
   A = PROB_get_A(p);
-  Z = PROB_get_Z(p);
   
   Assert("error - bad objective value init",PROB_get_phi(p) == 0.);
 
   Assert("error - bad A shape",MAT_get_size2(A) == NET_get_num_vars(net));
-  Assert("error - bad Z shape",MAT_get_size1(Z) == NET_get_num_vars(net));
-  Assert("error - bad Z shape",MAT_get_size2(Z) == (NET_get_num_vars(net)-
-						    MAT_get_size1(A)));
   
   PROB_eval(p,x);
 
