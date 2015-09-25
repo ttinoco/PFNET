@@ -39,13 +39,16 @@
 // Generator
 typedef struct Gen Gen;
 
+// Other
+typedef struct Bus Bus;
+
 // Prototypes
 void* GEN_array_get(void* gen, int index);
 Gen* GEN_array_new(int num);
 void GEN_array_show(Gen* gen, int num);
 void GEN_clear_flags(Gen* gen, char flag_type);
-void* GEN_get_bus(Gen* gen);
-void* GEN_get_reg_bus(Gen* gen);
+Bus* GEN_get_bus(Gen* gen);
+Bus* GEN_get_reg_bus(Gen* gen);
 REAL GEN_get_cost_coeff_Q0(Gen* gen);
 REAL GEN_get_cost_coeff_Q1(Gen* gen);
 REAL GEN_get_cost_coeff_Q2(Gen* gen);
@@ -76,8 +79,8 @@ Gen* GEN_new(void);
 void GEN_set_cost_coeff_Q0(Gen* gen, REAL q);
 void GEN_set_cost_coeff_Q1(Gen* gen, REAL q);
 void GEN_set_cost_coeff_Q2(Gen* gen, REAL q);
-void GEN_set_bus(Gen* gen, void* bus);
-void GEN_set_reg_bus(Gen* gen, void* reg_bus);
+void GEN_set_bus(Gen* gen, Bus* bus);
+void GEN_set_reg_bus(Gen* gen, Bus* reg_bus);
 void GEN_set_regulator(Gen* gen, BOOL regulator);
 void GEN_set_index(Gen* gen, int index);
 void GEN_set_P(Gen* gen, REAL P);

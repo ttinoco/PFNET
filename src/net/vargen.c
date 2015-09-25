@@ -76,9 +76,9 @@ void VARGEN_clear_flags(Vargen* gen, char flag_type) {
   }
 }
 
-void* VARGEN_get_bus(Vargen* gen) {
+Bus* VARGEN_get_bus(Vargen* gen) {
   if (gen)
-    return (void*)gen->bus;
+    return gen->bus;
   else
     return NULL;
 }
@@ -223,7 +223,7 @@ Vargen* VARGEN_new(void) {
   return gen;
 }
 
-void VARGEN_set_bus(Vargen* gen, void* bus) {
+void VARGEN_set_bus(Vargen* gen, Bus* bus) {
   if (gen)
     gen->bus = (Bus*)bus;
 }

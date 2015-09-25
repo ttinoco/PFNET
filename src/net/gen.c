@@ -87,16 +87,16 @@ void GEN_clear_flags(Gen* gen, char flag_type) {
   }
 }
 
-void* GEN_get_bus(Gen* gen) {
+Bus* GEN_get_bus(Gen* gen) {
   if (gen)
-    return (void*)gen->bus;
+    return gen->bus;
   else
     return NULL;
 }
 
-void* GEN_get_reg_bus(Gen* gen) {
+Bus* GEN_get_reg_bus(Gen* gen) {
   if (gen)
-    return (void*)gen->reg_bus;
+    return gen->reg_bus;
   else
     return NULL;
 }
@@ -351,11 +351,11 @@ void GEN_set_cost_coeff_Q2(Gen* gen, REAL q) {
     gen->cost_coeff_Q2 = q;
 }
 
-void GEN_set_bus(Gen* gen, void* bus) {
+void GEN_set_bus(Gen* gen, Bus* bus) {
   gen->bus = (Bus*)bus;
 }
 
-void GEN_set_reg_bus(Gen* gen, void* reg_bus) {
+void GEN_set_reg_bus(Gen* gen, Bus* reg_bus) {
   gen->reg_bus = (Bus*)reg_bus;
 }
 

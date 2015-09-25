@@ -37,12 +37,15 @@
 // Variable generator
 typedef struct Vargen Vargen;
 
+// Other
+typedef struct Bus Bus;
+
 // Prototypes
 void* VARGEN_array_get(void* gen, int index);
 Vargen* VARGEN_array_new(int num);
 void VARGEN_array_show(Vargen* gen, int num);
 void VARGEN_clear_flags(Vargen* gen, char flag_type);
-void* VARGEN_get_bus(Vargen* gen);
+Bus* VARGEN_get_bus(Vargen* gen);
 int VARGEN_get_index(Vargen* gen);
 int VARGEN_get_index_P(Vargen* gen);
 Vargen* VARGEN_get_next(Vargen* gen);
@@ -60,7 +63,7 @@ Vargen* VARGEN_list_add(Vargen* gen_list, Vargen* gen);
 int VARGEN_list_len(Vargen* gen_list);
 Vargen* VARGEN_new(void);
 void VARGEN_set_type(Vargen* gen, int type);
-void VARGEN_set_bus(Vargen* gen, void* bus);
+void VARGEN_set_bus(Vargen* gen, Bus* bus);
 void VARGEN_set_index(Vargen* gen, int index);
 void VARGEN_set_P(Vargen* gen, REAL P);
 void VARGEN_set_P_max(Vargen* gen, REAL P_max);

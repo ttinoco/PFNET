@@ -4,6 +4,11 @@ net = pfnet.Network();
 
 net.load('../data/ieee14.mat')
 
+% Constants
+%%%%%%%%%%%
+assert(exist('CURRENT','var')==1)
+assert(exist('BUS_VAR_VANG','var')==1)
+
 % Show
 %%%%%%
 net.show_components()
@@ -19,8 +24,28 @@ assert(net.num_loads == 11);
 
 % Buses
 %%%%%%%
-bus = net.get_bus(5);
-assert(bus.index == 5);
+bus = net.get_bus(13);
+assert(bus.index == 13);
+bus.is_slack();
+bus.is_regulated_by_gen();
+bus.has_flags(FLAG_VARS,BUS_VAR_VMAG);
+bus.get_total_gen_P();
+bus.get_total_gen_Q();
+bus.get_total_load_P();
+bus.get_total_load_Q();
+bus.show();
+assert(bus.index_v_mag==0);
+assert(bus.index_v_ang==0);
+bus.number;
+bus.degree;
+bus.v_mag;
+bus.v_ang;
+bus.v_set;
+bus.v_max;
+bus.v_min;
+assert(size(bus.gens,1)>0);
+assert(size(bus.gens,2)==1);
+bus.gens{1}
 
 % Branches
 %%%%%%%%%%
@@ -31,6 +56,7 @@ assert(br.index == 3);
 %%%%%%
 gen = net.get_gen(4);
 assert(gen.index == 4);
+assert(gen.bus.number > 0);
 
 % Shunts
 %%%%%%%%
@@ -41,6 +67,7 @@ assert(sh.index == 0);
 %%%%%%
 load = net.get_load(9);
 assert(load.index == 9);
+assert(load.bus.number > 0)
 
 % Variables
 %%%%%%%%%%%
@@ -62,4 +89,4 @@ assert(all(size(x) == [1 net.num_vars]));
 
 g = pfnet.Graph(net);
 g.set_layout()
-g.write('ps2','graph.ps2');
+%g.write('ps2','graph.ps2');

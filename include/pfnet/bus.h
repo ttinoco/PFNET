@@ -13,13 +13,9 @@
 
 #include "stdio.h"
 #include "types.h"
-#include "gen.h"
-#include "load.h"
-#include "shunt.h"
-#include "vargen.h"
-#include "branch.h"
-#include "uthash.h"
+#include "list.h"
 #include "vector.h"
+#include "uthash.h"
 
 // Limits
 #define BUS_DEFAULT_V_MAX 1.1 /**< @brief Default maximum voltage magnitude. */
@@ -73,6 +69,14 @@
 
 // Bus
 typedef struct Bus Bus;
+
+// Other
+typedef struct Gen Gen;
+typedef struct Load Load;
+typedef struct Branch Branch;
+typedef struct Shunt Shunt;
+typedef struct Vargen Vargen;
+typedef struct Vec Vec;
 
 // Prototypes
 /** @brief Adds generator to list of generators connected to bus. */

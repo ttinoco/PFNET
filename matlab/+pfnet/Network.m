@@ -45,8 +45,11 @@ classdef Network < handle
       shunt = pfnet.Shunt(calllib('libpfnet','NET_get_shunt',net.c_net,i));
     end
 
-    function values = get_var_values(net)
-      values = pfnet.Vector(calllib('libpfnet','NET_get_var_values',net.c_net));
+    function values = get_var_values(net,code)
+      if (~exist('code','var'))
+	code=0;
+      end
+      values = pfnet.Vector(calllib('libpfnet','NET_get_var_values',net.c_net,code));
     end
 
     function load(net,filename)

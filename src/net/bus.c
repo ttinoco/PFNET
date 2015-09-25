@@ -1,14 +1,20 @@
 /** @file bus.c
- *  @brief This file defines the Bus data structure and its associated methods.
+1;3409;0c *  @brief This file defines the Bus data structure and its associated methods.
  *
  * This file is part of PFNET.
  *
  * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
+
  */
 
 #include <pfnet/bus.h>
+#include <pfnet/gen.h>
+#include <pfnet/branch.h>
+#include <pfnet/load.h>
+#include <pfnet/shunt.h>
+#include <pfnet/vargen.h>
 
 struct Bus {
 

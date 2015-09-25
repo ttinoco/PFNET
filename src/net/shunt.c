@@ -122,13 +122,13 @@ int SHUNT_get_index_z(Shunt* shunt) {
     return 0;
 }
 
-void* SHUNT_get_bus(Shunt* shunt) {
+Bus* SHUNT_get_bus(Shunt* shunt) {
   if (shunt)
     return shunt->bus;
   else
     return NULL;
 }
-void* SHUNT_get_reg_bus(Shunt* shunt) {
+Bus* SHUNT_get_reg_bus(Shunt* shunt) {
   if (shunt)
     return shunt->reg_bus;
   else
@@ -315,12 +315,12 @@ Shunt* SHUNT_new(void) {
   return shunt;
 }
 
-void SHUNT_set_bus(Shunt* shunt, void* bus) { 
+void SHUNT_set_bus(Shunt* shunt, Bus* bus) { 
   if (shunt)
     shunt->bus = (Bus*)bus;
 }
 
-void SHUNT_set_reg_bus(Shunt* shunt, void* reg_bus) { 
+void SHUNT_set_reg_bus(Shunt* shunt, Bus* reg_bus) { 
   if (shunt)
     shunt->reg_bus = (Bus*)reg_bus;
 }

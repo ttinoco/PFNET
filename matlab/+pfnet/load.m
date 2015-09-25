@@ -4,6 +4,7 @@ classdef Load < handle
 
     c_load = libpointer;
     index = 0;
+    bus = pfnet.Bus.empty;
 
   end
 
@@ -18,6 +19,10 @@ classdef Load < handle
 
     function idx = get.index(load)
       idx = calllib('libpfnet','LOAD_get_index',load.c_load);
+    end
+
+    function b = get.bus(load)
+      b = pfnet.Bus(calllib('libpfnet','LOAD_get_bus',load.c_load));
     end
     
   end

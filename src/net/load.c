@@ -53,9 +53,9 @@ void LOAD_array_show(Load* load, int num) {
     LOAD_show(&(load[i]));
 }
 
-void* LOAD_get_bus(Load* load) {
+Bus* LOAD_get_bus(Load* load) {
   if (load)
-    return (void*)load->bus;
+    return load->bus;
   else
     return NULL;
 }
@@ -113,7 +113,7 @@ Load* LOAD_new(void) {
   return load;
 }
 
-void LOAD_set_bus(Load* load, void* bus) { 
+void LOAD_set_bus(Load* load, Bus* bus) { 
   load->bus = (Bus*)bus;
 }
 

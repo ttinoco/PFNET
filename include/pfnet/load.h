@@ -18,10 +18,13 @@
 // Load
 typedef struct Load Load;
 
+// Other
+typedef struct Bus Bus;
+
 void* LOAD_array_get(void* load, int index);
 Load* LOAD_array_new(int num);
 void LOAD_array_show(Load* load, int num);
-void* LOAD_get_bus(Load* load);
+Bus* LOAD_get_bus(Load* load);
 int LOAD_get_index(Load* load);
 Load* LOAD_get_next(Load* load);
 REAL LOAD_get_P(Load* load);
@@ -30,7 +33,7 @@ void LOAD_init(Load* load);
 Load* LOAD_list_add(Load *load_list, Load* load);
 int LOAD_list_len(Load* load_list);
 Load* LOAD_new(void);
-void LOAD_set_bus(Load* load, void* bus);
+void LOAD_set_bus(Load* load, Bus* bus);
 void LOAD_set_index(Load* load, int index);
 void LOAD_set_P(Load* load, REAL P);
 void LOAD_set_Q(Load* load, REAL Q);

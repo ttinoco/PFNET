@@ -39,6 +39,9 @@
 // Struct
 typedef struct Shunt Shunt;
 
+// Other
+typedef struct Bus Bus;
+
 // Function prototypes
 void* SHUNT_array_get(void* shunt, int index);
 void SHUNT_array_free(Shunt* shunt, int num);
@@ -49,8 +52,8 @@ int SHUNT_get_index(Shunt* shunt);
 int SHUNT_get_index_b(Shunt* shunt);
 int SHUNT_get_index_y(Shunt* shunt);
 int SHUNT_get_index_z(Shunt* shunt);
-void* SHUNT_get_bus(Shunt* shunt);
-void* SHUNT_get_reg_bus(Shunt* shunt);
+Bus* SHUNT_get_bus(Shunt* shunt);
+Bus* SHUNT_get_reg_bus(Shunt* shunt);
 REAL SHUNT_get_g(Shunt* shunt);
 REAL SHUNT_get_b(Shunt* shunt);
 REAL SHUNT_get_b(Shunt* shunt);
@@ -71,8 +74,8 @@ int SHUNT_list_len(Shunt* shunt_list);
 Shunt* SHUNT_list_reg_add(Shunt *reg_shunt_list, Shunt* reg_shunt);
 int SHUNT_list_reg_len(Shunt* reg_shunt_list);
 Shunt* SHUNT_new(void);
-void SHUNT_set_bus(Shunt* shunt, void* bus);
-void SHUNT_set_reg_bus(Shunt* shunt, void* reg_bus);
+void SHUNT_set_bus(Shunt* shunt, Bus* bus);
+void SHUNT_set_reg_bus(Shunt* shunt, Bus* reg_bus);
 void SHUNT_set_type(Shunt* shunt, int type);
 void SHUNT_set_index(Shunt* shunt, int index);
 void SHUNT_set_g(Shunt* shunt, REAL g);

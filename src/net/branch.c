@@ -210,23 +210,23 @@ REAL BRANCH_get_g_to(Branch* b) {
     return 0;
 }
 
-void* BRANCH_get_bus_from(Branch* br) {
+Bus* BRANCH_get_bus_from(Branch* br) {
   if (br)
-    return (void*)br->bus_from;
+    return br->bus_from;
   else
     return NULL;
 }
 
-void* BRANCH_get_bus_to(Branch* br) {
+Bus* BRANCH_get_bus_to(Branch* br) {
   if (br)
-    return (void*)br->bus_to;
+    return br->bus_to;
   else
     return NULL;
 }
 
-void* BRANCH_get_reg_bus(Branch* br) {
+Bus* BRANCH_get_reg_bus(Branch* br) {
   if (br)
-    return (void*)br->reg_bus;
+    return br->reg_bus;
   else
     return NULL;
 }
@@ -522,15 +522,15 @@ void BRANCH_set_type(Branch* br, int type) {
     br->type = type;
 }
 
-void BRANCH_set_bus_from(Branch* branch, void* bus_from) {
+void BRANCH_set_bus_from(Branch* branch, Bus* bus_from) {
   branch->bus_from = (Bus*)bus_from;
 }
 
-void BRANCH_set_bus_to(Branch* branch, void* bus_to) {
+void BRANCH_set_bus_to(Branch* branch, Bus* bus_to) {
   branch->bus_to = (Bus*)bus_to;
 }
 
-void BRANCH_set_reg_bus(Branch* branch, void* reg_bus) {
+void BRANCH_set_reg_bus(Branch* branch, Bus* reg_bus) {
   branch->reg_bus = (Bus*)reg_bus;
 }
 

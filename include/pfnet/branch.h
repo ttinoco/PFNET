@@ -12,6 +12,7 @@
 #define __BRANCH_HEADER__
 
 #include "types.h"
+#include "list.h"
 #include "vector.h"
 
 // Branch types
@@ -46,6 +47,10 @@
 // Branch
 typedef struct Branch Branch;
 
+// Other
+typedef struct Bus Bus;
+typedef struct Vec Vec;
+
 // Prototypes
 void* BRANCH_array_get(void* br, int index);
 Branch* BRANCH_array_new(int num);
@@ -65,9 +70,9 @@ REAL BRANCH_get_b_to(Branch* br);
 REAL BRANCH_get_g(Branch* br);
 REAL BRANCH_get_g_from(Branch* br);
 REAL BRANCH_get_g_to(Branch* br);
-void* BRANCH_get_bus_from(Branch* br);
-void* BRANCH_get_bus_to(Branch* br);
-void* BRANCH_get_reg_bus(Branch* br);
+Bus* BRANCH_get_bus_from(Branch* br);
+Bus* BRANCH_get_bus_to(Branch* br);
+Bus* BRANCH_get_reg_bus(Branch* br);
 Branch* BRANCH_get_reg_next(Branch* br);
 Branch* BRANCH_get_from_next(Branch* br);
 Branch* BRANCH_get_to_next(Branch* br);
@@ -98,9 +103,9 @@ int BRANCH_list_to_len(Branch* to_br_list);
 Branch* BRANCH_new(void);
 void BRANCH_set_index(Branch* br, int index);
 void BRANCH_set_type(Branch* br, int type);
-void BRANCH_set_bus_from(Branch* br, void* bus_from);
-void BRANCH_set_bus_to(Branch* br, void* bus_to);
-void BRANCH_set_reg_bus(Branch* br, void* reg_bus);
+void BRANCH_set_bus_from(Branch* br, Bus* bus_from);
+void BRANCH_set_bus_to(Branch* br, Bus* bus_to);
+void BRANCH_set_reg_bus(Branch* br, Bus* reg_bus);
 void BRANCH_set_g(Branch* br, REAL g);
 void BRANCH_set_g_from(Branch* br, REAL g_from);
 void BRANCH_set_g_to(Branch* br, REAL g_to);
