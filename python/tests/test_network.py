@@ -292,13 +292,25 @@ class TestNetwork(unittest.TestCase):
                 else:
                     self.assertFalse(gen.is_P_adjustable())
 
-                # setting P_min and P_max
+                # set/get P_min and P_max
                 self.assertNotEqual(gen.P_max,2*np.pi)
                 self.assertNotEqual(gen.P_min,np.pi)
                 gen.P_min = np.pi
                 gen.P_max = 2*np.pi
                 self.assertEqual(gen.P_min,np.pi)
                 self.assertEqual(gen.P_max,2*np.pi)
+
+                # set/get cost coeffs
+                if case.split('.')[-1] == 'raw':
+                    self.assertEqual(gen.cost_coeff_Q0,0.)
+                    self.assertEqual(gen.cost_coeff_Q1,20.)
+                    self.assertEqual(gen.cost_coeff_Q2,1.)
+                gen.cost_coeff_Q0 = 1.4
+                gen.cost_coeff_Q1 = 42.
+                gen.cost_coeff_Q2 = 2.5
+                self.assertEqual(gen.cost_coeff_Q0,1.4)
+                self.assertEqual(gen.cost_coeff_Q1,42.)
+                self.assertEqual(gen.cost_coeff_Q2,2.5)
 
     def test_branches(self):
         

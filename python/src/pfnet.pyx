@@ -995,14 +995,17 @@ cdef class Generator:
     property cost_coeff_Q0:
         """ Coefficient for quadratic genertion cost (constant term). """
         def __get__(self): return cgen.GEN_get_cost_coeff_Q0(self._c_gen)
+        def __set__(self,c): cgen.GEN_set_cost_coeff_Q0(self._c_gen,c)
 
     property cost_coeff_Q1:
         """ Coefficient for quadratic genertion cost (linear term). """
         def __get__(self): return cgen.GEN_get_cost_coeff_Q1(self._c_gen)
+        def __set__(self,c): cgen.GEN_set_cost_coeff_Q1(self._c_gen,c)
 
     property cost_coeff_Q2:
         """ Coefficient for quadratic genertion cost (quadratic term). """
         def __get__(self): return cgen.GEN_get_cost_coeff_Q2(self._c_gen)
+        def __set__(self,c): cgen.GEN_set_cost_coeff_Q2(self._c_gen,c)
 
 cdef new_Generator(cgen.Gen* g):
     if g is not NULL:

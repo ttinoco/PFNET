@@ -45,3 +45,6 @@ cdef extern from "pfnet/gen.h":
     Gen* GEN_new()
     void GEN_set_P_min(Gen* gen, REAL P_min)
     void GEN_set_P_max(Gen* gen, REAL P_max)
+    void GEN_set_cost_coeff_Q0(Gen* gen, REAL c)
+    void GEN_set_cost_coeff_Q1(Gen* gen, REAL c)
+    void GEN_set_cost_coeff_Q2(Gen* gen, REAL c)
