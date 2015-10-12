@@ -50,17 +50,29 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.num_bounded,0)
 
             self.assertRaises(pf.NetworkError,net.get_bus,-1)
+            net.clear_error()
             self.assertRaises(pf.NetworkError,net.get_bus,net.num_buses)
+            net.clear_error()
             self.assertRaises(pf.NetworkError,net.get_gen,-1)
+            net.clear_error()
             self.assertRaises(pf.NetworkError,net.get_gen,net.num_gens)
+            net.clear_error()
             self.assertRaises(pf.NetworkError,net.get_branch,-1)
+            net.clear_error()
             self.assertRaises(pf.NetworkError,net.get_branch,net.num_branches)
+            net.clear_error()
             self.assertRaises(pf.NetworkError,net.get_shunt,-1)
+            net.clear_error()
             self.assertRaises(pf.NetworkError,net.get_shunt,net.num_shunts)
+            net.clear_error()
             self.assertRaises(pf.NetworkError,net.get_load,-1)
+            net.clear_error()
             self.assertRaises(pf.NetworkError,net.get_load,net.num_loads)
+            net.clear_error()
             self.assertRaises(pf.NetworkError,net.get_vargen,-1)
-            self.assertRaises(pf.NetworkError,net.get_vargen,net.num_vargens)            
+            net.clear_error()
+            self.assertRaises(pf.NetworkError,net.get_vargen,net.num_vargens)
+            net.clear_error()
 
             # Counters
             self.assertEqual(net.get_num_P_adjust_gens(),
@@ -455,19 +467,77 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(vargen.bus,load_buses[i])
                 self.assertTrue(vargen.index in [vg.index for vg in load_buses[i].vargens])
 
-            # Set P,P_max,P_std
+            # Set P,P_max,P_std,P
             self.assertGreater(net.num_vargens,0)
             self.assertGreater(len(net.var_generators),0)
             for vg in net.var_generators:
                 self.assertEqual(vg.P,0.)
                 self.assertEqual(vg.P_max,0.)
                 self.assertEqual(vg.P_std,0.)
+                self.assertEqual(vg.P,0.)
                 vg.P = 1.
                 vg.P_max = 2.
                 vg.P_std = 3.
-                self.assertEqual(vg.P,1.)
                 self.assertEqual(vg.P_max,2.)
                 self.assertEqual(vg.P_std,3)                
+                self.assertEqual(vg.P,1.)
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+
+            self.assertEqual(net.num_vargens,0)
+            self.assertEqual(len(net.var_generators),net.num_vargens)
+
+            self.assertEqual(net.vargen_corr_radius,1.)
+            self.assertEqual(net.vargen_corr_value,0.)
+
+            gen_buses = net.get_gen_buses()
+            self.assertGreater(len(gen_buses),0)
+            for b in gen_buses:
+                self.assertTrue(b.gens is not None)
+            self.assertEqual(len(gen_buses),
+                             len([b for b in net.buses if b.gens]))
+
+            # add vargens
+            penetration = 50.
+            uncertainty = 30.
+            corr_radius = 5
+            corr_value = 0.05
+            self.assertRaises(pf.NetworkError,net.add_vargens,gen_buses,-10,50.,5,0.05)
+            self.assertTrue(net.has_error())
+            net.clear_error()
+            self.assertFalse(net.has_error())
+            self.assertRaises(pf.NetworkError,net.add_vargens,gen_buses,50,-10.,5,0.05)
+            net.clear_error()
+            self.assertRaises(pf.NetworkError,net.add_vargens,gen_buses,50,50.,-1,0.05)
+            net.clear_error()
+            self.assertRaises(pf.NetworkError,net.add_vargens,gen_buses,50,50.,5,1.05)
+            net.clear_error()
+            self.assertRaises(pf.NetworkError,net.add_vargens,gen_buses,50,50.,5,-1.05)
+            net.clear_error()
+            net.add_vargens([],penetration,uncertainty,corr_radius,corr_value)
+            self.assertEqual(net.num_vargens,0)
+            self.assertEqual(net.var_generators,[])
+
+            net.add_vargens(gen_buses,penetration,uncertainty,corr_radius,corr_value)
+            self.assertEqual(net.num_vargens,len(gen_buses))
+            self.assertEqual(len(net.var_generators),len(gen_buses))
+
+            self.assertEqual(net.vargen_corr_radius,corr_radius)
+            self.assertEqual(net.vargen_corr_value,corr_value)
+
+            total_load = sum([l.P for l in net.loads])            
+            total_cap = sum([vg.P_max for vg in net.var_generators])
+
+            self.assertLess(np.abs(total_load-total_cap),1e-10)
+            self.assertLess(np.abs(penetration-100*sum([vg.P for vg in net.var_generators])/total_load),1e-10)
+                        
+            for vg in net.var_generators:
+                self.assertGreater(vg.P_max,0)
+                self.assertEqual(vg.P_max,total_load/net.num_vargens)
+                self.assertEqual(vg.P,(penetration/100.)*vg.P_max)
+                self.assertEqual(vg.P_std,(uncertainty/100.)*vg.P_max)
                 
     def test_clear_flags(self):
        

@@ -17,7 +17,7 @@ struct Net {
   // Error
   BOOL error_flag;                    /**< @brief Error flag */
   char error_string[NET_BUFFER_SIZE]; /**< @brief Error string */
-
+  
   // Components
   Bus* bus;          /**< @brief Bus array */
   Bus* bus_hash;     /**< @brief Bus hash table indexed by bus bumbers */
@@ -58,12 +58,70 @@ struct Net {
   REAL tran_p_vio;   /**< @brief Maximum phase shift limit violation of phase-shifting trasnformer (radians). */
   REAL shunt_v_vio;  /**< @brief Maximum shunt-controlled bus voltage mangnitude band violation (p.u.). */
   REAL shunt_b_vio;  /**< @brief Maximum susceptance limit volation of switched shunt device (p.u.). */
-  int num_actions;
+  int num_actions;   
+
+  // Spatial correlation
+  REAL vargen_corr_radius; /**< @brief Correlation radius for variable generators. **/
+  REAL vargen_corr_value;  /**< @brief Correlation value for variable generators. **/
   
   // Utils
   char* bus_counted;  /**< @brief Flags for processing buses */
   int branch_counter; /**< @brief Counter for processing branches */
 };
+
+void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty, REAL corr_radius, REAL corr_value) {
+  
+  // Local variables
+  REAL total_load_P;
+  Vargen* vargen;
+  int i;
+
+  // Check
+  if (!net)
+    return;
+
+  // Check
+  if (penetration < 0 ||
+      uncertainty < 0 ||
+      corr_radius < 0 ||
+      corr_value < -1 ||
+      corr_value > 1) {
+    sprintf(net->error_string,"invalid arguments for adding variable generators");
+    net->error_flag = TRUE;
+    return;
+  }
+
+  // Clear
+  free(net->vargen);
+  net->vargen = NULL;
+  net->num_vargens = 0;
+  
+  // Save
+  net->vargen_corr_radius = corr_radius;
+  net->vargen_corr_value = corr_value;
+
+  // Total load
+  total_load_P = 0;
+  for (i = 0; i < net->num_loads; i++)
+    total_load_P += LOAD_get_P(NET_get_load(net,i));
+
+  // Number
+  net->num_vargens = BUS_list_len(bus_list);
+
+  // Allocate
+  net->vargen = VARGEN_array_new(net->num_vargens);
+
+  // Set buses
+  NET_set_vargen_buses(net,bus_list);
+
+  // Set properties
+  for (i = 0; i < net->num_vargens; i++) {
+    vargen = NET_get_vargen(net,i);
+    VARGEN_set_P_max(vargen,total_load_P/net->num_vargens);
+    VARGEN_set_P_std(vargen,(uncertainty/100.)*VARGEN_get_P_max(vargen));
+    VARGEN_set_P(vargen,(penetration/100.)*VARGEN_get_P_max(vargen));
+  }
+}
 
 void NET_adjust_generators(Net* net) {
   /** This function adjusts the powers of slack or regulator generators 
@@ -194,6 +252,13 @@ void NET_clear_data(Net* net) {
 
     // Re-initialize
     NET_init(net);
+  }
+}
+
+void NET_clear_error(Net* net) {
+  if (net) {
+    net->error_flag = FALSE;
+    strcpy(net->error_string,"");
   }
 }
 
@@ -575,6 +640,10 @@ void NET_init(Net* net) {
 
   // Base
   net->base_power = NET_BASE_POWER;
+
+  // Spatial correlation
+  net->vargen_corr_radius = 1;
+  net->vargen_corr_value = 0;
 
   // Properties
   net->bus_v_max = 0;
@@ -1242,6 +1311,20 @@ REAL NET_get_shunt_b_vio(Net* net) {
 int NET_get_num_actions(Net* net) {
   if (net)
     return net->num_actions;
+  else
+    return 0;
+}
+
+REAL NET_get_vargen_corr_radius(Net* net) {
+  if (net)
+    return net->vargen_corr_radius;
+  else
+    return 0;
+}
+
+REAL NET_get_vargen_corr_value(Net* net) {
+  if (net)
+    return net->vargen_corr_value;
   else
     return 0;
 }

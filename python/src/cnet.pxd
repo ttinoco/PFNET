@@ -20,8 +20,10 @@ cdef extern from "pfnet/net.h":
     ctypedef struct Net
     ctypedef double REAL
  
+    void NET_add_vargens(Net* net, cbus.Bus* bus_list, REAL penetration, REAL uncertainty, REAL corr_radius, REAL corr_value)
     void NET_adjust_generators(Net* net)
     cbus.Bus* NET_bus_hash_find(Net* net, int number)
+    void NET_clear_error(Net* net)
     void NET_clear_flags(Net* net)
     void NET_clear_properties(Net* net)
     void NET_clear_sensitivities(Net* net)
@@ -79,6 +81,8 @@ cdef extern from "pfnet/net.h":
     REAL NET_get_shunt_v_vio(Net* net)
     REAL NET_get_shunt_b_vio(Net* net)
     int NET_get_num_actions(Net* net)
+    REAL NET_get_vargen_corr_radius(Net* net)
+    REAL NET_get_vargen_corr_value(Net* net)
     cvec.Vec* NET_get_var_values(Net* net, int code)
     cmat.Mat* NET_get_var_projection(Net* net, char obj_type, char var)
     bint NET_has_error(Net* net)

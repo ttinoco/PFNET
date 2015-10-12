@@ -1379,6 +1379,25 @@ cdef class Network:
             self._c_net = NULL
         self.alloc = alloc
 
+    def __dealloc__(self):
+        """
+        Frees network C data structure. 
+        """
+        
+        if self.alloc:
+            cnet.NET_del(self._c_net)
+            self._c_net = NULL
+
+    def add_vargens(self,buses,penetration,uncertainty,corr_radius,corr_value):
+        
+        cdef Bus b = buses[0] if buses else None
+        if b:
+            cnet.NET_add_vargens(self._c_net,b._c_bus,penetration,uncertainty,corr_radius,corr_value)
+        else:
+            cnet.NET_add_vargens(self._c_net,NULL,penetration,uncertainty,corr_radius,corr_value)
+        if cnet.NET_has_error(self._c_net):
+            raise NetworkError(cnet.NET_get_error_string(self._c_net))
+
     def adjust_generators(self):
         """
         Adjusts powers of slack and regulator generators connected to or regulating the
@@ -1386,6 +1405,13 @@ cdef class Network:
         """
         
         cnet.NET_adjust_generators(self._c_net);
+
+    def clear_error(self):
+        """ 
+        Clear error flag and message string.
+        """
+
+        cnet.NET_clear_error(self._c_net);
 
     def clear_flags(self):
         """
@@ -1470,15 +1496,6 @@ cdef class Network:
             return new_Bus(ptr)
         else:
             raise NetworkError('bus not found')
-
-    def __dealloc__(self):
-        """
-        Frees network C data structure. 
-        """
-        
-        if self.alloc:
-            cnet.NET_del(self._c_net)
-            self._c_net = NULL
             
     def get_bus(self,index):
         """
@@ -1913,6 +1930,14 @@ cdef class Network:
                 'shunt_b_vio': self.shunt_b_vio,
                 'num_actions': self.num_actions}
 
+    def has_error(self):
+        """
+        Indicates whether the network has the error flag set due to an
+        invalid operation.
+        """
+
+        return cnet.NET_has_error(self._c_net)
+
     def load(self,filename):
         """
         Loads a network data contained in a specific file.
@@ -2169,6 +2194,14 @@ cdef class Network:
     property num_actions:
         """ Number of control adjustments (int). """
         def __get__(self): return cnet.NET_get_num_actions(self._c_net)
+
+    property vargen_corr_radius:
+        """ Correlation radius of variable generators (number of edges). """
+        def __get__(self): return cnet.NET_get_vargen_corr_radius(self._c_net)
+
+    property vargen_corr_value:
+        """ Correlation value (coefficient) of variable generators. """
+        def __get__(self): return cnet.NET_get_vargen_corr_value(self._c_net)
 
 cdef new_Network(cnet.Net* n):
     if n is not NULL:
@@ -2730,6 +2763,15 @@ cdef class Problem:
 
         self._c_prob = cprob.PROB_new()
         self.alloc = True
+
+    def __dealloc__(self):
+        """
+        Frees problem C data structure. 
+        """
+        
+        if self.alloc:
+            cprob.PROB_del(self._c_prob)
+            self._c_prob = NULL
         
     def add_constraint(self,ctype):
         """
@@ -2837,15 +2879,6 @@ cdef class Problem:
             return new_Constraint(c,n)
         else:
             raise ProblemError('constraint not found')
-
-    def __dealloc__(self):
-        """
-        Frees problem C data structure. 
-        """
-        
-        if self.alloc:
-            cprob.PROB_del(self._c_prob)
-            self._c_prob = NULL
 
     def get_init_point(self):
         """

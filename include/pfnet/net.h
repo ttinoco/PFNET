@@ -37,11 +37,13 @@ typedef struct Net Net;
 
 // Prototypes
 /** @brief Adjust generator powers to obtain correct participations without affecting total injections. */
+void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty, REAL corr_radius, REAL corr_value);
 void NET_adjust_generators(Net* net);
 void NET_bus_hash_add(Net* net, Bus* bus);
 Bus* NET_bus_hash_find(Net* net, int number);
 BOOL NET_check(Net* net, BOOL verbose);
 void NET_clear_data(Net* net);
+void NET_clear_error(Net* net);
 void NET_clear_flags(Net* net);
 void NET_clear_properties(Net* net);
 void NET_clear_sensitivities(Net* net);
@@ -107,6 +109,8 @@ REAL NET_get_tran_p_vio(Net* net);
 REAL NET_get_shunt_v_vio(Net* net);
 REAL NET_get_shunt_b_vio(Net* net);
 int NET_get_num_actions(Net* net);
+REAL NET_get_vargen_corr_radius(Net* net);
+REAL NET_get_vargen_corr_value(Net* net);
 BOOL NET_has_error(Net* net);
 void NET_load(Net* net, char* filename);
 Net* NET_new(void);
