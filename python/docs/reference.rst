@@ -228,6 +228,10 @@ Generator Property Masks
 
 	  Generator that is not slack.
 
+.. data:: pfnet.GEN_PROP_P_ADJUST
+
+	  Generator that can adjust its active power (P_min < P_max).
+
 .. _ref_gen_var:
 
 Generator Variable Masks
@@ -301,6 +305,37 @@ Load Class
 .. autoclass:: pfnet.Load
    :members:
 
+.. _ref_vargen:
+
+Variable Generator
+==================
+
+.. _ref_vargen_prop:
+
+Variable Generator Property Masks
+---------------------------------
+
+.. data:: pfnet.VARGEN_PROP_ANY
+
+	  Any variable generator.
+
+.. _ref_vargen_var:
+
+Variable Generator Variable Masks
+---------------------------------
+
+.. data:: pfnet.VARGEN_VAR_P
+
+	  Variable generator active power.
+
+.. _ref_vargen_class:
+
+Variable Generator Class
+------------------------
+
+.. autoclass:: pfnet.VarGenerator
+   :members:
+
 .. _ref_net:
 
 Network
@@ -327,6 +362,14 @@ Component Types
 
 	  Shunt device.
 
+.. data:: pfnet.OBJ_LOAD
+
+	  Load.
+
+.. data:: pfnet.OBJ_VARGEN
+
+	  Variable generator.
+
 .. _ref_net_flag:
 
 Flag Masks
@@ -347,6 +390,23 @@ Flag Masks
 .. data:: pfnet.FLAG_SPARSE
 
 	  For specifying control adjustments that should be sparse.
+
+.. _ref_var_values:
+
+Variable Value Codes
+--------------------
+
+.. data:: pfnet.CURRENT
+
+	  Current variable value.
+
+.. data:: pfnet.UPPER_LIMIT
+
+	  Upper limit of variable.
+
+.. data:: pfnet.LOWER_LIMIT
+
+	  Lower limit of variable.
 
 .. _ref_net_class:
 

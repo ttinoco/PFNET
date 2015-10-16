@@ -204,7 +204,7 @@ Names           Description                                                     
 ``num_actions`` Number of control adjustments (greater than 2% of control range)  unitless
 =============== ================================================================= ========
 
-All of these properties are attributes of the :class:`Network <pfnet.Network>` class. If there is a change in the network, the class method :func:`update_properties() <pfnet.Network.update_properties>` needs to be called in order for the network properties to reflect the change. Tee following example shows how to update and extract properties::
+All of these properties are attributes of the :class:`Network <pfnet.Network>` class. If there is a change in the network, the class method :func:`update_properties() <pfnet.Network.update_properties>` needs to be called in order for the network properties to reflect the change. The following example shows how to update and extract properties::
 
   >>> print net.bus_v_max
   1.09
@@ -239,17 +239,19 @@ To set network quantities as variables, the :class:`Network <pfnet.Network>` cla
 
 **Property masks** are component-specific. They can be combined using ``logical OR`` to make properties more complex. More information can be found in the following sections:
 
-* :ref:`Bus Property Masks <ref_bus_prop>`
-* :ref:`Branch Property Masks <ref_branch_prop>`
-* :ref:`Generator Property Masks <ref_gen_prop>`
-* :ref:`Shunt Property Masks <ref_shunt_prop>`
+* :ref:`ref_bus_prop`
+* :ref:`ref_branch_prop`
+* :ref:`ref_gen_prop`
+* :ref:`ref_shunt_prop`
+* :ref:`ref_vargen_prop`
 
 **Variable masks** are also component-specific. They can be combined using ``logical OR`` to target more than one component quantity. More information can be found in the following sections:
 
-* :ref:`Bus Variable Masks <ref_bus_var>`
-* :ref:`Branch Variable Masks <ref_branch_var>`
-* :ref:`Generator Variable Masks <ref_gen_var>`
-* :ref:`Shunt Variable Masks <ref_shunt_var>`
+* :ref:`ref_bus_var`
+* :ref:`ref_branch_var`
+* :ref:`ref_gen_var`
+* :ref:`ref_shunt_var`
+* :ref:`ref_vargen_var`
 
 The following example shows how to set as variables all the voltage magnitudes and angles of buses regulated by generators::
 
@@ -269,7 +271,7 @@ The following example shows how to set as variables all the voltage magnitudes a
   >>> print net.num_vars, 2*net.get_num_buses_reg_by_gen()
   10 10
 
-Network components have a :func:`has_flags() <pfnet.Bus.has_flags>` method that allows checking whether flags of a certain type associated with specific quantities have been set.
+Network components have a :func:`has_flags() <pfnet.Bus.has_flags>` method that allows checking whether flags of a certain type associated with specific quantities are set.
 
 Once variables have been set, the :ref:`vector <ref_vec>` containing all the current variable values can be extracted using :func:`get_var_values() <pfnet.Network.get_var_values>`::
 
@@ -314,3 +316,12 @@ A vector of variable values can be used to update the corresponding network quan
   1.20
 
 As we will see in later, variables are also useful for constructing network optimization problems.
+
+Lastly, the class method :func:`get_var_values() <pfnet.Network.get_var_values>` can also be used to get upper or lower limits of the variables. To do this, a valid :ref:`variable value code <ref_var_values>` must be passed to this method.
+
+.. _net_var_projections:
+
+Projections
+===========
+
+

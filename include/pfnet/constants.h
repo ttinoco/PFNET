@@ -11,7 +11,7 @@
 #ifndef __CONSTANTS_HEADER__
 #define __CONSTANTS_HEADER__
 
-// Object types
+// Variable values
 /** \defgroup var_values Codes for variable values
  *  @{
  */
