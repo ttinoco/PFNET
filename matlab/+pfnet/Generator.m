@@ -16,6 +16,10 @@ classdef Generator < handle
       gen.c_gen = ptr;
     end
 
+    function flag = is_slack(gen)
+      flag = calllib('libpfnet','GEN_is_slack',gen.c_gen);
+    end
+
     % Getters and Setters
     %%%%%%%%%%%%%%%%%%%%%
 
