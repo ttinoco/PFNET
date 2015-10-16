@@ -51,6 +51,16 @@ shunt = net.get_shunt(0)
 
 print shunt.index == 0
 
+net.add_vargens(net.get_gen_buses(),50.,50.,5,0.05)
+
+print net.num_vargens == len([b for b in net.buses if b.gens])
+
+vargen = net.get_vargen(3)
+
+print vargen.index == 3
+
+print vargen.P,vargen.P_std,vargen.P_max
+
 print net.bus_v_max
 
 for bus in net.buses:
