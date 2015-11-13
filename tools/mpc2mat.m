@@ -1,4 +1,4 @@
-function mpc2mat(mpc,mat_file)
+function mpc2mat(mpc,mat_file,random_cost)
 %MPC2MAT Converts an "mpc" MATPOWER structure to a CSV file.
 %   MPC2MAT(MPT, MAT_FILE)
 %   Converts an "mpc" MATPOWER structure to a CSV file.
@@ -6,6 +6,7 @@ function mpc2mat(mpc,mat_file)
 %   Input:
 %      MPC : MATPOWER case structure.
 %      MAT_FILE: name of output CSV file.
+%      random_cost: flag for random generator cost coefficients.
 
 disp('Executing mpc2mat');
 
@@ -92,10 +93,17 @@ fprintf(fid,'END\n');
 fprintf(fid,'COST\n');
 fprintf(fid,'gen index,Q2 ($/hr MW2),Q1 ($/hr MW),Q0 ($/hr)\n');
 for i=1:size(mpc.gencost)(1)
-    fprintf(fid,'%d,',i-1);
-    fprintf(fid,'%.8f,',0.04*rand()+0.01);
-    fprintf(fid,'%.8f,',40.*rand()+10.);
-    fprintf(fid,'%.8f\n',0.);
+    if ~random_cost && mpc.gencost(i,1) == 2 && mpc.gencost(i,4) == 3
+       fprintf(fid,'%d,',i-1);
+       fprintf(fid,'%.8f,',mpc.gencost(i,5));
+       fprintf(fid,'%.8f,',mpc.gencost(i,6));
+       fprintf(fid,'%.8f\n',mpc.gencost(i,7));
+    else
+       fprintf(fid,'%d,',i-1);
+       fprintf(fid,'%.8f,',0.04*rand()+0.01);
+       fprintf(fid,'%.8f,',40.*rand()+10.);
+       fprintf(fid,'%.8f\n',0.);
+    end
 end
 fprintf(fid,'END\n');
 

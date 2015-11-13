@@ -439,9 +439,13 @@ void PROB_set_network(Prob* p, Net* net) {
 }
 
 void PROB_show(Prob* p) {
+  Func* f;
   if (p) {
     printf("\nProblem\n");
     printf("functions  : %d\n",FUNC_list_len(p->func));
+    for (f = p->func; f != NULL; f = FUNC_get_next(f)) {
+      printf("\ttype %d \t value %.4e\n",FUNC_get_type(f),FUNC_get_phi(f));
+    }
     printf("constraints: %d\n",CONSTR_list_len(p->constr));  
     printf("heuristics : %d\n",HEUR_list_len(p->heur));
   }
