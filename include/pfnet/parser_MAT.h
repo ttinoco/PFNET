@@ -32,11 +32,11 @@
 #define MAT_PARSER_BASE_POWER 100
 
 // Tokens
-#define BUS_TOKEN  "BUS"
-#define END_TOKEN  "END"
-#define GEN_TOKEN  "GEN"
-#define BRANCH_TOKEN "BRANCH"
-#define COST_TOKEN "COST"
+#define MAT_BUS_TOKEN  "BUS"
+#define MAT_END_TOKEN  "END"
+#define MAT_GEN_TOKEN  "GEN"
+#define MAT_BRANCH_TOKEN "BRANCH"
+#define MAT_COST_TOKEN "COST"
 
 // Bus types
 #define MAT_BUS_TYPE_PQ 1

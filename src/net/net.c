@@ -11,6 +11,7 @@
 #include <pfnet/net.h>
 #include <pfnet/parser_RAW.h>
 #include <pfnet/parser_MAT.h>
+#include <pfnet/parser_ART.h>
 
 struct Net {
   
@@ -1387,6 +1388,22 @@ void NET_load(Net* net, char* filename) {
       net->error_flag = TRUE;
     }
     MAT_PARSER_del(parser);
+  }
+  else if (strcmp(ext+1,"art") == 0) {
+  
+    // ARTERE ART
+    ART_Parser* parser = ART_PARSER_new();
+    ART_PARSER_read(parser,filename);
+    #ifdef DEBUG
+      ART_PARSER_show(parser);
+    #endif
+    if (!ART_PARSER_has_error(parser))
+      ART_PARSER_load(parser,net);
+    if (ART_PARSER_has_error(parser)) {
+      strcpy(net->error_string,ART_PARSER_get_error_string(parser));
+      net->error_flag = TRUE;
+    }
+    ART_PARSER_del(parser);
   }
   else {
     sprintf(net->error_string,"invalid file type (%s)",ext+1);
