@@ -28,6 +28,7 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
 			char* buffer,
 			size_t len,
 			BOOL last,
+			char del,
 			void (*cfield)(char*,void*),
 			void (*crow)(void*),
 			void* data);

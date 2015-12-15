@@ -34,6 +34,7 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
 			char* buffer,
 			size_t len,
 			BOOL last,
+			char del,
 			void (*cfield)(char*,void*),
 			void (*crow)(void*),
 			void* data) {
@@ -41,13 +42,23 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
   // Local variables
   size_t buffer_index;
 
-  for (buffer_index = 0; buffer_index < len; buffer_index++) {
+  buffer_index = 0;
+  while (buffer_index < len) {
     
     // end of field
-    if (buffer[buffer_index] == ',') {
+    if (buffer[buffer_index] == del) {
       p->field[p->field_index] = 0;
       cfield(p->field,data);
       p->field_index = 0;
+      
+      // skip remaining white if white is del
+      if (del == ' ') {
+	while ((buffer[buffer_index] == ' ' || 
+		buffer[buffer_index] == '\t') &&
+	       buffer_index < len)
+	  buffer_index++;
+	buffer_index--;
+      }
     }
     
     // end of line
@@ -65,6 +76,8 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
       p->field[p->field_index] = buffer[buffer_index];
       p->field_index++;
     }
+
+    buffer_index++;
   }
 
   // Remaining

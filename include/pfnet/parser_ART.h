@@ -45,5 +45,7 @@ BOOL ART_PARSER_has_error(ART_Parser* parser);
 char* ART_PARSER_get_error_string(ART_Parser* parser);
 void ART_PARSER_callback_field(char* s, void* data);
 void ART_PARSER_callback_row(void* data);
+void ART_PARSER_parse_bus_field(char* s, ART_Parser* parser);
+void ART_PARSER_parse_bus_row(ART_Parser* parser);
 
 #endif
