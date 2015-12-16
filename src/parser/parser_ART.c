@@ -35,6 +35,22 @@ struct ART_Line {
   struct ART_Line* next;
 };
 
+struct ART_Transfo {
+
+  char name[22];
+  char from_bus[10];
+  char to_bus[10];
+  REAL r;             // % on the Vb1,SNOM base
+  REAL x;             // % on the Vb1,SNOM base
+  REAL b1;            // % on the Vb1,SNOM base
+  REAL b2;            // % on the Vb1,SNOM base
+  REAL n;             // % on the Vb1,Vb2 base
+  REAL phi;           // degrees
+  REAL snom;          // mva
+  REAL br;            
+  struct ART_Transfo* next;
+};
+
 struct ART_Parser {
 
   // Error
@@ -57,6 +73,10 @@ struct ART_Parser {
   // Lines
   ART_Line* line;
   ART_Line* line_list;
+
+  // Lines
+  ART_Transfo* transfo;
+  ART_Transfo* transfo_list;
 };
 
 ART_Parser* ART_PARSER_new(void) {
@@ -84,6 +104,10 @@ ART_Parser* ART_PARSER_new(void) {
   // Lines
   parser->line = NULL;
   parser->line_list = NULL;
+
+  // Lines
+  parser->transfo = NULL;
+  parser->transfo_list = NULL;
 
   // Return
   return parser;
@@ -137,6 +161,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   // Local variables
   int len_bus_list;
   int len_line_list;
+  int len_transfo_list;
 
   if (!parser)
     return;
@@ -144,12 +169,14 @@ void ART_PARSER_show(ART_Parser* parser) {
   // List lengths
   LIST_len(ART_Bus,parser->bus_list,next,len_bus_list);
   LIST_len(ART_Line,parser->line_list,next,len_line_list);
-
+  LIST_len(ART_Transfo,parser->transfo_list,next,len_transfo_list);
+  
   // Show
   printf("\nParsed Data\n");
-  printf("base power : %.2f\n",parser->base_power);
-  printf("bus list   : %d\n",len_bus_list);
-  printf("line list  : %d\n",len_line_list);
+  printf("base power   : %.2f\n",parser->base_power);
+  printf("bus list     : %d\n",len_bus_list);
+  printf("line list    : %d\n",len_line_list);
+  printf("transfo list : %d\n",len_transfo_list);
 
   // Debugging BUS
   ART_Bus* bus;
@@ -176,6 +203,23 @@ void ART_PARSER_show(ART_Parser* parser) {
 	   line->snom,
 	   line->br);
   }
+  
+  // Debugging TRANSFO
+  ART_Transfo* transfo;
+  for (transfo = parser->transfo_list; transfo != NULL; transfo = transfo->next) {
+    printf("Transfo %s %s %s %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f\n",
+	   transfo->name,
+	   transfo->from_bus,
+	   transfo->to_bus,
+	   transfo->r,
+	   transfo->x,
+	   transfo->b1,
+	   transfo->b2,
+	   transfo->n,
+	   transfo->phi,
+	   transfo->snom,
+	   transfo->br);
+  }
 }
 
 void ART_PARSER_load(ART_Parser* parser, Net* net) {
@@ -195,6 +239,9 @@ void ART_PARSER_del(ART_Parser* parser) {
 
   // Line
   LIST_map(ART_Line,parser->line_list,line,next,{free(line);});
+
+  // Transfo
+  LIST_map(ART_Transfo,parser->transfo_list,transfo,next,{free(transfo);});
 
   // Parser
   free(parser);  
@@ -236,6 +283,12 @@ void ART_PARSER_callback_field(char* s, void* data) {
 	printf("*** LINE STATE ***\n");
 	parser->state = ART_PARSER_STATE_LINE;
       }
+
+      // Transfo
+      else if (strstr(s,ART_TRANSFO_TOKEN) != NULL) {
+	printf("*** TRANSFO STATE ***\n");
+	parser->state = ART_PARSER_STATE_TRANSFO;
+      }
 	
     }
     break;
@@ -245,6 +298,9 @@ void ART_PARSER_callback_field(char* s, void* data) {
     break;
   case ART_PARSER_STATE_LINE:
     ART_PARSER_parse_line_field((char*)s,parser);
+    break;
+  case ART_PARSER_STATE_TRANSFO:
+    ART_PARSER_parse_transfo_field((char*)s,parser);
     break;
   }
     
@@ -268,6 +324,9 @@ void ART_PARSER_callback_row(void *data) {
     break;
   case ART_PARSER_STATE_LINE:
     ART_PARSER_parse_line_row(parser);
+    break;
+  case ART_PARSER_STATE_TRANSFO:
+    ART_PARSER_parse_transfo_row(parser);
     break;
   }  
 }
@@ -334,9 +393,6 @@ void ART_PARSER_parse_line_field(char* s, ART_Parser* parser) {
     parser->line->next = NULL;
   }
 
-  // DEBUG
-  printf("*** parsing line field *** %s\n",s);
-
   // Fields
   if (parser->line) {
     switch (parser->field) {
@@ -377,6 +433,71 @@ void ART_PARSER_parse_line_row(ART_Parser* parser) {
     LIST_add(parser->line_list,parser->line,next);
   }
   parser->line = NULL;
+  parser->field = 0;
+  parser->record = 0;
+  parser->state = ART_PARSER_STATE_INIT;
+}
+
+void ART_PARSER_parse_transfo_field(char* s, ART_Parser* parser) {
+
+  if (!parser)
+    return;
+
+  // New transfo
+  if (parser->field == 1) {
+    parser->transfo = (ART_Transfo*)malloc(sizeof(ART_Transfo));
+    parser->transfo->next = NULL;
+  }
+
+  // Fields
+  if (parser->transfo) {
+    switch (parser->field) {
+    case 1:
+      strcpy(parser->transfo->name,s);
+      break;
+    case 2:
+      strcpy(parser->transfo->from_bus,s);
+      break;
+    case 3:
+      strcpy(parser->transfo->to_bus,s);
+      break;
+    case 4:
+      parser->transfo->r = atof(s);
+      break;
+    case 5:
+      parser->transfo->x = atof(s);
+      break;
+    case 6:
+      parser->transfo->b1 = atof(s);
+      break;
+    case 7:
+      parser->transfo->b2 = atof(s);
+      break;
+    case 8:
+      parser->transfo->n = atof(s);
+      break;
+    case 9:
+      parser->transfo->phi = atof(s);
+      break;
+    case 10:
+      parser->transfo->snom = atof(s);
+      break;
+    case 11:
+      parser->transfo->br = atof(s);
+      break;
+    }
+  }
+}
+
+void ART_PARSER_parse_transfo_row(ART_Parser* parser) {
+
+  if (!parser)
+    return;
+
+  if (parser->transfo) {
+    LIST_add(parser->transfo_list,parser->transfo,next);
+  }
+  parser->transfo = NULL;
   parser->field = 0;
   parser->record = 0;
   parser->state = ART_PARSER_STATE_INIT;
