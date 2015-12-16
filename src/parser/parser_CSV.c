@@ -38,9 +38,10 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
 			char* buffer,
 			size_t len,
 			BOOL last,
-			char del,
+			char delimeter,
+			char end_of_record,
 			void (*cfield)(char*,void*),
-			void (*crow)(void*),
+			void (*crecord)(void*),
 			void* data) {
   
   // Local variables
@@ -67,13 +68,13 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
     }
 	
     // end of field
-    else if (buffer[buffer_index] == del && !p->in_string_single && !p->in_string_double) {
+    else if (buffer[buffer_index] == delimeter && !p->in_string_single && !p->in_string_double) {
       p->field[p->field_index] = 0;
       cfield(p->field,data);
       p->field_index = 0;
       
-      // skip remaining white if white is del
-      if (del == ' ') {
+      // skip remaining white if white is delimeter
+      if (delimeter == ' ') {
 	while ((buffer[buffer_index] == ' ' || 
 		buffer[buffer_index] == '\t') &&
 	       buffer_index < len)
@@ -82,8 +83,8 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
       }
     }
     
-    // end of line
-    else if (buffer[buffer_index] == '\n') {
+    // end of record
+    else if (buffer[buffer_index] == end_of_record) {
       p->in_string_single = FALSE;
       p->in_string_double = FALSE;
       if (p->field_index > 0) {
@@ -91,7 +92,16 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
 	cfield(p->field,data);
 	p->field_index = 0;
       }
-      crow(data);
+      crecord(data);
+    }
+
+    // end of line
+    else if (buffer[buffer_index] == '\n') {
+      if (p->field_index > 0) {
+	p->field[p->field_index] = 0;
+	cfield(p->field,data);
+	p->field_index = 0;
+      }
     }
     
     // in field
@@ -108,7 +118,7 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
     p->field[p->field_index] = 0;
     cfield(p->field,data);
     p->field_index = 0;
-    crow(data);
+    crecord(data);
   }
   
   return buffer_index;
