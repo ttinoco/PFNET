@@ -13,6 +13,8 @@
 struct CSV_Parser {
   char field[CSV_PARSER_BUFFER_SIZE];
   int field_index;
+  BOOL in_string_single;
+  BOOL in_string_double;
 };
 
 void CSV_PARSER_clear_field(CSV_Parser* p) {
@@ -27,6 +29,8 @@ CSV_Parser* CSV_PARSER_new(void) {
   CSV_Parser* csv = (CSV_Parser*)malloc(sizeof(CSV_Parser));
   CSV_PARSER_clear_field(csv);
   csv->field_index = 0;
+  csv->in_string_single = FALSE;
+  csv->in_string_double = FALSE;
   return csv;
 }
 
@@ -42,11 +46,28 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
   // Local variables
   size_t buffer_index;
 
+  // Parse
   buffer_index = 0;
   while (buffer_index < len) {
-    
+
+    // single quote
+    if (buffer[buffer_index] == '\'' && !p->in_string_double) {
+      if (!p->in_string_single)
+	p->in_string_single = TRUE;
+      else
+	p->in_string_single = FALSE;
+    }
+
+    // double quote
+    else if (buffer[buffer_index] == '"' && !p->in_string_single) {
+      if (!p->in_string_double)
+	p->in_string_double = TRUE;
+      else
+	p->in_string_double = FALSE; 
+    }
+	
     // end of field
-    if (buffer[buffer_index] == del) {
+    else if (buffer[buffer_index] == del && !p->in_string_single && !p->in_string_double) {
       p->field[p->field_index] = 0;
       cfield(p->field,data);
       p->field_index = 0;
@@ -63,6 +84,8 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
     
     // end of line
     else if (buffer[buffer_index] == '\n') {
+      p->in_string_single = FALSE;
+      p->in_string_double = FALSE;
       if (p->field_index > 0) {
 	p->field[p->field_index] = 0;
 	cfield(p->field,data);

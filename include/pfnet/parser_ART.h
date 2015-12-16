@@ -23,15 +23,18 @@
 // State
 #define ART_PARSER_STATE_INIT 0
 #define ART_PARSER_STATE_BUS 1
+#define ART_PARSER_STATE_LINE 2
 
 // Defaults
 #define ART_PARSER_BASE_POWER 100
 
 // Tokens
 #define ART_BUS_TOKEN  "BUS"
+#define ART_LINE_TOKEN  "LINE"
 
 // Structs
 typedef struct ART_Bus ART_Bus;
+typedef struct ART_Line ART_Line;
 typedef struct ART_Parser ART_Parser;
 
 // Prototypes
@@ -47,5 +50,7 @@ void ART_PARSER_callback_field(char* s, void* data);
 void ART_PARSER_callback_row(void* data);
 void ART_PARSER_parse_bus_field(char* s, ART_Parser* parser);
 void ART_PARSER_parse_bus_row(ART_Parser* parser);
+void ART_PARSER_parse_line_field(char* s, ART_Parser* parser);
+void ART_PARSER_parse_line_row(ART_Parser* parser);
 
 #endif
