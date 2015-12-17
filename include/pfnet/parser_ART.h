@@ -28,6 +28,7 @@
 #define ART_PARSER_STATE_LTCV 4
 #define ART_PARSER_STATE_TRFO 5
 #define ART_PARSER_STATE_PSHIFTP 6
+#define ART_PARSER_STATE_GENER 7
 
 // Defaults
 #define ART_PARSER_BASE_POWER 100
@@ -39,6 +40,7 @@
 #define ART_LTCV_TOKEN  "LTC-V"
 #define ART_TRFO_TOKEN  "TRFO"
 #define ART_PSHIFTP_TOKEN  "PSHIFT-P"
+#define ART_GENER_TOKEN  "GENER"
 
 // Structs
 typedef struct ART_Bus ART_Bus;
@@ -47,6 +49,7 @@ typedef struct ART_Transfo ART_Transfo;
 typedef struct ART_Ltcv ART_Ltcv;
 typedef struct ART_Trfo ART_Trfo;
 typedef struct ART_Pshiftp ART_Pshiftp;
+typedef struct ART_Gener ART_Gener;
 typedef struct ART_Parser ART_Parser;
 
 // Prototypes
@@ -72,5 +75,7 @@ void ART_PARSER_parse_trfo_field(char* s, ART_Parser* parser);
 void ART_PARSER_parse_trfo_record(ART_Parser* parser);
 void ART_PARSER_parse_pshiftp_field(char* s, ART_Parser* parser);
 void ART_PARSER_parse_pshiftp_record(ART_Parser* parser);
+void ART_PARSER_parse_gener_field(char* s, ART_Parser* parser);
+void ART_PARSER_parse_gener_record(ART_Parser* parser);
 
 #endif

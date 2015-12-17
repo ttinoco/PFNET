@@ -11,7 +11,6 @@
 #include <pfnet/parser_ART.h>
 
 struct ART_Bus {
-
   char name[10];
   REAL vnom;    // kv
   REAL pload;   // mw
@@ -23,7 +22,6 @@ struct ART_Bus {
 };
 
 struct ART_Line {
-
   char name[22];
   char from_bus[10];
   char to_bus[10];
@@ -36,7 +34,6 @@ struct ART_Line {
 };
 
 struct ART_Transfo {
-
   char name[22];
   char from_bus[10];
   char to_bus[10];
@@ -52,20 +49,17 @@ struct ART_Transfo {
 };
 
 struct ART_Ltcv {
-
   char name[22];
   char con_bus[10];
   REAL nfirst;      // %           
   REAL nlast;       // %    
   int nbpos; 
   REAL tolv;        // per unit
-  REAL vdes;        // per unit
- 
+  REAL vdes;        // per unit 
   struct ART_Ltcv* next;
 };
 
 struct ART_Trfo {
-
   char name[22];
   char from_bus[10];
   char to_bus[10];
@@ -85,16 +79,29 @@ struct ART_Trfo {
 };
 
 struct ART_Pshiftp {
-
   char contrfo[22];
   char monbranch[10];
   REAL phafirst;      // degress
   REAL phalast;       // degrees
   int nbpos;  
   int sign;           // 1 or -1 
-  REAL pdes;          // MW
-  REAL tolp;          // MW
+  REAL pdes;          // mw
+  REAL tolp;          // mw
   struct ART_Pshiftp* next;
+};
+
+struct ART_Gener {
+  char name[22];
+  char con_bus[10];
+  char mon_bus[10];
+  REAL p;           // mw 
+  REAL q;           // mvar
+  REAL vimp;        // per unit
+  REAL snom;        // MVA
+  REAL qmin;        // mvar
+  REAL qmax;        // mvar
+  REAL br;  
+  struct ART_Gener* next;
 };
 
 struct ART_Parser {
@@ -135,6 +142,10 @@ struct ART_Parser {
   // Phase shifters
   ART_Pshiftp* pshiftp;
   ART_Pshiftp* pshiftp_list;
+
+  // Generators
+  ART_Gener* gener;
+  ART_Gener* gener_list;
 };
 
 ART_Parser* ART_PARSER_new(void) {
@@ -178,6 +189,10 @@ ART_Parser* ART_PARSER_new(void) {
   // Phase shifters
   parser->pshiftp = NULL;
   parser->pshiftp_list = NULL;
+
+  // Generators
+  parser->gener = NULL;
+  parser->gener_list = NULL;
 
   // Return
   return parser;
@@ -237,6 +252,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   int len_ltcv_list;
   int len_trfo_list;
   int len_pshiftp_list;
+  int len_gener_list;
 
   if (!parser)
     return;
@@ -248,6 +264,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   LIST_len(ART_Ltcv,parser->ltcv_list,next,len_ltcv_list);
   LIST_len(ART_Trfo,parser->trfo_list,next,len_trfo_list);
   LIST_len(ART_Pshiftp,parser->pshiftp_list,next,len_pshiftp_list);
+  LIST_len(ART_Gener,parser->gener_list,next,len_gener_list);
   
   // Show
   printf("\nParsed Data\n");
@@ -258,6 +275,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   printf("ltc-v list   : %d\n",len_ltcv_list);
   printf("trfo list    : %d\n",len_trfo_list);
   printf("pshiftp list : %d\n",len_pshiftp_list);
+  printf("gener list   : %d\n",len_gener_list);
 
   // Debugging BUS
   ART_Bus* bus;
@@ -350,6 +368,21 @@ void ART_PARSER_show(ART_Parser* parser) {
 	   pshiftp->tolp);
   }
 
+  // Debugging GENER
+  ART_Gener* gener;
+  for (gener = parser->gener_list; gener != NULL; gener = gener->next) {
+    printf("Gener %s %s %s %.5f %.5f %.5f %.5f %.5f %.5f %.5f\n",
+	   gener->name,
+	   gener->con_bus,
+	   gener->mon_bus,
+	   gener->p,
+	   gener->q,
+	   gener->vimp,
+	   gener->snom,
+	   gener->qmin,
+	   gener->qmax,
+	   gener->br);
+  }
 }
 
 void ART_PARSER_load(ART_Parser* parser, Net* net) {
@@ -379,8 +412,11 @@ void ART_PARSER_del(ART_Parser* parser) {
   // TRFOs
   LIST_map(ART_Trfo,parser->trfo_list,trfo,next,{free(trfo);});
 
-  // PSHIFTPs
+  // Phase shifters
   LIST_map(ART_Pshiftp,parser->pshiftp_list,pshiftp,next,{free(pshiftp);});
+
+  // Generators
+  LIST_map(ART_Gener,parser->gener_list,gener,next,{free(gener);});
 
   // Parser
   free(parser);  
@@ -446,6 +482,12 @@ void ART_PARSER_callback_field(char* s, void* data) {
 	printf("*** PSHIFTP STATE ***\n");
 	parser->state = ART_PARSER_STATE_PSHIFTP;
       }
+
+      // Generators
+      else if (strstr(s,ART_GENER_TOKEN) != NULL) {
+	printf("*** GENER STATE ***\n");
+	parser->state = ART_PARSER_STATE_GENER;
+      }
 	
     }
     break;
@@ -467,6 +509,9 @@ void ART_PARSER_callback_field(char* s, void* data) {
     break;
   case ART_PARSER_STATE_PSHIFTP:
     ART_PARSER_parse_pshiftp_field((char*)s,parser);
+    break;
+  case ART_PARSER_STATE_GENER:
+    ART_PARSER_parse_gener_field((char*)s,parser);
     break;
   }
     
@@ -502,6 +547,9 @@ void ART_PARSER_callback_record(void *data) {
     break;
   case ART_PARSER_STATE_PSHIFTP:
     ART_PARSER_parse_pshiftp_record(parser);
+    break;
+  case ART_PARSER_STATE_GENER:
+    ART_PARSER_parse_gener_record(parser);
     break;
   }  
 }
@@ -859,6 +907,68 @@ void ART_PARSER_parse_pshiftp_record(ART_Parser* parser) {
     LIST_add(parser->pshiftp_list,parser->pshiftp,next);
   }
   parser->pshiftp = NULL;
+  parser->field = 0;
+  parser->record = 0;
+  parser->state = ART_PARSER_STATE_INIT;
+}
+
+void ART_PARSER_parse_gener_field(char* s, ART_Parser* parser) {
+
+  if (!parser)
+    return;
+
+  // New gener
+  if (parser->field == 1) {
+    parser->gener = (ART_Gener*)malloc(sizeof(ART_Gener));
+    parser->gener->next = NULL;
+  }
+
+  // Fields
+  if (parser->gener) {
+    switch (parser->field) {
+    case 1:
+      strcpy(parser->gener->name,s);
+      break;
+    case 2:
+      strcpy(parser->gener->con_bus,s);
+      break;
+    case 3:
+      strcpy(parser->gener->mon_bus,s);
+      break;
+    case 4:
+      parser->gener->p = atof(s);
+      break;
+    case 5:
+      parser->gener->q = atof(s);
+      break;
+    case 6:
+      parser->gener->vimp = atof(s);
+      break;
+    case 7:
+      parser->gener->snom = atof(s);
+      break;
+    case 8:
+      parser->gener->qmin = atof(s);
+      break;
+    case 9:
+      parser->gener->qmax = atof(s);
+      break;
+    case 10:
+      parser->gener->br = atof(s);
+      break;
+    }
+  }
+}
+
+void ART_PARSER_parse_gener_record(ART_Parser* parser) {
+
+  if (!parser)
+    return;
+
+  if (parser->gener) {
+    LIST_add(parser->gener_list,parser->gener,next);
+  }
+  parser->gener = NULL;
   parser->field = 0;
   parser->record = 0;
   parser->state = ART_PARSER_STATE_INIT;
