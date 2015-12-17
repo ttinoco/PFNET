@@ -84,6 +84,19 @@ struct ART_Trfo {
   struct ART_Trfo* next;
 };
 
+struct ART_Pshiftp {
+
+  char contrfo[22];
+  char monbranch[10];
+  REAL phafirst;      // degress
+  REAL phalast;       // degrees
+  int nbpos;  
+  int sign;           // 1 or -1 
+  REAL pdes;          // MW
+  REAL tolp;          // MW
+  struct ART_Pshiftp* next;
+};
+
 struct ART_Parser {
 
   // Error
@@ -118,6 +131,10 @@ struct ART_Parser {
   // TRFOs
   ART_Trfo* trfo;
   ART_Trfo* trfo_list;
+
+  // Phase shifters
+  ART_Pshiftp* pshiftp;
+  ART_Pshiftp* pshiftp_list;
 };
 
 ART_Parser* ART_PARSER_new(void) {
@@ -157,6 +174,10 @@ ART_Parser* ART_PARSER_new(void) {
   // TRFOs
   parser->trfo = NULL;
   parser->trfo_list = NULL;
+
+  // Phase shifters
+  parser->pshiftp = NULL;
+  parser->pshiftp_list = NULL;
 
   // Return
   return parser;
@@ -215,6 +236,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   int len_transfo_list;
   int len_ltcv_list;
   int len_trfo_list;
+  int len_pshiftp_list;
 
   if (!parser)
     return;
@@ -225,6 +247,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   LIST_len(ART_Transfo,parser->transfo_list,next,len_transfo_list);
   LIST_len(ART_Ltcv,parser->ltcv_list,next,len_ltcv_list);
   LIST_len(ART_Trfo,parser->trfo_list,next,len_trfo_list);
+  LIST_len(ART_Pshiftp,parser->pshiftp_list,next,len_pshiftp_list);
   
   // Show
   printf("\nParsed Data\n");
@@ -233,7 +256,8 @@ void ART_PARSER_show(ART_Parser* parser) {
   printf("line list    : %d\n",len_line_list);
   printf("transfo list : %d\n",len_transfo_list);
   printf("ltc-v list   : %d\n",len_ltcv_list);
-  printf("trfo list   : %d\n",len_trfo_list);
+  printf("trfo list    : %d\n",len_trfo_list);
+  printf("pshiftp list : %d\n",len_pshiftp_list);
 
   // Debugging BUS
   ART_Bus* bus;
@@ -292,7 +316,39 @@ void ART_PARSER_show(ART_Parser* parser) {
   }
 
   // Debugging TRFO
-  // Not tested
+  ART_Trfo* trfo;
+  for (trfo = parser->trfo_list; trfo != NULL; trfo = trfo->next) {
+    printf("Trfo %s %s %s %s %.5f %.5f %.5f %.5f %.5f %.5f %.5f %d %.5f %.5f %.5f\n",
+	   trfo->name,
+	   trfo->from_bus,
+	   trfo->to_bus,
+	   trfo->con_bus,
+	   trfo->r,
+	   trfo->x,
+	   trfo->b,
+	   trfo->n,
+	   trfo->snom,
+	   trfo->nfirst,
+	   trfo->nlast,
+	   trfo->nbpos,
+	   trfo->tolv,
+	   trfo->vdes,
+	   trfo->br);
+  }
+
+  // Debugging PSHIFTP
+  ART_Pshiftp* pshiftp;
+  for (pshiftp = parser->pshiftp_list; pshiftp != NULL; pshiftp = pshiftp->next) {
+    printf("Pshiftp %s %s %.5f %.5f %d %d %.5f %.5f\n",
+	   pshiftp->contrfo,
+	   pshiftp->monbranch,
+	   pshiftp->phafirst,
+	   pshiftp->phalast,
+	   pshiftp->nbpos,
+	   pshiftp->sign,
+	   pshiftp->pdes,
+	   pshiftp->tolp);
+  }
 
 }
 
@@ -322,6 +378,9 @@ void ART_PARSER_del(ART_Parser* parser) {
 
   // TRFOs
   LIST_map(ART_Trfo,parser->trfo_list,trfo,next,{free(trfo);});
+
+  // PSHIFTPs
+  LIST_map(ART_Pshiftp,parser->pshiftp_list,pshiftp,next,{free(pshiftp);});
 
   // Parser
   free(parser);  
@@ -381,6 +440,12 @@ void ART_PARSER_callback_field(char* s, void* data) {
 	printf("*** TRFO STATE ***\n");
 	parser->state = ART_PARSER_STATE_TRFO;
       }
+
+      // PSHIFTPs
+      else if (strstr(s,ART_PSHIFTP_TOKEN) != NULL) {
+	printf("*** PSHIFTP STATE ***\n");
+	parser->state = ART_PARSER_STATE_PSHIFTP;
+      }
 	
     }
     break;
@@ -399,6 +464,9 @@ void ART_PARSER_callback_field(char* s, void* data) {
     break;
   case ART_PARSER_STATE_TRFO:
     ART_PARSER_parse_trfo_field((char*)s,parser);
+    break;
+  case ART_PARSER_STATE_PSHIFTP:
+    ART_PARSER_parse_pshiftp_field((char*)s,parser);
     break;
   }
     
@@ -431,6 +499,9 @@ void ART_PARSER_callback_record(void *data) {
     break;
   case ART_PARSER_STATE_TRFO:
     ART_PARSER_parse_trfo_record(parser);
+    break;
+  case ART_PARSER_STATE_PSHIFTP:
+    ART_PARSER_parse_pshiftp_record(parser);
     break;
   }  
 }
@@ -732,6 +803,62 @@ void ART_PARSER_parse_trfo_record(ART_Parser* parser) {
     LIST_add(parser->trfo_list,parser->trfo,next);
   }
   parser->trfo = NULL;
+  parser->field = 0;
+  parser->record = 0;
+  parser->state = ART_PARSER_STATE_INIT;
+}
+
+void ART_PARSER_parse_pshiftp_field(char* s, ART_Parser* parser) {
+
+  if (!parser)
+    return;
+
+  // New pshiftp
+  if (parser->field == 1) {
+    parser->pshiftp = (ART_Pshiftp*)malloc(sizeof(ART_Pshiftp));
+    parser->pshiftp->next = NULL;    
+  }
+  
+  // Fields
+  if (parser->pshiftp) {
+    switch (parser->field) {
+    case 1:
+      strcpy(parser->pshiftp->contrfo,s);
+      break;
+    case 2:
+      strcpy(parser->pshiftp->monbranch,s);
+      break;
+    case 3:
+      parser->pshiftp->phafirst = atof(s);
+      break;
+    case 4:
+      parser->pshiftp->phalast = atof(s);
+      break;
+    case 5:
+      parser->pshiftp->nbpos = atoi(s);
+      break;
+    case 6:
+      parser->pshiftp->sign = atoi(s);
+      break;
+    case 7:
+      parser->pshiftp->pdes = atof(s);
+      break;
+    case 8:
+      parser->pshiftp->tolp = atof(s);
+      break;
+    }
+  }
+}
+
+void ART_PARSER_parse_pshiftp_record(ART_Parser* parser) {
+
+  if (!parser)
+    return;
+
+  if (parser->pshiftp) {
+    LIST_add(parser->pshiftp_list,parser->pshiftp,next);
+  }
+  parser->pshiftp = NULL;
   parser->field = 0;
   parser->record = 0;
   parser->state = ART_PARSER_STATE_INIT;
