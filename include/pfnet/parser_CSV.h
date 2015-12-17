@@ -30,6 +30,7 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
 			BOOL last,
 			char delimeter,
 			char end_of_record,
+			char comment,
 			void (*cfield)(char*,void*),
 			void (*crecord)(void*),
 			void* data);

@@ -164,6 +164,7 @@ void ART_PARSER_read(ART_Parser* parser, char* filename) {
 			 feof(file),
 			 ' ',
 			 ';',
+			 '#',
 			 ART_PARSER_callback_field,
 			 ART_PARSER_callback_record,
 			 parser) != bytes_read) {
@@ -566,7 +567,7 @@ void ART_PARSER_parse_ltcv_field(char* s, ART_Parser* parser) {
     parser->ltcv = (ART_Ltcv*)malloc(sizeof(ART_Ltcv));
     parser->ltcv->next = NULL;    
   }
-
+  
   // Fields
   if (parser->ltcv) {
     switch (parser->field) {
@@ -600,10 +601,10 @@ void ART_PARSER_parse_ltcv_record(ART_Parser* parser) {
   if (!parser)
     return;
 
-  if (parser->transfo) {
-    LIST_add(parser->transfo_list,parser->transfo,next);
+  if (parser->ltcv) {
+    LIST_add(parser->ltcv_list,parser->ltcv,next);
   }
-  parser->transfo = NULL;
+  parser->ltcv = NULL;
   parser->field = 0;
   parser->record = 0;
   parser->state = ART_PARSER_STATE_INIT;

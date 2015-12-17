@@ -174,6 +174,7 @@ void MAT_PARSER_read(MAT_Parser* parser, char* filename) {
 			 feof(file),
 			 ',',
 			 '\n',
+			 0,
 			 MAT_PARSER_callback_field,
 			 MAT_PARSER_callback_row,
 			 parser) != bytes_read) {
