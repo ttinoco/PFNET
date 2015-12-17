@@ -104,6 +104,11 @@ struct ART_Gener {
   struct ART_Gener* next;
 };
 
+struct ART_Slack {
+  char at_bus[10];
+  struct ART_Slack* next;
+};
+
 struct ART_Parser {
 
   // Error
@@ -146,6 +151,10 @@ struct ART_Parser {
   // Generators
   ART_Gener* gener;
   ART_Gener* gener_list;
+
+  // Slacks
+  ART_Slack* slack;
+  ART_Slack* slack_list;
 };
 
 ART_Parser* ART_PARSER_new(void) {
@@ -193,6 +202,10 @@ ART_Parser* ART_PARSER_new(void) {
   // Generators
   parser->gener = NULL;
   parser->gener_list = NULL;
+
+  // Slacks
+  parser->slack = NULL;
+  parser->slack_list = NULL;
 
   // Return
   return parser;
@@ -253,6 +266,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   int len_trfo_list;
   int len_pshiftp_list;
   int len_gener_list;
+  int len_slack_list;
 
   if (!parser)
     return;
@@ -265,6 +279,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   LIST_len(ART_Trfo,parser->trfo_list,next,len_trfo_list);
   LIST_len(ART_Pshiftp,parser->pshiftp_list,next,len_pshiftp_list);
   LIST_len(ART_Gener,parser->gener_list,next,len_gener_list);
+  LIST_len(ART_Slack,parser->slack_list,next,len_slack_list);
   
   // Show
   printf("\nParsed Data\n");
@@ -276,6 +291,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   printf("trfo list    : %d\n",len_trfo_list);
   printf("pshiftp list : %d\n",len_pshiftp_list);
   printf("gener list   : %d\n",len_gener_list);
+  printf("slack list   : %d\n",len_slack_list);
 
   // Debugging BUS
   ART_Bus* bus;
@@ -383,6 +399,13 @@ void ART_PARSER_show(ART_Parser* parser) {
 	   gener->qmax,
 	   gener->br);
   }
+  
+  // Debugging SLACK
+  ART_Slack* slack;
+  for (slack = parser->slack_list; slack != NULL; slack = slack->next) {
+    printf("Slack %s\n",
+	   slack->at_bus);
+  }
 }
 
 void ART_PARSER_load(ART_Parser* parser, Net* net) {
@@ -417,6 +440,9 @@ void ART_PARSER_del(ART_Parser* parser) {
 
   // Generators
   LIST_map(ART_Gener,parser->gener_list,gener,next,{free(gener);});
+
+  // Slacks
+  LIST_map(ART_Slack,parser->slack_list,slack,next,{free(slack);});
 
   // Parser
   free(parser);  
@@ -488,7 +514,12 @@ void ART_PARSER_callback_field(char* s, void* data) {
 	printf("*** GENER STATE ***\n");
 	parser->state = ART_PARSER_STATE_GENER;
       }
-	
+
+      // Slacks
+      else if (strstr(s,ART_SLACK_TOKEN) != NULL) {
+	printf("*** SLACK STATE ***\n");
+	parser->state = ART_PARSER_STATE_SLACK;
+      }	
     }
     break;
     
@@ -512,6 +543,9 @@ void ART_PARSER_callback_field(char* s, void* data) {
     break;
   case ART_PARSER_STATE_GENER:
     ART_PARSER_parse_gener_field((char*)s,parser);
+    break;
+  case ART_PARSER_STATE_SLACK:
+    ART_PARSER_parse_slack_field((char*)s,parser);
     break;
   }
     
@@ -550,6 +584,9 @@ void ART_PARSER_callback_record(void *data) {
     break;
   case ART_PARSER_STATE_GENER:
     ART_PARSER_parse_gener_record(parser);
+    break;
+  case ART_PARSER_STATE_SLACK:
+    ART_PARSER_parse_slack_record(parser);
     break;
   }  
 }
@@ -969,6 +1006,41 @@ void ART_PARSER_parse_gener_record(ART_Parser* parser) {
     LIST_add(parser->gener_list,parser->gener,next);
   }
   parser->gener = NULL;
+  parser->field = 0;
+  parser->record = 0;
+  parser->state = ART_PARSER_STATE_INIT;
+}
+
+void ART_PARSER_parse_slack_field(char* s, ART_Parser* parser) {
+
+  if (!parser)
+    return;
+
+  // New slack
+  if (parser->field == 1) {
+    parser->slack = (ART_Slack*)malloc(sizeof(ART_Slack));
+    parser->slack->next = NULL;
+  }
+
+  // Fields
+  if (parser->slack) {
+    switch (parser->field) {
+    case 1:
+      strcpy(parser->slack->at_bus,s);
+      break;
+    }
+  }
+}
+
+void ART_PARSER_parse_slack_record(ART_Parser* parser) {
+
+  if (!parser)
+    return;
+
+  if (parser->slack) {
+    LIST_add(parser->slack_list,parser->slack,next);
+  }
+  parser->slack = NULL;
   parser->field = 0;
   parser->record = 0;
   parser->state = ART_PARSER_STATE_INIT;
