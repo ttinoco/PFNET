@@ -64,6 +64,26 @@ struct ART_Ltcv {
   struct ART_Ltcv* next;
 };
 
+struct ART_Trfo {
+
+  char name[22];
+  char from_bus[10];
+  char to_bus[10];
+  char con_bus[10];
+  REAL r;             // % on the Vb1,SNOM base
+  REAL x;             // % on the Vb1,SNOM base
+  REAL b;             // % on the Vb1,SNOM base
+  REAL n;             // % on the Vb1,Vb2 base
+  REAL snom;          // mva
+  REAL nfirst;        // %           
+  REAL nlast;         // %    
+  int nbpos; 
+  REAL tolv;          // per unit
+  REAL vdes;          // per unit
+  REAL br;            
+  struct ART_Trfo* next;
+};
+
 struct ART_Parser {
 
   // Error
@@ -94,6 +114,10 @@ struct ART_Parser {
   // LTC-Vs
   ART_Ltcv* ltcv;
   ART_Ltcv* ltcv_list;
+
+  // TRFOs
+  ART_Trfo* trfo;
+  ART_Trfo* trfo_list;
 };
 
 ART_Parser* ART_PARSER_new(void) {
@@ -129,6 +153,10 @@ ART_Parser* ART_PARSER_new(void) {
   // LTC-Vs
   parser->ltcv = NULL;
   parser->ltcv_list = NULL;
+
+  // TRFOs
+  parser->trfo = NULL;
+  parser->trfo_list = NULL;
 
   // Return
   return parser;
@@ -186,6 +214,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   int len_line_list;
   int len_transfo_list;
   int len_ltcv_list;
+  int len_trfo_list;
 
   if (!parser)
     return;
@@ -195,6 +224,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   LIST_len(ART_Line,parser->line_list,next,len_line_list);
   LIST_len(ART_Transfo,parser->transfo_list,next,len_transfo_list);
   LIST_len(ART_Ltcv,parser->ltcv_list,next,len_ltcv_list);
+  LIST_len(ART_Trfo,parser->trfo_list,next,len_trfo_list);
   
   // Show
   printf("\nParsed Data\n");
@@ -203,6 +233,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   printf("line list    : %d\n",len_line_list);
   printf("transfo list : %d\n",len_transfo_list);
   printf("ltc-v list   : %d\n",len_ltcv_list);
+  printf("trfo list   : %d\n",len_trfo_list);
 
   // Debugging BUS
   ART_Bus* bus;
@@ -259,10 +290,14 @@ void ART_PARSER_show(ART_Parser* parser) {
 	   ltcv->tolv,
 	   ltcv->vdes);
   }
+
+  // Debugging TRFO
+  // Not tested
+
 }
 
 void ART_PARSER_load(ART_Parser* parser, Net* net) {
-
+  
 
 }
 
@@ -284,6 +319,9 @@ void ART_PARSER_del(ART_Parser* parser) {
 
   // LTC-Vs
   LIST_map(ART_Ltcv,parser->ltcv_list,ltcv,next,{free(ltcv);});
+
+  // TRFOs
+  LIST_map(ART_Trfo,parser->trfo_list,trfo,next,{free(trfo);});
 
   // Parser
   free(parser);  
@@ -337,6 +375,12 @@ void ART_PARSER_callback_field(char* s, void* data) {
 	printf("*** LTCV STATE ***\n");
 	parser->state = ART_PARSER_STATE_LTCV;
       }
+
+      // TRFOs
+      else if (strstr(s,ART_TRFO_TOKEN) != NULL) {
+	printf("*** TRFO STATE ***\n");
+	parser->state = ART_PARSER_STATE_TRFO;
+      }
 	
     }
     break;
@@ -352,6 +396,9 @@ void ART_PARSER_callback_field(char* s, void* data) {
     break;
   case ART_PARSER_STATE_LTCV:
     ART_PARSER_parse_ltcv_field((char*)s,parser);
+    break;
+  case ART_PARSER_STATE_TRFO:
+    ART_PARSER_parse_trfo_field((char*)s,parser);
     break;
   }
     
@@ -381,6 +428,9 @@ void ART_PARSER_callback_record(void *data) {
     break;
   case ART_PARSER_STATE_LTCV:
     ART_PARSER_parse_ltcv_record(parser);
+    break;
+  case ART_PARSER_STATE_TRFO:
+    ART_PARSER_parse_trfo_record(parser);
     break;
   }  
 }
@@ -605,6 +655,83 @@ void ART_PARSER_parse_ltcv_record(ART_Parser* parser) {
     LIST_add(parser->ltcv_list,parser->ltcv,next);
   }
   parser->ltcv = NULL;
+  parser->field = 0;
+  parser->record = 0;
+  parser->state = ART_PARSER_STATE_INIT;
+}
+
+void ART_PARSER_parse_trfo_field(char* s, ART_Parser* parser) {
+
+  if (!parser)
+    return;
+
+  // New trfo
+  if (parser->field == 1) {
+    parser->trfo = (ART_Trfo*)malloc(sizeof(ART_Trfo));
+    parser->trfo->next = NULL;
+  }
+
+  // Fields
+  if (parser->trfo) {
+    switch (parser->field) {
+    case 1:
+      strcpy(parser->trfo->name,s);
+      break;
+    case 2:
+      strcpy(parser->trfo->from_bus,s);
+      break;
+    case 3:
+      strcpy(parser->trfo->to_bus,s);
+      break;
+    case 4:
+      strcpy(parser->trfo->con_bus,s);
+      break;
+    case 5:
+      parser->trfo->r = atof(s);
+      break;
+    case 6:
+      parser->trfo->x = atof(s);
+      break;
+    case 7:
+      parser->trfo->b = atof(s);
+      break;
+    case 8:
+      parser->trfo->n = atof(s);
+      break;
+    case 9:
+      parser->trfo->snom = atof(s);
+      break;
+    case 10:
+      parser->trfo->nfirst = atof(s);
+      break;
+    case 11:
+      parser->trfo->nlast = atof(s);
+      break;
+    case 12:
+      parser->trfo->nbpos = atoi(s);
+      break;
+    case 13:
+      parser->trfo->tolv = atof(s);
+      break;
+    case 14:
+      parser->trfo->vdes = atof(s);
+      break;
+    case 15:
+      parser->trfo->br = atof(s);
+      break;
+    }
+  }
+}
+
+void ART_PARSER_parse_trfo_record(ART_Parser* parser) {
+
+  if (!parser)
+    return;
+
+  if (parser->trfo) {
+    LIST_add(parser->trfo_list,parser->trfo,next);
+  }
+  parser->trfo = NULL;
   parser->field = 0;
   parser->record = 0;
   parser->state = ART_PARSER_STATE_INIT;
