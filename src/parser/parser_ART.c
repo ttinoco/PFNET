@@ -30,7 +30,7 @@ struct ART_Line {
   REAL x;             // ohms
   REAL wc_half;       // micro siemens
   REAL snom;          // mva
-  REAL br;            
+  REAL br;            // breaker
   struct ART_Line* next;
 };
 
@@ -45,7 +45,7 @@ struct ART_Transfo {
   REAL n;             // % on the Vb1,Vb2 base
   REAL phi;           // degrees
   REAL snom;          // mva
-  REAL br;            
+  REAL br;            // breaker
   struct ART_Transfo* next;
 };
 
@@ -75,7 +75,7 @@ struct ART_Trfo {
   int nbpos; 
   REAL tolv;          // per unit
   REAL vdes;          // per unit
-  REAL br;            
+  REAL br;            // breaker         
   struct ART_Trfo* next;
 };
 
@@ -93,15 +93,15 @@ struct ART_Pshiftp {
 
 struct ART_Gener {
   char name[22];
-  char con_bus[10];
-  char mon_bus[10];
+  char con_bus[10]; // connected bus
+  char mon_bus[10]; // not used
   REAL p;           // mw 
   REAL q;           // mvar
   REAL vimp;        // per unit
   REAL snom;        // MVA
   REAL qmin;        // mvar
   REAL qmax;        // mvar
-  REAL br;  
+  REAL br;          // breaker
   struct ART_Gener* next;
 };
 
@@ -419,11 +419,14 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   int num_buses;
   int num_loads;
   int num_shunts;
+  int num_gens;
   ART_Bus* art_bus;
   ART_Slack* art_slack;
+  ART_Gener* art_gen;
   Bus* bus;
   Load* load;
   Shunt* shunt;
+  Gen* gen;
 
   // Check
   if (!parser || !net)
@@ -499,7 +502,49 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       index++;
     }
   }
-  
+
+  // Generators
+  index = 0;
+  num_gens = 0;
+  for (art_gen = parser->gener_list; art_gen != NULL; art_gen = art_gen->next) {
+    if (art_gen->br != 0) {
+      num_gens++;
+    }
+  }
+  NET_set_gen_array(net,GEN_array_new(num_gens),num_gens);
+  for (art_gen = parser->gener_list; art_gen != NULL; art_gen = art_gen->next) {
+    if (art_gen->br != 0) {
+      art_bus = NULL;
+      HASH_FIND_STR(parser->bus_hash,art_gen->con_bus,art_bus);
+      if (art_bus) {
+	bus = NET_get_bus(net,art_bus->index);
+	gen = NET_get_gen(net,index);
+	BUS_add_gen(bus,gen);                                // connect gen to bus
+	GEN_set_bus(gen,bus);                                // connect bus to gen
+	GEN_set_P(gen,art_gen->p/parser->base_power);        // per unit
+	GEN_set_P_max(gen,GEN_get_P(gen));                   // per unit
+	GEN_set_P_min(gen,GEN_get_P(gen));                   // per unit
+	GEN_set_Q(gen,art_gen->q/parser->base_power);        // per unit
+	GEN_set_Q_max(gen,art_gen->qmax/parser->base_power); // per unit
+	GEN_set_Q_min(gen,art_gen->qmin/parser->base_power); // per unit
+	if (art_gen->vimp != 0.) {
+	  GEN_set_regulator(gen,TRUE);        
+	  GEN_set_reg_bus(gen,bus);           
+	  BUS_add_reg_gen(bus,gen);
+	  BUS_set_v_set(bus,art_gen->vimp); // p.u.
+	}
+	else if (BUS_is_slack(bus)) {
+	  sprintf(parser->error_string,"invalid imposed voltage of slack generator %s",art_gen->name);
+	  parser->error_flag = TRUE;
+	}
+      }
+      else {
+	sprintf(parser->error_string,"unable to find generator bus %s",art_gen->con_bus);
+	parser->error_flag = TRUE;
+      }
+      index++;
+    }
+  }
 }
 
 void ART_PARSER_del(ART_Parser* parser) {
