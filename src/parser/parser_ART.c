@@ -418,10 +418,12 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   int index;
   int num_buses;
   int num_loads;
+  int num_shunts;
   ART_Bus* art_bus;
   ART_Slack* art_slack;
   Bus* bus;
   Load* load;
+  Shunt* shunt;
 
   // Check
   if (!parser || !net)
@@ -458,19 +460,42 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   index = 0;
   num_loads = 0;
   for (art_bus = parser->bus_list; art_bus != NULL; art_bus = art_bus->next) {
-    if (art_bus->pload != 0. || art_bus->qload != 0.) {
+    if (art_bus->pload != 0. || art_bus->qload != 0. || art_bus->qshunt != 0.) {
       num_loads++;
     }
   }
   NET_set_load_array(net,LOAD_array_new(num_loads),num_loads);
   for (art_bus = parser->bus_list; art_bus != NULL; art_bus = art_bus->next) {
-    if (art_bus->pload != 0. || art_bus->qload != 0.) {
+    if (art_bus->pload != 0. || art_bus->qload != 0. || art_bus->qshunt != 0.) {
       bus = NET_get_bus(net,art_bus->index);
       load = NET_get_load(net,index);
       BUS_add_load(bus,load);                             // connect load to bus
       LOAD_set_bus(load,bus);                             // connect bus to load
       LOAD_set_P(load,art_bus->pload/parser->base_power); // per unit 
-      LOAD_set_Q(load,art_bus->qload/parser->base_power); // per unit
+      LOAD_set_Q(load,(art_bus->qload-art_bus->qshunt)/parser->base_power); // per unit
+      index++;
+    }
+  }
+
+  // Shunts
+  index = 0;
+  num_shunts = 0;
+  for (art_bus = parser->bus_list; art_bus != NULL; art_bus = art_bus->next) {
+    if (art_bus->bshunt != 0.) {
+      num_shunts++;
+    }
+  }
+  NET_set_shunt_array(net,SHUNT_array_new(num_shunts),num_shunts);
+  for (art_bus = parser->bus_list; art_bus != NULL; art_bus = art_bus->next) {
+    if (art_bus->bshunt != 0.) {
+      bus = NET_get_bus(net,art_bus->index);
+      shunt = NET_get_shunt(net,index);
+      BUS_add_shunt(bus,shunt);                              // connect shunt to bus
+      SHUNT_set_bus(shunt,bus);                              // connect bus to shunt
+      SHUNT_set_type(shunt,SHUNT_TYPE_FIXED);                // set switchable flag
+      SHUNT_set_b(shunt,art_bus->bshunt/parser->base_power); // per unit 
+      SHUNT_set_b_max(shunt,SHUNT_get_b(shunt));             // per unit
+      SHUNT_set_b_min(shunt,SHUNT_get_b(shunt));             // per unit
       index++;
     }
   }
