@@ -12,6 +12,7 @@
 
 struct ART_Bus {
   char name[10];
+  int index;
   REAL vnom;    // kv
   REAL pload;   // mw
   REAL qload;   // mvar
@@ -127,6 +128,7 @@ struct ART_Parser {
   ART_Bus* bus;
   ART_Bus* bus_list;
   ART_Bus* bus_hash;
+  int bus_counter;
 
   // Lines
   ART_Line* line;
@@ -178,6 +180,7 @@ ART_Parser* ART_PARSER_new(void) {
   parser->bus = NULL;
   parser->bus_list = NULL;
   parser->bus_hash = NULL;
+  parser->bus_counter = 0;
 
   // Lines
   parser->line = NULL;
@@ -296,8 +299,9 @@ void ART_PARSER_show(ART_Parser* parser) {
   // Debugging BUS
   ART_Bus* bus;
   for (bus = parser->bus_list; bus != NULL; bus = bus->next) {
-    printf("Bus %s %.5f %.5f %.5f %.5f %.5f\n",
+    printf("Bus %s %d %.5f %.5f %.5f %.5f %.5f\n",
 	   bus->name,
+	   bus->index,
 	   bus->vnom,
 	   bus->pload,
 	   bus->qload,
@@ -410,7 +414,67 @@ void ART_PARSER_show(ART_Parser* parser) {
 
 void ART_PARSER_load(ART_Parser* parser, Net* net) {
   
+  // Local variables
+  int index;
+  int num_buses;
+  int num_loads;
+  ART_Bus* art_bus;
+  ART_Slack* art_slack;
+  Bus* bus;
+  Load* load;
 
+  // Check
+  if (!parser || !net)
+    return;
+  
+  // Base power
+  NET_set_base_power(net,parser->base_power);
+
+  // Buses
+  num_buses = 0;
+  LIST_len(ART_Bus,parser->bus_list,next,num_buses);
+  NET_set_bus_array(net,BUS_array_new(num_buses),num_buses);
+  for (art_bus = parser->bus_list; art_bus != NULL; art_bus = art_bus->next) {
+    bus = NET_get_bus(net,art_bus->index);
+    BUS_set_number(bus,art_bus->index+1);
+    NET_bus_hash_add(net,bus);
+  }
+
+  // Slacks
+  for (art_slack = parser->slack_list; art_slack != NULL; art_slack = art_slack->next) {
+    art_bus = NULL;
+    HASH_FIND_STR(parser->bus_hash,art_slack->at_bus,art_bus);
+    if (art_bus) {
+      bus = NET_get_bus(net,art_bus->index);
+      BUS_set_slack(bus,TRUE);
+    }
+    else {
+      sprintf(parser->error_string,"unable to find slack bus %s",art_slack->at_bus);
+      parser->error_flag = TRUE;
+    }
+  }
+
+  // Loads
+  index = 0;
+  num_loads = 0;
+  for (art_bus = parser->bus_list; art_bus != NULL; art_bus = art_bus->next) {
+    if (art_bus->pload != 0. || art_bus->qload != 0.) {
+      num_loads++;
+    }
+  }
+  NET_set_load_array(net,LOAD_array_new(num_loads),num_loads);
+  for (art_bus = parser->bus_list; art_bus != NULL; art_bus = art_bus->next) {
+    if (art_bus->pload != 0. || art_bus->qload != 0.) {
+      bus = NET_get_bus(net,art_bus->index);
+      load = NET_get_load(net,index);
+      BUS_add_load(bus,load);                             // connect load to bus
+      LOAD_set_bus(load,bus);                             // connect bus to load
+      LOAD_set_P(load,art_bus->pload/parser->base_power); // per unit 
+      LOAD_set_Q(load,art_bus->qload/parser->base_power); // per unit
+      index++;
+    }
+  }
+  
 }
 
 void ART_PARSER_del(ART_Parser* parser) {
@@ -633,6 +697,8 @@ void ART_PARSER_parse_bus_record(ART_Parser* parser) {
     return;
 
   if (parser->bus) {
+    parser->bus->index = parser->bus_counter;
+    parser->bus_counter++;
     LIST_add(parser->bus_list,parser->bus,next);
     HASH_ADD_STR(parser->bus_hash,name,parser->bus);
   }
