@@ -122,13 +122,12 @@ struct ART_Parser {
   int record;
 
   // Base
-  REAL base_power;
+  REAL base_power; // MVA
   
   // Buses
   ART_Bus* bus;
   ART_Bus* bus_list;
   ART_Bus* bus_hash;
-  int bus_counter;
 
   // Lines
   ART_Line* line;
@@ -180,7 +179,6 @@ ART_Parser* ART_PARSER_new(void) {
   parser->bus = NULL;
   parser->bus_list = NULL;
   parser->bus_hash = NULL;
-  parser->bus_counter = 0;
 
   // Lines
   parser->line = NULL;
@@ -299,9 +297,8 @@ void ART_PARSER_show(ART_Parser* parser) {
   // Debugging BUS
   ART_Bus* bus;
   for (bus = parser->bus_list; bus != NULL; bus = bus->next) {
-    printf("Bus %s %d %.5f %.5f %.5f %.5f %.5f\n",
+    printf("Bus %s %.5f %.5f %.5f %.5f %.5f\n",
 	   bus->name,
-	   bus->index,
 	   bus->vnom,
 	   bus->pload,
 	   bus->qload,
@@ -420,13 +417,28 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   int num_loads;
   int num_shunts;
   int num_gens;
+  int num_lines;
+  int num_transfo;
+  int num_branches;
   ART_Bus* art_bus;
+  ART_Bus* art_busA;
+  ART_Bus* art_busB;
   ART_Slack* art_slack;
   ART_Gener* art_gen;
+  ART_Line* art_line;
+  ART_Transfo* art_transfo;
   Bus* bus;
+  Bus* busA;
+  Bus* busB;
   Load* load;
   Shunt* shunt;
   Gen* gen;
+  Branch* branch;
+  REAL r;
+  REAL x;
+  REAL den;
+  REAL g;
+  REAL b;
 
   // Check
   if (!parser || !net)
@@ -436,13 +448,16 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   NET_set_base_power(net,parser->base_power);
 
   // Buses
+  index = 0;
   num_buses = 0;
   LIST_len(ART_Bus,parser->bus_list,next,num_buses);
   NET_set_bus_array(net,BUS_array_new(num_buses),num_buses);
   for (art_bus = parser->bus_list; art_bus != NULL; art_bus = art_bus->next) {
-    bus = NET_get_bus(net,art_bus->index);
+    art_bus->index = index;
+    bus = NET_get_bus(net,index);
     BUS_set_number(bus,art_bus->index+1);
     NET_bus_hash_add(net,bus);
+    index++;
   }
 
   // Slacks
@@ -460,14 +475,13 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   }
 
   // Loads
-  index = 0;
   num_loads = 0;
   for (art_bus = parser->bus_list; art_bus != NULL; art_bus = art_bus->next) {
-    if (art_bus->pload != 0. || art_bus->qload != 0. || art_bus->qshunt != 0.) {
+    if (art_bus->pload != 0. || art_bus->qload != 0. || art_bus->qshunt != 0.)
       num_loads++;
-    }
   }
   NET_set_load_array(net,LOAD_array_new(num_loads),num_loads);
+  index = 0;
   for (art_bus = parser->bus_list; art_bus != NULL; art_bus = art_bus->next) {
     if (art_bus->pload != 0. || art_bus->qload != 0. || art_bus->qshunt != 0.) {
       bus = NET_get_bus(net,art_bus->index);
@@ -481,14 +495,13 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   }
 
   // Shunts
-  index = 0;
   num_shunts = 0;
   for (art_bus = parser->bus_list; art_bus != NULL; art_bus = art_bus->next) {
-    if (art_bus->bshunt != 0.) {
+    if (art_bus->bshunt != 0.)
       num_shunts++;
-    }
   }
   NET_set_shunt_array(net,SHUNT_array_new(num_shunts),num_shunts);
+  index = 0;
   for (art_bus = parser->bus_list; art_bus != NULL; art_bus = art_bus->next) {
     if (art_bus->bshunt != 0.) {
       bus = NET_get_bus(net,art_bus->index);
@@ -504,14 +517,13 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   }
 
   // Generators
-  index = 0;
   num_gens = 0;
   for (art_gen = parser->gener_list; art_gen != NULL; art_gen = art_gen->next) {
-    if (art_gen->br != 0) {
+    if (art_gen->br != 0)
       num_gens++;
-    }
   }
   NET_set_gen_array(net,GEN_array_new(num_gens),num_gens);
+  index = 0;
   for (art_gen = parser->gener_list; art_gen != NULL; art_gen = art_gen->next) {
     if (art_gen->br != 0) {
       art_bus = NULL;
@@ -545,10 +557,79 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       index++;
     }
   }
+
+  // Branches
+  num_lines = 0;
+  num_transfo = 0;
+  num_branches = 0;
+  for (art_line = parser->line_list; art_line != NULL; art_line = art_line->next) {
+    if (art_line->br != 0)
+      num_lines++;
+  }
+  for (art_transfo = parser->transfo_list; art_transfo != NULL; art_transfo = art_transfo->next) {
+    if (art_transfo->br != 0)
+      num_transfo++;
+  }  
+  num_branches = num_lines + num_transfo;
+  NET_set_branch_array(net,BRANCH_array_new(num_branches),num_branches);
+
+  // Lines
+  index = 0;
+  for (art_line = parser->line_list; art_line != NULL; art_line = art_line->next) {
+    if (art_line->br != 0) {
+      
+      art_busA = NULL;
+      art_busB = NULL;
+      HASH_FIND_STR(parser->bus_hash,art_line->from_bus,art_busA);
+      HASH_FIND_STR(parser->bus_hash,art_line->to_bus,art_busB);
+
+      if (art_busA && art_busB) {
+
+	busA = NET_get_bus(net,art_busA->index);
+	busB = NET_get_bus(net,art_busB->index);
+	branch = NET_get_branch(net,index);
+	
+	BRANCH_set_bus_from(branch,busA);
+	BRANCH_set_bus_to(branch,busB);
+	BUS_add_branch_from(busA,branch);
+	BUS_add_branch_to(busB,branch);
+	
+	r = art_line->r*(parser->base_power*1e-6)/pow(art_busA->vnom*1e-3,2.); // per unit
+	x = art_line->x*(parser->base_power*1e-6)/pow(art_busA->vnom*1e-3,2.); // per unit
+
+	den = pow(r,2.)+pow(x,2.);
+	g = r/den;
+	b = -x/den;
+	
+	BRANCH_set_g(branch,g);                                // per unit
+	BRANCH_set_b(branch,b);                                // per unit
+
+	b = (art_line->wc_half*1e-6)*pow(art_busA->vnom*1e-3,2.)/(parser->base_power*1e-6); // per unit
+	
+	BRANCH_set_b_from(branch,b);            // per unit
+	BRANCH_set_b_to(branch,b);              // per unit
+	
+      }
+      else {
+	sprintf(parser->error_string,"unable to find buses of line %s",art_line->name);
+	parser->error_flag = TRUE;
+      }
+
+      index++;
+    }
+  }
+  
+  // Transfo
+  
+
+  // LTC-V
+  
+  
 }
 
 void ART_PARSER_del(ART_Parser* parser) {
 
+  // Check
   if (!parser)
     return;
 
@@ -767,8 +848,6 @@ void ART_PARSER_parse_bus_record(ART_Parser* parser) {
     return;
 
   if (parser->bus) {
-    parser->bus->index = parser->bus_counter;
-    parser->bus_counter++;
     LIST_add(parser->bus_list,parser->bus,next);
     HASH_ADD_STR(parser->bus_hash,name,parser->bus);
   }
