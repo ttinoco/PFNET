@@ -588,6 +588,8 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 	busA = NET_get_bus(net,art_busA->index);
 	busB = NET_get_bus(net,art_busB->index);
 	branch = NET_get_branch(net,index);
+
+	BRANCH_set_type(branch,BRANCH_TYPE_LINE);
 	
 	BRANCH_set_bus_from(branch,busA);
 	BRANCH_set_bus_to(branch,busB);
@@ -620,8 +622,59 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   }
   
   // Transfo
-  
+  index = 0;
+  for (art_transfo = parser->transfo_list; art_transfo != NULL; art_transfo = art_transfo->next) {
+    if (art_transfo->br != 0) {
+      
+      art_busA = NULL;
+      art_busB = NULL;
+      HASH_FIND_STR(parser->bus_hash,art_transfo->from_bus,art_busA);
+      HASH_FIND_STR(parser->bus_hash,art_transfo->to_bus,art_busB);
 
+      if (art_busA && art_busB) {
+
+	busA = NET_get_bus(net,art_busA->index);
+	busB = NET_get_bus(net,art_busB->index);
+	branch = NET_get_branch(net,index);
+	
+	BRANCH_set_type(branch,BRANCH_TYPE_TRAN_FIXED);
+	
+	BRANCH_set_bus_from(branch,busB);  // reversed
+	BRANCH_set_bus_to(branch,busA);    // reversed
+	BUS_add_branch_from(busB,branch);
+	BUS_add_branch_to(busA,branch);
+	
+	r = art_transfo->r/100.; // per unit (VB1,SNOM) 
+	x = art_transfo->x/100.; // per unit (VB1,SNOM)
+
+	den = pow(r,2.)+pow(x,2.);
+	g = r/den;
+	b = -x/den;
+	
+	BRANCH_set_g(branch,g);                                // per unit
+	BRANCH_set_b(branch,b);                                // per unit
+
+	BRANCH_set_b_to(branch,art_transfo->b1/100.);   // per unit (VB1,SNOM)
+	BRANCH_set_b_from(branch,art_transfo->b2/100.); // per unit (VB1,SNOM)
+
+	BRANCH_set_ratio(branch,100./art_transfo->n);          // units of bus_from_base/bus_to_base
+	BRANCH_set_ratio_max(branch,BRANCH_get_ratio(branch));
+	BRANCH_set_ratio_min(branch,BRANCH_get_ratio(branch));
+
+	BRANCH_set_phase(branch,-art_transfo->phi*PI/180.);    // radians
+	BRANCH_set_phase_max(branch,BRANCH_get_phase(branch));
+	BRANCH_set_phase_min(branch,BRANCH_get_phase(branch));
+	
+      }
+      else {
+	sprintf(parser->error_string,"unable to find buses of transfo %s",art_transfo->name);
+	parser->error_flag = TRUE;
+      }
+
+      index++;
+    }
+  }
+  
   // LTC-V
   
   
