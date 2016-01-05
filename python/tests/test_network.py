@@ -43,7 +43,7 @@ class TestNetwork(unittest.TestCase):
             self.assertGreater(net.num_buses,0)
             self.assertGreater(net.num_gens,0)
             self.assertGreater(net.num_branches,0)
-            self.assertGreater(net.num_shunts,0)
+            self.assertGreaterEqual(net.num_shunts,0)
             self.assertEqual(net.num_vargens,0)
             self.assertEqual(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
@@ -88,8 +88,13 @@ class TestNetwork(unittest.TestCase):
             net.load(case)
             net.clear_flags()
 
+            num_adj = 0
+            for gen in net.generators:
+                if gen.P_min < gen.P_max:
+                    num_adj += 1
+
             self.assertEqual(net.num_vars,0)
-            self.assertGreater(net.get_num_P_adjust_gens(),0)
+            self.assertEqual(net.get_num_P_adjust_gens(),num_adj)
 
             # P adjust gens
             net.set_flags(pf.OBJ_GEN,
@@ -370,7 +375,7 @@ class TestNetwork(unittest.TestCase):
             
             net.load(case)
             
-            self.assertTrue(net.num_shunts > 0)
+            self.assertGreaterEqual(net.num_shunts,0)
 
             self.assertEqual(len(net.shunts),net.num_shunts)
 
@@ -534,7 +539,6 @@ class TestNetwork(unittest.TestCase):
             self.assertLess(np.abs(penetration-100*sum([vg.P for vg in net.var_generators])/total_load),1e-10)
                         
             for vg in net.var_generators:
-                self.assertGreater(vg.P_max,0)
                 self.assertEqual(vg.P_max,total_load/net.num_vargens)
                 self.assertEqual(vg.P,(penetration/100.)*vg.P_max)
                 self.assertEqual(vg.P_std,(uncertainty/100.)*vg.P_max)
@@ -898,7 +902,6 @@ class TestNetwork(unittest.TestCase):
             r2 = []
             r3 = []
             r4 = []
-            r5 = []
             for i in range(len(bus_list)):
                 if i > 0:
                     bus1 = bus_list[i-1]
@@ -909,12 +912,10 @@ class TestNetwork(unittest.TestCase):
                     r2.append(abs(bus2.get_largest_mis()) >= abs(bus1.get_largest_mis()))
                     r3.append(abs(bus1.get_largest_sens()) >= abs(bus2.get_largest_sens()))
                     r4.append(bus1.get_largest_mis() >= bus2.get_largest_mis())
-                    r5.append(abs(bus1.P_mis) >= abs(bus2.P_mis))
             self.assertTrue(all(r1))
             self.assertFalse(all(r2))
             self.assertFalse(all(r3))
             self.assertFalse(all(r4))
-            self.assertFalse(all(r5))
 
             # Sort by P mismatch
             bus_list = net.create_sorted_bus_list(pf.BUS_MIS_ACTIVE)
@@ -922,7 +923,6 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(len(bus_list),net.num_buses)
             r1 = []
             r2 = []
-            r3 = []
             for i in range(len(bus_list)):
                 if i > 0:
                     bus1 = bus_list[i-1]
@@ -931,10 +931,8 @@ class TestNetwork(unittest.TestCase):
                     self.assertTrue(isinstance(bus2,pf.Bus))
                     r1.append(abs(bus1.P_mis) >= abs(bus2.P_mis))
                     r2.append(abs(bus2.P_mis) >= abs(bus1.P_mis))
-                    r3.append(abs(bus1.get_largest_mis()) >= abs(bus2.get_largest_mis()))
             self.assertTrue(all(r1))
             self.assertFalse(all(r2))
-            self.assertFalse(all(r3))
 
             # Sort by largest sensitivity
             bus_list = net.create_sorted_bus_list(pf.BUS_SENS_LARGEST)
@@ -965,19 +963,16 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(len(bus_list),net.num_buses)
             r1 = []
             r2 = []
-            r3 = []
             for i in range(len(bus_list)):
                 if i > 0:
                     bus1 = bus_list[i-1]
                     bus2 = bus_list[i]
                     self.assertTrue(isinstance(bus1,pf.Bus))
                     self.assertTrue(isinstance(bus2,pf.Bus))
-                    r1.append(abs(bus2.sens_v_reg_by_gen) >= abs(bus1.sens_v_reg_by_gen))
-                    r2.append(abs(bus1.sens_v_reg_by_gen) >= abs(bus2.sens_v_reg_by_gen))
-                    r3.append(abs(bus1.get_largest_sens()) >= abs(bus2.get_largest_sens()))
-            self.assertFalse(all(r1))
-            self.assertTrue(all(r2))
-            self.assertFalse(all(r3))
+                    r1.append(abs(bus1.sens_v_reg_by_gen) >= abs(bus2.sens_v_reg_by_gen))
+                    r2.append(abs(bus1.get_largest_sens()) >= abs(bus2.get_largest_sens()))
+            self.assertTrue(all(r1))
+            self.assertFalse(all(r2))
 
     def test_set_points(self):
 
@@ -1346,8 +1341,8 @@ class TestNetwork(unittest.TestCase):
                 self.assertGreater(len(vg.bus.gens),0)
                 vg.P_max = total_load/net.num_vargens
                 vg.P_std = 0.25*vg.P_max
-                self.assertGreater(vg.P_max,0)
-                self.assertGreater(vg.P_std,0)
+                self.assertNotEqual(vg.P_max,0)
+                self.assertNotEqual(vg.P_std,0)
             self.assertLess(np.abs(sum([vg.P_max for vg in net.var_generators])-total_load),1e-10)
 
             # Variables

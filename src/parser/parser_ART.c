@@ -36,6 +36,7 @@ struct ART_Line {
 
 struct ART_Transfo {
   char name[22];
+  int index;
   char from_bus[10];
   char to_bus[10];
   REAL r;             // % on the Vb1,SNOM base
@@ -47,6 +48,7 @@ struct ART_Transfo {
   REAL snom;          // mva
   REAL br;            // breaker
   struct ART_Transfo* next;
+  UT_hash_handle hh;
 };
 
 struct ART_Ltcv {
@@ -136,6 +138,7 @@ struct ART_Parser {
   // Transformers
   ART_Transfo* transfo;
   ART_Transfo* transfo_list;
+  ART_Transfo* transfo_hash;
 
   // LTC-Vs
   ART_Ltcv* ltcv;
@@ -187,6 +190,7 @@ ART_Parser* ART_PARSER_new(void) {
   // Transformers
   parser->transfo = NULL;
   parser->transfo_list = NULL;
+  parser->transfo_hash = NULL;
 
   // LTC-Vs
   parser->ltcv = NULL;
@@ -427,6 +431,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   ART_Gener* art_gen;
   ART_Line* art_line;
   ART_Transfo* art_transfo;
+  ART_Ltcv* art_ltcv;
   Bus* bus;
   Bus* busA;
   Bus* busB;
@@ -588,7 +593,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 	busA = NET_get_bus(net,art_busA->index);
 	busB = NET_get_bus(net,art_busB->index);
 	branch = NET_get_branch(net,index);
-
+	
 	BRANCH_set_type(branch,BRANCH_TYPE_LINE);
 	
 	BRANCH_set_bus_from(branch,busA);
@@ -622,9 +627,10 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   }
   
   // Transfo
-  index = 0;
   for (art_transfo = parser->transfo_list; art_transfo != NULL; art_transfo = art_transfo->next) {
     if (art_transfo->br != 0) {
+      
+      art_transfo->index = index;
       
       art_busA = NULL;
       art_busB = NULL;
@@ -632,11 +638,11 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       HASH_FIND_STR(parser->bus_hash,art_transfo->to_bus,art_busB);
 
       if (art_busA && art_busB) {
-
+	
 	busA = NET_get_bus(net,art_busA->index);
 	busB = NET_get_bus(net,art_busB->index);
 	branch = NET_get_branch(net,index);
-	
+
 	BRANCH_set_type(branch,BRANCH_TYPE_TRAN_FIXED);
 	
 	BRANCH_set_bus_from(branch,busB);  // reversed
@@ -670,14 +676,63 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 	sprintf(parser->error_string,"unable to find buses of transfo %s",art_transfo->name);
 	parser->error_flag = TRUE;
       }
-
+      
       index++;
     }
   }
   
   // LTC-V
-  
-  
+  for (art_ltcv = parser->ltcv_list; art_ltcv != NULL; art_ltcv = art_ltcv->next) {
+    
+    art_transfo = NULL;
+    HASH_FIND_STR(parser->transfo_hash,art_ltcv->name,art_transfo);
+    if (art_transfo) {
+
+      art_bus = NULL;
+      HASH_FIND_STR(parser->bus_hash,art_ltcv->con_bus,art_bus);
+      if (art_bus) {
+	
+	branch = NET_get_branch(net,art_transfo->index);
+	bus = NET_get_bus(net,art_bus->index);
+	busA = BRANCH_get_bus_from(branch);
+	busB = BRANCH_get_bus_to(branch);
+	
+	BRANCH_set_type(branch,BRANCH_TYPE_TRAN_TAP_V); // tap changer tap that regulates voltage
+	BRANCH_set_reg_bus(branch,bus);                 // branch regulates bus
+	BUS_add_reg_tran(bus,branch);               // add regulating transformer to bus
+
+	// Ratio limits
+	BRANCH_set_ratio_max(branch,100./art_ltcv->nfirst);
+	BRANCH_set_ratio_min(branch,100./art_ltcv->nlast);
+
+	// Voltage limits
+	BUS_set_v_set(bus,art_ltcv->vdes); // per unit
+	BUS_set_v_max(bus,art_ltcv->vdes+art_ltcv->tolv);
+	BUS_set_v_min(bus,art_ltcv->vdes-art_ltcv->tolv);	
+
+	// tap-voltage sensitivity
+	if (busA == bus)
+	  BRANCH_set_pos_ratio_v_sens(branch,FALSE); // negative sensitivity
+	else if (busB == bus)
+	  BRANCH_set_pos_ratio_v_sens(branch,TRUE);  // positive ratio-v sensitivity
+	else {
+	  sprintf(parser->error_string,"bus regulated by LTC-V transformer %s is not a terminal bus",
+		  art_ltcv->name);
+	  parser->error_flag = TRUE;
+	}
+      }
+      else {
+	sprintf(parser->error_string,"unable to find controlled bus %s of LTC-V transformer %s",
+		art_ltcv->con_bus,
+		art_ltcv->name);
+	parser->error_flag = TRUE;
+      }   
+    }
+    else {
+      sprintf(parser->error_string,"unable to find LTC-V transformer %s",art_ltcv->name);
+      parser->error_flag = TRUE;
+    }   
+  }  
 }
 
 void ART_PARSER_del(ART_Parser* parser) {
@@ -695,6 +750,8 @@ void ART_PARSER_del(ART_Parser* parser) {
   LIST_map(ART_Line,parser->line_list,line,next,{free(line);});
 
   // Transformers
+  while (parser->transfo_hash)
+    HASH_DEL(parser->transfo_hash,parser->transfo_hash);
   LIST_map(ART_Transfo,parser->transfo_list,transfo,next,{free(transfo);});
 
   // LTC-Vs
@@ -743,49 +800,41 @@ void ART_PARSER_callback_field(char* s, void* data) {
       
       // Bus
       if (strstr(s,ART_BUS_TOKEN) != NULL) {
-	printf("*** BUS STATE ***\n");
 	parser->state = ART_PARSER_STATE_BUS;
       }
       
       // Line
       else if (strstr(s,ART_LINE_TOKEN) != NULL) {
-	printf("*** LINE STATE ***\n");
 	parser->state = ART_PARSER_STATE_LINE;
       }
 
       // Transformer
       else if (strstr(s,ART_TRANSFO_TOKEN) != NULL) {
-	printf("*** TRANSFO STATE ***\n");
 	parser->state = ART_PARSER_STATE_TRANSFO;
       }
 
       // LTC-V
       else if (strstr(s,ART_LTCV_TOKEN) != NULL) {
-	printf("*** LTCV STATE ***\n");
 	parser->state = ART_PARSER_STATE_LTCV;
       }
 
       // TRFOs
       else if (strstr(s,ART_TRFO_TOKEN) != NULL) {
-	printf("*** TRFO STATE ***\n");
 	parser->state = ART_PARSER_STATE_TRFO;
       }
 
       // PSHIFTPs
       else if (strstr(s,ART_PSHIFTP_TOKEN) != NULL) {
-	printf("*** PSHIFTP STATE ***\n");
 	parser->state = ART_PARSER_STATE_PSHIFTP;
       }
 
       // Generators
       else if (strstr(s,ART_GENER_TOKEN) != NULL) {
-	printf("*** GENER STATE ***\n");
 	parser->state = ART_PARSER_STATE_GENER;
       }
 
       // Slacks
       else if (strstr(s,ART_SLACK_TOKEN) != NULL) {
-	printf("*** SLACK STATE ***\n");
 	parser->state = ART_PARSER_STATE_SLACK;
       }	
     }
@@ -1024,6 +1073,7 @@ void ART_PARSER_parse_transfo_record(ART_Parser* parser) {
 
   if (parser->transfo) {
     LIST_add(parser->transfo_list,parser->transfo,next);
+    HASH_ADD_STR(parser->transfo_hash,name,parser->transfo);
   }
   parser->transfo = NULL;
   parser->field = 0;

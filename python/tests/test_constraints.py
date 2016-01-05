@@ -407,7 +407,6 @@ class TestConstraints(unittest.TestCase):
                     for g in bus.reg_gens:
                         self.assertTrue(g.has_flags(pf.FLAG_VARS,pf.GEN_VAR_Q))
                         x[g.index_Q] = (g.Q_max+g.Q_min)/2.
-            self.assertGreater(np.linalg.norm(x),0)
             self.assertTrue(np.linalg.norm(A*x-b) < 1e-10)
 
     def test_constr_PF(self):
@@ -687,7 +686,6 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.Jconstr_index,0)
             self.assertEqual(constr.Aconstr_index,0)
             
-            #Jnnz = 4*(net.get_num_buses_reg_by_gen()-net.get_num_slack_buses())
             Jnnz = 0
             for i in range(net.num_buses):
                 bus = net.get_bus(i)
@@ -695,13 +693,9 @@ class TestConstraints(unittest.TestCase):
                     Jnnz += 2 + 2*len(bus.reg_gens)
                     
             Annz = 3*(net.get_num_buses_reg_by_gen()-net.get_num_slack_buses())
-            self.assertGreater(Jnnz,0)
-            self.assertGreater(Annz,0)
             
             rowsJ = 2*(net.get_num_buses_reg_by_gen()-net.get_num_slack_buses())
             rowsA = net.get_num_buses_reg_by_gen()-net.get_num_slack_buses()
-            self.assertGreater(rowsJ,0)
-            self.assertGreater(rowsA,0)
                         
             constr.analyze()
             self.assertEqual(constr.Jcounter,Jnnz)
@@ -759,11 +753,14 @@ class TestConstraints(unittest.TestCase):
                 
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.linalg.norm(Jd_exact)
+                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.maximum(np.linalg.norm(Jd_exact),1e-5)
                 self.assertLessEqual(error,EPS)
 
             # Sigle Hessian check
             for i in range(NUM_TRIALS):
+
+                if f.shape[0] == 0:
+                    break
 
                 j = np.random.randint(0,f.shape[0])
 
@@ -786,7 +783,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.linalg.norm(Hd_exact)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),1e-5)
                 self.assertLessEqual(error,EPS)
 
             # Combined Hessian check
@@ -812,7 +809,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.linalg.norm(Hd_exact)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),1e-5)
                 self.assertLessEqual(error,EPS)
 
             # Sensitivities

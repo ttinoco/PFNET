@@ -198,7 +198,7 @@ class TestFunctions(unittest.TestCase):
             
             # After
             self.assertTrue(type(f) is float)
-            self.assertGreater(f,0.)
+            self.assertGreaterEqual(f,0.)
             self.assertTrue(type(g) is np.ndarray)
             self.assertTupleEqual(g.shape,(net.num_vars,))
             self.assertTrue(type(H) is coo_matrix)
@@ -225,8 +225,12 @@ class TestFunctions(unittest.TestCase):
                 
                 gd_exact = np.dot(g0,d)
                 gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.linalg.norm(gd_exact)
-                self.assertLessEqual(error,EPS)
+
+                if np.linalg.norm(gd_exact) == 0.:
+                    self.assertLessEqual(np.linalg.norm(gd_approx),1.)
+                else:
+                    error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),1e-5)
+                    self.assertLessEqual(error,EPS)
 
             # Hessian check
             func.eval(x0)
@@ -317,7 +321,7 @@ class TestFunctions(unittest.TestCase):
             
             # After
             self.assertTrue(type(f) is float)
-            self.assertGreater(f,0.)
+            self.assertGreaterEqual(f,0.)
             self.assertTrue(type(g) is np.ndarray)
             self.assertTupleEqual(g.shape,(net.num_vars,))
             self.assertTrue(type(H) is coo_matrix)
@@ -344,7 +348,7 @@ class TestFunctions(unittest.TestCase):
                 
                 gd_exact = np.dot(g0,d)
                 gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.linalg.norm(gd_exact)
+                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),1e-5)
                 self.assertLessEqual(error,EPS)
 
             # Hessian check
@@ -364,7 +368,7 @@ class TestFunctions(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.linalg.norm(Hd_exact)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),1e-5)
                 self.assertLessEqual(error,EPS)
 
     def test_func_REG_RATIO(self):
@@ -659,7 +663,7 @@ class TestFunctions(unittest.TestCase):
             
             # After
             self.assertTrue(type(f) is float)
-            self.assertGreater(f,0.)
+            self.assertGreaterEqual(f,0.)
             self.assertTrue(type(g) is np.ndarray)
             self.assertTupleEqual(g.shape,(net.num_vars,))
             self.assertTrue(type(H) is coo_matrix)
