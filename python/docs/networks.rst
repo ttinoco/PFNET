@@ -324,4 +324,42 @@ Lastly, the class method :func:`get_var_values() <pfnet.Network.get_var_values>`
 Projections
 ===========
 
+As explained above, once the network variables have been set, a vector with the current values of the selected variables is obtained with the class method :func:`get_var_values() <pfnet.Network.get_var_values>`. To extract subvectors that contain values of specific variables, projection matrices can be used. These :ref:`matrices <ref_mat>` can be obtained using the class method :func:`get_var_projection() <pfnet.Network.get_var_projection>`, which take as arguments a :ref:`component type <ref_net_obj>` and a ``variable mask``, *e.g.*, :ref:`bus variable masks <ref_bus_var>`. The next example sets the variables of the network to be the bus voltage magnitudes and angles of all the buses, extracts the vector of values of all variables, and then extracts two subvectors having only voltage magnitudes and only voltage angles, respectively::
+
+  >>> import numpy as np
+  >>> import pfnet as pf
+
+  >>> net = pf.Network()
+  >>> net.load('ieee14.mat')
+
+  >>> net.set_flags(pf.OBJ_BUS,
+  ...               pf.FLAG_VARS,
+  ...               pf.BUS_PROP_ANY,
+  ...               pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
+
+  >>> print net.num_vars, 2*net.num_buses
+  28 28
+
+  >>> P1 = net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VMAG)
+  >>> P2 = net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VANG)
+
+  >>> print type(P1)
+  <class 'scipy.sparse.coo.coo_matrix'>
+
+  >>> x = net.get_var_values()
+  >>> v_mags = P1*x
+  >>> v_angs = P2*x
+
+  >>> print v_mags
+  [ 1.036  1.05   1.055  1.057  1.051  1.056  1.09   1.062  1.07   1.02
+    1.019  1.01   1.045  1.06 ]
+
+  >>> print v_angs
+  [-0.27995081 -0.26459191 -0.26302112 -0.2581342  -0.26354472 -0.26075219
+   -0.23317599 -0.23335052 -0.24818582 -0.15323991 -0.18029251 -0.22200588
+   -0.0869174   0. ]
+
+  >>> print np.linalg.norm(x - (P1.T*v_mags+P2.T*v_angs))
+  0.0
+
 
