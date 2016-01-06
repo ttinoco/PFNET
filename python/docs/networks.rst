@@ -11,7 +11,7 @@ This section describes how to load and analyze power networks using PFNET.
 Overview
 ========
 
-Power networks in PFNET are represented by objects of type :class:`Network <pfnet.Network>`. These objects are initially empty networks and need to be loaded with data contained in specific types of files. Once the data is loaded, the network and its components can be analyzed, visualized, and used to construct network optimization problems. After a network optimization problem is solved, the network object can be updated with the solution to perform further analysis.
+Power networks in PFNET are represented by objects of type :class:`Network <pfnet.Network>`. These objects are initially empty and need to be loaded with data contained in specific types of files. Once the data is loaded, the network and its components can be analyzed, visualized, and used to construct network optimization problems. After a network optimization problem is solved, the network object can be updated with the solution to perform further analysis.
 
 An important attribute of the :class:`Network <pfnet.Network>` class is :data:`base_power <pfnet.Network.base_power>`. This quantity, which has units of MVA, is useful for converting power quantities in per unit system base power to MW or MVAr.
 
