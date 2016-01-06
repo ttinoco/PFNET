@@ -549,6 +549,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 	  GEN_set_reg_bus(gen,bus);           
 	  BUS_add_reg_gen(bus,gen);
 	  BUS_set_v_set(bus,art_gen->vimp); // p.u.
+	  BUS_set_v_mag(bus,art_gen->vimp); // p.u.
 	}
 	else if (BUS_is_slack(bus)) {
 	  sprintf(parser->error_string,"invalid imposed voltage of slack generator %s",art_gen->name);
@@ -650,8 +651,8 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 	BUS_add_branch_from(busB,branch);
 	BUS_add_branch_to(busA,branch);
 	
-	r = art_transfo->r/100.; // per unit (VB1,SNOM) 
-	x = art_transfo->x/100.; // per unit (VB1,SNOM)
+	r = (art_transfo->r/100.)*(parser->base_power/art_transfo->snom); // per unit (VB1,SNOM) 
+	x = (art_transfo->x/100.)*(parser->base_power/art_transfo->snom); // per unit (VB1,SNOM)
 
 	den = pow(r,2.)+pow(x,2.);
 	g = r/den;
@@ -660,8 +661,8 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 	BRANCH_set_g(branch,g);                                // per unit
 	BRANCH_set_b(branch,b);                                // per unit
 
-	BRANCH_set_b_to(branch,art_transfo->b1/100.);   // per unit (VB1,SNOM)
-	BRANCH_set_b_from(branch,art_transfo->b2/100.); // per unit (VB1,SNOM)
+	BRANCH_set_b_to(branch,(art_transfo->b1/100.)*(art_transfo->snom/parser->base_power));   // per unit (VB1,SNOM)
+	BRANCH_set_b_from(branch,(art_transfo->b2/100.)*(art_transfo->snom/parser->base_power)); // per unit (VB1,SNOM)
 
 	BRANCH_set_ratio(branch,100./art_transfo->n);          // units of bus_from_base/bus_to_base
 	BRANCH_set_ratio_max(branch,BRANCH_get_ratio(branch));
