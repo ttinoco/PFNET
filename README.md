@@ -46,7 +46,7 @@ If you use PFNET in your work, please cite the software as follows:
 
 \code
 @misc{pfnet,
-  author={Tomas Tinoco De Rubira},
+  author={Tinoco De Rubira, Tomas},
   title={{PFNET}: A library for modeling and analyzing electric power networks},
   howpublished={\url{https://github.com/ttinoco/PFNET}},
   month={July},
