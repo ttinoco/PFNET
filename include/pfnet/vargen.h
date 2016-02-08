@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -21,6 +21,7 @@
  *  @{
  */
 #define VARGEN_VAR_P 0x01    /**< @brief Variable: variable generator active power */
+#define VARGEN_VAR_Q 0x02    /**< @brief Variable: variable generator reactive power */
 /** @} */
 
 // Variable generator types
@@ -48,17 +49,21 @@ void VARGEN_clear_flags(Vargen* gen, char flag_type);
 Bus* VARGEN_get_bus(Vargen* gen);
 int VARGEN_get_index(Vargen* gen);
 int VARGEN_get_index_P(Vargen* gen);
+int VARGEN_get_index_Q(Vargen* gen);
 Vargen* VARGEN_get_next(Vargen* gen);
 REAL VARGEN_get_P(Vargen* gen);
 REAL VARGEN_get_P_max(Vargen* gen);
 REAL VARGEN_get_P_std(Vargen* gen);
+REAL VARGEN_get_Q(Vargen* gen);
+REAL VARGEN_get_Q_max(Vargen* gen);
+REAL VARGEN_get_Q_min(Vargen* gen);
 void VARGEN_get_var_values(Vargen* gen, Vec* values, int code);
 int VARGEN_get_var_index(void* gen, char var);
 BOOL VARGEN_has_flags(void* gen, char flag_type, char mask);
 BOOL VARGEN_has_properties(void* gen, char prop);
 void VARGEN_init(Vargen* gen);
-BOOL VARGEN_is_wind_farm(Vargen* gen);
-BOOL VARGEN_is_solar_plant(Vargen* gen);
+BOOL VARGEN_is_wind(Vargen* gen);
+BOOL VARGEN_is_solar(Vargen* gen);
 Vargen* VARGEN_list_add(Vargen* gen_list, Vargen* gen);
 int VARGEN_list_len(Vargen* gen_list);
 Vargen* VARGEN_new(void);
@@ -68,6 +73,9 @@ void VARGEN_set_index(Vargen* gen, int index);
 void VARGEN_set_P(Vargen* gen, REAL P);
 void VARGEN_set_P_max(Vargen* gen, REAL P_max);
 void VARGEN_set_P_std(Vargen* gen, REAL P_std);
+void VARGEN_set_Q(Vargen* gen, REAL Q);
+void VARGEN_set_Q_max(Vargen* gen, REAL Q);
+void VARGEN_set_Q_min(Vargen* gen, REAL Q);
 int VARGEN_set_flags(void* gen, char flag_type, char mask, int index);
 void VARGEN_set_var_values(Vargen* gen, Vec* values);
 void VARGEN_show(Vargen* gen);

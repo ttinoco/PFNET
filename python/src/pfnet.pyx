@@ -3,7 +3,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -104,6 +104,7 @@ cdef Matrix(cmat.Mat* m, owndata=False):
 # Bus
 #####
 
+# Properties
 BUS_PROP_ANY = cbus.BUS_PROP_ANY
 BUS_PROP_SLACK = cbus.BUS_PROP_SLACK
 BUS_PROP_REG_BY_GEN = cbus.BUS_PROP_REG_BY_GEN
@@ -1223,6 +1224,7 @@ VARGEN_PROP_ANY = cvargen.VARGEN_PROP_ANY
 
 # Variables
 VARGEN_VAR_P = cvargen.VARGEN_VAR_P
+VARGEN_VAR_Q = cvargen.VARGEN_VAR_Q
 
 class VarGeneratorError(Exception):
     """ 
@@ -1284,6 +1286,10 @@ cdef class VarGenerator:
         """ Index of variable generator active power variable (int). """
         def __get__(self): return cvargen.VARGEN_get_index_P(self._c_gen)
 
+    property index_Q:
+        """ Index of variable generator reactive power variable (int). """
+        def __get__(self): return cvargen.VARGEN_get_index_Q(self._c_gen)
+
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which variable generator is connected. """
         def __get__(self): return new_Bus(cvargen.VARGEN_get_bus(self._c_gen))
@@ -1302,6 +1308,21 @@ cdef class VarGenerator:
         """ Variable generator active power standard deviation (p.u. system base MVA) (float). """
         def __get__(self): return cvargen.VARGEN_get_P_std(self._c_gen)
         def __set__(self,P): cvargen.VARGEN_set_P_std(self._c_gen,P)
+
+    property Q:
+        """ Variable generator reactive power (p.u. system base MVA) (float). """
+        def __get__(self): return cvargen.VARGEN_get_Q(self._c_gen)
+        def __set__(self,Q): cvargen.VARGEN_set_Q(self._c_gen,Q)
+
+    property Q_max:
+        """ Variable generator maximum reactive power (p.u. system base MVA) (float). """
+        def __get__(self): return cvargen.VARGEN_get_Q_max(self._c_gen)
+        def __set__(self,Q): cvargen.VARGEN_set_Q_max(self._c_gen,Q)
+
+    property Q_min:
+        """ Variable generator minimum reactive power (p.u. system base MVA) (float). """
+        def __get__(self): return cvargen.VARGEN_get_Q_min(self._c_gen)
+        def __set__(self,Q): cvargen.VARGEN_set_Q_min(self._c_gen,Q)
 
 cdef class VarGeneratorArray:
     """

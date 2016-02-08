@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -458,10 +458,24 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(vargen.P_max,0.)
                 self.assertEqual(vargen.P_std,0.)
                 self.assertEqual(vargen.index,i)
+                self.assertEqual(vargen.Q,0.)
+                self.assertEqual(vargen.Q_max,0.)
+                self.assertEqual(vargen.Q_min,0.)
                 self.assertRaises(pf.BusError,lambda : vargen.bus)
                 vargen.P = np.pi
                 self.assertEqual(vargen.P,np.pi)
                 vargen.P = 0.
+                vargen.Q = (i+1)*12.5
+                self.assertEqual(vargen.Q,(i+1)*12.5)
+                vargen.Q_max = (i+1)*13.5
+                self.assertEqual(vargen.Q_max,(i+1)*13.5)
+                vargen.Q_min = (i+1)*11.5
+                self.assertEqual(vargen.Q_min,(i+1)*11.5)
+                self.assertLess(vargen.Q,vargen.Q_max)
+                self.assertLess(vargen.Q_min,vargen.Q)
+                vargen.Q = 0.
+                vargen.Q_max = 0.
+                vargen.Q_min = 0.
 
             # Set buses
             net.set_vargen_buses(load_buses)
@@ -472,7 +486,7 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(vargen.bus,load_buses[i])
                 self.assertTrue(vargen.index in [vg.index for vg in load_buses[i].vargens])
 
-            # Set P,P_max,P_std,P
+            # Set P,P_max,P_std,Q,Q_max,Q_min
             self.assertGreater(net.num_vargens,0)
             self.assertGreater(len(net.var_generators),0)
             for vg in net.var_generators:
@@ -480,12 +494,21 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(vg.P_max,0.)
                 self.assertEqual(vg.P_std,0.)
                 self.assertEqual(vg.P,0.)
+                self.assertEqual(vg.Q,0.)
+                self.assertEqual(vg.Q_max,0.)
+                self.assertEqual(vg.Q_min,0.)
                 vg.P = 1.
                 vg.P_max = 2.
                 vg.P_std = 3.
+                vg.Q = 4.
+                vg.Q_max = 5.
+                vg.Q_min = 6
                 self.assertEqual(vg.P_max,2.)
                 self.assertEqual(vg.P_std,3)                
                 self.assertEqual(vg.P,1.)
+                self.assertEqual(vg.Q,4.)
+                self.assertEqual(vg.Q_max,5.)
+                self.assertEqual(vg.Q_min,6.)
 
         for case in test_cases.CASES:
             
@@ -1042,7 +1065,7 @@ class TestNetwork(unittest.TestCase):
             net.set_flags(pf.OBJ_VARGEN,
                           pf.FLAG_VARS,
                           pf.VARGEN_PROP_ANY,
-                          pf.VARGEN_VAR_P)
+                          pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
 
             self.assertEqual(net.num_vars,
                              (2*(net.num_buses-1) +
@@ -1051,13 +1074,14 @@ class TestNetwork(unittest.TestCase):
                               net.get_num_tap_changers_v() +
                               net.get_num_phase_shifters() +
                               net.get_num_switched_shunts() +
-                              net.get_num_vargens()))
+                              2*net.get_num_vargens()))
 
             # set vargens
             for vargen in net.var_generators:
                 vargen.P = np.pi*vargen.index
+                vargen.Q = -np.pi*vargen.index
 
-            # var values
+            # var values (current values)
             x = net.get_var_values()
 
             # bus vmag
@@ -1168,9 +1192,26 @@ class TestNetwork(unittest.TestCase):
             index = 0
             for i in range(net.num_vargens):
                 vargen = net.get_vargen(i)
+                self.assertEqual(vargen.index_P,vargen.index_Q-1)
                 if vargen.has_flags(pf.FLAG_VARS,pf.VARGEN_VAR_P):
                     self.assertEqual(vgP[index],vargen.P)
                     self.assertEqual(vgP[index],vargen.index*np.pi)
+                    index += 1
+
+            # vargen reactive power
+            P = net.get_var_projection(pf.OBJ_VARGEN,pf.VARGEN_VAR_Q)
+            self.assertTrue(isinstance(P,coo_matrix))
+            self.assertEqual(P.shape[0],net.num_vargens)
+            self.assertEqual(P.shape[1],net.num_vars)
+            self.assertEqual(P.nnz,net.num_vargens)
+            vgQ = P*x
+            index = 0
+            for i in range(net.num_vargens):
+                vargen = net.get_vargen(i)
+                self.assertEqual(vargen.index_P+1,vargen.index_Q)
+                if vargen.has_flags(pf.FLAG_VARS,pf.VARGEN_VAR_Q):
+                    self.assertEqual(vgQ[index],vargen.Q)
+                    self.assertEqual(vgQ[index],-vargen.index*np.pi)
                     index += 1
 
             # All
@@ -1181,7 +1222,8 @@ class TestNetwork(unittest.TestCase):
                      net.get_var_projection(pf.OBJ_BRANCH,pf.BRANCH_VAR_RATIO),
                      net.get_var_projection(pf.OBJ_BRANCH,pf.BRANCH_VAR_PHASE),
                      net.get_var_projection(pf.OBJ_SHUNT,pf.SHUNT_VAR_SUSC),
-                     net.get_var_projection(pf.OBJ_VARGEN,pf.VARGEN_VAR_P)]
+                     net.get_var_projection(pf.OBJ_VARGEN,pf.VARGEN_VAR_P),
+                     net.get_var_projection(pf.OBJ_VARGEN,pf.VARGEN_VAR_Q)]
             P = bmat([[P] for P in Plist if P.shape[0] > 0])
             self.assertTupleEqual(P.shape,(net.num_vars,net.num_vars))
             for i in range(10):
@@ -1218,7 +1260,7 @@ class TestNetwork(unittest.TestCase):
             net.set_flags(pf.OBJ_VARGEN,
                           pf.FLAG_VARS,
                           pf.VARGEN_PROP_ANY,
-                          pf.VARGEN_VAR_P)
+                          pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
             net.set_flags(pf.OBJ_BRANCH,
                           pf.FLAG_VARS,
                           pf.BRANCH_PROP_ANY,
@@ -1230,7 +1272,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.num_vars,
                              (6*net.num_buses +
                               2*net.num_gens + 
-                              net.num_vargens +
+                              2*net.num_vargens +
                               4*net.num_branches + 
                               3*net.num_shunts))
             
@@ -1238,6 +1280,9 @@ class TestNetwork(unittest.TestCase):
             for vargen in net.var_generators:
                 vargen.P = 2*vargen.index
                 vargen.P_max = 3*vargen.index
+                vargen.Q = 4*vargen.index
+                vargen.Q_min = 1*vargen.index
+                vargen.Q_max = 5*vargen.index
 
             # current
             x = net.get_var_values()
@@ -1258,7 +1303,10 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(x[gen.index_P],gen.P)
                 self.assertEqual(x[gen.index_Q],gen.Q)
             for vargen in net.var_generators:
+                self.assertEqual(x[vargen.index_P],vargen.index*2)
                 self.assertEqual(x[vargen.index_P],vargen.P)
+                self.assertEqual(x[vargen.index_Q],vargen.index*4)
+                self.assertEqual(x[vargen.index_Q],vargen.Q)
             for shunt in net.shunts:
                 self.assertEqual(x[shunt.index_b],shunt.b)
                 self.assertEqual(x[shunt.index_y],0.)
@@ -1283,7 +1331,10 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(x[gen.index_P],gen.P_max)
                 self.assertEqual(x[gen.index_Q],gen.Q_max)
             for vargen in net.var_generators:
+                self.assertEqual(x[vargen.index_P],3*vargen.index)
                 self.assertEqual(x[vargen.index_P],vargen.P_max)
+                self.assertEqual(x[vargen.index_Q],5*vargen.index)
+                self.assertEqual(x[vargen.index_Q],vargen.Q_max)
             for shunt in net.shunts:
                 self.assertEqual(x[shunt.index_b],shunt.b_max)
                 self.assertEqual(x[shunt.index_y],pf.INF)
@@ -1309,6 +1360,8 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(x[gen.index_Q],gen.Q_min)
             for vargen in net.var_generators:
                 self.assertEqual(x[vargen.index_P],0.)
+                self.assertEqual(x[vargen.index_Q],1.*vargen.index)
+                self.assertEqual(x[vargen.index_Q],vargen.Q_min)
             for shunt in net.shunts:
                 self.assertEqual(x[shunt.index_b],shunt.b_min)
                 self.assertEqual(x[shunt.index_y],-pf.INF)
