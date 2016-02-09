@@ -187,11 +187,11 @@ void NET_adjust_generators(Net* net) {
 }
 
 void NET_bus_hash_add(Net* net, Bus* bus) {
-  net->bus_hash = BUS_hash_add(net->bus_hash,bus);
+  net->bus_hash = BUS_hash_number_add(net->bus_hash,bus);
 }
 
 Bus* NET_bus_hash_find(Net* net, int number) {
-  return BUS_hash_find(net->bus_hash,number);
+  return BUS_hash_number_find(net->bus_hash,number);
 }
 
 BOOL NET_check(Net* net, BOOL verbose) {
@@ -242,7 +242,7 @@ void NET_clear_data(Net* net) {
   if (net) {
 
     // Free data
-    BUS_hash_del(net->bus_hash);
+    BUS_hash_number_del(net->bus_hash);
     free(net->bus);
     free(net->branch);
     free(net->gen);

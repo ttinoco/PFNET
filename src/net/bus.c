@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -69,7 +69,7 @@ struct Bus {
   REAL Q_mis; /**< @brief Reactive power mismatch (p.u. system base power) */
   
   // Hash
-  UT_hash_handle hh; /**< @brief Handle for bus hash table */
+  UT_hash_handle hh_number; /**< @brief Handle for bus hash table based on numbers */
 
   // List
   Bus* next; /**< @brief List of buses */
@@ -877,24 +877,24 @@ BOOL BUS_has_properties(void* vbus, char prop) {
   return TRUE;
 }
 
-Bus* BUS_hash_add(Bus* bus_hash,Bus* bus) {
-  HASH_ADD_INT(bus_hash,number,bus);
+Bus* BUS_hash_number_add(Bus* bus_hash,Bus* bus) {
+  HASH_ADD(hh_number,bus_hash,number,sizeof(int),bus);
   return bus_hash;
 }
 
-void BUS_hash_del(Bus* bus_hash) {
+void BUS_hash_number_del(Bus* bus_hash) {
   while (bus_hash != NULL)
-    HASH_DEL(bus_hash,bus_hash);
+    HASH_DELETE(hh_number,bus_hash,bus_hash);
 }
 
-Bus* BUS_hash_find(Bus* bus_hash,int number) {
+Bus* BUS_hash_number_find(Bus* bus_hash,int number) {
   Bus* bus;
-  HASH_FIND_INT(bus_hash,&number,bus);
+  HASH_FIND(hh_number,bus_hash,&number,sizeof(int),bus);
   return bus;
 }
 
-int BUS_hash_len(Bus* bus_hash) {
-  return HASH_COUNT(bus_hash);
+int BUS_hash_number_len(Bus* bus_hash) {
+  return HASH_CNT(hh_number,bus_hash);
 }
 
 void BUS_init(Bus* bus) {

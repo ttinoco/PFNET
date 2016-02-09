@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -279,7 +279,7 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
   NET_set_load_array(net,LOAD_array_new(num_loads),num_loads);
   for (mat_bus = parser->bus_list; mat_bus != NULL; mat_bus = mat_bus->next) {
     if (mat_bus->type != MAT_BUS_TYPE_IS && (mat_bus->Pd != 0 || mat_bus->Qd != 0)) {
-      bus = BUS_hash_find(NET_get_bus_hash(net),mat_bus->number);
+      bus = BUS_hash_number_find(NET_get_bus_hash(net),mat_bus->number);
       load = NET_get_load(net,index);
       BUS_add_load(bus,load);                          // connect load to bus
       LOAD_set_bus(load,bus);                          // connect bus to load
@@ -299,7 +299,7 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
   NET_set_shunt_array(net,SHUNT_array_new(num_shunts),num_shunts);
   for (mat_bus = parser->bus_list; mat_bus != NULL; mat_bus = mat_bus->next) {
     if (mat_bus->type != MAT_BUS_TYPE_IS && (mat_bus->Gs != 0 || mat_bus->Bs != 0)) {
-      bus = BUS_hash_find(NET_get_bus_hash(net),mat_bus->number);
+      bus = BUS_hash_number_find(NET_get_bus_hash(net),mat_bus->number);
       shunt = NET_get_shunt(net,index);
       BUS_add_shunt(bus,shunt);                          // connect shunt to bus
       SHUNT_set_bus(shunt,bus);                          // connect bus to shunt
@@ -322,7 +322,7 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
   NET_set_gen_array(net,GEN_array_new(num_gens),num_gens);
   for (mat_gen = parser->gen_list; mat_gen != NULL; mat_gen = mat_gen->next) {
     if (mat_gen->status > 0) {
-      bus = BUS_hash_find(NET_get_bus_hash(net),mat_gen->bus_number);
+      bus = BUS_hash_number_find(NET_get_bus_hash(net),mat_gen->bus_number);
       gen = NET_get_gen(net,index);
       BUS_add_gen(bus,gen);                                // connect gen to bus
       GEN_set_bus(gen,bus);                                // connect bus to gen
@@ -358,8 +358,8 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
   LIST_len(MAT_Branch,parser->branch_list,next,num_branches);
   NET_set_branch_array(net,BRANCH_array_new(num_branches),num_branches);
   for (mat_branch = parser->branch_list; mat_branch != NULL; mat_branch = mat_branch->next) {
-    busA = BUS_hash_find(NET_get_bus_hash(net),mat_branch->bus_from_number);
-    busB = BUS_hash_find(NET_get_bus_hash(net),mat_branch->bus_to_number);
+    busA = BUS_hash_number_find(NET_get_bus_hash(net),mat_branch->bus_from_number);
+    busB = BUS_hash_number_find(NET_get_bus_hash(net),mat_branch->bus_to_number);
     branch = NET_get_branch(net,index);
     r = mat_branch->r;
     x = mat_branch->x;
