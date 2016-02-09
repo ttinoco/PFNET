@@ -20,13 +20,13 @@ struct Net {
   char error_string[NET_BUFFER_SIZE]; /**< @brief Error string */
   
   // Components
-  Bus* bus;          /**< @brief Bus array */
-  Bus* bus_hash;     /**< @brief Bus hash table indexed by bus bumbers */
-  Branch* branch;    /**< @brief Branch array */
-  Gen* gen;          /**< @brief Gen array */
-  Load* load;        /**< @brief Load array */
-  Shunt* shunt;      /**< @brief Shunt array */
-  Vargen* vargen;    /**< @brief Vargen array */
+  Bus* bus;             /**< @brief Bus array */
+  Bus* bus_hash_number; /**< @brief Bus hash table indexed by bus bumbers */
+  Branch* branch;       /**< @brief Branch array */
+  Gen* gen;             /**< @brief Gen array */
+  Load* load;           /**< @brief Load array */
+  Shunt* shunt;         /**< @brief Shunt array */
+  Vargen* vargen;       /**< @brief Vargen array */
 
   // Number of components
   int num_buses;     /**< @brief Number of buses (size of Bus array) */
@@ -186,12 +186,12 @@ void NET_adjust_generators(Net* net) {
   }
 }
 
-void NET_bus_hash_add(Net* net, Bus* bus) {
-  net->bus_hash = BUS_hash_number_add(net->bus_hash,bus);
+void NET_bus_hash_number_add(Net* net, Bus* bus) {
+  net->bus_hash_number = BUS_hash_number_add(net->bus_hash_number,bus);
 }
 
-Bus* NET_bus_hash_find(Net* net, int number) {
-  return BUS_hash_number_find(net->bus_hash,number);
+Bus* NET_bus_hash_number_find(Net* net, int number) {
+  return BUS_hash_number_find(net->bus_hash_number,number);
 }
 
 BOOL NET_check(Net* net, BOOL verbose) {
@@ -242,7 +242,7 @@ void NET_clear_data(Net* net) {
   if (net) {
 
     // Free data
-    BUS_hash_number_del(net->bus_hash);
+    BUS_hash_number_del(net->bus_hash_number);
     free(net->bus);
     free(net->branch);
     free(net->gen);
@@ -617,7 +617,7 @@ void NET_init(Net* net) {
   strcpy(net->error_string,"");
 
   // Components
-  net->bus_hash = NULL;
+  net->bus_hash_number = NULL;
   net->bus = NULL;
   net->branch = NULL;
   net->gen = NULL;
@@ -688,11 +688,11 @@ Bus* NET_get_bus(Net* net, int index) {
     return BUS_array_get(net->bus,index);
 }
 
-Bus* NET_get_bus_hash(Net* net) {
+Bus* NET_get_bus_hash_number(Net* net) {
   if (!net)
     return NULL;
   else
-    return net->bus_hash;
+    return net->bus_hash_number;
 }
 
 char* NET_get_error_string(Net* net) {

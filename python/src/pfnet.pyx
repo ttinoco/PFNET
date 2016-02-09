@@ -1517,7 +1517,7 @@ cdef class Network:
         bus : :class:`Bus <pfnet.Bus>`
         """
 
-        ptr = cnet.NET_bus_hash_find(self._c_net,number)
+        ptr = cnet.NET_bus_hash_number_find(self._c_net,number)
         if ptr is not NULL:
             return new_Bus(ptr)
         else:

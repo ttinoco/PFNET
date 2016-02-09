@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -22,7 +22,7 @@ cdef extern from "pfnet/net.h":
  
     void NET_add_vargens(Net* net, cbus.Bus* bus_list, REAL penetration, REAL uncertainty, REAL corr_radius, REAL corr_value)
     void NET_adjust_generators(Net* net)
-    cbus.Bus* NET_bus_hash_find(Net* net, int number)
+    cbus.Bus* NET_bus_hash_number_find(Net* net, int number)
     void NET_clear_error(Net* net)
     void NET_clear_flags(Net* net)
     void NET_clear_properties(Net* net)
