@@ -8,6 +8,7 @@
  * PFNET is released under the BSD 2-clause license.
  */
 
+#include <pfnet/utils.h>
 #include <pfnet/parser_ART.h>
 
 struct ART_Bus {
@@ -461,6 +462,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
     art_bus->index = index;
     bus = NET_get_bus(net,index);
     BUS_set_number(bus,art_bus->index+1);
+    BUS_set_name(bus,art_bus->name);
     NET_bus_hash_number_add(net,bus);
     index++;
   }
@@ -924,7 +926,7 @@ void ART_PARSER_parse_bus_field(char* s, ART_Parser* parser) {
   if (parser->bus) {
     switch (parser->field) {
     case 1:
-      strcpy(parser->bus->name,s);
+      strcpy(parser->bus->name,trim(s));
       break;
     case 2:
       parser->bus->vnom = atof(s);

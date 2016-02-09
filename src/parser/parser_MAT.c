@@ -12,6 +12,7 @@
 
 struct MAT_Bus {
   int number;
+  char name[MAT_BUS_NAME_BUFFER_SIZE];
   int type;               
   REAL Pd;                // MW
   REAL Qd;                // MVAr
@@ -259,9 +260,10 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
   }
   NET_set_bus_array(net,BUS_array_new(num_buses),num_buses); // allocate buses
   for (mat_bus = parser->bus_list; mat_bus != NULL; mat_bus = mat_bus->next) {
-    bus = NET_get_bus(net,index);                          // get bus
-    BUS_set_number(bus,mat_bus->number); 
-    BUS_set_v_mag(bus,mat_bus->Vm);           // per unit
+    bus = NET_get_bus(net,index);           // get bus
+    BUS_set_number(bus,mat_bus->number);
+    BUS_set_name(bus,mat_bus->name);
+    BUS_set_v_mag(bus,mat_bus->Vm);         // per unit
     BUS_set_v_ang(bus,mat_bus->Va*PI/180.); // radians
     if (mat_bus->type == MAT_BUS_TYPE_SL)
       BUS_set_slack(bus,TRUE);
@@ -589,6 +591,8 @@ void MAT_PARSER_parse_bus_field(char* s, MAT_Parser* parser) {
     switch (parser->field) {
     case 0: 
       parser->bus->number = atoi(s);
+      snprintf(parser->bus->name,(size_t)(MAT_BUS_NAME_BUFFER_SIZE-1),
+	       "BUS %d",parser->bus->number);
       break;
     case 1:
       parser->bus->type = atoi(s);

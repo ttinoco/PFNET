@@ -12,6 +12,7 @@
 #define __UTILS_HEADER__
 
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 
 char* trim(char *s) {

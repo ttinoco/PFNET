@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -19,6 +19,7 @@
 
 // Buffer
 #define MAT_PARSER_BUFFER_SIZE 1024
+#define MAT_BUS_NAME_BUFFER_SIZE 25
 
 // State
 #define MAT_PARSER_STATE_TOKEN -1
