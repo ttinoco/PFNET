@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -25,6 +25,9 @@ class TestFlags(unittest.TestCase):
         for case in test_cases.CASES:
             
             net.load(case)
+
+            # add vargens
+            net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
 
             num_vars = 0
 
@@ -123,6 +126,27 @@ class TestFlags(unittest.TestCase):
             num_vars += net.get_num_switched_shunts()
             self.assertEqual(net.num_vars,num_vars)
 
+            # Vargens
+            self.assertGreater(net.num_vargens,0)
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P)
+            num_vars += net.num_vargens
+            self.assertEqual(net.num_vars,num_vars)
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_Q)
+            num_vars += net.num_vargens
+            self.assertEqual(net.num_vars,num_vars)
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
+            num_vars += 0
+            self.assertEqual(net.num_vars,num_vars)
+
             # Clear
             num_vars = 0
             net.clear_flags()
@@ -145,6 +169,12 @@ class TestFlags(unittest.TestCase):
         for case in test_cases.CASES:
             
             net.load(case)
+
+            # add vargens
+            net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
+            for vargen in net.var_generators:
+                vargen.P = np.random.rand()
+                vargen.Q = np.random.rand()
 
             self.assertEqual(net.num_vars,0)
 
@@ -178,7 +208,14 @@ class TestFlags(unittest.TestCase):
                           pf.SHUNT_VAR_SUSC)
             num_vars += net.get_num_switched_shunts()
             self.assertEqual(num_vars,net.num_vars)
-            
+           
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
+            num_vars += net.num_vargens*2
+            self.assertEqual(num_vars,net.num_vars)
+ 
             point = net.get_var_values()
             self.assertTrue(type(point) is np.ndarray)
             self.assertTupleEqual(point.shape,(num_vars,))
@@ -191,6 +228,14 @@ class TestFlags(unittest.TestCase):
                 s = net.get_shunt(i)
                 if s.is_switched_v():
                     self.assertLess(np.abs(point[s.index_b]-s.b),1e-10)
+
+            # check vargens
+            self.assertGreater(len(net.var_generators),0)
+            for vargen in net.var_generators:
+                self.assertNotEqual(vargen.P,0.)
+                self.assertNotEqual(vargen.Q,0.)
+                self.assertLess(np.abs(point[vargen.index_P]-vargen.P),1e-10)
+                self.assertLess(np.abs(point[vargen.index_Q]-vargen.Q),1e-10)
 
     def test_tap_changer_v(self):
 
@@ -262,6 +307,8 @@ class TestFlags(unittest.TestCase):
             
             net.load(case)
 
+            net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
+
             self.assertEqual(net.num_fixed,0)
 
             net.set_flags(pf.OBJ_BUS,
@@ -283,12 +330,18 @@ class TestFlags(unittest.TestCase):
                           pf.FLAG_FIXED,
                           pf.SHUNT_PROP_SWITCHED_V,
                           pf.SHUNT_VAR_SUSC)
+
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_FIXED,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
             
             self.assertEqual(net.num_fixed,
                              (net.get_num_buses_reg_by_gen()*2 + 
                               net.num_gens - net.get_num_reg_gens() + 
                               net.get_num_phase_shifters() +
-                              net.get_num_switched_shunts()))
+                              net.get_num_switched_shunts()+
+                              net.num_vargens*2))
 
     def test_multiple_flags(self):
 

@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -32,6 +32,7 @@ void CONSTR_FIX_count_branch(Constr* c, Branch* br) {
   Bus* buses[2];
   Bus* bus;
   Gen* gen;
+  Vargen* vargen;
   Shunt* shunt;
   int* Acounter;
   int* Aconstr_index;
@@ -75,7 +76,7 @@ void CONSTR_FIX_count_branch(Constr* c, Branch* br) {
 	  BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
 	(*Acounter)++;
 	
-	// Extra nz for regulating generator
+	// Extra nz for regulating generator (for PV-PQ switching?)
 	if (BUS_is_regulated_by_gen(bus) && 
 	    GEN_has_flags(BUS_get_reg_gen(bus),FLAG_VARS,GEN_VAR_Q))
 	  (*Acounter)++;
@@ -103,6 +104,24 @@ void CONSTR_FIX_count_branch(Constr* c, Branch* br) {
 	// Reactive power (Q)
 	if (GEN_has_flags(gen,FLAG_FIXED,GEN_VAR_Q) && 
 	    GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) {
+	  (*Acounter)++;
+	  (*Aconstr_index)++;
+	}
+      }
+      
+      // Variable generators	  	  
+      for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+	
+	// Active power (P)
+	if (VARGEN_has_flags(vargen,FLAG_FIXED,VARGEN_VAR_P) && 
+	    VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) {
+	  (*Acounter)++;
+	  (*Aconstr_index)++;
+	}
+	
+	// Reactive power (Q)
+	if (VARGEN_has_flags(vargen,FLAG_FIXED,VARGEN_VAR_Q) && 
+	    VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q)) {
 	  (*Acounter)++;
 	  (*Aconstr_index)++;
 	}
@@ -140,6 +159,11 @@ void CONSTR_FIX_allocate(Constr *c) {
   CONSTR_set_J(c,MAT_new(0,num_vars,0));
   CONSTR_set_f(c,VEC_new(0));
 
+  // G hl hu
+  CONSTR_set_G(c,MAT_new(0,num_vars,0));
+  CONSTR_set_hl(c,VEC_new(0));
+  CONSTR_set_hu(c,VEC_new(0));
+
   // b
   CONSTR_set_b(c,VEC_new(num_constr));
 
@@ -155,6 +179,7 @@ void CONSTR_FIX_analyze_branch(Constr* c, Branch* br) {
   Bus* buses[2];
   Bus* bus;
   Gen* gen;
+  Vargen* vargen;
   Shunt* shunt;
   int* Acounter;
   int* Aconstr_index;
@@ -217,7 +242,7 @@ void CONSTR_FIX_analyze_branch(Constr* c, Branch* br) {
 	MAT_set_d(A,*Acounter,1.);
 	(*Acounter)++;
 
-	// Extra nz for regulating generator
+	// Extra nz for regulating generator (for PV-PQ switching?)
 	if (BUS_is_regulated_by_gen(bus) && 
 	    GEN_has_flags(BUS_get_reg_gen(bus),FLAG_VARS,GEN_VAR_Q)) {
 	  MAT_set_i(A,*Acounter,*Aconstr_index);
@@ -260,6 +285,32 @@ void CONSTR_FIX_analyze_branch(Constr* c, Branch* br) {
 	  VEC_set(b,*Aconstr_index,GEN_get_Q(gen));
 	  MAT_set_i(A,*Acounter,*Aconstr_index);
 	  MAT_set_j(A,*Acounter,GEN_get_index_Q(gen));
+	  MAT_set_d(A,*Acounter,1.);
+	  (*Acounter)++;
+	  (*Aconstr_index)++;
+	}
+      }
+
+      // Variable generators
+      for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+	
+	// Active power (P)
+	if (VARGEN_has_flags(vargen,FLAG_FIXED,VARGEN_VAR_P) && 
+	    VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) {
+	  VEC_set(b,*Aconstr_index,VARGEN_get_P(vargen));
+	  MAT_set_i(A,*Acounter,*Aconstr_index);
+	  MAT_set_j(A,*Acounter,VARGEN_get_index_P(vargen));
+	  MAT_set_d(A,*Acounter,1.);
+	  (*Acounter)++;
+	  (*Aconstr_index)++;
+	}
+
+	// Reactive power (Q)
+	if (VARGEN_has_flags(vargen,FLAG_FIXED,VARGEN_VAR_Q) && 
+	    VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q)) {
+	  VEC_set(b,*Aconstr_index,VARGEN_get_Q(vargen));
+	  MAT_set_i(A,*Acounter,*Aconstr_index);
+	  MAT_set_j(A,*Acounter,VARGEN_get_index_Q(vargen));
 	  MAT_set_d(A,*Acounter,1.);
 	  (*Acounter)++;
 	  (*Aconstr_index)++;

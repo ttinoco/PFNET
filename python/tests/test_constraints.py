@@ -30,6 +30,13 @@ class TestConstraints(unittest.TestCase):
             
             net.load(case)
 
+            # add vargens
+            net.add_vargens(net.get_load_buses(),50.,30.,5,0.05)
+            for vargen in net.var_generators:
+                vargen.P = vargen.index*1.5
+                vargen.Q = vargen.index*2.5
+            self.assertGreater(net.num_vargens,0)
+
             self.assertEqual(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
 
@@ -58,6 +65,10 @@ class TestConstraints(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.SHUNT_PROP_SWITCHED_V,
                           pf.SHUNT_VAR_SUSC)
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
             self.assertGreater(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
             self.assertEqual(net.num_vars,
@@ -66,7 +77,8 @@ class TestConstraints(unittest.TestCase):
                              net.get_num_reg_gens() +
                              net.get_num_tap_changers() +
                              net.get_num_phase_shifters() +
-                             net.get_num_switched_shunts())
+                             net.get_num_switched_shunts() +
+                             net.num_vargens*2)
             
             # Fixed
             net.set_flags(pf.OBJ_BUS,
@@ -93,6 +105,10 @@ class TestConstraints(unittest.TestCase):
                           pf.FLAG_FIXED,
                           pf.SHUNT_PROP_SWITCHED_V,
                           pf.SHUNT_VAR_SUSC)
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_FIXED,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
             self.assertGreater(net.num_fixed,0)
             self.assertEqual(net.num_fixed,
                              2*(net.get_num_slack_buses()) +
@@ -100,7 +116,8 @@ class TestConstraints(unittest.TestCase):
                              net.get_num_reg_gens() +
                              net.get_num_tap_changers() +
                              net.get_num_phase_shifters() +
-                             net.get_num_switched_shunts())
+                             net.get_num_switched_shunts() +
+                             net.num_vargens*2)
             
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -112,6 +129,9 @@ class TestConstraints(unittest.TestCase):
             J = constr.J
             A = constr.A
             b = constr.b
+            G = constr.G
+            hl = constr.hl
+            hu = constr.hu
             
             # Before 
             self.assertTrue(type(f) is np.ndarray)
@@ -124,9 +144,17 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(A) is coo_matrix)
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(0,0))
+            self.assertEqual(G.nnz,0)
+            self.assertTrue(type(hl) is np.ndarray)
+            self.assertTupleEqual(hl.shape,(0,))
+            self.assertTrue(type(hu) is np.ndarray)
+            self.assertTupleEqual(hu.shape,(0,))
             
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.Gcounter,0)
 
             Acounter = net.num_fixed+net.get_num_buses_reg_by_gen()
             constr.analyze()
@@ -138,6 +166,9 @@ class TestConstraints(unittest.TestCase):
             J = constr.J
             A = constr.A
             b = constr.b
+            G = constr.G
+            hl = constr.hl
+            hu = constr.hu
             
             # After
             self.assertTrue(type(b) is np.ndarray)
@@ -150,10 +181,31 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(J) is coo_matrix)
             self.assertTupleEqual(J.shape,(0,net.num_vars))
             self.assertEqual(J.nnz,0)
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(0,net.num_vars))
+            self.assertEqual(G.nnz,0)
+            self.assertTrue(type(hl) is np.ndarray)
+            self.assertTupleEqual(hl.shape,(0,))
+            self.assertTrue(type(hu) is np.ndarray)
+            self.assertTupleEqual(hu.shape,(0,))
             
             self.assertTrue(not np.any(np.isinf(b)))
             self.assertTrue(not np.any(np.isnan(b)))
-            
+        
+            # Vargen
+            for vargen in net.var_generators:
+                ar = np.where(A.col == vargen.index_P)[0]
+                self.assertEqual(ar.size,1)
+                self.assertEqual(A.col[ar[0]],vargen.index_P)
+                self.assertEqual(b[A.row[ar[0]]],vargen.P)
+                self.assertEqual(b[A.row[ar[0]]],vargen.index*1.5)
+            for vargen in net.var_generators:
+                ar = np.where(A.col == vargen.index_Q)[0]
+                self.assertEqual(ar.size,1)
+                self.assertEqual(A.col[ar[0]],vargen.index_Q)
+                self.assertEqual(b[A.row[ar[0]]],vargen.Q)
+                self.assertEqual(b[A.row[ar[0]]],vargen.index*2.5)
+
     def test_constr_PAR_GEN_P(self):
         
         net = self.net
