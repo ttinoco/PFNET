@@ -111,7 +111,7 @@ class TestNetwork(unittest.TestCase):
         for case in test_cases.CASES:
             
             net.load(case)
-
+            
             self.assertGreater(net.num_buses,0)
             
             self.assertEqual(len(net.buses),net.num_buses)
@@ -269,8 +269,9 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(len(bus.branches),bus.degree)
 
                 # vargens
-                self.assertEqual(bus.vargens,[])
-                
+                for vg in bus.vargens:
+                    self.assertEqual(bus,vg.bus)
+
             # sum of degrees
             sum_deg = 0
             for i in range(net.num_buses):
@@ -449,7 +450,6 @@ class TestNetwork(unittest.TestCase):
             
             net.load(case)
 
-            self.assertEqual(net.num_vargens,0)
             self.assertEqual(len(net.var_generators),net.num_vargens)
 
             # Allocate
@@ -467,6 +467,7 @@ class TestNetwork(unittest.TestCase):
                 vargen = net.get_vargen(i)
                 self.assertEqual(vargen.P,0.)
                 self.assertEqual(vargen.P_max,0.)
+                self.assertEqual(vargen.P_min,0.)
                 self.assertEqual(vargen.P_std,0.)
                 self.assertEqual(vargen.index,i)
                 self.assertEqual(vargen.Q,0.)
@@ -497,24 +498,27 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(vargen.bus,load_buses[i])
                 self.assertTrue(vargen.index in [vg.index for vg in load_buses[i].vargens])
 
-            # Set P,P_max,P_std,Q,Q_max,Q_min
+            # Set P,P_max,P_min,P_std,Q,Q_max,Q_min
             self.assertGreater(net.num_vargens,0)
             self.assertGreater(len(net.var_generators),0)
             for vg in net.var_generators:
                 self.assertEqual(vg.P,0.)
                 self.assertEqual(vg.P_max,0.)
+                self.assertEqual(vg.P_min,0.)
                 self.assertEqual(vg.P_std,0.)
                 self.assertEqual(vg.P,0.)
                 self.assertEqual(vg.Q,0.)
                 self.assertEqual(vg.Q_max,0.)
                 self.assertEqual(vg.Q_min,0.)
                 vg.P = 1.
+                vg.P_min = 2.3
                 vg.P_max = 2.
                 vg.P_std = 3.
                 vg.Q = 4.
                 vg.Q_max = 5.
                 vg.Q_min = 6
                 self.assertEqual(vg.P_max,2.)
+                self.assertEqual(vg.P_min,2.3)
                 self.assertEqual(vg.P_std,3)                
                 self.assertEqual(vg.P,1.)
                 self.assertEqual(vg.Q,4.)
@@ -525,7 +529,6 @@ class TestNetwork(unittest.TestCase):
             
             net.load(case)
 
-            self.assertEqual(net.num_vargens,0)
             self.assertEqual(len(net.var_generators),net.num_vargens)
 
             self.assertEqual(net.vargen_corr_radius,1.)
@@ -573,6 +576,7 @@ class TestNetwork(unittest.TestCase):
             self.assertLess(np.abs(penetration-100*sum([vg.P for vg in net.var_generators])/total_load),1e-10)
                         
             for vg in net.var_generators:
+                self.assertEqual(vg.P_min,0.)
                 self.assertEqual(vg.P_max,total_load/net.num_vargens)
                 self.assertEqual(vg.P,(penetration/100.)*vg.P_max)
                 self.assertEqual(vg.P_std,(uncertainty/100.)*vg.P_max)
@@ -1074,7 +1078,6 @@ class TestNetwork(unittest.TestCase):
             net.load(case)
             
             self.assertEqual(net.num_vars,0)
-            self.assertEqual(net.num_vargens,0)
 
             # Add vargens
             load_buses = net.get_load_buses()
@@ -1334,6 +1337,7 @@ class TestNetwork(unittest.TestCase):
             for vargen in net.var_generators:
                 vargen.P = 2*vargen.index
                 vargen.P_max = 3*vargen.index
+                vargen.P_min = 9*vargen.index
                 vargen.Q = 4*vargen.index
                 vargen.Q_min = 1*vargen.index
                 vargen.Q_max = 5*vargen.index
@@ -1413,7 +1417,7 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(x[gen.index_P],gen.P_min)
                 self.assertEqual(x[gen.index_Q],gen.Q_min)
             for vargen in net.var_generators:
-                self.assertEqual(x[vargen.index_P],0.)
+                self.assertEqual(x[vargen.index_P],9.*vargen.index)
                 self.assertEqual(x[vargen.index_Q],1.*vargen.index)
                 self.assertEqual(x[vargen.index_Q],vargen.Q_min)
             for shunt in net.shunts:
@@ -1434,7 +1438,6 @@ class TestNetwork(unittest.TestCase):
             P_MIN = 1e-5
         
             # Add renewable sources (at load buses)
-            self.assertEqual(net.num_vargens,0)
             gen_buses = net.get_gen_buses()
             total_load = sum([l.P for l in net.loads])
             vargen_array = pf.VarGeneratorArray(len(gen_buses))
@@ -1443,6 +1446,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.num_vargens,len([b for b in net.buses if b.gens]))
             for vg in net.var_generators:
                 self.assertEqual(vg.P,0)
+                self.assertEqual(vg.P_min,0)
                 self.assertEqual(vg.P_max,0)
                 self.assertEqual(vg.P_std,0)
                 self.assertGreater(len(vg.bus.gens),0)

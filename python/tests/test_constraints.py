@@ -1765,7 +1765,6 @@ class TestConstraints(unittest.TestCase):
             net.load(case)
 
             self.assertEqual(net.num_vars,0)
-            self.assertEqual(net.num_vargens,0)
             
             # Add vargens
             load_buses = net.get_load_buses()

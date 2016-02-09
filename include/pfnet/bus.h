@@ -71,7 +71,7 @@
 /** \defgroup bus_const Bus Constants
  *  @{
  */
-#define BUS_NAME_BUFFER_SIZE 25
+#define BUS_NAME_BUFFER_SIZE 25  /**< @brief Constant: buffer size for name */
 /** @} */
 
 // Bus
@@ -118,6 +118,7 @@ BOOL BUS_check(Bus* bus, BOOL verbose);
 void BUS_clear_flags(Bus* bus, char flag_type);
 void BUS_clear_sensitivities(Bus* bus);
 void BUS_clear_mismatches(Bus* bus);
+void BUS_clear_vargen(Bus* bus);
 int BUS_get_degree(Bus* bus);
 int BUS_get_index(Bus* bus);
 int BUS_get_index_v_mag(Bus* bus);

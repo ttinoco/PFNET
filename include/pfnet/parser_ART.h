@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -30,6 +30,7 @@
 #define ART_PARSER_STATE_PSHIFTP 6
 #define ART_PARSER_STATE_GENER 7
 #define ART_PARSER_STATE_SLACK 8
+#define ART_PARSER_STATE_VARGEN 9
 
 // Defaults
 #define ART_PARSER_BASE_POWER 100
@@ -43,6 +44,7 @@
 #define ART_PSHIFTP_TOKEN  "PSHIFT-P"
 #define ART_GENER_TOKEN  "GENER"
 #define ART_SLACK_TOKEN  "SLACK"
+#define ART_VARGEN_TOKEN  "VARGEN"
 
 // Structs
 typedef struct ART_Bus ART_Bus;
@@ -53,6 +55,7 @@ typedef struct ART_Trfo ART_Trfo;
 typedef struct ART_Pshiftp ART_Pshiftp;
 typedef struct ART_Gener ART_Gener;
 typedef struct ART_Slack ART_Slack;
+typedef struct ART_Vargen ART_Vargen;
 typedef struct ART_Parser ART_Parser;
 
 // Prototypes
@@ -82,5 +85,7 @@ void ART_PARSER_parse_gener_field(char* s, ART_Parser* parser);
 void ART_PARSER_parse_gener_record(ART_Parser* parser);
 void ART_PARSER_parse_slack_field(char* s, ART_Parser* parser);
 void ART_PARSER_parse_slack_record(ART_Parser* parser);
+void ART_PARSER_parse_vargen_field(char* s, ART_Parser* parser);
+void ART_PARSER_parse_vargen_record(ART_Parser* parser);
 
 #endif

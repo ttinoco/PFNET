@@ -238,6 +238,11 @@ void BUS_clear_mismatches(Bus* bus) {
   }
 }
 
+void BUS_clear_vargen(Bus* bus) {
+  if (bus)
+    bus->vargen = NULL;
+}
+
 int BUS_get_degree(Bus* bus) {
   if (bus) {
     return (BRANCH_list_from_len(bus->branch_from) +
@@ -922,6 +927,9 @@ void BUS_init(Bus* bus) {
   
   // Local variables
   int i;
+
+  if (!bus)
+    return;
 
   bus->number = 0;
   for (i = 0; i < BUS_NAME_BUFFER_SIZE; i++) 

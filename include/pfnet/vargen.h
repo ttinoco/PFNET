@@ -35,6 +35,13 @@
 #define VARGEN_PROP_ANY 0x00       /**< @brief Property: any */
 /** @} */
 
+// Constants
+/** \defgroup vargen_const Variable Generator Constants
+ *  @{
+ */
+#define VARGEN_NAME_BUFFER_SIZE 25       /**< @brief Constant: buffer size for name */
+/** @} */
+
 // Variable generator
 typedef struct Vargen Vargen;
 
@@ -46,6 +53,7 @@ void* VARGEN_array_get(void* gen, int index);
 Vargen* VARGEN_array_new(int num);
 void VARGEN_array_show(Vargen* gen, int num);
 void VARGEN_clear_flags(Vargen* gen, char flag_type);
+char* VARGEN_get_name(Vargen* gen);
 Bus* VARGEN_get_bus(Vargen* gen);
 int VARGEN_get_index(Vargen* gen);
 int VARGEN_get_index_P(Vargen* gen);
@@ -53,6 +61,7 @@ int VARGEN_get_index_Q(Vargen* gen);
 Vargen* VARGEN_get_next(Vargen* gen);
 REAL VARGEN_get_P(Vargen* gen);
 REAL VARGEN_get_P_max(Vargen* gen);
+REAL VARGEN_get_P_min(Vargen* gen);
 REAL VARGEN_get_P_std(Vargen* gen);
 REAL VARGEN_get_Q(Vargen* gen);
 REAL VARGEN_get_Q_max(Vargen* gen);
@@ -67,12 +76,14 @@ BOOL VARGEN_is_solar(Vargen* gen);
 Vargen* VARGEN_list_add(Vargen* gen_list, Vargen* gen);
 int VARGEN_list_len(Vargen* gen_list);
 Vargen* VARGEN_new(void);
+void VARGEN_set_name(Vargen* gen, char* name);
 void VARGEN_set_type(Vargen* gen, int type);
 void VARGEN_set_bus(Vargen* gen, Bus* bus);
 void VARGEN_set_index(Vargen* gen, int index);
 void VARGEN_set_P(Vargen* gen, REAL P);
-void VARGEN_set_P_max(Vargen* gen, REAL P_max);
-void VARGEN_set_P_std(Vargen* gen, REAL P_std);
+void VARGEN_set_P_max(Vargen* gen, REAL P);
+void VARGEN_set_P_min(Vargen* gen, REAL P);
+void VARGEN_set_P_std(Vargen* gen, REAL P);
 void VARGEN_set_Q(Vargen* gen, REAL Q);
 void VARGEN_set_Q_max(Vargen* gen, REAL Q);
 void VARGEN_set_Q_min(Vargen* gen, REAL Q);

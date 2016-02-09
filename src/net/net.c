@@ -21,13 +21,15 @@ struct Net {
   
   // Components
   Bus* bus;             /**< @brief Bus array */
-  Bus* bus_hash_number; /**< @brief Bus hash table indexed by bus numbers */
-  Bus* bus_hash_name;   /**< @brief Bus hash table indexed by bus names */
   Branch* branch;       /**< @brief Branch array */
   Gen* gen;             /**< @brief Gen array */
   Load* load;           /**< @brief Load array */
   Shunt* shunt;         /**< @brief Shunt array */
   Vargen* vargen;       /**< @brief Vargen array */
+
+  // Hash tables
+  Bus* bus_hash_number; /**< @brief Bus hash table indexed by bus numbers */
+  Bus* bus_hash_name;   /**< @brief Bus hash table indexed by bus names */
 
   // Number of components
   int num_buses;     /**< @brief Number of buses (size of Bus array) */
@@ -119,6 +121,7 @@ void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty
   // Set properties
   for (i = 0; i < net->num_vargens; i++) {
     vargen = NET_get_vargen(net,i);
+    VARGEN_set_P_min(vargen,0.);
     VARGEN_set_P_max(vargen,total_load_P/net->num_vargens);
     VARGEN_set_P_std(vargen,(uncertainty/100.)*VARGEN_get_P_max(vargen));
     VARGEN_set_P(vargen,(penetration/100.)*VARGEN_get_P_max(vargen));
@@ -635,14 +638,16 @@ void NET_init(Net* net) {
   strcpy(net->error_string,"");
 
   // Components
-  net->bus_hash_number = NULL;
-  net->bus_hash_name = NULL;
   net->bus = NULL;
   net->branch = NULL;
   net->gen = NULL;
   net->load = NULL;
   net->shunt = NULL;
   net->vargen = NULL;
+
+  // Hash tables
+  net->bus_hash_number = NULL;
+  net->bus_hash_name = NULL;
 
   // Number components
   net->num_buses = 0;
@@ -1504,6 +1509,10 @@ void NET_set_vargen_buses(Net* net, Bus* bus_list) {
 
   if (!net)
     return;
+
+  // Clear
+  for (i = 0; i < net->num_buses; i++)
+    BUS_clear_vargen(NET_get_bus(net,i));
 
   i = 0;
   bus = bus_list;

@@ -113,6 +113,18 @@ struct ART_Slack {
   struct ART_Slack* next;
 };
 
+struct ART_Vargen {
+  char name[22];
+  char bus[10];
+  REAL p;             // mw
+  REAL q;             // mvar
+  REAL pmax;          // mw
+  REAL pmin;          // mw
+  REAL qmax;          // mvar
+  REAL qmin;          // mvar
+  struct ART_Vargen* next;
+};
+
 struct ART_Parser {
 
   // Error
@@ -160,6 +172,10 @@ struct ART_Parser {
   // Slacks
   ART_Slack* slack;
   ART_Slack* slack_list;
+
+  // Vargens
+  ART_Vargen* vargen;
+  ART_Vargen* vargen_list;
 };
 
 ART_Parser* ART_PARSER_new(void) {
@@ -212,6 +228,10 @@ ART_Parser* ART_PARSER_new(void) {
   // Slacks
   parser->slack = NULL;
   parser->slack_list = NULL;
+
+  // Vargen
+  parser->vargen = NULL;
+  parser->vargen_list = NULL;
 
   // Return
   return parser;
@@ -273,6 +293,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   int len_pshiftp_list;
   int len_gener_list;
   int len_slack_list;
+  int len_vargen_list;
 
   if (!parser)
     return;
@@ -286,6 +307,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   LIST_len(ART_Pshiftp,parser->pshiftp_list,next,len_pshiftp_list);
   LIST_len(ART_Gener,parser->gener_list,next,len_gener_list);
   LIST_len(ART_Slack,parser->slack_list,next,len_slack_list);
+  LIST_len(ART_Vargen,parser->vargen_list,next,len_vargen_list);
   
   // Show
   printf("\nParsed Data\n");
@@ -298,6 +320,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   printf("pshiftp list : %d\n",len_pshiftp_list);
   printf("gener list   : %d\n",len_gener_list);
   printf("slack list   : %d\n",len_slack_list);
+  printf("vargen list  : %d\n",len_vargen_list);
 
   // Debugging BUS
   ART_Bus* bus;
@@ -412,6 +435,20 @@ void ART_PARSER_show(ART_Parser* parser) {
     printf("Slack %s\n",
 	   slack->at_bus);
   }
+
+  // Debugging VARGEN
+  ART_Vargen* vargen;
+  for (vargen = parser->vargen_list; vargen != NULL; vargen = vargen->next) {
+    printf("Vargen %s %s %.5f %.5f %.5f %.5f %.5f %.5f\n",
+	   vargen->name,
+	   vargen->bus,
+	   vargen->p,
+	   vargen->q,
+	   vargen->pmin,
+	   vargen->pmax,
+	   vargen->qmin,
+	   vargen->qmax);
+  }
 }
 
 void ART_PARSER_load(ART_Parser* parser, Net* net) {
@@ -425,6 +462,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   int num_lines;
   int num_transfo;
   int num_branches;
+  int num_vargens;
   ART_Bus* art_bus;
   ART_Bus* art_busA;
   ART_Bus* art_busB;
@@ -433,6 +471,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   ART_Line* art_line;
   ART_Transfo* art_transfo;
   ART_Ltcv* art_ltcv;
+  ART_Vargen* art_vargen;
   Bus* bus;
   Bus* busA;
   Bus* busB;
@@ -440,6 +479,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   Shunt* shunt;
   Gen* gen;
   Branch* branch;
+  Vargen* vargen;
   REAL r;
   REAL x;
   REAL den;
@@ -736,7 +776,33 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       sprintf(parser->error_string,"unable to find LTC-V transformer %s",art_ltcv->name);
       parser->error_flag = TRUE;
     }   
-  }  
+  }
+  
+  // Vargens
+  index = 0;
+  LIST_len(ART_Vargen,parser->vargen_list,next,num_vargens);
+  NET_set_vargen_array(net,VARGEN_array_new(num_vargens),num_vargens);
+  for (art_vargen = parser->vargen_list; art_vargen != NULL; art_vargen = art_vargen->next) {
+    art_bus = NULL;
+    HASH_FIND_STR(parser->bus_hash,art_vargen->bus,art_bus);
+    if (art_bus) {
+      bus = NET_get_bus(net,art_bus->index);
+      vargen = NET_get_vargen(net,index);
+      BUS_add_vargen(bus,vargen);                                // connect vargen to bus
+      VARGEN_set_bus(vargen,bus);                                // connect bus to vargen
+      VARGEN_set_P(vargen,art_vargen->p/parser->base_power);        // per unit
+      VARGEN_set_P_max(vargen,art_vargen->pmax/parser->base_power); // per unit
+      VARGEN_set_P_min(vargen,art_vargen->pmin/parser->base_power); // per unit
+      VARGEN_set_Q(vargen,art_vargen->q/parser->base_power);        // per unit
+      VARGEN_set_Q_max(vargen,art_vargen->qmax/parser->base_power); // per unit
+      VARGEN_set_Q_min(vargen,art_vargen->qmin/parser->base_power); // per unit
+    }
+    else {
+      sprintf(parser->error_string,"unable to find var-generator bus %s",art_vargen->bus);
+      parser->error_flag = TRUE;
+    }
+    index++;
+  }
 }
 
 void ART_PARSER_del(ART_Parser* parser) {
@@ -772,6 +838,9 @@ void ART_PARSER_del(ART_Parser* parser) {
 
   // Slacks
   LIST_map(ART_Slack,parser->slack_list,slack,next,{free(slack);});
+
+  // Vargens
+  LIST_map(ART_Vargen,parser->vargen_list,vargen,next,{free(vargen);});
 
   // Parser
   free(parser);  
@@ -840,6 +909,11 @@ void ART_PARSER_callback_field(char* s, void* data) {
       // Slacks
       else if (strstr(s,ART_SLACK_TOKEN) != NULL) {
 	parser->state = ART_PARSER_STATE_SLACK;
+      }
+
+      // Vargen
+      else if (strstr(s,ART_VARGEN_TOKEN) != NULL) {
+	parser->state = ART_PARSER_STATE_VARGEN;
       }	
     }
     break;
@@ -867,6 +941,9 @@ void ART_PARSER_callback_field(char* s, void* data) {
     break;
   case ART_PARSER_STATE_SLACK:
     ART_PARSER_parse_slack_field((char*)s,parser);
+    break;
+  case ART_PARSER_STATE_VARGEN:
+    ART_PARSER_parse_vargen_field((char*)s,parser);
     break;
   }
     
@@ -908,6 +985,9 @@ void ART_PARSER_callback_record(void *data) {
     break;
   case ART_PARSER_STATE_SLACK:
     ART_PARSER_parse_slack_record(parser);
+    break;
+  case ART_PARSER_STATE_VARGEN:
+    ART_PARSER_parse_vargen_record(parser);
     break;
   }  
 }
@@ -1363,6 +1443,62 @@ void ART_PARSER_parse_slack_record(ART_Parser* parser) {
     LIST_add(parser->slack_list,parser->slack,next);
   }
   parser->slack = NULL;
+  parser->field = 0;
+  parser->record = 0;
+  parser->state = ART_PARSER_STATE_INIT;
+}
+
+void ART_PARSER_parse_vargen_field(char* s, ART_Parser* parser) {
+
+  if (!parser)
+    return;
+
+  // New vargen
+  if (parser->field == 1) {
+    parser->vargen = (ART_Vargen*)malloc(sizeof(ART_Vargen));
+    parser->vargen->next = NULL;
+  }
+
+  // Fields
+  if (parser->vargen) {
+    switch (parser->field) {
+    case 1:
+      strcpy(parser->vargen->name,s);
+      break;
+    case 2:
+      strcpy(parser->vargen->bus,s);
+      break;
+    case 3:
+      parser->vargen->p = atof(s);
+      break;
+    case 4:
+      parser->vargen->q = atof(s);
+      break;
+    case 5:
+      parser->vargen->pmin = atof(s);
+      break;
+    case 6:
+      parser->vargen->pmax = atof(s);
+      break;
+    case 7:
+      parser->vargen->qmin = atof(s);
+      break;
+    case 8:
+      parser->vargen->qmax = atof(s);
+      break;
+    }
+  }
+}
+
+void ART_PARSER_parse_vargen_record(ART_Parser* parser) {
+
+  if (!parser)
+    return;
+
+  if (parser->vargen) {
+    LIST_add(parser->vargen_list,parser->vargen,next);
+  }
+  parser->vargen = NULL;
   parser->field = 0;
   parser->record = 0;
   parser->state = ART_PARSER_STATE_INIT;

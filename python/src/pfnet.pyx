@@ -1283,6 +1283,11 @@ cdef class VarGenerator:
 
         return cvargen.VARGEN_has_flags(self._c_gen,fmask,vmask)
 
+    property name:
+        """ Variable generator name (string). """
+        def __get__(self): return cvargen.VARGEN_get_name(self._c_gen)
+        def __set__(self,name): cvargen.VARGEN_set_name(self._c_gen,name)
+
     property index:
         """ Variable generator index (int). """
         def __get__(self): return cvargen.VARGEN_get_index(self._c_gen)
@@ -1308,6 +1313,11 @@ cdef class VarGenerator:
         """ Variable generator active power upper limit (p.u. system base MVA) (float). """
         def __get__(self): return cvargen.VARGEN_get_P_max(self._c_gen)
         def __set__(self,P): cvargen.VARGEN_set_P_max(self._c_gen,P)
+
+    property P_min:
+        """ Variable generator active power lower limit (p.u. system base MVA) (float). """
+        def __get__(self): return cvargen.VARGEN_get_P_min(self._c_gen)
+        def __set__(self,P): cvargen.VARGEN_set_P_min(self._c_gen,P)
 
     property P_std:
         """ Variable generator active power standard deviation (p.u. system base MVA) (float). """

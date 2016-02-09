@@ -17,7 +17,8 @@ struct Vargen {
   Bus* bus;            /**< @brief Bus to which variable generator is connected */
 
   // Properties
-  char type;         /**< @brief Variable generator type */
+  char name[VARGEN_NAME_BUFFER_SIZE]; /**< @brief Variable generator name */
+  char type;                          /**< @brief Variable generator type */
   
   // Flags
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
@@ -28,6 +29,7 @@ struct Vargen {
   // Active power
   REAL P;              /**< @brief Variable generator active power (p.u. system base power) */
   REAL P_max;          /**< @brief Maximum variable generator active power (p.u.) */
+  REAL P_min;          /**< @brief Minimum variable generator active power (p.u.) */
   REAL P_std;          /**< @brief Standard deviation of active power (p.u. system base power) */
 
   // Reactive power
@@ -82,6 +84,13 @@ void VARGEN_clear_flags(Vargen* gen, char flag_type) {
   }
 }
 
+char* VARGEN_get_name(Vargen* gen) {
+  if (gen)
+    return gen->name;
+  else
+    return NULL;
+}
+
 Bus* VARGEN_get_bus(Vargen* gen) {
   if (gen)
     return gen->bus;
@@ -131,6 +140,13 @@ REAL VARGEN_get_P_max(Vargen* gen) {
     return 0;
 }
 
+REAL VARGEN_get_P_min(Vargen* gen) {
+  if (gen)
+    return gen->P_min;
+  else 
+    return 0;
+}
+
 REAL VARGEN_get_P_std(Vargen* gen) {
   if (gen)
     return gen->P_std;
@@ -171,7 +187,7 @@ void VARGEN_get_var_values(Vargen* gen, Vec* values, int code) {
       VEC_set(values,gen->index_P,gen->P_max);
       break;
     case LOWER_LIMITS:
-      VEC_set(values,gen->index_P,0.);
+      VEC_set(values,gen->index_P,gen->P_min);
       break;
     default:
       VEC_set(values,gen->index_P,gen->P);
@@ -229,14 +245,24 @@ BOOL VARGEN_has_properties(void* vgen, char prop) {
 }
 
 void VARGEN_init(Vargen* gen) {
+  
+  // Local variables
+  int i;
+
+  if (!gen)
+    return;
+
   gen->bus = NULL;
   gen->type = VARGEN_TYPE_WIND;
+  for (i = 0; i < VARGEN_NAME_BUFFER_SIZE; i++) 
+    gen->name[i] = 0;
   gen->fixed = 0x00;
   gen->bounded = 0x00;
   gen->sparse = 0x00;
   gen->vars = 0x00;
   gen->P = 0;
   gen->P_max = 0;
+  gen->P_min = 0;
   gen->P_std = 0;
   gen->Q = 0;
   gen->Q_max = 0;
@@ -278,6 +304,11 @@ Vargen* VARGEN_new(void) {
   return gen;
 }
 
+void VARGEN_set_name(Vargen* gen, char* name) {
+  if (gen)
+    strncpy(gen->name,name,(size_t)(VARGEN_NAME_BUFFER_SIZE-1));
+}
+
 void VARGEN_set_bus(Vargen* gen, Bus* bus) {
   if (gen)
     gen->bus = (Bus*)bus;
@@ -296,6 +327,11 @@ void VARGEN_set_P(Vargen* gen, REAL P) {
 void VARGEN_set_P_max(Vargen* gen, REAL P_max) {
   if (gen)
     gen->P_max = P_max;
+}
+
+void VARGEN_set_P_min(Vargen* gen, REAL P_min) {
+  if (gen)
+    gen->P_min = P_min;
 }
 
 void VARGEN_set_P_std(Vargen* gen, REAL P_std) {
