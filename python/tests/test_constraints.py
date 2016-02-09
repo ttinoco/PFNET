@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -419,7 +419,16 @@ class TestConstraints(unittest.TestCase):
         for case in test_cases.CASES:
             
             net.load(case)
-            
+
+            # add vargens
+            load_buses = net.get_load_buses()
+            net.add_vargens(load_buses,50.,30.,5,0.05)
+            self.assertGreater(net.num_vargens,0)
+            self.assertEqual(net.num_vargens,len(load_buses))
+            for vargen in net.var_generators:
+                vargen.Q = np.abs(vargen.P)
+                self.assertGreater(vargen.Q,0.)
+
             # Vars
             net.set_flags(pf.OBJ_BUS,
                           pf.FLAG_VARS,
@@ -445,14 +454,19 @@ class TestConstraints(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.SHUNT_PROP_SWITCHED_V,
                           pf.SHUNT_VAR_SUSC)
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
             self.assertEqual(net.num_vars,
                              2*net.get_num_buses() +
                              net.get_num_slack_gens() +
                              net.get_num_reg_gens() +
                              net.get_num_tap_changers() +
                              net.get_num_phase_shifters() +
-                             net.get_num_switched_shunts())
-            
+                             net.get_num_switched_shunts() +
+                             net.num_vargens*2)
+
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
@@ -464,6 +478,7 @@ class TestConstraints(unittest.TestCase):
             J = constr.J
             A = constr.A
             b = constr.b
+            G = constr.G
             
             # Before 
             self.assertTrue(type(f) is np.ndarray)
@@ -476,9 +491,13 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(A) is coo_matrix)
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
-            
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(0,0))
+            self.assertEqual(G.nnz,0)
+
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.Gcounter,0)
 
             num_Jnnz = (net.get_num_buses()*4 +
                         net.get_num_branches()*8 +
@@ -486,7 +505,8 @@ class TestConstraints(unittest.TestCase):
                         net.get_num_phase_shifters()*4 +
                         net.get_num_switched_shunts() +
                         net.get_num_slack_gens() +
-                        net.get_num_reg_gens())
+                        net.get_num_reg_gens()+
+                        net.num_vargens*2)
             
             constr.analyze()
             self.assertEqual(num_Jnnz,constr.Jcounter)
@@ -497,6 +517,7 @@ class TestConstraints(unittest.TestCase):
             J = constr.J
             A = constr.A
             b = constr.b
+            G = constr.G
             constr.combine_H(np.ones(f.size),False)
             Hcomb = constr.H_combined            
             
@@ -511,6 +532,9 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(A) is coo_matrix)
             self.assertTupleEqual(A.shape,(0,net.num_vars))
             self.assertEqual(A.nnz,0)
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(0,net.num_vars))
+            self.assertEqual(G.nnz,0)
             self.assertTupleEqual(Hcomb.shape,(net.num_vars,net.num_vars))
             self.assertEqual(Hcomb.nnz,2*(net.get_num_buses()*3 +
                                           net.get_num_branches()*12 +
@@ -535,10 +559,35 @@ class TestConstraints(unittest.TestCase):
                 self.assertLess(np.abs(dQ-bus.Q_mis),1e-10)
             self.assertLess(np.abs(net.bus_P_mis-np.max(np.abs(dP_list))*net.base_power),1e-10)
             self.assertLess(np.abs(net.bus_Q_mis-np.max(np.abs(dQ_list))*net.base_power),1e-10)
+            
+            # Remove vargen injections
+            fsaved = f.copy()
+            x0saved = x0.copy()
+            for vargen in net.var_generators:
+                x0[vargen.index_P] = 0.
+                x0[vargen.index_Q] = 0.
+            constr.eval(x0)
+            for vargen in net.var_generators:
+                self.assertLess(np.abs(fsaved[vargen.bus.index_P]-
+                                       constr.f[vargen.bus.index_P]-vargen.P),1e-10)
+                self.assertLess(np.abs(fsaved[vargen.bus.index_Q]-
+                                       constr.f[vargen.bus.index_Q]-vargen.Q),1e-10)
+            for vargen in net.var_generators:
+                vargen.bus.loads[0].P = vargen.bus.loads[0].P-vargen.P
+                vargen.bus.loads[0].Q = vargen.bus.loads[0].Q-vargen.Q
+                pass
+            constr.eval(x0)
+            for vargen in net.var_generators:
+                self.assertLess(np.abs(fsaved[vargen.bus.index_P]-
+                                       constr.f[vargen.bus.index_P]),1e-10)
+                self.assertLess(np.abs(fsaved[vargen.bus.index_Q]-
+                                       constr.f[vargen.bus.index_Q]),1e-10)
 
             # Jacobian check
-            f0 = f.copy()
-            J0 = J.copy()
+            x0 = x0saved.copy()
+            constr.eval(x0)
+            f0 = constr.f.copy()
+            J0 = constr.J.copy()
             for i in range(NUM_TRIALS):
                 
                 d = np.random.randn(net.num_vars)

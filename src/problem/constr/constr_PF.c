@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -82,6 +82,7 @@ void CONSTR_PF_count_branch(Constr* c, Branch* br) {
   // Local variables
   Bus* bus[2];
   Gen* gen;
+  Vargen* vargen;
   Shunt* shunt;
   int* Jcounter;
   int* Hcounter;
@@ -301,10 +302,28 @@ void CONSTR_PF_count_branch(Constr* c, Branch* br) {
 	}      
       }
 
+      // Variable generators
+      for (vargen = BUS_get_vargen(bus[k]); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+	
+	//*****************************
+	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) { // Pg var
+	  
+	  // J 
+	  (*Jcounter)++; // dPk/dPg
+	}
+	
+	//*****************************
+	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q)) { // Qg var
+	  
+	  // J
+	  (*Jcounter)++; // dQk/dQg
+	}      
+      }
+
       // Shunts
       for (shunt = BUS_get_shunt(bus[k]); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
 
-	//**************************************
+	//*****************************
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) { // b var
 	  
 	  // J
@@ -351,6 +370,11 @@ void CONSTR_PF_allocate(Constr* c) {
   // A b
   CONSTR_set_A(c,MAT_new(0,num_vars,0));
   CONSTR_set_b(c,VEC_new(0));
+
+  // G hl hu
+  CONSTR_set_G(c,MAT_new(0,num_vars,0));
+  CONSTR_set_hl(c,VEC_new(0));
+  CONSTR_set_hu(c,VEC_new(0));
 
   // f
   CONSTR_set_f(c,VEC_new(num_constr));
@@ -405,6 +429,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
   // Local variables
   Bus* bus[2];
   Gen* gen;
+  Vargen* vargen;
   Shunt* shunt;
   Mat* J;
   int* Jcounter;
@@ -719,6 +744,28 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
 	  (*Jcounter)++;
 	}
       }
+      
+      // Variable generators
+      for (vargen = BUS_get_vargen(bus[k]); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+	
+	//*****************************
+	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) { // Pg var
+	  
+	  // J 
+	  MAT_set_i(J,*Jcounter,P_index[k]);             // dPk/dPg
+	  MAT_set_j(J,*Jcounter,VARGEN_get_index_P(vargen)); 
+	  (*Jcounter)++; 
+	}
+	
+	//*****************************
+	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q)) { // Qg var
+	  
+	  // J
+	  MAT_set_i(J,*Jcounter,Q_index[k]);             // dQk/dQg
+	  MAT_set_j(J,*Jcounter,VARGEN_get_index_Q(vargen)); 
+	  (*Jcounter)++;
+	}
+      }
 
       // Shunts
       for (shunt = BUS_get_shunt(bus[k]); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
@@ -776,6 +823,7 @@ void CONSTR_PF_eval_branch(Constr* c, Branch *br, Vec* var_values) {
   // Local variables
   Bus* bus[2];
   Gen* gen;
+  Vargen* vargen;
   Load* load;
   Shunt* shunt;
   REAL* f;
@@ -1164,6 +1212,40 @@ void CONSTR_PF_eval_branch(Constr* c, Branch *br, Vec* var_values) {
 	
 	//*****************************
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) { // Qg var
+	  
+	  // J
+	  J[*Jcounter] = 1.; // dQk/dQg
+	  (*Jcounter)++;
+	}
+      }
+
+      // Variable generators
+      for (vargen = BUS_get_vargen(bus[k]); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+	
+	// Var values
+	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P))
+	  Pg = VEC_get(var_values,VARGEN_get_index_P(vargen)); // p.u.
+	else
+	  Pg = VARGEN_get_P(vargen);                           // p.u.
+	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q))
+	  Qg = VEC_get(var_values,VARGEN_get_index_Q(vargen)); // p.u.
+	else
+	  Qg = VARGEN_get_Q(vargen);                           // p.u.
+	
+	// f
+	f[P_index[k]] += Pg;
+	f[Q_index[k]] += Qg;
+
+	//*****************************
+	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) { // Pg var
+	  
+	  // J 
+	  J[*Jcounter] = 1.; // dPk/dPg
+	  (*Jcounter)++; 
+	}
+	
+	//*****************************
+	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q)) { // Qg var
 	  
 	  // J
 	  J[*Jcounter] = 1.; // dQk/dQg

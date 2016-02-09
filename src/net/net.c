@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -59,7 +59,7 @@ struct Net {
   REAL tran_p_vio;   /**< @brief Maximum phase shift limit violation of phase-shifting trasnformer (radians). */
   REAL shunt_v_vio;  /**< @brief Maximum shunt-controlled bus voltage mangnitude band violation (p.u.). */
   REAL shunt_b_vio;  /**< @brief Maximum susceptance limit volation of switched shunt device (p.u.). */
-  int num_actions;   
+  int num_actions;   /**< @brief Number of control actions. */
 
   // Spatial correlation
   REAL vargen_corr_radius; /**< @brief Correlation radius for variable generators. **/
@@ -128,7 +128,7 @@ void NET_adjust_generators(Net* net) {
   /** This function adjusts the powers of slack or regulator generators 
    *  connected to the same bus or regulating the same bus voltage magnitude. 
    *  The adjustment is done to obtain specific participations without affecting
-   *  the their total power. For active power, the participation is equal for every
+   *  their total power. For active power, the participation is equal for every
    *  generator. For reactive power, the participaion is proportional to the generator
    *  reactive power resources.
    */
@@ -1760,6 +1760,7 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
   Bus* buses[2];
   Bus* bus;
   Gen* gen;
+  Vargen* vargen;
   Load* load;
   Shunt* shunt;
   
@@ -2012,6 +2013,23 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
 	dP = NET_CONTROL_EPS;
       if (100.*fabs(P-GEN_get_P(gen))/dP > NET_CONTROL_ACTION_PCT)
 	net->num_actions++;
+    }
+
+    // Variable generators
+    for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+
+      if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P) && var_values)
+	P = VEC_get(var_values,VARGEN_get_index_P(vargen));
+      else
+	P = VARGEN_get_P(vargen);
+      if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q) && var_values)
+	Q = VEC_get(var_values,VARGEN_get_index_Q(vargen));
+      else
+	Q = VARGEN_get_Q(vargen);
+
+      // Injections
+      BUS_inject_P(bus,P);
+      BUS_inject_Q(bus,Q);
     }
 
     // Loads

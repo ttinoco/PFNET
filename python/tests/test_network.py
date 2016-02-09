@@ -44,7 +44,7 @@ class TestNetwork(unittest.TestCase):
             self.assertGreater(net.num_gens,0)
             self.assertGreater(net.num_branches,0)
             self.assertGreaterEqual(net.num_shunts,0)
-            self.assertEqual(net.num_vargens,0)
+            self.assertGreaterEqual(net.num_vargens,0)
             self.assertEqual(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
             self.assertEqual(net.num_bounded,0)
@@ -671,6 +671,15 @@ class TestNetwork(unittest.TestCase):
             
             net.load(case)
 
+            # add vargens
+            net.add_vargens(net.get_load_buses(),50.,30.,5,0.05)
+            for vargen in net.var_generators:
+                vargen.P = 1.
+                vargen.Q = 2.
+                self.assertGreater(len(vargen.bus.loads),0)
+
+            net.update_properties()
+
             self.assertEqual(net.num_vars,0)
 
             bus_v_max = net.bus_v_max
@@ -799,6 +808,40 @@ class TestNetwork(unittest.TestCase):
                 self.assertLess(np.abs(dQ-bus.Q_mis),1e-10)
             self.assertLess(np.abs(net.bus_P_mis-np.max(np.abs(dP_list))*net.base_power),1e-10)
             self.assertLess(np.abs(net.bus_Q_mis-np.max(np.abs(dQ_list))*net.base_power),1e-10)
+
+            # Mismatches 2
+            for vargen in net.var_generators:
+                vargen.P = 0.
+                vargen.Q = 0.
+            net.update_properties()
+            fsaved = f.copy()
+            constr.eval(x0)
+            f = constr.f
+            for vargen in net.var_generators:
+                self.assertLess(np.abs(fsaved[vargen.bus.index_P]-
+                                       f[vargen.bus.index_P]-1.),1e-10)
+                self.assertLess(np.abs(fsaved[vargen.bus.index_P]-
+                                       vargen.bus.P_mis-1.),1e-10)
+                self.assertLess(np.abs(fsaved[vargen.bus.index_Q]-
+                                       f[vargen.bus.index_Q]-2.),1e-10)
+                self.assertLess(np.abs(fsaved[vargen.bus.index_Q]-
+                                       vargen.bus.Q_mis-2.),1e-10)
+            for vargen in net.var_generators:
+                self.assertGreater(len(vargen.bus.loads),0)
+                vargen.bus.loads[0].P = vargen.bus.loads[0].P - 1.
+                vargen.bus.loads[0].Q = vargen.bus.loads[0].Q - 2.
+            net.update_properties()
+            constr.eval(x0)
+            f = constr.f
+            for vargen in net.var_generators:
+                self.assertLess(np.abs(fsaved[vargen.bus.index_P]-
+                                       f[vargen.bus.index_P]),1e-10)
+                self.assertLess(np.abs(fsaved[vargen.bus.index_P]-
+                                       vargen.bus.P_mis),1e-10)
+                self.assertLess(np.abs(fsaved[vargen.bus.index_Q]-
+                                       f[vargen.bus.index_Q]),1e-10)
+                self.assertLess(np.abs(fsaved[vargen.bus.index_Q]-
+                                       vargen.bus.Q_mis),1e-10)
 
             net.clear_properties()
             
