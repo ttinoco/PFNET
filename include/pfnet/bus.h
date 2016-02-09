@@ -67,6 +67,13 @@
 #define BUS_MIS_REACTIVE 10 /**< @brief Mismatch: reactive power */
 /** @} */
 
+// Constants
+/** \defgroup bus_const Bus Constants
+ *  @{
+ */
+#define BUS_NAME_BUFFER_SIZE 25
+/** @} */
+
 // Bus
 typedef struct Bus Bus;
 
@@ -123,6 +130,7 @@ int BUS_get_index_P(Bus* bus);
 int BUS_get_index_Q(Bus* bus);
 Bus* BUS_get_next(Bus* bus);
 int BUS_get_number(Bus* bus);
+char* BUS_get_name(Bus* bus);
 int BUS_get_num_gens(Bus* bus);
 int BUS_get_num_loads(Bus* bus);
 int BUS_get_num_shunts(Bus* bus);
@@ -188,6 +196,7 @@ Bus* BUS_list_add_sorting(Bus* bus_list, Bus* bus, int sort_by);
 int BUS_list_len(Bus* bus_list);
 Bus* BUS_new(void);
 void BUS_set_number(Bus* bus, int number);
+void BUS_set_name(Bus* bus, char* name);
 void BUS_set_v_mag(Bus* bus, REAL v_mag);
 void BUS_set_v_ang(Bus* bus, REAL v_ang);
 void BUS_set_v_set(Bus* bus, REAL v_set);

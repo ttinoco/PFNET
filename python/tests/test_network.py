@@ -158,6 +158,7 @@ class TestNetwork(unittest.TestCase):
 
                 # values
                 self.assertGreater(bus.number,0)
+                self.assertTrue(isinstance(bus.name,str))
                 self.assertGreater(bus.v_mag,0)
                 self.assertGreater(bus.v_set,0)
                 self.assertEqual(bus.sens_P_balance,0.)
@@ -171,6 +172,13 @@ class TestNetwork(unittest.TestCase):
                 self.assertTrue(isinstance(bus.reg_trans,list))
                 self.assertTrue(isinstance(bus.reg_shunts,list))
                 self.assertTrue(isinstance(bus.gens,list))
+
+                # name
+                self.assertTrue(isinstance(bus.name,str))
+                bus.name = "some bus"
+                self.assertTrue(isinstance(bus.name,str))
+                self.assertEqual(bus.name,"some bus")
+                self.assertEqual(bus.name,'some bus')
 
                 # generators
                 for g in bus.gens:

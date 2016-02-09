@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -52,6 +52,7 @@ cdef extern from "pfnet/bus.h":
     int BUS_get_index_P(Bus* bus)
     int BUS_get_index_Q(Bus* bus)
     int BUS_get_number(Bus* bus)
+    char* BUS_get_name(Bus* bus)
     Gen* BUS_get_gen(Bus* bus)
     Gen* BUS_get_reg_gen(Bus* bus)
     Branch* BUS_get_reg_tran(Bus* bus)
@@ -95,6 +96,7 @@ cdef extern from "pfnet/bus.h":
     bint BUS_is_regulated_by_shunt(Bus* bus)
     bint BUS_has_flags(Bus* bus, char flag_type, char mask)
     Bus* BUS_new()
+    void BUS_set_name(Bus* bus, char* name)
     void BUS_set_v_mag(Bus* bus, REAL v_mag)
     void BUS_set_v_ang(Bus* bus, REAL v_ang)
     void BUS_show(Bus* bus)

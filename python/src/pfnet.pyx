@@ -451,6 +451,11 @@ cdef class Bus:
         """ Bus number (int). """
         def __get__(self): return cbus.BUS_get_number(self._c_bus)
 
+    property name:
+        """ Bus name (sting). """
+        def __get__(self): return cbus.BUS_get_name(self._c_bus)
+        def __set__(self,name): cbus.BUS_set_name(self._c_bus,name)
+
     property degree:
         """ Bus degree (number of incident branches) (float). """
         def __get__(self): return cbus.BUS_get_degree(self._c_bus)    

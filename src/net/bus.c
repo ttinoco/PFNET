@@ -1,12 +1,11 @@
 /** @file bus.c
-1;3409;0c *  @brief This file defines the Bus data structure and its associated methods.
+ *  @brief This file defines the Bus data structure and its associated methods.
  *
  * This file is part of PFNET.
  *
  * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
-
  */
 
 #include <pfnet/bus.h>
@@ -19,7 +18,8 @@
 struct Bus {
 
   // Properties
-  int number;        /**< @brief Bus number */
+  int number;                      /**< @brief Bus number */
+  char name[BUS_NAME_BUFFER_SIZE]; /**< @brief Bus name */
 
   // Voltage
   REAL v_mag;        /**< @brief Voltage magnitude (p.u.) */
@@ -321,6 +321,13 @@ int BUS_get_number(Bus* bus) {
     return bus->number;
   else
     return 0;
+}
+
+char* BUS_get_name(Bus* bus) {
+  if (bus)
+    return bus->name;
+  else
+    return NULL;
 }
 
 int BUS_get_num_gens(Bus* bus) {
@@ -891,8 +898,13 @@ int BUS_hash_len(Bus* bus_hash) {
 }
 
 void BUS_init(Bus* bus) {
+  
+  // Local variables
+  int i;
 
   bus->number = 0;
+  for (i = 0; i < BUS_NAME_BUFFER_SIZE; i++) 
+    bus->name[i] = 0;
 
   bus->v_mag = 1.;
   bus->v_ang = 0.;
@@ -1024,6 +1036,11 @@ Bus* BUS_new(void) {
 void BUS_set_number(Bus* bus, int number) {
   if (bus)
     bus->number = number;
+}
+
+void BUS_set_name(Bus* bus, char* name) {
+  if (bus)
+    strncpy(bus->name,name,(size_t)(BUS_NAME_BUFFER_SIZE-1));
 }
 
 void BUS_set_v_mag(Bus* bus, REAL v_mag) {
