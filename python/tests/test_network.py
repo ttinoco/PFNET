@@ -153,9 +153,12 @@ class TestNetwork(unittest.TestCase):
                     self.assertFalse(bus == other_bus)
                     self.assertTrue(bus != other_bus)
                 
-                # hash
+                # hash table (numbers)
                 self.assertEqual(bus.number,net.get_bus_by_number(bus.number).number)
 
+                # hash table (names)
+                self.assertEqual(bus.name,net.get_bus_by_name(bus.name).name)
+                
                 # values
                 self.assertGreater(bus.number,0)
                 self.assertTrue(isinstance(bus.name,str))

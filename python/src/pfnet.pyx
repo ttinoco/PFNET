@@ -1522,6 +1522,25 @@ cdef class Network:
             return new_Bus(ptr)
         else:
             raise NetworkError('bus not found')
+
+    def get_bus_by_name(self,name):
+        """
+        Gets bus with the given name.
+
+        Parameters
+        ----------
+        name : string
+        
+        Returns
+        -------
+        bus : :class:`Bus <pfnet.Bus>`
+        """
+
+        ptr = cnet.NET_bus_hash_name_find(self._c_net,name)
+        if ptr is not NULL:
+            return new_Bus(ptr)
+        else:
+            raise NetworkError('bus not found')
             
     def get_bus(self,index):
         """

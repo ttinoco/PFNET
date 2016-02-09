@@ -268,6 +268,7 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
     if (mat_bus->type == MAT_BUS_TYPE_SL)
       BUS_set_slack(bus,TRUE);
     NET_bus_hash_number_add(net,bus);
+    NET_bus_hash_name_add(net,bus);
     index++;
   }
 

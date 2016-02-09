@@ -21,7 +21,8 @@ struct Net {
   
   // Components
   Bus* bus;             /**< @brief Bus array */
-  Bus* bus_hash_number; /**< @brief Bus hash table indexed by bus bumbers */
+  Bus* bus_hash_number; /**< @brief Bus hash table indexed by bus numbers */
+  Bus* bus_hash_name;   /**< @brief Bus hash table indexed by bus names */
   Branch* branch;       /**< @brief Branch array */
   Gen* gen;             /**< @brief Gen array */
   Load* load;           /**< @brief Load array */
@@ -187,11 +188,27 @@ void NET_adjust_generators(Net* net) {
 }
 
 void NET_bus_hash_number_add(Net* net, Bus* bus) {
-  net->bus_hash_number = BUS_hash_number_add(net->bus_hash_number,bus);
+  if (net)
+    net->bus_hash_number = BUS_hash_number_add(net->bus_hash_number,bus);
 }
 
 Bus* NET_bus_hash_number_find(Net* net, int number) {
-  return BUS_hash_number_find(net->bus_hash_number,number);
+  if (net)
+    return BUS_hash_number_find(net->bus_hash_number,number);
+  else
+    return NULL;
+}
+
+void NET_bus_hash_name_add(Net* net, Bus* bus) {
+  if (net)
+    net->bus_hash_name = BUS_hash_name_add(net->bus_hash_name,bus);
+}
+
+Bus* NET_bus_hash_name_find(Net* net, char* name) {
+  if (net)
+    return BUS_hash_name_find(net->bus_hash_name,name);
+  else
+    return NULL;
 }
 
 BOOL NET_check(Net* net, BOOL verbose) {
@@ -243,6 +260,7 @@ void NET_clear_data(Net* net) {
 
     // Free data
     BUS_hash_number_del(net->bus_hash_number);
+    BUS_hash_name_del(net->bus_hash_name);
     free(net->bus);
     free(net->branch);
     free(net->gen);
@@ -618,6 +636,7 @@ void NET_init(Net* net) {
 
   // Components
   net->bus_hash_number = NULL;
+  net->bus_hash_name = NULL;
   net->bus = NULL;
   net->branch = NULL;
   net->gen = NULL;
@@ -693,6 +712,13 @@ Bus* NET_get_bus_hash_number(Net* net) {
     return NULL;
   else
     return net->bus_hash_number;
+}
+
+Bus* NET_get_bus_hash_name(Net* net) {
+  if (!net)
+    return NULL;
+  else
+    return net->bus_hash_name;
 }
 
 char* NET_get_error_string(Net* net) {

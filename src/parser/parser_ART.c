@@ -464,6 +464,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
     BUS_set_number(bus,art_bus->index+1);
     BUS_set_name(bus,art_bus->name);
     NET_bus_hash_number_add(net,bus);
+    NET_bus_hash_name_add(net,bus);
     index++;
   }
 

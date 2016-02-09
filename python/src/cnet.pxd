@@ -23,6 +23,7 @@ cdef extern from "pfnet/net.h":
     void NET_add_vargens(Net* net, cbus.Bus* bus_list, REAL penetration, REAL uncertainty, REAL corr_radius, REAL corr_value)
     void NET_adjust_generators(Net* net)
     cbus.Bus* NET_bus_hash_number_find(Net* net, int number)
+    cbus.Bus* NET_bus_hash_name_find(Net* net, char* name)
     void NET_clear_error(Net* net)
     void NET_clear_flags(Net* net)
     void NET_clear_properties(Net* net)

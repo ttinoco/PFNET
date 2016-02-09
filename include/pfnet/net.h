@@ -41,6 +41,8 @@ void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty
 void NET_adjust_generators(Net* net);
 void NET_bus_hash_number_add(Net* net, Bus* bus);
 Bus* NET_bus_hash_number_find(Net* net, int number);
+void NET_bus_hash_name_add(Net* net, Bus* bus);
+Bus* NET_bus_hash_name_find(Net* net, char* name);
 BOOL NET_check(Net* net, BOOL verbose);
 void NET_clear_data(Net* net);
 void NET_clear_error(Net* net);
@@ -55,6 +57,7 @@ REAL NET_get_base_power(Net* net);
 Branch* NET_get_branch(Net* net, int index);
 Bus* NET_get_bus(Net* net, int index);
 Bus* NET_get_bus_hash_number(Net* net); 
+Bus* NET_get_bus_hash_name(Net* net);
 char* NET_get_error_string(Net* net);
 Gen* NET_get_gen(Net* net, int index);
 Load* NET_get_load(Net* net, int index);

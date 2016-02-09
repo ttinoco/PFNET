@@ -70,6 +70,7 @@ struct Bus {
   
   // Hash
   UT_hash_handle hh_number; /**< @brief Handle for bus hash table based on numbers */
+  UT_hash_handle hh_name;   /**< @brief Handle for bus hash table based on names */
 
   // List
   Bus* next; /**< @brief List of buses */
@@ -895,6 +896,26 @@ Bus* BUS_hash_number_find(Bus* bus_hash,int number) {
 
 int BUS_hash_number_len(Bus* bus_hash) {
   return HASH_CNT(hh_number,bus_hash);
+}
+
+Bus* BUS_hash_name_add(Bus* bus_hash, Bus* bus) {
+  HASH_ADD(hh_name,bus_hash,name[0],strlen(bus->name),bus);
+  return bus_hash;
+}
+
+void BUS_hash_name_del(Bus* bus_hash) {
+  while (bus_hash != NULL)
+    HASH_DELETE(hh_name,bus_hash,bus_hash);
+}
+
+Bus* BUS_hash_name_find(Bus* bus_hash, char* name) {
+  Bus* bus;
+  HASH_FIND(hh_name,bus_hash,name,(unsigned)strlen(name),bus);
+  return bus;
+}
+
+int BUS_hash_name_len(Bus* bus_hash) {
+  return HASH_CNT(hh_name,bus_hash);
 }
 
 void BUS_init(Bus* bus) {
