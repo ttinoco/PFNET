@@ -328,6 +328,10 @@ Variable Generator Variable Masks
 
 	  Variable generator active power.
 
+.. data:: pfnet.VARGEN_VAR_Q
+
+	  Variable generator reactive power.
+
 .. _ref_vargen_class:
 
 Variable Generator Class

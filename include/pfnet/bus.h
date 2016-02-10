@@ -181,17 +181,14 @@ int BUS_get_largest_mis_type(Bus* bus);
 REAL BUS_get_quantity(Bus* bus, int qtype);
 BOOL BUS_has_flags(void* bus, char flag_type, char mask);
 BOOL BUS_has_properties(void* bus, char prop);
-
 Bus* BUS_hash_number_add(Bus* bus_hash, Bus* bus);
 void BUS_hash_number_del(Bus* bus_hash);
 Bus* BUS_hash_number_find(Bus* bus_hash, int number);
 int BUS_hash_number_len(Bus* bus_hash);
-
 Bus* BUS_hash_name_add(Bus* bus_hash, Bus* bus);
 void BUS_hash_name_del(Bus* bus_hash);
 Bus* BUS_hash_name_find(Bus* bus_hash, char* name);
 int BUS_hash_name_len(Bus* bus_hash);
-
 void BUS_init(Bus* bus);
 void BUS_inject_P(Bus* bus, REAL P);
 void BUS_inject_Q(Bus* bus, REAL Q);

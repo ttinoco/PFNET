@@ -42,6 +42,9 @@ struct Vargen {
   int index_P;         /**< @brief Active power index */
   int index_Q;         /**< @brief Reactive power index */
 
+  // Hash
+  UT_hash_handle hh;   /**< @brief Handle for vargen hash table based on names */
+
   // List
   Vargen* next;        /**< @brief List of variable generators connected to a bus */
 };
@@ -59,6 +62,8 @@ Vargen* VARGEN_array_new(int num) {
   for (i = 0; i < num; i++) {
     VARGEN_init(&(gen[i]));
     VARGEN_set_index(&(gen[i]),i);
+    snprintf(gen[i].name,(size_t)(VARGEN_NAME_BUFFER_SIZE-1),
+	     "VARGEN %d",i+1);
   }
   return gen;
 }
@@ -242,6 +247,26 @@ BOOL VARGEN_has_properties(void* vgen, char prop) {
   if (!gen)
     return FALSE;
   return TRUE;
+}
+
+Vargen* VARGEN_hash_name_add(Vargen* vargen_hash, Vargen* vargen) {
+  HASH_ADD_STR(vargen_hash,name,vargen);
+  return vargen_hash;
+}
+
+void VARGEN_hash_name_del(Vargen* vargen_hash) {
+  while (vargen_hash != NULL)
+    HASH_DEL(vargen_hash,vargen_hash);
+}
+
+Vargen* VARGEN_hash_name_find(Vargen* vargen_hash, char* name) {
+  Vargen* vargen;
+  HASH_FIND_STR(vargen_hash,name,vargen);
+  return vargen;
+}
+
+int VARGEN_hash_name_len(Vargen* vargen_hash) {
+  return HASH_COUNT(vargen_hash);
 }
 
 void VARGEN_init(Vargen* gen) {

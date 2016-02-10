@@ -452,31 +452,39 @@ class TestNetwork(unittest.TestCase):
 
             self.assertEqual(len(net.var_generators),net.num_vargens)
 
-            # Allocate
+            # existing vargens
+            for vg in net.var_generators:
+                self.assertTrue(isinstance(vg.name,str))
+                self.assertEqual(net.get_vargen_by_name(vg.name).name,vg.name)
+                vg.name = "some vargen"
+                self.assertEqual(vg.name,"some vargen")
+                self.assertRaises(pf.NetworkError,net.get_vargen_by_name,vg.name)
+
+            # add vargens
             load_buses = net.get_load_buses()
             self.assertEqual(len(load_buses),
                              len([b for b in net.buses if b.loads]))
-            vargen_array = pf.VarGeneratorArray(len(load_buses))
-            self.assertEqual(vargen_array.size,len(load_buses))
-
-            # Set array
-            net.set_vargen_array(vargen_array)
+            total_load = sum([l.P for l in net.loads])
+            net.add_vargens(load_buses,50.,30.,5,0.05)
             self.assertGreater(net.num_vargens,0)
             self.assertEqual(net.num_vargens,len(load_buses))
             for i in range(net.num_vargens):
                 vargen = net.get_vargen(i)
-                self.assertEqual(vargen.P,0.)
-                self.assertEqual(vargen.P_max,0.)
+                self.assertTrue(isinstance(vargen.name,str))
+                self.assertEqual(vargen.name,"VARGEN %d" %(vargen.index+1))
+                self.assertEqual(net.get_vargen_by_name(vargen.name).name,vargen.name)
+                self.assertEqual(vargen.P,0.5*vargen.P_max)
+                self.assertEqual(vargen.P_max,total_load/net.num_vargens)
                 self.assertEqual(vargen.P_min,0.)
-                self.assertEqual(vargen.P_std,0.)
+                self.assertEqual(vargen.P_std,0.3*vargen.P_max)
                 self.assertEqual(vargen.index,i)
                 self.assertEqual(vargen.Q,0.)
                 self.assertEqual(vargen.Q_max,0.)
                 self.assertEqual(vargen.Q_min,0.)
-                self.assertRaises(pf.BusError,lambda : vargen.bus)
+                self.assertEqual(len(vargen.bus.vargens),1)
+                self.assertEqual(vargen.bus.vargens[0].index,vargen.index)
                 vargen.P = np.pi
                 self.assertEqual(vargen.P,np.pi)
-                vargen.P = 0.
                 vargen.Q = (i+1)*12.5
                 self.assertEqual(vargen.Q,(i+1)*12.5)
                 vargen.Q_max = (i+1)*13.5
@@ -489,8 +497,7 @@ class TestNetwork(unittest.TestCase):
                 vargen.Q_max = 0.
                 vargen.Q_min = 0.
 
-            # Set buses
-            net.set_vargen_buses(load_buses)
+            # check buses
             for i in range(net.num_vargens):
                 vargen = net.get_vargen(i)
                 self.assertEqual(vargen.index,net.var_generators[i].index)
@@ -502,11 +509,10 @@ class TestNetwork(unittest.TestCase):
             self.assertGreater(net.num_vargens,0)
             self.assertGreater(len(net.var_generators),0)
             for vg in net.var_generators:
-                self.assertEqual(vg.P,0.)
-                self.assertEqual(vg.P_max,0.)
+                self.assertEqual(vg.P,np.pi)
+                self.assertEqual(vg.P_max,total_load/net.num_vargens)
+                self.assertEqual(vg.P_std,0.3*vg.P_max)
                 self.assertEqual(vg.P_min,0.)
-                self.assertEqual(vg.P_std,0.)
-                self.assertEqual(vg.P,0.)
                 self.assertEqual(vg.Q,0.)
                 self.assertEqual(vg.Q_max,0.)
                 self.assertEqual(vg.Q_min,0.)
@@ -534,6 +540,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.vargen_corr_radius,1.)
             self.assertEqual(net.vargen_corr_value,0.)
 
+            # gen buses
             gen_buses = net.get_gen_buses()
             self.assertGreater(len(gen_buses),0)
             for b in gen_buses:
@@ -568,7 +575,7 @@ class TestNetwork(unittest.TestCase):
 
             self.assertEqual(net.vargen_corr_radius,corr_radius)
             self.assertEqual(net.vargen_corr_value,corr_value)
-
+            
             total_load = sum([l.P for l in net.loads])            
             total_cap = sum([vg.P_max for vg in net.var_generators])
 
@@ -689,6 +696,9 @@ class TestNetwork(unittest.TestCase):
             # add vargens
             net.add_vargens(net.get_load_buses(),50.,30.,5,0.05)
             for vargen in net.var_generators:
+                self.assertTrue(isinstance(vargen.name,str))
+                self.assertEqual(vargen.name,"VARGEN %d" %(vargen.index+1))
+                self.assertEqual(net.get_vargen_by_name(vargen.name).name,vargen.name)
                 vargen.P = 1.
                 vargen.Q = 2.
                 self.assertGreater(len(vargen.bus.loads),0)
@@ -1081,10 +1091,9 @@ class TestNetwork(unittest.TestCase):
 
             # Add vargens
             load_buses = net.get_load_buses()
-            vargen_array = pf.VarGeneratorArray(len(load_buses))
-            net.set_vargen_array(vargen_array)
-            net.set_vargen_buses(load_buses)
+            net.add_vargens(load_buses,50.,30.,5,0.05)
             self.assertGreater(net.num_vargens,0)
+            self.assertEqual(net.num_vargens,len(load_buses))
 
             # bus vmag and vang
             net.set_flags(pf.OBJ_BUS,
@@ -1300,10 +1309,9 @@ class TestNetwork(unittest.TestCase):
             
             # vargens
             load_buses = net.get_load_buses()
-            vargen_array = pf.VarGeneratorArray(len(load_buses))
-            net.set_vargen_array(vargen_array)
-            net.set_vargen_buses(load_buses)
+            net.add_vargens(load_buses,50.,30.,5,0.05)
             self.assertGreater(net.num_vargens,0)
+            self.assertEqual(net.num_vargens,len(load_buses))
 
             # vars
             net.set_flags(pf.OBJ_BUS,
@@ -1440,18 +1448,17 @@ class TestNetwork(unittest.TestCase):
             # Add renewable sources (at load buses)
             gen_buses = net.get_gen_buses()
             total_load = sum([l.P for l in net.loads])
-            vargen_array = pf.VarGeneratorArray(len(gen_buses))
-            net.set_vargen_array(vargen_array)
-            net.set_vargen_buses(gen_buses)
+            net.add_vargens(gen_buses,50.,30.,5,0.05)
             self.assertEqual(net.num_vargens,len([b for b in net.buses if b.gens]))
             for vg in net.var_generators:
-                self.assertEqual(vg.P,0)
+                self.assertTrue(isinstance(vg.name,str))
+                self.assertEqual(vg.name,"VARGEN %d" %(vg.index+1))
+                self.assertEqual(net.get_vargen_by_name(vg.name).name,vg.name)
+                self.assertEqual(vg.P,0.5*vg.P_max)
                 self.assertEqual(vg.P_min,0)
-                self.assertEqual(vg.P_max,0)
-                self.assertEqual(vg.P_std,0)
+                self.assertEqual(vg.P_max,total_load/net.num_vargens)
+                self.assertEqual(vg.P_std,0.3*vg.P_max)
                 self.assertGreater(len(vg.bus.gens),0)
-                vg.P_max = total_load/net.num_vargens
-                vg.P_std = 0.25*vg.P_max
                 self.assertNotEqual(vg.P_max,0)
                 self.assertNotEqual(vg.P_std,0)
             self.assertLess(np.abs(sum([vg.P_max for vg in net.var_generators])-total_load),1e-10)

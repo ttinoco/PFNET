@@ -1339,34 +1339,6 @@ cdef class VarGenerator:
         def __get__(self): return cvargen.VARGEN_get_Q_min(self._c_gen)
         def __set__(self,Q): cvargen.VARGEN_set_Q_min(self._c_gen,Q)
 
-cdef class VarGeneratorArray:
-    """
-    Variable generator array class.
-    """
-
-    cdef cvargen.Vargen* _c_gen
-    cdef int size
-
-    def __init__(self,size):
-        """
-        Variable generator array class.
-
-        Parameters
-        ----------
-        size : int
-        """
-
-        pass
-
-    def __cinit__(self,size):
-        
-        self._c_gen = cvargen.VARGEN_array_new(size)
-        self.size = size
-
-    property size:
-        """ Array size (int). """
-        def __get__(self): return self.size
-
 cdef new_VarGenerator(cvargen.Vargen* g):
     if g is not NULL:
         gen = VarGenerator(alloc=False)
@@ -1551,6 +1523,25 @@ cdef class Network:
             return new_Bus(ptr)
         else:
             raise NetworkError('bus not found')
+
+    def get_vargen_by_name(self,name):
+        """
+        Gets vargen with the given name.
+
+        Parameters
+        ----------
+        name : string
+        
+        Returns
+        -------
+        vargen : :class:`VarGenerator <pfnet.VarGenerator>`
+        """
+
+        ptr = cnet.NET_vargen_hash_name_find(self._c_net,name)
+        if ptr is not NULL:
+            return new_VarGenerator(ptr)
+        else:
+            raise NetworkError('vargen not found')
             
     def get_bus(self,index):
         """
@@ -2041,32 +2032,7 @@ cdef class Network:
         cdef np.ndarray[double,mode='c'] x = values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if values.size else NULL
         cnet.NET_set_var_values(self._c_net,v)
-
-    def set_vargen_buses(self,buses):
-        """
-        Connects the variable generator buses to the given buses in order.
-
-        Parameters
-        ----------
-        buses : list
-        """
-        
-        cdef Bus b = buses[0] if buses else None
-        if b:
-            cnet.NET_set_vargen_buses(self._c_net,b._c_bus);
-
-    def set_vargen_array(self,gen_array):
-        """
-        Sets array of variable generators.
-
-        Parameters
-        ----------
-        gen_array : VarGeneratorArray
-        """
-        
-        cdef VarGeneratorArray ga = gen_array
-        cnet.NET_set_vargen_array(self._c_net, ga._c_gen, ga.size)
-        
+    
     def show_components(self):
         """
         Shows information about the number of network components of each type.

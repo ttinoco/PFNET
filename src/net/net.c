@@ -28,8 +28,9 @@ struct Net {
   Vargen* vargen;       /**< @brief Vargen array */
 
   // Hash tables
-  Bus* bus_hash_number; /**< @brief Bus hash table indexed by bus numbers */
-  Bus* bus_hash_name;   /**< @brief Bus hash table indexed by bus names */
+  Bus* bus_hash_number;     /**< @brief Bus hash table indexed by bus numbers */
+  Bus* bus_hash_name;       /**< @brief Bus hash table indexed by bus names */
+  Vargen* vargen_hash_name; /**< @brief Vargen hash table indexed by vargen names */
 
   // Number of components
   int num_buses;     /**< @brief Number of buses (size of Bus array) */
@@ -79,6 +80,7 @@ void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty
   REAL total_load_P;
   Vargen* vargen;
   int i;
+  int num;
 
   // Check
   if (!net)
@@ -110,13 +112,19 @@ void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty
     total_load_P += LOAD_get_P(NET_get_load(net,i));
 
   // Number
-  net->num_vargens = BUS_list_len(bus_list);
+  num = BUS_list_len(bus_list);
 
   // Allocate
-  net->vargen = VARGEN_array_new(net->num_vargens);
+  NET_set_vargen_array(net,VARGEN_array_new(num),num);
 
   // Set buses
   NET_set_vargen_buses(net,bus_list);
+
+  // Set hash
+  for (i = 0; i < net->num_vargens; i++) {
+    vargen = NET_get_vargen(net,i);
+    NET_vargen_hash_name_add(net,vargen);
+  }
 
   // Set properties
   for (i = 0; i < net->num_vargens; i++) {
@@ -125,6 +133,13 @@ void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty
     VARGEN_set_P_max(vargen,total_load_P/net->num_vargens);
     VARGEN_set_P_std(vargen,(uncertainty/100.)*VARGEN_get_P_max(vargen));
     VARGEN_set_P(vargen,(penetration/100.)*VARGEN_get_P_max(vargen));
+  }
+
+  // Check hash
+  if (VARGEN_hash_name_len(net->vargen_hash_name) != num) {
+    sprintf(net->error_string,"unable to create vargen hash table");
+    net->error_flag = TRUE;
+    return;
   }
 }
 
@@ -214,6 +229,18 @@ Bus* NET_bus_hash_name_find(Net* net, char* name) {
     return NULL;
 }
 
+void NET_vargen_hash_name_add(Net* net, Vargen* vargen) {
+  if (net)
+    net->vargen_hash_name = VARGEN_hash_name_add(net->vargen_hash_name,vargen);
+}
+
+Vargen* NET_vargen_hash_name_find(Net* net, char* name) {
+  if (net)
+    return VARGEN_hash_name_find(net->vargen_hash_name,name);
+  else
+    return NULL;
+}
+
 BOOL NET_check(Net* net, BOOL verbose) {
 
   // Local variables
@@ -261,9 +288,12 @@ BOOL NET_check(Net* net, BOOL verbose) {
 void NET_clear_data(Net* net) {
   if (net) {
 
-    // Free data
+    // Free hash tables
     BUS_hash_number_del(net->bus_hash_number);
     BUS_hash_name_del(net->bus_hash_name);
+    VARGEN_hash_name_del(net->vargen_hash_name);
+
+    // Free components
     free(net->bus);
     free(net->branch);
     free(net->gen);
@@ -648,6 +678,7 @@ void NET_init(Net* net) {
   // Hash tables
   net->bus_hash_number = NULL;
   net->bus_hash_name = NULL;
+  net->vargen_hash_name = NULL;
 
   // Number components
   net->num_buses = 0;
@@ -724,6 +755,13 @@ Bus* NET_get_bus_hash_name(Net* net) {
     return NULL;
   else
     return net->bus_hash_name;
+}
+
+Vargen* NET_get_vargen_hash_name(Net* net) {
+  if (!net)
+    return NULL;
+  else
+    return net->vargen_hash_name;
 }
 
 char* NET_get_error_string(Net* net) {
@@ -1495,9 +1533,31 @@ void NET_set_gen_array(Net* net, Gen* gen, int num) {
 }
 
 void NET_set_vargen_array(Net* net, Vargen* gen, int num) {
+
+  // Local variables
+  int i;
+
   if (net) {
-    net->vargen = gen;
-    net->num_vargens = num;
+    
+    // Clear array
+    free(net->vargen);
+    net->vargen = NULL;
+    net->num_vargens = 0;
+
+    // Clear hash
+    VARGEN_hash_name_del(net->vargen_hash_name);
+    net->vargen_hash_name = NULL;
+
+    // Check hash length
+    if (VARGEN_hash_name_len(net->vargen_hash_name) != 0) {
+      sprintf(net->error_string,"unable to clear vargen hash table");
+      net->error_flag = TRUE;
+      return;
+    }
+
+    // Set
+    net->vargen = gen;         // array
+    net->num_vargens = num;    // number
   }
 }
 
@@ -1510,7 +1570,7 @@ void NET_set_vargen_buses(Net* net, Bus* bus_list) {
   if (!net)
     return;
 
-  // Clear
+  // Clear connections
   for (i = 0; i < net->num_buses; i++)
     BUS_clear_vargen(NET_get_bus(net,i));
 

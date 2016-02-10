@@ -15,6 +15,7 @@
 #include "types.h"
 #include "list.h"
 #include "vector.h"
+#include "uthash.h"
 
 // Variables
 /** \defgroup vargen_vars Variable Generator Variable Masks 
@@ -70,6 +71,10 @@ void VARGEN_get_var_values(Vargen* gen, Vec* values, int code);
 int VARGEN_get_var_index(void* gen, char var);
 BOOL VARGEN_has_flags(void* gen, char flag_type, char mask);
 BOOL VARGEN_has_properties(void* gen, char prop);
+Vargen* VARGEN_hash_name_add(Vargen* vargen_hash, Vargen* vg);
+void VARGEN_hash_name_del(Vargen* vargen_hash);
+Vargen* VARGEN_hash_name_find(Vargen* vargen_hash, char* name);
+int VARGEN_hash_name_len(Vargen* vargen_hash);
 void VARGEN_init(Vargen* gen);
 BOOL VARGEN_is_wind(Vargen* gen);
 BOOL VARGEN_is_solar(Vargen* gen);

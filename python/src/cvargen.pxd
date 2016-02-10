@@ -17,7 +17,6 @@ cdef extern from "pfnet/vargen.h":
 
     cdef char VARGEN_PROP_ANY
 
-    Vargen* VARGEN_array_new(int num)
     char* VARGEN_get_name(Vargen* gen)
     int VARGEN_get_index(Vargen* gen)
     int VARGEN_get_index_P(Vargen* gen)

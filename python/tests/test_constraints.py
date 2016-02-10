@@ -1768,9 +1768,7 @@ class TestConstraints(unittest.TestCase):
             
             # Add vargens
             load_buses = net.get_load_buses()
-            vargen_array = pf.VarGeneratorArray(len(load_buses))
-            net.set_vargen_array(vargen_array)
-            net.set_vargen_buses(load_buses)
+            net.add_vargens(load_buses,50.,30.,5,0.05)
             self.assertGreater(net.num_vargens,0)
             self.assertEqual(net.num_vargens,len([b for b in net.buses if b.loads]))
             for b in net.buses:
