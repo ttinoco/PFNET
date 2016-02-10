@@ -788,8 +788,9 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
     if (art_bus) {
       bus = NET_get_bus(net,art_bus->index);
       vargen = NET_get_vargen(net,index);
-      BUS_add_vargen(bus,vargen);                                // connect vargen to bus
-      VARGEN_set_bus(vargen,bus);                                // connect bus to vargen
+      BUS_add_vargen(bus,vargen);                                   // connect vargen to bus
+      VARGEN_set_bus(vargen,bus);                                   // connect bus to vargen
+      VARGEN_set_name(vargen,art_vargen->name);
       VARGEN_set_P(vargen,art_vargen->p/parser->base_power);        // per unit
       VARGEN_set_P_max(vargen,art_vargen->pmax/parser->base_power); // per unit
       VARGEN_set_P_min(vargen,art_vargen->pmin/parser->base_power); // per unit
