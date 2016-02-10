@@ -1397,6 +1397,22 @@ cdef class Network:
             self._c_net = NULL
 
     def add_vargens(self,buses,penetration,uncertainty,corr_radius,corr_value):
+        """
+        Adds variable generators to the network.
+
+        Parameters
+        ----------
+
+        buses : list of :class:`Buses <pfnet.Bus>`
+        penetration : float
+                      percentage
+        uncertainty : float
+                      percentage
+        corr_radius : int
+                      number of branches
+        corr_value : float
+                     correlation coefficient
+        """
         
         cdef Bus b = buses[0] if buses else None
         if b:
