@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -48,6 +48,7 @@ void SHUNT_array_free(Shunt* shunt, int num);
 Shunt* SHUNT_array_new(int num);
 void SHUNT_array_show(Shunt* shunt, int num);
 void SHUNT_clear_flags(Shunt* shunt, char flag_type);
+char SHUNT_get_obj_type(Shunt* shunt);
 int SHUNT_get_index(Shunt* shunt);
 int SHUNT_get_index_b(Shunt* shunt);
 int SHUNT_get_index_y(Shunt* shunt);
@@ -76,7 +77,7 @@ int SHUNT_list_reg_len(Shunt* reg_shunt_list);
 Shunt* SHUNT_new(void);
 void SHUNT_set_bus(Shunt* shunt, Bus* bus);
 void SHUNT_set_reg_bus(Shunt* shunt, Bus* reg_bus);
-void SHUNT_set_type(Shunt* shunt, int type);
+void SHUNT_set_type(Shunt* shunt, char type);
 void SHUNT_set_index(Shunt* shunt, int index);
 void SHUNT_set_g(Shunt* shunt, REAL g);
 void SHUNT_set_b(Shunt* shunt, REAL b);

@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -14,7 +14,8 @@
 struct Shunt {
 
   // Properties
-  int type;       /**< @brief Shunt type */
+  char type;       /**< @brief Shunt type */
+  char obj_type;   /**< @brief Object type */
   
   // Bus
   Bus* bus;       /**< @brief Bus where the shunt is connected */
@@ -92,6 +93,13 @@ void SHUNT_clear_flags(Shunt* shunt, char flag_type) {
     else if (flag_type == FLAG_SPARSE)
       shunt->sparse = 0x00;
   }
+}
+
+char SHUNT_get_obj_type(Shunt* shunt) {
+  if (shunt)
+    return shunt->obj_type;
+  else
+    return OBJ_UNKNOWN;
 }
 
 int SHUNT_get_index(Shunt* shunt) {
@@ -249,6 +257,7 @@ BOOL SHUNT_has_properties(void* vshunt, char prop) {
 
 void SHUNT_init(Shunt* shunt) { 
   shunt->type = SHUNT_TYPE_FIXED;
+  shunt->obj_type = OBJ_SHUNT;
   shunt->bus = NULL;
   shunt->reg_bus = NULL;
   shunt->g = 0;
@@ -325,7 +334,7 @@ void SHUNT_set_reg_bus(Shunt* shunt, Bus* reg_bus) {
     shunt->reg_bus = (Bus*)reg_bus;
 }
 
-void SHUNT_set_type(Shunt* shunt, int type) {
+void SHUNT_set_type(Shunt* shunt, char type) {
   if (shunt)
     shunt->type = type;
 }

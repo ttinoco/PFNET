@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -12,6 +12,9 @@
 #include <pfnet/bus.h>
 
 struct Load {
+
+  // Properties
+  char obj_type;      /**< @brief Object type */
 
   // Bus
   Bus *bus;           /**< @brief Bus to which the load is connected */
@@ -53,6 +56,13 @@ void LOAD_array_show(Load* load, int num) {
     LOAD_show(&(load[i]));
 }
 
+char LOAD_get_obj_type(Load* load) {
+  if (load)
+    return load->obj_type;
+  else
+    return OBJ_UNKNOWN;
+}
+
 Bus* LOAD_get_bus(Load* load) {
   if (load)
     return load->bus;
@@ -89,6 +99,7 @@ REAL LOAD_get_Q(Load* load) {
 }
 
 void LOAD_init(Load* load) { 
+  load->obj_type = OBJ_LOAD;
   load->bus = NULL;
   load->P = 0;
   load->Q = 0;

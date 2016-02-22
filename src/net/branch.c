@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -16,6 +16,7 @@ struct Branch {
 
   // Properties
   char type;         /**< @brief %Branch type */
+  char obj_type;     /**< @brief %Object type */
 
   // Buses
   Bus* bus_from;     /**< @brief Bus connected to the "from" side */
@@ -110,6 +111,13 @@ void BRANCH_clear_flags(Branch* br, char flag_type) {
     else if (flag_type == FLAG_SPARSE)
       br->sparse = 0x00;
   }
+}
+
+char BRANCH_get_obj_type(Branch* b) {
+  if (b)
+    return b->obj_type;
+  else
+    return OBJ_UNKNOWN;
 }
 
 int BRANCH_get_index(Branch* b) {
@@ -394,6 +402,7 @@ BOOL BRANCH_has_properties(void* vbr, char prop) {
 void BRANCH_init(Branch* br) {  
 
   br->type = BRANCH_TYPE_LINE;
+  br->obj_type = OBJ_BRANCH;
 
   br->bus_from = NULL;
   br->bus_to = NULL;

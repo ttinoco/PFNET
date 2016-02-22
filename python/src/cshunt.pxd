@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -18,6 +18,7 @@ cdef extern from "pfnet/shunt.h":
     cdef char SHUNT_PROP_ANY
     cdef char SHUNT_PROP_SWITCHED_V
     
+    char SHUNT_get_obj_type(Shunt* shunt)
     int SHUNT_get_index(Shunt* shunt)
     int SHUNT_get_index_b(Shunt* shunt)
     int SHUNT_get_index_y(Shunt* shunt)

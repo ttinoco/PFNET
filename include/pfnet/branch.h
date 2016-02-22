@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -56,6 +56,7 @@ void* BRANCH_array_get(void* br, int index);
 Branch* BRANCH_array_new(int num);
 void BRANCH_array_show(Branch* br, int num);
 void BRANCH_clear_flags(Branch* br, char flag_type);
+char BRANCH_get_obj_type(Branch* br);
 int BRANCH_get_index(Branch* br);
 int BRANCH_get_index_ratio(Branch* br);
 int BRANCH_get_index_ratio_y(Branch* br);

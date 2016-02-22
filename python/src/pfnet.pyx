@@ -57,6 +57,7 @@ OBJ_BRANCH = cobjs.OBJ_BRANCH
 OBJ_SHUNT = cobjs.OBJ_SHUNT
 OBJ_LOAD = cobjs.OBJ_LOAD
 OBJ_VARGEN = cobjs.OBJ_VARGEN
+OBJ_UNKNOWN = cobjs.OBJ_UNKNOWN
 
 # Flags
 FLAG_VARS = cflags.FLAG_VARS
@@ -411,6 +412,10 @@ cdef class Bus:
         else:
             return False
 
+    property obj_type:
+        """ Object type (int). """
+        def __get__(self): return cbus.BUS_get_obj_type(self._c_bus)
+
     property index:
         """ Bus index (int). """
         def __get__(self): return cbus.BUS_get_index(self._c_bus)
@@ -757,6 +762,10 @@ cdef class Branch:
 
         return cbranch.BRANCH_has_flags(self._c_branch,fmask,vmask)
 
+    property obj_type:
+        """ Object type (int). """
+        def __get__(self): return cbranch.BRANCH_get_obj_type(self._c_branch)
+
     property index:
         """ Branch index (int). """
         def __get__(self): return cbranch.BRANCH_get_index(self._c_branch)
@@ -952,6 +961,10 @@ cdef class Generator:
 
         return cgen.GEN_has_flags(self._c_gen,fmask,vmask)
 
+    property obj_type:
+        """ Object type (int). """
+        def __get__(self): return cgen.GEN_get_obj_type(self._c_gen)
+
     property index:
         """ Generator index (int). """
         def __get__(self): return cgen.GEN_get_index(self._c_gen)
@@ -1107,6 +1120,10 @@ cdef class Shunt:
         
         return cshunt.SHUNT_has_flags(self._c_shunt,fmask,vmask)
 
+    property obj_type:
+        """ Object type (int). """
+        def __get__(self): return cshunt.SHUNT_get_obj_type(self._c_shunt)
+
     property index:
         """ Shunt index (int). """
         def __get__(self): return cshunt.SHUNT_get_index(self._c_shunt)    
@@ -1194,6 +1211,10 @@ cdef class Load:
             self._c_load = cload.LOAD_new()
         else:
             self._c_load = NULL
+
+    property obj_type:
+        """ Object type (int). """
+        def __get__(self): return cload.LOAD_get_obj_type(self._c_load)
 
     property index:
         """ Load index (int). """
@@ -1287,6 +1308,10 @@ cdef class VarGenerator:
         """ Variable generator name (string). """
         def __get__(self): return cvargen.VARGEN_get_name(self._c_gen)
         def __set__(self,name): cvargen.VARGEN_set_name(self._c_gen,name)
+
+    property obj_type:
+        """ Object type (int). """
+        def __get__(self): return cvargen.VARGEN_get_obj_type(self._c_gen)
 
     property index:
         """ Variable generator index (int). """

@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -22,6 +22,7 @@ cdef extern from "pfnet/branch.h":
     cdef char BRANCH_PROP_TAP_CHANGER_Q
     cdef char BRANCH_PROP_PHASE_SHIFTER
     
+    char BRANCH_get_obj_type(Branch* br)
     int BRANCH_get_index(Branch* br)
     int BRANCH_get_index_ratio(Branch* br)
     int BRANCH_get_index_ratio_y(Branch* br)

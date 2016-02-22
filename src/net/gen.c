@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -12,6 +12,9 @@
 #include <pfnet/bus.h>
 
 struct Gen {
+
+  // Properties
+  char obj_type;       /**< @brief Object type */
 
   // Bus
   Bus* bus;            /**< @brief Bus to which generator is connected */
@@ -85,6 +88,13 @@ void GEN_clear_flags(Gen* gen, char flag_type) {
     else if (flag_type == FLAG_SPARSE)
       gen->sparse = 0x00;
   }
+}
+
+char GEN_get_obj_type(Gen* gen) {
+  if (gen)
+    return gen->obj_type;
+  else
+    return OBJ_UNKNOWN;
 }
 
 Bus* GEN_get_bus(Gen* gen) {
@@ -264,6 +274,7 @@ BOOL GEN_has_properties(void* vgen, char prop) {
 }
 
 void GEN_init(Gen* gen) {
+  gen->obj_type = OBJ_GEN;
   gen->bus = NULL;
   gen->reg_bus = NULL;
   gen->regulator = FALSE;

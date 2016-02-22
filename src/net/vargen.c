@@ -19,6 +19,7 @@ struct Vargen {
   // Properties
   char name[VARGEN_NAME_BUFFER_SIZE]; /**< @brief Variable generator name */
   char type;                          /**< @brief Variable generator type */
+  char obj_type;                      /**< @brief Object type */
   
   // Flags
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
@@ -94,6 +95,13 @@ char* VARGEN_get_name(Vargen* gen) {
     return gen->name;
   else
     return NULL;
+}
+
+char VARGEN_get_obj_type(Vargen* gen) {
+  if (gen)
+    return gen->obj_type;
+  else
+    return OBJ_UNKNOWN;
 }
 
 Bus* VARGEN_get_bus(Vargen* gen) {
@@ -279,6 +287,7 @@ void VARGEN_init(Vargen* gen) {
 
   gen->bus = NULL;
   gen->type = VARGEN_TYPE_WIND;
+  gen->obj_type = OBJ_VARGEN;
   for (i = 0; i < VARGEN_NAME_BUFFER_SIZE; i++) 
     gen->name[i] = 0;
   gen->fixed = 0x00;

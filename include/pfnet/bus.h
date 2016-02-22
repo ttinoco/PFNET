@@ -119,6 +119,7 @@ void BUS_clear_flags(Bus* bus, char flag_type);
 void BUS_clear_sensitivities(Bus* bus);
 void BUS_clear_mismatches(Bus* bus);
 void BUS_clear_vargen(Bus* bus);
+char BUS_get_obj_type(Bus* bus);
 int BUS_get_degree(Bus* bus);
 int BUS_get_index(Bus* bus);
 int BUS_get_index_v_mag(Bus* bus);

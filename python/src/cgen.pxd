@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -25,6 +25,7 @@ cdef extern from "pfnet/gen.h":
     REAL GEN_get_cost_coeff_Q0(Gen* gen)
     REAL GEN_get_cost_coeff_Q1(Gen* gen)
     REAL GEN_get_cost_coeff_Q2(Gen* gen)
+    char GEN_get_obj_type(Gen* gen)
     int GEN_get_index(Gen* gen)
     int GEN_get_index_P(Gen* gen)
     int GEN_get_index_Q(Gen* gen)

@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -24,6 +24,7 @@ typedef struct Bus Bus;
 void* LOAD_array_get(void* load, int index);
 Load* LOAD_array_new(int num);
 void LOAD_array_show(Load* load, int num);
+char LOAD_get_obj_type(Load* load);
 Bus* LOAD_get_bus(Load* load);
 int LOAD_get_index(Load* load);
 Load* LOAD_get_next(Load* load);

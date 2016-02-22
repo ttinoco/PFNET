@@ -56,6 +56,7 @@ void VARGEN_array_show(Vargen* gen, int num);
 void VARGEN_clear_flags(Vargen* gen, char flag_type);
 char* VARGEN_get_name(Vargen* gen);
 Bus* VARGEN_get_bus(Vargen* gen);
+char VARGEN_get_obj_type(Vargen* gen);
 int VARGEN_get_index(Vargen* gen);
 int VARGEN_get_index_P(Vargen* gen);
 int VARGEN_get_index_Q(Vargen* gen);

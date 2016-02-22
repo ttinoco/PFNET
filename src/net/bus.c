@@ -20,6 +20,7 @@ struct Bus {
   // Properties
   int number;                      /**< @brief Bus number */
   char name[BUS_NAME_BUFFER_SIZE]; /**< @brief Bus name */
+  char obj_type;                   /**< @brief Object type */
 
   // Voltage
   REAL v_mag;        /**< @brief Voltage magnitude (p.u.) */
@@ -241,6 +242,13 @@ void BUS_clear_mismatches(Bus* bus) {
 void BUS_clear_vargen(Bus* bus) {
   if (bus)
     bus->vargen = NULL;
+}
+
+char BUS_get_obj_type(Bus* bus) {
+  if (bus)
+    return bus->obj_type;
+  else
+    return OBJ_UNKNOWN;
 }
 
 int BUS_get_degree(Bus* bus) {
@@ -934,6 +942,7 @@ void BUS_init(Bus* bus) {
   bus->number = 0;
   for (i = 0; i < BUS_NAME_BUFFER_SIZE; i++) 
     bus->name[i] = 0;
+  bus->obj_type = OBJ_BUS;
 
   bus->v_mag = 1.;
   bus->v_ang = 0.;

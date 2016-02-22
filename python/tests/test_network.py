@@ -133,6 +133,10 @@ class TestNetwork(unittest.TestCase):
 
                 self.assertEqual(bus.index,i)
 
+                # obj type
+                self.assertEqual(bus.obj_type,pf.OBJ_BUS)
+                self.assertNotEqual(bus.obj_type,pf.OBJ_UNKNOWN)
+
                 # vmag vang set get
                 bus.v_mag = 1.234567
                 self.assertEqual(bus.v_mag,1.234567)
@@ -299,7 +303,11 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(gen.index,net.generators[i].index)
 
                 self.assertTrue(gen.bus)
-            
+
+                # obj type
+                self.assertEqual(gen.obj_type,pf.OBJ_GEN)
+                self.assertNotEqual(gen.obj_type,pf.OBJ_UNKNOWN)
+ 
                 # slack
                 if gen.is_slack():
                     self.assertTrue(gen.is_regulator())
@@ -357,6 +365,10 @@ class TestNetwork(unittest.TestCase):
 
                 branch = net.get_branch(i)
 
+                # obj type
+                self.assertEqual(branch.obj_type,pf.OBJ_BRANCH)
+                self.assertNotEqual(branch.obj_type,pf.OBJ_UNKNOWN)
+
                 self.assertEqual(branch.index,net.branches[i].index)
 
                 self.assertEqual(branch.index,i)
@@ -395,6 +407,10 @@ class TestNetwork(unittest.TestCase):
 
                 shunt = net.get_shunt(i)
 
+                # obj type
+                self.assertEqual(shunt.obj_type,pf.OBJ_SHUNT)
+                self.assertNotEqual(shunt.obj_type,pf.OBJ_UNKNOWN)
+
                 self.assertEqual(shunt.index,i)
 
                 self.assertEqual(shunt.index,net.shunts[i].index)
@@ -430,6 +446,10 @@ class TestNetwork(unittest.TestCase):
             for i in range(net.num_loads):
 
                 load = net.get_load(i)
+
+                # obj type
+                self.assertEqual(load.obj_type,pf.OBJ_LOAD)
+                self.assertNotEqual(load.obj_type,pf.OBJ_UNKNOWN)
 
                 self.assertEqual(load.index,i)
 
@@ -470,6 +490,9 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.num_vargens,len(load_buses))
             for i in range(net.num_vargens):
                 vargen = net.get_vargen(i)
+                self.assertEqual(vargen.index,i)
+                self.assertEqual(vargen.obj_type,pf.OBJ_VARGEN)
+                self.assertNotEqual(vargen.obj_type,pf.OBJ_UNKNOWN)
                 self.assertTrue(isinstance(vargen.name,str))
                 self.assertEqual(vargen.name,"VARGEN %d" %(vargen.index+1))
                 self.assertEqual(net.get_vargen_by_name(vargen.name).name,vargen.name)
