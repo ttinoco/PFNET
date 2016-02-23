@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2016, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -47,3 +47,11 @@ values[bus.index_v_mag] = 1.20
 net.set_var_values(values)
 
 print bus.v_mag
+
+net.clear_flags()
+
+for bus in net.buses:
+    if bus.index % 3 == 0:
+        net.set_flags_of_component(bus,pf.FLAG_VARS,pf.BUS_VAR_VMAG)
+
+print net.num_vars, net.num_buses, len([b for b in net.buses if b.index % 3 == 0])

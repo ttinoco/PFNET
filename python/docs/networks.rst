@@ -235,7 +235,7 @@ Variables
 
 Network quantities can be specified to be ``variables``. This is useful to represent network quantities with vectors and turn the network properties described above as functions of these vectors. 
 
-To set network quantities as variables, the :class:`Network <pfnet.Network>` class method :func:`set_flags() <pfnet.Network.set_flags>` is used. This method takes as arguments a :ref:`component type <ref_net_obj>`, a :ref:`flag mask <ref_net_flag>` for specifying which flags types to set, a ``property mask`` for targeting objects with specific properties, and a ``variable mask`` for specifying which component quantities should be affected.
+To set network quantities as variables, the :class:`Network <pfnet.Network>` class method :func:`set_flags() <pfnet.Network.set_flags>` is used. This method takes as arguments a :ref:`component type <ref_net_obj>`, a :ref:`flag mask <ref_net_flag>` for specifying which flags types to set, a ``property mask`` for targeting components with specific properties, and a ``variable mask`` for specifying which component quantities should be affected.
 
 **Property masks** are component-specific. They can be combined using ``logical OR`` to make properties more complex. More information can be found in the following sections:
 
@@ -317,7 +317,18 @@ A vector of variable values can be used to update the corresponding network quan
 
 As we will see in later, variables are also useful for constructing network optimization problems.
 
-Lastly, the class method :func:`get_var_values() <pfnet.Network.get_var_values>` can also be used to get upper or lower limits of the variables. To do this, a valid :ref:`variable value code <ref_var_values>` must be passed to this method.
+The class method :func:`get_var_values() <pfnet.Network.get_var_values>` can also be used to get upper or lower limits of the variables. To do this, a valid :ref:`variable value code <ref_var_values>` must be passed to this method.
+
+In addition to the class method :func:`set_flags() <pfnet.Network.set_flags>`, which allows specifying variables of components having certain properties, one can also use the :class:`Network <pfnet.Network>` class method :func:`set_flags_of_component() <pfnet.Network.set_flags_of_component>` to specify variables of individual components. This is useful when the desired components cannot be targeted using a ``property mask``. For example, the following code illustrates how to set as variables the voltage magnitudes of buses whose indices are multiples of three::
+
+  >>> net.clear_flags()
+
+  >>> for bus in net.buses:
+  ...     if bus.index % 3 == 0:
+  ...         net.set_flags_of_component(bus,pf.FLAG_VARS,pf.BUS_VAR_VMAG)
+
+  >>> print net.num_vars, len([b for b in net.buses if b.index % 3 == 0]), net.num_buses
+  5 5 14
 
 .. _net_var_projections:
 

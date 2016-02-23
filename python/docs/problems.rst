@@ -195,7 +195,7 @@ where :math:`u` are control quantities, :math:`u^0` are their current values, an
 
    \Delta u_k := \max\{u^{\max}_k-u^{\min}_k, \delta\},
 
-where :math:`u^{\max}` and :math:`u^{\min}` are control limits, and :math:`\delta` is a small positive scalar. The control quantities that are considered by this function are specified using the :class:`Network <pfnet.Network>` class method :func:`set_flags <pfnet.Network.set_flags>` using the flag type :data:`FLAG_SPARSE <pfnet.FLAG_SPARSE>`.
+where :math:`u^{\max}` and :math:`u^{\min}` are control limits, and :math:`\delta` is a small positive scalar. The control quantities that are considered by this function are specified using the :class:`Network <pfnet.Network>` class methods :func:`set_flags() <pfnet.Network.set_flags>` or :func:`set_flags_of_component() <pfnet.Network.set_flags_of_component>` using the flag type :data:`FLAG_SPARSE <pfnet.FLAG_SPARSE>`.
 
 .. _prob_constr:
 
@@ -288,14 +288,14 @@ where :math:`P^g` and :math:`Q^g` are generator active and reactive powers, :mat
 Variable fixing
 ---------------
 
-This constraint is of type :data:`CONSTR_TYPE_FIX <pfnet.CONSTR_TYPE_FIX>`. It constrains specific variables to be fixed at their current value. The variables to be fixed are specified using the :class:`Network <pfnet.Network>` class method :func:`set_flags <pfnet.Network.set_flags>` with the flag type :data:`FLAG_FIXED <pfnet.FLAG_FIXED>`.
+This constraint is of type :data:`CONSTR_TYPE_FIX <pfnet.CONSTR_TYPE_FIX>`. It constrains specific variables to be fixed at their current value. The variables to be fixed are specified using the :class:`Network <pfnet.Network>` class methods :func:`set_flags() <pfnet.Network.set_flags>` or :func:`set_flags_of_component() <pfnet.Network.set_flags_of_component>` with the flag type :data:`FLAG_FIXED <pfnet.FLAG_FIXED>`.
 
 .. _prob_constr_BOUND:
 
 Variable bounding
 -----------------
 
-This constraint is of type :data:`CONSTR_TYPE_BOUND <pfnet.CONSTR_TYPE_BOUND>`. It constrains specific variables to be inside their bounds. The variables to be bounded are specified using the :class:`Network <pfnet.Network>` class method :func:`set_flags <pfnet.Network.set_flags>` with the flag type :data:`FLAG_BOUNDED <pfnet.FLAG_BOUNDED>`. These constraints are expressed as nonlinear equality constraints using the techniques described in Section 4.3.3 of [TTR2015]_.
+This constraint is of type :data:`CONSTR_TYPE_BOUND <pfnet.CONSTR_TYPE_BOUND>`. It constrains specific variables to be inside their bounds. The variables to be bounded are specified using the :class:`Network <pfnet.Network>` class methods :func:`set_flags() <pfnet.Network.set_flags>` or :func:`set_flags_of_component() <pfnet.Network.set_flags_of_component>` with the flag type :data:`FLAG_BOUNDED <pfnet.FLAG_BOUNDED>`. These constraints are expressed as nonlinear equality constraints using the techniques described in Section 4.3.3 of [TTR2015]_.
 
 .. _prob_constr_PAR_GEN:
 
