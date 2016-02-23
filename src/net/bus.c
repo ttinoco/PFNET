@@ -244,9 +244,9 @@ void BUS_clear_vargen(Bus* bus) {
     bus->vargen = NULL;
 }
 
-char BUS_get_obj_type(Bus* bus) {
+char BUS_get_obj_type(void* bus) {
   if (bus)
-    return bus->obj_type;
+    return ((Bus*)bus)->obj_type;
   else
     return OBJ_UNKNOWN;
 }

@@ -128,6 +128,7 @@ void NET_set_load_array(Net* net, Load* load, int num);
 void NET_set_shunt_array(Net* net, Shunt* shunt, int num);
 void NET_set_vargen_array(Net* net, Vargen* gen, int num);
 void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, char val_mask);
+void NET_set_flags_of_component(Net* net, void* obj, char obj_type, char flag_mask, char val_mask);
 void NET_set_var_values(Net* net, Vec* values);
 void NET_set_vargen_buses(Net* net, Bus* bus_list);
 void NET_show_components(Net* net);

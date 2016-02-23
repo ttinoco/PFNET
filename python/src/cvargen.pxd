@@ -18,7 +18,7 @@ cdef extern from "pfnet/vargen.h":
     cdef char VARGEN_PROP_ANY
 
     char* VARGEN_get_name(Vargen* gen)
-    char VARGEN_get_obj_type(Vargen* gen)
+    char VARGEN_get_obj_type(void* gen)
     int VARGEN_get_index(Vargen* gen)
     int VARGEN_get_index_P(Vargen* gen)
     int VARGEN_get_index_Q(Vargen* gen)

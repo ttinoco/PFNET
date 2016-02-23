@@ -113,9 +113,9 @@ void BRANCH_clear_flags(Branch* br, char flag_type) {
   }
 }
 
-char BRANCH_get_obj_type(Branch* b) {
+char BRANCH_get_obj_type(void* b) {
   if (b)
-    return b->obj_type;
+    return ((Branch*)b)->obj_type;
   else
     return OBJ_UNKNOWN;
 }

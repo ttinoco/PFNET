@@ -383,6 +383,121 @@ class TestFlags(unittest.TestCase):
             self.assertEqual(net.num_sparse,0)
             self.assertEqual(net.num_bounded,2*net.get_num_slack_gens())
 
+    def test_custom_flags(self):
+
+        net = self.net
+
+        for case in test_cases.CASES:
+            
+            net.load(case)            
+
+            # add vargens
+            net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
+            self.assertGreater(net.num_vargens,0)
+
+            self.assertEqual(net.num_vars,0)
+            self.assertEqual(net.num_fixed,0)
+            self.assertEqual(net.num_sparse,0)
+            self.assertEqual(net.num_bounded,0)
+
+            num_vars = 0
+            num_bounded = 0
+            num_fixed = 0
+
+            # buses
+            for bus in net.buses:
+                if bus.index % 3 == 0:
+                    net.set_flags_of_component(bus,
+                                               pf.FLAG_VARS|pf.FLAG_BOUNDED,
+                                               pf.BUS_VAR_VANG|pf.BUS_VAR_VMAG)
+                    self.assertTrue(bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VANG))
+                    self.assertTrue(bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VMAG))
+                    self.assertFalse(bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VVIO))
+                    self.assertTrue(bus.has_flags(pf.FLAG_BOUNDED,pf.BUS_VAR_VANG))
+                    self.assertTrue(bus.has_flags(pf.FLAG_BOUNDED,pf.BUS_VAR_VMAG))
+                    self.assertFalse(bus.has_flags(pf.FLAG_BOUNDED,pf.BUS_VAR_VDEV))
+                    self.assertFalse(bus.has_flags(pf.FLAG_FIXED,pf.BUS_VAR_VANG))
+                    self.assertFalse(bus.has_flags(pf.FLAG_FIXED,pf.BUS_VAR_VMAG))
+                    num_vars += 2
+                    num_bounded += 2
+                else:
+                    self.assertFalse(bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VANG))
+                    self.assertFalse(bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VMAG))
+            self.assertEqual(net.num_vars,num_vars)
+            self.assertEqual(net.num_bounded,num_bounded)
+
+            # branches
+            for branch in net.branches:
+                if branch.index == 5:
+                    net.set_flags_of_component(branch,
+                                               pf.FLAG_FIXED|pf.FLAG_VARS,
+                                               pf.BRANCH_VAR_RATIO)
+                    self.assertTrue(branch.has_flags(pf.FLAG_FIXED,pf.BRANCH_VAR_RATIO))
+                    self.assertTrue(branch.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_RATIO))
+                    self.assertFalse(branch.has_flags(pf.FLAG_FIXED,pf.BRANCH_VAR_PHASE))
+                    self.assertFalse(branch.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_PHASE))
+                    num_fixed += 1
+                    num_vars += 1
+                else:
+                    self.assertFalse(branch.has_flags(pf.FLAG_FIXED,pf.BRANCH_VAR_RATIO))
+                    self.assertFalse(branch.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_RATIO))
+            self.assertEqual(net.num_vars,num_vars)
+            self.assertEqual(net.num_fixed,num_fixed)
+
+            # gens
+            for gen in net.generators:
+                if not gen.is_regulator():
+                    net.set_flags_of_component(gen,
+                                               pf.FLAG_VARS,
+                                               pf.GEN_VAR_P)
+                    self.assertTrue(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
+                    self.assertFalse(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_Q))
+                    self.assertFalse(gen.has_flags(pf.FLAG_FIXED,pf.GEN_VAR_P))
+                else:
+                    self.assertFalse(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
+            num_vars += net.num_gens-net.get_num_reg_gens()
+            self.assertEqual(net.num_vars,num_vars)
+            self.assertEqual(net.num_fixed,num_fixed)
+
+            # loads
+
+            # shunts
+            for shunt in net.shunts:
+                if shunt.index % 2 == 0:
+                    net.set_flags_of_component(shunt,
+                                               pf.FLAG_BOUNDED,
+                                               pf.SHUNT_VAR_SUSC)
+                    self.assertTrue(shunt.has_flags(pf.FLAG_BOUNDED,pf.SHUNT_VAR_SUSC))
+                    self.assertFalse(shunt.has_flags(pf.FLAG_VARS,pf.SHUNT_VAR_SUSC))
+                    self.assertFalse(shunt.has_flags(pf.FLAG_FIXED,pf.SHUNT_VAR_SUSC))
+                    num_bounded += 1
+                else:
+                    self.assertFalse(shunt.has_flags(pf.FLAG_BOUNDED,pf.SHUNT_VAR_SUSC))
+            self.assertEqual(net.num_vars,num_vars)
+            self.assertEqual(net.num_fixed,num_fixed)
+            self.assertEqual(net.num_bounded,num_bounded)
+
+            # vargens
+            for vargen in net.var_generators:
+                if vargen.index % 3 == 0:
+                    net.set_flags_of_component(vargen,
+                                               pf.FLAG_VARS,
+                                               pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
+                    net.set_flags_of_component(vargen,
+                                               pf.FLAG_VARS,
+                                               pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
+                    self.assertTrue(vargen.has_flags(pf.FLAG_VARS,pf.VARGEN_VAR_P))
+                    self.assertTrue(vargen.has_flags(pf.FLAG_VARS,pf.VARGEN_VAR_Q))
+                    self.assertFalse(vargen.has_flags(pf.FLAG_FIXED,pf.VARGEN_VAR_P))
+                    self.assertFalse(vargen.has_flags(pf.FLAG_FIXED,pf.VARGEN_VAR_Q))
+                    num_vars += 2
+                else:
+                    self.assertFalse(vargen.has_flags(pf.FLAG_VARS,pf.VARGEN_VAR_P))
+                    self.assertFalse(vargen.has_flags(pf.FLAG_VARS,pf.VARGEN_VAR_Q))
+            self.assertEqual(net.num_vars,num_vars)
+            self.assertEqual(net.num_fixed,num_fixed)
+            self.assertEqual(net.num_bounded,num_bounded)
+
     def test_errors(self):
 
         net = self.net

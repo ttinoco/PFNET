@@ -42,7 +42,7 @@ cdef extern from "pfnet/bus.h":
     cdef char BUS_MIS_ACTIVE
     cdef char BUS_MIS_REACTIVE
 
-    char BUS_get_obj_type(Bus* bus)
+    char BUS_get_obj_type(void* bus)
     int BUS_get_index(Bus* bus)
     int BUS_get_index_v_mag(Bus* bus)
     int BUS_get_index_v_ang(Bus* bus)

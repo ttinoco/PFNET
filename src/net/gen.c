@@ -90,9 +90,9 @@ void GEN_clear_flags(Gen* gen, char flag_type) {
   }
 }
 
-char GEN_get_obj_type(Gen* gen) {
+char GEN_get_obj_type(void* gen) {
   if (gen)
-    return gen->obj_type;
+    return ((Gen*)gen)->obj_type;
   else
     return OBJ_UNKNOWN;
 }

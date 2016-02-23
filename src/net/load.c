@@ -56,9 +56,9 @@ void LOAD_array_show(Load* load, int num) {
     LOAD_show(&(load[i]));
 }
 
-char LOAD_get_obj_type(Load* load) {
+char LOAD_get_obj_type(void* load) {
   if (load)
-    return load->obj_type;
+    return ((Load*)load)->obj_type;
   else
     return OBJ_UNKNOWN;
 }

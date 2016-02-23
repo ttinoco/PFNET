@@ -97,9 +97,9 @@ char* VARGEN_get_name(Vargen* gen) {
     return NULL;
 }
 
-char VARGEN_get_obj_type(Vargen* gen) {
+char VARGEN_get_obj_type(void* gen) {
   if (gen)
-    return gen->obj_type;
+    return ((Vargen*)gen)->obj_type;
   else
     return OBJ_UNKNOWN;
 }

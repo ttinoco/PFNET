@@ -91,6 +91,7 @@ cdef extern from "pfnet/net.h":
     void NET_load(Net* net, char* filename)
     Net* NET_new()
     void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, char val_mask)
+    void NET_set_flags_of_component(Net* net, void* obj, char obj_type, char flag_mask, char val_mask)
     void NET_set_var_values(Net* net, cvec.Vec* values)
     void NET_show_components(Net* net)
     void NET_show_properties(Net* net)

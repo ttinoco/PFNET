@@ -12,7 +12,7 @@ cdef extern from "pfnet/load.h":
     ctypedef struct Bus
     ctypedef double REAL
         
-    char LOAD_get_obj_type(Load* load)
+    char LOAD_get_obj_type(void* load)
     int LOAD_get_index(Load* load)
     Bus* LOAD_get_bus(Load* load)
     REAL LOAD_get_P(Load* load)

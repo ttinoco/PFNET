@@ -65,11 +65,26 @@ FLAG_FIXED = cflags.FLAG_FIXED
 FLAG_BOUNDED = cflags.FLAG_BOUNDED
 FLAG_SPARSE = cflags.FLAG_SPARSE
 
+# C pointer
+###########
+
+cdef class CPtr:
+    """
+    C Pointer class.
+    """
+    
+    cdef void* _c_ptr
+
+cdef new_CPtr(void* ptr):
+    cptr = CPtr()
+    cptr._c_ptr = ptr
+    return cptr
+
 # Vector
 ########
 
 cdef extern from "numpy/arrayobject.h":
-    void PyArray_ENABLEFLAGS(np.ndarray arr, int flags)
+     void PyArray_ENABLEFLAGS(np.ndarray arr, int flags)
 
 cdef Vector(cvec.Vec* v, owndata=False):
      cdef np.npy_intp shape[1]
@@ -149,7 +164,7 @@ cdef class Bus:
     Bus class.
     """
     
-    cdef cbus.Bus* _c_bus
+    cdef cbus.Bus* _c_ptr
 
     def __init__(self,alloc=True):
         """
@@ -165,9 +180,13 @@ cdef class Bus:
     def __cinit__(self,alloc=True):
 
         if alloc:
-            self._c_bus = cbus.BUS_new()
+            self._c_ptr = cbus.BUS_new()
         else:
-            self._c_bus = NULL
+            self._c_ptr = NULL
+
+    def _get_c_ptr(self):
+
+        return new_CPtr(self._c_ptr)
 
     def is_slack(self):
         """
@@ -178,7 +197,7 @@ cdef class Bus:
         flag : {``True``, ``False``}
         """
 
-        return cbus.BUS_is_slack(self._c_bus)
+        return cbus.BUS_is_slack(self._c_ptr)
 
     def is_regulated_by_gen(self):
         """
@@ -189,7 +208,7 @@ cdef class Bus:
         flag : {``True``, ``False``}
         """
 
-        return cbus.BUS_is_regulated_by_gen(self._c_bus)
+        return cbus.BUS_is_regulated_by_gen(self._c_ptr)
 
     def is_regulated_by_tran(self):
         """
@@ -200,7 +219,7 @@ cdef class Bus:
         flag : {``True``, ``False``}
         """
 
-        return cbus.BUS_is_regulated_by_tran(self._c_bus)
+        return cbus.BUS_is_regulated_by_tran(self._c_ptr)
 
     def is_regulated_by_shunt(self):
         """
@@ -211,7 +230,7 @@ cdef class Bus:
         flag : {``True``, ``False``}
         """
 
-        return cbus.BUS_is_regulated_by_shunt(self._c_bus)
+        return cbus.BUS_is_regulated_by_shunt(self._c_ptr)
 
     def has_flags(self,fmask,vmask):
         """
@@ -228,7 +247,7 @@ cdef class Bus:
         flag : {``True``, ``False``}
         """
 
-        return cbus.BUS_has_flags(self._c_bus,fmask,vmask)
+        return cbus.BUS_has_flags(self._c_ptr,fmask,vmask)
 
     def get_largest_sens(self):
         """
@@ -239,7 +258,7 @@ cdef class Bus:
         sens : float
         """
 
-        return cbus.BUS_get_largest_sens(self._c_bus)
+        return cbus.BUS_get_largest_sens(self._c_ptr)
 
     def get_largest_sens_type(self):
         """
@@ -250,7 +269,7 @@ cdef class Bus:
         type : int
         """
 
-        return cbus.BUS_get_largest_sens_type(self._c_bus)
+        return cbus.BUS_get_largest_sens_type(self._c_ptr)
 
     def get_largest_mis(self):
         """
@@ -261,7 +280,7 @@ cdef class Bus:
         mis : float
         """
 
-        return cbus.BUS_get_largest_mis(self._c_bus)
+        return cbus.BUS_get_largest_mis(self._c_ptr)
 
     def get_largest_mis_type(self):
         """
@@ -272,7 +291,7 @@ cdef class Bus:
         type : int
         """
 
-        return cbus.BUS_get_largest_mis_type(self._c_bus)
+        return cbus.BUS_get_largest_mis_type(self._c_ptr)
 
     def get_quantity(self,type):
         """
@@ -287,7 +306,7 @@ cdef class Bus:
         value : float
         """
 
-        return cbus.BUS_get_quantity(self._c_bus,type)
+        return cbus.BUS_get_quantity(self._c_ptr,type)
 
     def get_total_gen_P(self):
         """
@@ -299,7 +318,7 @@ cdef class Bus:
         P : float
         """
 
-        return cbus.BUS_get_total_gen_P(self._c_bus)
+        return cbus.BUS_get_total_gen_P(self._c_ptr)
 
     def get_total_gen_Q(self):
         """
@@ -311,7 +330,7 @@ cdef class Bus:
         Q : float
         """
 
-        return cbus.BUS_get_total_gen_Q(self._c_bus)
+        return cbus.BUS_get_total_gen_Q(self._c_ptr)
 
     def get_total_gen_Q_max(self):
         """ 
@@ -323,7 +342,7 @@ cdef class Bus:
         Q_max : float
         """
 
-        return cbus.BUS_get_total_gen_Q_max(self._c_bus)
+        return cbus.BUS_get_total_gen_Q_max(self._c_ptr)
 
     def get_total_gen_Q_min(self):
         """
@@ -335,7 +354,7 @@ cdef class Bus:
         Q_min : float
         """
 
-        return cbus.BUS_get_total_gen_Q_min(self._c_bus)
+        return cbus.BUS_get_total_gen_Q_min(self._c_ptr)
 
     def get_total_load_P(self):
         """ 
@@ -347,7 +366,7 @@ cdef class Bus:
         P : float
         """
 
-        return cbus.BUS_get_total_load_P(self._c_bus)
+        return cbus.BUS_get_total_load_P(self._c_ptr)
 
     def get_total_load_Q(self):
         """
@@ -359,7 +378,7 @@ cdef class Bus:
         Q : float
         """
 
-        return cbus.BUS_get_total_load_Q(self._c_bus)
+        return cbus.BUS_get_total_load_Q(self._c_ptr)
 
     def get_total_shunt_g(self):
         """ 
@@ -371,7 +390,7 @@ cdef class Bus:
         g : float
         """
 
-        return cbus.BUS_get_total_shunt_g(self._c_bus)
+        return cbus.BUS_get_total_shunt_g(self._c_ptr)
 
     def get_total_shunt_b(self):
         """
@@ -383,13 +402,13 @@ cdef class Bus:
         b : float
         """
 
-        return cbus.BUS_get_total_shunt_b(self._c_bus)
+        return cbus.BUS_get_total_shunt_b(self._c_ptr)
     
     def show(self):
         """
         Shows bus properties.
         """
-        cbus.BUS_show(self._c_bus)
+        cbus.BUS_show(self._c_ptr)
 
     def __richcmp__(self,other,op):
         """
@@ -414,120 +433,120 @@ cdef class Bus:
 
     property obj_type:
         """ Object type (int). """
-        def __get__(self): return cbus.BUS_get_obj_type(self._c_bus)
+        def __get__(self): return cbus.BUS_get_obj_type(self._c_ptr)
 
     property index:
         """ Bus index (int). """
-        def __get__(self): return cbus.BUS_get_index(self._c_bus)
+        def __get__(self): return cbus.BUS_get_index(self._c_ptr)
 
     property index_v_mag: 
         """ Index of voltage magnitude variable (int). """
-        def __get__(self): return cbus.BUS_get_index_v_mag(self._c_bus)
+        def __get__(self): return cbus.BUS_get_index_v_mag(self._c_ptr)
 
     property index_v_ang:
         """ Index of voltage angle variable (int). """
-        def __get__(self): return cbus.BUS_get_index_v_ang(self._c_bus)
+        def __get__(self): return cbus.BUS_get_index_v_ang(self._c_ptr)
 
     property index_y:
         """ Index of voltage magnitude positive deviation variable (int). """
-        def __get__(self): return cbus.BUS_get_index_y(self._c_bus)
+        def __get__(self): return cbus.BUS_get_index_y(self._c_ptr)
 
     property index_z:
         """ Index of voltage magnitude negative deviation variable (int). """
-        def __get__(self): return cbus.BUS_get_index_z(self._c_bus)
+        def __get__(self): return cbus.BUS_get_index_z(self._c_ptr)
 
     property index_vl:
         """ Index of voltage low limit violation variable (int). """
-        def __get__(self): return cbus.BUS_get_index_vl(self._c_bus)
+        def __get__(self): return cbus.BUS_get_index_vl(self._c_ptr)
 
     property index_vh:
         """ Index of voltage high limit violation variable (int). """
-        def __get__(self): return cbus.BUS_get_index_vh(self._c_bus)
+        def __get__(self): return cbus.BUS_get_index_vh(self._c_ptr)
 
     property index_P:
         """ Index of bus active power mismatch (int). """
-        def __get__(self): return cbus.BUS_get_index_P(self._c_bus)
+        def __get__(self): return cbus.BUS_get_index_P(self._c_ptr)
 
     property index_Q:
         """ Index for bus reactive power mismatch (int). """
-        def __get__(self): return cbus.BUS_get_index_Q(self._c_bus)
+        def __get__(self): return cbus.BUS_get_index_Q(self._c_ptr)
 
     property number:
         """ Bus number (int). """
-        def __get__(self): return cbus.BUS_get_number(self._c_bus)
+        def __get__(self): return cbus.BUS_get_number(self._c_ptr)
 
     property name:
         """ Bus name (sting). """
-        def __get__(self): return cbus.BUS_get_name(self._c_bus)
-        def __set__(self,name): cbus.BUS_set_name(self._c_bus,name)
+        def __get__(self): return cbus.BUS_get_name(self._c_ptr)
+        def __set__(self,name): cbus.BUS_set_name(self._c_ptr,name)
 
     property degree:
         """ Bus degree (number of incident branches) (float). """
-        def __get__(self): return cbus.BUS_get_degree(self._c_bus)    
+        def __get__(self): return cbus.BUS_get_degree(self._c_ptr)    
 
     property v_mag:
         """ Bus volatge magnitude (p.u. bus base kv) (float). """
-        def __get__(self): return cbus.BUS_get_v_mag(self._c_bus)
-        def __set__(self,value): cbus.BUS_set_v_mag(self._c_bus,value)
+        def __get__(self): return cbus.BUS_get_v_mag(self._c_ptr)
+        def __set__(self,value): cbus.BUS_set_v_mag(self._c_ptr,value)
 
     property v_ang:
         """ Bus voltage angle (radians) (float). """
-        def __get__(self): return cbus.BUS_get_v_ang(self._c_bus)
-        def __set__(self,value): cbus.BUS_set_v_ang(self._c_bus,value)
+        def __get__(self): return cbus.BUS_get_v_ang(self._c_ptr)
+        def __set__(self,value): cbus.BUS_set_v_ang(self._c_ptr,value)
 
     property v_set:
         """ Bus voltage set point (p.u. bus base kv) (float). Equals one if bus is not regulated by a generator. """
-        def __get__(self): return cbus.BUS_get_v_set(self._c_bus)
+        def __get__(self): return cbus.BUS_get_v_set(self._c_ptr)
 
     property v_max:
         """ Bus volatge upper bound (p.u. bus base kv) (float). """
-        def __get__(self): return cbus.BUS_get_v_max(self._c_bus)
+        def __get__(self): return cbus.BUS_get_v_max(self._c_ptr)
 
     property v_min:
         """ Bus voltage lower bound (p.u. bus base kv) (float). """
-        def __get__(self): return cbus.BUS_get_v_min(self._c_bus)
+        def __get__(self): return cbus.BUS_get_v_min(self._c_ptr)
 
     property P_mis:
         """ Bus active power mismatch (p.u. system base MVA) (float). """
-        def __get__(self): return cbus.BUS_get_P_mis(self._c_bus)
+        def __get__(self): return cbus.BUS_get_P_mis(self._c_ptr)
 
     property Q_mis:
         """ Bus reactive power mismatch (p.u. system base MVA) (float). """
-        def __get__(self): return cbus.BUS_get_Q_mis(self._c_bus)
+        def __get__(self): return cbus.BUS_get_Q_mis(self._c_ptr)
 
     property sens_P_balance:
         """ Objective function sensitivity with respect to bus active power balance (float). """
-        def __get__(self): return cbus.BUS_get_sens_P_balance(self._c_bus)
+        def __get__(self): return cbus.BUS_get_sens_P_balance(self._c_ptr)
 
     property sens_Q_balance:
         """ Objective function sensitivity with respect to bus reactive power balance (float). """
-        def __get__(self): return cbus.BUS_get_sens_Q_balance(self._c_bus)
+        def __get__(self): return cbus.BUS_get_sens_Q_balance(self._c_ptr)
 
     property sens_v_mag_u_bound:
         """ Objective function sensitivity with respect to bus upper voltage limit (float). """
-        def __get__(self): return cbus.BUS_get_sens_v_mag_u_bound(self._c_bus)
+        def __get__(self): return cbus.BUS_get_sens_v_mag_u_bound(self._c_ptr)
 
     property sens_v_mag_l_bound:
         """ Objective function sensitivity with respect to bus lower voltage limit (float). """
-        def __get__(self): return cbus.BUS_get_sens_v_mag_l_bound(self._c_bus)
+        def __get__(self): return cbus.BUS_get_sens_v_mag_l_bound(self._c_ptr)
 
     property sens_v_reg_by_gen:
         """ Objective function sensitivity with respect to bus voltage regulation by generators (float). """
-        def __get__(self): return cbus.BUS_get_sens_v_reg_by_gen(self._c_bus)
+        def __get__(self): return cbus.BUS_get_sens_v_reg_by_gen(self._c_ptr)
 
     property sens_v_reg_by_tran:
         """ Objective function sensitivity with respect to bus voltage regulation by transformers (float). """
-        def __get__(self): return cbus.BUS_get_sens_v_reg_by_tran(self._c_bus)
+        def __get__(self): return cbus.BUS_get_sens_v_reg_by_tran(self._c_ptr)
 
     property sens_v_reg_by_shunt:
         """ Objective function sensitivity with respect to bus voltage regulation by shunts (float). """
-        def __get__(self): return cbus.BUS_get_sens_v_reg_by_shunt(self._c_bus)
+        def __get__(self): return cbus.BUS_get_sens_v_reg_by_shunt(self._c_ptr)
 
     property gens:
         """ List of :class:`generators <pfnet.Generator>` connected to this bus (list). """
         def __get__(self):
             gens = []
-            cdef cgen.Gen* g = cbus.BUS_get_gen(self._c_bus)
+            cdef cgen.Gen* g = cbus.BUS_get_gen(self._c_ptr)
             while g is not NULL:
                 gens.append(new_Generator(g))
                 g = cgen.GEN_get_next(g)
@@ -537,7 +556,7 @@ cdef class Bus:
         """ List of :class:`generators <pfnet.Generator>` regulating the voltage magnitude of this bus (list). """
         def __get__(self):
             reg_gens = []
-            cdef cgen.Gen* g = cbus.BUS_get_reg_gen(self._c_bus)
+            cdef cgen.Gen* g = cbus.BUS_get_reg_gen(self._c_ptr)
             while g is not NULL:
                 reg_gens.append(new_Generator(g))
                 g = cgen.GEN_get_reg_next(g)
@@ -547,7 +566,7 @@ cdef class Bus:
         """ List of :class:`tap-changing transformers <pfnet.Branch>` regulating the voltage magnitude of this bus (list). """
         def __get__(self):
             reg_trans = []
-            cdef cbranch.Branch* br = cbus.BUS_get_reg_tran(self._c_bus)
+            cdef cbranch.Branch* br = cbus.BUS_get_reg_tran(self._c_ptr)
             while br is not NULL:
                 reg_trans.append(new_Branch(br))
                 br = cbranch.BRANCH_get_reg_next(br)
@@ -557,7 +576,7 @@ cdef class Bus:
         """ List of :class:`switched shunt devices <pfnet.Shunt>` regulating the voltage magnitude of this bus (list). """
         def __get__(self):
             reg_shunts = []
-            cdef cshunt.Shunt* s = cbus.BUS_get_reg_shunt(self._c_bus)
+            cdef cshunt.Shunt* s = cbus.BUS_get_reg_shunt(self._c_ptr)
             while s is not NULL:
                 reg_shunts.append(new_Shunt(s))
                 s = cshunt.SHUNT_get_reg_next(s)
@@ -567,7 +586,7 @@ cdef class Bus:
         """ List of :class:`branches <pfnet.Branch>` that have this bus on the "from" side (list). """
         def __get__(self):
             branches = []
-            cdef cbranch.Branch* br = cbus.BUS_get_branch_from(self._c_bus)
+            cdef cbranch.Branch* br = cbus.BUS_get_branch_from(self._c_ptr)
             while br is not NULL:
                 branches.append(new_Branch(br))
                 br = cbranch.BRANCH_get_from_next(br)
@@ -577,7 +596,7 @@ cdef class Bus:
         """ List of :class:`branches <pfnet.Branch>` that have this bus on the "to" side (list). """
         def __get__(self):
             branches = []
-            cdef cbranch.Branch* br = cbus.BUS_get_branch_to(self._c_bus)
+            cdef cbranch.Branch* br = cbus.BUS_get_branch_to(self._c_ptr)
             while br is not NULL:
                 branches.append(new_Branch(br))
                 br = cbranch.BRANCH_get_to_next(br)
@@ -592,7 +611,7 @@ cdef class Bus:
         """ List of :class:`loads <pfnet.Load>` connected to this bus (list). """
         def __get__(self):
             loads = []
-            cdef cload.Load* l = cbus.BUS_get_load(self._c_bus)
+            cdef cload.Load* l = cbus.BUS_get_load(self._c_ptr)
             while l is not NULL:
                 loads.append(new_Load(l))
                 l = cload.LOAD_get_next(l)
@@ -602,7 +621,7 @@ cdef class Bus:
         """ List of :class:`variable generators <pfnet.VarGenerator>` connected to this bus (list). """
         def __get__(self):
             vargens = []
-            cdef cvargen.Vargen* g = cbus.BUS_get_vargen(self._c_bus)
+            cdef cvargen.Vargen* g = cbus.BUS_get_vargen(self._c_ptr)
             while g is not NULL:
                 vargens.append(new_VarGenerator(g))
                 g = cvargen.VARGEN_get_next(g)
@@ -611,7 +630,7 @@ cdef class Bus:
 cdef new_Bus(cbus.Bus* b):
     if b is not NULL:
         bus = Bus(alloc=False)
-        bus._c_bus = b
+        bus._c_ptr = b
         return bus
     else:
         raise BusError('no bus data')
@@ -645,7 +664,7 @@ cdef class Branch:
     Branch class.
     """
 
-    cdef cbranch.Branch* _c_branch
+    cdef cbranch.Branch* _c_ptr
 
     def __init__(self,alloc=True):
         """
@@ -661,9 +680,13 @@ cdef class Branch:
     def __cinit__(self,alloc=True):
 
         if alloc:
-            self._c_branch = cbranch.BRANCH_new()
+            self._c_ptr = cbranch.BRANCH_new()
         else:
-            self._c_branch = NULL
+            self._c_ptr = NULL
+
+    def _get_c_ptr(self):
+
+        return new_CPtr(self._c_ptr)
 
     def has_pos_ratio_v_sens(self):
         """
@@ -675,7 +698,7 @@ cdef class Branch:
         flag : {``True``, ``False``}
         """
 
-        return cbranch.BRANCH_has_pos_ratio_v_sens(self._c_branch)
+        return cbranch.BRANCH_has_pos_ratio_v_sens(self._c_ptr)
 
     def is_fixed_tran(self):
         """
@@ -686,7 +709,7 @@ cdef class Branch:
         flag : {``True``, ``False``}
         """
 
-        return cbranch.BRANCH_is_fixed_tran(self._c_branch)
+        return cbranch.BRANCH_is_fixed_tran(self._c_ptr)
 
     def is_line(self):
         """
@@ -697,7 +720,7 @@ cdef class Branch:
         flag : {``True``, ``False``}
         """
 
-        return cbranch.BRANCH_is_line(self._c_branch)
+        return cbranch.BRANCH_is_line(self._c_ptr)
 
     def is_phase_shifter(self):
         """
@@ -708,7 +731,7 @@ cdef class Branch:
         flag : {``True``, ``False``}
         """
 
-        return cbranch.BRANCH_is_phase_shifter(self._c_branch)
+        return cbranch.BRANCH_is_phase_shifter(self._c_ptr)
 
     def is_tap_changer(self):
         """
@@ -719,7 +742,7 @@ cdef class Branch:
         flag : {``True``, ``False``}
         """
         
-        return cbranch.BRANCH_is_tap_changer(self._c_branch)
+        return cbranch.BRANCH_is_tap_changer(self._c_ptr)
 
     def is_tap_changer_v(self):
         """
@@ -731,7 +754,7 @@ cdef class Branch:
         flag : {``True``, ``False``}
         """
 
-        return cbranch.BRANCH_is_tap_changer_v(self._c_branch)
+        return cbranch.BRANCH_is_tap_changer_v(self._c_ptr)
 
     def is_tap_changer_Q(self):
         """
@@ -743,7 +766,7 @@ cdef class Branch:
         flag : {``True``, ``False``}
         """
 
-        return cbranch.BRANCH_is_tap_changer_Q(self._c_branch)
+        return cbranch.BRANCH_is_tap_changer_Q(self._c_ptr)
 
     def has_flags(self,fmask,vmask):
         """
@@ -760,103 +783,103 @@ cdef class Branch:
         flag : {``True``, ``False``}
         """
 
-        return cbranch.BRANCH_has_flags(self._c_branch,fmask,vmask)
+        return cbranch.BRANCH_has_flags(self._c_ptr,fmask,vmask)
 
     property obj_type:
         """ Object type (int). """
-        def __get__(self): return cbranch.BRANCH_get_obj_type(self._c_branch)
+        def __get__(self): return cbranch.BRANCH_get_obj_type(self._c_ptr)
 
     property index:
         """ Branch index (int). """
-        def __get__(self): return cbranch.BRANCH_get_index(self._c_branch)
+        def __get__(self): return cbranch.BRANCH_get_index(self._c_ptr)
 
     property index_ratio:
         """ Index of transformer tap ratio variable (int). """
-        def __get__(self): return cbranch.BRANCH_get_index_ratio(self._c_branch)
+        def __get__(self): return cbranch.BRANCH_get_index_ratio(self._c_ptr)
 
     property index_ratio_y:
         """ Index of transformer tap ratio positive deviation variable (int). """
-        def __get__(self): return cbranch.BRANCH_get_index_ratio_y(self._c_branch)
+        def __get__(self): return cbranch.BRANCH_get_index_ratio_y(self._c_ptr)
 
     property index_ratio_z:
         """ Index of transformer tap ratio negative deviation variable (int). """
-        def __get__(self): return cbranch.BRANCH_get_index_ratio_z(self._c_branch)
+        def __get__(self): return cbranch.BRANCH_get_index_ratio_z(self._c_ptr)
 
     property index_phase:
         """ Index of transformer phase shift variable (int). """
-        def __get__(self): return cbranch.BRANCH_get_index_phase(self._c_branch)
+        def __get__(self): return cbranch.BRANCH_get_index_phase(self._c_ptr)
 
     property ratio:
         """ Transformer tap ratio (float). """
-        def __get__(self): return cbranch.BRANCH_get_ratio(self._c_branch)
+        def __get__(self): return cbranch.BRANCH_get_ratio(self._c_ptr)
 
     property ratio_max:
         """ Transformer tap ratio upper limit (float). """
-        def __get__(self): return cbranch.BRANCH_get_ratio_max(self._c_branch)
-        def __set__(self,value): cbranch.BRANCH_set_ratio_max(self._c_branch,value)
+        def __get__(self): return cbranch.BRANCH_get_ratio_max(self._c_ptr)
+        def __set__(self,value): cbranch.BRANCH_set_ratio_max(self._c_ptr,value)
 
     property ratio_min:
         """ Transformer tap ratio lower limit (float). """
-        def __get__(self): return cbranch.BRANCH_get_ratio_min(self._c_branch)
-        def __set__(self,value): cbranch.BRANCH_set_ratio_min(self._c_branch,value)
+        def __get__(self): return cbranch.BRANCH_get_ratio_min(self._c_ptr)
+        def __set__(self,value): cbranch.BRANCH_set_ratio_min(self._c_ptr,value)
 
     property bus_from:
         """ :class:`Bus <pfnet.Bus>` connected to the "from" side. """
-        def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_from(self._c_branch))
+        def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_from(self._c_ptr))
    
     property bus_to:
         """ :class:`Bus <pfnet.Bus>` connected to the "to" side. """
-        def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_to(self._c_branch))
+        def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_to(self._c_ptr))
 
     property reg_bus:
         """ :class:`Bus <pfnet.Bus>` whose voltage is regulated by this tap-changing transformer. """
-        def __get__(self): return new_Bus(cbranch.BRANCH_get_reg_bus(self._c_branch))
+        def __get__(self): return new_Bus(cbranch.BRANCH_get_reg_bus(self._c_ptr))
 
     property b:
         """ Branch series susceptance (p.u.) (float). """
-        def __get__(self): return cbranch.BRANCH_get_b(self._c_branch)
+        def __get__(self): return cbranch.BRANCH_get_b(self._c_ptr)
 
     property b_from:
         """ Branch shunt susceptance at the "from" side (p.u.) (float). """
-        def __get__(self): return cbranch.BRANCH_get_b_from(self._c_branch)
+        def __get__(self): return cbranch.BRANCH_get_b_from(self._c_ptr)
 
     property b_to:
         """ Branch shunt susceptance at the "to" side (p.u.) (float). """
-        def __get__(self): return cbranch.BRANCH_get_b_to(self._c_branch)
+        def __get__(self): return cbranch.BRANCH_get_b_to(self._c_ptr)
 
     property g:
         """ Branch series conductance (p.u.) (float). """
-        def __get__(self): return cbranch.BRANCH_get_g(self._c_branch)
+        def __get__(self): return cbranch.BRANCH_get_g(self._c_ptr)
 
     property g_from:
         """ Branch shunt conductance at the "from" side (p.u.) (float). """
-        def __get__(self): return cbranch.BRANCH_get_g_from(self._c_branch)
+        def __get__(self): return cbranch.BRANCH_get_g_from(self._c_ptr)
 
     property g_to:
         """ Branch shunt conductance at the "to" side (p.u.) (float). """
-        def __get__(self): return cbranch.BRANCH_get_g_to(self._c_branch)
+        def __get__(self): return cbranch.BRANCH_get_g_to(self._c_ptr)
 
     property phase:
         """ Transformer phase shift (radians) (float). """
-        def __get__(self): return cbranch.BRANCH_get_phase(self._c_branch)
+        def __get__(self): return cbranch.BRANCH_get_phase(self._c_ptr)
 
     property phase_max:
         """ Transformer phase shift upper limit (radians) (float). """
-        def __get__(self): return cbranch.BRANCH_get_phase_max(self._c_branch)
+        def __get__(self): return cbranch.BRANCH_get_phase_max(self._c_ptr)
 
     property phase_min:
         """ Transformer phase shift lower limit (radians) (float). """
-        def __get__(self): return cbranch.BRANCH_get_phase_min(self._c_branch)
+        def __get__(self): return cbranch.BRANCH_get_phase_min(self._c_ptr)
 
     property ratingA:
         """ Branch thermal rating A (p.u. system base power) (float). """
-        def __get__(self): return cbranch.BRANCH_get_ratingA(self._c_branch)
-        def __set__(self,r): cbranch.BRANCH_set_ratingA(self._c_branch,r)
+        def __get__(self): return cbranch.BRANCH_get_ratingA(self._c_ptr)
+        def __set__(self,r): cbranch.BRANCH_set_ratingA(self._c_ptr,r)
    
 cdef new_Branch(cbranch.Branch* b):
     if b is not NULL:
         branch = Branch(alloc=False)
-        branch._c_branch = b
+        branch._c_ptr = b
         return branch
     else:
         raise BranchError('no branch data')
@@ -891,7 +914,7 @@ cdef class Generator:
     Generator class.
     """
 
-    cdef cgen.Gen* _c_gen
+    cdef cgen.Gen* _c_ptr
 
     def __init__(self,alloc=True):
         """
@@ -907,9 +930,13 @@ cdef class Generator:
     def __cinit__(self,alloc=True):
 
         if alloc:
-            self._c_gen = cgen.GEN_new()
+            self._c_ptr = cgen.GEN_new()
         else:
-            self._c_gen = NULL
+            self._c_ptr = NULL
+
+    def _get_c_ptr(self):
+
+        return new_CPtr(self._c_ptr)
 
     def is_slack(self):
         """ 
@@ -920,7 +947,7 @@ cdef class Generator:
         flag : {``True``, ``False``}
         """
 
-        return cgen.GEN_is_slack(self._c_gen)
+        return cgen.GEN_is_slack(self._c_ptr)
 
     def is_regulator(self):
         """ 
@@ -931,7 +958,7 @@ cdef class Generator:
         flag : {``True``, ``False``}
         """
         
-        return cgen.GEN_is_regulator(self._c_gen)
+        return cgen.GEN_is_regulator(self._c_ptr)
 
     def is_P_adjustable(self):
         """ 
@@ -942,7 +969,7 @@ cdef class Generator:
         flag : {``True``, ``False``}
         """
         
-        return cgen.GEN_is_P_adjustable(self._c_gen)
+        return cgen.GEN_is_P_adjustable(self._c_ptr)
 
     def has_flags(self,fmask,vmask):
         """ 
@@ -959,77 +986,77 @@ cdef class Generator:
         flag : {``True``, ``False``}
         """
 
-        return cgen.GEN_has_flags(self._c_gen,fmask,vmask)
+        return cgen.GEN_has_flags(self._c_ptr,fmask,vmask)
 
     property obj_type:
         """ Object type (int). """
-        def __get__(self): return cgen.GEN_get_obj_type(self._c_gen)
+        def __get__(self): return cgen.GEN_get_obj_type(self._c_ptr)
 
     property index:
         """ Generator index (int). """
-        def __get__(self): return cgen.GEN_get_index(self._c_gen)
+        def __get__(self): return cgen.GEN_get_index(self._c_ptr)
         
     property index_P:
         """ Index of generator active power variable (int). """
-        def __get__(self): return cgen.GEN_get_index_P(self._c_gen)
+        def __get__(self): return cgen.GEN_get_index_P(self._c_ptr)
 
     property index_Q:
         """ Index of generator reactive power variable (int). """
-        def __get__(self): return cgen.GEN_get_index_Q(self._c_gen)
+        def __get__(self): return cgen.GEN_get_index_Q(self._c_ptr)
 
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which generator is connected. """
-        def __get__(self): return new_Bus(cgen.GEN_get_bus(self._c_gen))
+        def __get__(self): return new_Bus(cgen.GEN_get_bus(self._c_ptr))
 
     property reg_bus:
         """ :class:`Bus <pfnet.Bus>` whose voltage is regulated by this generator. """
-        def __get__(self): return new_Bus(cgen.GEN_get_reg_bus(self._c_gen))
+        def __get__(self): return new_Bus(cgen.GEN_get_reg_bus(self._c_ptr))
 
     property P:
         """ Generator active power (p.u. system base MVA) (float). """
-        def __get__(self): return cgen.GEN_get_P(self._c_gen)
+        def __get__(self): return cgen.GEN_get_P(self._c_ptr)
 
     property P_max:
         """ Generator active power upper limit (p.u. system base MVA) (float). """
-        def __get__(self): return cgen.GEN_get_P_max(self._c_gen)
-        def __set__(self,P): cgen.GEN_set_P_max(self._c_gen,P)
+        def __get__(self): return cgen.GEN_get_P_max(self._c_ptr)
+        def __set__(self,P): cgen.GEN_set_P_max(self._c_ptr,P)
 
     property P_min:
         """ Generator active power lower limit (p.u. system base MVA) (float). """
-        def __get__(self): return cgen.GEN_get_P_min(self._c_gen)
-        def __set__(self,P): cgen.GEN_set_P_min(self._c_gen,P)
+        def __get__(self): return cgen.GEN_get_P_min(self._c_ptr)
+        def __set__(self,P): cgen.GEN_set_P_min(self._c_ptr,P)
             
     property Q:
         """ Generator reactive power (p.u. system base MVA) (float). """
-        def __get__(self): return cgen.GEN_get_Q(self._c_gen)
+        def __get__(self): return cgen.GEN_get_Q(self._c_ptr)
 
     property Q_max:
         """ Generator reactive power upper limit (p.u. system base MVA) (float). """
-        def __get__(self): return cgen.GEN_get_Q_max(self._c_gen)
+        def __get__(self): return cgen.GEN_get_Q_max(self._c_ptr)
 
     property Q_min:
         """ Generator reactive power lower limit (p.u. system base MVA) (float). """
-        def __get__(self): return cgen.GEN_get_Q_min(self._c_gen)
+        def __get__(self): return cgen.GEN_get_Q_min(self._c_ptr)
 
     property cost_coeff_Q0:
         """ Coefficient for quadratic genertion cost (constant term). """
-        def __get__(self): return cgen.GEN_get_cost_coeff_Q0(self._c_gen)
-        def __set__(self,c): cgen.GEN_set_cost_coeff_Q0(self._c_gen,c)
+        def __get__(self): return cgen.GEN_get_cost_coeff_Q0(self._c_ptr)
+        def __set__(self,c): cgen.GEN_set_cost_coeff_Q0(self._c_ptr,c)
 
     property cost_coeff_Q1:
         """ Coefficient for quadratic genertion cost (linear term). """
-        def __get__(self): return cgen.GEN_get_cost_coeff_Q1(self._c_gen)
-        def __set__(self,c): cgen.GEN_set_cost_coeff_Q1(self._c_gen,c)
+        def __get__(self): return cgen.GEN_get_cost_coeff_Q1(self._c_ptr)
+        def __set__(self,c): cgen.GEN_set_cost_coeff_Q1(self._c_ptr,c)
 
     property cost_coeff_Q2:
         """ Coefficient for quadratic genertion cost (quadratic term). """
-        def __get__(self): return cgen.GEN_get_cost_coeff_Q2(self._c_gen)
-        def __set__(self,c): cgen.GEN_set_cost_coeff_Q2(self._c_gen,c)
+        def __get__(self): return cgen.GEN_get_cost_coeff_Q2(self._c_ptr)
+        def __set__(self,c): cgen.GEN_set_cost_coeff_Q2(self._c_ptr,c)
 
 cdef new_Generator(cgen.Gen* g):
     if g is not NULL:
         gen = Generator(alloc=False)
-        gen._c_gen = g
+        gen._c_ptr = g
         return gen
     else:
         raise GeneratorError('no gen data')
@@ -1060,7 +1087,7 @@ cdef class Shunt:
     Shunt class.
     """
 
-    cdef cshunt.Shunt* _c_shunt
+    cdef cshunt.Shunt* _c_ptr
 
     def __init__(self,alloc=True):
         """
@@ -1076,9 +1103,13 @@ cdef class Shunt:
     def __cinit__(self,alloc=True):
 
         if alloc:
-            self._c_shunt = cshunt.SHUNT_new()
+            self._c_ptr = cshunt.SHUNT_new()
         else:
-            self._c_shunt = NULL
+            self._c_ptr = NULL
+
+    def _get_c_ptr(self):
+
+        return new_CPtr(self._c_ptr)
 
     def is_fixed(self):
         """
@@ -1089,7 +1120,7 @@ cdef class Shunt:
         flag : {``True``, ``False``}
         """
         
-        return cshunt.SHUNT_is_fixed(self._c_shunt)
+        return cshunt.SHUNT_is_fixed(self._c_ptr)
 
     def is_switched_v(self):
         """
@@ -1101,7 +1132,7 @@ cdef class Shunt:
         flag : {``True``, ``False``}
         """
         
-        return cshunt.SHUNT_is_switched_v(self._c_shunt)
+        return cshunt.SHUNT_is_switched_v(self._c_ptr)
 
     def has_flags(self,fmask,vmask):
         """
@@ -1118,58 +1149,58 @@ cdef class Shunt:
         flag : {``True``, ``False``}
         """
         
-        return cshunt.SHUNT_has_flags(self._c_shunt,fmask,vmask)
+        return cshunt.SHUNT_has_flags(self._c_ptr,fmask,vmask)
 
     property obj_type:
         """ Object type (int). """
-        def __get__(self): return cshunt.SHUNT_get_obj_type(self._c_shunt)
+        def __get__(self): return cshunt.SHUNT_get_obj_type(self._c_ptr)
 
     property index:
         """ Shunt index (int). """
-        def __get__(self): return cshunt.SHUNT_get_index(self._c_shunt)    
+        def __get__(self): return cshunt.SHUNT_get_index(self._c_ptr)    
 
     property index_b:
         """ Index of shunt susceptance variable (int). """
-        def __get__(self): return cshunt.SHUNT_get_index_b(self._c_shunt)
+        def __get__(self): return cshunt.SHUNT_get_index_b(self._c_ptr)
 
     property index_y:
         """ Index of shunt susceptance positive deviation variable (int). """
-        def __get__(self): return cshunt.SHUNT_get_index_y(self._c_shunt)
+        def __get__(self): return cshunt.SHUNT_get_index_y(self._c_ptr)
 
     property index_z:
         """ Index of shunt susceptance negative deviation variable (int). """
-        def __get__(self): return cshunt.SHUNT_get_index_z(self._c_shunt)
+        def __get__(self): return cshunt.SHUNT_get_index_z(self._c_ptr)
 
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which the shunt devices is connected. """
-        def __get__(self): return new_Bus(cshunt.SHUNT_get_bus(self._c_shunt))
+        def __get__(self): return new_Bus(cshunt.SHUNT_get_bus(self._c_ptr))
 
     property reg_bus:
         """ :class:`Bus <pfnet.Bus>` whose voltage magnitude is regulated by this shunt device. """
-        def __get__(self): return new_Bus(cshunt.SHUNT_get_reg_bus(self._c_shunt))
+        def __get__(self): return new_Bus(cshunt.SHUNT_get_reg_bus(self._c_ptr))
 
     property g:
         """ Shunt conductance (p.u.) (float). """
-        def __get__(self): return cshunt.SHUNT_get_g(self._c_shunt)
+        def __get__(self): return cshunt.SHUNT_get_g(self._c_ptr)
             
     property b:
         """ Shunt susceptance (p.u.) (float). """
-        def __get__(self): return cshunt.SHUNT_get_b(self._c_shunt)
+        def __get__(self): return cshunt.SHUNT_get_b(self._c_ptr)
 
     property b_max:
         """ Shunt susceptance upper limit (p.u.) (float). """
-        def __get__(self): return cshunt.SHUNT_get_b_max(self._c_shunt)
-        def __set__(self,value): cshunt.SHUNT_set_b_max(self._c_shunt,value)
+        def __get__(self): return cshunt.SHUNT_get_b_max(self._c_ptr)
+        def __set__(self,value): cshunt.SHUNT_set_b_max(self._c_ptr,value)
 
     property b_min:
         """ Shunt susceptance lower limit (p.u.) (float). """
-        def __get__(self): return cshunt.SHUNT_get_b_min(self._c_shunt)
-        def __set__(self,value): cshunt.SHUNT_set_b_min(self._c_shunt,value)                
+        def __get__(self): return cshunt.SHUNT_get_b_min(self._c_ptr)
+        def __set__(self,value): cshunt.SHUNT_set_b_min(self._c_ptr,value)                
 
 cdef new_Shunt(cshunt.Shunt* s):
     if s is not NULL:
         shunt = Shunt(alloc=False)
-        shunt._c_shunt = s
+        shunt._c_ptr = s
         return shunt
     else:
         raise ShuntError('no shunt data')
@@ -1192,7 +1223,7 @@ cdef class Load:
     Load class.
     """
 
-    cdef cload.Load* _c_load
+    cdef cload.Load* _c_ptr
 
     def __init__(self,alloc=True):
         """
@@ -1208,36 +1239,40 @@ cdef class Load:
     def __cinit__(self,alloc=True):
 
         if alloc:
-            self._c_load = cload.LOAD_new()
+            self._c_ptr = cload.LOAD_new()
         else:
-            self._c_load = NULL
+            self._c_ptr = NULL
+
+    def _get_c_ptr(self):
+
+        return new_CPtr(self._c_ptr)
 
     property obj_type:
         """ Object type (int). """
-        def __get__(self): return cload.LOAD_get_obj_type(self._c_load)
+        def __get__(self): return cload.LOAD_get_obj_type(self._c_ptr)
 
     property index:
         """ Load index (int). """
-        def __get__(self): return cload.LOAD_get_index(self._c_load)
+        def __get__(self): return cload.LOAD_get_index(self._c_ptr)
         
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which load is connected. """
-        def __get__(self): return new_Bus(cload.LOAD_get_bus(self._c_load))
+        def __get__(self): return new_Bus(cload.LOAD_get_bus(self._c_ptr))
 
     property P:
         """ Load active power (p.u. system base MVA) (float). """
-        def __get__(self): return cload.LOAD_get_P(self._c_load)
-        def __set__(self,value): cload.LOAD_set_P(self._c_load,value)
+        def __get__(self): return cload.LOAD_get_P(self._c_ptr)
+        def __set__(self,value): cload.LOAD_set_P(self._c_ptr,value)
             
     property Q:
         """ Load reactive power (p.u. system base MVA) (float). """
-        def __get__(self): return cload.LOAD_get_Q(self._c_load)
-        def __set__(self,value): cload.LOAD_set_Q(self._c_load,value)
+        def __get__(self): return cload.LOAD_get_Q(self._c_ptr)
+        def __set__(self,value): cload.LOAD_set_Q(self._c_ptr,value)
 
 cdef new_Load(cload.Load* l):
     if l is not NULL:
         load = Load(alloc=False)
-        load._c_load = l
+        load._c_ptr = l
         return load
     else:
         raise LoadError('no load data')
@@ -1267,7 +1302,7 @@ cdef class VarGenerator:
     Variable generator class.
     """
 
-    cdef cvargen.Vargen* _c_gen
+    cdef cvargen.Vargen* _c_ptr
 
     def __init__(self,alloc=True):
         """
@@ -1283,9 +1318,13 @@ cdef class VarGenerator:
     def __cinit__(self,alloc=True):
         
         if alloc:
-            self._c_gen = cvargen.VARGEN_new()
+            self._c_ptr = cvargen.VARGEN_new()
         else:
-            self._c_gen = NULL
+            self._c_ptr = NULL
+
+    def _get_c_ptr(self):
+
+        return new_CPtr(self._c_ptr)
 
     def has_flags(self,fmask,vmask):
         """ 
@@ -1302,72 +1341,72 @@ cdef class VarGenerator:
         flag : {``True``, ``False``}
         """
 
-        return cvargen.VARGEN_has_flags(self._c_gen,fmask,vmask)
+        return cvargen.VARGEN_has_flags(self._c_ptr,fmask,vmask)
 
     property name:
         """ Variable generator name (string). """
-        def __get__(self): return cvargen.VARGEN_get_name(self._c_gen)
-        def __set__(self,name): cvargen.VARGEN_set_name(self._c_gen,name)
+        def __get__(self): return cvargen.VARGEN_get_name(self._c_ptr)
+        def __set__(self,name): cvargen.VARGEN_set_name(self._c_ptr,name)
 
     property obj_type:
         """ Object type (int). """
-        def __get__(self): return cvargen.VARGEN_get_obj_type(self._c_gen)
+        def __get__(self): return cvargen.VARGEN_get_obj_type(self._c_ptr)
 
     property index:
         """ Variable generator index (int). """
-        def __get__(self): return cvargen.VARGEN_get_index(self._c_gen)
+        def __get__(self): return cvargen.VARGEN_get_index(self._c_ptr)
         
     property index_P:
         """ Index of variable generator active power variable (int). """
-        def __get__(self): return cvargen.VARGEN_get_index_P(self._c_gen)
+        def __get__(self): return cvargen.VARGEN_get_index_P(self._c_ptr)
 
     property index_Q:
         """ Index of variable generator reactive power variable (int). """
-        def __get__(self): return cvargen.VARGEN_get_index_Q(self._c_gen)
+        def __get__(self): return cvargen.VARGEN_get_index_Q(self._c_ptr)
 
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which variable generator is connected. """
-        def __get__(self): return new_Bus(cvargen.VARGEN_get_bus(self._c_gen))
+        def __get__(self): return new_Bus(cvargen.VARGEN_get_bus(self._c_ptr))
 
     property P:
         """ Variable generator active power (p.u. system base MVA) (float). """
-        def __get__(self): return cvargen.VARGEN_get_P(self._c_gen)
-        def __set__(self,P): cvargen.VARGEN_set_P(self._c_gen,P)
+        def __get__(self): return cvargen.VARGEN_get_P(self._c_ptr)
+        def __set__(self,P): cvargen.VARGEN_set_P(self._c_ptr,P)
 
     property P_max:
         """ Variable generator active power upper limit (p.u. system base MVA) (float). """
-        def __get__(self): return cvargen.VARGEN_get_P_max(self._c_gen)
-        def __set__(self,P): cvargen.VARGEN_set_P_max(self._c_gen,P)
+        def __get__(self): return cvargen.VARGEN_get_P_max(self._c_ptr)
+        def __set__(self,P): cvargen.VARGEN_set_P_max(self._c_ptr,P)
 
     property P_min:
         """ Variable generator active power lower limit (p.u. system base MVA) (float). """
-        def __get__(self): return cvargen.VARGEN_get_P_min(self._c_gen)
-        def __set__(self,P): cvargen.VARGEN_set_P_min(self._c_gen,P)
+        def __get__(self): return cvargen.VARGEN_get_P_min(self._c_ptr)
+        def __set__(self,P): cvargen.VARGEN_set_P_min(self._c_ptr,P)
 
     property P_std:
         """ Variable generator active power standard deviation (p.u. system base MVA) (float). """
-        def __get__(self): return cvargen.VARGEN_get_P_std(self._c_gen)
-        def __set__(self,P): cvargen.VARGEN_set_P_std(self._c_gen,P)
+        def __get__(self): return cvargen.VARGEN_get_P_std(self._c_ptr)
+        def __set__(self,P): cvargen.VARGEN_set_P_std(self._c_ptr,P)
 
     property Q:
         """ Variable generator reactive power (p.u. system base MVA) (float). """
-        def __get__(self): return cvargen.VARGEN_get_Q(self._c_gen)
-        def __set__(self,Q): cvargen.VARGEN_set_Q(self._c_gen,Q)
+        def __get__(self): return cvargen.VARGEN_get_Q(self._c_ptr)
+        def __set__(self,Q): cvargen.VARGEN_set_Q(self._c_ptr,Q)
 
     property Q_max:
         """ Variable generator maximum reactive power (p.u. system base MVA) (float). """
-        def __get__(self): return cvargen.VARGEN_get_Q_max(self._c_gen)
-        def __set__(self,Q): cvargen.VARGEN_set_Q_max(self._c_gen,Q)
+        def __get__(self): return cvargen.VARGEN_get_Q_max(self._c_ptr)
+        def __set__(self,Q): cvargen.VARGEN_set_Q_max(self._c_ptr,Q)
 
     property Q_min:
         """ Variable generator minimum reactive power (p.u. system base MVA) (float). """
-        def __get__(self): return cvargen.VARGEN_get_Q_min(self._c_gen)
-        def __set__(self,Q): cvargen.VARGEN_set_Q_min(self._c_gen,Q)
+        def __get__(self): return cvargen.VARGEN_get_Q_min(self._c_ptr)
+        def __set__(self,Q): cvargen.VARGEN_set_Q_min(self._c_ptr,Q)
 
 cdef new_VarGenerator(cvargen.Vargen* g):
     if g is not NULL:
         gen = VarGenerator(alloc=False)
-        gen._c_gen = g
+        gen._c_ptr = g
         return gen
     else:
         raise VarGeneratorError('no vargen data')
@@ -1441,7 +1480,7 @@ cdef class Network:
         
         cdef Bus b = buses[0] if buses else None
         if b:
-            cnet.NET_add_vargens(self._c_net,b._c_bus,penetration,uncertainty,corr_radius,corr_value)
+            cnet.NET_add_vargens(self._c_net,b._c_ptr,penetration,uncertainty,corr_radius,corr_value)
         else:
             cnet.NET_add_vargens(self._c_net,NULL,penetration,uncertainty,corr_radius,corr_value)
         if cnet.NET_has_error(self._c_net):
@@ -2060,6 +2099,30 @@ cdef class Network:
                            reduce(lambda x,y: x|y,vals,0))
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
+
+    def set_flags_of_component(self,obj,flags,vals):
+        """
+        Sets flags of network components with specific properties.
+
+        Parameters
+        ----------
+        obj : :class:`Bus <pfnet.Bus>`, :class:`Branch <pfnet.Branch>`, :class:`Generator <pfnet.Generator>`, 
+              :class:`Load <pfnet.Load>`, :class:`Shunt <pfnet.Shunt>`, :class:`VarGenerator <pfnet.VarGenerator>` 
+        flags : int or list (:ref:`ref_net_flag`)
+        vals : int or list (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`)
+        """
+        
+        cdef CPtr ptr = obj._get_c_ptr()
+        vals = vals if isinstance(vals,list) else [vals]
+        flags = flags if isinstance(flags,list) else [flags]
+        cnet.NET_set_flags_of_component(self._c_net,
+                                        ptr._c_ptr,
+                                        obj.obj_type,
+                                        reduce(lambda x,y: x|y,flags,0),
+                                        reduce(lambda x,y: x|y,vals,0))
+        if cnet.NET_has_error(self._c_net):
+            raise NetworkError(cnet.NET_get_error_string(self._c_net))
+
 
     def set_var_values(self,values):
         """

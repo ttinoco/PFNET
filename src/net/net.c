@@ -1659,6 +1659,62 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, char
   }
 }
 
+void NET_set_flags_of_component(Net* net, void* obj, char obj_type, char flag_mask, char val_mask) {
+
+  // Local variables
+  int (*set_flags)(void*,char,char,int);
+  char (*get_obj_type)(void*);
+
+  // Check
+  if (!net)
+    return;
+
+  // Set pointers
+  switch (obj_type) {
+  case OBJ_BUS:
+    set_flags = &BUS_set_flags;
+    get_obj_type = &BUS_get_obj_type;
+    break;
+  case OBJ_GEN:
+    set_flags = &GEN_set_flags;
+    get_obj_type = &GEN_get_obj_type;
+    break;
+  case OBJ_BRANCH:
+    set_flags = &BRANCH_set_flags;
+    get_obj_type = &BRANCH_get_obj_type;
+    break;
+  case OBJ_SHUNT:
+    set_flags = &SHUNT_set_flags;
+    get_obj_type = &SHUNT_get_obj_type;
+    break;
+  case OBJ_VARGEN:
+    set_flags = &VARGEN_set_flags;
+    get_obj_type = &VARGEN_get_obj_type;
+    break;
+  default:
+    sprintf(net->error_string,"invalid object type");
+    net->error_flag = TRUE;
+    return;
+  }
+
+  // Check type
+  if (obj_type != get_obj_type(obj)) {
+    sprintf(net->error_string,"object type mismatch");
+    net->error_flag = TRUE;
+    return;
+  } 
+
+  // Set flags
+  if (flag_mask & FLAG_VARS)
+    net->num_vars = set_flags(obj,FLAG_VARS,val_mask,net->num_vars);
+  if (flag_mask & FLAG_FIXED)
+    net->num_fixed = set_flags(obj,FLAG_FIXED,val_mask,net->num_fixed);
+  if (flag_mask & FLAG_BOUNDED)
+    net->num_bounded = set_flags(obj,FLAG_BOUNDED,val_mask,net->num_bounded);
+  if (flag_mask & FLAG_SPARSE)
+    net->num_sparse = set_flags(obj,FLAG_SPARSE,val_mask,net->num_sparse);
+}
+
 void NET_set_var_values(Net* net, Vec* values) {
 
   // Local variables

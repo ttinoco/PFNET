@@ -22,7 +22,7 @@ cdef extern from "pfnet/branch.h":
     cdef char BRANCH_PROP_TAP_CHANGER_Q
     cdef char BRANCH_PROP_PHASE_SHIFTER
     
-    char BRANCH_get_obj_type(Branch* br)
+    char BRANCH_get_obj_type(void* br)
     int BRANCH_get_index(Branch* br)
     int BRANCH_get_index_ratio(Branch* br)
     int BRANCH_get_index_ratio_y(Branch* br)

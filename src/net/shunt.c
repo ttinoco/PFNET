@@ -95,9 +95,9 @@ void SHUNT_clear_flags(Shunt* shunt, char flag_type) {
   }
 }
 
-char SHUNT_get_obj_type(Shunt* shunt) {
+char SHUNT_get_obj_type(void* shunt) {
   if (shunt)
-    return shunt->obj_type;
+    return ((Shunt*)shunt)->obj_type;
   else
     return OBJ_UNKNOWN;
 }

@@ -18,7 +18,7 @@ cdef extern from "pfnet/shunt.h":
     cdef char SHUNT_PROP_ANY
     cdef char SHUNT_PROP_SWITCHED_V
     
-    char SHUNT_get_obj_type(Shunt* shunt)
+    char SHUNT_get_obj_type(void* shunt)
     int SHUNT_get_index(Shunt* shunt)
     int SHUNT_get_index_b(Shunt* shunt)
     int SHUNT_get_index_y(Shunt* shunt)

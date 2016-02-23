@@ -25,7 +25,7 @@ cdef extern from "pfnet/gen.h":
     REAL GEN_get_cost_coeff_Q0(Gen* gen)
     REAL GEN_get_cost_coeff_Q1(Gen* gen)
     REAL GEN_get_cost_coeff_Q2(Gen* gen)
-    char GEN_get_obj_type(Gen* gen)
+    char GEN_get_obj_type(void* gen)
     int GEN_get_index(Gen* gen)
     int GEN_get_index_P(Gen* gen)
     int GEN_get_index_Q(Gen* gen)

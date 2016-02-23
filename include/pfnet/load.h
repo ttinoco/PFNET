@@ -24,7 +24,7 @@ typedef struct Bus Bus;
 void* LOAD_array_get(void* load, int index);
 Load* LOAD_array_new(int num);
 void LOAD_array_show(Load* load, int num);
-char LOAD_get_obj_type(Load* load);
+char LOAD_get_obj_type(void* load);
 Bus* LOAD_get_bus(Load* load);
 int LOAD_get_index(Load* load);
 Load* LOAD_get_next(Load* load);

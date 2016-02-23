@@ -56,7 +56,7 @@ void* BRANCH_array_get(void* br, int index);
 Branch* BRANCH_array_new(int num);
 void BRANCH_array_show(Branch* br, int num);
 void BRANCH_clear_flags(Branch* br, char flag_type);
-char BRANCH_get_obj_type(Branch* br);
+char BRANCH_get_obj_type(void* br);
 int BRANCH_get_index(Branch* br);
 int BRANCH_get_index_ratio(Branch* br);
 int BRANCH_get_index_ratio_y(Branch* br);
