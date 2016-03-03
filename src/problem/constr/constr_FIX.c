@@ -342,7 +342,7 @@ void CONSTR_FIX_eval_branch(Constr* c, Branch *br, Vec* var_values) {
   // Nothing to do
 }
 
-void CONSTR_FIX_store_sens_branch(Constr* c, Branch *b, Vec* sens) {
+void CONSTR_FIX_store_sens_branch(Constr* c, Branch *b, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing
 }
 

@@ -1311,7 +1311,7 @@ void CONSTR_PF_eval_branch(Constr* c, Branch *br, Vec* var_values) {
   }
 }
 
-void CONSTR_PF_store_sens_branch(Constr* c, Branch* br, Vec* sens) {
+void CONSTR_PF_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   
   // Local variables
   Bus* bus[2];
@@ -1328,8 +1328,8 @@ void CONSTR_PF_store_sens_branch(Constr* c, Branch* br, Vec* sens) {
   bus[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++) {
     if (!bus_counted[BUS_get_index(bus[k])]) {
-      BUS_set_sens_P_balance(bus[k],VEC_get(sens,BUS_get_index_P(bus[k]))); // sens of P balance
-      BUS_set_sens_Q_balance(bus[k],VEC_get(sens,BUS_get_index_Q(bus[k]))); // sens of Q balance
+      BUS_set_sens_P_balance(bus[k],VEC_get(sf,BUS_get_index_P(bus[k]))); // sens of P balance
+      BUS_set_sens_Q_balance(bus[k],VEC_get(sf,BUS_get_index_Q(bus[k]))); // sens of Q balance
     }
     bus_counted[BUS_get_index(bus[k])] = TRUE;
   }

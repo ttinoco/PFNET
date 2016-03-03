@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -598,7 +598,7 @@ void CONSTR_REG_GEN_eval_branch(Constr* c, Branch *br, Vec* var_values) {
   }
 }
 
-void CONSTR_REG_GEN_store_sens_branch(Constr* c, Branch* br, Vec* sens) {
+void CONSTR_REG_GEN_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   
   // Local variables
   Bus* buses[2];
@@ -634,9 +634,9 @@ void CONSTR_REG_GEN_store_sens_branch(Constr* c, Branch* br, Vec* sens) {
       if (BUS_is_regulated_by_gen(bus) && // reg gen
 	  !BUS_is_slack(bus)) {           // not slack
 	
-	lamCompY = VEC_get(sens,*Jconstr_index);
+	lamCompY = VEC_get(sf,*Jconstr_index);
 	(*Jconstr_index)++; // dCompY
-	lamCompZ = VEC_get(sens,*Jconstr_index);
+	lamCompZ = VEC_get(sf,*Jconstr_index);
 	(*Jconstr_index)++; // dCompZ
 	
 	if (fabs(lamCompY) > fabs(lamCompZ))

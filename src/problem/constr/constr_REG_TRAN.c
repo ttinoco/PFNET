@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -767,7 +767,7 @@ void CONSTR_REG_TRAN_eval_branch(Constr* c, Branch *br, Vec* var_values) {
   }
 }
 
-void CONSTR_REG_TRAN_store_sens_branch(Constr* c, Branch* br, Vec* sens) {
+void CONSTR_REG_TRAN_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Local variables
   Bus* reg_bus;
@@ -786,13 +786,13 @@ void CONSTR_REG_TRAN_store_sens_branch(Constr* c, Branch* br, Vec* sens) {
 
     reg_bus = BRANCH_get_reg_bus(br);
     
-    lamCompVmin = VEC_get(sens,*Jconstr_index);
+    lamCompVmin = VEC_get(sf,*Jconstr_index);
     (*Jconstr_index)++; // compVmin
-    lamCompVmax = VEC_get(sens,*Jconstr_index);
+    lamCompVmax = VEC_get(sf,*Jconstr_index);
     (*Jconstr_index)++; // compVmax
-    lamCompTmax = VEC_get(sens,*Jconstr_index);
+    lamCompTmax = VEC_get(sf,*Jconstr_index);
     (*Jconstr_index)++; // compTmax
-    lamCompTmin = VEC_get(sens,*Jconstr_index);
+    lamCompTmin = VEC_get(sf,*Jconstr_index);
     (*Jconstr_index)++; // compTmin
 
     if (fabs(lamCompVmin) > fabs(BUS_get_sens_v_reg_by_tran(reg_bus)))

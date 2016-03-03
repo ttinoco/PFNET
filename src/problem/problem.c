@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -185,17 +185,17 @@ void PROB_eval(Prob* p, Vec* point) {
   PROB_update_nonlin_data(p);
 }
 
-void PROB_store_sens(Prob* p, Vec* sens) {
+void PROB_store_sens(Prob* p, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Local variables
   Branch* br;
   int i;
   
-  if (!p || !sens)
+  if (!p)
     return;
 
-  // Check size
-  if (VEC_get_size(sens) != VEC_get_size(p->f)) {
+  // Check sizes
+  if (VEC_get_size(sf) != VEC_get_size(p->f)) {
     sprintf(p->error_string,"invalid vector size");
     p->error_flag = TRUE;
     return;
@@ -207,7 +207,7 @@ void PROB_store_sens(Prob* p, Vec* sens) {
   // Store sens
   for (i = 0; i < NET_get_num_branches(p->net); i++) {
     br = NET_get_branch(p->net,i);
-    CONSTR_list_store_sens_branch(p->constr,br,sens);
+    CONSTR_list_store_sens_branch(p->constr,br,sA,sf,sGu,sGl);
   }
 }
 

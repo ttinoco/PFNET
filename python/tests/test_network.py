@@ -944,7 +944,7 @@ class TestNetwork(unittest.TestCase):
             for c in constr:
                 c.analyze()
                 c.eval(x0)
-                c.store_sensitivities(np.random.randn(c.f.size))
+                c.store_sensitivities(None,np.random.randn(c.f.size),None,None)
                 
             # Check bus largest mis and sens
             sens_types = [pf.BUS_SENS_P_BALANCE,

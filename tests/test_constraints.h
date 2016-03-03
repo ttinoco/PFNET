@@ -2,7 +2,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -80,7 +80,7 @@ static char* test_constr_BOUND() {
   Assert("error - wrong Jnnz counter",CONSTR_get_Jcounter(c) == 2*num);
   CONSTR_eval(c,x);
   Assert("error - wrong Jnnz counter",CONSTR_get_Jcounter(c) == 2*num);
-  CONSTR_store_sens(c,NULL);
+  CONSTR_store_sens(c,NULL,NULL,NULL,NULL);
   Assert("error - wrong Jnnz counter",CONSTR_get_Jcounter(c) == 2*num);
   Assert("error - wrong Annz counter",CONSTR_get_Acounter(c) == 0);
 
@@ -175,7 +175,7 @@ static char* test_constr_FIX() {
   Assert("error - wrong Annz counter",CONSTR_get_Acounter(c) == num+NET_get_num_buses_reg_by_gen(net));
   CONSTR_eval(c,x);
   Assert("error - wrong Annz counter",CONSTR_get_Acounter(c) == 0);
-  CONSTR_store_sens(c,NULL);
+  CONSTR_store_sens(c,NULL,NULL,NULL,NULL);
   Assert("error - wrong Annz counter",CONSTR_get_Acounter(c) == 0);
   Assert("error - wrong Jnnz counter",CONSTR_get_Jcounter(c) == 0);
 
@@ -292,7 +292,7 @@ static char* test_constr_PAR_GEN_P() {
   CONSTR_eval(c,x);
   Assert("error - wrong A counter",CONSTR_get_Acounter(c) == 0);
   Assert("error - wrong A counter",CONSTR_get_Aconstr_index(c) == 0);  
-  CONSTR_store_sens(c,NULL);
+  CONSTR_store_sens(c,NULL,NULL,NULL,NULL);
   Assert("error - wrong A counter",CONSTR_get_Acounter(c) == 0);
   Assert("error - wrong A counter",CONSTR_get_Aconstr_index(c) == 0);  
   
@@ -410,7 +410,7 @@ static char* test_constr_PAR_GEN_Q() {
   CONSTR_eval(c,x);
   Assert("error - wrong A counter",CONSTR_get_Acounter(c) == 0);
   Assert("error - wrong A counter",CONSTR_get_Aconstr_index(c) == 0);  
-  CONSTR_store_sens(c,NULL);
+  CONSTR_store_sens(c,NULL,NULL,NULL,NULL);
   Assert("error - wrong A counter",CONSTR_get_Acounter(c) == 0);
   Assert("error - wrong A counter",CONSTR_get_Aconstr_index(c) == 0);  
   

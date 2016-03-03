@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -23,8 +23,8 @@ void CONSTR_PF_count_branch(Constr* c, Branch* b);
 void CONSTR_PF_allocate(Constr* c);
 void CONSTR_PF_clear(Constr* c);
 void CONSTR_PF_analyze_branch(Constr* c, Branch* b);
-void CONSTR_PF_eval_branch(Constr* c, Branch *b, Vec* var_values);
-void CONSTR_PF_store_sens_branch(Constr* c, Branch *b, Vec* sens);
+void CONSTR_PF_eval_branch(Constr* c, Branch* b, Vec* var_values);
+void CONSTR_PF_store_sens_branch(Constr* c, Branch* b, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void CONSTR_PF_free(Constr* c);
 
 #endif

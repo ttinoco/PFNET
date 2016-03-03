@@ -68,7 +68,7 @@ struct Constr {
   void (*func_clear)(Constr* c); /**< @brief Function for clearing flags, counters, and function values */
   void (*func_analyze_branch)(Constr* c, Branch* br); /**< @brief Function for analyzing sparsity pattern */
   void (*func_eval_branch)(Constr* c, Branch* br, Vec* var_values); /**< @brief Function for evaluating constraint */
-  void (*func_store_sens_branch)(Constr* c, Branch* br, Vec* sens); /**< @brief Function for storing sensitivities */
+  void (*func_store_sens_branch)(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl); /**< @brief Function for storing sensitivities */
   void (*func_free)(Constr* c); /**< @brief Function for de-allocating any data used */
 
   // Type data
@@ -451,25 +451,62 @@ void CONSTR_list_eval_branch(Constr* clist, Branch* br, Vec* values) {
     CONSTR_eval_branch(cc,br,values);
 }
 
-void CONSTR_list_store_sens_branch(Constr* clist, Branch* br, Vec* sens) {
+void CONSTR_list_store_sens_branch(Constr* clist, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   Constr* cc;
-  Vec* v;
-  int size = 0;
-  int offset = 0;
-  REAL* sensd = VEC_get_data(sens);
+  Vec* vA;
+  Vec* vf;
+  Vec* vGu;
+  Vec* vGl;
+  int size_sA = 0;
+  int size_sf = 0;
+  int size_sG = 0;
+  int offset_sA = 0;
+  int offset_sf = 0;
+  int offset_sG = 0;
+  REAL* sA_data = VEC_get_data(sA);
+  REAL* sf_data = VEC_get_data(sf);
+  REAL* sGu_data = VEC_get_data(sGu);
+  REAL* sGl_data = VEC_get_data(sGl);
   
-  // Size
-  for (cc = clist; cc != NULL; cc = CONSTR_get_next(cc))
-    size += VEC_get_size(CONSTR_get_f(cc));
+  // Sizes
+  for (cc = clist; cc != NULL; cc = CONSTR_get_next(cc)) {
+    size_sA += MAT_get_size1(CONSTR_get_A(cc));
+    size_sf += VEC_get_size(CONSTR_get_f(cc));
+    size_sG += MAT_get_size1(CONSTR_get_G(cc));
+  }
   
   // Map
   for (cc = clist; cc != NULL; cc = CONSTR_get_next(cc)) {
-    if (offset + VEC_get_size(CONSTR_get_f(cc)) <= VEC_get_size(sens))
-      v = VEC_new_from_array(&(sensd[offset]),VEC_get_size(CONSTR_get_f(cc)));
+  
+    // Ax = b
+    if (offset_sA + MAT_get_size1(CONSTR_get_A(cc)) <= VEC_get_size(sA))
+      vA = VEC_new_from_array(&(sA_data[offset_sA]),MAT_get_size1(CONSTR_get_A(cc)));
     else
-      v = NULL;
-    CONSTR_store_sens_branch(cc,br,v);
-    offset += VEC_get_size(CONSTR_get_f(cc));
+      vA = NULL;
+
+    // f(x) = 0
+    if (offset_sf + VEC_get_size(CONSTR_get_f(cc)) <= VEC_get_size(sf))
+      vf = VEC_new_from_array(&(sf_data[offset_sf]),VEC_get_size(CONSTR_get_f(cc)));
+    else
+      vf = NULL;
+
+    // Gx <= u
+    if (offset_sG + MAT_get_size1(CONSTR_get_G(cc)) <= VEC_get_size(sGu))
+      vGu = VEC_new_from_array(&(sGu_data[offset_sG]),MAT_get_size1(CONSTR_get_G(cc)));
+    else
+      vGu = NULL;
+
+    // l <= Gx
+    if (offset_sG + MAT_get_size1(CONSTR_get_G(cc)) <= VEC_get_size(sGl))
+      vGl = VEC_new_from_array(&(sGl_data[offset_sG]),MAT_get_size1(CONSTR_get_G(cc)));
+    else
+      vGl = NULL;
+
+    CONSTR_store_sens_branch(cc,br,vA,vf,vGu,vGl);
+
+    offset_sA += MAT_get_size1(CONSTR_get_A(cc));
+    offset_sf += VEC_get_size(CONSTR_get_f(cc));
+    offset_sG += MAT_get_size1(CONSTR_get_G(cc));
   }
 }
 
@@ -780,17 +817,17 @@ void CONSTR_eval_branch(Constr* c, Branch *br, Vec* values) {
     (*(c->func_eval_branch))(c,br,values);
 }
 
-void CONSTR_store_sens(Constr* c, Vec* sens) {
+void CONSTR_store_sens(Constr* c, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   int i;
   Net* net = CONSTR_get_network(c);
   CONSTR_clear(c);
   for (i = 0; i < NET_get_num_branches(net); i++) 
-    CONSTR_store_sens_branch(c,NET_get_branch(net,i),sens);
+    CONSTR_store_sens_branch(c,NET_get_branch(net,i),sA,sf,sGu,sGl);
 }
 
-void CONSTR_store_sens_branch(Constr* c, Branch *br, Vec* sens) {
+void CONSTR_store_sens_branch(Constr* c, Branch *br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   if (c && c->func_store_sens_branch && CONSTR_is_safe_to_count(c))
-    (*(c->func_store_sens_branch))(c,br,sens);
+    (*(c->func_store_sens_branch))(c,br,sA,sf,sGu,sGl);
 }
 
 BOOL CONSTR_is_safe_to_count(Constr* c) {

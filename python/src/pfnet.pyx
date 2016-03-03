@@ -2173,12 +2173,8 @@ cdef class Network:
         values : :class:`ndarray <numpy.ndarray>`
         """
             
-        cdef cvec.Vec* v = NULL
         cdef np.ndarray[double,mode='c'] x = values
-        if values is not None:
-            v = cvec.VEC_new_from_array(&(x[0]),len(x)) if x.size else NULL
-        else:
-            v = NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (values is not None and values.size) else NULL
         cnet.NET_update_properties(self._c_net,v)
 
     def update_set_points(self):
@@ -2734,19 +2730,32 @@ cdef class Constraint:
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
 
-    def store_sensitivities(self,sens):
+    def store_sensitivities(self,sA,sf,sGu,sGl):
         """
-        Stores Lagrange multiplier estimates of the nonlinear equality constraint in 
+        Stores Lagrange multiplier estimates of the constraints in 
         the power network components.
 
         Parameters
         ----------
-        sens : :class:`ndarray <numpy.ndarray>`
+        sA : :class:`ndarray <numpy.ndarray>`
+             linear equality constraints (Ax = b)
+        sf : :class:`ndarray <numpy.ndarray>`
+             nonlinear equality constraints (f(x) = 0)
+        sGu : :class:`ndarray <numpy.ndarray>`
+              linear inequality constraints (Gx <= u)
+        sGl : :class:`ndarray <numpy.ndarray>`
+              linear inequality constraints (l <= Gx)
         """
 
-        cdef np.ndarray[double,mode='c'] x = sens
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if sens.size else NULL
-        cconstr.CONSTR_store_sens(self._c_constr,v)
+        cdef np.ndarray[double,mode='c'] xA = sA
+        cdef np.ndarray[double,mode='c'] xf = sf
+        cdef np.ndarray[double,mode='c'] xGu = sGu
+        cdef np.ndarray[double,mode='c'] xGl = sGl
+        cdef cvec.Vec* vA = cvec.VEC_new_from_array(&(xA[0]),len(xA)) if (sA is not None and sA.size) else NULL
+        cdef cvec.Vec* vf = cvec.VEC_new_from_array(&(xf[0]),len(xf)) if (sf is not None and sf.size) else NULL
+        cdef cvec.Vec* vGu = cvec.VEC_new_from_array(&(xGu[0]),len(xGu)) if (sGu is not None and sGu.size) else NULL
+        cdef cvec.Vec* vGl = cvec.VEC_new_from_array(&(xGl[0]),len(xGl)) if (sGl is not None and sGl.size) else NULL
+        cconstr.CONSTR_store_sens(self._c_constr,vA,vf,vGu,vGl)
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
 
@@ -2972,19 +2981,32 @@ cdef class Problem:
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if var_values.size else NULL
         cprob.PROB_eval(self._c_prob,v)
 
-    def store_sensitivities(self,sens):
+    def store_sensitivities(self,sA,sf,sGu,sGl):
         """
-        Stores Lagrange multiplier estimates of the nonlinear equality constraint in 
+        Stores Lagrange multiplier estimates of the constraints in 
         the power network components.
 
         Parameters
         ----------
-        sens : :class:`ndarray <numpy.ndarray>`
+        sA : :class:`ndarray <numpy.ndarray>`
+             linear equality constraints (Ax = b)
+        sf : :class:`ndarray <numpy.ndarray>`
+             nonlinear equality constraints (f(x) = 0)
+        sGu : :class:`ndarray <numpy.ndarray>`
+              linear inequality constraints (Gx <= u)
+        sGl : :class:`ndarray <numpy.ndarray>`
+              linear inequality constraints (l <= Gx)
         """
         
-        cdef np.ndarray[double,mode='c'] x = sens
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if sens.size else NULL
-        cprob.PROB_store_sens(self._c_prob,v)
+        cdef np.ndarray[double,mode='c'] xA = sA
+        cdef np.ndarray[double,mode='c'] xf = sf
+        cdef np.ndarray[double,mode='c'] xGu = sGu
+        cdef np.ndarray[double,mode='c'] xGl = sGl
+        cdef cvec.Vec* vA = cvec.VEC_new_from_array(&(xA[0]),len(xA)) if (sA is not None and sA.size) else NULL
+        cdef cvec.Vec* vf = cvec.VEC_new_from_array(&(xf[0]),len(xf)) if (sf is not None and sf.size) else NULL
+        cdef cvec.Vec* vGu = cvec.VEC_new_from_array(&(xGu[0]),len(xGu)) if (sGu is not None and sGu.size) else NULL
+        cdef cvec.Vec* vGl = cvec.VEC_new_from_array(&(xGl[0]),len(xGl)) if (sGl is not None and sGl.size) else NULL
+        cprob.PROB_store_sens(self._c_prob,vA,vf,vGu,vGl)
         if cprob.PROB_has_error(self._c_prob):
             raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 

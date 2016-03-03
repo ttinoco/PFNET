@@ -50,7 +50,7 @@ cdef extern from "pfnet/constr.h":
     void CONSTR_allocate(Constr* c)
     void CONSTR_analyze(Constr* c)
     void CONSTR_eval(Constr* c, Vec* values)
-    void CONSTR_store_sens(Constr* c, Vec* sens)
+    void CONSTR_store_sens(Constr* c, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl)
     bint CONSTR_has_error(Constr* c)
     void CONSTR_clear_error(Constr * c)
     char* CONSTR_get_error_string(Constr* c)

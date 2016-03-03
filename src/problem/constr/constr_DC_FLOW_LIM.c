@@ -165,7 +165,7 @@ void CONSTR_DC_FLOW_LIM_eval_branch(Constr* c, Branch *br, Vec* var_values) {
   // Nothing
 }
 
-void CONSTR_DC_FLOW_LIM_store_sens_branch(Constr* c, Branch* br, Vec* sens) {
+void CONSTR_DC_FLOW_LIM_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing
 }
 

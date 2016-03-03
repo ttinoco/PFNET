@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -298,7 +298,7 @@ void CONSTR_DCPF_eval_branch(Constr* c, Branch *br, Vec* var_values) {
   // Nothing
 }
 
-void CONSTR_DCPF_store_sens_branch(Constr* c, Branch* br, Vec* sens) {
+void CONSTR_DCPF_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing
 }
 

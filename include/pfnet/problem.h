@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -29,7 +29,7 @@ void PROB_add_heur(Prob* p, int type);
 void PROB_analyze(Prob* p);
 void PROB_apply_heuristics(Prob* p, Vec* point);
 void PROB_eval(Prob* p, Vec* point);
-void PROB_store_sens(Prob* p, Vec* sens);
+void PROB_store_sens(Prob* p, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void PROB_del(Prob* p);
 void PROB_clear(Prob* p);
 void PROB_combine_H(Prob* p, Vec* coeff, BOOL ensure_psd);

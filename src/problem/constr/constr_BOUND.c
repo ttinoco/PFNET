@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -735,7 +735,7 @@ void CONSTR_BOUND_eval_branch(Constr* c, Branch *br, Vec* var_values) {
   }
 }
 
-void CONSTR_BOUND_store_sens_branch(Constr* c, Branch* br, Vec* sens) {
+void CONSTR_BOUND_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   
   // Local variables
   Bus* buses[2];
@@ -782,9 +782,9 @@ void CONSTR_BOUND_store_sens_branch(Constr* c, Branch* br, Vec* sens) {
 
       // Voltage magnitude (V_MAG)
       if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VMAG) && BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
-	BUS_set_sens_v_mag_u_bound(bus,VEC_get(sens,*Jcounter));
+	BUS_set_sens_v_mag_u_bound(bus,VEC_get(sf,*Jcounter));
 	(*Jcounter)++; // upper bound
-	BUS_set_sens_v_mag_l_bound(bus,VEC_get(sens,*Jcounter));
+	BUS_set_sens_v_mag_l_bound(bus,VEC_get(sf,*Jcounter));
 	(*Jcounter)++; // lower bound
       }
 

@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -822,7 +822,7 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch *br, Vec* var_values) {
   }
 }
 
-void CONSTR_REG_SHUNT_store_sens_branch(Constr* c, Branch* br, Vec* sens) {
+void CONSTR_REG_SHUNT_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   
   // Local variables
   Bus* buses[2];
@@ -863,13 +863,13 @@ void CONSTR_REG_SHUNT_store_sens_branch(Constr* c, Branch* br, Vec* sens) {
       
       for (shunt = BUS_get_reg_shunt(bus); shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
 
-	lamCompVmin = VEC_get(sens,*Jconstr_index);
+	lamCompVmin = VEC_get(sf,*Jconstr_index);
 	(*Jconstr_index)++; // compVmin
-	lamCompVmax = VEC_get(sens,*Jconstr_index);
+	lamCompVmax = VEC_get(sf,*Jconstr_index);
 	(*Jconstr_index)++; // compVmax
-	lamCompBmax = VEC_get(sens,*Jconstr_index);
+	lamCompBmax = VEC_get(sf,*Jconstr_index);
 	(*Jconstr_index)++; // compBmax
-	lamCompBmin = VEC_get(sens,*Jconstr_index);
+	lamCompBmin = VEC_get(sf,*Jconstr_index);
 	(*Jconstr_index)++; // compBmin
 
 	if (fabs(lamCompVmin) > fabs(BUS_get_sens_v_reg_by_shunt(bus)))
