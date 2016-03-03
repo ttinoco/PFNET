@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -43,10 +43,10 @@ struct Constr {
   Mat* A;           /**< @brief Matrix of constraint normals of linear equality constraints */
   Vec* b;           /**< @brief Right-hand side vector of linear equality constraints */
 
-  // Linear inequalities (hl <= Gx <= hu)
+  // Linear inequalities (l <= Gx <= h)
   Mat* G;           /** @brief Matrix of constraint normals of linear inequality constraints */
-  Vec* hl;          /** @brief Lower bound for linear inequality contraints */
-  Vec* hu;          /** @brief Upper bound for linear inequality contraints */
+  Vec* l;           /** @brief Lower bound for linear inequality contraints */
+  Vec* u;           /** @brief Upper bound for linear inequality contraints */
   
   // Utils
   int Acounter;         /**< @brief Counter for nonzeros of matrix A */
@@ -144,8 +144,8 @@ void CONSTR_del(Constr* c) {
     VEC_del(c->f);
     MAT_del(c->J);
     MAT_del(c->G);
-    VEC_del(c->hl);
-    VEC_del(c->hu);
+    VEC_del(c->l);
+    VEC_del(c->u);
     MAT_array_del(c->H_array,c->H_array_size);
     MAT_del(c->H_combined);
 
@@ -182,16 +182,16 @@ Mat* CONSTR_get_A(Constr* c) {
     return NULL;
 }
 
-Vec* CONSTR_get_hl(Constr* c) {
+Vec* CONSTR_get_l(Constr* c) {
   if (c)
-    return c->hl;
+    return c->l;
   else
     return NULL;
 }
 
-Vec* CONSTR_get_hu(Constr* c) {
+Vec* CONSTR_get_u(Constr* c) {
   if (c)
-    return c->hu;
+    return c->u;
   else
     return NULL;
 }
@@ -494,8 +494,8 @@ Constr* CONSTR_new(int type, Net* net) {
   c->A = NULL;
   c->b = NULL;
   c->G = NULL;
-  c->hl = NULL;
-  c->hu = NULL;
+  c->l = NULL;
+  c->u = NULL;
   c->Acounter = 0;
   c->Jcounter = 0;
   c->Gcounter = 0;
@@ -640,14 +640,14 @@ void CONSTR_set_A(Constr* c, Mat* A) {
     c->A = A;
 }
 
-void CONSTR_set_hl(Constr* c, Vec* hl) {
+void CONSTR_set_l(Constr* c, Vec* l) {
   if (c)
-    c->hl = hl;
+    c->l = l;
 }
 
-void CONSTR_set_hu(Constr* c, Vec* hu) {
+void CONSTR_set_u(Constr* c, Vec* u) {
   if (c)
-    c->hu = hu;
+    c->u = u;
 }
 
 void CONSTR_set_G(Constr* c, Mat* G) {

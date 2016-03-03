@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -39,8 +39,8 @@ cdef extern from "pfnet/constr.h":
     Mat* CONSTR_get_J(Constr* c)
     Vec* CONSTR_get_b(Constr* c)
     Mat* CONSTR_get_A(Constr* c)
-    Vec* CONSTR_get_hl(Constr* c)
-    Vec* CONSTR_get_hu(Constr* c)
+    Vec* CONSTR_get_l(Constr* c)
+    Vec* CONSTR_get_u(Constr* c)
     Mat* CONSTR_get_G(Constr* c)
     Mat* CONSTR_get_H_single(Constr* c, int i)
     Mat* CONSTR_get_H_combined(Constr* c)

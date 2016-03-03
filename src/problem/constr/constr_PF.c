@@ -371,10 +371,10 @@ void CONSTR_PF_allocate(Constr* c) {
   CONSTR_set_A(c,MAT_new(0,num_vars,0));
   CONSTR_set_b(c,VEC_new(0));
 
-  // G hl hu
+  // G l u
   CONSTR_set_G(c,MAT_new(0,num_vars,0));
-  CONSTR_set_hl(c,VEC_new(0));
-  CONSTR_set_hu(c,VEC_new(0));
+  CONSTR_set_l(c,VEC_new(0));
+  CONSTR_set_u(c,VEC_new(0));
 
   // f
   CONSTR_set_f(c,VEC_new(num_constr));

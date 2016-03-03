@@ -2808,13 +2808,13 @@ cdef class Constraint:
         """ Matrix for linear equality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
         def __get__(self): return Matrix(cconstr.CONSTR_get_A(self._c_constr))
 
-    property hl:
+    property l:
         """ Lower bound vector of linear inequality constraints (:class:`ndarray <numpy.ndarray>`). """
-        def __get__(self): return Vector(cconstr.CONSTR_get_hl(self._c_constr))
+        def __get__(self): return Vector(cconstr.CONSTR_get_l(self._c_constr))
 
-    property hu:
+    property u:
         """ Upper bound vector of linear inequality constraints (:class:`ndarray <numpy.ndarray>`). """
-        def __get__(self): return Vector(cconstr.CONSTR_get_hu(self._c_constr))
+        def __get__(self): return Vector(cconstr.CONSTR_get_u(self._c_constr))
 
     property G:
         """ Matrix for linear inequality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """

@@ -130,8 +130,8 @@ class TestConstraints(unittest.TestCase):
             A = constr.A
             b = constr.b
             G = constr.G
-            hl = constr.hl
-            hu = constr.hu
+            l = constr.l
+            u = constr.u
             
             # Before 
             self.assertTrue(type(f) is np.ndarray)
@@ -147,10 +147,10 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(G) is coo_matrix)
             self.assertTupleEqual(G.shape,(0,0))
             self.assertEqual(G.nnz,0)
-            self.assertTrue(type(hl) is np.ndarray)
-            self.assertTupleEqual(hl.shape,(0,))
-            self.assertTrue(type(hu) is np.ndarray)
-            self.assertTupleEqual(hu.shape,(0,))
+            self.assertTrue(type(l) is np.ndarray)
+            self.assertTupleEqual(l.shape,(0,))
+            self.assertTrue(type(u) is np.ndarray)
+            self.assertTupleEqual(u.shape,(0,))
             
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Acounter,0)
@@ -167,8 +167,8 @@ class TestConstraints(unittest.TestCase):
             A = constr.A
             b = constr.b
             G = constr.G
-            hl = constr.hl
-            hu = constr.hu
+            l = constr.l
+            u = constr.u
             
             # After
             self.assertTrue(type(b) is np.ndarray)
@@ -184,10 +184,10 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(G) is coo_matrix)
             self.assertTupleEqual(G.shape,(0,net.num_vars))
             self.assertEqual(G.nnz,0)
-            self.assertTrue(type(hl) is np.ndarray)
-            self.assertTupleEqual(hl.shape,(0,))
-            self.assertTrue(type(hu) is np.ndarray)
-            self.assertTupleEqual(hu.shape,(0,))
+            self.assertTrue(type(l) is np.ndarray)
+            self.assertTupleEqual(l.shape,(0,))
+            self.assertTrue(type(u) is np.ndarray)
+            self.assertTupleEqual(u.shape,(0,))
             
             self.assertTrue(not np.any(np.isinf(b)))
             self.assertTrue(not np.any(np.isnan(b)))
@@ -1909,18 +1909,18 @@ class TestConstraints(unittest.TestCase):
             A = constr.A
             b = constr.b
             G = constr.G
-            hl = constr.hl
-            hu = constr.hu
+            l = constr.l
+            u = constr.u
 
             # Before 
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(b) is np.ndarray)
             self.assertTupleEqual(b.shape,(0,))
-            self.assertTrue(type(hl) is np.ndarray)
-            self.assertTupleEqual(hl.shape,(0,))
-            self.assertTrue(type(hu) is np.ndarray)
-            self.assertTupleEqual(hu.shape,(0,))
+            self.assertTrue(type(l) is np.ndarray)
+            self.assertTupleEqual(l.shape,(0,))
+            self.assertTrue(type(u) is np.ndarray)
+            self.assertTupleEqual(u.shape,(0,))
             self.assertTrue(type(J) is coo_matrix)
             self.assertTupleEqual(J.shape,(0,0))
             self.assertEqual(J.nnz,0)
@@ -1943,8 +1943,8 @@ class TestConstraints(unittest.TestCase):
             J = constr.J
             A = constr.A
             b = constr.b
-            hl = constr.hl
-            hu = constr.hu
+            l = constr.l
+            u = constr.u
             G = constr.G
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Jconstr_index,0)
@@ -1953,15 +1953,15 @@ class TestConstraints(unittest.TestCase):
 
             self.assertTupleEqual(b.shape,(0,))
             self.assertTupleEqual(f.shape,(0,))
-            self.assertTupleEqual(hl.shape,(net.num_branches,))
-            self.assertTupleEqual(hu.shape,(net.num_branches,))
+            self.assertTupleEqual(l.shape,(net.num_branches,))
+            self.assertTupleEqual(u.shape,(net.num_branches,))
             
             self.assertTupleEqual(A.shape,(0,net.num_vars)) 
             self.assertTupleEqual(J.shape,(0,net.num_vars))
             self.assertTupleEqual(G.shape,(net.num_branches,net.num_vars))
             self.assertEqual(G.nnz,constr.Gcounter)
             
-            self.assertTrue(np.all(hl <= hu))
+            self.assertTrue(np.all(l <= u))
 
             num = 0
             for br in net.branches:
@@ -1988,8 +1988,8 @@ class TestConstraints(unittest.TestCase):
                     self.assertEqual(G.col[counter],br.bus_to.index_v_ang)
                     self.assertEqual(G.data[counter],br.b)
                     counter += 1
-                self.assertEqual(hl[br.index],-br.ratingA+off-br.b*br.phase)
-                self.assertEqual(hu[br.index],br.ratingA+off-br.b*br.phase)
+                self.assertEqual(l[br.index],-br.ratingA+off-br.b*br.phase)
+                self.assertEqual(u[br.index],br.ratingA+off-br.b*br.phase)
             self.assertEqual(counter,G.nnz)
 
     def tearDown(self):

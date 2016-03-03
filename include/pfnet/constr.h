@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -48,8 +48,8 @@ void CONSTR_del(Constr* constr);
 int CONSTR_get_type(Constr* c);
 Vec* CONSTR_get_b(Constr* c);
 Mat* CONSTR_get_A(Constr* c);
-Vec* CONSTR_get_hl(Constr* c);
-Vec* CONSTR_get_hu(Constr* c);
+Vec* CONSTR_get_l(Constr* c);
+Vec* CONSTR_get_u(Constr* c);
 Mat* CONSTR_get_G(Constr* c);
 Vec* CONSTR_get_f(Constr* c);
 Mat* CONSTR_get_J(Constr* c);
@@ -90,8 +90,8 @@ void CONSTR_list_store_sens_branch(Constr* clist, Branch* br, Vec* sens);
 Constr* CONSTR_new(int type, Net* net);
 void CONSTR_set_b(Constr* c, Vec* b);
 void CONSTR_set_A(Constr* c, Mat* A);
-void CONSTR_set_hl(Constr* c, Vec* hl);
-void CONSTR_set_hu(Constr* c, Vec* hu);
+void CONSTR_set_l(Constr* c, Vec* l);
+void CONSTR_set_u(Constr* c, Vec* u);
 void CONSTR_set_G(Constr* c, Mat* G);
 void CONSTR_set_f(Constr* c, Vec* f);
 void CONSTR_set_J(Constr* c, Mat* J);

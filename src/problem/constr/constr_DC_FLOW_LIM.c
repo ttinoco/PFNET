@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -77,8 +77,8 @@ void CONSTR_DC_FLOW_LIM_allocate(Constr* c) {
   CONSTR_set_b(c,VEC_new(0));
   
   // h
-  CONSTR_set_hl(c,VEC_new(num_br));
-  CONSTR_set_hu(c,VEC_new(num_br));
+  CONSTR_set_l(c,VEC_new(num_br));
+  CONSTR_set_u(c,VEC_new(num_br));
 
   // G
   CONSTR_set_G(c,MAT_new(num_br,      // size1 (rows)
@@ -91,16 +91,16 @@ void CONSTR_DC_FLOW_LIM_analyze_branch(Constr* c, Branch* br) {
   // Local variables
   Bus* bus[2];
   Mat* G;
-  Vec* hl;
-  Vec* hu;
+  Vec* l;
+  Vec* u;
   int* Gcounter;
   REAL b;
   int index;
   
   // Constr data
   G = CONSTR_get_G(c);
-  hl = CONSTR_get_hl(c);
-  hu = CONSTR_get_hu(c);
+  l = CONSTR_get_l(c);
+  u = CONSTR_get_u(c);
   Gcounter = CONSTR_get_Gcounter_ptr(c);
   if (!Gcounter)
     return;
@@ -112,8 +112,8 @@ void CONSTR_DC_FLOW_LIM_analyze_branch(Constr* c, Branch* br) {
 
   index = BRANCH_get_index(br);
   
-  VEC_set(hl,index,-BRANCH_get_ratingA(br)); // p.u.
-  VEC_set(hu,index,BRANCH_get_ratingA(br));  // p.u.
+  VEC_set(l,index,-BRANCH_get_ratingA(br)); // p.u.
+  VEC_set(u,index,BRANCH_get_ratingA(br));  // p.u.
   
   if (BUS_has_flags(bus[0],FLAG_VARS,BUS_VAR_VANG)) { // wk var
     
@@ -126,8 +126,8 @@ void CONSTR_DC_FLOW_LIM_analyze_branch(Constr* c, Branch* br) {
   else {
     
     // b 
-    VEC_add_to_entry(hl,index,b*BUS_get_v_ang(bus[0]));
-    VEC_add_to_entry(hu,index,b*BUS_get_v_ang(bus[0]));
+    VEC_add_to_entry(l,index,b*BUS_get_v_ang(bus[0]));
+    VEC_add_to_entry(u,index,b*BUS_get_v_ang(bus[0]));
   }
 
   if (BUS_has_flags(bus[1],FLAG_VARS,BUS_VAR_VANG)) { // wm var
@@ -141,8 +141,8 @@ void CONSTR_DC_FLOW_LIM_analyze_branch(Constr* c, Branch* br) {
   else {
     
     // b 
-    VEC_add_to_entry(hl,index,-b*BUS_get_v_ang(bus[1]));
-    VEC_add_to_entry(hu,index,-b*BUS_get_v_ang(bus[1]));
+    VEC_add_to_entry(l,index,-b*BUS_get_v_ang(bus[1]));
+    VEC_add_to_entry(u,index,-b*BUS_get_v_ang(bus[1]));
   }
 
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) { // phi var
@@ -156,8 +156,8 @@ void CONSTR_DC_FLOW_LIM_analyze_branch(Constr* c, Branch* br) {
   else {
     
     // b 
-    VEC_add_to_entry(hl,index,-b*BRANCH_get_phase(br));
-    VEC_add_to_entry(hu,index,-b*BRANCH_get_phase(br));
+    VEC_add_to_entry(l,index,-b*BRANCH_get_phase(br));
+    VEC_add_to_entry(u,index,-b*BRANCH_get_phase(br));
   }
 }
 
