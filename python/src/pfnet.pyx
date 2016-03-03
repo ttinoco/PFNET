@@ -2644,7 +2644,11 @@ cdef class Constraint:
 
     def __init__(self,int type, Network net, alloc=True):
         """
-        Constraint class.
+        Class that represents constraints of the form
+
+        Ax = b
+        f(x) = 0
+        l <= Gx <= u
 
         Parameters
         ----------
@@ -2887,7 +2891,12 @@ cdef class Problem:
 
     def __init__(self):
         """
-        Class constructor.
+        Class that represents optimization problem of the form
+
+        minimize    phi(x)
+        subject to  Ax = b
+                    f(x) = 0
+                    l <= Gx <= u
         """
 
         pass        
@@ -3124,6 +3133,18 @@ cdef class Problem:
     property b:
         """ Right hand side vectors of the linear equality constraints (:class:`ndarray <numpy.ndarray>`). """
         def __get__(self): return Vector(cprob.PROB_get_b(self._c_prob))
+
+    property G:
+        """ Constraint matrix of linear inequality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
+        def __get__(self): return Matrix(cprob.PROB_get_G(self._c_prob))
+
+    property l:
+        """ Lower bound for linear inequality constraints (:class:`ndarray <numpy.ndarray>`). """
+        def __get__(self): return Vector(cprob.PROB_get_l(self._c_prob))
+
+    property u:
+        """ Upper bound for linear inequality constraints (:class:`ndarray <numpy.ndarray>`). """
+        def __get__(self): return Vector(cprob.PROB_get_u(self._c_prob))
 
     property J:
         """ Jacobian matrix of the nonlinear equality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """

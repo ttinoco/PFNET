@@ -33,14 +33,19 @@ struct Prob {
   Vec* gphi;      /**< @brief Gradient of combined objective function */
   Mat* Hphi;      /**< @brief Hessian of combined objective function */
 
-  // Linear equality constraints
+  // Linear equality constraints (Ax = 0)
   Vec* b;         /**< @brief Combined right-hand side of linear constraints */
   Mat* A;         /**< @brief Combined linear constraint matrix */
   
-  // Nonlinear equality constraints
+  // Nonlinear equality constraints (f(x) = 0)
   Vec* f;           /**< @brief Nonlinear constraint function values */
   Mat* J;           /**< @brief Jacobian matrix of nonlinear constraints */
   Mat* H_combined;  /**< @brief Combined Hessians of nonlinear constraints */
+
+  // Linear inequality constraints (l <= Gx <= u)
+  Mat* G;           /** @brief Matrix of constraint normals of linear inequality constraints */
+  Vec* l;           /** @brief Lower bound for linear inequality contraints */
+  Vec* u;           /** @brief Upper bound for linear inequality contraints */
 };
 
 void PROB_add_constr(Prob* p, int type) {
@@ -69,6 +74,8 @@ void PROB_analyze(Prob* p) {
   Func* f;
   int Arow;
   int Annz;
+  int Grow;
+  int Gnnz;
   int Jrow;
   int Jnnz;
   int Hphinnz;
@@ -106,27 +113,41 @@ void PROB_analyze(Prob* p) {
   }
 
   // Allocate problem matvec
-  Annz = 0;
   Arow = 0;
+  Annz = 0;
+  Grow = 0;
+  Gnnz = 0;
   Jrow = 0;
   Jnnz = 0;
   Hphinnz = 0;
   Hcombnnz = 0;
   num_vars = NET_get_num_vars(p->net);
   for (c = p->constr; c != NULL; c = CONSTR_get_next(c)) {
+
     Arow += MAT_get_size1(CONSTR_get_A(c));
     Annz += MAT_get_nnz(CONSTR_get_A(c));
+
+    Grow += MAT_get_size1(CONSTR_get_G(c));
+    Gnnz += MAT_get_nnz(CONSTR_get_G(c));
+
     Jrow += MAT_get_size1(CONSTR_get_J(c));
     Jnnz += MAT_get_nnz(CONSTR_get_J(c));
     Hcombnnz += MAT_get_nnz(CONSTR_get_H_combined(c));
   }
   for (f = p->func; f != NULL; f = FUNC_get_next(f))
     Hphinnz += MAT_get_nnz(FUNC_get_Hphi(f));
+
   p->phi = 0;
   p->gphi = VEC_new(num_vars);
   p->Hphi = MAT_new(num_vars,num_vars,Hphinnz);
+
   p->b = VEC_new(Arow);
   p->A = MAT_new(Arow,num_vars,Annz);
+
+  p->l = VEC_new(Grow);
+  p->u = VEC_new(Grow);
+  p->G = MAT_new(Grow,num_vars,Gnnz);
+  
   p->f = VEC_new(Jrow);
   p->J = MAT_new(Jrow,num_vars,Jnnz);
   p->H_combined = MAT_new(num_vars,num_vars,Hcombnnz);
@@ -226,11 +247,18 @@ void PROB_clear(Prob* p) {
     CONSTR_list_del(p->constr);
     FUNC_list_del(p->func);
     HEUR_list_del(p->heur);
+    
     VEC_del(p->b);
     MAT_del(p->A);
+
+    VEC_del(p->u);
+    VEC_del(p->l);
+    MAT_del(p->G);
+    
     VEC_del(p->f);
     MAT_del(p->J);
     MAT_del(p->H_combined);
+    
     VEC_del(p->gphi);
     MAT_del(p->Hphi);    
 
@@ -377,6 +405,27 @@ Vec* PROB_get_b(Prob* p) {
     return NULL;
 }
 
+Mat* PROB_get_G(Prob* p) {
+  if (p)
+    return p->G;
+  else 
+    return NULL;
+}
+
+Vec* PROB_get_l(Prob* p) {
+  if (p)
+    return p->l;
+  else 
+    return NULL;
+}
+
+Vec* PROB_get_u(Prob* p) {
+  if (p)
+    return p->u;
+  else 
+    return NULL;
+}
+
 Mat* PROB_get_J(Prob* p) {
   if (p)
     return p->J;
@@ -416,11 +465,18 @@ void PROB_init(Prob* p) {
     p->func = NULL;
     p->heur = NULL;
     p->net = NULL;
+    
     p->phi = 0;
     p->gphi = NULL;
     p->Hphi = NULL;
+    
     p->b = NULL;
     p->A = NULL;
+    
+    p->l = NULL;
+    p->u = NULL;
+    p->G = NULL;
+    
     p->f = NULL;
     p->J = NULL;
     p->H_combined = NULL;
@@ -452,7 +508,9 @@ void PROB_show(Prob* p) {
 }
 
 void PROB_update_nonlin_struc(Prob* p) {
-  
+  /* This function fills in problem Jacobians and Hessians
+     structure with constraint structure */
+
   // Local variables
   Func* f;
   Constr* c;
@@ -520,6 +578,8 @@ void PROB_update_nonlin_struc(Prob* p) {
 }
 
 void PROB_update_nonlin_data(Prob* p) {
+  /* This function fills in problem Jacobians and Hessians
+     data with constraint data */
   
   // Local variables
   Func* func;
@@ -591,9 +651,12 @@ void PROB_update_nonlin_data(Prob* p) {
 }
 
 void PROB_update_lin(Prob* p) {
+  /* This function updates problem A,b,G,l,u with 
+     constraint A,b,G,l,u. */
   
   // Local variables
   Constr* c;
+
   REAL* b;
   REAL* b_constr;
   int* Ai;
@@ -604,18 +667,42 @@ void PROB_update_lin(Prob* p) {
   REAL* Ad_constr;
   int Annz;
   int Arow;
+  
+  REAL* l;
+  REAL* l_constr;
+  REAL* u;
+  REAL* u_constr;
+  int* Gi;
+  int* Gj;
+  REAL* Gd;
+  int* Gi_constr;
+  int* Gj_constr;
+  REAL* Gd_constr;
+  int Gnnz;
+  int Grow;
+
   int i;
   
   if (!p)
     return;
 
   // Update
+
   Annz = 0;
   Arow = 0;
   b = VEC_get_data(p->b);
   Ai = MAT_get_row_array(p->A);
   Aj = MAT_get_col_array(p->A);
   Ad = MAT_get_data_array(p->A);
+
+  Gnnz = 0;
+  Grow = 0;
+  l = VEC_get_data(p->l);
+  u = VEC_get_data(p->u);
+  Gi = MAT_get_row_array(p->G);
+  Gj = MAT_get_col_array(p->G);
+  Gd = MAT_get_data_array(p->G);
+
   for (c = p->constr; c != NULL; c = CONSTR_get_next(c)) {
 
     // A and b of constraint
@@ -623,6 +710,13 @@ void PROB_update_lin(Prob* p) {
     Ai_constr = MAT_get_row_array(CONSTR_get_A(c));
     Aj_constr = MAT_get_col_array(CONSTR_get_A(c));
     Ad_constr = MAT_get_data_array(CONSTR_get_A(c));
+
+    // G and l,u of constraint
+    l_constr = VEC_get_data(CONSTR_get_l(c));
+    u_constr = VEC_get_data(CONSTR_get_u(c));
+    Gi_constr = MAT_get_row_array(CONSTR_get_G(c));
+    Gj_constr = MAT_get_col_array(CONSTR_get_G(c));
+    Gd_constr = MAT_get_data_array(CONSTR_get_G(c));
 
     // Update A
     for (i = 0; i < MAT_get_nnz(CONSTR_get_A(c)); i++) {
@@ -636,6 +730,21 @@ void PROB_update_lin(Prob* p) {
     for (i = 0; i < MAT_get_size1(CONSTR_get_A(c)); i++) {
       b[Arow] = b_constr[i];
       Arow++;
+    }
+    
+    // Update G
+    for (i = 0; i < MAT_get_nnz(CONSTR_get_G(c)); i++) {
+      Gi[Gnnz] = Gi_constr[i]+Grow;
+      Gj[Gnnz] = Gj_constr[i];
+      Gd[Gnnz] = Gd_constr[i];
+      Gnnz++;
+    }
+
+    // Update l,u
+    for (i = 0; i < MAT_get_size1(CONSTR_get_G(c)); i++) {
+      l[Grow] = l_constr[i];
+      u[Grow] = u_constr[i];
+      Grow++;
     }
   }
 }
