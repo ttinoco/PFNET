@@ -371,13 +371,13 @@ BOOL BRANCH_has_flags(void* vbr, char flag_type, char mask) {
   Branch* br = (Branch*)vbr;
   if (br) {
     if (flag_type == FLAG_VARS)
-      return (br->vars & mask);
+      return (br->vars & mask) == mask;
     else if (flag_type == FLAG_BOUNDED)
-      return (br->bounded & mask);
+      return (br->bounded & mask) == mask;
     else if (flag_type == FLAG_FIXED)
-      return (br->fixed & mask);
+      return (br->fixed & mask) == mask;
     else if (flag_type == FLAG_SPARSE)
-      return (br->sparse & mask);
+      return (br->sparse & mask) == mask;
     return FALSE;
   }
   else

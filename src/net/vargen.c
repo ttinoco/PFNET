@@ -237,13 +237,13 @@ BOOL VARGEN_has_flags(void* vgen, char flag_type, char mask) {
   Vargen* gen = (Vargen*)vgen;
   if (gen) {
     if (flag_type == FLAG_VARS)         // variables
-      return (gen->vars & mask);
+      return (gen->vars & mask) == mask;
     else if (flag_type == FLAG_BOUNDED) // bounded
-      return (gen->bounded & mask);
+      return (gen->bounded & mask) == mask;
     else if (flag_type == FLAG_FIXED)   // fixed
-      return (gen->fixed & mask);
+      return (gen->fixed & mask) == mask;
     else if (flag_type == FLAG_SPARSE)  // sparse
-      return (gen->sparse & mask);
+      return (gen->sparse & mask) == mask;
     return FALSE;
   }
   else

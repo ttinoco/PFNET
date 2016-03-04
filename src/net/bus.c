@@ -859,13 +859,13 @@ BOOL BUS_has_flags(void* vbus, char flag_type, char mask) {
   Bus* bus = (Bus*)vbus;
   if (bus) {
     if (flag_type == FLAG_VARS)
-      return (bus->vars & mask);
+      return (bus->vars & mask) == mask;
     else if (flag_type == FLAG_BOUNDED)
-      return (bus->bounded & mask);
+      return (bus->bounded & mask) == mask;
     else if (flag_type == FLAG_FIXED)
-      return (bus->fixed & mask);
+      return (bus->fixed & mask) == mask;
     else if (flag_type == FLAG_SPARSE)
-      return (bus->sparse & mask);
+      return (bus->sparse & mask) == mask;
     return FALSE;
   }
   else

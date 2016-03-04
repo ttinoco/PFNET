@@ -233,13 +233,13 @@ BOOL SHUNT_has_flags(void* vshunt, char flag_type, char mask) {
   Shunt* shunt = (Shunt*)vshunt;
   if (shunt) {
     if (flag_type == FLAG_VARS)
-      return (shunt->vars & mask);
+      return (shunt->vars & mask) == mask;
     else if (flag_type == FLAG_BOUNDED)
-      return (shunt->bounded & mask);
+      return (shunt->bounded & mask) == mask;
     else if (flag_type == FLAG_FIXED)
-      return (shunt->fixed & mask);
+      return (shunt->fixed & mask) == mask;
     else if (flag_type == FLAG_SPARSE)
-      return (shunt->sparse & mask);
+      return (shunt->sparse & mask) == mask;
     return FALSE;
   }
   else

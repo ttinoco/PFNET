@@ -243,13 +243,13 @@ BOOL GEN_has_flags(void* vgen, char flag_type, char mask) {
   Gen* gen = (Gen*)vgen;
   if (gen) {
     if (flag_type == FLAG_VARS)
-      return (gen->vars & mask);
+      return (gen->vars & mask) == mask;
     else if (flag_type == FLAG_BOUNDED)
-      return (gen->bounded & mask);
+      return (gen->bounded & mask) == mask;
     else if (flag_type == FLAG_FIXED)
-      return (gen->fixed & mask);
+      return (gen->fixed & mask) == mask;
     else if (flag_type == FLAG_SPARSE)
-      return (gen->sparse & mask);
+      return (gen->sparse & mask) == mask;
     return FALSE;
   }
   else
