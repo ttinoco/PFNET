@@ -335,12 +335,12 @@ void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
   if (br->vars & BRANCH_VAR_RATIO_DEV) { // tap ratio deviations
     switch(code) {
     case UPPER_LIMITS:
-      VEC_set(values,br->index_ratio_y,INF);
-      VEC_set(values,br->index_ratio_z,INF);
+      VEC_set(values,br->index_ratio_y,BRANCH_INF_RATIO);
+      VEC_set(values,br->index_ratio_z,BRANCH_INF_RATIO);
       break;
     case LOWER_LIMITS:
-      VEC_set(values,br->index_ratio_y,-INF);
-      VEC_set(values,br->index_ratio_z,-INF);
+      VEC_set(values,br->index_ratio_y,0.);
+      VEC_set(values,br->index_ratio_z,0.);
       break;
     default:
       VEC_set(values,br->index_ratio_y,0.);

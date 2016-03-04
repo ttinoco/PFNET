@@ -206,12 +206,12 @@ void SHUNT_get_var_values(Shunt* shunt, Vec* values, int code) {
   if (shunt->vars & SHUNT_VAR_SUSC_DEV) { // susceptance deviations
     switch(code) {
     case UPPER_LIMITS:
-      VEC_set(values,shunt->index_y,INF);
-      VEC_set(values,shunt->index_z,INF);
+      VEC_set(values,shunt->index_y,SHUNT_INF_SUSC);
+      VEC_set(values,shunt->index_z,SHUNT_INF_SUSC);
       break;
     case LOWER_LIMITS:
-      VEC_set(values,shunt->index_y,-INF);
-      VEC_set(values,shunt->index_z,-INF);
+      VEC_set(values,shunt->index_y,0.);
+      VEC_set(values,shunt->index_z,0.);
       break;
     default:
       VEC_set(values,shunt->index_y,0.);

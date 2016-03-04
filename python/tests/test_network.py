@@ -1404,17 +1404,20 @@ class TestNetwork(unittest.TestCase):
             # upper limits
             x = net.get_var_values(pf.UPPER_LIMITS)
             self.assertEqual(x.size,net.num_vars)
+            self.assertEqual(pf.BUS_INF_V_MAG,100.)
+            self.assertEqual(pf.BRANCH_INF_RATIO,100.)
+            self.assertEqual(pf.SHUNT_INF_SUSC,1000.)
             for bus in net.buses:
                 self.assertEqual(x[bus.index_v_mag],bus.v_max)
                 self.assertEqual(x[bus.index_v_ang],pf.PI)
-                self.assertEqual(x[bus.index_y],pf.INF)
-                self.assertEqual(x[bus.index_z],pf.INF)
-                self.assertEqual(x[bus.index_vl],pf.INF)
-                self.assertEqual(x[bus.index_vh],pf.INF)
+                self.assertEqual(x[bus.index_y],pf.BUS_INF_V_MAG)
+                self.assertEqual(x[bus.index_z],pf.BUS_INF_V_MAG)
+                self.assertEqual(x[bus.index_vl],pf.BUS_INF_V_MAG)
+                self.assertEqual(x[bus.index_vh],pf.BUS_INF_V_MAG)
             for br in net.branches:
                 self.assertEqual(x[br.index_ratio],br.ratio_max)
-                self.assertEqual(x[br.index_ratio_y],pf.INF)
-                self.assertEqual(x[br.index_ratio_z],pf.INF)
+                self.assertEqual(x[br.index_ratio_y],pf.BRANCH_INF_RATIO)
+                self.assertEqual(x[br.index_ratio_z],pf.BRANCH_INF_RATIO)
                 self.assertEqual(x[br.index_phase],br.phase_max)
             for gen in net.generators:
                 self.assertEqual(x[gen.index_P],gen.P_max)
@@ -1426,8 +1429,8 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(x[vargen.index_Q],vargen.Q_max)
             for shunt in net.shunts:
                 self.assertEqual(x[shunt.index_b],shunt.b_max)
-                self.assertEqual(x[shunt.index_y],pf.INF)
-                self.assertEqual(x[shunt.index_z],pf.INF)
+                self.assertEqual(x[shunt.index_y],pf.SHUNT_INF_SUSC)
+                self.assertEqual(x[shunt.index_z],pf.SHUNT_INF_SUSC)
 
             # lower limits
             x = net.get_var_values(pf.LOWER_LIMITS)
@@ -1435,14 +1438,14 @@ class TestNetwork(unittest.TestCase):
             for bus in net.buses:
                 self.assertEqual(x[bus.index_v_mag],bus.v_min)
                 self.assertEqual(x[bus.index_v_ang],-pf.PI)
-                self.assertEqual(x[bus.index_y],-pf.INF)
-                self.assertEqual(x[bus.index_z],-pf.INF)
-                self.assertEqual(x[bus.index_vl],-pf.INF)
-                self.assertEqual(x[bus.index_vh],-pf.INF)
+                self.assertEqual(x[bus.index_y],0.)
+                self.assertEqual(x[bus.index_z],0.)
+                self.assertEqual(x[bus.index_vl],0.)
+                self.assertEqual(x[bus.index_vh],0.)
             for br in net.branches:
                 self.assertEqual(x[br.index_ratio],br.ratio_min)
-                self.assertEqual(x[br.index_ratio_y],-pf.INF)
-                self.assertEqual(x[br.index_ratio_z],-pf.INF)
+                self.assertEqual(x[br.index_ratio_y],0.)
+                self.assertEqual(x[br.index_ratio_z],0.)
                 self.assertEqual(x[br.index_phase],br.phase_min)
             for gen in net.generators:
                 self.assertEqual(x[gen.index_P],gen.P_min)
@@ -1453,8 +1456,8 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(x[vargen.index_Q],vargen.Q_min)
             for shunt in net.shunts:
                 self.assertEqual(x[shunt.index_b],shunt.b_min)
-                self.assertEqual(x[shunt.index_y],-pf.INF)
-                self.assertEqual(x[shunt.index_z],-pf.INF)
+                self.assertEqual(x[shunt.index_y],0.)
+                self.assertEqual(x[shunt.index_z],0.)
 
     def test_vargen_P_sigma(self):
 

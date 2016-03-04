@@ -15,6 +15,8 @@ cdef extern from "pfnet/shunt.h":
     cdef char SHUNT_VAR_SUSC
     cdef char SHUNT_VAR_SUSC_DEV
 
+    cdef double SHUNT_INF_SUSC
+
     cdef char SHUNT_PROP_ANY
     cdef char SHUNT_PROP_SWITCHED_V
     

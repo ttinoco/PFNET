@@ -21,6 +21,9 @@
 #define BUS_DEFAULT_V_MAX 1.1 /**< @brief Default maximum voltage magnitude. */
 #define BUS_DEFAULT_V_MIN 0.9 /**< @brief Default minimum voltage magnitude. */
 
+// Infinity
+#define BUS_INF_V_MAG 100. /**< @brief Infinite voltage magnitude */
+
 // Variables
 /** \defgroup bus_vars Bus Variable Masks
  *  @{

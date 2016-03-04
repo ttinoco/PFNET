@@ -28,6 +28,9 @@
 #define SHUNT_VAR_SUSC_DEV 0x02 /**< @brief Variable: suscptance pos/neg deviation from current value */
 /** @} */
 
+// Infinity
+#define SHUNT_INF_SUSC 1000. /**< @brief Infinite susceptance */
+
 // Properties
 /** \defgroup shunt_props Shunt Property Masks
  *  @{

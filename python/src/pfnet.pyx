@@ -39,9 +39,6 @@ np.import_array()
 # Constants
 ###########
 
-# Infinity
-INF = cconstants.INF
-
 # Pi
 PI = cconstants.PI
 
@@ -134,6 +131,9 @@ BUS_VAR_VMAG = cbus.BUS_VAR_VMAG
 BUS_VAR_VANG = cbus.BUS_VAR_VANG
 BUS_VAR_VDEV = cbus.BUS_VAR_VDEV
 BUS_VAR_VVIO = cbus.BUS_VAR_VVIO
+
+# Infinite
+BUS_INF_V_MAG = cbus.BUS_INF_V_MAG
 
 # Sensitivities
 BUS_SENS_LARGEST = cbus.BUS_SENS_LARGEST
@@ -650,6 +650,9 @@ BRANCH_VAR_RATIO = cbranch.BRANCH_VAR_RATIO
 BRANCH_VAR_RATIO_DEV = cbranch.BRANCH_VAR_RATIO_DEV
 BRANCH_VAR_PHASE = cbranch.BRANCH_VAR_PHASE
 
+# Infinite
+BRANCH_INF_RATIO = cbranch.BRANCH_INF_RATIO
+
 class BranchError(Exception):
     """
     Branch error exception.
@@ -1071,6 +1074,9 @@ SHUNT_PROP_SWITCHED_V = cshunt.SHUNT_PROP_SWITCHED_V
 # Variables
 SHUNT_VAR_SUSC = cshunt.SHUNT_VAR_SUSC
 SHUNT_VAR_SUSC_DEV = cshunt.SHUNT_VAR_SUSC_DEV
+
+# Infinite
+SHUNT_INF_SUSC = cshunt.SHUNT_INF_SUSC
 
 class ShuntError(Exception):
     """

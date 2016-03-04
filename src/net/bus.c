@@ -643,12 +643,12 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
   if (bus->vars & BUS_VAR_VDEV) {
     switch(code) {
     case UPPER_LIMITS:
-      VEC_set(values,bus->index_y,INF); 
-      VEC_set(values,bus->index_z,INF);
+      VEC_set(values,bus->index_y,BUS_INF_V_MAG); 
+      VEC_set(values,bus->index_z,BUS_INF_V_MAG);
       break;
     case LOWER_LIMITS:
-      VEC_set(values,bus->index_y,-INF); 
-      VEC_set(values,bus->index_z,-INF);
+      VEC_set(values,bus->index_y,0.); 
+      VEC_set(values,bus->index_z,0.);
       break;
     default:
       if (bus->v_mag > bus->v_set) { // pos voltage mag deviation
@@ -666,12 +666,12 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
   if (bus->vars & BUS_VAR_VVIO) {
     switch(code) {
     case UPPER_LIMITS:
-      VEC_set(values,bus->index_vl,INF);
-      VEC_set(values,bus->index_vh,INF);
+      VEC_set(values,bus->index_vl,BUS_INF_V_MAG);
+      VEC_set(values,bus->index_vh,BUS_INF_V_MAG);
       break;
     case LOWER_LIMITS:
-      VEC_set(values,bus->index_vl,-INF);
-      VEC_set(values,bus->index_vh,-INF);
+      VEC_set(values,bus->index_vl,0.);
+      VEC_set(values,bus->index_vh,0.);
       break;
     default:
       VEC_set(values,bus->index_vl,0.);

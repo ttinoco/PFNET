@@ -20,9 +20,6 @@
 #define LOWER_LIMITS 2
 /** @} */
 
-// Infinity
-#define INF 1e20
-
 // Pi
 #define PI 3.14159265359
 

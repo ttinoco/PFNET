@@ -33,6 +33,9 @@
 #define BRANCH_VAR_Q 0x10         /**< @brief Variable: branch ractive flow */
 /** @} */
 
+// Infinity
+#define BRANCH_INF_RATIO 100. /**< @brief Infinite tap ratio */
+
 // Properties
 /** \defgroup branch_props Branch Property Masks
  *  @{
