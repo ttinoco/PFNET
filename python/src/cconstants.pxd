@@ -9,7 +9,6 @@
 cdef extern from "pfnet/constants.h":
 
     cdef double PI
-    cdef double INF
 
     cdef char CURRENT
     cdef char UPPER_LIMITS

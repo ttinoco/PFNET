@@ -15,6 +15,9 @@ cdef extern from "pfnet/gen.h":
     cdef char GEN_VAR_P
     cdef char GEN_VAR_Q
 
+    cdef double GEN_INF_P
+    cdef double GEN_INF_Q
+
     cdef char GEN_PROP_ANY
     cdef char GEN_PROP_SLACK
     cdef char GEN_PROP_REG

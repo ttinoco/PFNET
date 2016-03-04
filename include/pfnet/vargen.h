@@ -25,6 +25,10 @@
 #define VARGEN_VAR_Q 0x02    /**< @brief Variable: variable generator reactive power */
 /** @} */
 
+// Infinity
+#define VARGEN_INF_P 1000. /**< @brief Infinite active power */
+#define VARGEN_INF_Q 1000. /**< @brief Infinite reactive power */
+
 // Variable generator types
 #define VARGEN_TYPE_WIND 0       /**< @brief Type: wind farm */
 #define VARGEN_TYPE_SOLAR 1       /**< @brief Type: solar plant */

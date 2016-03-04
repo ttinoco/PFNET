@@ -902,6 +902,10 @@ GEN_PROP_P_ADJUST = cgen.GEN_PROP_P_ADJUST
 GEN_VAR_P = cgen.GEN_VAR_P
 GEN_VAR_Q = cgen.GEN_VAR_Q
 
+# Infinity
+GEN_INF_P = cgen.GEN_INF_P
+GEN_INF_Q = cgen.GEN_INF_Q
+
 class GeneratorError(Exception):
     """ 
     Generator error exception.
@@ -1292,6 +1296,10 @@ VARGEN_PROP_ANY = cvargen.VARGEN_PROP_ANY
 # Variables
 VARGEN_VAR_P = cvargen.VARGEN_VAR_P
 VARGEN_VAR_Q = cvargen.VARGEN_VAR_Q
+
+# Infinity
+VARGEN_INF_P = cvargen.VARGEN_INF_P
+VARGEN_INF_Q = cvargen.VARGEN_INF_Q
 
 class VarGeneratorError(Exception):
     """ 
@@ -2628,6 +2636,7 @@ CONSTR_TYPE_REG_GEN = cconstr.CONSTR_TYPE_REG_GEN
 CONSTR_TYPE_REG_TRAN = cconstr.CONSTR_TYPE_REG_TRAN
 CONSTR_TYPE_REG_SHUNT = cconstr.CONSTR_TYPE_REG_SHUNT
 CONSTR_TYPE_DC_FLOW_LIM = cconstr.CONSTR_TYPE_DC_FLOW_LIM
+CONSTR_TYPE_LBOUND = cconstr.CONSTR_TYPE_LBOUND
 
 class ConstraintError(Exception):
     """

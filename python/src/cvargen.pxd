@@ -15,6 +15,9 @@ cdef extern from "pfnet/vargen.h":
     cdef char VARGEN_VAR_P
     cdef char VARGEN_VAR_Q
 
+    cdef double VARGEN_INF_P
+    cdef double VARGEN_INF_Q
+
     cdef char VARGEN_PROP_ANY
 
     char* VARGEN_get_name(Vargen* gen)

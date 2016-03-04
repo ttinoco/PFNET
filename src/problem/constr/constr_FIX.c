@@ -169,7 +169,7 @@ void CONSTR_FIX_allocate(Constr *c) {
 
   // A
   CONSTR_set_A(c,MAT_new(num_constr, // size1 (rows)
-			 num_vars,   // size2 (rows)
+			 num_vars,   // size2 (cols)
 			 Acounter)); // nnz
 }
 

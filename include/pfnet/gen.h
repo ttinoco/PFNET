@@ -24,6 +24,10 @@
 #define GEN_VAR_Q 0x02    /**< @brief Variable: generator reactive power */
 /** @} */
 
+// Infinity
+#define GEN_INF_P 1000. /**< @brief Infinite active power */
+#define GEN_INF_Q 1000. /**< @brief Infinite reactive power */
+
 // Properties
 /** \defgroup gen_props Generator Property Masks 
  *  @{

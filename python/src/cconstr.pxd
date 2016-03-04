@@ -25,6 +25,7 @@ cdef extern from "pfnet/constr.h":
     cdef char CONSTR_TYPE_REG_TRAN
     cdef char CONSTR_TYPE_REG_SHUNT
     cdef char CONSTR_TYPE_DC_FLOW_LIM
+    cdef char CONSTR_TYPE_LBOUND
     
     void CONSTR_combine_H(Constr* c, Vec* coeff, bint ensure_psd)
     void CONSTR_del(Constr* c)

@@ -19,6 +19,7 @@
 #include <pfnet/constr_REG_TRAN.h>
 #include <pfnet/constr_REG_SHUNT.h>
 #include <pfnet/constr_DC_FLOW_LIM.h>
+#include <pfnet/constr_LBOUND.h>
 
 struct Constr {
 
@@ -630,7 +631,7 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_store_sens_branch = &CONSTR_REG_SHUNT_store_sens_branch;
     c->func_free = &CONSTR_REG_SHUNT_free;
   }
-  else if (type == CONSTR_TYPE_BOUND) { // variable bounds
+  else if (type == CONSTR_TYPE_BOUND) { // variable bounds (nonlin eq)
     c->func_init = &CONSTR_BOUND_init;
     c->func_count_branch = &CONSTR_BOUND_count_branch;
     c->func_allocate = &CONSTR_BOUND_allocate;
@@ -649,6 +650,16 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_eval_branch = &CONSTR_DC_FLOW_LIM_eval_branch;
     c->func_store_sens_branch = &CONSTR_DC_FLOW_LIM_store_sens_branch;
     c->func_free = &CONSTR_DC_FLOW_LIM_free;
+  }
+  else if (type == CONSTR_TYPE_LBOUND) { // variable bounds (lin ineq)
+    c->func_init = &CONSTR_LBOUND_init;
+    c->func_count_branch = &CONSTR_LBOUND_count_branch;
+    c->func_allocate = &CONSTR_LBOUND_allocate;
+    c->func_clear = &CONSTR_LBOUND_clear;
+    c->func_analyze_branch = &CONSTR_LBOUND_analyze_branch;
+    c->func_eval_branch = &CONSTR_LBOUND_eval_branch;
+    c->func_store_sens_branch = &CONSTR_LBOUND_store_sens_branch;
+    c->func_free = &CONSTR_LBOUND_free;
   }
   else { // unknown 
     c->func_init = NULL;
