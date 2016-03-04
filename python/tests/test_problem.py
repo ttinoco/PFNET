@@ -10,7 +10,7 @@ import pfnet as pf
 import unittest
 import test_cases
 import numpy as np
-from scipy.sparse import coo_matrix,triu
+from scipy.sparse import coo_matrix,triu,bmat
 
 NUM_TRIALS = 25
 EPS = 2e0 # %
@@ -553,6 +553,73 @@ class TestProblem(unittest.TestCase):
                 self.assertEqual(bus.v_max,u[bus.index_v_mag])
                 self.assertEqual(bus.v_min,l[bus.index_v_mag])
 
+    def test_problem_Glu_construction(self):
+
+        p = self.p
+        net = self.net
+
+        for case in test_cases.CASES:
+            
+            p.clear()
+            net.load(case)
+            p.network = net
+
+            self.assertEqual(net.num_vars,0)
+            self.assertEqual(net.num_bounded,0)
+            
+            # flags
+            net.set_flags(pf.OBJ_BUS,
+                          pf.FLAG_VARS|pf.FLAG_BOUNDED,
+                          pf.BUS_PROP_ANY,
+                          pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
+            
+            self.assertGreater(net.num_buses,0)
+            self.assertEqual(net.num_vars,net.num_buses*2)
+            self.assertEqual(net.num_bounded,net.num_buses*2)
+            
+            self.assertEqual(len(p.constraints),0)
+
+            p.add_constraint(pf.CONSTR_TYPE_LBOUND)
+            p.add_constraint(pf.CONSTR_TYPE_DC_FLOW_LIM)
+
+            self.assertEqual(len(p.constraints),2)
+
+            constr1 = p.find_constraint(pf.CONSTR_TYPE_LBOUND)
+            constr2 = p.find_constraint(pf.CONSTR_TYPE_DC_FLOW_LIM)
+            self.assertRaises(pf.ProblemError,p.find_constraint,pf.CONSTR_TYPE_PF)
+
+            p.analyze()
+
+            l1 = constr1.l
+            u1 = constr1.u
+            G1 = constr1.G
+
+            l2 = constr2.l
+            u2 = constr2.u
+            G2 = constr2.G
+
+            l = p.l
+            u = p.u
+            G = p.G
+
+            self.assertTupleEqual(l1.shape,(net.num_vars,))
+            self.assertTupleEqual(u1.shape,(net.num_vars,))
+            self.assertTupleEqual(G1.shape,(net.num_vars,net.num_vars))
+            self.assertTupleEqual(l2.shape,(net.num_branches,))
+            self.assertTupleEqual(u2.shape,(net.num_branches,))
+            self.assertTupleEqual(G2.shape,(net.num_branches,net.num_vars))
+            self.assertTupleEqual(l.shape,(net.num_vars+net.num_branches,))
+            self.assertTupleEqual(u.shape,(net.num_vars+net.num_branches,))
+            self.assertTupleEqual(G.shape,(net.num_vars+net.num_branches,net.num_vars))
+            
+            self.assertLess(np.linalg.norm(l-np.hstack((l2,l1)),np.inf),1e-12)
+            self.assertLess(np.linalg.norm(u-np.hstack((u2,u1)),np.inf),1e-12)
+
+            self.assertGreater(G.nnz,0)
+            self.assertGreater(bmat([[G2],[G1]],format='coo').nnz,0)
+            E = G - bmat([[G2],[G1]])
+            self.assertEqual(E.nnz,0)
+            
     def tearDown(self):
         
         pass

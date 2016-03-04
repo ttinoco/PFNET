@@ -467,6 +467,22 @@ class TestConstraints(unittest.TestCase):
             l = constr.l
             u = constr.u
 
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(net.num_vars,net.num_vars))
+            self.assertEqual(G.nnz,net.num_vars)
+            self.assertTrue(np.all(G.row == np.array(range(net.num_vars))))
+            self.assertTrue(np.all(G.col == np.array(range(net.num_vars))))
+            self.assertTrue(np.all(G.data == np.ones(net.num_vars)))
+            self.assertTrue(type(l) is np.ndarray)
+            self.assertTupleEqual(l.shape,(net.num_vars,))
+            self.assertTrue(type(u) is np.ndarray)
+            self.assertTupleEqual(u.shape,(net.num_vars,))
+            
+            E = G-eye(net.num_vars)
+            self.assertGreater(G.nnz,0)
+            self.assertGreater(np.linalg.norm(G.data,np.inf),0.5)
+            self.assertEqual(E.nnz,0)
+
             # Bounds
             for bus in net.buses:
                 if bus.is_regulated_by_gen():
