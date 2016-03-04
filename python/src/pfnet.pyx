@@ -652,6 +652,7 @@ BRANCH_VAR_PHASE = cbranch.BRANCH_VAR_PHASE
 
 # Infinite
 BRANCH_INF_RATIO = cbranch.BRANCH_INF_RATIO
+BRANCH_INF_FLOW = cbranch.BRANCH_INF_FLOW
 
 class BranchError(Exception):
     """

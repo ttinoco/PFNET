@@ -96,6 +96,7 @@ void CONSTR_DC_FLOW_LIM_analyze_branch(Constr* c, Branch* br) {
   int* Gcounter;
   REAL b;
   int index;
+  double rating;
   
   // Constr data
   G = CONSTR_get_G(c);
@@ -111,9 +112,14 @@ void CONSTR_DC_FLOW_LIM_analyze_branch(Constr* c, Branch* br) {
   b = BRANCH_get_b(br);
 
   index = BRANCH_get_index(br);
-  
-  VEC_set(l,index,-BRANCH_get_ratingA(br)); // p.u.
-  VEC_set(u,index,BRANCH_get_ratingA(br));  // p.u.
+ 
+  if (BRANCH_get_ratingA(br) > 0)
+    rating = BRANCH_get_ratingA(br);
+  else
+    rating = BRANCH_INF_FLOW;
+
+  VEC_set(l,index,-rating); // p.u.
+  VEC_set(u,index,rating);  // p.u.
   
   if (BUS_has_flags(bus[0],FLAG_VARS,BUS_VAR_VANG)) { // wk var
     

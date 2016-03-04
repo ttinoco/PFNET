@@ -2344,8 +2344,9 @@ class TestConstraints(unittest.TestCase):
                     self.assertEqual(G.col[counter],br.bus_to.index_v_ang)
                     self.assertEqual(G.data[counter],br.b)
                     counter += 1
-                self.assertEqual(l[br.index],-br.ratingA+off-br.b*br.phase)
-                self.assertEqual(u[br.index],br.ratingA+off-br.b*br.phase)
+                rating = br.ratingA if br.ratingA > 0 else pf.BRANCH_INF_FLOW
+                self.assertEqual(l[br.index],-rating+off-br.b*br.phase)
+                self.assertEqual(u[br.index],rating+off-br.b*br.phase)
             self.assertEqual(counter,G.nnz)
 
     def tearDown(self):
