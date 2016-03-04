@@ -250,6 +250,7 @@ class TestConstraints(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.VARGEN_PROP_ANY,
                           pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
+            num_vars_saved = net.num_vars
             self.assertGreater(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
             self.assertEqual(net.num_vars,
@@ -353,16 +354,12 @@ class TestConstraints(unittest.TestCase):
                 if bus.is_regulated_by_gen():
                     self.assertTrue(bus.has_flags(pf.FLAG_VARS,
                                                   pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG|pf.BUS_VAR_VDEV|pf.BUS_VAR_VVIO))
-
-                    # u
                     self.assertEqual(u[bus.index_v_mag],pf.BUS_INF_V_MAG)
                     self.assertLess(np.abs(u[bus.index_v_ang]-2.*np.pi),1e-10)
                     self.assertEqual(u[bus.index_y],pf.BUS_INF_V_MAG)
                     self.assertEqual(u[bus.index_z],pf.BUS_INF_V_MAG)
                     self.assertEqual(u[bus.index_vl],pf.BUS_INF_V_MAG)
                     self.assertEqual(u[bus.index_vh],pf.BUS_INF_V_MAG)
-
-                    # l
                     self.assertEqual(l[bus.index_v_mag],0.)
                     self.assertLess(np.abs(l[bus.index_v_ang]+2.*np.pi),1e-10)
                     self.assertEqual(l[bus.index_y],0.)
@@ -377,40 +374,177 @@ class TestConstraints(unittest.TestCase):
                 if branch.is_tap_changer():
                     self.assertTrue(branch.has_flags(pf.FLAG_VARS,
                                                      pf.BRANCH_VAR_RATIO|pf.BRANCH_VAR_RATIO_DEV))
-
-                    # u
                     self.assertEqual(u[branch.index_ratio],pf.BRANCH_INF_RATIO)
                     self.assertEqual(u[branch.index_ratio_y],pf.BRANCH_INF_RATIO)
                     self.assertEqual(u[branch.index_ratio_z],pf.BRANCH_INF_RATIO)
-
-                    # l
                     self.assertEqual(l[branch.index_ratio],0.)
                     self.assertEqual(l[branch.index_ratio_y],0.)
                     self.assertEqual(l[branch.index_ratio_z],0.)
-
                 else:
                     self.assertFalse(branch.has_flags(pf.FLAG_VARS,
                                                       pf.BRANCH_VAR_RATIO|pf.BRANCH_VAR_RATIO_DEV))
-                
                 if branch.is_phase_shifter():
                     self.assertTrue(branch.has_flags(pf.FLAG_VARS,
                                                      pf.BRANCH_VAR_PHASE))
-
-                    # u
                     self.assertLess(np.abs(u[branch.index_phase]-np.pi*2.),1e-10)
-
-                    # l
                     self.assertLess(np.abs(l[branch.index_phase]+np.pi*2.),1e-10)
-                    
                 else:
                     self.assertFalse(branch.has_flags(pf.FLAG_VARS,
                                                       pf.BRANCH_VAR_PHASE))
             
+            for gen in net.generators:
+                if gen.is_regulator():
+                    self.assertTrue(gen.has_flags(pf.FLAG_VARS,
+                                                  pf.GEN_VAR_P|pf.GEN_VAR_Q))
+                    self.assertEqual(u[gen.index_P],pf.GEN_INF_P)
+                    self.assertEqual(u[gen.index_Q],pf.GEN_INF_Q)
+                    self.assertEqual(l[gen.index_P],-pf.GEN_INF_P)
+                    self.assertEqual(l[gen.index_Q],-pf.GEN_INF_Q)
+                else:
+                    self.assertFalse(gen.has_flags(pf.FLAG_VARS,
+                                                   pf.GEN_VAR_P|pf.GEN_VAR_Q))
+
+            for vargen in net.var_generators:
+                self.assertTrue(vargen.has_flags(pf.FLAG_VARS,
+                                                 pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q))
+                self.assertEqual(u[vargen.index_P],pf.VARGEN_INF_P)
+                self.assertEqual(u[vargen.index_Q],pf.VARGEN_INF_Q)
+                self.assertEqual(l[vargen.index_P],-pf.VARGEN_INF_P)
+                self.assertEqual(l[vargen.index_Q],-pf.VARGEN_INF_Q)
+
+            for shunt in net.shunts:
+                if shunt.is_switched_v():
+                    self.assertTrue(shunt.has_flags(pf.FLAG_VARS,
+                                                     pf.SHUNT_VAR_SUSC|pf.SHUNT_VAR_SUSC_DEV))
+                    self.assertEqual(u[shunt.index_b],pf.SHUNT_INF_SUSC)
+                    self.assertEqual(u[shunt.index_y],pf.SHUNT_INF_SUSC)
+                    self.assertEqual(u[shunt.index_z],pf.SHUNT_INF_SUSC)
+                    self.assertEqual(l[shunt.index_b],-pf.SHUNT_INF_SUSC)
+                    self.assertEqual(l[shunt.index_y],0.)
+                    self.assertEqual(l[shunt.index_z],0.)
+                else:
+                    self.assertFalse(shunt.has_flags(pf.FLAG_VARS,
+                                                     pf.SHUNT_VAR_SUSC|pf.SHUNT_VAR_SUSC_DEV))                
                     
             # Add bounded flags
-            print 'ok for now'
-                        
+            net.set_flags(pf.OBJ_BUS,
+                          pf.FLAG_BOUNDED,
+                          pf.BUS_PROP_REG_BY_GEN,
+                          [pf.BUS_VAR_VMAG,pf.BUS_VAR_VANG,pf.BUS_VAR_VDEV,pf.BUS_VAR_VVIO])
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_BOUNDED,
+                          pf.GEN_PROP_REG,
+                          [pf.GEN_VAR_P,pf.GEN_VAR_Q])
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_BOUNDED,
+                          pf.BRANCH_PROP_TAP_CHANGER,
+                          [pf.BRANCH_VAR_RATIO,pf.BRANCH_VAR_RATIO_DEV])
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_BOUNDED,
+                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          pf.BRANCH_VAR_PHASE)
+            net.set_flags(pf.OBJ_SHUNT,
+                          pf.FLAG_BOUNDED,
+                          pf.SHUNT_PROP_SWITCHED_V,
+                          [pf.SHUNT_VAR_SUSC,pf.SHUNT_VAR_SUSC_DEV])
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_BOUNDED,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
+            self.assertEqual(net.num_vars,num_vars_saved)
+            self.assertEqual(net.num_fixed,0)
+            self.assertEqual(net.num_bounded,net.num_vars)
 
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+            
+            constr = pf.Constraint(pf.CONSTR_TYPE_LBOUND,net)
+                        
+            constr.analyze()
+
+            G = constr.G
+            l = constr.l
+            u = constr.u
+
+            # Bounds
+            for bus in net.buses:
+                if bus.is_regulated_by_gen():
+                    self.assertTrue(bus.has_flags(pf.FLAG_BOUNDED,
+                                                  pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG|pf.BUS_VAR_VDEV|pf.BUS_VAR_VVIO))
+                    self.assertTrue(bus.has_flags(pf.FLAG_VARS,
+                                                  pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG|pf.BUS_VAR_VDEV|pf.BUS_VAR_VVIO))
+                    self.assertEqual(u[bus.index_v_mag],bus.v_max)
+                    self.assertLess(np.abs(u[bus.index_v_ang]-2.*np.pi),1e-10)
+                    self.assertEqual(u[bus.index_y],pf.BUS_INF_V_MAG)
+                    self.assertEqual(u[bus.index_z],pf.BUS_INF_V_MAG)
+                    self.assertEqual(u[bus.index_vl],pf.BUS_INF_V_MAG)
+                    self.assertEqual(u[bus.index_vh],pf.BUS_INF_V_MAG)
+                    self.assertEqual(l[bus.index_v_mag],bus.v_min)
+                    self.assertLess(np.abs(l[bus.index_v_ang]+2.*np.pi),1e-10)
+                    self.assertEqual(l[bus.index_y],0.)
+                    self.assertEqual(l[bus.index_z],0.)
+                    self.assertEqual(l[bus.index_vl],0.)
+                    self.assertEqual(l[bus.index_vh],0.)
+                else:
+                    self.assertFalse(bus.has_flags(pf.FLAG_BOUNDED,
+                                                   pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG|pf.BUS_VAR_VDEV|pf.BUS_VAR_VVIO))
+            
+            for branch in net.branches:
+                if branch.is_tap_changer():
+                    self.assertTrue(branch.has_flags(pf.FLAG_BOUNDED,
+                                                     pf.BRANCH_VAR_RATIO|pf.BRANCH_VAR_RATIO_DEV))
+                    self.assertEqual(u[branch.index_ratio],branch.ratio_max)
+                    self.assertEqual(u[branch.index_ratio_y],pf.BRANCH_INF_RATIO)
+                    self.assertEqual(u[branch.index_ratio_z],pf.BRANCH_INF_RATIO)
+                    self.assertEqual(l[branch.index_ratio],branch.ratio_min)
+                    self.assertEqual(l[branch.index_ratio_y],0.)
+                    self.assertEqual(l[branch.index_ratio_z],0.)
+                else:
+                    self.assertFalse(branch.has_flags(pf.FLAG_BOUNDED,
+                                                      pf.BRANCH_VAR_RATIO|pf.BRANCH_VAR_RATIO_DEV))
+                if branch.is_phase_shifter():
+                    self.assertTrue(branch.has_flags(pf.FLAG_BOUNDED,
+                                                     pf.BRANCH_VAR_PHASE))
+                    self.assertEqual(u[branch.index_phase],branch.phase_max)
+                    self.assertEqual(l[branch.index_phase],branch.phase_min)
+                else:
+                    self.assertFalse(branch.has_flags(pf.FLAG_BOUNDED,
+                                                      pf.BRANCH_VAR_PHASE))
+            
+            for gen in net.generators:
+                if gen.is_regulator():
+                    self.assertTrue(gen.has_flags(pf.FLAG_BOUNDED,
+                                                  pf.GEN_VAR_P|pf.GEN_VAR_Q))
+                    self.assertEqual(u[gen.index_P],gen.P_max)
+                    self.assertEqual(u[gen.index_Q],gen.Q_max)
+                    self.assertEqual(l[gen.index_P],gen.P_min)
+                    self.assertEqual(l[gen.index_Q],gen.Q_min)
+                else:
+                    self.assertFalse(gen.has_flags(pf.FLAG_BOUNDED,
+                                                   pf.GEN_VAR_P|pf.GEN_VAR_Q))
+
+            for vargen in net.var_generators:
+                self.assertTrue(vargen.has_flags(pf.FLAG_BOUNDED,
+                                                 pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q))
+                self.assertEqual(u[vargen.index_P],vargen.P_max)
+                self.assertEqual(u[vargen.index_Q],vargen.Q_max)
+                self.assertEqual(l[vargen.index_P],vargen.P_min)
+                self.assertEqual(l[vargen.index_Q],vargen.Q_min)
+
+            for shunt in net.shunts:
+                if shunt.is_switched_v():
+                    self.assertTrue(shunt.has_flags(pf.FLAG_BOUNDED,
+                                                     pf.SHUNT_VAR_SUSC|pf.SHUNT_VAR_SUSC_DEV))
+                    self.assertEqual(u[shunt.index_b],shunt.b_max)
+                    self.assertEqual(u[shunt.index_y],pf.SHUNT_INF_SUSC)
+                    self.assertEqual(u[shunt.index_z],pf.SHUNT_INF_SUSC)
+                    self.assertEqual(l[shunt.index_b],shunt.b_min)
+                    self.assertEqual(l[shunt.index_y],0.)
+                    self.assertEqual(l[shunt.index_z],0.)
+                else:
+                    self.assertFalse(shunt.has_flags(pf.FLAG_BOUNDED,
+                                                     pf.SHUNT_VAR_SUSC|pf.SHUNT_VAR_SUSC_DEV))
 
     def test_constr_PAR_GEN_P(self):
         
