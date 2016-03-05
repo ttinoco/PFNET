@@ -2236,6 +2236,17 @@ class TestConstraints(unittest.TestCase):
             phi = P4*x
             self.assertLess(np.linalg.norm((G*p+R*r-Atheta*theta-Aphi*phi)-A*x),1e-10)
 
+            # Sensitivities
+            for bus in net.buses:
+                self.assertEqual(bus.sens_P_balance,0.)
+                self.assertEqual(bus.sens_Q_balance,0.)
+            new_sens = np.random.randn(net.num_buses)
+            constr.store_sensitivities(new_sens,None,None,None)
+            for bus in net.buses:
+                self.assertNotEqual(bus.sens_P_balance,0.)
+                self.assertEqual(bus.sens_Q_balance,0.)
+                self.assertEqual(bus.sens_P_balance,new_sens[bus.index])
+
     def test_constr_DC_FLOW_LIM(self):
                 
         net = self.net

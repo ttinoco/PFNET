@@ -299,7 +299,33 @@ void CONSTR_DCPF_eval_branch(Constr* c, Branch *br, Vec* var_values) {
 }
 
 void CONSTR_DCPF_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
-  // Nothing
+ 
+  // Local variables
+  Bus* bus[2];
+  int bus_index[2];
+  char* bus_counted;
+  int k;
+
+  bus_counted = CONSTR_get_bus_counted(c);
+  if (!bus_counted)
+    return;
+
+  // Bus data
+  bus[0] = BRANCH_get_bus_from(br);
+  bus[1] = BRANCH_get_bus_to(br);
+  for (k = 0; k < 2; k++)
+    bus_index[k] = BUS_get_index(bus[k]);
+
+  // Buses
+  for (k = 0; k < 2; k++) {
+    
+    // Store P balance sensitivity
+    if (!bus_counted[bus_index[k]])
+      BUS_set_sens_P_balance(bus[k],VEC_get(sA,bus_index[k]));
+    
+    // Update counted flag
+    bus_counted[bus_index[k]] = TRUE;
+  }
 }
 
 void CONSTR_DCPF_free(Constr* c) {
