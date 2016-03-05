@@ -172,6 +172,8 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(bus.sens_Q_balance,0.)
                 self.assertEqual(bus.sens_v_mag_u_bound,0.)
                 self.assertEqual(bus.sens_v_mag_l_bound,0.)
+                self.assertEqual(bus.sens_v_ang_u_bound,0.)
+                self.assertEqual(bus.sens_v_ang_l_bound,0.)
                 self.assertEqual(bus.sens_v_reg_by_gen,0.)
                 self.assertEqual(bus.sens_v_reg_by_tran,0.)
                 self.assertEqual(bus.sens_v_reg_by_shunt,0.)
@@ -355,6 +357,10 @@ class TestNetwork(unittest.TestCase):
                                   gen.cost_coeff_Q1*gen.P+
                                   gen.cost_coeff_Q2*(gen.P**2.)))
 
+                # sens
+                self.assertEqual(gen.sens_P_u_bound,0.)
+                self.assertEqual(gen.sens_P_l_bound,0.)
+
     def test_branches(self):
         
         net = self.net
@@ -396,6 +402,10 @@ class TestNetwork(unittest.TestCase):
                     self.assertTrue(branch.reg_bus.is_regulated_by_tran())
                 else:
                     self.assertRaises(pf.BusError,lambda : branch.reg_bus)
+
+                # sens
+                self.assertEqual(branch.sens_P_u_bound,0.)
+                self.assertEqual(branch.sens_P_l_bound,0.)
 
     def test_shunts(self):
         

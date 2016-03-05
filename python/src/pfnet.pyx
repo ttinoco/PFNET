@@ -141,6 +141,8 @@ BUS_SENS_P_BALANCE = cbus.BUS_SENS_P_BALANCE
 BUS_SENS_Q_BALANCE = cbus.BUS_SENS_Q_BALANCE
 BUS_SENS_V_MAG_U_BOUND = cbus.BUS_SENS_V_MAG_U_BOUND
 BUS_SENS_V_MAG_L_BOUND = cbus.BUS_SENS_V_MAG_L_BOUND
+BUS_SENS_V_ANG_U_BOUND = cbus.BUS_SENS_V_ANG_U_BOUND
+BUS_SENS_V_ANG_L_BOUND = cbus.BUS_SENS_V_ANG_L_BOUND
 BUS_SENS_V_REG_BY_GEN = cbus.BUS_SENS_V_REG_BY_GEN
 BUS_SENS_V_REG_BY_TRAN = cbus.BUS_SENS_V_REG_BY_TRAN
 BUS_SENS_V_REG_BY_SHUNT = cbus.BUS_SENS_V_REG_BY_SHUNT
@@ -523,12 +525,20 @@ cdef class Bus:
         def __get__(self): return cbus.BUS_get_sens_Q_balance(self._c_ptr)
 
     property sens_v_mag_u_bound:
-        """ Objective function sensitivity with respect to bus upper voltage limit (float). """
+        """ Objective function sensitivity with respect to voltage magnitude upper bound (float). """
         def __get__(self): return cbus.BUS_get_sens_v_mag_u_bound(self._c_ptr)
 
     property sens_v_mag_l_bound:
-        """ Objective function sensitivity with respect to bus lower voltage limit (float). """
+        """ Objective function sensitivity with respect to voltage magnitude lower bound (float). """
         def __get__(self): return cbus.BUS_get_sens_v_mag_l_bound(self._c_ptr)
+
+    property sens_v_ang_u_bound:
+        """ Objective function sensitivity with respect to voltage angle upper bound (float). """
+        def __get__(self): return cbus.BUS_get_sens_v_ang_u_bound(self._c_ptr)
+
+    property sens_v_ang_l_bound:
+        """ Objective function sensitivity with respect to voltage angle lower bound (float). """
+        def __get__(self): return cbus.BUS_get_sens_v_ang_l_bound(self._c_ptr)
 
     property sens_v_reg_by_gen:
         """ Objective function sensitivity with respect to bus voltage regulation by generators (float). """
@@ -879,7 +889,15 @@ cdef class Branch:
         """ Branch thermal rating A (p.u. system base power) (float). """
         def __get__(self): return cbranch.BRANCH_get_ratingA(self._c_ptr)
         def __set__(self,r): cbranch.BRANCH_set_ratingA(self._c_ptr,r)
-   
+
+    property sens_P_u_bound:
+        """ Objective function sensitivity with respect to active power flow upper bound (float). """
+        def __get__(self): return cbranch.BRANCH_get_sens_P_u_bound(self._c_ptr)   
+
+    property sens_P_l_bound:
+        """ Objective function sensitivity with respect to active power flow lower bound (float). """
+        def __get__(self): return cbranch.BRANCH_get_sens_P_l_bound(self._c_ptr)
+
 cdef new_Branch(cbranch.Branch* b):
     if b is not NULL:
         branch = Branch(alloc=False)
@@ -1064,6 +1082,14 @@ cdef class Generator:
         """ Coefficient for quadratic genertion cost (quadratic term, units of $/(hr p.u.^2)). """
         def __get__(self): return cgen.GEN_get_cost_coeff_Q2(self._c_ptr)
         def __set__(self,c): cgen.GEN_set_cost_coeff_Q2(self._c_ptr,c)
+
+    property sens_P_u_bound:
+        """ Objective function sensitivity with respect to active power upper bound (float). """
+        def __get__(self): return cgen.GEN_get_sens_P_u_bound(self._c_ptr)   
+
+    property sens_P_l_bound:
+        """ Objective function sensitivity with respect to active power lower bound (float). """
+        def __get__(self): return cgen.GEN_get_sens_P_l_bound(self._c_ptr)
 
 cdef new_Generator(cgen.Gen* g):
     if g is not NULL:
