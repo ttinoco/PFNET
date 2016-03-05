@@ -172,7 +172,10 @@ void CONSTR_DC_FLOW_LIM_eval_branch(Constr* c, Branch *br, Vec* var_values) {
 }
 
 void CONSTR_DC_FLOW_LIM_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
-  // Nothing
+  
+  // Store sensitivies
+  BRANCH_set_sens_P_u_bound(br,VEC_get(sGu,BRANCH_get_index(br)));
+  BRANCH_set_sens_P_l_bound(br,VEC_get(sGl,BRANCH_get_index(br)));
 }
 
 void CONSTR_DC_FLOW_LIM_free(Constr* c) {

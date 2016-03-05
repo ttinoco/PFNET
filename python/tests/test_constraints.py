@@ -2401,6 +2401,18 @@ class TestConstraints(unittest.TestCase):
                 self.assertEqual(l[br.index],-rating+off-br.b*br.phase)
                 self.assertEqual(u[br.index],rating+off-br.b*br.phase)
             self.assertEqual(counter,G.nnz)
+            
+            # Sensitivities
+            for branch in net.branches:
+                self.assertEqual(branch.sens_P_u_bound,0.)
+                self.assertEqual(branch.sens_P_l_bound,0.)
+            mu = np.random.randn(net.num_branches)
+            pi = np.random.randn(net.num_branches)
+            self.assertEqual(constr.G.shape[0],net.num_branches)
+            constr.store_sensitivities(None,None,mu,pi)
+            for branch in net.branches:
+                self.assertEqual(branch.sens_P_u_bound,mu[branch.index])
+                self.assertEqual(branch.sens_P_l_bound,pi[branch.index])
 
     def tearDown(self):
         
