@@ -306,15 +306,57 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 
     // Update counted flag
     bus_counted[BUS_get_index(bus)] = TRUE;    
-  } 
+  }
 }
 
-void CONSTR_LBOUND_eval_branch(Constr* c, Branch *br, Vec* var_values) {
+void CONSTR_LBOUND_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   // Nothing to do
 }
 
-void CONSTR_LBOUND_store_sens_branch(Constr* c, Branch *b, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
-  // Nothing
+void CONSTR_LBOUND_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+  
+  // Local variables
+  Bus* buses[2];
+  Bus* bus;
+  Gen* gen;
+  char* bus_counted;
+  int i;
+
+  bus_counted = CONSTR_get_bus_counted(c);
+  if (!bus_counted)
+    return;
+
+  // Bus data
+  buses[0] = BRANCH_get_bus_from(br);
+  buses[1] = BRANCH_get_bus_to(br);
+
+  // Buses
+  for (i = 0; i < 2; i++) {
+    
+    bus = buses[i];
+    
+    if (!bus_counted[BUS_get_index(bus)]) {
+      
+      // Voltage angle (V_ANG)
+      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) {
+	BUS_set_sens_v_ang_u_bound(bus,VEC_get(sGu,BUS_get_index_v_ang(bus)));
+	BUS_set_sens_v_ang_l_bound(bus,VEC_get(sGl,BUS_get_index_v_ang(bus)));
+      }
+
+      // Generators
+      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+	
+	// Active power (P)
+	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
+	  GEN_set_sens_P_u_bound(gen,VEC_get(sGu,GEN_get_index_P(gen)));
+	  GEN_set_sens_P_l_bound(gen,VEC_get(sGl,GEN_get_index_P(gen)));
+	}
+      } 
+    }
+    
+    // Update counted flag
+    bus_counted[BUS_get_index(bus)] = TRUE;    
+  }
 }
 
 void CONSTR_LBOUND_free(Constr* c) {

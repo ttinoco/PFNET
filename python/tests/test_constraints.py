@@ -561,6 +561,48 @@ class TestConstraints(unittest.TestCase):
                 else:
                     self.assertFalse(shunt.has_flags(pf.FLAG_BOUNDED,
                                                      pf.SHUNT_VAR_SUSC|pf.SHUNT_VAR_SUSC_DEV))
+            # Sensitivities
+            net.clear_sensitivities()
+            for bus in net.buses:
+                self.assertEqual(bus.sens_P_balance,0.)
+                self.assertEqual(bus.sens_Q_balance,0.)
+                self.assertEqual(bus.sens_v_mag_u_bound,0.)
+                self.assertEqual(bus.sens_v_mag_l_bound,0.)
+                self.assertEqual(bus.sens_v_ang_u_bound,0.)
+                self.assertEqual(bus.sens_v_ang_l_bound,0.)
+            for gen in net.generators:
+                self.assertEqual(gen.sens_P_u_bound,0.)
+                self.assertEqual(gen.sens_P_l_bound,0.)
+            
+            mu = np.random.randn(net.num_vars)
+            pi = np.random.randn(net.num_vars)
+            
+            constr.store_sensitivities(None,None,mu,pi)
+
+            for bus in net.buses:
+                self.assertEqual(bus.sens_P_balance,0.)
+                self.assertEqual(bus.sens_Q_balance,0.)
+                self.assertEqual(bus.sens_v_mag_u_bound,0.)
+                self.assertEqual(bus.sens_v_mag_l_bound,0.)
+                if bus.is_regulated_by_gen():
+                    self.assertTrue(bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VANG))
+                    self.assertNotEqual(bus.sens_v_ang_u_bound,0.)
+                    self.assertNotEqual(bus.sens_v_ang_l_bound,0.)
+                    self.assertEqual(bus.sens_v_ang_u_bound,mu[bus.index_v_ang])
+                    self.assertEqual(bus.sens_v_ang_l_bound,pi[bus.index_v_ang])
+                else:
+                    self.assertEqual(bus.sens_v_ang_u_bound,0.)
+                    self.assertEqual(bus.sens_v_ang_l_bound,0.)
+            for gen in net.generators:
+                if gen.is_regulator():
+                    self.assertTrue(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
+                    self.assertNotEqual(gen.sens_P_u_bound,0.)
+                    self.assertNotEqual(gen.sens_P_l_bound,0.)
+                    self.assertEqual(gen.sens_P_u_bound,mu[gen.index_P])
+                    self.assertEqual(gen.sens_P_l_bound,pi[gen.index_P])
+                else:
+                    self.assertEqual(gen.sens_P_u_bound,0.)
+                    self.assertEqual(gen.sens_P_l_bound,0.)
 
     def test_constr_PAR_GEN_P(self):
         
