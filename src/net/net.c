@@ -55,6 +55,7 @@ struct Net {
   REAL bus_v_vio;    /**< @brief Maximum bus voltage limits violation (p.u.). */
   REAL bus_P_mis;    /**< @brief Maximum bus active power mismatch (MW). */
   REAL bus_Q_mis;    /**< @brief Maximum bus reactive power mismatch (MVAr). */
+  REAL gen_P_cost;   /**< @brief Total active power generation cost ($/hr). */
   REAL gen_v_dev;    /**< @brief Maximum generator voltage setpoint deviation (p.u.). */
   REAL gen_Q_vio;    /**< @brief Maximum generator reactive power limit violation (MVAr). */
   REAL gen_P_vio;    /**< @brief Maximum generator active power limit violation (MW). */
@@ -387,6 +388,7 @@ void NET_clear_properties(Net* net) {
     net->bus_v_vio = 0;
     net->bus_P_mis = 0;
     net->bus_Q_mis = 0;
+    net->gen_P_cost = 0;
     net->gen_v_dev = 0;
     net->gen_Q_vio = 0;
     net->gen_P_vio = 0;
@@ -707,6 +709,7 @@ void NET_init(Net* net) {
   net->bus_v_vio = 0;
   net->bus_P_mis = 0;
   net->bus_Q_mis = 0;
+  net->gen_P_cost = 0;
   net->gen_v_dev = 0;
   net->gen_Q_vio = 0;
   net->gen_P_vio = 0;
@@ -1322,6 +1325,13 @@ REAL NET_get_bus_Q_mis(Net* net) {
     return 0;
 }
 
+REAL NET_get_gen_P_cost(Net* net) {
+  if (net)
+    return net->gen_P_cost;
+  else
+    return 0;
+}
+
 REAL NET_get_gen_v_dev(Net* net) {
   if (net)
     return net->gen_v_dev;
@@ -1780,6 +1790,7 @@ void NET_show_properties(Net* net) {
   printf("bus v vio   : %.2f     (p.u.)\n",NET_get_bus_v_vio(net));
   printf("bus P mis   : %.2e (MW)\n",NET_get_bus_P_mis(net));
   printf("bus Q mis   : %.2e (MVAr)\n",NET_get_bus_Q_mis(net));
+  printf("gen P cost  : %.2e ($/hr)\n",NET_get_gen_P_cost(net));
   printf("gen v dev   : %.2e (p.u.)\n",NET_get_gen_v_dev(net));
   printf("gen Q vio   : %.2e (MVAr)\n",NET_get_gen_Q_vio(net));
   printf("gen P vio   : %.2e (MW)\n",NET_get_gen_P_vio(net));
@@ -2132,6 +2143,10 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
       // Injections
       BUS_inject_P(bus,P);
       BUS_inject_Q(bus,Q);
+
+      // Active power generation cost
+      //*****************************
+      net->gen_P_cost += GEN_get_P_cost(gen);
       
       // Reacive power
       if (GEN_is_regulator(gen)) { // Should this be done for all generators?

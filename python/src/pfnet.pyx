@@ -1046,18 +1046,22 @@ cdef class Generator:
         """ Generator reactive power lower limit (p.u. system base MVA) (float). """
         def __get__(self): return cgen.GEN_get_Q_min(self._c_ptr)
 
+    property P_cost:
+        """ Active power generation cost ($/hr). """
+        def __get__(self): return cgen.GEN_get_P_cost(self._c_ptr)
+
     property cost_coeff_Q0:
-        """ Coefficient for quadratic genertion cost (constant term). """
+        """ Coefficient for quadratic genertion cost (constant term, units of $/hr). """
         def __get__(self): return cgen.GEN_get_cost_coeff_Q0(self._c_ptr)
         def __set__(self,c): cgen.GEN_set_cost_coeff_Q0(self._c_ptr,c)
 
     property cost_coeff_Q1:
-        """ Coefficient for quadratic genertion cost (linear term). """
+        """ Coefficient for quadratic genertion cost (linear term. units of $/(hr p.u.)). """
         def __get__(self): return cgen.GEN_get_cost_coeff_Q1(self._c_ptr)
         def __set__(self,c): cgen.GEN_set_cost_coeff_Q1(self._c_ptr,c)
 
     property cost_coeff_Q2:
-        """ Coefficient for quadratic genertion cost (quadratic term). """
+        """ Coefficient for quadratic genertion cost (quadratic term, units of $/(hr p.u.^2)). """
         def __get__(self): return cgen.GEN_get_cost_coeff_Q2(self._c_ptr)
         def __set__(self,c): cgen.GEN_set_cost_coeff_Q2(self._c_ptr,c)
 
@@ -2061,6 +2065,7 @@ cdef class Network:
                 'bus_v_vio': self.bus_v_vio,
                 'bus_P_mis': self.bus_P_mis,
                 'bus_Q_mis': self.bus_Q_mis,
+                'gen_P_cost': self.gen_P_cost,
                 'gen_v_dev': self.gen_v_dev,
                 'gen_Q_vio': self.gen_Q_vio,
                 'gen_P_vio': self.gen_P_vio,
@@ -2293,6 +2298,10 @@ cdef class Network:
     property bus_Q_mis:
         """ Largest bus reactive power mismatch in the network (MVAr) (float). """
         def __get__(self): return cnet.NET_get_bus_Q_mis(self._c_net)
+
+    property gen_P_cost:
+        """ Total active power generation cost ($/hr) (float). """
+        def __get__(self): return cnet.NET_get_gen_P_cost(self._c_net)
 
     property gen_v_dev:
         """ Largest voltage magnitude deviation from set point of bus regulated by generator (p.u.) (float). """

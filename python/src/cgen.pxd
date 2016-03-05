@@ -25,6 +25,7 @@ cdef extern from "pfnet/gen.h":
     cdef char GEN_PROP_NOT_SLACK
     cdef char GEN_PROP_P_ADJUST
 
+    REAL GEN_get_P_cost(Gen* gen)
     REAL GEN_get_cost_coeff_Q0(Gen* gen)
     REAL GEN_get_cost_coeff_Q1(Gen* gen)
     REAL GEN_get_cost_coeff_Q2(Gen* gen)

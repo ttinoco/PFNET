@@ -340,14 +340,20 @@ class TestNetwork(unittest.TestCase):
                 # set/get cost coeffs
                 if case.split('.')[-1] == 'raw':
                     self.assertEqual(gen.cost_coeff_Q0,0.)
-                    self.assertEqual(gen.cost_coeff_Q1,20.)
-                    self.assertEqual(gen.cost_coeff_Q2,1.)
+                    self.assertEqual(gen.cost_coeff_Q1,2000.)
+                    self.assertEqual(gen.cost_coeff_Q2,100.)
                 gen.cost_coeff_Q0 = 1.4
                 gen.cost_coeff_Q1 = 42.
                 gen.cost_coeff_Q2 = 2.5
                 self.assertEqual(gen.cost_coeff_Q0,1.4)
                 self.assertEqual(gen.cost_coeff_Q1,42.)
                 self.assertEqual(gen.cost_coeff_Q2,2.5)
+
+                # P cost
+                self.assertEqual(gen.P_cost,
+                                 (gen.cost_coeff_Q0+
+                                  gen.cost_coeff_Q1*gen.P+
+                                  gen.cost_coeff_Q2*(gen.P**2.)))
 
     def test_branches(self):
         
@@ -704,6 +710,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.bus_v_vio,0.)
             self.assertEqual(net.bus_P_mis,0.)
             self.assertEqual(net.bus_Q_mis,0.)
+            self.assertEqual(net.gen_P_cost,0.)
             self.assertEqual(net.gen_v_dev,0.)
             self.assertEqual(net.gen_Q_vio,0.)
             self.assertEqual(net.gen_P_vio,0.)
@@ -750,6 +757,7 @@ class TestNetwork(unittest.TestCase):
             self.assertGreaterEqual(net.bus_v_vio,0.)
             self.assertGreater(net.bus_P_mis,0.)
             self.assertGreater(net.bus_Q_mis,0.)
+            self.assertGreater(net.gen_P_cost,0.)
             self.assertGreaterEqual(net.gen_v_dev,0.)
             self.assertGreaterEqual(net.gen_Q_vio,0.)
             self.assertGreaterEqual(net.gen_P_vio,0.)
@@ -765,6 +773,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.bus_v_vio,net.get_properties()['bus_v_vio'])
             self.assertEqual(net.bus_P_mis,net.get_properties()['bus_P_mis'])
             self.assertEqual(net.bus_Q_mis,net.get_properties()['bus_Q_mis'])
+            self.assertEqual(net.gen_P_cost,net.get_properties()['gen_P_cost'])
             self.assertEqual(net.gen_v_dev,net.get_properties()['gen_v_dev'])
             self.assertEqual(net.gen_Q_vio,net.get_properties()['gen_Q_vio'])
             self.assertEqual(net.gen_P_vio,net.get_properties()['gen_P_vio'])
@@ -809,7 +818,9 @@ class TestNetwork(unittest.TestCase):
             # Generators
             Pvio = 0
             Qvio = 0
+            Pcost = 0
             for gen in net.generators:
+                Pcost += gen.P_cost
                 dP = np.max([gen.P-gen.P_max,gen.P_min-gen.P,0.])
                 if dP > Pvio:
                     Pvio = dP
@@ -819,6 +830,7 @@ class TestNetwork(unittest.TestCase):
                         Qvio = dQ                    
             self.assertLess(abs(net.gen_P_vio-Pvio*net.base_power),1e-10)
             self.assertLess(abs(net.gen_Q_vio-Qvio*net.base_power),1e-10)
+            self.assertLess(abs(net.gen_P_cost-Pcost),1e-8)
             
             # Transformers
             rvio = 0.

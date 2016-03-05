@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -686,7 +686,7 @@ class TestFunctions(unittest.TestCase):
                 val += (gen.cost_coeff_Q0 + 
                         gen.cost_coeff_Q1*gen.P +
                         gen.cost_coeff_Q2*(gen.P**2.))
-            self.assertLess(np.abs(val-f),1e-10)
+            self.assertLess(np.abs(val-f),1e-8)
 
             # Gradient check
             f0 = func.phi

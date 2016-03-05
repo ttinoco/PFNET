@@ -106,6 +106,7 @@ REAL NET_get_bus_v_min(Net* net);
 REAL NET_get_bus_v_vio(Net* net);
 REAL NET_get_bus_P_mis(Net* net);
 REAL NET_get_bus_Q_mis(Net* net);
+REAL NET_get_gen_P_cost(Net* net);
 REAL NET_get_gen_v_dev(Net* net);
 REAL NET_get_gen_Q_vio(Net* net);
 REAL NET_get_gen_P_vio(Net* net);

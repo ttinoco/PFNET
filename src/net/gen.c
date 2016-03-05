@@ -38,9 +38,9 @@ struct Gen {
   REAL Q_min;          /**< @brief Minimum generator reactive power (p.u.) */
 
   // Cost
-  REAL cost_coeff_Q0;  /**< @brief Generator cost coefficient (constant term) */
-  REAL cost_coeff_Q1;  /**< @brief Generator cost coefficient (linear term) */
-  REAL cost_coeff_Q2;  /**< @brief Generator cost coefficient (quadratic term) */
+  REAL cost_coeff_Q0;  /**< @brief Generator cost coefficient (constant term, units of $/hr ) */
+  REAL cost_coeff_Q1;  /**< @brief Generator cost coefficient (linear term, units of $/(hr p.u.) ) */
+  REAL cost_coeff_Q2;  /**< @brief Generator cost coefficient (quadratic term, units of $/(hr p.u.^2) ) */
 
   // Indices
   int index;           /**< @brief Generator index */
@@ -109,6 +109,15 @@ Bus* GEN_get_reg_bus(Gen* gen) {
     return gen->reg_bus;
   else
     return NULL;
+}
+
+REAL GEN_get_P_cost(Gen* gen) {
+  if (gen)
+    return (gen->cost_coeff_Q0 + 
+	    gen->cost_coeff_Q1*gen->P +
+	    gen->cost_coeff_Q2*pow(gen->P,2.)); // $/hr
+  else
+    return 0;
 }
 
 REAL GEN_get_cost_coeff_Q0(Gen* gen) {
@@ -288,9 +297,9 @@ void GEN_init(Gen* gen) {
   gen->Q = 0;
   gen->Q_max = 0;
   gen->Q_min = 0;
-  gen->cost_coeff_Q0 = 0/100.;
-  gen->cost_coeff_Q1 = 20.;
-  gen->cost_coeff_Q2 = 0.01*100.;
+  gen->cost_coeff_Q0 = 0;
+  gen->cost_coeff_Q1 = 2000.;
+  gen->cost_coeff_Q2 = 100.;
   gen->index = 0;
   gen->index_P = 0;
   gen->index_Q = 0;

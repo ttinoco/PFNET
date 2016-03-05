@@ -53,6 +53,7 @@ void GEN_array_show(Gen* gen, int num);
 void GEN_clear_flags(Gen* gen, char flag_type);
 Bus* GEN_get_bus(Gen* gen);
 Bus* GEN_get_reg_bus(Gen* gen);
+REAL GEN_get_P_cost(Gen* gen);
 REAL GEN_get_cost_coeff_Q0(Gen* gen);
 REAL GEN_get_cost_coeff_Q1(Gen* gen);
 REAL GEN_get_cost_coeff_Q2(Gen* gen);
