@@ -412,6 +412,8 @@ void NET_clear_sensitivities(Net* net) {
   
   // Local variables
   Bus* bus;
+  Branch* branch;
+  Gen* gen;
   int i;
 
   if (!net)
@@ -420,6 +422,14 @@ void NET_clear_sensitivities(Net* net) {
   // Buses
   for (i = 0; i < net->num_buses; i++) 
     BUS_clear_sensitivities(BUS_array_get(net->bus,i));
+
+  // Branches
+  for (i = 0; i < net->num_branches; i++) 
+    BRANCH_clear_sensitivities(BRANCH_array_get(net->branch,i));
+
+  // Generators
+  for (i = 0; i < net->num_gens; i++) 
+    GEN_clear_sensitivities(GEN_array_get(net->gen,i));
 
   // Others (TO DO)
 }
@@ -1856,6 +1866,12 @@ void NET_show_buses(Net* net, int number, int sort_by) {
 	break;
       case BUS_SENS_V_MAG_L_BOUND:
 	printf("%15s "," v_mag_l_bound ");
+	break;
+      case BUS_SENS_V_ANG_U_BOUND:
+	printf("%15s "," v_ang_u_bound ");
+	break;
+      case BUS_SENS_V_ANG_L_BOUND:
+	printf("%15s "," v_ang_l_bound ");
 	break;
       case BUS_SENS_V_REG_BY_GEN:
 	printf("%15s ","  v_reg_by_gen ");

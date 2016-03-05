@@ -36,6 +36,8 @@ cdef extern from "pfnet/bus.h":
     cdef char BUS_SENS_Q_BALANCE 
     cdef char BUS_SENS_V_MAG_U_BOUND
     cdef char BUS_SENS_V_MAG_L_BOUND
+    cdef char BUS_SENS_V_ANG_U_BOUND
+    cdef char BUS_SENS_V_ANG_L_BOUND
     cdef char BUS_SENS_V_REG_BY_GEN
     cdef char BUS_SENS_V_REG_BY_TRAN
     cdef char BUS_SENS_V_REG_BY_SHUNT
@@ -84,6 +86,8 @@ cdef extern from "pfnet/bus.h":
     REAL BUS_get_sens_Q_balance(Bus* bus)
     REAL BUS_get_sens_v_mag_u_bound(Bus* bus)
     REAL BUS_get_sens_v_mag_l_bound(Bus* bus)
+    REAL BUS_get_sens_v_ang_u_bound(Bus* bus)
+    REAL BUS_get_sens_v_ang_l_bound(Bus* bus)
     REAL BUS_get_sens_v_reg_by_gen(Bus* bus)
     REAL BUS_get_sens_v_reg_by_tran(Bus* bus)
     REAL BUS_get_sens_v_reg_by_shunt(Bus* bus)

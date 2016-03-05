@@ -61,6 +61,8 @@ struct Bus {
   REAL sens_Q_balance;      /**< @brief Sensitivity of reactive power balance */
   REAL sens_v_mag_u_bound;  /**< @brief Sensitivity of voltage magnitude upper bound */
   REAL sens_v_mag_l_bound;  /**< @brief Sensitivity of voltage magnitude lower bound */
+  REAL sens_v_ang_u_bound;  /**< @brief Sensitivity of voltage angle upper bound */
+  REAL sens_v_ang_l_bound;  /**< @brief Sensitivity of voltage angle lower bound */
   REAL sens_v_reg_by_gen;   /**< @brief Sensitivity of voltage regulation by generator */
   REAL sens_v_reg_by_tran;  /**< @brief Sensitivity of voltage regulation by transformer */
   REAL sens_v_reg_by_shunt; /**< @brief Sensitivity of voltage regulation by shunt device */
@@ -226,6 +228,8 @@ void BUS_clear_sensitivities(Bus* bus) {
     bus->sens_Q_balance = 0;
     bus->sens_v_mag_u_bound = 0;
     bus->sens_v_mag_l_bound = 0;
+    bus->sens_v_ang_u_bound = 0;
+    bus->sens_v_ang_l_bound = 0;
     bus->sens_v_reg_by_gen = 0;
     bus->sens_v_reg_by_tran = 0;
     bus->sens_v_reg_by_shunt = 0;
@@ -720,6 +724,20 @@ REAL BUS_get_sens_v_mag_l_bound(Bus* bus) {
     return 0;
 }
 
+REAL BUS_get_sens_v_ang_u_bound(Bus* bus) {
+  if (bus)
+    return bus->sens_v_ang_u_bound;
+  else
+    return 0;
+}
+
+REAL BUS_get_sens_v_ang_l_bound(Bus* bus) {
+  if (bus)
+    return bus->sens_v_ang_l_bound;
+  else
+    return 0;
+}
+
 REAL BUS_get_sens_v_reg_by_gen(Bus* bus) {
   if (bus)
     return bus->sens_v_reg_by_gen;
@@ -744,18 +762,31 @@ REAL BUS_get_sens_v_reg_by_shunt(Bus* bus) {
 REAL BUS_get_largest_sens(Bus* bus) {
   REAL sens = 0;
   if (bus) {
+    
     if (fabs(bus->sens_P_balance) >= fabs(sens))
       sens = bus->sens_P_balance;
+    
     if (fabs(bus->sens_Q_balance) >= fabs(sens))
       sens = bus->sens_Q_balance;
+    
     if (fabs(bus->sens_v_mag_u_bound) >= fabs(sens))
       sens = bus->sens_v_mag_u_bound;
+    
     if (fabs(bus->sens_v_mag_l_bound) >= fabs(sens))
       sens = bus->sens_v_mag_l_bound;
+
+    if (fabs(bus->sens_v_ang_u_bound) >= fabs(sens))
+      sens = bus->sens_v_ang_u_bound;
+    
+    if (fabs(bus->sens_v_ang_l_bound) >= fabs(sens))
+      sens = bus->sens_v_ang_l_bound;
+    
     if (fabs(bus->sens_v_reg_by_gen) >= fabs(sens))
       sens = bus->sens_v_reg_by_gen;
+    
     if (fabs(bus->sens_v_reg_by_tran) >= fabs(sens))
       sens = bus->sens_v_reg_by_tran;
+    
     if (fabs(bus->sens_v_reg_by_shunt) >= fabs(sens))
       sens = bus->sens_v_reg_by_shunt;
   }
@@ -766,30 +797,47 @@ int BUS_get_largest_sens_type(Bus* bus) {
   REAL sens = 0;
   int type = BUS_SENS_P_BALANCE;
   if (bus) {
+
     if (fabs(bus->sens_P_balance) >= fabs(sens)) {
       sens = bus->sens_P_balance;
       type = BUS_SENS_P_BALANCE;
     }    
+
     if (fabs(bus->sens_Q_balance) >= fabs(sens)) {
       sens = bus->sens_Q_balance;
       type = BUS_SENS_Q_BALANCE;
     }
+
     if (fabs(bus->sens_v_mag_u_bound) >= fabs(sens)) {
       sens = bus->sens_v_mag_u_bound;
       type = BUS_SENS_V_MAG_U_BOUND;
     }
+
     if (fabs(bus->sens_v_mag_l_bound) >= fabs(sens)) {
       sens = bus->sens_v_mag_l_bound;
       type = BUS_SENS_V_MAG_L_BOUND;
     }
+
+    if (fabs(bus->sens_v_ang_u_bound) >= fabs(sens)) {
+      sens = bus->sens_v_ang_u_bound;
+      type = BUS_SENS_V_ANG_U_BOUND;
+    }
+
+    if (fabs(bus->sens_v_ang_l_bound) >= fabs(sens)) {
+      sens = bus->sens_v_ang_l_bound;
+      type = BUS_SENS_V_ANG_L_BOUND;
+    }
+
     if (fabs(bus->sens_v_reg_by_gen) >= fabs(sens)) {
       sens = bus->sens_v_reg_by_gen;
       type = BUS_SENS_V_REG_BY_GEN;
     }
+
     if (fabs(bus->sens_v_reg_by_tran) >= fabs(sens)) {
       sens = bus->sens_v_reg_by_tran;
       type = BUS_SENS_V_REG_BY_TRAN;
     }
+
     if (fabs(bus->sens_v_reg_by_shunt) >= fabs(sens)) {
       sens = bus->sens_v_reg_by_shunt;
       type = BUS_SENS_V_REG_BY_SHUNT;
@@ -828,28 +876,46 @@ int BUS_get_largest_mis_type(Bus* bus) {
 REAL BUS_get_quantity(Bus* bus, int qtype) {
   
   switch (qtype) {
+  
   case BUS_SENS_LARGEST:
     return BUS_get_largest_sens(bus);
+  
   case BUS_SENS_P_BALANCE:
     return BUS_get_sens_P_balance(bus);
+  
   case BUS_SENS_Q_BALANCE:
     return BUS_get_sens_Q_balance(bus);
+  
   case BUS_SENS_V_MAG_U_BOUND:
     return BUS_get_sens_v_mag_u_bound(bus);
+  
   case BUS_SENS_V_MAG_L_BOUND:
     return BUS_get_sens_v_mag_l_bound(bus);
+
+  case BUS_SENS_V_ANG_U_BOUND:
+    return BUS_get_sens_v_ang_u_bound(bus);
+  
+  case BUS_SENS_V_ANG_L_BOUND:
+    return BUS_get_sens_v_ang_l_bound(bus);
+  
   case BUS_SENS_V_REG_BY_GEN:
     return BUS_get_sens_v_reg_by_gen(bus);
+  
   case BUS_SENS_V_REG_BY_TRAN:
     return BUS_get_sens_v_reg_by_tran(bus);
+  
   case BUS_SENS_V_REG_BY_SHUNT:
     return BUS_get_sens_v_reg_by_shunt(bus);
+  
   case BUS_MIS_LARGEST:
     return BUS_get_largest_mis(bus);
+  
   case BUS_MIS_ACTIVE:
     return BUS_get_P_mis(bus);
+  
   case BUS_MIS_REACTIVE:
     return BUS_get_Q_mis(bus);
+  
   default:
     return 0;
   }
@@ -978,6 +1044,8 @@ void BUS_init(Bus* bus) {
   bus->sens_Q_balance = 0;
   bus->sens_v_mag_u_bound = 0;
   bus->sens_v_mag_l_bound = 0;
+  bus->sens_v_ang_u_bound = 0;
+  bus->sens_v_ang_l_bound = 0;
   bus->sens_v_reg_by_gen = 0;
   bus->sens_v_reg_by_tran = 0;
   bus->sens_v_reg_by_shunt = 0;
@@ -1201,6 +1269,16 @@ void BUS_set_sens_v_mag_u_bound(Bus* bus, REAL value) {
 void BUS_set_sens_v_mag_l_bound(Bus* bus, REAL value) {
   if (bus)
     bus->sens_v_mag_l_bound = value;
+}
+
+void BUS_set_sens_v_ang_u_bound(Bus* bus, REAL value) {
+  if (bus)
+    bus->sens_v_ang_u_bound = value;
+}
+
+void BUS_set_sens_v_ang_l_bound(Bus* bus, REAL value) {
+  if (bus)
+    bus->sens_v_ang_l_bound = value;
 }
 
 void BUS_set_sens_v_reg_by_gen(Bus* bus, REAL value) {

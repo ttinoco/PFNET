@@ -47,6 +47,10 @@ struct Gen {
   int index_P;         /**< @brief Active power index */
   int index_Q;         /**< @brief Reactive power index */
 
+  // Sensitivities
+  REAL sens_P_u_bound;  /**< @brief Sensitivity of active power upper bound */
+  REAL sens_P_l_bound;  /**< @brief Sensitivity of active power lower bound */
+
   // List
   Gen* next;     /**< @brief List of generators connected to a bus */
   Gen* reg_next; /**< @brief List of generators regulating a bus */
@@ -77,6 +81,13 @@ void GEN_array_show(Gen* gen, int num) {
   }
 }
 
+void GEN_clear_sensitivities(Gen* gen) {
+  if (gen) {
+    gen->sens_P_u_bound = 0;
+    gen->sens_P_l_bound = 0;
+  }
+}
+
 void GEN_clear_flags(Gen* gen, char flag_type) {
   if (gen) {
     if (flag_type == FLAG_VARS)
@@ -88,6 +99,20 @@ void GEN_clear_flags(Gen* gen, char flag_type) {
     else if (flag_type == FLAG_SPARSE)
       gen->sparse = 0x00;
   }
+}
+
+REAL GEN_get_sens_P_u_bound(Gen* gen) {
+  if (gen)
+    return gen->sens_P_u_bound;
+  else
+    return 0;
+}
+
+REAL GEN_get_sens_P_l_bound(Gen* gen) {
+  if (gen)
+    return gen->sens_P_l_bound;
+  else
+    return 0;
 }
 
 char GEN_get_obj_type(void* gen) {
@@ -283,26 +308,37 @@ BOOL GEN_has_properties(void* vgen, char prop) {
 }
 
 void GEN_init(Gen* gen) {
+
   gen->obj_type = OBJ_GEN;
+
   gen->bus = NULL;
   gen->reg_bus = NULL;
+
   gen->regulator = FALSE;
   gen->fixed = 0x00;
   gen->bounded = 0x00;
   gen->sparse = 0x00;
   gen->vars = 0x00;
+
   gen->P = 0;
   gen->P_max = 0;
   gen->P_min = 0;
+
   gen->Q = 0;
   gen->Q_max = 0;
   gen->Q_min = 0;
+
   gen->cost_coeff_Q0 = 0;
   gen->cost_coeff_Q1 = 2000.;
   gen->cost_coeff_Q2 = 100.;
+
   gen->index = 0;
   gen->index_P = 0;
   gen->index_Q = 0;
+
+  gen->sens_P_u_bound = 0;
+  gen->sens_P_l_bound = 0;
+
   gen->next = NULL;
   gen->reg_next = NULL;
 }
@@ -354,6 +390,16 @@ Gen* GEN_new(void) {
   Gen* gen = (Gen*)malloc(sizeof(Gen));
   GEN_init(gen);
   return gen;
+}
+
+void GEN_set_sens_P_u_bound(Gen* gen, REAL value) {
+  if (gen)
+    gen->sens_P_u_bound = value;
+}
+
+void GEN_set_sens_P_l_bound(Gen* gen, REAL value) {
+  if (gen)
+    gen->sens_P_l_bound = value;
 }
 
 void GEN_set_cost_coeff_Q0(Gen* gen, REAL q) {

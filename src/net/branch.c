@@ -71,6 +71,10 @@ struct Branch {
   int index_P;       /**< @brief Branch active power flow index */
   int index_Q;       /**< @brief Branch reactive power flow index */
 
+  // Sensitivities
+  REAL sens_P_u_bound;  /**< @brief Sensitivity of active power flow upper bound */
+  REAL sens_P_l_bound;  /**< @brief Sensitivity of active power flow lower bound */
+
   // List
   Branch* reg_next;  /**< @brief List of branches regulating a bus voltage magnitude */
   Branch* from_next; /**< @brief List of branches connected to a bus on the "from" side */
@@ -113,11 +117,32 @@ void BRANCH_clear_flags(Branch* br, char flag_type) {
   }
 }
 
+void BRANCH_clear_sensitivities(Branch* br) {
+  if (br) {
+    br->sens_P_u_bound = 0;
+    br->sens_P_l_bound = 0;
+  }
+}
+
 char BRANCH_get_obj_type(void* b) {
   if (b)
     return ((Branch*)b)->obj_type;
   else
     return OBJ_UNKNOWN;
+}
+
+REAL BRANCH_get_sens_P_u_bound(Branch* br) {
+  if (br)
+    return br->sens_P_u_bound;
+  else
+    return 0;
+}
+
+REAL BRANCH_get_sens_P_l_bound(Branch* br) {
+  if (br)
+    return br->sens_P_l_bound;
+  else
+    return 0;
 }
 
 int BRANCH_get_index(Branch* b) {
@@ -447,6 +472,9 @@ void BRANCH_init(Branch* br) {
   br->index_P = 0;
   br->index_Q = 0;
 
+  br->sens_P_u_bound = 0;
+  br->sens_P_l_bound = 0;
+
   br->reg_next = NULL;
   br->from_next = NULL;
   br->to_next = NULL;
@@ -519,6 +547,16 @@ Branch* BRANCH_new(void) {
   Branch* branch = (Branch*)malloc(sizeof(Branch));
   BRANCH_init(branch);
   return branch;
+}
+
+void BRANCH_set_sens_P_u_bound(Branch* br, REAL value) {
+  if (br)
+    br->sens_P_u_bound = value;
+}
+
+void BRANCH_set_sens_P_l_bound(Branch* br, REAL value) {
+  if (br)
+    br->sens_P_l_bound = value;
 }
 
 void BRANCH_set_index(Branch* br, int index) {
