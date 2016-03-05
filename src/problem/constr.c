@@ -829,9 +829,28 @@ void CONSTR_eval_branch(Constr* c, Branch *br, Vec* values) {
 }
 
 void CONSTR_store_sens(Constr* c, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+
+  // Local variables
   int i;
   Net* net = CONSTR_get_network(c);
+
+  if (!c)
+    return;
+
+  // Check sizes
+  if ((VEC_get_size(sA) != MAT_get_size1(c->A)) ||
+      (VEC_get_size(sf) != MAT_get_size1(c->J)) ||
+      (VEC_get_size(sGu) != MAT_get_size1(c->G)) ||
+      (VEC_get_size(sGl) != MAT_get_size1(c->G))) {
+    sprintf(c->error_string,"invalid vector size");
+    c->error_flag = TRUE;
+    return;
+  }
+
+  // Clear
   CONSTR_clear(c);
+
+  // Store sensitivities
   for (i = 0; i < NET_get_num_branches(net); i++) 
     CONSTR_store_sens_branch(c,NET_get_branch(net,i),sA,sf,sGu,sGl);
 }

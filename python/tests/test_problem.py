@@ -248,12 +248,17 @@ class TestProblem(unittest.TestCase):
                     break
                 else:
                     offset += c.f.size
-            p.store_sensitivities(None,sens,None,None)
+            p.store_sensitivities(np.zeros(p.A.shape[0]),sens,None,None)
             for i in range(net.num_buses):
                 bus = net.get_bus(i)
                 self.assertEqual(bus.sens_P_balance,sens[2*bus.index+offset])
                 self.assertEqual(bus.sens_Q_balance,sens[2*bus.index+1+offset])
-            self.assertRaises(pf.ProblemError,p.store_sensitivities,None,np.zeros(p.f.size+5),None,None)
+            self.assertRaises(pf.ProblemError,
+                              p.store_sensitivities,
+                              np.zeros(p.A.shape[0]),
+                              np.zeros(p.f.size+5),
+                              None,
+                              None)
 
     def test_problem_vPF(self):
 
@@ -519,12 +524,17 @@ class TestProblem(unittest.TestCase):
                     break
                 else:
                     offset += c.f.size
-            p.store_sensitivities(None,sens,None,None)
+            p.store_sensitivities(np.zeros(p.A.shape[0]),sens,None,None)
             for i in range(net.num_buses):
                 bus = net.get_bus(i)
                 self.assertEqual(bus.sens_P_balance,sens[2*bus.index+offset])
                 self.assertEqual(bus.sens_Q_balance,sens[2*bus.index+1+offset])
-            self.assertRaises(pf.ProblemError,p.store_sensitivities,None,np.zeros(p.f.size+5),None,None)
+            self.assertRaises(pf.ProblemError,
+                              p.store_sensitivities,
+                              np.zeros(p.A.shape[0]),
+                              np.zeros(p.f.size+5),
+                              None,
+                              None)
 
     def test_problem_limits(self):
 

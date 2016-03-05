@@ -1286,7 +1286,7 @@ class TestConstraints(unittest.TestCase):
                     self.assertEqual(indices.size,2)
                     sens[indices[0]] = -bus.index-10
                     sens[indices[1]] = bus.index+11*(bus.index % 2)
-            constr.store_sensitivities(None,sens,None,None)
+            constr.store_sensitivities(np.zeros(constr.A.shape[0]),sens,None,None)
             for i in range(net.num_buses):
                 bus = net.get_bus(i)
                 if bus.is_regulated_by_gen() and not bus.is_slack():
@@ -1394,7 +1394,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(Jcounter,constr.Jcounter)
             constr.eval(x0)
             self.assertEqual(Jcounter,constr.Jcounter)
-            constr.store_sensitivities(None,np.zeros(0),None,None)
+            constr.store_sensitivities(None,np.zeros(constr.J.shape[0]),None,None)
             self.assertEqual(Jcounter,constr.Jcounter)
             constr.eval(x0)
             self.assertEqual(Jcounter,constr.Jcounter)
@@ -1734,7 +1734,7 @@ class TestConstraints(unittest.TestCase):
                     self.assertEqual(indices.size,4*len(bus.reg_trans))
                     j = np.random.randint(0,indices.size)                        
                     sens[indices[j]] = -bus.index - max([tran.index for tran in bus.reg_trans])
-            constr.store_sensitivities(None,sens,None,None)
+            constr.store_sensitivities(np.zeros(constr.A.shape[0]),sens,None,None)
             for i in range(net.num_buses):
                 bus = net.get_bus(i)
                 if bus.is_regulated_by_tran():
@@ -1977,7 +1977,7 @@ class TestConstraints(unittest.TestCase):
                     self.assertEqual(indices.size,4*len(bus.reg_shunts))
                     j = np.random.randint(0,indices.size)           
                     sens[indices[j]] = -bus.index - max([s.index for s in bus.reg_shunts])
-            constr.store_sensitivities(None,sens,None,None)
+            constr.store_sensitivities(np.zeros(constr.A.shape[0]),sens,None,None)
             for i in range(net.num_buses):
                 bus = net.get_bus(i)
                 if bus.is_regulated_by_shunt():

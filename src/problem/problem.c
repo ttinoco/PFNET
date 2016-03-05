@@ -216,7 +216,10 @@ void PROB_store_sens(Prob* p, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
     return;
 
   // Check sizes
-  if (VEC_get_size(sf) != VEC_get_size(p->f)) {
+  if ((VEC_get_size(sA) != MAT_get_size1(p->A)) ||
+      (VEC_get_size(sf) != MAT_get_size1(p->J)) ||
+      (VEC_get_size(sGu) != MAT_get_size1(p->G)) ||
+      (VEC_get_size(sGl) != MAT_get_size1(p->G))) {
     sprintf(p->error_string,"invalid vector size");
     p->error_flag = TRUE;
     return;
