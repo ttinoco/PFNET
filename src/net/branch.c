@@ -327,6 +327,19 @@ REAL BRANCH_get_ratingC(Branch* b) {
     return 0;
 }
 
+REAL BRANCH_get_P_flow_DC(Branch* br) {
+  /* Active power flow (DC approx) from bus
+     "from" to bus "to". */
+
+  if (br) {
+    return -(br->b)*(BUS_get_v_ang(br->bus_from)-
+		     BUS_get_v_ang(br->bus_to)-
+		     br->phase);
+  }
+  else
+    return 0;
+}
+
 void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
 
   // No branch

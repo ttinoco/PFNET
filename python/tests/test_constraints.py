@@ -2401,6 +2401,20 @@ class TestConstraints(unittest.TestCase):
                 self.assertEqual(l[br.index],-rating+off-br.b*br.phase)
                 self.assertEqual(u[br.index],rating+off-br.b*br.phase)
             self.assertEqual(counter,G.nnz)
+
+            # Flow
+            Gx0 = constr.G*x0
+            self.assertTupleEqual(Gx0.shape,(net.num_branches,))
+            for branch in net.branches:
+                bus1 = branch.bus_from
+                bus2 = branch.bus_to
+                if bus1.is_slack():
+                    flow = Gx0[branch.index]-branch.b*(bus1.v_ang-branch.phase)
+                elif bus2.is_slack():
+                    flow = Gx0[branch.index]-branch.b*(-bus2.v_ang-branch.phase)
+                else:
+                    flow = Gx0[branch.index]-branch.b*(-branch.phase)
+                self.assertLess(np.abs(branch.P_flow_DC-flow),1e-10)
             
             # Sensitivities
             for branch in net.branches:

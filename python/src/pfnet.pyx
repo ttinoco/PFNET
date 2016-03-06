@@ -890,6 +890,10 @@ cdef class Branch:
         def __get__(self): return cbranch.BRANCH_get_ratingA(self._c_ptr)
         def __set__(self,r): cbranch.BRANCH_set_ratingA(self._c_ptr,r)
 
+    property P_flow_DC:
+        """ Active power flow (DC approx.) from bus "from" to bus "to" (float). """
+        def __get__(self): return cbranch.BRANCH_get_P_flow_DC(self._c_ptr)
+
     property sens_P_u_bound:
         """ Objective function sensitivity with respect to active power flow upper bound (float). """
         def __get__(self): return cbranch.BRANCH_get_sens_P_u_bound(self._c_ptr)   
