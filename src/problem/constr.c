@@ -69,7 +69,7 @@ struct Constr {
   void (*func_clear)(Constr* c); /**< @brief Function for clearing flags, counters, and function values */
   void (*func_analyze_branch)(Constr* c, Branch* br); /**< @brief Function for analyzing sparsity pattern */
   void (*func_eval_branch)(Constr* c, Branch* br, Vec* var_values); /**< @brief Function for evaluating constraint */
-  void (*func_store_sens_branch)(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl); /**< @brief Function for storing sensitivities */
+  void (*func_store_sens_branch)(Constr* c,Branch* br,Vec* sA,Vec* sf,Vec* sGu,Vec* sGl); /**< @brief Func. for storing sensitivities */
   void (*func_free)(Constr* c); /**< @brief Function for de-allocating any data used */
 
   // Type data
@@ -167,6 +167,38 @@ int CONSTR_get_type(Constr* c) {
     return c->type;
   else
     return CONSTR_TYPE_UNKNOWN;
+}
+
+char* CONSTR_get_type_str(Constr* c) {
+  if (c)
+    switch (c->type) {
+    case CONSTR_TYPE_PF:
+      return CONSTR_TYPE_PF_STR;
+    case CONSTR_TYPE_DCPF:
+      return CONSTR_TYPE_DCPF_STR;
+    case CONSTR_TYPE_FIX:
+      return CONSTR_TYPE_FIX_STR;
+    case CONSTR_TYPE_BOUND:
+      return CONSTR_TYPE_BOUND_STR;
+    case CONSTR_TYPE_PAR_GEN_P:
+      return CONSTR_TYPE_PAR_GEN_P_STR;
+    case CONSTR_TYPE_PAR_GEN_Q:
+      return CONSTR_TYPE_PAR_GEN_Q_STR;
+    case CONSTR_TYPE_REG_GEN:
+      return CONSTR_TYPE_REG_GEN_STR;
+    case CONSTR_TYPE_REG_TRAN:
+      return CONSTR_TYPE_REG_TRAN_STR;
+    case CONSTR_TYPE_REG_SHUNT:
+      return CONSTR_TYPE_REG_SHUNT_STR;
+    case CONSTR_TYPE_DC_FLOW_LIM:
+      return CONSTR_TYPE_DC_FLOW_LIM_STR;
+    case CONSTR_TYPE_LBOUND:
+      return CONSTR_TYPE_LBOUND_STR;
+    default:
+      return CONSTR_TYPE_UNKNOWN_STR;
+    }
+  else
+    return CONSTR_TYPE_UNKNOWN_STR;
 }
 
 Vec* CONSTR_get_b(Constr* c) {

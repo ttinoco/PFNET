@@ -98,6 +98,34 @@ int FUNC_get_type(Func* f) {
     return FUNC_TYPE_UNKNOWN;
 }
 
+char* FUNC_get_type_str(Func* f) {
+  if (f)
+    switch (f->type) {
+    case FUNC_TYPE_REG_VMAG:
+      return FUNC_TYPE_REG_VMAG_STR;
+    case FUNC_TYPE_REG_VANG:
+      return FUNC_TYPE_REG_VANG_STR;
+    case FUNC_TYPE_REG_PQ:
+      return FUNC_TYPE_REG_PQ_STR;
+    case FUNC_TYPE_REG_RATIO:
+      return FUNC_TYPE_REG_RATIO_STR;
+    case FUNC_TYPE_REG_PHASE:
+      return FUNC_TYPE_REG_PHASE_STR;
+    case FUNC_TYPE_REG_SUSC:
+      return FUNC_TYPE_REG_SUSC_STR;
+    case FUNC_TYPE_GEN_COST:
+      return FUNC_TYPE_GEN_COST_STR;
+    case FUNC_TYPE_SP_CONTROLS:
+      return FUNC_TYPE_SP_CONTROLS_STR;
+    case FUNC_TYPE_SLIM_VMAG:
+      return FUNC_TYPE_SLIM_VMAG_STR;
+    default:
+      return FUNC_TYPE_UNKNOWN_STR;
+    }
+  else
+    return FUNC_TYPE_UNKNOWN_STR;
+}
+
 REAL FUNC_get_weight(Func* f) {
   if (f)
     return f->weight;

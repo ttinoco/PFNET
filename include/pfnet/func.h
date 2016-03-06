@@ -36,6 +36,18 @@
 #define FUNC_TYPE_SLIM_VMAG 8   /**< @brief Function type: soft limits of bus voltage magnitudes. */
 /** @} */
 
+// Function type strings
+#define FUNC_TYPE_UNKNOWN_STR "UNKNOWN"
+#define FUNC_TYPE_REG_VMAG_STR "REG_VMAG" 
+#define FUNC_TYPE_REG_VANG_STR "REG_VANG"
+#define FUNC_TYPE_REG_PQ_STR "REG_PQ"
+#define FUNC_TYPE_REG_RATIO_STR "REG_RATIO" 
+#define FUNC_TYPE_REG_PHASE_STR "REG_PHASE"
+#define FUNC_TYPE_REG_SUSC_STR "REG_SUSC"
+#define FUNC_TYPE_GEN_COST_STR "GEN_COST" 
+#define FUNC_TYPE_SP_CONTROLS_STR "SP_CONTROLS" 
+#define FUNC_TYPE_SLIM_VMAG_STR "SLIM_VMAG" 
+
 // Function
 typedef struct Func Func;
 
@@ -43,6 +55,7 @@ typedef struct Func Func;
 void FUNC_clear_bus_counted(Func* f);
 void FUNC_del(Func* f);
 int FUNC_get_type(Func* f);
+char* FUNC_get_type_str(Func* f);
 REAL FUNC_get_weight(Func* f);
 REAL FUNC_get_phi(Func* f);
 REAL* FUNC_get_phi_ptr(Func* f);

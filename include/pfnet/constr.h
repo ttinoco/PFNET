@@ -38,6 +38,20 @@
 #define CONSTR_TYPE_LBOUND 10     /**< @brief Constraint type: variable bounds as linear inequality constraints */
 /** @} */
 
+// Constraint types strings
+#define CONSTR_TYPE_UNKNOWN_STR "UNKNOWN"
+#define CONSTR_TYPE_PF_STR "PF"
+#define CONSTR_TYPE_DCPF_STR "DCPF"
+#define CONSTR_TYPE_FIX_STR "FIX"
+#define CONSTR_TYPE_BOUND_STR "BOUND"
+#define CONSTR_TYPE_PAR_GEN_P_STR "PAR_GEN_P"
+#define CONSTR_TYPE_PAR_GEN_Q_STR "PAR_GEN_Q"
+#define CONSTR_TYPE_REG_GEN_STR "REG_GEN"
+#define CONSTR_TYPE_REG_TRAN_STR "REG_TRAN"
+#define CONSTR_TYPE_REG_SHUNT_STR "REG_SHUNT"
+#define CONSTR_TYPE_DC_FLOW_LIM_STR "DC_FLOW_LIM"
+#define CONSTR_TYPE_LBOUND_STR "LBOUND"
+
 // Constraint
 typedef struct Constr Constr;
 
@@ -47,6 +61,7 @@ void CONSTR_clear_bus_counted(Constr* c);
 void CONSTR_combine_H(Constr* c, Vec* coeff, BOOL ensure_psd);
 void CONSTR_del(Constr* constr);
 int CONSTR_get_type(Constr* c);
+char* CONSTR_get_type_str(Constr* c);
 Vec* CONSTR_get_b(Constr* c);
 Mat* CONSTR_get_A(Constr* c);
 Vec* CONSTR_get_l(Constr* c);
