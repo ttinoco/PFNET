@@ -206,10 +206,11 @@ Constraints in PFNET are of the form
 
 .. math::
    
-   A x & = b \\
-   f(x) & = 0,
+   & A x = b \\
+   & f(x) = 0 \\
+   & l \le G x \le u,
 
-where :math:`A` is a matrix, :math:`b` is a vector, :math:`f` is a vector-valued function, and :math:`x` is a vector of values of network quantities that have been set as variables. They are represented by objects of type :class:`Constraint <pfnet.Constraint>`. To create an object of this type, the constraint type and the network to be associated with the constraint need to be specified. The following example sets all bus voltage magnitudes and angles as variables and constructs the power flow constraints::
+where :math:`A` and :math:`G`  are matrices, :math:`b`, :math:`l` and :math:`u`  are vectors, :math:`f` is a vector-valued nonlinear function, and :math:`x` is a vector of values of network quantities that have been set as variables. They are represented by objects of type :class:`Constraint <pfnet.Constraint>`. To create an object of this type, the constraint type and the network to be associated with the constraint need to be specified. The following example sets all bus voltage magnitudes and angles as variables and constructs the power flow constraints::
 
   >>> import pfnet as pf
 
@@ -238,7 +239,7 @@ Before a :class:`Constraint <pfnet.Constraint>` object can be used, it must be i
   >>> constr.eval(x + 0.01)
   >>> constr.eval(x)
 
-The linear constraint matrix and right-hand side can be extracted from the :data:`A <pfnet.Constraint.A>` and :data:`b <pfnet.Constraint.b>` attributes of the :class:`Constraint <pfnet.Constraint>` object. The constraint violations vector and Jacobian matrix of the nonlinear constraints can be extracted from the attributes :data:`f <pfnet.Constraint.f>` and :data:`J <pfnet.Constraint.J>`, respectively. Also, the Hessian matrix of any individual nonlinear constraint :math:`f_i(x) = 0` can be extracted using the class method :func:`get_H_single <pfnet.Constraint.get_H_single>`. The following example shows how to extract the largest power flow mismatch in per unit :data:`system base power <pfnet.Network.base_power>` and the Hessian matrix corresponding to the active power balance constraint of a bus::
+The matrices and vectors associated with the linear constraints can be extracted from the :data:`A <pfnet.Constraint.A>`, :data:`G <pfnet.Constraint.G>`, :data:`b <pfnet.Constraint.b>`, :data:`l <pfnet.Constraint.l>` and :data:`u <pfnet.Constraint.u>` attributes of the :class:`Constraint <pfnet.Constraint>` object. The vector of violations and Jacobian matrix of the nonlinear constraints can be extracted from the attributes :data:`f <pfnet.Constraint.f>` and :data:`J <pfnet.Constraint.J>`, respectively. Also, the Hessian matrix of any individual nonlinear constraint :math:`f_i(x) = 0` can be extracted using the class method :func:`get_H_single <pfnet.Constraint.get_H_single>`. The following example shows how to extract the largest power flow mismatch in per unit :data:`system base power <pfnet.Network.base_power>` and the Hessian matrix corresponding to the active power balance constraint of a bus::
 
   >>> import numpy as np
 
@@ -266,7 +267,7 @@ As before, all Hessian matrices have stored only the lower triangular part. In a
   >>> print type(H), H.shape, H.nnz
   <class 'scipy.sparse.coo.coo_matrix'> (28, 28) 564
 
-Lastly, Lagrange multiplier estimates of the nonlinear constraints :math:`f(x) = 0` can be used to store sensitivity information in the network components associated with the constraints. This is done using the class method :func:`store_sensitivities <pfnet.Constraint.store_sensitivities>`. 
+Lastly, Lagrange multiplier estimates of the linear and constraints can be used to store sensitivity information in the network components associated with the constraints. This is done using the class method :func:`store_sensitivities <pfnet.Constraint.store_sensitivities>`. Component-specific attributes that store sensitivity information are described in the :ref:`reference` section.
 
 Details about each of the different constraint types available in PFNET are provided below.
 
@@ -296,6 +297,8 @@ Variable bounding
 -----------------
 
 This constraint is of type :data:`CONSTR_TYPE_BOUND <pfnet.CONSTR_TYPE_BOUND>`. It constrains specific variables to be inside their bounds. The variables to be bounded are specified using the :class:`Network <pfnet.Network>` class methods :func:`set_flags() <pfnet.Network.set_flags>` or :func:`set_flags_of_component() <pfnet.Network.set_flags_of_component>` with the flag type :data:`FLAG_BOUNDED <pfnet.FLAG_BOUNDED>`. These constraints are expressed as nonlinear equality constraints using the techniques described in Section 4.3.3 of [TTR2015]_.
+
+For conventional linear bounds, the constraint type :data:`CONSTR_TYPE_LBOUND <pfnet.CONSTR_TYPE_LBOUND>` can be used.
 
 .. _prob_constr_PAR_GEN:
 
@@ -378,10 +381,11 @@ Optimization problems constructed with PFNET are of the form
    \begin{alignat*}{2}
    & \mbox{minimize}   \quad && \varphi(x) \\
    & \mbox{subject to} \quad && Ax = b \\
-   &                   \quad && f(x) = 0.
+   &                   \quad && f(x) = 0 \\
+   &                   \quad && l \le Gx \le u,
    \end{alignat*}
 
-As already noted, the objective function :math:`\varphi` is a weighted sum of functions :math:`\varphi_i`. The linear and nonlinear equality constraints :math:`Ax = b` and :math:`f(x) = 0`, respectively, correspond to one or more of the constraints described above. An optimization problem in PFNET is represented by an object of type :class:`Problem <pfnet.Problem>`. 
+As already noted, the objective function :math:`\varphi` is a weighted sum of functions :math:`\varphi_i`. The linear and nonlinear constraints :math:`Ax = b`, :math:`l \le Gx \le u`, and :math:`f(x) = 0` correspond to one or more of the constraints described above. An optimization problem in PFNET is represented by an object of type :class:`Problem <pfnet.Problem>`. 
 
 After instantiation, a :class:`Problem <pfnet.Problem>` is empty and one needs to specify the :class:`Network <pfnet.Network>` that is to be associated with the problem, the :class:`Constraints <pfnet.Constraint>` to include, and the :class:`Functions <pfnet.Function>` that form the objective function. This can be done using the :class:`Problem <pfnet.Problem>` class methods :func:`set_network <pfnet.Problem.set_network>`, :func:`add_constraint <pfnet.Problem.add_constraint>`, and :func:`add_function <pfnet.Problem.add_function>`. The following example shows how to construct a simple power flow problem and solve it using the Newton-Raphson method:
 
@@ -400,4 +404,4 @@ The above routine can then be used as follows::
    >>> print net.bus_P_mis, net.bus_Q_mis
    2.37e-6 3.58e-6
 
-As shown in the example, the :class:`Problem <pfnet.Problem>` class method :func:`analyze <pfnet.Problem.analyze>` needs to be called before the vectors and matrices associated with the problem constraints and functions can be used. The method :func:`eval <pfnet.Problem.eval>` can then be used for evaluating the problem objective and constraint functions at different points. As is the case for :class:`Constraints <pfnet.Constraint>`, a :class:`Problem <pfnet.Problem>` has a method :func:`combine_H <pfnet.Problem.combine_H>` for forming linear combinations of individual constraint Hessians, and a method :func:`store_sensitivities <pfnet.Problem.store_sensitivities>` for storing sensitivity information in the network components associated with the nonlinear equality constraints. Lastly, a useful attribute of the :class:`Problem <pfnet.Problem>` class is :data:`Z <pfnet.Problem.Z>`, which is a sparse matrix whose columns are a basis for the null space of :data:`A <pfnet.Problem.A>`. 
+As shown in the example, the :class:`Problem <pfnet.Problem>` class method :func:`analyze <pfnet.Problem.analyze>` needs to be called before the vectors and matrices associated with the problem constraints and functions can be used. The method :func:`eval <pfnet.Problem.eval>` can then be used for evaluating the problem objective and constraint functions at different points. As is the case for :class:`Constraints <pfnet.Constraint>`, a :class:`Problem <pfnet.Problem>` has a method :func:`combine_H <pfnet.Problem.combine_H>` for forming linear combinations of individual constraint Hessians, and a method :func:`store_sensitivities <pfnet.Problem.store_sensitivities>` for storing sensitivity information in the network components associated with the constraints.

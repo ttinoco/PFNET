@@ -88,35 +88,43 @@ Bus Sensitivities
 
 .. data:: pfnet.BUS_SENS_LARGEST
 
-          Largest objective function sensitivity with respect to nonlinear equality constraints involving this bus.
+          Largest objective function sensitivity with respect to constraints involving this bus.
 	  
 .. data:: pfnet.BUS_SENS_P_BALANCE
 
-	  Objective function sensitivity with respect to bus active power balance.
+	  Objective function sensitivity with respect to active power balance.
 
 .. data:: pfnet.BUS_SENS_Q_BALANCE
 
-	  Objective function sensitivity with respect to bus reactive power balance.
+	  Objective function sensitivity with respect to reactive power balance.
 
 .. data:: pfnet.BUS_SENS_V_MAG_U_BOUND
 
-	  Objective function sensitivity with respect to bus upper voltage bound.
+	  Objective function sensitivity with respect to voltage magnitude upper bound.
 
 .. data:: pfnet.BUS_SENS_V_MAG_L_BOUND
 
-	  Objective function sensitivity with respect to bus lower voltage bound.
+	  Objective function sensitivity with respect to voltage magnitude lower bound.
+
+.. data:: pfnet.BUS_SENS_V_ANG_U_BOUND
+
+	  Objective function sensitivity with respect to voltage angle upper bound.
+
+.. data:: pfnet.BUS_SENS_V_ANG_L_BOUND
+
+	  Objective function sensitivity with respect to voltage angle lower bound.
 
 .. data:: pfnet.BUS_SENS_V_REG_BY_GEN
 
-	  Objective function sensitivity with respect to bus voltage magnitude regulation by generators.
+	  Objective function sensitivity with respect to voltage magnitude regulation by generators.
 
 .. data:: pfnet.BUS_SENS_V_REG_BY_TRAN
 
-	  Objective function sensitivity with respect to bus voltage magnitude regulation by tap-changing transformers.
+	  Objective function sensitivity with respect to voltage magnitude regulation by tap-changing transformers.
 
 .. data:: pfnet.BUS_SENS_V_REG_BY_SHUNT
 
-	  Objective function sensitivity with respect to bus voltage magnitude regulation by switched shunt devices.
+	  Objective function sensitivity with respect to voltage magnitude regulation by switched shunt devices.
 
 .. _ref_bus_mis:
 
@@ -500,17 +508,29 @@ Constraint Types
 
 	  Constraint for enforcing power balance at every bus of the network. 
 
+.. data:: pfnet.CONSTR_TYPE_DCPF
+
+	  Constraint for enforcing DC power balance at every bus of the network. 
+
 .. data:: pfnet.CONSTR_TYPE_FIX
 
 	  Constraint for fixing a subset of variables to their current value.
 
 .. data:: pfnet.CONSTR_TYPE_BOUND
 
-	  Constraint for forcing a subset of variables to be within their bounds.
+	  Constraint for forcing a subset of variables to be within their bounds (nonlinear).
 
-.. data:: pfnet.CONSTR_TYPE_PAR_GEN
+.. data:: pfnet.CONSTR_TYPE_LBOUND
 
-	  Constraint for enforcing generator participations.
+	  Constraint for forcing a subset of variables to be within their bounds (linear).
+
+.. data:: pfnet.CONSTR_TYPE_PAR_GEN_P
+
+	  Constraint for enforcing generator active power participations.
+
+.. data:: pfnet.CONSTR_TYPE_PAR_GEN_Q
+
+	  Constraint for enforcing generator reactive power participations.
 
 .. data:: pfnet.CONSTR_TYPE_REG_GEN
 
@@ -523,6 +543,10 @@ Constraint Types
 .. data:: pfnet.CONSTR_TYPE_REG_SHUNT
 
 	  Constraint for enforcing voltage band regulation by switched shunt devices.
+
+.. data:: pfnet.CONSTR_TYPE_DC_FLOW_LIM
+
+	  Constraint for enforcing DC power flow limits on every branch
 
 .. _ref_constr_class:
 

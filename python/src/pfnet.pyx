@@ -2709,11 +2709,7 @@ cdef class Constraint:
 
     def __init__(self,int type, Network net, alloc=True):
         """
-        Class that represents constraints of the form
-
-        Ax = b
-        f(x) = 0
-        l <= Gx <= u
+        Contraint class.
 
         Parameters
         ----------
@@ -2807,13 +2803,13 @@ cdef class Constraint:
         Parameters
         ----------
         sA : :class:`ndarray <numpy.ndarray>`
-             linear equality constraints (Ax = b)
+             sensitivities for linear equality constraints (:math:`Ax = b`)
         sf : :class:`ndarray <numpy.ndarray>`
-             nonlinear equality constraints (f(x) = 0)
+             sensitivities for nonlinear equality constraints (:math:`f(x) = 0`)
         sGu : :class:`ndarray <numpy.ndarray>`
-              linear inequality constraints (Gx <= u)
+             sensitivities for linear inequality constraints (:math:`Gx \le u`)
         sGl : :class:`ndarray <numpy.ndarray>`
-              linear inequality constraints (l <= Gx)
+             sensitivities for linear inequality constraints (:math:`l \le Gx`)
         """
 
         cdef np.ndarray[double,mode='c'] xA = sA
@@ -2956,12 +2952,7 @@ cdef class Problem:
 
     def __init__(self):
         """
-        Class that represents optimization problem of the form
-
-        minimize    phi(x)
-        subject to  Ax = b
-                    f(x) = 0
-                    l <= Gx <= u
+        Optimization problem class.
         """
 
         pass        
@@ -3063,13 +3054,13 @@ cdef class Problem:
         Parameters
         ----------
         sA : :class:`ndarray <numpy.ndarray>`
-             linear equality constraints (Ax = b)
+             sensitivities for linear equality constraints (:math:`Ax = b`)
         sf : :class:`ndarray <numpy.ndarray>`
-             nonlinear equality constraints (f(x) = 0)
+             sensitivities for nonlinear equality constraints (:math:`f(x) = 0`)
         sGu : :class:`ndarray <numpy.ndarray>`
-              linear inequality constraints (Gx <= u)
+             sensitivities for linear inequality constraints (:math:`Gx \le u`)
         sGl : :class:`ndarray <numpy.ndarray>`
-              linear inequality constraints (l <= Gx)
+             sensitivities for linear inequality constraints (:math:`l \le Gx`)
         """
         
         cdef np.ndarray[double,mode='c'] xA = sA

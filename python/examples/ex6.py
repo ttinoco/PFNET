@@ -1,11 +1,3 @@
-#***************************************************#
-# This file is part of PFNET.                       #
-#                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
-#                                                   #
-# PFNET is released under the BSD 2-clause license. #
-#***************************************************#
-
 import pfnet as pf
 from numpy import hstack
 from numpy.linalg import norm
@@ -42,8 +34,9 @@ def NRsolve(net):
 
     p = pf.Problem()
     p.set_network(net)
-    p.add_constraint(pf.CONSTR_TYPE_PF)       # power flow
-    p.add_constraint(pf.CONSTR_TYPE_PAR_GEN)  # generator participation
+    p.add_constraint(pf.CONSTR_TYPE_PF)         # power flow
+    p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_P)  # generator participation
+    p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_Q)  # generator participation
     p.analyze()
     
     x = p.get_init_point()

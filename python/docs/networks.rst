@@ -193,6 +193,7 @@ Names           Description                                                     
 ``bus_v_vio``   Maximum bus voltage magnitude limit violation                     per unit
 ``bus_P_mis``   Maximum absolute bus active power mismatch                        MW
 ``bus_Q_mis``   Maximum absolute bus reactive power mismatch                      MVAr
+``gen_P_cost``  Total active power generation cost                                $/hour
 ``gen_v_dev``   Maximum set point deviation of generator-regulated voltage        per unit
 ``gen_Q_vio``   Maximum generator reactive power limit violation                  MVAr
 ``gen_P_vio``   Maximum generator active power limit violation                    MW
