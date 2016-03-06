@@ -390,9 +390,17 @@ class TestNetwork(unittest.TestCase):
                 self.assertGreater(branch.ratio,0)
 
                 self.assertGreaterEqual(branch.ratingA,0.)
+                self.assertGreaterEqual(branch.ratingB,0.)
+                self.assertGreaterEqual(branch.ratingC,0.)
                 r = np.random.rand()
                 branch.ratingA = r
                 self.assertEqual(r,branch.ratingA)
+                r = np.random.rand()
+                branch.ratingB = r
+                self.assertEqual(r,branch.ratingB)
+                r = np.random.rand()
+                branch.ratingC = r
+                self.assertEqual(r,branch.ratingC)
 
                 # tap changer v
                 if branch.is_tap_changer_v():

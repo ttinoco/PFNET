@@ -890,6 +890,16 @@ cdef class Branch:
         def __get__(self): return cbranch.BRANCH_get_ratingA(self._c_ptr)
         def __set__(self,r): cbranch.BRANCH_set_ratingA(self._c_ptr,r)
 
+    property ratingB:
+        """ Branch thermal rating B (p.u. system base power) (float). """
+        def __get__(self): return cbranch.BRANCH_get_ratingB(self._c_ptr)
+        def __set__(self,r): cbranch.BRANCH_set_ratingB(self._c_ptr,r)
+
+    property ratingC:
+        """ Branch thermal rating C (p.u. system base power) (float). """
+        def __get__(self): return cbranch.BRANCH_get_ratingC(self._c_ptr)
+        def __set__(self,r): cbranch.BRANCH_set_ratingC(self._c_ptr,r)
+
     property P_flow_DC:
         """ Active power flow (DC approx.) from bus "from" to bus "to" (float). """
         def __get__(self): return cbranch.BRANCH_get_P_flow_DC(self._c_ptr)
