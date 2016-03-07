@@ -582,8 +582,8 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 	BUS_add_gen(bus,gen);                                // connect gen to bus
 	GEN_set_bus(gen,bus);                                // connect bus to gen
 	GEN_set_P(gen,art_gen->p/parser->base_power);        // per unit
-	GEN_set_P_max(gen,GEN_get_P(gen));                   // per unit
-	GEN_set_P_min(gen,GEN_get_P(gen));                   // per unit
+	GEN_set_P_max(gen,GEN_INF_P);                        // per unit
+	GEN_set_P_min(gen,-GEN_INF_P);                       // per unit
 	GEN_set_Q(gen,art_gen->q/parser->base_power);        // per unit
 	GEN_set_Q_max(gen,art_gen->qmax/parser->base_power); // per unit
 	GEN_set_Q_min(gen,art_gen->qmin/parser->base_power); // per unit
