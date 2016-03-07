@@ -775,7 +775,7 @@ class TestNetwork(unittest.TestCase):
             self.assertGreaterEqual(net.bus_v_vio,0.)
             self.assertGreater(net.bus_P_mis,0.)
             self.assertGreater(net.bus_Q_mis,0.)
-            self.assertGreater(net.gen_P_cost,0.)
+            self.assertGreaterEqual(net.gen_P_cost,0.)
             self.assertGreaterEqual(net.gen_v_dev,0.)
             self.assertGreaterEqual(net.gen_Q_vio,0.)
             self.assertGreaterEqual(net.gen_P_vio,0.)
