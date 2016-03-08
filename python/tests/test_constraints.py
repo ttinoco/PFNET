@@ -13,7 +13,7 @@ import numpy as np
 from scipy.sparse import coo_matrix,triu,tril,eye
 
 NUM_TRIALS = 25
-EPS = 2e0 # %
+EPS = 3e0 # %
 
 class TestConstraints(unittest.TestCase):
     
