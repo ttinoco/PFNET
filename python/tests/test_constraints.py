@@ -13,7 +13,7 @@ import numpy as np
 from scipy.sparse import coo_matrix,triu,tril,eye
 
 NUM_TRIALS = 25
-EPS = 3e0 # %
+EPS = 2e0 # %
 
 class TestConstraints(unittest.TestCase):
     
@@ -1474,7 +1474,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.linalg.norm(Jd_exact)
+                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.maximum(np.linalg.norm(Jd_exact),1e-3)
                 self.assertLessEqual(error,EPS)
 
             # Sigle Hessian check

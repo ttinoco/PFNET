@@ -2446,6 +2446,33 @@ cdef class Graph:
         if self.alloc:
             cgraph.GRAPH_del(self._c_graph)
             self._c_graph = NULL
+    
+    def has_viz(self):
+        """
+        Determines whether graph has visualization 
+        capabilities.
+
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+        
+        return cgraph.GRAPH_can_viz(self._c_graph)
+
+    def has_error(self):
+        """
+        Indicates whether the graph has the error flag set due to an
+        invalid operation.
+        """
+
+        return cgraph.GRAPH_has_error(self._c_graph)
+
+    def clear_error(self):
+        """ 
+        Clear error flag and message string.
+        """
+
+        cgraph.GRAPH_clear_error(self._c_graph);
         
     def set_layout(self):
         """

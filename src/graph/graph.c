@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -50,6 +50,13 @@ BOOL GRAPH_has_error(Graph* g) {
     return FALSE;
   else
     return g->error_flag;
+}
+
+void GRAPH_clear_error(Graph* g) {
+  if (g) {
+    g->error_flag = FALSE;
+    strcpy(g->error_string,"");
+  }
 }
 
 Graph* GRAPH_new(Net* net) {
@@ -120,6 +127,17 @@ Graph* GRAPH_new(Net* net) {
   #endif
 
   return g;
+}
+
+BOOL GRAPH_can_viz(Graph* g) {
+  if (g) {
+    #ifndef NO_GRAPHVIZ
+    return TRUE;
+    #else
+    return FALSE;
+    #endif
+  }
+  return FALSE;  
 }
 
 void GRAPH_set_layout(Graph* g) {
