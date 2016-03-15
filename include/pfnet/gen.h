@@ -57,6 +57,7 @@ REAL GEN_get_sens_P_l_bound(Gen* gen);
 Bus* GEN_get_bus(Gen* gen);
 Bus* GEN_get_reg_bus(Gen* gen);
 REAL GEN_get_P_cost(Gen* gen);
+REAL GEN_get_P_cost_at(Gen* gen, REAL P);
 REAL GEN_get_cost_coeff_Q0(Gen* gen);
 REAL GEN_get_cost_coeff_Q1(Gen* gen);
 REAL GEN_get_cost_coeff_Q2(Gen* gen);

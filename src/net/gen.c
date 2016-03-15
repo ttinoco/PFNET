@@ -138,9 +138,16 @@ Bus* GEN_get_reg_bus(Gen* gen) {
 
 REAL GEN_get_P_cost(Gen* gen) {
   if (gen)
+    return GEN_get_P_cost_at(gen,gen->P); // $/hr
+  else
+    return 0;
+}
+
+REAL GEN_get_P_cost_at(Gen* gen, REAL P) {
+  if (gen)
     return (gen->cost_coeff_Q0 + 
-	    gen->cost_coeff_Q1*gen->P +
-	    gen->cost_coeff_Q2*pow(gen->P,2.)); // $/hr
+	    gen->cost_coeff_Q1*P +
+	    gen->cost_coeff_Q2*pow(P,2.)); // $/hr
   else
     return 0;
 }

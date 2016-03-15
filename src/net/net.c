@@ -2162,7 +2162,7 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
 
       // Active power generation cost
       //*****************************
-      net->gen_P_cost += GEN_get_P_cost(gen);
+      net->gen_P_cost += GEN_get_P_cost_at(gen,P);
       
       // Reacive power
       if (GEN_is_regulator(gen)) { // Should this be done for all generators?
