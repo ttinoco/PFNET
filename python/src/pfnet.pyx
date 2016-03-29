@@ -715,6 +715,17 @@ cdef class Branch:
 
         return cbranch.BRANCH_has_pos_ratio_v_sens(self._c_ptr)
 
+    def is_on_outage(self):
+        """
+        Determines whether branch in on outage.
+        
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+
+        return cbranch.BRANCH_is_on_outage(self._c_ptr)
+
     def is_fixed_tran(self):
         """
         Determines whether branch is fixed transformer.
@@ -913,6 +924,11 @@ cdef class Branch:
         """ Objective function sensitivity with respect to active power flow lower bound (float). """
         def __get__(self): return cbranch.BRANCH_get_sens_P_l_bound(self._c_ptr)
 
+    property outage:
+        """ Flag that indicates whehter branch is on outage. """
+        def __get__(self): return cbranch.BRANCH_is_on_outage(self._c_ptr)
+        def __set__(self,value): cbranch.BRANCH_set_outage(self._c_ptr,value)
+
 cdef new_Branch(cbranch.Branch* b):
     if b is not NULL:
         branch = Branch(alloc=False)
@@ -978,6 +994,17 @@ cdef class Generator:
     def _get_c_ptr(self):
 
         return new_CPtr(self._c_ptr)
+
+    def is_on_outage(self):
+        """
+        Determines whether generator in on outage.
+        
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+
+        return cgen.GEN_is_on_outage(self._c_ptr)
 
     def is_slack(self):
         """ 
@@ -1105,6 +1132,11 @@ cdef class Generator:
     property sens_P_l_bound:
         """ Objective function sensitivity with respect to active power lower bound (float). """
         def __get__(self): return cgen.GEN_get_sens_P_l_bound(self._c_ptr)
+
+    property outage:
+        """ Flag that indicates whehter generator is on outage. """
+        def __get__(self): return cgen.GEN_is_on_outage(self._c_ptr)
+        def __set__(self,value): cgen.GEN_set_outage(self._c_ptr,value)
 
 cdef new_Generator(cgen.Gen* g):
     if g is not NULL:

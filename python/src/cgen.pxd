@@ -45,6 +45,7 @@ cdef extern from "pfnet/gen.h":
     REAL GEN_get_Q_min(Gen* gen)
     Gen* GEN_get_next(Gen* gen)
     Gen* GEN_get_reg_next(Gen* gen)
+    bint GEN_is_on_outage(Gen* gen)
     bint GEN_is_P_adjustable(Gen* gen)
     bint GEN_is_regulator(Gen* gen)
     bint GEN_is_slack(Gen* gen)
@@ -55,3 +56,4 @@ cdef extern from "pfnet/gen.h":
     void GEN_set_cost_coeff_Q0(Gen* gen, REAL c)
     void GEN_set_cost_coeff_Q1(Gen* gen, REAL c)
     void GEN_set_cost_coeff_Q2(Gen* gen, REAL c)
+    void GEN_set_outage(Gen* gen, bint outage)
