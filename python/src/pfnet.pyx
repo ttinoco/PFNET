@@ -20,6 +20,7 @@ cimport cbranch
 cimport cload
 cimport cvargen
 cimport cnet
+cimport ccont
 cimport cgraph
 cimport cconstr
 cimport cfunc
@@ -2394,6 +2395,126 @@ cdef new_Network(cnet.Net* n):
         return net
     else:
         raise NetworkError('no network data')
+
+# Contingency
+#############
+
+class ContingencyError(Exception):
+    """
+    Contingency error exception.
+    """
+
+    def __init__(self,value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+cdef class Contingency:
+    """
+    Contingency class.
+    """
+    
+    cdef ccont.Cont* _c_cont
+    cdef bint alloc
+    
+    def __init__(self,alloc=True):
+        """
+        Contingency class.
+        
+        Parameters
+        ----------
+        alloc : {``True``, ``False``}
+        """
+
+        pass
+     
+    def __cinit__(self,alloc=True):
+        
+        if alloc:
+            self._c_cont = ccont.CONT_new()
+        else:
+            self._c_cont = NULL
+        self.alloc = alloc
+
+    def __dealloc__(self):
+        """
+        Frees contingency C data structure. 
+        """
+        
+        if self.alloc:
+            ccont.CONT_del(self._c_cont)
+            self._c_cont = NULL
+
+    def show(self):
+        """
+        Shows contingency information.
+        """
+        
+        ccont.CONT_show(self._c_cont)
+
+    def add_gen_outage(self,gen):
+        """
+        Adds generator outage to contingency.
+    
+        Parameters
+        ----------
+        gen : :class:`Generator <pfnet.Generator>`
+        """
+
+        cdef Generator g = gen
+        ccont.CONT_add_gen_outage(self._c_cont,g._c_ptr)
+
+    def add_branch_outage(self,br):
+        """
+        Adds branch outage to contingency.
+    
+        Parameters
+        ----------
+        br : :class:`Branch <pfnet.Branch>`
+        """
+
+        cdef Branch b = br
+        ccont.CONT_add_branch_outage(self._c_cont,b._c_ptr)
+
+    def has_gen_outage(self,gen):
+        """
+        Determines whether contingency specifies the given generator as being on outage.
+
+        Parameters
+        ----------
+        gen : :class:`Generator <pfnet.Generator>`
+
+        Returns
+        -------
+        result : {``True``, ``False``}
+        """
+        
+        cdef Generator g = gen
+        return ccont.CONT_has_gen_outage(self._c_cont,g._c_ptr)
+
+    def has_branch_outage(self,br):
+        """
+        Determines whether contingency specifies the given branch as being on outage.
+
+        Parameters
+        ----------
+        branch : :class:`Branch <pfnet.Branch>`
+
+        Returns
+        -------
+        result : {``True``, ``False``}
+        """
+        
+        cdef Branch b = br
+        return ccont.CONT_has_branch_outage(self._c_cont,b._c_ptr)
+
+    property num_gen_outages:
+        """ Number of generator outages. """
+        def __get__(self): return ccont.CONT_get_num_gen_outages(self._c_cont)
+
+    property num_branch_outages:
+        """ Number of branch outages. """
+        def __get__(self): return ccont.CONT_get_num_branch_outages(self._c_cont)
 
 # Graph
 #######

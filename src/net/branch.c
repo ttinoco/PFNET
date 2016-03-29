@@ -56,6 +56,7 @@ struct Branch {
   REAL ratingC;      /**< @brief Power rating C (p.u. system base MVA) */  
    
   // Flags
+  BOOL outage;            /**< @brief Flag for indicating that branch in on outage */
   BOOL pos_ratio_v_sens; /**< @brief Flag for positive ratio-voltage sensitivity */
   char vars;             /**< @brief Flags for indicating which quantities should be treated as variables */
   char fixed;            /**< @brief Flags for indicating which quantities should be fixed to their current value */
@@ -471,6 +472,7 @@ void BRANCH_init(Branch* br) {
   br->ratingB = 0;
   br->ratingC = 0;
 
+  br->outage = FALSE;
   br->pos_ratio_v_sens = TRUE;
   br->vars = 0x00;
   br->fixed = 0x00;
@@ -493,20 +495,39 @@ void BRANCH_init(Branch* br) {
   br->to_next = NULL;
 };
 
-BOOL BRANCH_is_fixed_tran(Branch* branch) {
-  return (branch->type == BRANCH_TYPE_TRAN_FIXED);
+BOOL BRANCH_is_on_outage(Branch* br) {
+  if (br)
+    return br->outage;
+  else
+    return FALSE;
 }
 
-BOOL BRANCH_is_line(Branch* branch) {
-  return (branch->type == BRANCH_TYPE_LINE);
+BOOL BRANCH_is_fixed_tran(Branch* br) {
+  if (br)
+    return br->type == BRANCH_TYPE_TRAN_FIXED;
+  else
+    return FALSE;
 }
 
-BOOL BRANCH_is_phase_shifter(Branch* branch) {
-  return (branch->type == BRANCH_TYPE_TRAN_PHASE);
+BOOL BRANCH_is_line(Branch* br) {
+  if (br)
+    return br->type == BRANCH_TYPE_LINE;
+  else
+    return FALSE;
+}
+
+BOOL BRANCH_is_phase_shifter(Branch* br) {
+  if (br)
+    return br->type == BRANCH_TYPE_TRAN_PHASE;
+  else
+    return FALSE;
 }
 
 BOOL BRANCH_is_tap_changer(Branch* br) {
-  return (BRANCH_is_tap_changer_v(br) || BRANCH_is_tap_changer_Q(br));
+  if (br)
+    return BRANCH_is_tap_changer_v(br) || BRANCH_is_tap_changer_Q(br);
+  else
+    return FALSE;
 }
 
 BOOL BRANCH_is_tap_changer_v(Branch* br) {
@@ -583,56 +604,73 @@ void BRANCH_set_type(Branch* br, int type) {
 }
 
 void BRANCH_set_bus_from(Branch* branch, Bus* bus_from) {
-  branch->bus_from = (Bus*)bus_from;
+  if (branch)
+    branch->bus_from = (Bus*)bus_from;
 }
 
 void BRANCH_set_bus_to(Branch* branch, Bus* bus_to) {
-  branch->bus_to = (Bus*)bus_to;
+  if (branch)
+    branch->bus_to = (Bus*)bus_to;
 }
 
 void BRANCH_set_reg_bus(Branch* branch, Bus* reg_bus) {
-  branch->reg_bus = (Bus*)reg_bus;
+  if (branch)  
+    branch->reg_bus = (Bus*)reg_bus;
 }
 
 void BRANCH_set_g(Branch* branch, REAL g) {
-  branch->g = g;
+  if (branch)  
+    branch->g = g;
 }
 
 void BRANCH_set_g_from(Branch* branch, REAL g_from) {
-  branch->g_from = g_from;
+  if (branch)
+    branch->g_from = g_from;
 }
 
 void BRANCH_set_g_to(Branch* branch, REAL g_to) {
-  branch->g_to = g_to;
+  if (branch)
+    branch->g_to = g_to;
 }
 
 void BRANCH_set_b(Branch* branch, REAL b) {
-  branch->b = b;
+  if (branch)
+    branch->b = b;
 }
 
 void BRANCH_set_b_from(Branch* branch, REAL b_from) {
-  branch->b_from = b_from;
+  if (branch)  
+    branch->b_from = b_from;
 }
 
 void BRANCH_set_b_to(Branch* branch, REAL b_to) {
-  branch->b_to = b_to;
+  if (branch)
+    branch->b_to = b_to;
 }
 
 void BRANCH_set_ratio(Branch* branch, REAL ratio) {
-  branch->ratio = ratio;
+  if (branch)
+    branch->ratio = ratio;
 }
 
 void BRANCH_set_ratio_max(Branch* branch, REAL ratio) {
-  branch->ratio_max = ratio;
+  if (branch)
+    branch->ratio_max = ratio;
 }
 
 void BRANCH_set_ratio_min(Branch* branch, REAL ratio) {
-  branch->ratio_min = ratio;
+  if (branch)
+    branch->ratio_min = ratio;
 }
 
 void BRANCH_set_pos_ratio_v_sens(Branch* branch, BOOL flag) {
   if (branch)
     branch->pos_ratio_v_sens = flag;
+}
+
+void BRANCH_set_outage(Branch* branch, BOOL outage) {
+  if (branch)
+    branch->outage = outage;
 }
 
 void BRANCH_set_phase(Branch* br, REAL phase) {

@@ -21,7 +21,8 @@ struct Gen {
   Bus* reg_bus;        /**< @brief Bus regulated by this generator */
   
   // Flags
-  BOOL regulator;      /**< @brief Flag for indicating that this generator provides voltage regulation */
+  BOOL outage;         /**< @brief Flag for indicating that generator in on outage */
+  BOOL regulator;      /**< @brief Flag for indicating that generator provides voltage regulation */
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
   char vars;           /**< @brief Flags for indicating which quantities should be treated as variables */
@@ -321,6 +322,7 @@ void GEN_init(Gen* gen) {
   gen->bus = NULL;
   gen->reg_bus = NULL;
 
+  gen->outage = FALSE;
   gen->regulator = FALSE;
   gen->fixed = 0x00;
   gen->bounded = 0x00;
@@ -348,6 +350,13 @@ void GEN_init(Gen* gen) {
 
   gen->next = NULL;
   gen->reg_next = NULL;
+}
+
+BOOL GEN_is_on_outage(Gen* gen) {
+  if (gen)
+    return gen->outage;
+  else
+    return FALSE;
 }
 
 BOOL GEN_is_P_adjustable(Gen* gen) {
@@ -425,43 +434,58 @@ void GEN_set_cost_coeff_Q2(Gen* gen, REAL q) {
 }
 
 void GEN_set_bus(Gen* gen, Bus* bus) {
-  gen->bus = (Bus*)bus;
+  if (gen)
+    gen->bus = (Bus*)bus;
 }
 
 void GEN_set_reg_bus(Gen* gen, Bus* reg_bus) {
-  gen->reg_bus = (Bus*)reg_bus;
+  if (gen)
+    gen->reg_bus = (Bus*)reg_bus;
 }
 
 void GEN_set_regulator(Gen* gen, BOOL regulator) {
-  gen->regulator = regulator;
+  if (gen)
+    gen->regulator = regulator;
+}
+
+void GEN_set_outage(Gen* gen, BOOL outage) {
+  if (gen)
+    gen->outage = outage;
 }
 
 void GEN_set_index(Gen* gen, int index) {
-  gen->index = index;
+  if (gen)
+    gen->index = index;
 }
 
 void GEN_set_P(Gen* gen, REAL P) {
-  gen->P = P;
+  if (gen)
+    gen->P = P;
 }
 
 void GEN_set_P_max(Gen* gen, REAL P_max) {
-  gen->P_max = P_max;
+  if (gen)
+    gen->P_max = P_max;
 }
 
 void GEN_set_P_min(Gen* gen, REAL P_min) {
-  gen->P_min = P_min;
+  if (gen)
+    gen->P_min = P_min;
 }
 
 void GEN_set_Q(Gen* gen, REAL Q) {
-  gen->Q = Q;
+  if (gen)
+    gen->Q = Q;
 }
 
 void GEN_set_Q_max(Gen* gen, REAL Q_max) {
-  gen->Q_max = Q_max;
+  if (gen)
+    gen->Q_max = Q_max;
 }
 
 void GEN_set_Q_min(Gen* gen, REAL Q_min) {
-  gen->Q_min = Q_min;
+  if (gen)  
+    gen->Q_min = Q_min;
 }
 
 int GEN_set_flags(void* vgen, char flag_type, char mask, int index) {
