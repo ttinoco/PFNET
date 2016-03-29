@@ -271,10 +271,10 @@ Lastly, Lagrange multiplier estimates of the linear and constraints can be used 
 
 Details about each of the different constraint types available in PFNET are provided below.
 
-.. _prob_constr_PF:
+.. _prob_constr_ACPF:
 
-Power balance
--------------
+AC Power balance
+----------------
 
 This constraint is of type :data:`CONSTR_TYPE_PF <pfnet.CONSTR_TYPE_PF>`. It enforces active and reactive power balance at every bus of the network. It is given by
 
@@ -283,6 +283,32 @@ This constraint is of type :data:`CONSTR_TYPE_PF <pfnet.CONSTR_TYPE_PF>`. It enf
    (P^g_k + j Q^g_k) - (P^l_k + j Q^l_k) - S_k^{sh} - \sum_{m \in [n]} S_{km} = 0, \ \forall \ k \in [n],
 
 where :math:`P^g` and :math:`Q^g` are generator active and reactive powers, :math:`P^l` and :math:`Q^l` are load active and reactive powers, :math:`S^{sh}` are apparent powers flowing out of buses through shunt devices, :math:`S` are apparent powers flowing out of buses through branches, :math:`n` is the number of buses, and :math:`[n] := \{1,\ldots,n\}`. 
+
+.. _prob_constr_DCPF:
+
+DC Power balance
+----------------
+
+This constraint is of type :data:`CONSTR_TYPE_DCPF <pfnet.CONSTR_TYPE_DCPF>`. It enforces "DC" active power balance at every bus of the network. It is given by
+
+.. math:: 
+   
+   P^g_k - P^l_k + \sum_{m \in [n]} b_{km} \left( \theta_k - \theta_m - \phi_{km} \right) = 0, \ \forall \ k \in [n],
+
+where :math:`P^g` are generator active powers, :math:`P^l` are load active powers, :math:`b_{km}` are branch susceptances, :math:`\theta_k` are bus voltage angles, :math:`\phi_{km}` are phase shifts of phase-shifting transformers, :math:`n` is the number of buses, and :math:`[n] := \{1,\ldots,n\}`.
+
+.. _prob_constr_DC_FLOW_LIM:
+
+Branch DC power flow limits
+---------------------------
+
+This constraint is of type :data:`CONSTR_TYPE_DC_FLOW_LIM <pfnet.CONSTR_TYPE_DC_FLOW_LIM>`. It enforces branch "DC" power flow limits due to thermal ratings. It is given by
+
+.. math:: 
+
+   -P^{\max}_{km} \le -b_{km} \left( \theta_k - \theta_m - \phi_{km} \right) \le P^{\max}_{km},
+
+for each branch :math:`(k,m)`, where :math:`b_{km}` are branch susceptances, :math:`\theta_k` are bus voltage angles, :math:`\phi_{km}` are phase shifts of phase-shifting transformers, and :math:`P^{\max}_{km}` are branch power flow limits. 
 
 .. _prob_constr_FIX:
 
