@@ -24,6 +24,10 @@ struct Gen_outage {
 // Branch outage
 struct Branch_outage {
   Branch* br;
+  Bus* bus_from;
+  Bus* bus_to;
+  Bus* reg_bus;
+  char br_type;
   struct Branch_outage* next;
 };
 
@@ -53,18 +57,38 @@ void CONT_apply(Cont* cont) {
     // Generators
     for (go = cont->gen_outage; go != NULL; go = go->next) {
 
+      // Outage flag
       GEN_set_outage(go->gen,TRUE);
       
-      GEN_set_bus(go->gen,NULL);        // disconnect bus from gen
-      GEN_set_reg_bus(go->gen,NULL);    // gen does not regulate reg_bus
+      // Connection
+      GEN_set_bus(go->gen,NULL);    // disconnect bus from gen
+      BUS_del_gen(go->bus,go->gen); // disconnect gen from bus
 
-      BUS_del_gen(go->bus,go->gen);         // disconnect gen from bus
+      // Regulation
+      GEN_set_reg_bus(go->gen,NULL);        // gen does not regulate reg_bus
       BUS_del_reg_gen(go->reg_bus,go->gen); // reg_bus is not regulated by gen 
     }
     
     // Branches
-    for (bo = cont->br_outage; bo != NULL; bo = bo->next)
-      BRANCH_set_outage(bo->br,TRUE);    
+    for (bo = cont->br_outage; bo != NULL; bo = bo->next) {
+      
+      // Outage flag
+      BRANCH_set_outage(bo->br,TRUE);
+
+      // Connection
+      BRANCH_set_bus_from(bo->br,NULL);         // disconnect bus_from from branch
+      BRANCH_set_bus_to(bo->br,NULL);           // disconnect bus_to from branch
+      BUS_del_branch_from(bo->bus_from,bo->br); // disconnect branch from bus_from 
+      BUS_del_branch_to(bo->bus_to,bo->br);     // disconnect branch from bus_to
+
+      // Regulation
+      BRANCH_set_reg_bus(bo->br,NULL);      // branch does not regulate reg_bus
+      BUS_del_reg_tran(bo->reg_bus,bo->br); // reg_bus is not regulated by branch
+
+      // Type
+      if (BRANCH_get_type(bo->br) != BRANCH_TYPE_LINE)
+	BRANCH_set_type(bo->br,BRANCH_TYPE_TRAN_FIXED);
+    }
   }
 }
 
@@ -79,18 +103,37 @@ void CONT_clear(Cont* cont) {
     // Generators
     for (go = cont->gen_outage; go != NULL; go = go->next) {
 
+      // Outage flag
       GEN_set_outage(go->gen,FALSE);
       
-      GEN_set_bus(go->gen,go->bus);         // connect bus to gen
+      // Connections
+      GEN_set_bus(go->gen,go->bus); // connect bus to gen
+      BUS_add_gen(go->bus,go->gen); // connect gen to bus      
+
+      // Regulation
       GEN_set_reg_bus(go->gen,go->reg_bus); // gen does regulates reg_bus
-      
-      BUS_add_gen(go->bus,go->gen);         // connect gen to bus
       BUS_add_reg_gen(go->reg_bus,go->gen); // reg_bus is regulated by gen 
     }
 
     // Branches
-    for (bo = cont->br_outage; bo != NULL; bo = bo->next)
-      BRANCH_set_outage(bo->br,FALSE);    
+    for (bo = cont->br_outage; bo != NULL; bo = bo->next) {
+      
+      // Outage flag
+      BRANCH_set_outage(bo->br,FALSE);
+    
+      // Connection
+      BRANCH_set_bus_from(bo->br,bo->bus_from); // connect bus_from from branch
+      BRANCH_set_bus_to(bo->br,bo->bus_to);     // connect bus_to from branch
+      BUS_add_branch_from(bo->bus_from,bo->br); // connect branch from bus_from 
+      BUS_add_branch_to(bo->bus_to,bo->br);     // connect branch from bus_to
+
+      // Regulation
+      BRANCH_set_reg_bus(bo->br,bo->reg_bus); // branch regulates reg_bus
+      BUS_add_reg_tran(bo->reg_bus,bo->br);   // reg_bus is regulated by branch
+
+      // Type
+      BRANCH_set_type(bo->br,bo->br_type);
+    }
   }
 }
 
@@ -143,6 +186,10 @@ void CONT_add_branch_outage(Cont* cont, Branch* br) {
   if (cont) {
     Branch_outage* bo = (Branch_outage*)malloc(sizeof(Branch_outage));
     bo->br = br;
+    bo->bus_from = BRANCH_get_bus_from(br);
+    bo->bus_to = BRANCH_get_bus_to(br);
+    bo->reg_bus = BRANCH_get_reg_bus(br);
+    bo->br_type = BRANCH_get_type(br);
     LIST_add(cont->br_outage,bo,next);
   }
 }

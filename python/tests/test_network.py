@@ -1635,6 +1635,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(len([b for b in net.branches if b.outage]),2)
             for g in net.generators:
                 if g.index == 0 or g.index == 5:
+                    self.assertFalse(g.is_regulator())
                     self.assertTrue(g.is_on_outage())
                     self.assertTrue(g.outage)
                     self.assertRaises(pf.BusError,lambda x: x.bus,g)
@@ -1720,11 +1721,13 @@ class TestNetwork(unittest.TestCase):
                 cont.apply()
                 
                 self.assertTrue(gen.is_on_outage())
+                self.assertFalse(gen.is_regulator())
                 self.assertRaises(pf.BusError,lambda x: x.bus,gen)
                 self.assertRaises(pf.BusError,lambda x: x.reg_bus,gen)
                 self.assertFalse(gen.index in [x.index for x in bus.gens])
                 self.assertTrue(gen.index in [x.index for x in gens])
                 if reg_bus is not None:
+                    self.assertFalse(gen.is_regulator())
                     self.assertFalse(gen.index in [x.index for x in reg_bus.reg_gens])
                     self.assertTrue(gen.index in [x.index for x in reg_gens])
 
@@ -1733,6 +1736,7 @@ class TestNetwork(unittest.TestCase):
                 self.assertFalse(gen.is_on_outage())
                 self.assertEqual(gen.bus.index,bus.index)
                 if reg_bus is not None:
+                    self.assertTrue(gen.is_regulator())
                     self.assertEqual(gen.reg_bus.index,reg_bus.index)
                 self.assertTrue(gen.index in [x.index for x in gens])
                 self.assertTrue(gen.index in [x.index for x in bus.gens])

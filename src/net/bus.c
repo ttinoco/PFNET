@@ -109,6 +109,11 @@ void BUS_add_reg_tran(Bus* bus, Branch* reg_tran) {
     bus->reg_tran = BRANCH_list_reg_add(bus->reg_tran,reg_tran);
 }
 
+void BUS_del_reg_tran(Bus* bus, Branch* reg_tran) {
+  if (bus)
+    bus->reg_tran = BRANCH_list_reg_del(bus->reg_tran,reg_tran);
+}
+
 void BUS_add_shunt(Bus* bus, Shunt* shunt) {
   if (bus)
     bus->shunt = SHUNT_list_add(bus->shunt,shunt);
@@ -124,9 +129,19 @@ void BUS_add_branch_from(Bus* bus, Branch* branch) {
     bus->branch_from = BRANCH_list_from_add(bus->branch_from,branch);
 }
 
+void BUS_del_branch_from(Bus* bus, Branch* branch) {
+  if (bus)
+    bus->branch_from = BRANCH_list_from_del(bus->branch_from,branch);
+}
+
 void BUS_add_branch_to(Bus* bus, Branch* branch) {
   if (bus)
     bus->branch_to = BRANCH_list_to_add(bus->branch_to,branch);
+}
+
+void BUS_del_branch_to(Bus* bus, Branch* branch) {
+  if (bus)
+    bus->branch_to = BRANCH_list_to_del(bus->branch_to,branch);
 }
 
 void BUS_add_vargen(Bus* bus, Vargen* gen) {

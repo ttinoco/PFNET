@@ -125,9 +125,16 @@ void BRANCH_clear_sensitivities(Branch* br) {
   }
 }
 
-char BRANCH_get_obj_type(void* b) {
-  if (b)
-    return ((Branch*)b)->obj_type;
+char BRANCH_get_type(Branch* br) {
+  if (br)
+    return br->type;
+  else
+    return BRANCH_TYPE_LINE;
+}
+
+char BRANCH_get_obj_type(void* br) {
+  if (br)
+    return ((Branch*)br)->obj_type;
   else
     return OBJ_UNKNOWN;
 }
@@ -549,6 +556,11 @@ Branch* BRANCH_list_reg_add(Branch* reg_br_list, Branch* reg_br) {
   return reg_br_list;
 }
 
+Branch* BRANCH_list_reg_del(Branch* reg_br_list, Branch* reg_br) {
+  LIST_del(Branch,reg_br_list,reg_br,reg_next);
+  return reg_br_list;
+}
+
 int BRANCH_list_reg_len(Branch* reg_br_list) {
   int len;
   LIST_len(Branch,reg_br_list,reg_next,len);
@@ -560,6 +572,11 @@ Branch* BRANCH_list_from_add(Branch* from_br_list, Branch* br) {
   return from_br_list;
 }
 
+Branch* BRANCH_list_from_del(Branch* from_br_list, Branch* br) {
+  LIST_del(Branch,from_br_list,br,from_next);
+  return from_br_list;
+}
+
 int BRANCH_list_from_len(Branch* from_br_list) {
   int len;
   LIST_len(Branch,from_br_list,from_next,len);
@@ -568,6 +585,11 @@ int BRANCH_list_from_len(Branch* from_br_list) {
 
 Branch* BRANCH_list_to_add(Branch* to_br_list, Branch* br) {
   LIST_add(to_br_list,br,to_next);
+  return to_br_list;
+}
+
+Branch* BRANCH_list_to_del(Branch* to_br_list, Branch* br) {
+  LIST_del(Branch,to_br_list,br,to_next);
   return to_br_list;
 }
 
@@ -605,17 +627,17 @@ void BRANCH_set_type(Branch* br, int type) {
 
 void BRANCH_set_bus_from(Branch* branch, Bus* bus_from) {
   if (branch)
-    branch->bus_from = (Bus*)bus_from;
+    branch->bus_from = bus_from;
 }
 
 void BRANCH_set_bus_to(Branch* branch, Bus* bus_to) {
   if (branch)
-    branch->bus_to = (Bus*)bus_to;
+    branch->bus_to = bus_to;
 }
 
 void BRANCH_set_reg_bus(Branch* branch, Bus* reg_bus) {
   if (branch)  
-    branch->reg_bus = (Bus*)reg_bus;
+    branch->reg_bus = reg_bus;
 }
 
 void BRANCH_set_g(Branch* branch, REAL g) {
