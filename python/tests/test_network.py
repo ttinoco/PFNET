@@ -1552,7 +1552,113 @@ class TestNetwork(unittest.TestCase):
                 factor = cholesky(sigma.tocsc())
             except ImportError:
                 pass
-                
+
+    def test_contingencies(self):
+
+        net = self.net
+
+        for case in test_cases.CASES:
+
+            net.clear_properties()
+            net.load(case)
+            net.clear_flags()
+
+            # outage init
+            for gen in net.generators:
+                self.assertFalse(gen.is_on_outage())
+                self.assertFalse(gen.outage)
+            for branch in net.branches:
+                self.assertFalse(branch.is_on_outage())
+                self.assertFalse(branch.outage)
+
+            # outage set
+            gen = net.get_gen(net.num_gens-1)
+            branch = net.get_branch(10)
+            gen.outage = True
+            branch.outage = True
+            for g in net.generators:
+                if g.index == net.num_gens-1:
+                    self.assertTrue(g.is_on_outage())
+                    self.assertTrue(g.outage)
+                else:
+                    self.assertFalse(g.is_on_outage())
+                    self.assertFalse(g.outage)
+            for b in net.branches:
+                if b.index == 10:
+                    self.assertTrue(b.is_on_outage())
+                    self.assertTrue(b.outage)
+                else:
+                    self.assertFalse(b.is_on_outage())
+                    self.assertFalse(b.outage)
+            gen.outage = False
+            branch.outage = False
+            self.assertEqual(len([g for g in net.generators if not g.outage]),net.num_gens)
+            self.assertEqual(len([b for b in net.branches if not b.outage]),net.num_branches)
+
+            # contingency
+            cont = pf.Contingency()
+            self.assertEqual(cont.num_gen_outages,0)
+            self.assertEqual(cont.num_branch_outages,0)
+            cont.add_gen_outage(net.get_gen(0))
+            cont.add_branch_outage(net.get_branch(7))
+            self.assertEqual(cont.num_gen_outages,1)
+            self.assertEqual(cont.num_branch_outages,1)
+            if net.num_gens > 5:
+                cont.add_gen_outage(net.get_gen(5))
+                self.assertEqual(cont.num_gen_outages,2)
+                self.assertTrue(cont.has_gen_outage(net.get_gen(5)))
+            cont.add_branch_outage(net.get_branch(3))
+            self.assertEqual(cont.num_branch_outages,2)
+            self.assertTrue(cont.has_branch_outage(net.get_branch(3)))
+
+            # apply/clear
+            self.assertEqual(len([g for g in net.generators if not g.outage]),net.num_gens)
+            self.assertEqual(len([b for b in net.branches if not b.outage]),net.num_branches)
+            self.assertEqual(len([g for g in net.generators if g.outage]),0)
+            self.assertEqual(len([b for b in net.branches if b.outage]),0)
+            cont.apply()
+            if net.num_gens > 5:
+                self.assertEqual(len([g for g in net.generators if g.outage]),2)
+            else:
+                self.assertEqual(len([g for g in net.generators if g.outage]),1)
+            self.assertEqual(len([b for b in net.branches if b.outage]),2)
+            for g in net.generators:
+                if g.index == 0 or g.index == 5:
+                    self.assertTrue(g.is_on_outage())
+                    self.assertTrue(g.outage)
+                else:
+                    self.assertFalse(g.is_on_outage())
+                    self.assertFalse(g.outage)
+            for b in net.branches:
+                if b.index == 7 or b.index == 3:
+                    self.assertTrue(b.is_on_outage())
+                    self.assertTrue(b.outage)
+                else:
+                    self.assertFalse(b.is_on_outage())
+                    self.assertFalse(b.outage)
+            cont2 = pf.Contingency()
+            cont2.add_branch_outage(net.get_branch(11))
+            self.assertFalse(net.get_branch(11).outage)
+            cont2.apply()
+            self.assertTrue(net.get_branch(11).outage)
+            self.assertTrue(net.get_branch(7).outage)
+            self.assertTrue(net.get_branch(3).outage)
+            self.assertTrue(net.get_gen(0).outage)
+            if net.num_gens > 5:
+                self.assertTrue(net.get_gen(5).outage)
+            self.assertEqual(cont2.num_branch_outages,1)
+            self.assertEqual(cont2.num_gen_outages,0)
+            cont.clear()
+            self.assertTrue(net.get_branch(11).outage)
+            self.assertFalse(net.get_branch(3).outage)
+            self.assertFalse(net.get_branch(7).outage)
+            self.assertFalse(net.get_gen(0).outage)
+            if net.num_gens > 5:
+                self.assertFalse(net.get_gen(5).outage)
+            self.assertEqual(len([b for b in net.branches if b.outage]),1)
+            cont2.clear()
+            self.assertEqual(len([b for b in net.branches if b.outage]),0)
+
     def tearDown(self):
         
         pass
