@@ -11,7 +11,9 @@ cdef extern from "pfnet/contingency.h":
     ctypedef struct Cont
     ctypedef struct Gen
     ctypedef struct Branch
-    
+
+    void CONT_apply(Cont* cont)
+    void CONT_clear(Cont* cont)
     void CONT_add_branch_outage(Cont* cont, Branch* br)
     void CONT_add_gen_outage(Cont* cont, Gen* gen)
     void CONT_del(Cont* cont)

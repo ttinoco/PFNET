@@ -37,6 +37,28 @@ struct Cont {
 };
 
 
+void CONT_apply(Cont* cont) {
+  Gen_outage* go;
+  Branch_outage* bo;
+  if (cont) {
+    for (go = cont->gen_outage; go != NULL; go = go->next)
+      GEN_set_outage(go->gen,TRUE);
+    for (bo = cont->br_outage; bo != NULL; bo = bo->next)
+      BRANCH_set_outage(bo->br,TRUE);    
+  }
+}
+
+void CONT_clear(Cont* cont) {
+  Gen_outage* go;
+  Branch_outage* bo;
+  if (cont) {
+    for (go = cont->gen_outage; go != NULL; go = go->next)
+      GEN_set_outage(go->gen,FALSE);
+    for (bo = cont->br_outage; bo != NULL; bo = bo->next)
+      BRANCH_set_outage(bo->br,FALSE);    
+  }
+}
+
 void CONT_init(Cont* cont) { 
   if (cont) {
     cont->gen_outage = NULL;

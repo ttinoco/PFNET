@@ -2477,6 +2477,20 @@ cdef class Contingency:
             ccont.CONT_del(self._c_cont)
             self._c_cont = NULL
 
+    def apply(self):
+        """
+        Applies outages that characterize contingency.
+        """
+        
+        ccont.CONT_apply(self._c_cont)
+
+    def clear(self):
+        """
+        Clears outages that characterize contingency.
+        """
+        
+        ccont.CONT_clear(self._c_cont)
+
     def show(self):
         """
         Shows contingency information.

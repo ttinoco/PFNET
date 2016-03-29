@@ -24,6 +24,8 @@ typedef struct Branch Branch;
 
 void CONT_add_branch_outage(Cont* cont, Branch* br);
 void CONT_add_gen_outage(Cont* cont, Gen* gen);
+void CONT_apply(Cont* cont);
+void CONT_clear(Cont* cont);
 void CONT_del(Cont* cont);
 int CONT_get_num_gen_outages(Cont* cont);
 int CONT_get_num_branch_outages(Cont* cont);
