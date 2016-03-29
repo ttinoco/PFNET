@@ -14,7 +14,6 @@
 struct Shunt {
 
   // Properties
-  char type;       /**< @brief Shunt type */
   char obj_type;   /**< @brief Object type */
   
   // Bus
@@ -256,7 +255,6 @@ BOOL SHUNT_has_properties(void* vshunt, char prop) {
 }
 
 void SHUNT_init(Shunt* shunt) { 
-  shunt->type = SHUNT_TYPE_FIXED;
   shunt->obj_type = OBJ_SHUNT;
   shunt->bus = NULL;
   shunt->reg_bus = NULL;
@@ -282,7 +280,7 @@ BOOL SHUNT_is_fixed(Shunt* shunt) {
   if (!shunt)
     return FALSE;
   else
-    return (shunt->type == SHUNT_TYPE_FIXED);
+    return !SHUNT_is_switched(shunt);
 }
 
 BOOL SHUNT_is_switched(Shunt* shunt) {
@@ -293,7 +291,7 @@ BOOL SHUNT_is_switched_v(Shunt* shunt) {
   if (!shunt)
     return FALSE;
   else
-    return (shunt->type == SHUNT_TYPE_SWITCHED_V);
+    return shunt->reg_bus != NULL;
 }
 
 Shunt* SHUNT_list_add(Shunt* shunt_list, Shunt* shunt) {
@@ -332,11 +330,6 @@ void SHUNT_set_bus(Shunt* shunt, Bus* bus) {
 void SHUNT_set_reg_bus(Shunt* shunt, Bus* reg_bus) { 
   if (shunt)
     shunt->reg_bus = (Bus*)reg_bus;
-}
-
-void SHUNT_set_type(Shunt* shunt, char type) {
-  if (shunt)
-    shunt->type = type;
 }
 
 void SHUNT_set_index(Shunt* shunt, int index) { 

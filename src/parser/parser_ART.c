@@ -556,7 +556,6 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       shunt = NET_get_shunt(net,index);
       BUS_add_shunt(bus,shunt);                              // connect shunt to bus
       SHUNT_set_bus(shunt,bus);                              // connect bus to shunt
-      SHUNT_set_type(shunt,SHUNT_TYPE_FIXED);                // set switchable flag
       SHUNT_set_b(shunt,art_bus->bshunt/parser->base_power); // per unit 
       SHUNT_set_b_max(shunt,SHUNT_get_b(shunt));             // per unit
       SHUNT_set_b_min(shunt,SHUNT_get_b(shunt));             // per unit
@@ -588,7 +587,6 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 	GEN_set_Q_max(gen,art_gen->qmax/parser->base_power); // per unit
 	GEN_set_Q_min(gen,art_gen->qmin/parser->base_power); // per unit
 	if (art_gen->vimp != 0.) {
-	  GEN_set_regulator(gen,TRUE);        
 	  GEN_set_reg_bus(gen,bus);           
 	  BUS_add_reg_gen(bus,gen);
 	  BUS_set_v_set(bus,art_gen->vimp); // p.u.

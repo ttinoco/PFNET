@@ -22,7 +22,6 @@ struct Gen {
   
   // Flags
   BOOL outage;         /**< @brief Flag for indicating that generator in on outage */
-  BOOL regulator;      /**< @brief Flag for indicating that generator provides voltage regulation */
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
   char vars;           /**< @brief Flags for indicating which quantities should be treated as variables */
@@ -323,7 +322,6 @@ void GEN_init(Gen* gen) {
   gen->reg_bus = NULL;
 
   gen->outage = FALSE;
-  gen->regulator = FALSE;
   gen->fixed = 0x00;
   gen->bounded = 0x00;
   gen->sparse = 0x00;
@@ -368,7 +366,7 @@ BOOL GEN_is_P_adjustable(Gen* gen) {
 
 BOOL GEN_is_regulator(Gen* gen) {
   if (gen)
-    return gen->regulator;
+    return gen->reg_bus != NULL;
   else
     return FALSE;
 }
@@ -380,8 +378,13 @@ BOOL GEN_is_slack(Gen* gen) {
     return FALSE;
 }
 
-Gen* GEN_list_add(Gen *gen_list, Gen* gen) {
+Gen* GEN_list_add(Gen* gen_list, Gen* gen) {
   LIST_add(gen_list,gen,next);
+  return gen_list;
+}
+
+Gen* GEN_list_del(Gen* gen_list, Gen* gen) {
+  LIST_del(Gen,gen_list,gen,next);
   return gen_list;
 }
 
@@ -393,6 +396,11 @@ int GEN_list_len(Gen* gen_list) {
 
 Gen* GEN_list_reg_add(Gen* reg_gen_list, Gen* reg_gen) {
   LIST_add(reg_gen_list,reg_gen,reg_next);
+  return reg_gen_list;
+}
+
+Gen* GEN_list_reg_del(Gen* reg_gen_list, Gen* reg_gen) {
+  LIST_del(Gen,reg_gen_list,reg_gen,reg_next);
   return reg_gen_list;
 }
 
@@ -435,17 +443,12 @@ void GEN_set_cost_coeff_Q2(Gen* gen, REAL q) {
 
 void GEN_set_bus(Gen* gen, Bus* bus) {
   if (gen)
-    gen->bus = (Bus*)bus;
+    gen->bus = bus;
 }
 
 void GEN_set_reg_bus(Gen* gen, Bus* reg_bus) {
   if (gen)
-    gen->reg_bus = (Bus*)reg_bus;
-}
-
-void GEN_set_regulator(Gen* gen, BOOL regulator) {
-  if (gen)
-    gen->regulator = regulator;
+    gen->reg_bus = reg_bus;
 }
 
 void GEN_set_outage(Gen* gen, BOOL outage) {

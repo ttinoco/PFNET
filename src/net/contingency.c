@@ -11,19 +11,24 @@
 #include <pfnet/contingency.h>
 #include <pfnet/branch.h>
 #include <pfnet/gen.h>
+#include <pfnet/bus.h>
 
 // Gen outage
 struct Gen_outage {
   Gen* gen;
+  Bus* bus;
+  Bus* reg_bus;
   struct Gen_outage* next;
 };
-typedef struct Gen_outage Gen_outage;
 
 // Branch outage
 struct Branch_outage {
   Branch* br;
   struct Branch_outage* next;
 };
+
+// Types
+typedef struct Gen_outage Gen_outage;
 typedef struct Branch_outage Branch_outage;
 
 // Contingency
@@ -38,22 +43,52 @@ struct Cont {
 
 
 void CONT_apply(Cont* cont) {
+  
+  // Local variables
   Gen_outage* go;
   Branch_outage* bo;
+
   if (cont) {
-    for (go = cont->gen_outage; go != NULL; go = go->next)
+
+    // Generators
+    for (go = cont->gen_outage; go != NULL; go = go->next) {
+
       GEN_set_outage(go->gen,TRUE);
+      
+      GEN_set_bus(go->gen,NULL);        // disconnect bus from gen
+      GEN_set_reg_bus(go->gen,NULL);    // gen does not regulate reg_bus
+
+      BUS_del_gen(go->bus,go->gen);         // disconnect gen from bus
+      BUS_del_reg_gen(go->reg_bus,go->gen); // reg_bus is not regulated by gen 
+    }
+    
+    // Branches
     for (bo = cont->br_outage; bo != NULL; bo = bo->next)
       BRANCH_set_outage(bo->br,TRUE);    
   }
 }
 
 void CONT_clear(Cont* cont) {
+
+  // Local variables
   Gen_outage* go;
   Branch_outage* bo;
+
   if (cont) {
-    for (go = cont->gen_outage; go != NULL; go = go->next)
+
+    // Generators
+    for (go = cont->gen_outage; go != NULL; go = go->next) {
+
       GEN_set_outage(go->gen,FALSE);
+      
+      GEN_set_bus(go->gen,go->bus);         // connect bus to gen
+      GEN_set_reg_bus(go->gen,go->reg_bus); // gen does regulates reg_bus
+      
+      BUS_add_gen(go->bus,go->gen);         // connect gen to bus
+      BUS_add_reg_gen(go->reg_bus,go->gen); // reg_bus is regulated by gen 
+    }
+
+    // Branches
     for (bo = cont->br_outage; bo != NULL; bo = bo->next)
       BRANCH_set_outage(bo->br,FALSE);    
   }
@@ -98,6 +133,8 @@ void CONT_add_gen_outage(Cont* cont, Gen* gen) {
   if (cont) {
     Gen_outage* go = (Gen_outage*)malloc(sizeof(Gen_outage));
     go->gen = gen;
+    go->bus = GEN_get_bus(gen);
+    go->reg_bus = GEN_get_reg_bus(gen);
     LIST_add(cont->gen_outage,go,next);
   }
 }

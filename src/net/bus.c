@@ -84,6 +84,11 @@ void BUS_add_gen(Bus* bus, Gen* gen) {
     bus->gen = GEN_list_add(bus->gen,gen);
 }
 
+void BUS_del_gen(Bus* bus, Gen* gen) {
+  if (bus)
+    bus->gen = GEN_list_del(bus->gen,gen);
+}
+
 void BUS_add_load(Bus* bus, Load* load) {
   if (bus)
     bus->load = LOAD_list_add(bus->load,load);
@@ -92,6 +97,11 @@ void BUS_add_load(Bus* bus, Load* load) {
 void BUS_add_reg_gen(Bus* bus, Gen* reg_gen) {
   if (bus)
     bus->reg_gen = GEN_list_reg_add(bus->reg_gen,reg_gen);
+}
+
+void BUS_del_reg_gen(Bus* bus, Gen* reg_gen) {
+  if (bus)
+    bus->reg_gen = GEN_list_reg_del(bus->reg_gen,reg_gen);
 }
 
 void BUS_add_reg_tran(Bus* bus, Branch* reg_tran) {

@@ -1596,22 +1596,33 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(len([b for b in net.branches if not b.outage]),net.num_branches)
 
             # contingency
+            g0 = net.get_gen(0)
+            bus0 = g0.bus
+            reg_bus0 = g0.reg_bus
+            br7 = net.get_branch(7)
+            br3 = net.get_branch(3)
+            if net.num_gens > 5:
+                g5 = net.get_gen(5)
+                bus5 = g5.bus
+                reg_bus5 = g5.reg_bus
             cont = pf.Contingency()
             self.assertEqual(cont.num_gen_outages,0)
             self.assertEqual(cont.num_branch_outages,0)
-            cont.add_gen_outage(net.get_gen(0))
-            cont.add_branch_outage(net.get_branch(7))
+            cont.add_gen_outage(g0)
+            cont.add_branch_outage(br7)
             self.assertEqual(cont.num_gen_outages,1)
             self.assertEqual(cont.num_branch_outages,1)
             if net.num_gens > 5:
-                cont.add_gen_outage(net.get_gen(5))
+                cont.add_gen_outage(g5)
                 self.assertEqual(cont.num_gen_outages,2)
-                self.assertTrue(cont.has_gen_outage(net.get_gen(5)))
-            cont.add_branch_outage(net.get_branch(3))
+                self.assertTrue(cont.has_gen_outage(g5))
+            self.assertTrue(cont.has_gen_outage(g0))
+            cont.add_branch_outage(br3)
             self.assertEqual(cont.num_branch_outages,2)
-            self.assertTrue(cont.has_branch_outage(net.get_branch(3)))
+            self.assertTrue(cont.has_branch_outage(br3))
+            self.assertTrue(cont.has_branch_outage(br7))
 
-            # apply/clear
+            # apply
             self.assertEqual(len([g for g in net.generators if not g.outage]),net.num_gens)
             self.assertEqual(len([b for b in net.branches if not b.outage]),net.num_branches)
             self.assertEqual(len([g for g in net.generators if g.outage]),0)
@@ -1626,6 +1637,14 @@ class TestNetwork(unittest.TestCase):
                 if g.index == 0 or g.index == 5:
                     self.assertTrue(g.is_on_outage())
                     self.assertTrue(g.outage)
+                    self.assertRaises(pf.BusError,lambda x: x.bus,g)
+                    self.assertRaises(pf.BusError,lambda x: x.reg_bus,g)
+                    if g.index == 0:
+                        self.assertFalse(g.index in [y.index for y in bus0.gens])
+                        self.assertFalse(g.index in [y.index for y in reg_bus0.reg_gens])
+                    elif g.index == 5:
+                        self.assertFalse(g.index in [y.index for y in bus5.gens])
+                        self.assertFalse(g.index in [y.index for y in reg_bus5.reg_gens])
                 else:
                     self.assertFalse(g.is_on_outage())
                     self.assertFalse(g.outage)
@@ -1648,6 +1667,8 @@ class TestNetwork(unittest.TestCase):
                 self.assertTrue(net.get_gen(5).outage)
             self.assertEqual(cont2.num_branch_outages,1)
             self.assertEqual(cont2.num_gen_outages,0)
+
+            # clear
             cont.clear()
             self.assertTrue(net.get_branch(11).outage)
             self.assertFalse(net.get_branch(3).outage)
@@ -1658,6 +1679,72 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(len([b for b in net.branches if b.outage]),1)
             cont2.clear()
             self.assertEqual(len([b for b in net.branches if b.outage]),0)
+            for g in net.generators:
+                if g.index == 0 or g.index == 5:
+                    self.assertFalse(g.is_on_outage())
+                    self.assertFalse(g.outage)
+                    if g.index == 0:
+                        self.assertEqual(g.bus.index,bus0.index)
+                        self.assertEqual(g.reg_bus.index,reg_bus0.index)
+                        self.assertTrue(g.index in [y.index for y in bus0.gens])
+                        self.assertTrue(g.index in [y.index for y in reg_bus0.reg_gens])
+                    elif g.index == 5:
+                        self.assertEqual(g.bus.index,bus5.index)
+                        self.assertEqual(g.reg_bus.index,reg_bus5.index)
+                        self.assertTrue(g.index in [y.index for y in bus5.gens])
+                        self.assertTrue(g.index in [y.index for y in reg_bus5.reg_gens])
+                else:
+                    self.assertFalse(g.is_on_outage())
+                    self.assertFalse(g.outage)
+                
+            # do it again
+            net.clear_properties()
+            net.load(case)
+            net.clear_flags()
+            
+            # generator single contingencies
+            for gen in net.generators:
+
+                self.assertFalse(gen.is_on_outage())
+                cont = pf.Contingency()
+                cont.add_gen_outage(gen)                
+                self.assertFalse(gen.is_on_outage())
+
+                bus = gen.bus
+                reg_bus = gen.reg_bus if gen.is_regulator() else None
+
+                gens = bus.gens
+                if reg_bus is not None:
+                    reg_gens = reg_bus.reg_gens
+
+                cont.apply()
+                
+                self.assertTrue(gen.is_on_outage())
+                self.assertRaises(pf.BusError,lambda x: x.bus,gen)
+                self.assertRaises(pf.BusError,lambda x: x.reg_bus,gen)
+                self.assertFalse(gen.index in [x.index for x in bus.gens])
+                self.assertTrue(gen.index in [x.index for x in gens])
+                if reg_bus is not None:
+                    self.assertFalse(gen.index in [x.index for x in reg_bus.reg_gens])
+                    self.assertTrue(gen.index in [x.index for x in reg_gens])
+
+                cont.clear()
+
+                self.assertFalse(gen.is_on_outage())
+                self.assertEqual(gen.bus.index,bus.index)
+                if reg_bus is not None:
+                    self.assertEqual(gen.reg_bus.index,reg_bus.index)
+                self.assertTrue(gen.index in [x.index for x in gens])
+                self.assertTrue(gen.index in [x.index for x in bus.gens])
+                self.assertEqual(len(gens),len(bus.gens))
+                self.assertTrue(set(map(lambda x: x.index,bus.gens)) == 
+                                set(map(lambda x: x.index,gens)))
+                if reg_bus is not None:
+                    self.assertTrue(gen.index in [x.index for x in reg_gens])
+                    self.assertTrue(gen.index in [x.index for x in reg_bus.reg_gens])
+                    self.assertEqual(len(reg_gens),len(reg_bus.reg_gens))
+                    self.assertTrue(set(map(lambda x: x.index,reg_bus.reg_gens)) == 
+                                    set(map(lambda x: x.index,reg_gens)))
 
     def tearDown(self):
         

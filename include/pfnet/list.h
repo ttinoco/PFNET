@@ -12,8 +12,29 @@
 #define __LIST_HEADER__
 
 #define LIST_add(head, item, next) {\
-  (item)->next = (head);\
-  (head) = (item);\
+  if ((item)) { \
+    (item)->next = (head); \
+    (head) = (item); \
+  } \
+}
+
+#define LIST_del(type, head, item, next) { \
+  type* _h_;\
+  type* _prev_;\
+  if (!(item) || !(head)) \
+    ;\
+  else if ((head) == (item)) \
+    (head) = (item)->next;\
+  else { \
+    _h_ = (head)->next;\
+    _prev_ = (head);\
+    while (_h_) {\
+      if (_h_ == (item)) \
+	(_prev_)->next = (_h_)->next;\
+      _prev_ = _h_;\
+      _h_ = (_h_)->next;\
+    } \
+  } \
 }
 
 #define LIST_len(type, head, next, len) {\

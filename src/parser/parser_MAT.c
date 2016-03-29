@@ -306,7 +306,6 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
       shunt = NET_get_shunt(net,index);
       BUS_add_shunt(bus,shunt);                          // connect shunt to bus
       SHUNT_set_bus(shunt,bus);                          // connect bus to shunt
-      SHUNT_set_type(shunt,SHUNT_TYPE_FIXED);            // set switchable flag
       SHUNT_set_g(shunt,mat_bus->Gs/parser->base_power); // per unit 
       SHUNT_set_b(shunt,mat_bus->Bs/parser->base_power); // per unit 
       SHUNT_set_b_max(shunt,SHUNT_get_b(shunt));         // per unit
@@ -336,13 +335,11 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
       GEN_set_Q_max(gen,mat_gen->Qmax/parser->base_power); // per unit
       GEN_set_Q_min(gen,mat_gen->Qmin/parser->base_power); // per unit
       if (BUS_is_slack(bus))  { // generator provides regulation
-	GEN_set_regulator(gen,TRUE);        
 	GEN_set_reg_bus(gen,bus);           
 	BUS_add_reg_gen(bus,gen);
 	BUS_set_v_set(bus,mat_gen->Vg); // p.u.
       }
       else if (GEN_get_Q_max(gen) > GEN_get_Q_min(gen)) { // generator provides regulation
-	GEN_set_regulator(gen,TRUE);    
 	GEN_set_reg_bus(gen,bus);       
 	BUS_add_reg_gen(bus,gen);
 	BUS_set_v_set(bus,mat_gen->Vg); // p.u.
