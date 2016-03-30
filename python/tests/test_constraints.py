@@ -2296,7 +2296,7 @@ class TestConstraints(unittest.TestCase):
     def test_constr_DC_FLOW_LIM(self):
                 
         net = self.net
-
+        
         for case in test_cases.CASES:
             
             net.load(case)
@@ -2362,7 +2362,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Jconstr_index,0)
             self.assertEqual(constr.Aconstr_index,0)
-            self.assertEqual(constr.Gconstr_index,0)
+            self.assertEqual(constr.Gconstr_index,net.num_branches)
 
             self.assertTupleEqual(b.shape,(0,))
             self.assertTupleEqual(f.shape,(0,))
@@ -2385,42 +2385,48 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(num,constr.Gcounter)
 
             counter = 0
+            index = 0
             for br in net.branches:
                 off = 0
                 if br.bus_from.is_slack():
                     off = br.b*br.bus_from.v_ang
                 else:
-                    self.assertEqual(G.row[counter],br.index)
+                    self.assertEqual(G.row[counter],index)
                     self.assertEqual(G.col[counter],br.bus_from.index_v_ang)
                     self.assertEqual(G.data[counter],-br.b)
                     counter += 1
                 if br.bus_to.is_slack():
                     off = -br.b*br.bus_to.v_ang
                 else:
-                    self.assertEqual(G.row[counter],br.index)
+                    self.assertEqual(G.row[counter],index)
                     self.assertEqual(G.col[counter],br.bus_to.index_v_ang)
                     self.assertEqual(G.data[counter],br.b)
                     counter += 1
                 rating = br.ratingA if br.ratingA > 0 else pf.BRANCH_INF_FLOW
-                self.assertEqual(l[br.index],-rating+off-br.b*br.phase)
-                self.assertEqual(u[br.index],rating+off-br.b*br.phase)
+                self.assertEqual(l[index],-rating+off-br.b*br.phase)
+                self.assertEqual(u[index],rating+off-br.b*br.phase)
+                index += 1
             self.assertEqual(counter,G.nnz)
+            self.assertEqual(index,G.shape[0])
 
             # Flow
             Gx0 = constr.G*x0
             self.assertTupleEqual(Gx0.shape,(net.num_branches,))
+            index = 0
             for branch in net.branches:
                 bus1 = branch.bus_from
                 bus2 = branch.bus_to
                 if bus1.is_slack():
-                    flow = Gx0[branch.index]-branch.b*(bus1.v_ang-branch.phase)
+                    flow = Gx0[index]-branch.b*(bus1.v_ang-branch.phase)
                 elif bus2.is_slack():
-                    flow = Gx0[branch.index]-branch.b*(-bus2.v_ang-branch.phase)
+                    flow = Gx0[index]-branch.b*(-bus2.v_ang-branch.phase)
                 else:
-                    flow = Gx0[branch.index]-branch.b*(-branch.phase)
+                    flow = Gx0[index]-branch.b*(-branch.phase)
                 self.assertLess(np.abs(branch.P_flow_DC-flow),1e-10)
-            
+                index += 1
+
             # Sensitivities
+            index = 0
             for branch in net.branches:
                 self.assertEqual(branch.sens_P_u_bound,0.)
                 self.assertEqual(branch.sens_P_l_bound,0.)
@@ -2429,8 +2435,16 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.G.shape[0],net.num_branches)
             constr.store_sensitivities(None,None,mu,pi)
             for branch in net.branches:
-                self.assertEqual(branch.sens_P_u_bound,mu[branch.index])
-                self.assertEqual(branch.sens_P_l_bound,pi[branch.index])
+                self.assertEqual(index,branch.index)
+                self.assertEqual(branch.sens_P_u_bound,mu[index])
+                self.assertEqual(branch.sens_P_l_bound,pi[index])
+                index += 1
+            self.assertEqual(constr.Jcounter,0)
+            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.Gcounter,0)
+            self.assertEqual(constr.Jconstr_index,0)
+            self.assertEqual(constr.Aconstr_index,0)
+            self.assertEqual(constr.Gconstr_index,net.num_branches)
 
     def tearDown(self):
         
