@@ -75,7 +75,13 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
   u = CONSTR_get_u(c);
   G = CONSTR_get_G(c);
   bus_counted = CONSTR_get_bus_counted(c);
+
+  // Check pointer
   if (!bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data
@@ -321,9 +327,16 @@ void CONSTR_LBOUND_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Ve
   Gen* gen;
   char* bus_counted;
   int i;
-
+  
+  // Constr data
   bus_counted = CONSTR_get_bus_counted(c);
+
+  // Check pointer
   if (!bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data

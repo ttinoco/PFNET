@@ -44,7 +44,13 @@ void CONSTR_PAR_GEN_Q_count_branch(Constr* c, Branch* br) {
   Acounter = CONSTR_get_Acounter_ptr(c);
   Aconstr_index = CONSTR_get_Aconstr_index_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
+
+  // Check pointer
   if (!Acounter || !Aconstr_index || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data
@@ -76,7 +82,7 @@ void CONSTR_PAR_GEN_Q_count_branch(Constr* c, Branch* br) {
   }
 }
 
-void CONSTR_PAR_GEN_Q_allocate(Constr *c) {
+void CONSTR_PAR_GEN_Q_allocate(Constr* c) {
   
   // Local variables
   int num_constr;
@@ -125,7 +131,13 @@ void CONSTR_PAR_GEN_Q_analyze_branch(Constr* c, Branch* br) {
   Acounter = CONSTR_get_Acounter_ptr(c);
   Aconstr_index = CONSTR_get_Aconstr_index_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
+
+  // Check pointer
   if (!Acounter || !Aconstr_index || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data

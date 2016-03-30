@@ -40,7 +40,13 @@ void CONSTR_DCPF_count_branch(Constr* c, Branch* br) {
   // Constr data
   Acounter = CONSTR_get_Acounter_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
+
+  // Check pointers
   if (!Acounter || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
  
   // Bus data
@@ -164,7 +170,13 @@ void CONSTR_DCPF_analyze_branch(Constr* c, Branch* br) {
   rhs = CONSTR_get_b(c);
   Acounter = CONSTR_get_Acounter_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
+
+  // Check pointers
   if (!Acounter || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
  
   // Bus data
@@ -294,7 +306,7 @@ void CONSTR_DCPF_analyze_branch(Constr* c, Branch* br) {
   }
 }
 
-void CONSTR_DCPF_eval_branch(Constr* c, Branch *br, Vec* var_values) {
+void CONSTR_DCPF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   // Nothing
 }
 
@@ -306,8 +318,15 @@ void CONSTR_DCPF_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec*
   char* bus_counted;
   int k;
 
+  // Constr data
   bus_counted = CONSTR_get_bus_counted(c);
+
+  // Check pointer
   if (!bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data

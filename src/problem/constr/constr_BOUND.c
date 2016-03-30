@@ -51,7 +51,13 @@ void CONSTR_BOUND_count_branch(Constr* c, Branch* br) {
   // Constr data
   Jcounter = CONSTR_get_Jcounter_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
+
+  // Check pointers
   if (!Jcounter || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
  
   // Bus data
@@ -196,7 +202,14 @@ void CONSTR_BOUND_analyze_branch(Constr* c, Branch* br) {
   H_array = CONSTR_get_H_array(c);
   Jcounter = CONSTR_get_Jcounter_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
+  CONSTR_inc_branch_counter(c);
+
+  // Check pointers
   if (!Jcounter || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data
@@ -207,8 +220,6 @@ void CONSTR_BOUND_analyze_branch(Constr* c, Branch* br) {
 
   // Branch
   //*******
-
-  CONSTR_inc_branch_counter(c);
 
   // Tap ratio
   if (BRANCH_has_flags(br,FLAG_BOUNDED,BRANCH_VAR_RATIO) && 
@@ -427,7 +438,7 @@ void CONSTR_BOUND_analyze_branch(Constr* c, Branch* br) {
   }
 }
 
-void CONSTR_BOUND_eval_branch(Constr* c, Branch *br, Vec* var_values) {
+void CONSTR_BOUND_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 
   // Local variables
   Bus* buses[2];
@@ -459,7 +470,14 @@ void CONSTR_BOUND_eval_branch(Constr* c, Branch *br, Vec* var_values) {
   H_array = CONSTR_get_H_array(c);
   Jcounter = CONSTR_get_Jcounter_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
+  CONSTR_inc_branch_counter(c);
+
+  // Check pointers
   if (!f || !J || !Jcounter || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Param
@@ -473,8 +491,6 @@ void CONSTR_BOUND_eval_branch(Constr* c, Branch *br, Vec* var_values) {
 
   // Branch
   //*******
-
-  CONSTR_inc_branch_counter(c);
 
   // Tap ratio
   if (BRANCH_has_flags(br,FLAG_BOUNDED,BRANCH_VAR_RATIO) && 
@@ -750,7 +766,13 @@ void CONSTR_BOUND_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec
   // Constr data
   Jcounter = CONSTR_get_Jcounter_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
+
+  // Check pointers
   if (!Jcounter || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
  
   // Bus data

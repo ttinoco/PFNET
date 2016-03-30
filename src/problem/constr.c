@@ -136,7 +136,7 @@ void CONSTR_combine_H(Constr* c, Vec* coeff, BOOL ensure_psd) {
   }
 }
 
-void CONSTR_del(Constr* c) {
+void CONSTR_del_matvec(Constr* c) {
   if (c) {
 
     // Mat and vec
@@ -149,6 +149,24 @@ void CONSTR_del(Constr* c) {
     VEC_del(c->u);
     MAT_array_del(c->H_array,c->H_array_size);
     MAT_del(c->H_combined);
+    c->b = NULL;
+    c->A = NULL;
+    c->f = NULL;
+    c->J = NULL;
+    c->G = NULL;
+    c->l = NULL;
+    c->u = NULL;
+    c->H_array = NULL;
+    c->H_array_size = 0;
+    c->H_combined = NULL;
+  }
+}
+
+void CONSTR_del(Constr* c) {
+  if (c) {
+
+    // Mat and vec
+    CONSTR_del_matvec(c);
 
     // Utils
     if (c->bus_counted)

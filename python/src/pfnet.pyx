@@ -2940,6 +2940,14 @@ cdef class Constraint:
             cconstr.CONSTR_del(self._c_constr)
             self._c_constr = NULL
 
+    def del_matvec(self):
+        """
+        Deletes matrices and vectors associated with
+        this constraint.
+        """
+
+        cconstr.CONSTR_del_matvec(self._c_constr)
+
     def update_network(self):
         """
         Updates internal arrays to be compatible

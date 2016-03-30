@@ -43,7 +43,13 @@ void CONSTR_FIX_count_branch(Constr* c, Branch* br) {
   Acounter = CONSTR_get_Acounter_ptr(c);
   Aconstr_index = CONSTR_get_Aconstr_index_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
+
+  // Check pointers
   if (!Acounter || !Aconstr_index || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data
@@ -144,13 +150,14 @@ void CONSTR_FIX_count_branch(Constr* c, Branch* br) {
   }
 }
 
-void CONSTR_FIX_allocate(Constr *c) {
+void CONSTR_FIX_allocate(Constr* c) {
   
   // Local variables
   int num_constr;
   int num_vars;
   int Acounter;
   
+  // Constr data
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
   num_constr = CONSTR_get_Aconstr_index(c);
   Acounter = CONSTR_get_Acounter(c);
@@ -194,7 +201,13 @@ void CONSTR_FIX_analyze_branch(Constr* c, Branch* br) {
   Acounter = CONSTR_get_Acounter_ptr(c);
   Aconstr_index = CONSTR_get_Aconstr_index_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
+
+  // Check pointers
   if (!Acounter || !Aconstr_index || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data
@@ -338,11 +351,11 @@ void CONSTR_FIX_analyze_branch(Constr* c, Branch* br) {
   } 
 }
 
-void CONSTR_FIX_eval_branch(Constr* c, Branch *br, Vec* var_values) {
+void CONSTR_FIX_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   // Nothing to do
 }
 
-void CONSTR_FIX_store_sens_branch(Constr* c, Branch *b, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_FIX_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing
 }
 

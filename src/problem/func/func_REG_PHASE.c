@@ -29,14 +29,20 @@ void FUNC_REG_PHASE_clear(Func* f) {
   FUNC_set_Hcounter(f,0);
 }
 
-void FUNC_REG_PHASE_count_branch(Func* f, Branch *br) {
+void FUNC_REG_PHASE_count_branch(Func* f, Branch* br) {
 
   // Local variables
   int* Hcounter;
 
   // Constr data
   Hcounter = FUNC_get_Hcounter_ptr(f);
+
+  // Check pointer
   if (!Hcounter)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
   
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) // phase var
@@ -61,7 +67,7 @@ void FUNC_REG_PHASE_allocate(Func* f) {
 			  Hcounter));
 }
 
-void FUNC_REG_PHASE_analyze_branch(Func* f, Branch *br) {
+void FUNC_REG_PHASE_analyze_branch(Func* f, Branch* br) {
 
   // Local variables
   int* Hcounter;
@@ -71,7 +77,13 @@ void FUNC_REG_PHASE_analyze_branch(Func* f, Branch *br) {
   // Constr data
   H = FUNC_get_Hphi(f);
   Hcounter = FUNC_get_Hcounter_ptr(f);
+
+  // Check pointer
   if (!Hcounter)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Normalization factor
@@ -99,7 +111,13 @@ void FUNC_REG_PHASE_eval_branch(Func* f, Branch* br, Vec* var_values) {
   // Constr data
   phi = FUNC_get_phi_ptr(f);
   gphi = VEC_get_data(FUNC_get_gphi(f));
+
+  // Check pointers
   if (!phi || !gphi)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
   
   // Normalizatin factor

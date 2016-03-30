@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -33,7 +33,7 @@ void FUNC_REG_VANG_clear(Func* f) {
   FUNC_clear_bus_counted(f);
 }
 
-void FUNC_REG_VANG_count_branch(Func* f, Branch *br) {
+void FUNC_REG_VANG_count_branch(Func* f, Branch* br) {
 
   // Local variables
   Bus* buses[2];
@@ -46,7 +46,13 @@ void FUNC_REG_VANG_count_branch(Func* f, Branch *br) {
   // Constr data
   Hcounter = FUNC_get_Hcounter_ptr(f);
   bus_counted = FUNC_get_bus_counted(f);
+
+  // Check pointers
   if (!Hcounter || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data
@@ -99,7 +105,7 @@ void FUNC_REG_VANG_allocate(Func* f) {
 			  Hcounter));
 }
 
-void FUNC_REG_VANG_analyze_branch(Func* f, Branch *br) {
+void FUNC_REG_VANG_analyze_branch(Func* f, Branch* br) {
 
   // Local variables
   Bus* buses[2];
@@ -116,7 +122,13 @@ void FUNC_REG_VANG_analyze_branch(Func* f, Branch *br) {
   H = FUNC_get_Hphi(f);
   Hcounter = FUNC_get_Hcounter_ptr(f);
   bus_counted = FUNC_get_bus_counted(f);
+
+  // Check pointers
   if (!Hcounter || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data
@@ -195,7 +207,13 @@ void FUNC_REG_VANG_eval_branch(Func* f, Branch* br, Vec* var_values) {
   phi = FUNC_get_phi_ptr(f);
   gphi = VEC_get_data(FUNC_get_gphi(f));
   bus_counted = FUNC_get_bus_counted(f);
+
+  // Check pointers
   if (!phi || !gphi || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data
