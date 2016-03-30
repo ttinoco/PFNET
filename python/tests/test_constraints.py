@@ -14,6 +14,7 @@ from scipy.sparse import coo_matrix,triu,tril,eye
 
 NUM_TRIALS = 25
 EPS = 2e0 # %
+TOL = 1e-4
 
 class TestConstraints(unittest.TestCase):
     
@@ -21,6 +22,9 @@ class TestConstraints(unittest.TestCase):
         
         # Network
         self.net = pf.Network()
+
+        # Random
+        np.random.seed(0)
 
     def test_constr_FIX(self):
 
@@ -1049,7 +1053,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.linalg.norm(Jd_exact)
+                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.maximum(np.linalg.norm(Jd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sigle Hessian check
@@ -1076,7 +1080,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.linalg.norm(Hd_exact)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Combined Hessian check
@@ -1102,7 +1106,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.linalg.norm(Hd_exact)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sensitivities
@@ -1252,7 +1256,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.maximum(np.linalg.norm(Jd_exact),1e-5)
+                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.maximum(np.linalg.norm(Jd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sigle Hessian check
@@ -1282,7 +1286,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),1e-5)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Combined Hessian check
@@ -1308,7 +1312,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),1e-5)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sensitivities
@@ -1474,7 +1478,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.maximum(np.linalg.norm(Jd_exact),1e-3)
+                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.maximum(np.linalg.norm(Jd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sigle Hessian check
@@ -1502,7 +1506,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),1e-4)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
                 
             # Combined Hessian check
@@ -1529,7 +1533,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.linalg.norm(Hd_exact)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sensitivities
@@ -1701,7 +1705,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.maximum(np.linalg.norm(Jd_exact),1e-4)
+                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.maximum(np.linalg.norm(Jd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sigle Hessian check
@@ -1731,7 +1735,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.linalg.norm(Hd_exact)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Combined Hessian check
@@ -1757,7 +1761,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),1e-4)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sensitivities
@@ -1944,7 +1948,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.maximum(np.linalg.norm(Jd_exact),1e-4)
+                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.maximum(np.linalg.norm(Jd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sigle Hessian check
@@ -1974,7 +1978,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.linalg.norm(Hd_exact)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Combined Hessian check
@@ -2000,7 +2004,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),1e-4)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
             
             # Sensitivities

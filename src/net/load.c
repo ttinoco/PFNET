@@ -108,7 +108,7 @@ void LOAD_init(Load* load) {
 }
 
 Load* LOAD_list_add(Load *load_list, Load* load) {
-  LIST_add(load_list,load,next);
+  LIST_add(Load,load_list,load,next);
   return load_list;
 }
 

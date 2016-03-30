@@ -1601,6 +1601,10 @@ class TestNetwork(unittest.TestCase):
             reg_bus0 = g0.reg_bus
             br7 = net.get_branch(7)
             br3 = net.get_branch(3)
+            bus_from7 = br7.bus_from
+            bus_from3 = br3.bus_from
+            bus_to7 = br7.bus_to
+            bus_to3 = br3.bus_to
             if net.num_gens > 5:
                 g5 = net.get_gen(5)
                 bus5 = g5.bus
@@ -1608,6 +1612,10 @@ class TestNetwork(unittest.TestCase):
             cont = pf.Contingency()
             self.assertEqual(cont.num_gen_outages,0)
             self.assertEqual(cont.num_branch_outages,0)
+            cont.add_gen_outage(g0)
+            cont.add_branch_outage(br7)
+            self.assertEqual(cont.num_gen_outages,1)
+            self.assertEqual(cont.num_branch_outages,1)
             cont.add_gen_outage(g0)
             cont.add_branch_outage(br7)
             self.assertEqual(cont.num_gen_outages,1)
@@ -1651,8 +1659,26 @@ class TestNetwork(unittest.TestCase):
                     self.assertFalse(g.outage)
             for b in net.branches:
                 if b.index == 7 or b.index == 3:
+                    self.assertTrue(b.is_line() or b.is_fixed_tran())
                     self.assertTrue(b.is_on_outage())
                     self.assertTrue(b.outage)
+                    self.assertRaises(pf.BusError,lambda x: x.bus_from,b)
+                    self.assertRaises(pf.BusError,lambda x: x.bus_to,b)
+                    self.assertRaises(pf.BusError,lambda x: x.reg_bus,b)
+                    if b.index == 7:
+                        self.assertFalse(b.index in [y.index for y in bus_from7.branches_from])
+                        self.assertFalse(b.index in [y.index for y in bus_from7.branches])
+                        self.assertFalse(b.index in [y.index for y in bus_from7.branches_to])
+                        self.assertFalse(b.index in [y.index for y in bus_to7.branches_from])
+                        self.assertFalse(b.index in [y.index for y in bus_to7.branches])
+                        self.assertFalse(b.index in [y.index for y in bus_to7.branches_to])
+                    elif b.index == 3:
+                        self.assertFalse(b.index in [y.index for y in bus_from3.branches_from])
+                        self.assertFalse(b.index in [y.index for y in bus_from3.branches])
+                        self.assertFalse(b.index in [y.index for y in bus_from3.branches_to])
+                        self.assertFalse(b.index in [y.index for y in bus_to3.branches_from])
+                        self.assertFalse(b.index in [y.index for y in bus_to3.branches])
+                        self.assertFalse(b.index in [y.index for y in bus_to3.branches_to])
                 else:
                     self.assertFalse(b.is_on_outage())
                     self.assertFalse(b.outage)
@@ -1697,6 +1723,28 @@ class TestNetwork(unittest.TestCase):
                 else:
                     self.assertFalse(g.is_on_outage())
                     self.assertFalse(g.outage)
+            for b in net.branches:
+                if b.index == 3 or b.index == 7:
+                    self.assertFalse(b.is_on_outage())
+                    self.assertFalse(b.outage)
+                    if b.index == 7:
+                        self.assertEqual(b.bus_from.index,bus_from7.index)
+                        self.assertEqual(b.bus_to.index,bus_to7.index)
+                        self.assertTrue(b.index in [y.index for y in bus_from7.branches_from])
+                        self.assertTrue(b.index in [y.index for y in bus_from7.branches])
+                        self.assertFalse(b.index in [y.index for y in bus_from7.branches_to])
+                        self.assertFalse(b.index in [y.index for y in bus_to7.branches_from])
+                        self.assertTrue(b.index in [y.index for y in bus_to7.branches])
+                        self.assertTrue(b.index in [y.index for y in bus_to7.branches_to])
+                    elif b.index == 3:
+                        self.assertEqual(b.bus_from.index,bus_from3.index)
+                        self.assertEqual(b.bus_to.index,bus_to3.index)
+                        self.assertTrue(b.index in [y.index for y in bus_from3.branches_from])
+                        self.assertTrue(b.index in [y.index for y in bus_from3.branches])
+                        self.assertFalse(b.index in [y.index for y in bus_from3.branches_to])
+                        self.assertFalse(b.index in [y.index for y in bus_to3.branches_from])
+                        self.assertTrue(b.index in [y.index for y in bus_to3.branches])
+                        self.assertTrue(b.index in [y.index for y in bus_to3.branches_to])
                 
             # do it again
             net.clear_properties()
@@ -1717,7 +1765,9 @@ class TestNetwork(unittest.TestCase):
                 gens = bus.gens
                 if reg_bus is not None:
                     reg_gens = reg_bus.reg_gens
-
+                    
+                cont.apply()
+                cont.apply()
                 cont.apply()
                 
                 self.assertTrue(gen.is_on_outage())
@@ -1731,6 +1781,8 @@ class TestNetwork(unittest.TestCase):
                     self.assertFalse(gen.index in [x.index for x in reg_bus.reg_gens])
                     self.assertTrue(gen.index in [x.index for x in reg_gens])
 
+                cont.clear()
+                cont.clear()
                 cont.clear()
 
                 self.assertFalse(gen.is_on_outage())
@@ -1749,6 +1801,129 @@ class TestNetwork(unittest.TestCase):
                     self.assertEqual(len(reg_gens),len(reg_bus.reg_gens))
                     self.assertTrue(set(map(lambda x: x.index,reg_bus.reg_gens)) == 
                                     set(map(lambda x: x.index,reg_gens)))
+
+            # branch single contingencies
+            for br in net.branches:
+
+                self.assertFalse(br.is_on_outage())
+                cont = pf.Contingency()
+                cont.add_branch_outage(br)                
+                self.assertFalse(br.is_on_outage())
+
+                bus_from = br.bus_from
+                bus_to = br.bus_to
+                reg_bus = br.reg_bus if br.is_tap_changer_v() else None
+
+                bus_from_branches_from = bus_from.branches_from
+                bus_from_branches_to = bus_from.branches_to
+                bus_from_branches = bus_from.branches
+                bus_to_branches_from = bus_to.branches_from
+                bus_to_branches_to = bus_to.branches_to
+                bus_to_branches = bus_to.branches
+                
+                if reg_bus is not None:
+                    reg_trans = reg_bus.reg_trans
+
+                br_types = [br.is_line(),
+                            br.is_fixed_tran(),
+                            br.is_phase_shifter(),
+                            br.is_tap_changer(),
+                            br.is_tap_changer_v(),
+                            br.is_tap_changer_Q()]
+
+                cont.apply()
+                cont.apply()
+                cont.apply()
+                
+                self.assertTrue(br.is_on_outage())
+                self.assertFalse(br.is_tap_changer())
+                if br_types[0]:
+                    self.assertTrue(br.is_line())
+                else:
+                    self.assertTrue(br.is_fixed_tran())
+                self.assertRaises(pf.BusError,lambda x: x.bus_from,br)
+                self.assertRaises(pf.BusError,lambda x: x.bus_to,br)
+                self.assertRaises(pf.BusError,lambda x: x.reg_bus,br)
+                self.assertFalse(br.index in [x.index for x in bus_from.branches_from])
+                self.assertFalse(br.index in [x.index for x in bus_from.branches_to])
+                self.assertFalse(br.index in [x.index for x in bus_from.branches])
+                self.assertFalse(br.index in [x.index for x in bus_to.branches_from])
+                self.assertFalse(br.index in [x.index for x in bus_to.branches_to])
+                self.assertFalse(br.index in [x.index for x in bus_to.branches])
+
+                self.assertTrue(br.index in [x.index for x in bus_from_branches_from])
+                self.assertFalse(br.index in [x.index for x in bus_from_branches_to])
+                self.assertTrue(br.index in [x.index for x in bus_from_branches])
+                self.assertFalse(br.index in [x.index for x in bus_to_branches_from])
+                self.assertTrue(br.index in [x.index for x in bus_to_branches_to])
+                self.assertTrue(br.index in [x.index for x in bus_to_branches])
+
+                if reg_bus is not None:
+                    self.assertFalse(br.is_tap_changer())
+                    self.assertTrue(br.is_fixed_tran())
+                    self.assertFalse(br.index in [x.index for x in reg_bus.reg_trans])
+                    self.assertTrue(br.index in [x.index for x in reg_trans])
+
+                cont.clear()
+                cont.clear()
+                cont.clear()
+
+                self.assertFalse(br.is_on_outage())
+                self.assertEqual(br.bus_from.index,bus_from.index)
+                self.assertEqual(br.bus_to.index,bus_to.index)
+                if reg_bus is not None:
+                    self.assertTrue(br.is_tap_changer_v())
+                    self.assertTrue(br.is_tap_changer())
+                    self.assertEqual(br.reg_bus.index,reg_bus.index)
+
+                self.assertTrue(br.index in [x.index for x in bus_from_branches_from])
+                self.assertTrue(br.index in [x.index for x in bus_from_branches])
+                self.assertFalse(br.index in [x.index for x in bus_from_branches_to])
+                self.assertTrue(br.index in [x.index for x in bus_from.branches_from])
+                self.assertTrue(br.index in [x.index for x in bus_from.branches])
+                self.assertFalse(br.index in [x.index for x in bus_from.branches_to])
+                self.assertEqual(len(bus_from_branches_from),len(bus_from.branches_from))
+                self.assertEqual(len(bus_from_branches_to),len(bus_from.branches_to))
+                self.assertEqual(len(bus_from_branches),len(bus_from.branches))
+
+                self.assertFalse(br.index in [x.index for x in bus_to_branches_from])
+                self.assertTrue(br.index in [x.index for x in bus_to_branches])
+                self.assertTrue(br.index in [x.index for x in bus_to_branches_to])
+                self.assertFalse(br.index in [x.index for x in bus_to.branches_from])
+                self.assertTrue(br.index in [x.index for x in bus_to.branches])
+                self.assertTrue(br.index in [x.index for x in bus_to.branches_to])
+                self.assertEqual(len(bus_to_branches_from),len(bus_to.branches_from))
+                self.assertEqual(len(bus_to_branches_to),len(bus_to.branches_to))
+                self.assertEqual(len(bus_to_branches),len(bus_to.branches))
+
+                self.assertTrue(set(map(lambda x: x.index,bus_from_branches_from)) == 
+                                set(map(lambda x: x.index,bus_from.branches_from)))
+                self.assertTrue(set(map(lambda x: x.index,bus_from_branches_to)) == 
+                                set(map(lambda x: x.index,bus_from.branches_to)))
+                self.assertTrue(set(map(lambda x: x.index,bus_from_branches)) == 
+                                set(map(lambda x: x.index,bus_from.branches)))
+
+                self.assertTrue(set(map(lambda x: x.index,bus_to_branches_from)) == 
+                                set(map(lambda x: x.index,bus_to.branches_from)))
+                self.assertTrue(set(map(lambda x: x.index,bus_to_branches_to)) == 
+                                set(map(lambda x: x.index,bus_to.branches_to)))
+                self.assertTrue(set(map(lambda x: x.index,bus_to_branches)) == 
+                                set(map(lambda x: x.index,bus_to.branches)))
+
+                if reg_bus is not None:
+                    self.assertTrue(br.index in [x.index for x in reg_trans])
+                    self.assertTrue(br.index in [x.index for x in reg_bus.reg_trans])
+                    self.assertEqual(len(reg_trans),len(reg_bus.reg_trans))
+                    self.assertTrue(set(map(lambda x: x.index,reg_bus.reg_trans)) == 
+                                    set(map(lambda x: x.index,reg_trans)))
+                    
+                self.assertTupleEqual(tuple(br_types),
+                                      (br.is_line(),
+                                       br.is_fixed_tran(),
+                                       br.is_phase_shifter(),
+                                       br.is_tap_changer(),
+                                       br.is_tap_changer_v(),
+                                       br.is_tap_changer_Q()))
 
     def tearDown(self):
         

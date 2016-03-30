@@ -87,7 +87,7 @@ Heur* HEUR_get_next(Heur* h) {
 }
 
 Heur* HEUR_list_add(Heur* hlist, Heur* nh) {
-  LIST_add(hlist,nh,next);
+  LIST_add(Heur,hlist,nh,next);
   return hlist;
 }
 

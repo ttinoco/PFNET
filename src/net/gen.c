@@ -379,7 +379,7 @@ BOOL GEN_is_slack(Gen* gen) {
 }
 
 Gen* GEN_list_add(Gen* gen_list, Gen* gen) {
-  LIST_add(gen_list,gen,next);
+  LIST_add(Gen,gen_list,gen,next);
   return gen_list;
 }
 
@@ -395,7 +395,7 @@ int GEN_list_len(Gen* gen_list) {
 }
 
 Gen* GEN_list_reg_add(Gen* reg_gen_list, Gen* reg_gen) {
-  LIST_add(reg_gen_list,reg_gen,reg_next);
+  LIST_add(Gen,reg_gen_list,reg_gen,reg_next);
   return reg_gen_list;
 }
 

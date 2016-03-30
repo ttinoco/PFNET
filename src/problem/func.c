@@ -209,7 +209,7 @@ void FUNC_inc_branch_counter(Func* f) {
 }
 
 Func* FUNC_list_add(Func* flist, Func* nf) {
-  LIST_add(flist,nf,next);
+  LIST_add(Func,flist,nf,next);
   return flist;
 }
 

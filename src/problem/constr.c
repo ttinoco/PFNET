@@ -418,7 +418,7 @@ void CONSTR_inc_branch_counter(Constr* c) {
 }
 
 Constr* CONSTR_list_add(Constr* clist, Constr* nc) {
-  LIST_add(clist,nc,next);
+  LIST_add(Constr,clist,nc,next);
   return clist;
 }
 

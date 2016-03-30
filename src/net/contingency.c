@@ -108,7 +108,7 @@ void CONT_clear(Cont* cont) {
       
       // Connections
       GEN_set_bus(go->gen,go->bus); // connect bus to gen
-      BUS_add_gen(go->bus,go->gen); // connect gen to bus      
+      BUS_add_gen(go->bus,go->gen); // connect gen to bus
 
       // Regulation
       GEN_set_reg_bus(go->gen,go->reg_bus); // gen does regulates reg_bus
@@ -173,24 +173,36 @@ int CONT_get_num_branch_outages(Cont* cont) {
 }
 
 void CONT_add_gen_outage(Cont* cont, Gen* gen) {
+  Gen_outage* go;
   if (cont) {
-    Gen_outage* go = (Gen_outage*)malloc(sizeof(Gen_outage));
+    for (go = cont->gen_outage; go != NULL; go = go->next) {
+      if (go->gen == gen)
+    	return;
+    }
+    go = (Gen_outage*)malloc(sizeof(Gen_outage));
     go->gen = gen;
     go->bus = GEN_get_bus(gen);
     go->reg_bus = GEN_get_reg_bus(gen);
-    LIST_add(cont->gen_outage,go,next);
+    go->next = NULL;
+    LIST_add(Gen_outage,cont->gen_outage,go,next);
   }
 }
 
 void CONT_add_branch_outage(Cont* cont, Branch* br) {
+  Branch_outage* bo;
   if (cont) {
-    Branch_outage* bo = (Branch_outage*)malloc(sizeof(Branch_outage));
+    for (bo = cont->br_outage; bo != NULL; bo = bo->next) {
+      if (bo->br == br)
+	return;
+    }
+    bo = (Branch_outage*)malloc(sizeof(Branch_outage));
     bo->br = br;
     bo->bus_from = BRANCH_get_bus_from(br);
     bo->bus_to = BRANCH_get_bus_to(br);
     bo->reg_bus = BRANCH_get_reg_bus(br);
     bo->br_type = BRANCH_get_type(br);
-    LIST_add(cont->br_outage,bo,next);
+    bo->next = NULL;
+    LIST_add(Branch_outage,cont->br_outage,bo,next);
   }
 }
 

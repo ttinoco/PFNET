@@ -321,8 +321,8 @@ BOOL VARGEN_is_solar(Vargen* gen) {
     return FALSE;
 }
 
-Vargen* VARGEN_list_add(Vargen *gen_list, Vargen* gen) {
-  LIST_add(gen_list,gen,next);
+Vargen* VARGEN_list_add(Vargen* gen_list, Vargen* gen) {
+  LIST_add(Vargen,gen_list,gen,next);
   return gen_list;
 }
 

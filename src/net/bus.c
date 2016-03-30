@@ -1120,8 +1120,8 @@ BOOL BUS_is_slack(Bus* bus) {
 }
 
 Bus* BUS_list_add(Bus* bus_list, Bus* bus_new) {
-    LIST_add(bus_list,bus_new,next);
-    return bus_list;
+  LIST_add(Bus,bus_list,bus_new,next);
+  return bus_list;
 }
 
 Bus* BUS_list_add_sorting(Bus* bus_list, Bus* bus_new, int sort_by) {

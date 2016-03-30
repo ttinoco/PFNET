@@ -552,7 +552,7 @@ BOOL BRANCH_is_tap_changer_Q(Branch* br) {
 }
 
 Branch* BRANCH_list_reg_add(Branch* reg_br_list, Branch* reg_br) {
-  LIST_add(reg_br_list,reg_br,reg_next);
+  LIST_add(Branch,reg_br_list,reg_br,reg_next);
   return reg_br_list;
 }
 
@@ -568,7 +568,7 @@ int BRANCH_list_reg_len(Branch* reg_br_list) {
 }
 
 Branch* BRANCH_list_from_add(Branch* from_br_list, Branch* br) {
-  LIST_add(from_br_list,br,from_next);
+  LIST_add(Branch,from_br_list,br,from_next);
   return from_br_list;
 }
 
@@ -584,7 +584,7 @@ int BRANCH_list_from_len(Branch* from_br_list) {
 }
 
 Branch* BRANCH_list_to_add(Branch* to_br_list, Branch* br) {
-  LIST_add(to_br_list,br,to_next);
+  LIST_add(Branch,to_br_list,br,to_next);
   return to_br_list;
 }
 

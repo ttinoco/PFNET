@@ -1034,7 +1034,7 @@ void ART_PARSER_parse_bus_record(ART_Parser* parser) {
     return;
 
   if (parser->bus) {
-    LIST_add(parser->bus_list,parser->bus,next);
+    LIST_push(parser->bus_list,parser->bus,next);
     HASH_ADD_STR(parser->bus_hash,name,parser->bus);
   }
   parser->bus = NULL;
@@ -1090,9 +1090,8 @@ void ART_PARSER_parse_line_record(ART_Parser* parser) {
   if (!parser)
     return;
 
-  if (parser->line) {
-    LIST_add(parser->line_list,parser->line,next);
-  }
+  if (parser->line)
+    LIST_push(parser->line_list,parser->line,next);
   parser->line = NULL;
   parser->field = 0;
   parser->record = 0;
@@ -1156,7 +1155,7 @@ void ART_PARSER_parse_transfo_record(ART_Parser* parser) {
     return;
 
   if (parser->transfo) {
-    LIST_add(parser->transfo_list,parser->transfo,next);
+    LIST_push(parser->transfo_list,parser->transfo,next);
     HASH_ADD_STR(parser->transfo_hash,name,parser->transfo);
   }
   parser->transfo = NULL;
@@ -1209,9 +1208,8 @@ void ART_PARSER_parse_ltcv_record(ART_Parser* parser) {
   if (!parser)
     return;
 
-  if (parser->ltcv) {
-    LIST_add(parser->ltcv_list,parser->ltcv,next);
-  }
+  if (parser->ltcv)
+    LIST_push(parser->ltcv_list,parser->ltcv,next);
   parser->ltcv = NULL;
   parser->field = 0;
   parser->record = 0;
@@ -1286,9 +1284,8 @@ void ART_PARSER_parse_trfo_record(ART_Parser* parser) {
   if (!parser)
     return;
 
-  if (parser->trfo) {
-    LIST_add(parser->trfo_list,parser->trfo,next);
-  }
+  if (parser->trfo)
+    LIST_push(parser->trfo_list,parser->trfo,next);
   parser->trfo = NULL;
   parser->field = 0;
   parser->record = 0;
@@ -1342,9 +1339,8 @@ void ART_PARSER_parse_pshiftp_record(ART_Parser* parser) {
   if (!parser)
     return;
 
-  if (parser->pshiftp) {
-    LIST_add(parser->pshiftp_list,parser->pshiftp,next);
-  }
+  if (parser->pshiftp)
+    LIST_push(parser->pshiftp_list,parser->pshiftp,next);
   parser->pshiftp = NULL;
   parser->field = 0;
   parser->record = 0;
@@ -1404,9 +1400,8 @@ void ART_PARSER_parse_gener_record(ART_Parser* parser) {
   if (!parser)
     return;
 
-  if (parser->gener) {
-    LIST_add(parser->gener_list,parser->gener,next);
-  }
+  if (parser->gener)
+    LIST_push(parser->gener_list,parser->gener,next);
   parser->gener = NULL;
   parser->field = 0;
   parser->record = 0;
@@ -1439,9 +1434,8 @@ void ART_PARSER_parse_slack_record(ART_Parser* parser) {
   if (!parser)
     return;
 
-  if (parser->slack) {
-    LIST_add(parser->slack_list,parser->slack,next);
-  }
+  if (parser->slack)
+    LIST_push(parser->slack_list,parser->slack,next);
   parser->slack = NULL;
   parser->field = 0;
   parser->record = 0;
@@ -1495,9 +1489,8 @@ void ART_PARSER_parse_vargen_record(ART_Parser* parser) {
   if (!parser)
     return;
 
-  if (parser->vargen) {
-    LIST_add(parser->vargen_list,parser->vargen,next);
-  }
+  if (parser->vargen)
+    LIST_push(parser->vargen_list,parser->vargen,next);
   parser->vargen = NULL;
   parser->field = 0;
   parser->record = 0;

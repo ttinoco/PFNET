@@ -638,7 +638,7 @@ void MAT_PARSER_parse_bus_row(MAT_Parser* parser) {
     return;
 
   if (parser->bus && parser->record >= 0) {
-    LIST_add(parser->bus_list,parser->bus,next);
+    LIST_push(parser->bus_list,parser->bus,next);
     HASH_ADD_INT(parser->bus_hash,number,parser->bus);
   }
   parser->bus = NULL;
@@ -711,7 +711,7 @@ void MAT_PARSER_parse_gen_row(MAT_Parser* parser) {
     return;
   
   if (parser->gen && parser->record >= 0)
-    LIST_add(parser->gen_list,parser->gen,next);
+    LIST_push(parser->gen_list,parser->gen,next);
   parser->gen = NULL;
   parser->field = 0;
   parser->record++;
@@ -782,7 +782,7 @@ void MAT_PARSER_parse_branch_row(MAT_Parser* parser) {
     return;
 
   if (parser->branch && parser->record >= 0)
-    LIST_add(parser->branch_list,parser->branch,next);
+    LIST_push(parser->branch_list,parser->branch,next);
   parser->branch = NULL;
   parser->field = 0;
   parser->record++;  
@@ -835,7 +835,7 @@ void MAT_PARSER_parse_cost_row(MAT_Parser* parser) {
     return;
   
   if (parser->cost && parser->record >= 0)
-    LIST_add(parser->cost_list,parser->cost,next);
+    LIST_push(parser->cost_list,parser->cost,next);
   parser->cost = NULL;
   parser->field = 0;
   parser->record++;

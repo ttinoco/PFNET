@@ -295,7 +295,7 @@ BOOL SHUNT_is_switched_v(Shunt* shunt) {
 }
 
 Shunt* SHUNT_list_add(Shunt* shunt_list, Shunt* shunt) {
-  LIST_add(shunt_list,shunt,next);
+  LIST_add(Shunt,shunt_list,shunt,next);
   return shunt_list;
 }
 
@@ -306,7 +306,7 @@ int SHUNT_list_len(Shunt* shunt_list) {
 }
 
 Shunt* SHUNT_list_reg_add(Shunt* reg_shunt_list, Shunt* reg_shunt) {
-  LIST_add(reg_shunt_list,reg_shunt,reg_next);
+  LIST_add(Shunt,reg_shunt_list,reg_shunt,reg_next);
   return reg_shunt_list;
 }
 
