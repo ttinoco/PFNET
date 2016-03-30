@@ -2791,6 +2791,14 @@ cdef class Function:
         if self.alloc:
             cfunc.FUNC_del(self._c_func)
             self._c_func = NULL
+
+    def del_matvec(self):
+        """
+        Deletes matrices and vectors associated with
+        this function.
+        """
+
+        cfunc.FUNC_del_matvec(self._c_func)
             
     def update_network(self):
         """

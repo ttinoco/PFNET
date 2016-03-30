@@ -1976,12 +1976,16 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
   int k;
   int m;
   
-  // Check data
+  // Check pointers
   if (!net || !br)
     return;
 
   // Branch counter
   net->branch_counter++;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
+    return;
 
   // Bus data
   buses[0] = BRANCH_get_bus_from(br);

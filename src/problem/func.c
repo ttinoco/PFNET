@@ -72,12 +72,22 @@ void FUNC_clear_bus_counted(Func* f) {
   } 
 }
 
-void FUNC_del(Func* f) {
+void FUNC_del_matvec(Func* f) {
   if (f) {
 
     // Mat and vec
     VEC_del(f->gphi);
     MAT_del(f->Hphi);
+    f->gphi = NULL;
+    f->Hphi = NULL;
+  }
+}
+
+void FUNC_del(Func* f) {
+  if (f) {
+
+    // Mat and vec
+    FUNC_del_matvec(f);
 
     // Utils
     if (f->bus_counted)
