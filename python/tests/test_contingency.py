@@ -12,6 +12,10 @@ import test_cases
 import numpy as np
 from scipy.sparse import coo_matrix, bmat, triu
 
+TEST_BRANCHES = 100
+TEST_GENS = 100
+TEST_BUSES = 20
+
 class TestContingency(unittest.TestCase):
     
     def setUp(self):
@@ -418,6 +422,7 @@ class TestContingency(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.GEN_PROP_ANY,
                           pf.GEN_VAR_P)
+            self.assertEqual(net.num_vars,net.num_gens)
 
             # pre contingency
             net.update_properties()
@@ -431,6 +436,9 @@ class TestContingency(unittest.TestCase):
             self.assertEqual(phi_base,gen_cost_base)
             self.assertTupleEqual(gphi_base.shape,(net.num_vars,))
             self.assertEqual(Hphi_base.nnz,net.num_vars)
+
+            # gen outages
+            counter = 0
             for gen in net.generators:
                 
                 cont = pf.Contingency()
@@ -459,7 +467,12 @@ class TestContingency(unittest.TestCase):
                 self.assertTrue(np.all(Hphi.col != gen.index_P))
 
                 cont.clear()
+                counter += 1
+                if counter > TEST_GENS:
+                    break
 
+            # branch outages
+            counter = 0
             for br in net.branches:
                 
                 if br.bus_from.degree == 1 or br.bus_to.degree == 1:
@@ -487,7 +500,224 @@ class TestContingency(unittest.TestCase):
                 self.assertEqual(E.nnz,0)
 
                 cont.clear()
+                counter += 1
+                if counter > TEST_BRANCHES:
+                    break
 
+    def test_pf(self):
+
+        net = self.net
+
+        for case in test_cases.CASES:
+
+            net.clear_properties()
+            net.load(case)
+            net.clear_flags()
+
+            # variables
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_ANY,
+                          pf.GEN_VAR_P)
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_REG,
+                          pf.GEN_VAR_Q)
+            net.set_flags(pf.OBJ_BUS,
+                          pf.FLAG_VARS,
+                          pf.BUS_PROP_ANY,
+                          pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_VARS,
+                          pf.BRANCH_PROP_TAP_CHANGER,
+                          pf.BRANCH_VAR_RATIO)
+            net.set_flags(pf.OBJ_SHUNT,
+                          pf.FLAG_VARS,
+                          pf.SHUNT_PROP_SWITCHED_V,
+                          pf.SHUNT_VAR_SUSC)
+            self.assertEqual(net.num_vars,
+                             (net.num_gens +
+                              net.get_num_reg_gens() +
+                              2*net.num_buses +
+                              net.get_num_tap_changers() +
+                              net.get_num_switched_shunts()))
+
+            # pre contingency
+            net.update_properties()
+            mismatches = np.zeros(2*net.num_buses)
+            for bus in net.buses:
+                mismatches[bus.index_P] = bus.P_mis
+                mismatches[bus.index_Q] = bus.Q_mis
+            constr = pf.Constraint(pf.CONSTR_TYPE_PF,net)
+            constr.analyze()
+            constr.eval(net.get_var_values())
+            f = constr.f.copy()
+            self.assertLess(np.linalg.norm(f-mismatches),1e-8)
+
+            # gen outages
+            counter = 0
+            for gen in net.generators:
+ 
+                bus = gen.bus
+
+                cont = pf.Contingency()
+                cont.add_gen_outage(gen)
+                cont.apply()
+
+                constr.del_matvec()
+                constr.analyze()                
+                constr.eval(net.get_var_values())
+                
+                net.update_properties()
+
+                self.assertLess(np.abs(constr.f[bus.index_P]-bus.P_mis),1e-8)
+                self.assertLess(np.abs(constr.f[bus.index_Q]-bus.Q_mis),1e-8)
+                self.assertLess(np.abs(f[bus.index_P]-constr.f[bus.index_P]-gen.P),1e-8)
+                self.assertLess(np.abs(f[bus.index_Q]-constr.f[bus.index_Q]-gen.Q),1e-8)
+                self.assertLess(np.abs(mismatches[bus.index_P]-bus.P_mis-gen.P),1e-8)
+                self.assertLess(np.abs(mismatches[bus.index_Q]-bus.Q_mis-gen.Q),1e-8)
+
+                counter1 = 0
+                for bus1 in net.buses:
+                    if bus != bus1:
+                        self.assertLess(np.abs(constr.f[bus1.index_P]-f[bus1.index_P]),1e-8)
+                        self.assertLess(np.abs(constr.f[bus1.index_Q]-f[bus1.index_Q]),1e-8)
+                        self.assertLess(np.abs(bus1.P_mis-mismatches[bus1.index_P]),1e-8)
+                        self.assertLess(np.abs(bus1.Q_mis-mismatches[bus1.index_Q]),1e-8)
+                        counter1 += 1
+                        if counter1 > TEST_BUSES:
+                            break
+
+                cont.clear()
+                counter += 1
+                if counter > TEST_GENS:
+                    break
+
+            # branch outages
+            counter = 0
+            for br in net.branches:
+                
+                if br.bus_from.degree == 1 or br.bus_to.degree == 1:
+                    continue
+                
+                cont = pf.Contingency()
+                cont.add_branch_outage(br)
+                cont.apply()
+
+                constr.del_matvec()
+                constr.analyze()                
+                constr.eval(net.get_var_values())
+
+                net.update_properties()
+               
+                # NEED TO TEST
+                #*************
+                
+                cont.clear()
+                counter += 1
+                if counter > TEST_BRANCHES:
+                    break
+
+    def test_dcpf(self):
+
+        net = self.net
+
+        for case in test_cases.CASES:
+
+            net.clear_properties()
+            net.load(case)
+            net.clear_flags()
+
+            # variables
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_ANY,
+                          pf.GEN_VAR_P)
+            net.set_flags(pf.OBJ_BUS,
+                          pf.FLAG_VARS,
+                          pf.BUS_PROP_NOT_SLACK,
+                          pf.BUS_VAR_VANG)
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_VARS,
+                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          pf.BRANCH_VAR_PHASE)
+            self.assertEqual(net.num_vars,
+                             (net.num_gens +
+                              net.num_buses-net.get_num_slack_buses() +
+                              net.get_num_phase_shifters()))
+
+            # pre contingency
+            constr = pf.Constraint(pf.CONSTR_TYPE_DCPF,net)
+            constr.analyze()
+            constr.eval(net.get_var_values())
+            A = constr.A.copy()
+            b = constr.b.copy()
+            x = net.get_var_values()
+           
+            # gen outages
+            counter = 0
+            for gen in net.generators:
+ 
+                bus = gen.bus
+
+                cont = pf.Contingency()
+                cont.add_gen_outage(gen)
+                cont.apply()
+            
+                constr.del_matvec()
+                constr.analyze()                
+                constr.eval(x)
+                
+                self.assertFalse(np.all(A.col != gen.index_P))
+                self.assertTrue(np.all(constr.A.col != gen.index_P))
+
+                self.assertLess(np.abs((A*x-b)[bus.index]-
+                                       (constr.A*x-constr.b)[bus.index]-gen.P),1e-8)
+
+                counter1 = 0
+                for bus1 in net.buses:
+                    if bus != bus1:
+                        self.assertLess(np.abs((A*x-b)[bus1.index]-
+                                               (constr.A*x-constr.b)[bus1.index]),1e-8)
+                        counter1 += 1
+                        if counter1 > TEST_BUSES:
+                            break
+
+                cont.clear()
+                counter += 1
+                if counter > TEST_GENS:
+                    break
+
+            # branch outages
+            counter = 0
+            for br in net.branches:
+
+                bus_from = br.bus_from
+                bus_to = br.bus_to
+                
+                if br.bus_from.degree == 1 or br.bus_to.degree == 1:
+                    continue
+
+                Pflow = br.P_flow_DC
+                
+                cont = pf.Contingency()
+                cont.add_branch_outage(br)
+                cont.apply()
+
+                constr.del_matvec()
+                constr.analyze()                
+                constr.eval(net.get_var_values())
+                
+                self.assertLess(np.abs((A*x-b)[bus_from.index]-
+                                       ((constr.A*x-constr.b)[bus_from.index]-Pflow)),1e-8)
+                self.assertLess(np.abs((A*x-b)[bus_to.index]-
+                                       ((constr.A*x-constr.b)[bus_to.index]+Pflow)),1e-8)
+ 
+                cont.clear()
+                counter += 1
+                if counter > TEST_BRANCHES:
+                    break
+ 
     def tearDown(self):
         
         pass
