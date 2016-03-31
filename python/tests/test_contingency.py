@@ -808,6 +808,46 @@ class TestContingency(unittest.TestCase):
                 counter += 1
                 if counter > TEST_BRANCHES:
                     break
+
+    def test_variables(self):
+
+        net = self.net
+
+        for case in test_cases.CASES:
+
+            net.clear_properties()
+            net.load(case)
+            net.clear_flags()
+
+            cont = pf.Contingency()
+            cont.add_gen_outage(net.get_gen(0))
+            cont.add_branch_outage(net.get_branch(3))
+            cont.add_branch_outage(net.get_branch(10))
+
+            cont.apply()
+
+            # variables
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_NOT_OUT,
+                          pf.GEN_VAR_P)
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_VARS,
+                          pf.BRANCH_PROP_NOT_OUT,
+                          pf.BRANCH_VAR_RATIO)
+            self.assertEqual(net.num_vars,
+                             (net.num_gens-1+net.num_branches-2))
+            for gen in net.generators:
+                if gen.index != 0:
+                    self.assertTrue(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
+                else:
+                    self.assertFalse(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
+            for br in net.branches:
+                if br.index not in [3,10]:
+                    self.assertTrue(br.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_RATIO))
+                else:
+                    self.assertFalse(br.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_RATIO))
+
  
     def tearDown(self):
         

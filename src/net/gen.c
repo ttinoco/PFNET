@@ -309,6 +309,8 @@ BOOL GEN_has_properties(void* vgen, char prop) {
     return FALSE;
   if ((prop & GEN_PROP_NOT_SLACK) && GEN_is_slack(gen))
     return FALSE;
+  if ((prop & GEN_PROP_NOT_OUT) && GEN_is_on_outage(gen))
+    return FALSE;
   if ((prop & GEN_PROP_P_ADJUST) && !GEN_is_P_adjustable(gen))
     return FALSE;
   return TRUE;

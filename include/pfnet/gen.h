@@ -37,7 +37,8 @@
 #define GEN_PROP_REG 0x02       /**< @brief Property: regulating generator */
 #define GEN_PROP_NOT_REG 0x04   /**< @brief Property: non-regulating generator */
 #define GEN_PROP_NOT_SLACK 0x08 /**< @brief Property: non-slack generator */
-#define GEN_PROP_P_ADJUST 0x10  /**< @brief Property: P adjustable (Pmin < Pmax) */
+#define GEN_PROP_NOT_OUT 0x10   /**< @brief Property: generator not on outage */
+#define GEN_PROP_P_ADJUST 0x20  /**< @brief Property: P adjustable (Pmin < Pmax) */
 /** @} */
 
 // Generator

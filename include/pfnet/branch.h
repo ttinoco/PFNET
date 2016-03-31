@@ -46,6 +46,7 @@
 #define BRANCH_PROP_TAP_CHANGER_V 0x02 /**< @brief Property: tap-changing transformer that regulates voltage */
 #define BRANCH_PROP_TAP_CHANGER_Q 0x04 /**< @brief Property: tap-changing transformer that regulates reactive flow */
 #define BRANCH_PROP_PHASE_SHIFTER 0x08 /**< @brief Property: phase-shiting transformer that regulates active flow */
+#define BRANCH_PROP_NOT_OUT 0x10       /**< @brief Property: branch not on outage */
 /** @} */
 
 // Branch

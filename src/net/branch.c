@@ -442,6 +442,8 @@ BOOL BRANCH_has_properties(void* vbr, char prop) {
     return FALSE;
   if ((prop & BRANCH_PROP_PHASE_SHIFTER) && !BRANCH_is_phase_shifter(br))
     return FALSE;
+  if ((prop & BRANCH_PROP_NOT_OUT) && BRANCH_is_on_outage(br))
+    return FALSE;
   return TRUE;
 }
 

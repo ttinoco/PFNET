@@ -23,6 +23,7 @@ cdef extern from "pfnet/gen.h":
     cdef char GEN_PROP_REG
     cdef char GEN_PROP_NOT_REG
     cdef char GEN_PROP_NOT_SLACK
+    cdef char GEN_PROP_NOT_OUT
     cdef char GEN_PROP_P_ADJUST
 
     REAL GEN_get_sens_P_u_bound(Gen* gen)
