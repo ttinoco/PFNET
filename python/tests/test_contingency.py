@@ -717,6 +717,97 @@ class TestContingency(unittest.TestCase):
                 counter += 1
                 if counter > TEST_BRANCHES:
                     break
+
+    def test_dc_flow_lim(self):
+
+        net = self.net
+
+        for case in test_cases.CASES:
+
+            net.clear_properties()
+            net.load(case)
+            net.clear_flags()
+
+            # variables
+            net.set_flags(pf.OBJ_BUS,
+                          pf.FLAG_VARS,
+                          pf.BUS_PROP_NOT_SLACK,
+                          pf.BUS_VAR_VANG)
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_VARS,
+                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          pf.BRANCH_VAR_PHASE)
+            self.assertEqual(net.num_vars,
+                             (net.num_buses-net.get_num_slack_buses() +
+                              net.get_num_phase_shifters()))
+
+            # pre contingency
+            constr = pf.Constraint(pf.CONSTR_TYPE_DC_FLOW_LIM,net)
+            constr.analyze()
+            constr.eval(net.get_var_values())
+            G = constr.G.copy()
+            l = constr.l.copy()
+            u = constr.u.copy()
+            x = net.get_var_values()
+           
+            # gen outages
+            counter = 0
+            for gen in net.generators:
+ 
+                cont = pf.Contingency()
+                cont.add_gen_outage(gen)
+                cont.apply()
+            
+                constr.del_matvec()
+                constr.analyze()                
+                constr.eval(x)
+                
+                self.assertEqual((G-constr.G).nnz,0)
+                self.assertEqual(np.linalg.norm(l-constr.l),0.)
+                self.assertEqual(np.linalg.norm(u-constr.u),0.)
+
+                cont.clear()
+                counter += 1
+                if counter > TEST_GENS:
+                    break
+
+            # branch outages
+            counter = 0
+            for br in net.branches:
+                
+                if br.bus_from.degree == 1 or br.bus_to.degree == 1:
+                    continue
+                
+                cont = pf.Contingency()
+                cont.add_branch_outage(br)
+                cont.apply()
+
+                constr.del_matvec()
+                constr.analyze()                
+                constr.eval(net.get_var_values())
+
+                lnew = constr.l.copy()
+                unew = constr.u.copy()
+                Gnew = constr.G.copy()
+
+                self.assertTupleEqual(lnew.shape,(l.size-1,))
+                self.assertTupleEqual(unew.shape,(u.size-1,))
+                self.assertTupleEqual(Gnew.shape,(G.shape[0]-1,G.shape[1]))
+
+                self.assertLess(np.linalg.norm(lnew-np.hstack((l[:br.index],l[br.index+1:])),np.inf),1e-8)
+                self.assertLess(np.linalg.norm(unew-np.hstack((u[:br.index],u[br.index+1:])),np.inf),1e-8)
+                indices = G.row != br.index
+                row = G.row[indices]
+                row = row - 1*(row>br.index)
+                col = G.col[indices]
+                data = G.data[indices] 
+                Gcut = coo_matrix((data,(row,col)),shape=(net.num_branches-1,net.num_vars))
+                self.assertEqual((Gnew-Gcut).nnz,0)
+
+                cont.clear()
+                counter += 1
+                if counter > TEST_BRANCHES:
+                    break
  
     def tearDown(self):
         
