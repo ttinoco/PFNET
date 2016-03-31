@@ -71,4 +71,3 @@ cdef extern from "pfnet/branch.h":
     void BRANCH_set_ratingA(Branch* br, REAL r)
     void BRANCH_set_ratingB(Branch* br, REAL r)
     void BRANCH_set_ratingC(Branch* br, REAL r)
-    void BRANCH_set_outage(Branch* branch, bint outage)

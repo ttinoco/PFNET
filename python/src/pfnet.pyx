@@ -928,7 +928,6 @@ cdef class Branch:
     property outage:
         """ Flag that indicates whehter branch is on outage. """
         def __get__(self): return cbranch.BRANCH_is_on_outage(self._c_ptr)
-        def __set__(self,value): cbranch.BRANCH_set_outage(self._c_ptr,value)
 
 cdef new_Branch(cbranch.Branch* b):
     if b is not NULL:
@@ -1138,7 +1137,6 @@ cdef class Generator:
     property outage:
         """ Flag that indicates whehter generator is on outage. """
         def __get__(self): return cgen.GEN_is_on_outage(self._c_ptr)
-        def __set__(self,value): cgen.GEN_set_outage(self._c_ptr,value)
 
 cdef new_Generator(cgen.Gen* g):
     if g is not NULL:

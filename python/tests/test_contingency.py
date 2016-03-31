@@ -39,32 +39,18 @@ class TestContingency(unittest.TestCase):
                 self.assertFalse(gen.outage)
             for branch in net.branches:
                 self.assertFalse(branch.is_on_outage())
-                self.assertFalse(branch.outage)
+                self.assertFalse(branch.outage)            
 
             # outage set
-            gen = net.get_gen(net.num_gens-1)
+            gen = net.get_gen(0)
             branch = net.get_branch(10)
-            gen.outage = True
-            branch.outage = True
-            for g in net.generators:
-                if g.index == net.num_gens-1:
-                    self.assertTrue(g.is_on_outage())
-                    self.assertTrue(g.outage)
-                else:
-                    self.assertFalse(g.is_on_outage())
-                    self.assertFalse(g.outage)
-            for b in net.branches:
-                if b.index == 10:
-                    self.assertTrue(b.is_on_outage())
-                    self.assertTrue(b.outage)
-                else:
-                    self.assertFalse(b.is_on_outage())
-                    self.assertFalse(b.outage)
-            gen.outage = False
-            branch.outage = False
-            self.assertEqual(len([g for g in net.generators if not g.outage]),net.num_gens)
-            self.assertEqual(len([b for b in net.branches if not b.outage]),net.num_branches)
-
+            def s1():
+                gen.outage = True
+            def s2():
+                branch.outage = True
+            self.assertRaises(AttributeError,s1)
+            self.assertRaises(AttributeError,s2)
+            
             # contingency
             g0 = net.get_gen(0)
             bus0 = g0.bus

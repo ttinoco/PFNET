@@ -57,4 +57,3 @@ cdef extern from "pfnet/gen.h":
     void GEN_set_cost_coeff_Q0(Gen* gen, REAL c)
     void GEN_set_cost_coeff_Q1(Gen* gen, REAL c)
     void GEN_set_cost_coeff_Q2(Gen* gen, REAL c)
-    void GEN_set_outage(Gen* gen, bint outage)

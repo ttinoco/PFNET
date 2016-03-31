@@ -49,6 +49,7 @@ BOOL NET_check(Net* net, BOOL verbose);
 void NET_clear_data(Net* net);
 void NET_clear_error(Net* net);
 void NET_clear_flags(Net* net);
+void NET_clear_outages(Net* net);
 void NET_clear_properties(Net* net);
 void NET_clear_sensitivities(Net* net);
 Bus* NET_create_sorted_bus_list(Net* net, int sort_by);

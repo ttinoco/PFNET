@@ -380,6 +380,16 @@ void NET_clear_flags(Net* net) {
   net->num_sparse = 0;
 }
 
+void NET_clear_outages(Net* net) {
+  int i;
+  if (!net)
+    return;
+  for (i = 0; i < net->num_gens; i++)
+    GEN_set_outage(NET_get_gen(net,i),FALSE);
+  for (i = 0; i < net->num_branches; i++)
+    BRANCH_set_outage(NET_get_branch(net,i),FALSE);
+}
+
 void NET_clear_properties(Net* net) {
   int i;
   if (net) {
