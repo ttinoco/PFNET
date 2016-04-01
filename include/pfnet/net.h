@@ -77,6 +77,7 @@ int NET_get_num_buses_reg_by_tran_only(Net* net);
 int NET_get_num_buses_reg_by_shunt(Net* net);
 int NET_get_num_buses_reg_by_shunt_only(Net* net);
 int NET_get_num_branches(Net* net);
+int NET_get_num_branches_not_on_outage(Net* net);
 int NET_get_num_fixed_trans(Net* net);
 int NET_get_num_lines(Net* net);
 int NET_get_num_phase_shifters(Net* net);

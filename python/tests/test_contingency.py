@@ -113,6 +113,7 @@ class TestContingency(unittest.TestCase):
                 self.assertEqual(net.get_num_gens_not_on_outage(),net.num_gens-1)
                 self.assertEqual(len([g for g in net.generators if g.outage]),1)
             self.assertEqual(len([b for b in net.branches if b.outage]),2)
+            self.assertEqual(net.get_num_branches_not_on_outage(),net.num_branches-2)
             for g in net.generators:
                 if g.index == 0 or g.index == 5:
                     self.assertFalse(g.is_regulator())

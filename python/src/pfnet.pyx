@@ -1959,6 +1959,17 @@ cdef class Network:
 
         return cnet.NET_get_num_branches(self._c_net)
 
+    def get_num_branches_not_on_outage(self):
+        """
+        Gets number of branches in the network that are not on outage.
+
+        Returns
+        -------
+        num : int
+        """
+        
+        return cnet.NET_get_num_branches_not_on_outage(self._c_net)
+
     def get_num_fixed_trans(self):
         """
         Gets number of fixed transformers in the network.

@@ -950,6 +950,18 @@ int NET_get_num_branches(Net* net) {
     return 0;
 }
 
+int NET_get_num_branches_not_on_outage(Net* net) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  for(i = 0; i < net->num_branches; i++) {
+    if (!BRANCH_is_on_outage(BRANCH_array_get(net->branch,i)))
+      n++;
+  }
+  return n;
+}
+
 int NET_get_num_fixed_trans(Net* net) {
   int i;
   int n = 0;
