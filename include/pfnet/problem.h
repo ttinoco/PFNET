@@ -31,6 +31,7 @@ void PROB_apply_heuristics(Prob* p, Vec* point);
 void PROB_eval(Prob* p, Vec* point);
 void PROB_store_sens(Prob* p, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void PROB_del(Prob* p);
+void PROB_del_matvec(Prob* p);
 void PROB_clear(Prob* p);
 void PROB_combine_H(Prob* p, Vec* coeff, BOOL ensure_psd);
 Constr* PROB_find_constr(Prob* p, int constr_type);

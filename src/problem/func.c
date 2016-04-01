@@ -444,8 +444,10 @@ void FUNC_count_branch(Func* f, Branch* b) {
 }
 
 void FUNC_allocate(Func* f) {
-  if (f && f->func_allocate && FUNC_is_safe_to_count(f))
+  if (f && f->func_allocate && FUNC_is_safe_to_count(f)) {
+    FUNC_del_matvec(f);
     (*(f->func_allocate))(f);
+  }
 }
 
 void FUNC_clear(Func* f) {

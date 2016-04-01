@@ -843,8 +843,10 @@ void CONSTR_count_branch(Constr* c, Branch* br) {
 }
 
 void CONSTR_allocate(Constr* c) {
-  if (c && c->func_allocate && CONSTR_is_safe_to_count(c))
+  if (c && c->func_allocate && CONSTR_is_safe_to_count(c)) {
+    CONSTR_del_matvec(c);
     (*(c->func_allocate))(c);
+  }
 }
 
 void CONSTR_clear(Constr* c) {

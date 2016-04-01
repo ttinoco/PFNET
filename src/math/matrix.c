@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -28,7 +28,7 @@ void MAT_add_to_dentry(Mat* m, int index, REAL value) {
     m->data[index] += value;
 }
 
-void MAT_array_del(Mat *m, int size) {
+void MAT_array_del(Mat* m, int size) {
   int i;
   if (m) {
     for (i = 0; i < size; i++) {
@@ -144,6 +144,7 @@ void MAT_init(Mat* m) {
 
 Mat* MAT_new(int size1, int size2, int nnz) {
   Mat* m = (Mat*)malloc(sizeof(Mat));
+  MAT_init(m);
   m->size1 = size1;
   m->size2 = size2;
   m->row = (int*)calloc(nnz,sizeof(int));
@@ -218,7 +219,5 @@ void MAT_show(Mat* m) {
     printf("size1 : %d\n",m->size1);
     printf("size2 : %d\n",m->size2);
     printf("nnz   : %d\n",m->nnz);
-    //for (i = 0; i < m->nnz; i++) 
-    //  printf("(%d,%d,%.2e)\n",m->row[i],m->col[i],m->data[i]);
   }
 }
