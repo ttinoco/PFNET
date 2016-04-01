@@ -50,6 +50,16 @@ class TestContingency(unittest.TestCase):
                 branch.outage = True
             self.assertRaises(AttributeError,s1)
             self.assertRaises(AttributeError,s2)
+
+            # outages at construction
+            c0 = pf.Contingency([net.get_gen(0)],
+                                [net.get_branch(2)])
+            self.assertTrue(c0.has_gen_outage(net.get_gen(0)))
+            self.assertTrue(c0.has_branch_outage(net.get_branch(2)))
+            c1 = pf.Contingency(gens=[net.get_gen(0)],
+                                branches=[net.get_branch(4)])
+            self.assertTrue(c1.has_gen_outage(net.get_gen(0)))
+            self.assertTrue(c1.has_branch_outage(net.get_branch(4)))
             
             # contingency
             g0 = net.get_gen(0)

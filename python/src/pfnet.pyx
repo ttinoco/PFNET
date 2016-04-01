@@ -2449,24 +2449,38 @@ cdef class Contingency:
     cdef ccont.Cont* _c_cont
     cdef bint alloc
     
-    def __init__(self,alloc=True):
+    def __init__(self,gens=None,branches=None,alloc=True):
         """
         Contingency class.
         
         Parameters
         ----------
+        gens : list
+        branches : list
         alloc : {``True``, ``False``}
         """
 
         pass
      
-    def __cinit__(self,alloc=True):
+    def __cinit__(self,gens=None,branches=None,alloc=True):
         
+        cdef Generator g
+        cdef Branch br
+
         if alloc:
             self._c_cont = ccont.CONT_new()
         else:
             self._c_cont = NULL
         self.alloc = alloc
+        
+        if gens:
+            for gen in gens:
+                g = gen
+                ccont.CONT_add_gen_outage(self._c_cont,g._c_ptr)
+        if branches:
+            for branch in branches:
+                br = branch
+                ccont.CONT_add_branch_outage(self._c_cont,br._c_ptr)
 
     def __dealloc__(self):
         """
