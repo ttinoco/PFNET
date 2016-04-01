@@ -1029,6 +1029,18 @@ int NET_get_num_gens(Net* net) {
     return 0;
 }
 
+int NET_get_num_gens_not_on_outage(Net* net) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  for(i = 0; i < net->num_gens; i++) {
+    if (!GEN_is_on_outage(GEN_array_get(net->gen,i)))
+      n++;
+  }
+  return n;
+}
+
 int NET_get_num_reg_gens(Net* net) {
   int i;
   int n = 0;

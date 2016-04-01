@@ -2036,6 +2036,17 @@ cdef class Network:
         
         return cnet.NET_get_num_gens(self._c_net)
 
+    def get_num_gens_not_on_outage(self):
+        """
+        Gets number of generators in the network that are not on outage.
+
+        Returns
+        -------
+        num : int
+        """
+        
+        return cnet.NET_get_num_gens_not_on_outage(self._c_net)
+
     def get_num_reg_gens(self):
         """
         Gets number generators in the network that provide voltage regulation.

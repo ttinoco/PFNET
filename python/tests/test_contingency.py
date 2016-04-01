@@ -107,8 +107,10 @@ class TestContingency(unittest.TestCase):
             self.assertEqual(len([b for b in net.branches if b.outage]),0)
             cont.apply()
             if net.num_gens > 5:
+                self.assertEqual(net.get_num_gens_not_on_outage(),net.num_gens-2)
                 self.assertEqual(len([g for g in net.generators if g.outage]),2)
             else:
+                self.assertEqual(net.get_num_gens_not_on_outage(),net.num_gens-1)
                 self.assertEqual(len([g for g in net.generators if g.outage]),1)
             self.assertEqual(len([b for b in net.branches if b.outage]),2)
             for g in net.generators:
