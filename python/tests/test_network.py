@@ -31,18 +31,28 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.bus_v_min,0.)
             self.assertEqual(net.bus_P_mis,0.)
             self.assertEqual(net.bus_Q_mis,0.)
+            
+            self.assertEqual(net.gen_P_cost,0.)
             self.assertEqual(net.gen_v_dev,0.)
             self.assertEqual(net.gen_Q_vio,0.)
+            self.assertEqual(net.gen_P_vio,0.)
+            
             self.assertEqual(net.tran_v_vio,0.)
             self.assertEqual(net.tran_r_vio,0.)
+            self.assertEqual(net.tran_p_vio,0.)
+
             self.assertEqual(net.shunt_v_vio,0.)
             self.assertEqual(net.shunt_b_vio,0.)
-            
+
+            self.assertEqual(net.load_P_util,0.)
+            self.assertEqual(net.load_P_vio,0.)
+
             net.load(case)
             
             self.assertGreater(net.num_buses,0)
             self.assertGreater(net.num_gens,0)
             self.assertGreater(net.num_branches,0)
+            self.assertGreater(net.num_loads,0)
             self.assertGreaterEqual(net.num_shunts,0)
             self.assertGreaterEqual(net.num_vargens,0)
             self.assertEqual(net.num_vars,0)
@@ -77,6 +87,8 @@ class TestNetwork(unittest.TestCase):
             # Counters
             self.assertEqual(net.get_num_P_adjust_gens(),
                              len([g for g in net.generators if g.P_min < g.P_max]))
+            self.assertEqual(net.get_num_P_adjust_loads(),
+                             len([l for l in net.loads if l.P_min < l.P_max]))
 
     def test_variables(self):
 
@@ -88,6 +100,7 @@ class TestNetwork(unittest.TestCase):
             net.load(case)
             net.clear_flags()
 
+            # P adjust gens
             num_adj = 0
             for gen in net.generators:
                 if gen.P_min < gen.P_max:
@@ -96,7 +109,6 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.num_vars,0)
             self.assertEqual(net.get_num_P_adjust_gens(),num_adj)
 
-            # P adjust gens
             net.set_flags(pf.OBJ_GEN,
                           pf.FLAG_VARS,
                           pf.GEN_PROP_P_ADJUST,
@@ -104,6 +116,36 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.num_vars,
                              net.get_num_P_adjust_gens())
             
+            net.clear_flags()
+            
+            # P adjust loads
+            for load in net.loads:
+                if load.index % 2 == 0:
+                    load.P_min = 0
+                    load.P_max = 10
+                    self.assertEqual(load.P_min,0.)
+                    self.assertEqual(load.P_max,10.)
+            num_adj = 0
+            for load in net.loads:
+                if load.P_min < load.P_max:
+                    num_adj += 1
+
+            self.assertEqual(net.num_vars,0)
+            self.assertEqual(net.get_num_P_adjust_loads(),num_adj)
+
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_VARS,
+                          pf.LOAD_PROP_P_ADJUST,
+                          pf.LOAD_VAR_P)
+            self.assertEqual(net.num_vars,
+                             net.get_num_P_adjust_loads())
+           
+            for load in net.loads:
+                if load.index % 2 == 0:
+                    self.assertTrue(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+                else:
+                    self.assertFalse(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+
     def test_buses(self):
 
         net = self.net
@@ -464,7 +506,7 @@ class TestNetwork(unittest.TestCase):
             self.assertTrue(net.num_loads > 0)
 
             self.assertEqual(net.num_loads,len(net.loads))
-
+            
             self.assertEqual(net.num_loads,sum([len(b.loads) for b in net.buses]))
 
             for i in range(net.num_loads):
@@ -481,10 +523,50 @@ class TestNetwork(unittest.TestCase):
 
                 self.assertTrue(load.bus)
 
+                # P, Q
                 load.P = 0.3241
                 load.Q = 0.1212
                 self.assertEqual(load.P,0.3241)
                 self.assertEqual(load.Q,0.1212)
+
+                # P limits
+                load.P_min = -1.23
+                load.P_max = 2123.
+                self.assertEqual(load.P_min,-1.23)
+                self.assertEqual(load.P_max,2123.)
+
+                # adjustable
+                self.assertTrue(load.is_P_adjustable())
+                load.P_min = 0.5
+                load.P_max = 0.5
+                self.assertFalse(load.is_P_adjustable())
+                load.P_min = 1.
+                load.P_max = -2.
+                self.assertFalse(load.is_P_adjustable())
+
+                # utiltiy
+                if case.split('.')[-1] == 'raw':
+                    self.assertEqual(load.util_coeff_Q0,0.)
+                    self.assertEqual(load.util_coeff_Q1,2000.)
+                    self.assertEqual(load.util_coeff_Q2,-100.)
+                load.util_coeff_Q0 = 1.4
+                load.util_coeff_Q1 = 42.
+                load.util_coeff_Q2 = -2.5
+                self.assertEqual(load.util_coeff_Q0,1.4)
+                self.assertEqual(load.util_coeff_Q1,42.)
+                self.assertEqual(load.util_coeff_Q2,-2.5)
+
+                # P util
+                self.assertEqual(load.P_util,
+                                 (load.util_coeff_Q0+
+                                  load.util_coeff_Q1*load.P+
+                                  load.util_coeff_Q2*(load.P**2.)))
+                self.assertEqual(load.P_util,
+                                 (1.4+42.*load.P-2.5*(load.P**2.)))
+
+                # sens
+                self.assertEqual(load.sens_P_u_bound,0.)
+                self.assertEqual(load.sens_P_l_bound,0.)
 
     def test_vargens(self):
 

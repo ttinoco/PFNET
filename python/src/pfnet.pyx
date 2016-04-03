@@ -1112,17 +1112,17 @@ cdef class Generator:
         def __get__(self): return cgen.GEN_get_P_cost(self._c_ptr)
 
     property cost_coeff_Q0:
-        """ Coefficient for quadratic genertion cost (constant term, units of $/hr). """
+        """ Coefficient for genertion cost function (constant term, units of $/hr). """
         def __get__(self): return cgen.GEN_get_cost_coeff_Q0(self._c_ptr)
         def __set__(self,c): cgen.GEN_set_cost_coeff_Q0(self._c_ptr,c)
 
     property cost_coeff_Q1:
-        """ Coefficient for quadratic genertion cost (linear term. units of $/(hr p.u.)). """
+        """ Coefficient for genertion cost function (linear term. units of $/(hr p.u.)). """
         def __get__(self): return cgen.GEN_get_cost_coeff_Q1(self._c_ptr)
         def __set__(self,c): cgen.GEN_set_cost_coeff_Q1(self._c_ptr,c)
 
     property cost_coeff_Q2:
-        """ Coefficient for quadratic genertion cost (quadratic term, units of $/(hr p.u.^2)). """
+        """ Coefficient for genertion cost function (quadratic term, units of $/(hr p.u.^2)). """
         def __get__(self): return cgen.GEN_get_cost_coeff_Q2(self._c_ptr)
         def __set__(self,c): cgen.GEN_set_cost_coeff_Q2(self._c_ptr,c)
 
@@ -1296,6 +1296,16 @@ cdef new_Shunt(cshunt.Shunt* s):
 # Load
 ######
 
+# Properties
+LOAD_PROP_ANY = cload.LOAD_PROP_ANY
+LOAD_PROP_P_ADJUST = cload.LOAD_PROP_P_ADJUST
+
+# Variables
+LOAD_VAR_P = cload.LOAD_VAR_P
+
+# Infinity
+LOAD_INF_P = cload.LOAD_INF_P
+
 class LoadError(Exception):
     """ 
     Load error exception.
@@ -1335,6 +1345,33 @@ cdef class Load:
 
         return new_CPtr(self._c_ptr)
 
+    def is_P_adjustable(self):
+        """ 
+        Determines whether the load has adjustable active power.
+        
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+        
+        return cload.LOAD_is_P_adjustable(self._c_ptr)
+
+    def has_flags(self,fmask,vmask):
+        """ 
+        Determines whether the load has the flags associated with
+        certain quantities set. 
+        Parameters
+        ----------
+        fmask : int (:ref:`ref_net_flag`)
+        vmask : int (:ref:`ref_load_var`)
+        
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+
+        return cload.LOAD_has_flags(self._c_ptr,fmask,vmask)
+
     property obj_type:
         """ Object type (int). """
         def __get__(self): return cload.LOAD_get_obj_type(self._c_ptr)
@@ -1342,7 +1379,11 @@ cdef class Load:
     property index:
         """ Load index (int). """
         def __get__(self): return cload.LOAD_get_index(self._c_ptr)
-        
+       
+    property index_P:
+        """ Index of load active power variable (int). """
+        def __get__(self): return cload.LOAD_get_index_P(self._c_ptr)
+ 
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which load is connected. """
         def __get__(self): return new_Bus(cload.LOAD_get_bus(self._c_ptr))
@@ -1351,11 +1392,48 @@ cdef class Load:
         """ Load active power (p.u. system base MVA) (float). """
         def __get__(self): return cload.LOAD_get_P(self._c_ptr)
         def __set__(self,value): cload.LOAD_set_P(self._c_ptr,value)
-            
+       
+    property P_max:
+        """ Load active power upper limit (p.u. system base MVA) (float). """
+        def __get__(self): return cload.LOAD_get_P_max(self._c_ptr)
+        def __set__(self,P): cload.LOAD_set_P_max(self._c_ptr,P)
+
+    property P_min:
+        """ Load active power lower limit (p.u. system base MVA) (float). """
+        def __get__(self): return cload.LOAD_get_P_min(self._c_ptr)
+        def __set__(self,P): cload.LOAD_set_P_min(self._c_ptr,P)
+     
     property Q:
         """ Load reactive power (p.u. system base MVA) (float). """
         def __get__(self): return cload.LOAD_get_Q(self._c_ptr)
         def __set__(self,value): cload.LOAD_set_Q(self._c_ptr,value)
+
+    property P_util:
+        """ Active power load utility ($/hr). """
+        def __get__(self): return cload.LOAD_get_P_util(self._c_ptr)
+
+    property util_coeff_Q0:
+        """ Coefficient for consumption utility function (constant term, units of $/hr). """
+        def __get__(self): return cload.LOAD_get_util_coeff_Q0(self._c_ptr)
+        def __set__(self,c): cload.LOAD_set_util_coeff_Q0(self._c_ptr,c)
+
+    property util_coeff_Q1:
+        """ Coefficient for consumption utility function (linear term. units of $/(hr p.u.)). """
+        def __get__(self): return cload.LOAD_get_util_coeff_Q1(self._c_ptr)
+        def __set__(self,c): cload.LOAD_set_util_coeff_Q1(self._c_ptr,c)
+
+    property util_coeff_Q2:
+        """ Coefficient for consumption utility function (quadratic term, units of $/(hr p.u.^2)). """
+        def __get__(self): return cload.LOAD_get_util_coeff_Q2(self._c_ptr)
+        def __set__(self,c): cload.LOAD_set_util_coeff_Q2(self._c_ptr,c)
+
+    property sens_P_u_bound:
+        """ Objective function sensitivity with respect to active power upper bound (float). """
+        def __get__(self): return cload.LOAD_get_sens_P_u_bound(self._c_ptr)   
+
+    property sens_P_l_bound:
+        """ Objective function sensitivity with respect to active power lower bound (float). """
+        def __get__(self): return cload.LOAD_get_sens_P_l_bound(self._c_ptr)
 
 cdef new_Load(cload.Load* l):
     if l is not NULL:
@@ -2102,6 +2180,17 @@ cdef class Network:
 
         return cnet.NET_get_num_loads(self._c_net)
 
+    def get_num_P_adjust_loads(self):
+        """
+        Gets number of loads in the network that have adjustable active powers.
+
+        Returns
+        -------
+        num : int
+        """
+
+        return cnet.NET_get_num_P_adjust_loads(self._c_net)
+
     def get_num_shunts(self):
         """
         Gets number of shunts in the network.
@@ -2169,6 +2258,8 @@ cdef class Network:
                 'tran_p_vio': self.tran_p_vio,
                 'shunt_v_vio': self.shunt_v_vio,
                 'shunt_b_vio': self.shunt_b_vio,
+                'load_P_util': self.load_P_util,
+                'load_P_vio': self.load_P_vio, 
                 'num_actions': self.num_actions}
 
     def has_error(self):
@@ -2429,6 +2520,14 @@ cdef class Network:
     property shunt_b_vio:
         """ Largest switched shunt susceptance limit violation (p.u.) (float). """
         def __get__(self): return cnet.NET_get_shunt_b_vio(self._c_net)
+
+    property load_P_util:
+        """ Total active power consumption utility ($/hr) (float). """
+        def __get__(self): return cnet.NET_get_load_P_util(self._c_net)
+
+    property load_P_vio:
+        """ Largest load active power limit violation (MW) (float). """
+        def __get__(self): return cnet.NET_get_load_P_vio(self._c_net)
 
     property num_actions:
         """ Number of control adjustments (int). """

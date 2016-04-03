@@ -28,14 +28,14 @@ struct Gen {
   char sparse;         /**< @brief Flags for indicating which control adjustments should be sparse */
   
   // Active power
-  REAL P;              /**< @brief Generator active power (p.u. system base power) */
-  REAL P_max;          /**< @brief Maximum generator active power (p.u.) */
-  REAL P_min;          /**< @brief Minimum generator active power (p.u.) */
+  REAL P;              /**< @brief Generator active power production (p.u. system base power) */
+  REAL P_max;          /**< @brief Maximum generator active power production (p.u.) */
+  REAL P_min;          /**< @brief Minimum generator active power production (p.u.) */
 
   // Reactive power
-  REAL Q;              /**< @brief Generator reactive power (p.u. system base power) */
-  REAL Q_max;          /**< @brief Maximum generator reactive power (p.u.) */
-  REAL Q_min;          /**< @brief Minimum generator reactive power (p.u.) */
+  REAL Q;              /**< @brief Generator reactive power production (p.u. system base power) */
+  REAL Q_max;          /**< @brief Maximum generator reactive power production (p.u.) */
+  REAL Q_min;          /**< @brief Minimum generator reactive power production (p.u.) */
 
   // Cost
   REAL cost_coeff_Q0;  /**< @brief Generator cost coefficient (constant term, units of $/hr ) */
@@ -223,19 +223,31 @@ REAL GEN_get_P_max(Gen* gen) {
 }
 
 REAL GEN_get_P_min(Gen* gen) {
-  return gen->P_min;
+  if (gen)
+    return gen->P_min;
+  else 
+    return 0;
 }
 
 REAL GEN_get_Q(Gen* gen) {
-  return gen->Q;
+  if (gen)
+    return gen->Q;
+  else
+    return 0;
 }
 
 REAL GEN_get_Q_max(Gen* gen) {
-  return gen->Q_max;
+  if (gen)
+    return gen->Q_max;
+  else
+    return 0;
 }
 
 REAL GEN_get_Q_min(Gen* gen) {
-  return gen->Q_min;
+  if (gen)
+    return gen->Q_min;
+  else
+    return 0;
 }
 
 void GEN_get_var_values(Gen* gen, Vec* values, int code) {
@@ -317,39 +329,41 @@ BOOL GEN_has_properties(void* vgen, char prop) {
 }
 
 void GEN_init(Gen* gen) {
-
-  gen->obj_type = OBJ_GEN;
-
-  gen->bus = NULL;
-  gen->reg_bus = NULL;
-
-  gen->outage = FALSE;
-  gen->fixed = 0x00;
-  gen->bounded = 0x00;
-  gen->sparse = 0x00;
-  gen->vars = 0x00;
-
-  gen->P = 0;
-  gen->P_max = 0;
-  gen->P_min = 0;
-
-  gen->Q = 0;
-  gen->Q_max = 0;
-  gen->Q_min = 0;
-
-  gen->cost_coeff_Q0 = 0;
-  gen->cost_coeff_Q1 = 2000.;
-  gen->cost_coeff_Q2 = 100.;
-
-  gen->index = 0;
-  gen->index_P = 0;
-  gen->index_Q = 0;
-
-  gen->sens_P_u_bound = 0;
-  gen->sens_P_l_bound = 0;
-
-  gen->next = NULL;
-  gen->reg_next = NULL;
+  if (gen) {
+    
+    gen->obj_type = OBJ_GEN;
+    
+    gen->bus = NULL;
+    gen->reg_bus = NULL;
+    
+    gen->outage = FALSE;
+    gen->fixed = 0x00;
+    gen->bounded = 0x00;
+    gen->sparse = 0x00;
+    gen->vars = 0x00;
+    
+    gen->P = 0;
+    gen->P_max = 0;
+    gen->P_min = 0;
+    
+    gen->Q = 0;
+    gen->Q_max = 0;
+    gen->Q_min = 0;
+    
+    gen->cost_coeff_Q0 = 0;
+    gen->cost_coeff_Q1 = 2000.;
+    gen->cost_coeff_Q2 = 100.;
+    
+    gen->index = 0;
+    gen->index_P = 0;
+    gen->index_Q = 0;
+    
+    gen->sens_P_u_bound = 0;
+    gen->sens_P_l_bound = 0;
+    
+    gen->next = NULL;
+    gen->reg_next = NULL;
+  }
 }
 
 BOOL GEN_is_on_outage(Gen* gen) {
