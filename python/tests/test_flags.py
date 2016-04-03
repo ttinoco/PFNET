@@ -29,6 +29,16 @@ class TestFlags(unittest.TestCase):
             # add vargens
             net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
 
+            # loads
+            lcount = 0
+            for load in net.loads:
+                if load.index % 2 == 0:
+                    load.P_min = -10.
+                    load.P_max = 20.
+                    lcount += 1
+            self.assertEqual(lcount,net.get_num_P_adjust_loads())
+            self.assertGreater(lcount,0)
+
             num_vars = 0
 
             self.assertEqual(net.num_vars,0)
@@ -101,6 +111,20 @@ class TestFlags(unittest.TestCase):
                           pf.GEN_PROP_REG,
                           pf.GEN_VAR_P|pf.GEN_VAR_Q)
             num_vars += 2*net.get_num_reg_gens() - net.get_num_slack_gens()
+            self.assertEqual(net.num_vars,num_vars)
+
+            # Loads
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_VARS,
+                          pf.LOAD_PROP_P_ADJUST,
+                          pf.LOAD_VAR_P)
+            num_vars += net.get_num_P_adjust_loads()
+            self.assertEqual(net.num_vars,num_vars)
+
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_VARS,
+                          pf.LOAD_PROP_P_ADJUST,
+                          pf.LOAD_VAR_P)
             self.assertEqual(net.num_vars,num_vars)
 
             # Branches
@@ -202,6 +226,13 @@ class TestFlags(unittest.TestCase):
             num_vars += net.num_gens
             self.assertEqual(num_vars,net.num_vars)
 
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_VARS,
+                          pf.LOAD_PROP_ANY,
+                          pf.LOAD_VAR_P)
+            num_vars += net.num_loads
+            self.assertEqual(num_vars,net.num_vars)
+
             net.set_flags(pf.OBJ_SHUNT,
                           pf.FLAG_VARS,
                           pf.SHUNT_PROP_SWITCHED_V,
@@ -236,6 +267,12 @@ class TestFlags(unittest.TestCase):
                 self.assertNotEqual(vargen.Q,0.)
                 self.assertLess(np.abs(point[vargen.index_P]-vargen.P),1e-10)
                 self.assertLess(np.abs(point[vargen.index_Q]-vargen.Q),1e-10)
+
+            # check loads
+            for i in range(net.num_loads):
+                l = net.get_load(i)
+                self.assertTrue(l.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+                self.assertEqual(point[l.index_P],l.P)
 
     def test_tap_changer_v(self):
 
@@ -283,6 +320,10 @@ class TestFlags(unittest.TestCase):
                           pf.FLAG_BOUNDED,
                           pf.GEN_PROP_SLACK,
                           pf.GEN_VAR_P)
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_BOUNDED,
+                          pf.LOAD_PROP_ANY,
+                          pf.LOAD_VAR_P)
             net.set_flags(pf.OBJ_BRANCH,
                           pf.FLAG_BOUNDED,
                           pf.BRANCH_PROP_TAP_CHANGER_V,
@@ -297,7 +338,12 @@ class TestFlags(unittest.TestCase):
                              (net.get_num_tap_changers_v() +
                               net.get_num_buses_reg_by_tran() + 
                               net.get_num_slack_gens() +
-                              net.num_shunts))
+                              net.num_shunts +
+                              net.num_loads))
+                             
+            # loads
+            for load in net.loads:
+                self.assertTrue(load.has_flags(pf.FLAG_BOUNDED,pf.LOAD_VAR_P))
 
     def test_fixed(self):
 
@@ -321,6 +367,11 @@ class TestFlags(unittest.TestCase):
                           pf.GEN_PROP_NOT_REG,
                           pf.GEN_VAR_Q)
 
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_FIXED,
+                          pf.LOAD_PROP_ANY,
+                          pf.LOAD_VAR_P)
+
             net.set_flags(pf.OBJ_BRANCH,
                           pf.FLAG_FIXED,
                           pf.BRANCH_PROP_PHASE_SHIFTER,
@@ -341,7 +392,14 @@ class TestFlags(unittest.TestCase):
                               net.num_gens - net.get_num_reg_gens() + 
                               net.get_num_phase_shifters() +
                               net.get_num_switched_shunts()+
-                              net.num_vargens*2))
+                              net.num_vargens*2 +
+                              net.num_loads))
+
+            # loads
+            for load in net.loads:
+                self.assertFalse(load.has_flags(pf.FLAG_BOUNDED,pf.LOAD_VAR_P))
+                self.assertFalse(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+                self.assertTrue(load.has_flags(pf.FLAG_FIXED,pf.LOAD_VAR_P))
 
     def test_multiple_flags(self):
 
@@ -460,6 +518,22 @@ class TestFlags(unittest.TestCase):
             self.assertEqual(net.num_fixed,num_fixed)
 
             # loads
+            lcount = 0
+            for load in net.loads:
+                if load.index % 5 == 0:
+                    net.set_flags_of_component(load,
+                                               pf.FLAG_VARS,
+                                               pf.LOAD_VAR_P)
+                    lcount += 1
+            for load in net.loads:
+                if load.index % 5 == 0:
+                    self.assertTrue(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+                    self.assertFalse(load.has_flags(pf.FLAG_FIXED,pf.LOAD_VAR_P))
+                else:
+                    self.assertFalse(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+            num_vars += lcount
+            self.assertEqual(net.num_vars,num_vars)
+            self.assertEqual(net.num_fixed,num_fixed)
 
             # shunts
             for shunt in net.shunts:
