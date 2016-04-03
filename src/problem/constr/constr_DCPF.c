@@ -30,6 +30,7 @@ void CONSTR_DCPF_count_branch(Constr* c, Branch* br) {
   // Local variables
   Bus* bus[2];
   Gen* gen;
+  Load* load;
   Vargen* vargen;
   int* Acounter;
   char* bus_counted;
@@ -99,6 +100,17 @@ void CONSTR_DCPF_count_branch(Constr* c, Branch* br) {
 	
 	//*****************************
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // Pg var
+	  
+	  // A
+	  (*Acounter)++; // Pk
+	}
+      }
+
+      // Loads
+      for (load = BUS_get_load(bus[k]); load != NULL; load = LOAD_get_next(load)) {
+	
+	//*****************************
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) { // Pl var
 	  
 	  // A
 	  (*Acounter)++; // Pk
@@ -274,6 +286,25 @@ void CONSTR_DCPF_analyze_branch(Constr* c, Branch* br) {
 	}
       }
 
+      // Loads
+      for (load = BUS_get_load(bus[k]); load != NULL; load = LOAD_get_next(load)) {
+	
+	//*****************************
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) { // Pl var
+	  
+	  // A
+	  MAT_set_i(A,*Acounter,bus_index[k]); // Pk
+	  MAT_set_j(A,*Acounter,LOAD_get_index_P(load)); // Pl
+	  MAT_set_d(A,*Acounter,-1.);
+	  (*Acounter)++; 
+	}
+	else {
+	  
+	  // b
+	  VEC_add_to_entry(rhs,bus_index[k],LOAD_get_P(load));
+	}
+      }
+
       // Variable generators
       for (vargen = BUS_get_vargen(bus[k]); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
 	
@@ -291,13 +322,6 @@ void CONSTR_DCPF_analyze_branch(Constr* c, Branch* br) {
 	  // b
 	  VEC_add_to_entry(rhs,bus_index[k],-VARGEN_get_P(vargen));
 	}
-      }
-
-      // Loads
-      for (load = BUS_get_load(bus[k]); load != NULL; load = LOAD_get_next(load)) {
-	
-	// b
-	VEC_add_to_entry(rhs,bus_index[k],LOAD_get_P(load));
       }
     }
     

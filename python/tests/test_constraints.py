@@ -2165,7 +2165,7 @@ class TestConstraints(unittest.TestCase):
         for case in test_cases.CASES:
             
             net.load(case)
-
+            
             self.assertEqual(net.num_vars,0)
             
             # Add vargens
@@ -2188,6 +2188,10 @@ class TestConstraints(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.GEN_PROP_ANY,
                           pf.GEN_VAR_P)
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_VARS,
+                          pf.LOAD_PROP_ANY,
+                          pf.LOAD_VAR_P)
             net.set_flags(pf.OBJ_VARGEN,
                           pf.FLAG_VARS,
                           pf.VARGEN_PROP_ANY,
@@ -2198,7 +2202,8 @@ class TestConstraints(unittest.TestCase):
                           pf.BRANCH_VAR_PHASE)
             self.assertEqual(net.num_vars,
                              (net.num_buses-net.get_num_slack_buses() +
-                              net.num_gens + 
+                              net.num_gens +
+                              net.num_loads + 
                               net.num_vargens +
                               net.get_num_phase_shifters()))
             
@@ -2246,6 +2251,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.Aconstr_index,0)
             self.assertEqual(constr.Acounter,
                              (net.num_gens +
+                              net.num_loads + 
                               net.num_vargens +
                               4*net.num_branches - 
                               2*r +
@@ -2254,12 +2260,13 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(f.shape,(0,))
             self.assertTupleEqual(A.shape,(net.num_buses,net.num_vars))
             self.assertEqual(A.nnz,constr.Acounter)
-            self.assertTupleEqual(J.shape,(0,net.num_vars))            
+            self.assertTupleEqual(J.shape,(0,net.num_vars)) 
             
             constr.eval(x0)
             self.assertEqual(constr.Acounter,0)
             self.assertEqual(A.nnz,
                              (net.num_gens +
+                              net.num_loads + 
                               net.num_vargens +
                               4*net.num_branches - 
                               2*r +
@@ -2270,17 +2277,20 @@ class TestConstraints(unittest.TestCase):
             P2 = net.get_var_projection(pf.OBJ_GEN,pf.GEN_VAR_P)
             P3 = net.get_var_projection(pf.OBJ_VARGEN,pf.VARGEN_VAR_P)
             P4 = net.get_var_projection(pf.OBJ_BRANCH,pf.BRANCH_VAR_PHASE)
-            
+            P5 = net.get_var_projection(pf.OBJ_LOAD,pf.LOAD_VAR_P)
+
             G = A*P2.T
             R = A*P3.T
             Atheta = -A*P1.T
             Aphi = -A*P4.T
+            L = -A*P5.T
             x = np.random.randn(net.num_vars)
             p = P2*x
             r = P3*x
             theta = P1*x
             phi = P4*x
-            self.assertLess(np.linalg.norm((G*p+R*r-Atheta*theta-Aphi*phi)-A*x),1e-10)
+            l = P5*x
+            self.assertLess(np.linalg.norm((G*p+R*r-Atheta*theta-Aphi*phi-L*l)-A*x),1e-10)
 
             # Sensitivities
             for bus in net.buses:
@@ -2292,6 +2302,59 @@ class TestConstraints(unittest.TestCase):
                 self.assertNotEqual(bus.sens_P_balance,0.)
                 self.assertEqual(bus.sens_Q_balance,0.)
                 self.assertEqual(bus.sens_P_balance,new_sens[bus.index])
+                
+            # mismatches
+            mismatches = A*x0-b
+            for bus in net.buses:
+                mis = 0
+                for gen in bus.gens:
+                    mis += gen.P
+                for vargen in bus.vargens:
+                    mis += vargen.P
+                for load in bus.loads:
+                    mis -= load.P
+                for br in bus.branches_from:
+                    mis -= br.P_flow_DC
+                for br in bus.branches_to:
+                    mis += br.P_flow_DC
+                self.assertLess(np.abs(mismatches[bus.index]-mis),1e-8)
+
+            # no variables
+            net.clear_flags()
+            self.assertEqual(net.num_vars,0)
+            constr.del_matvec()
+            constr.analyze()
+            f1 = constr.f
+            J1 = constr.J
+            A1 = constr.A
+            b1 = constr.b
+            self.assertEqual(constr.Jcounter,0)
+            self.assertEqual(constr.Jconstr_index,0)
+            self.assertEqual(constr.Aconstr_index,0)
+            self.assertEqual(constr.Acounter,0)
+            self.assertTupleEqual(b1.shape,(net.num_buses,))
+            self.assertTupleEqual(f1.shape,(0,))
+            self.assertTupleEqual(A1.shape,(net.num_buses,net.num_vars))
+            self.assertEqual(A1.nnz,constr.Acounter)
+            self.assertTupleEqual(J1.shape,(0,net.num_vars))
+            x1 = net.get_var_values()
+            self.assertTrue(type(x1) is np.ndarray)
+            self.assertTupleEqual(x1.shape,(net.num_vars,))
+            
+            mismatches1 = A1*x1-b1
+            for bus in net.buses:
+                mis = 0
+                for gen in bus.gens:
+                    mis += gen.P
+                for vargen in bus.vargens:
+                    mis += vargen.P
+                for load in bus.loads:
+                    mis -= load.P
+                for br in bus.branches_from:
+                    mis -= br.P_flow_DC
+                for br in bus.branches_to:
+                    mis += br.P_flow_DC
+                self.assertLess(np.abs(mismatches1[bus.index]-mis),1e-8)
 
     def test_constr_DC_FLOW_LIM(self):
                 
