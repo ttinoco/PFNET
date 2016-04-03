@@ -280,7 +280,7 @@ void LOAD_init(Load* load) {
     load->Q = 0;
 
     load->util_coeff_Q0 = 0;
-    load->util_coeff_Q1 = 2000.;
+    load->util_coeff_Q1 = 20000.;
     load->util_coeff_Q2 = -100.;
 
     load->index = 0;
