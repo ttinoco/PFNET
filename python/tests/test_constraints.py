@@ -229,6 +229,11 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
 
+            # loads
+            for load in net.loads:
+                load.P_min = -2.4*(load.index+1)
+                load.P_max = 3.3*(load.index+1)
+
             # Vars
             net.set_flags(pf.OBJ_BUS,
                           pf.FLAG_VARS,
@@ -238,6 +243,10 @@ class TestConstraints(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.GEN_PROP_REG,
                           [pf.GEN_VAR_P,pf.GEN_VAR_Q])
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_VARS,
+                          pf.LOAD_PROP_P_ADJUST,
+                          pf.LOAD_VAR_P)
             net.set_flags(pf.OBJ_BRANCH,
                           pf.FLAG_VARS,
                           pf.BRANCH_PROP_TAP_CHANGER,
@@ -260,6 +269,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_vars,
                              net.get_num_buses_reg_by_gen()*6 +
                              net.get_num_reg_gens()*2 +
+                             net.get_num_P_adjust_loads() + 
                              net.get_num_tap_changers()*3 +
                              net.get_num_phase_shifters()*1 +
                              net.get_num_switched_shunts()*3 +
@@ -305,11 +315,11 @@ class TestConstraints(unittest.TestCase):
             constr.analyze()
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Acounter,0)
-            self.assertEqual(0,constr.Gcounter)
+            self.assertEqual(constr.Gcounter,0)
             constr.eval(x0)
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Acounter,0)
-            self.assertEqual(0,constr.Gcounter)
+            self.assertEqual(constr.Gcounter,0)
 
             f = constr.f
             J = constr.J
@@ -408,6 +418,11 @@ class TestConstraints(unittest.TestCase):
                     self.assertFalse(gen.has_flags(pf.FLAG_VARS,
                                                    pf.GEN_VAR_P|pf.GEN_VAR_Q))
 
+            for load in net.loads:
+                self.assertTrue(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+                self.assertEqual(u[load.index_P],pf.LOAD_INF_P)
+                self.assertEqual(l[load.index_P],-pf.LOAD_INF_P)                                
+
             for vargen in net.var_generators:
                 self.assertTrue(vargen.has_flags(pf.FLAG_VARS,
                                                  pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q))
@@ -439,6 +454,10 @@ class TestConstraints(unittest.TestCase):
                           pf.FLAG_BOUNDED,
                           pf.GEN_PROP_REG,
                           [pf.GEN_VAR_P,pf.GEN_VAR_Q])
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_BOUNDED,
+                          pf.LOAD_PROP_P_ADJUST,
+                          pf.LOAD_VAR_P)
             net.set_flags(pf.OBJ_BRANCH,
                           pf.FLAG_BOUNDED,
                           pf.BRANCH_PROP_TAP_CHANGER,
@@ -544,6 +563,11 @@ class TestConstraints(unittest.TestCase):
                     self.assertFalse(gen.has_flags(pf.FLAG_BOUNDED,
                                                    pf.GEN_VAR_P|pf.GEN_VAR_Q))
 
+            for load in net.loads:
+                self.assertTrue(load.has_flags(pf.FLAG_BOUNDED,pf.LOAD_VAR_P))
+                self.assertEqual(u[load.index_P],load.P_max)
+                self.assertEqual(l[load.index_P],load.P_min)
+
             for vargen in net.var_generators:
                 self.assertTrue(vargen.has_flags(pf.FLAG_BOUNDED,
                                                  pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q))
@@ -577,6 +601,9 @@ class TestConstraints(unittest.TestCase):
             for gen in net.generators:
                 self.assertEqual(gen.sens_P_u_bound,0.)
                 self.assertEqual(gen.sens_P_l_bound,0.)
+            for load in net.loads:
+                self.assertEqual(load.sens_P_u_bound,0.)
+                self.assertEqual(load.sens_P_l_bound,0.)
             
             mu = np.random.randn(net.num_vars)
             pi = np.random.randn(net.num_vars)
@@ -607,6 +634,12 @@ class TestConstraints(unittest.TestCase):
                 else:
                     self.assertEqual(gen.sens_P_u_bound,0.)
                     self.assertEqual(gen.sens_P_l_bound,0.)
+            for load in net.loads:
+                self.assertTrue(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+                self.assertNotEqual(load.sens_P_u_bound,0.)
+                self.assertNotEqual(load.sens_P_l_bound,0.)
+                self.assertEqual(load.sens_P_u_bound,mu[load.index_P])
+                self.assertEqual(load.sens_P_l_bound,pi[load.index_P])
 
     def test_constr_PAR_GEN_P(self):
         
