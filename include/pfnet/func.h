@@ -34,6 +34,7 @@
 #define FUNC_TYPE_GEN_COST 6    /**< @brief Function type: power generation cost. */
 #define FUNC_TYPE_SP_CONTROLS 7 /**< @brief Function type: sparse controls. */
 #define FUNC_TYPE_SLIM_VMAG 8   /**< @brief Function type: soft limits of bus voltage magnitudes. */
+#define FUNC_TYPE_LOAD_UTIL 9   /**< @brief Function type: power consumption utility. */
 /** @} */
 
 // Function type strings
@@ -47,6 +48,7 @@
 #define FUNC_TYPE_GEN_COST_STR "GEN_COST" 
 #define FUNC_TYPE_SP_CONTROLS_STR "SP_CONTROLS" 
 #define FUNC_TYPE_SLIM_VMAG_STR "SLIM_VMAG" 
+#define FUNC_TYPE_LOAD_UTIL_STR "LOAD_UTIL"
 
 // Function
 typedef struct Func Func;

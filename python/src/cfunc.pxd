@@ -23,6 +23,7 @@ cdef extern from "pfnet/func.h":
     cdef char FUNC_TYPE_GEN_COST
     cdef char FUNC_TYPE_SP_CONTROLS
     cdef char FUNC_TYPE_SLIM_VMAG
+    cdef char FUNC_TYPE_LOAD_UTIL
     
     void FUNC_del(Func* f)
     void FUNC_del_matvec(Func* f)

@@ -18,6 +18,7 @@
 #include <pfnet/func_GEN_COST.h>
 #include <pfnet/func_SP_CONTROLS.h>
 #include <pfnet/func_SLIM_VMAG.h>
+#include <pfnet/func_LOAD_UTIL.h>
 
 struct Func {
   
@@ -129,6 +130,8 @@ char* FUNC_get_type_str(Func* f) {
       return FUNC_TYPE_SP_CONTROLS_STR;
     case FUNC_TYPE_SLIM_VMAG:
       return FUNC_TYPE_SLIM_VMAG_STR;
+    case FUNC_TYPE_LOAD_UTIL:
+      return FUNC_TYPE_LOAD_UTIL_STR;
     default:
       return FUNC_TYPE_UNKNOWN_STR;
     }
@@ -379,6 +382,16 @@ Func* FUNC_new(int type, REAL weight, Net* net) {
     f->func_analyze_branch = FUNC_SLIM_VMAG_analyze_branch;
     f->func_eval_branch = FUNC_SLIM_VMAG_eval_branch;
     f->func_free = FUNC_SLIM_VMAG_free;
+    break;
+
+  case FUNC_TYPE_LOAD_UTIL: // Power consumption utility
+    f->func_init = FUNC_LOAD_UTIL_init;
+    f->func_count_branch = FUNC_LOAD_UTIL_count_branch;
+    f->func_allocate = FUNC_LOAD_UTIL_allocate;
+    f->func_clear = FUNC_LOAD_UTIL_clear;
+    f->func_analyze_branch = FUNC_LOAD_UTIL_analyze_branch;
+    f->func_eval_branch = FUNC_LOAD_UTIL_eval_branch;
+    f->func_free = FUNC_LOAD_UTIL_free;
     break;
  
   default:
