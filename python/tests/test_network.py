@@ -523,17 +523,19 @@ class TestNetwork(unittest.TestCase):
 
                 self.assertTrue(load.bus)
 
+                # P limits
+                self.assertEqual(load.P,load.P_max)
+                self.assertEqual(load.P,load.P_min)
+                load.P_min = -1.23
+                load.P_max = 2123.
+                self.assertEqual(load.P_min,-1.23)
+                self.assertEqual(load.P_max,2123.)
+
                 # P, Q
                 load.P = 0.3241
                 load.Q = 0.1212
                 self.assertEqual(load.P,0.3241)
                 self.assertEqual(load.Q,0.1212)
-
-                # P limits
-                load.P_min = -1.23
-                load.P_max = 2123.
-                self.assertEqual(load.P_min,-1.23)
-                self.assertEqual(load.P_max,2123.)
 
                 # adjustable
                 self.assertTrue(load.is_P_adjustable())

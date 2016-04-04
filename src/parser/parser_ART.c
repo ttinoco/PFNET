@@ -538,6 +538,8 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       LOAD_set_bus(load,bus);                             // connect bus to load
       LOAD_set_P(load,art_bus->pload/parser->base_power); // per unit 
       LOAD_set_Q(load,(art_bus->qload-art_bus->qshunt)/parser->base_power); // per unit
+      LOAD_set_P_min(load,LOAD_get_P(load));              // Pmin = P = Pmax
+      LOAD_set_P_max(load,LOAD_get_P(load));              // Pmin = P = Pmax
       index++;
     }
   }
