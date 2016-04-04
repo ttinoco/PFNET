@@ -1203,9 +1203,6 @@ class TestNetwork(unittest.TestCase):
             self.assertTrue(isinstance(bus_list,list))
             self.assertEqual(len(bus_list),net.num_buses)
             r1 = []
-            r2 = []
-            r3 = []
-            r4 = []
             for i in range(len(bus_list)):
                 if i > 0:
                     bus1 = bus_list[i-1]
@@ -1213,20 +1210,13 @@ class TestNetwork(unittest.TestCase):
                     self.assertTrue(isinstance(bus1,pf.Bus))
                     self.assertTrue(isinstance(bus2,pf.Bus))
                     r1.append(abs(bus1.get_largest_mis()) >= abs(bus2.get_largest_mis()))
-                    r2.append(abs(bus2.get_largest_mis()) >= abs(bus1.get_largest_mis()))
-                    r3.append(abs(bus1.get_largest_sens()) >= abs(bus2.get_largest_sens()))
-                    r4.append(bus1.get_largest_mis() >= bus2.get_largest_mis())
             self.assertTrue(all(r1))
-            self.assertFalse(all(r2))
-            self.assertFalse(all(r3))
-            self.assertFalse(all(r4))
 
             # Sort by P mismatch
             bus_list = net.create_sorted_bus_list(pf.BUS_MIS_ACTIVE)
             self.assertTrue(isinstance(bus_list,list))
             self.assertEqual(len(bus_list),net.num_buses)
             r1 = []
-            r2 = []
             for i in range(len(bus_list)):
                 if i > 0:
                     bus1 = bus_list[i-1]
@@ -1234,39 +1224,27 @@ class TestNetwork(unittest.TestCase):
                     self.assertTrue(isinstance(bus1,pf.Bus))
                     self.assertTrue(isinstance(bus2,pf.Bus))
                     r1.append(abs(bus1.P_mis) >= abs(bus2.P_mis))
-                    r2.append(abs(bus2.P_mis) >= abs(bus1.P_mis))
             self.assertTrue(all(r1))
-            self.assertFalse(all(r2))
 
             # Sort by largest sensitivity
             bus_list = net.create_sorted_bus_list(pf.BUS_SENS_LARGEST)
             self.assertTrue(isinstance(bus_list,list))
             self.assertEqual(len(bus_list),net.num_buses)
             r1 = []
-            r2 = []
-            r3 = []
-            r4 = []
             for i in range(len(bus_list)):
                 if i > 0:
                     bus1 = bus_list[i-1]
                     bus2 = bus_list[i]
                     self.assertTrue(isinstance(bus1,pf.Bus))
                     self.assertTrue(isinstance(bus2,pf.Bus))
-                    r1.append(abs(bus1.get_largest_mis()) >= abs(bus2.get_largest_mis()))
-                    r2.append(abs(bus2.get_largest_mis()) >= abs(bus1.get_largest_mis()))
-                    r3.append(abs(bus1.get_largest_sens()) >= abs(bus2.get_largest_sens()))
-                    r4.append(bus1.get_largest_sens() >= bus2.get_largest_sens())
-            self.assertFalse(all(r1))
-            self.assertFalse(all(r2))
-            self.assertTrue(all(r3))
-            self.assertFalse(all(r4))
+                    r1.append(abs(bus1.get_largest_sens()) >= abs(bus2.get_largest_sens()))
+            self.assertTrue(all(r1))
 
             # Sort by v_reg_by_gen sensitivity
             bus_list = net.create_sorted_bus_list(pf.BUS_SENS_V_REG_BY_GEN)
             self.assertTrue(isinstance(bus_list,list))
             self.assertEqual(len(bus_list),net.num_buses)
             r1 = []
-            r2 = []
             for i in range(len(bus_list)):
                 if i > 0:
                     bus1 = bus_list[i-1]
@@ -1274,9 +1252,7 @@ class TestNetwork(unittest.TestCase):
                     self.assertTrue(isinstance(bus1,pf.Bus))
                     self.assertTrue(isinstance(bus2,pf.Bus))
                     r1.append(abs(bus1.sens_v_reg_by_gen) >= abs(bus2.sens_v_reg_by_gen))
-                    r2.append(abs(bus1.get_largest_sens()) >= abs(bus2.get_largest_sens()))
             self.assertTrue(all(r1))
-            self.assertFalse(all(r2))
 
     def test_set_points(self):
 

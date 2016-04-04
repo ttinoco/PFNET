@@ -43,7 +43,7 @@ class TestContingency(unittest.TestCase):
 
             # outage set
             gen = net.get_gen(0)
-            branch = net.get_branch(10)
+            branch = net.get_branch(0)
             def s1():
                 gen.outage = True
             def s2():
@@ -53,20 +53,20 @@ class TestContingency(unittest.TestCase):
 
             # outages at construction
             c0 = pf.Contingency([net.get_gen(0)],
-                                [net.get_branch(2)])
+                                [net.get_branch(1)])
             self.assertTrue(c0.has_gen_outage(net.get_gen(0)))
-            self.assertTrue(c0.has_branch_outage(net.get_branch(2)))
+            self.assertTrue(c0.has_branch_outage(net.get_branch(1)))
             c1 = pf.Contingency(gens=[net.get_gen(0)],
-                                branches=[net.get_branch(4)])
+                                branches=[net.get_branch(2)])
             self.assertTrue(c1.has_gen_outage(net.get_gen(0)))
-            self.assertTrue(c1.has_branch_outage(net.get_branch(4)))
+            self.assertTrue(c1.has_branch_outage(net.get_branch(2)))
             
             # contingency
             g0 = net.get_gen(0)
             bus0 = g0.bus
             reg_bus0 = g0.reg_bus
-            br7 = net.get_branch(7)
-            br3 = net.get_branch(3)
+            br7 = net.get_branch(0)
+            br3 = net.get_branch(1)
             bus_from7 = br7.bus_from
             bus_from3 = br3.bus_from
             bus_to7 = br7.bus_to
@@ -130,26 +130,38 @@ class TestContingency(unittest.TestCase):
                 else:
                     self.assertFalse(g.is_on_outage())
                     self.assertFalse(g.outage)
-            self.assertEqual(bus_from7_degree-1,bus_from7.degree)
-            self.assertEqual(bus_to7_degree-1,bus_to7.degree)
-            self.assertEqual(bus_from3_degree-1,bus_from3.degree)
-            self.assertEqual(bus_to3_degree-1,bus_to3.degree)
+            if bus_from7 == bus_from3 or bus_from7 == bus_to3:
+                self.assertEqual(bus_from7_degree-2,bus_from7.degree)
+            else:
+                self.assertEqual(bus_from7_degree-1,bus_from7.degree)
+            if bus_to7 == bus_from3 or bus_to7 == bus_to3:
+                self.assertEqual(bus_to7_degree-2,bus_to7.degree)
+            else:
+                self.assertEqual(bus_to7_degree-1,bus_to7.degree)
+            if bus_from3 == bus_from7 or bus_from3 == bus_to7:
+                self.assertEqual(bus_from3_degree-2,bus_from3.degree)
+            else:
+                self.assertEqual(bus_from3_degree-1,bus_from3.degree)
+            if bus_to3 == bus_from7 or bus_to3 == bus_to7:
+                self.assertEqual(bus_to3_degree-2,bus_to3.degree)
+            else:
+                self.assertEqual(bus_to3_degree-1,bus_to3.degree)
             for b in net.branches:
-                if b.index == 7 or b.index == 3:
+                if b.index == 0 or b.index == 1:
                     self.assertTrue(b.is_line() or b.is_fixed_tran())
                     self.assertTrue(b.is_on_outage())
                     self.assertTrue(b.outage)
                     self.assertRaises(pf.BusError,lambda x: x.bus_from,b)
                     self.assertRaises(pf.BusError,lambda x: x.bus_to,b)
                     self.assertRaises(pf.BusError,lambda x: x.reg_bus,b)
-                    if b.index == 7:
+                    if b.index == 0:
                         self.assertFalse(b.index in [y.index for y in bus_from7.branches_from])
                         self.assertFalse(b.index in [y.index for y in bus_from7.branches])
                         self.assertFalse(b.index in [y.index for y in bus_from7.branches_to])
                         self.assertFalse(b.index in [y.index for y in bus_to7.branches_from])
                         self.assertFalse(b.index in [y.index for y in bus_to7.branches])
                         self.assertFalse(b.index in [y.index for y in bus_to7.branches_to])
-                    elif b.index == 3:
+                    elif b.index == 1:
                         self.assertFalse(b.index in [y.index for y in bus_from3.branches_from])
                         self.assertFalse(b.index in [y.index for y in bus_from3.branches])
                         self.assertFalse(b.index in [y.index for y in bus_from3.branches_to])
@@ -160,12 +172,12 @@ class TestContingency(unittest.TestCase):
                     self.assertFalse(b.is_on_outage())
                     self.assertFalse(b.outage)
             cont2 = pf.Contingency()
-            cont2.add_branch_outage(net.get_branch(11))
-            self.assertFalse(net.get_branch(11).outage)
+            cont2.add_branch_outage(net.get_branch(2))
+            self.assertFalse(net.get_branch(2).outage)
             cont2.apply()
-            self.assertTrue(net.get_branch(11).outage)
-            self.assertTrue(net.get_branch(7).outage)
-            self.assertTrue(net.get_branch(3).outage)
+            self.assertTrue(net.get_branch(2).outage)
+            self.assertTrue(net.get_branch(0).outage)
+            self.assertTrue(net.get_branch(1).outage)
             self.assertTrue(net.get_gen(0).outage)
             if net.num_gens > 5:
                 self.assertTrue(net.get_gen(5).outage)
@@ -174,9 +186,9 @@ class TestContingency(unittest.TestCase):
 
             # clear
             cont.clear()
-            self.assertTrue(net.get_branch(11).outage)
-            self.assertFalse(net.get_branch(3).outage)
-            self.assertFalse(net.get_branch(7).outage)
+            self.assertTrue(net.get_branch(2).outage)
+            self.assertFalse(net.get_branch(1).outage)
+            self.assertFalse(net.get_branch(0).outage)
             self.assertFalse(net.get_gen(0).outage)
             if net.num_gens > 5:
                 self.assertFalse(net.get_gen(5).outage)
@@ -205,10 +217,10 @@ class TestContingency(unittest.TestCase):
             self.assertEqual(bus_from3_degree,bus_from3.degree)
             self.assertEqual(bus_to3_degree,bus_to3.degree)
             for b in net.branches:
-                if b.index == 3 or b.index == 7:
+                if b.index == 0 or b.index == 1:
                     self.assertFalse(b.is_on_outage())
                     self.assertFalse(b.outage)
-                    if b.index == 7:
+                    if b.index == 0:
                         self.assertEqual(b.bus_from.index,bus_from7.index)
                         self.assertEqual(b.bus_to.index,bus_to7.index)
                         self.assertTrue(b.index in [y.index for y in bus_from7.branches_from])
@@ -217,7 +229,7 @@ class TestContingency(unittest.TestCase):
                         self.assertFalse(b.index in [y.index for y in bus_to7.branches_from])
                         self.assertTrue(b.index in [y.index for y in bus_to7.branches])
                         self.assertTrue(b.index in [y.index for y in bus_to7.branches_to])
-                    elif b.index == 3:
+                    elif b.index == 1:
                         self.assertEqual(b.bus_from.index,bus_from3.index)
                         self.assertEqual(b.bus_to.index,bus_to3.index)
                         self.assertTrue(b.index in [y.index for y in bus_from3.branches_from])
@@ -820,8 +832,8 @@ class TestContingency(unittest.TestCase):
 
             cont = pf.Contingency()
             cont.add_gen_outage(net.get_gen(0))
-            cont.add_branch_outage(net.get_branch(3))
-            cont.add_branch_outage(net.get_branch(10))
+            cont.add_branch_outage(net.get_branch(0))
+            cont.add_branch_outage(net.get_branch(1))
 
             cont.apply()
 
@@ -842,7 +854,7 @@ class TestContingency(unittest.TestCase):
                 else:
                     self.assertFalse(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
             for br in net.branches:
-                if br.index not in [3,10]:
+                if br.index not in [0,1]:
                     self.assertTrue(br.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_RATIO))
                 else:
                     self.assertFalse(br.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_RATIO))

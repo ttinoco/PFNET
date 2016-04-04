@@ -1829,7 +1829,7 @@ cdef class Network:
         if ptr is not NULL:
             return new_Branch(ptr)
         else:
-            raise NetworkError('invalid ranch index')
+            raise NetworkError('invalid branch index')
 
     def get_gen(self,index):
         """

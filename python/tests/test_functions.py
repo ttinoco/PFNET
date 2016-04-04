@@ -279,7 +279,7 @@ class TestFunctions(unittest.TestCase):
                           pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
             self.assertEqual(net.num_vars,2*(nb-ns))
              
-            x0 = net.get_var_values()
+            x0 = net.get_var_values()+np.random.randn(net.num_vars)
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
@@ -928,7 +928,7 @@ class TestFunctions(unittest.TestCase):
     def test_func_SLIM_VMAG(self):
         
         # Constants
-        h = 1e-9
+        h = 1e-8
         
         net = self.net
 
