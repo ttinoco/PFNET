@@ -1231,7 +1231,8 @@ class TestFunctions(unittest.TestCase):
                 val += (load.util_coeff_Q0 + 
                         load.util_coeff_Q1*load.P +
                         load.util_coeff_Q2*(load.P**2.))
-            self.assertLess(np.abs(val+f),1e-7)
+            net.update_properties()
+            self.assertLess(np.abs(val-f),1e-7)
 
             # Gradient check
             f0 = func.phi

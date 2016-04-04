@@ -137,7 +137,7 @@ void FUNC_LOAD_UTIL_analyze_branch(Func* f, Branch* br) {
 	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
 	  MAT_set_i(H,*Hcounter,LOAD_get_index_P(load));
 	  MAT_set_j(H,*Hcounter,LOAD_get_index_P(load));
-	  MAT_set_d(H,*Hcounter,-2.*LOAD_get_util_coeff_Q2(load));
+	  MAT_set_d(H,*Hcounter,2.*LOAD_get_util_coeff_Q2(load));
 	  (*Hcounter)++;
 	}
       }
@@ -206,10 +206,10 @@ void FUNC_LOAD_UTIL_eval_branch(Func* f, Branch* br, Vec* var_values) {
 	  P = VEC_get(var_values,index_P);
 	  
 	  // phi
-	  (*phi) -= Q0 + Q1*P + Q2*pow(P,2.);
+	  (*phi) += Q0 + Q1*P + Q2*pow(P,2.);
 	  
 	  // gphi
-	  gphi[index_P] = -Q1 - 2.*Q2*P;
+	  gphi[index_P] = Q1 + 2.*Q2*P;
 	}
       }
     }
