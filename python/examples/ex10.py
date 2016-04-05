@@ -14,13 +14,16 @@ net = pf.Network()
 net.load(sys.argv[1])
 
 gen = net.get_gen(3)
-gen_bus = gen.bus
 branch = net.get_branch(2)
-branch_bus = branch.bus_from
 
 c1 = pf.Contingency(gens=[gen],branches=[branch])
 
 print c1.num_gen_outages, c1.num_branch_outages
+
+print c1.has_gen_outage(gen), c1.has_branch_outage(branch)
+
+gen_bus = gen.bus
+branch_bus = branch.bus_from
 
 print gen in gen_bus.gens, branch in branch_bus.branches
 

@@ -381,3 +381,52 @@ As explained above, once the network variables have been set, a vector with the 
   0.0
 
 
+.. _net_cont:
+
+Contingencies
+=============
+
+PFNET provides a convenient way to specify and analyze network contingencies. A contingency is represented by an object of type :class:`Contingency <pfnet.Contingency>`, and is characterized by one or more :class:`generator <pfnet.Generator>` or :class:`branch <pfnet.Branch>` outages. The lists of generator and branch outages of a contingency can be specified at construction, or by using the class methods :func:`add_gen_outage() <pfnet.Contingency.add_gen_outage>` and :func:`add_branch_outage() <pfnet.Contingency.add_branch_outage>`, respectively. The following example shows how to construct a contingency::
+
+  >>> import pfnet as pf
+
+  >>> net = pf.Network()
+  >>> net.load('ieee14.mat')
+
+  >>> gen = net.get_gen(3)
+  >>> branch = net.get_branch(2)
+
+  >>> c1 = pf.Contingency(gens=[gen],branches=[branch])
+
+  >>> print c1.num_gen_outages, c1.num_branch_outages
+  1 1
+
+Once a contingency has been constructed, it can be applied and later cleared. This is done using the class methods :func:`apply() <pfnet.Contingency.apply>` and :func:`clear() <pfnet.Contingency.clear>`. The :func:`apply() <pfnet.Contingency.apply>` function sets the specified generator and branches on outage and disconnects them from the network. Voltage regulation and other controls provided by generator or transformers on outage are lost. The :func:`clear() <pfnet.Contingency.clear>` function undoes the changes made by the :func:`apply() <pfnet.Contingency.apply>` function. The following example shows how to apply and clear contingencies, and illustrates some of the side effects::
+
+  >>> print c1.has_gen_outage(gen), c1.has_branch_outage(branch)
+  True True
+
+  >>> gen_bus = gen.bus
+  >>> branch_bus = branch.bus_from
+
+  >>> # generator and branch connected to buses
+  >>> print gen in gen_bus.gens, branch in branch_bus.branches
+  True True
+  
+  >>> c1.apply()
+   
+  >>> print gen.is_on_outage(), branch.is_on_outage()
+  True True
+
+  >>> # generator and branch disconnected from buses
+  >>> print gen in gen_bus.gens, branch in branch_bus.branches
+  False False
+
+  >>> c1.clear()
+
+  >>> print gen.is_on_outage(), branch.is_on_outage()
+  False False
+
+  >>> # generator and branch connected to buses again
+  >>> print gen in gen_bus.gens, branch in branch_bus.branches
+  True True
