@@ -20,6 +20,7 @@ cimport cbranch
 cimport cload
 cimport cvargen
 cimport cnet
+cimport ccont
 cimport cgraph
 cimport cconstr
 cimport cfunc
@@ -654,6 +655,7 @@ BRANCH_PROP_TAP_CHANGER = cbranch.BRANCH_PROP_TAP_CHANGER
 BRANCH_PROP_TAP_CHANGER_V = cbranch.BRANCH_PROP_TAP_CHANGER_V
 BRANCH_PROP_TAP_CHANGER_Q = cbranch.BRANCH_PROP_TAP_CHANGER_Q
 BRANCH_PROP_PHASE_SHIFTER = cbranch.BRANCH_PROP_PHASE_SHIFTER
+BRANCH_PROP_NOT_OUT = cbranch.BRANCH_PROP_NOT_OUT
 
 # Variables
 BRANCH_VAR_RATIO = cbranch.BRANCH_VAR_RATIO
@@ -713,6 +715,17 @@ cdef class Branch:
         """
 
         return cbranch.BRANCH_has_pos_ratio_v_sens(self._c_ptr)
+
+    def is_on_outage(self):
+        """
+        Determines whether branch in on outage.
+        
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+
+        return cbranch.BRANCH_is_on_outage(self._c_ptr)
 
     def is_fixed_tran(self):
         """
@@ -912,6 +925,10 @@ cdef class Branch:
         """ Objective function sensitivity with respect to active power flow lower bound (float). """
         def __get__(self): return cbranch.BRANCH_get_sens_P_l_bound(self._c_ptr)
 
+    property outage:
+        """ Flag that indicates whehter branch is on outage. """
+        def __get__(self): return cbranch.BRANCH_is_on_outage(self._c_ptr)
+
 cdef new_Branch(cbranch.Branch* b):
     if b is not NULL:
         branch = Branch(alloc=False)
@@ -929,6 +946,7 @@ GEN_PROP_SLACK = cgen.GEN_PROP_SLACK
 GEN_PROP_REG = cgen.GEN_PROP_REG
 GEN_PROP_NOT_REG = cgen.GEN_PROP_NOT_REG
 GEN_PROP_NOT_SLACK = cgen.GEN_PROP_NOT_SLACK
+GEN_PROP_NOT_OUT = cgen.GEN_PROP_NOT_OUT
 GEN_PROP_P_ADJUST = cgen.GEN_PROP_P_ADJUST
 
 # Variables
@@ -977,6 +995,17 @@ cdef class Generator:
     def _get_c_ptr(self):
 
         return new_CPtr(self._c_ptr)
+
+    def is_on_outage(self):
+        """
+        Determines whether generator in on outage.
+        
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+
+        return cgen.GEN_is_on_outage(self._c_ptr)
 
     def is_slack(self):
         """ 
@@ -1083,17 +1112,17 @@ cdef class Generator:
         def __get__(self): return cgen.GEN_get_P_cost(self._c_ptr)
 
     property cost_coeff_Q0:
-        """ Coefficient for quadratic genertion cost (constant term, units of $/hr). """
+        """ Coefficient for genertion cost function (constant term, units of $/hr). """
         def __get__(self): return cgen.GEN_get_cost_coeff_Q0(self._c_ptr)
         def __set__(self,c): cgen.GEN_set_cost_coeff_Q0(self._c_ptr,c)
 
     property cost_coeff_Q1:
-        """ Coefficient for quadratic genertion cost (linear term. units of $/(hr p.u.)). """
+        """ Coefficient for genertion cost function (linear term. units of $/(hr p.u.)). """
         def __get__(self): return cgen.GEN_get_cost_coeff_Q1(self._c_ptr)
         def __set__(self,c): cgen.GEN_set_cost_coeff_Q1(self._c_ptr,c)
 
     property cost_coeff_Q2:
-        """ Coefficient for quadratic genertion cost (quadratic term, units of $/(hr p.u.^2)). """
+        """ Coefficient for genertion cost function (quadratic term, units of $/(hr p.u.^2)). """
         def __get__(self): return cgen.GEN_get_cost_coeff_Q2(self._c_ptr)
         def __set__(self,c): cgen.GEN_set_cost_coeff_Q2(self._c_ptr,c)
 
@@ -1104,6 +1133,10 @@ cdef class Generator:
     property sens_P_l_bound:
         """ Objective function sensitivity with respect to active power lower bound (float). """
         def __get__(self): return cgen.GEN_get_sens_P_l_bound(self._c_ptr)
+
+    property outage:
+        """ Flag that indicates whehter generator is on outage. """
+        def __get__(self): return cgen.GEN_is_on_outage(self._c_ptr)
 
 cdef new_Generator(cgen.Gen* g):
     if g is not NULL:
@@ -1263,6 +1296,16 @@ cdef new_Shunt(cshunt.Shunt* s):
 # Load
 ######
 
+# Properties
+LOAD_PROP_ANY = cload.LOAD_PROP_ANY
+LOAD_PROP_P_ADJUST = cload.LOAD_PROP_P_ADJUST
+
+# Variables
+LOAD_VAR_P = cload.LOAD_VAR_P
+
+# Infinity
+LOAD_INF_P = cload.LOAD_INF_P
+
 class LoadError(Exception):
     """ 
     Load error exception.
@@ -1302,6 +1345,33 @@ cdef class Load:
 
         return new_CPtr(self._c_ptr)
 
+    def is_P_adjustable(self):
+        """ 
+        Determines whether the load has adjustable active power.
+        
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+        
+        return cload.LOAD_is_P_adjustable(self._c_ptr)
+
+    def has_flags(self,fmask,vmask):
+        """ 
+        Determines whether the load has the flags associated with
+        certain quantities set. 
+        Parameters
+        ----------
+        fmask : int (:ref:`ref_net_flag`)
+        vmask : int (:ref:`ref_load_var`)
+        
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+
+        return cload.LOAD_has_flags(self._c_ptr,fmask,vmask)
+
     property obj_type:
         """ Object type (int). """
         def __get__(self): return cload.LOAD_get_obj_type(self._c_ptr)
@@ -1309,7 +1379,11 @@ cdef class Load:
     property index:
         """ Load index (int). """
         def __get__(self): return cload.LOAD_get_index(self._c_ptr)
-        
+       
+    property index_P:
+        """ Index of load active power variable (int). """
+        def __get__(self): return cload.LOAD_get_index_P(self._c_ptr)
+ 
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which load is connected. """
         def __get__(self): return new_Bus(cload.LOAD_get_bus(self._c_ptr))
@@ -1318,11 +1392,48 @@ cdef class Load:
         """ Load active power (p.u. system base MVA) (float). """
         def __get__(self): return cload.LOAD_get_P(self._c_ptr)
         def __set__(self,value): cload.LOAD_set_P(self._c_ptr,value)
-            
+       
+    property P_max:
+        """ Load active power upper limit (p.u. system base MVA) (float). """
+        def __get__(self): return cload.LOAD_get_P_max(self._c_ptr)
+        def __set__(self,P): cload.LOAD_set_P_max(self._c_ptr,P)
+
+    property P_min:
+        """ Load active power lower limit (p.u. system base MVA) (float). """
+        def __get__(self): return cload.LOAD_get_P_min(self._c_ptr)
+        def __set__(self,P): cload.LOAD_set_P_min(self._c_ptr,P)
+     
     property Q:
         """ Load reactive power (p.u. system base MVA) (float). """
         def __get__(self): return cload.LOAD_get_Q(self._c_ptr)
         def __set__(self,value): cload.LOAD_set_Q(self._c_ptr,value)
+
+    property P_util:
+        """ Active power load utility ($/hr). """
+        def __get__(self): return cload.LOAD_get_P_util(self._c_ptr)
+
+    property util_coeff_Q0:
+        """ Coefficient for consumption utility function (constant term, units of $/hr). """
+        def __get__(self): return cload.LOAD_get_util_coeff_Q0(self._c_ptr)
+        def __set__(self,c): cload.LOAD_set_util_coeff_Q0(self._c_ptr,c)
+
+    property util_coeff_Q1:
+        """ Coefficient for consumption utility function (linear term. units of $/(hr p.u.)). """
+        def __get__(self): return cload.LOAD_get_util_coeff_Q1(self._c_ptr)
+        def __set__(self,c): cload.LOAD_set_util_coeff_Q1(self._c_ptr,c)
+
+    property util_coeff_Q2:
+        """ Coefficient for consumption utility function (quadratic term, units of $/(hr p.u.^2)). """
+        def __get__(self): return cload.LOAD_get_util_coeff_Q2(self._c_ptr)
+        def __set__(self,c): cload.LOAD_set_util_coeff_Q2(self._c_ptr,c)
+
+    property sens_P_u_bound:
+        """ Objective function sensitivity with respect to active power upper bound (float). """
+        def __get__(self): return cload.LOAD_get_sens_P_u_bound(self._c_ptr)   
+
+    property sens_P_l_bound:
+        """ Objective function sensitivity with respect to active power lower bound (float). """
+        def __get__(self): return cload.LOAD_get_sens_P_l_bound(self._c_ptr)
 
 cdef new_Load(cload.Load* l):
     if l is not NULL:
@@ -1718,7 +1829,7 @@ cdef class Network:
         if ptr is not NULL:
             return new_Branch(ptr)
         else:
-            raise NetworkError('invalid ranch index')
+            raise NetworkError('invalid branch index')
 
     def get_gen(self,index):
         """
@@ -1926,6 +2037,17 @@ cdef class Network:
 
         return cnet.NET_get_num_branches(self._c_net)
 
+    def get_num_branches_not_on_outage(self):
+        """
+        Gets number of branches in the network that are not on outage.
+
+        Returns
+        -------
+        num : int
+        """
+        
+        return cnet.NET_get_num_branches_not_on_outage(self._c_net)
+
     def get_num_fixed_trans(self):
         """
         Gets number of fixed transformers in the network.
@@ -2003,6 +2125,17 @@ cdef class Network:
         
         return cnet.NET_get_num_gens(self._c_net)
 
+    def get_num_gens_not_on_outage(self):
+        """
+        Gets number of generators in the network that are not on outage.
+
+        Returns
+        -------
+        num : int
+        """
+        
+        return cnet.NET_get_num_gens_not_on_outage(self._c_net)
+
     def get_num_reg_gens(self):
         """
         Gets number generators in the network that provide voltage regulation.
@@ -2046,6 +2179,17 @@ cdef class Network:
         """
 
         return cnet.NET_get_num_loads(self._c_net)
+
+    def get_num_P_adjust_loads(self):
+        """
+        Gets number of loads in the network that have adjustable active powers.
+
+        Returns
+        -------
+        num : int
+        """
+
+        return cnet.NET_get_num_P_adjust_loads(self._c_net)
 
     def get_num_shunts(self):
         """
@@ -2114,6 +2258,8 @@ cdef class Network:
                 'tran_p_vio': self.tran_p_vio,
                 'shunt_v_vio': self.shunt_v_vio,
                 'shunt_b_vio': self.shunt_b_vio,
+                'load_P_util': self.load_P_util,
+                'load_P_vio': self.load_P_vio, 
                 'num_actions': self.num_actions}
 
     def has_error(self):
@@ -2375,6 +2521,14 @@ cdef class Network:
         """ Largest switched shunt susceptance limit violation (p.u.) (float). """
         def __get__(self): return cnet.NET_get_shunt_b_vio(self._c_net)
 
+    property load_P_util:
+        """ Total active power consumption utility ($/hr) (float). """
+        def __get__(self): return cnet.NET_get_load_P_util(self._c_net)
+
+    property load_P_vio:
+        """ Largest load active power limit violation (MW) (float). """
+        def __get__(self): return cnet.NET_get_load_P_vio(self._c_net)
+
     property num_actions:
         """ Number of control adjustments (int). """
         def __get__(self): return cnet.NET_get_num_actions(self._c_net)
@@ -2394,6 +2548,154 @@ cdef new_Network(cnet.Net* n):
         return net
     else:
         raise NetworkError('no network data')
+
+# Contingency
+#############
+
+class ContingencyError(Exception):
+    """
+    Contingency error exception.
+    """
+
+    def __init__(self,value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+cdef class Contingency:
+    """
+    Contingency class.
+    """
+    
+    cdef ccont.Cont* _c_cont
+    cdef bint alloc
+    
+    def __init__(self,gens=None,branches=None,alloc=True):
+        """
+        Contingency class.
+        
+        Parameters
+        ----------
+        gens : list
+        branches : list
+        alloc : {``True``, ``False``}
+        """
+
+        pass
+     
+    def __cinit__(self,gens=None,branches=None,alloc=True):
+        
+        cdef Generator g
+        cdef Branch br
+
+        if alloc:
+            self._c_cont = ccont.CONT_new()
+        else:
+            self._c_cont = NULL
+        self.alloc = alloc
+        
+        if gens:
+            for gen in gens:
+                g = gen
+                ccont.CONT_add_gen_outage(self._c_cont,g._c_ptr)
+        if branches:
+            for branch in branches:
+                br = branch
+                ccont.CONT_add_branch_outage(self._c_cont,br._c_ptr)
+
+    def __dealloc__(self):
+        """
+        Frees contingency C data structure. 
+        """
+        
+        if self.alloc:
+            ccont.CONT_del(self._c_cont)
+            self._c_cont = NULL
+
+    def apply(self):
+        """
+        Applies outages that characterize contingency.
+        """
+        
+        ccont.CONT_apply(self._c_cont)
+
+    def clear(self):
+        """
+        Clears outages that characterize contingency.
+        """
+        
+        ccont.CONT_clear(self._c_cont)
+
+    def show(self):
+        """
+        Shows contingency information.
+        """
+        
+        ccont.CONT_show(self._c_cont)
+
+    def add_gen_outage(self,gen):
+        """
+        Adds generator outage to contingency.
+    
+        Parameters
+        ----------
+        gen : :class:`Generator <pfnet.Generator>`
+        """
+
+        cdef Generator g = gen
+        ccont.CONT_add_gen_outage(self._c_cont,g._c_ptr)
+
+    def add_branch_outage(self,br):
+        """
+        Adds branch outage to contingency.
+    
+        Parameters
+        ----------
+        br : :class:`Branch <pfnet.Branch>`
+        """
+
+        cdef Branch b = br
+        ccont.CONT_add_branch_outage(self._c_cont,b._c_ptr)
+
+    def has_gen_outage(self,gen):
+        """
+        Determines whether contingency specifies the given generator as being on outage.
+
+        Parameters
+        ----------
+        gen : :class:`Generator <pfnet.Generator>`
+
+        Returns
+        -------
+        result : {``True``, ``False``}
+        """
+        
+        cdef Generator g = gen
+        return ccont.CONT_has_gen_outage(self._c_cont,g._c_ptr)
+
+    def has_branch_outage(self,br):
+        """
+        Determines whether contingency specifies the given branch as being on outage.
+
+        Parameters
+        ----------
+        branch : :class:`Branch <pfnet.Branch>`
+
+        Returns
+        -------
+        result : {``True``, ``False``}
+        """
+        
+        cdef Branch b = br
+        return ccont.CONT_has_branch_outage(self._c_cont,b._c_ptr)
+
+    property num_gen_outages:
+        """ Number of generator outages. """
+        def __get__(self): return ccont.CONT_get_num_gen_outages(self._c_cont)
+
+    property num_branch_outages:
+        """ Number of branch outages. """
+        def __get__(self): return ccont.CONT_get_num_branch_outages(self._c_cont)
 
 # Graph
 #######
@@ -2575,6 +2877,7 @@ FUNC_TYPE_REG_SUSC = cfunc.FUNC_TYPE_REG_SUSC
 FUNC_TYPE_GEN_COST = cfunc.FUNC_TYPE_GEN_COST
 FUNC_TYPE_SP_CONTROLS = cfunc.FUNC_TYPE_SP_CONTROLS
 FUNC_TYPE_SLIM_VMAG = cfunc.FUNC_TYPE_SLIM_VMAG
+FUNC_TYPE_LOAD_UTIL = cfunc.FUNC_TYPE_LOAD_UTIL
 
 class FunctionError(Exception):
     """
@@ -2624,6 +2927,14 @@ cdef class Function:
         if self.alloc:
             cfunc.FUNC_del(self._c_func)
             self._c_func = NULL
+
+    def del_matvec(self):
+        """
+        Deletes matrices and vectors associated with
+        this function.
+        """
+
+        cfunc.FUNC_del_matvec(self._c_func)
             
     def update_network(self):
         """
@@ -2764,6 +3075,14 @@ cdef class Constraint:
         if self.alloc:
             cconstr.CONSTR_del(self._c_constr)
             self._c_constr = NULL
+
+    def del_matvec(self):
+        """
+        Deletes matrices and vectors associated with
+        this constraint.
+        """
+
+        cconstr.CONSTR_del_matvec(self._c_constr)
 
     def update_network(self):
         """

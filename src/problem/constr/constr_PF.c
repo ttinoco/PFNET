@@ -109,7 +109,13 @@ void CONSTR_PF_count_branch(Constr* c, Branch* br) {
   Hcounter = CONSTR_get_Hcounter(c);
   bus_counted = CONSTR_get_bus_counted(c);
   data = (Constr_PF_Data*)CONSTR_get_data(c);
+
+  // Check pointers
   if (!Jcounter || !Hcounter || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Key J indices
@@ -464,7 +470,14 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
   Jcounter = CONSTR_get_Jcounter_ptr(c);
   Hcounter = CONSTR_get_Hcounter(c);
   bus_counted = CONSTR_get_bus_counted(c);
+  CONSTR_inc_branch_counter(c);
+
+  // Check pointers
   if (!Jcounter || !Hcounter || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
  
   // Bus data
@@ -489,8 +502,6 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
 
   // Branch
   //*******
-
-  CONSTR_inc_branch_counter(c);
 
   for (k = 0; k < 2; k++) {
 
@@ -818,7 +829,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
   }
 }
 
-void CONSTR_PF_eval_branch(Constr* c, Branch *br, Vec* var_values) {
+void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   
   // Local variables
   Bus* bus[2];
@@ -886,7 +897,13 @@ void CONSTR_PF_eval_branch(Constr* c, Branch *br, Vec* var_values) {
   Hcounter = CONSTR_get_Hcounter(c);
   bus_counted = CONSTR_get_bus_counted(c);
   data = (Constr_PF_Data*)CONSTR_get_data(c);
+
+  // Check pointers
   if (!f || !J || !Jcounter || !Hcounter || !bus_counted || !data)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
   
   // Bus data
@@ -1320,7 +1337,13 @@ void CONSTR_PF_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* s
   
   // Constr data
   bus_counted = CONSTR_get_bus_counted(c);
+
+  // Check pointer
   if (!bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Buses

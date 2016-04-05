@@ -16,10 +16,6 @@
 #include "vector.h"
 #include "list.h"
 
-// Shunt types
-#define SHUNT_TYPE_FIXED 0      /**< @brief Type: fixed shunt */
-#define SHUNT_TYPE_SWITCHED_V 1 /**< @brief Type: switched shunt that regulates bus voltage **/
-
 // Variables
 /** \defgroup shunt_vars Shunt Variable Masks
  *  @{
@@ -80,7 +76,6 @@ int SHUNT_list_reg_len(Shunt* reg_shunt_list);
 Shunt* SHUNT_new(void);
 void SHUNT_set_bus(Shunt* shunt, Bus* bus);
 void SHUNT_set_reg_bus(Shunt* shunt, Bus* reg_bus);
-void SHUNT_set_type(Shunt* shunt, char type);
 void SHUNT_set_index(Shunt* shunt, int index);
 void SHUNT_set_g(Shunt* shunt, REAL g);
 void SHUNT_set_b(Shunt* shunt, REAL b);

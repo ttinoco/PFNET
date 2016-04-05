@@ -24,6 +24,7 @@ cdef extern from "pfnet/branch.h":
     cdef char BRANCH_PROP_TAP_CHANGER_V
     cdef char BRANCH_PROP_TAP_CHANGER_Q
     cdef char BRANCH_PROP_PHASE_SHIFTER
+    cdef char BRANCH_PROP_NOT_OUT
 
     REAL BRANCH_get_sens_P_u_bound(Branch* br)
     REAL BRANCH_get_sens_P_l_bound(Branch* br)
@@ -56,6 +57,7 @@ cdef extern from "pfnet/branch.h":
     Branch* BRANCH_get_from_next(Branch* br)
     Branch* BRANCH_get_to_next(Branch* br)
     bint BRANCH_has_pos_ratio_v_sens(Branch* br)
+    bint BRANCH_is_on_outage(Branch* br)
     bint BRANCH_is_fixed_tran(Branch* br)
     bint BRANCH_is_line(Branch* br)
     bint BRANCH_is_phase_shifter(Branch* br)

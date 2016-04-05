@@ -84,6 +84,11 @@ void BUS_add_gen(Bus* bus, Gen* gen) {
     bus->gen = GEN_list_add(bus->gen,gen);
 }
 
+void BUS_del_gen(Bus* bus, Gen* gen) {
+  if (bus)
+    bus->gen = GEN_list_del(bus->gen,gen);
+}
+
 void BUS_add_load(Bus* bus, Load* load) {
   if (bus)
     bus->load = LOAD_list_add(bus->load,load);
@@ -94,9 +99,19 @@ void BUS_add_reg_gen(Bus* bus, Gen* reg_gen) {
     bus->reg_gen = GEN_list_reg_add(bus->reg_gen,reg_gen);
 }
 
+void BUS_del_reg_gen(Bus* bus, Gen* reg_gen) {
+  if (bus)
+    bus->reg_gen = GEN_list_reg_del(bus->reg_gen,reg_gen);
+}
+
 void BUS_add_reg_tran(Bus* bus, Branch* reg_tran) {
   if (bus)
     bus->reg_tran = BRANCH_list_reg_add(bus->reg_tran,reg_tran);
+}
+
+void BUS_del_reg_tran(Bus* bus, Branch* reg_tran) {
+  if (bus)
+    bus->reg_tran = BRANCH_list_reg_del(bus->reg_tran,reg_tran);
 }
 
 void BUS_add_shunt(Bus* bus, Shunt* shunt) {
@@ -114,9 +129,19 @@ void BUS_add_branch_from(Bus* bus, Branch* branch) {
     bus->branch_from = BRANCH_list_from_add(bus->branch_from,branch);
 }
 
+void BUS_del_branch_from(Bus* bus, Branch* branch) {
+  if (bus)
+    bus->branch_from = BRANCH_list_from_del(bus->branch_from,branch);
+}
+
 void BUS_add_branch_to(Bus* bus, Branch* branch) {
   if (bus)
     bus->branch_to = BRANCH_list_to_add(bus->branch_to,branch);
+}
+
+void BUS_del_branch_to(Bus* bus, Branch* branch) {
+  if (bus)
+    bus->branch_to = BRANCH_list_to_del(bus->branch_to,branch);
 }
 
 void BUS_add_vargen(Bus* bus, Vargen* gen) {
@@ -1095,8 +1120,8 @@ BOOL BUS_is_slack(Bus* bus) {
 }
 
 Bus* BUS_list_add(Bus* bus_list, Bus* bus_new) {
-    LIST_add(bus_list,bus_new,next);
-    return bus_list;
+  LIST_add(Bus,bus_list,bus_new,next);
+  return bus_list;
 }
 
 Bus* BUS_list_add_sorting(Bus* bus_list, Bus* bus_new, int sort_by) {

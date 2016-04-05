@@ -112,6 +112,9 @@ void PROB_analyze(Prob* p) {
     FUNC_list_analyze_branch(p->func,br);
   }
 
+  // Delete matvec
+  PROB_del_matvec(p);
+
   // Allocate problem matvec
   Arow = 0;
   Annz = 0;
@@ -243,27 +246,45 @@ void PROB_del(Prob* p) {
   }
 }
 
+void PROB_del_matvec(Prob* p) {
+  if (p) {
+
+    VEC_del(p->b);
+    MAT_del(p->A);
+    p->b = NULL;
+    p->A = NULL;
+    
+    VEC_del(p->u);
+    VEC_del(p->l);
+    MAT_del(p->G);
+    p->u = NULL;
+    p->l = NULL;
+    p->G = NULL;
+ 
+    VEC_del(p->f);
+    MAT_del(p->J);
+    MAT_del(p->H_combined);
+    p->f = NULL;
+    p->J = NULL;
+    p->H_combined = NULL;
+
+    VEC_del(p->gphi);
+    MAT_del(p->Hphi);
+    p->gphi = NULL;
+    p->Hphi = NULL;
+  }
+}
+
 void PROB_clear(Prob* p) {
   if (p) {
     
-    // Free data
+    // Free constr, functions and heuristics
     CONSTR_list_del(p->constr);
     FUNC_list_del(p->func);
     HEUR_list_del(p->heur);
     
-    VEC_del(p->b);
-    MAT_del(p->A);
-
-    VEC_del(p->u);
-    VEC_del(p->l);
-    MAT_del(p->G);
-    
-    VEC_del(p->f);
-    MAT_del(p->J);
-    MAT_del(p->H_combined);
-    
-    VEC_del(p->gphi);
-    MAT_del(p->Hphi);    
+    // Free matvec
+    PROB_del_matvec(p);
 
     // Re-initialize
     PROB_init(p);

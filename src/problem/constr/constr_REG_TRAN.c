@@ -57,8 +57,14 @@ void CONSTR_REG_TRAN_count_branch(Constr* c, Branch* br) {
   Aconstr_index = CONSTR_get_Aconstr_index_ptr(c);
   Jconstr_index = CONSTR_get_Jconstr_index_ptr(c);
   Hcounter = CONSTR_get_Hcounter(c);
+  
+  // Check pointers
   if (!Acounter || !Jcounter || !Aconstr_index ||
       !Jconstr_index || !Hcounter)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   if (BRANCH_is_tap_changer_v(br)) {
@@ -161,7 +167,7 @@ void CONSTR_REG_TRAN_count_branch(Constr* c, Branch* br) {
   }
 }
 
-void CONSTR_REG_TRAN_allocate(Constr *c) {
+void CONSTR_REG_TRAN_allocate(Constr* c) {
 
   // Local variables
   int Acounter;
@@ -265,11 +271,16 @@ void CONSTR_REG_TRAN_analyze_branch(Constr* c, Branch* br) {
   Aconstr_index = CONSTR_get_Aconstr_index_ptr(c);
   Jconstr_index = CONSTR_get_Jconstr_index_ptr(c);
   Hcounter = CONSTR_get_Hcounter(c);
+  CONSTR_inc_branch_counter(c);
+
+  // Check pointers
   if (!Acounter || !Jcounter || !Aconstr_index ||
       !Jconstr_index || !Hcounter)
     return;
-  
-  CONSTR_inc_branch_counter(c);
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
+    return;
   
   if (BRANCH_is_tap_changer_v(br)) {
       
@@ -512,7 +523,7 @@ void CONSTR_REG_TRAN_analyze_branch(Constr* c, Branch* br) {
   }
 }
 
-void CONSTR_REG_TRAN_eval_branch(Constr* c, Branch *br, Vec* var_values) {
+void CONSTR_REG_TRAN_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   
   // Local variables
   Bus* reg_bus;
@@ -553,11 +564,16 @@ void CONSTR_REG_TRAN_eval_branch(Constr* c, Branch *br, Vec* var_values) {
   Jcounter = CONSTR_get_Jcounter_ptr(c);
   Jconstr_index = CONSTR_get_Jconstr_index_ptr(c);
   Hcounter = CONSTR_get_Hcounter(c);
+  CONSTR_inc_branch_counter(c);
+
+  // Check pointers
   if (!f || !J || !Jcounter || 
       !Jconstr_index || !Hcounter)
     return;
-  
-  CONSTR_inc_branch_counter(c);
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
+    return;  
   
   if (BRANCH_is_tap_changer_v(br)) {
     
@@ -779,7 +795,13 @@ void CONSTR_REG_TRAN_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, 
   
   // Constr data
   Jconstr_index = CONSTR_get_Jconstr_index_ptr(c);
+
+  // Check pointer
   if (!Jconstr_index)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   if (BRANCH_is_tap_changer_v(br)) {

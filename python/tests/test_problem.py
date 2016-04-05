@@ -14,6 +14,7 @@ from scipy.sparse import coo_matrix,triu,bmat
 
 NUM_TRIALS = 25
 EPS = 2e0 # %
+TOL = 1e-4
 
 class TestProblem(unittest.TestCase):
     
@@ -22,6 +23,9 @@ class TestProblem(unittest.TestCase):
         # Network
         self.net = pf.Network()
         self.p = pf.Problem()
+
+        # Random
+        np.random.seed(0)
 
     def test_problem_LSNR(self):
 
@@ -206,7 +210,7 @@ class TestProblem(unittest.TestCase):
                 
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.linalg.norm(Jd_exact)
+                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.maximum(np.linalg.norm(Jd_exact),TOL)
                 self.assertLessEqual(error,EPS)
                 
             # Check Hcombined
@@ -232,7 +236,7 @@ class TestProblem(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.linalg.norm(Hd_exact)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sensitivities
@@ -446,7 +450,7 @@ class TestProblem(unittest.TestCase):
                 
                 gd_exact = np.dot(gphi0,d)
                 gd_approx = (phi1-phi0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.linalg.norm(gd_exact)
+                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Check J
@@ -463,7 +467,7 @@ class TestProblem(unittest.TestCase):
                 
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.linalg.norm(Jd_exact)
+                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.maximum(np.linalg.norm(Jd_exact),TOL)
                 self.assertLessEqual(error,EPS)
                 
             # Check Hphi
@@ -482,7 +486,7 @@ class TestProblem(unittest.TestCase):
                 
                 Hd_exact = Hphi0*d
                 Hd_approx = (gphi1-gphi0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.linalg.norm(Hd_exact)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Check Hcombined
@@ -508,7 +512,7 @@ class TestProblem(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.linalg.norm(Hd_exact)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sensitivities
@@ -622,12 +626,12 @@ class TestProblem(unittest.TestCase):
             self.assertTupleEqual(u.shape,(net.num_vars+net.num_branches,))
             self.assertTupleEqual(G.shape,(net.num_vars+net.num_branches,net.num_vars))
             
-            self.assertLess(np.linalg.norm(l-np.hstack((l2,l1)),np.inf),1e-12)
-            self.assertLess(np.linalg.norm(u-np.hstack((u2,u1)),np.inf),1e-12)
+            self.assertLess(np.linalg.norm(l-np.hstack((l1,l2)),np.inf),1e-12)
+            self.assertLess(np.linalg.norm(u-np.hstack((u1,u2)),np.inf),1e-12)
 
             self.assertGreater(G.nnz,0)
-            self.assertGreater(bmat([[G2],[G1]],format='coo').nnz,0)
-            E = G - bmat([[G2],[G1]])
+            self.assertGreater(bmat([[G1],[G2]],format='coo').nnz,0)
+            E = G - bmat([[G1],[G2]])
             self.assertEqual(E.nnz,0)
             
     def tearDown(self):

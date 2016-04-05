@@ -29,6 +29,7 @@ cdef extern from "pfnet/constr.h":
     
     void CONSTR_combine_H(Constr* c, Vec* coeff, bint ensure_psd)
     void CONSTR_del(Constr* c)
+    void CONSTR_del_matvec(Constr* constr)
     Constr* CONSTR_new(int type, Net* net)
     int CONSTR_get_Acounter(Constr* c)
     int CONSTR_get_Gcounter(Constr* c)

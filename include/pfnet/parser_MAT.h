@@ -28,6 +28,7 @@
 #define MAT_PARSER_STATE_GEN 2
 #define MAT_PARSER_STATE_BRANCH 3
 #define MAT_PARSER_STATE_COST 4
+#define MAT_PARSER_STATE_UTIL 5
 
 // Defaults
 #define MAT_PARSER_BASE_POWER 100
@@ -38,6 +39,7 @@
 #define MAT_GEN_TOKEN  "GEN"
 #define MAT_BRANCH_TOKEN "BRANCH"
 #define MAT_COST_TOKEN "COST"
+#define MAT_UTIL_TOKEN "UTIL"
 
 // Bus types
 #define MAT_BUS_TYPE_PQ 1
@@ -51,6 +53,7 @@ typedef struct MAT_Gen MAT_Gen;
 typedef struct MAT_Branch MAT_Branch;
 typedef struct MAT_Parser MAT_Parser;
 typedef struct MAT_Cost MAT_Cost;
+typedef struct MAT_Util MAT_Util;
 
 // Prototypes
 MAT_Parser* MAT_PARSER_new(void);
@@ -75,5 +78,7 @@ void MAT_PARSER_parse_branch_field(char* s, MAT_Parser* parser);
 void MAT_PARSER_parse_branch_row(MAT_Parser* parser);
 void MAT_PARSER_parse_cost_field(char* s, MAT_Parser* parser);
 void MAT_PARSER_parse_cost_row(MAT_Parser* parser);
+void MAT_PARSER_parse_util_field(char* s, MAT_Parser* parser);
+void MAT_PARSER_parse_util_row(MAT_Parser* parser);
 
 #endif

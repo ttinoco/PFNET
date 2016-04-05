@@ -60,6 +60,7 @@ void CONSTR_clear_Hcounter(Constr* c);
 void CONSTR_clear_bus_counted(Constr* c);
 void CONSTR_combine_H(Constr* c, Vec* coeff, BOOL ensure_psd);
 void CONSTR_del(Constr* constr);
+void CONSTR_del_matvec(Constr* constr);
 int CONSTR_get_type(Constr* c);
 char* CONSTR_get_type_str(Constr* c);
 Vec* CONSTR_get_b(Constr* c);

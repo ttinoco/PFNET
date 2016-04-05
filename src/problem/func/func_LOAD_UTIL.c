@@ -1,5 +1,5 @@
-/** @file func_SLIM_VMAG.c
- *  @brief This file defines the data structure and routines associated with the function of type SLIM_VMAG.
+/** @file func_LOAD_UTIL.c
+ *  @brief This file defines the data structure and routines associated with the function of type LOAD_UTIL.
  *
  * This file is part of PFNET.
  *
@@ -8,14 +8,14 @@
  * PFNET is released under the BSD 2-clause license.
  */
 
-#include <pfnet/func_SLIM_VMAG.h>
+#include <pfnet/func_LOAD_UTIL.h>
 
-void FUNC_SLIM_VMAG_init(Func* f) {
+void FUNC_LOAD_UTIL_init(Func* f) {
   // Nothing
 }
 
-void FUNC_SLIM_VMAG_clear(Func* f) {
-  
+void FUNC_LOAD_UTIL_clear(Func* f) {
+
   // phi
   FUNC_set_phi(f,0);
   
@@ -32,16 +32,17 @@ void FUNC_SLIM_VMAG_clear(Func* f) {
   FUNC_clear_bus_counted(f);
 }
 
-void FUNC_SLIM_VMAG_count_branch(Func* f, Branch* br) {
+void FUNC_LOAD_UTIL_count_branch(Func* f, Branch* br) {
 
   // Local variables
   Bus* buses[2];
   Bus* bus;
+  Load* load;
   int bus_index[2];
   int* Hcounter;
   char* bus_counted;
   int k;
-
+  
   // Constr data
   Hcounter = FUNC_get_Hcounter_ptr(f);
   bus_counted = FUNC_get_bus_counted(f);
@@ -49,7 +50,7 @@ void FUNC_SLIM_VMAG_count_branch(Func* f, Branch* br) {
   // Check pointers
   if (!Hcounter || !bus_counted)
     return;
-
+  
   // Check outage
   if (BRANCH_is_on_outage(br))
     return;
@@ -64,11 +65,12 @@ void FUNC_SLIM_VMAG_count_branch(Func* f, Branch* br) {
   for (k = 0; k < 2; k++) {
     
     bus = buses[k];
-
+    
     if (!bus_counted[bus_index[k]]) {
-
-      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) // v var
-	(*Hcounter)++;
+      for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P))
+	  (*Hcounter)++;
+      }     
     }
     
     // Update counted flag
@@ -76,7 +78,7 @@ void FUNC_SLIM_VMAG_count_branch(Func* f, Branch* br) {
   }
 }
 
-void FUNC_SLIM_VMAG_allocate(Func* f) {
+void FUNC_LOAD_UTIL_allocate(Func* f) {
   
   // Local variables
   int num_vars;
@@ -94,17 +96,17 @@ void FUNC_SLIM_VMAG_allocate(Func* f) {
 			  Hcounter));
 }
 
-void FUNC_SLIM_VMAG_analyze_branch(Func* f, Branch* br) {
+void FUNC_LOAD_UTIL_analyze_branch(Func* f, Branch* br) {
 
   // Local variables
   Bus* buses[2];
   Bus* bus;
+  Load* load;
   int bus_index[2];
   int* Hcounter;
   char* bus_counted;
   Mat* H;
   int k;
-  REAL dv;
 
   // Constr data
   H = FUNC_get_Hphi(f);
@@ -129,39 +131,38 @@ void FUNC_SLIM_VMAG_analyze_branch(Func* f, Branch* br) {
   for (k = 0; k < 2; k++) {
     
     bus = buses[k];
-    
+
     if (!bus_counted[bus_index[k]]) {
-      
-      dv = BUS_get_v_max(bus)-BUS_get_v_min(bus);
-      if (dv < FUNC_SLIM_VMAG_PARAM)
-	dv = FUNC_SLIM_VMAG_PARAM;
-      
-      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
-	MAT_set_i(H,*Hcounter,BUS_get_index_v_mag(bus));
-	MAT_set_j(H,*Hcounter,BUS_get_index_v_mag(bus));
-	MAT_set_d(H,*Hcounter,1./(dv*dv));
-	(*Hcounter)++;
+      for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
+	  MAT_set_i(H,*Hcounter,LOAD_get_index_P(load));
+	  MAT_set_j(H,*Hcounter,LOAD_get_index_P(load));
+	  MAT_set_d(H,*Hcounter,2.*LOAD_get_util_coeff_Q2(load));
+	  (*Hcounter)++;
+	}
       }
     }
     
     // Update counted flag
     bus_counted[bus_index[k]] = TRUE;
-  }  
+  }
 }
 
-void FUNC_SLIM_VMAG_eval_branch(Func* f, Branch* br, Vec* var_values) {
+void FUNC_LOAD_UTIL_eval_branch(Func* f, Branch* br, Vec* var_values) {
 
   // Local variables
   Bus* buses[2];
   Bus* bus;
+  Load* load;
   int bus_index[2];
   char* bus_counted;
   REAL* phi;
   REAL* gphi;
-  int index_v_mag;
-  REAL v;
-  REAL vmid;
-  REAL dv;
+  int index_P;
+  REAL P;
+  REAL Q0;
+  REAL Q1;
+  REAL Q2;
   int k;
 
   // Constr data
@@ -187,36 +188,37 @@ void FUNC_SLIM_VMAG_eval_branch(Func* f, Branch* br, Vec* var_values) {
   for (k = 0; k < 2; k++) {
     
     bus = buses[k];
-
+    
     if (!bus_counted[bus_index[k]]) {
-
-      dv = BUS_get_v_max(bus)-BUS_get_v_min(bus);
-      if (dv < FUNC_SLIM_VMAG_PARAM)
-	dv = FUNC_SLIM_VMAG_PARAM;
-
-      vmid = 0.5*(BUS_get_v_max(bus)+BUS_get_v_min(bus));
       
-      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
+      for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
 
-	// Index
-	index_v_mag = BUS_get_index_v_mag(bus);
-	
-	// v
-	v = VEC_get(var_values,index_v_mag);
-
-	// phi
-	(*phi) += 0.5*pow((v-vmid)/dv,2.);
-
-	// gphi
-	gphi[index_v_mag] = (v-vmid)/(dv*dv);
+	Q0 = LOAD_get_util_coeff_Q0(load);
+	Q1 = LOAD_get_util_coeff_Q1(load);
+	Q2 = LOAD_get_util_coeff_Q2(load);
+      
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
+	  
+	  // Index
+	  index_P = LOAD_get_index_P(load);
+	  
+	  // P
+	  P = VEC_get(var_values,index_P);
+	  
+	  // phi
+	  (*phi) += Q0 + Q1*P + Q2*pow(P,2.);
+	  
+	  // gphi
+	  gphi[index_P] = Q1 + 2.*Q2*P;
+	}
       }
     }
-    
+
     // Update counted flag
     bus_counted[bus_index[k]] = TRUE;
   }
 }
 
-void FUNC_SLIM_VMAG_free(Func* f) {
+void FUNC_LOAD_UTIL_free(Func* f) {
   // Nothing
 }

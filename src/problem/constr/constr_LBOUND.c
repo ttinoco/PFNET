@@ -59,6 +59,7 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
   Bus* buses[2];
   Bus* bus;
   Gen* gen;
+  Load* load;
   Vargen* vargen;
   Shunt* shunt;
   char* bus_counted;
@@ -75,7 +76,13 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
   u = CONSTR_get_u(c);
   G = CONSTR_get_G(c);
   bus_counted = CONSTR_get_bus_counted(c);
+
+  // Check pointer
   if (!bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data
@@ -213,7 +220,7 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 	    VEC_set(l,index,-GEN_INF_P);
 	  }
 	}
-
+	
 	// Reactive power (Q)
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) {
 	  index = GEN_get_index_Q(gen);
@@ -229,6 +236,26 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 	    VEC_set(l,index,-GEN_INF_Q);
 	  }
 	}	
+      }
+
+      // Loads
+      for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+	
+	// Active power (P)
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
+	  index = LOAD_get_index_P(load);
+	  MAT_set_i(G,index,index);
+	  MAT_set_j(G,index,index);    
+	  MAT_set_d(G,index,1.);
+	  if (LOAD_has_flags(load,FLAG_BOUNDED,LOAD_VAR_P)) {
+	    VEC_set(u,index,LOAD_get_P_max(load));     
+	    VEC_set(l,index,LOAD_get_P_min(load));
+	  }
+	  else {
+	    VEC_set(u,index,LOAD_INF_P);
+	    VEC_set(l,index,-LOAD_INF_P);
+	  }
+	}
       }
 
       // Variable generators
@@ -319,11 +346,19 @@ void CONSTR_LBOUND_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Ve
   Bus* buses[2];
   Bus* bus;
   Gen* gen;
+  Load* load;
   char* bus_counted;
   int i;
-
+  
+  // Constr data
   bus_counted = CONSTR_get_bus_counted(c);
+
+  // Check pointer
   if (!bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data
@@ -350,6 +385,16 @@ void CONSTR_LBOUND_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Ve
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
 	  GEN_set_sens_P_u_bound(gen,VEC_get(sGu,GEN_get_index_P(gen)));
 	  GEN_set_sens_P_l_bound(gen,VEC_get(sGl,GEN_get_index_P(gen)));
+	}
+      } 
+
+      // Loads
+      for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+	
+	// Active power (P)
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
+	  LOAD_set_sens_P_u_bound(load,VEC_get(sGu,LOAD_get_index_P(load)));
+	  LOAD_set_sens_P_l_bound(load,VEC_get(sGl,LOAD_get_index_P(load)));
 	}
       } 
     }

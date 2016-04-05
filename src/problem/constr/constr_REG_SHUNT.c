@@ -66,8 +66,14 @@ void CONSTR_REG_SHUNT_count_branch(Constr* c, Branch* br) {
   Jconstr_index = CONSTR_get_Jconstr_index_ptr(c);
   Hcounter = CONSTR_get_Hcounter(c);
   bus_counted = CONSTR_get_bus_counted(c);
+
+  // Check pointers
   if (!Acounter || !Jcounter || !Aconstr_index ||
       !Jconstr_index || !Hcounter || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data
@@ -191,7 +197,7 @@ void CONSTR_REG_SHUNT_count_branch(Constr* c, Branch* br) {
   }
 }
 
-void CONSTR_REG_SHUNT_allocate(Constr *c) {
+void CONSTR_REG_SHUNT_allocate(Constr* c) {
 
   // Local variables
   int Acounter;
@@ -296,8 +302,15 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
   Jconstr_index = CONSTR_get_Jconstr_index_ptr(c);
   Hcounter = CONSTR_get_Hcounter(c);
   bus_counted = CONSTR_get_bus_counted(c);
+  CONSTR_inc_branch_counter(c);
+
+  // Check pointers
   if (!Acounter || !Jcounter || !Aconstr_index ||
       !Jconstr_index || !Hcounter || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data
@@ -309,8 +322,6 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
   // Branch
   //*******
   
-  CONSTR_inc_branch_counter(c);
-
   // Buses
   //******
   
@@ -555,7 +566,7 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
   }
 }
 
-void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch *br, Vec* var_values) {
+void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   
   // Local variables
   Bus* buses[2];
@@ -598,8 +609,15 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch *br, Vec* var_values) {
   Jconstr_index = CONSTR_get_Jconstr_index_ptr(c);
   Hcounter = CONSTR_get_Hcounter(c);
   bus_counted = CONSTR_get_bus_counted(c);
+  CONSTR_inc_branch_counter(c);
+
+  // Check pointers
   if (!f || !J || !Jcounter || !Jconstr_index || 
       !Hcounter || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data
@@ -610,8 +628,6 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch *br, Vec* var_values) {
 
   // Branch
   //*******
-  
-  CONSTR_inc_branch_counter(c);
 
   // Buses
   //******
@@ -840,7 +856,13 @@ void CONSTR_REG_SHUNT_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf,
   // Constr data
   Jconstr_index = CONSTR_get_Jconstr_index_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
+
+  // Check pointers
   if (!Jconstr_index || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data

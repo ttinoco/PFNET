@@ -13,7 +13,8 @@ import numpy as np
 from scipy.sparse import coo_matrix,triu,tril
 
 NUM_TRIALS = 25
-EPS = 5e0 # %
+EPS = 2e0 # %
+TOL = 1e-4
 
 class TestFunctions(unittest.TestCase):
 
@@ -21,6 +22,9 @@ class TestFunctions(unittest.TestCase):
         
         # Network
         self.net = pf.Network()
+
+        # Random
+        np.random.seed(0)
         
     def test_func_REG_VMAG(self):
         
@@ -118,7 +122,7 @@ class TestFunctions(unittest.TestCase):
                 if np.linalg.norm(gd_exact) == 0.:
                     self.assertLessEqual(np.linalg.norm(gd_approx),2.)
                 else:
-                    error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),1e-5)
+                    error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Hessian check
@@ -137,7 +141,7 @@ class TestFunctions(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),1e-5)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
     def test_func_REG_PQ(self):
@@ -232,7 +236,7 @@ class TestFunctions(unittest.TestCase):
                 if np.linalg.norm(gd_exact) == 0.:
                     self.assertLessEqual(np.linalg.norm(gd_approx),2.)
                 else:
-                    error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),1e-5)
+                    error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
                     self.assertLessEqual(error,EPS)
 
             # Hessian check
@@ -251,7 +255,7 @@ class TestFunctions(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),1e-5)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
     def test_func_REG_VANG(self):
@@ -275,7 +279,7 @@ class TestFunctions(unittest.TestCase):
                           pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
             self.assertEqual(net.num_vars,2*(nb-ns))
              
-            x0 = net.get_var_values()
+            x0 = net.get_var_values()+np.random.randn(net.num_vars)
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
@@ -351,7 +355,7 @@ class TestFunctions(unittest.TestCase):
                 
                 gd_exact = np.dot(g0,d)
                 gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),1e-5)
+                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Hessian check
@@ -371,7 +375,7 @@ class TestFunctions(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),1e-5)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
     def test_func_REG_RATIO(self):
@@ -470,7 +474,7 @@ class TestFunctions(unittest.TestCase):
                 
                 gd_exact = np.dot(g0,d)
                 gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),1e-4)
+                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Hessian check
@@ -490,7 +494,7 @@ class TestFunctions(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),1e-4)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
     def test_func_REG_SUSC(self):
@@ -589,7 +593,7 @@ class TestFunctions(unittest.TestCase):
                 
                 gd_exact = np.dot(g0,d)
                 gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),1e-4)
+                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Hessian check
@@ -609,7 +613,7 @@ class TestFunctions(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),1e-4)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
     def test_func_GEN_COST(self):
@@ -702,7 +706,7 @@ class TestFunctions(unittest.TestCase):
                 
                 gd_exact = np.dot(g0,d)
                 gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.linalg.norm(gd_exact)
+                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Hessian check
@@ -721,7 +725,7 @@ class TestFunctions(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.linalg.norm(Hd_exact)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
     def test_func_SP_CONTROLS(self):
@@ -898,11 +902,11 @@ class TestFunctions(unittest.TestCase):
                 
                 gd_exact = np.dot(g0,d)
                 gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.linalg.norm(gd_exact)
+                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Hessian check
-            h = 1e-8
+            h = 1e-6
             func.eval(x0)
             g0 = func.gphi.copy()
             H0 = func.Hphi.copy()
@@ -918,13 +922,13 @@ class TestFunctions(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),1e-1)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
     def test_func_SLIM_VMAG(self):
         
         # Constants
-        h = 1e-9
+        h = 1e-8
         
         net = self.net
 
@@ -1014,7 +1018,7 @@ class TestFunctions(unittest.TestCase):
                 if np.linalg.norm(gd_exact) == 0.:
                     self.assertLessEqual(np.linalg.norm(gd_approx),2.)
                 else:
-                    error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),1e-5)
+                    error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Hessian check
@@ -1033,7 +1037,7 @@ class TestFunctions(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),1e-5)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
     def test_func_REG_PHASE(self):
@@ -1130,7 +1134,7 @@ class TestFunctions(unittest.TestCase):
                 
                 gd_exact = np.dot(g0,d)
                 gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),1e-4)
+                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Hessian check
@@ -1150,7 +1154,120 @@ class TestFunctions(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),1e-4)
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
+                self.assertLessEqual(error,EPS)
+
+    def test_func_LOAD_UTIL(self):
+        
+        # Constants
+        h = 1e-9
+        
+        net = self.net
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+            
+            # Vars
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_VARS,
+                          pf.LOAD_PROP_ANY,
+                          pf.LOAD_VAR_P)
+            self.assertEqual(net.num_vars,net.num_loads)
+            self.assertGreater(net.num_vars,0)
+             
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+            
+            # Function
+            func = pf.Function(pf.FUNC_TYPE_LOAD_UTIL,1.,net)
+
+            self.assertEqual(func.type,pf.FUNC_TYPE_LOAD_UTIL)
+
+            f = func.phi
+            g = func.gphi
+            H = func.Hphi
+            
+            # Before 
+            self.assertTrue(type(f) is float)
+            self.assertEqual(f,0.)
+            self.assertTrue(type(g) is np.ndarray)
+            self.assertTupleEqual(g.shape,(0,))
+            self.assertTrue(type(H) is coo_matrix)
+            self.assertTupleEqual(H.shape,(0,0))
+            self.assertEqual(H.nnz,0)
+            
+            self.assertEqual(func.Hcounter,0)
+            
+            func.analyze()
+            self.assertEqual(func.Hcounter,net.num_loads)
+            func.eval(x0)
+            self.assertEqual(func.Hcounter,0)
+            
+            f = func.phi
+            g = func.gphi
+            H = func.Hphi
+            
+            # After
+            self.assertTrue(type(f) is float)
+            self.assertNotEqual(f,0.)
+            self.assertTrue(type(g) is np.ndarray)
+            self.assertTupleEqual(g.shape,(net.num_vars,))
+            self.assertTrue(type(H) is coo_matrix)
+            self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
+            self.assertEqual(H.nnz,net.num_loads)
+            self.assertTrue(np.all(H.row == H.col))
+
+            self.assertTrue(not np.any(np.isinf(g)))
+            self.assertTrue(not np.any(np.isnan(g)))
+            self.assertTrue(not np.any(np.isinf(H.data)))
+            self.assertTrue(not np.any(np.isnan(H.data)))
+            
+            # value check
+            val = 0
+            for load in net.loads:
+                self.assertTrue(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+                val += (load.util_coeff_Q0 + 
+                        load.util_coeff_Q1*load.P +
+                        load.util_coeff_Q2*(load.P**2.))
+            net.update_properties()
+            self.assertLess(np.abs(val-f),1e-7)
+
+            # Gradient check
+            f0 = func.phi
+            g0 = func.gphi.copy()
+            for i in range(NUM_TRIALS):
+                
+                d = np.random.randn(net.num_vars)
+    
+                x = x0 + h*d
+                
+                func.eval(x)
+                f1 = func.phi
+                
+                gd_exact = np.dot(g0,d)
+                gd_approx = (f1-f0)/h
+                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
+                self.assertLessEqual(error,EPS)
+
+            # Hessian check
+            func.eval(x0)
+            g0 = func.gphi.copy()
+            H0 = func.Hphi.copy()
+            for i in range(NUM_TRIALS):
+                
+                d = np.random.randn(net.num_vars)
+    
+                x = x0 + h*d
+                
+                func.eval(x)
+
+                g1 = func.gphi.copy()
+                
+                Hd_exact = H0*d
+                Hd_approx = (g1-g0)/h
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
     def test_robustness(self):
@@ -1167,7 +1284,8 @@ class TestFunctions(unittest.TestCase):
                          pf.Function(pf.FUNC_TYPE_REG_VANG,1.,net),
                          pf.Function(pf.FUNC_TYPE_REG_VMAG,1.,net),
                          pf.Function(pf.FUNC_TYPE_SLIM_VMAG,1.,net),
-                         pf.Function(pf.FUNC_TYPE_SP_CONTROLS,1.,net)]
+                         pf.Function(pf.FUNC_TYPE_SP_CONTROLS,1.,net),
+                         pf.Function(pf.FUNC_TYPE_LOAD_UTIL,1.,net)]
             
             x0 = net.get_var_values()
         
@@ -1230,6 +1348,10 @@ class TestFunctions(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.GEN_PROP_ANY,
                           pf.GEN_VAR_P|pf.GEN_VAR_Q)
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_VARS,
+                          pf.LOAD_PROP_ANY,
+                          pf.LOAD_VAR_P)
             net.set_flags(pf.OBJ_BRANCH,
                           pf.FLAG_VARS,
                           pf.BRANCH_PROP_TAP_CHANGER,
@@ -1245,6 +1367,7 @@ class TestFunctions(unittest.TestCase):
             self.assertEqual(net.num_vars,
                              (2*net.num_buses + 
                               2*net.num_gens +
+                              net.num_loads +
                               net.get_num_tap_changers()+
                               net.get_num_phase_shifters()+
                               net.get_num_switched_shunts()))
@@ -1261,7 +1384,6 @@ class TestFunctions(unittest.TestCase):
             map(lambda f: f.analyze(),functions)
             map(lambda f: f.eval(x0),functions)
             for f in functions:
-                self.assertGreaterEqual(f.phi,0.)
                 self.assertTrue(isinstance(f.gphi,np.ndarray))
                 self.assertTrue(isinstance(f.Hphi,coo_matrix))
                 self.assertEqual(f.gphi.size,net.num_vars)

@@ -93,15 +93,18 @@ typedef struct Vec Vec;
 // Prototypes
 /** @brief Adds generator to list of generators connected to bus. */
 void BUS_add_gen(Bus* bus, Gen* gen);
+void BUS_del_gen(Bus* bus, Gen* gen);
 
 /** @brief Adds load to list of loads connected to bus. */
 void BUS_add_load(Bus* bus, Load* load);
 
 /** @brief Adds generator to list of generators regulating bus voltage. */
 void BUS_add_reg_gen(Bus* bus, Gen* reg_gen);
+void BUS_del_reg_gen(Bus* bus, Gen* reg_gen);
 
 /** @brief Adds transformer to list of transformer regulating bus voltage. */
 void BUS_add_reg_tran(Bus* bus, Branch* reg_tran);
+void BUS_del_reg_tran(Bus* bus, Branch* reg_tran);
 
 /** @brief Adds switched shunt to list of shunts regulating bus voltage. */
 void BUS_add_reg_shunt(Bus* bus, Shunt* reg_shunt);
@@ -113,7 +116,11 @@ void BUS_add_shunt(Bus* bus, Shunt* shunt);
 void BUS_add_vargen(Bus* bus, Vargen* gen);
 
 void BUS_add_branch_from(Bus* bus, Branch* branch);
+void BUS_del_branch_from(Bus* bus, Branch* branch);
+
 void BUS_add_branch_to(Bus* bus, Branch* branch);
+void BUS_del_branch_to(Bus* bus, Branch* branch);
+
 BOOL BUS_array_check(Bus* bus, int num, BOOL verbose);
 void* BUS_array_get(void* bus, int index);
 Bus* BUS_array_new(int num);

@@ -55,15 +55,22 @@ struct Net {
   REAL bus_v_vio;    /**< @brief Maximum bus voltage limits violation (p.u.). */
   REAL bus_P_mis;    /**< @brief Maximum bus active power mismatch (MW). */
   REAL bus_Q_mis;    /**< @brief Maximum bus reactive power mismatch (MVAr). */
+
   REAL gen_P_cost;   /**< @brief Total active power generation cost ($/hr). */
   REAL gen_v_dev;    /**< @brief Maximum generator voltage setpoint deviation (p.u.). */
   REAL gen_Q_vio;    /**< @brief Maximum generator reactive power limit violation (MVAr). */
   REAL gen_P_vio;    /**< @brief Maximum generator active power limit violation (MW). */
+
   REAL tran_v_vio;   /**< @brief Maximum transformer-controlled bus voltage magnitude band violation (p.u.). */
   REAL tran_r_vio;   /**< @brief Maximum tap ratio limit violation of tap-changing transformer (unitless). */
   REAL tran_p_vio;   /**< @brief Maximum phase shift limit violation of phase-shifting trasnformer (radians). */
+
   REAL shunt_v_vio;  /**< @brief Maximum shunt-controlled bus voltage mangnitude band violation (p.u.). */
   REAL shunt_b_vio;  /**< @brief Maximum susceptance limit volation of switched shunt device (p.u.). */
+
+  REAL load_P_util;  /**< @brief Total active power consumption utility ($/hr). */
+  REAL load_P_vio;   /**< @brief Maximum load active power limit violation (MW). */
+
   int num_actions;   /**< @brief Number of control actions. */
 
   // Spatial correlation
@@ -322,6 +329,7 @@ void NET_clear_flags(Net* net) {
   Bus* bus;
   Shunt* shunt;
   Vargen* vargen;
+  Load* load;
 
   if (!net)
     return;
@@ -363,6 +371,13 @@ void NET_clear_flags(Net* net) {
   }
 
   // Loads
+  for (i = 0; i < net->num_loads; i++) {
+    load = LOAD_array_get(net->load,i);
+    LOAD_clear_flags(load,FLAG_VARS);
+    LOAD_clear_flags(load,FLAG_FIXED);
+    LOAD_clear_flags(load,FLAG_BOUNDED);
+    LOAD_clear_flags(load,FLAG_SPARSE);
+  }
 
   // Vargens
   for (i = 0; i < net->num_vargens; i++) {
@@ -380,24 +395,48 @@ void NET_clear_flags(Net* net) {
   net->num_sparse = 0;
 }
 
+void NET_clear_outages(Net* net) {
+  int i;
+  if (!net)
+    return;
+  for (i = 0; i < net->num_gens; i++)
+    GEN_set_outage(NET_get_gen(net,i),FALSE);
+  for (i = 0; i < net->num_branches; i++)
+    BRANCH_set_outage(NET_get_branch(net,i),FALSE);
+}
+
 void NET_clear_properties(Net* net) {
   int i;
   if (net) {
+    
+    // Bus
     net->bus_v_max = 0;
     net->bus_v_min = 0;
     net->bus_v_vio = 0;
     net->bus_P_mis = 0;
     net->bus_Q_mis = 0;
+
+    // Gen
     net->gen_P_cost = 0;
     net->gen_v_dev = 0;
     net->gen_Q_vio = 0;
     net->gen_P_vio = 0;
+
+    // Branch
     net->tran_v_vio = 0;
     net->tran_r_vio = 0;
     net->tran_p_vio = 0;
+
+    // Shunt
     net->shunt_v_vio = 0;
     net->shunt_b_vio = 0;
     net->num_actions = 0;
+
+    // Load
+    net->load_P_util = 0;
+    net->load_P_vio = 0;
+
+    // Counters
     if (net->bus_counted && net->bus) {
       for (i = 0; i < net->num_buses; i++) {
 	BUS_clear_mismatches(BUS_array_get(net->bus,i));
@@ -411,9 +450,6 @@ void NET_clear_properties(Net* net) {
 void NET_clear_sensitivities(Net* net) {
   
   // Local variables
-  Bus* bus;
-  Branch* branch;
-  Gen* gen;
   int i;
 
   if (!net)
@@ -431,7 +467,13 @@ void NET_clear_sensitivities(Net* net) {
   for (i = 0; i < net->num_gens; i++) 
     GEN_clear_sensitivities(GEN_array_get(net->gen,i));
 
-  // Others (TO DO)
+  // Loads
+  for (i = 0; i < net->num_loads; i++) 
+    LOAD_clear_sensitivities(LOAD_array_get(net->load,i));
+
+  // Vargens
+
+  // Shunts
 }
 
 Bus* NET_create_sorted_bus_list(Net* net, int sort_by) {
@@ -719,15 +761,22 @@ void NET_init(Net* net) {
   net->bus_v_vio = 0;
   net->bus_P_mis = 0;
   net->bus_Q_mis = 0;
+
   net->gen_P_cost = 0;
   net->gen_v_dev = 0;
   net->gen_Q_vio = 0;
   net->gen_P_vio = 0;
+
   net->tran_v_vio = 0;
   net->tran_r_vio = 0;
   net->tran_p_vio = 0;
+
   net->shunt_v_vio = 0;
   net->shunt_b_vio = 0;
+
+  net->load_P_util = 0;
+  net->load_P_vio = 0;
+
   net->num_actions = 0;
 
   // Utils
@@ -940,6 +989,18 @@ int NET_get_num_branches(Net* net) {
     return 0;
 }
 
+int NET_get_num_branches_not_on_outage(Net* net) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  for(i = 0; i < net->num_branches; i++) {
+    if (!BRANCH_is_on_outage(BRANCH_array_get(net->branch,i)))
+      n++;
+  }
+  return n;
+}
+
 int NET_get_num_fixed_trans(Net* net) {
   int i;
   int n = 0;
@@ -1019,6 +1080,18 @@ int NET_get_num_gens(Net* net) {
     return 0;
 }
 
+int NET_get_num_gens_not_on_outage(Net* net) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  for(i = 0; i < net->num_gens; i++) {
+    if (!GEN_is_on_outage(GEN_array_get(net->gen,i)))
+      n++;
+  }
+  return n;
+}
+
 int NET_get_num_reg_gens(Net* net) {
   int i;
   int n = 0;
@@ -1060,6 +1133,18 @@ int NET_get_num_loads(Net* net) {
     return net->num_loads;
   else
     return 0;
+}
+
+int NET_get_num_P_adjust_loads(Net* net) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  for(i = 0; i < net->num_loads; i++) {
+    if (LOAD_is_P_adjustable(LOAD_array_get(net->load,i)))
+      n++;
+  }
+  return n;
 }
 
 int NET_get_num_shunts(Net* net) {
@@ -1201,6 +1286,8 @@ Vec* NET_get_var_values(Net* net, int code) {
     SHUNT_get_var_values(SHUNT_array_get(net->shunt,i),values,code);
 
   // Loads
+  for (i = 0; i < net->num_loads; i++) 
+    LOAD_get_var_values(LOAD_array_get(net->load,i),values,code);
 
   // Variable generators
   for (i = 0; i < net->num_vargens; i++) 
@@ -1243,6 +1330,13 @@ Mat* NET_get_var_projection(Net* net, char obj_type, char var) {
     get_element = &GEN_array_get;
     has_flags = &GEN_has_flags;
     get_var_index = &GEN_get_var_index;
+    break;
+  case OBJ_LOAD:
+    num = net->num_loads;
+    array = net->load;
+    get_element = &LOAD_array_get;
+    has_flags = &LOAD_has_flags;
+    get_var_index = &LOAD_get_var_index;
     break;
   case OBJ_BRANCH:
     num = net->num_branches;
@@ -1398,6 +1492,20 @@ REAL NET_get_shunt_b_vio(Net* net) {
     return 0;
 }
 
+REAL NET_get_load_P_util(Net* net) {
+  if (net)
+    return net->load_P_util;
+  else
+    return 0;
+}
+
+REAL NET_get_load_P_vio(Net* net) {
+  if (net)
+    return net->load_P_vio;
+  else
+    return 0;
+}
+
 int NET_get_num_actions(Net* net) {
   if (net)
     return net->num_actions;
@@ -1420,10 +1528,10 @@ REAL NET_get_vargen_corr_value(Net* net) {
 }
 
 BOOL NET_has_error(Net* net) {
-  if (!net)
-    return FALSE;
-  else
+  if (net)
     return net->error_flag;
+  else
+    return FALSE;
 }
 
 void NET_load(Net* net, char* filename) {
@@ -1636,6 +1744,13 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, char
     set_flags = &GEN_set_flags;
     has_properties = &GEN_has_properties;
     break;
+  case OBJ_LOAD:
+    num = net->num_loads;
+    array = net->load;
+    get_element = &LOAD_array_get;
+    set_flags = &LOAD_set_flags;
+    has_properties = &LOAD_has_properties;
+    break;
   case OBJ_BRANCH:
     num = net->num_branches;
     array = net->branch;
@@ -1699,6 +1814,10 @@ void NET_set_flags_of_component(Net* net, void* obj, char obj_type, char flag_ma
     set_flags = &GEN_set_flags;
     get_obj_type = &GEN_get_obj_type;
     break;
+  case OBJ_LOAD:
+    set_flags = &LOAD_set_flags;
+    get_obj_type = &LOAD_get_obj_type;
+    break;
   case OBJ_BRANCH:
     set_flags = &BRANCH_set_flags;
     get_obj_type = &BRANCH_get_obj_type;
@@ -1760,6 +1879,8 @@ void NET_set_var_values(Net* net, Vec* values) {
     SHUNT_set_var_values(SHUNT_array_get(net->shunt,i),values);
 
   // Loads
+  for (i = 0; i < net->num_loads; i++) 
+    LOAD_set_var_values(LOAD_array_get(net->load,i),values);
 
   // Vargens
   for (i = 0; i < net->num_vargens; i++) 
@@ -1787,7 +1908,9 @@ void NET_show_components(Net *net) {
   printf("generators       : %d\n",NET_get_num_gens(net));
   printf("  slack          : %d\n",NET_get_num_slack_gens(net));
   printf("  reg            : %d\n",NET_get_num_reg_gens(net));
+  printf("  P adjust       : %d\n",NET_get_num_P_adjust_gens(net));
   printf("loads            : %d\n",NET_get_num_loads(net));
+  printf("  P adjust       : %d\n",NET_get_num_P_adjust_loads(net));
   printf("vargens          : %d\n",NET_get_num_vargens(net));
 }
 
@@ -1809,6 +1932,8 @@ void NET_show_properties(Net* net) {
   printf("tran p vio  : %.2e (rad)\n",NET_get_tran_p_vio(net));
   printf("shunt v vio : %.2e (p.u.)\n",NET_get_shunt_v_vio(net));
   printf("shunt b vio : %.2e (p.u.)\n",NET_get_shunt_b_vio(net));
+  printf("load P util : %.2e ($/hr)\n",NET_get_load_P_util(net));
+  printf("load P vio  : %.2e (MW)\n",NET_get_load_P_vio(net));
   printf("num actions : %d\n",NET_get_num_actions(net));
 }
 
@@ -1976,12 +2101,16 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
   int k;
   int m;
   
-  // Check data
+  // Check pointers
   if (!net || !br)
     return;
 
   // Branch counter
   net->branch_counter++;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
+    return;
 
   // Bus data
   buses[0] = BRANCH_get_bus_from(br);
@@ -2197,6 +2326,41 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
 	net->num_actions++;
     }
 
+    // Loads
+    for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+
+      if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P) && var_values)
+	P = VEC_get(var_values,LOAD_get_index_P(load));
+      else
+	P = LOAD_get_P(load);
+
+      // Injections
+      BUS_inject_P(bus,-P);
+      BUS_inject_Q(bus,-LOAD_get_Q(load));
+
+      // Active power consumption utility
+      //*********************************
+      net->load_P_util += LOAD_get_P_util_at(load,P);
+
+      // Active power limit violations
+      //******************************
+      dP = 0;
+      if (P > LOAD_get_P_max(load))
+	dP = (P-LOAD_get_P_max(load))*net->base_power; // MW
+      if (P < LOAD_get_P_min(load)) 
+	dP = (LOAD_get_P_min(load)-P)*net->base_power; // MW
+      if (dP > net->load_P_vio)
+	net->load_P_vio = dP;
+
+      // Active power actions
+      //*********************
+      dP = LOAD_get_P_max(load)-LOAD_get_P_min(load);
+      if (dP < NET_CONTROL_EPS)
+	dP = NET_CONTROL_EPS;
+      if (100.*fabs(P-LOAD_get_P(load))/dP > NET_CONTROL_ACTION_PCT)
+	net->num_actions++;
+    }
+
     // Variable generators
     for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
 
@@ -2212,14 +2376,6 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
       // Injections
       BUS_inject_P(bus,P);
       BUS_inject_Q(bus,Q);
-    }
-
-    // Loads
-    for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
-
-      // Injections
-      BUS_inject_P(bus,-LOAD_get_P(load));
-      BUS_inject_Q(bus,-LOAD_get_Q(load));
     }
 
     // Shunts

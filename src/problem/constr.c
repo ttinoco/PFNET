@@ -136,7 +136,7 @@ void CONSTR_combine_H(Constr* c, Vec* coeff, BOOL ensure_psd) {
   }
 }
 
-void CONSTR_del(Constr* c) {
+void CONSTR_del_matvec(Constr* c) {
   if (c) {
 
     // Mat and vec
@@ -149,6 +149,24 @@ void CONSTR_del(Constr* c) {
     VEC_del(c->u);
     MAT_array_del(c->H_array,c->H_array_size);
     MAT_del(c->H_combined);
+    c->b = NULL;
+    c->A = NULL;
+    c->f = NULL;
+    c->J = NULL;
+    c->G = NULL;
+    c->l = NULL;
+    c->u = NULL;
+    c->H_array = NULL;
+    c->H_array_size = 0;
+    c->H_combined = NULL;
+  }
+}
+
+void CONSTR_del(Constr* c) {
+  if (c) {
+
+    // Mat and vec
+    CONSTR_del_matvec(c);
 
     // Utils
     if (c->bus_counted)
@@ -418,7 +436,7 @@ void CONSTR_inc_branch_counter(Constr* c) {
 }
 
 Constr* CONSTR_list_add(Constr* clist, Constr* nc) {
-  LIST_add(clist,nc,next);
+  LIST_add(Constr,clist,nc,next);
   return clist;
 }
 
@@ -825,8 +843,10 @@ void CONSTR_count_branch(Constr* c, Branch* br) {
 }
 
 void CONSTR_allocate(Constr* c) {
-  if (c && c->func_allocate && CONSTR_is_safe_to_count(c))
+  if (c && c->func_allocate && CONSTR_is_safe_to_count(c)) {
+    CONSTR_del_matvec(c);
     (*(c->func_allocate))(c);
+  }
 }
 
 void CONSTR_clear(Constr* c) {

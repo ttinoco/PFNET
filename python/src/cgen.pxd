@@ -23,6 +23,7 @@ cdef extern from "pfnet/gen.h":
     cdef char GEN_PROP_REG
     cdef char GEN_PROP_NOT_REG
     cdef char GEN_PROP_NOT_SLACK
+    cdef char GEN_PROP_NOT_OUT
     cdef char GEN_PROP_P_ADJUST
 
     REAL GEN_get_sens_P_u_bound(Gen* gen)
@@ -45,6 +46,7 @@ cdef extern from "pfnet/gen.h":
     REAL GEN_get_Q_min(Gen* gen)
     Gen* GEN_get_next(Gen* gen)
     Gen* GEN_get_reg_next(Gen* gen)
+    bint GEN_is_on_outage(Gen* gen)
     bint GEN_is_P_adjustable(Gen* gen)
     bint GEN_is_regulator(Gen* gen)
     bint GEN_is_slack(Gen* gen)

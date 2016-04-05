@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -18,6 +18,7 @@
 #include <pfnet/func_GEN_COST.h>
 #include <pfnet/func_SP_CONTROLS.h>
 #include <pfnet/func_SLIM_VMAG.h>
+#include <pfnet/func_LOAD_UTIL.h>
 
 struct Func {
   
@@ -72,12 +73,22 @@ void FUNC_clear_bus_counted(Func* f) {
   } 
 }
 
-void FUNC_del(Func* f) {
+void FUNC_del_matvec(Func* f) {
   if (f) {
 
     // Mat and vec
     VEC_del(f->gphi);
     MAT_del(f->Hphi);
+    f->gphi = NULL;
+    f->Hphi = NULL;
+  }
+}
+
+void FUNC_del(Func* f) {
+  if (f) {
+
+    // Mat and vec
+    FUNC_del_matvec(f);
 
     // Utils
     if (f->bus_counted)
@@ -119,6 +130,8 @@ char* FUNC_get_type_str(Func* f) {
       return FUNC_TYPE_SP_CONTROLS_STR;
     case FUNC_TYPE_SLIM_VMAG:
       return FUNC_TYPE_SLIM_VMAG_STR;
+    case FUNC_TYPE_LOAD_UTIL:
+      return FUNC_TYPE_LOAD_UTIL_STR;
     default:
       return FUNC_TYPE_UNKNOWN_STR;
     }
@@ -209,7 +222,7 @@ void FUNC_inc_branch_counter(Func* f) {
 }
 
 Func* FUNC_list_add(Func* flist, Func* nf) {
-  LIST_add(flist,nf,next);
+  LIST_add(Func,flist,nf,next);
   return flist;
 }
 
@@ -370,6 +383,16 @@ Func* FUNC_new(int type, REAL weight, Net* net) {
     f->func_eval_branch = FUNC_SLIM_VMAG_eval_branch;
     f->func_free = FUNC_SLIM_VMAG_free;
     break;
+
+  case FUNC_TYPE_LOAD_UTIL: // Power consumption utility
+    f->func_init = FUNC_LOAD_UTIL_init;
+    f->func_count_branch = FUNC_LOAD_UTIL_count_branch;
+    f->func_allocate = FUNC_LOAD_UTIL_allocate;
+    f->func_clear = FUNC_LOAD_UTIL_clear;
+    f->func_analyze_branch = FUNC_LOAD_UTIL_analyze_branch;
+    f->func_eval_branch = FUNC_LOAD_UTIL_eval_branch;
+    f->func_free = FUNC_LOAD_UTIL_free;
+    break;
  
   default:
     f->func_init = NULL;
@@ -434,8 +457,10 @@ void FUNC_count_branch(Func* f, Branch* b) {
 }
 
 void FUNC_allocate(Func* f) {
-  if (f && f->func_allocate && FUNC_is_safe_to_count(f))
+  if (f && f->func_allocate && FUNC_is_safe_to_count(f)) {
+    FUNC_del_matvec(f);
     (*(f->func_allocate))(f);
+  }
 }
 
 void FUNC_clear(Func* f) {

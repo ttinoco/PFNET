@@ -37,7 +37,8 @@
 #define GEN_PROP_REG 0x02       /**< @brief Property: regulating generator */
 #define GEN_PROP_NOT_REG 0x04   /**< @brief Property: non-regulating generator */
 #define GEN_PROP_NOT_SLACK 0x08 /**< @brief Property: non-slack generator */
-#define GEN_PROP_P_ADJUST 0x10  /**< @brief Property: P adjustable (Pmin < Pmax) */
+#define GEN_PROP_NOT_OUT 0x10   /**< @brief Property: generator not on outage */
+#define GEN_PROP_P_ADJUST 0x20  /**< @brief Property: P adjustable (Pmin < Pmax) */
 /** @} */
 
 // Generator
@@ -78,12 +79,15 @@ int GEN_get_var_index(void* gen, char var);
 BOOL GEN_has_flags(void* gen, char flag_type, char mask);
 BOOL GEN_has_properties(void* gen, char prop);
 void GEN_init(Gen* gen);
+BOOL GEN_is_on_outage(Gen* gen);
 BOOL GEN_is_P_adjustable(Gen* gen);
 BOOL GEN_is_regulator(Gen* gen);
 BOOL GEN_is_slack(Gen* gen);
 Gen* GEN_list_add(Gen* gen_list, Gen* gen);
+Gen* GEN_list_del(Gen* gen_list, Gen* gen);
 int GEN_list_len(Gen* gen_list);
 Gen* GEN_list_reg_add(Gen* reg_gen_list, Gen* reg_gen);
+Gen* GEN_list_reg_del(Gen* reg_gen_list, Gen* reg_gen);
 int GEN_list_reg_len(Gen* reg_gen_list);
 Gen* GEN_new(void);
 void GEN_set_sens_P_u_bound(Gen* gen, REAL value);
@@ -93,7 +97,7 @@ void GEN_set_cost_coeff_Q1(Gen* gen, REAL q);
 void GEN_set_cost_coeff_Q2(Gen* gen, REAL q);
 void GEN_set_bus(Gen* gen, Bus* bus);
 void GEN_set_reg_bus(Gen* gen, Bus* reg_bus);
-void GEN_set_regulator(Gen* gen, BOOL regulator);
+void GEN_set_outage(Gen* gen, BOOL outage);
 void GEN_set_index(Gen* gen, int index);
 void GEN_set_P(Gen* gen, REAL P);
 void GEN_set_P_max(Gen* gen, REAL P_max);

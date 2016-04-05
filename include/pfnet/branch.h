@@ -46,6 +46,7 @@
 #define BRANCH_PROP_TAP_CHANGER_V 0x02 /**< @brief Property: tap-changing transformer that regulates voltage */
 #define BRANCH_PROP_TAP_CHANGER_Q 0x04 /**< @brief Property: tap-changing transformer that regulates reactive flow */
 #define BRANCH_PROP_PHASE_SHIFTER 0x08 /**< @brief Property: phase-shiting transformer that regulates active flow */
+#define BRANCH_PROP_NOT_OUT 0x10       /**< @brief Property: branch not on outage */
 /** @} */
 
 // Branch
@@ -61,6 +62,7 @@ Branch* BRANCH_array_new(int num);
 void BRANCH_array_show(Branch* br, int num);
 void BRANCH_clear_sensitivities(Branch* br);
 void BRANCH_clear_flags(Branch* br, char flag_type);
+char BRANCH_get_type(Branch* br);
 char BRANCH_get_obj_type(void* br);
 REAL BRANCH_get_sens_P_u_bound(Branch* br);
 REAL BRANCH_get_sens_P_l_bound(Branch* br);
@@ -97,6 +99,7 @@ BOOL BRANCH_has_flags(void* br, char flag_type, char mask);
 BOOL BRANCH_has_pos_ratio_v_sens(Branch* br);
 BOOL BRANCH_has_properties(void* br, char prop);
 void BRANCH_init(Branch* br);
+BOOL BRANCH_is_on_outage(Branch* br);
 BOOL BRANCH_is_fixed_tran(Branch* br);
 BOOL BRANCH_is_line(Branch* br);
 BOOL BRANCH_is_phase_shifter(Branch* br);
@@ -104,12 +107,16 @@ BOOL BRANCH_is_tap_changer(Branch* br);
 BOOL BRANCH_is_tap_changer_v(Branch* br);
 BOOL BRANCH_is_tap_changer_Q(Branch* br);
 Branch* BRANCH_list_reg_add(Branch* reg_br_list, Branch* br);
+Branch* BRANCH_list_reg_del(Branch* reg_br_list, Branch* br);
 int BRANCH_list_reg_len(Branch* reg_br_list);
 Branch* BRANCH_list_from_add(Branch* from_br_list, Branch* br);
+Branch* BRANCH_list_from_del(Branch* from_br_list, Branch* br);
 int BRANCH_list_from_len(Branch* from_br_list);
 Branch* BRANCH_list_to_add(Branch* to_br_list, Branch* br);
+Branch* BRANCH_list_to_del(Branch* to_br_list, Branch* br);
 int BRANCH_list_to_len(Branch* to_br_list);
 Branch* BRANCH_new(void);
+void BRANCH_set_outage(Branch* branch, BOOL outage);
 void BRANCH_set_sens_P_u_bound(Branch* br, REAL value);
 void BRANCH_set_sens_P_l_bound(Branch* br, REAL value);
 void BRANCH_set_index(Branch* br, int index);
