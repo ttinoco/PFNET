@@ -42,23 +42,23 @@ Bus Property Masks
  
 .. data:: pfnet.BUS_PROP_REG_BY_GEN
 
-          Bus voltage magnitude is regulated by generators.
+          Bus with voltage magnitude regulated by one or more generators.
 
 .. data:: pfnet.BUS_PROP_REG_BY_TRAN
 
-	  Bus voltage magnitude is regulated by tap-changing transformers.
+	  Bus with voltage magnitude regulated by one or more tap-changing transformers.
 
 .. data:: pfnet.BUS_PROP_REG_BY_SHUNT
 
-	  Bus voltage magnitude is regulated by switched shunt devices.
+	  Bus with voltage magnitude regulated by one or more switched shunt devices.
 	  
 .. data:: pfnet.BUS_PROP_NOT_REG_BY_GEN
 
-	  Bus voltage magnitude is not regulated by generators.
+	  Bus with voltage magnitude that is not regulated by generators.
 
 .. data:: pfnet.BUS_PROP_NOT_SLACK
 
-	  Bus is not slack. 
+	  Bus that is not a slack bus. 
 
 .. _ref_bus_var:
 
@@ -67,19 +67,19 @@ Bus Variable Masks
 
 .. data:: pfnet.BUS_VAR_VMAG
 
-          Voltage magnitude.
+          Bus voltage magnitude.
 
 .. data:: pfnet.BUS_VAR_VANG
 
-          Voltage angle.
+          Bus voltage angle.
 
 .. data:: pfnet.BUS_VAR_VDEV
 
-          Voltage magnitude positive and negative set point deviations.
+          Bus voltage magnitude positive and negative set-point deviations.
 
 .. data:: pfnet.BUS_VAR_VVIO
 
-          Voltage magnitude upper and lower bound violations.
+          Bus voltage magnitude upper and lower bound violations.
 
 .. _ref_bus_sens:
 
@@ -167,19 +167,23 @@ Branch Property Masks
 
 .. data:: pfnet.BRANCH_PROP_TAP_CHANGER
 
-	  Branch is tap-changing transformer.
+	  Branch that is tap-changing transformer.
 
 .. data:: pfnet.BRANCH_PROP_TAP_CHANGER_V
 
-	  Branch is tap-changing transformer regulating bus voltage magnitude.
+	  Branch that is tap-changing transformer regulating a bus voltage magnitude.
 
 .. data:: pfnet.BRANCH_PROP_TAP_CHANGER_Q 
 
-	  Branch is tap-changing transformer regulating reactive power flow.
+	  Branch that is tap-changing transformer regulating reactive power flow.
 
 .. data:: pfnet.BRANCH_PROP_PHASE_SHIFTER
 
-	  Branch is phase-shifting transformer regulating active power flow.
+	  Branch that is phase-shifting transformer regulating active power flow.
+
+.. data:: pfnet.BRANCH_PROP_NOT_OUT
+
+	  Branch that is not on outage.
 
 .. _ref_branch_var:
 
@@ -226,19 +230,23 @@ Generator Property Masks
 
 .. data:: pfnet.GEN_PROP_REG
 
-	  Generator that regulates bus voltage magnitude.
+	  Generator that regulates a bus voltage magnitude.
 
 .. data:: pfnet.GEN_PROP_NOT_REG
 
-	  Generator that does not regulate bus voltage magnitude.
+	  Generator that does not regulate a bus voltage magnitude.
 
 .. data:: pfnet.GEN_PROP_NOT_SLACK
 
-	  Generator that is not slack.
+	  Generator that is not a slack generator.
+
+.. data:: pfnet.GEN_PROP_NOT_OUT
+
+	  Generator that is not on outage.
 
 .. data:: pfnet.GEN_PROP_P_ADJUST
 
-	  Generator that can adjust its active power (P_min < P_max).
+	  Generator that can adjust its active power, e.g., :math:`P_{\min} < P_{\max}`.
 
 .. _ref_gen_var:
 
@@ -277,7 +285,7 @@ Shunt Property Masks
 
 .. data:: pfnet.SHUNT_PROP_SWITCHED_V
 
-	  Switched shunt devices that regulates bus voltage magnitude.
+	  Switched shunt devices that regulates a bus voltage magnitude.
 
 .. _ref_shunt_var:
 
@@ -304,6 +312,28 @@ Shunt Class
 
 Load
 ====
+
+.. _ref_load_prop:
+
+Load Property Masks
+-------------------
+
+.. data:: pfnet.LOAD_PROP_ANY
+
+	  Any load.
+
+.. data:: pfnet.LOAD_PROP_P_ADJUST
+
+	  Load that can adjust its active power, e.g., :math:`P_{\min} < P_{\max}`.
+
+.. _ref_load_var:
+
+Load Variable Masks
+-------------------
+
+.. data:: pfnet.LOAD_VAR_P
+
+	  Load active power.
 
 .. _ref_load_class:
 
@@ -380,7 +410,7 @@ Component Types
 
 .. data:: pfnet.OBJ_VARGEN
 
-	  Variable generator.
+	  Variable generator (solar, wind, etc).
 
 .. _ref_net_flag:
 
@@ -389,7 +419,7 @@ Flag Masks
 
 .. data:: pfnet.FLAG_VARS
 
-	  For specifying quantities as variable.
+	  For specifying quantities as variables.
 
 .. data:: pfnet.FLAG_FIXED
 
@@ -426,6 +456,14 @@ Network Class
 -------------
 
 .. autoclass:: pfnet.Network
+   :members:
+
+.. _ref_cont:
+
+Contingency
+===========
+
+.. autoclass:: pfnet.Contingency
    :members:
 
 .. _ref_graph:
@@ -470,6 +508,10 @@ Function Types
 
           Active power generation cost.
 
+.. data:: pfnet.FUNC_TYPE_LOAD_UTIL
+
+          Active power consumption utility.
+
 .. data:: pfnet.FUNC_TYPE_REG_RATIO
 
 	  Transformer tap ratio regularization.
@@ -506,7 +548,7 @@ Constraint Types
 
 .. data:: pfnet.CONSTR_TYPE_PF
 
-	  Constraint for enforcing power balance at every bus of the network. 
+	  Constraint for enforcing AC power balance at every bus of the network. 
 
 .. data:: pfnet.CONSTR_TYPE_DCPF
 

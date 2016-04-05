@@ -1117,7 +1117,7 @@ cdef class Generator:
         def __set__(self,c): cgen.GEN_set_cost_coeff_Q0(self._c_ptr,c)
 
     property cost_coeff_Q1:
-        """ Coefficient for genertion cost function (linear term. units of $/(hr p.u.)). """
+        """ Coefficient for genertion cost function (linear term, units of $/(hr p.u.)). """
         def __get__(self): return cgen.GEN_get_cost_coeff_Q1(self._c_ptr)
         def __set__(self,c): cgen.GEN_set_cost_coeff_Q1(self._c_ptr,c)
 
@@ -1360,6 +1360,7 @@ cdef class Load:
         """ 
         Determines whether the load has the flags associated with
         certain quantities set. 
+
         Parameters
         ----------
         fmask : int (:ref:`ref_net_flag`)
@@ -1418,7 +1419,7 @@ cdef class Load:
         def __set__(self,c): cload.LOAD_set_util_coeff_Q0(self._c_ptr,c)
 
     property util_coeff_Q1:
-        """ Coefficient for consumption utility function (linear term. units of $/(hr p.u.)). """
+        """ Coefficient for consumption utility function (linear term, units of $/(hr p.u.)). """
         def __get__(self): return cload.LOAD_get_util_coeff_Q1(self._c_ptr)
         def __set__(self,c): cload.LOAD_set_util_coeff_Q1(self._c_ptr,c)
 
@@ -1960,7 +1961,7 @@ cdef class Network:
         Parameters
         ----------
         obj_type : int (:ref:`ref_net_obj`)
-        var : int (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`)
+        var : int (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`)
         """
         
         return Matrix(cnet.NET_get_var_projection(self._c_net,obj_type,var),owndata=True)
@@ -2291,8 +2292,8 @@ cdef class Network:
         ----------
         obj_type : int (:ref:`ref_net_obj`)
         flags : int or list (:ref:`ref_net_flag`)
-        props : int or list (:ref:`ref_bus_prop`, :ref:`ref_branch_prop`, :ref:`ref_gen_prop`, :ref:`ref_shunt_prop`)
-        vals : int or list (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`)
+        props : int or list (:ref:`ref_bus_prop`, :ref:`ref_branch_prop`, :ref:`ref_gen_prop`, :ref:`ref_shunt_prop`, :ref:`ref_load_prop`, :ref:`ref_vargen_prop` )
+        vals : int or list (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`)
         """
 
         props = props if isinstance(props,list) else [props]
@@ -2314,7 +2315,7 @@ cdef class Network:
         ----------
         obj : :class:`Bus <pfnet.Bus>`, :class:`Branch <pfnet.Branch>`, :class:`Generator <pfnet.Generator>`, :class:`Load <pfnet.Load>`, :class:`Shunt <pfnet.Shunt>`, :class:`VarGenerator <pfnet.VarGenerator>` 
         flags : int or list (:ref:`ref_net_flag`)
-        vals : int or list (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`)
+        vals : int or list (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`)
         """
         
         cdef CPtr ptr = obj._get_c_ptr()
@@ -2576,8 +2577,8 @@ cdef class Contingency:
         
         Parameters
         ----------
-        gens : list
-        branches : list
+        gens : list or :class:`Generators <pfnet.Generator>`
+        branches : list :class:`Branchs <pfnet.Branch>`
         alloc : {``True``, ``False``}
         """
 

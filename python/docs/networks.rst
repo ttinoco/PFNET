@@ -4,7 +4,7 @@
 Power Networks
 **************
 
-This section describes how to load and analyze power networks using PFNET.
+This section describes how to create and analyze power networks using PFNET.
 
 .. _net_overview:
 
@@ -60,7 +60,9 @@ Power networks have several components. These are :ref:`buses <net_bus>`, :ref:`
   generators       : 5
     slack          : 1
     reg            : 5
+    P adjust       : 5
   loads            : 11
+    P adjust       : 0
   vargens          : 0
 
 .. _net_bus:
@@ -202,6 +204,8 @@ Names           Description                                                     
 ``tran_p_vio``  Maximum phase shift limit violation of phase-shifting transformer radians
 ``shunt_v_vio`` Maximum band violation of shunt-regulated voltage                 per unit
 ``shunt_b_vio`` Maximum susceptance limit violation of switched shunt device      per unit
+``load_P_util`` Total active power consumption utility                            $/hour
+``load_P_vio``  Maximum load active power limit violation                         MW
 ``num_actions`` Number of control adjustments (greater than 2% of control range)  unitless
 =============== ================================================================= ========
 
@@ -243,6 +247,7 @@ To set network quantities as variables, the :class:`Network <pfnet.Network>` cla
 * :ref:`ref_bus_prop`
 * :ref:`ref_branch_prop`
 * :ref:`ref_gen_prop`
+* :ref:`ref_load_prop`
 * :ref:`ref_shunt_prop`
 * :ref:`ref_vargen_prop`
 
@@ -251,6 +256,7 @@ To set network quantities as variables, the :class:`Network <pfnet.Network>` cla
 * :ref:`ref_bus_var`
 * :ref:`ref_branch_var`
 * :ref:`ref_gen_var`
+* :ref:`ref_load_var`
 * :ref:`ref_shunt_var`
 * :ref:`ref_vargen_var`
 
@@ -284,7 +290,7 @@ Once variables have been set, the :ref:`vector <ref_vec>` containing all the cur
   >>> print values.shape
   (10,)
 
-The components that have quantities set as variables have indices that can be used to locate these quantities in the vector of all variable values::
+The network components that have quantities set as variables have indices that can be used to locate these quantities in the vector of all variable values::
 
   >>> bus = [b for b in net.buses if b.is_reg_by_gen()][0]
 
