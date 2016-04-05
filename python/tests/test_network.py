@@ -341,12 +341,28 @@ class TestNetwork(unittest.TestCase):
             for i in range(net.num_gens):
 
                 gen = net.get_gen(i)
+                same_gen = net.get_gen(i)
 
                 self.assertEqual(gen.index,i)
 
                 self.assertEqual(gen.index,net.generators[i].index)
 
                 self.assertTrue(gen.bus)
+
+                # Comparisons
+                self.assertFalse(gen == net.get_bus(0))
+                self.assertFalse(gen is same_gen)
+                self.assertTrue(gen == same_gen)
+                self.assertFalse(gen != same_gen)
+                if i > 0:
+                    j = 0
+                else:
+                    j = net.num_gens-1
+                if i != j:
+                    other_gen = net.get_gen(j)
+                    self.assertFalse(gen is other_gen)
+                    self.assertFalse(gen == other_gen)
+                    self.assertTrue(gen != other_gen)
 
                 # obj type
                 self.assertEqual(gen.obj_type,pf.OBJ_GEN)
@@ -418,6 +434,22 @@ class TestNetwork(unittest.TestCase):
             for i in range(net.num_branches):
 
                 branch = net.get_branch(i)
+                same_branch = net.get_branch(i)
+
+                # Comparisons
+                self.assertFalse(branch == net.get_bus(0))
+                self.assertFalse(branch is same_branch)
+                self.assertTrue(branch == same_branch)
+                self.assertFalse(branch != same_branch)
+                if i > 0:
+                    j = 0
+                else:
+                    j = net.num_branches-1
+                if i != j:
+                    other_branch = net.get_branch(j)
+                    self.assertFalse(branch is other_branch)
+                    self.assertFalse(branch == other_branch)
+                    self.assertTrue(branch != other_branch)
 
                 # obj type
                 self.assertEqual(branch.obj_type,pf.OBJ_BRANCH)

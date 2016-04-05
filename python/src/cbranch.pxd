@@ -57,6 +57,7 @@ cdef extern from "pfnet/branch.h":
     Branch* BRANCH_get_from_next(Branch* br)
     Branch* BRANCH_get_to_next(Branch* br)
     bint BRANCH_has_pos_ratio_v_sens(Branch* br)
+    bint BRANCH_is_equal(Branch* br, Branch* other)
     bint BRANCH_is_on_outage(Branch* br)
     bint BRANCH_is_fixed_tran(Branch* br)
     bint BRANCH_is_line(Branch* br)

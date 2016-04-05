@@ -46,6 +46,7 @@ cdef extern from "pfnet/gen.h":
     REAL GEN_get_Q_min(Gen* gen)
     Gen* GEN_get_next(Gen* gen)
     Gen* GEN_get_reg_next(Gen* gen)
+    bint GEN_is_equal(Gen* gen, Gen* other)
     bint GEN_is_on_outage(Gen* gen)
     bint GEN_is_P_adjustable(Gen* gen)
     bint GEN_is_regulator(Gen* gen)

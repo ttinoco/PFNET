@@ -1091,6 +1091,10 @@ void BUS_inject_Q(Bus* bus, REAL Q) {
     bus->Q_mis += Q; // p.u.
 }
 
+BOOL BUS_is_equal(Bus* bus, Bus* other) {
+  return bus == other;
+}
+
 BOOL BUS_is_regulated_by_gen(Bus* bus) {
   if (bus)
     return GEN_is_regulator(bus->reg_gen);

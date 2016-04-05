@@ -366,6 +366,10 @@ void GEN_init(Gen* gen) {
   }
 }
 
+BOOL GEN_is_equal(Gen* gen, Gen* other) {
+  return gen == other;
+}
+
 BOOL GEN_is_on_outage(Gen* gen) {
   if (gen)
     return gen->outage;

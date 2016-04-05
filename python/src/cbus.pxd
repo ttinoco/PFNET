@@ -97,6 +97,7 @@ cdef extern from "pfnet/bus.h":
     int BUS_get_largest_mis_type(Bus* bus)
     REAL BUS_get_quantity(Bus* bus, int qtype)
     Bus* BUS_get_next(Bus* bus)
+    bint BUS_is_equal(Bus* bus, Bus* other)
     bint BUS_is_slack(Bus* bus)
     bint BUS_is_regulated_by_gen(Bus* bus)
     bint BUS_is_regulated_by_tran(Bus* bus)

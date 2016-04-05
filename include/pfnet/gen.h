@@ -79,6 +79,7 @@ int GEN_get_var_index(void* gen, char var);
 BOOL GEN_has_flags(void* gen, char flag_type, char mask);
 BOOL GEN_has_properties(void* gen, char prop);
 void GEN_init(Gen* gen);
+BOOL GEN_is_equal(Gen* gen, Gen* other);
 BOOL GEN_is_on_outage(Gen* gen);
 BOOL GEN_is_P_adjustable(Gen* gen);
 BOOL GEN_is_regulator(Gen* gen);

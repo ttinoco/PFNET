@@ -99,6 +99,7 @@ BOOL BRANCH_has_flags(void* br, char flag_type, char mask);
 BOOL BRANCH_has_pos_ratio_v_sens(Branch* br);
 BOOL BRANCH_has_properties(void* br, char prop);
 void BRANCH_init(Branch* br);
+BOOL BRANCH_is_equal(Branch* br, Branch* other);
 BOOL BRANCH_is_on_outage(Branch* br);
 BOOL BRANCH_is_fixed_tran(Branch* br);
 BOOL BRANCH_is_line(Branch* br);

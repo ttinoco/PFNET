@@ -504,6 +504,10 @@ void BRANCH_init(Branch* br) {
   br->to_next = NULL;
 };
 
+BOOL BRANCH_is_equal(Branch* br, Branch* other) {
+  return br == other;
+}
+
 BOOL BRANCH_is_on_outage(Branch* br) {
   if (br)
     return br->outage;

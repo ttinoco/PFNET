@@ -191,6 +191,24 @@ cdef class Bus:
 
         return new_CPtr(self._c_ptr)
 
+    def is_equal(self,other):
+        """
+        Determines whether bus is equal to given bus.
+
+        Parameters
+        ----------
+        other : :class:`Bus <pfnet.Bus>`
+        """
+
+        cdef Bus b_other
+
+        if not isinstance(other,Bus):
+            return False
+
+        b_other = other
+
+        return cbus.BUS_is_equal(self._c_ptr,b_other._c_ptr)
+
     def is_slack(self):
         """
         Determines whether the bus is a slack bus.
@@ -426,11 +444,11 @@ cdef class Bus:
         -------
         flag : {``True``, ``False``}
         """
-        
+
         if op == 2:
-            return isinstance(other,Bus) and self.index == other.index
+            return self.is_equal(other)
         elif op == 3:
-            return (not isinstance(other,Bus)) or self.index != other.index
+            return not self.is_equal(other)
         else:
             return False
 
@@ -716,6 +734,45 @@ cdef class Branch:
 
         return cbranch.BRANCH_has_pos_ratio_v_sens(self._c_ptr)
 
+    def is_equal(self,other):
+        """
+        Determines whether branch is equal to given branch.
+
+        Parameters
+        ----------
+        other : :class:`Branch <pfnet.Branch>`
+        """
+
+        cdef Branch b_other
+
+        if not isinstance(other,Branch):
+            return False
+
+        b_other = other
+
+        return cbranch.BRANCH_is_equal(self._c_ptr,b_other._c_ptr)
+
+    def __richcmp__(self,other,op):
+        """
+        Compares two branches.
+
+        Parameters
+        ----------
+        other : Branch
+        op : comparison type
+
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+
+        if op == 2:
+            return self.is_equal(other)
+        elif op == 3:
+            return not self.is_equal(other)
+        else:
+            return False
+
     def is_on_outage(self):
         """
         Determines whether branch in on outage.
@@ -995,6 +1052,45 @@ cdef class Generator:
     def _get_c_ptr(self):
 
         return new_CPtr(self._c_ptr)
+
+    def is_equal(self,other):
+        """
+        Determines whether generator is equal to given generator.
+
+        Parameters
+        ----------
+        other : :class:`Generator <pfnet.Generator>`
+        """
+
+        cdef Generator g_other
+
+        if not isinstance(other,Generator):
+            return False
+
+        g_other = other
+
+        return cgen.GEN_is_equal(self._c_ptr,g_other._c_ptr)
+
+    def __richcmp__(self,other,op):
+        """
+        Compares two generators.
+
+        Parameters
+        ----------
+        other : Generator
+        op : comparison type
+
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+
+        if op == 2:
+            return self.is_equal(other)
+        elif op == 3:
+            return not self.is_equal(other)
+        else:
+            return False
 
     def is_on_outage(self):
         """
