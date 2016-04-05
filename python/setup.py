@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -25,7 +25,7 @@ else:
     libraries.append('gvc')
     
 setup(name='PFNET',
-      version='1.0',
+      version='1.3',
       license='BSD 2-clause license',
       description='Power Flow Network Library',
       author='Tomas Tinoco De Rubira',
