@@ -1642,7 +1642,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(pf.SHUNT_INF_SUSC,1000.)
             for bus in net.buses:
                 self.assertEqual(x[bus.index_v_mag],bus.v_max)
-                self.assertEqual(x[bus.index_v_ang],pf.PI)
+                self.assertEqual(x[bus.index_v_ang],pf.BUS_INF_V_ANG)
                 self.assertEqual(x[bus.index_y],pf.BUS_INF_V_MAG)
                 self.assertEqual(x[bus.index_z],pf.BUS_INF_V_MAG)
                 self.assertEqual(x[bus.index_vl],pf.BUS_INF_V_MAG)
@@ -1673,7 +1673,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(x.size,net.num_vars)
             for bus in net.buses:
                 self.assertEqual(x[bus.index_v_mag],bus.v_min)
-                self.assertEqual(x[bus.index_v_ang],-pf.PI)
+                self.assertEqual(x[bus.index_v_ang],-pf.BUS_INF_V_ANG)
                 self.assertEqual(x[bus.index_y],0.)
                 self.assertEqual(x[bus.index_z],0.)
                 self.assertEqual(x[bus.index_vl],0.)

@@ -22,7 +22,8 @@
 #define BUS_DEFAULT_V_MIN 0.9 /**< @brief Default minimum voltage magnitude. */
 
 // Infinity
-#define BUS_INF_V_MAG 100. /**< @brief Infinite voltage magnitude */
+#define BUS_INF_V_MAG 100. /**< @brief Infinite voltage magnitude (p.u.) */
+#define BUS_INF_V_ANG 100. /**< @brief Infinite voltage angle (radians) */
 
 // Variables
 /** \defgroup bus_vars Bus Variable Masks

@@ -198,8 +198,8 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 	MAT_set_i(G,index,index);
 	MAT_set_j(G,index,index);    
 	MAT_set_d(G,index,1.);
-	VEC_set(u,index,2.*PI);
-	VEC_set(l,index,-2.*PI);
+	VEC_set(u,index,BUS_INF_V_ANG);
+	VEC_set(l,index,-BUS_INF_V_ANG);
       }
       
       // Generators

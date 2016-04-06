@@ -135,6 +135,7 @@ BUS_VAR_VVIO = cbus.BUS_VAR_VVIO
 
 # Infinite
 BUS_INF_V_MAG = cbus.BUS_INF_V_MAG
+BUS_INF_V_ANG = cbus.BUS_INF_V_ANG
 
 # Sensitivities
 BUS_SENS_LARGEST = cbus.BUS_SENS_LARGEST

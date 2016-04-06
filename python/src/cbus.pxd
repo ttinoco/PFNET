@@ -22,6 +22,7 @@ cdef extern from "pfnet/bus.h":
     cdef char BUS_VAR_VVIO
 
     cdef double BUS_INF_V_MAG
+    cdef double BUS_INF_V_ANG
 
     cdef char BUS_PROP_ANY
     cdef char BUS_PROP_SLACK
