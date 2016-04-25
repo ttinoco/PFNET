@@ -23,7 +23,10 @@ if '--no_graphviz' in sys.argv:
     sys.argv.remove('--no_graphviz')
 else:
     libraries.append('gvc')
-    
+
+import numpy as np
+
+
 setup(name='PFNET',
       version='1.3',
       license='BSD 2-clause license',
@@ -34,5 +37,5 @@ setup(name='PFNET',
                                        ["./src/pfnet.pyx"],
                                        libraries=libraries,
                                        library_dirs=['../lib'],
-                                       include_dirs=['../include'])]))
+                                       include_dirs=['../include'] + [np.get_include(), ])]))
       
