@@ -8,7 +8,7 @@
 
 import pfnet as pf
 import unittest
-import test_cases
+from . import test_cases
 import numpy as np
 
 class TestGraph(unittest.TestCase):

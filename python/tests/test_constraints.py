@@ -8,7 +8,7 @@
 
 import pfnet as pf
 import unittest
-import test_cases
+from . import test_cases
 import numpy as np
 from scipy.sparse import coo_matrix,triu,tril,eye
 
@@ -736,7 +736,7 @@ class TestConstraints(unittest.TestCase):
             for k in range(net.num_branches):
                 br = net.get_branch(k)
                 for bus in [br.bus_from,br.bus_to]:
-                    if counted.has_key(bus.number):
+                    if bus.number in counted:
                         continue
                     counted[bus.number] = True
                     if bus.is_slack():
@@ -863,7 +863,7 @@ class TestConstraints(unittest.TestCase):
             for k in range(net.num_branches):
                 br = net.get_branch(k)
                 for bus in [br.bus_from,br.bus_to]:
-                    if counted.has_key(bus.number):
+                    if bus.number in counted:
                         continue
                     counted[bus.number] = True
                     if bus.is_regulated_by_gen():
