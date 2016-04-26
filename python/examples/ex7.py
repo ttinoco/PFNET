@@ -13,8 +13,8 @@ from ex6 import NRsolve
 net = Network()
 net.load(sys.argv[1])
 
-print '%.2e %.2e' %(net.bus_P_mis, net.bus_Q_mis)
+print('%.2e %.2e' %(net.bus_P_mis, net.bus_Q_mis))
 
 NRsolve(net)
 
-print '%.2e %.2e' %(net.bus_P_mis, net.bus_Q_mis)
+print('%.2e %.2e' %(net.bus_P_mis, net.bus_Q_mis))

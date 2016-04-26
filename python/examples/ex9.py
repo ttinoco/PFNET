@@ -18,18 +18,18 @@ net.set_flags(pf.OBJ_BUS,
               pf.BUS_PROP_ANY,
               pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
 
-print net.num_vars, 2*net.num_buses
+print(net.num_vars, 2*net.num_buses)
 
 P1 = net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VMAG)
 P2 = net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VANG)
 
-print type(P1)
+print(type(P1))
 
 x = net.get_var_values()
 v_mags = P1*x
 v_angs = P2*x
 
-print v_mags
-print v_angs
+print(v_mags)
+print(v_angs)
 
-print np.linalg.norm(x - (P1.T*v_mags+P2.T*v_angs))
+print(np.linalg.norm(x - (P1.T*v_mags+P2.T*v_angs)))

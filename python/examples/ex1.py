@@ -13,4 +13,4 @@ from pfnet import Network
 net = Network()
 net.load(sys.argv[1])
 
-print np.average([b.degree for b in net.buses])
+print(np.average([b.degree for b in net.buses]))
