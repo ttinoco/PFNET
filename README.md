@@ -43,3 +43,4 @@ Wrappers for PFNET are available for the following languages:
 ## Contributors ##
 
 * [Tomas Tinoco De Rubira](http://n.ethz.ch/~tomast/) (principal developer)
+* Martin Zellner (port to Python 3)
