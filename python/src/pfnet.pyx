@@ -12,6 +12,8 @@ from functools import reduce
 import numpy as np
 cimport numpy as np
 
+from functools import reduce
+
 cimport cconstants
 cimport cflags
 cimport cobjs
