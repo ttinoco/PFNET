@@ -40,20 +40,6 @@ Wrappers for PFNET are available for the following languages:
 * [Python](http://ttinoco.github.io/PFNET/python)
 * [Matlab](http://ttinoco.github.io/PFNET/matlab) (getting started)
 
-## Citing PFNET ##
+## Contributors ##
 
-If you use PFNET in your work, please cite the software as follows:
-
-\code
-@misc{pfnet,
-  author={Tinoco De Rubira, Tomas},
-  title={{PFNET}: A library for modeling and analyzing electric power networks},
-  howpublished={\url{https://github.com/ttinoco/PFNET}},
-  month={July},
-  year={2015}
-}
-\endcode
-
-## Contact ##
-
-* Tomas Tinoco De Rubira (<ttinoco5687@gmail.com>)
+* [Tomas Tinoco De Rubira](http://n.ethz.ch/~tomast/) (principal developer)
