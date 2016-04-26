@@ -52,9 +52,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'PFNET'
-copyright = u'2015, Tomas Tinoco De Rubira'
-author = u'Tomas Tinoco De Rubira'
+project = 'PFNET'
+copyright = '2015, Tomas Tinoco De Rubira'
+author = 'Tomas Tinoco De Rubira'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -231,8 +231,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'PFNET.tex', u'PFNET Python Documentation',
-   u'Tomas Tinoco De Rubira', 'manual'),
+  (master_doc, 'PFNET.tex', 'PFNET Python Documentation',
+   'Tomas Tinoco De Rubira', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -261,7 +261,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'pfnet', u'PFNET Python Documentation',
+    (master_doc, 'pfnet', 'PFNET Python Documentation',
      [author], 1)
 ]
 
@@ -275,7 +275,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'PFNET', u'PFNET Python Documentation',
+  (master_doc, 'PFNET', 'PFNET Python Documentation',
    author, 'PFNET', 'One line description of project.',
    'Miscellaneous'),
 ]
