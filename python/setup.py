@@ -32,7 +32,7 @@ setup(name='PFNET',
       author='Tomas Tinoco De Rubira',
       author_email='ttinoco5687@gmail.com',
       ext_modules=cythonize([Extension("pfnet", 
-                                       ["../python/src/pfnet.pyx"],
+                                       ["./src/pfnet.pyx"],
                                        libraries=libraries,
                                        library_dirs=['../lib'],
                                        include_dirs=['../include'] + [np.get_include()])]))
