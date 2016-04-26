@@ -9,6 +9,7 @@
 import sys
 from Cython.Build import cythonize
 from distutils.core import setup, Extension
+import numpy as np
 
 libraries = ['pfnet']
 
@@ -24,9 +25,6 @@ if '--no_graphviz' in sys.argv:
 else:
     libraries.append('gvc')
 
-import numpy as np
-
-
 setup(name='PFNET',
       version='1.3',
       license='BSD 2-clause license',
@@ -34,8 +32,8 @@ setup(name='PFNET',
       author='Tomas Tinoco De Rubira',
       author_email='ttinoco5687@gmail.com',
       ext_modules=cythonize([Extension("pfnet", 
-                                       ["./src/pfnet.pyx"],
+                                       ["/Users/murphy/git/PFNET/python/src/pfnet.pyx"],
                                        libraries=libraries,
-                                       library_dirs=['../lib'],
-                                       include_dirs=['../include'] + [np.get_include(), ])]))
+                                       library_dirs=['/Users/murphy/git/PFNET/lib'],
+                                       include_dirs=['/Users/murphy/git/PFNET/include'] + [np.get_include()])]))
       
