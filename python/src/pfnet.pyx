@@ -7,6 +7,10 @@
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
+from functools import reduce
+
+import numpy as np
+cimport numpy as np
 
 cimport cconstants
 cimport cflags
@@ -26,9 +30,6 @@ cimport cconstr
 cimport cfunc
 cimport cheur
 cimport cprob
-
-import numpy as np
-cimport numpy as np
 
 from scipy import misc
 import tempfile
@@ -499,8 +500,8 @@ cdef class Bus:
 
     property name:
         """ Bus name (sting). """
-        def __get__(self): return cbus.BUS_get_name(self._c_ptr)
-        def __set__(self,name): cbus.BUS_set_name(self._c_ptr,name)
+        def __get__(self): return cbus.BUS_get_name(self._c_ptr).decode('UTF-8')
+        def __set__(self,name): cbus.BUS_set_name(self._c_ptr, name.encode('UTF-8'))
 
     property degree:
         """ Bus degree (number of incident branches) (float). """
@@ -1613,8 +1614,8 @@ cdef class VarGenerator:
 
     property name:
         """ Variable generator name (string). """
-        def __get__(self): return cvargen.VARGEN_get_name(self._c_ptr)
-        def __set__(self,name): cvargen.VARGEN_set_name(self._c_ptr,name)
+        def __get__(self): return cvargen.VARGEN_get_name(self._c_ptr).decode('UTF-8')
+        def __set__(self,name): cvargen.VARGEN_set_name(self._c_ptr,name.encode('UTF-8'))
 
     property obj_type:
         """ Object type (int). """
@@ -1866,7 +1867,7 @@ cdef class Network:
         bus : :class:`Bus <pfnet.Bus>`
         """
 
-        ptr = cnet.NET_bus_hash_name_find(self._c_net,name)
+        ptr = cnet.NET_bus_hash_name_find(self._c_net,name.encode('UTF-8'))
         if ptr is not NULL:
             return new_Bus(ptr)
         else:
@@ -1885,7 +1886,7 @@ cdef class Network:
         vargen : :class:`VarGenerator <pfnet.VarGenerator>`
         """
 
-        ptr = cnet.NET_vargen_hash_name_find(self._c_net,name)
+        ptr = cnet.NET_vargen_hash_name_find(self._c_net,name.encode('UTF-8'))
         if ptr is not NULL:
             return new_VarGenerator(ptr)
         else:
@@ -2377,7 +2378,7 @@ cdef class Network:
         filename : string        
         """
 
-        cnet.NET_load(self._c_net,filename)
+        cnet.NET_load(self._c_net,filename.encode('UTF-8'))
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
 
@@ -2958,7 +2959,7 @@ cdef class Graph:
         filename : string
         """
 
-        cgraph.GRAPH_write(self._c_graph,format,filename)
+        cgraph.GRAPH_write(self._c_graph,format.encode('UTF-8'),filename.encode('UTF-8'))
         if cgraph.GRAPH_has_error(self._c_graph):
             raise GraphError(cgraph.GRAPH_get_error_string(self._c_graph))
 
@@ -3681,5 +3682,3 @@ cdef class Problem:
     property nu:
         """ Initial dual point (:class:`ndarray <numpy.ndarray>`). """
         def __get__(self): return None
-        
-    
