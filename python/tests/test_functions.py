@@ -1296,9 +1296,9 @@ class TestFunctions(unittest.TestCase):
                 self.assertEqual(f.gphi.size,0)
                 self.assertEqual(f.Hphi.nnz,0)
 
-            map(lambda f: f.eval(x0),functions)
-            map(lambda f: f.analyze(),functions)
-            map(lambda f: f.eval(x0),functions)
+            list(map(lambda f: f.eval(x0),functions))
+            list(map(lambda f: f.analyze(),functions))
+            list(map(lambda f: f.eval(x0),functions))
 
             for f in functions:
                 self.assertEqual(f.phi,0.)
@@ -1311,26 +1311,26 @@ class TestFunctions(unittest.TestCase):
             net.load(case)
 
             # Before updating network
-            map(lambda f: f.clear_error(),functions)
+            list(map(lambda f: f.clear_error(),functions))
             for f in functions:
                 self.assertRaises(pf.FunctionError,f.eval,x0)
-            map(lambda f: f.clear_error(),functions)
+            list(map(lambda f: f.clear_error(),functions))
             for f in functions:
                 self.assertRaises(pf.FunctionError,f.eval,x0)
-            map(lambda f: f.clear_error(),functions)
+            list(map(lambda f: f.clear_error(),functions))
             for f in functions:
                 self.assertRaises(pf.FunctionError,f.analyze)
-            map(lambda f: f.clear_error(),functions)
+            list(map(lambda f: f.clear_error(),functions))
             for f in functions:
                 self.assertRaises(pf.FunctionError,f.eval,x0)
-            map(lambda f: f.clear_error(),functions)
+            list(map(lambda f: f.clear_error(),functions))
 
             # Update network
-            map(lambda f: f.update_network(),functions)
+            list(map(lambda f: f.update_network(),functions))
             
             # After updating network
-            map(lambda f: f.analyze(),functions)
-            map(lambda f: f.eval(x0),functions)
+            list(map(lambda f: f.analyze(),functions))
+            list(map(lambda f: f.eval(x0),functions))
 
             for f in functions:
                 self.assertEqual(f.phi,0.)
@@ -1375,14 +1375,14 @@ class TestFunctions(unittest.TestCase):
             x0 = net.get_var_values()
 
             # Before analyzing
-            map(lambda f: f.clear_error(),functions)
+            list(map(lambda f: f.clear_error(),functions))
             for f in functions:
                 self.assertRaises(pf.FunctionError,f.eval,x0)
-            map(lambda f: f.clear_error(),functions)
+            list(map(lambda f: f.clear_error(),functions))
 
             # Do it right
-            map(lambda f: f.analyze(),functions)
-            map(lambda f: f.eval(x0),functions)
+            list(map(lambda f: f.analyze(),functions))
+            list(map(lambda f: f.eval(x0),functions))
             for f in functions:
                 self.assertTrue(isinstance(f.gphi,np.ndarray))
                 self.assertTrue(isinstance(f.Hphi,coo_matrix))

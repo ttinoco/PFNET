@@ -7,7 +7,6 @@
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
-from functools import reduce
 
 import numpy as np
 cimport numpy as np
