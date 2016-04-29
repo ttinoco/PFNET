@@ -2944,32 +2944,25 @@ cdef class Graph:
         if cgraph.GRAPH_has_error(self._c_graph):
             raise GraphError(cgraph.GRAPH_get_error_string(self._c_graph))
 
-    def view(self):
+    def view(self, inline=False):
         """
         Displays the graph.
         """
-
-        temp = tempfile.NamedTemporaryFile(delete=True)
-        try:
-            self.write("png".encode('UTF-8'),temp.name.encode('UTF-8'))
-            im = misc.imread(temp.name.encode('UTF-8'))
-            misc.imshow(im)
-        finally:
-            temp.close()
-
-    def jpview(self):
-        """
-        Displays the graph in jupyter.
-        """
-        from IPython.display import Image
-
+        
         temp = tempfile.NamedTemporaryFile(delete=True, suffix='.png')
         try:
             self.write("png",temp.name)
-            return Image(filename=temp.name)
+
+            if inline is True:
+                from IPython.display import Image
+
+                self.write("png",temp.name)
+                return Image(filename=temp.name)
+            else:                
+                im = misc.imread(temp.name.encode('UTF-8'))
+                misc.imshow(im)
         finally:
             temp.close()
-
             
     def write(self,format,filename):
         """
