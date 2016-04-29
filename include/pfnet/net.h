@@ -139,7 +139,9 @@ void NET_set_flags_of_component(Net* net, void* obj, char obj_type, char flag_ma
 void NET_set_var_values(Net* net, Vec* values);
 void NET_set_vargen_buses(Net* net, Bus* bus_list);
 void NET_show_components(Net* net);
+char* NET_get_show_components_str(Net* net);
 void NET_show_properties(Net* net);
+char* NET_get_show_properties_str(Net* net);
 void NET_show_buses(Net* net, int number, int sort_by);
 void NET_update_properties_branch(Net* net, Branch* br, Vec* values);
 void NET_update_properties(Net* net, Vec* values);

@@ -38,6 +38,9 @@ typedef struct Branch_outage Branch_outage;
 // Contingency
 struct Cont {
 
+  // Output
+  char output_string[CONT_BUFFER_SIZE]; /**< @brief Output string */
+
   // Generator outages
   Gen_outage* gen_outage;           /**< @brief List of generator outages */
 
@@ -139,6 +142,7 @@ void CONT_clear(Cont* cont) {
 
 void CONT_init(Cont* cont) { 
   if (cont) {
+    strcpy(cont->output_string,"");
     cont->gen_outage = NULL;
     cont->br_outage = NULL;
   }
@@ -234,16 +238,30 @@ Cont* CONT_new(void) {
   return cont;
 }
 
-void CONT_show(Cont* cont) {
+char* CONT_get_show_str(Cont* cont) {
+
   Gen_outage* go;
   Branch_outage* bo;
-  if (cont) {
-    printf("\nGenerator outages\n");
-    for (go = cont->gen_outage; go != NULL; go = go->next)
-      printf("index %d\n",GEN_get_index(go->gen));
-    printf("\nBranch outages\n");
-    for (bo = cont->br_outage; bo != NULL; bo = bo->next)
-      printf("index %d\n",BRANCH_get_index(bo->br));
-  }
+  char* out;
+
+  if (!cont)
+    return NULL;
+
+  out = cont->output_string;
+  strcpy(out,"");
+
+  sprintf(out+strlen(out),"\nGenerator outages\n");
+  for (go = cont->gen_outage; go != NULL; go = go->next)
+    sprintf(out+strlen(out),"index %d\n",GEN_get_index(go->gen));
+  sprintf(out+strlen(out),"\nBranch outages\n");
+  for (bo = cont->br_outage; bo != NULL; bo = bo->next)
+    sprintf(out+strlen(out),"index %d\n",BRANCH_get_index(bo->br));
+
+  return out;
+}
+
+void CONT_show(Cont* cont) {
+
+  printf("%s",CONT_get_show_str(cont));
 }
 

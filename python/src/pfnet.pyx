@@ -2448,14 +2448,14 @@ cdef class Network:
         Shows information about the number of network components of each type.
         """
         
-        cnet.NET_show_components(self._c_net)
+        print(cnet.NET_get_show_components_str(self._c_net))
 	 	 
     def show_properties(self):
         """
         Shows information about the state of the network component quantities.
         """
 
-        cnet.NET_show_properties(self._c_net)
+        print(cnet.NET_get_show_properties_str(self._c_net))
 
     def show_buses(self,number,sort_by):
         """
@@ -2732,7 +2732,7 @@ cdef class Contingency:
         Shows contingency information.
         """
         
-        ccont.CONT_show(self._c_cont)
+        print(ccont.CONT_get_show_str(self._c_cont))
 
     def add_gen_outage(self,gen):
         """
@@ -3591,7 +3591,7 @@ cdef class Problem:
         Shows information about this optimization problem.
         """
         
-        cprob.PROB_show(self._c_prob)
+        print(cprob.PROB_get_show_str(self._c_prob))
 
     def update_lin(self):
         """

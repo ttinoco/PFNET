@@ -16,6 +16,9 @@ struct Prob {
   BOOL error_flag;                     /**< @brief Error flags */
   char error_string[PROB_BUFFER_SIZE]; /**< @brief Error string */
 
+  // Output
+  char output_string[PROB_BUFFER_SIZE]; /**< @brief Output string */
+
   // Constraints
   Constr* constr; /**< @brief List of constraints */
 
@@ -484,7 +487,10 @@ void PROB_init(Prob* p) {
     // Error
     p->error_flag = FALSE;
     strcpy(p->error_string,"");
-    
+   
+    // Output
+    strcpy(p->output_string,"");
+ 
     p->constr = NULL;
     p->func = NULL;
     p->heur = NULL;
@@ -518,20 +524,32 @@ void PROB_set_network(Prob* p, Net* net) {
     p->net = net;
 }
 
-void PROB_show(Prob* p) {
+char* PROB_get_show_str(Prob* p) {
+
   Func* f;
   Constr* c;
-  if (p) {
-    printf("\nProblem\n");
-    printf("functions  : %d\n",FUNC_list_len(p->func));
-    for (f = p->func; f != NULL; f = FUNC_get_next(f)) {
-      printf("  type: %s\n",FUNC_get_type_str(f));
-    }
-    printf("constraints: %d\n",CONSTR_list_len(p->constr));  
-    for (c = p->constr; c != NULL; c = CONSTR_get_next(c)) {
-      printf("  type: %s\n",CONSTR_get_type_str(c));
-    }
-  }
+  char* out;
+
+  if (!p)
+    return NULL;
+
+  out = p->output_string;
+  strcpy(out,"");
+
+  sprintf(out+strlen(out),"\nProblem\n");
+  sprintf(out+strlen(out),"functions  : %d\n",FUNC_list_len(p->func));
+  for (f = p->func; f != NULL; f = FUNC_get_next(f))
+    sprintf(out+strlen(out),"  type: %s\n",FUNC_get_type_str(f));
+  sprintf(out+strlen(out),"constraints: %d\n",CONSTR_list_len(p->constr));  
+  for (c = p->constr; c != NULL; c = CONSTR_get_next(c))
+    sprintf(out+strlen(out),"  type: %s\n",CONSTR_get_type_str(c));
+
+  return out;
+}
+
+void PROB_show(Prob* p) {
+  
+  printf("%s",PROB_get_show_str(p));
 }
 
 void PROB_update_nonlin_struc(Prob* p) {
