@@ -2945,11 +2945,25 @@ cdef class Graph:
 
         temp = tempfile.NamedTemporaryFile(delete=True)
         try:
-            self.write("png",temp.name)
-            im = misc.imread(temp.name)
+            self.write("png".encode('UTF-8'),temp.name.encode('UTF-8'))
+            im = misc.imread(temp.name.encode('UTF-8'))
             misc.imshow(im)
         finally:
             temp.close()
+
+    def jpview(self):
+        """
+        Displays the graph in jupyter.
+        """
+        from IPython.display import Image
+
+        temp = tempfile.NamedTemporaryFile(delete=True, suffix='.png')
+        try:
+            self.write("png",temp.name)
+            return Image(filename=temp.name)
+        finally:
+            temp.close()
+
             
     def write(self,format,filename):
         """
