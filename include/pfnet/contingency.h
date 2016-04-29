@@ -15,6 +15,9 @@
 #include "types.h"
 #include "list.h"
 
+// Buffer
+#define CONT_BUFFER_SIZE 64 /**< @brief Default contingency buffer size for strings */
+
 // Contingency
 typedef struct Cont Cont;
 
@@ -34,5 +37,6 @@ BOOL CONT_has_branch_outage(Cont* cont, Branch* br);
 void CONT_init(Cont* cont);
 Cont* CONT_new(void);
 void CONT_show(Cont* cont);
+char* CONT_get_show_str(Cont* cont);
 
 #endif

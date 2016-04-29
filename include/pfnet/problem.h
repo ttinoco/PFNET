@@ -59,6 +59,7 @@ void PROB_init(Prob* p);
 Prob* PROB_new(void);
 void PROB_set_network(Prob* p, Net* net);
 void PROB_show(Prob* p);
+char* PROB_get_show_str(Prob* p);
 void PROB_update_lin(Prob* p);
 void PROB_update_nonlin_struc(Prob* p);
 void PROB_update_nonlin_data(Prob* p);

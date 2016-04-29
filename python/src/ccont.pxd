@@ -24,6 +24,7 @@ cdef extern from "pfnet/contingency.h":
     bint CONT_has_branch_outage(Cont* cont, Branch* br)
     Cont* CONT_new()
     void CONT_show(Cont* cont)
+    char* CONT_get_show_str(Cont* cont)
 
 
         

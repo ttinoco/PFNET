@@ -48,6 +48,7 @@ cdef extern from "pfnet/problem.h":
     bint PROB_has_error(Prob* p)
     Prob* PROB_new()
     void PROB_show(Prob* p)
+    char* PROB_get_show_str(Prob* p)
     void PROB_set_network(Prob* p,Net* net)
     void PROB_update_lin(Prob* p)
 
