@@ -18,6 +18,9 @@ struct Net {
   // Error
   BOOL error_flag;                    /**< @brief Error flag */
   char error_string[NET_BUFFER_SIZE]; /**< @brief Error string */
+
+  // Output
+  char output_string[NET_BUFFER_SIZE]; /**< @brief Output string */
   
   // Components
   Bus* bus;             /**< @brief Bus array */
@@ -720,6 +723,9 @@ void NET_init(Net* net) {
   // Error
   net->error_flag = FALSE;
   strcpy(net->error_string,"");
+
+  // Output
+  strcpy(net->output_string,"");
 
   // Components
   net->bus = NULL;
@@ -1887,54 +1893,84 @@ void NET_set_var_values(Net* net, Vec* values) {
     VARGEN_set_var_values(VARGEN_array_get(net->vargen,i),values);
 }
 
-void NET_show_components(Net *net) {
+char* NET_get_show_components_str(Net* net) {
+
+  char* out;
+
+  if (!net)
+    return NULL;
+
+  out = net->output_string;
+  strcpy(out,"");
+
+  sprintf(out+strlen(out),"\nNetwork Components\n");
+  sprintf(out+strlen(out),"------------------\n");
+  sprintf(out+strlen(out),"buses            : %d\n",NET_get_num_buses(net));
+  sprintf(out+strlen(out),"  slack          : %d\n",NET_get_num_slack_buses(net));
+  sprintf(out+strlen(out),"  reg by gen     : %d\n",NET_get_num_buses_reg_by_gen(net));
+  sprintf(out+strlen(out),"  reg by tran    : %d\n",NET_get_num_buses_reg_by_tran(net));
+  sprintf(out+strlen(out),"  reg by shunt   : %d\n",NET_get_num_buses_reg_by_shunt(net));
+  sprintf(out+strlen(out),"shunts           : %d\n",NET_get_num_shunts(net));
+  sprintf(out+strlen(out),"  fixed          : %d\n",NET_get_num_fixed_shunts(net));
+  sprintf(out+strlen(out),"  switched v     : %d\n",NET_get_num_switched_shunts(net));
+  sprintf(out+strlen(out),"branches         : %d\n",NET_get_num_branches(net));
+  sprintf(out+strlen(out),"  lines          : %d\n",NET_get_num_lines(net));
+  sprintf(out+strlen(out),"  fixed trans    : %d\n",NET_get_num_fixed_trans(net));
+  sprintf(out+strlen(out),"  phase shifters : %d\n",NET_get_num_phase_shifters(net));
+  sprintf(out+strlen(out),"  tap changers v : %d\n",NET_get_num_tap_changers_v(net));
+  sprintf(out+strlen(out),"  tap changers Q : %d\n",NET_get_num_tap_changers_Q(net));
+  sprintf(out+strlen(out),"generators       : %d\n",NET_get_num_gens(net));
+  sprintf(out+strlen(out),"  slack          : %d\n",NET_get_num_slack_gens(net));
+  sprintf(out+strlen(out),"  reg            : %d\n",NET_get_num_reg_gens(net));
+  sprintf(out+strlen(out),"  P adjust       : %d\n",NET_get_num_P_adjust_gens(net));
+  sprintf(out+strlen(out),"loads            : %d\n",NET_get_num_loads(net));
+  sprintf(out+strlen(out),"  P adjust       : %d\n",NET_get_num_P_adjust_loads(net));
+  sprintf(out+strlen(out),"vargens          : %d\n",NET_get_num_vargens(net));
+
+  return out;
+}
+
+void NET_show_components(Net* net) {
  
-  printf("\nNetwork Components\n");
-  printf("------------------\n");
-  printf("buses            : %d\n",NET_get_num_buses(net));
-  printf("  slack          : %d\n",NET_get_num_slack_buses(net));
-  printf("  reg by gen     : %d\n",NET_get_num_buses_reg_by_gen(net));
-  printf("  reg by tran    : %d\n",NET_get_num_buses_reg_by_tran(net));
-  printf("  reg by shunt   : %d\n",NET_get_num_buses_reg_by_shunt(net));
-  printf("shunts           : %d\n",NET_get_num_shunts(net));
-  printf("  fixed          : %d\n",NET_get_num_fixed_shunts(net));
-  printf("  switched v     : %d\n",NET_get_num_switched_shunts(net));
-  printf("branches         : %d\n",NET_get_num_branches(net));
-  printf("  lines          : %d\n",NET_get_num_lines(net));
-  printf("  fixed trans    : %d\n",NET_get_num_fixed_trans(net));
-  printf("  phase shifters : %d\n",NET_get_num_phase_shifters(net));
-  printf("  tap changers v : %d\n",NET_get_num_tap_changers_v(net));
-  printf("  tap changers Q : %d\n",NET_get_num_tap_changers_Q(net));
-  printf("generators       : %d\n",NET_get_num_gens(net));
-  printf("  slack          : %d\n",NET_get_num_slack_gens(net));
-  printf("  reg            : %d\n",NET_get_num_reg_gens(net));
-  printf("  P adjust       : %d\n",NET_get_num_P_adjust_gens(net));
-  printf("loads            : %d\n",NET_get_num_loads(net));
-  printf("  P adjust       : %d\n",NET_get_num_P_adjust_loads(net));
-  printf("vargens          : %d\n",NET_get_num_vargens(net));
+  printf("%s",NET_get_show_components_str(net));
+}
+
+char* NET_get_show_properties_str(Net* net) {
+
+  char* out;
+
+  if (!net)
+    return NULL;
+
+  out = net->output_string;
+  strcpy(out,"");
+
+  sprintf(out+strlen(out),"\nNetwork Properties\n");
+  sprintf(out+strlen(out),"------------------\n");
+  sprintf(out+strlen(out),"bus v max   : %.2f     (p.u.)\n",NET_get_bus_v_max(net));
+  sprintf(out+strlen(out),"bus v min   : %.2f     (p.u.)\n",NET_get_bus_v_min(net));
+  sprintf(out+strlen(out),"bus v vio   : %.2f     (p.u.)\n",NET_get_bus_v_vio(net));
+  sprintf(out+strlen(out),"bus P mis   : %.2e (MW)\n",NET_get_bus_P_mis(net));
+  sprintf(out+strlen(out),"bus Q mis   : %.2e (MVAr)\n",NET_get_bus_Q_mis(net));
+  sprintf(out+strlen(out),"gen P cost  : %.2e ($/hr)\n",NET_get_gen_P_cost(net));
+  sprintf(out+strlen(out),"gen v dev   : %.2e (p.u.)\n",NET_get_gen_v_dev(net));
+  sprintf(out+strlen(out),"gen Q vio   : %.2e (MVAr)\n",NET_get_gen_Q_vio(net));
+  sprintf(out+strlen(out),"gen P vio   : %.2e (MW)\n",NET_get_gen_P_vio(net));
+  sprintf(out+strlen(out),"tran v vio  : %.2e (p.u.)\n",NET_get_tran_v_vio(net));
+  sprintf(out+strlen(out),"tran r vio  : %.2e       \n",NET_get_tran_r_vio(net));
+  sprintf(out+strlen(out),"tran p vio  : %.2e (rad)\n",NET_get_tran_p_vio(net));
+  sprintf(out+strlen(out),"shunt v vio : %.2e (p.u.)\n",NET_get_shunt_v_vio(net));
+  sprintf(out+strlen(out),"shunt b vio : %.2e (p.u.)\n",NET_get_shunt_b_vio(net));
+  sprintf(out+strlen(out),"load P util : %.2e ($/hr)\n",NET_get_load_P_util(net));
+  sprintf(out+strlen(out),"load P vio  : %.2e (MW)\n",NET_get_load_P_vio(net));
+  sprintf(out+strlen(out),"num actions : %d\n",NET_get_num_actions(net));
+  
+  return out;
 }
 
 void NET_show_properties(Net* net) {
   
-  printf("\nNetwork Properties\n");
-  printf("------------------\n");
-  printf("bus v max   : %.2f     (p.u.)\n",NET_get_bus_v_max(net));
-  printf("bus v min   : %.2f     (p.u.)\n",NET_get_bus_v_min(net));
-  printf("bus v vio   : %.2f     (p.u.)\n",NET_get_bus_v_vio(net));
-  printf("bus P mis   : %.2e (MW)\n",NET_get_bus_P_mis(net));
-  printf("bus Q mis   : %.2e (MVAr)\n",NET_get_bus_Q_mis(net));
-  printf("gen P cost  : %.2e ($/hr)\n",NET_get_gen_P_cost(net));
-  printf("gen v dev   : %.2e (p.u.)\n",NET_get_gen_v_dev(net));
-  printf("gen Q vio   : %.2e (MVAr)\n",NET_get_gen_Q_vio(net));
-  printf("gen P vio   : %.2e (MW)\n",NET_get_gen_P_vio(net));
-  printf("tran v vio  : %.2e (p.u.)\n",NET_get_tran_v_vio(net));
-  printf("tran r vio  : %.2e       \n",NET_get_tran_r_vio(net));
-  printf("tran p vio  : %.2e (rad)\n",NET_get_tran_p_vio(net));
-  printf("shunt v vio : %.2e (p.u.)\n",NET_get_shunt_v_vio(net));
-  printf("shunt b vio : %.2e (p.u.)\n",NET_get_shunt_b_vio(net));
-  printf("load P util : %.2e ($/hr)\n",NET_get_load_P_util(net));
-  printf("load P vio  : %.2e (MW)\n",NET_get_load_P_vio(net));
-  printf("num actions : %d\n",NET_get_num_actions(net));
+  printf("%s",NET_get_show_properties_str(net));
 }
 
 void NET_show_buses(Net* net, int number, int sort_by) {

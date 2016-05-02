@@ -7,10 +7,11 @@
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
-from functools import reduce
 
 import numpy as np
 cimport numpy as np
+
+from functools import reduce
 
 cimport cconstants
 cimport cflags
@@ -501,7 +502,9 @@ cdef class Bus:
     property name:
         """ Bus name (sting). """
         def __get__(self): return cbus.BUS_get_name(self._c_ptr).decode('UTF-8')
-        def __set__(self,name): cbus.BUS_set_name(self._c_ptr, name.encode('UTF-8'))
+        def __set__(self,name): 
+            name = name.encode('UTF-8')
+            cbus.BUS_set_name(self._c_ptr,name)
 
     property degree:
         """ Bus degree (number of incident branches) (float). """
@@ -1615,7 +1618,9 @@ cdef class VarGenerator:
     property name:
         """ Variable generator name (string). """
         def __get__(self): return cvargen.VARGEN_get_name(self._c_ptr).decode('UTF-8')
-        def __set__(self,name): cvargen.VARGEN_set_name(self._c_ptr,name.encode('UTF-8'))
+        def __set__(self,name): 
+            name = name.encode('UTF-8')
+            cvargen.VARGEN_set_name(self._c_ptr,name)
 
     property obj_type:
         """ Object type (int). """
@@ -1867,7 +1872,8 @@ cdef class Network:
         bus : :class:`Bus <pfnet.Bus>`
         """
 
-        ptr = cnet.NET_bus_hash_name_find(self._c_net,name.encode('UTF-8'))
+        name = name.encode('UTF-8')
+        ptr = cnet.NET_bus_hash_name_find(self._c_net,name)
         if ptr is not NULL:
             return new_Bus(ptr)
         else:
@@ -1886,7 +1892,8 @@ cdef class Network:
         vargen : :class:`VarGenerator <pfnet.VarGenerator>`
         """
 
-        ptr = cnet.NET_vargen_hash_name_find(self._c_net,name.encode('UTF-8'))
+        name = name.encode('UTF-8')
+        ptr = cnet.NET_vargen_hash_name_find(self._c_net,name)
         if ptr is not NULL:
             return new_VarGenerator(ptr)
         else:
@@ -2378,7 +2385,8 @@ cdef class Network:
         filename : string        
         """
 
-        cnet.NET_load(self._c_net,filename.encode('UTF-8'))
+        filename = filename.encode('UTF-8')
+        cnet.NET_load(self._c_net,filename)
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
 
@@ -2446,14 +2454,14 @@ cdef class Network:
         Shows information about the number of network components of each type.
         """
         
-        cnet.NET_show_components(self._c_net)
+        print(cnet.NET_get_show_components_str(self._c_net).decode('UTF-8'))
 	 	 
     def show_properties(self):
         """
         Shows information about the state of the network component quantities.
         """
 
-        cnet.NET_show_properties(self._c_net)
+        print(cnet.NET_get_show_properties_str(self._c_net).decode('UTF-8'))
 
     def show_buses(self,number,sort_by):
         """
@@ -2730,7 +2738,7 @@ cdef class Contingency:
         Shows contingency information.
         """
         
-        ccont.CONT_show(self._c_cont)
+        print(ccont.CONT_get_show_str(self._c_cont).decode('UTF-8'))
 
     def add_gen_outage(self,gen):
         """
@@ -2936,16 +2944,23 @@ cdef class Graph:
         if cgraph.GRAPH_has_error(self._c_graph):
             raise GraphError(cgraph.GRAPH_get_error_string(self._c_graph))
 
-    def view(self):
+    def view(self, inline=False):
         """
         Displays the graph.
         """
-
-        temp = tempfile.NamedTemporaryFile(delete=True)
+        
+        temp = tempfile.NamedTemporaryFile(delete=True, suffix='.png')
         try:
             self.write("png",temp.name)
-            im = misc.imread(temp.name)
-            misc.imshow(im)
+
+            if inline is True:
+                from IPython.display import Image
+
+                self.write("png",temp.name)
+                return Image(filename=temp.name)
+            else:                
+                im = misc.imread(temp.name.encode('UTF-8'))
+                misc.imshow(im)
         finally:
             temp.close()
             
@@ -2959,7 +2974,9 @@ cdef class Graph:
         filename : string
         """
 
-        cgraph.GRAPH_write(self._c_graph,format.encode('UTF-8'),filename.encode('UTF-8'))
+        format = format.encode('UTF-8')
+        filename = filename.encode('UTF-8')
+        cgraph.GRAPH_write(self._c_graph,format,filename)
         if cgraph.GRAPH_has_error(self._c_graph):
             raise GraphError(cgraph.GRAPH_get_error_string(self._c_graph))
 
@@ -3589,7 +3606,7 @@ cdef class Problem:
         Shows information about this optimization problem.
         """
         
-        cprob.PROB_show(self._c_prob)
+        print(cprob.PROB_get_show_str(self._c_prob).decode('UTF-8'))
 
     def update_lin(self):
         """

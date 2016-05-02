@@ -207,7 +207,7 @@ class TestNetwork(unittest.TestCase):
                 
                 # values
                 self.assertGreater(bus.number,0)
-                self.assertTrue(isinstance(bus.name,str))
+                self.assertTrue(isinstance(bus.name,str) or isinstance(bus.name,unicode))
                 self.assertGreater(bus.v_mag,0)
                 self.assertGreater(bus.v_set,0)
                 self.assertEqual(bus.sens_P_balance,0.)
@@ -225,9 +225,9 @@ class TestNetwork(unittest.TestCase):
                 self.assertTrue(isinstance(bus.gens,list))
 
                 # name
-                self.assertTrue(isinstance(bus.name,str))
+                self.assertTrue(isinstance(bus.name,str) or isinstance(bus.name,unicode))
                 bus.name = "some bus"
-                self.assertTrue(isinstance(bus.name,str))
+                self.assertTrue(isinstance(bus.name,str) or isinstance(bus.name,unicode))
                 self.assertEqual(bus.name,"some bus")
                 self.assertEqual(bus.name,'some bus')
 
@@ -614,7 +614,7 @@ class TestNetwork(unittest.TestCase):
 
             # existing vargens
             for vg in net.var_generators:
-                self.assertTrue(isinstance(vg.name,str))
+                self.assertTrue(isinstance(vg.name,str) or isinstance(vg.name,unicode))
                 self.assertEqual(net.get_vargen_by_name(vg.name).name,vg.name)
                 vg.name = "some vargen"
                 self.assertEqual(vg.name,"some vargen")
@@ -633,7 +633,7 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(vargen.index,i)
                 self.assertEqual(vargen.obj_type,pf.OBJ_VARGEN)
                 self.assertNotEqual(vargen.obj_type,pf.OBJ_UNKNOWN)
-                self.assertTrue(isinstance(vargen.name,str))
+                self.assertTrue(isinstance(vargen.name,str) or isinstance(vargen.name,unicode))
                 self.assertEqual(vargen.name,"VARGEN %d" %(vargen.index+1))
                 self.assertEqual(net.get_vargen_by_name(vargen.name).name,vargen.name)
                 self.assertEqual(vargen.P,0.5*vargen.P_max)
@@ -909,7 +909,7 @@ class TestNetwork(unittest.TestCase):
             # add vargens
             net.add_vargens(net.get_load_buses(),50.,30.,5,0.05)
             for vargen in net.var_generators:
-                self.assertTrue(isinstance(vargen.name,str))
+                self.assertTrue(isinstance(vargen.name,str) or isinstance(vargen.name,unicode))
                 self.assertEqual(vargen.name,"VARGEN %d" %(vargen.index+1))
                 self.assertEqual(net.get_vargen_by_name(vargen.name).name,vargen.name)
                 vargen.P = 1.
@@ -1716,7 +1716,7 @@ class TestNetwork(unittest.TestCase):
             net.add_vargens(gen_buses,50.,30.,5,0.05)
             self.assertEqual(net.num_vargens,len([b for b in net.buses if b.gens]))
             for vg in net.var_generators:
-                self.assertTrue(isinstance(vg.name,str))
+                self.assertTrue(isinstance(vg.name,str) or isinstance(vg.name,unicode))
                 self.assertEqual(vg.name,"VARGEN %d" %(vg.index+1))
                 self.assertEqual(net.get_vargen_by_name(vg.name).name,vg.name)
                 self.assertEqual(vg.P,0.5*vg.P_max)

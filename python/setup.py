@@ -31,9 +31,10 @@ setup(name='PFNET',
       description='Power Flow Network Library',
       author='Tomas Tinoco De Rubira',
       author_email='ttinoco5687@gmail.com',
-      ext_modules=cythonize([Extension("pfnet", 
-                                       ["/Users/murphy/git/PFNET/python/src/pfnet.pyx"],
+      packages=['pfnet'],
+      ext_modules=cythonize([Extension("pfnet.cpfnet", 
+                                       ["./pfnet/cpfnet.pyx"],
                                        libraries=libraries,
-                                       library_dirs=['/Users/murphy/git/PFNET/lib'],
-                                       include_dirs=['/Users/murphy/git/PFNET/include'] + [np.get_include()])]))
+                                       library_dirs=['../lib'],
+                                       include_dirs=['../include'] + [np.get_include()])]))
       

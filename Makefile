@@ -26,7 +26,7 @@ ifeq ($(NO_GRAPHVIZ),1)
 	CFLAGS += -DNO_GRAPHVIZ
 else
 	LDLIBS += -lgvc -lcgraph
-        CFLAGS += -I$(GRAPHVIZ)/include
+        CFLAGS += -I$(GRAPHVIZ)/include -lgvc -lcgraph
 endif
 
 SOURCES_LIB = $(shell echo src/*/*.c src/*/*/*.c)
@@ -45,7 +45,7 @@ lib : $(TARGET_LIB)
 
 $(TARGET_LIB) : $(OBJECTS_LIB)
 	mkdir -p lib
-	$(CC) $(CFLAGS) -lgvc -lcgraph -o $@ $(OBJECTS_LIB) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $(OBJECTS_LIB) $(LDFLAGS)
 
 .PHONY: test
 test : $(TARGET_TEST)

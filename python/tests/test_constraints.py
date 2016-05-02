@@ -2091,9 +2091,9 @@ class TestConstraints(unittest.TestCase):
                 self.assertEqual(c.J.nnz,0)
                 self.assertTupleEqual(c.J.shape,(0,0))
 
-            map(lambda c: c.eval(x0),constraints)
-            map(lambda c: c.analyze(),constraints)
-            map(lambda c: c.eval(x0),constraints)
+            list(map(lambda c: c.eval(x0),constraints))
+            list(map(lambda c: c.analyze(),constraints))
+            list(map(lambda c: c.eval(x0),constraints))
 
             for c in constraints:
                 self.assertTrue(isinstance(c.b,np.ndarray))
@@ -2111,26 +2111,26 @@ class TestConstraints(unittest.TestCase):
             net.load(case)
 
             # Before updating network
-            map(lambda c: c.clear_error(),constraints)
+            list(map(lambda c: c.clear_error(),constraints))
             for c in constraints:
                 self.assertRaises(pf.ConstraintError,c.eval,x0)
-            map(lambda c: c.clear_error(),constraints)
+            list(map(lambda c: c.clear_error(),constraints))
             for c in constraints:
                 self.assertRaises(pf.ConstraintError,c.eval,x0)
-            map(lambda c: c.clear_error(),constraints)
+            list(map(lambda c: c.clear_error(),constraints))
             for c in constraints:
                 self.assertRaises(pf.ConstraintError,c.analyze)
-            map(lambda c: c.clear_error(),constraints)
+            list(map(lambda c: c.clear_error(),constraints))
             for c in constraints:
                 self.assertRaises(pf.ConstraintError,c.eval,x0)
-            map(lambda c: c.clear_error(),constraints)
+            list(map(lambda c: c.clear_error(),constraints))
 
             # Update network
-            map(lambda c: c.update_network(),constraints)
+            list(map(lambda c: c.update_network(),constraints))
             
             # After updating network
-            map(lambda c: c.analyze(),constraints)
-            map(lambda c: c.eval(x0),constraints)
+            list(map(lambda c: c.analyze(),constraints))
+            list(map(lambda c: c.eval(x0),constraints))
 
             for c in constraints:
                 self.assertTrue(isinstance(c.b,np.ndarray))
@@ -2171,14 +2171,14 @@ class TestConstraints(unittest.TestCase):
             x0 = net.get_var_values()
 
             # Before analyzing
-            map(lambda c: c.clear_error(),constraints)
+            list(map(lambda c: c.clear_error(),constraints))
             for c in constraints:
                 self.assertRaises(pf.ConstraintError,c.eval,x0)
-            map(lambda c: c.clear_error(),constraints)
+            list(map(lambda c: c.clear_error(),constraints))
 
             # Do it right
-            map(lambda c: c.analyze(),constraints)
-            map(lambda c: c.eval(x0),constraints)
+            list(map(lambda c: c.analyze(),constraints))
+            list(map(lambda c: c.eval(x0),constraints))
             for c in constraints:
                 self.assertTrue(isinstance(c.b,np.ndarray))
                 self.assertTrue(isinstance(c.A,coo_matrix))
