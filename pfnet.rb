@@ -2,8 +2,8 @@ class Pfnet < Formula
   desc "Library for modeling and analyzing electric power networks"
   homepage "https://github.com/ttinoco/PFNET"
   url "https://github.com/ttinoco/PFNET/archive/1.2.1.tar.gz"
-  sha256 "ec871c4534127e1988e1a9c99383f3d2a592df322b11b46c720eb521605f74ac"
-
+  sha256 "ba0ddfb6eacb617d6a4ae7e425305b2a982d921f9b0cb706a7fb14a6a3214dd2"
+  
   depends_on :python => :recommended if MacOS.version <= :snow_leopard
   depends_on :python3 => :recommended
   depends_on "numpy" => :python
