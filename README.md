@@ -33,6 +33,15 @@ To build the library without visualization capabilities (no ``libgvc`` dependenc
 
 To build the library without raw parsing capabilities (no ``libraw_parser`` dependency), ``make`` should be passed the argument ``NO_RAW_PARSER=1``.
 
+## Build Instructions (Mac OS X)
+
+In Mac OS X, PFNET can be easily installed using [Homebrew](http://brew.sh):
+
+    brew install https://raw.githubusercontent.com/ttinoco/PFNET/master/pfnet.rb
+
+Since Homebrew does currently not support external dependencies, PFNET cannot be built with raw parsing capabilities with this method.
+
+Homebrew will install graphviz as a dependency unless ``--without-graphviz`` is specified.
 ## Wrappers ##
 
 Wrappers for PFNET are available for the following languages:
