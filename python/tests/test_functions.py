@@ -24,7 +24,7 @@ class TestFunctions(unittest.TestCase):
         self.net = pf.Network()
 
         # Random
-        np.random.seed(0)
+        np.random.seed(1)
         
     def test_func_REG_VMAG(self):
         
