@@ -73,6 +73,10 @@ class TestConstraints(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.VARGEN_PROP_ANY,
                           pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P|pf.BAT_VAR_E)
             self.assertGreater(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
             self.assertEqual(net.num_vars,
@@ -82,7 +86,8 @@ class TestConstraints(unittest.TestCase):
                              net.get_num_tap_changers() +
                              net.get_num_phase_shifters() +
                              net.get_num_switched_shunts() +
-                             net.num_vargens*2)
+                             net.num_vargens*2+
+                             2*net.num_bats)
             
             # Fixed
             net.set_flags(pf.OBJ_BUS,
@@ -113,6 +118,10 @@ class TestConstraints(unittest.TestCase):
                           pf.FLAG_FIXED,
                           pf.VARGEN_PROP_ANY,
                           pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_FIXED,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P|pf.BAT_VAR_E)
             self.assertGreater(net.num_fixed,0)
             self.assertEqual(net.num_fixed,
                              2*(net.get_num_slack_buses()) +
@@ -121,7 +130,8 @@ class TestConstraints(unittest.TestCase):
                              net.get_num_tap_changers() +
                              net.get_num_phase_shifters() +
                              net.get_num_switched_shunts() +
-                             net.num_vargens*2)
+                             net.num_vargens*2+
+                             2*net.num_bats)
             
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -210,6 +220,18 @@ class TestConstraints(unittest.TestCase):
                 self.assertEqual(b[A.row[ar[0]]],vargen.Q)
                 self.assertEqual(b[A.row[ar[0]]],vargen.index*2.5)
 
+           # Batteries
+            for bat in net.batteries:
+                ar = np.where(A.col == bat.index_P)[0]
+                self.assertEqual(ar.size,1)
+                self.assertEqual(A.col[ar[0]],bat.index_P)
+                self.assertEqual(b[A.row[ar[0]]],bat.P)
+            for bat in net.batteries:
+                ar = np.where(A.col == bat.index_E)[0]
+                self.assertEqual(ar.size,1)
+                self.assertEqual(A.col[ar[0]],bat.index_E)
+                self.assertEqual(b[A.row[ar[0]]],bat.E)
+
     def test_constr_LBOUND(self):
 
         net = self.net
@@ -263,6 +285,10 @@ class TestConstraints(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.VARGEN_PROP_ANY,
                           pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P|pf.BAT_VAR_E)
             num_vars_saved = net.num_vars
             self.assertGreater(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
@@ -273,7 +299,8 @@ class TestConstraints(unittest.TestCase):
                              net.get_num_tap_changers()*3 +
                              net.get_num_phase_shifters()*1 +
                              net.get_num_switched_shunts()*3 +
-                             net.num_vargens*2)
+                             net.num_vargens*2+
+                             2*net.num_bats)
 
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -421,7 +448,7 @@ class TestConstraints(unittest.TestCase):
             for load in net.loads:
                 self.assertTrue(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
                 self.assertEqual(u[load.index_P],pf.LOAD_INF_P)
-                self.assertEqual(l[load.index_P],-pf.LOAD_INF_P)                                
+                self.assertEqual(l[load.index_P],-pf.LOAD_INF_P)
 
             for vargen in net.var_generators:
                 self.assertTrue(vargen.has_flags(pf.FLAG_VARS,
@@ -443,7 +470,15 @@ class TestConstraints(unittest.TestCase):
                     self.assertEqual(l[shunt.index_z],0.)
                 else:
                     self.assertFalse(shunt.has_flags(pf.FLAG_VARS,
-                                                     pf.SHUNT_VAR_SUSC|pf.SHUNT_VAR_SUSC_DEV))                
+                                                     pf.SHUNT_VAR_SUSC|pf.SHUNT_VAR_SUSC_DEV))              
+
+            for bat in net.batteries:
+                self.assertTrue(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P))
+                self.assertTrue(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_E))
+                self.assertEqual(u[bat.index_P],pf.BAT_INF_P)
+                self.assertEqual(l[bat.index_P],-pf.BAT_INF_P)
+                self.assertEqual(u[bat.index_E],pf.BAT_INF_E)
+                self.assertEqual(l[bat.index_E],0.)
                     
             # Add bounded flags
             net.set_flags(pf.OBJ_BUS,
@@ -474,6 +509,10 @@ class TestConstraints(unittest.TestCase):
                           pf.FLAG_BOUNDED,
                           pf.VARGEN_PROP_ANY,
                           pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_BOUNDED,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P|pf.BAT_VAR_E)
             self.assertEqual(net.num_vars,num_vars_saved)
             self.assertEqual(net.num_fixed,0)
             self.assertEqual(net.num_bounded,net.num_vars)
@@ -589,6 +628,15 @@ class TestConstraints(unittest.TestCase):
                 else:
                     self.assertFalse(shunt.has_flags(pf.FLAG_BOUNDED,
                                                      pf.SHUNT_VAR_SUSC|pf.SHUNT_VAR_SUSC_DEV))
+
+            for bat in net.batteries:
+                self.assertTrue(bat.has_flags(pf.FLAG_BOUNDED,pf.BAT_VAR_P))
+                self.assertTrue(bat.has_flags(pf.FLAG_BOUNDED,pf.BAT_VAR_E))
+                self.assertEqual(u[bat.index_P],bat.P_max)
+                self.assertEqual(l[bat.index_P],bat.P_min)
+                self.assertEqual(u[bat.index_E],bat.E_max)
+                self.assertEqual(l[bat.index_E],0.)
+
             # Sensitivities
             net.clear_sensitivities()
             for bus in net.buses:
@@ -2161,12 +2209,17 @@ class TestConstraints(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.SHUNT_PROP_SWITCHED_V,
                           pf.SHUNT_VAR_SUSC)
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P|pf.BAT_VAR_E)
             self.assertEqual(net.num_vars,
                              (2*net.num_buses + 
                               2*net.num_gens +
                               net.get_num_tap_changers()+
                               net.get_num_phase_shifters()+
-                              net.get_num_switched_shunts()))
+                              net.get_num_switched_shunts()+
+                              2*net.num_bats))
 
             x0 = net.get_var_values()
 
@@ -2233,12 +2286,17 @@ class TestConstraints(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.BRANCH_PROP_PHASE_SHIFTER,
                           pf.BRANCH_VAR_PHASE)
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P)
             self.assertEqual(net.num_vars,
                              (net.num_buses-net.get_num_slack_buses() +
                               net.num_gens +
                               net.num_loads + 
                               net.num_vargens +
-                              net.get_num_phase_shifters()))
+                              net.get_num_phase_shifters()+
+                              net.num_bats))
             
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -2288,7 +2346,8 @@ class TestConstraints(unittest.TestCase):
                               net.num_vargens +
                               4*net.num_branches - 
                               2*r +
-                              2*net.get_num_phase_shifters()))
+                              2*net.get_num_phase_shifters()+
+                              net.num_bats))
             self.assertTupleEqual(b.shape,(net.num_buses,))
             self.assertTupleEqual(f.shape,(0,))
             self.assertTupleEqual(A.shape,(net.num_buses,net.num_vars))
@@ -2303,7 +2362,8 @@ class TestConstraints(unittest.TestCase):
                               net.num_vargens +
                               4*net.num_branches - 
                               2*r +
-                              2*net.get_num_phase_shifters()))
+                              2*net.get_num_phase_shifters()+
+                              net.num_bats))
             
             # Extract pieces
             P1 = net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VANG)
@@ -2311,19 +2371,22 @@ class TestConstraints(unittest.TestCase):
             P3 = net.get_var_projection(pf.OBJ_VARGEN,pf.VARGEN_VAR_P)
             P4 = net.get_var_projection(pf.OBJ_BRANCH,pf.BRANCH_VAR_PHASE)
             P5 = net.get_var_projection(pf.OBJ_LOAD,pf.LOAD_VAR_P)
+            P6 = net.get_var_projection(pf.OBJ_BAT,pf.BAT_VAR_P)
 
             G = A*P2.T
             R = A*P3.T
             Atheta = -A*P1.T
             Aphi = -A*P4.T
             L = -A*P5.T
+            B = -A*P6.T
             x = np.random.randn(net.num_vars)
             p = P2*x
             r = P3*x
             theta = P1*x
             phi = P4*x
             l = P5*x
-            self.assertLess(np.linalg.norm((G*p+R*r-Atheta*theta-Aphi*phi-L*l)-A*x),1e-10)
+            Pb = P6*x
+            self.assertLess(np.linalg.norm((G*p+R*r-Atheta*theta-Aphi*phi-L*l-B*Pb)-A*x),1e-10)
 
             # Sensitivities
             for bus in net.buses:
@@ -2346,6 +2409,8 @@ class TestConstraints(unittest.TestCase):
                     mis += vargen.P
                 for load in bus.loads:
                     mis -= load.P
+                for bat in bus.bats:
+                    mis -= bat.P
                 for br in bus.branches_from:
                     mis -= br.P_flow_DC
                 for br in bus.branches_to:
@@ -2383,6 +2448,8 @@ class TestConstraints(unittest.TestCase):
                     mis += vargen.P
                 for load in bus.loads:
                     mis -= load.P
+                for bat in bus.bats:
+                    mis -= bat.P
                 for br in bus.branches_from:
                     mis -= br.P_flow_DC
                 for br in bus.branches_to:

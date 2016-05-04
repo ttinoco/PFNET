@@ -438,6 +438,14 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(gen.P_min,np.pi)
                 self.assertEqual(gen.P_max,2*np.pi)
 
+                # set/get P,Q
+                self.assertNotEqual(gen.P,0.333)
+                self.assertNotEqual(gen.Q,0.222)
+                gen.P = 0.333
+                gen.Q = 0.222
+                self.assertEqual(gen.P,0.333)
+                self.assertEqual(gen.Q,0.222)
+
                 # set/get cost coeffs
                 if case.split('.')[-1] == 'raw':
                     self.assertEqual(gen.cost_coeff_Q0,0.)
@@ -1654,7 +1662,21 @@ class TestNetwork(unittest.TestCase):
                 if bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P):
                     self.assertEqual(batP[index],bat.P)
                     index += 1
-            print 'prin'
+
+            # battery energy
+            P = net.get_var_projection(pf.OBJ_BAT,pf.BAT_VAR_E)
+            self.assertTrue(isinstance(P,coo_matrix))
+            self.assertEqual(P.shape[0],net.num_bats)
+            self.assertEqual(P.shape[1],net.num_vars)
+            self.assertEqual(P.nnz,net.num_bats)
+            batE = P*x
+            index = 0
+            for i in range(net.num_bats):
+                bat = net.get_bat(i)
+                self.assertEqual(bat.index_P,bat.index_E-1)
+                if bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_E):
+                    self.assertEqual(batE[index],bat.E)
+                    index += 1
 
             # All
             Plist = [net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VMAG),

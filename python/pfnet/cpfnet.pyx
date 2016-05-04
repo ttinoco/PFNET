@@ -1197,6 +1197,7 @@ cdef class Generator:
     property P:
         """ Generator active power (p.u. system base MVA) (float). """
         def __get__(self): return cgen.GEN_get_P(self._c_ptr)
+        def __set__(self,P): cgen.GEN_set_P(self._c_ptr,P)
 
     property P_max:
         """ Generator active power upper limit (p.u. system base MVA) (float). """
@@ -1211,6 +1212,7 @@ cdef class Generator:
     property Q:
         """ Generator reactive power (p.u. system base MVA) (float). """
         def __get__(self): return cgen.GEN_get_Q(self._c_ptr)
+        def __set__(self,Q): cgen.GEN_set_Q(self._c_ptr,Q)
 
     property Q_max:
         """ Generator reactive power upper limit (p.u. system base MVA) (float). """

@@ -62,6 +62,7 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
   Load* load;
   Vargen* vargen;
   Shunt* shunt;
+  Bat* bat;
   char* bus_counted;
   Vec* l;
   Vec* u;
@@ -327,6 +328,42 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 	  VEC_set(u,index2,SHUNT_INF_SUSC);
 	  VEC_set(l,index1,0.);
 	  VEC_set(l,index2,0.);
+	}
+      }
+
+      // Batteries
+      for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+	
+	// Charging power (P)
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
+	  index = BAT_get_index_P(bat);
+	  MAT_set_i(G,index,index);
+	  MAT_set_j(G,index,index);    
+	  MAT_set_d(G,index,1.);
+	  if (BAT_has_flags(bat,FLAG_BOUNDED,BAT_VAR_P)) {
+	    VEC_set(u,index,BAT_get_P_max(bat));     
+	    VEC_set(l,index,BAT_get_P_min(bat));
+	  }
+	  else {
+	    VEC_set(u,index,BAT_INF_P);
+	    VEC_set(l,index,-BAT_INF_P);
+	  }
+	}
+
+	// Energy level (E)
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_E)) {
+	  index = BAT_get_index_E(bat);
+	  MAT_set_i(G,index,index);
+	  MAT_set_j(G,index,index);    
+	  MAT_set_d(G,index,1.);
+	  if (BAT_has_flags(bat,FLAG_BOUNDED,BAT_VAR_E)) {
+	    VEC_set(u,index,BAT_get_E_max(bat));     
+	    VEC_set(l,index,0.);
+	  }
+	  else {
+	    VEC_set(u,index,BAT_INF_E);
+	    VEC_set(l,index,0.);
+	  }
 	}
       }
     }

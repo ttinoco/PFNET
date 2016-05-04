@@ -32,6 +32,7 @@ void CONSTR_DCPF_count_branch(Constr* c, Branch* br) {
   Gen* gen;
   Load* load;
   Vargen* vargen;
+  Bat* bat;
   int* Acounter;
   char* bus_counted;
   int bus_index[2];
@@ -127,6 +128,17 @@ void CONSTR_DCPF_count_branch(Constr* c, Branch* br) {
 	  (*Acounter)++; // Pk
 	}
       }
+
+      // Batteries
+      for (bat = BUS_get_bat(bus[k]); bat != NULL; bat = BAT_get_next(bat)) {
+	
+	//*****************************
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) { // Pb var
+	  
+	  // A
+	  (*Acounter)++; // Pk
+	}
+      }
     }
     
     // Update counted flag
@@ -167,6 +179,7 @@ void CONSTR_DCPF_analyze_branch(Constr* c, Branch* br) {
   Gen* gen;
   Vargen* vargen;
   Load* load;
+  Bat* bat;
   Mat* A;
   Vec* rhs;
   int* Acounter;
@@ -321,6 +334,25 @@ void CONSTR_DCPF_analyze_branch(Constr* c, Branch* br) {
 	  
 	  // b
 	  VEC_add_to_entry(rhs,bus_index[k],-VARGEN_get_P(vargen));
+	}
+      }
+
+      // Batteries
+      for (bat = BUS_get_bat(bus[k]); bat != NULL; bat = BAT_get_next(bat)) {
+	
+	//*****************************
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) { // Pb var
+	  
+	  // A
+	  MAT_set_i(A,*Acounter,bus_index[k]); // Pk
+	  MAT_set_j(A,*Acounter,BAT_get_index_P(bat)); // Pb
+	  MAT_set_d(A,*Acounter,-1.);
+	  (*Acounter)++; 
+	}
+	else {
+	  
+	  // b
+	  VEC_add_to_entry(rhs,bus_index[k],BAT_get_P(bat));
 	}
       }
     }
