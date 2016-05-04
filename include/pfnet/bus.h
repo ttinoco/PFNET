@@ -89,6 +89,7 @@ typedef struct Load Load;
 typedef struct Branch Branch;
 typedef struct Shunt Shunt;
 typedef struct Vargen Vargen;
+typedef struct Bat Bat;
 typedef struct Vec Vec;
 
 // Prototypes
@@ -115,6 +116,9 @@ void BUS_add_shunt(Bus* bus, Shunt* shunt);
 
 /** @brief Adds variable generator to list of variable generators connected to bus. */
 void BUS_add_vargen(Bus* bus, Vargen* gen);
+
+/** @brief Adds battery to list of batteries connected to bus. */
+void BUS_add_bat(Bus* bus, Bat* bat);
 
 void BUS_add_branch_from(Bus* bus, Branch* branch);
 void BUS_del_branch_from(Bus* bus, Branch* branch);
@@ -150,6 +154,7 @@ int BUS_get_num_gens(Bus* bus);
 int BUS_get_num_loads(Bus* bus);
 int BUS_get_num_shunts(Bus* bus);
 int BUS_get_num_vargens(Bus* bus);
+int BUS_get_num_bats(Bus* bus);
 int BUS_get_num_reg_gens(Bus* bus);
 int BUS_get_num_reg_trans(Bus* bus);
 int BUS_get_num_reg_shunts(Bus* bus);
@@ -162,6 +167,7 @@ Shunt* BUS_get_shunt(Bus* bus);
 Branch* BUS_get_branch_from(Bus* bus);
 Branch* BUS_get_branch_to(Bus* bus);
 Vargen* BUS_get_vargen(Bus* bus);
+Bat* BUS_get_bat(Bus* bus);
 REAL BUS_get_P_mis(Bus* bus);
 REAL BUS_get_Q_mis(Bus* bus);
 REAL BUS_get_total_gen_P(Bus* bus);
