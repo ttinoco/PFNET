@@ -300,7 +300,7 @@ BOOL LOAD_is_P_adjustable(Load* load) {
     return FALSE;
 }
 
-Load* LOAD_list_add(Load *load_list, Load* load) {
+Load* LOAD_list_add(Load* load_list, Load* load) {
   LIST_add(Load,load_list,load,next);
   return load_list;
 }
