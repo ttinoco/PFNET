@@ -362,4 +362,58 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(branch13.ratingA,4000./100.)
                 self.assertEqual(branch13.ratingB,4000./100.)
                 self.assertEqual(branch13.ratingC,4000./100.)
-                
+
+    def test_cas32art(self):
+
+        for case in test_cases.CASES:
+            if case == '../data/case32.art':
+
+                net = self.net
+
+                net.load(case)
+
+                self.assertEqual(net.num_buses,31)
+                self.assertEqual(net.num_bats,3)
+                b1 = net.get_bat(0)
+                b2 = net.get_bat(1)
+                b3 = net.get_bat(2)
+                self.assertRaises(pf.NetworkError,net.get_bat,3)
+
+                self.assertEqual(b1.bus.name,"N18")
+                self.assertEqual(b1.index,0)
+                self.assertTrue(all(map(lambda y: isinstance(y,pf.Battery),b1.bus.bats)))
+                self.assertEqual(len(b1.bus.bats),2)
+                self.assertEqual(map(lambda y: y.index,b1.bus.bats),[b1.index,b2.index])
+                self.assertEqual(b1.P,6./100.)
+                self.assertEqual(b1.P_min,-7./100.)
+                self.assertEqual(b1.P_max,8./100.)
+                self.assertEqual(b1.E,14./100.)
+                self.assertEqual(b1.E_max,22./100.)
+                self.assertEqual(b1.eta_c,0.93)
+                self.assertEqual(b1.eta_d,0.97)
+
+                self.assertEqual(b2.bus.name,"N18")
+                self.assertEqual(b2.index,1)
+                self.assertTrue(all(map(lambda y: isinstance(y,pf.Battery),b2.bus.bats)))
+                self.assertEqual(len(b2.bus.bats),2)
+                self.assertEqual(map(lambda y: y.index,b2.bus.bats),[b1.index,b2.index])
+                self.assertEqual(b2.P,3./100.)
+                self.assertEqual(b2.P_min,-3./100.)
+                self.assertEqual(b2.P_max,9./100.)
+                self.assertEqual(b2.E,12./100.)
+                self.assertEqual(b2.E_max,21./100.)
+                self.assertEqual(b2.eta_c,0.94)
+                self.assertEqual(b2.eta_d,0.92)
+
+                self.assertEqual(b3.bus.name,"N15")
+                self.assertEqual(b3.index,2)
+                self.assertTrue(all(map(lambda y: isinstance(y,pf.Battery),b3.bus.bats)))
+                self.assertEqual(len(b3.bus.bats),1)
+                self.assertEqual(map(lambda y: y.index,b3.bus.bats),[b3.index])
+                self.assertEqual(b3.P,2./100.)
+                self.assertEqual(b3.P_min,-4./100.)
+                self.assertEqual(b3.P_max,5./100.)
+                self.assertEqual(b3.E,10./100.)
+                self.assertEqual(b3.E_max,20./100.)
+                self.assertEqual(b3.eta_c,0.95)
+                self.assertEqual(b3.eta_d,0.93)

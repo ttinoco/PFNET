@@ -942,7 +942,7 @@ void ART_PARSER_callback_field(char* s, void* data) {
     
   case ART_PARSER_STATE_INIT:
     if (parser->field == 0) {
-      
+            
       // Bus
       if (strstr(s,ART_BUS_TOKEN) != NULL) {
 	parser->state = ART_PARSER_STATE_BUS;
