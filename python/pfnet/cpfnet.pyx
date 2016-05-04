@@ -24,6 +24,7 @@ cimport cbus
 cimport cbranch
 cimport cload
 cimport cvargen
+cimport cbat
 cimport cnet
 cimport ccont
 cimport cgraph
@@ -57,6 +58,7 @@ OBJ_BRANCH = cobjs.OBJ_BRANCH
 OBJ_SHUNT = cobjs.OBJ_SHUNT
 OBJ_LOAD = cobjs.OBJ_LOAD
 OBJ_VARGEN = cobjs.OBJ_VARGEN
+OBJ_BAT = cobjs.OBJ_BAT
 OBJ_UNKNOWN = cobjs.OBJ_UNKNOWN
 
 # Flags
@@ -660,6 +662,16 @@ cdef class Bus:
                 vargens.append(new_VarGenerator(g))
                 g = cvargen.VARGEN_get_next(g)
             return vargens
+
+    property bats:
+        """ List of :class:`batteries <pfnet.Battery>` connected to this bus (list). """
+        def __get__(self):
+            bats = []
+            cdef cbat.Bat* b = cbus.BUS_get_bat(self._c_ptr)
+            while b is not NULL:
+                bats.append(new_Battery(b))
+                b = cbat.BAT_get_next(b)
+            return bats
 
 cdef new_Bus(cbus.Bus* b):
     if b is not NULL:
@@ -1684,6 +1696,129 @@ cdef new_VarGenerator(cvargen.Vargen* g):
         return gen
     else:
         raise VarGeneratorError('no vargen data')
+
+# Battery
+#########
+
+# Properties
+BAT_PROP_ANY = cbat.BAT_PROP_ANY
+
+# Variables
+BAT_VAR_P = cbat.BAT_VAR_P
+BAT_VAR_E = cbat.BAT_VAR_E
+
+# Infinity
+BAT_INF_P = cbat.BAT_INF_P
+BAT_INF_E = cbat.BAT_INF_E
+
+class BatteryError(Exception):
+    """ 
+    Battery error exception.
+    """
+    
+    def __init__(self,value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+cdef class Battery:
+    """
+    Battery class.
+    """
+
+    cdef cbat.Bat* _c_ptr
+
+    def __init__(self,alloc=True):
+        """
+        Battery class.
+
+        Parameters
+        ----------
+        alloc : {``True``, ``False``}
+        """
+
+        pass
+
+    def __cinit__(self,alloc=True):
+        
+        if alloc:
+            self._c_ptr = cbat.BAT_new()
+        else:
+            self._c_ptr = NULL
+
+    def _get_c_ptr(self):
+
+        return new_CPtr(self._c_ptr)
+
+    def has_flags(self,fmask,vmask):
+        """ 
+        Determines whether the battery has the flags associated with
+        certain quantities set. 
+
+        Parameters
+        ----------
+        fmask : int (:ref:`ref_net_flag`)
+        vmask : int (:ref:`ref_bat_var`)
+        
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+
+        return cbat.BAT_has_flags(self._c_ptr,fmask,vmask)
+
+    property obj_type:
+        """ Object type (int). """
+        def __get__(self): return cbat.BAT_get_obj_type(self._c_ptr)
+
+    property index:
+        """ Battery index (int). """
+        def __get__(self): return cbat.BAT_get_index(self._c_ptr)
+        
+    property index_P:
+        """ Index of battery charging power variable (int). """
+        def __get__(self): return cbat.BAT_get_index_P(self._c_ptr)
+
+    property index_E:
+        """ Index of battery energy level variable (int). """
+        def __get__(self): return cbat.BAT_get_index_E(self._c_ptr)
+
+    property bus:
+        """ :class:`Bus <pfnet.Bus>` to which battery is connected. """
+        def __get__(self): return new_Bus(cbat.BAT_get_bus(self._c_ptr))
+
+    property P:
+        """ Battery charging power (p.u. system base MVA) (float). """
+        def __get__(self): return cbat.BAT_get_P(self._c_ptr)
+        def __set__(self,P): cbat.BAT_set_P(self._c_ptr,P)
+
+    property P_max:
+        """ Battery charging power upper limit (p.u. system base MVA) (float). """
+        def __get__(self): return cbat.BAT_get_P_max(self._c_ptr)
+        def __set__(self,P): cbat.BAT_set_P_max(self._c_ptr,P)
+
+    property P_min:
+        """ Battery charging power lower limit (p.u. system base MVA) (float). """
+        def __get__(self): return cbat.BAT_get_P_min(self._c_ptr)
+        def __set__(self,P): cbat.BAT_set_P_min(self._c_ptr,P)
+
+    property E:
+        """ Battery energy level (p.u. system base MVA times time unit) (float). """
+        def __get__(self): return cbat.BAT_get_E(self._c_ptr)
+        def __set__(self,E): cbat.BAT_set_E(self._c_ptr,E)
+
+    property E_max:
+        """ Battery energy level upper limit (p.u. system base MVA times time unit) (float). """
+        def __get__(self): return cbat.BAT_get_E_max(self._c_ptr)
+        def __set__(self,E): cbat.BAT_set_E_max(self._c_ptr,E)
+
+cdef new_Battery(cbat.Bat* b):
+    if b is not NULL:
+        bat = Battery(alloc=False)
+        bat._c_ptr = b
+        return bat
+    else:
+        raise BatteryError('no battery data')
 
 # Network
 #########

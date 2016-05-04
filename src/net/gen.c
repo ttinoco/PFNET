@@ -13,9 +13,6 @@
 
 struct Gen {
 
-  // Properties
-  char obj_type;       /**< @brief Object type */
-
   // Bus
   Bus* bus;            /**< @brief Bus to which generator is connected */
   Bus* reg_bus;        /**< @brief Bus regulated by this generator */
@@ -117,7 +114,7 @@ REAL GEN_get_sens_P_l_bound(Gen* gen) {
 
 char GEN_get_obj_type(void* gen) {
   if (gen)
-    return ((Gen*)gen)->obj_type;
+    return OBJ_GEN;
   else
     return OBJ_UNKNOWN;
 }
@@ -330,9 +327,7 @@ BOOL GEN_has_properties(void* vgen, char prop) {
 
 void GEN_init(Gen* gen) {
   if (gen) {
-    
-    gen->obj_type = OBJ_GEN;
-    
+        
     gen->bus = NULL;
     gen->reg_bus = NULL;
     

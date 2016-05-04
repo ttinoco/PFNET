@@ -14,6 +14,7 @@ cdef extern from "pfnet/bus.h":
     ctypedef struct Branch
     ctypedef struct Shunt
     ctypedef struct Vargen
+    ctypedef struct Bat
     ctypedef double REAL
     
     cdef char BUS_VAR_VMAG
@@ -67,6 +68,7 @@ cdef extern from "pfnet/bus.h":
     Branch* BUS_get_branch_to(Bus* bus)
     Load* BUS_get_load(Bus* bus)
     Vargen* BUS_get_vargen(Bus* bus)
+    Bat* BUS_get_bat(Bus* bus)
     int BUS_get_degree(Bus* bus)
     REAL BUS_get_total_gen_P(Bus* bus)
     REAL BUS_get_total_gen_Q(Bus* bus)

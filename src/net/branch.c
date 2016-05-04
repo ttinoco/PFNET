@@ -16,7 +16,6 @@ struct Branch {
 
   // Properties
   char type;         /**< @brief %Branch type */
-  char obj_type;     /**< @brief %Object type */
 
   // Buses
   Bus* bus_from;     /**< @brief Bus connected to the "from" side */
@@ -134,7 +133,7 @@ char BRANCH_get_type(Branch* br) {
 
 char BRANCH_get_obj_type(void* br) {
   if (br)
-    return ((Branch*)br)->obj_type;
+    return OBJ_BRANCH;
   else
     return OBJ_UNKNOWN;
 }
@@ -450,7 +449,6 @@ BOOL BRANCH_has_properties(void* vbr, char prop) {
 void BRANCH_init(Branch* br) {  
 
   br->type = BRANCH_TYPE_LINE;
-  br->obj_type = OBJ_BRANCH;
 
   br->bus_from = NULL;
   br->bus_to = NULL;

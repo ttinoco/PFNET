@@ -12,9 +12,6 @@
 #include <pfnet/bus.h>
 
 struct Shunt {
-
-  // Properties
-  char obj_type;   /**< @brief Object type */
   
   // Bus
   Bus* bus;       /**< @brief Bus where the shunt is connected */
@@ -96,7 +93,7 @@ void SHUNT_clear_flags(Shunt* shunt, char flag_type) {
 
 char SHUNT_get_obj_type(void* shunt) {
   if (shunt)
-    return ((Shunt*)shunt)->obj_type;
+    return OBJ_SHUNT;
   else
     return OBJ_UNKNOWN;
 }
@@ -255,7 +252,6 @@ BOOL SHUNT_has_properties(void* vshunt, char prop) {
 }
 
 void SHUNT_init(Shunt* shunt) { 
-  shunt->obj_type = OBJ_SHUNT;
   shunt->bus = NULL;
   shunt->reg_bus = NULL;
   shunt->g = 0;
