@@ -24,17 +24,18 @@
 /** \defgroup func_types Function Types
  *  @{
  */
-#define FUNC_TYPE_UNKNOWN -1    /**< @brief Function type: unknown */
-#define FUNC_TYPE_REG_VMAG 0    /**< @brief Function type: voltage magnitude regulation. */
-#define FUNC_TYPE_REG_VANG 1    /**< @brief Function type: vooltage angle regulation. */
-#define FUNC_TYPE_REG_PQ 2      /**< @brief Function type: generator power regulation. */
-#define FUNC_TYPE_REG_RATIO 3   /**< @brief Function type: transformer tap ratio regularization. */
-#define FUNC_TYPE_REG_PHASE 4   /**< @brief Function type: transformer phase shift regularization. */
-#define FUNC_TYPE_REG_SUSC 5    /**< @brief Function type: shunt susceptance regularization. */
-#define FUNC_TYPE_GEN_COST 6    /**< @brief Function type: power generation cost. */
-#define FUNC_TYPE_SP_CONTROLS 7 /**< @brief Function type: sparse controls. */
-#define FUNC_TYPE_SLIM_VMAG 8   /**< @brief Function type: soft limits of bus voltage magnitudes. */
-#define FUNC_TYPE_LOAD_UTIL 9   /**< @brief Function type: power consumption utility. */
+#define FUNC_TYPE_UNKNOWN -1     /**< @brief Function type: unknown */
+#define FUNC_TYPE_REG_VMAG 0     /**< @brief Function type: voltage magnitude regulation. */
+#define FUNC_TYPE_REG_VANG 1     /**< @brief Function type: vooltage angle regulation. */
+#define FUNC_TYPE_REG_PQ 2       /**< @brief Function type: generator power regulation. */
+#define FUNC_TYPE_REG_RATIO 3    /**< @brief Function type: transformer tap ratio regularization. */
+#define FUNC_TYPE_REG_PHASE 4    /**< @brief Function type: transformer phase shift regularization. */
+#define FUNC_TYPE_REG_SUSC 5     /**< @brief Function type: shunt susceptance regularization. */
+#define FUNC_TYPE_GEN_COST 6     /**< @brief Function type: power generation cost. */
+#define FUNC_TYPE_SP_CONTROLS 7  /**< @brief Function type: sparse controls. */
+#define FUNC_TYPE_SLIM_VMAG 8    /**< @brief Function type: soft limits of bus voltage magnitudes. */
+#define FUNC_TYPE_LOAD_UTIL 9    /**< @brief Function type: power consumption utility. */
+#define FUNC_TYPE_NETCON_COST 10 /**< @brief Function type: net power consumption cost. */
 /** @} */
 
 // Function type strings
@@ -49,6 +50,7 @@
 #define FUNC_TYPE_SP_CONTROLS_STR "SP_CONTROLS" 
 #define FUNC_TYPE_SLIM_VMAG_STR "SLIM_VMAG" 
 #define FUNC_TYPE_LOAD_UTIL_STR "LOAD_UTIL"
+#define FUNC_TYPE_NETCON_COST_STR "NETCON_COST"
 
 // Function
 typedef struct Func Func;

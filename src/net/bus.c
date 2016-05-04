@@ -47,6 +47,9 @@ struct Bus {
   Branch* branch_to;   /**< @brief List of branches having this bus on the "to" side */
   Vargen* vargen;      /**< @brief List of variable generators connected to bus */
   Bat* bat;            /**< @brief List of batteries connected to bus */
+
+  // Price
+  REAL price;        /**< @brief Energy price at bus ($/ (hr p.u.)) */
   
   // Indices
   int index;         /**< @brief Bus index */
@@ -291,6 +294,13 @@ int BUS_get_degree(Bus* bus) {
     return (BRANCH_list_from_len(bus->branch_from) +
 	    BRANCH_list_to_len(bus->branch_to));
   }
+  else
+    return 0;
+}
+
+REAL BUS_get_price(Bus* bus) {
+  if (bus)
+    return bus->price;
   else
     return 0;
 }
@@ -1077,6 +1087,8 @@ void BUS_init(Bus* bus) {
   bus->vargen = NULL;
   bus->bat = NULL;
 
+  bus->price = 0;
+
   bus->index = 0;
   bus->index_v_mag = 0;
   bus->index_v_ang = 0;
@@ -1196,6 +1208,11 @@ void BUS_set_number(Bus* bus, int number) {
 void BUS_set_name(Bus* bus, char* name) {
   if (bus)
     strncpy(bus->name,name,(size_t)(BUS_NAME_BUFFER_SIZE-1));
+}
+
+void BUS_set_price(Bus* bus, REAL price) {
+  if (bus)
+    bus->price = price;
 }
 
 void BUS_set_v_mag(Bus* bus, REAL v_mag) {
