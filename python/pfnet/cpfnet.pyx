@@ -497,6 +497,11 @@ cdef class Bus:
         """ Index for bus reactive power mismatch (int). """
         def __get__(self): return cbus.BUS_get_index_Q(self._c_ptr)
 
+    property price:
+        """ Bus energy price (float) ($ / (hr p.u.)). """
+        def __get__(self): return cbus.BUS_get_price(self._c_ptr)
+        def __set__(self,p): cbus.BUS_set_price(self._c_ptr,p)
+
     property number:
         """ Bus number (int). """
         def __get__(self): return cbus.BUS_get_number(self._c_ptr)
@@ -3180,6 +3185,7 @@ FUNC_TYPE_GEN_COST = cfunc.FUNC_TYPE_GEN_COST
 FUNC_TYPE_SP_CONTROLS = cfunc.FUNC_TYPE_SP_CONTROLS
 FUNC_TYPE_SLIM_VMAG = cfunc.FUNC_TYPE_SLIM_VMAG
 FUNC_TYPE_LOAD_UTIL = cfunc.FUNC_TYPE_LOAD_UTIL
+FUNC_TYPE_NETCON_COST = cfunc.FUNC_TYPE_NETCON_COST
 
 class FunctionError(Exception):
     """

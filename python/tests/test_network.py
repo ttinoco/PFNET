@@ -361,6 +361,11 @@ class TestNetwork(unittest.TestCase):
                     self.assertTrue(isinstance(b,pf.Battery))
                     self.assertEqual(bus,b.bus)
 
+                # prices
+                self.assertEqual(bus.price,0.)
+                bus.price = bus.index*4.33
+                self.assertEqual(bus.price,bus.index*4.33)
+
             # sum of degrees
             sum_deg = 0
             for i in range(net.num_buses):

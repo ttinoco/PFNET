@@ -52,7 +52,6 @@ void FUNC_NETCON_COST_allocate(Func* f) {
 
 void FUNC_NETCON_COST_analyze_branch(Func* f, Branch* br) {
 
-  /*
   // Local variables
   Bus* buses[2];
   Bus* bus;
@@ -62,16 +61,16 @@ void FUNC_NETCON_COST_analyze_branch(Func* f, Branch* br) {
   Bat* bat;
   int bus_index[2];
   char* bus_counted;
-  Vec* g;
+  REAL price;
+  Vec* gphi;
   int k;
 
   // Constr data
-  g = FUNC_get_gphi(f);
-  Hcounter = FUNC_get_Hcounter_ptr(f);
+  gphi = FUNC_get_gphi(f);
   bus_counted = FUNC_get_bus_counted(f);
 
   // Check pointers
-  if (!Hcounter || !bus_counted)
+  if (!gphi || !bus_counted)
     return;
 
   // Check outage
@@ -89,26 +88,110 @@ void FUNC_NETCON_COST_analyze_branch(Func* f, Branch* br) {
     
     bus = buses[k];
 
+    price = BUS_get_price(bus);
+
     if (!bus_counted[bus_index[k]]) {
+      
+      // Generators
+      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
+	  VEC_set(gphi,GEN_get_index_P(gen),-price);
+      }
+
+      // Variable generators
+      for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P))
+	  VEC_set(gphi,VARGEN_get_index_P(vargen),-price);
+      }
+
+      // Loads
       for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
-	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
-	  MAT_set_i(H,*Hcounter,LOAD_get_index_P(load));
-	  MAT_set_j(H,*Hcounter,LOAD_get_index_P(load));
-	  MAT_set_d(H,*Hcounter,2.*LOAD_get_util_coeff_Q2(load));
-	  (*Hcounter)++;
-	}
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P))
+	  VEC_set(gphi,LOAD_get_index_P(load),price);
+      }
+
+      // Battery charging
+      for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P))
+	  VEC_set(gphi,BAT_get_index_P(bat),price);
       }
     }
     
     // Update counted flag
     bus_counted[bus_index[k]] = TRUE;
   }
-
-  */
 }
 
 void FUNC_NETCON_COST_eval_branch(Func* f, Branch* br, Vec* var_values) {
-  // need to compute phi (nothing else)
+  
+    // Local variables
+  Bus* buses[2];
+  Bus* bus;
+  Load* load;
+  Gen* gen;
+  Vargen* vargen;
+  Bat* bat;
+  int bus_index[2];
+  char* bus_counted;
+  REAL price;
+  REAL* phi;
+  int k;
+
+  // Constr data
+  phi = FUNC_get_phi_ptr(f);
+  bus_counted = FUNC_get_bus_counted(f);
+
+  // Check pointers
+  if (!phi || !bus_counted)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
+    return;
+  
+  // Bus data
+  buses[0] = BRANCH_get_bus_from(br);
+  buses[1] = BRANCH_get_bus_to(br);
+  for (k = 0; k < 2; k++)
+    bus_index[k] = BUS_get_index(buses[k]);
+
+  // Buses
+  for (k = 0; k < 2; k++) {
+    
+    bus = buses[k];
+
+    price = BUS_get_price(bus);
+
+    if (!bus_counted[bus_index[k]]) {
+      
+      // Generators
+      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
+	  (*phi) -= price*VEC_get(var_values,GEN_get_index_P(gen));
+      }
+
+      // Variable generators
+      for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P))
+	  (*phi) -= price*VEC_get(var_values,VARGEN_get_index_P(vargen));
+      }
+
+      // Loads
+      for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P))
+	  (*phi) += price*VEC_get(var_values,LOAD_get_index_P(load));
+      }
+
+      // Battery charging
+      for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P))
+	  (*phi) += price*VEC_get(var_values,BAT_get_index_P(bat));
+      }
+    }
+    
+    // Update counted flag
+    bus_counted[bus_index[k]] = TRUE;
+  }  
 }
 
 void FUNC_NETCON_COST_free(Func* f) {
