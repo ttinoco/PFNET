@@ -15,7 +15,7 @@ struct Bat {
 
   // Bus
   Bus* bus;            /**< @brief Bus to which the battery is connected */
-
+  
   // Flags
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
@@ -26,6 +26,10 @@ struct Bat {
   REAL P;              /**< @brief Battery charging power (p.u. system base power) */
   REAL P_max;          /**< @brief Maximum charging power (p.u.) */
   REAL P_min;          /**< @brief Minimum charging power (p.u.) */
+
+  // Efficiencies
+  REAL eta_c;          /**< @brief Battery charging efficiency (unitless) */
+  REAL eta_d;          /**< @brief Battery discharging efficiency (unitless) */
 
   // Energy level
   REAL E;              /**< @brief Battery energy level (p.u. system base power times time unit) */
@@ -153,6 +157,20 @@ REAL BAT_get_E_max(Bat* bat) {
     return 0;
 }
 
+REAL BAT_get_eta_c(Bat* bat) {
+  if (bat)
+    return bat->eta_c;
+  else
+    return 0;
+}
+
+REAL BAT_get_eta_d(Bat* bat) {
+  if (bat)
+    return bat->eta_d;
+  else
+    return 0;
+}
+
 void BAT_get_var_values(Bat* bat, Vec* values, int code) {
   
   if (!bat)
@@ -238,6 +256,9 @@ void BAT_init(Bat* bat) {
 
     bat->E = 0;
     bat->E_max = 0;
+
+    bat->eta_c = 1.;
+    bat->eta_d = 1.;
     
     bat->index = 0;
     bat->index_P = 0;
@@ -297,6 +318,16 @@ void BAT_set_E(Bat* bat, REAL E) {
 void BAT_set_E_max(Bat* bat, REAL E_max) {
   if (bat)
     bat->E_max = E_max;
+}
+
+void BAT_set_eta_c(Bat* bat, REAL eta_c) { 
+  if (bat)
+    bat->eta_c = eta_c;
+}
+
+void BAT_set_eta_d(Bat* bat, REAL eta_d) { 
+  if (bat)
+    bat->eta_d = eta_d;
 }
 
 int BAT_set_flags(void* vbat, char flag_type, char mask, int index) {

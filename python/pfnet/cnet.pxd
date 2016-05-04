@@ -14,6 +14,7 @@ cimport cgen
 cimport cload
 cimport cshunt
 cimport cvargen
+cimport cbat
 
 cdef extern from "pfnet/net.h":
 
@@ -40,6 +41,7 @@ cdef extern from "pfnet/net.h":
     cshunt.Shunt* NET_get_shunt(Net* net, int index)
     cload.Load* NET_get_load(Net* net, int index)
     cvargen.Vargen* NET_get_vargen(Net* net, int index)
+    cbat.Bat* NET_get_bat(Net* net, int index)
     cbus.Bus* NET_get_load_buses(Net* net)
     cbus.Bus* NET_get_gen_buses(Net* net)
     int NET_get_num_buses(Net* net)
@@ -68,6 +70,7 @@ cdef extern from "pfnet/net.h":
     int NET_get_num_fixed_shunts(Net* net)
     int NET_get_num_switched_shunts(Net* net)
     int NET_get_num_vargens(Net* net)
+    int NET_get_num_bats(Net* net)
     int NET_get_num_vars(Net* net)
     int NET_get_num_fixed(Net* net)
     int NET_get_num_bounded(Net* net)

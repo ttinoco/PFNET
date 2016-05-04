@@ -1812,6 +1812,16 @@ cdef class Battery:
         def __get__(self): return cbat.BAT_get_E_max(self._c_ptr)
         def __set__(self,E): cbat.BAT_set_E_max(self._c_ptr,E)
 
+    property eta_c:
+        """ Battery charging efficiency (unitless) (float). """
+        def __get__(self): return cbat.BAT_get_eta_c(self._c_ptr)
+        def __set__(self,eta_c): cbat.BAT_set_eta_c(self._c_ptr,eta_c)
+
+    property eta_d:
+        """ Battery discharging efficiency (unitless) (float). """
+        def __get__(self): return cbat.BAT_get_eta_d(self._c_ptr)
+        def __set__(self,eta_d): cbat.BAT_set_eta_d(self._c_ptr,eta_d)
+
 cdef new_Battery(cbat.Bat* b):
     if b is not NULL:
         bat = Battery(alloc=False)
@@ -2148,6 +2158,25 @@ cdef class Network:
         else:
             raise NetworkError('invalid vargen index')
 
+    def get_bat(self,index):
+        """
+        Gets battery with the given index.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        bat : :class:`Battery <pfnet.Battery>`
+        """
+
+        ptr = cnet.NET_get_bat(self._c_net,index)
+        if ptr is not NULL:
+            return new_Battery(ptr)
+        else:
+            raise NetworkError('invalid battery index')
+
     def get_gen_buses(self):
         """
         Gets list of buses where generators are connected.
@@ -2201,7 +2230,7 @@ cdef class Network:
         Parameters
         ----------
         obj_type : int (:ref:`ref_net_obj`)
-        var : int (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`)
+        var : int (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`) 
         """
         
         return Matrix(cnet.NET_get_var_projection(self._c_net,obj_type,var),owndata=True)
@@ -2476,6 +2505,17 @@ cdef class Network:
         
         return cnet.NET_get_num_vargens(self._c_net)
 
+    def get_num_bats(self):
+        """
+        Gets number of batteries in the network.
+
+        Returns
+        -------
+        num : int
+        """
+        
+        return cnet.NET_get_num_bats(self._c_net)
+
     def get_properties(self):
         """
         Gets network properties.
@@ -2533,8 +2573,8 @@ cdef class Network:
         ----------
         obj_type : int (:ref:`ref_net_obj`)
         flags : int or list (:ref:`ref_net_flag`)
-        props : int or list (:ref:`ref_bus_prop`, :ref:`ref_branch_prop`, :ref:`ref_gen_prop`, :ref:`ref_shunt_prop`, :ref:`ref_load_prop`, :ref:`ref_vargen_prop` )
-        vals : int or list (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`)
+        props : int or list (:ref:`ref_bus_prop`, :ref:`ref_branch_prop`, :ref:`ref_gen_prop`, :ref:`ref_shunt_prop`, :ref:`ref_load_prop`, :ref:`ref_vargen_prop`, :ref:`ref_bat_prop`)
+        vals : int or list (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`)
         """
 
         props = props if isinstance(props,list) else [props]
@@ -2554,9 +2594,9 @@ cdef class Network:
 
         Parameters
         ----------
-        obj : :class:`Bus <pfnet.Bus>`, :class:`Branch <pfnet.Branch>`, :class:`Generator <pfnet.Generator>`, :class:`Load <pfnet.Load>`, :class:`Shunt <pfnet.Shunt>`, :class:`VarGenerator <pfnet.VarGenerator>` 
+        obj : :class:`Bus <pfnet.Bus>`, :class:`Branch <pfnet.Branch>`, :class:`Generator <pfnet.Generator>`, :class:`Load <pfnet.Load>`, :class:`Shunt <pfnet.Shunt>`, :class:`VarGenerator <pfnet.VarGenerator>`, :class:`Battery <pfnet.Battery>` 
         flags : int or list (:ref:`ref_net_flag`)
-        vals : int or list (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`)
+        vals : int or list (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`)
         """
         
         cdef CPtr ptr = obj._get_c_ptr()
@@ -2666,6 +2706,11 @@ cdef class Network:
         """ List of network :class:`variable generators <pfnet.VarGenerator>` (list). """
         def __get__(self):
             return [self.get_vargen(i) for i in range(self.num_vargens)]
+
+    property batteries:
+        """ List of network :class:`batteries <pfnet.Battery>` (list). """
+        def __get__(self):
+            return [self.get_bat(i) for i in range(self.num_bats)]
     
     property num_buses:
         """ Number of buses in the network (int). """
@@ -2690,6 +2735,10 @@ cdef class Network:
     property num_vargens:
         """ Number of variable generators in the network (int). """
         def __get__(self): return cnet.NET_get_num_vargens(self._c_net)
+
+    property num_bats:
+        """ Number of batteries in the network (int). """
+        def __get__(self): return cnet.NET_get_num_bats(self._c_net)
 
     property num_vars:
         """ Number of network quantities that have been set to variable (int). """

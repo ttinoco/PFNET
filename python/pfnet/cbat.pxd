@@ -30,6 +30,8 @@ cdef extern from "pfnet/bat.h":
     REAL BAT_get_P_min(Bat* bat)
     REAL BAT_get_E(Bat* bat)
     REAL BAT_get_E_max(Bat* bat)
+    REAL BAT_get_eta_c(Bat* bat)
+    REAL BAT_get_eta_d(Bat* bat)
     Bat* BAT_get_next(Bat* bat)
     bint BAT_has_flags(Bat* bat, char flag_type, char mask)
     Bat* BAT_new()
@@ -38,4 +40,5 @@ cdef extern from "pfnet/bat.h":
     void BAT_set_P_max(Bat* bat, REAL P_max)
     void BAT_set_E(Bat* bat, REAL E)
     void BAT_set_E_max(Bat* bat, REAL E_max)
-
+    void BAT_set_eta_c(Bat* bat, REAL eta_c)
+    void BAT_set_eta_d(Bat* bat, REAL eta_d)
