@@ -143,40 +143,48 @@ BOOL GRAPH_can_viz(Graph* g) {
 void GRAPH_set_layout(Graph* g) {
   if (g) {
     #ifndef NO_GRAPHVIZ
+    gvFreeLayout(g->gvc,g->G);
     gvLayout(g->gvc,g->G,"sfdp");
     g->layout_done = TRUE;
     #endif
   }
 }
 
-void GRAPH_set_nodes_property(Graph* g, char* prop, char* value) {
+void GRAPH_set_node_property(Graph* g, Bus* bus, char* prop, char* value) {
 
   #ifndef NO_GRAPHVIZ
 
   // Local variables
   Agsym_t* att;
   Agnode_t* node;
-  Bus* bus;
   char buffer[100];
+  
+  // Set property
+  if (g) {
+    sprintf(buffer,"%d",BUS_get_number(bus));
+    node = agnode(g->G,buffer,FALSE);
+    att = agattrsym(node,prop);
+    if (att)
+      agxset(node,att,value);
+    else {
+      sprintf(g->error_string,"invalid node property");
+      g->error_flag = TRUE;
+      return;
+    }
+  }
+  #endif
+}
+  
+void GRAPH_set_nodes_property(Graph* g, char* prop, char* value) {
+  
+  // Local variables
   int i;
   
   // Set property
   if (g) {
-    for (i = 0; i < NET_get_num_buses(g->net); i++) {
-      bus = NET_get_bus(g->net,i);
-      sprintf(buffer,"%d",BUS_get_number(bus));
-      node = agnode(g->G,buffer,FALSE);
-      att = agattrsym(node,prop);
-      if (att)
-	agxset(node,att,value);
-      else {
-	sprintf(g->error_string,"invalid node property");
-	g->error_flag = TRUE;
-	return;
-      }
-    }
+    for (i = 0; i < NET_get_num_buses(g->net); i++)
+      GRAPH_set_node_property(g,NET_get_bus(g->net,i),prop,value);
   }
-  #endif
 }
 
 void GRAPH_set_edges_property(Graph* g, char* prop, char* value) {

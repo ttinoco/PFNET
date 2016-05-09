@@ -9,7 +9,7 @@
 cdef extern from "pfnet/graph.h":
 
     ctypedef struct Graph
-    
+    ctypedef struct Bus
     ctypedef struct Net
 
     void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type)
@@ -21,6 +21,7 @@ cdef extern from "pfnet/graph.h":
     bint GRAPH_can_viz(Graph* g)
     Graph* GRAPH_new(Net* net)
     void GRAPH_set_layout(Graph* g)
+    void GRAPH_set_node_property(Graph* g, Bus* bus, char* prop, char* value)
     void GRAPH_set_edges_property(Graph* g, char* prop, char* value)
     void GRAPH_set_nodes_property(Graph* g, char* prop, char* value)
     void GRAPH_write(Graph* g, char* format, char* filename)

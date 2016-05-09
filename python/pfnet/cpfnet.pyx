@@ -3081,6 +3081,22 @@ cdef class Graph:
 
         cgraph.GRAPH_set_layout(self._c_graph)
 
+    def set_node_property(self,bus,prop,value):
+        """
+        Sets property of node. See `Graphviz documentation <http://www.graphviz.org/Documentation.php>`_.
+
+        Parameters
+        ----------
+        bus : :class:`Bus <pfnet.Bus>`
+        prop : string
+        value : string
+        """
+        
+        cdef Bus b = bus
+        cgraph.GRAPH_set_node_property(self._c_graph,b._c_ptr,prop,value)
+        if cgraph.GRAPH_has_error(self._c_graph):
+            raise GraphError(cgraph.GRAPH_get_error_string(self._c_graph))
+
     def set_nodes_property(self,prop,value):
         """
         Sets property of nodes. See `Graphviz documentation <http://www.graphviz.org/Documentation.php>`_.
