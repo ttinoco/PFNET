@@ -992,6 +992,11 @@ void ART_PARSER_callback_field(char* s, void* data) {
       else if (strstr(s,ART_BAT_TOKEN) != NULL) {
 	parser->state = ART_PARSER_STATE_BAT;
       }	
+      
+      // Base
+      else if (strstr(s,ART_BASE_TOKEN) != NULL) {
+	parser->state = ART_PARSER_STATE_BASE;
+      }	
     }
     break;
     
@@ -1024,6 +1029,9 @@ void ART_PARSER_callback_field(char* s, void* data) {
     break;
   case ART_PARSER_STATE_BAT:
     ART_PARSER_parse_bat_field((char*)s,parser);
+    break;
+  case ART_PARSER_STATE_BASE:
+    ART_PARSER_parse_base_field((char*)s,parser);
     break;
   }
     
@@ -1071,6 +1079,9 @@ void ART_PARSER_callback_record(void *data) {
     break;
   case ART_PARSER_STATE_BAT:
     ART_PARSER_parse_bat_record(parser);
+    break;
+  case ART_PARSER_STATE_BASE:
+    ART_PARSER_parse_base_record(parser);
     break;
   }  
 }
@@ -1630,6 +1641,29 @@ void ART_PARSER_parse_bat_record(ART_Parser* parser) {
   if (parser->bat)
     LIST_push(parser->bat_list,parser->bat,next);
   parser->bat = NULL;
+  parser->field = 0;
+  parser->record = 0;
+  parser->state = ART_PARSER_STATE_INIT;
+}
+
+void ART_PARSER_parse_base_field(char* s, ART_Parser* parser) {
+
+  if (!parser)
+    return;
+
+  // Fields
+  switch (parser->field) {
+  case 1:
+    parser->base_power = atof(s);
+    break;
+  }
+}
+
+void ART_PARSER_parse_base_record(ART_Parser* parser) {
+
+  if (!parser)
+    return;
+
   parser->field = 0;
   parser->record = 0;
   parser->state = ART_PARSER_STATE_INIT;
