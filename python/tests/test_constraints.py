@@ -77,6 +77,10 @@ class TestConstraints(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.BAT_PROP_ANY,
                           pf.BAT_VAR_P|pf.BAT_VAR_E)
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_VARS,
+                          pf.LOAD_PROP_ANY,
+                          pf.LOAD_VAR_P)
             self.assertGreater(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
             self.assertEqual(net.num_vars,
@@ -87,7 +91,8 @@ class TestConstraints(unittest.TestCase):
                              net.get_num_phase_shifters() +
                              net.get_num_switched_shunts() +
                              net.num_vargens*2+
-                             2*net.num_bats)
+                             2*net.num_bats+
+                             net.num_loads)
             
             # Fixed
             net.set_flags(pf.OBJ_BUS,
@@ -122,6 +127,10 @@ class TestConstraints(unittest.TestCase):
                           pf.FLAG_FIXED,
                           pf.BAT_PROP_ANY,
                           pf.BAT_VAR_P|pf.BAT_VAR_E)
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_FIXED,
+                          pf.LOAD_PROP_ANY,
+                          pf.LOAD_VAR_P)
             self.assertGreater(net.num_fixed,0)
             self.assertEqual(net.num_fixed,
                              2*(net.get_num_slack_buses()) +
@@ -131,7 +140,8 @@ class TestConstraints(unittest.TestCase):
                              net.get_num_phase_shifters() +
                              net.get_num_switched_shunts() +
                              net.num_vargens*2+
-                             2*net.num_bats)
+                             2*net.num_bats+
+                             net.num_loads)
             
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -220,7 +230,7 @@ class TestConstraints(unittest.TestCase):
                 self.assertEqual(b[A.row[ar[0]]],vargen.Q)
                 self.assertEqual(b[A.row[ar[0]]],vargen.index*2.5)
 
-           # Batteries
+            # Batteries
             for bat in net.batteries:
                 ar = np.where(A.col == bat.index_P)[0]
                 self.assertEqual(ar.size,1)
@@ -231,6 +241,15 @@ class TestConstraints(unittest.TestCase):
                 self.assertEqual(ar.size,1)
                 self.assertEqual(A.col[ar[0]],bat.index_E)
                 self.assertEqual(b[A.row[ar[0]]],bat.E)
+
+            # Load
+            for load in net.loads:
+                self.assertTrue(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+                self.assertTrue(load.has_flags(pf.FLAG_FIXED,pf.LOAD_VAR_P))
+                ar = np.where(A.col == load.index_P)[0]
+                self.assertEqual(ar.size,1)
+                self.assertEqual(A.col[ar[0]],load.index_P)
+                self.assertEqual(b[A.row[ar[0]]],load.P)
 
     def test_constr_LBOUND(self):
 
