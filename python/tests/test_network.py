@@ -1506,6 +1506,11 @@ class TestNetwork(unittest.TestCase):
                 vargen.P = np.pi*vargen.index
                 vargen.Q = -np.pi*vargen.index
 
+            # set batteries
+            for bat in net.batteries:
+                if bat.index % 2 == 0:
+                    bat.P *= -1.
+
             # var values (current values)
             x = net.get_var_values()
 
@@ -1665,6 +1670,12 @@ class TestNetwork(unittest.TestCase):
                 bat = net.get_bat(i)
                 self.assertEqual(bat.index_Pc,bat.index_Pd-1)
                 self.assertEqual(bat.index_Pd,bat.index_E-1)
+                ac = np.where(P.col == bat.index_Pc)[0]
+                ad = np.where(P.col == bat.index_Pd)[0]
+                self.assertEqual(ac.size,1)
+                self.assertEqual(ad.size,1)
+                self.assertEqual(P.col[ac[0]],bat.index_Pc)
+                self.assertEqual(P.row[ac[0]],P.row[ad[0]]-1)
                 if bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P):
                     if bat.P >= 0:
                         self.assertEqual(batP[index],bat.P)
@@ -1725,6 +1736,11 @@ class TestNetwork(unittest.TestCase):
             net.add_vargens(load_buses,50.,30.,5,0.05)
             self.assertGreater(net.num_vargens,0)
             self.assertEqual(net.num_vargens,len(load_buses))
+
+            # set batteries
+            for bat in net.batteries:
+                if bat.index % 2 == 0:
+                    bat.P *= -1.
 
             # loads
             for load in net.loads:

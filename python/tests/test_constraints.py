@@ -2293,6 +2293,11 @@ class TestConstraints(unittest.TestCase):
                     for vargen in b.vargens:
                         self.assertEqual(vargen.bus,b)
 
+            # batteries
+            for bat in net.batteries:
+                if bat.index % 2 == 0:
+                    bat.P *= -1.
+
             # Variables
             net.set_flags(pf.OBJ_BUS,
                           pf.FLAG_VARS,
