@@ -170,18 +170,24 @@ void FUNC_NETCON_COST_eval_branch(Func* f, Branch* br, Vec* var_values) {
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
 	  (*phi) -= price*VEC_get(var_values,GEN_get_index_P(gen));
+	else
+	  (*phi) -= price*GEN_get_P(gen);
       }
 
       // Variable generators
       for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P))
 	  (*phi) -= price*VEC_get(var_values,VARGEN_get_index_P(vargen));
+	else
+	  (*phi) -= price*VARGEN_get_P(vargen);
       }
 
       // Loads
       for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
 	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P))
 	  (*phi) += price*VEC_get(var_values,LOAD_get_index_P(load));
+	else
+	  (*phi) += price*LOAD_get_P(load);
       }
 
       // Battery charging
@@ -189,6 +195,9 @@ void FUNC_NETCON_COST_eval_branch(Func* f, Branch* br, Vec* var_values) {
 	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
 	  (*phi) += price*VEC_get(var_values,BAT_get_index_Pc(bat));
 	  (*phi) -= price*VEC_get(var_values,BAT_get_index_Pd(bat));
+	}
+	else {
+	  (*phi) += price*BAT_get_P(bat);
 	}
       }
     }

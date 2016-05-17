@@ -1289,6 +1289,11 @@ class TestFunctions(unittest.TestCase):
             net.add_vargens(net.get_load_buses(),50.,30.,5,0.05)
             for vargen in net.var_generators:
                 vargen.P = (vargen.index%10)*0.3233+0.1
+
+            # batteries
+            for bat in net.batteries:
+                if bat.index % 2 == 0:
+                    bat.P *= -1.
             
             # Vars
             net.set_flags(pf.OBJ_LOAD,
@@ -1374,7 +1379,7 @@ class TestFunctions(unittest.TestCase):
                 for vargen in bus.vargens:
                     self.assertTrue(vargen.has_flags(pf.FLAG_VARS,pf.VARGEN_VAR_P))
                     val -= bus.price*vargen.P
-            self.assertLess(100*np.abs(val-f)/np.abs(f),1e-3)
+            self.assertLess(100*np.abs(val-f)/np.abs(f),1e-8)
 
             # Gradient check
             f0 = func.phi
@@ -1393,6 +1398,38 @@ class TestFunctions(unittest.TestCase):
                 error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
+            # No variables
+            net.clear_flags()
+            self.assertEqual(net.num_vars,0)
+            
+            func = pf.Function(pf.FUNC_TYPE_NETCON_COST,1.,net)
+            self.assertEqual(func.type,pf.FUNC_TYPE_NETCON_COST)
+
+            x0 = net.get_var_values()
+
+            func.analyze()
+            func.eval(x0)
+            
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
+            
+            # value check
+            val = 0
+            for bus in net.buses:
+                for load in bus.loads:
+                    self.assertFalse(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+                    val += bus.price*load.P
+                for bat in bus.bats:
+                    self.assertFalse(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P))
+                    val += bus.price*bat.P
+                for gen in bus.gens:
+                    self.assertFalse(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
+                    val -= bus.price*gen.P
+                for vargen in bus.vargens:
+                    self.assertFalse(vargen.has_flags(pf.FLAG_VARS,pf.VARGEN_VAR_P))
+                    val -= bus.price*vargen.P
+            self.assertLess(100*np.abs(val-func.phi)/np.abs(f),1e-8)
+            
     def test_robustness(self):
 
         for case in test_cases.CASES:
