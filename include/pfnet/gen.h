@@ -75,7 +75,7 @@ REAL GEN_get_P_min(Gen* gen);
 REAL GEN_get_Q_max(Gen* gen);
 REAL GEN_get_Q_min(Gen* gen);
 void GEN_get_var_values(Gen* gen, Vec* values, int code);
-int GEN_get_var_index(void* gen, char var);
+Vec* GEN_get_var_indices(void* gen, char var);
 BOOL GEN_has_flags(void* gen, char flag_type, char mask);
 BOOL GEN_has_properties(void* gen, char prop);
 void GEN_init(Gen* gen);

@@ -1782,9 +1782,13 @@ cdef class Battery:
         """ Battery index (int). """
         def __get__(self): return cbat.BAT_get_index(self._c_ptr)
         
-    property index_P:
+    property index_Pc:
         """ Index of battery charging power variable (int). """
-        def __get__(self): return cbat.BAT_get_index_P(self._c_ptr)
+        def __get__(self): return cbat.BAT_get_index_Pc(self._c_ptr)
+
+    property index_Pd:
+        """ Index of battery discharging power variable (int). """
+        def __get__(self): return cbat.BAT_get_index_Pd(self._c_ptr)
 
     property index_E:
         """ Index of battery energy level variable (int). """

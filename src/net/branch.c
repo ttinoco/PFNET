@@ -394,15 +394,28 @@ void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
   }   
 }
 
-int BRANCH_get_var_index(void* vbr, char var) {
+Vec* BRANCH_get_var_indices(void* vbr, char var) {
   Branch* br = (Branch*)vbr;
+  Vec* indices;
   if (!br)
-    return 0;
-  if (var == BRANCH_VAR_RATIO)
-    return br->index_ratio;
-  if (var == BRANCH_VAR_PHASE)
-    return br->index_phase;
-  return 0;
+    return NULL;
+  if (var == BRANCH_VAR_RATIO) {
+    indices = VEC_new(1);
+    VEC_set(indices,0,br->index_ratio);
+    return indices;
+  }
+  if (var == BRANCH_VAR_PHASE) {
+    indices = VEC_new(1);
+    VEC_set(indices,0,br->index_phase);
+    return indices;
+  }
+  if (var == BRANCH_VAR_RATIO_DEV) {
+    indices = VEC_new(2);
+    VEC_set(indices,0,br->index_ratio_y);
+    VEC_set(indices,1,br->index_ratio_z);
+    return indices;
+  }
+  return NULL;
 }
 
 BOOL BRANCH_has_pos_ratio_v_sens(Branch* branch) {

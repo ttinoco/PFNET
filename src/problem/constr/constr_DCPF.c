@@ -100,7 +100,7 @@ void CONSTR_DCPF_count_branch(Constr* c, Branch* br) {
       for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
 	
 	//*****************************
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // Pg var
+	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // P var
 	  
 	  // A
 	  (*Acounter)++; // Pk
@@ -111,7 +111,7 @@ void CONSTR_DCPF_count_branch(Constr* c, Branch* br) {
       for (load = BUS_get_load(bus[k]); load != NULL; load = LOAD_get_next(load)) {
 	
 	//*****************************
-	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) { // Pl var
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) { // P var
 	  
 	  // A
 	  (*Acounter)++; // Pk
@@ -122,7 +122,7 @@ void CONSTR_DCPF_count_branch(Constr* c, Branch* br) {
       for (vargen = BUS_get_vargen(bus[k]); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
 	
 	//*****************************
-	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) { // Pg var
+	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) { // P var
 	  
 	  // A
 	  (*Acounter)++; // Pk
@@ -133,10 +133,11 @@ void CONSTR_DCPF_count_branch(Constr* c, Branch* br) {
       for (bat = BUS_get_bat(bus[k]); bat != NULL; bat = BAT_get_next(bat)) {
 	
 	//*****************************
-	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) { // Pb var
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) { // P var
 	  
 	  // A
-	  (*Acounter)++; // Pk
+	  (*Acounter)++; // Pc
+	  (*Acounter)++; // Pd
 	}
       }
     }
@@ -284,7 +285,7 @@ void CONSTR_DCPF_analyze_branch(Constr* c, Branch* br) {
       for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
 	
 	//*****************************
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // Pg var
+	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // P var
 	  
 	  // A
 	  MAT_set_i(A,*Acounter,bus_index[k]); // Pk
@@ -341,12 +342,18 @@ void CONSTR_DCPF_analyze_branch(Constr* c, Branch* br) {
       for (bat = BUS_get_bat(bus[k]); bat != NULL; bat = BAT_get_next(bat)) {
 	
 	//*****************************
-	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) { // Pb var
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) { // P var
 	  
 	  // A
 	  MAT_set_i(A,*Acounter,bus_index[k]); // Pk
-	  MAT_set_j(A,*Acounter,BAT_get_index_P(bat)); // Pb
+	  MAT_set_j(A,*Acounter,BAT_get_index_Pc(bat)); // Pc
 	  MAT_set_d(A,*Acounter,-1.);
+	  (*Acounter)++; 
+
+	  // A
+	  MAT_set_i(A,*Acounter,bus_index[k]); // Pk
+	  MAT_set_j(A,*Acounter,BAT_get_index_Pd(bat)); // Pd
+	  MAT_set_d(A,*Acounter,1.);
 	  (*Acounter)++; 
 	}
 	else {

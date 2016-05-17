@@ -149,11 +149,11 @@ void CONSTR_FIX_count_branch(Constr* c, Branch* br) {
       // Batteries
       for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
 	
-	// Charging power (P)
+	// Charging/discharging power (P)
 	if (BAT_has_flags(bat,FLAG_FIXED,BAT_VAR_P) && 
 	    BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
-	  (*Acounter)++;
-	  (*Aconstr_index)++;
+	  (*Acounter) += 2;
+	  (*Aconstr_index) += 2;
 	}
 	
 	// Energy level (E)
@@ -227,6 +227,8 @@ void CONSTR_FIX_analyze_branch(Constr* c, Branch* br) {
   Vec* b;
   Mat* A;
   int i;
+  REAL Pc;
+  REAL Pd;
   
   // Cosntr data
   b = CONSTR_get_b(c);
@@ -381,12 +383,31 @@ void CONSTR_FIX_analyze_branch(Constr* c, Branch* br) {
       // Batteries
       for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
 	
-	// Charging power (P)
+	// Charging/discharging power (P)
 	if (BAT_has_flags(bat,FLAG_FIXED,BAT_VAR_P) && 
 	    BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
-	  VEC_set(b,*Aconstr_index,BAT_get_P(bat));
+	  
+	  if (BAT_get_P(bat) >= 0) {
+	    Pc = BAT_get_P(bat);
+	    Pd = 0.;
+	  }
+	  else {
+	    Pc = 0.;
+	    Pd = -BAT_get_P(bat);
+	  }
+
+	  // Pc
+	  VEC_set(b,*Aconstr_index,Pc);
 	  MAT_set_i(A,*Acounter,*Aconstr_index);
-	  MAT_set_j(A,*Acounter,BAT_get_index_P(bat));
+	  MAT_set_j(A,*Acounter,BAT_get_index_Pc(bat));
+	  MAT_set_d(A,*Acounter,1.);
+	  (*Acounter)++;
+	  (*Aconstr_index)++;
+
+	  // Pd
+	  VEC_set(b,*Aconstr_index,Pd);
+	  MAT_set_i(A,*Acounter,*Aconstr_index);
+	  MAT_set_j(A,*Acounter,BAT_get_index_Pd(bat));
 	  MAT_set_d(A,*Acounter,1.);
 	  (*Acounter)++;
 	  (*Aconstr_index)++;

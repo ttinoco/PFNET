@@ -73,7 +73,7 @@ REAL VARGEN_get_Q(Vargen* gen);
 REAL VARGEN_get_Q_max(Vargen* gen);
 REAL VARGEN_get_Q_min(Vargen* gen);
 void VARGEN_get_var_values(Vargen* gen, Vec* values, int code);
-int VARGEN_get_var_index(void* gen, char var);
+Vec* VARGEN_get_var_indices(void* gen, char var);
 BOOL VARGEN_has_flags(void* gen, char flag_type, char mask);
 BOOL VARGEN_has_properties(void* gen, char prop);
 Vargen* VARGEN_hash_name_add(Vargen* vargen_hash, Vargen* vg);

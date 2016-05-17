@@ -1311,7 +1311,7 @@ class TestFunctions(unittest.TestCase):
                              (net.num_loads+
                               net.num_gens+
                               net.num_vargens+
-                              net.num_bats))
+                              2*net.num_bats))
             self.assertGreater(net.num_vars,0)
              
             x0 = net.get_var_values()

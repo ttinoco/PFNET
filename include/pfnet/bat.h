@@ -20,12 +20,12 @@
 /** \defgroup bat_vars Battery Variable Masks 
  *  @{
  */
-#define BAT_VAR_P 0x01    /**< @brief Variable: battery charing power */
+#define BAT_VAR_P 0x01    /**< @brief Variable: battery charing/discharging power */
 #define BAT_VAR_E 0x02    /**< @brief Variable: battery energy level */
 /** @} */
 
 // Infinity
-#define BAT_INF_P 1000. /**< @brief Infinite charging power */
+#define BAT_INF_P 1000. /**< @brief Infinite charging/discharging power */
 #define BAT_INF_E 1000. /**< @brief Infinite energy level */
 
 // Properties
@@ -48,7 +48,8 @@ void BAT_clear_flags(Bat* bat, char flag_type);
 char BAT_get_obj_type(void* bat);
 Bus* BAT_get_bus(Bat* bat);
 int BAT_get_index(Bat* bat);
-int BAT_get_index_P(Bat* bat);
+int BAT_get_index_Pc(Bat* bat);
+int BAT_get_index_Pd(Bat* bat);
 int BAT_get_index_E(Bat* bat);
 Bat* BAT_get_next(Bat* bat);
 REAL BAT_get_P(Bat* bat);
@@ -59,7 +60,7 @@ REAL BAT_get_E_max(Bat* bat);
 REAL BAT_get_eta_c(Bat* bat);
 REAL BAT_get_eta_d(Bat* bat);
 void BAT_get_var_values(Bat* bat, Vec* values, int code);
-int BAT_get_var_index(void* bat, char var);
+Vec* BAT_get_var_indices(void* bat, char var);
 BOOL BAT_has_flags(void* bat, char flag_type, char mask);
 BOOL BAT_has_properties(void* bat, char prop);
 void BAT_init(Bat* bat);

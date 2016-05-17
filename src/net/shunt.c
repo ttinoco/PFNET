@@ -216,13 +216,23 @@ void SHUNT_get_var_values(Shunt* shunt, Vec* values, int code) {
   }    
 }
 
-int SHUNT_get_var_index(void* vshunt, char var) {
+Vec* SHUNT_get_var_indices(void* vshunt, char var) {
   Shunt* shunt = (Shunt*)vshunt;
+  Vec* indices;
   if (!shunt)
-    return 0;
-  if (var == SHUNT_VAR_SUSC)
-    return shunt->index_b;
-  return 0;
+    return NULL;
+  if (var == SHUNT_VAR_SUSC) {
+    indices = VEC_new(1);
+    VEC_set(indices,0,shunt->index_b);
+    return indices;
+  }
+  if (var == SHUNT_VAR_SUSC_DEV) {
+    indices = VEC_new(2);
+    VEC_set(indices,0,shunt->index_y);
+    VEC_set(indices,1,shunt->index_z);
+    return indices;
+  }
+  return NULL;
 }
 
 BOOL SHUNT_has_flags(void* vshunt, char flag_type, char mask) {

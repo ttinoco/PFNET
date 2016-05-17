@@ -187,7 +187,7 @@ REAL BUS_get_v_set(Bus* bus);
 REAL BUS_get_v_max(Bus* bus);
 REAL BUS_get_v_min(Bus* bus);
 void BUS_get_var_values(Bus* bus, Vec* values, int code);
-int BUS_get_var_index(void* bus, char var);
+Vec* BUS_get_var_indices(void* bus, char var);
 REAL BUS_get_sens_P_balance(Bus* bus);
 REAL BUS_get_sens_Q_balance(Bus* bus);
 REAL BUS_get_sens_v_mag_u_bound(Bus* bus);

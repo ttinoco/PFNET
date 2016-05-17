@@ -62,7 +62,7 @@ REAL LOAD_get_P_max(Load* load);
 REAL LOAD_get_P_min(Load* load);
 REAL LOAD_get_Q(Load* load);
 void LOAD_get_var_values(Load* load, Vec* values, int code);
-int LOAD_get_var_index(void* load, char var);
+Vec* LOAD_get_var_indices(void* load, char var);
 BOOL LOAD_has_flags(void* load, char flag_type, char mask);
 BOOL LOAD_has_properties(void* load, char prop);
 void LOAD_init(Load* load);

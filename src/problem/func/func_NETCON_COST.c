@@ -112,8 +112,10 @@ void FUNC_NETCON_COST_analyze_branch(Func* f, Branch* br) {
 
       // Battery charging
       for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
-	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P))
-	  VEC_set(gphi,BAT_get_index_P(bat),price);
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
+	  VEC_set(gphi,BAT_get_index_Pc(bat),price);
+	  VEC_set(gphi,BAT_get_index_Pd(bat),-price);
+	}
       }
     }
     
@@ -184,8 +186,10 @@ void FUNC_NETCON_COST_eval_branch(Func* f, Branch* br, Vec* var_values) {
 
       // Battery charging
       for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
-	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P))
-	  (*phi) += price*VEC_get(var_values,BAT_get_index_P(bat));
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
+	  (*phi) += price*VEC_get(var_values,BAT_get_index_Pc(bat));
+	  (*phi) -= price*VEC_get(var_values,BAT_get_index_Pd(bat));
+	}
       }
     }
     

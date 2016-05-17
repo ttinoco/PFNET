@@ -159,7 +159,7 @@ class TestNetwork(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.BAT_PROP_ANY,
                           pf.BAT_VAR_P)
-            num_so_far += net.num_bats
+            num_so_far += 2*net.num_bats
 
             self.assertEqual(net.num_vars,
                              num_so_far)
@@ -1499,7 +1499,7 @@ class TestNetwork(unittest.TestCase):
                               net.get_num_switched_shunts() +
                               2*net.get_num_vargens()+
                               net.num_loads+
-                              2*net.num_bats))
+                              3*net.num_bats))
 
             # set vargens
             for vargen in net.var_generators:
@@ -1656,17 +1656,23 @@ class TestNetwork(unittest.TestCase):
             # battery charging
             P = net.get_var_projection(pf.OBJ_BAT,pf.BAT_VAR_P)
             self.assertTrue(isinstance(P,coo_matrix))
-            self.assertEqual(P.shape[0],net.num_bats)
+            self.assertEqual(P.shape[0],2*net.num_bats)
             self.assertEqual(P.shape[1],net.num_vars)
-            self.assertEqual(P.nnz,net.num_bats)
+            self.assertEqual(P.nnz,2*net.num_bats)
             batP = P*x
             index = 0
             for i in range(net.num_bats):
                 bat = net.get_bat(i)
-                self.assertEqual(bat.index_P,bat.index_E-1)
+                self.assertEqual(bat.index_Pc,bat.index_Pd-1)
+                self.assertEqual(bat.index_Pd,bat.index_E-1)
                 if bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P):
-                    self.assertEqual(batP[index],bat.P)
-                    index += 1
+                    if bat.P >= 0:
+                        self.assertEqual(batP[index],bat.P)
+                        self.assertEqual(batP[index+1],0.)
+                    else:
+                        self.assertEqual(batP[index],0.)
+                        self.assertEqual(batP[index+1],-bat.P)
+                    index += 2
 
             # battery energy
             P = net.get_var_projection(pf.OBJ_BAT,pf.BAT_VAR_E)
@@ -1678,7 +1684,8 @@ class TestNetwork(unittest.TestCase):
             index = 0
             for i in range(net.num_bats):
                 bat = net.get_bat(i)
-                self.assertEqual(bat.index_P,bat.index_E-1)
+                self.assertEqual(bat.index_Pc,bat.index_Pd-1)
+                self.assertEqual(bat.index_Pd,bat.index_E-1)
                 if bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_E):
                     self.assertEqual(batE[index],bat.E)
                     index += 1
@@ -1761,7 +1768,7 @@ class TestNetwork(unittest.TestCase):
                               4*net.num_branches + 
                               3*net.num_shunts +
                               net.get_num_P_adjust_loads()+
-                              2*net.num_bats))
+                              3*net.num_bats))
             
             # Add some interesting vargen values
             for vargen in net.var_generators:
@@ -1802,7 +1809,12 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(x[shunt.index_y],0.)
                 self.assertEqual(x[shunt.index_z],0.)
             for bat in net.batteries:
-                self.assertEqual(x[bat.index_P],bat.P)
+                if bat.P >= 0:
+                    self.assertEqual(x[bat.index_Pc],bat.P)
+                    self.assertEqual(x[bat.index_Pd],0.)
+                else:
+                    self.assertEqual(x[bat.index_Pc],0.)
+                    self.assertEqual(x[bat.index_Pd],-bat.P)
                 self.assertEqual(x[bat.index_E],bat.E)
                 
             # upper limits
@@ -1839,7 +1851,8 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(x[shunt.index_y],pf.SHUNT_INF_SUSC)
                 self.assertEqual(x[shunt.index_z],pf.SHUNT_INF_SUSC)
             for bat in net.batteries:
-                self.assertEqual(x[bat.index_P],bat.P_max)
+                self.assertEqual(x[bat.index_Pc],bat.P_max)
+                self.assertEqual(x[bat.index_Pd],-bat.P_min)
                 self.assertEqual(x[bat.index_E],bat.E_max)
 
             # lower limits
@@ -1872,7 +1885,8 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(x[shunt.index_y],0.)
                 self.assertEqual(x[shunt.index_z],0.)
             for bat in net.batteries:
-                self.assertEqual(x[bat.index_P],bat.P_min)
+                self.assertEqual(x[bat.index_Pc],0.)
+                self.assertEqual(x[bat.index_Pd],0.)
                 self.assertEqual(x[bat.index_E],0.)
 
     def test_vargen_P_sigma(self):

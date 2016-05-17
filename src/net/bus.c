@@ -739,16 +739,34 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
   }
 }
 
-int BUS_get_var_index(void* vbus, char var) {
+Vec* BUS_get_var_indices(void* vbus, char var) {
   Bus* bus = (Bus*)vbus;
+  Vec* indices;
   if (!bus)
-    return 0;
-  if (var == BUS_VAR_VMAG)
-    return bus->index_v_mag;
-  if (var == BUS_VAR_VANG)
-    return bus->index_v_ang;
-  else
-    return 0;
+    return NULL;
+  if (var == BUS_VAR_VMAG) {
+    indices = VEC_new(1);
+    VEC_set(indices,0,bus->index_v_mag);
+    return indices;
+  }
+  if (var == BUS_VAR_VANG) {
+    indices = VEC_new(1);
+    VEC_set(indices,0,bus->index_v_ang);
+    return indices;
+  }
+  if (var == BUS_VAR_VDEV) {
+    indices = VEC_new(2);
+    VEC_set(indices,0,bus->index_y);
+    VEC_set(indices,1,bus->index_z);
+    return indices;
+  }
+  if (var == BUS_VAR_VVIO) {
+    indices = VEC_new(2);
+    VEC_set(indices,0,bus->index_vl);
+    VEC_set(indices,1,bus->index_vh);
+    return indices;
+  }
+  return NULL;
 }
 
 REAL BUS_get_sens_P_balance(Bus* bus) {

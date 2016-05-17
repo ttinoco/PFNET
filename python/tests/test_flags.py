@@ -176,7 +176,7 @@ class TestFlags(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.BAT_PROP_ANY,
                           pf.BAT_VAR_P|pf.BAT_VAR_E)
-            num_vars += 2*net.num_bats
+            num_vars += 3*net.num_bats
             self.assertEqual(net.num_vars,num_vars)
 
             net.set_flags(pf.OBJ_BAT,
@@ -266,7 +266,7 @@ class TestFlags(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.BAT_PROP_ANY,
                           pf.BAT_VAR_P|pf.BAT_VAR_E)
-            num_vars += 2*net.num_bats
+            num_vars += 3*net.num_bats
             self.assertEqual(net.num_vars,num_vars)
  
             point = net.get_var_values()
@@ -301,7 +301,12 @@ class TestFlags(unittest.TestCase):
                 b = net.get_bat(i)
                 self.assertTrue(b.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P))
                 self.assertTrue(b.has_flags(pf.FLAG_VARS,pf.BAT_VAR_E))
-                self.assertEqual(point[b.index_P],b.P)
+                if (b.P >= 0.):
+                    self.assertEqual(point[b.index_Pc],b.P)
+                    self.assertEqual(point[b.index_Pd],0.)
+                else:
+                    self.assertEqual(point[b.index_Pd],-b.P)
+                    self.assertEqual(point[b.index_Pc],0.)
                 self.assertEqual(point[b.index_E],b.E)
 
     def test_tap_changer_v(self):
@@ -438,7 +443,7 @@ class TestFlags(unittest.TestCase):
                               net.get_num_switched_shunts()+
                               net.num_vargens*2 +
                               net.num_loads+
-                              2*net.num_bats))
+                              3*net.num_bats))
 
             # loads
             for load in net.loads:
@@ -633,7 +638,7 @@ class TestFlags(unittest.TestCase):
                     net.set_flags_of_component(bat,
                                                pf.FLAG_VARS,
                                                pf.BAT_VAR_P)
-                    bcount += 1
+                    bcount += 2
             for bat in net.batteries:
                 if bat.index % 2 == 0:
                     self.assertTrue(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P))

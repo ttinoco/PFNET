@@ -221,15 +221,22 @@ void VARGEN_get_var_values(Vargen* gen, Vec* values, int code) {
   }
 }
 
-int VARGEN_get_var_index(void* vgen, char var) {
+Vec* VARGEN_get_var_indices(void* vgen, char var) {
   Vargen* gen = (Vargen*)vgen;
+  Vec* indices;
   if (!gen)
-    return 0;
-  if (var == VARGEN_VAR_P)
-    return gen->index_P;
-  if (var == VARGEN_VAR_Q)
-    return gen->index_Q;
-  return 0;
+    return NULL;
+  if (var == VARGEN_VAR_P) {
+    indices = VEC_new(1);
+    VEC_set(indices,0,gen->index_P);
+    return indices;
+  }
+  if (var == VARGEN_VAR_Q) {
+    indices = VEC_new(1);
+    VEC_set(indices,0,gen->index_Q);
+    return indices;
+  }
+  return NULL;
 }
 
 BOOL VARGEN_has_flags(void* vgen, char flag_type, char mask) {

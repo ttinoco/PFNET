@@ -91,7 +91,7 @@ class TestConstraints(unittest.TestCase):
                              net.get_num_phase_shifters() +
                              net.get_num_switched_shunts() +
                              net.num_vargens*2+
-                             2*net.num_bats+
+                             3*net.num_bats+
                              net.num_loads)
             
             # Fixed
@@ -140,7 +140,7 @@ class TestConstraints(unittest.TestCase):
                              net.get_num_phase_shifters() +
                              net.get_num_switched_shunts() +
                              net.num_vargens*2+
-                             2*net.num_bats+
+                             3*net.num_bats+
                              net.num_loads)
             
             x0 = net.get_var_values()
@@ -232,10 +232,15 @@ class TestConstraints(unittest.TestCase):
 
             # Batteries
             for bat in net.batteries:
-                ar = np.where(A.col == bat.index_P)[0]
+                ar = np.where(A.col == bat.index_Pc)[0]
                 self.assertEqual(ar.size,1)
-                self.assertEqual(A.col[ar[0]],bat.index_P)
-                self.assertEqual(b[A.row[ar[0]]],bat.P)
+                self.assertEqual(A.col[ar[0]],bat.index_Pc)
+                self.assertEqual(b[A.row[ar[0]]],max([bat.P,0]))
+            for bat in net.batteries:
+                ar = np.where(A.col == bat.index_Pd)[0]
+                self.assertEqual(ar.size,1)
+                self.assertEqual(A.col[ar[0]],bat.index_Pd)
+                self.assertEqual(b[A.row[ar[0]]],max([-bat.P,0]))
             for bat in net.batteries:
                 ar = np.where(A.col == bat.index_E)[0]
                 self.assertEqual(ar.size,1)
@@ -319,7 +324,7 @@ class TestConstraints(unittest.TestCase):
                              net.get_num_phase_shifters()*1 +
                              net.get_num_switched_shunts()*3 +
                              net.num_vargens*2+
-                             2*net.num_bats)
+                             3*net.num_bats)
 
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -494,8 +499,10 @@ class TestConstraints(unittest.TestCase):
             for bat in net.batteries:
                 self.assertTrue(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P))
                 self.assertTrue(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_E))
-                self.assertEqual(u[bat.index_P],pf.BAT_INF_P)
-                self.assertEqual(l[bat.index_P],-pf.BAT_INF_P)
+                self.assertEqual(u[bat.index_Pc],pf.BAT_INF_P)
+                self.assertEqual(l[bat.index_Pc],0.)
+                self.assertEqual(u[bat.index_Pd],pf.BAT_INF_P)
+                self.assertEqual(l[bat.index_Pd],0.)
                 self.assertEqual(u[bat.index_E],pf.BAT_INF_E)
                 self.assertEqual(l[bat.index_E],0.)
                     
@@ -651,8 +658,10 @@ class TestConstraints(unittest.TestCase):
             for bat in net.batteries:
                 self.assertTrue(bat.has_flags(pf.FLAG_BOUNDED,pf.BAT_VAR_P))
                 self.assertTrue(bat.has_flags(pf.FLAG_BOUNDED,pf.BAT_VAR_E))
-                self.assertEqual(u[bat.index_P],bat.P_max)
-                self.assertEqual(l[bat.index_P],bat.P_min)
+                self.assertEqual(u[bat.index_Pc],bat.P_max)
+                self.assertEqual(l[bat.index_Pc],0.)
+                self.assertEqual(u[bat.index_Pd],-bat.P_min)
+                self.assertEqual(l[bat.index_Pd],0.)
                 self.assertEqual(u[bat.index_E],bat.E_max)
                 self.assertEqual(l[bat.index_E],0.)
 
@@ -2238,7 +2247,7 @@ class TestConstraints(unittest.TestCase):
                               net.get_num_tap_changers()+
                               net.get_num_phase_shifters()+
                               net.get_num_switched_shunts()+
-                              2*net.num_bats))
+                              3*net.num_bats))
 
             x0 = net.get_var_values()
 
@@ -2315,7 +2324,7 @@ class TestConstraints(unittest.TestCase):
                               net.num_loads + 
                               net.num_vargens +
                               net.get_num_phase_shifters()+
-                              net.num_bats))
+                              2*net.num_bats))
             
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -2366,7 +2375,7 @@ class TestConstraints(unittest.TestCase):
                               4*net.num_branches - 
                               2*r +
                               2*net.get_num_phase_shifters()+
-                              net.num_bats))
+                              2*net.num_bats))
             self.assertTupleEqual(b.shape,(net.num_buses,))
             self.assertTupleEqual(f.shape,(0,))
             self.assertTupleEqual(A.shape,(net.num_buses,net.num_vars))
@@ -2382,7 +2391,7 @@ class TestConstraints(unittest.TestCase):
                               4*net.num_branches - 
                               2*r +
                               2*net.get_num_phase_shifters()+
-                              net.num_bats))
+                              2*net.num_bats))
             
             # Extract pieces
             P1 = net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VANG)

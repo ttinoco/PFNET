@@ -278,15 +278,22 @@ void GEN_get_var_values(Gen* gen, Vec* values, int code) {
   }
 }
 
-int GEN_get_var_index(void* vgen, char var) {
+Vec* GEN_get_var_indices(void* vgen, char var) {
   Gen* gen = (Gen*)vgen;
+  Vec* indices;
   if (!gen)
-    return 0;
-  if (var == GEN_VAR_P)
-    return gen->index_P;
-  if (var == GEN_VAR_Q)
-    return gen->index_Q;
-  return 0;
+    return NULL;
+  if (var == GEN_VAR_P) {
+    indices = VEC_new(1);
+    VEC_set(indices,0,gen->index_P);
+    return indices;
+  }
+  if (var == GEN_VAR_Q) {
+    indices = VEC_new(1);
+    VEC_set(indices,0,gen->index_Q);
+    return indices;
+  }
+  return NULL;
 }
 
 BOOL GEN_has_flags(void* vgen, char flag_type, char mask) {

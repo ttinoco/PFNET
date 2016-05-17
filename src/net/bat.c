@@ -37,7 +37,8 @@ struct Bat {
   
   // Indices
   int index;           /**< @brief Battery index */
-  int index_P;         /**< @brief charging power index */
+  int index_Pc;        /**< @brief charging power index */
+  int index_Pd;        /**< @brief discharging power index */
   int index_E;         /**< @brief energy level index */
 
   // List
@@ -101,9 +102,16 @@ int BAT_get_index(Bat* bat) {
     return 0;
 }
 
-int BAT_get_index_P(Bat* bat) {
+int BAT_get_index_Pc(Bat* bat) {
   if (bat)
-    return bat->index_P;
+    return bat->index_Pc;
+  else
+    return 0;
+}
+
+int BAT_get_index_Pd(Bat* bat) {
+  if (bat)
+    return bat->index_Pd;
   else
     return 0;
 }
@@ -180,13 +188,22 @@ void BAT_get_var_values(Bat* bat, Vec* values, int code) {
   if (bat->vars & BAT_VAR_P) {
     switch(code) {
     case UPPER_LIMITS:
-      VEC_set(values,bat->index_P,bat->P_max);
+      VEC_set(values,bat->index_Pc,bat->P_max);
+      VEC_set(values,bat->index_Pd,-bat->P_min);
       break;
     case LOWER_LIMITS:
-      VEC_set(values,bat->index_P,bat->P_min);
+      VEC_set(values,bat->index_Pc,0.);
+      VEC_set(values,bat->index_Pd,0.);
       break;
     default:
-      VEC_set(values,bat->index_P,bat->P);
+      if (bat->P >= 0) {
+	VEC_set(values,bat->index_Pc,bat->P);
+	VEC_set(values,bat->index_Pd,0.);
+      }
+      else {
+	VEC_set(values,bat->index_Pc,0.);
+	VEC_set(values,bat->index_Pd,-bat->P);
+      }
     }
   }
 
@@ -205,15 +222,23 @@ void BAT_get_var_values(Bat* bat, Vec* values, int code) {
   }
 }
 
-int BAT_get_var_index(void* vbat, char var) {
+Vec* BAT_get_var_indices(void* vbat, char var) {
   Bat* bat = (Bat*)vbat;
+  Vec* indices;
   if (!bat)
-    return 0;
-  if (var == BAT_VAR_P)
-    return bat->index_P;
-  if (var == BAT_VAR_E)
-    return bat->index_E;
-  return 0;
+    return NULL;
+  if (var == BAT_VAR_P) {
+    indices = VEC_new(2);
+    VEC_set(indices,0,bat->index_Pc);
+    VEC_set(indices,1,bat->index_Pd);
+    return indices;
+  }
+  if (var == BAT_VAR_E) {
+    indices = VEC_new(1);
+    VEC_set(indices,0,bat->index_E);
+    return indices;
+  }
+  return NULL;
 }
 
 BOOL BAT_has_flags(void* vbat, char flag_type, char mask) {
@@ -261,7 +286,8 @@ void BAT_init(Bat* bat) {
     bat->eta_d = 1.;
     
     bat->index = 0;
-    bat->index_P = 0;
+    bat->index_Pc = 0;
+    bat->index_Pd = 0;
     bat->index_E = 0;
 
     bat->next = NULL;
@@ -353,11 +379,13 @@ int BAT_set_flags(void* vbat, char flag_type, char mask, int index) {
     return index;
 
   // Set flags
-  if (!((*flags_ptr) & BAT_VAR_P) && (mask & BAT_VAR_P)) { // charging power
-    if (flag_type == FLAG_VARS)
-      bat->index_P = index;
+  if (!((*flags_ptr) & BAT_VAR_P) && (mask & BAT_VAR_P)) { // charging/discharging power
+    if (flag_type == FLAG_VARS) {
+      bat->index_Pc = index;
+      bat->index_Pd = index+1;
+    }
     (*flags_ptr) |= BAT_VAR_P;
-    index++;
+    index += 2;
   }
   if (!((*flags_ptr) & BAT_VAR_E) && (mask & BAT_VAR_E)) { // energy level
     if (flag_type == FLAG_VARS)
@@ -372,8 +400,8 @@ void BAT_set_var_values(Bat* bat, Vec* values) {
   
   if (!bat)
     return;
-  if (bat->vars & BAT_VAR_P) // charging power
-    bat->P = VEC_get(values,bat->index_P);
+  if (bat->vars & BAT_VAR_P) // charging/discharging power
+    bat->P = VEC_get(values,bat->index_Pc)-VEC_get(values,bat->index_Pd);
   if (bat->vars & BAT_VAR_E) // energy level
     bat->E = VEC_get(values,bat->index_E);
 }

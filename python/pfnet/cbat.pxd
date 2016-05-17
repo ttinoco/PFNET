@@ -22,7 +22,8 @@ cdef extern from "pfnet/bat.h":
     
     char BAT_get_obj_type(void* bat)
     int BAT_get_index(Bat* bat)
-    int BAT_get_index_P(Bat* bat)
+    int BAT_get_index_Pc(Bat* bat)
+    int BAT_get_index_Pd(Bat* bat)
     int BAT_get_index_E(Bat* bat)
     Bus* BAT_get_bus(Bat* bat)
     REAL BAT_get_P(Bat* bat)

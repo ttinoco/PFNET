@@ -223,13 +223,17 @@ void LOAD_get_var_values(Load* load, Vec* values, int code) {
   }
 }
 
-int LOAD_get_var_index(void* vload, char var) {
+Vec* LOAD_get_var_indices(void* vload, char var) {
   Load* load = (Load*)vload;
+  Vec* indices;
   if (!load)
-    return 0;
-  if (var == LOAD_VAR_P)
-    return load->index_P;
-  return 0;
+    return NULL;
+  if (var == LOAD_VAR_P) {
+    indices = VEC_new(1);
+    VEC_set(indices,0,load->index_P);
+    return indices;
+  }
+  return NULL;
 }
 
 BOOL LOAD_has_flags(void* vload, char flag_type, char mask) {

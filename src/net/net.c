@@ -1350,16 +1350,18 @@ Mat* NET_get_var_projection(Net* net, char obj_type, char var) {
 
   // Local variables
   int num_subvars;
+  Vec* indices;
   Mat* proj;
   int i;
+  int j;
 
   int num;
   void* obj;
   void* array;
   void* (*get_element)(void* array, int index);
   BOOL (*has_flags)(void*,char,char);
-  int (*get_var_index)(void*,char);
-
+  Vec* (*get_var_indices)(void*,char);
+  
   // Check
   if (!net)
     return NULL;
@@ -1371,49 +1373,49 @@ Mat* NET_get_var_projection(Net* net, char obj_type, char var) {
     array = net->bus;
     get_element = &BUS_array_get;
     has_flags = &BUS_has_flags;
-    get_var_index = &BUS_get_var_index;
+    get_var_indices = &BUS_get_var_indices;
     break;
   case OBJ_GEN:
     num = net->num_gens;
     array = net->gen;
     get_element = &GEN_array_get;
     has_flags = &GEN_has_flags;
-    get_var_index = &GEN_get_var_index;
+    get_var_indices = &GEN_get_var_indices;
     break;
   case OBJ_LOAD:
     num = net->num_loads;
     array = net->load;
     get_element = &LOAD_array_get;
     has_flags = &LOAD_has_flags;
-    get_var_index = &LOAD_get_var_index;
+    get_var_indices = &LOAD_get_var_indices;
     break;
   case OBJ_BRANCH:
     num = net->num_branches;
     array = net->branch;
     get_element = &BRANCH_array_get;
     has_flags = &BRANCH_has_flags;
-    get_var_index = &BRANCH_get_var_index;
+    get_var_indices = &BRANCH_get_var_indices;
     break;
   case OBJ_SHUNT:
     num = net->num_shunts;
     array = net->shunt;
     get_element = &SHUNT_array_get;
     has_flags = &SHUNT_has_flags;
-    get_var_index = &SHUNT_get_var_index;
+    get_var_indices = &SHUNT_get_var_indices;
     break;
   case OBJ_VARGEN:
     num = net->num_vargens;
     array = net->vargen;
     get_element = &VARGEN_array_get;
     has_flags = &VARGEN_has_flags;
-    get_var_index = &VARGEN_get_var_index;
+    get_var_indices = &VARGEN_get_var_indices;
     break;
   case OBJ_BAT:
     num = net->num_bats;
     array = net->bat;
     get_element = &BAT_array_get;
     has_flags = &BAT_has_flags;
-    get_var_index = &BAT_get_var_index;
+    get_var_indices = &BAT_get_var_indices;
     break;
   default:
     sprintf(net->error_string,"invalid object type");
@@ -1425,8 +1427,11 @@ Mat* NET_get_var_projection(Net* net, char obj_type, char var) {
   num_subvars = 0;
   for (i = 0; i < num; i++) {
     obj = get_element(array,i);
-    if (has_flags(obj,FLAG_VARS,var))
-      num_subvars++;
+    if (has_flags(obj,FLAG_VARS,var)) {
+      indices = get_var_indices(obj,var);
+      num_subvars += VEC_get_size(indices);
+      VEC_del(indices);
+    }
   }
 
   // Allocate
@@ -1439,10 +1444,14 @@ Mat* NET_get_var_projection(Net* net, char obj_type, char var) {
   for (i = 0; i < num; i++) {
     obj = get_element(array,i);
     if (has_flags(obj,FLAG_VARS,var)) {
-      MAT_set_i(proj,num_subvars,num_subvars);
-      MAT_set_j(proj,num_subvars,get_var_index(obj,var));
-      MAT_set_d(proj,num_subvars,1.);
-      num_subvars++;
+      indices = get_var_indices(obj,var);
+      for (j = 0; j < VEC_get_size(indices); j++) {
+	MAT_set_i(proj,num_subvars,num_subvars);
+	MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+	MAT_set_d(proj,num_subvars,1.);
+	num_subvars++;
+      }
+      VEC_del(indices);
     }
   }
        
@@ -2475,7 +2484,8 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
     for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
       
       if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P) && var_values)
-	P = VEC_get(var_values,BAT_get_index_P(bat));
+	P = (VEC_get(var_values,BAT_get_index_Pc(bat))-
+	     VEC_get(var_values,BAT_get_index_Pd(bat)));
       else
 	P = BAT_get_P(bat);
 
