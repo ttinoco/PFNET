@@ -32,6 +32,7 @@ BOOL GRAPH_has_error(Graph* g);
 Graph* GRAPH_new(Net* net);
 BOOL GRAPH_can_viz(Graph* g);
 void GRAPH_set_layout(Graph* g);
+void GRAPH_set_node_property(Graph* g, Bus* bus, char* prop, char* value);
 void GRAPH_set_nodes_property(Graph* g, char* prop, char* value);
 void GRAPH_set_edges_property(Graph* g, char* prop, char* value);
 void GRAPH_write(Graph* g, char* format, char* filename);

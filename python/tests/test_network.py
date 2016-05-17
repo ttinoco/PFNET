@@ -55,6 +55,7 @@ class TestNetwork(unittest.TestCase):
             self.assertGreater(net.num_loads,0)
             self.assertGreaterEqual(net.num_shunts,0)
             self.assertGreaterEqual(net.num_vargens,0)
+            self.assertGreaterEqual(net.num_bats,0)
             self.assertEqual(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
             self.assertEqual(net.num_bounded,0)
@@ -83,6 +84,10 @@ class TestNetwork(unittest.TestCase):
             net.clear_error()
             self.assertRaises(pf.NetworkError,net.get_vargen,net.num_vargens)
             net.clear_error()
+            self.assertRaises(pf.NetworkError,net.get_bat,net.num_bats)
+            net.clear_error()
+            self.assertRaises(pf.NetworkError,net.get_bat,-1)
+            net.clear_error()
 
             # Counters
             self.assertEqual(net.get_num_P_adjust_gens(),
@@ -100,6 +105,8 @@ class TestNetwork(unittest.TestCase):
             net.load(case)
             net.clear_flags()
 
+            num_so_far = 0
+
             # P adjust gens
             num_adj = 0
             for gen in net.generators:
@@ -113,11 +120,11 @@ class TestNetwork(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.GEN_PROP_P_ADJUST,
                           pf.GEN_VAR_P)
+            num_so_far += net.get_num_P_adjust_gens()
+
             self.assertEqual(net.num_vars,
-                             net.get_num_P_adjust_gens())
-            
-            net.clear_flags()
-            
+                             num_so_far)
+                        
             # P adjust loads
             for load in net.loads:
                 if load.index % 2 == 0:
@@ -130,21 +137,50 @@ class TestNetwork(unittest.TestCase):
                 if load.P_min < load.P_max:
                     num_adj += 1
 
-            self.assertEqual(net.num_vars,0)
             self.assertEqual(net.get_num_P_adjust_loads(),num_adj)
 
             net.set_flags(pf.OBJ_LOAD,
                           pf.FLAG_VARS,
                           pf.LOAD_PROP_P_ADJUST,
                           pf.LOAD_VAR_P)
+            num_so_far += net.get_num_P_adjust_loads()
+            
             self.assertEqual(net.num_vars,
-                             net.get_num_P_adjust_loads())
+                             num_so_far)
            
             for load in net.loads:
                 if load.index % 2 == 0:
                     self.assertTrue(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
                 else:
                     self.assertFalse(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+
+            # batter charging
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P)
+            num_so_far += net.num_bats
+
+            self.assertEqual(net.num_vars,
+                             num_so_far)
+
+            for bat in net.batteries:
+                self.assertTrue(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P))
+                self.assertFalse(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_E))
+
+            # batter energy
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_E)
+            num_so_far += net.num_bats
+
+            self.assertEqual(net.num_vars,
+                             num_so_far)
+
+            for bat in net.batteries:
+                self.assertTrue(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P))
+                self.assertTrue(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_E))
 
     def test_buses(self):
 
@@ -320,6 +356,16 @@ class TestNetwork(unittest.TestCase):
                 for vg in bus.vargens:
                     self.assertEqual(bus,vg.bus)
 
+                # batters
+                for b in bus.bats:
+                    self.assertTrue(isinstance(b,pf.Battery))
+                    self.assertEqual(bus,b.bus)
+
+                # prices
+                self.assertEqual(bus.price,0.)
+                bus.price = bus.index*4.33
+                self.assertEqual(bus.price,bus.index*4.33)
+
             # sum of degrees
             sum_deg = 0
             for i in range(net.num_buses):
@@ -396,6 +442,14 @@ class TestNetwork(unittest.TestCase):
                 gen.P_max = 2*np.pi
                 self.assertEqual(gen.P_min,np.pi)
                 self.assertEqual(gen.P_max,2*np.pi)
+
+                # set/get P,Q
+                self.assertNotEqual(gen.P,0.333)
+                self.assertNotEqual(gen.Q,0.222)
+                gen.P = 0.333
+                gen.Q = 0.222
+                self.assertEqual(gen.P,0.333)
+                self.assertEqual(gen.Q,0.222)
 
                 # set/get cost coeffs
                 if case.split('.')[-1] == 'raw':
@@ -750,7 +804,59 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(vg.P_max,total_load/net.num_vargens)
                 self.assertEqual(vg.P,(penetration/100.)*vg.P_max)
                 self.assertEqual(vg.P_std,(uncertainty/100.)*vg.P_max)
-                
+
+    def test_batteries(self):
+
+        net = self.net
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+
+            self.assertGreaterEqual(net.num_bats,0)
+
+            self.assertEqual(net.num_bats,len(net.batteries))
+            
+            self.assertEqual(net.num_bats,sum([len(b.bats) for b in net.buses]))
+
+            for i in range(net.num_bats):
+
+                bat = net.get_bat(i)
+
+                self.assertTrue(isinstance(bat,pf.Battery))
+
+                # obj type
+                self.assertEqual(bat.obj_type,pf.OBJ_BAT)
+                self.assertNotEqual(bat.obj_type,pf.OBJ_UNKNOWN)
+
+                self.assertEqual(bat.index,i)
+
+                self.assertEqual(bat.index,net.batteries[i].index)
+
+                self.assertTrue(bat.bus)
+
+                self.assertTrue(bat.index in map(lambda x: x.index,bat.bus.bats))
+
+                # P
+                bat.P_min = -1.23
+                bat.P_max = 2123.
+                bat.P = 0.3241
+                self.assertEqual(bat.P_min,-1.23)
+                self.assertEqual(bat.P_max,2123.)
+                self.assertEqual(bat.P,0.3241)
+
+                # E
+                bat.E_max = 22.2
+                bat.E = 0.555
+                self.assertEqual(bat.E_max,22.2)
+                self.assertEqual(bat.E,0.555)
+
+                # eta
+                bat.eta_c = 0.91
+                bat.eta_d = 0.95
+                self.assertEqual(bat.eta_c,0.91)
+                self.assertEqual(bat.eta_d,0.95)
+                                
     def test_clear_flags(self):
        
         net = self.net
@@ -783,13 +889,18 @@ class TestNetwork(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.SHUNT_PROP_ANY,
                           pf.SHUNT_VAR_SUSC)
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_E)
 
             self.assertEqual(net.num_vars,
                              (net.num_buses+
                               net.num_gens+
                               net.num_loads+
                               net.num_branches+
-                              net.num_shunts))
+                              net.num_shunts+
+                              net.num_bats))
             self.assertEqual(net.num_fixed,0)
             self.assertEqual(net.num_bounded,0)
 
@@ -813,19 +924,25 @@ class TestNetwork(unittest.TestCase):
                           pf.FLAG_FIXED,
                           pf.SHUNT_PROP_ANY,
                           pf.SHUNT_VAR_SUSC)
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_FIXED,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_E)
 
             self.assertEqual(net.num_vars,
                              (net.num_buses+
                               net.num_gens+
                               net.num_loads+
                               net.num_branches+
-                              net.num_shunts))
+                              net.num_shunts+
+                              net.num_bats))
             self.assertEqual(net.num_fixed,
                              (net.num_buses+
                               net.num_gens+
                               net.num_loads+
                               net.num_branches+
-                              net.num_shunts))                             
+                              net.num_shunts+
+                              net.num_bats))
             self.assertEqual(net.num_bounded,0)
 
             net.set_flags(pf.OBJ_BUS,
@@ -848,6 +965,10 @@ class TestNetwork(unittest.TestCase):
                           pf.FLAG_BOUNDED,
                           pf.SHUNT_PROP_ANY,
                           pf.SHUNT_VAR_SUSC)
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_BOUNDED,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_E)
 
             self.assertGreater(net.num_vars,0)
             self.assertGreater(net.num_fixed,0)
@@ -858,19 +979,22 @@ class TestNetwork(unittest.TestCase):
                               net.num_gens+
                               net.num_loads+
                               net.num_branches+
-                              net.num_shunts))
+                              net.num_shunts+
+                              net.num_bats))
             self.assertEqual(net.num_fixed,
                              (net.num_buses+
                               net.num_gens+
                               net.num_loads+
                               net.num_branches+
-                              net.num_shunts))
+                              net.num_shunts+
+                              net.num_bats))
             self.assertEqual(net.num_bounded,
                              (net.num_buses+
                               net.num_gens+
                               net.num_loads+
                               net.num_branches+
-                              net.num_shunts))
+                              net.num_shunts+
+                              net.num_bats))
 
             net.clear_flags()
 
@@ -1360,6 +1484,12 @@ class TestNetwork(unittest.TestCase):
                           pf.VARGEN_PROP_ANY,
                           pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
 
+            # batteries
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P|pf.BAT_VAR_E)
+
             self.assertEqual(net.num_vars,
                              (2*(net.num_buses-1) +
                               net.get_num_slack_gens() +
@@ -1368,7 +1498,8 @@ class TestNetwork(unittest.TestCase):
                               net.get_num_phase_shifters() +
                               net.get_num_switched_shunts() +
                               2*net.get_num_vargens()+
-                              net.num_loads))
+                              net.num_loads+
+                              2*net.num_bats))
 
             # set vargens
             for vargen in net.var_generators:
@@ -1522,6 +1653,36 @@ class TestNetwork(unittest.TestCase):
                     self.assertEqual(vgQ[index],-vargen.index*np.pi)
                     index += 1
 
+            # battery charging
+            P = net.get_var_projection(pf.OBJ_BAT,pf.BAT_VAR_P)
+            self.assertTrue(isinstance(P,coo_matrix))
+            self.assertEqual(P.shape[0],net.num_bats)
+            self.assertEqual(P.shape[1],net.num_vars)
+            self.assertEqual(P.nnz,net.num_bats)
+            batP = P*x
+            index = 0
+            for i in range(net.num_bats):
+                bat = net.get_bat(i)
+                self.assertEqual(bat.index_P,bat.index_E-1)
+                if bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P):
+                    self.assertEqual(batP[index],bat.P)
+                    index += 1
+
+            # battery energy
+            P = net.get_var_projection(pf.OBJ_BAT,pf.BAT_VAR_E)
+            self.assertTrue(isinstance(P,coo_matrix))
+            self.assertEqual(P.shape[0],net.num_bats)
+            self.assertEqual(P.shape[1],net.num_vars)
+            self.assertEqual(P.nnz,net.num_bats)
+            batE = P*x
+            index = 0
+            for i in range(net.num_bats):
+                bat = net.get_bat(i)
+                self.assertEqual(bat.index_P,bat.index_E-1)
+                if bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_E):
+                    self.assertEqual(batE[index],bat.E)
+                    index += 1
+
             # All
             Plist = [net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VMAG),
                      net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VANG),
@@ -1532,7 +1693,9 @@ class TestNetwork(unittest.TestCase):
                      net.get_var_projection(pf.OBJ_BRANCH,pf.BRANCH_VAR_PHASE),
                      net.get_var_projection(pf.OBJ_SHUNT,pf.SHUNT_VAR_SUSC),
                      net.get_var_projection(pf.OBJ_VARGEN,pf.VARGEN_VAR_P),
-                     net.get_var_projection(pf.OBJ_VARGEN,pf.VARGEN_VAR_Q)]
+                     net.get_var_projection(pf.OBJ_VARGEN,pf.VARGEN_VAR_Q),
+                     net.get_var_projection(pf.OBJ_BAT,pf.BAT_VAR_P),
+                     net.get_var_projection(pf.OBJ_BAT,pf.BAT_VAR_E)]
             P = bmat([[P] for P in Plist if P.shape[0] > 0])
             self.assertTupleEqual(P.shape,(net.num_vars,net.num_vars))
             for i in range(10):
@@ -1587,13 +1750,18 @@ class TestNetwork(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.SHUNT_PROP_ANY,
                           pf.SHUNT_VAR_SUSC|pf.SHUNT_VAR_SUSC_DEV)
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P|pf.BAT_VAR_E)
             self.assertEqual(net.num_vars,
                              (6*net.num_buses +
                               2*net.num_gens + 
                               2*net.num_vargens +
                               4*net.num_branches + 
                               3*net.num_shunts +
-                              net.get_num_P_adjust_loads()))
+                              net.get_num_P_adjust_loads()+
+                              2*net.num_bats))
             
             # Add some interesting vargen values
             for vargen in net.var_generators:
@@ -1633,6 +1801,9 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(x[shunt.index_b],shunt.b)
                 self.assertEqual(x[shunt.index_y],0.)
                 self.assertEqual(x[shunt.index_z],0.)
+            for bat in net.batteries:
+                self.assertEqual(x[bat.index_P],bat.P)
+                self.assertEqual(x[bat.index_E],bat.E)
                 
             # upper limits
             x = net.get_var_values(pf.UPPER_LIMITS)
@@ -1667,6 +1838,9 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(x[shunt.index_b],shunt.b_max)
                 self.assertEqual(x[shunt.index_y],pf.SHUNT_INF_SUSC)
                 self.assertEqual(x[shunt.index_z],pf.SHUNT_INF_SUSC)
+            for bat in net.batteries:
+                self.assertEqual(x[bat.index_P],bat.P_max)
+                self.assertEqual(x[bat.index_E],bat.E_max)
 
             # lower limits
             x = net.get_var_values(pf.LOWER_LIMITS)
@@ -1697,6 +1871,9 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(x[shunt.index_b],shunt.b_min)
                 self.assertEqual(x[shunt.index_y],0.)
                 self.assertEqual(x[shunt.index_z],0.)
+            for bat in net.batteries:
+                self.assertEqual(x[bat.index_P],bat.P_min)
+                self.assertEqual(x[bat.index_E],0.)
 
     def test_vargen_P_sigma(self):
 

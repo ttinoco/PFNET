@@ -14,13 +14,13 @@
 #include <pfnet/load.h>
 #include <pfnet/shunt.h>
 #include <pfnet/vargen.h>
+#include <pfnet/bat.h>
 
 struct Bus {
 
   // Properties
   int number;                      /**< @brief Bus number */
   char name[BUS_NAME_BUFFER_SIZE]; /**< @brief Bus name */
-  char obj_type;                   /**< @brief Object type */
 
   // Voltage
   REAL v_mag;        /**< @brief Voltage magnitude (p.u.) */
@@ -46,6 +46,10 @@ struct Bus {
   Branch* branch_from; /**< @brief List of branches having this bus on the "from" side */
   Branch* branch_to;   /**< @brief List of branches having this bus on the "to" side */
   Vargen* vargen;      /**< @brief List of variable generators connected to bus */
+  Bat* bat;            /**< @brief List of batteries connected to bus */
+
+  // Price
+  REAL price;        /**< @brief Energy price at bus ($/ (hr p.u.)) */
   
   // Indices
   int index;         /**< @brief Bus index */
@@ -147,6 +151,11 @@ void BUS_del_branch_to(Bus* bus, Branch* branch) {
 void BUS_add_vargen(Bus* bus, Vargen* gen) {
   if (bus)
     bus->vargen = VARGEN_list_add(bus->vargen,gen);
+}
+
+void BUS_add_bat(Bus* bus, Bat* bat) {
+  if (bus)
+    bus->bat = BAT_list_add(bus->bat,bat);
 }
 
 BOOL BUS_array_check(Bus* bus, int num, BOOL verbose) {
@@ -275,7 +284,7 @@ void BUS_clear_vargen(Bus* bus) {
 
 char BUS_get_obj_type(void* bus) {
   if (bus)
-    return ((Bus*)bus)->obj_type;
+    return OBJ_BUS;
   else
     return OBJ_UNKNOWN;
 }
@@ -285,6 +294,13 @@ int BUS_get_degree(Bus* bus) {
     return (BRANCH_list_from_len(bus->branch_from) +
 	    BRANCH_list_to_len(bus->branch_to));
   }
+  else
+    return 0;
+}
+
+REAL BUS_get_price(Bus* bus) {
+  if (bus)
+    return bus->price;
   else
     return 0;
 }
@@ -422,6 +438,13 @@ int BUS_get_num_vargens(Bus* bus) {
     return 0;
 }
 
+int BUS_get_num_bats(Bus* bus) {
+  if (bus)
+    return BAT_list_len(bus->bat);
+  else
+    return 0;
+}
+
 Gen* BUS_get_gen(Bus* bus) {
   if (bus)
     return bus->gen;
@@ -481,6 +504,13 @@ Branch* BUS_get_branch_to(Bus* bus) {
 Vargen* BUS_get_vargen(Bus* bus) {
   if (bus)
     return bus->vargen;
+  else 
+    return NULL;
+}
+
+Bat* BUS_get_bat(Bus* bus) {
+  if (bus)
+    return bus->bat;
   else 
     return NULL;
 }
@@ -1033,7 +1063,6 @@ void BUS_init(Bus* bus) {
   bus->number = 0;
   for (i = 0; i < BUS_NAME_BUFFER_SIZE; i++) 
     bus->name[i] = 0;
-  bus->obj_type = OBJ_BUS;
 
   bus->v_mag = 1.;
   bus->v_ang = 0.;
@@ -1056,6 +1085,9 @@ void BUS_init(Bus* bus) {
   bus->branch_from = NULL;
   bus->branch_to = NULL;
   bus->vargen = NULL;
+  bus->bat = NULL;
+
+  bus->price = 0;
 
   bus->index = 0;
   bus->index_v_mag = 0;
@@ -1176,6 +1208,11 @@ void BUS_set_number(Bus* bus, int number) {
 void BUS_set_name(Bus* bus, char* name) {
   if (bus)
     strncpy(bus->name,name,(size_t)(BUS_NAME_BUFFER_SIZE-1));
+}
+
+void BUS_set_price(Bus* bus, REAL price) {
+  if (bus)
+    bus->price = price;
 }
 
 void BUS_set_v_mag(Bus* bus, REAL v_mag) {

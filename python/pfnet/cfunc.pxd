@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -24,6 +24,7 @@ cdef extern from "pfnet/func.h":
     cdef char FUNC_TYPE_SP_CONTROLS
     cdef char FUNC_TYPE_SLIM_VMAG
     cdef char FUNC_TYPE_LOAD_UTIL
+    cdef char FUNC_TYPE_NETCON_COST
     
     void FUNC_del(Func* f)
     void FUNC_del_matvec(Func* f)

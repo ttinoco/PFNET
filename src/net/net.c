@@ -29,6 +29,7 @@ struct Net {
   Load* load;           /**< @brief Load array */
   Shunt* shunt;         /**< @brief Shunt array */
   Vargen* vargen;       /**< @brief Vargen array */
+  Bat* bat;             /**< @brief Bat array */
 
   // Hash tables
   Bus* bus_hash_number;     /**< @brief Bus hash table indexed by bus numbers */
@@ -42,6 +43,7 @@ struct Net {
   int num_loads;     /**< @brief Number of loads (size of Load array) */
   int num_shunts;    /**< @brief Number of shunts (size of Shunt array) */
   int num_vargens;   /**< @brief Number of variable generators (size of Vargen array) */
+  int num_bats;      /**< @brief Number of batteries (size of Bat array) */
 
   // Number of flags
   int num_vars;      /**< @brief Number of variable quantities. */
@@ -291,6 +293,8 @@ BOOL NET_check(Net* net, BOOL verbose) {
 
   // Vargens
 
+  // Bats
+
   // Overall
   return (base_ok & bus_ok);
 
@@ -311,6 +315,9 @@ void NET_clear_data(Net* net) {
     free(net->load);
     SHUNT_array_free(net->shunt,net->num_shunts);
     free(net->vargen);
+    free(net->bat);
+
+    // Free utils
     free(net->bus_counted);
 
     // Re-initialize
@@ -333,6 +340,7 @@ void NET_clear_flags(Net* net) {
   Shunt* shunt;
   Vargen* vargen;
   Load* load;
+  Bat* bat;
 
   if (!net)
     return;
@@ -391,6 +399,15 @@ void NET_clear_flags(Net* net) {
     VARGEN_clear_flags(vargen,FLAG_SPARSE);
   }
 
+  // Batteries
+  for (i = 0; i < net->num_bats; i++) {
+    bat = BAT_array_get(net->bat,i);
+    BAT_clear_flags(bat,FLAG_VARS);
+    BAT_clear_flags(bat,FLAG_FIXED);
+    BAT_clear_flags(bat,FLAG_BOUNDED);
+    BAT_clear_flags(bat,FLAG_SPARSE);
+  }
+
   // Clear counters
   net->num_vars = 0;
   net->num_fixed = 0;
@@ -433,11 +450,15 @@ void NET_clear_properties(Net* net) {
     // Shunt
     net->shunt_v_vio = 0;
     net->shunt_b_vio = 0;
-    net->num_actions = 0;
 
     // Load
     net->load_P_util = 0;
     net->load_P_vio = 0;
+
+    // Battery
+    
+    // Actions
+    net->num_actions = 0;
 
     // Counters
     if (net->bus_counted && net->bus) {
@@ -477,6 +498,8 @@ void NET_clear_sensitivities(Net* net) {
   // Vargens
 
   // Shunts
+
+  // Batteries
 }
 
 Bus* NET_create_sorted_bus_list(Net* net, int sort_by) {
@@ -719,7 +742,7 @@ void NET_init(Net* net) {
 
   if (!net)
     return;
-
+  
   // Error
   net->error_flag = FALSE;
   strcpy(net->error_string,"");
@@ -734,6 +757,7 @@ void NET_init(Net* net) {
   net->load = NULL;
   net->shunt = NULL;
   net->vargen = NULL;
+  net->bat = NULL;
 
   // Hash tables
   net->bus_hash_number = NULL;
@@ -747,6 +771,7 @@ void NET_init(Net* net) {
   net->num_loads = 0;
   net->num_shunts = 0;
   net->num_vargens = 0;
+  net->num_bats = 0;
 
   // Number flags 
   net->num_vars = 0;
@@ -865,6 +890,13 @@ Vargen* NET_get_vargen(Net* net, int index) {
     return NULL;
   else
     return VARGEN_array_get(net->vargen,index);
+}
+
+Bat* NET_get_bat(Net* net, int index) {
+  if (!net || index < 0 || index >= net->num_bats)
+    return NULL;
+  else
+    return BAT_array_get(net->bat,index);
 }
 
 Bus* NET_get_gen_buses(Net* net) {
@@ -1191,6 +1223,13 @@ int NET_get_num_vargens(Net* net) {
     return 0;
 }
 
+int NET_get_num_bats(Net* net) {
+  if (net)
+    return net->num_bats;
+  else
+    return 0;
+}
+
 int NET_get_num_bounded(Net* net) {
   if (net)
     return net->num_bounded;
@@ -1299,6 +1338,10 @@ Vec* NET_get_var_values(Net* net, int code) {
   for (i = 0; i < net->num_vargens; i++) 
     VARGEN_get_var_values(VARGEN_array_get(net->vargen,i),values,code);
 
+  // Batteries
+  for (i = 0; i < net->num_bats; i++) 
+    BAT_get_var_values(BAT_array_get(net->bat,i),values,code);
+
   // Return
   return values;  
 }
@@ -1364,6 +1407,13 @@ Mat* NET_get_var_projection(Net* net, char obj_type, char var) {
     get_element = &VARGEN_array_get;
     has_flags = &VARGEN_has_flags;
     get_var_index = &VARGEN_get_var_index;
+    break;
+  case OBJ_BAT:
+    num = net->num_bats;
+    array = net->bat;
+    get_element = &BAT_array_get;
+    has_flags = &BAT_has_flags;
+    get_var_index = &BAT_get_var_index;
     break;
   default:
     sprintf(net->error_string,"invalid object type");
@@ -1695,6 +1745,13 @@ void NET_set_vargen_array(Net* net, Vargen* gen, int num) {
   }
 }
 
+void NET_set_bat_array(Net* net, Bat* bat, int num) {
+  if (net) {
+    net->bat = bat;
+    net->num_bats = num;
+  }
+}
+
 void NET_set_vargen_buses(Net* net, Bus* bus_list) {
   
   int i;
@@ -1778,6 +1835,13 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, char
     set_flags = &VARGEN_set_flags;
     has_properties = &VARGEN_has_properties;
     break;
+  case OBJ_BAT:
+    num = net->num_bats;
+    array = net->bat;
+    get_element = &BAT_array_get;
+    set_flags = &BAT_set_flags;
+    has_properties = &BAT_has_properties;
+    break;
   default:
     sprintf(net->error_string,"invalid object type");
     net->error_flag = TRUE;
@@ -1836,6 +1900,10 @@ void NET_set_flags_of_component(Net* net, void* obj, char obj_type, char flag_ma
     set_flags = &VARGEN_set_flags;
     get_obj_type = &VARGEN_get_obj_type;
     break;
+  case OBJ_BAT:
+    set_flags = &BAT_set_flags;
+    get_obj_type = &BAT_get_obj_type;
+    break;
   default:
     sprintf(net->error_string,"invalid object type");
     net->error_flag = TRUE;
@@ -1891,6 +1959,10 @@ void NET_set_var_values(Net* net, Vec* values) {
   // Vargens
   for (i = 0; i < net->num_vargens; i++) 
     VARGEN_set_var_values(VARGEN_array_get(net->vargen,i),values);
+
+  // Batteries
+  for (i = 0; i < net->num_bats; i++) 
+    BAT_set_var_values(BAT_array_get(net->bat,i),values);
 }
 
 char* NET_get_show_components_str(Net* net) {
@@ -1926,6 +1998,7 @@ char* NET_get_show_components_str(Net* net) {
   sprintf(out+strlen(out),"loads            : %d\n",NET_get_num_loads(net));
   sprintf(out+strlen(out),"  P adjust       : %d\n",NET_get_num_P_adjust_loads(net));
   sprintf(out+strlen(out),"vargens          : %d\n",NET_get_num_vargens(net));
+  sprintf(out+strlen(out),"batteries        : %d\n",NET_get_num_bats(net));
 
   return out;
 }
@@ -2102,6 +2175,7 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
   Vargen* vargen;
   Load* load;
   Shunt* shunt;
+  Bat* bat;
   
   REAL P;
   REAL Q;
@@ -2395,6 +2469,18 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
 	dP = NET_CONTROL_EPS;
       if (100.*fabs(P-LOAD_get_P(load))/dP > NET_CONTROL_ACTION_PCT)
 	net->num_actions++;
+    }
+
+    // Batteries
+    for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+      
+      if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P) && var_values)
+	P = VEC_get(var_values,BAT_get_index_P(bat));
+      else
+	P = BAT_get_P(bat);
+
+      // Injections
+      BUS_inject_P(bus,-P);
     }
 
     // Variable generators

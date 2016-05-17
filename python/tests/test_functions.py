@@ -24,7 +24,7 @@ class TestFunctions(unittest.TestCase):
         self.net = pf.Network()
 
         # Random
-        np.random.seed(0)
+        np.random.seed(1)
         
     def test_func_REG_VMAG(self):
         
@@ -123,7 +123,7 @@ class TestFunctions(unittest.TestCase):
                     self.assertLessEqual(np.linalg.norm(gd_approx),2.)
                 else:
                     error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+                    self.assertLessEqual(error,EPS)
 
             # Hessian check
             func.eval(x0)
@@ -1268,6 +1268,129 @@ class TestFunctions(unittest.TestCase):
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
                 error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
+                self.assertLessEqual(error,EPS)
+
+    def test_func_NETCON_COST(self):
+        
+        # Constants
+        h = 1e-9
+        
+        net = self.net
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+
+            # prices
+            for bus in net.buses:
+                bus.price = (bus.index%10)*0.5123
+
+            # vargens
+            net.add_vargens(net.get_load_buses(),50.,30.,5,0.05)
+            for vargen in net.var_generators:
+                vargen.P = (vargen.index%10)*0.3233+0.1
+            
+            # Vars
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_VARS,
+                          pf.LOAD_PROP_ANY,
+                          pf.LOAD_VAR_P)
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_ANY,
+                          pf.GEN_VAR_P)
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P)
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P)
+            self.assertEqual(net.num_vars,
+                             (net.num_loads+
+                              net.num_gens+
+                              net.num_vargens+
+                              net.num_bats))
+            self.assertGreater(net.num_vars,0)
+             
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+            
+            # Function
+            func = pf.Function(pf.FUNC_TYPE_NETCON_COST,1.,net)
+
+            self.assertEqual(func.type,pf.FUNC_TYPE_NETCON_COST)
+
+            f = func.phi
+            g = func.gphi
+            H = func.Hphi
+            
+            # Before 
+            self.assertTrue(type(f) is float)
+            self.assertEqual(f,0.)
+            self.assertTrue(type(g) is np.ndarray)
+            self.assertTupleEqual(g.shape,(0,))
+            self.assertTrue(type(H) is coo_matrix)
+            self.assertTupleEqual(H.shape,(0,0))
+            self.assertEqual(H.nnz,0)
+            
+            self.assertEqual(func.Hcounter,0)
+            
+            func.analyze()
+            self.assertEqual(func.Hcounter,0)
+            func.eval(x0)
+            self.assertEqual(func.Hcounter,0)
+            
+            f = func.phi
+            g = func.gphi
+            H = func.Hphi
+            
+            # After
+            self.assertTrue(type(f) is float)
+            self.assertNotEqual(f,0.)
+            self.assertTrue(type(g) is np.ndarray)
+            self.assertTupleEqual(g.shape,(net.num_vars,))
+            self.assertTrue(type(H) is coo_matrix)
+            self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
+            self.assertEqual(H.nnz,0)
+
+            self.assertTrue(not np.any(np.isinf(g)))
+            self.assertTrue(not np.any(np.isnan(g)))
+            
+            # value check
+            val = 0
+            for bus in net.buses:
+                for load in bus.loads:
+                    self.assertTrue(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+                    val += bus.price*load.P
+                for bat in bus.bats:
+                    self.assertTrue(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P))
+                    val += bus.price*bat.P
+                for gen in bus.gens:
+                    self.assertTrue(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
+                    val -= bus.price*gen.P
+                for vargen in bus.vargens:
+                    self.assertTrue(vargen.has_flags(pf.FLAG_VARS,pf.VARGEN_VAR_P))
+                    val -= bus.price*vargen.P
+            self.assertLess(100*np.abs(val-f)/np.abs(f),1e-3)
+
+            # Gradient check
+            f0 = func.phi
+            g0 = func.gphi.copy()
+            for i in range(NUM_TRIALS):
+                
+                d = np.random.randn(net.num_vars)
+    
+                x = x0 + h*d
+                
+                func.eval(x)
+                f1 = func.phi
+                
+                gd_exact = np.dot(g0,d)
+                gd_approx = (f1-f0)/h
+                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
     def test_robustness(self):

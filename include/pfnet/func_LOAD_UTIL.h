@@ -16,10 +16,10 @@
 
 // Function prototypes
 void FUNC_LOAD_UTIL_init(Func* f);
-void FUNC_LOAD_UTIL_count_branch(Func* f, Branch *branch);
+void FUNC_LOAD_UTIL_count_branch(Func* f, Branch* branch);
 void FUNC_LOAD_UTIL_allocate(Func* f);
 void FUNC_LOAD_UTIL_clear(Func* f);
-void FUNC_LOAD_UTIL_analyze_branch(Func* f, Branch *branch);
+void FUNC_LOAD_UTIL_analyze_branch(Func* f, Branch* branch);
 void FUNC_LOAD_UTIL_eval_branch(Func* f, Branch* branch, Vec* var_values);
 void FUNC_LOAD_UTIL_free(Func* f);
 

@@ -125,6 +125,18 @@ struct ART_Vargen {
   struct ART_Vargen* next;
 };
 
+struct ART_Bat {
+  char bus[10];
+  REAL p;             // mw
+  REAL pmax;          // mw
+  REAL pmin;          // mw
+  REAL e;             // mwh
+  REAL emax;          // mhw
+  REAL eta_c;         // unitless
+  REAL eta_d;         // unitless
+  struct ART_Bat* next;
+};
+
 struct ART_Parser {
 
   // Error
@@ -176,6 +188,10 @@ struct ART_Parser {
   // Vargens
   ART_Vargen* vargen;
   ART_Vargen* vargen_list;
+
+  // Bats
+  ART_Bat* bat;
+  ART_Bat* bat_list;
 };
 
 ART_Parser* ART_PARSER_new(void) {
@@ -232,6 +248,10 @@ ART_Parser* ART_PARSER_new(void) {
   // Vargen
   parser->vargen = NULL;
   parser->vargen_list = NULL;
+
+  // Bats
+  parser->bat = NULL;
+  parser->bat_list = NULL;
 
   // Return
   return parser;
@@ -294,6 +314,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   int len_gener_list;
   int len_slack_list;
   int len_vargen_list;
+  int len_bat_list;
 
   if (!parser)
     return;
@@ -308,6 +329,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   LIST_len(ART_Gener,parser->gener_list,next,len_gener_list);
   LIST_len(ART_Slack,parser->slack_list,next,len_slack_list);
   LIST_len(ART_Vargen,parser->vargen_list,next,len_vargen_list);
+  LIST_len(ART_Bat,parser->bat_list,next,len_bat_list);
   
   // Show
   printf("\nParsed Data\n");
@@ -321,6 +343,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   printf("gener list   : %d\n",len_gener_list);
   printf("slack list   : %d\n",len_slack_list);
   printf("vargen list  : %d\n",len_vargen_list);
+  printf("bat list     : %d\n",len_bat_list);
 
   // Debugging BUS
   ART_Bus* bus;
@@ -449,6 +472,20 @@ void ART_PARSER_show(ART_Parser* parser) {
 	   vargen->qmin,
 	   vargen->qmax);
   }
+
+  // Debugging BAT
+  ART_Bat* bat;
+  for (bat = parser->bat_list; bat != NULL; bat = bat->next) {
+    printf("Bat %s %.5f %.5f %.5f %.5f %.5f %.5f %.5f\n",
+	   bat->bus,
+	   bat->p,
+	   bat->pmin,
+	   bat->pmax,
+	   bat->e,
+	   bat->emax,
+	   bat->eta_c,
+	   bat->eta_d);
+  }
 }
 
 void ART_PARSER_load(ART_Parser* parser, Net* net) {
@@ -463,6 +500,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   int num_transfo;
   int num_branches;
   int num_vargens;
+  int num_bats;
   ART_Bus* art_bus;
   ART_Bus* art_busA;
   ART_Bus* art_busB;
@@ -472,6 +510,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   ART_Transfo* art_transfo;
   ART_Ltcv* art_ltcv;
   ART_Vargen* art_vargen;
+  ART_Bat* art_bat;
   Bus* bus;
   Bus* busA;
   Bus* busB;
@@ -480,6 +519,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   Gen* gen;
   Branch* branch;
   Vargen* vargen;
+  Bat* bat;
   REAL r;
   REAL x;
   REAL den;
@@ -805,6 +845,33 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
     }
     index++;
   }
+
+  // Bats
+  index = 0;
+  LIST_len(ART_Bat,parser->bat_list,next,num_bats);
+  NET_set_bat_array(net,BAT_array_new(num_bats),num_bats);
+  for (art_bat = parser->bat_list; art_bat != NULL; art_bat = art_bat->next) {
+    art_bus = NULL;
+    HASH_FIND_STR(parser->bus_hash,art_bat->bus,art_bus);
+    if (art_bus) {
+      bus = NET_get_bus(net,art_bus->index);
+      bat = NET_get_bat(net,index);
+      BUS_add_bat(bus,bat);                                // connect bat to bus
+      BAT_set_bus(bat,bus);                                // connect bus to bat
+      BAT_set_P(bat,art_bat->p/parser->base_power);        // per unit
+      BAT_set_P_max(bat,art_bat->pmax/parser->base_power); // per unit
+      BAT_set_P_min(bat,art_bat->pmin/parser->base_power); // per unit
+      BAT_set_E(bat,art_bat->e/parser->base_power);        // per unit times hour
+      BAT_set_E_max(bat,art_bat->emax/parser->base_power); // per unit times hour
+      BAT_set_eta_c(bat,art_bat->eta_c);                   // unitless
+      BAT_set_eta_d(bat,art_bat->eta_d);                   // unitless
+    }
+    else {
+      sprintf(parser->error_string,"unable to find battery bus %s",art_bat->bus);
+      parser->error_flag = TRUE;
+    }
+    index++;
+  }
 }
 
 void ART_PARSER_del(ART_Parser* parser) {
@@ -844,6 +911,9 @@ void ART_PARSER_del(ART_Parser* parser) {
   // Vargens
   LIST_map(ART_Vargen,parser->vargen_list,vargen,next,{free(vargen);});
 
+  // Bats
+  LIST_map(ART_Bat,parser->bat_list,bat,next,{free(bat);});
+
   // Parser
   free(parser);  
 }
@@ -872,7 +942,7 @@ void ART_PARSER_callback_field(char* s, void* data) {
     
   case ART_PARSER_STATE_INIT:
     if (parser->field == 0) {
-      
+            
       // Bus
       if (strstr(s,ART_BUS_TOKEN) != NULL) {
 	parser->state = ART_PARSER_STATE_BUS;
@@ -917,6 +987,16 @@ void ART_PARSER_callback_field(char* s, void* data) {
       else if (strstr(s,ART_VARGEN_TOKEN) != NULL) {
 	parser->state = ART_PARSER_STATE_VARGEN;
       }	
+
+      // Bat
+      else if (strstr(s,ART_BAT_TOKEN) != NULL) {
+	parser->state = ART_PARSER_STATE_BAT;
+      }	
+      
+      // Base
+      else if (strstr(s,ART_BASE_TOKEN) != NULL) {
+	parser->state = ART_PARSER_STATE_BASE;
+      }	
     }
     break;
     
@@ -946,6 +1026,12 @@ void ART_PARSER_callback_field(char* s, void* data) {
     break;
   case ART_PARSER_STATE_VARGEN:
     ART_PARSER_parse_vargen_field((char*)s,parser);
+    break;
+  case ART_PARSER_STATE_BAT:
+    ART_PARSER_parse_bat_field((char*)s,parser);
+    break;
+  case ART_PARSER_STATE_BASE:
+    ART_PARSER_parse_base_field((char*)s,parser);
     break;
   }
     
@@ -990,6 +1076,12 @@ void ART_PARSER_callback_record(void *data) {
     break;
   case ART_PARSER_STATE_VARGEN:
     ART_PARSER_parse_vargen_record(parser);
+    break;
+  case ART_PARSER_STATE_BAT:
+    ART_PARSER_parse_bat_record(parser);
+    break;
+  case ART_PARSER_STATE_BASE:
+    ART_PARSER_parse_base_record(parser);
     break;
   }  
 }
@@ -1494,6 +1586,84 @@ void ART_PARSER_parse_vargen_record(ART_Parser* parser) {
   if (parser->vargen)
     LIST_push(parser->vargen_list,parser->vargen,next);
   parser->vargen = NULL;
+  parser->field = 0;
+  parser->record = 0;
+  parser->state = ART_PARSER_STATE_INIT;
+}
+
+void ART_PARSER_parse_bat_field(char* s, ART_Parser* parser) {
+
+  if (!parser)
+    return;
+
+  // New bat
+  if (parser->field == 1) {
+    parser->bat = (ART_Bat*)malloc(sizeof(ART_Bat));
+    parser->bat->next = NULL;
+  }
+
+  // Fields
+  if (parser->bat) {
+    switch (parser->field) {
+    case 1:
+      strcpy(parser->bat->bus,s);
+      break;
+    case 2:
+      parser->bat->p = atof(s);
+      break;
+    case 3:
+      parser->bat->pmin = atof(s);
+      break;
+    case 4:
+      parser->bat->pmax = atof(s);
+      break;
+    case 5:
+      parser->bat->e = atof(s);
+      break;
+    case 6:
+      parser->bat->emax = atof(s);
+      break;
+    case 7:
+      parser->bat->eta_c = atof(s);
+      break;
+    case 8:
+      parser->bat->eta_d = atof(s);
+      break;
+    }
+  }
+}
+
+void ART_PARSER_parse_bat_record(ART_Parser* parser) {
+
+  if (!parser)
+    return;
+
+  if (parser->bat)
+    LIST_push(parser->bat_list,parser->bat,next);
+  parser->bat = NULL;
+  parser->field = 0;
+  parser->record = 0;
+  parser->state = ART_PARSER_STATE_INIT;
+}
+
+void ART_PARSER_parse_base_field(char* s, ART_Parser* parser) {
+
+  if (!parser)
+    return;
+
+  // Fields
+  switch (parser->field) {
+  case 1:
+    parser->base_power = atof(s);
+    break;
+  }
+}
+
+void ART_PARSER_parse_base_record(ART_Parser* parser) {
+
+  if (!parser)
+    return;
+
   parser->field = 0;
   parser->record = 0;
   parser->state = ART_PARSER_STATE_INIT;

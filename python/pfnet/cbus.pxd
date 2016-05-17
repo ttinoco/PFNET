@@ -14,6 +14,7 @@ cdef extern from "pfnet/bus.h":
     ctypedef struct Branch
     ctypedef struct Shunt
     ctypedef struct Vargen
+    ctypedef struct Bat
     ctypedef double REAL
     
     cdef char BUS_VAR_VMAG
@@ -58,6 +59,7 @@ cdef extern from "pfnet/bus.h":
     int BUS_get_index_P(Bus* bus)
     int BUS_get_index_Q(Bus* bus)
     int BUS_get_number(Bus* bus)
+    REAL BUS_get_price(Bus* bus)
     char* BUS_get_name(Bus* bus)
     Gen* BUS_get_gen(Bus* bus)
     Gen* BUS_get_reg_gen(Bus* bus)
@@ -67,6 +69,7 @@ cdef extern from "pfnet/bus.h":
     Branch* BUS_get_branch_to(Bus* bus)
     Load* BUS_get_load(Bus* bus)
     Vargen* BUS_get_vargen(Bus* bus)
+    Bat* BUS_get_bat(Bus* bus)
     int BUS_get_degree(Bus* bus)
     REAL BUS_get_total_gen_P(Bus* bus)
     REAL BUS_get_total_gen_Q(Bus* bus)
@@ -106,6 +109,7 @@ cdef extern from "pfnet/bus.h":
     bint BUS_has_flags(Bus* bus, char flag_type, char mask)
     Bus* BUS_new()
     void BUS_set_name(Bus* bus, char* name)
+    void BUS_set_price(Bus* bus, REAL price)
     void BUS_set_v_mag(Bus* bus, REAL v_mag)
     void BUS_set_v_ang(Bus* bus, REAL v_ang)
     void BUS_show(Bus* bus)

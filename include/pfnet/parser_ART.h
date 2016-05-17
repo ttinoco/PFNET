@@ -31,6 +31,8 @@
 #define ART_PARSER_STATE_GENER 7
 #define ART_PARSER_STATE_SLACK 8
 #define ART_PARSER_STATE_VARGEN 9
+#define ART_PARSER_STATE_BAT 10
+#define ART_PARSER_STATE_BASE 11
 
 // Defaults
 #define ART_PARSER_BASE_POWER 100
@@ -45,6 +47,8 @@
 #define ART_GENER_TOKEN  "GENER"
 #define ART_SLACK_TOKEN  "SLACK"
 #define ART_VARGEN_TOKEN  "VARGEN"
+#define ART_BAT_TOKEN  "BAT"
+#define ART_BASE_TOKEN  "BASE"
 
 // Structs
 typedef struct ART_Bus ART_Bus;
@@ -56,6 +60,7 @@ typedef struct ART_Pshiftp ART_Pshiftp;
 typedef struct ART_Gener ART_Gener;
 typedef struct ART_Slack ART_Slack;
 typedef struct ART_Vargen ART_Vargen;
+typedef struct ART_Bat ART_Bat;
 typedef struct ART_Parser ART_Parser;
 
 // Prototypes
@@ -87,5 +92,9 @@ void ART_PARSER_parse_slack_field(char* s, ART_Parser* parser);
 void ART_PARSER_parse_slack_record(ART_Parser* parser);
 void ART_PARSER_parse_vargen_field(char* s, ART_Parser* parser);
 void ART_PARSER_parse_vargen_record(ART_Parser* parser);
+void ART_PARSER_parse_bat_field(char* s, ART_Parser* parser);
+void ART_PARSER_parse_bat_record(ART_Parser* parser);
+void ART_PARSER_parse_base_field(char* s, ART_Parser* parser);
+void ART_PARSER_parse_base_record(ART_Parser* parser);
 
 #endif

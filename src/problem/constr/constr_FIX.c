@@ -34,6 +34,8 @@ void CONSTR_FIX_count_branch(Constr* c, Branch* br) {
   Gen* gen;
   Vargen* vargen;
   Shunt* shunt;
+  Load* load;
+  Bat* bat;
   int* Acounter;
   int* Aconstr_index;
   char* bus_counted;
@@ -143,6 +145,35 @@ void CONSTR_FIX_count_branch(Constr* c, Branch* br) {
 	  (*Aconstr_index)++;
 	}
       }
+      
+      // Batteries
+      for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+	
+	// Charging power (P)
+	if (BAT_has_flags(bat,FLAG_FIXED,BAT_VAR_P) && 
+	    BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
+	  (*Acounter)++;
+	  (*Aconstr_index)++;
+	}
+	
+	// Energy level (E)
+	if (BAT_has_flags(bat,FLAG_FIXED,BAT_VAR_E) && 
+	    BAT_has_flags(bat,FLAG_VARS,BAT_VAR_E)) {
+	  (*Acounter)++;
+	  (*Aconstr_index)++;
+	}
+      }
+
+      // Loads
+      for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+	
+	// Active power (P)
+	if (LOAD_has_flags(load,FLAG_FIXED,LOAD_VAR_P) && 
+	    LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
+	  (*Acounter)++;
+	  (*Aconstr_index)++;
+	}
+      }
     }
       
     // Update counted flag
@@ -187,6 +218,8 @@ void CONSTR_FIX_analyze_branch(Constr* c, Branch* br) {
   Bus* bus;
   Gen* gen;
   Vargen* vargen;
+  Bat* bat;
+  Load* load;
   Shunt* shunt;
   int* Acounter;
   int* Aconstr_index;
@@ -339,6 +372,47 @@ void CONSTR_FIX_analyze_branch(Constr* c, Branch* br) {
 	  VEC_set(b,*Aconstr_index,SHUNT_get_b(shunt));
 	  MAT_set_i(A,*Acounter,*Aconstr_index);
 	  MAT_set_j(A,*Acounter,SHUNT_get_index_b(shunt));
+	  MAT_set_d(A,*Acounter,1.);
+	  (*Acounter)++;
+	  (*Aconstr_index)++;
+	}
+      }
+
+      // Batteries
+      for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+	
+	// Charging power (P)
+	if (BAT_has_flags(bat,FLAG_FIXED,BAT_VAR_P) && 
+	    BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
+	  VEC_set(b,*Aconstr_index,BAT_get_P(bat));
+	  MAT_set_i(A,*Acounter,*Aconstr_index);
+	  MAT_set_j(A,*Acounter,BAT_get_index_P(bat));
+	  MAT_set_d(A,*Acounter,1.);
+	  (*Acounter)++;
+	  (*Aconstr_index)++;
+	}
+
+	// Energy level (E)
+	if (BAT_has_flags(bat,FLAG_FIXED,BAT_VAR_E) && 
+	    BAT_has_flags(bat,FLAG_VARS,BAT_VAR_E)) {
+	  VEC_set(b,*Aconstr_index,BAT_get_E(bat));
+	  MAT_set_i(A,*Acounter,*Aconstr_index);
+	  MAT_set_j(A,*Acounter,BAT_get_index_E(bat));
+	  MAT_set_d(A,*Acounter,1.);
+	  (*Acounter)++;
+	  (*Aconstr_index)++;
+	}
+      }
+      
+      // Loads
+      for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+	
+	// Active power (P)
+	if (LOAD_has_flags(load,FLAG_FIXED,LOAD_VAR_P) && 
+	    LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
+	  VEC_set(b,*Aconstr_index,LOAD_get_P(load));
+	  MAT_set_i(A,*Acounter,*Aconstr_index);
+	  MAT_set_j(A,*Acounter,LOAD_get_index_P(load));
 	  MAT_set_d(A,*Acounter,1.);
 	  (*Acounter)++;
 	  (*Aconstr_index)++;

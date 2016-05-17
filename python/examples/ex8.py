@@ -15,13 +15,13 @@ net.load(sys.argv[1])
 
 g = pf.Graph(net)
 
+for bus in net.buses:
+    g.set_node_property(bus,"label",str(bus.number))
+
+g.color_nodes_by_mismatch(pf.BUS_MIS_REACTIVE)
+
 g.set_layout()
 
-#g.color_nodes_by_mismatch(pf.BUS_MIS_REACTIVE)
-
-#g.set_edges_property("color","black")
-#g.set_nodes_property("color","black")
-
-g.write('pdf','graph.pdf')
+g.write('png','graph.png')
 
 g.view()

@@ -13,9 +13,6 @@
 
 struct Load {
 
-  // Properties
-  char obj_type;       /**< @brief Object type */
-
   // Bus
   Bus* bus;            /**< @brief Bus to which the load is connected */
 
@@ -109,7 +106,7 @@ REAL LOAD_get_sens_P_l_bound(Load* load) {
 
 char LOAD_get_obj_type(void* load) {
   if (load)
-    return ((Load*)load)->obj_type;
+    return OBJ_LOAD;
   else
     return OBJ_UNKNOWN;
 }
@@ -263,8 +260,6 @@ BOOL LOAD_has_properties(void* vload, char prop) {
 
 void LOAD_init(Load* load) { 
   if (load) {
-
-    load->obj_type = OBJ_LOAD;
     
     load->bus = NULL;
     
@@ -300,7 +295,7 @@ BOOL LOAD_is_P_adjustable(Load* load) {
     return FALSE;
 }
 
-Load* LOAD_list_add(Load *load_list, Load* load) {
+Load* LOAD_list_add(Load* load_list, Load* load) {
   LIST_add(Load,load_list,load,next);
   return load_list;
 }

@@ -836,6 +836,7 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   Gen* gen;
   Vargen* vargen;
   Load* load;
+  Bat* bat;
   Shunt* shunt;
   REAL* f;
   REAL* J;
@@ -1276,6 +1277,13 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	// f
 	f[P_index[k]] -= LOAD_get_P(load); // p.u.
 	f[Q_index[k]] -= LOAD_get_Q(load); // p.u.
+      }
+
+      // Batteries
+      for (bat = BUS_get_bat(bus[k]); bat != NULL; bat = BAT_get_next(bat)) {
+	
+	// f
+	f[P_index[k]] -= BAT_get_P(bat); // p.u.
       }
       
       // Shunts

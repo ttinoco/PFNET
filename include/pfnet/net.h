@@ -19,6 +19,7 @@
 #include "gen.h"
 #include "shunt.h"
 #include "vargen.h"
+#include "bat.h"
 #include "vector.h"
 #include "matrix.h"
 
@@ -67,6 +68,7 @@ Gen* NET_get_gen(Net* net, int index);
 Load* NET_get_load(Net* net, int index);
 Shunt* NET_get_shunt(Net* net, int index);
 Vargen* NET_get_vargen(Net* net, int index);
+Bat* NET_get_bat(Net* net, int index);
 Bus* NET_get_gen_buses(Net* net);
 Bus* NET_get_load_buses(Net* net);
 int NET_get_num_buses(Net* net);
@@ -95,6 +97,7 @@ int NET_get_num_shunts(Net* net);
 int NET_get_num_fixed_shunts(Net* net);
 int NET_get_num_switched_shunts(Net* net);
 int NET_get_num_vargens(Net* net);
+int NET_get_num_bats(Net* net);
 int NET_get_num_vars(Net* net);
 int NET_get_num_fixed(Net* net);
 int NET_get_num_bounded(Net* net);
@@ -134,6 +137,7 @@ void NET_set_gen_array(Net* net, Gen* gen, int num);
 void NET_set_load_array(Net* net, Load* load, int num);
 void NET_set_shunt_array(Net* net, Shunt* shunt, int num);
 void NET_set_vargen_array(Net* net, Vargen* gen, int num);
+void NET_set_bat_array(Net* net, Bat* bat, int num);
 void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, char val_mask);
 void NET_set_flags_of_component(Net* net, void* obj, char obj_type, char flag_mask, char val_mask);
 void NET_set_var_values(Net* net, Vec* values);

@@ -171,6 +171,21 @@ class TestFlags(unittest.TestCase):
             num_vars += 0
             self.assertEqual(net.num_vars,num_vars)
 
+            # Batteries
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P|pf.BAT_VAR_E)
+            num_vars += 2*net.num_bats
+            self.assertEqual(net.num_vars,num_vars)
+
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P|pf.BAT_VAR_E)
+            num_vars += 0
+            self.assertEqual(net.num_vars,num_vars)
+
             # Clear
             num_vars = 0
             net.clear_flags()
@@ -246,6 +261,13 @@ class TestFlags(unittest.TestCase):
                           pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
             num_vars += net.num_vargens*2
             self.assertEqual(num_vars,net.num_vars)
+
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P|pf.BAT_VAR_E)
+            num_vars += 2*net.num_bats
+            self.assertEqual(net.num_vars,num_vars)
  
             point = net.get_var_values()
             self.assertTrue(type(point) is np.ndarray)
@@ -273,6 +295,14 @@ class TestFlags(unittest.TestCase):
                 l = net.get_load(i)
                 self.assertTrue(l.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
                 self.assertEqual(point[l.index_P],l.P)
+
+            # check bats
+            for i in range(net.num_bats):
+                b = net.get_bat(i)
+                self.assertTrue(b.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P))
+                self.assertTrue(b.has_flags(pf.FLAG_VARS,pf.BAT_VAR_E))
+                self.assertEqual(point[b.index_P],b.P)
+                self.assertEqual(point[b.index_E],b.E)
 
     def test_tap_changer_v(self):
 
@@ -327,23 +357,32 @@ class TestFlags(unittest.TestCase):
             net.set_flags(pf.OBJ_BRANCH,
                           pf.FLAG_BOUNDED,
                           pf.BRANCH_PROP_TAP_CHANGER_V,
-                          pf.BRANCH_VAR_RATIO)
-                    
+                          pf.BRANCH_VAR_RATIO)                    
             net.set_flags(pf.OBJ_SHUNT,
                           pf.FLAG_BOUNDED,
                           pf.SHUNT_PROP_ANY,
                           pf.SHUNT_VAR_SUSC)
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_BOUNDED,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_E)
             
             self.assertEqual(net.num_bounded,
                              (net.get_num_tap_changers_v() +
                               net.get_num_buses_reg_by_tran() + 
                               net.get_num_slack_gens() +
                               net.num_shunts +
-                              net.num_loads))
+                              net.num_loads+
+                              net.num_bats))
                              
             # loads
             for load in net.loads:
                 self.assertTrue(load.has_flags(pf.FLAG_BOUNDED,pf.LOAD_VAR_P))
+
+            # bats
+            for bat in net.batteries:
+                self.assertTrue(bat.has_flags(pf.FLAG_BOUNDED,pf.BAT_VAR_E))
+                self.assertFalse(bat.has_flags(pf.FLAG_BOUNDED,pf.BAT_VAR_P))
 
     def test_fixed(self):
 
@@ -386,6 +425,11 @@ class TestFlags(unittest.TestCase):
                           pf.FLAG_FIXED,
                           pf.VARGEN_PROP_ANY,
                           pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
+
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_FIXED,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P|pf.BAT_VAR_E)
             
             self.assertEqual(net.num_fixed,
                              (net.get_num_buses_reg_by_gen()*2 + 
@@ -393,13 +437,23 @@ class TestFlags(unittest.TestCase):
                               net.get_num_phase_shifters() +
                               net.get_num_switched_shunts()+
                               net.num_vargens*2 +
-                              net.num_loads))
+                              net.num_loads+
+                              2*net.num_bats))
 
             # loads
             for load in net.loads:
                 self.assertFalse(load.has_flags(pf.FLAG_BOUNDED,pf.LOAD_VAR_P))
                 self.assertFalse(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
                 self.assertTrue(load.has_flags(pf.FLAG_FIXED,pf.LOAD_VAR_P))
+
+            # batteries
+            for bat in net.batteries:
+                self.assertFalse(bat.has_flags(pf.FLAG_BOUNDED,pf.BAT_VAR_P))
+                self.assertFalse(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P))
+                self.assertTrue(bat.has_flags(pf.FLAG_FIXED,pf.BAT_VAR_P))
+                self.assertFalse(bat.has_flags(pf.FLAG_BOUNDED,pf.BAT_VAR_E))
+                self.assertFalse(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_E))
+                self.assertTrue(bat.has_flags(pf.FLAG_FIXED,pf.BAT_VAR_E))
 
     def test_multiple_flags(self):
 
@@ -571,6 +625,24 @@ class TestFlags(unittest.TestCase):
             self.assertEqual(net.num_vars,num_vars)
             self.assertEqual(net.num_fixed,num_fixed)
             self.assertEqual(net.num_bounded,num_bounded)
+
+            # batteries
+            bcount = 0
+            for bat in net.batteries:
+                if bat.index % 2 == 0:
+                    net.set_flags_of_component(bat,
+                                               pf.FLAG_VARS,
+                                               pf.BAT_VAR_P)
+                    bcount += 1
+            for bat in net.batteries:
+                if bat.index % 2 == 0:
+                    self.assertTrue(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P))
+                    self.assertFalse(bat.has_flags(pf.FLAG_FIXED,pf.BAT_VAR_P))
+                else:
+                    self.assertFalse(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P))
+            num_vars += bcount
+            self.assertEqual(net.num_vars,num_vars)
+            self.assertEqual(net.num_fixed,num_fixed)
 
     def test_errors(self):
 

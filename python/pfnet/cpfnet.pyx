@@ -24,6 +24,7 @@ cimport cbus
 cimport cbranch
 cimport cload
 cimport cvargen
+cimport cbat
 cimport cnet
 cimport ccont
 cimport cgraph
@@ -57,6 +58,7 @@ OBJ_BRANCH = cobjs.OBJ_BRANCH
 OBJ_SHUNT = cobjs.OBJ_SHUNT
 OBJ_LOAD = cobjs.OBJ_LOAD
 OBJ_VARGEN = cobjs.OBJ_VARGEN
+OBJ_BAT = cobjs.OBJ_BAT
 OBJ_UNKNOWN = cobjs.OBJ_UNKNOWN
 
 # Flags
@@ -495,6 +497,11 @@ cdef class Bus:
         """ Index for bus reactive power mismatch (int). """
         def __get__(self): return cbus.BUS_get_index_Q(self._c_ptr)
 
+    property price:
+        """ Bus energy price (float) ($ / (hr p.u.)). """
+        def __get__(self): return cbus.BUS_get_price(self._c_ptr)
+        def __set__(self,p): cbus.BUS_set_price(self._c_ptr,p)
+
     property number:
         """ Bus number (int). """
         def __get__(self): return cbus.BUS_get_number(self._c_ptr)
@@ -660,6 +667,16 @@ cdef class Bus:
                 vargens.append(new_VarGenerator(g))
                 g = cvargen.VARGEN_get_next(g)
             return vargens
+
+    property bats:
+        """ List of :class:`batteries <pfnet.Battery>` connected to this bus (list). """
+        def __get__(self):
+            bats = []
+            cdef cbat.Bat* b = cbus.BUS_get_bat(self._c_ptr)
+            while b is not NULL:
+                bats.append(new_Battery(b))
+                b = cbat.BAT_get_next(b)
+            return bats
 
 cdef new_Bus(cbus.Bus* b):
     if b is not NULL:
@@ -1185,6 +1202,7 @@ cdef class Generator:
     property P:
         """ Generator active power (p.u. system base MVA) (float). """
         def __get__(self): return cgen.GEN_get_P(self._c_ptr)
+        def __set__(self,P): cgen.GEN_set_P(self._c_ptr,P)
 
     property P_max:
         """ Generator active power upper limit (p.u. system base MVA) (float). """
@@ -1199,6 +1217,7 @@ cdef class Generator:
     property Q:
         """ Generator reactive power (p.u. system base MVA) (float). """
         def __get__(self): return cgen.GEN_get_Q(self._c_ptr)
+        def __set__(self,Q): cgen.GEN_set_Q(self._c_ptr,Q)
 
     property Q_max:
         """ Generator reactive power upper limit (p.u. system base MVA) (float). """
@@ -1685,6 +1704,139 @@ cdef new_VarGenerator(cvargen.Vargen* g):
     else:
         raise VarGeneratorError('no vargen data')
 
+# Battery
+#########
+
+# Properties
+BAT_PROP_ANY = cbat.BAT_PROP_ANY
+
+# Variables
+BAT_VAR_P = cbat.BAT_VAR_P
+BAT_VAR_E = cbat.BAT_VAR_E
+
+# Infinity
+BAT_INF_P = cbat.BAT_INF_P
+BAT_INF_E = cbat.BAT_INF_E
+
+class BatteryError(Exception):
+    """ 
+    Battery error exception.
+    """
+    
+    def __init__(self,value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+cdef class Battery:
+    """
+    Battery class.
+    """
+
+    cdef cbat.Bat* _c_ptr
+
+    def __init__(self,alloc=True):
+        """
+        Battery class.
+
+        Parameters
+        ----------
+        alloc : {``True``, ``False``}
+        """
+
+        pass
+
+    def __cinit__(self,alloc=True):
+        
+        if alloc:
+            self._c_ptr = cbat.BAT_new()
+        else:
+            self._c_ptr = NULL
+
+    def _get_c_ptr(self):
+
+        return new_CPtr(self._c_ptr)
+
+    def has_flags(self,fmask,vmask):
+        """ 
+        Determines whether the battery has the flags associated with
+        certain quantities set. 
+
+        Parameters
+        ----------
+        fmask : int (:ref:`ref_net_flag`)
+        vmask : int (:ref:`ref_bat_var`)
+        
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+
+        return cbat.BAT_has_flags(self._c_ptr,fmask,vmask)
+
+    property obj_type:
+        """ Object type (int). """
+        def __get__(self): return cbat.BAT_get_obj_type(self._c_ptr)
+
+    property index:
+        """ Battery index (int). """
+        def __get__(self): return cbat.BAT_get_index(self._c_ptr)
+        
+    property index_P:
+        """ Index of battery charging power variable (int). """
+        def __get__(self): return cbat.BAT_get_index_P(self._c_ptr)
+
+    property index_E:
+        """ Index of battery energy level variable (int). """
+        def __get__(self): return cbat.BAT_get_index_E(self._c_ptr)
+
+    property bus:
+        """ :class:`Bus <pfnet.Bus>` to which battery is connected. """
+        def __get__(self): return new_Bus(cbat.BAT_get_bus(self._c_ptr))
+
+    property P:
+        """ Battery charging power (p.u. system base MVA) (float). """
+        def __get__(self): return cbat.BAT_get_P(self._c_ptr)
+        def __set__(self,P): cbat.BAT_set_P(self._c_ptr,P)
+
+    property P_max:
+        """ Battery charging power upper limit (p.u. system base MVA) (float). """
+        def __get__(self): return cbat.BAT_get_P_max(self._c_ptr)
+        def __set__(self,P): cbat.BAT_set_P_max(self._c_ptr,P)
+
+    property P_min:
+        """ Battery charging power lower limit (p.u. system base MVA) (float). """
+        def __get__(self): return cbat.BAT_get_P_min(self._c_ptr)
+        def __set__(self,P): cbat.BAT_set_P_min(self._c_ptr,P)
+
+    property E:
+        """ Battery energy level (p.u. system base MVA times time unit) (float). """
+        def __get__(self): return cbat.BAT_get_E(self._c_ptr)
+        def __set__(self,E): cbat.BAT_set_E(self._c_ptr,E)
+
+    property E_max:
+        """ Battery energy level upper limit (p.u. system base MVA times time unit) (float). """
+        def __get__(self): return cbat.BAT_get_E_max(self._c_ptr)
+        def __set__(self,E): cbat.BAT_set_E_max(self._c_ptr,E)
+
+    property eta_c:
+        """ Battery charging efficiency (unitless) (float). """
+        def __get__(self): return cbat.BAT_get_eta_c(self._c_ptr)
+        def __set__(self,eta_c): cbat.BAT_set_eta_c(self._c_ptr,eta_c)
+
+    property eta_d:
+        """ Battery discharging efficiency (unitless) (float). """
+        def __get__(self): return cbat.BAT_get_eta_d(self._c_ptr)
+        def __set__(self,eta_d): cbat.BAT_set_eta_d(self._c_ptr,eta_d)
+
+cdef new_Battery(cbat.Bat* b):
+    if b is not NULL:
+        bat = Battery(alloc=False)
+        bat._c_ptr = b
+        return bat
+    else:
+        raise BatteryError('no battery data')
+
 # Network
 #########
 
@@ -2013,6 +2165,25 @@ cdef class Network:
         else:
             raise NetworkError('invalid vargen index')
 
+    def get_bat(self,index):
+        """
+        Gets battery with the given index.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        bat : :class:`Battery <pfnet.Battery>`
+        """
+
+        ptr = cnet.NET_get_bat(self._c_net,index)
+        if ptr is not NULL:
+            return new_Battery(ptr)
+        else:
+            raise NetworkError('invalid battery index')
+
     def get_gen_buses(self):
         """
         Gets list of buses where generators are connected.
@@ -2066,7 +2237,7 @@ cdef class Network:
         Parameters
         ----------
         obj_type : int (:ref:`ref_net_obj`)
-        var : int (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`)
+        var : int (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`) 
         """
         
         return Matrix(cnet.NET_get_var_projection(self._c_net,obj_type,var),owndata=True)
@@ -2341,6 +2512,17 @@ cdef class Network:
         
         return cnet.NET_get_num_vargens(self._c_net)
 
+    def get_num_bats(self):
+        """
+        Gets number of batteries in the network.
+
+        Returns
+        -------
+        num : int
+        """
+        
+        return cnet.NET_get_num_bats(self._c_net)
+
     def get_properties(self):
         """
         Gets network properties.
@@ -2398,8 +2580,8 @@ cdef class Network:
         ----------
         obj_type : int (:ref:`ref_net_obj`)
         flags : int or list (:ref:`ref_net_flag`)
-        props : int or list (:ref:`ref_bus_prop`, :ref:`ref_branch_prop`, :ref:`ref_gen_prop`, :ref:`ref_shunt_prop`, :ref:`ref_load_prop`, :ref:`ref_vargen_prop` )
-        vals : int or list (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`)
+        props : int or list (:ref:`ref_bus_prop`, :ref:`ref_branch_prop`, :ref:`ref_gen_prop`, :ref:`ref_shunt_prop`, :ref:`ref_load_prop`, :ref:`ref_vargen_prop`, :ref:`ref_bat_prop`)
+        vals : int or list (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`)
         """
 
         props = props if isinstance(props,list) else [props]
@@ -2419,9 +2601,9 @@ cdef class Network:
 
         Parameters
         ----------
-        obj : :class:`Bus <pfnet.Bus>`, :class:`Branch <pfnet.Branch>`, :class:`Generator <pfnet.Generator>`, :class:`Load <pfnet.Load>`, :class:`Shunt <pfnet.Shunt>`, :class:`VarGenerator <pfnet.VarGenerator>` 
+        obj : :class:`Bus <pfnet.Bus>`, :class:`Branch <pfnet.Branch>`, :class:`Generator <pfnet.Generator>`, :class:`Load <pfnet.Load>`, :class:`Shunt <pfnet.Shunt>`, :class:`VarGenerator <pfnet.VarGenerator>`, :class:`Battery <pfnet.Battery>` 
         flags : int or list (:ref:`ref_net_flag`)
-        vals : int or list (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`)
+        vals : int or list (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`)
         """
         
         cdef CPtr ptr = obj._get_c_ptr()
@@ -2531,6 +2713,11 @@ cdef class Network:
         """ List of network :class:`variable generators <pfnet.VarGenerator>` (list). """
         def __get__(self):
             return [self.get_vargen(i) for i in range(self.num_vargens)]
+
+    property batteries:
+        """ List of network :class:`batteries <pfnet.Battery>` (list). """
+        def __get__(self):
+            return [self.get_bat(i) for i in range(self.num_bats)]
     
     property num_buses:
         """ Number of buses in the network (int). """
@@ -2555,6 +2742,10 @@ cdef class Network:
     property num_vargens:
         """ Number of variable generators in the network (int). """
         def __get__(self): return cnet.NET_get_num_vargens(self._c_net)
+
+    property num_bats:
+        """ Number of batteries in the network (int). """
+        def __get__(self): return cnet.NET_get_num_bats(self._c_net)
 
     property num_vars:
         """ Number of network quantities that have been set to variable (int). """
@@ -2890,6 +3081,22 @@ cdef class Graph:
 
         cgraph.GRAPH_set_layout(self._c_graph)
 
+    def set_node_property(self,bus,prop,value):
+        """
+        Sets property of node. See `Graphviz documentation <http://www.graphviz.org/Documentation.php>`_.
+
+        Parameters
+        ----------
+        bus : :class:`Bus <pfnet.Bus>`
+        prop : string
+        value : string
+        """
+        
+        cdef Bus b = bus
+        cgraph.GRAPH_set_node_property(self._c_graph,b._c_ptr,prop,value)
+        if cgraph.GRAPH_has_error(self._c_graph):
+            raise GraphError(cgraph.GRAPH_get_error_string(self._c_graph))
+
     def set_nodes_property(self,prop,value):
         """
         Sets property of nodes. See `Graphviz documentation <http://www.graphviz.org/Documentation.php>`_.
@@ -2994,6 +3201,7 @@ FUNC_TYPE_GEN_COST = cfunc.FUNC_TYPE_GEN_COST
 FUNC_TYPE_SP_CONTROLS = cfunc.FUNC_TYPE_SP_CONTROLS
 FUNC_TYPE_SLIM_VMAG = cfunc.FUNC_TYPE_SLIM_VMAG
 FUNC_TYPE_LOAD_UTIL = cfunc.FUNC_TYPE_LOAD_UTIL
+FUNC_TYPE_NETCON_COST = cfunc.FUNC_TYPE_NETCON_COST
 
 class FunctionError(Exception):
     """
