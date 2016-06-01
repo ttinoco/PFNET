@@ -685,8 +685,8 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 	BUS_add_branch_from(busA,branch);
 	BUS_add_branch_to(busB,branch);
 	
-	r = art_line->r*(parser->base_power*1e-6)/pow(art_busA->vnom*1e-3,2.); // per unit
-	x = art_line->x*(parser->base_power*1e-6)/pow(art_busA->vnom*1e-3,2.); // per unit
+	r = art_line->r*(parser->base_power*1e6)/pow(art_busA->vnom*1e3,2.); // per unit
+	x = art_line->x*(parser->base_power*1e6)/pow(art_busA->vnom*1e3,2.); // per unit
 
 	den = pow(r,2.)+pow(x,2.);
 	g = r/den;
@@ -695,7 +695,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 	BRANCH_set_g(branch,g);                                // per unit
 	BRANCH_set_b(branch,b);                                // per unit
 
-	b = (art_line->wc_half*1e-6)*pow(art_busA->vnom*1e-3,2.)/(parser->base_power*1e-6); // per unit
+	b = (art_line->wc_half*1e-6)*pow(art_busA->vnom*1e3,2.)/(parser->base_power*1e6); // per unit
 	
 	BRANCH_set_b_from(branch,b);            // per unit
 	BRANCH_set_b_to(branch,b);              // per unit
