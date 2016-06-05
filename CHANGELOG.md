@@ -23,6 +23,18 @@ Version 1.2.2
 Version 1.2.1
 -------------
 * Python 3 and Jupyter compatibility.
+* Variable load active powers.
+
+Version 1.2.0
+-------------
+* Variable generators (e.g., wind and solar)
+* l <= Gx <= u constraints.
+* LBOUND constraint type.
+* Contingencies.
+
+Version 1.1
+-----------
+* Artere parser.
 
 Version 1.0
 -----------
