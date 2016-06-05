@@ -23,3 +23,7 @@ Version 1.2.2
 Version 1.2.1
 -------------
 * Python 3 and Jupyter compatibility.
+
+Version 1.0
+-----------
+* Initial version.
