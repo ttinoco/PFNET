@@ -41,7 +41,7 @@ If ``libpfnet`` was built without visualization capabilities, the argument ``--n
 
 The installation can be tested using `nose <https://nose.readthedocs.org/en/latest/>`_ as follows::
 
-  > nosetests -v
+  > nosetests -v --exe
 
 .. _start_example:
 

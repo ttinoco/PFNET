@@ -8,15 +8,15 @@ This section describes the different data parsers available in PFNET and the sup
 
 .. _parsers_mat:
 
-MATPOWER case files
--------------------
+MATPOWER Case Files
+===================
 
 `MATPOWER <http://www.pserc.cornell.edu//matpower/>`_ is a `MATLAB <http://www.mathworks.com/products/matlab/>`_ package for solving power flow and optimal power flow problems. It contains several power flow and optimal power flow cases defined in `MATLAB <http://www.mathworks.com/products/matlab/>`_ files. These "M" files can be converted to CSV files using the script :download:`mpc2mat.m <../../tools/mpc2mat.m>`. These MATPOWER-converted CSV files have extension ``.mat`` and can be used to load power networks in PFNET.
 
 .. _parser_artere:
 
-ARTERE case files
------------------
+ARTERE Case Files
+=================
 
 PFNET can load networks from case files used by `ARTERE <http://www.montefiore.ulg.ac.be/~vct/software.html>`_, which is a software for performing power flow computations using the Newton-Raphson method. These files should have extension ``.art``. Details about these data files can be found in the document `"ARTERE: description of data files" <http://www.montefiore.ulg.ac.be/~vct/software/ARTERE_data.pdf>`_.
 
@@ -27,10 +27,17 @@ Currently, PFNET has limited support of these files. More specifically:
 * The SWITCH, TRFO, PSHIFT-P, TURLIM, SVC, LFRESV, BUSPART and BRAPART records are not supported.
 * Computation control parameters are ignored.
 
+.. _parser_artere_extra:
+
+Added Records
+-------------
+
+Variable generators, batteries, base power, etc.
+
 .. _parser_raw:
 
-RAW case files
---------------
+RAW Case Files
+==============
 
 .. include:: <isonum.txt> 
 

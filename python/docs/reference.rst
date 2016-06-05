@@ -29,8 +29,8 @@ Bus
 
 .. _ref_bus_prop:
 
-Bus Property Masks
-------------------
+Bus Properties
+--------------
 
 .. data:: pfnet.BUS_PROP_ANY 
  
@@ -62,8 +62,8 @@ Bus Property Masks
 
 .. _ref_bus_var:
 
-Bus Variable Masks
-------------------
+Bus Variables
+-------------
 
 .. data:: pfnet.BUS_VAR_VMAG
 
@@ -158,8 +158,8 @@ Branch
 
 .. _ref_branch_prop:
 
-Branch Property Masks
----------------------
+Branch Properties
+-----------------
 
 .. data:: pfnet.BRANCH_PROP_ANY
 
@@ -187,8 +187,8 @@ Branch Property Masks
 
 .. _ref_branch_var:
 
-Branch Variable Masks
----------------------
+Branch Variables
+----------------
 
 .. data:: pfnet.BRANCH_VAR_RATIO
 
@@ -217,8 +217,8 @@ Generator
 
 .. _ref_gen_prop:
 
-Generator Property Masks
-------------------------
+Generator Properties
+--------------------
 
 .. data:: pfnet.GEN_PROP_ANY
 
@@ -250,8 +250,8 @@ Generator Property Masks
 
 .. _ref_gen_var:
 
-Generator Variable Masks
-------------------------
+Generator Variables
+-------------------
 
 .. data:: pfnet.GEN_VAR_P
 
@@ -276,8 +276,8 @@ Shunt
 
 .. _ref_shunt_prop:
 
-Shunt Property Masks
---------------------
+Shunt Properties
+----------------
 
 .. data:: pfnet.SHUNT_PROP_ANY
 
@@ -289,8 +289,8 @@ Shunt Property Masks
 
 .. _ref_shunt_var:
 
-Shunt Variable Masks
---------------------
+Shunt Variables
+---------------
 
 .. data:: pfnet.SHUNT_VAR_SUSC
 
@@ -315,8 +315,8 @@ Load
 
 .. _ref_load_prop:
 
-Load Property Masks
--------------------
+Load Properties
+---------------
 
 .. data:: pfnet.LOAD_PROP_ANY
 
@@ -328,8 +328,8 @@ Load Property Masks
 
 .. _ref_load_var:
 
-Load Variable Masks
--------------------
+Load Variables
+--------------
 
 .. data:: pfnet.LOAD_VAR_P
 
@@ -350,8 +350,8 @@ Variable Generator
 
 .. _ref_vargen_prop:
 
-Variable Generator Property Masks
----------------------------------
+Variable Generator Properties
+-----------------------------
 
 .. data:: pfnet.VARGEN_PROP_ANY
 
@@ -359,8 +359,8 @@ Variable Generator Property Masks
 
 .. _ref_vargen_var:
 
-Variable Generator Variable Masks
----------------------------------
+Variable Generator Variables
+----------------------------
 
 .. data:: pfnet.VARGEN_VAR_P
 
@@ -376,6 +376,41 @@ Variable Generator Class
 ------------------------
 
 .. autoclass:: pfnet.VarGenerator
+   :members:
+
+.. _ref_bat:
+
+Battery
+=======
+
+.. _ref_bat_prop:
+
+Battery Properties
+------------------
+
+.. data:: pfnet.BAT_PROP_ANY
+
+	  Any battery.
+
+.. _ref_bat_var:
+
+Battery Variables
+-----------------
+
+.. data:: pfnet.BAT_VAR_P
+
+	  Battery charging/discharging power.
+
+.. data:: pfnet.BAT_VAR_E
+
+	  Battery energy level.
+
+.. _ref_bat_class:
+
+Battery Class
+-------------
+
+.. autoclass:: pfnet.Battery
    :members:
 
 .. _ref_net:
@@ -412,9 +447,17 @@ Component Types
 
 	  Variable generator (solar, wind, etc).
 
+.. data:: pfnet.OBJ_BAT
+
+	  Battery.
+
+.. data:: pfnet.OBJ_UNKNOWN
+
+	  Unknown network component.
+
 .. _ref_net_flag:
 
-Flag Masks
+Flag Types
 ----------
 
 .. data:: pfnet.FLAG_VARS
@@ -507,6 +550,10 @@ Function Types
 .. data:: pfnet.FUNC_TYPE_GEN_COST
 
           Active power generation cost.
+
+.. data:: pfnet.FUNC_TYPE_NETCON_COST
+
+          Net power consumption cost.
 
 .. data:: pfnet.FUNC_TYPE_LOAD_UTIL
 

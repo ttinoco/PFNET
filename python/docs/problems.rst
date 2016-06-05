@@ -37,13 +37,12 @@ where :math:`w_i` are weights, :math:`\varphi_i` are general linear or nonlinear
   >>> print func.weight
   0.3
 
-After a :class:`Function <pfnet.Function>` object is created, its value, gradient and Hessian are zero, an empty vector, and an empty matrix, respectively. Before evaluating the function at a specific vector of values, it must be analyzed using the :class:`Function <pfnet.Function>` class method :func:`analyze() <pfnet.Function.analyze>`. This routine analyzes the function and allocated the required vectors and matrices for storing its gradient and Hessian. After this, the function can be evaluated using the method :func:`eval() <pfnet.Function.eval>`::
+After a :class:`Function <pfnet.Function>` object is created, its value, gradient and Hessian are zero, an empty vector, and an empty matrix, respectively. Before evaluating the function at a specific vector of values, it must be analyzed using the :class:`Function <pfnet.Function>` class method :func:`analyze() <pfnet.Function.analyze>`. This routine analyzes the function and allocates the required vectors and matrices for storing its gradient and Hessian. After this, the function can be evaluated using the method :func:`eval() <pfnet.Function.eval>`::
 
   >>> x = net.get_var_values()
 
   >>> func.analyze()
 
-  >>> func.eval(x + 0.01)
   >>> func.eval(x)
 
 The value :math:`\varphi_i(x)`, gradient :math:`\nabla \varphi_i(x)` and Hessian :math:`\nabla^2 \varphi_i(x)` of a function can then be extracted from the :data:`phi <pfnet.Function.phi>`, :data:`gphi <pfnet.Function.gphi>` and :data:`Hphi <pfnet.Function.Hphi>` attributes, respectively::
@@ -69,7 +68,7 @@ Details about each of the different function types available in PFNET are provid
 Voltage magnitude regularization
 --------------------------------
 
-This function is of type :data:`FUNC_TYPE_REG_VMAG <pfnet.FUNC_TYPE_REG_VMAG>`. It penalizes deviations of bus voltage magnitudes from ideal values. It is defined by the expression
+This function has type :data:`FUNC_TYPE_REG_VMAG <pfnet.FUNC_TYPE_REG_VMAG>`. It penalizes deviations of bus voltage magnitudes from ideal values. It is defined by the expression
 
 .. math::
 
@@ -86,7 +85,7 @@ where :math:`v` are bus voltage magnitudes, :math:`v^t` are voltage magnitude se
 Voltage magnitude soft limit penalty
 ------------------------------------
 
-This function is of type :data:`FUNC_TYPE_SLIM_VMAG <pfnet.FUNC_TYPE_SLIM_VMAG>`. It reduces voltage (soft) limit violations by penalizing deviations of bus voltage magnitudes from the mid point of their ranges. It is defined by the expression
+This function has type :data:`FUNC_TYPE_SLIM_VMAG <pfnet.FUNC_TYPE_SLIM_VMAG>`. It reduces voltage (soft) limit violations by penalizing deviations of bus voltage magnitudes from the mid point of their ranges. It is defined by the expression
 
 .. math::
 
@@ -99,7 +98,7 @@ where :math:`v` are bus voltage magnitudes, :math:`\bar{v}` are the mid points o
 Voltage angle regularization
 ----------------------------
 
-This function is of type :data:`FUNC_TYPE_REG_VANG <pfnet.FUNC_TYPE_REG_VANG>`. It penalizes large bus voltage angles and voltage angle differences across branches. It is defined by the expression
+This function has type :data:`FUNC_TYPE_REG_VANG <pfnet.FUNC_TYPE_REG_VANG>`. It penalizes large bus voltage angles and voltage angle differences across branches. It is defined by the expression
 
 .. math::
 
@@ -113,7 +112,7 @@ where :math:`\theta` are bus voltage angles, :math:`\phi` are branch phase shift
 Generator powers regularization
 -------------------------------
 
-This function is of type :data:`FUNC_TYPE_REG_PQ <pfnet.FUNC_TYPE_REG_PQ>`. It penalizes deviations of generator powers from the midpoint of their ranges. It is defined by the expression
+This function has type :data:`FUNC_TYPE_REG_PQ <pfnet.FUNC_TYPE_REG_PQ>`. It penalizes deviations of generator powers from the midpoint of their ranges. It is defined by the expression
 
 .. math::
 
@@ -127,7 +126,7 @@ where :math:`P^g` and :math:`Q^g` are generator active and reactive powers, :mat
 Active power generation cost
 ----------------------------
 
-This function is of type :data:`FUNC_TYPE_GEN_COST <pfnet.FUNC_TYPE_GEN_COST>`. It measures active power generation cost by the expression
+This function has type :data:`FUNC_TYPE_GEN_COST <pfnet.FUNC_TYPE_GEN_COST>`. It measures active power generation cost by the expression
 
 .. math::
 
@@ -135,12 +134,19 @@ This function is of type :data:`FUNC_TYPE_GEN_COST <pfnet.FUNC_TYPE_GEN_COST>`. 
 
 where :math:`P_k` are generator active powers in per unit base system power, and :math:`q_{k0}`, :math:`q_{k1}`, and :math:`q_{k2}` are constant coefficients. These coefficients correspond to the attributes :data:`cost_coeff_Q0 <pfnet.Generator.cost_coeff_Q0>`, :data:`cost_coeff_Q1 <pfnet.Generator.cost_coeff_Q1>` and :data:`cost_coeff_Q2 <pfnet.Generator.cost_coeff_Q2>` of each :class:`Generator <pfnet.Generator>` object. 
 
+.. _prob_func_NETCON_COST:
+
+Net Active Power Consumption Cost
+---------------------------------
+
+This function has type :data:`FUNC_TYPE_NETCON_COST <pfnet.FUNC_TYPE_NETCON_COST>`. It measures the cost of net active power consumption of each bus using the price specified in the :data:`price <pfnet.Bus.price>` attribute of each :class:`Bus <pfnet.Bus>` object.
+
 .. _prob_func_LOAD_UTIL:
 
 Active power consumption utility
 --------------------------------
 
-This function is of type :data:`FUNC_TYPE_LOAD_UTIL <pfnet.FUNC_TYPE_LOAD_UTIL>`. It measures active power consumption utility by the expression
+This function has type :data:`FUNC_TYPE_LOAD_UTIL <pfnet.FUNC_TYPE_LOAD_UTIL>`. It measures active power consumption utility by the expression
 
 .. math::
 
@@ -153,7 +159,7 @@ where :math:`P_k` are load active powers in per unit base system power, and :mat
 Transformer tap ratio regularization
 ------------------------------------
 
-This function is of type :data:`FUNC_TYPE_REG_RATIO <pfnet.FUNC_TYPE_REG_RATIO>`. It penalizes deviations of tap ratios of tap-changing transformers from their initial value. It is defined by the expression
+This function has type :data:`FUNC_TYPE_REG_RATIO <pfnet.FUNC_TYPE_REG_RATIO>`. It penalizes deviations of tap ratios of tap-changing transformers from their initial value. It is defined by the expression
 
 .. math::
 
@@ -168,7 +174,7 @@ where :math:`t` are tap ratios of tap-changing transformers, :math:`t^0` are the
 Transformer phase shift regularization
 --------------------------------------
 
-This function is of type :data:`FUNC_TYPE_REG_PHASE <pfnet.FUNC_TYPE_REG_PHASE>`. It penalizes deviations of phase shifts of phase shifting transformers from their initial value. It is defined by the expression
+This function has type :data:`FUNC_TYPE_REG_PHASE <pfnet.FUNC_TYPE_REG_PHASE>`. It penalizes deviations of phase shifts of phase shifting transformers from their initial value. It is defined by the expression
 
 .. math::
 
@@ -181,7 +187,7 @@ where :math:`\phi` are phase shifts of phase-shifting transformers, :math:`\phi^
 Switched shunt susceptance regularization
 -----------------------------------------
 
-This function is of type :data:`FUNC_TYPE_REG_SUSC <pfnet.FUNC_TYPE_REG_SUSC>`. It penalizes deviations of susceptances of switched shunt devices from their initial value. It is defined by the expression
+This function has type :data:`FUNC_TYPE_REG_SUSC <pfnet.FUNC_TYPE_REG_SUSC>`. It penalizes deviations of susceptances of switched shunt devices from their initial value. It is defined by the expression
 
 .. math::
 
@@ -196,7 +202,7 @@ where :math:`b` are susceptances of switched shunt devices, :math:`b^0` are thei
 Sparsity inducing penalty for controls
 --------------------------------------
 
-This function is of type :data:`FUNC_TYPE_SP_CONTROLS <pfnet.FUNC_TYPE_SP_CONTROLS>`. It encourages sparse control adjustments with the expression
+This function has type :data:`FUNC_TYPE_SP_CONTROLS <pfnet.FUNC_TYPE_SP_CONTROLS>`. It encourages sparse control adjustments with the expression
 
 .. math::
 
@@ -249,7 +255,6 @@ Before a :class:`Constraint <pfnet.Constraint>` object can be used, it must be i
 
   >>> constr.analyze()
 
-  >>> constr.eval(x + 0.01)
   >>> constr.eval(x)
 
 The matrices and vectors associated with the linear constraints can be extracted from the :data:`A <pfnet.Constraint.A>`, :data:`G <pfnet.Constraint.G>`, :data:`b <pfnet.Constraint.b>`, :data:`l <pfnet.Constraint.l>` and :data:`u <pfnet.Constraint.u>` attributes of the :class:`Constraint <pfnet.Constraint>` object. The vector of violations and Jacobian matrix of the nonlinear constraints can be extracted from the attributes :data:`f <pfnet.Constraint.f>` and :data:`J <pfnet.Constraint.J>`, respectively. Also, the Hessian matrix of any individual nonlinear constraint :math:`f_i(x) = 0` can be extracted using the class method :func:`get_H_single() <pfnet.Constraint.get_H_single>`. The following example shows how to extract the largest power flow mismatch in per unit :data:`system base power <pfnet.Network.base_power>` and the Hessian matrix corresponding to the active power balance constraint of a bus::
@@ -289,7 +294,7 @@ Details about each of the different constraint types available in PFNET are prov
 AC Power balance
 ----------------
 
-This constraint is of type :data:`CONSTR_TYPE_PF <pfnet.CONSTR_TYPE_PF>`. It enforces active and reactive power balance at every bus of the network. It is given by
+This constraint has type :data:`CONSTR_TYPE_PF <pfnet.CONSTR_TYPE_PF>`. It enforces active and reactive power balance at every bus of the network. It is given by
 
 .. math:: 
    
@@ -302,7 +307,7 @@ where :math:`P^g` and :math:`Q^g` are generator active and reactive powers, :mat
 DC Power balance
 ----------------
 
-This constraint is of type :data:`CONSTR_TYPE_DCPF <pfnet.CONSTR_TYPE_DCPF>`. It enforces "DC" active power balance at every bus of the network. It is given by
+This constraint has type :data:`CONSTR_TYPE_DCPF <pfnet.CONSTR_TYPE_DCPF>`. It enforces "DC" active power balance at every bus of the network. It is given by
 
 .. math:: 
    
@@ -315,7 +320,7 @@ where :math:`P^g` are generator active powers, :math:`P^l` are load active power
 Branch DC power flow limits
 ---------------------------
 
-This constraint is of type :data:`CONSTR_TYPE_DC_FLOW_LIM <pfnet.CONSTR_TYPE_DC_FLOW_LIM>`. It enforces branch "DC" power flow limits due to thermal ratings. It is given by
+This constraint has type :data:`CONSTR_TYPE_DC_FLOW_LIM <pfnet.CONSTR_TYPE_DC_FLOW_LIM>`. It enforces branch "DC" power flow limits due to thermal ratings. It is given by
 
 .. math:: 
 
@@ -328,14 +333,14 @@ for each branch :math:`(k,m)`, where :math:`b_{km}` are branch susceptances, :ma
 Variable fixing
 ---------------
 
-This constraint is of type :data:`CONSTR_TYPE_FIX <pfnet.CONSTR_TYPE_FIX>`. It constrains specific variables to be fixed at their current value. The variables to be fixed are specified using the :class:`Network <pfnet.Network>` class methods :func:`set_flags() <pfnet.Network.set_flags>` or :func:`set_flags_of_component() <pfnet.Network.set_flags_of_component>` with the flag type :data:`FLAG_FIXED <pfnet.FLAG_FIXED>`.
+This constraint has type :data:`CONSTR_TYPE_FIX <pfnet.CONSTR_TYPE_FIX>`. It constrains specific variables to be fixed at their current value. The variables to be fixed are specified using the :class:`Network <pfnet.Network>` class methods :func:`set_flags() <pfnet.Network.set_flags>` or :func:`set_flags_of_component() <pfnet.Network.set_flags_of_component>` with the flag type :data:`FLAG_FIXED <pfnet.FLAG_FIXED>`.
 
 .. _prob_constr_BOUND:
 
 Variable bounding
 -----------------
 
-This constraint is of type :data:`CONSTR_TYPE_BOUND <pfnet.CONSTR_TYPE_BOUND>`. It constrains specific variables to be inside their bounds. The variables to be bounded are specified using the :class:`Network <pfnet.Network>` class methods :func:`set_flags() <pfnet.Network.set_flags>` or :func:`set_flags_of_component() <pfnet.Network.set_flags_of_component>` with the flag type :data:`FLAG_BOUNDED <pfnet.FLAG_BOUNDED>`. These constraints are expressed as nonlinear equality constraints using the techniques described in Section 4.3.3 of [TTR2015]_.
+This constraint has type :data:`CONSTR_TYPE_BOUND <pfnet.CONSTR_TYPE_BOUND>`. It constrains specific variables to be inside their bounds. The variables to be bounded are specified using the :class:`Network <pfnet.Network>` class methods :func:`set_flags() <pfnet.Network.set_flags>` or :func:`set_flags_of_component() <pfnet.Network.set_flags_of_component>` with the flag type :data:`FLAG_BOUNDED <pfnet.FLAG_BOUNDED>`. These constraints are expressed as nonlinear equality constraints using the techniques described in Section 4.3.3 of [TTR2015]_.
 
 For conventional linear bounds, the constraint type :data:`CONSTR_TYPE_LBOUND <pfnet.CONSTR_TYPE_LBOUND>` can be used.
 
@@ -344,7 +349,7 @@ For conventional linear bounds, the constraint type :data:`CONSTR_TYPE_LBOUND <p
 Generator participation
 -----------------------
 
-This constraint is of type :data:`CONSTR_TYPE_PAR_GEN <pfnet.CONSTR_TYPE_PAR_GEN>`. It enforces specific active power participations among slack generators, and reactive power participations among generators regulating the same bus voltage magnitude. For slack generators, all participate with equal active powers. For voltage regulating generators, each one participates with the same fraction of its total resources. More specifically, this constraint enforces
+This constraint has type :data:`CONSTR_TYPE_PAR_GEN <pfnet.CONSTR_TYPE_PAR_GEN>`. It enforces specific active power participations among slack generators, and reactive power participations among generators regulating the same bus voltage magnitude. For slack generators, all participate with equal active powers. For voltage regulating generators, each one participates with the same fraction of its total resources. More specifically, this constraint enforces
 
 .. math:: 
 
@@ -363,7 +368,7 @@ for all generators :math:`k` and :math:`m` regulating the same bus voltage magni
 Voltage set-point regulation by generators
 ------------------------------------------
 
-This constraint is of type :data:`CONSTR_TYPE_REG_GEN <pfnet.CONSTR_TYPE_REG_GEN>`. It enforces voltage set-point regulation by generators. It approximates the constraints
+This constraint has type :data:`CONSTR_TYPE_REG_GEN <pfnet.CONSTR_TYPE_REG_GEN>`. It enforces voltage set-point regulation by generators. It approximates the constraints
 
 .. math:: 
    
@@ -378,7 +383,7 @@ for each bus :math:`k` whose voltage is regulated by generators, where :math:`v`
 Voltage band regulation by transformers
 ---------------------------------------
 
-This constraint is of type :data:`CONSTR_TYPE_REG_TRAN <pfnet.CONSTR_TYPE_REG_TRAN>`. It enforces voltage band regulation by tap-changing transformers. It approximates the constraints
+This constraint has type :data:`CONSTR_TYPE_REG_TRAN <pfnet.CONSTR_TYPE_REG_TRAN>`. It enforces voltage band regulation by tap-changing transformers. It approximates the constraints
 
 .. math:: 
    
@@ -395,7 +400,7 @@ for each bus :math:`k` whose voltage is regulated by tap-changing transformers, 
 Voltage band regulation by switched shunts
 ------------------------------------------
 
-This constraint is of type :data:`CONSTR_TYPE_REG_SHUNT <pfnet.CONSTR_TYPE_REG_SHUNT>`. It enforces voltage band regulation by switched shunt devices. It approximates the constraints
+This constraint has type :data:`CONSTR_TYPE_REG_SHUNT <pfnet.CONSTR_TYPE_REG_SHUNT>`. It enforces voltage band regulation by switched shunt devices. It approximates the constraints
 
 .. math:: 
    

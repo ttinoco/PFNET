@@ -107,7 +107,7 @@ Branches in a power network are objects of type :class:`Branch <pfnet.Branch>` a
 
 For convenience, a list of all the branches in the network is contained in the :data:`branches <pfnet.Network.branches>` attribute of the :class:`Network <pfnet.Network>` class.
 
-Branches in a power network can have different properties. Fore example, some branches can be transmission lines, fixed transformers, tap-changing transformers, or phase-shifting transformers. Tap-changing transformers in turn can control the reactive power flowing through the branch or the voltage magnitude of a bus. The :class:`Branch <pfnet.Branch>` class provides methods for checking whether a branch has specific properties. The following example shows how to get a list of all the branches that are transmission lines::
+Branches in a power network can have different properties. For example, some branches can be transmission lines, fixed transformers, tap-changing transformers, or phase-shifting transformers. Tap-changing transformers in turn can control the reactive power flowing through the branch or the voltage magnitude of a bus. The :class:`Branch <pfnet.Branch>` class provides methods for checking whether a branch has specific properties. The following example shows how to get a list of all the branches that are transmission lines::
 
   >>> lines = [br for br in net.branches if br.is_line()]
 
@@ -130,7 +130,7 @@ Generators in a power network are objects of type :class:`Generator <pfnet.Gener
 
 For convenience, a list of all the generators in the network is contained in the :data:`generators <pfnet.Network.generators>` attribute of the :class:`Network <pfnet.Network>` class.
 
-Generators in a power network can have different properties. Fore example, some generators can be slack generators and others can provide bus voltage magnitude regulation. The :class:`Generator <pfnet.Generator>` class provides methods for checking whether a generator has specific properties. The following example shows how to get a list of all the slack generators::
+Generators in a power network can have different properties. For example, some generators can be slack generators and others can provide bus voltage magnitude regulation. The :class:`Generator <pfnet.Generator>` class provides methods for checking whether a generator has specific properties. The following example shows how to get a list of all the slack generators::
 
   >>> slack_gens = [g for g in net.generators if g.is_slack()]
 
@@ -156,14 +156,14 @@ Shunt devices in a power network are objects of type :class:`Shunt <pfnet.Shunt>
 
 For convenience, a list of all the shunt devices in the network is contained in the :data:`shunts <pfnet.Network.shunts>` attribute of the :class:`Network <pfnet.Network>` class.
 
-As other network components, shunt devices can have different properties. Some shunt devices can be fixed while others can be switchable and configured to regulate a bus voltage magnitude.
+As with other network components, shunt devices can have different properties. Some shunt devices can be fixed while others can be switchable and configured to regulate a bus voltage magnitude.
 
 .. _net_load:
 
 Loads
 -----
 
-Loads in a power network are objects of type :class:`Load <pfnet.Load>`. As other components, the :data:`index <pfnet.Load.index>` attribute is used to identify a load in the network. A list of all the loads in the network is contained in the :data:`loads <pfnet.Network.loads>` attribute of the :class:`Network <pfnet.Network>` class. 
+Loads in a power network are objects of type :class:`Load <pfnet.Load>`. As with other components, the :data:`index <pfnet.Load.index>` attribute is used to identify a load in the network. A list of all the loads in the network is contained in the :data:`loads <pfnet.Network.loads>` attribute of the :class:`Network <pfnet.Network>` class. 
 
 Similar to generators, the active and reactive powers that a load consumes from the bus to which it is connected are obtained from the :data:`P <pfnet.Load.P>` and :data:`Q <pfnet.Load.Q>` attributes of the :class:`Load <pfnet.Load>` class. They are also given in units of per unit :data:`system base power <pfnet.Network.base_power>`.
 
@@ -176,7 +176,7 @@ Variable generators in a power network are objects of type :class:`VarGenerator 
 
 Similar to generators, the active and reactive powers produced by a variable generator are obtained from the :data:`P <pfnet.VarGenerator.P>` and :data:`Q <pfnet.VarGenerator.Q>` attributes of the :class:`VarGenerator <pfnet.VarGenerator>` class in units of per unit :data:`system base power <pfnet.Network.base_power>`. This is the output of the device in the absence of uncertainty. When there is uncertainty, the output of the device is subject to variations about :data:`P <pfnet.VarGenerator.P>` that have a standard deviation given by the attribute :data:`P_std <pfnet.VarGenerator.P_std>`. Output limits of a variable generator are given by the :data:`P_min <pfnet.VarGenerator.P_min>`, :data:`P_max <pfnet.VarGenerator.P_max>`, :data:`Q_min <pfnet.VarGenerator.Q_min>`, and :data:`Q_max <pfnet.VarGenerator.Q_max>` attributes. 
 
-The output of variable generators in a network are subject to random variations that can be correlated, especially for devices that are "nearby". The method :func:`create_vargen_P_sigma() <pfnet.Network.create_vargen_P_sigma>` of the :class:`Network <pfnet.Network>` class allows constructing a covariance matrix for these variations based on a "correlation distance" ``N`` and a given correlation coefficient. The cross-covariance between the variation of two devices that are connected to buses that are less than ``N`` branches away from each other are set such that they have the given correlation coefficient.
+The output of variable generators in a network is subject to random variations that can be correlated, especially for devices that are "nearby". The method :func:`create_vargen_P_sigma() <pfnet.Network.create_vargen_P_sigma>` of the :class:`Network <pfnet.Network>` class allows constructing a covariance matrix for these variations based on a "correlation distance" ``N`` and a given correlation coefficient. The cross-covariance between the variation of two devices that are connected to buses that are less than ``N`` branches away from each other is set such that it is consistent with the given correlation coefficient.
 
 Lastly, since many power network input files do not have variable generator information, these devices can be added to the network by using the :func:`add_vargens() <pfnet.Network.add_vargens>` method of the :class:`Network <pfnet.Network>` class.
 
