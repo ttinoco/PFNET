@@ -1,0 +1,17 @@
+
+# PyCharm Project Files
+.idea/*
+
+# Builds
+lib/*
+python/build/*
+*.o
+python/pfnet/*.so
+
+# pycache
+*.pyc
+
+# Test output
+tests/*.out
+
+
