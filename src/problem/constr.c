@@ -11,6 +11,7 @@
 #include <pfnet/constr.h>
 #include <pfnet/constr_PF.h>
 #include <pfnet/constr_DCPF.h>
+#include <pfnet/constr_LINPF.h>
 #include <pfnet/constr_FIX.h>
 #include <pfnet/constr_BOUND.h>
 #include <pfnet/constr_PAR_GEN_P.h>
@@ -194,6 +195,8 @@ char* CONSTR_get_type_str(Constr* c) {
       return CONSTR_TYPE_PF_STR;
     case CONSTR_TYPE_DCPF:
       return CONSTR_TYPE_DCPF_STR;
+    case CONSTR_TYPE_LINPF:
+      return CONSTR_TYPE_LINPF_STR;
     case CONSTR_TYPE_FIX:
       return CONSTR_TYPE_FIX_STR;
     case CONSTR_TYPE_BOUND:
@@ -620,6 +623,16 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_eval_branch = &CONSTR_DCPF_eval_branch;
     c->func_store_sens_branch = &CONSTR_DCPF_store_sens_branch;
     c->func_free = &CONSTR_DCPF_free;
+  }
+  else if (type == CONSTR_TYPE_LINPF) { // DC power flow
+    c->func_init = &CONSTR_LINPF_init;
+    c->func_count_branch = &CONSTR_LINPF_count_branch;
+    c->func_allocate = &CONSTR_LINPF_allocate;
+    c->func_clear = &CONSTR_LINPF_clear;
+    c->func_analyze_branch = &CONSTR_LINPF_analyze_branch;
+    c->func_eval_branch = &CONSTR_LINPF_eval_branch;
+    c->func_store_sens_branch = &CONSTR_LINPF_store_sens_branch;
+    c->func_free = &CONSTR_LINPF_free;
   }
   else if (type == CONSTR_TYPE_PAR_GEN_P) { // generator participation (active power)
     c->func_init = &CONSTR_PAR_GEN_P_init;
