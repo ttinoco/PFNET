@@ -315,6 +315,19 @@ This constraint has type :data:`CONSTR_TYPE_DCPF <pfnet.CONSTR_TYPE_DCPF>`. It e
 
 where :math:`P^g` are generator active powers, :math:`P^l` are load active powers, :math:`b_{km}` are branch susceptances, :math:`\theta_k` are bus voltage angles, :math:`\phi_{km}` are phase shifts of phase-shifting transformers, :math:`n` is the number of buses, and :math:`[n] := \{1,\ldots,n\}`.
 
+.. _prob_constr_LINPF:
+
+Linearized Power balance
+------------------------
+
+This constraint has type :data:`CONSTR_TYPE_LINPF <pfnet.CONSTR_TYPE_LINPF>`. It enforces active and reactive power balance at every bus of the network using a first-order Taylor expansion of the AC power balance constraints. It is given by
+
+.. math:: 
+   
+   J(x_0) x = J(x_0) x_0 - f(x_0),
+
+where :math:`x_0` is the vector of current variable values, :math:`f(x_0)` is the vector of AC bus power mismatches, and :math:`J(x_0)` is the Jacobian of :math:`f` at :math:`x_0`.
+
 .. _prob_constr_DC_FLOW_LIM:
 
 Branch DC power flow limits

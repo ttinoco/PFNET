@@ -12,6 +12,7 @@ Unreleased
 * Function value independent of variable flags.
 * Bus number of variables.
 * Area/zone projections.
+* Linear power flow constraints (LINPF).
 
 Version 1.2.2
 -------------

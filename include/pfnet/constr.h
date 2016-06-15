@@ -26,8 +26,8 @@
  */
 #define CONSTR_TYPE_UNKNOWN -1     /**< @brief Constraint type: unknown */
 #define CONSTR_TYPE_PF 0           /**< @brief Constraint type: power flow equations */
-#define CONSTR_TYPE_DCPF 1         /**< @brief Constraint type: DC power flow quations */
-#define CONSTR_TYPE_LINPF 2        /**< @brief Constraint type: Linear power flow quations */
+#define CONSTR_TYPE_DCPF 1         /**< @brief Constraint type: DC power flow equations */
+#define CONSTR_TYPE_LINPF 2        /**< @brief Constraint type: Linear power flow equations */
 #define CONSTR_TYPE_FIX 3          /**< @brief Constraint type: variable fixing */
 #define CONSTR_TYPE_BOUND 4        /**< @brief Constraint type: variable bounds as nonlinear equality constraints */ 
 #define CONSTR_TYPE_PAR_GEN_P 5    /**< @brief Constraint type: generator participation (active power) */

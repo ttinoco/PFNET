@@ -601,6 +601,10 @@ Constraint Types
 
 	  Constraint for enforcing DC power balance at every bus of the network. 
 
+.. data:: pfnet.CONSTR_TYPE_LINPF
+
+	  Constraint for enforcing linearized power balance at every bus of the network. 
+
 .. data:: pfnet.CONSTR_TYPE_FIX
 
 	  Constraint for fixing a subset of variables to their current value.
