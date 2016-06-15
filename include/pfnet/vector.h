@@ -31,5 +31,6 @@ Vec* VEC_new_from_array(REAL* data, int size);
 void VEC_set(Vec* v, int index, REAL value);
 void VEC_set_zero(Vec* v);
 void VEC_show(Vec* v);
+void VEC_sub_inplace(Vec* v,Vec* w);
 
 #endif

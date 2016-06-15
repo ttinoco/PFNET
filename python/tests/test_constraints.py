@@ -10,6 +10,7 @@ import pfnet as pf
 import unittest
 from . import test_cases
 import numpy as np
+from numpy.linalg import norm
 from scipy.sparse import coo_matrix,triu,tril,eye
 
 NUM_TRIALS = 25
@@ -404,7 +405,7 @@ class TestConstraints(unittest.TestCase):
             
             E = G-eye(net.num_vars)
             self.assertGreater(G.nnz,0)
-            self.assertGreater(np.linalg.norm(G.data,np.inf),0.5)
+            self.assertGreater(norm(G.data,np.inf),0.5)
             self.assertEqual(E.nnz,0)
             
             self.assertTrue(not np.any(np.isinf(l)))
@@ -568,7 +569,7 @@ class TestConstraints(unittest.TestCase):
             
             E = G-eye(net.num_vars)
             self.assertGreater(G.nnz,0)
-            self.assertGreater(np.linalg.norm(G.data,np.inf),0.5)
+            self.assertGreater(norm(G.data,np.inf),0.5)
             self.assertEqual(E.nnz,0)
 
             # Bounds
@@ -841,8 +842,8 @@ class TestConstraints(unittest.TestCase):
                     for g in bus.gens:
                         self.assertTrue(g.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
                         x[g.index_P] = 10.
-            self.assertGreater(np.linalg.norm(x),0)
-            self.assertTrue(np.linalg.norm(A*x-b) < 1e-10)
+            self.assertGreater(norm(x),0)
+            self.assertTrue(norm(A*x-b) < 1e-10)
 
     def test_constr_PAR_GEN_Q(self):
         
@@ -970,7 +971,7 @@ class TestConstraints(unittest.TestCase):
                     for g in bus.reg_gens:
                         self.assertTrue(g.has_flags(pf.FLAG_VARS,pf.GEN_VAR_Q))
                         x[g.index_Q] = (g.Q_max+g.Q_min)/2.
-            self.assertTrue(np.linalg.norm(A*x-b) < 1e-10)
+            self.assertTrue(norm(A*x-b) < 1e-10)
 
     def test_constr_PF(self):
         
@@ -1162,7 +1163,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.maximum(np.linalg.norm(Jd_exact),TOL)
+                error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sigle Hessian check
@@ -1189,7 +1190,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
+                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Combined Hessian check
@@ -1215,7 +1216,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
+                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sensitivities
@@ -1347,9 +1348,9 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(A.data)))
 
             # Ax=b check
-            self.assertEqual(np.linalg.norm(A.data,1),rowsA*3)
+            self.assertEqual(norm(A.data,1),rowsA*3)
             self.assertEqual(np.sum(A.data),net.get_num_buses_reg_by_gen()-net.get_num_slack_buses())
-            self.assertLess(np.linalg.norm(A*x0-b),1e-10)
+            self.assertLess(norm(A*x0-b),1e-10)
 
             # Jacobian check
             f0 = f.copy()
@@ -1365,7 +1366,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.maximum(np.linalg.norm(Jd_exact),TOL)
+                error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sigle Hessian check
@@ -1395,7 +1396,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
+                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Combined Hessian check
@@ -1421,7 +1422,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
+                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sensitivities
@@ -1587,7 +1588,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.maximum(np.linalg.norm(Jd_exact),TOL)
+                error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sigle Hessian check
@@ -1615,7 +1616,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
+                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
                 
             # Combined Hessian check
@@ -1642,7 +1643,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
+                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sensitivities
@@ -1670,7 +1671,7 @@ class TestConstraints(unittest.TestCase):
         
         # Constants
         h = 1e-8
-        norm = 1e0
+        normal = 1e0
         eta = 1e-8
 
         net = self.net
@@ -1777,9 +1778,9 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(A.data)))
 
             # Ax=b check
-            self.assertEqual(np.linalg.norm(A.data,1),rowsA*3)
+            self.assertEqual(norm(A.data,1),rowsA*3)
             self.assertEqual(np.sum(A.data),net.get_num_tap_changers_v())
-            self.assertLess(np.linalg.norm(A*x0-b),1e-10)
+            self.assertLess(norm(A*x0-b),1e-10)
             
             # f check
             index = 0
@@ -1789,10 +1790,10 @@ class TestConstraints(unittest.TestCase):
                     self.assertTrue(br.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_RATIO))
                     self.assertTrue(br.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_RATIO_DEV))
                     bus = br.reg_bus
-                    fvmin = ((bus.v_mag-bus.v_min) - np.sqrt((bus.v_mag-bus.v_min)**2. + 2*eta))*norm
-                    fvmax = ((bus.v_max-bus.v_mag) - np.sqrt((bus.v_max-bus.v_mag)**2. + 2*eta))*norm
-                    ftmax = ((br.ratio_max-br.ratio) - np.sqrt((br.ratio_max-br.ratio)**2. + 2*eta))*norm
-                    ftmin = ((br.ratio-br.ratio_min) - np.sqrt((br.ratio-br.ratio_min)**2. + 2*eta))*norm
+                    fvmin = ((bus.v_mag-bus.v_min) - np.sqrt((bus.v_mag-bus.v_min)**2. + 2*eta))*normal
+                    fvmax = ((bus.v_max-bus.v_mag) - np.sqrt((bus.v_max-bus.v_mag)**2. + 2*eta))*normal
+                    ftmax = ((br.ratio_max-br.ratio) - np.sqrt((br.ratio_max-br.ratio)**2. + 2*eta))*normal
+                    ftmin = ((br.ratio-br.ratio_min) - np.sqrt((br.ratio-br.ratio_min)**2. + 2*eta))*normal
                     self.assertLess(np.abs(fvmin-f[index]),1e-10)
                     self.assertLess(np.abs(fvmax-f[index+1]),1e-10)
                     self.assertLess(np.abs(ftmax-f[index+2]),1e-10)
@@ -1814,7 +1815,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.maximum(np.linalg.norm(Jd_exact),TOL)
+                error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sigle Hessian check
@@ -1844,7 +1845,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
+                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Combined Hessian check
@@ -1870,7 +1871,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
+                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sensitivities
@@ -1899,7 +1900,7 @@ class TestConstraints(unittest.TestCase):
         
         # Constants
         h = 1e-8
-        norm = 1e0
+        normal = 1e0
         eta = 1e-8
 
         net = self.net
@@ -2010,9 +2011,9 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(A.data)))
 
             # Ax=b check
-            self.assertEqual(np.linalg.norm(A.data,1),rowsA*3)
+            self.assertEqual(norm(A.data,1),rowsA*3)
             self.assertEqual(np.sum(A.data),net.get_num_switched_shunts())
-            self.assertLess(np.linalg.norm(A*x0-b),1e-10)
+            self.assertLess(norm(A*x0-b),1e-10)
 
             # f check
             index = 0
@@ -2031,10 +2032,10 @@ class TestConstraints(unittest.TestCase):
                             self.assertEqual(x0[s.index_z],0.)
                             self.assertEqual(x0[bus.index_vl],0.)
                             self.assertEqual(x0[bus.index_vh],0.)
-                            fvmin = ((bus.v_mag-bus.v_min) - np.sqrt((bus.v_mag-bus.v_min)**2. + 2.*eta))*norm
-                            fvmax = ((bus.v_max-bus.v_mag) - np.sqrt((bus.v_max-bus.v_mag)**2. + 2.*eta))*norm
-                            fbmax = ((s.b_max-s.b) - np.sqrt((s.b_max-s.b)**2. + 2*eta))*norm
-                            fbmin = ((s.b-s.b_min) - np.sqrt((s.b-s.b_min)**2. + 2*eta))*norm
+                            fvmin = ((bus.v_mag-bus.v_min) - np.sqrt((bus.v_mag-bus.v_min)**2. + 2.*eta))*normal
+                            fvmax = ((bus.v_max-bus.v_mag) - np.sqrt((bus.v_max-bus.v_mag)**2. + 2.*eta))*normal
+                            fbmax = ((s.b_max-s.b) - np.sqrt((s.b_max-s.b)**2. + 2*eta))*normal
+                            fbmin = ((s.b-s.b_min) - np.sqrt((s.b-s.b_min)**2. + 2*eta))*normal
                             self.assertLess(np.abs(fvmin-f[index]),1e-10)
                             self.assertLess(np.abs(fvmax-f[index+1]),1e-10)
                             self.assertLess(np.abs(fbmax-f[index+2]),1e-10)
@@ -2057,7 +2058,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(Jd_exact-Jd_approx)/np.maximum(np.linalg.norm(Jd_exact),TOL)
+                error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Sigle Hessian check
@@ -2087,7 +2088,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
+                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
             # Combined Hessian check
@@ -2113,7 +2114,7 @@ class TestConstraints(unittest.TestCase):
                 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
+                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
             
             # Sensitivities
@@ -2419,7 +2420,7 @@ class TestConstraints(unittest.TestCase):
             phi = P4*x
             l = P5*x
             Pb = P6*x
-            self.assertLess(np.linalg.norm((G*p+R*r-Atheta*theta-Aphi*phi-L*l-B*Pb)-A*x),1e-10)
+            self.assertLess(norm((G*p+R*r-Atheta*theta-Aphi*phi-L*l-B*Pb)-A*x),1e-10)
 
             # Sensitivities
             for bus in net.buses:
@@ -2641,6 +2642,156 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.Jconstr_index,0)
             self.assertEqual(constr.Aconstr_index,0)
             self.assertEqual(constr.Gconstr_index,net.num_branches)
+
+    def test_constr_LINPF(self):
+                
+        net = self.net
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+
+            # add vargens
+            load_buses = net.get_load_buses()
+            net.add_vargens(load_buses,50.,30.,5,0.05)
+            self.assertGreater(net.num_vargens,0)
+            self.assertEqual(net.num_vargens,len(load_buses))
+            for vargen in net.var_generators:
+                vargen.Q = np.abs(vargen.P)
+                self.assertGreater(vargen.Q,0.)
+
+            # Vars
+            net.set_flags(pf.OBJ_BUS,
+                          pf.FLAG_VARS,
+                          pf.BUS_PROP_ANY,
+                          [pf.BUS_VAR_VMAG,pf.BUS_VAR_VANG])
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_SLACK,
+                          pf.GEN_VAR_P)
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_REG,
+                          pf.GEN_VAR_Q)
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_VARS,
+                          pf.BRANCH_PROP_TAP_CHANGER,
+                          pf.BRANCH_VAR_RATIO)
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_VARS,
+                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          pf.BRANCH_VAR_PHASE)
+            net.set_flags(pf.OBJ_SHUNT,
+                          pf.FLAG_VARS,
+                          pf.SHUNT_PROP_SWITCHED_V,
+                          pf.SHUNT_VAR_SUSC)
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
+            self.assertEqual(net.num_vars,
+                             2*net.get_num_buses() +
+                             net.get_num_slack_gens() +
+                             net.get_num_reg_gens() +
+                             net.get_num_tap_changers() +
+                             net.get_num_phase_shifters() +
+                             net.get_num_switched_shunts() +
+                             net.num_vargens*2)
+
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+            
+            # Constraint
+            constr = pf.Constraint(pf.CONSTR_TYPE_LINPF,net)
+
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            G = constr.G
+            
+            # Before 
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(0,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,0))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(0,0))
+            self.assertEqual(A.nnz,0)
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(0,0))
+            self.assertEqual(G.nnz,0)
+
+            self.assertEqual(constr.Jcounter,0)
+            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.Gcounter,0)
+
+            num_Annz = (net.get_num_buses()*4 +
+                        net.get_num_branches()*8 +
+                        net.get_num_tap_changers()*4 +
+                        net.get_num_phase_shifters()*4 +
+                        net.get_num_switched_shunts() +
+                        net.get_num_slack_gens() +
+                        net.get_num_reg_gens()+
+                        net.num_vargens*2)
+            
+            constr.analyze()
+            self.assertEqual(constr.Acounter,0)
+            constr.eval(x0)
+            self.assertEqual(constr.Acounter,0)
+            
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            G = constr.G
+            
+            # After
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(2*net.num_buses,))
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(2*net.num_buses,net.num_vars))
+            self.assertEqual(A.nnz,num_Annz)
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,net.num_vars))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(0,net.num_vars))
+            self.assertEqual(G.nnz,0)
+            self.assertTrue(not np.any(np.isinf(b)))
+            self.assertTrue(not np.any(np.isnan(b)))
+
+            # Check with ACPF
+            constrPF = pf.Constraint(pf.CONSTR_TYPE_PF,net)
+            constrPF.analyze()
+            constrPF.eval(x0)
+            self.assertEqual(A.nnz,constrPF.J.nnz)
+            self.assertTrue(np.all(A.row == constrPF.J.row))
+            self.assertTrue(np.all(A.col == constrPF.J.col))
+            self.assertTrue(np.all(A.data == constrPF.J.data))
+            self.assertGreater(norm(A.row),0)
+            self.assertGreater(norm(A.col),0)
+            self.assertGreater(norm(A.data),0)
+            self.assertGreater(norm(b),0)
+            self.assertLess(norm(b - (constrPF.J*x0-constrPF.f)),1e-10)
+
+            # After eval
+            constr.eval(np.zeros(x0.size))
+            self.assertEqual(constr.A.nnz,constrPF.J.nnz)
+            self.assertTrue(np.all(constr.A.row == constrPF.J.row))
+            self.assertTrue(np.all(constr.A.col == constrPF.J.col))
+            self.assertTrue(np.all(constr.A.data == constrPF.J.data))
+            self.assertGreater(norm(constr.A.row),0)
+            self.assertGreater(norm(constr.A.col),0)
+            self.assertGreater(norm(constr.A.data),0)
+            self.assertGreater(norm(constr.b),0)
+            self.assertLess(norm(constr.b - (constrPF.J*x0-constrPF.f)),1e-10)
 
     def tearDown(self):
         

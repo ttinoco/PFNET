@@ -9,6 +9,7 @@
  */
 
 #include <pfnet/matrix.h>
+#include <pfnet/vector.h>
 
 struct Mat {
 
@@ -63,6 +64,25 @@ void MAT_array_set_zero_d(Mat* m, int size) {
     for (i = 0; i < size; i++) 
       MAT_set_zero_d(&(m[i]));
   }
+}
+
+Mat* MAT_copy(Mat* m) {
+
+  Mat* newm;
+  int k;
+
+  if (!m)
+    return NULL;
+
+  newm = MAT_new(m->size1,m->size2,m->nnz);
+  for (k = 0; k < m->nnz; k++) {
+    newm->row[k] = m->row[k];
+    newm->col[k] = m->col[k];
+    newm->data[k] = m->data[k];
+  }
+
+  return newm;
+  
 }
 
 void MAT_del(Mat* m) {
@@ -152,6 +172,37 @@ Mat* MAT_new(int size1, int size2, int nnz) {
   m->data = (REAL*)calloc(nnz,sizeof(REAL));
   m->nnz = nnz;
   return m;
+}
+
+Vec* MAT_rmul_by_vec(Mat* m, Vec* v) {
+  
+  int k;
+  int i;
+  int j;
+  Vec* w;
+  REAL* wdata;
+  REAL* vdata;
+
+  if (!m || !v)
+    return NULL;
+
+  if (VEC_get_size(v) != m->size2) {
+    printf("MAT_rmul_by_vec error: incompatible dimensions\n");
+    return NULL;
+  }
+
+  w = VEC_new(m->size1);   // all zeros
+  wdata = VEC_get_data(w);
+  vdata = VEC_get_data(v);
+  for (k = 0; k < m->nnz; k++) {
+    i = m->row[k];
+    j = m->col[k];
+    if (i < m->size1 && j < m->size2)
+      wdata[i] += m->data[k]*vdata[j];
+    else
+      printf("MAT_rmul_by_vec warning: invalid index\n");
+  }
+  return w;
 }
 
 void MAT_set_i(Mat* m, int index, int value) {

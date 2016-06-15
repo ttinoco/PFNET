@@ -14,8 +14,9 @@
 #include <stdio.h>
 #include "types.h"
 
-// Mat
+// Types
 typedef struct Mat Mat;
+typedef struct Vec Vec;
 
 // Function prototypes
 void MAT_add_to_dentry(Mat* m, int index, REAL value);
@@ -23,6 +24,7 @@ void MAT_array_del(Mat* m, int size);
 Mat* MAT_array_new(int size);
 Mat* MAT_array_get(Mat* m, int index);
 void MAT_array_set_zero_d(Mat* m, int size);
+Mat* MAT_copy(Mat* m);
 void MAT_del(Mat* m);
 int MAT_get_i(Mat* m, int index);
 int MAT_get_j(Mat* m, int index);
@@ -35,6 +37,7 @@ int* MAT_get_col_array(Mat* m);
 REAL* MAT_get_data_array(Mat* m);
 void MAT_init(Mat* m);
 Mat* MAT_new(int size1, int size2, int nnz);
+Vec* MAT_rmul_by_vec(Mat* m, Vec* v);
 void MAT_set_i(Mat* m, int index, int value);
 void MAT_set_j(Mat* m, int index, int value);
 void MAT_set_d(Mat* m, int index, REAL value);

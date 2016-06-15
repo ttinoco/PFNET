@@ -109,3 +109,19 @@ void VEC_show(Vec* v) {
     printf("min  : %.5e\n",VEC_get_min(v));
   }
 }
+
+void VEC_sub_inplace(Vec* v,Vec* w) {
+  
+  int k;
+
+  if (!v || !w)
+    return;
+  
+  if (v->size != w->size) {
+    printf("VEC_sub_inplace error: incompatible dimensions\n");
+    return;
+  }
+  
+  for (k = 0; k < v->size; k++)
+    v->data[k] -= w->data[k];  
+}

@@ -22,6 +22,9 @@ void CONSTR_LINPF_clear(Constr* c) {
   // ACPF
   Constr* acpf = (Constr*)CONSTR_get_data(c);
   CONSTR_clear(acpf);
+
+  // Counter
+  CONSTR_set_branch_counter(c,0);
 }
 
 void CONSTR_LINPF_count_branch(Constr* c, Branch* br) {
@@ -37,32 +40,59 @@ void CONSTR_LINPF_allocate(Constr* c) {
   Net* net;
   int num_vars;
   Constr* acpf;
-  Vec* f;
-  Mat* J;
-  Vec* x0;
-
+  
   net = CONSTR_get_network(c);
   num_vars = NET_get_num_vars(net);
   acpf = (Constr*)CONSTR_get_data(c);
 
-  // PF
- 
-  // J f
+  // ACPF
+  CONSTR_allocate(acpf);
+   
+  // A b (empty)
+  CONSTR_set_A(c,CONSTR_get_J(acpf)); // temporary
+  CONSTR_set_b(c,CONSTR_get_f(acpf)); // temporary
+
+  // J f (empty)
   CONSTR_set_J(c,MAT_new(0,num_vars,0));
   CONSTR_set_f(c,VEC_new(0));
-  
-  // b
-  CONSTR_set_b(c,VEC_new(num_buses));
 
-  // A
-  CONSTR_set_A(c,MAT_new(num_buses,   // size1 (rows)
-			 num_vars,    // size2 (cols)
-			 Acounter));  // nnz
+  // G l u (empty)
+  CONSTR_set_G(c,MAT_new(0,num_vars,0));
+  CONSTR_set_l(c,VEC_new(0));
+  CONSTR_set_u(c,VEC_new(0));
 }
 
 void CONSTR_LINPF_analyze_branch(Constr* c, Branch* br) {
-  
-  
+
+  // Local vars
+  Constr* acpf;
+  Net* net;
+  Vec* f;
+  Mat* J;
+  Vec* x0;
+  Vec* b;
+
+  // Net
+  net = CONSTR_get_network(c);
+
+  // ACPF
+  acpf = (Constr*)CONSTR_get_data(c);
+  CONSTR_analyze_branch(acpf,br);
+
+  // Counter
+  CONSTR_inc_branch_counter(c);
+
+  // Done 
+  if (CONSTR_get_branch_counter(c) == NET_get_num_branches(net)) {
+    x0 = NET_get_var_values(net,CURRENT);
+    CONSTR_eval(acpf,x0);
+    J = CONSTR_get_J(acpf);
+    f = CONSTR_get_f(acpf);
+    b = MAT_rmul_by_vec(J,x0);
+    VEC_sub_inplace(b,f);
+    CONSTR_set_b(c,b);
+    CONSTR_set_A(c,MAT_copy(J));
+  }
 }
 
 void CONSTR_LINPF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
@@ -70,9 +100,13 @@ void CONSTR_LINPF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 }
 
 void CONSTR_LINPF_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
-  
+  // Nothing for now
 }
-
+ 
 void CONSTR_LINPF_free(Constr* c) {
-  // Nothing
+  
+  // ACPF
+  Constr* acpf = (Constr*)CONSTR_get_data(c);
+  CONSTR_del(acpf);
+  CONSTR_set_data(c,NULL);
 }
