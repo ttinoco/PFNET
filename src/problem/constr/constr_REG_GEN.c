@@ -40,7 +40,6 @@ void CONSTR_REG_GEN_clear(Constr* c) {
   CONSTR_set_Aconstr_index(c,0);
   CONSTR_set_Jconstr_index(c,0);
   CONSTR_clear_Hcounter(c);
-  CONSTR_set_branch_counter(c,0);
    
   // Flags
   CONSTR_clear_bus_counted(c);
@@ -258,7 +257,6 @@ void CONSTR_REG_GEN_analyze_branch(Constr* c, Branch* br) {
   Jconstr_index = CONSTR_get_Jconstr_index_ptr(c);
   Hcounter = CONSTR_get_Hcounter(c);
   bus_counted = CONSTR_get_bus_counted(c);
-  CONSTR_inc_branch_counter(c);
 
   // Check pointers
   if (!Acounter || !Jcounter || !Aconstr_index ||
@@ -405,7 +403,7 @@ void CONSTR_REG_GEN_analyze_branch(Constr* c, Branch* br) {
   }
 
   // Done
-  if (CONSTR_get_branch_counter(c) == NET_get_num_branches(CONSTR_get_network(c))) {
+  if (BRANCH_get_index(br) == NET_get_num_branches(CONSTR_get_network(c))-1) {
     
     // Ensure lower triangular and save struct of H comb
     Hcounter_comb = 0;
@@ -466,7 +464,6 @@ void CONSTR_REG_GEN_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   Jconstr_index = CONSTR_get_Jconstr_index_ptr(c);
   Hcounter = CONSTR_get_Hcounter(c);
   bus_counted = CONSTR_get_bus_counted(c);
-  CONSTR_inc_branch_counter(c);
 
   // Check pointers
   if (!f || !J || !Jcounter || !Jconstr_index || 

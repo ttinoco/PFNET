@@ -61,7 +61,6 @@ struct Constr {
   int Gconstr_index;    /**< @brief Index for linear inequality constraints */
   char* bus_counted;    /**< @brief Flag for processing buses */
   int bus_counted_size; /**< @brief Size of array of flags for processing buses */
-  int branch_counter;   /**< @brief Counter for processing branches */
 
   // Type functions
   void (*func_init)(Constr* c); /**< @brief Initialization function */
@@ -426,18 +425,6 @@ Constr* CONSTR_get_next(Constr* c) {
     return NULL;
 }
 
-int CONSTR_get_branch_counter(Constr* c) {
-  if (c)
-    return c->branch_counter;
-  else
-    return 0;
-}
-
-void CONSTR_inc_branch_counter(Constr* c) {
-  if (c)
-    c->branch_counter++;
-}
-
 Constr* CONSTR_list_add(Constr* clist, Constr* nc) {
   LIST_add(Constr,clist,nc,next);
   return clist;
@@ -595,7 +582,6 @@ Constr* CONSTR_new(int type, Net* net) {
   c->Aconstr_index = 0;
   c->Jconstr_index = 0;
   c->Gconstr_index = 0;
-  c->branch_counter = 0;
   c->data = NULL;
   c->next = NULL;
 
@@ -830,11 +816,6 @@ void CONSTR_set_bus_counted(Constr* c, char* counted, int size) {
     c->bus_counted = counted;
     c->bus_counted_size = size;
   }
-}
-
-void CONSTR_set_branch_counter(Constr* c, int counter) {
-  if (c)
-    c->branch_counter = counter;
 }
 
 void CONSTR_set_data(Constr* c, void* data) {

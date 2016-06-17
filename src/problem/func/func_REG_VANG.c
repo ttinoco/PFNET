@@ -27,7 +27,6 @@ void FUNC_REG_VANG_clear(Func* f) {
   
   // Counter
   FUNC_set_Hcounter(f,0);
-  FUNC_set_branch_counter(f,0);
 
   // Flags
   FUNC_clear_bus_counted(f);

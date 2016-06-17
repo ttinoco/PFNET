@@ -22,9 +22,6 @@ void CONSTR_LINPF_clear(Constr* c) {
   // ACPF
   Constr* acpf = (Constr*)CONSTR_get_data(c);
   CONSTR_clear(acpf);
-
-  // Counter
-  CONSTR_set_branch_counter(c,0);
 }
 
 void CONSTR_LINPF_count_branch(Constr* c, Branch* br) {
@@ -79,11 +76,8 @@ void CONSTR_LINPF_analyze_branch(Constr* c, Branch* br) {
   acpf = (Constr*)CONSTR_get_data(c);
   CONSTR_analyze_branch(acpf,br);
 
-  // Counter
-  CONSTR_inc_branch_counter(c);
-
   // Done 
-  if (CONSTR_get_branch_counter(c) == NET_get_num_branches(net)) {
+  if (BRANCH_get_index(br) == NET_get_num_branches(net)-1) {
     x0 = NET_get_var_values(net,CURRENT);
     CONSTR_eval(acpf,x0);
     J = CONSTR_get_J(acpf);

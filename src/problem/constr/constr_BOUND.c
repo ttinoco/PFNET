@@ -30,7 +30,6 @@ void CONSTR_BOUND_clear(Constr* c) {
   
   // Counters
   CONSTR_set_Jcounter(c,0);
-  CONSTR_set_branch_counter(c,0);
   
   // Flags
   CONSTR_clear_bus_counted(c);  
@@ -202,7 +201,6 @@ void CONSTR_BOUND_analyze_branch(Constr* c, Branch* br) {
   H_array = CONSTR_get_H_array(c);
   Jcounter = CONSTR_get_Jcounter_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
-  CONSTR_inc_branch_counter(c);
 
   // Check pointers
   if (!Jcounter || !bus_counted)
@@ -424,7 +422,7 @@ void CONSTR_BOUND_analyze_branch(Constr* c, Branch* br) {
   }
 
   // Done
-  if (CONSTR_get_branch_counter(c) == NET_get_num_branches(CONSTR_get_network(c))) {
+  if (BRANCH_get_index(br) == NET_get_num_branches(CONSTR_get_network(c))-1) {
     
     // Ensure lower triangular and save struct of H comb
     Hi_comb = MAT_get_row_array(CONSTR_get_H_combined(c));
@@ -470,7 +468,6 @@ void CONSTR_BOUND_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   H_array = CONSTR_get_H_array(c);
   Jcounter = CONSTR_get_Jcounter_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
-  CONSTR_inc_branch_counter(c);
 
   // Check pointers
   if (!f || !J || !Jcounter || !bus_counted)

@@ -71,7 +71,6 @@ void CONSTR_PF_clear(Constr* c) {
   // Counters
   CONSTR_set_Jcounter(c,0);
   CONSTR_clear_Hcounter(c);
-  CONSTR_set_branch_counter(c,0);
    
   // Flags
   CONSTR_clear_bus_counted(c);  
@@ -470,7 +469,6 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
   Jcounter = CONSTR_get_Jcounter_ptr(c);
   Hcounter = CONSTR_get_Hcounter(c);
   bus_counted = CONSTR_get_bus_counted(c);
-  CONSTR_inc_branch_counter(c);
 
   // Check pointers
   if (!Jcounter || !Hcounter || !bus_counted)
@@ -806,7 +804,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
   }
 
   // Done
-  if (CONSTR_get_branch_counter(c) == NET_get_num_branches(CONSTR_get_network(c))) {
+  if (BRANCH_get_index(br) == NET_get_num_branches(CONSTR_get_network(c))-1) {
     
     // Ensure lower triangular and save struct of H comb
     Hcounter_comb = 0;

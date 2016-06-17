@@ -49,7 +49,6 @@ struct Func {
   char* bus_counted;    /**< @brief Flags for processing buses */
   int bus_counted_size; /**< @brief Size of array of flags for processing buses */
   int Hcounter;         /**< @brief Counter of number of nonzero elements of the Hessian */
-  int branch_counter;   /**< @brief Counter of network branches */
 
   // Functions
   void (*func_init)(Func* f); /**< @brief Initialization function */
@@ -212,18 +211,6 @@ Func* FUNC_get_next(Func* f) {
     return NULL;
 }
 
-int FUNC_get_branch_counter(Func* f) {
-  if (f)
-    return f->branch_counter;
-  else
-    return 0;
-}
-
-void FUNC_inc_branch_counter(Func* f) {
-  if (f)
-    f->branch_counter++;
-}
-
 Func* FUNC_list_add(Func* flist, Func* nf) {
   LIST_add(Func,flist,nf,next);
   return flist;
@@ -287,7 +274,6 @@ Func* FUNC_new(int type, REAL weight, Net* net) {
   f->gphi = NULL;
   f->Hphi = NULL;
   f->Hcounter = 0;
-  f->branch_counter = 0;
   f->next = NULL;
 
   // Bus counted
@@ -449,11 +435,6 @@ void FUNC_set_bus_counted(Func* f, char* counted, int size) {
     f->bus_counted = counted;
     f->bus_counted_size = size;
   }  
-}
-
-void FUNC_set_branch_counter(Func* f, int counter) {
-  if (f)
-    f->branch_counter = counter;
 }
 
 void FUNC_count(Func* f) {
