@@ -17,7 +17,6 @@ ifeq ($(DEBUG),1)
 endif
 
 # Raw parser
-NO_RAW_PARSER = 1
 ifeq ($(NO_RAW_PARSER),1)
 	CFLAGS += -DNO_RAW_PARSER
 else
