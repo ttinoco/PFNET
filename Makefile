@@ -1,13 +1,16 @@
 DEBUG ?= 0
 NO_RAW_PARSER ?=0
 NO_GRAPHVIZ ?=0
+SITE_PACKAGES ?= '/Library/Python/2.7/site-packages'
 
 CC = gcc
 INCDIR = ./include
 LIBDIR = ./lib
 LDFLAGS = -shared
-LDLIBS = -lpfnet -lm
-CFLAGS = -I$(INCDIR) -fPIC -O3 -Wall -Wno-unused-variable
+# LDLIBS = -lpfnet -lm # libpfnet is not needed here.
+LDLIBS = -lm
+# CFLAGS = -I$(INCDIR) -fPIC -O3 -Wall -Wno-unused-variable #TBD: Something needs to be done about architectures
+CFLAGS = -I$(INCDIR) -fPIC -O3 -Wall -Wno-unused-variable -arch i386 -arch x86_64
 
 # Debug
 ifeq ($(DEBUG),1)
@@ -26,7 +29,7 @@ ifeq ($(NO_GRAPHVIZ),1)
 	CFLAGS += -DNO_GRAPHVIZ
 else
 	LDLIBS += -lgvc -lcgraph
-        CFLAGS += -I$(GRAPHVIZ)/include -lgvc -lcgraph
+	CFLAGS += -I$(GRAPHVIZ)/include -lgvc -lcgraph
 endif
 
 SOURCES_LIB = $(shell echo src/*/*.c src/*/*/*.c)
@@ -45,12 +48,14 @@ lib : $(TARGET_LIB)
 
 $(TARGET_LIB) : $(OBJECTS_LIB)
 	mkdir -p lib
-	$(CC) $(CFLAGS) -o $@ $(OBJECTS_LIB) $(LDFLAGS)
-
+#	$(CC) $(CFLAGS) -o $@ $(OBJECTS_LIB) $(LDFLAGS) # This call needs all the script variables
+	$(CC) $(CFLAGS) -L$(LIBDIR) -o $@ $(OBJECTS_LIB) $(LDFLAGS) $(LDLIBS)
+	
 .PHONY: test
 test : $(TARGET_TEST)
 tests/%.out: tests/%.c
-	$(CC) $(CFLAGS) -L$(LIBDIR) -o $@ $< $(LDLIBS)
+#	$(CC) $(CFLAGS) -L$(LIBDIR) -o $@ $< $(LDLIBS) # libpfnet is needed here
+	$(CC) $(CFLAGS) -L$(LIBDIR) -o $@ $< -lpfnet $(LDLIBS)
 	./tests/run_tests.out ./data/ieee14.mat
 
 .PHONY: clean

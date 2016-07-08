@@ -70,6 +70,9 @@ void PROB_add_heur(Prob* p, int type) {
 }
 
 void PROB_analyze(Prob* p) {
+  int VERBOSE = 0;
+  char* prefix = "PROB_analyze():";
+  if (VERBOSE > 0) printf("%s begin\n",prefix);
 
   // Local variables
   Branch* br;
@@ -161,6 +164,8 @@ void PROB_analyze(Prob* p) {
   // Update 
   PROB_update_lin(p);
   PROB_update_nonlin_struc(p);
+
+  if (VERBOSE > 0) printf("%s return\n",prefix);
 }
 
 void PROB_apply_heuristics(Prob* p, Vec* point) {
@@ -192,6 +197,10 @@ void PROB_eval(Prob* p, Vec* point) {
   Branch* br;
   int i;
   
+  int VERBOSE = 0;
+  char* prefix = "PROB_eval():";
+  if (VERBOSE > 0) printf("%s begin\n",prefix);
+
   if (!p)
     return;
 
@@ -210,6 +219,8 @@ void PROB_eval(Prob* p, Vec* point) {
 
   // Update 
   PROB_update_nonlin_data(p);
+
+  if (VERBOSE > 0) printf("%s return\n",prefix);
 }
 
 void PROB_store_sens(Prob* p, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
@@ -279,6 +290,10 @@ void PROB_del_matvec(Prob* p) {
 }
 
 void PROB_clear(Prob* p) {
+  int VERBOSE = 0;
+  char* prefix = "PROB_clear():";
+  if (VERBOSE > 0) printf("%s begin\n",prefix);
+
   if (p) {
     
     // Free constr, functions and heuristics
@@ -292,9 +307,13 @@ void PROB_clear(Prob* p) {
     // Re-initialize
     PROB_init(p);
   }
+  if (VERBOSE > 0) printf("%s return\n",prefix);
 }
 
 void PROB_combine_H(Prob* p, Vec* coeff, BOOL ensure_psd) {
+  int VERBOSE = 0;
+  char* prefix = "PROB_combine_H():";
+  if (VERBOSE > 0) printf("%s begin\n",prefix);
   
   // Local variables
   Constr* c;
@@ -326,6 +345,7 @@ void PROB_combine_H(Prob* p, Vec* coeff, BOOL ensure_psd) {
       Hcombnnz++;
     }
   }
+  if (VERBOSE > 0) printf("%s return\n",prefix);
 }
 
 Constr* PROB_find_constr(Prob* p, int constr_type) {
@@ -468,10 +488,17 @@ Vec* PROB_get_f(Prob* p) {
 }
 
 Mat* PROB_get_H_combined(Prob* p) {
-  if (p)
+  int VERBOSE = 0;
+  char* prefix = "PROB_get_H_combined():";
+  if (VERBOSE > 0) printf("%s begin\n",prefix);
+
+  if (p) {
+    if (VERBOSE > 0) printf("%s return\n",prefix);
     return p->H_combined;
-  else
+  } else {
+    if (VERBOSE > 0) printf("%s return NULL\n",prefix);
     return NULL;
+  }
 }
 
 BOOL PROB_has_error(Prob* p) {
@@ -482,6 +509,10 @@ BOOL PROB_has_error(Prob* p) {
 }
 
 void PROB_init(Prob* p) {
+  int VERBOSE = 0;
+  char* prefix = "PROB_init():";
+  if (VERBOSE > 0) printf("%s begin\n",prefix);
+
   if (p) {
 
     // Error
@@ -511,11 +542,19 @@ void PROB_init(Prob* p) {
     p->J = NULL;
     p->H_combined = NULL;
   }
+
+  if (VERBOSE > 0) printf("%s return\n",prefix);
 }
 
 Prob* PROB_new(void) {
+  int VERBOSE = 0;
+  char* prefix = "PROB_new():";
+  if (VERBOSE > 0) printf("%s begin\n",prefix);
+
   Prob* p = (Prob*)malloc(sizeof(Prob));
   PROB_init(p);
+
+  if (VERBOSE > 0) printf("%s return\n",prefix);
   return p;
 }
 
@@ -625,6 +664,9 @@ void PROB_update_nonlin_struc(Prob* p) {
 void PROB_update_nonlin_data(Prob* p) {
   /* This function fills in problem Jacobians and Hessians
      data with constraint data */
+  int VERBOSE = 0;
+  char* prefix = "PROB_update_nonlin_data():";
+  if (VERBOSE > 0) printf("%s begin\n",prefix);
   
   // Local variables
   Func* func;
@@ -693,11 +735,16 @@ void PROB_update_nonlin_data(Prob* p) {
       Jrow++;
     }
   }
+
+  if (VERBOSE > 0) printf("%s return\n",prefix);
 }
 
 void PROB_update_lin(Prob* p) {
   /* This function updates problem A,b,G,l,u with 
      constraint A,b,G,l,u. */
+  int VERBOSE = 0;
+  char* prefix = "PROB_update_lin():";
+  if (VERBOSE > 0) printf("%s begin\n",prefix);
   
   // Local variables
   Constr* c;
@@ -792,5 +839,6 @@ void PROB_update_lin(Prob* p) {
       Grow++;
     }
   }
+  if (VERBOSE > 0) printf("%s return\n",prefix);
 }
 
