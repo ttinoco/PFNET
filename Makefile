@@ -1,7 +1,7 @@
 DEBUG ?= 0
 NO_RAW_PARSER ?=0
 NO_GRAPHVIZ ?=0
-SITE_PACKAGES ?= '/Library/Python/2.7/site-packages/'
+SITE_PACKAGES ?= '/Library/Python/2.7/site-packages'
 
 CC = gcc
 INCDIR = ./include
