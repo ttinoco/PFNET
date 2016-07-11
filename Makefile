@@ -6,7 +6,7 @@ CC = gcc
 INCDIR = ./include
 LIBDIR = ./lib
 LDFLAGS = -shared
-LDLIBS = -lpfnet -lm
+LDLIBS = -lm
 CFLAGS = -I$(INCDIR) -fPIC -O3 -Wall -Wno-unused-variable
 
 # Debug
@@ -45,12 +45,12 @@ lib : $(TARGET_LIB)
 
 $(TARGET_LIB) : $(OBJECTS_LIB)
 	mkdir -p lib
-	$(CC) $(CFLAGS) -o $@ $(OBJECTS_LIB) $(LDFLAGS)
+	$(CC) $(CFLAGS) -L$(LIBDIR) -o $@ $(OBJECTS_LIB) $(LDFLAGS) $(LDLIBS)
 
 .PHONY: test
 test : $(TARGET_TEST)
 tests/%.out: tests/%.c
-	$(CC) $(CFLAGS) -L$(LIBDIR) -o $@ $< $(LDLIBS)
+	$(CC) $(CFLAGS) -L$(LIBDIR) -o $@ $< -lpfnet $(LDLIBS)
 	./tests/run_tests.out ./data/ieee14.mat
 
 .PHONY: clean
