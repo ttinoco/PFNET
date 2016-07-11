@@ -13,6 +13,7 @@ Unreleased
 * Bus number of variables.
 * Area/zone projections.
 * Linear power flow constraints (LINPF).
+* Updated Makefile.
 
 Version 1.2.2
 -------------
