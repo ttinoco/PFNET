@@ -466,14 +466,14 @@ void MAT_PARSER_del(MAT_Parser* parser) {
 
 BOOL MAT_PARSER_has_error(MAT_Parser* parser) {
   if (!parser)
-    return FALSE;
+    return TRUE;
   else
     return parser->error_flag;
 }
 
 char* MAT_PARSER_get_error_string(MAT_Parser* parser) {
   if (!parser)
-    return NULL;
+    return "empty parser";
   else
     return parser->error_string;
 }

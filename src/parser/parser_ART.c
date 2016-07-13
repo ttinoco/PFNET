@@ -920,14 +920,14 @@ void ART_PARSER_del(ART_Parser* parser) {
 
 BOOL ART_PARSER_has_error(ART_Parser* parser) {
   if (!parser)
-    return FALSE;
+    return TRUE;
   else
     return parser->error_flag;
 }
 
 char* ART_PARSER_get_error_string(ART_Parser* parser) {
   if (!parser)
-    return NULL;
+    return "empty parser";
   else
     return parser->error_string;
 }

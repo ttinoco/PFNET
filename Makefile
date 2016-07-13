@@ -9,6 +9,10 @@ LDFLAGS = -shared
 LDLIBS = -lm
 CFLAGS = -I$(INCDIR) -fPIC -O3 -Wall -Wno-unused-variable
 
+# Python parsers
+PYLIBDIR = /usr/local/lib/python2.7/dist-packages/pfnet
+PYLIBS = -lpython2.7 -l:cpfnet.so
+
 # Debug
 ifeq ($(DEBUG),1)
 	CFLAGS += -DDEBUG
@@ -50,7 +54,7 @@ $(TARGET_LIB) : $(OBJECTS_LIB)
 .PHONY: test
 test : $(TARGET_TEST)
 tests/%.out: tests/%.c
-	$(CC) $(CFLAGS) -L$(LIBDIR) -o $@ $< -lpfnet $(LDLIBS)
+	$(CC) $(CFLAGS) -L$(LIBDIR) -L$(PYLIBDIR) -o $@ $< -lpfnet $(LDLIBS) $(PYLIBS)
 	./tests/run_tests.out ./data/ieee14.mat
 
 .PHONY: clean

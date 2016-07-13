@@ -12,6 +12,7 @@
 #include <pfnet/parser_RAW.h>
 #include <pfnet/parser_MAT.h>
 #include <pfnet/parser_ART.h>
+#include <pfnet/parser_PYTHON.h>
 
 struct Net {
   
@@ -1666,6 +1667,22 @@ void NET_load(Net* net, char* filename) {
       net->error_flag = TRUE;
     }
     ART_PARSER_del(parser);
+  }
+  else if (strcmp(ext+1,"dummy") == 0) {
+    
+    // DUMMY PYTHON
+    PYTHON_Parser* parser = PYTHON_PARSER_new("DummyPythonParser");
+    PYTHON_PARSER_read(parser,filename);
+    #ifdef DEBUG
+      PYTHON_PARSER_show(parser);
+    #endif
+    if (!PYTHON_PARSER_has_error(parser))
+      PYTHON_PARSER_load(parser,net);
+    if (PYTHON_PARSER_has_error(parser)) {
+      strcpy(net->error_string,PYTHON_PARSER_get_error_string(parser));
+      net->error_flag = TRUE;
+    }
+    PYTHON_PARSER_del(parser);
   }
   else {
     sprintf(net->error_string,"invalid file type (%s)",ext+1);
