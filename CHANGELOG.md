@@ -14,6 +14,7 @@ Unreleased
 * Area/zone projections.
 * Linear power flow constraints (LINPF).
 * Updated Makefile.
+* Python parsers.
 
 Version 1.2.2
 -------------
