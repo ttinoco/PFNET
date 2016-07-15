@@ -6,7 +6,7 @@ Targets
 * Rich object comparisons for all network components.
 * Need AC branch flow limits.
 * Instructions for adding new functions and constraints.
-	
+
 Unreleased
 ----------
 * Function value independent of variable flags.
@@ -14,13 +14,15 @@ Unreleased
 * Area/zone projections.
 * Linear power flow constraints (LINPF).
 * Updated Makefile.
+* Documentation build rules with PFNET_DOCS.
+* Make an Autotools build. (long-term)
 
 Version 1.2.2
 -------------
 * Battery objects.
 * Net consumption function.
 * Bus price attribute.
-* Load suppport to FIX constraint.
+* Load support to FIX constraint.
 
 Version 1.2.1
 -------------
