@@ -42,6 +42,23 @@ In Mac OS X, PFNET can be easily installed using [Homebrew](http://brew.sh):
 Since Homebrew does currently not support external dependencies, PFNET cannot be built with raw parsing capabilities with this method.
 
 Homebrew will install graphviz as a dependency unless ``--without-graphviz`` is specified.
+
+## Build Documentation (Linux) ##
+
+Building the documentation for PFNET requires [Doxygen](http://www.stack.nl/~dimitri/doxygen/) (for C) and [Sphinx](http://www.sphinx-doc.org/en/stable/) (for Python). The environment variable ``PFNET_DOCS`` must be set to the location where the documentation will be moved to once it is built.
+
+```bash
+export PFNET_DOCS=../pfnet-docs
+```
+
+To build the documentation for the C library and the Python wrapper library. Run the following commands from the home directory of PFNET. (Note that the `html` documenation is built for the Python wrapper library but other formats can be specified, such as `pdf`)
+
+```bash
+make docs  # build C library documentation
+cd python/docs
+make html  # build Python wrapper library documentation
+```
+
 ## Wrappers ##
 
 Wrappers for PFNET are available for the following languages:
