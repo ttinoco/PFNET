@@ -54,12 +54,12 @@ tests/%.out: tests/%.c
 	./tests/run_tests.out ./data/ieee14.mat
 
 .PHONY: docs
-docs :
 ifndef PFNET_DOCS
 $(error error 'PFNET_DOCS' must be set to the location to put documentation files)
-endif
+else
+docs :
 	doxygen ./docs/Doxyfile
-
+endif
 
 .PHONY: clean
 clean :
