@@ -33,8 +33,6 @@ To build the library without visualization capabilities (no ``libgvc`` dependenc
 
 To build the library without raw parsing capabilities (no ``libraw_parser`` dependency), ``make`` should be passed the argument ``NO_RAW_PARSER=1``.
 
-To be able to use the Python wrapper it is necessary to add the ``$PFNET/lib``  folder to ``$LD_LIBRARY_PATH``. E.g. ```export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PFNET/lib```.
-
 ## Build Instructions (Mac OS X)
 
 In Mac OS X, PFNET can be easily installed using [Homebrew](http://brew.sh):
