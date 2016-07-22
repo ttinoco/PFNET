@@ -49,18 +49,16 @@ If building from source directly. The Build Instructions for Linux should suffic
 
 ## Build Documentation (Linux) ##
 
-Building the documentation for PFNET requires [Doxygen](http://www.stack.nl/~dimitri/doxygen/) (for C) and [Sphinx](http://www.sphinx-doc.org/en/stable/) (for Python). The environment variable ``PFNET_DOCS`` must be set to the location where the documentation will be moved to once it is built.
+Building the documentation for PFNET requires [Doxygen](http://www.stack.nl/~dimitri/doxygen/) (for C). The environment variable ``PFNET_DOCS`` must be set to the location where the documentation will be moved to once it is built.
 
 ```bash
 export PFNET_DOCS=../pfnet-docs
 ```
 
-To build the documentation for the C library and the Python wrapper library. Run the following commands from the home directory of PFNET. (Note that the `html` documenation is built for the Python wrapper library but other formats can be specified, such as `pdf`)
+To build the documentation. Run the following commands from the home directory of PFNET.
 
 ```bash
 make docs  # build C library documentation
-cd python/docs
-make html  # build Python wrapper library documentation
 ```
 
 ## Wrappers ##
