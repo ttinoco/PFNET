@@ -38,6 +38,10 @@ To build the library without raw parsing capabilities (no ``libraw_parser`` depe
 In Mac OS X, PFNET can be easily installed using [Homebrew](http://brew.sh):
 
     brew install https://raw.githubusercontent.com/ttinoco/PFNET/master/pfnet.rb
+    
+To build the latest (possibly unstable) version you can add the ``--HEAD``flag:
+    
+    brew install --HEAD https://raw.githubusercontent.com/ttinoco/PFNET/master/pfnet.rb
 
 Since Homebrew does currently not support external dependencies, PFNET cannot be built with raw parsing capabilities with this method.
 
