@@ -6,6 +6,8 @@ Targets
 * Rich object comparisons for all network components.
 * Need AC branch flow limits.
 * Instructions for adding new functions and constraints.
+* Make an Autotools build. (long-term)
+
 
 Unreleased
 ----------
@@ -15,7 +17,6 @@ Unreleased
 * Linear power flow constraints (LINPF).
 * Updated Makefile.
 * Documentation build rules with PFNET_DOCS.
-* Make an Autotools build. (long-term)
 
 Version 1.2.2
 -------------

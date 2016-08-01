@@ -43,7 +43,7 @@ Since Homebrew does currently not support external dependencies, PFNET cannot be
 
 Homebrew will install graphviz as a dependency unless ``--without-graphviz`` is specified.
 
-If building from source directly. The Build Instructions for Linux should suffice but substitute ``$DYLD_FALLBACK_LIBRARY_PATH`` for ``$LD_LIBRARY_PATH``.
+If building from source directly, the Build Instructions for Linux should suffice but substitute ``$DYLD_FALLBACK_LIBRARY_PATH`` for ``$LD_LIBRARY_PATH``.
 
 ## Build Documentation (Linux) ##
 
@@ -53,7 +53,7 @@ Building the documentation for PFNET requires [Doxygen](http://www.stack.nl/~dim
 export PFNET_DOCS=../pfnet-docs
 ```
 
-To build the documentation. Run the following commands from the home directory of PFNET.
+To build the documentation, run the following commands from the home directory of PFNET.
 
 ```bash
 make docs  # build C library documentation
