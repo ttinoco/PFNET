@@ -5,9 +5,21 @@ NO_GRAPHVIZ ?=0
 CC = gcc
 INCDIR = ./include
 LIBDIR = ./lib
-LDFLAGS = -shared
 LDLIBS = -lm
 CFLAGS = -I$(INCDIR) -fPIC -O3 -Wall -Wno-unused-variable
+
+ifeq ($(OS),Windows_NT)
+  OS_DETECTED := Windows
+else
+  OS_DETECTED := $(shell uname -s)
+endif
+$(warning $(OS_DETECTED))
+ifeq ($(OS_DETECTED),Darwin)
+	LDFLAGS += -dynamiclib
+else
+	LDFLAGS += -shared
+endif
+
 
 # Debug
 ifeq ($(DEBUG),1)
