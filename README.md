@@ -46,6 +46,23 @@ To build the latest (possibly unstable) version you can add the ``--HEAD``flag:
 Since Homebrew does currently not support external dependencies, PFNET cannot be built with raw parsing capabilities with this method.
 
 Homebrew will install graphviz as a dependency unless ``--without-graphviz`` is specified.
+
+If building from source directly, the Build Instructions for Linux should suffice but substitute ``$DYLD_FALLBACK_LIBRARY_PATH`` for ``$LD_LIBRARY_PATH``.
+
+## Build Documentation (Linux) ##
+
+Building the documentation for PFNET requires [Doxygen](http://www.stack.nl/~dimitri/doxygen/) (for C). The environment variable ``PFNET_DOCS`` must be set to the location where the documentation will be moved to once it is built.
+
+```bash
+export PFNET_DOCS=../pfnet-docs
+```
+
+To build the documentation, run the following commands from the home directory of PFNET.
+
+```bash
+make docs  # build C library documentation
+```
+
 ## Wrappers ##
 
 Wrappers for PFNET are available for the following languages:
