@@ -50,7 +50,7 @@ Example
 =======
 
 As a quick example of how to use the PFNET Python module, consider the task of constructing a power network from a `MATPOWER <http://www.pserc.cornell.edu//matpower/>`_-converted power flow file and computing the average bus degree. This can be done as follows::
-  
+
   >>> import numpy as np
   >>> from pfnet import Network
 
@@ -59,3 +59,12 @@ As a quick example of how to use the PFNET Python module, consider the task of c
 
   >>> print np.average([b.degree for b in net.buses])
   2.86
+
+Documentation
+=============
+
+Requirements to build PFNET documentation:
+
+* Sphinx <http://www.sphinx-doc.org/> (>=1.4)
+
+To build the documentation the environment variable PFNET_DOCS must be set to a location where the documentation files are to be put. In order to create the files then just run `make` in python/docs from the PFNET home directory.

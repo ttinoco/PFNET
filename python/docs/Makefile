@@ -1,11 +1,14 @@
 # Makefile for Sphinx documentation
 #
 
+ifndef PFNET_DOCS
+$(error error 'PFNET_DOCS' must be set to the location to put documentation files)
+endif
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
-BUILDDIR      = ../../../pfnet-docs/python
+BUILDDIR      = $(PFNET_DOCS)/python
 PDFBUILDDIR   = /tmp
 PDF           = ../manual.pdf
 

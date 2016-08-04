@@ -18,7 +18,7 @@ if '--no_raw_parser' in sys.argv:
     sys.argv.remove('--no_raw_parser')
 else:
     libraries.append('raw_parser')
-    
+
 # graphviz
 if '--no_graphviz' in sys.argv:
     sys.argv.remove('--no_graphviz')
@@ -32,10 +32,10 @@ setup(name='PFNET',
       description='Power Flow Network Library',
       author='Tomas Tinoco De Rubira',
       author_email='ttinoco5687@gmail.com',
+      url='https://github.com/ttinoco/PFNET',
       packages=['pfnet'],
-      ext_modules=cythonize([Extension("pfnet.cpfnet", 
+      ext_modules=cythonize([Extension("pfnet.cpfnet",
                                        [os.path.join("pfnet", 'cpfnet.pyx')],
                                        libraries=libraries,
                                        library_dirs=["../lib"],
                                        include_dirs=["../include", np.get_include()])]))
-      
