@@ -33,19 +33,32 @@ To build the library without visualization capabilities (no ``libgvc`` dependenc
 
 To build the library without raw parsing capabilities (no ``libraw_parser`` dependency), ``make`` should be passed the argument ``NO_RAW_PARSER=1``.
 
+### Documentation ###
+
+Building the C documentation for PFNET requires [Doxygen](http://www.stack.nl/~dimitri/doxygen/). The environment variable ``PFNET_DOCS`` must be set to the location where the documentation will be moved to once it is built:
+
+    export PFNET_DOCS=../pfnet-docs
+
+To build the documentation, run the following commands from the home directory of PFNET:
+
+    make docs
+
 ## Build Instructions (Mac OS X)
 
 In Mac OS X, PFNET can be easily installed using [Homebrew](http://brew.sh):
 
     brew install https://raw.githubusercontent.com/ttinoco/PFNET/master/pfnet.rb
     
-To build the latest (possibly unstable) version you can add the ``--HEAD``flag:
+To build the latest (possibly unstable) version you can add the ``--HEAD`` flag:
     
     brew install --HEAD https://raw.githubusercontent.com/ttinoco/PFNET/master/pfnet.rb
 
 Since Homebrew does currently not support external dependencies, PFNET cannot be built with raw parsing capabilities with this method.
 
 Homebrew will install graphviz as a dependency unless ``--without-graphviz`` is specified.
+
+If building from source directly, the Build Instructions for Linux should suffice but substitute ``$DYLD_FALLBACK_LIBRARY_PATH`` for ``$LD_LIBRARY_PATH``.
+
 ## Wrappers ##
 
 Wrappers for PFNET are available for the following languages:
