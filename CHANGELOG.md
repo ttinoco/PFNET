@@ -8,15 +8,15 @@ Targets
 * Instructions for adding new functions and constraints.
 * Make an Autotools build. (long-term)
 
-
 Unreleased
 ----------
 * Function value independent of variable flags.
 * Bus number of variables.
 * Area/zone projections.
 * Linear power flow constraints (LINPF).
-* Updated Makefile.
+* Improved Makefile (Linux and Mac).
 * Documentation build rules with PFNET_DOCS.
+* Removed DEBUG conditional compilation and added output levels to parsers.
 
 Version 1.2.2
 -------------

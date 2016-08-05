@@ -148,6 +148,9 @@ struct ART_Parser {
   int field;
   int record;
 
+  // Options
+  int output_level;
+
   // Base
   REAL base_power; // MVA
   
@@ -207,6 +210,9 @@ ART_Parser* ART_PARSER_new(void) {
   parser->state = ART_PARSER_STATE_INIT;
   parser->field = 0;
   parser->record = 0;
+
+  // Options
+  parser->output_level = 0;
 
   // Base
   parser->base_power = ART_PARSER_BASE_POWER;
@@ -319,6 +325,10 @@ void ART_PARSER_show(ART_Parser* parser) {
   if (!parser)
     return;
 
+  // LEVEL 0
+  if (parser->output_level <= 0)
+    return;
+
   // List lengths
   LIST_len(ART_Bus,parser->bus_list,next,len_bus_list);
   LIST_len(ART_Line,parser->line_list,next,len_line_list);
@@ -344,6 +354,10 @@ void ART_PARSER_show(ART_Parser* parser) {
   printf("slack list   : %d\n",len_slack_list);
   printf("vargen list  : %d\n",len_vargen_list);
   printf("bat list     : %d\n",len_bat_list);
+
+  // LEVEL 1
+  if (parser->output_level <= 1)
+    return;
 
   // Debugging BUS
   ART_Bus* bus;
@@ -1667,4 +1681,14 @@ void ART_PARSER_parse_base_record(ART_Parser* parser) {
   parser->field = 0;
   parser->record = 0;
   parser->state = ART_PARSER_STATE_INIT;
+}
+
+void ART_PARSER_set(ART_Parser* parser, char* key, REAL value) {
+  
+  if (!parser)
+    return;
+
+  // Output level
+  if (strcmp(key,"output_level") == 0)
+    parser->output_level = (int)value;
 }

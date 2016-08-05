@@ -87,6 +87,9 @@ struct MAT_Parser {
   int record;
   char token[MAT_PARSER_BUFFER_SIZE];
 
+  // Options
+  int output_level;
+
   // Base
   REAL base_power;
   
@@ -132,6 +135,9 @@ MAT_Parser* MAT_PARSER_new(void) {
   parser->field = 0;
   parser->record = 0;
   MAT_PARSER_clear_token(parser);
+
+  // Options
+  parser->output_level = 0;
 
   // Base
   parser->base_power = MAT_PARSER_BASE_POWER;
@@ -216,6 +222,10 @@ void MAT_PARSER_show(MAT_Parser* parser) {
   int len_util_list;  
 
   if (!parser)
+    return;
+
+  // LEVEL 0
+  if (parser->output_level <= 0)
     return;
 
   // List lengths
@@ -938,4 +948,14 @@ void MAT_PARSER_parse_util_row(MAT_Parser* parser) {
   parser->util = NULL;
   parser->field = 0;
   parser->record++;
+}
+
+void MAT_PARSER_set(MAT_Parser* parser, char* key, REAL value) {
+  
+  if (!parser)
+    return;
+
+  // Output level
+  if (strcmp(key,"output_level") == 0)
+    parser->output_level = (int)value;
 }

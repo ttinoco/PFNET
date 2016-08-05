@@ -34,6 +34,10 @@ void RAW_PARSER_del(RAW_Parser* parser) {
   // pass
 }
 
+void RAW_PARSER_set(ART_Parser* parser, char* key, REAL value) {
+  // pass
+}
+
 BOOL RAW_PARSER_has_error(RAW_Parser* parser) {
   return TRUE;
 }

@@ -20,7 +20,7 @@ static char* test_graph_basic() {
 
   net = NET_new();
 
-  NET_load(net,test_case);
+  NET_load(net,test_case,0);
 
   g = GRAPH_new(net);
   Assert("error - unable to create graph",g != NULL);

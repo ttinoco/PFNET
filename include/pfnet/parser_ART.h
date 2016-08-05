@@ -70,6 +70,7 @@ void ART_PARSER_read(ART_Parser* parser, char* filename);
 void ART_PARSER_show(ART_Parser* parser);
 void ART_PARSER_load(ART_Parser* parser, Net* net);
 void ART_PARSER_del(ART_Parser* parser);
+void ART_PARSER_set(ART_Parser* parser, char* key, REAL value);
 BOOL ART_PARSER_has_error(ART_Parser* parser);
 char* ART_PARSER_get_error_string(ART_Parser* parser);
 void ART_PARSER_callback_field(char* s, void* data);

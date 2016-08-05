@@ -62,6 +62,7 @@ void MAT_PARSER_read(MAT_Parser* parser, char* filename);
 void MAT_PARSER_show(MAT_Parser* parser);
 void MAT_PARSER_load(MAT_Parser* parser, Net* net);
 void MAT_PARSER_del(MAT_Parser* parser);
+void MAT_PARSER_set(MAT_Parser* parser, char* key, REAL value);
 BOOL MAT_PARSER_has_error(MAT_Parser* parser);
 char* MAT_PARSER_get_error_string(MAT_Parser* parser);
 void MAT_PARSER_callback_field(char* s, void* data);

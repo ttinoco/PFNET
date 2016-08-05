@@ -33,7 +33,7 @@ static char* test_net_load() {
 
   net = NET_new();
   Assert("error - invalid number of buses",NET_get_num_buses(net) == 0);
-  NET_load(net,test_case);
+  NET_load(net,test_case,0);
   Assert("error - failed to parse case",!NET_has_error(net));
   Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
 
@@ -49,7 +49,7 @@ static char* test_net_check() {
   printf("test_net_check ... ");
 
   net = NET_new();				
-  NET_load(net,test_case);
+  NET_load(net,test_case,0);
   Assert("error - net check failed",NET_check(net,0));
   NET_del(net);
   printf("ok\n");
@@ -65,7 +65,7 @@ static char* test_net_variables() {
   
   net = NET_new();				
 
-  NET_load(net,test_case);
+  NET_load(net,test_case,0);
 
   Assert("error - wrong number of variables",NET_get_num_vars(net) == num);
   
@@ -111,7 +111,7 @@ static char* test_net_fixed() {
 
   net = NET_new();	
 			
-  NET_load(net,test_case);
+  NET_load(net,test_case,0);
   
   Assert("error - wrong number of variables",NET_get_num_fixed(net) == num);
 
@@ -166,7 +166,7 @@ static char* test_net_properties() {
 
   net = NET_new();
 
-  NET_load(net,test_case);
+  NET_load(net,test_case,0);
 
   for (i = 0; i < NET_get_num_buses(net); i++) {
     
@@ -213,7 +213,7 @@ static char* test_net_init_point() {
 
   net = NET_new();
 
-  NET_load(net,test_case);
+  NET_load(net,test_case,0);
   
   // Set variables
   NET_set_flags(net,

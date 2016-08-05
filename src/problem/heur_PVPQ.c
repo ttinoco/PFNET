@@ -151,11 +151,6 @@ void HEUR_PVPQ_apply_to_branch(Heur* h, Constr* clist, Net* net, Branch* br, Vec
 	      VEC_set(var_values,GEN_get_index_Q(gen),GEN_get_Q_max(gen));
 	    gen = GEN_get_reg_next(gen);
 	  }
-	  
-	  // Show
-          #ifdef DEBUG
-	    printf("PV-PQ switching - Q > Qmax (%d)\n",BUS_get_number(bus[k]));
-	  #endif
 	}
 	else if (Q < Qmin) {
 
@@ -172,11 +167,6 @@ void HEUR_PVPQ_apply_to_branch(Heur* h, Constr* clist, Net* net, Branch* br, Vec
 	      VEC_set(var_values,GEN_get_index_Q(gen),GEN_get_Q_min(gen));
 	    gen = GEN_get_reg_next(gen);
 	  }
-
-	  // Show
-	  #ifdef DEBUG
-	    printf("PV-PQ switching - Q < Qmin (%d)\n",BUS_get_number(bus[k]));
-	  #endif
 	}
       }
 
@@ -202,11 +192,6 @@ void HEUR_PVPQ_apply_to_branch(Heur* h, Constr* clist, Net* net, Branch* br, Vec
 		VEC_set(var_values,GEN_get_index_Q(gen),GEN_get_Q_max(gen));
 	      gen = GEN_get_reg_next(gen);
 	    }
-
-	    // Show
-	    #ifdef DEBUG
-	      printf("PQ-PQ switching - Qmin to Qmax (%d)\n",BUS_get_number(bus[k]));
-	    #endif
 	  }
 	  else if (Qmin < Q && Q < Qmax) {
 
@@ -219,11 +204,6 @@ void HEUR_PVPQ_apply_to_branch(Heur* h, Constr* clist, Net* net, Branch* br, Vec
 
 	    // Udpate vector of var values
 	    VEC_set(var_values,j_new,b_new);
-
-	    // Show
-	    #ifdef DEBUG
-	      printf("PQ-PV switching - Qmin to vset (%d)\n",BUS_get_number(bus[k]));
-	    #endif
 	  }
 	}
 
@@ -246,11 +226,6 @@ void HEUR_PVPQ_apply_to_branch(Heur* h, Constr* clist, Net* net, Branch* br, Vec
 		VEC_set(var_values,GEN_get_index_Q(gen),GEN_get_Q_min(gen));
 	      gen = GEN_get_reg_next(gen);
 	    }
-
-	    // Show
-	    #ifdef DEBUG
-	      printf("PQ-PQ switching - Qmax to Qmin (%d)\n",BUS_get_number(bus[k]));
-	    #endif
 	  }
 	  else if (Qmin < Q && Q < Qmax) {
 
@@ -263,11 +238,6 @@ void HEUR_PVPQ_apply_to_branch(Heur* h, Constr* clist, Net* net, Branch* br, Vec
 
 	    // Udpate vector of var values
 	    VEC_set(var_values,j_new,b_new);
-
-	    // Show 
-	    #ifdef DEBUG
-	      printf("PQ-PV switching - Qmax to vset (%d)\n",BUS_get_number(bus[k]));
-	    #endif
 	  }
 	}
       }

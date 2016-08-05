@@ -128,7 +128,7 @@ int NET_get_num_actions(Net* net);
 REAL NET_get_vargen_corr_radius(Net* net);
 REAL NET_get_vargen_corr_value(Net* net);
 BOOL NET_has_error(Net* net);
-void NET_load(Net* net, char* filename);
+void NET_load(Net* net, char* filename, int output_level);
 Net* NET_new(void);
 void NET_set_base_power(Net* net, REAL base_power);
 void NET_set_branch_array(Net* net, Branch* branch, int num);
