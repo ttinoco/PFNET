@@ -34,7 +34,7 @@ void RAW_PARSER_del(RAW_Parser* parser) {
   // pass
 }
 
-void RAW_PARSER_set(ART_Parser* parser, char* key, REAL value) {
+void RAW_PARSER_set(RAW_Parser* parser, char* key, REAL value) {
   // pass
 }
 
