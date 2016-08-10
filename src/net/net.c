@@ -1599,7 +1599,7 @@ BOOL NET_has_error(Net* net) {
     return FALSE;
 }
 
-void NET_load(Net* net, char* filename) {
+void NET_load(Net* net, char* filename, int output_level) {
 
   // Local variables
   char* ext;
@@ -1621,12 +1621,11 @@ void NET_load(Net* net, char* filename) {
   }
   else if (strcmp(ext+1,"raw") == 0) {
   
-    // PSSE raw
+    // PSSE RAW
     RAW_Parser* parser = RAW_PARSER_new();
+    RAW_PARSER_set(parser,"output_level",output_level);
     RAW_PARSER_read(parser,filename);
-    #ifdef DEBUG
-      RAW_PARSER_show(parser);
-    #endif
+    RAW_PARSER_show(parser);
     if (!RAW_PARSER_has_error(parser))
       RAW_PARSER_load(parser,net);
     if (RAW_PARSER_has_error(parser)) {
@@ -1639,10 +1638,9 @@ void NET_load(Net* net, char* filename) {
   
     // MATPOWER MAT
     MAT_Parser* parser = MAT_PARSER_new();
+    MAT_PARSER_set(parser,"output_level",output_level);
     MAT_PARSER_read(parser,filename);
-    #ifdef DEBUG
-      MAT_PARSER_show(parser);
-    #endif
+    MAT_PARSER_show(parser);
     if (!MAT_PARSER_has_error(parser))
       MAT_PARSER_load(parser,net);
     if (MAT_PARSER_has_error(parser)) {
@@ -1655,10 +1653,9 @@ void NET_load(Net* net, char* filename) {
   
     // ARTERE ART
     ART_Parser* parser = ART_PARSER_new();
+    ART_PARSER_set(parser,"output_level",output_level);
     ART_PARSER_read(parser,filename);
-    #ifdef DEBUG
-      ART_PARSER_show(parser);
-    #endif
+    ART_PARSER_show(parser);
     if (!ART_PARSER_has_error(parser))
       ART_PARSER_load(parser,net);
     if (ART_PARSER_has_error(parser)) {

@@ -29,7 +29,7 @@ static char* test_problem_basic() {
   PROB_set_network(p,net);
 
   // Load
-  NET_load(net,test_case);
+  NET_load(net,test_case,0);
 
   // Set variables
   NET_set_flags(net,

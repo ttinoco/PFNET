@@ -2562,17 +2562,18 @@ cdef class Network:
 
         return cnet.NET_has_error(self._c_net)
 
-    def load(self,filename):
+    def load(self,filename,output_level=0):
         """
         Loads a network data contained in a specific file.
         
         Parameters
         ----------
-        filename : string        
+        filename : string
+        output_level : int
         """
 
         filename = filename.encode('UTF-8')
-        cnet.NET_load(self._c_net,filename)
+        cnet.NET_load(self._c_net,filename,output_level)
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
 

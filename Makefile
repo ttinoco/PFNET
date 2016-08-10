@@ -1,4 +1,3 @@
-DEBUG ?= 0
 NO_RAW_PARSER ?=0
 NO_GRAPHVIZ ?=0
 
@@ -18,12 +17,6 @@ ifeq ($(OS_DETECTED),Darwin)
 	LDFLAGS += -dynamiclib
 else
 	LDFLAGS += -shared
-endif
-
-
-# Debug
-ifeq ($(DEBUG),1)
-	CFLAGS += -DDEBUG
 endif
 
 # Raw parser

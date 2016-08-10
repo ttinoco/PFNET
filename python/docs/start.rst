@@ -63,8 +63,8 @@ As a quick example of how to use the PFNET Python module, consider the task of c
 Documentation
 =============
 
-Requirements to build PFNET documentation:
+Requirements to build the PFNET Python documentation:
 
-* Sphinx <http://www.sphinx-doc.org/> (>=1.4)
+* `Sphinx <http://www.sphinx-doc.org/>`_ (>=1.4).
 
-To build the documentation the environment variable PFNET_DOCS must be set to a location where the documentation files are to be put. In order to create the files then just run `make` in python/docs from the PFNET home directory.
+To build the documentation the environment variable ``PFNET_DOCS`` must be set. The generated files will be placed in the directory ``PFNET_DOCS/python``. To generate the files, run `make` from the ``python/docs`` directory of the PFNET package.

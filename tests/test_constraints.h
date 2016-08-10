@@ -24,7 +24,7 @@ static char* test_constr_BOUND() {
 
   // Load
   net = NET_new();
-  NET_load(net,test_case);
+  NET_load(net,test_case,0);
 
   // Set flags
   NET_set_flags(net,OBJ_BUS,
@@ -118,7 +118,7 @@ static char* test_constr_FIX() {
 
   // Load
   net = NET_new();
-  NET_load(net,test_case);
+  NET_load(net,test_case,0);
 
   // Set flags
   NET_set_flags(net,OBJ_BUS,
@@ -216,7 +216,7 @@ static char* test_constr_PAR_GEN_P() {
 
   // Load
   net = NET_new();
-  NET_load(net,test_case);
+  NET_load(net,test_case,0);
 
   // Set flags
   NET_set_flags(net,
@@ -334,7 +334,7 @@ static char* test_constr_PAR_GEN_Q() {
 
   // Load
   net = NET_new();
-  NET_load(net,test_case);
+  NET_load(net,test_case,0);
 
   // Set flags
   NET_set_flags(net,
@@ -455,7 +455,7 @@ static char* test_constr_PF() {
 
   // Load
   net = NET_new();
-  NET_load(net,test_case);
+  NET_load(net,test_case,0);
 
   // Set variables
   NET_set_flags(net,
@@ -601,7 +601,7 @@ static char* test_constr_REG_GEN() {
 
   // Load
   net = NET_new();
-  NET_load(net,test_case);
+  NET_load(net,test_case,0);
 
   // Set variables
   NET_set_flags(net,
@@ -721,7 +721,7 @@ static char* test_constr_REG_TRAN() {
 
   // Load
   net = NET_new();
-  NET_load(net,test_case);
+  NET_load(net,test_case,0);
 
   // Set variables
   NET_set_flags(net,
@@ -833,7 +833,7 @@ static char* test_constr_REG_SHUNT() {
 
   // Load
   net = NET_new();
-  NET_load(net,test_case);
+  NET_load(net,test_case,0);
 
   // Set variables
   NET_set_flags(net,
