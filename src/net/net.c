@@ -483,45 +483,47 @@ void NET_clear_properties(Net* net) {
   if (net) {
     
     T = net->num_peirods;
+
+    for (t = 0; t < net->num_periods; t++) {
     
-    // Bus
-    ARRAY_clear(net->bus_v_max,REAL,T);
-    ARRAY_clear(net->bus_v_min,REAL,T);
-    ARRAY_clear(net->bus_v_vio,REAL,T);
-    ARRAY_clear(net->bus_P_mis,REAL,T);
-    ARRAY_clear(net->bus_Q_mis,REAL,T);
-
-    // Gen
-    ARRAY_clear(net->gen_P_cost,REAL,T);
-    ARRAY_clear(net->gen_v_dev,REAL,T);
-    ARRAY_clear(net->gen_Q_vio,REAL,T);
-    ARRAY_clear(net->gen_P_vio,REAL,T);
-
-    // Branch
-    ARRAY_clear(net->tran_v_vio,REAL,T);
-    ARRAY_clear(net->tran_r_vio,REAL,T);
-    ARRAY_clear(net->tran_p_vio,REAL,T);
-
-    // Shunt
-    ARRAY_clear(net->shunt_v_vio,REAL,T);
-    ARRAY_clear(net->shunt_b_vio,REAL,T);
-
-    // Load
-    ARRAY_clear(net->load_P_util,REAL,T);
-    ARRAY_clear(net->load_P_vio,REAL,T);
-
-    // Battery
-    
-    // Actions
-    ARRAY_clear(net->num_actions,int,T);
+      // Bus
+      net->bus_v_max[t] = 0;
+      net->bus_v_min[t] = 0;
+      net->bus_v_vio[t] = 0;
+      net->bus_P_mis[t] = 0;
+      net->bus_Q_mis[t] = 0;
+      
+      // Gen
+      net->gen_P_cost[t] = 0;
+      net->gen_v_dev[t] = 0;
+      net->gen_Q_vio[t] = 0;
+      net->gen_P_vio[t] = 0;
+      
+      // Branch
+      net->tran_v_vio[t] = 0;
+      net->tran_r_vio[t] = 0;
+      net->tran_p_vio[t] = 0;
+      
+      // Shunt
+      net->shunt_v_vio[t] = 0;
+      net->shunt_b_vio[t] = 0;
+      
+      // Load
+      net->load_P_util[t] = 0;
+      net->load_P_vio[t] = 0;
+      
+      // Battery
+      
+      // Actions
+      net->num_actions[t] = 0;
+    }      
 
     // Counters
     if (net->bus_counted && net->bus) {
       for (i = 0; i < net->num_buses; i++) {
-	for (t = 0; t < net->num_periods; t++) {
-	  BUS_clear_mismatches(BUS_array_get(net->bus,i),t);
+	BUS_clear_mismatches(BUS_array_get(net->bus,i));
+	for (t = 0; t < net->num_periods; t++)
 	  net->bus_counted[i*T+t] = 0;
-	}
       }
     }
   }
@@ -840,28 +842,28 @@ void NET_init(Net* net, int num_periods) {
   net->vargen_corr_value = 0;
 
   // Properties
-  ARRAY_alloc(net->bus_v_max,REAL,T);
-  ARRAY_alloc(net->bus_v_min,REAL,T);
-  ARRAY_alloc(net->bus_v_vio,REAL,T); 
-  ARRAY_alloc(net->bus_P_mis,REAL,T);
-  ARRAY_alloc(net->bus_Q_mis,REAL,T); 
+  ARRAY_zalloc(net->bus_v_max,REAL,T);
+  ARRAY_zalloc(net->bus_v_min,REAL,T);
+  ARRAY_zalloc(net->bus_v_vio,REAL,T); 
+  ARRAY_zalloc(net->bus_P_mis,REAL,T);
+  ARRAY_zalloc(net->bus_Q_mis,REAL,T); 
 
-  ARRAY_alloc(net->gen_P_cost,REAL,T); 
-  ARRAY_alloc(net->gen_v_dev,REAL,T); 
-  ARRAY_alloc(net->gen_Q_vio,REAL,T); 
-  ARRAY_alloc(net->gen_P_vio,REAL,T); 
+  ARRAY_zalloc(net->gen_P_cost,REAL,T); 
+  ARRAY_zalloc(net->gen_v_dev,REAL,T); 
+  ARRAY_zalloc(net->gen_Q_vio,REAL,T); 
+  ARRAY_zalloc(net->gen_P_vio,REAL,T); 
 
-  ARRAY_alloc(net->tran_v_vio,REAL,T); 
-  ARRAY_alloc(net->tran_r_vio,REAL,T); 
-  ARRAY_alloc(net->tran_p_vio,REAL,T); 
+  ARRAY_zalloc(net->tran_v_vio,REAL,T); 
+  ARRAY_zalloc(net->tran_r_vio,REAL,T); 
+  ARRAY_zalloc(net->tran_p_vio,REAL,T); 
 
-  ARRAY_alloc(net->shunt_v_vio,REAL,T); 
-  ARRAY_alloc(net->shunt_b_vio,REAL,T); 
+  ARRAY_zalloc(net->shunt_v_vio,REAL,T); 
+  ARRAY_zalloc(net->shunt_b_vio,REAL,T); 
 
-  ARRAY_alloc(net->load_P_util,REAL,T); 
-  ARRAY_alloc(net->load_P_vio,REAL,T); 
+  ARRAY_zalloc(net->load_P_util,REAL,T); 
+  ARRAY_zalloc(net->load_P_vio,REAL,T); 
 
-  ARRAY_alloc(net->num_actions,int,T); 
+  ARRAY_zalloc(net->num_actions,int,T); 
 
   // Utils
   net->bus_counted = NULL;
@@ -2619,8 +2621,8 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
     if (BRANCH_get_index(br) == net->num_branches-1) {
       BUS_array_get_max_mismatches(net->bus,
 				   net->num_buses,
-				   &(net->bus_P_mis),
-				   &(net->bus_Q_mis),
+				   &(net->bus_P_mis[t]),
+				   &(net->bus_Q_mis[t]),
 				   t);
       net->bus_P_mis[t] *= net->base_power;
       net->bus_Q_mis[t] *= net->base_power;
