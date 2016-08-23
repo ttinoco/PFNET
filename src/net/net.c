@@ -9,6 +9,7 @@
  */
 
 #include <pfnet/net.h>
+#include <pfnet/array.h>
 #include <pfnet/parser_RAW.h>
 #include <pfnet/parser_MAT.h>
 #include <pfnet/parser_ART.h>
@@ -483,35 +484,35 @@ void NET_clear_properties(Net* net) {
     T = net->num_peirods;
     
     // Bus
-    memset(net->bus_v_max,0,T*sizeof(REAL));
-    memset(net->bus_v_min,0,T*sizeof(REAL));
-    memset(net->bus_v_vio,0,T*sizeof(REAL));
-    memset(net->bus_P_mis,0,T*sizeof(REAL));
-    memset(net->bus_Q_mis,0,T*sizeof(REAL));
+    ARRAY_clear(net->bus_v_max,REAL,T);
+    ARRAY_clear(net->bus_v_min,REAL,T);
+    ARRAY_clear(net->bus_v_vio,REAL,T);
+    ARRAY_clear(net->bus_P_mis,REAL,T);
+    ARRAY_clear(net->bus_Q_mis,REAL,T);
 
     // Gen
-    memset(net->gen_P_cost,0,T*sizeof(REAL));
-    memset(net->gen_v_dev,0,T*sizeof(REAL));
-    memset(net->gen_Q_vio,0,T*sizeof(REAL));
-    memset(net->gen_P_vio,0,T*sizeof(REAL));
+    ARRAY_clear(net->gen_P_cost,REAL,T);
+    ARRAY_clear(net->gen_v_dev,REAL,T);
+    ARRAY_clear(net->gen_Q_vio,REAL,T);
+    ARRAY_clear(net->gen_P_vio,REAL,T);
 
     // Branch
-    memset(net->tran_v_vio,0,T*sizeof(REAL));
-    memset(net->tran_r_vio,0,T*sizeof(REAL));
-    memset(net->tran_p_vio,0,T*sizeof(REAL));
+    ARRAY_clear(net->tran_v_vio,REAL,T);
+    ARRAY_clear(net->tran_r_vio,REAL,T);
+    ARRAY_clear(net->tran_p_vio,REAL,T);
 
     // Shunt
-    memset(net->shunt_v_vio,0,T*sizeof(REAL));
-    memset(net->shunt_b_vio,0,T*sizeof(REAL));
+    ARRAY_clear(net->shunt_v_vio,REAL,T);
+    ARRAY_clear(net->shunt_b_vio,REAL,T);
 
     // Load
-    memset(net->load_P_util,0,T*sizeof(REAL));
-    memset(net->load_P_vio,0,T*sizeof(REAL));
+    ARRAY_clear(net->load_P_util,REAL,T);
+    ARRAY_clear(net->load_P_vio,REAL,T);
 
     // Battery
     
     // Actions
-    memset(net->num_actions,0,T*sizeof(int));
+    ARRAY_clear(net->num_actions,int,T);
 
     // Counters
     if (net->bus_counted && net->bus) {
@@ -658,8 +659,8 @@ Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
     return NULL;
 
   // Allocate arrays
-  queued = (char*)malloc(net->num_buses*sizeof(char));
-  neighbors = (int*)malloc(net->num_buses*sizeof(int));
+  ARRAY_alloc(queued,char,net->num_buses);
+  ARRAY_alloc(neighbors,int,net->num_buses);
 
   // Count nnz
   //**********
@@ -836,28 +837,28 @@ void NET_init(Net* net, int num_periods) {
   net->vargen_corr_value = 0;
 
   // Properties
-  net->bus_v_max = NULL;
-  net->bus_v_min = NULL;
-  net->bus_v_vio = NULL;
-  net->bus_P_mis = NULL;
-  net->bus_Q_mis = NULL;
+  ARRAY_alloc(net->bus_v_max,REAL,T);
+  ARRAY_alloc(net->bus_v_min,REAL,T);
+  ARRAY_alloc(net->bus_v_vio,REAL,T); 
+  ARRAY_alloc(net->bus_P_mis,REAL,T);
+  ARRAY_alloc(net->bus_Q_mis,REAL,T); 
 
-  net->gen_P_cost = NULL;
-  net->gen_v_dev = NULL;
-  net->gen_Q_vio = NULL;
-  net->gen_P_vio = NULL;
+  ARRAY_alloc(net->gen_P_cost,REAL,T); 
+  ARRAY_alloc(net->gen_v_dev,REAL,T); 
+  ARRAY_alloc(net->gen_Q_vio,REAL,T); 
+  ARRAY_alloc(net->gen_P_vio,REAL,T); 
 
-  net->tran_v_vio = NULL;
-  net->tran_r_vio = NULL;
-  net->tran_p_vio = NULL;
+  ARRAY_alloc(net->tran_v_vio,REAL,T); 
+  ARRAY_alloc(net->tran_r_vio,REAL,T); 
+  ARRAY_alloc(net->tran_p_vio,REAL,T); 
 
-  net->shunt_v_vio = NULL;
-  net->shunt_b_vio = NULL;
+  ARRAY_alloc(net->shunt_v_vio,REAL,T); 
+  ARRAY_alloc(net->shunt_b_vio,REAL,T); 
 
-  net->load_P_util = NULL;
-  net->load_P_vio = NULL;
+  ARRAY_alloc(net->load_P_util,REAL,T); 
+  ARRAY_alloc(net->load_P_vio,REAL,T); 
 
-  net->num_actions = NULL;
+  ARRAY_alloc(net->num_actions,int,T); 
 
   // Utils
   net->bus_counted = NULL;
@@ -979,6 +980,13 @@ Bus* NET_get_load_buses(Net* net) {
       bus_list = BUS_list_add(bus_list,bus);
   }
   return bus_list;
+}
+
+int NET_get_num_periods(Net* net) {
+  if (!net)
+    return 0;
+  else
+    return net->num_periods;
 }
 
 int NET_get_num_buses(Net* net) {
@@ -1306,46 +1314,46 @@ int NET_get_num_vars(Net* net) {
     return 0;
 }
 
-REAL NET_get_total_gen_P(Net* net) {
+REAL NET_get_total_gen_P(Net* net, int t) {
   int i;
   REAL P = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_gens; i++) {
-    P += GEN_get_P(GEN_array_get(net->gen,i)); // p.u.
+    P += GEN_get_P(GEN_array_get(net->gen,i),t); // p.u.
   }
   return P*net->base_power; // MW
 }
 
-REAL NET_get_total_gen_Q(Net* net) {
+REAL NET_get_total_gen_Q(Net* net, int t) {
   int i;
   REAL Q = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_gens; i++) {
-    Q += GEN_get_Q(GEN_array_get(net->gen,i)); // p.u.
+    Q += GEN_get_Q(GEN_array_get(net->gen,i),t); // p.u.
   }
   return Q*net->base_power; // MVAr
 }
 
-REAL NET_get_total_load_P(Net* net) {
+REAL NET_get_total_load_P(Net* net, int t) {
   int i;
   REAL P = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_loads; i++) {
-    P += LOAD_get_P(LOAD_array_get(net->load,i)); // p.u.
+    P += LOAD_get_P(LOAD_array_get(net->load,i),t); // p.u.
   }
   return P*net->base_power; // MW
 }
 
-REAL NET_get_total_load_Q(Net* net) {
+REAL NET_get_total_load_Q(Net* net, int t) {
   int i;
   REAL Q = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_loads; i++) {
-    Q += LOAD_get_Q(LOAD_array_get(net->load,i)); // p.u.
+    Q += LOAD_get_Q(LOAD_array_get(net->load,i),t); // p.u.
   }
   return Q*net->base_power; // MVAr
 }
