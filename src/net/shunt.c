@@ -51,7 +51,7 @@ void* SHUNT_array_get(void* shunt, int index) {
     return NULL;
 }
 
-void SHUNT_array_free(Shunt* shunt, int num) {
+void SHUNT_array_del(Shunt* shunt, int num) {
   int i;
   if (shunt) {
     for (i = 0; i < num; i++)
