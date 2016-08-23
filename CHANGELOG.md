@@ -1,6 +1,5 @@
 Targets
 -------
-* Multi-period support.
 * Mechanism for changing constraint parameters.
 * MAT or ART data writer.
 * Rich object comparisons for all network components.
@@ -10,9 +9,15 @@ Targets
 
 Unreleased
 ----------
+* Multi-period support.
 * Function value independent of variable flags.
 * Bus number of variables.
 * Area/zone projections.
+* Branch bus name changes.
+* Branch AC flow getters.
+
+Version 1.2.3
+-------------
 * Linear power flow constraints (LINPF).
 * Improved Makefile (Linux and Mac).
 * Documentation build rules with PFNET_DOCS.
