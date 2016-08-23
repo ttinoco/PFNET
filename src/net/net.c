@@ -556,17 +556,17 @@ void NET_clear_sensitivities(Net* net) {
   // Batteries
 }
 
-Bus* NET_create_sorted_bus_list(Net* net, int sort_by) {
+Bus* NET_create_sorted_bus_list(Net* net, int sort_by, int t) {
   
   // Local variables
   Bus* bus_list = NULL;
   int i;
   
-  if (!net)
+  if (!net || t < 0 || t >= net->num_periods)
     return bus_list;
   
   for (i = 0; i < net->num_buses; i++)
-    bus_list = BUS_list_add_sorting(bus_list,BUS_array_get(net->bus,i),sort_by);
+    bus_list = BUS_list_add_sorting(bus_list,BUS_array_get(net->bus,i),sort_by,t);
   return bus_list;
 }
 
@@ -1403,7 +1403,7 @@ Vec* NET_get_var_values(Net* net, int code) {
 }
 
 Mat* NET_get_var_projection(Net* net, char obj_type, char var) {
-
+  
   // Local variables
   int num_subvars;
   Vec* indices;
@@ -1515,121 +1515,121 @@ Mat* NET_get_var_projection(Net* net, char obj_type, char var) {
   return proj;
 }
 
-REAL NET_get_bus_v_max(Net* net) {
-  if (net)
-    return net->bus_v_max;
+REAL NET_get_bus_v_max(Net* net, int t) {
+  if (net && t >= 0 && t < net->num_periods)
+    return net->bus_v_max[t];
   else
     return 0;
 }
 
-REAL NET_get_bus_v_min(Net* net) {
-  if (net)
-    return net->bus_v_min;
+REAL NET_get_bus_v_min(Net* net, int t) {
+  if (net && t >= 0 && t < net->num_periods)
+    return net->bus_v_min[t];
   else
     return 0;
 }
 
-REAL NET_get_bus_v_vio(Net* net) {
-  if (net)
-    return net->bus_v_vio;
+REAL NET_get_bus_v_vio(Net* net, int t) {
+  if (net && t >= 0 && t < net->num_periods)
+    return net->bus_v_vio[t];
   else
     return 0;
 }
 
-REAL NET_get_bus_P_mis(Net* net) {
-  if (net)
-    return net->bus_P_mis;
+REAL NET_get_bus_P_mis(Net* net, int t) {
+  if (net && t >= 0 && t < net->num_periods)
+    return net->bus_P_mis[t];
   else
     return 0;
 }
 
-REAL NET_get_bus_Q_mis(Net* net) {
-  if (net)
-    return net->bus_Q_mis;
+REAL NET_get_bus_Q_mis(Net* net, int t) {
+  if (net && t >= 0 && t < net->num_periods)
+    return net->bus_Q_mis[t];
   else
     return 0;
 }
 
-REAL NET_get_gen_P_cost(Net* net) {
-  if (net)
-    return net->gen_P_cost;
+REAL NET_get_gen_P_cost(Net* net, int t) {
+  if (net && t >= 0 && t < net->num_periods)
+    return net->gen_P_cost[t];
   else
     return 0;
 }
 
-REAL NET_get_gen_v_dev(Net* net) {
-  if (net)
-    return net->gen_v_dev;
+REAL NET_get_gen_v_dev(Net* net, int t) {
+  if (net && t >= 0 && t < net->num_periods)
+    return net->gen_v_dev[t];
   else
     return 0;
 }
 
-REAL NET_get_gen_Q_vio(Net* net) {
-  if (net)
-    return net->gen_Q_vio;
+REAL NET_get_gen_Q_vio(Net* net, int t) {
+  if (net && t >= 0 && t < net->num_periods)
+    return net->gen_Q_vio[t];
   else
     return 0;
 }
 
-REAL NET_get_gen_P_vio(Net* net) {
-  if (net)
-    return net->gen_P_vio;
+REAL NET_get_gen_P_vio(Net* net, int t) {
+  if (net && t >= 0 && t < net->num_periods)
+    return net->gen_P_vio[t];
   else
     return 0;
 }
 
-REAL NET_get_tran_v_vio(Net* net) {
-  if (net)
-    return net->tran_v_vio;
+REAL NET_get_tran_v_vio(Net* net, int t) {
+  if (net && t >= 0 && t < net->num_periods)
+    return net->tran_v_vio[t];
   else
     return 0;
 }
 
-REAL NET_get_tran_r_vio(Net* net) {
-  if (net)
-    return net->tran_r_vio;
+REAL NET_get_tran_r_vio(Net* net, int t) {
+  if (net && t >= 0 && t < net->num_periods)
+    return net->tran_r_vio[t];
   else
     return 0;
 }
 
-REAL NET_get_tran_p_vio(Net* net) {
-  if (net)
-    return net->tran_p_vio;
+REAL NET_get_tran_p_vio(Net* net, int t) {
+  if (net && t >= 0 && t < net->num_periods)
+    return net->tran_p_vio[t];
   else
     return 0;
 }
 
-REAL NET_get_shunt_v_vio(Net* net) {
-  if (net)
-    return net->shunt_v_vio;
+REAL NET_get_shunt_v_vio(Net* net, int t) {
+  if (net && t >= 0 && t < net->num_periods)
+    return net->shunt_v_vio[t];
   else
     return 0;
 }
 
-REAL NET_get_shunt_b_vio(Net* net) {
-  if (net)
-    return net->shunt_b_vio;
+REAL NET_get_shunt_b_vio(Net* net, int t) {
+  if (net && t >= 0 && t < net->num_periods)
+    return net->shunt_b_vio[t];
   else
     return 0;
 }
 
-REAL NET_get_load_P_util(Net* net) {
-  if (net)
-    return net->load_P_util;
+REAL NET_get_load_P_util(Net* net, int t) {
+  if (net && t >= 0 && t < net->num_periods)
+    return net->load_P_util[t];
   else
     return 0;
 }
 
-REAL NET_get_load_P_vio(Net* net) {
-  if (net)
-    return net->load_P_vio;
+REAL NET_get_load_P_vio(Net* net, int t) {
+  if (net && t >= 0 && t < net->num_periods)
+    return net->load_P_vio[t];
   else
     return 0;
 }
 
-int NET_get_num_actions(Net* net) {
-  if (net)
-    return net->num_actions;
+int NET_get_num_actions(Net* net, int t) {
+  if (net && t >= 0 && t < net->num_periods)
+    return net->num_actions[t];
   else
     return 0;
 }
@@ -1726,7 +1726,7 @@ void NET_load(Net* net, char* filename, int output_level) {
   }
 
   // Set up utilities
-  net->bus_counted = (char*)calloc(net->num_buses,sizeof(char));
+  ARRAY_clear(net->bus_counted,char,net->num_buses);
 
   // Properties
   NET_update_properties(net,NULL);
@@ -2074,11 +2074,11 @@ void NET_show_components(Net* net) {
   printf("%s",NET_get_show_components_str(net));
 }
 
-char* NET_get_show_properties_str(Net* net) {
+char* NET_get_show_properties_str(Net* net, int t) {
 
   char* out;
 
-  if (!net)
+  if (!net || t < 0 || t >= net->num_periods)
     return NULL;
 
   out = net->output_string;
@@ -2086,33 +2086,33 @@ char* NET_get_show_properties_str(Net* net) {
 
   sprintf(out+strlen(out),"\nNetwork Properties\n");
   sprintf(out+strlen(out),"------------------\n");
-  sprintf(out+strlen(out),"bus v max   : %.2f     (p.u.)\n",NET_get_bus_v_max(net));
-  sprintf(out+strlen(out),"bus v min   : %.2f     (p.u.)\n",NET_get_bus_v_min(net));
-  sprintf(out+strlen(out),"bus v vio   : %.2f     (p.u.)\n",NET_get_bus_v_vio(net));
-  sprintf(out+strlen(out),"bus P mis   : %.2e (MW)\n",NET_get_bus_P_mis(net));
-  sprintf(out+strlen(out),"bus Q mis   : %.2e (MVAr)\n",NET_get_bus_Q_mis(net));
-  sprintf(out+strlen(out),"gen P cost  : %.2e ($/hr)\n",NET_get_gen_P_cost(net));
-  sprintf(out+strlen(out),"gen v dev   : %.2e (p.u.)\n",NET_get_gen_v_dev(net));
-  sprintf(out+strlen(out),"gen Q vio   : %.2e (MVAr)\n",NET_get_gen_Q_vio(net));
-  sprintf(out+strlen(out),"gen P vio   : %.2e (MW)\n",NET_get_gen_P_vio(net));
-  sprintf(out+strlen(out),"tran v vio  : %.2e (p.u.)\n",NET_get_tran_v_vio(net));
-  sprintf(out+strlen(out),"tran r vio  : %.2e       \n",NET_get_tran_r_vio(net));
-  sprintf(out+strlen(out),"tran p vio  : %.2e (rad)\n",NET_get_tran_p_vio(net));
-  sprintf(out+strlen(out),"shunt v vio : %.2e (p.u.)\n",NET_get_shunt_v_vio(net));
-  sprintf(out+strlen(out),"shunt b vio : %.2e (p.u.)\n",NET_get_shunt_b_vio(net));
-  sprintf(out+strlen(out),"load P util : %.2e ($/hr)\n",NET_get_load_P_util(net));
-  sprintf(out+strlen(out),"load P vio  : %.2e (MW)\n",NET_get_load_P_vio(net));
-  sprintf(out+strlen(out),"num actions : %d\n",NET_get_num_actions(net));
+  sprintf(out+strlen(out),"bus v max   : %.2f     (p.u.)\n",NET_get_bus_v_max(net,t));
+  sprintf(out+strlen(out),"bus v min   : %.2f     (p.u.)\n",NET_get_bus_v_min(net,t));
+  sprintf(out+strlen(out),"bus v vio   : %.2f     (p.u.)\n",NET_get_bus_v_vio(net,t));
+  sprintf(out+strlen(out),"bus P mis   : %.2e (MW)\n",NET_get_bus_P_mis(net,t));
+  sprintf(out+strlen(out),"bus Q mis   : %.2e (MVAr)\n",NET_get_bus_Q_mis(net,t));
+  sprintf(out+strlen(out),"gen P cost  : %.2e ($/hr)\n",NET_get_gen_P_cost(net,t));
+  sprintf(out+strlen(out),"gen v dev   : %.2e (p.u.)\n",NET_get_gen_v_dev(net,t));
+  sprintf(out+strlen(out),"gen Q vio   : %.2e (MVAr)\n",NET_get_gen_Q_vio(net,t));
+  sprintf(out+strlen(out),"gen P vio   : %.2e (MW)\n",NET_get_gen_P_vio(net,t));
+  sprintf(out+strlen(out),"tran v vio  : %.2e (p.u.)\n",NET_get_tran_v_vio(net,t));
+  sprintf(out+strlen(out),"tran r vio  : %.2e       \n",NET_get_tran_r_vio(net,t));
+  sprintf(out+strlen(out),"tran p vio  : %.2e (rad)\n",NET_get_tran_p_vio(net,t));
+  sprintf(out+strlen(out),"shunt v vio : %.2e (p.u.)\n",NET_get_shunt_v_vio(net,t));
+  sprintf(out+strlen(out),"shunt b vio : %.2e (p.u.)\n",NET_get_shunt_b_vio(net,t));
+  sprintf(out+strlen(out),"load P util : %.2e ($/hr)\n",NET_get_load_P_util(net,t));
+  sprintf(out+strlen(out),"load P vio  : %.2e (MW)\n",NET_get_load_P_vio(net,t));
+  sprintf(out+strlen(out),"num actions : %d\n",NET_get_num_actions(net,t));
   
   return out;
 }
 
-void NET_show_properties(Net* net) {
+void NET_show_properties(Net* net, int t) {
   
-  printf("%s",NET_get_show_properties_str(net));
+  printf("%s",NET_get_show_properties_str(net,t));
 }
 
-void NET_show_buses(Net* net, int number, int sort_by) {
+void NET_show_buses(Net* net, int number, int sort_by, int t) {
   
   // Local variables
   Bus* bus;
@@ -2140,7 +2140,7 @@ void NET_show_buses(Net* net, int number, int sort_by) {
   }
 
   counter = 0;
-  bus = NET_create_sorted_bus_list(net,sort_by);
+  bus = NET_create_sorted_bus_list(net,sort_by,t);
   while (bus != NULL && counter < number) {
   
     printf("%7d ",BUS_get_index(bus));
@@ -2148,9 +2148,9 @@ void NET_show_buses(Net* net, int number, int sort_by) {
     
     if (BUS_SENS_LARGEST <= sort_by && sort_by <= BUS_SENS_V_REG_BY_SHUNT) { // sensitivity
       
-      value = BUS_get_quantity(bus,sort_by);
+      value = BUS_get_quantity(bus,sort_by,t);
       if (sort_by == BUS_SENS_LARGEST)
-	type = BUS_get_largest_sens_type(bus);
+	type = BUS_get_largest_sens_type(bus,t);
       else
 	type = sort_by;
       
@@ -2191,9 +2191,9 @@ void NET_show_buses(Net* net, int number, int sort_by) {
       
     else if (BUS_MIS_LARGEST <= sort_by && sort_by <= BUS_MIS_REACTIVE) { // mismatch
       
-      value = BUS_get_quantity(bus,sort_by);
+      value = BUS_get_quantity(bus,sort_by,t);
       if (sort_by == BUS_MIS_LARGEST)
-	type = BUS_get_largest_mis_type(bus);
+	type = BUS_get_largest_mis_type(bus,t);
       else
 	type = sort_by;
 
@@ -2618,6 +2618,7 @@ void NET_update_set_points(Net* net) {
   // Local variables
   Bus* bus;
   int i;
+  int t;
 
   // Check
   if (!net)
@@ -2626,7 +2627,9 @@ void NET_update_set_points(Net* net) {
   // Update
   for (i = 0; i < net->num_buses; i++) {
     bus = BUS_array_get(net->bus,i);
-    if (BUS_is_regulated_by_gen(bus))
-      BUS_set_v_set(bus,BUS_get_v_mag(bus));
+    if (BUS_is_regulated_by_gen(bus)) {
+      for (t = 0; t < net->num_periods; t++) 
+	BUS_set_v_set(bus,BUS_get_v_mag(bus,t),t);
+    }
   }
 }
