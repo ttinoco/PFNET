@@ -18,23 +18,23 @@ struct Branch {
   char type;         /**< @brief %Branch type */
 
   // Buses
-  Bus* bus_from;     /**< @brief Bus connected to the "from" side */
-  Bus* bus_to;       /**< @brief Bus connected to the "to" side */
+  Bus* bus_k;        /**< @brief Bus connected to the "k" side */
+  Bus* bus_m;        /**< @brief Bus connected to the "m" side */
   Bus* reg_bus;      /**< @brief Bus regulated by this transformer */
 
   // Conductance
   REAL g;            /**< @brief Series conductance (p.u.) */
-  REAL g_from;       /**< @brief %Shunt conductance on "from" side (p.u.) */
-  REAL g_to;         /**< @brief %Shunt conductance on "to" side (p.u.) */
+  REAL g_k;          /**< @brief %Shunt conductance on "k" side (p.u.) */
+  REAL g_m;          /**< @brief %Shunt conductance on "m" side (p.u.) */
 
   // Susceptance
   REAL b;            /**< @brief Series susceptance (p.u.) */
-  REAL b_from;       /**< @brief %Shunt susceptance on "from" side (p.u.) */
-  REAL b_to;         /**< @brief %Shunt shunt susceptance "to" side (p.u.) */
-  
+  REAL b_k;          /**< @brief %Shunt susceptance on "k" side (p.u.) */
+  REAL b_m;          /**< @brief %Shunt shunt susceptance "m" side (p.u.) */
+
   // Tap ratio
   REAL ratio;        /**< @brief Transformer taps ratio (p.u.) */
-  REAL ratio_max;    /**< @brief Maximum transformer taps ratio (p.u.) */ 
+  REAL ratio_max;    /**< @brief Maximum transformer taps ratio (p.u.) */
   REAL ratio_min;    /**< @brief Minimum transformer taps ratio (p.u.) */
   char num_ratios;   /**< @brief Number of tap positions */
 
@@ -42,7 +42,7 @@ struct Branch {
   REAL phase;        /**< @brief Transformer phase shift (radians) */
   REAL phase_max;    /**< @brief Maximum transformer phase shift (radians) */
   REAL phase_min;    /**< @brief Minimum transformer phase shift (radians) */
-  
+
   // Flow bounds
   REAL P_max;        /**< @brief Maximum active power flow (p.u.) */
   REAL P_min;        /**< @brief Minimum active power flow (p.u.) */
@@ -52,10 +52,10 @@ struct Branch {
   // Power ratings
   REAL ratingA;      /**< @brief Power rating A (p.u. system base MVA) */
   REAL ratingB;      /**< @brief Power rating B (p.u. system base MVA) */
-  REAL ratingC;      /**< @brief Power rating C (p.u. system base MVA) */  
-   
+  REAL ratingC;      /**< @brief Power rating C (p.u. system base MVA) */
+
   // Flags
-  BOOL outage;            /**< @brief Flag for indicating that branch in on outage */
+  BOOL outage;           /**< @brief Flag for indicating that branch in on outage */
   BOOL pos_ratio_v_sens; /**< @brief Flag for positive ratio-voltage sensitivity */
   char vars;             /**< @brief Flags for indicating which quantities should be treated as variables */
   char fixed;            /**< @brief Flags for indicating which quantities should be fixed to their current value */
@@ -76,9 +76,9 @@ struct Branch {
   REAL sens_P_l_bound;  /**< @brief Sensitivity of active power flow lower bound */
 
   // List
-  Branch* reg_next;  /**< @brief List of branches regulating a bus voltage magnitude */
-  Branch* from_next; /**< @brief List of branches connected to a bus on the "from" side */
-  Branch* to_next;   /**< @brief List of branches connected to a bus in the "to" side */
+  Branch* reg_next;   /**< @brief List of branches regulating a bus voltage magnitude */
+  Branch* next_k;     /**< @brief List of branches connected to a bus on the "k" side */
+  Branch* next_m;     /**< @brief List of branches connected to a bus in the "m" side */
 };
 
 void* BRANCH_array_get(void* branch, int index) {
@@ -152,114 +152,138 @@ REAL BRANCH_get_sens_P_l_bound(Branch* br) {
     return 0;
 }
 
-int BRANCH_get_index(Branch* b) {
-  if (b)
-    return b->index;
+int BRANCH_get_index(Branch* br) {
+  if (br)
+    return br->index;
   else
     return 0;
 }
 
-int BRANCH_get_index_ratio(Branch* b) {
-  if (b)
-    return b->index_ratio;
+int BRANCH_get_index_ratio(Branch* br) {
+  if (br)
+    return br->index_ratio;
   else
     return 0;
 }
 
-int BRANCH_get_index_ratio_y(Branch* b) {
-  if (b)
-    return b->index_ratio_y;
+int BRANCH_get_index_ratio_y(Branch* br) {
+  if (br)
+    return br->index_ratio_y;
   else
     return 0;
 }
 
-int BRANCH_get_index_ratio_z(Branch* b) {
-  if (b)
-    return b->index_ratio_z;
+int BRANCH_get_index_ratio_z(Branch* br) {
+  if (br)
+    return br->index_ratio_z;
   else
     return 0;
 }
 
-int BRANCH_get_index_phase(Branch* b) {
-  if (b)
-    return b->index_phase;
+int BRANCH_get_index_phase(Branch* br) {
+  if (br)
+    return br->index_phase;
   else
     return 0;
 }
 
-REAL BRANCH_get_ratio(Branch* b) {
-  if (b)
-    return b->ratio;
+REAL BRANCH_get_ratio(Branch* br) {
+  if (br)
+    return br->ratio;
   else
     return 0;
 }
 
-REAL BRANCH_get_ratio_max(Branch* b) {
-  if (b)
-    return b->ratio_max;
+REAL BRANCH_get_ratio_max(Branch* br) {
+  if (br)
+    return br->ratio_max;
   else
     return 0;
 }
 
-REAL BRANCH_get_ratio_min(Branch* b) {
-  if (b)
-    return b->ratio_min;
+REAL BRANCH_get_ratio_min(Branch* br) {
+  if (br)
+    return br->ratio_min;
   else
     return 0;
 }
 
-REAL BRANCH_get_b(Branch* b) {
-  if (b)
-    return b->b;
+REAL BRANCH_get_b(Branch* br) {
+  if (br)
+    return br->b;
   else
     return 0;
 }
 
-REAL BRANCH_get_b_from(Branch* b) {
-  if (b)
-    return b->b_from;
+REAL BRANCH_get_b_from(Branch* br) {
+  return BRANCH_get_b_k(br);
+}
+
+REAL BRANCH_get_b_k(Branch* br) {
+  if (br)
+    return br->b_k;
   else
     return 0;
 }
 
-REAL BRANCH_get_b_to(Branch* b) {
-  if (b)
-    return b->b_to;
+REAL BRANCH_get_b_to(Branch* br) {
+  return BRANCH_get_b_m(br);
+}
+
+REAL BRANCH_get_b_m(Branch* br) {
+  if (br)
+    return br->b_m;
   else
     return 0;
 }
 
-REAL BRANCH_get_g(Branch* b) {
-  if (b)
-    return b->g;
+REAL BRANCH_get_g(Branch* br) {
+  if (br)
+    return br->g;
   else
     return 0;
 }
 
-REAL BRANCH_get_g_from(Branch* b) {
-  if (b)
-    return b->g_from;
+REAL BRANCH_get_g_from(Branch* br) {
+  return BRANCH_get_g_k(br);
+}
+
+REAL BRANCH_get_g_k(Branch* br) {
+  if (br)
+    return br->g_k;
   else
     return 0;
 }
 
-REAL BRANCH_get_g_to(Branch* b) {
-  if (b)
-    return b->g_to;
+REAL BRANCH_get_g_to(Branch* br) {
+  return BRANCH_get_g_m(br);
+}
+
+REAL BRANCH_get_g_m(Branch* br) {
+  if (br)
+    return br->g_m;
   else
     return 0;
 }
 
 Bus* BRANCH_get_bus_from(Branch* br) {
+  return BRANCH_get_bus_k(br);
+}
+
+Bus* BRANCH_get_bus_k(Branch* br) {
   if (br)
-    return br->bus_from;
+    return br->bus_k;
   else
     return NULL;
 }
 
 Bus* BRANCH_get_bus_to(Branch* br) {
+  return BRANCH_get_bus_m(br);
+}
+
+Bus* BRANCH_get_bus_m(Branch* br) {
   if (br)
-    return br->bus_to;
+    return br->bus_m;
   else
     return NULL;
 }
@@ -279,57 +303,137 @@ Branch* BRANCH_get_reg_next(Branch* br) {
 }
 
 Branch* BRANCH_get_from_next(Branch* br) {
+  return BRANCH_get_next_k(br);
+}
+
+Branch* BRANCH_get_next_k(Branch* br) {
   if (br)
-    return br->from_next;
+    return br->next_k;
   else
     return NULL;
 }
 
 Branch* BRANCH_get_to_next(Branch* br) {
+  return BRANCH_get_next_m(br);
+}
+
+Branch* BRANCH_get_next_m(Branch* br) {
   if (br)
-    return br->to_next;
+    return br->next_m;
   else
     return NULL;
 }
 
-REAL BRANCH_get_phase(Branch* b) {
-  if (b)
-    return b->phase;
+REAL BRANCH_get_phase(Branch* br) {
+  if (br)
+    return br->phase;
   else
     return 0;
 }
 
-REAL BRANCH_get_phase_max(Branch* b) {
-  if (b)
-    return b->phase_max;
+REAL BRANCH_get_phase_max(Branch* br) {
+  if (br)
+    return br->phase_max;
   else
     return 0;
 }
 
-REAL BRANCH_get_phase_min(Branch* b) {
-  if (b)
-    return b->phase_min;
+REAL BRANCH_get_phase_min(Branch* br) {
+  if (br)
+    return br->phase_min;
   else
     return 0;
 }
 
-REAL BRANCH_get_ratingA(Branch* b) {
-  if (b)
-    return b->ratingA;
+// TODO: Branch flow calculations
+REAL BRANCH_get_P_km(Branch* br) {
+  if (br)
+    // TODO fill in the calcluation
+  return 0;
+}
+
+REAL BRANCH_get_Q_km(Branch* br) {
+  if (br)
+    // TODO fill in the calcluation
+  return 0;
+}
+
+REAL BRANCH_get_P_mk(Branch* br) {
+  if (br)
+    // TODO fill in the calcluation
+  return 0;
+}
+
+REAL BRANCH_get_Q_mk(Branch* br) {
+  if (br)
+    // TODO fill in the calcluation
+  return 0;}
+
+REAL BRANCH_get_P_km_series(Branch* br) {
+  if (br)
+    // TODO fill in the calcluation
+  return 0;
+}
+
+REAL BRANCH_get_Q_km_series(Branch* br) {
+  if (br)
+    // TODO fill in the calcluation
+  return 0;
+}
+
+REAL BRANCH_get_P_mk_series(Branch* br) {
+  if (br)
+    return 0;
+}
+
+REAL BRANCH_get_Q_mk_series(Branch* br) {
+  if (br)
+    // TODO fill in the calcluation
+  return 0;
+}
+
+REAL BRANCH_get_P_k_shunt(Branch* br) {
+  if (br)
+    // TODO fill in the calcluation
+  return 0;
+}
+
+REAL BRANCH_get_Q_k_shunt(Branch* br) {
+  if (br)
+    // TODO fill in the calcluation
+  return 0;
+}
+
+REAL BRANCH_get_P_m_shunt(Branch* br) {
+  if (br)
+    // TODO fill in the calcluation
+  return 0;
+}
+
+REAL BRANCH_get_Q_m_shunt(Branch* br) {
+  if (br)
+    // TODO fill in the calcluation
+  return 0;
+}
+
+
+REAL BRANCH_get_ratingA(Branch* br) {
+  if (br)
+    return br->ratingA;
   else
     return 0;
 }
 
-REAL BRANCH_get_ratingB(Branch* b) {
-  if (b)
-    return b->ratingB;
+REAL BRANCH_get_ratingB(Branch* br) {
+  if (br)
+    return br->ratingB;
   else
     return 0;
 }
 
-REAL BRANCH_get_ratingC(Branch* b) {
-  if (b)
-    return b->ratingC;
+REAL BRANCH_get_ratingC(Branch* br) {
+  if (br)
+    return br->ratingC;
   else
     return 0;
 }
@@ -339,8 +443,8 @@ REAL BRANCH_get_P_flow_DC(Branch* br) {
      "from" to bus "to". */
 
   if (br) {
-    return -(br->b)*(BUS_get_v_ang(br->bus_from)-
-		     BUS_get_v_ang(br->bus_to)-
+    return -(br->b)*(BUS_get_v_ang(br->bus_k)-
+		     BUS_get_v_ang(br->bus_m)-
 		     br->phase);
   }
   else
@@ -391,7 +495,7 @@ void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
       VEC_set(values,br->index_ratio_y,0.);
       VEC_set(values,br->index_ratio_z,0.);
     }
-  }   
+  }
 }
 
 Vec* BRANCH_get_var_indices(void* vbr, char var) {
@@ -459,20 +563,20 @@ BOOL BRANCH_has_properties(void* vbr, char prop) {
   return TRUE;
 }
 
-void BRANCH_init(Branch* br) {  
+void BRANCH_init(Branch* br) {
 
   br->type = BRANCH_TYPE_LINE;
 
-  br->bus_from = NULL;
-  br->bus_to = NULL;
+  br->bus_k = NULL;
+  br->bus_m = NULL;
   br->reg_bus = NULL;
 
   br->g = 0;
-  br->g_from = 0;
-  br->g_to = 0;
+  br->g_k = 0;
+  br->g_m = 0;
   br->b = 0;
-  br->b_from = 0;
-  br->b_to = 0;
+  br->b_k = 0;
+  br->b_m = 0;
 
   br->ratio = 1;
   br->ratio_max = 1;
@@ -511,8 +615,8 @@ void BRANCH_init(Branch* br) {
   br->sens_P_l_bound = 0;
 
   br->reg_next = NULL;
-  br->from_next = NULL;
-  br->to_next = NULL;
+  br->next_k = NULL;
+  br->next_m = NULL;
 };
 
 BOOL BRANCH_is_equal(Branch* br, Branch* other) {
@@ -585,34 +689,58 @@ int BRANCH_list_reg_len(Branch* reg_br_list) {
 }
 
 Branch* BRANCH_list_from_add(Branch* from_br_list, Branch* br) {
-  LIST_add(Branch,from_br_list,br,from_next);
-  return from_br_list;
+  return BRANCH_list_k_add(from_br_list, br);
+}
+
+Branch* BRANCH_list_k_add(Branch* k_br_list, Branch* br) {
+  LIST_add(Branch,k_br_list,br,next_k);
+  return k_br_list;
 }
 
 Branch* BRANCH_list_from_del(Branch* from_br_list, Branch* br) {
-  LIST_del(Branch,from_br_list,br,from_next);
-  return from_br_list;
+  return BRANCH_list_k_del(from_br_list, br);
+}
+
+Branch* BRANCH_list_k_del(Branch* k_br_list, Branch* br) {
+  LIST_del(Branch,k_br_list,br,next_k);
+  return k_br_list;
 }
 
 int BRANCH_list_from_len(Branch* from_br_list) {
+  return BRANCH_list_k_len(from_br_list);
+}
+
+int BRANCH_list_k_len(Branch* k_br_list) {
   int len;
-  LIST_len(Branch,from_br_list,from_next,len);
+  LIST_len(Branch,k_br_list,next_k,len);
   return len;
 }
 
 Branch* BRANCH_list_to_add(Branch* to_br_list, Branch* br) {
-  LIST_add(Branch,to_br_list,br,to_next);
-  return to_br_list;
+  return BRANCH_list_m_add(to_br_list,br);
+}
+
+Branch* BRANCH_list_m_add(Branch* m_br_list, Branch* br) {
+  LIST_add(Branch,m_br_list,br,next_m);
+  return m_br_list;
 }
 
 Branch* BRANCH_list_to_del(Branch* to_br_list, Branch* br) {
-  LIST_del(Branch,to_br_list,br,to_next);
-  return to_br_list;
+  return BRANCH_list_m_del(to_br_list,br);
+}
+
+Branch* BRANCH_list_m_del(Branch* m_br_list, Branch* br) {
+  LIST_del(Branch,m_br_list,br,next_m);
+  return m_br_list;
 }
 
 int BRANCH_list_to_len(Branch* to_br_list) {
+  return BRANCH_list_m_len(to_br_list);
+}
+
+int BRANCH_list_m_len(Branch* m_br_list) {
   int len;
-  LIST_len(Branch,to_br_list,to_next,len);
+  LIST_len(Branch,m_br_list,next_m,len);
   return len;
 }
 
@@ -633,7 +761,7 @@ void BRANCH_set_sens_P_l_bound(Branch* br, REAL value) {
 }
 
 void BRANCH_set_index(Branch* br, int index) {
-  if (br) 
+  if (br)
     br->index = index;
 }
 
@@ -642,74 +770,98 @@ void BRANCH_set_type(Branch* br, int type) {
     br->type = type;
 }
 
-void BRANCH_set_bus_from(Branch* branch, Bus* bus_from) {
-  if (branch)
-    branch->bus_from = bus_from;
+void BRANCH_set_bus_from(Branch* br, Bus* bus_from) {
+  BRANCH_set_bus_k(br, bus_from);
 }
 
-void BRANCH_set_bus_to(Branch* branch, Bus* bus_to) {
-  if (branch)
-    branch->bus_to = bus_to;
+void BRANCH_set_bus_k(Branch* br, Bus* bus_k) {
+  if (br)
+    br->bus_k = bus_k;
 }
 
-void BRANCH_set_reg_bus(Branch* branch, Bus* reg_bus) {
-  if (branch)  
-    branch->reg_bus = reg_bus;
+void BRANCH_set_bus_to(Branch* br, Bus* bus_to) {
+  BRANCH_set_bus_m(br, bus_to);
 }
 
-void BRANCH_set_g(Branch* branch, REAL g) {
-  if (branch)  
-    branch->g = g;
+void BRANCH_set_bus_m(Branch* br, Bus* bus_m) {
+  if (br)
+    br->bus_m = bus_m;
 }
 
-void BRANCH_set_g_from(Branch* branch, REAL g_from) {
-  if (branch)
-    branch->g_from = g_from;
+void BRANCH_set_reg_bus(Branch* br, Bus* reg_bus) {
+  if (br)
+    br->reg_bus = reg_bus;
 }
 
-void BRANCH_set_g_to(Branch* branch, REAL g_to) {
-  if (branch)
-    branch->g_to = g_to;
+void BRANCH_set_g(Branch* br, REAL g) {
+  if (br)
+    br->g = g;
 }
 
-void BRANCH_set_b(Branch* branch, REAL b) {
-  if (branch)
-    branch->b = b;
+void BRANCH_set_g_from(Branch* br, REAL g_from) {
+  BRANCH_set_g_k(br, g_from);
 }
 
-void BRANCH_set_b_from(Branch* branch, REAL b_from) {
-  if (branch)  
-    branch->b_from = b_from;
+void BRANCH_set_g_k(Branch* br, REAL g_k) {
+  if (br)
+    br->g_k = g_k;
 }
 
-void BRANCH_set_b_to(Branch* branch, REAL b_to) {
-  if (branch)
-    branch->b_to = b_to;
+void BRANCH_set_g_to(Branch* br, REAL g_to) {
+  BRANCH_set_g_m(br, g_to);
 }
 
-void BRANCH_set_ratio(Branch* branch, REAL ratio) {
-  if (branch)
-    branch->ratio = ratio;
+void BRANCH_set_g_m(Branch* br, REAL g_m) {
+  if (br)
+    br->g_m = g_m;
 }
 
-void BRANCH_set_ratio_max(Branch* branch, REAL ratio) {
-  if (branch)
-    branch->ratio_max = ratio;
+void BRANCH_set_b(Branch* br, REAL b) {
+  if (br)
+    br->b = b;
 }
 
-void BRANCH_set_ratio_min(Branch* branch, REAL ratio) {
-  if (branch)
-    branch->ratio_min = ratio;
+void BRANCH_set_b_from(Branch* br, REAL b_from) {
+  BRANCH_set_b_k(br, b_from);
 }
 
-void BRANCH_set_pos_ratio_v_sens(Branch* branch, BOOL flag) {
-  if (branch)
-    branch->pos_ratio_v_sens = flag;
+void BRANCH_set_b_k(Branch* br, REAL b_k) {
+  if (br)
+    br->b_k = b_k;
 }
 
-void BRANCH_set_outage(Branch* branch, BOOL outage) {
-  if (branch)
-    branch->outage = outage;
+void BRANCH_set_b_to(Branch* br, REAL b_to) {
+  BRANCH_set_b_m(br, b_to);
+}
+
+void BRANCH_set_b_m(Branch* br, REAL b_m) {
+  if (br)
+    br->b_m = b_m;
+}
+
+void BRANCH_set_ratio(Branch* br, REAL ratio) {
+  if (br)
+    br->ratio = ratio;
+}
+
+void BRANCH_set_ratio_max(Branch* br, REAL ratio) {
+  if (br)
+    br->ratio_max = ratio;
+}
+
+void BRANCH_set_ratio_min(Branch* br, REAL ratio) {
+  if (br)
+    br->ratio_min = ratio;
+}
+
+void BRANCH_set_pos_ratio_v_sens(Branch* br, BOOL flag) {
+  if (br)
+    br->pos_ratio_v_sens = flag;
+}
+
+void BRANCH_set_outage(Branch* br, BOOL outage) {
+  if (br)
+    br->outage = outage;
 }
 
 void BRANCH_set_phase(Branch* br, REAL phase) {
@@ -770,7 +922,7 @@ void BRANCH_set_var_values(Branch* br, Vec* values) {
 
   // Set variable values
   if (br->vars & BRANCH_VAR_RATIO)    // taps ratio
-    br->ratio = VEC_get(values,br->index_ratio); 
+    br->ratio = VEC_get(values,br->index_ratio);
   if (br->vars & BRANCH_VAR_PHASE)    // phase shift
     br->phase = VEC_get(values,br->index_phase);
 }
@@ -823,8 +975,7 @@ int BRANCH_set_flags(void* vbr, char flag_type, char mask, int index) {
 
 void BRANCH_show(Branch* br) {
   printf("branch %d\t%d\t%d\n",
-	 BUS_get_number(br->bus_from),
-	 BUS_get_number(br->bus_to),
+	 BUS_get_number(br->bus_k),
+	 BUS_get_number(br->bus_m),
 	 br->type);
 }
-

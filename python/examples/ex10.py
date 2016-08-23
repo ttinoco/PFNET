@@ -23,7 +23,7 @@ print(c1.num_gen_outages, c1.num_branch_outages)
 print(c1.has_gen_outage(gen), c1.has_branch_outage(branch))
 
 gen_bus = gen.bus
-branch_bus = branch.bus_from
+branch_bus = branch.bus_k
 
 print(gen in gen_bus.gens, branch in branch_bus.branches)
 

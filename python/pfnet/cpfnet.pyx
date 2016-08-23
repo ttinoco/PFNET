@@ -74,7 +74,7 @@ cdef class CPtr:
     """
     C Pointer class.
     """
-    
+
     cdef void* _c_ptr
 
 cdef new_CPtr(void* ptr):
@@ -152,7 +152,7 @@ BUS_SENS_V_ANG_L_BOUND = cbus.BUS_SENS_V_ANG_L_BOUND
 BUS_SENS_V_REG_BY_GEN = cbus.BUS_SENS_V_REG_BY_GEN
 BUS_SENS_V_REG_BY_TRAN = cbus.BUS_SENS_V_REG_BY_TRAN
 BUS_SENS_V_REG_BY_SHUNT = cbus.BUS_SENS_V_REG_BY_SHUNT
-    
+
 # Mismatches
 BUS_MIS_LARGEST = cbus.BUS_MIS_LARGEST
 BUS_MIS_ACTIVE = cbus.BUS_MIS_ACTIVE
@@ -171,18 +171,18 @@ cdef class Bus:
     """
     Bus class.
     """
-    
+
     cdef cbus.Bus* _c_ptr
 
     def __init__(self,alloc=True):
         """
         Bus class.
-        
+
         Parameters
         ----------
         alloc : {``True``, ``False``}
         """
-        
+
         pass
 
     def __cinit__(self,alloc=True):
@@ -260,7 +260,7 @@ cdef class Bus:
 
     def has_flags(self,fmask,vmask):
         """
-        Determines whether the bus has the flags associated with 
+        Determines whether the bus has the flags associated with
         certain quantities set.
 
         Parameters
@@ -278,7 +278,7 @@ cdef class Bus:
     def get_largest_sens(self):
         """
         Gets the bus sensitivity of largest absolute value.
-        
+
         Returns
         -------
         sens : float
@@ -321,7 +321,7 @@ cdef class Bus:
 
     def get_quantity(self,type):
         """
-        Gets the bus quantity of the given type. 
+        Gets the bus quantity of the given type.
 
         Parameters
         ----------
@@ -359,8 +359,8 @@ cdef class Bus:
         return cbus.BUS_get_total_gen_Q(self._c_ptr)
 
     def get_total_gen_Q_max(self):
-        """ 
-        Gets the largest total reactive power that can be 
+        """
+        Gets the largest total reactive power that can be
         injected by generators connected to this bus.
 
         Returns
@@ -372,7 +372,7 @@ cdef class Bus:
 
     def get_total_gen_Q_min(self):
         """
-        Gets the smallest total reactive power that can be 
+        Gets the smallest total reactive power that can be
         injected by generators connected to this bus.
 
         Returns
@@ -383,7 +383,7 @@ cdef class Bus:
         return cbus.BUS_get_total_gen_Q_min(self._c_ptr)
 
     def get_total_load_P(self):
-        """ 
+        """
         Gets the total active power consumed by loads
         connected to this bus.
 
@@ -407,8 +407,8 @@ cdef class Bus:
         return cbus.BUS_get_total_load_Q(self._c_ptr)
 
     def get_total_shunt_g(self):
-        """ 
-        Gets the combined conductance of shunt devices 
+        """
+        Gets the combined conductance of shunt devices
         connected to this bus.
 
         Returns
@@ -420,7 +420,7 @@ cdef class Bus:
 
     def get_total_shunt_b(self):
         """
-        Gets the combined susceptance of shunt devices 
+        Gets the combined susceptance of shunt devices
         connected to this bus.
 
         Returns
@@ -429,7 +429,7 @@ cdef class Bus:
         """
 
         return cbus.BUS_get_total_shunt_b(self._c_ptr)
-    
+
     def show(self):
         """
         Shows bus properties.
@@ -465,7 +465,7 @@ cdef class Bus:
         """ Bus index (int). """
         def __get__(self): return cbus.BUS_get_index(self._c_ptr)
 
-    property index_v_mag: 
+    property index_v_mag:
         """ Index of voltage magnitude variable (int). """
         def __get__(self): return cbus.BUS_get_index_v_mag(self._c_ptr)
 
@@ -509,13 +509,13 @@ cdef class Bus:
     property name:
         """ Bus name (sting). """
         def __get__(self): return cbus.BUS_get_name(self._c_ptr).decode('UTF-8')
-        def __set__(self,name): 
+        def __set__(self,name):
             name = name.encode('UTF-8')
             cbus.BUS_set_name(self._c_ptr,name)
 
     property degree:
         """ Bus degree (number of incident branches) (float). """
-        def __get__(self): return cbus.BUS_get_degree(self._c_ptr)    
+        def __get__(self): return cbus.BUS_get_degree(self._c_ptr)
 
     property v_mag:
         """ Bus volatge magnitude (p.u. bus base kv) (float). """
@@ -593,7 +593,7 @@ cdef class Bus:
                 g = cgen.GEN_get_next(g)
             return gens
 
-    property reg_gens: 
+    property reg_gens:
         """ List of :class:`generators <pfnet.Generator>` regulating the voltage magnitude of this bus (list). """
         def __get__(self):
             reg_gens = []
@@ -624,7 +624,7 @@ cdef class Bus:
             return reg_shunts
 
     property branches_from:
-        """ List of :class:`branches <pfnet.Branch>` that have this bus on the "from" side (list). """
+        """ (Deprecated, see branches_k) List of :class:`branches <pfnet.Branch>` that have this bus on the "from" side (list). """
         def __get__(self):
             branches = []
             cdef cbranch.Branch* br = cbus.BUS_get_branch_from(self._c_ptr)
@@ -633,8 +633,18 @@ cdef class Bus:
                 br = cbranch.BRANCH_get_from_next(br)
             return branches
 
+    property branches_k:
+        """ List of :class:`branches <pfnet.Branch` that have this bus on the "k" (aka "from" or "i") side (list). """
+        def __get__(self):
+            branches = []
+            cdef cbranch.Branch* br = cbus.BUS_get_branch_k(self._c_ptr)
+            while br is not NULL:
+                branches.append(new_Branch(br))
+                br = cbranch.BRANCH_get_next_k(br)
+            return branches
+
     property branches_to:
-        """ List of :class:`branches <pfnet.Branch>` that have this bus on the "to" side (list). """
+        """ (Deprecated, see branches_m) List of :class:`branches <pfnet.Branch>` that have this bus on the "to" side (list). """
         def __get__(self):
             branches = []
             cdef cbranch.Branch* br = cbus.BUS_get_branch_to(self._c_ptr)
@@ -643,10 +653,21 @@ cdef class Bus:
                 br = cbranch.BRANCH_get_to_next(br)
             return branches
 
+    property branches_m:
+        """ List of :class:`branches <pfnet.Branch>` that have this bus on the "m" (aka "to" or "j") side (list). """
+        def __get__(self):
+            branches = []
+            cdef cbranch.Branch* br = cbus.BUS_get_branch_m(self._c_ptr)
+            while br is not NULL:
+                branches.append(new_Branch(br))
+                br = cbranch.BRANCH_get_next_m(br)
+            return branches
+
     property branches:
         """ List of :class:`branches <pfnet.Branch>` incident on this bus (list). """
         def __get__(self):
-            return self.branches_from+self.branches_to
+            # combine both "k"/"from" and "m"/"to" branches
+            return self.branches_k+self.branches_m
 
     property loads:
         """ List of :class:`loads <pfnet.Load>` connected to this bus (list). """
@@ -798,7 +819,7 @@ cdef class Branch:
     def is_on_outage(self):
         """
         Determines whether branch in on outage.
-        
+
         Returns
         -------
         flag : {``True``, ``False``}
@@ -847,7 +868,7 @@ cdef class Branch:
         -------
         flag : {``True``, ``False``}
         """
-        
+
         return cbranch.BRANCH_is_tap_changer(self._c_ptr)
 
     def is_tap_changer_v(self):
@@ -930,11 +951,19 @@ cdef class Branch:
         def __set__(self,value): cbranch.BRANCH_set_ratio_min(self._c_ptr,value)
 
     property bus_from:
-        """ :class:`Bus <pfnet.Bus>` connected to the "from" side. """
+        """ (Deprecated, see bus_k) :class:`Bus <pfnet.Bus>` connected to the "from" side. """
         def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_from(self._c_ptr))
-   
+
+    property bus_k:
+        """ :class:`Bus <pfnet.Bus>` connected to the "k" (aka "from" or "i") side. """
+        def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_k(self._c_ptr))
+
     property bus_to:
-        """ :class:`Bus <pfnet.Bus>` connected to the "to" side. """
+        """ (Deprecated, see bus_m) :class:`Bus <pfnet.Bus>` connected to the "to" side. """
+        def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_to(self._c_ptr))
+
+    property bus_m:
+        """ :class:`Bus <pfnet.Bus>` connected to the "m" (aka "to" or "j") side. """
         def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_to(self._c_ptr))
 
     property reg_bus:
@@ -946,24 +975,40 @@ cdef class Branch:
         def __get__(self): return cbranch.BRANCH_get_b(self._c_ptr)
 
     property b_from:
-        """ Branch shunt susceptance at the "from" side (p.u.) (float). """
+        """ (Deprecated, see b_k) Branch shunt susceptance at the "from" side (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_b_from(self._c_ptr)
 
+    property b_k:
+        """ Branch shunt susceptance at the "k" (aka "from" or "i") side (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_b_k(self._c_ptr)
+
     property b_to:
-        """ Branch shunt susceptance at the "to" side (p.u.) (float). """
+        """ (Deprecated, see b_m) Branch shunt susceptance at the "to" side (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_b_to(self._c_ptr)
+
+    property b_m:
+        """ Branch shunt susceptance at the "m" (aka "to" or "j") side (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_b_m(self._c_ptr)
 
     property g:
         """ Branch series conductance (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_g(self._c_ptr)
 
     property g_from:
-        """ Branch shunt conductance at the "from" side (p.u.) (float). """
+        """ (Deprecated, see g_k) Branch shunt conductance at the "from" side (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_g_from(self._c_ptr)
 
+    property g_k:
+        """ Branch shunt conductance at the "k" (aka "from" or "i") side (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_g_k(self._c_ptr)
+
     property g_to:
-        """ Branch shunt conductance at the "to" side (p.u.) (float). """
+        """ (Deprecated, see g_m) Branch shunt conductance at the "to" side (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_g_to(self._c_ptr)
+
+    property g_m:
+        """ Branch shunt conductance at the "m" (aka "to" or "j") side (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_g_m(self._c_ptr)
 
     property phase:
         """ Transformer phase shift (radians) (float). """
@@ -976,6 +1021,54 @@ cdef class Branch:
     property phase_min:
         """ Transformer phase shift lower limit (radians) (float). """
         def __get__(self): return cbranch.BRANCH_get_phase_min(self._c_ptr)
+
+    property P_km:
+        """ Real power flow at bus "k" towards bus "m" (from -> to)(MW) (float). """
+        def __get__(self): return cbranch.BRANCH_get_P_km(self._c_ptr)
+
+    property Q_km:
+        """ Reactive power flow at bus "k" towards bus "m" (from -> to) (Mvar) (float). """
+        def __get__(self): return cbranch.BRANCH_get_Q_km(self._c_ptr)
+
+    property P_mk:
+        """ Real power flow at bus "m" towards bus "k" (to -> from) (MW) (float). """
+        def __get__(self): return cbranch.BRANCH_get_P_mk(self._c_ptr)
+
+    property Q_mk:
+        """ Reactive power flow at bus "m" towards bus "k" (to -> from) (Mvar) (float). """
+        def __get__(self): return cbranch.BRANCH_get_Q_mk(self._c_ptr)
+
+    property P_km_series:
+        """ Real power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (MW) (float). """
+        def __get__(self): return cbranch.BRANCH_get_P_km_series(self._c_ptr)
+
+    property Q_km_series:
+        """ Reactive power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (Mvar) (float). """
+        def __get__(self): return cbranch.BRANCH_get_Q_km_series(self._c_ptr)
+
+    property P_mk_series:
+        """ Real power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (MW) (float). """
+        def __get__(self): return cbranch.BRANCH_get_P_mk_series(self._c_ptr)
+
+    property Q_mk_series:
+        """ Reactive power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (Mvar) (float). """
+        def __get__(self): return cbranch.BRANCH_get_Q_mk_series(self._c_ptr)
+
+    property P_k_shunt:
+        """ Real power flow into the shunt element at bus "k" (aka "from") (MW) (float). """
+        def __get__(self): return cbranch.BRANCH_get_P_k_shunt(self._c_ptr)
+
+    property Q_k_shunt:
+        """ Reactive power flow into the shunt element bus "k" (aka "from") (Mvar) (float). """
+        def __get__(self): return cbranch.BRANCH_get_Q_k_shunt(self._c_ptr)
+
+    property P_m_shunt:
+        """ Real power flow into the shunt element at bus "m" (aka "to") (MW) (float). """
+        def __get__(self): return cbranch.BRANCH_get_P_m_shunt(self._c_ptr)
+
+    property Q_m_shunt:
+        """ Reactive power flow into the shunt element at bus "m" (aka "to") (MW) (float). """
+        def __get__(self): return cbranch.BRANCH_get_Q_m_shunt(self._c_ptr)
 
     property ratingA:
         """ Branch thermal rating A (p.u. system base power) (float). """
@@ -993,12 +1086,12 @@ cdef class Branch:
         def __set__(self,r): cbranch.BRANCH_set_ratingC(self._c_ptr,r)
 
     property P_flow_DC:
-        """ Active power flow (DC approx.) from bus "from" to bus "to" (float). """
+        """ Active power flow (DC approx.) from bus "k" to bus "m" (float). """
         def __get__(self): return cbranch.BRANCH_get_P_flow_DC(self._c_ptr)
 
     property sens_P_u_bound:
         """ Objective function sensitivity with respect to active power flow upper bound (float). """
-        def __get__(self): return cbranch.BRANCH_get_sens_P_u_bound(self._c_ptr)   
+        def __get__(self): return cbranch.BRANCH_get_sens_P_u_bound(self._c_ptr)
 
     property sens_P_l_bound:
         """ Objective function sensitivity with respect to active power flow lower bound (float). """
@@ -1037,10 +1130,10 @@ GEN_INF_P = cgen.GEN_INF_P
 GEN_INF_Q = cgen.GEN_INF_Q
 
 class GeneratorError(Exception):
-    """ 
+    """
     Generator error exception.
     """
-    
+
     def __init__(self,value):
         self.value = value
     def __str__(self):
@@ -1117,7 +1210,7 @@ cdef class Generator:
     def is_on_outage(self):
         """
         Determines whether generator in on outage.
-        
+
         Returns
         -------
         flag : {``True``, ``False``}
@@ -1126,9 +1219,9 @@ cdef class Generator:
         return cgen.GEN_is_on_outage(self._c_ptr)
 
     def is_slack(self):
-        """ 
+        """
         Determines whether generator is slack.
-        
+
         Returns
         -------
         flag : {``True``, ``False``}
@@ -1137,37 +1230,37 @@ cdef class Generator:
         return cgen.GEN_is_slack(self._c_ptr)
 
     def is_regulator(self):
-        """ 
+        """
         Determines whether generator provides voltage regulation.
-        
+
         Returns
         -------
         flag : {``True``, ``False``}
         """
-        
+
         return cgen.GEN_is_regulator(self._c_ptr)
 
     def is_P_adjustable(self):
-        """ 
+        """
         Determines whether generator has adjustable active power.
-        
+
         Returns
         -------
         flag : {``True``, ``False``}
         """
-        
+
         return cgen.GEN_is_P_adjustable(self._c_ptr)
 
     def has_flags(self,fmask,vmask):
-        """ 
+        """
         Determines whether the generator has the flags associated with
-        certain quantities set. 
+        certain quantities set.
 
         Parameters
         ----------
         fmask : int (:ref:`ref_net_flag`)
         vmask : int (:ref:`ref_gen_var`)
-        
+
         Returns
         -------
         flag : {``True``, ``False``}
@@ -1182,7 +1275,7 @@ cdef class Generator:
     property index:
         """ Generator index (int). """
         def __get__(self): return cgen.GEN_get_index(self._c_ptr)
-        
+
     property index_P:
         """ Index of generator active power variable (int). """
         def __get__(self): return cgen.GEN_get_index_P(self._c_ptr)
@@ -1213,7 +1306,7 @@ cdef class Generator:
         """ Generator active power lower limit (p.u. system base MVA) (float). """
         def __get__(self): return cgen.GEN_get_P_min(self._c_ptr)
         def __set__(self,P): cgen.GEN_set_P_min(self._c_ptr,P)
-            
+
     property Q:
         """ Generator reactive power (p.u. system base MVA) (float). """
         def __get__(self): return cgen.GEN_get_Q(self._c_ptr)
@@ -1248,7 +1341,7 @@ cdef class Generator:
 
     property sens_P_u_bound:
         """ Objective function sensitivity with respect to active power upper bound (float). """
-        def __get__(self): return cgen.GEN_get_sens_P_u_bound(self._c_ptr)   
+        def __get__(self): return cgen.GEN_get_sens_P_u_bound(self._c_ptr)
 
     property sens_P_l_bound:
         """ Objective function sensitivity with respect to active power lower bound (float). """
@@ -1284,7 +1377,7 @@ class ShuntError(Exception):
     """
     Shunt error exception.
     """
-    
+
     def __init__(self,value):
         self.value = value
     def __str__(self):
@@ -1327,26 +1420,26 @@ cdef class Shunt:
         -------
         flag : {``True``, ``False``}
         """
-        
+
         return cshunt.SHUNT_is_fixed(self._c_ptr)
 
     def is_switched_v(self):
         """
-        Determines whether the shunt is switchable and regulates 
+        Determines whether the shunt is switchable and regulates
         bus voltage magnitude.
 
         Returns
         -------
         flag : {``True``, ``False``}
         """
-        
+
         return cshunt.SHUNT_is_switched_v(self._c_ptr)
 
     def has_flags(self,fmask,vmask):
         """
-        Determines whether the shunt devices has flags associated with 
+        Determines whether the shunt devices has flags associated with
         certain quantities set.
-        
+
         Parameters
         ----------
         fmask : int (:ref:`ref_net_flag`)
@@ -1356,7 +1449,7 @@ cdef class Shunt:
         -------
         flag : {``True``, ``False``}
         """
-        
+
         return cshunt.SHUNT_has_flags(self._c_ptr,fmask,vmask)
 
     property obj_type:
@@ -1365,7 +1458,7 @@ cdef class Shunt:
 
     property index:
         """ Shunt index (int). """
-        def __get__(self): return cshunt.SHUNT_get_index(self._c_ptr)    
+        def __get__(self): return cshunt.SHUNT_get_index(self._c_ptr)
 
     property index_b:
         """ Index of shunt susceptance variable (int). """
@@ -1390,7 +1483,7 @@ cdef class Shunt:
     property g:
         """ Shunt conductance (p.u.) (float). """
         def __get__(self): return cshunt.SHUNT_get_g(self._c_ptr)
-            
+
     property b:
         """ Shunt susceptance (p.u.) (float). """
         def __get__(self): return cshunt.SHUNT_get_b(self._c_ptr)
@@ -1403,7 +1496,7 @@ cdef class Shunt:
     property b_min:
         """ Shunt susceptance lower limit (p.u.) (float). """
         def __get__(self): return cshunt.SHUNT_get_b_min(self._c_ptr)
-        def __set__(self,value): cshunt.SHUNT_set_b_min(self._c_ptr,value)                
+        def __set__(self,value): cshunt.SHUNT_set_b_min(self._c_ptr,value)
 
 cdef new_Shunt(cshunt.Shunt* s):
     if s is not NULL:
@@ -1427,10 +1520,10 @@ LOAD_VAR_P = cload.LOAD_VAR_P
 LOAD_INF_P = cload.LOAD_INF_P
 
 class LoadError(Exception):
-    """ 
+    """
     Load error exception.
     """
-    
+
     def __init__(self,value):
         self.value = value
     def __str__(self):
@@ -1466,26 +1559,26 @@ cdef class Load:
         return new_CPtr(self._c_ptr)
 
     def is_P_adjustable(self):
-        """ 
+        """
         Determines whether the load has adjustable active power.
-        
+
         Returns
         -------
         flag : {``True``, ``False``}
         """
-        
+
         return cload.LOAD_is_P_adjustable(self._c_ptr)
 
     def has_flags(self,fmask,vmask):
-        """ 
+        """
         Determines whether the load has the flags associated with
-        certain quantities set. 
+        certain quantities set.
 
         Parameters
         ----------
         fmask : int (:ref:`ref_net_flag`)
         vmask : int (:ref:`ref_load_var`)
-        
+
         Returns
         -------
         flag : {``True``, ``False``}
@@ -1500,11 +1593,11 @@ cdef class Load:
     property index:
         """ Load index (int). """
         def __get__(self): return cload.LOAD_get_index(self._c_ptr)
-       
+
     property index_P:
         """ Index of load active power variable (int). """
         def __get__(self): return cload.LOAD_get_index_P(self._c_ptr)
- 
+
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which load is connected. """
         def __get__(self): return new_Bus(cload.LOAD_get_bus(self._c_ptr))
@@ -1513,7 +1606,7 @@ cdef class Load:
         """ Load active power (p.u. system base MVA) (float). """
         def __get__(self): return cload.LOAD_get_P(self._c_ptr)
         def __set__(self,value): cload.LOAD_set_P(self._c_ptr,value)
-       
+
     property P_max:
         """ Load active power upper limit (p.u. system base MVA) (float). """
         def __get__(self): return cload.LOAD_get_P_max(self._c_ptr)
@@ -1523,7 +1616,7 @@ cdef class Load:
         """ Load active power lower limit (p.u. system base MVA) (float). """
         def __get__(self): return cload.LOAD_get_P_min(self._c_ptr)
         def __set__(self,P): cload.LOAD_set_P_min(self._c_ptr,P)
-     
+
     property Q:
         """ Load reactive power (p.u. system base MVA) (float). """
         def __get__(self): return cload.LOAD_get_Q(self._c_ptr)
@@ -1550,7 +1643,7 @@ cdef class Load:
 
     property sens_P_u_bound:
         """ Objective function sensitivity with respect to active power upper bound (float). """
-        def __get__(self): return cload.LOAD_get_sens_P_u_bound(self._c_ptr)   
+        def __get__(self): return cload.LOAD_get_sens_P_u_bound(self._c_ptr)
 
     property sens_P_l_bound:
         """ Objective function sensitivity with respect to active power lower bound (float). """
@@ -1579,10 +1672,10 @@ VARGEN_INF_P = cvargen.VARGEN_INF_P
 VARGEN_INF_Q = cvargen.VARGEN_INF_Q
 
 class VarGeneratorError(Exception):
-    """ 
+    """
     Variable generator error exception.
     """
-    
+
     def __init__(self,value):
         self.value = value
     def __str__(self):
@@ -1607,7 +1700,7 @@ cdef class VarGenerator:
         pass
 
     def __cinit__(self,alloc=True):
-        
+
         if alloc:
             self._c_ptr = cvargen.VARGEN_new()
         else:
@@ -1618,15 +1711,15 @@ cdef class VarGenerator:
         return new_CPtr(self._c_ptr)
 
     def has_flags(self,fmask,vmask):
-        """ 
+        """
         Determines whether the variable generator has the flags associated with
-        certain quantities set. 
+        certain quantities set.
 
         Parameters
         ----------
         fmask : int (:ref:`ref_net_flag`)
         vmask : int (:ref:`ref_vargen_var`)
-        
+
         Returns
         -------
         flag : {``True``, ``False``}
@@ -1637,7 +1730,7 @@ cdef class VarGenerator:
     property name:
         """ Variable generator name (string). """
         def __get__(self): return cvargen.VARGEN_get_name(self._c_ptr).decode('UTF-8')
-        def __set__(self,name): 
+        def __set__(self,name):
             name = name.encode('UTF-8')
             cvargen.VARGEN_set_name(self._c_ptr,name)
 
@@ -1648,7 +1741,7 @@ cdef class VarGenerator:
     property index:
         """ Variable generator index (int). """
         def __get__(self): return cvargen.VARGEN_get_index(self._c_ptr)
-        
+
     property index_P:
         """ Index of variable generator active power variable (int). """
         def __get__(self): return cvargen.VARGEN_get_index_P(self._c_ptr)
@@ -1719,10 +1812,10 @@ BAT_INF_P = cbat.BAT_INF_P
 BAT_INF_E = cbat.BAT_INF_E
 
 class BatteryError(Exception):
-    """ 
+    """
     Battery error exception.
     """
-    
+
     def __init__(self,value):
         self.value = value
     def __str__(self):
@@ -1747,7 +1840,7 @@ cdef class Battery:
         pass
 
     def __cinit__(self,alloc=True):
-        
+
         if alloc:
             self._c_ptr = cbat.BAT_new()
         else:
@@ -1758,15 +1851,15 @@ cdef class Battery:
         return new_CPtr(self._c_ptr)
 
     def has_flags(self,fmask,vmask):
-        """ 
+        """
         Determines whether the battery has the flags associated with
-        certain quantities set. 
+        certain quantities set.
 
         Parameters
         ----------
         fmask : int (:ref:`ref_net_flag`)
         vmask : int (:ref:`ref_bat_var`)
-        
+
         Returns
         -------
         flag : {``True``, ``False``}
@@ -1781,7 +1874,7 @@ cdef class Battery:
     property index:
         """ Battery index (int). """
         def __get__(self): return cbat.BAT_get_index(self._c_ptr)
-        
+
     property index_Pc:
         """ Index of battery charging power variable (int). """
         def __get__(self): return cbat.BAT_get_index_Pc(self._c_ptr)
@@ -1872,7 +1965,7 @@ cdef class Network:
         """
 
         pass
-     
+
     def __cinit__(self,alloc=True):
 
         if alloc:
@@ -1883,9 +1976,9 @@ cdef class Network:
 
     def __dealloc__(self):
         """
-        Frees network C data structure. 
+        Frees network C data structure.
         """
-        
+
         if self.alloc:
             cnet.NET_del(self._c_net)
             self._c_net = NULL
@@ -1907,7 +2000,7 @@ cdef class Network:
         corr_value : float
                      correlation coefficient
         """
-        
+
         cdef Bus b = buses[0] if buses else None
         if b:
             cnet.NET_add_vargens(self._c_net,b._c_ptr,penetration,uncertainty,corr_radius,corr_value)
@@ -1921,11 +2014,11 @@ cdef class Network:
         Adjusts powers of slack and regulator generators connected to or regulating the
         same bus to correct generator participations without modifying the total power injected.
         """
-        
+
         cnet.NET_adjust_generators(self._c_net);
 
     def clear_error(self):
-        """ 
+        """
         Clear error flag and message string.
         """
 
@@ -1949,7 +2042,7 @@ cdef class Network:
         """
         Clears all sensitivity information.
         """
-        
+
         cnet.NET_clear_sensitivities(self._c_net)
 
     def create_sorted_bus_list(self,sort_by):
@@ -1975,15 +2068,15 @@ cdef class Network:
     def create_vargen_P_sigma(self,spread,corr):
         """
         Creates covariance matrix (lower triangular part) for
-        variable vargen active powers. 
+        variable vargen active powers.
 
         Parameters
         ----------
         spead : int
                 Determines correlation neighborhood in terms of number of edges.
-        corr : float 
+        corr : float
                Desired correlation coefficient for neighboring vargens.
-        
+
         Returns
         -------
         sigma : :class:`coo_matrix <scipy.sparse.coo_matrix>`
@@ -1995,7 +2088,7 @@ cdef class Network:
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
         else:
             return sigma
-        
+
     def get_bus_by_number(self,number):
         """
         Gets bus with the given number.
@@ -2003,7 +2096,7 @@ cdef class Network:
         Parameters
         ----------
         number : int
-        
+
         Returns
         -------
         bus : :class:`Bus <pfnet.Bus>`
@@ -2022,7 +2115,7 @@ cdef class Network:
         Parameters
         ----------
         name : string
-        
+
         Returns
         -------
         bus : :class:`Bus <pfnet.Bus>`
@@ -2042,7 +2135,7 @@ cdef class Network:
         Parameters
         ----------
         name : string
-        
+
         Returns
         -------
         vargen : :class:`VarGenerator <pfnet.VarGenerator>`
@@ -2054,7 +2147,7 @@ cdef class Network:
             return new_VarGenerator(ptr)
         else:
             raise NetworkError('vargen not found')
-            
+
     def get_bus(self,index):
         """
         Gets bus with the given index.
@@ -2086,7 +2179,7 @@ cdef class Network:
         -------
         branch : :class:`Branch <pfnet.Branch>`
         """
-        
+
         ptr = cnet.NET_get_branch(self._c_net,index)
         if ptr is not NULL:
             return new_Branch(ptr)
@@ -2196,7 +2289,7 @@ cdef class Network:
         -------
         buses : list
         """
-        
+
         buses = []
         cdef cbus.Bus* b = cnet.NET_get_gen_buses(self._c_net)
         while b is not NULL:
@@ -2212,7 +2305,7 @@ cdef class Network:
         -------
         buses : list
         """
-        
+
         buses = []
         cdef cbus.Bus* b = cnet.NET_get_load_buses(self._c_net)
         while b is not NULL:
@@ -2241,9 +2334,9 @@ cdef class Network:
         Parameters
         ----------
         obj_type : int (:ref:`ref_net_obj`)
-        var : int (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`) 
+        var : int (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`)
         """
-        
+
         return Matrix(cnet.NET_get_var_projection(self._c_net,obj_type,var),owndata=True)
 
     def get_num_buses(self):
@@ -2254,7 +2347,7 @@ cdef class Network:
         -------
         num : int
         """
-        
+
         return cnet.NET_get_num_buses(self._c_net)
 
     def get_num_slack_buses(self):
@@ -2276,7 +2369,7 @@ cdef class Network:
         -------
         num : int
         """
-        
+
         return cnet.NET_get_num_buses_reg_by_gen(self._c_net)
 
     def get_num_buses_reg_by_tran(self,only=False):
@@ -2301,7 +2394,7 @@ cdef class Network:
         -------
         num : int
         """
-        
+
         if not only:
             return cnet.NET_get_num_buses_reg_by_shunt(self._c_net)
         else:
@@ -2326,7 +2419,7 @@ cdef class Network:
         -------
         num : int
         """
-        
+
         return cnet.NET_get_num_branches_not_on_outage(self._c_net)
 
     def get_num_fixed_trans(self):
@@ -2337,7 +2430,7 @@ cdef class Network:
         -------
         num : int
         """
-        
+
         return cnet.NET_get_num_fixed_trans(self._c_net)
 
     def get_num_lines(self):
@@ -2348,7 +2441,7 @@ cdef class Network:
         -------
         num : int
         """
-        
+
         return cnet.NET_get_num_lines(self._c_net)
 
     def get_num_phase_shifters(self):
@@ -2370,7 +2463,7 @@ cdef class Network:
         -------
         num : int
         """
-        
+
         return cnet.NET_get_num_tap_changers(self._c_net)
 
     def get_num_tap_changers_v(self):
@@ -2403,7 +2496,7 @@ cdef class Network:
         -------
         num : int
         """
-        
+
         return cnet.NET_get_num_gens(self._c_net)
 
     def get_num_gens_not_on_outage(self):
@@ -2414,7 +2507,7 @@ cdef class Network:
         -------
         num : int
         """
-        
+
         return cnet.NET_get_num_gens_not_on_outage(self._c_net)
 
     def get_num_reg_gens(self):
@@ -2475,7 +2568,7 @@ cdef class Network:
     def get_num_shunts(self):
         """
         Gets number of shunts in the network.
-        
+
         Returns
         -------
         num : int
@@ -2513,7 +2606,7 @@ cdef class Network:
         -------
         num : int
         """
-        
+
         return cnet.NET_get_num_vargens(self._c_net)
 
     def get_num_bats(self):
@@ -2524,7 +2617,7 @@ cdef class Network:
         -------
         num : int
         """
-        
+
         return cnet.NET_get_num_bats(self._c_net)
 
     def get_properties(self):
@@ -2551,7 +2644,7 @@ cdef class Network:
                 'shunt_v_vio': self.shunt_v_vio,
                 'shunt_b_vio': self.shunt_b_vio,
                 'load_P_util': self.load_P_util,
-                'load_P_vio': self.load_P_vio, 
+                'load_P_vio': self.load_P_vio,
                 'num_actions': self.num_actions}
 
     def has_error(self):
@@ -2565,7 +2658,7 @@ cdef class Network:
     def load(self,filename,output_level=0):
         """
         Loads a network data contained in a specific file.
-        
+
         Parameters
         ----------
         filename : string
@@ -2606,11 +2699,11 @@ cdef class Network:
 
         Parameters
         ----------
-        obj : :class:`Bus <pfnet.Bus>`, :class:`Branch <pfnet.Branch>`, :class:`Generator <pfnet.Generator>`, :class:`Load <pfnet.Load>`, :class:`Shunt <pfnet.Shunt>`, :class:`VarGenerator <pfnet.VarGenerator>`, :class:`Battery <pfnet.Battery>` 
+        obj : :class:`Bus <pfnet.Bus>`, :class:`Branch <pfnet.Branch>`, :class:`Generator <pfnet.Generator>`, :class:`Load <pfnet.Load>`, :class:`Shunt <pfnet.Shunt>`, :class:`VarGenerator <pfnet.VarGenerator>`, :class:`Battery <pfnet.Battery>`
         flags : int or list (:ref:`ref_net_flag`)
         vals : int or list (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`)
         """
-        
+
         cdef CPtr ptr = obj._get_c_ptr()
         vals = vals if isinstance(vals,list) else [vals]
         flags = flags if isinstance(flags,list) else [flags]
@@ -2635,14 +2728,14 @@ cdef class Network:
         cdef np.ndarray[double,mode='c'] x = values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if values.size else NULL
         cnet.NET_set_var_values(self._c_net,v)
-    
+
     def show_components(self):
         """
         Shows information about the number of network components of each type.
         """
-        
+
         print(cnet.NET_get_show_components_str(self._c_net).decode('UTF-8'))
-	 	 
+
     def show_properties(self):
         """
         Shows information about the state of the network component quantities.
@@ -2659,7 +2752,7 @@ cdef class Network:
         number : int
         sort_by : int (:ref:`ref_bus_sens`, :ref:`ref_bus_mis`)
         """
-        
+
         cnet.NET_show_buses(self._c_net,number,sort_by)
 
     def update_properties(self,values=None):
@@ -2672,14 +2765,14 @@ cdef class Network:
         ----------
         values : :class:`ndarray <numpy.ndarray>`
         """
-            
+
         cdef np.ndarray[double,mode='c'] x = values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (values is not None and values.size) else NULL
         cnet.NET_update_properties(self._c_net,v)
 
     def update_set_points(self):
         """
-        Updates voltage magnitude set points of gen-regulated buses 
+        Updates voltage magnitude set points of gen-regulated buses
         to be equal to the bus voltage magnitudes.
         """
 
@@ -2723,7 +2816,7 @@ cdef class Network:
         """ List of network :class:`batteries <pfnet.Battery>` (list). """
         def __get__(self):
             return [self.get_bat(i) for i in range(self.num_bats)]
-    
+
     property num_buses:
         """ Number of buses in the network (int). """
         def __get__(self): return cnet.NET_get_num_buses(self._c_net)
@@ -2869,14 +2962,14 @@ cdef class Contingency:
     """
     Contingency class.
     """
-    
+
     cdef ccont.Cont* _c_cont
     cdef bint alloc
-    
+
     def __init__(self,gens=None,branches=None,alloc=True):
         """
         Contingency class.
-        
+
         Parameters
         ----------
         gens : list or :class:`Generators <pfnet.Generator>`
@@ -2885,9 +2978,9 @@ cdef class Contingency:
         """
 
         pass
-     
+
     def __cinit__(self,gens=None,branches=None,alloc=True):
-        
+
         cdef Generator g
         cdef Branch br
 
@@ -2896,7 +2989,7 @@ cdef class Contingency:
         else:
             self._c_cont = NULL
         self.alloc = alloc
-        
+
         if gens:
             for gen in gens:
                 g = gen
@@ -2908,9 +3001,9 @@ cdef class Contingency:
 
     def __dealloc__(self):
         """
-        Frees contingency C data structure. 
+        Frees contingency C data structure.
         """
-        
+
         if self.alloc:
             ccont.CONT_del(self._c_cont)
             self._c_cont = NULL
@@ -2919,27 +3012,27 @@ cdef class Contingency:
         """
         Applies outages that characterize contingency.
         """
-        
+
         ccont.CONT_apply(self._c_cont)
 
     def clear(self):
         """
         Clears outages that characterize contingency.
         """
-        
+
         ccont.CONT_clear(self._c_cont)
 
     def show(self):
         """
         Shows contingency information.
         """
-        
+
         print(ccont.CONT_get_show_str(self._c_cont).decode('UTF-8'))
 
     def add_gen_outage(self,gen):
         """
         Adds generator outage to contingency.
-    
+
         Parameters
         ----------
         gen : :class:`Generator <pfnet.Generator>`
@@ -2951,7 +3044,7 @@ cdef class Contingency:
     def add_branch_outage(self,br):
         """
         Adds branch outage to contingency.
-    
+
         Parameters
         ----------
         br : :class:`Branch <pfnet.Branch>`
@@ -2972,7 +3065,7 @@ cdef class Contingency:
         -------
         result : {``True``, ``False``}
         """
-        
+
         cdef Generator g = gen
         return ccont.CONT_has_gen_outage(self._c_cont,g._c_ptr)
 
@@ -2988,7 +3081,7 @@ cdef class Contingency:
         -------
         result : {``True``, ``False``}
         """
-        
+
         cdef Branch b = br
         return ccont.CONT_has_branch_outage(self._c_cont,b._c_ptr)
 
@@ -3021,11 +3114,11 @@ cdef class Graph:
     cdef cgraph.Graph* _c_graph
     cdef cnet.Net* _c_net
     cdef bint alloc
-    
+
     def __init__(self,net,alloc=True):
         """
         Graph class.
-        
+
         Parameters
         ----------
         net : :class:`Network <pfnet.Network>`
@@ -3033,9 +3126,9 @@ cdef class Graph:
         """
 
         pass
-     
+
     def __cinit__(self,Network net, alloc=True):
-        
+
         self._c_net = net._c_net
         if alloc:
             self._c_graph = cgraph.GRAPH_new(net._c_net)
@@ -3045,23 +3138,23 @@ cdef class Graph:
 
     def __dealloc__(self):
         """
-        Frees graph C data structure. 
+        Frees graph C data structure.
         """
-        
+
         if self.alloc:
             cgraph.GRAPH_del(self._c_graph)
             self._c_graph = NULL
-    
+
     def has_viz(self):
         """
-        Determines whether graph has visualization 
+        Determines whether graph has visualization
         capabilities.
 
         Returns
         -------
         flag : {``True``, ``False``}
         """
-        
+
         return cgraph.GRAPH_can_viz(self._c_graph)
 
     def has_error(self):
@@ -3073,15 +3166,15 @@ cdef class Graph:
         return cgraph.GRAPH_has_error(self._c_graph)
 
     def clear_error(self):
-        """ 
+        """
         Clear error flag and message string.
         """
 
         cgraph.GRAPH_clear_error(self._c_graph);
-        
+
     def set_layout(self):
         """
-        Determines and saves a layout for the graph nodes. 
+        Determines and saves a layout for the graph nodes.
         """
 
         cgraph.GRAPH_set_layout(self._c_graph)
@@ -3096,7 +3189,7 @@ cdef class Graph:
         prop : string
         value : string
         """
-        
+
         cdef Bus b = bus
         cgraph.GRAPH_set_node_property(self._c_graph,b._c_ptr,prop,value)
         if cgraph.GRAPH_has_error(self._c_graph):
@@ -3111,7 +3204,7 @@ cdef class Graph:
         prop : string
         value : string
         """
-        
+
         cgraph.GRAPH_set_nodes_property(self._c_graph,prop,value)
         if cgraph.GRAPH_has_error(self._c_graph):
             raise GraphError(cgraph.GRAPH_get_error_string(self._c_graph))
@@ -3125,7 +3218,7 @@ cdef class Graph:
         prop : string
         value : string
         """
-        
+
         cgraph.GRAPH_set_edges_property(self._c_graph,prop,value)
         if cgraph.GRAPH_has_error(self._c_graph):
             raise GraphError(cgraph.GRAPH_get_error_string(self._c_graph))
@@ -3133,12 +3226,12 @@ cdef class Graph:
     def color_nodes_by_mismatch(self,mis_type):
         """
         Colors the graphs nodes according to their power mismatch.
-        
+
         Parameters
         ----------
         mis_type : int (:ref:`ref_bus_mis`)
         """
-        
+
         cgraph.GRAPH_color_nodes_by_mismatch(self._c_graph,mis_type)
         if cgraph.GRAPH_has_error(self._c_graph):
             raise GraphError(cgraph.GRAPH_get_error_string(self._c_graph))
@@ -3160,7 +3253,7 @@ cdef class Graph:
         """
         Displays the graph.
         """
-        
+
         temp = tempfile.NamedTemporaryFile(delete=True, suffix='.png')
         try:
             self.write("png",temp.name)
@@ -3170,12 +3263,12 @@ cdef class Graph:
 
                 self.write("png",temp.name)
                 return Image(filename=temp.name)
-            else:                
+            else:
                 im = misc.imread(temp.name.encode('UTF-8'))
                 misc.imshow(im)
         finally:
             temp.close()
-            
+
     def write(self,format,filename):
         """
         Writes the graph to a file.
@@ -3229,7 +3322,7 @@ cdef class Function:
     def __init__(self, int type, float weight, Network net, alloc=True):
         """
         Function class.
-        
+
         Parameters
         ----------
         type : int (:ref:`ref_func_type`)
@@ -3239,9 +3332,9 @@ cdef class Function:
         """
 
         pass
-     
+
     def __cinit__(self, int type, float weight, Network net, alloc=True):
-        
+
         if alloc:
             self._c_func = cfunc.FUNC_new(type,weight,net._c_net)
         else:
@@ -3250,9 +3343,9 @@ cdef class Function:
 
     def __dealloc__(self):
         """
-        Frees function C data structure. 
+        Frees function C data structure.
         """
-        
+
         if self.alloc:
             cfunc.FUNC_del(self._c_func)
             self._c_func = NULL
@@ -3264,7 +3357,7 @@ cdef class Function:
         """
 
         cfunc.FUNC_del_matvec(self._c_func)
-            
+
     def update_network(self):
         """
         Updates internal arrays to be compatible
@@ -3279,7 +3372,7 @@ cdef class Function:
         """
 
         cfunc.FUNC_clear_error(self._c_func)
-        
+
     def analyze(self):
         """
         Analyzes function and allocates required vectors and matrices.
@@ -3290,12 +3383,12 @@ cdef class Function:
         cfunc.FUNC_analyze(self._c_func)
         if cfunc.FUNC_has_error(self._c_func):
             raise FunctionError(cfunc.FUNC_get_error_string(self._c_func))
-        
+
     def eval(self,var_values):
         """
-        Evaluates function value, gradient, and Hessian using 
-        the given variable values. 
-        
+        Evaluates function value, gradient, and Hessian using
+        the given variable values.
+
         Parameters
         ----------
         var_values : :class:`ndarray <numpy.ndarray>`
@@ -3314,13 +3407,13 @@ cdef class Function:
     property Hcounter:
         """ Number of nonzero entries in Hessian matrix (int). """
         def __get__(self): return cfunc.FUNC_get_Hcounter(self._c_func)
-        
+
     property phi:
         """ Function value (float). """
         def __get__(self): return cfunc.FUNC_get_phi(self._c_func)
 
     property gphi:
-        """ Function gradient vector (:class:`ndarray <numpy.ndarray>`). """   
+        """ Function gradient vector (:class:`ndarray <numpy.ndarray>`). """
         def __get__(self): return Vector(cfunc.FUNC_get_gphi(self._c_func))
 
     property Hphi:
@@ -3330,7 +3423,7 @@ cdef class Function:
     property weight:
         """ Function weight (float). """
         def __get__(self): return cfunc.FUNC_get_weight(self._c_func)
-        
+
 cdef new_Function(cfunc.Func* f, cnet.Net* n):
     if f is not NULL and n is not NULL:
         func = Function(0,0,new_Network(n),alloc=False)
@@ -3338,7 +3431,7 @@ cdef new_Function(cfunc.Func* f, cnet.Net* n):
         return func
     else:
         raise FunctionError('invalid function data')
-    
+
 # Constraint
 ############
 
@@ -3370,7 +3463,7 @@ cdef class Constraint:
     """
     Constraint class.
     """
-    
+
     cdef cconstr.Constr* _c_constr
     cdef cnet.Net* _c_net
     cdef bint alloc
@@ -3387,7 +3480,7 @@ cdef class Constraint:
         """
 
         pass
-     
+
     def __cinit__(self,int type, Network net, alloc=True):
 
         self._c_net = net._c_net
@@ -3396,12 +3489,12 @@ cdef class Constraint:
         else:
             self._c_constr = NULL
         self.alloc = alloc
-            
+
     def __dealloc__(self):
         """
-        Frees constraint C data structure. 
+        Frees constraint C data structure.
         """
-        
+
         if self.alloc:
             cconstr.CONSTR_del(self._c_constr)
             self._c_constr = NULL
@@ -3419,7 +3512,7 @@ cdef class Constraint:
         Updates internal arrays to be compatible
         with any network changes.
         """
-        
+
         cconstr.CONSTR_update_network(self._c_constr)
 
     def clear_error(self):
@@ -3428,14 +3521,14 @@ cdef class Constraint:
         """
 
         cconstr.CONSTR_clear_error(self._c_constr)
-        
+
     def analyze(self):
         """
         Analyzes constraint and allocates required vectors and matrices.
         """
-        
+
         cconstr.CONSTR_count(self._c_constr)
-        cconstr.CONSTR_allocate(self._c_constr)     
+        cconstr.CONSTR_allocate(self._c_constr)
         cconstr.CONSTR_analyze(self._c_constr)
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
@@ -3449,22 +3542,22 @@ cdef class Constraint:
         coeff : :class:`ndarray <numpy.ndarray>`
         ensure_psd : {``True``, ``False``}
         """
-        
+
         cdef np.ndarray[double,mode='c'] x = coeff
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if coeff.size else NULL
         cconstr.CONSTR_combine_H(self._c_constr,v,ensure_psd)
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
-        
+
     def eval(self,var_values):
         """
         Evaluates constraint violations, Jacobian, and individual Hessian matrices.
-        
+
         Parameters
         ----------
         var_values : :class:`ndarray <numpy.ndarray>`
         """
-        
+
         cdef np.ndarray[double,mode='c'] x = var_values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if var_values.size else NULL
         cconstr.CONSTR_eval(self._c_constr,v)
@@ -3473,7 +3566,7 @@ cdef class Constraint:
 
     def store_sensitivities(self,sA,sf,sGu,sGl):
         """
-        Stores Lagrange multiplier estimates of the constraints in 
+        Stores Lagrange multiplier estimates of the constraints in
         the power network components.
 
         Parameters
@@ -3503,11 +3596,11 @@ cdef class Constraint:
     def get_H_single(self,i):
         """
         Gets the Hessian matrix (only lower triangular part) of an individual constraint.
-        
+
         Parameters
         ----------
-        i : int 
-        
+        i : int
+
         Returns
         -------
         H : :class:`coo_matrix <scipy.sparse.coo_matrix>`
@@ -3541,7 +3634,7 @@ cdef class Constraint:
     property Jconstr_index:
         """ Index of nonlinear equality constraint (int). """
         def __get__(self): return cconstr.CONSTR_get_Jconstr_index(self._c_constr)
-        
+
     property f:
         """ Vector of nonlinear equality constraint violations (:class:`ndarray <numpy.ndarray>`). """
         def __get__(self): return Vector(cconstr.CONSTR_get_f(self._c_constr))
@@ -3553,7 +3646,7 @@ cdef class Constraint:
     property b:
         """ Right-hand side vector of linear equality constraints (:class:`ndarray <numpy.ndarray>`). """
         def __get__(self): return Vector(cconstr.CONSTR_get_b(self._c_constr))
-        
+
     property A:
         """ Matrix for linear equality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
         def __get__(self): return Matrix(cconstr.CONSTR_get_A(self._c_constr))
@@ -3606,8 +3699,8 @@ cdef class Heuristic:
     pass
 
 # Problem
-#########        
-    
+#########
+
 class ProblemError(Exception):
     """
     Problem error exception.
@@ -3622,7 +3715,7 @@ cdef class Problem:
     """
     Optimization problem class.
     """
-    
+
     cdef cprob.Prob* _c_prob
     cdef bint alloc
 
@@ -3631,7 +3724,7 @@ cdef class Problem:
         Optimization problem class.
         """
 
-        pass        
+        pass
 
     def __cinit__(self):
 
@@ -3640,17 +3733,17 @@ cdef class Problem:
 
     def __dealloc__(self):
         """
-        Frees problem C data structure. 
+        Frees problem C data structure.
         """
-        
+
         if self.alloc:
             cprob.PROB_del(self._c_prob)
             self._c_prob = NULL
-        
+
     def add_constraint(self,ctype):
         """
         Adds constraint to optimization problem.
-        
+
         Parameters
         ----------
         ctype : int (:ref:`ref_constr_type`)
@@ -3703,7 +3796,7 @@ cdef class Problem:
         coeff : :class:`ndarray <numpy.ndarray>`
         ensure_psd : {``True``, ``False``}
         """
-        
+
         cdef np.ndarray[double,mode='c'] x = coeff
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if coeff.size else NULL
         cprob.PROB_combine_H(self._c_prob,v,ensure_psd)
@@ -3711,20 +3804,20 @@ cdef class Problem:
     def eval(self,var_values):
         """
         Evaluates objective function and constraints as well as their first and
-        second derivatives using the given variable values. 
-        
+        second derivatives using the given variable values.
+
         Parameters
         ----------
         var_values : :class:`ndarray <numpy.ndarray>`
         """
-        
+
         cdef np.ndarray[double,mode='c'] x = var_values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if var_values.size else NULL
         cprob.PROB_eval(self._c_prob,v)
 
     def store_sensitivities(self,sA,sf,sGu,sGl):
         """
-        Stores Lagrange multiplier estimates of the constraints in 
+        Stores Lagrange multiplier estimates of the constraints in
         the power network components.
 
         Parameters
@@ -3738,7 +3831,7 @@ cdef class Problem:
         sGl : :class:`ndarray <numpy.ndarray>`
              sensitivities for linear inequality constraints (:math:`l \le Gx`)
         """
-        
+
         cdef np.ndarray[double,mode='c'] xA = sA
         cdef np.ndarray[double,mode='c'] xf = sf
         cdef np.ndarray[double,mode='c'] xGu = sGu
@@ -3759,7 +3852,7 @@ cdef class Problem:
         ----------
         type : int (:ref:`ref_constr_type`)
         """
-        
+
         cdef cnet.Net* n = cprob.PROB_get_network(self._c_prob)
         c = cprob.PROB_find_constr(self._c_prob,type)
         if c is not NULL:
@@ -3792,7 +3885,7 @@ cdef class Problem:
     def get_lower_limits(self):
         """
         Gets vector of lower limits for the network variables.
-        
+
         Returns
         -------
         limits : :class:`ndarray <numpy.ndarray>`
@@ -3811,7 +3904,7 @@ cdef class Problem:
         """
         Sets the power network associated with this optimization problem.
         """
-        
+
         cdef Network n = net
         cprob.PROB_set_network(self._c_prob,n._c_net)
 
@@ -3819,7 +3912,7 @@ cdef class Problem:
         """
         Shows information about this optimization problem.
         """
-        
+
         print(cprob.PROB_get_show_str(self._c_prob).decode('UTF-8'))
 
     def update_lin(self):
@@ -3835,7 +3928,7 @@ cdef class Problem:
         def __set__(self,net):
             cdef Network n = net
             cprob.PROB_set_network(self._c_prob,n._c_net)
-        
+
     property constraints:
         """ List of :class:`constraints <pfnet.Constraint>` of this optimization problem (list). """
         def __get__(self):
@@ -3857,7 +3950,7 @@ cdef class Problem:
                 flist.append(new_Function(f,n))
                 f = cfunc.FUNC_get_next(f)
             return flist
-            
+
     property A:
         """ Constraint matrix of linear equality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
         def __get__(self): return Matrix(cprob.PROB_get_A(self._c_prob))
@@ -3889,7 +3982,7 @@ cdef class Problem:
     property phi:
         """ Objective function value (float). """
         def __get__(self): return cprob.PROB_get_phi(self._c_prob)
-            
+
     property gphi:
         """ Objective function gradient vector (:class:`ndarray <numpy.ndarray>`). """
         def __get__(self): return Vector(cprob.PROB_get_gphi(self._c_prob))

@@ -582,24 +582,24 @@ Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
       num_new = 0;
       while (neighbors_curr < neighbors_total) {
 	bus1 = NET_get_bus(net,neighbors[neighbors_curr]);
-	for (br = BUS_get_branch_from(bus1); br != NULL; br = BRANCH_get_from_next(br)) {
-	  if (bus1 != BRANCH_get_bus_from(br)) {
+	for (br = BUS_get_branch_k(bus1); br != NULL; br = BRANCH_get_next_k(br)) {
+	  if (bus1 != BRANCH_get_bus_k(br)) {
 	    sprintf(net->error_string,"unable to construct covariance matrix");
 	    net->error_flag = TRUE;
 	  }
-	  bus2 = BRANCH_get_bus_to(br);
+	  bus2 = BRANCH_get_bus_m(br);
 	  if (!queued[BUS_get_index(bus2)]) {
 	    neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
 	    queued[BUS_get_index(bus2)] = TRUE;
 	    num_new++;
 	  }
 	}
-	for (br = BUS_get_branch_to(bus1); br != NULL; br = BRANCH_get_to_next(br)) {
-	  if (bus1 != BRANCH_get_bus_to(br)) {
+	for (br = BUS_get_branch_m(bus1); br != NULL; br = BRANCH_get_next_m(br)) {
+	  if (bus1 != BRANCH_get_bus_m(br)) {
 	    sprintf(net->error_string,"unable to construct covariance matrix");
 	    net->error_flag = TRUE;
 	  }
-	  bus2 = BRANCH_get_bus_from(br);
+	  bus2 = BRANCH_get_bus_k(br);
 	  if (!queued[BUS_get_index(bus2)]) {
 	    neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
 	    queued[BUS_get_index(bus2)] = TRUE;
@@ -664,24 +664,24 @@ Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
       num_new = 0;
       while (neighbors_curr < neighbors_total) {
 	bus1 = NET_get_bus(net,neighbors[neighbors_curr]);
-	for (br = BUS_get_branch_from(bus1); br != NULL; br = BRANCH_get_from_next(br)) {
-	  if (bus1 != BRANCH_get_bus_from(br)) {
+	for (br = BUS_get_branch_k(bus1); br != NULL; br = BRANCH_get_next_k(br)) {
+	  if (bus1 != BRANCH_get_bus_k(br)) {
 	    sprintf(net->error_string,"unable to construct covariance matrix");
 	    net->error_flag = TRUE;
 	  }
-	  bus2 = BRANCH_get_bus_to(br);
+	  bus2 = BRANCH_get_bus_m(br);
 	  if (!queued[BUS_get_index(bus2)]) {
 	    neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
 	    queued[BUS_get_index(bus2)] = TRUE;
 	    num_new++;
 	  }
 	}
-	for (br = BUS_get_branch_to(bus1); br != NULL; br = BRANCH_get_to_next(br)) {
-	  if (bus1 != BRANCH_get_bus_to(br)) {
+	for (br = BUS_get_branch_m(bus1); br != NULL; br = BRANCH_get_next_m(br)) {
+	  if (bus1 != BRANCH_get_bus_m(br)) {
 	    sprintf(net->error_string,"unable to construct covariance matrix");
 	    net->error_flag = TRUE;
 	  }
-	  bus2 = BRANCH_get_bus_from(br);
+	  bus2 = BRANCH_get_bus_k(br);
 	  if (!queued[BUS_get_index(bus2)]) {
 	    neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
 	    queued[BUS_get_index(bus2)] = TRUE;
@@ -2229,8 +2229,8 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
     return;
 
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++) {
     bus = buses[k];
     if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG) && var_values)
@@ -2245,11 +2245,11 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
 
   // Branch data
   b = BRANCH_get_b(br);
-  b_sh[0] = BRANCH_get_b_from(br);
-  b_sh[1] = BRANCH_get_b_to(br);
+  b_sh[0] = BRANCH_get_b_k(br);
+  b_sh[1] = BRANCH_get_b_m(br);
   g = BRANCH_get_g(br);
-  g_sh[0] = BRANCH_get_g_from(br);
-  g_sh[1] = BRANCH_get_g_to(br);
+  g_sh[0] = BRANCH_get_g_k(br);
+  g_sh[1] = BRANCH_get_g_m(br);
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
     a = VEC_get(var_values,BRANCH_get_index_ratio(br));
   else
@@ -2307,30 +2307,35 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
   for (k = 0; k < 2; k++) {
     bus = buses[k];
     if (k == 0) {
+      // k to m
       m = 1;
       a_temp = a;
       phi_temp = phi;
     }
     else {
+      // m to k
       m = 0;
       a_temp = 1;
       phi_temp = -phi;
     }
 
     // THINK WE NEED A CHECK FOR SHUNT VALUES AND HANDLE LARGE B VALUES
-    flowP[k] = -a*v[k]*v[m]*(g*cos(w[k]-w[m]-phi_temp)+b*sin(w[k]-w[m]-phi_temp));
-    flowQ[k] = -a*v[k]*v[m]*(g*sin(w[k]-w[m]-phi_temp)-b*cos(w[k]-w[m]-phi_temp));
-    flowP_sh[k] =  a_temp*a_temp*(g_sh[k]+g)*v[k]*v[k];
-    flowQ_sh[k] = -a_temp*a_temp*(b_sh[k]+b)*v[k]*v[k];
-    // flowP_sh[k] =  a_temp*a_temp*(g_sh[k])*v[k]*v[k];
-    // flowQ_sh[k] = -a_temp*a_temp*(b_sh[k])*v[k]*v[k];
+    // flowP[k] = -a*v[k]*v[m]*(g*cos(w[k]-w[m]-phi_temp)+b*sin(w[k]-w[m]-phi_temp));
+    // flowQ[k] = -a*v[k]*v[m]*(g*sin(w[k]-w[m]-phi_temp)-b*cos(w[k]-w[m]-phi_temp));
+    // flowP_sh[k] =  a_temp*a_temp*(g_sh[k]+g)*v[k]*v[k];
+    // flowQ_sh[k] = -a_temp*a_temp*(b_sh[k]+b)*v[k]*v[k];
+    flowP[k] = a_temp*a_temp*v[k]*v[k]*g + -a*a_temp*v[k]*v[m]*(g*cos(w[k]-w[m]-phi_temp)+b*sin(w[k]-w[m]-phi_temp));
+    flowQ[k] = -a_temp*a_temp*v[k]*v[k]*b + -a*a_temp*v[k]*v[m]*(g*sin(w[k]-w[m]-phi_temp)-b*cos(w[k]-w[m]-phi_temp));
+    flowP_sh[k] =  a_temp*a_temp*g_sh[k]*v[k]*v[k];
+    flowQ_sh[k] = -a_temp*a_temp*b_sh[k]*v[k]*v[k];
 
     // if (BUS_get_number(buses[k]) == 57 || BUS_get_number(buses[m]) == 57) {
-    if (TRUE) {
-      printf("busk %d > busm %d\n", BUS_get_number(buses[k]), BUS_get_number(buses[m]));
-      printf("**parameters**\n");
-      printf("\ta\tv_k\tv_m\tg\tw_k\tw_m\tphi_temp\tb\ta_temp\tg_sh\tb_sh\n");
-      printf("\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\n",
+    if (FALSE) {
+      printf("\nbusk %d > busm %d\n", BUS_get_number(buses[k]), BUS_get_number(buses[m]));
+      printf("  **parameters**\n");
+      // 1st set of parameters
+      printf("\t a\t\t v_k\t\t v_m\t\t g\t\t w_k\t\t w_m\t\t phi_t\t\t b\n");
+      printf("\t% 7.6f\t% 7.6f\t% 7.6f\t% 7.6f\t% 7.6f\t% 7.6f\t% 7.6f\t% 7.6f\n",
         a,
         v[k],
         v[m],
@@ -2338,19 +2343,24 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
         w[k],
         w[m],
         phi_temp,
-        b,
+        b);
+      // 2nd set of parameters
+      printf("\t a_temp\t\t g_sh\t\t b_sh\t\t cos\t\t sin\n");
+      printf("\t % 7.6f\t% 7.6f\t% 7.6f\t% 7.6f\t% 7.6f\n",
         a_temp,
         g_sh[k],
-        b_sh[k]);
-      printf("**flows**\n");
-      printf("@k\tflowP\tflowQ\tflowP_sh\tflowQ_sh\tinjPk\tinjQk\n");
-      printf("\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\n",
+        b_sh[k],
+        cos(w[k]-w[m]-phi_temp),
+        sin(w[k]-w[m]-phi_temp));
+      printf("  **flows**\n");
+      printf("@k\t Pser\t\t Qser\t\t Psh\t\t Qsh\t\t Pk\t\t Qk\n");
+      printf("\t% 7.6f\t% 7.6f\t% 7.6f\t% 7.6f\t% 7.6f\t% 7.6f\n",
         flowP[k] * net->base_power,
         flowQ[k] * net->base_power,
         flowP_sh[k] * net->base_power,
         flowQ_sh[k] * net->base_power,
-        -(-flowP_sh[k]-flowP[k]) * net->base_power,
-        -(-flowQ_sh[k]-flowQ[k]) * net->base_power);
+        (-flowP_sh[k]-flowP[k]) * net->base_power,
+        (-flowQ_sh[k]-flowQ[k]) * net->base_power);
       printf("Base Power = %.3f\n", net->base_power);
     }
 
