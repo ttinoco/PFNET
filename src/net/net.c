@@ -2324,8 +2324,8 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
     // flowQ[k] = -a*v[k]*v[m]*(g*sin(w[k]-w[m]-phi_temp)-b*cos(w[k]-w[m]-phi_temp));
     // flowP_sh[k] =  a_temp*a_temp*(g_sh[k]+g)*v[k]*v[k];
     // flowQ_sh[k] = -a_temp*a_temp*(b_sh[k]+b)*v[k]*v[k];
-    flowP[k] = a_temp*a_temp*v[k]*v[k]*g + -a*a_temp*v[k]*v[m]*(g*cos(w[k]-w[m]-phi_temp)+b*sin(w[k]-w[m]-phi_temp));
-    flowQ[k] = -a_temp*a_temp*v[k]*v[k]*b + -a*a_temp*v[k]*v[m]*(g*sin(w[k]-w[m]-phi_temp)-b*cos(w[k]-w[m]-phi_temp));
+    flowP[k] = a_temp*a_temp*g*v[k]*v[k] - a*a_temp*v[k]*v[m]*(g*cos(w[k]-w[m]-phi_temp)+b*sin(w[k]-w[m]-phi_temp));
+    flowQ[k] = -a_temp*a_temp*b*v[k]*v[k] - a*a_temp*v[k]*v[m]*(g*sin(w[k]-w[m]-phi_temp)-b*cos(w[k]-w[m]-phi_temp));
     flowP_sh[k] =  a_temp*a_temp*g_sh[k]*v[k]*v[k];
     flowQ_sh[k] = -a_temp*a_temp*b_sh[k]*v[k]*v[k];
 
