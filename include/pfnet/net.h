@@ -38,8 +38,8 @@ typedef struct Net Net;
 
 // Prototypes
 /** @brief Adjust generator powers to obtain correct participations without affecting total injections. */
-void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty, REAL corr_radius, REAL corr_value);
 void NET_adjust_generators(Net* net);
+void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty, REAL corr_radius, REAL corr_value);
 void NET_bus_hash_number_add(Net* net, Bus* bus);
 Bus* NET_bus_hash_number_find(Net* net, int number);
 void NET_bus_hash_name_add(Net* net, Bus* bus);
@@ -56,7 +56,7 @@ void NET_clear_sensitivities(Net* net);
 Bus* NET_create_sorted_bus_list(Net* net, int sort_by);
 Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr);
 void NET_del(Net* net);
-void NET_init(Net* net);
+void NET_init(Net* net, int num_periods);
 REAL NET_get_base_power(Net* net);
 Branch* NET_get_branch(Net* net, int index);
 Bus* NET_get_bus(Net* net, int index);
@@ -129,7 +129,7 @@ REAL NET_get_vargen_corr_radius(Net* net);
 REAL NET_get_vargen_corr_value(Net* net);
 BOOL NET_has_error(Net* net);
 void NET_load(Net* net, char* filename, int output_level);
-Net* NET_new(void);
+Net* NET_new(int num_periods);
 void NET_set_base_power(Net* net, REAL base_power);
 void NET_set_branch_array(Net* net, Branch* branch, int num);
 void NET_set_bus_array(Net* net, Bus* bus, int num);

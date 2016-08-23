@@ -43,7 +43,7 @@ typedef struct Bus Bus;
 
 // Function prototypes
 void* SHUNT_array_get(void* shunt, int index);
-void SHUNT_array_free(Shunt* shunt, int num);
+void SHUNT_array_del(Shunt* shunt, int num);
 Shunt* SHUNT_array_new(int num);
 void SHUNT_array_show(Shunt* shunt, int num);
 void SHUNT_clear_flags(Shunt* shunt, char flag_type);
