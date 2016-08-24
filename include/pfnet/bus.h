@@ -147,7 +147,7 @@ int BUS_get_index_z(Bus* bus, int t);
 int BUS_get_index_vl(Bus* bus, int t);
 int BUS_get_index_vh(Bus* bus, int t);
 int BUS_get_index_P(Bus* bus);
-int BUS_get_index_Q(Bus* bus, int t);
+int BUS_get_index_Q(Bus* bus);
 Bus* BUS_get_next(Bus* bus);
 int BUS_get_number(Bus* bus);
 char* BUS_get_name(Bus* bus);

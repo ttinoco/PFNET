@@ -1,6 +1,8 @@
 NO_RAW_PARSER ?=0
 NO_GRAPHVIZ ?=0
 
+FILE ?=
+
 CC = gcc
 INCDIR = ./include
 LIBDIR = ./lib
@@ -58,10 +60,18 @@ tests/%.out: tests/%.c
 	$(CC) $(CFLAGS) -L$(LIBDIR) -Wl,-rpath $(LIBDIR) -o $@ $< -lpfnet $(LDLIBS)
 	./tests/run_tests.out ./data/ieee14.mat
 
+.PHONY: single
+single: 
+ifndef FILE
+	$(error error: 'FILE' must be specified)
+else	
+	$(CC) -c $(CFLAGS) -Wfatal-errors $(FILE)
+endif
+
 .PHONY: docs
 docs :
 ifndef PFNET_DOCS
-	$(error error 'PFNET_DOCS' must be set to the location to put documentation files)
+	$(error error: 'PFNET_DOCS' must be set to the location to put documentation files)
 else
 	doxygen ./docs/Doxyfile
 endif

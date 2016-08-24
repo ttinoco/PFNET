@@ -95,7 +95,7 @@ void BRANCH_array_del(Branch* br_array, int size) {
   Branch* br;
   if (br_array) {
     for (i = 0; i < size; i++) {
-      br = br_array[i];
+      br = &(br_array[i]);
       free(br->ratio);
       free(br->phase);
       free(br->index_ratio);
@@ -119,7 +119,7 @@ Branch* BRANCH_array_new(int size, int num_periods) {
     return br_array;
   }
   else
-    return NULL,
+    return NULL;
 }
 
 void BRANCH_array_show(Branch* br_array, int size, int t) {
@@ -321,7 +321,7 @@ Branch* BRANCH_get_to_next(Branch* br) {
 
 REAL BRANCH_get_phase(Branch* br, int t) {
   if (br && t >= 0 && t < br->num_periods)
-    return br->phase;
+    return br->phase[t];
   else
     return 0;
 }
@@ -435,19 +435,19 @@ Vec* BRANCH_get_var_indices(void* vbr, char var) {
     return NULL;
   if (var == BRANCH_VAR_RATIO) {
     indices = VEC_new(br->num_periods);
-    for (t = 0; t < bus->num_periods; t++)
+    for (t = 0; t < br->num_periods; t++)
       VEC_set(indices,t,br->index_ratio[t]);
     return indices;
   }
   if (var == BRANCH_VAR_PHASE) {
     indices = VEC_new(br->num_periods);
-    for (t = 0; t < bus->num_periods; t++)
+    for (t = 0; t < br->num_periods; t++)
       VEC_set(indices,t,br->index_phase[t]);
     return indices;
   }
   if (var == BRANCH_VAR_RATIO_DEV) {
     indices = VEC_new(2*br->num_periods);
-    for (t = 0; t < bus->num_periods; t++) {
+    for (t = 0; t < br->num_periods; t++) {
       VEC_set(indices,2*t,br->index_ratio_y[t]);
       VEC_set(indices,2*t+1,br->index_ratio_z[t]);
     }
@@ -560,7 +560,7 @@ void BRANCH_init(Branch* br, int num_periods) {
   ARRAY_zalloc(br->sens_P_l_bound,REAL,T);
 
   for (t = 0; t < br->num_periods; t++)
-    bus->ratio[t] = 1.;
+    br->ratio[t] = 1.;
 
   br->reg_next = NULL;
   br->from_next = NULL;
@@ -668,20 +668,24 @@ int BRANCH_list_to_len(Branch* to_br_list) {
   return len;
 }
 
-Branch* BRANCH_new(void) {
-  Branch* branch = (Branch*)malloc(sizeof(Branch));
-  BRANCH_init(branch);
-  return branch;
+Branch* BRANCH_new(int num_periods) {
+  if (num_periods > 0) {
+    Branch* branch = (Branch*)malloc(sizeof(Branch));
+    BRANCH_init(branch,num_periods);
+    return branch;
+  }
+  else
+    return NULL;
 }
 
-void BRANCH_set_sens_P_u_bound(Branch* br, REAL value) {
-  if (br)
-    br->sens_P_u_bound = value;
+void BRANCH_set_sens_P_u_bound(Branch* br, REAL value, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    br->sens_P_u_bound[t] = value;
 }
 
-void BRANCH_set_sens_P_l_bound(Branch* br, REAL value) {
-  if (br)
-    br->sens_P_l_bound = value;
+void BRANCH_set_sens_P_l_bound(Branch* br, REAL value, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    br->sens_P_l_bound[t] = value;
 }
 
 void BRANCH_set_index(Branch* br, int index) {
@@ -694,79 +698,79 @@ void BRANCH_set_type(Branch* br, int type) {
     br->type = type;
 }
 
-void BRANCH_set_bus_from(Branch* branch, Bus* bus_from) {
-  if (branch)
-    branch->bus_from = bus_from;
-}
-
-void BRANCH_set_bus_to(Branch* branch, Bus* bus_to) {
-  if (branch)
-    branch->bus_to = bus_to;
-}
-
-void BRANCH_set_reg_bus(Branch* branch, Bus* reg_bus) {
-  if (branch)  
-    branch->reg_bus = reg_bus;
-}
-
-void BRANCH_set_g(Branch* branch, REAL g) {
-  if (branch)  
-    branch->g = g;
-}
-
-void BRANCH_set_g_from(Branch* branch, REAL g_from) {
-  if (branch)
-    branch->g_from = g_from;
-}
-
-void BRANCH_set_g_to(Branch* branch, REAL g_to) {
-  if (branch)
-    branch->g_to = g_to;
-}
-
-void BRANCH_set_b(Branch* branch, REAL b) {
-  if (branch)
-    branch->b = b;
-}
-
-void BRANCH_set_b_from(Branch* branch, REAL b_from) {
-  if (branch)  
-    branch->b_from = b_from;
-}
-
-void BRANCH_set_b_to(Branch* branch, REAL b_to) {
-  if (branch)
-    branch->b_to = b_to;
-}
-
-void BRANCH_set_ratio(Branch* branch, REAL ratio) {
-  if (branch)
-    branch->ratio = ratio;
-}
-
-void BRANCH_set_ratio_max(Branch* branch, REAL ratio) {
-  if (branch)
-    branch->ratio_max = ratio;
-}
-
-void BRANCH_set_ratio_min(Branch* branch, REAL ratio) {
-  if (branch)
-    branch->ratio_min = ratio;
-}
-
-void BRANCH_set_pos_ratio_v_sens(Branch* branch, BOOL flag) {
-  if (branch)
-    branch->pos_ratio_v_sens = flag;
-}
-
-void BRANCH_set_outage(Branch* branch, BOOL outage) {
-  if (branch)
-    branch->outage = outage;
-}
-
-void BRANCH_set_phase(Branch* br, REAL phase) {
+void BRANCH_set_bus_from(Branch* br, Bus* bus_from) {
   if (br)
-    br->phase = phase;
+    br->bus_from = bus_from;
+}
+
+void BRANCH_set_bus_to(Branch* br, Bus* bus_to) {
+  if (br)
+    br->bus_to = bus_to;
+}
+
+void BRANCH_set_reg_bus(Branch* br, Bus* reg_bus) {
+  if (br)  
+    br->reg_bus = reg_bus;
+}
+
+void BRANCH_set_g(Branch* br, REAL g) {
+  if (br)  
+    br->g = g;
+}
+
+void BRANCH_set_g_from(Branch* br, REAL g_from) {
+  if (br)
+    br->g_from = g_from;
+}
+
+void BRANCH_set_g_to(Branch* br, REAL g_to) {
+  if (br)
+    br->g_to = g_to;
+}
+
+void BRANCH_set_b(Branch* br, REAL b) {
+  if (br)
+    br->b = b;
+}
+
+void BRANCH_set_b_from(Branch* br, REAL b_from) {
+  if (br)  
+    br->b_from = b_from;
+}
+
+void BRANCH_set_b_to(Branch* br, REAL b_to) {
+  if (br)
+    br->b_to = b_to;
+}
+
+void BRANCH_set_ratio(Branch* br, REAL ratio, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    br->ratio[t] = ratio;
+}
+
+void BRANCH_set_ratio_max(Branch* br, REAL ratio) {
+  if (br)
+    br->ratio_max = ratio;
+}
+
+void BRANCH_set_ratio_min(Branch* br, REAL ratio) {
+  if (br)
+    br->ratio_min = ratio;
+}
+
+void BRANCH_set_pos_ratio_v_sens(Branch* br, BOOL flag) {
+  if (br)
+    br->pos_ratio_v_sens = flag;
+}
+
+void BRANCH_set_outage(Branch* br, BOOL outage) {
+  if (br)
+    br->outage = outage;
+}
+
+void BRANCH_set_phase(Branch* br, REAL phase, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    br->phase[t] = phase;
 }
 
 void BRANCH_set_phase_max(Branch* br, REAL phase) {
@@ -816,15 +820,22 @@ void BRANCH_set_ratingC(Branch* br, REAL r) {
 
 void BRANCH_set_var_values(Branch* br, Vec* values) {
 
+  // Local vars
+  int t;
+
   // No branch
   if (!br)
     return;
 
-  // Set variable values
-  if (br->vars & BRANCH_VAR_RATIO)    // taps ratio
-    br->ratio = VEC_get(values,br->index_ratio); 
-  if (br->vars & BRANCH_VAR_PHASE)    // phase shift
-    br->phase = VEC_get(values,br->index_phase);
+  // Time loop
+  for (t = 0; t < br->num_periods; t++) {
+    
+    // Ratio and phase
+    if (br->vars & BRANCH_VAR_RATIO)    // taps ratio
+      br->ratio[t] = VEC_get(values,br->index_ratio[t]); 
+    if (br->vars & BRANCH_VAR_PHASE)    // phase shift
+      br->phase[t] = VEC_get(values,br->index_phase[t]);
+  }
 }
 
 int BRANCH_set_flags(void* vbr, char flag_type, char mask, int index) {
@@ -832,6 +843,7 @@ int BRANCH_set_flags(void* vbr, char flag_type, char mask, int index) {
   // Local variables
   char* flags_ptr = NULL;
   Branch* br = (Branch*)vbr;
+  int t;
 
   // Check branch
   if (!br)
@@ -851,29 +863,35 @@ int BRANCH_set_flags(void* vbr, char flag_type, char mask, int index) {
 
   // Set flags
   if (!((*flags_ptr) & BRANCH_VAR_RATIO) && (mask & BRANCH_VAR_RATIO)) { // taps ratio
-    if (flag_type == FLAG_VARS)
-      br->index_ratio = index;
+    if (flag_type == FLAG_VARS) {
+      for (t = 0; t < br->num_periods; t++)
+	br->index_ratio[t] = index+t;
+    }
     (*flags_ptr) |= BRANCH_VAR_RATIO;
-    index++;
+    index += br->num_periods;
   }
   if (!((*flags_ptr) & BRANCH_VAR_PHASE) && (mask & BRANCH_VAR_PHASE)) { // phase shift
-    if (flag_type == FLAG_VARS)
-      br->index_phase = index;
+    if (flag_type == FLAG_VARS) {
+      for (t = 0; t < br->num_periods; t++)
+	br->index_phase[t] = index+t;
+    }
     (*flags_ptr) |= BRANCH_VAR_PHASE;
-    index++;
+    index += br->num_periods;
   }
   if (!((*flags_ptr) & BRANCH_VAR_RATIO_DEV) && (mask & BRANCH_VAR_RATIO_DEV)) { // taps ratio deviations
     if (flag_type == FLAG_VARS) {
-      br->index_ratio_y = index;
-      br->index_ratio_z = index+1;
+      for (t = 0; t < br->num_periods; t++) {
+	br->index_ratio_y[t] = index+2*t;
+	br->index_ratio_z[t] = index+2*t+1;
+      }
     }
     (*flags_ptr) |= BRANCH_VAR_RATIO_DEV;
-    index += 2;
+    index += 2*br->num_periods;
   }
   return index;
 }
 
-void BRANCH_show(Branch* br) {
+void BRANCH_show(Branch* br, int t) {
   printf("branch %d\t%d\t%d\n",
 	 BUS_get_number(br->bus_from),
 	 BUS_get_number(br->bus_to),

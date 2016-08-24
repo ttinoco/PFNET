@@ -177,7 +177,7 @@ void BUS_array_del(Bus* bus_array, int size) {
   Bus* bus;
   if (bus_array) {
     for (i = 0; i < size; i++) {
-      bus = bus_array[i];
+      bus = &(bus_array[i]);
       free(bus->v_mag);
       free(bus->v_ang);
       free(bus->v_set);
@@ -298,9 +298,9 @@ void BUS_clear_flags(Bus* bus, char flag_type) {
 }
 
 void BUS_clear_sensitivities(Bus* bus) {
-  int t,
+  int t;
   if (bus) {
-    for (t = 0; t < t->num_periods; t++) {
+    for (t = 0; t < bus->num_periods; t++) {
       bus->sens_P_balance[t] = 0;
       bus->sens_Q_balance[t] = 0;
       bus->sens_v_mag_u_bound[t] = 0;
@@ -317,7 +317,7 @@ void BUS_clear_sensitivities(Bus* bus) {
 void BUS_clear_mismatches(Bus* bus) {
   int t;
   if (bus) {
-    for (t = 0; t < t->num_periods; t++) {
+    for (t = 0; t < bus->num_periods; t++) {
       bus->P_mis[t] = 0;
       bus->Q_mis[t] = 0;
     }
@@ -1380,7 +1380,7 @@ int BUS_set_flags(void* vbus, char flag_type, char mask, int index) {
   if (!((*flags_ptr) & BUS_VAR_VANG) && (mask & BUS_VAR_VANG)) { // voltage angle
     if (flag_type == FLAG_VARS) {
       for (t = 0; t < bus->num_periods; t++)
-	bus->index_v_ang[t] = index[t];
+	bus->index_v_ang[t] = index+t;
     }
     (*flags_ptr) |= BUS_VAR_VANG;
     index += bus->num_periods;
@@ -1388,8 +1388,8 @@ int BUS_set_flags(void* vbus, char flag_type, char mask, int index) {
   if (!((*flags_ptr) & BUS_VAR_VDEV) && (mask & BUS_VAR_VDEV)) { // voltage mag deviation
     if (flag_type == FLAG_VARS) {
       for (t = 0; t < bus->num_periods; t++) {
-	bus->index_y = index+2*t;
-	bus->index_z = index+2*t+1;
+	bus->index_y[t] = index+2*t;
+	bus->index_z[t] = index+2*t+1;
       }
     }
     (*flags_ptr) |= BUS_VAR_VDEV;
@@ -1398,8 +1398,8 @@ int BUS_set_flags(void* vbus, char flag_type, char mask, int index) {
   if (!((*flags_ptr) & BUS_VAR_VVIO) && (mask & BUS_VAR_VVIO)) { // voltage mag max min bound violations
     if (flag_type == FLAG_VARS) {
       for (t = 0; t < bus->num_periods; t++) {
-	bus->index_vl = index+2*t;
-	bus->index_vh = index+2*t+1;
+	bus->index_vl[t] = index+2*t;
+	bus->index_vh[t] = index+2*t+1;
       }
     }
     (*flags_ptr) |= BUS_VAR_VVIO;
