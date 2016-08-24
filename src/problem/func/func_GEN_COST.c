@@ -235,7 +235,7 @@ void FUNC_GEN_COST_eval_branch(Func* f, Branch* br, Vec* var_values) {
 	    P = GEN_get_P(gen,t);
 	    
 	    // phi
-	    (*phi) += Q0 + Q1*P + Q2*pow(P,2.);	    
+	    (*phi) += Q0 + Q1*P + Q2*pow(P,2.);
 	  }
 	}
       }

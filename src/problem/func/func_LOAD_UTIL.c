@@ -66,7 +66,7 @@ void FUNC_LOAD_UTIL_count_branch(Func* f, Branch* br) {
     
     bus = buses[k];
     
-    if (!bus_counted[bus_index[k]]) {
+    if (!bus_counted[bus_index[k]*BRANCH_get_num_periods(br)]) {
       for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
 	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P))
 	  (*Hcounter)++;
@@ -74,7 +74,7 @@ void FUNC_LOAD_UTIL_count_branch(Func* f, Branch* br) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index[k]*BRANCH_get_num_periods(br)] = TRUE;
   }
 }
 
@@ -83,7 +83,9 @@ void FUNC_LOAD_UTIL_allocate(Func* f) {
   // Local variables
   int num_vars;
   int Hcounter;
+  Net* net;
   
+  net = FUNC_get_network(f);
   num_vars = NET_get_num_vars(FUNC_get_network(f));
   Hcounter = FUNC_get_Hcounter(f);
 
@@ -93,7 +95,7 @@ void FUNC_LOAD_UTIL_allocate(Func* f) {
   // Hphi
   FUNC_set_Hphi(f,MAT_new(num_vars,
 			  num_vars,
-			  Hcounter));
+			  Hcounter*NET_get_num_periods(net)));
 }
 
 void FUNC_LOAD_UTIL_analyze_branch(Func* f, Branch* br) {
@@ -107,6 +109,8 @@ void FUNC_LOAD_UTIL_analyze_branch(Func* f, Branch* br) {
   char* bus_counted;
   Mat* H;
   int k;
+  int t;
+  int T;
 
   // Constr data
   H = FUNC_get_Hphi(f);
@@ -127,24 +131,29 @@ void FUNC_LOAD_UTIL_analyze_branch(Func* f, Branch* br) {
   for (k = 0; k < 2; k++)
     bus_index[k] = BUS_get_index(buses[k]);
 
-  // Buses
-  for (k = 0; k < 2; k++) {
+  // Time loop
+  T = BRANCH_get_num_periods(br);
+  for (t = 0; t < T; t++) {
     
-    bus = buses[k];
-
-    if (!bus_counted[bus_index[k]]) {
-      for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
-	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
-	  MAT_set_i(H,*Hcounter,LOAD_get_index_P(load));
-	  MAT_set_j(H,*Hcounter,LOAD_get_index_P(load));
-	  MAT_set_d(H,*Hcounter,2.*LOAD_get_util_coeff_Q2(load));
-	  (*Hcounter)++;
+    // Buses
+    for (k = 0; k < 2; k++) {
+      
+      bus = buses[k];
+      
+      if (!bus_counted[bus_index[k]*T+t]) {
+	for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+	  if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
+	    MAT_set_i(H,*Hcounter,LOAD_get_index_P(load,t));
+	    MAT_set_j(H,*Hcounter,LOAD_get_index_P(load,t));
+	    MAT_set_d(H,*Hcounter,2.*LOAD_get_util_coeff_Q2(load));
+	    (*Hcounter)++;
+	  }
 	}
       }
+      
+      // Update counted flag
+      bus_counted[bus_index[k]*T+t] = TRUE;
     }
-    
-    // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
   }
 }
 
@@ -164,6 +173,8 @@ void FUNC_LOAD_UTIL_eval_branch(Func* f, Branch* br, Vec* var_values) {
   REAL Q1;
   REAL Q2;
   int k;
+  int t;
+  int T;
 
   // Constr data
   phi = FUNC_get_phi_ptr(f);
@@ -184,38 +195,54 @@ void FUNC_LOAD_UTIL_eval_branch(Func* f, Branch* br, Vec* var_values) {
   for (k = 0; k < 2; k++)
     bus_index[k] = BUS_get_index(buses[k]);
 
-  // Buses
-  for (k = 0; k < 2; k++) {
+  // Time loop
+  T = BRANCH_get_num_periods(br);
+  for (t = 0; t < T; t++) {
     
-    bus = buses[k];
-    
-    if (!bus_counted[bus_index[k]]) {
+    // Buses
+    for (k = 0; k < 2; k++) {
       
-      for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+      bus = buses[k];
+      
+      if (!bus_counted[bus_index[k]*T+t]) {
+	
+	for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+	  
+	  Q0 = LOAD_get_util_coeff_Q0(load);
+	  Q1 = LOAD_get_util_coeff_Q1(load);
+	  Q2 = LOAD_get_util_coeff_Q2(load);
+	  
+	  // Variable
+	  if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
+	    
+	    // Index
+	    index_P = LOAD_get_index_P(load,t);
+	    
+	    // P
+	    P = VEC_get(var_values,index_P);
+	    
+	    // phi
+	    (*phi) += Q0 + Q1*P + Q2*pow(P,2.);
+	    
+	    // gphi
+	    gphi[index_P] = Q1 + 2.*Q2*P;
+	  }
 
-	Q0 = LOAD_get_util_coeff_Q0(load);
-	Q1 = LOAD_get_util_coeff_Q1(load);
-	Q2 = LOAD_get_util_coeff_Q2(load);
-      
-	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
-	  
-	  // Index
-	  index_P = LOAD_get_index_P(load);
-	  
-	  // P
-	  P = VEC_get(var_values,index_P);
-	  
-	  // phi
-	  (*phi) += Q0 + Q1*P + Q2*pow(P,2.);
-	  
-	  // gphi
-	  gphi[index_P] = Q1 + 2.*Q2*P;
+	  // Constant
+	  else {
+	    
+	    // P
+	    P = LOAD_get_P(load,t);
+	    
+	    // phi
+	    (*phi) += Q0 + Q1*P + Q2*pow(P,2.);	    
+	  }
 	}
       }
+      
+      // Update counted flag
+      bus_counted[bus_index[k]*T+t] = TRUE;
     }
-
-    // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
   }
 }
 
