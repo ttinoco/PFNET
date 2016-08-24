@@ -151,6 +151,13 @@ void BRANCH_clear_sensitivities(Branch* br) {
   }
 }
 
+int BRANCH_get_num_periods(Branch* br) {
+  if (br)
+    return br->num_periods;
+  else
+    return 0;
+}
+
 char BRANCH_get_type(Branch* br) {
   if (br)
     return br->type;
@@ -383,6 +390,7 @@ void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
   if (!br)
     return;
 
+  // Time loop
   for (t = 0; t < br->num_periods; t++) {
 
     if (br->vars & BRANCH_VAR_RATIO) { // taps ratio
@@ -565,7 +573,7 @@ void BRANCH_init(Branch* br, int num_periods) {
   br->reg_next = NULL;
   br->from_next = NULL;
   br->to_next = NULL;
-};
+}
 
 BOOL BRANCH_is_equal(Branch* br, Branch* other) {
   return br == other;

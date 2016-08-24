@@ -151,6 +151,7 @@ int BUS_get_index_Q(Bus* bus);
 Bus* BUS_get_next(Bus* bus);
 int BUS_get_number(Bus* bus);
 char* BUS_get_name(Bus* bus);
+int BUS_get_num_periods(Bus* bus);
 int BUS_get_num_gens(Bus* bus);
 int BUS_get_num_loads(Bus* bus);
 int BUS_get_num_shunts(Bus* bus);

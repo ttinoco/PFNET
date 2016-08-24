@@ -436,6 +436,13 @@ char* BUS_get_name(Bus* bus) {
     return NULL;
 }
 
+int BUS_get_num_periods(Bus* bus) {
+  if (bus)
+    return bus->num_periods;
+  else
+    return 0;
+}
+
 int BUS_get_num_gens(Bus* bus) {
   if (bus)
     return GEN_list_len(bus->gen);

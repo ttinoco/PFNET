@@ -63,6 +63,7 @@ Branch* BRANCH_array_new(int size, int num_periods);
 void BRANCH_array_show(Branch* br, int size, int t);
 void BRANCH_clear_sensitivities(Branch* br);
 void BRANCH_clear_flags(Branch* br, char flag_type);
+int BRANCH_get_num_periods(Branch* br);
 char BRANCH_get_type(Branch* br);
 char BRANCH_get_obj_type(void* br);
 REAL BRANCH_get_sens_P_u_bound(Branch* br, int t);
