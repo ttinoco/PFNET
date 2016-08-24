@@ -8,6 +8,7 @@
  * PFNET is released under the BSD 2-clause license.
  */
 
+#include <pfnet/array.h>
 #include <pfnet/matrix.h>
 #include <pfnet/vector.h>
 
@@ -81,8 +82,7 @@ Mat* MAT_copy(Mat* m) {
     newm->data[k] = m->data[k];
   }
 
-  return newm;
-  
+  return newm; 
 }
 
 void MAT_del(Mat* m) {
@@ -167,9 +167,9 @@ Mat* MAT_new(int size1, int size2, int nnz) {
   MAT_init(m);
   m->size1 = size1;
   m->size2 = size2;
-  m->row = (int*)calloc(nnz,sizeof(int));
-  m->col = (int*)calloc(nnz,sizeof(int));
-  m->data = (REAL*)calloc(nnz,sizeof(REAL));
+  ARRAY_zalloc(m->row,int,nnz);
+  ARRAY_zalloc(m->col,int,nnz);
+  ARRAY_zalloc(m->data,REAL,nnz);
   m->nnz = nnz;
   return m;
 }
@@ -232,10 +232,8 @@ void MAT_set_size2(Mat* m, int size2) {
 
 void MAT_set_zero_d(Mat* m) {
   int i;
-  if (m) {
-    for (i = 0; i < m->nnz; i++) 
-      m->data[i] = 0.;
-  }
+  if (m)
+    ARRAY_clear(m->data,REAL,m->nnz);
 }
 
 void MAT_set_row_array(Mat* m, int* array) {

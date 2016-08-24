@@ -11,6 +11,8 @@
 #ifndef __ARRAY_HEADER__
 #define __ARRAY_HEADER__
 
+#include <string.h>
+
 #define ARRAY_alloc(ar, type, num) {	      \
     (ar) = (type*)malloc((num)*sizeof(type)); \
 }
@@ -19,9 +21,9 @@
     (ar) = (type*)calloc((num),sizeof(type)); \
 }
 
-#define ARRAY_clear(ar, type, num) {	   \
-    if ((ar))			           \
-	memset((ar),0,(num)*sizeof(type)); \
+#define ARRAY_clear(ar, type, num) {	 \
+    if ((ar))			         \
+      memset((ar),0,(num)*sizeof(type)); \
 }
 
 #endif
