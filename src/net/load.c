@@ -19,7 +19,7 @@ struct Load {
 
   // Times
   int num_periods;   /**< @brief Number of time periods. */
-
+  
   // Flags
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
@@ -90,8 +90,10 @@ Load* LOAD_array_new(int size, int num_periods) {
 
 void LOAD_array_show(Load* load_array, int size, int t) { 
   int i;
-  for (i = 0; i < size; i++) 
-    LOAD_show(&(load_array[i]),t);
+  if (load_array) {
+    for (i = 0; i < size; i++) 
+      LOAD_show(&(load_array[i]),t);
+  }
 }
 
 void LOAD_clear_sensitivities(Load* load) {

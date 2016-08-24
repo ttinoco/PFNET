@@ -125,8 +125,10 @@ Branch* BRANCH_array_new(int size, int num_periods) {
 
 void BRANCH_array_show(Branch* br_array, int size, int t) {
   int i;
-  for (i = 0; i < size; i++)
-    BRANCH_show(&(br_array[i]),t);
+  if (br_array) {
+    for (i = 0; i < size; i++)
+      BRANCH_show(&(br_array[i]),t);
+  }
 }
 
 void BRANCH_clear_flags(Branch* br, char flag_type) {
