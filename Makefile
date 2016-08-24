@@ -64,8 +64,8 @@ tests/%.out: tests/%.c
 single: 
 ifndef FILE
 	$(error error: 'FILE' must be specified)
-else	
-	$(CC) -c $(CFLAGS) -Wfatal-errors $(FILE)
+else
+	$(CC) -c $(CFLAGS) -Wfatal-errors $(FILE) -o $(basename $(FILE)).o
 endif
 
 .PHONY: docs
