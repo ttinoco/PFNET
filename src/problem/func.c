@@ -9,6 +9,7 @@
  */
 
 #include <pfnet/func.h>
+#include <pfnet/array.h>
 #include <pfnet/func_REG_VMAG.h>
 #include <pfnet/func_REG_VANG.h>
 #include <pfnet/func_REG_PQ.h>
@@ -64,13 +65,8 @@ struct Func {
 };
 
 void FUNC_clear_bus_counted(Func* f) {
-  int i;
-  if (f) {
-    if (f->bus_counted) {
-      for (i = 0; i < f->bus_counted_size; i++)
-	f->bus_counted[i] = 0;
-    }
-  } 
+  if (f)
+    ARRAY_clear(f->bus_counted,char,f->bus_counted_size);
 }
 
 void FUNC_del_matvec(Func* f) {
@@ -430,9 +426,11 @@ void FUNC_set_Hcounter(Func* f, int counter) {
     f->Hcounter = counter;
 }
 
-void FUNC_set_bus_counted(Func* f, char* counted, int size) {
+void FUNC_set_bus_counted(Func* f, char* bus_counted, int size) {
   if (f) {
-    f->bus_counted = counted;
+    if (f->bus_counted)
+      free(f->bus_counted);
+    f->bus_counted = bus_counted;
     f->bus_counted_size = size;
   }  
 }
@@ -489,7 +487,8 @@ void FUNC_eval_branch(Func* f, Branch* b, Vec* values) {
 }
 
 BOOL FUNC_is_safe_to_count(Func* f) {
-  if (FUNC_get_bus_counted_size(f) == NET_get_num_buses(FUNC_get_network(f)))
+  Net* net = FUNC_get_network(f);
+  if (FUNC_get_bus_counted_size(f) == NET_get_num_buses(net)*NET_get_num_periods(net))
     return TRUE;
   else {
     sprintf(f->error_string,"function is not safe to count");
@@ -500,7 +499,7 @@ BOOL FUNC_is_safe_to_count(Func* f) {
 
 BOOL FUNC_is_safe_to_analyze(Func* f) {
   Net* net = FUNC_get_network(f);
-  if (FUNC_get_bus_counted_size(f) == NET_get_num_buses(net) &&
+  if (FUNC_get_bus_counted_size(f) == NET_get_num_buses(net)*NET_get_num_periods(net) &&
       MAT_get_size1(f->Hphi) == NET_get_num_vars(net) &&
       MAT_get_size2(f->Hphi) == NET_get_num_vars(net))
     return TRUE;
@@ -513,7 +512,7 @@ BOOL FUNC_is_safe_to_analyze(Func* f) {
 
 BOOL FUNC_is_safe_to_eval(Func* f, Vec* values) {
   Net* net = FUNC_get_network(f);
-  if (FUNC_get_bus_counted_size(f) == NET_get_num_buses(net) &&
+  if (FUNC_get_bus_counted_size(f) == NET_get_num_buses(net)*NET_get_num_periods(net) &&
       MAT_get_size1(f->Hphi) == NET_get_num_vars(net) &&
       MAT_get_size2(f->Hphi) == NET_get_num_vars(net) &&
       VEC_get_size(f->gphi) == NET_get_num_vars(net) &&
@@ -548,14 +547,16 @@ char* FUNC_get_error_string(Func* f) {
 }
 
 void FUNC_update_network(Func* f) {
+  
+  // No f
   if (!f)
     return;
  
   // Bus counted
   if (f->bus_counted)
     free(f->bus_counted);
-  f->bus_counted_size = NET_get_num_buses(f->net);
-  f->bus_counted = (char*)calloc(NET_get_num_buses(f->net),sizeof(char));
+  f->bus_counted_size = NET_get_num_buses(f->net)*NET_get_num_periods(f->net);
+  ARRAY_zalloc(f->bus_counted,char,f->bus_counted_size);
 
   // Type-specific data
   if (f->func_free)

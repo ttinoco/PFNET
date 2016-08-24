@@ -19,8 +19,9 @@
     (ar) = (type*)calloc((num),sizeof(type)); \
 }
 
-#define ARRAY_clear(ar, type, num) {   \
-    memset((ar),0,(num)*sizeof(type)); \
+#define ARRAY_clear(ar, type, num) {	   \
+    if ((ar))			           \
+	memset((ar),0,(num)*sizeof(type)); \
 }
 
 #endif

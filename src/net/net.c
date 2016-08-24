@@ -519,13 +519,11 @@ void NET_clear_properties(Net* net) {
   }      
 
   // Counters
-  if (net->bus_counted && net->bus) {
-    for (i = 0; i < net->num_buses; i++) {
-      BUS_clear_mismatches(BUS_array_get(net->bus,i));
-      for (t = 0; t < net->num_periods; t++)
-	net->bus_counted[i*net->num_periods+t] = 0;
-    }
-  }
+  for (i = 0; i < net->num_buses; i++)
+    BUS_clear_mismatches(BUS_array_get(net->bus,i));
+
+  // Bus counted
+  ARRAY_clear(net->bus_counted,char,net->num_buses*net->num_periods);
 }
 
 void NET_clear_sensitivities(Net* net) {
