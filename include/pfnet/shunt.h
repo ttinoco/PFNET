@@ -47,6 +47,7 @@ void SHUNT_array_del(Shunt* shunt_array, int size);
 Shunt* SHUNT_array_new(int size, int num_periods);
 void SHUNT_array_show(Shunt* shunt_array, int size, int t);
 void SHUNT_clear_flags(Shunt* shunt, char flag_type);
+int SHUNT_get_num_periods(Shunt* shunt);
 char SHUNT_get_obj_type(void* shunt);
 int SHUNT_get_index(Shunt* shunt);
 int SHUNT_get_index_b(Shunt* shunt, int t);

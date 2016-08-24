@@ -106,6 +106,13 @@ void SHUNT_clear_flags(Shunt* shunt, char flag_type) {
   }
 }
 
+int SHUNT_get_num_periods(Shunt* shunt) {
+  if (shunt)
+    return shunt->num_periods;
+  else
+    return 0;
+}
+
 char SHUNT_get_obj_type(void* shunt) {
   if (shunt)
     return OBJ_SHUNT;
