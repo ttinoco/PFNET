@@ -126,11 +126,11 @@ void BUS_del_branch_from(Bus* bus, Branch* branch);
 void BUS_add_branch_to(Bus* bus, Branch* branch);
 void BUS_del_branch_to(Bus* bus, Branch* branch);
 
-BOOL BUS_array_check(Bus* bus, int num, BOOL verbose);
-void* BUS_array_get(void* bus, int index);
+BOOL BUS_array_check(Bus* bus_array, int size, BOOL verbose);
+void* BUS_array_get(void* bus_array, int index);
 Bus* BUS_array_new(int size, int num_periods);
-void BUS_array_show(Bus* bus, int size, int t);
-void BUS_array_get_max_mismatches(Bus* bus, int size, REAL* P, REAL* Q, int t);
+void BUS_array_show(Bus* bus_array, int size, int t);
+void BUS_array_get_max_mismatches(Bus* bus_array, int size, REAL* P, REAL* Q, int t);
 BOOL BUS_check(Bus* bus, BOOL verbose);
 void BUS_clear_flags(Bus* bus, char flag_type);
 void BUS_clear_sensitivities(Bus* bus);

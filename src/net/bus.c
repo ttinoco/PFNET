@@ -23,6 +23,9 @@ struct Bus {
   int number;                      /**< @brief Bus number */
   char name[BUS_NAME_BUFFER_SIZE]; /**< @brief Bus name */
 
+  // Times
+  int num_periods;   /**< @brief Number of time periods. */
+
   // Voltage
   REAL* v_mag;        /**< @brief Voltage magnitude (p.u.) */
   REAL* v_ang;        /**< @brief Voltage angle (radians) */
@@ -48,9 +51,6 @@ struct Bus {
   Branch* branch_to;   /**< @brief List of branches having this bus on the "to" side */
   Vargen* vargen;      /**< @brief List of variable generators connected to bus */
   Bat* bat;            /**< @brief List of batteries connected to bus */
-
-  // Times
-  int num_periods;   /**< @brief Number of time periods. */
 
   // Price
   REAL* price;        /**< @brief Energy price at bus ($/ (hr p.u.)) */
@@ -162,20 +162,22 @@ void BUS_add_bat(Bus* bus, Bat* bat) {
     bus->bat = BAT_list_add(bus->bat,bat);
 }
 
-BOOL BUS_array_check(Bus* bus, int num, BOOL verbose) {
+BOOL BUS_array_check(Bus* bus_array, int size, BOOL verbose) {
   int i;
   BOOL bus_ok = TRUE;
-  for (i = 0; i < num; i++)
-    bus_ok &= BUS_check(&(bus[i]),verbose);
+  if (!bus_array)
+    return bus_ok;
+  for (i = 0; i < size; i++)
+    bus_ok &= BUS_check(&(bus_array[i]),verbose);
   return bus_ok;
 }
 
-void BUS_array_del(Bus* bus, int size) {
+void BUS_array_del(Bus* bus_array, int size) {
   int i;
-  Bus* b;
-  if (bus) {
+  Bus* bus;
+  if (bus_array) {
     for (i = 0; i < size; i++) {
-      b = bus[i];
+      bus = bus_array[i];
       free(bus->v_mag);
       free(bus->v_ang);
       free(bus->v_set);
@@ -201,9 +203,9 @@ void BUS_array_del(Bus* bus, int size) {
   }  
 }
 
-void* BUS_array_get(void* bus, int index) {
-  if (bus)
-    return (void*)&(((Bus*)bus)[index]);
+void* BUS_array_get(void* bus_array, int index) {
+  if (bus_array)
+    return (void*)&(((Bus*)bus_array)[index]);
   else
     return NULL;
 }
@@ -211,33 +213,33 @@ void* BUS_array_get(void* bus, int index) {
 Bus* BUS_array_new(int size, int num_periods) {
   int i;
   if (num_periods > 0) {
-    Bus* bus = (Bus*)malloc(sizeof(Bus)*size);
+    Bus* bus_array = (Bus*)malloc(sizeof(Bus)*size);
     for (i = 0; i < size; i++) {
-      BUS_init(&(bus[i]),num_periods);
-      BUS_set_index(&(bus[i]),i);
+      BUS_init(&(bus_array[i]),num_periods);
+      BUS_set_index(&(bus_array[i]),i);
     }
-    return bus;
+    return bus_array;
   }
   else
     return NULL;
 }
 
-void BUS_array_show(Bus* bus, int size, int t) {
+void BUS_array_show(Bus* bus_array, int size, int t) {
   int i;
-  if (bus) {
+  if (bus_array) {
     for (i = 0; i < size; i++) 
-      BUS_show(&(bus[i]),t);
+      BUS_show(&(bus_array[i]),t);
   }
 }
 
-void BUS_array_get_max_mismatches(Bus* bus, int size, REAL* P, REAL* Q, int t) {
+void BUS_array_get_max_mismatches(Bus* bus_array, int size, REAL* P, REAL* Q, int t) {
   int i;
-  if (bus && t >= 0 && t < bus->num_periods) {
+  if (bus_array && t >= 0 && t < bus_array->num_periods) {
     for (i = 0; i < size; i++) {
-      if (fabs(bus[i].P_mis[t]) > *P)
-	*P = fabs(bus[i].P_mis[t]);
-      if (fabs(bus[i].Q_mis[t]) > *Q)
-	*Q = fabs(bus[i].Q_mis[t]);
+      if (fabs(bus_array[i].P_mis[t]) > *P)
+	*P = fabs(bus_array[i].P_mis[t]);
+      if (fabs(bus_array[i].Q_mis[t]) > *Q)
+	*Q = fabs(bus_array[i].Q_mis[t]);
     }
   }
 }
@@ -711,7 +713,7 @@ REAL BUS_get_v_min(Bus* bus) {
 
 void BUS_get_var_values(Bus* bus, Vec* values, int code) {
 
-  // Local variables
+  // Local vars
   int t;
 
   // No bus
@@ -1130,7 +1132,7 @@ int BUS_hash_name_len(Bus* bus_hash) {
 
 void BUS_init(Bus* bus, int num_periods) {
   
-  // Local variables
+  // Local vars
   int i;
   int T;
   int t;
@@ -1139,7 +1141,8 @@ void BUS_init(Bus* bus, int num_periods) {
   if (!bus)
     return;
 
-  T = bus->num_periods;
+  T = num_periods;
+  bus->num_periods = num_periods;
 
   bus->number = 0;
   for (i = 0; i < BUS_NAME_BUFFER_SIZE; i++) 

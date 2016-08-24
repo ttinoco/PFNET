@@ -10,12 +10,16 @@
 
 #include <pfnet/branch.h>
 #include <pfnet/bus.h>
+#include <pfnet/array.h>
 
 // Branch
 struct Branch {
 
   // Properties
   char type;         /**< @brief %Branch type */
+
+  // Times
+  int num_periods;   /**< @brief Number of time periods. */
 
   // Buses
   Bus* bus_from;     /**< @brief Bus connected to the "from" side */
@@ -33,13 +37,13 @@ struct Branch {
   REAL b_to;         /**< @brief %Shunt shunt susceptance "to" side (p.u.) */
   
   // Tap ratio
-  REAL ratio;        /**< @brief Transformer taps ratio (p.u.) */
+  REAL* ratio;       /**< @brief Transformer taps ratio (p.u.) */
   REAL ratio_max;    /**< @brief Maximum transformer taps ratio (p.u.) */ 
   REAL ratio_min;    /**< @brief Minimum transformer taps ratio (p.u.) */
   char num_ratios;   /**< @brief Number of tap positions */
 
   // Phase shift
-  REAL phase;        /**< @brief Transformer phase shift (radians) */
+  REAL* phase;       /**< @brief Transformer phase shift (radians) */
   REAL phase_max;    /**< @brief Maximum transformer phase shift (radians) */
   REAL phase_min;    /**< @brief Minimum transformer phase shift (radians) */
   
@@ -55,7 +59,7 @@ struct Branch {
   REAL ratingC;      /**< @brief Power rating C (p.u. system base MVA) */  
    
   // Flags
-  BOOL outage;            /**< @brief Flag for indicating that branch in on outage */
+  BOOL outage;           /**< @brief Flag for indicating that branch in on outage */
   BOOL pos_ratio_v_sens; /**< @brief Flag for positive ratio-voltage sensitivity */
   char vars;             /**< @brief Flags for indicating which quantities should be treated as variables */
   char fixed;            /**< @brief Flags for indicating which quantities should be fixed to their current value */
@@ -63,17 +67,15 @@ struct Branch {
   char sparse;           /**< @brief Flags for indicating which control adjustments should be sparse */
 
   // Indices
-  int index;         /**< @brief Branch index */
-  int index_ratio;   /**< @brief Taps ratio index */
-  int index_ratio_y; /**< @brief Taps ratio positive deviation index */
-  int index_ratio_z; /**< @brief Taps ratio negative deviation index */
-  int index_phase;   /**< @brief Phase shift index */
-  int index_P;       /**< @brief Branch active power flow index */
-  int index_Q;       /**< @brief Branch reactive power flow index */
+  int index;          /**< @brief Branch index */
+  int* index_ratio;   /**< @brief Taps ratio index */
+  int* index_ratio_y; /**< @brief Taps ratio positive deviation index */
+  int* index_ratio_z; /**< @brief Taps ratio negative deviation index */
+  int* index_phase;   /**< @brief Phase shift index */
 
   // Sensitivities
-  REAL sens_P_u_bound;  /**< @brief Sensitivity of active power flow upper bound */
-  REAL sens_P_l_bound;  /**< @brief Sensitivity of active power flow lower bound */
+  REAL* sens_P_u_bound;  /**< @brief Sensitivity of active power flow upper bound */
+  REAL* sens_P_l_bound;  /**< @brief Sensitivity of active power flow lower bound */
 
   // List
   Branch* reg_next;  /**< @brief List of branches regulating a bus voltage magnitude */
@@ -81,27 +83,49 @@ struct Branch {
   Branch* to_next;   /**< @brief List of branches connected to a bus in the "to" side */
 };
 
-void* BRANCH_array_get(void* branch, int index) {
-  if (branch)
-    return (void*)&(((Branch*)branch)[index]);
+void* BRANCH_array_get(void* br_array, int index) {
+  if (br_array)
+    return (void*)&(((Branch*)br_array)[index]);
   else
     return NULL;
 }
 
-Branch* BRANCH_array_new(int num) {
+void BRANCH_array_del(Branch* br_array, int size) {
   int i;
-  Branch* branch = (Branch*)malloc(sizeof(Branch)*num);
-  for (i = 0; i < num; i++) {
-    BRANCH_init(&(branch[i]));
-    BRANCH_set_index(&(branch[i]),i);
-  }
-  return branch;
+  Branch* br;
+  if (br_array) {
+    for (i = 0; i < size; i++) {
+      br = br_array[i];
+      free(br->ratio);
+      free(br->phase);
+      free(br->index_ratio);
+      free(br->index_ratio_y);
+      free(br->index_ratio_z);
+      free(br->index_phase);
+      free(br->sens_P_u_bound);
+      free(br->sens_P_l_bound);
+    }
+  }  
 }
 
-void BRANCH_array_show(Branch* branch, int num) {
+Branch* BRANCH_array_new(int size, int num_periods) {
   int i;
-  for (i = 0; i < num; i++)
-    BRANCH_show(&(branch[i]));
+  if (num_periods > 0) {
+    Branch* br_array = (Branch*)malloc(sizeof(Branch)*size);
+    for (i = 0; i < size; i++) {
+      BRANCH_init(&(br_array[i]),num_periods);
+      BRANCH_set_index(&(br_array[i]),i);
+    }
+    return br_array;
+  }
+  else
+    return NULL,
+}
+
+void BRANCH_array_show(Branch* br_array, int size, int t) {
+  int i;
+  for (i = 0; i < size; i++)
+    BRANCH_show(&(br_array[i]),t);
 }
 
 void BRANCH_clear_flags(Branch* br, char flag_type) {
@@ -118,9 +142,12 @@ void BRANCH_clear_flags(Branch* br, char flag_type) {
 }
 
 void BRANCH_clear_sensitivities(Branch* br) {
+  int t;
   if (br) {
-    br->sens_P_u_bound = 0;
-    br->sens_P_l_bound = 0;
+    for (t = 0; t < br->num_periods; t++) {
+      br->sens_P_u_bound[t] = 0;
+      br->sens_P_l_bound[t] = 0;
+    }
   }
 }
 
@@ -138,114 +165,114 @@ char BRANCH_get_obj_type(void* br) {
     return OBJ_UNKNOWN;
 }
 
-REAL BRANCH_get_sens_P_u_bound(Branch* br) {
+REAL BRANCH_get_sens_P_u_bound(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->sens_P_u_bound[t];
+  else
+    return 0;
+}
+
+REAL BRANCH_get_sens_P_l_bound(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->sens_P_l_bound[t];
+  else
+    return 0;
+}
+
+int BRANCH_get_index(Branch* br) {
   if (br)
-    return br->sens_P_u_bound;
+    return br->index;
   else
     return 0;
 }
 
-REAL BRANCH_get_sens_P_l_bound(Branch* br) {
+int BRANCH_get_index_ratio(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->index_ratio[t];
+  else
+    return 0;
+}
+
+int BRANCH_get_index_ratio_y(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->index_ratio_y[t];
+  else
+    return 0;
+}
+
+int BRANCH_get_index_ratio_z(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->index_ratio_z[t];
+  else
+    return 0;
+}
+
+int BRANCH_get_index_phase(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->index_phase[t];
+  else
+    return 0;
+}
+
+REAL BRANCH_get_ratio(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->ratio[t];
+  else
+    return 0;
+}
+
+REAL BRANCH_get_ratio_max(Branch* br) {
   if (br)
-    return br->sens_P_l_bound;
+    return br->ratio_max;
   else
     return 0;
 }
 
-int BRANCH_get_index(Branch* b) {
-  if (b)
-    return b->index;
+REAL BRANCH_get_ratio_min(Branch* br) {
+  if (br)
+    return br->ratio_min;
   else
     return 0;
 }
 
-int BRANCH_get_index_ratio(Branch* b) {
-  if (b)
-    return b->index_ratio;
+REAL BRANCH_get_b(Branch* br) {
+  if (br)
+    return br->b;
   else
     return 0;
 }
 
-int BRANCH_get_index_ratio_y(Branch* b) {
-  if (b)
-    return b->index_ratio_y;
+REAL BRANCH_get_b_from(Branch* br) {
+  if (br)
+    return br->b_from;
   else
     return 0;
 }
 
-int BRANCH_get_index_ratio_z(Branch* b) {
-  if (b)
-    return b->index_ratio_z;
+REAL BRANCH_get_b_to(Branch* br) {
+  if (br)
+    return br->b_to;
   else
     return 0;
 }
 
-int BRANCH_get_index_phase(Branch* b) {
-  if (b)
-    return b->index_phase;
+REAL BRANCH_get_g(Branch* br) {
+  if (br)
+    return br->g;
   else
     return 0;
 }
 
-REAL BRANCH_get_ratio(Branch* b) {
-  if (b)
-    return b->ratio;
+REAL BRANCH_get_g_from(Branch* br) {
+  if (br)
+    return br->g_from;
   else
     return 0;
 }
 
-REAL BRANCH_get_ratio_max(Branch* b) {
-  if (b)
-    return b->ratio_max;
-  else
-    return 0;
-}
-
-REAL BRANCH_get_ratio_min(Branch* b) {
-  if (b)
-    return b->ratio_min;
-  else
-    return 0;
-}
-
-REAL BRANCH_get_b(Branch* b) {
-  if (b)
-    return b->b;
-  else
-    return 0;
-}
-
-REAL BRANCH_get_b_from(Branch* b) {
-  if (b)
-    return b->b_from;
-  else
-    return 0;
-}
-
-REAL BRANCH_get_b_to(Branch* b) {
-  if (b)
-    return b->b_to;
-  else
-    return 0;
-}
-
-REAL BRANCH_get_g(Branch* b) {
-  if (b)
-    return b->g;
-  else
-    return 0;
-}
-
-REAL BRANCH_get_g_from(Branch* b) {
-  if (b)
-    return b->g_from;
-  else
-    return 0;
-}
-
-REAL BRANCH_get_g_to(Branch* b) {
-  if (b)
-    return b->g_to;
+REAL BRANCH_get_g_to(Branch* br) {
+  if (br)
+    return br->g_to;
   else
     return 0;
 }
@@ -292,56 +319,56 @@ Branch* BRANCH_get_to_next(Branch* br) {
     return NULL;
 }
 
-REAL BRANCH_get_phase(Branch* b) {
-  if (b)
-    return b->phase;
+REAL BRANCH_get_phase(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->phase;
   else
     return 0;
 }
 
-REAL BRANCH_get_phase_max(Branch* b) {
-  if (b)
-    return b->phase_max;
+REAL BRANCH_get_phase_max(Branch* br) {
+  if (br)
+    return br->phase_max;
   else
     return 0;
 }
 
-REAL BRANCH_get_phase_min(Branch* b) {
-  if (b)
-    return b->phase_min;
+REAL BRANCH_get_phase_min(Branch* br) {
+  if (br)
+    return br->phase_min;
   else
     return 0;
 }
 
-REAL BRANCH_get_ratingA(Branch* b) {
-  if (b)
-    return b->ratingA;
+REAL BRANCH_get_ratingA(Branch* br) {
+  if (br)
+    return br->ratingA;
   else
     return 0;
 }
 
-REAL BRANCH_get_ratingB(Branch* b) {
-  if (b)
-    return b->ratingB;
+REAL BRANCH_get_ratingB(Branch* br) {
+  if (br)
+    return br->ratingB;
   else
     return 0;
 }
 
-REAL BRANCH_get_ratingC(Branch* b) {
-  if (b)
-    return b->ratingC;
+REAL BRANCH_get_ratingC(Branch* br) {
+  if (br)
+    return br->ratingC;
   else
     return 0;
 }
 
-REAL BRANCH_get_P_flow_DC(Branch* br) {
+REAL BRANCH_get_P_flow_DC(Branch* br, int t) {
   /* Active power flow (DC approx) from bus
      "from" to bus "to". */
 
-  if (br) {
-    return -(br->b)*(BUS_get_v_ang(br->bus_from)-
-		     BUS_get_v_ang(br->bus_to)-
-		     br->phase);
+  if (br && t >= 0 && t < br->num_periods) {
+    return -(br->b)*(BUS_get_v_ang(br->bus_from,t)-
+		     BUS_get_v_ang(br->bus_to,t)-
+		     br->phase[t]);
   }
   else
     return 0;
@@ -349,47 +376,53 @@ REAL BRANCH_get_P_flow_DC(Branch* br) {
 
 void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
 
+  // Local vars
+  int t;
+
   // No branch
   if (!br)
     return;
 
-  if (br->vars & BRANCH_VAR_RATIO) { // taps ratio
-    switch(code) {
-    case UPPER_LIMITS:
-      VEC_set(values,br->index_ratio,br->ratio_max);
-      break;
-    case LOWER_LIMITS:
-      VEC_set(values,br->index_ratio,br->ratio_min);
-      break;
-    default:
-      VEC_set(values,br->index_ratio,br->ratio);
+  for (t = 0; t < br->num_periods; t++) {
+
+    if (br->vars & BRANCH_VAR_RATIO) { // taps ratio
+      switch(code) {
+      case UPPER_LIMITS:
+	VEC_set(values,br->index_ratio[t],br->ratio_max);
+	break;
+      case LOWER_LIMITS:
+	VEC_set(values,br->index_ratio[t],br->ratio_min);
+	break;
+      default:
+	VEC_set(values,br->index_ratio[t],br->ratio[t]);
+      }
     }
-  }
-  if (br->vars & BRANCH_VAR_PHASE) { // phase shift
-    switch(code) {
-    case UPPER_LIMITS:
-      VEC_set(values,br->index_phase,br->phase_max);
-      break;
-    case LOWER_LIMITS:
-      VEC_set(values,br->index_phase,br->phase_min);
-      break;
-    default:
-      VEC_set(values,br->index_phase,br->phase);
+    if (br->vars & BRANCH_VAR_PHASE) { // phase shift
+      switch(code) {
+      case UPPER_LIMITS:
+	VEC_set(values,br->index_phase[t],br->phase_max);
+	break;
+      case LOWER_LIMITS:
+	VEC_set(values,br->index_phase[t],br->phase_min);
+	break;
+      default:
+	VEC_set(values,br->index_phase[t],br->phase[t]);
+      }
     }
-  }
-  if (br->vars & BRANCH_VAR_RATIO_DEV) { // tap ratio deviations
-    switch(code) {
-    case UPPER_LIMITS:
-      VEC_set(values,br->index_ratio_y,BRANCH_INF_RATIO);
-      VEC_set(values,br->index_ratio_z,BRANCH_INF_RATIO);
-      break;
-    case LOWER_LIMITS:
-      VEC_set(values,br->index_ratio_y,0.);
-      VEC_set(values,br->index_ratio_z,0.);
-      break;
-    default:
-      VEC_set(values,br->index_ratio_y,0.);
-      VEC_set(values,br->index_ratio_z,0.);
+    if (br->vars & BRANCH_VAR_RATIO_DEV) { // tap ratio deviations
+      switch(code) {
+      case UPPER_LIMITS:
+	VEC_set(values,br->index_ratio_y[t],BRANCH_INF_RATIO);
+	VEC_set(values,br->index_ratio_z[t],BRANCH_INF_RATIO);
+	break;
+      case LOWER_LIMITS:
+	VEC_set(values,br->index_ratio_y[t],0.);
+	VEC_set(values,br->index_ratio_z[t],0.);
+	break;
+      default:
+	VEC_set(values,br->index_ratio_y[t],0.);
+	VEC_set(values,br->index_ratio_z[t],0.);
+      }
     }
   }   
 }
@@ -397,22 +430,27 @@ void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
 Vec* BRANCH_get_var_indices(void* vbr, char var) {
   Branch* br = (Branch*)vbr;
   Vec* indices;
+  int t;
   if (!br)
     return NULL;
   if (var == BRANCH_VAR_RATIO) {
-    indices = VEC_new(1);
-    VEC_set(indices,0,br->index_ratio);
+    indices = VEC_new(br->num_periods);
+    for (t = 0; t < bus->num_periods; t++)
+      VEC_set(indices,t,br->index_ratio[t]);
     return indices;
   }
   if (var == BRANCH_VAR_PHASE) {
-    indices = VEC_new(1);
-    VEC_set(indices,0,br->index_phase);
+    indices = VEC_new(br->num_periods);
+    for (t = 0; t < bus->num_periods; t++)
+      VEC_set(indices,t,br->index_phase[t]);
     return indices;
   }
   if (var == BRANCH_VAR_RATIO_DEV) {
-    indices = VEC_new(2);
-    VEC_set(indices,0,br->index_ratio_y);
-    VEC_set(indices,1,br->index_ratio_z);
+    indices = VEC_new(2*br->num_periods);
+    for (t = 0; t < bus->num_periods; t++) {
+      VEC_set(indices,2*t,br->index_ratio_y[t]);
+      VEC_set(indices,2*t+1,br->index_ratio_z[t]);
+    }
     return indices;
   }
   return NULL;
@@ -459,7 +497,18 @@ BOOL BRANCH_has_properties(void* vbr, char prop) {
   return TRUE;
 }
 
-void BRANCH_init(Branch* br) {  
+void BRANCH_init(Branch* br, int num_periods) {  
+
+  // Local vars
+  int T;
+  int t;
+
+  // No branch
+  if (!br)
+    return;
+
+  T = num_periods;
+  br->num_periods = num_periods;
 
   br->type = BRANCH_TYPE_LINE;
 
@@ -474,12 +523,10 @@ void BRANCH_init(Branch* br) {
   br->b_from = 0;
   br->b_to = 0;
 
-  br->ratio = 1;
   br->ratio_max = 1;
   br->ratio_min = 1;
   br->num_ratios = 1;
 
-  br->phase = 0;
   br->phase_max = 0;
   br->phase_min = 0;
 
@@ -500,15 +547,20 @@ void BRANCH_init(Branch* br) {
   br->sparse = 0x00;
 
   br->index = 0;
-  br->index_ratio = 0;
-  br->index_ratio_y = 0;
-  br->index_ratio_z = 0;
-  br->index_phase = 0;
-  br->index_P = 0;
-  br->index_Q = 0;
 
-  br->sens_P_u_bound = 0;
-  br->sens_P_l_bound = 0;
+  ARRAY_zalloc(br->ratio,REAL,T); 
+  ARRAY_zalloc(br->phase,REAL,T);
+
+  ARRAY_zalloc(br->index_ratio,int,T);
+  ARRAY_zalloc(br->index_ratio_y,int,T);
+  ARRAY_zalloc(br->index_ratio_z,int,T);
+  ARRAY_zalloc(br->index_phase,int,T);
+
+  ARRAY_zalloc(br->sens_P_u_bound,REAL,T);
+  ARRAY_zalloc(br->sens_P_l_bound,REAL,T);
+
+  for (t = 0; t < br->num_periods; t++)
+    bus->ratio[t] = 1.;
 
   br->reg_next = NULL;
   br->from_next = NULL;
