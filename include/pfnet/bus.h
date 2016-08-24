@@ -126,6 +126,7 @@ void BUS_del_branch_from(Bus* bus, Branch* branch);
 void BUS_add_branch_to(Bus* bus, Branch* branch);
 void BUS_del_branch_to(Bus* bus, Branch* branch);
 
+void BUS_array_del(Bus* bus_array, int size);
 BOOL BUS_array_check(Bus* bus_array, int size, BOOL verbose);
 void* BUS_array_get(void* bus_array, int index);
 Bus* BUS_array_new(int size, int num_periods);
