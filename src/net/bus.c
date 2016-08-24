@@ -200,7 +200,8 @@ void BUS_array_del(Bus* bus_array, int size) {
       free(bus->P_mis);
       free(bus->Q_mis);
     }
-  }  
+    free(bus_array);
+  }
 }
 
 void* BUS_array_get(void* bus_array, int index) {

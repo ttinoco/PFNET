@@ -10,6 +10,7 @@
 
 #include <pfnet/shunt.h>
 #include <pfnet/bus.h>
+#include <pfnet/array.h>
 
 struct Shunt {
   
@@ -17,11 +18,14 @@ struct Shunt {
   Bus* bus;       /**< @brief Bus where the shunt is connected */
   Bus* reg_bus;   /**< @brief Bus regulated by this shunt */
 
+  // Times
+  int num_periods;   /**< @brief Number of time periods. */
+
   // Conductance
   REAL g;         /**< @brief Conductance (p.u) */
 
   // Susceptance
-  REAL b;         /**< @brief Susceptance (p.u.) */
+  REAL* b;         /**< @brief Susceptance (p.u.) */
   REAL b_max;     /**< @brief Maximum susceptance (p.u.) */
   REAL b_min;     /**< @brief Minimum susceptance (p.u.) */
   REAL* b_values; /**< @brief Array of valid susceptances (p.u.) */
@@ -35,46 +39,57 @@ struct Shunt {
   
   // Indices
   int index;      /**< @brief Shunt index */
-  int index_b;    /**< @brief Susceptance index */
-  int index_y;    /**< @brief Susceptance positive deviation index */
-  int index_z;    /**< @brief Susceptance negative deviation index */
+  int* index_b;    /**< @brief Susceptance index */
+  int* index_y;    /**< @brief Susceptance positive deviation index */
+  int* index_z;    /**< @brief Susceptance negative deviation index */
 
   // List
   Shunt* next;     /**< @brief List of shunts connceted to a bus */
   Shunt* reg_next; /**< @brief List of shunts regulated the same bus */
 };
 
-void* SHUNT_array_get(void* shunt, int index) { 
-  if (shunt)
-    return (void*)&(((Shunt*)shunt)[index]);
+void* SHUNT_array_get(void* shunt_array, int index) { 
+  if (shunt_array)
+    return (void*)&(((Shunt*)shunt_array)[index]);
   else
     return NULL;
 }
 
-void SHUNT_array_del(Shunt* shunt, int num) {
+void SHUNT_array_del(Shunt* shunt_array, int size) {
   int i;
-  if (shunt) {
-    for (i = 0; i < num; i++)
-      free(shunt[i].b_values);
-    free(shunt);
+  Shunt* shunt;
+  if (shunt_array) {
+    for (i = 0; i < size; i++) {
+      shunt = &(shunt_array[i]);
+      free(shunt->b_values);
+      free(shunt->b);
+      free(shunt->index_b);
+      free(shunt->index_y);
+      free(shunt->index_z);
+    }
+    free(shunt_array);
   }
 }
 
-Shunt* SHUNT_array_new(int num) { 
+Shunt* SHUNT_array_new(int size, int num_periods) { 
   int i;
-  Shunt* shunt = (Shunt*)malloc(sizeof(Shunt)*num);
-  for (i = 0; i < num; i++) {
-    SHUNT_init(&(shunt[i]));
-    SHUNT_set_index(&(shunt[i]),i);
+  if (num_periods > 0) {
+    Shunt* shunt_array = (Shunt*)malloc(sizeof(Shunt)*size);
+    for (i = 0; i < size; i++) {
+      SHUNT_init(&(shunt_array[i]),num_periods);
+      SHUNT_set_index(&(shunt_array[i]),i);
+    }
+    return shunt_array;
   }
-  return shunt;
+  else
+    return NULL;
 }
 
-void SHUNT_array_show(Shunt* shunt, int num) { 
+void SHUNT_array_show(Shunt* shunt_array, int size, int t) { 
   int i;
-  if (shunt) {
-    for (i = 0; i < num; i++) 
-      SHUNT_show(&(shunt[i]));
+  if (shunt_array) {
+    for (i = 0; i < size; i++) 
+      SHUNT_show(&(shunt_array[i]),t);
   }
 }
 
@@ -105,23 +120,23 @@ int SHUNT_get_index(Shunt* shunt) {
     return 0;
 }
 
-int SHUNT_get_index_b(Shunt* shunt) {
-  if (shunt)
-    return shunt->index_b;
+int SHUNT_get_index_b(Shunt* shunt, int t) {
+  if (shunt && t >= 0 && t < shunt->num_periods)
+    return shunt->index_b[t];
   else
     return 0;
 }
 
-int SHUNT_get_index_y(Shunt* shunt) {
-  if (shunt)
-    return shunt->index_y;
+int SHUNT_get_index_y(Shunt* shunt, int t) {
+  if (shunt && t >= 0 && t < shunt->num_periods)
+    return shunt->index_y[t];
   else
     return 0;
 }
 
-int SHUNT_get_index_z(Shunt* shunt) {
-  if (shunt)
-    return shunt->index_z;
+int SHUNT_get_index_z(Shunt* shunt, int t) {
+  if (shunt && t >= 0 && t < shunt->num_periods)
+    return shunt->index_z[t];
   else
     return 0;
 }
@@ -146,9 +161,9 @@ REAL SHUNT_get_g(Shunt* shunt) {
     return 0;
 }
 
-REAL SHUNT_get_b(Shunt* shunt) {
-  if (shunt)
-    return shunt->b;
+REAL SHUNT_get_b(Shunt* shunt, int t) {
+  if (shunt && t >= 0 && t < shunt->num_periods)
+    return shunt->b[t];
   else
     return 0;
 }
@@ -183,53 +198,64 @@ Shunt* SHUNT_get_reg_next(Shunt* shunt) {
 
 void SHUNT_get_var_values(Shunt* shunt, Vec* values, int code) {
 
+  // Local vars
+  int t;
+
   // No shunt
   if (!shunt)
     return;
 
-  if (shunt->vars & SHUNT_VAR_SUSC) { // susceptance
-    switch(code) {
-    case UPPER_LIMITS:
-      VEC_set(values,shunt->index_b,shunt->b_max);
-      break;
-    case LOWER_LIMITS:
-      VEC_set(values,shunt->index_b,shunt->b_min);
-      break;
-    default:
-      VEC_set(values,shunt->index_b,shunt->b);
+  // Time loop
+  for (t = 0; t < shunt->num_periods; t++) {
+    
+    if (shunt->vars & SHUNT_VAR_SUSC) { // susceptance
+      switch(code) {
+      case UPPER_LIMITS:
+	VEC_set(values,shunt->index_b[t],shunt->b_max);
+	break;
+      case LOWER_LIMITS:
+	VEC_set(values,shunt->index_b[t],shunt->b_min);
+	break;
+      default:
+	VEC_set(values,shunt->index_b[t],shunt->b[t]);
+      }
     }
+    if (shunt->vars & SHUNT_VAR_SUSC_DEV) { // susceptance deviations
+      switch(code) {
+      case UPPER_LIMITS:
+	VEC_set(values,shunt->index_y[t],SHUNT_INF_SUSC);
+	VEC_set(values,shunt->index_z[t],SHUNT_INF_SUSC);
+	break;
+      case LOWER_LIMITS:
+	VEC_set(values,shunt->index_y[t],0.);
+	VEC_set(values,shunt->index_z[t],0.);
+	break;
+      default:
+	VEC_set(values,shunt->index_y[t],0.);
+	VEC_set(values,shunt->index_z[t],0.);
+      }
+    }    
   }
-  if (shunt->vars & SHUNT_VAR_SUSC_DEV) { // susceptance deviations
-    switch(code) {
-    case UPPER_LIMITS:
-      VEC_set(values,shunt->index_y,SHUNT_INF_SUSC);
-      VEC_set(values,shunt->index_z,SHUNT_INF_SUSC);
-      break;
-    case LOWER_LIMITS:
-      VEC_set(values,shunt->index_y,0.);
-      VEC_set(values,shunt->index_z,0.);
-      break;
-    default:
-      VEC_set(values,shunt->index_y,0.);
-      VEC_set(values,shunt->index_z,0.);
-    }
-  }    
 }
 
 Vec* SHUNT_get_var_indices(void* vshunt, char var) {
   Shunt* shunt = (Shunt*)vshunt;
   Vec* indices;
+  int t;
   if (!shunt)
     return NULL;
   if (var == SHUNT_VAR_SUSC) {
-    indices = VEC_new(1);
-    VEC_set(indices,0,shunt->index_b);
+    indices = VEC_new(shunt->num_periods);
+    for (t = 0; t < shunt->num_periods; t++)
+      VEC_set(indices,t,shunt->index_b[t]);
     return indices;
   }
   if (var == SHUNT_VAR_SUSC_DEV) {
-    indices = VEC_new(2);
-    VEC_set(indices,0,shunt->index_y);
-    VEC_set(indices,1,shunt->index_z);
+    indices = VEC_new(2*shunt->num_periods);
+    for (t = 0; t < shunt->num_periods; t++) {
+      VEC_set(indices,2*t,shunt->index_y[t]);
+      VEC_set(indices,2*t+1,shunt->index_z[t]);
+    }
     return indices;
   }
   return NULL;
@@ -261,11 +287,21 @@ BOOL SHUNT_has_properties(void* vshunt, char prop) {
   return TRUE;
 }
 
-void SHUNT_init(Shunt* shunt) { 
+void SHUNT_init(Shunt* shunt, int num_periods) {
+
+  // Local vars
+  int T;
+  
+  // No gen
+  if (!shunt)
+    return;
+
+  T = num_periods;
+  shunt->num_periods = num_periods;
+ 
   shunt->bus = NULL;
   shunt->reg_bus = NULL;
   shunt->g = 0;
-  shunt->b = 0;
   shunt->b_max = 0;
   shunt->b_min = 0;
   shunt->b_values = NULL;
@@ -275,9 +311,12 @@ void SHUNT_init(Shunt* shunt) {
   shunt->bounded = 0x00;
   shunt->sparse = 0x00;
   shunt->index = 0;
-  shunt->index_b = 0;
-  shunt->index_y = 0;
-  shunt->index_z = 0;
+
+  ARRAY_zalloc(shunt->b,REAL,T);
+  ARRAY_zalloc(shunt->index_b,int,T);
+  ARRAY_zalloc(shunt->index_y,int,T);
+  ARRAY_zalloc(shunt->index_z,int,T);
+
   shunt->next = NULL;
   shunt->reg_next = NULL;
 }
@@ -322,10 +361,14 @@ int SHUNT_list_reg_len(Shunt* reg_shunt_list) {
   return len;
 }
 
-Shunt* SHUNT_new(void) { 
-  Shunt* shunt = (Shunt*)malloc(sizeof(Shunt));
-  SHUNT_init(shunt);
-  return shunt;
+Shunt* SHUNT_new(int num_periods) { 
+  if (num_periods > 0) {
+    Shunt* shunt = (Shunt*)malloc(sizeof(Shunt));
+    SHUNT_init(shunt,num_periods);
+    return shunt;
+  }
+  else
+    return NULL;
 }
 
 void SHUNT_set_bus(Shunt* shunt, Bus* bus) { 
@@ -348,9 +391,9 @@ void SHUNT_set_g(Shunt* shunt, REAL g) {
     shunt->g = g;
 }
 
-void SHUNT_set_b(Shunt* shunt, REAL b) { 
-  if (shunt)
-    shunt->b = b;
+void SHUNT_set_b(Shunt* shunt, REAL b, int t) { 
+  if (shunt && t >= 0 && t < shunt->num_periods)
+    shunt->b[t] = b;
 }
 
 void SHUNT_set_b_max(Shunt* shunt, REAL b_max) {
@@ -378,8 +421,9 @@ int SHUNT_set_flags(void* vshunt, char flag_type, char mask, int index) {
   // Local variables
   char* flags_ptr = NULL;
   Shunt* shunt = (Shunt*)vshunt;
+  int t;
 
-  // Check shunt
+  // No shunt
   if (!shunt)
     return index;
 
@@ -397,30 +441,46 @@ int SHUNT_set_flags(void* vshunt, char flag_type, char mask, int index) {
 
   // Set flags
   if (!((*flags_ptr) & SHUNT_VAR_SUSC) && (mask & SHUNT_VAR_SUSC)) { // shunt susceptance
-    if (flag_type == FLAG_VARS)
-      shunt->index_b = index;
+    if (flag_type == FLAG_VARS) {
+      for (t = 0; t < shunt->num_periods; t++)
+	shunt->index_b[t] = index+t;
+    }
     (*flags_ptr) |= SHUNT_VAR_SUSC;
-    index++;
+    index += shunt->num_periods;
   }
   if (!((*flags_ptr) & SHUNT_VAR_SUSC_DEV) && (mask & SHUNT_VAR_SUSC_DEV)) { // shunt susceptance deviations
     if (flag_type == FLAG_VARS) {
-      shunt->index_y = index;
-      shunt->index_z = index+1;
+      for (t = 0; t < shunt->num_periods; t++) {
+	shunt->index_y[t] = index+2*t;
+	shunt->index_z[t] = index+2*t+1;
+      }
     }
     (*flags_ptr) |= SHUNT_VAR_SUSC_DEV;
-    index += 2;
+    index += 2*shunt->num_periods;
   }
   return index;
 }
 
 void SHUNT_set_var_values(Shunt* shunt, Vec* values) {
+
+  // Local vars
+  int t;
+
+  // No shunt
   if (!shunt)
     return;
-  if (shunt->vars & SHUNT_VAR_SUSC) // shunt susceptance (p.u.)
-    shunt->b = VEC_get(values,shunt->index_b); 
+
+  // Time loop
+  for (t = 0; t < shunt->num_periods; t++) {
+
+    if (shunt->vars & SHUNT_VAR_SUSC) // shunt susceptance (p.u.)
+      shunt->b[t] = VEC_get(values,shunt->index_b[t]); 
+  }
 }
 
-void SHUNT_show(Shunt* shunt) { 
+void SHUNT_show(Shunt* shunt, int t) { 
   if (shunt)
-    printf("shunt %d\t%d\n",BUS_get_number(shunt->bus),shunt->index);
+    printf("shunt %d\t%d\n",
+	   BUS_get_number(shunt->bus),
+	   shunt->index);
 }

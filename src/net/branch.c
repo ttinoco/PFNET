@@ -105,7 +105,8 @@ void BRANCH_array_del(Branch* br_array, int size) {
       free(br->sens_P_u_bound);
       free(br->sens_P_l_bound);
     }
-  }  
+    free(br_array);
+  }
 }
 
 Branch* BRANCH_array_new(int size, int num_periods) {

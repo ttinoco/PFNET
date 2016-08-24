@@ -77,6 +77,7 @@ void GEN_array_del(Gen* gen_array, int size) {
       free(gen->sens_P_u_bound);
       free(gen->sens_P_l_bound);
     }
+    free(gen_array);
   }  
 }
 
