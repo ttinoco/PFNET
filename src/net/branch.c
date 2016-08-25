@@ -346,71 +346,71 @@ REAL BRANCH_get_phase_min(Branch* br) {
 }
 
 // TODO: Branch flow calculations
-REAL BRANCH_get_P_km(Branch* br) {
+REAL BRANCH_get_P_km(Net* net, Branch* br, Vec* var_values) {
   if (br)
     // TODO fill in the calcluation
   return 0;
 }
 
-REAL BRANCH_get_Q_km(Branch* br) {
+REAL BRANCH_get_Q_km(Net* net, Branch* br, Vec* var_values) {
   if (br)
     // TODO fill in the calcluation
   return 0;
 }
 
-REAL BRANCH_get_P_mk(Branch* br) {
+REAL BRANCH_get_P_mk(Net* net, Branch* br, Vec* var_values) {
   if (br)
     // TODO fill in the calcluation
   return 0;
 }
 
-REAL BRANCH_get_Q_mk(Branch* br) {
+REAL BRANCH_get_Q_mk(Net* net, Branch* br, Vec* var_values) {
   if (br)
     // TODO fill in the calcluation
   return 0;}
 
-REAL BRANCH_get_P_km_series(Branch* br) {
+REAL BRANCH_get_P_km_series(Net* net, Branch* br, Vec* var_values) {
   if (br)
     // TODO fill in the calcluation
   return 0;
 }
 
-REAL BRANCH_get_Q_km_series(Branch* br) {
+REAL BRANCH_get_Q_km_series(Net* net, Branch* br, Vec* var_values) {
   if (br)
     // TODO fill in the calcluation
   return 0;
 }
 
-REAL BRANCH_get_P_mk_series(Branch* br) {
+REAL BRANCH_get_P_mk_series(Net* net, Branch* br, Vec* var_values) {
   if (br)
     return 0;
 }
 
-REAL BRANCH_get_Q_mk_series(Branch* br) {
+REAL BRANCH_get_Q_mk_series(Net* net, Branch* br, Vec* var_values) {
   if (br)
     // TODO fill in the calcluation
   return 0;
 }
 
-REAL BRANCH_get_P_k_shunt(Branch* br) {
+REAL BRANCH_get_P_k_shunt(Net* net, Branch* br, Vec* var_values) {
   if (br)
     // TODO fill in the calcluation
   return 0;
 }
 
-REAL BRANCH_get_Q_k_shunt(Branch* br) {
+REAL BRANCH_get_Q_k_shunt(Net* net, Branch* br, Vec* var_values) {
   if (br)
     // TODO fill in the calcluation
   return 0;
 }
 
-REAL BRANCH_get_P_m_shunt(Branch* br) {
+REAL BRANCH_get_P_m_shunt(Net* net, Branch* br, Vec* var_values) {
   if (br)
     // TODO fill in the calcluation
   return 0;
 }
 
-REAL BRANCH_get_Q_m_shunt(Branch* br) {
+REAL BRANCH_get_Q_m_shunt(Net* net, Branch* br, Vec* var_values) {
   if (br)
     // TODO fill in the calcluation
   return 0;

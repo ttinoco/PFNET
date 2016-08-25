@@ -2231,6 +2231,8 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
+
+  // TODO START replace all this in appropriate BRANCH_get_ functions
   for (k = 0; k < 2; k++) {
     bus = buses[k];
     if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG) && var_values)
@@ -2319,11 +2321,18 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
       phi_temp = -phi;
     }
 
+    /* Branch flow equations for refernce:
+    *  theta = w_k-w_m-theta_km+theta_mk
+    *  P_km =  a_km^2*v_k^2*(g_km + gsh_km) - a_km*a_mk*v_k*v_m*( g_km*cos(theta) + b_km*sin(theta) )
+    *  Q_km = -a_km^2*v_k^2*(b_km + bsh_km) - a_km*a_mk*v_k*v_m*( g_km*sin(theta) - b_km*cos(theta) )
+    */
+
     // THINK WE NEED A CHECK FOR SHUNT VALUES AND HANDLE LARGE B VALUES
     // flowP[k] = -a*v[k]*v[m]*(g*cos(w[k]-w[m]-phi_temp)+b*sin(w[k]-w[m]-phi_temp));
     // flowQ[k] = -a*v[k]*v[m]*(g*sin(w[k]-w[m]-phi_temp)-b*cos(w[k]-w[m]-phi_temp));
     // flowP_sh[k] =  a_temp*a_temp*(g_sh[k]+g)*v[k]*v[k];
     // flowQ_sh[k] = -a_temp*a_temp*(b_sh[k]+b)*v[k]*v[k];
+    // Note that a_km*a_mk == a, thus the second part of the equation
     flowP[k] =  a_temp*a_temp*g*v[k]*v[k] - a*v[k]*v[m]*(g*cos(w[k]-w[m]-phi_temp)+b*sin(w[k]-w[m]-phi_temp));
     flowQ[k] = -a_temp*a_temp*b*v[k]*v[k] - a*v[k]*v[m]*(g*sin(w[k]-w[m]-phi_temp)-b*cos(w[k]-w[m]-phi_temp));
     flowP_sh[k] =  a_temp*a_temp*g_sh[k]*v[k]*v[k];
@@ -2362,12 +2371,19 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
         (-flowP_sh[k]-flowP[k]) * net->base_power,
         (-flowQ_sh[k]-flowQ[k]) * net->base_power);
       printf("Base Power = %.3f\n", net->base_power);
-    }
+    } // end printout
 
     // Flows
     BUS_inject_P(bus,-flowP_sh[k]-flowP[k]);
     BUS_inject_Q(bus,-flowQ_sh[k]-flowQ[k]);
   }
+  // TODO END replace all this in appropriate fBRANCH_get_functions
+
+  // Update injected P,Q at buses k and m
+  BUS_inject_P(bus[0],-BRANCH_get_P_km(br));
+  BUS_inject_Q(bus[0],-BRANCH_get_Q_km(br));
+  BUS_inject_P(bus[1],-BRANCH_get_P_mk(br));
+  BUS_inject_Q(bus[1],-BRANCH_get_Q_mk(br));
 
   // Other flows
   for (k = 0; k < 2; k++) {

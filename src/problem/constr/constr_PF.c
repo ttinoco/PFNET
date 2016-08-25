@@ -958,7 +958,14 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
       phi_temp = -phi;
     }
 
-    // parts of the branch flow dependent on both vk, vm and
+    /* Branch flow equations for refernce:
+    *  theta = w_k-w_m-theta_km+theta_mk
+    *  P_km =  a_km^2*v_k^2*(g_km + gsh_km) - a_km*a_mk*v_k*v_m*( g_km*cos(theta) + b_km*sin(theta) )
+    *  Q_km = -a_km^2*v_k^2*(b_km + bsh_km) - a_km*a_mk*v_k*v_m*( g_km*sin(theta) - b_km*cos(theta) )
+    */
+
+    // parts of the branch flow dependent on both vk, vm and the angles
+    // (note that a == a_mk*a_km regardless of the direction since the other direction will always will always be 1)
     P_km[k] = -a*v[k]*v[m]*(g*cos(w[k]-w[m]-phi_temp)+b*sin(w[k]-w[m]-phi_temp));
     Q_km[k] = -a*v[k]*v[m]*(g*sin(w[k]-w[m]-phi_temp)-b*cos(w[k]-w[m]-phi_temp));
 
