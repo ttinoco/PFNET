@@ -132,6 +132,9 @@ void FUNC_REG_PHASE_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
     (*phi) += 0.5*pow((p-p0)/dp,2.);
     gphi[BRANCH_get_index_phase(br,t)] = (p-p0)/(dp*dp);
   }
+  else {
+    // nothing because p0-p0 = 0
+  }
 }
     
 void FUNC_REG_PHASE_free(Func* f) {
