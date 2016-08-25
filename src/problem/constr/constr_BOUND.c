@@ -617,8 +617,8 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 	  BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) {
 	
 	u = VEC_get(var_values,BUS_get_index_v_ang(bus,t));
-	umax = PI;
-	umin = -PI;
+	umax = 2*PI;
+	umin = -2*PI;
 	du = (umax-umin > eps) ? umax-umin : eps;
 	
 	a1 = umax-u;
@@ -865,7 +865,7 @@ void CONSTR_BOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf
 
     // Update counted flag
     bus_counted[bus_index[k]*T+t] = TRUE;
-  }  
+  }
 }
 
 void CONSTR_BOUND_free(Constr* c) {

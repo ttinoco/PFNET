@@ -827,8 +827,8 @@ void CONSTR_count(Constr* c) {
   int t;
   Net* net = CONSTR_get_network(c);
   CONSTR_clear(c);
-  for (i = 0; i < NET_get_num_branches(net); i++) {
-    for (t = 0; t < NET_get_num_periods(net); t++)
+  for (t = 0; t < NET_get_num_periods(net); t++) {
+    for (i = 0; i < NET_get_num_branches(net); i++)
       CONSTR_count_step(c,NET_get_branch(net,i),t);
   }
 }
@@ -855,8 +855,8 @@ void CONSTR_analyze(Constr* c) {
   int t;
   Net* net = CONSTR_get_network(c);
   CONSTR_clear(c);
-  for (i = 0; i < NET_get_num_branches(net); i++) {
-    for (t = 0; t < NET_get_num_periods(net); t++)
+  for (t = 0; t < NET_get_num_periods(net); t++) {
+    for (i = 0; i < NET_get_num_branches(net); i++)
       CONSTR_analyze_step(c,NET_get_branch(net,i),t);
   }
 }
@@ -871,8 +871,8 @@ void CONSTR_eval(Constr* c, Vec* values) {
   int t;
   Net* net = CONSTR_get_network(c);
   CONSTR_clear(c);
-  for (i = 0; i < NET_get_num_branches(net); i++) {
-    for (t = 0; t < NET_get_num_periods(net); t++)
+  for (t = 0; t < NET_get_num_periods(net); t++) {
+    for (i = 0; i < NET_get_num_branches(net); i++)
       CONSTR_eval_step(c,NET_get_branch(net,i),t,values);
   }
 }
@@ -907,8 +907,8 @@ void CONSTR_store_sens(Constr* c, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   CONSTR_clear(c);
 
   // Store sensitivities
-  for (i = 0; i < NET_get_num_branches(net); i++) {
-    for (t = 0; t < NET_get_num_periods(net); t++)
+  for (t = 0; t < NET_get_num_periods(net); t++) {
+    for (i = 0; i < NET_get_num_branches(net); i++)
       CONSTR_store_sens_step(c,NET_get_branch(net,i),t,sA,sf,sGu,sGl);
   }
 }

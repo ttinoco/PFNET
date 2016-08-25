@@ -27,7 +27,7 @@ void CONSTR_PAR_GEN_Q_clear(Constr* c) {
   CONSTR_clear_bus_counted(c);
 }
 
-void CONSTR_PAR_GEN_Q_count_branch(Constr* c, Branch* br) {
+void CONSTR_PAR_GEN_Q_count_step(Constr* c, Branch* br, int t) {
   
   // Local variables
   Bus* buses[2];
@@ -39,6 +39,10 @@ void CONSTR_PAR_GEN_Q_count_branch(Constr* c, Branch* br) {
   char* bus_counted;
   int i;
   int j;
+  int T;
+
+  // Number of periods
+  T = BRANCH_get_num_periods(br);
   
   // Constr data
   Acounter = CONSTR_get_Acounter_ptr(c);
@@ -62,7 +66,7 @@ void CONSTR_PAR_GEN_Q_count_branch(Constr* c, Branch* br) {
     
     bus = buses[i];
     
-    if (!bus_counted[BUS_get_index(bus)]) {
+    if (!bus_counted[BUS_get_index(bus)*T+t]) {
       
       // Reactive power of regulating generators
       if (BUS_is_regulated_by_gen(bus)) {
@@ -78,7 +82,7 @@ void CONSTR_PAR_GEN_Q_count_branch(Constr* c, Branch* br) {
     }
 
     // Update counted flag
-    bus_counted[BUS_get_index(bus)] = TRUE;    
+    bus_counted[BUS_get_index(bus)*T+t] = TRUE;    
   }
 }
 
@@ -106,7 +110,7 @@ void CONSTR_PAR_GEN_Q_allocate(Constr* c) {
 			 Acounter)); // nnz
 }
 
-void CONSTR_PAR_GEN_Q_analyze_branch(Constr* c, Branch* br) {
+void CONSTR_PAR_GEN_Q_analyze_step(Constr* c, Branch* br, int t) {
   
   // Local variables
   Bus* buses[2];
@@ -124,6 +128,10 @@ void CONSTR_PAR_GEN_Q_analyze_branch(Constr* c, Branch* br) {
   REAL Qmin2;
   REAL dQ1;
   REAL dQ2;
+  int T;
+
+  // Number of periods
+  T = BRANCH_get_num_periods(br);
   
   // Cosntr data
   b = CONSTR_get_b(c);
@@ -149,7 +157,7 @@ void CONSTR_PAR_GEN_Q_analyze_branch(Constr* c, Branch* br) {
     
     bus = buses[i];
     
-    if (!bus_counted[BUS_get_index(bus)]) {
+    if (!bus_counted[BUS_get_index(bus)*T+t]) {
       
       // Reactive power of regulating generators
       if (BUS_is_regulated_by_gen(bus)) {
@@ -166,35 +174,35 @@ void CONSTR_PAR_GEN_Q_analyze_branch(Constr* c, Branch* br) {
 	  VEC_set(b,*Aconstr_index,Qmin1/dQ1-Qmin2/dQ2);
 	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q)) {
 	    MAT_set_i(A,*Acounter,*Aconstr_index);
-	    MAT_set_j(A,*Acounter,GEN_get_index_Q(gen1));
+	    MAT_set_j(A,*Acounter,GEN_get_index_Q(gen1,t));
 	    MAT_set_d(A,*Acounter,1./dQ1);
 	    (*Acounter)++;
 	  }
 	  else
-	    VEC_add_to_entry(b,*Aconstr_index,-GEN_get_Q(gen1)/dQ1); 
+	    VEC_add_to_entry(b,*Aconstr_index,-GEN_get_Q(gen1,t)/dQ1); 
 	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q)) {
 	    MAT_set_i(A,*Acounter,*Aconstr_index);
-	    MAT_set_j(A,*Acounter,GEN_get_index_Q(gen2));	      
+	    MAT_set_j(A,*Acounter,GEN_get_index_Q(gen2,t));	      
 	    MAT_set_d(A,*Acounter,-1./dQ2);
 	    (*Acounter)++;
 	  }
 	  else
-	    VEC_add_to_entry(b,*Aconstr_index,GEN_get_Q(gen2)/dQ2); 
+	    VEC_add_to_entry(b,*Aconstr_index,GEN_get_Q(gen2,t)/dQ2); 
 	  (*Aconstr_index)++;
 	}
       }
     }
 
     // Update counted flag
-    bus_counted[BUS_get_index(bus)] = TRUE;    
+    bus_counted[BUS_get_index(bus)*T+t] = TRUE;    
   }  
 }
 
-void CONSTR_PAR_GEN_Q_eval_branch(Constr* c, Branch* br, Vec* var_values) {
+void CONSTR_PAR_GEN_Q_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
   // Nothing to do
 }
 
-void CONSTR_PAR_GEN_Q_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_PAR_GEN_Q_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing
 }
 

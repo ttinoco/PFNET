@@ -440,8 +440,8 @@ void FUNC_count(Func* f) {
   int t;
   Net* net = FUNC_get_network(f);
   FUNC_clear(f);
-  for (i = 0; i < NET_get_num_branches(net); i++) {
-    for (t = 0; t < NET_get_num_periods(net); t++)
+  for (t = 0; t < NET_get_num_periods(net); t++) {
+    for (i = 0; i < NET_get_num_branches(net); i++)
       FUNC_count_step(f,NET_get_branch(net,i),t);
   }
 }
@@ -468,8 +468,8 @@ void FUNC_analyze(Func* f) {
   int t;
   Net* net = FUNC_get_network(f);
   FUNC_clear(f);
-  for (i = 0; i < NET_get_num_branches(net); i++) {
-    for (t = 0; t < NET_get_num_periods(net); t++)
+  for (t = 0; t < NET_get_num_periods(net); t++) {
+    for (i = 0; i < NET_get_num_branches(net); i++)
       FUNC_analyze_step(f,NET_get_branch(net,i),t);
   }
 }
@@ -484,8 +484,8 @@ void FUNC_eval(Func* f, Vec* values) {
   int t;
   Net* net = FUNC_get_network(f);
   FUNC_clear(f);
-  for (i = 0; i < NET_get_num_branches(net); i++) {
-    for (t = 0; t < NET_get_num_periods(net); t++)
+  for (t = 0; t < NET_get_num_periods(net); t++) {
+    for (i = 0; i < NET_get_num_branches(net); i++)
       FUNC_eval_step(f,NET_get_branch(net,i),t,values);
   }
 }

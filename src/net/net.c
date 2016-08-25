@@ -2235,8 +2235,8 @@ void NET_update_properties(Net* net, Vec* values) {
   NET_clear_properties(net);
 
   // Update
-  for (i = 0; i < NET_get_num_branches(net); i++) {
-    for (t = 0; t < NET_get_num_periods(net); t++)
+  for (t = 0; t < NET_get_num_periods(net); t++) {
+    for (i = 0; i < NET_get_num_branches(net); i++)
       NET_update_properties_step(net,NET_get_branch(net,i),t,values);
   }
 }

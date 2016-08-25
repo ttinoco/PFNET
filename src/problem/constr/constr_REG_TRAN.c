@@ -13,10 +13,12 @@
 void CONSTR_REG_TRAN_init(Constr* c) {
   
   // Local variables
+  Net* net;
   int num_Jconstr;
   
   // Init
-  num_Jconstr = 4*NET_get_num_tap_changers_v(CONSTR_get_network(c));
+  net = CONSTR_get_network(c);
+  num_Jconstr = 4*NET_get_num_tap_changers_v(CONSTR_get_network(c))*NET_get_num_periods(net);;
   CONSTR_set_Hcounter(c,(int*)calloc(num_Jconstr,sizeof(int)),num_Jconstr);
   CONSTR_set_data(c,NULL);
 }
@@ -40,7 +42,7 @@ void CONSTR_REG_TRAN_clear(Constr* c) {
   CONSTR_clear_Hcounter(c);
 }
 
-void CONSTR_REG_TRAN_count_branch(Constr* c, Branch* br) {
+void CONSTR_REG_TRAN_count_step(Constr* c, Branch* br, int tau) {
   
   // Local variables
   Bus* reg_bus;
@@ -224,7 +226,7 @@ void CONSTR_REG_TRAN_allocate(Constr* c) {
 				  H_comb_nnz)); // nnz
 }
 
-void CONSTR_REG_TRAN_analyze_branch(Constr* c, Branch* br) {
+void CONSTR_REG_TRAN_analyze_step(Constr* c, Branch* br, int tau) {
   
   // Local variables
   Bus* reg_bus;
@@ -259,6 +261,10 @@ void CONSTR_REG_TRAN_analyze_branch(Constr* c, Branch* br) {
   int index_t;
   int index_y;
   int index_z;
+  int T;
+
+  // Number of periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   b = CONSTR_get_b(c);
@@ -292,23 +298,23 @@ void CONSTR_REG_TRAN_analyze_branch(Constr* c, Branch* br) {
 
     // Indices
     if (BRANCH_has_pos_ratio_v_sens(br)) {
-      index_yz_vmin = BRANCH_get_index_ratio_y(br);
-      index_yz_vmax = BRANCH_get_index_ratio_z(br);
-      index_vvio_tmax = BUS_get_index_vl(reg_bus);
-      index_vvio_tmin = BUS_get_index_vh(reg_bus);
+      index_yz_vmin = BRANCH_get_index_ratio_y(br,tau);
+      index_yz_vmax = BRANCH_get_index_ratio_z(br,tau);
+      index_vvio_tmax = BUS_get_index_vl(reg_bus,tau);
+      index_vvio_tmin = BUS_get_index_vh(reg_bus,tau);
     }
     else {
-      index_yz_vmin = BRANCH_get_index_ratio_z(br);
-      index_yz_vmax = BRANCH_get_index_ratio_y(br);
-      index_vvio_tmax = BUS_get_index_vh(reg_bus);
-      index_vvio_tmin = BUS_get_index_vl(reg_bus);
+      index_yz_vmin = BRANCH_get_index_ratio_z(br,tau);
+      index_yz_vmax = BRANCH_get_index_ratio_y(br,tau);
+      index_vvio_tmax = BUS_get_index_vh(reg_bus,tau);
+      index_vvio_tmin = BUS_get_index_vl(reg_bus,tau);
     }
-    index_v = BUS_get_index_v_mag(reg_bus);
-    index_vl = BUS_get_index_vl(reg_bus);
-    index_vh = BUS_get_index_vh(reg_bus);
-    index_t = BRANCH_get_index_ratio(br);
-    index_y = BRANCH_get_index_ratio_y(br);
-    index_z = BRANCH_get_index_ratio_z(br);
+    index_v = BUS_get_index_v_mag(reg_bus,tau);
+    index_vl = BUS_get_index_vl(reg_bus,tau);
+    index_vh = BUS_get_index_vh(reg_bus,tau);
+    index_t = BRANCH_get_index_ratio(br,tau);
+    index_y = BRANCH_get_index_ratio_y(br,tau);
+    index_z = BRANCH_get_index_ratio_z(br,tau);
     
     // Linear (t = t_0 + y - z)
     //*************************
@@ -316,7 +322,7 @@ void CONSTR_REG_TRAN_analyze_branch(Constr* c, Branch* br) {
 	BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO_DEV)) { // yz var
 
       // b
-      VEC_set(b,*Aconstr_index,BRANCH_get_ratio(br)); // current ratio value
+      VEC_set(b,*Aconstr_index,BRANCH_get_ratio(br,tau)); // current ratio value
         
       // A
       MAT_set_i(A,*Acounter,*Aconstr_index);
@@ -498,7 +504,7 @@ void CONSTR_REG_TRAN_analyze_branch(Constr* c, Branch* br) {
   }
 
   // Done
-  if (BRANCH_get_index(br) == NET_get_num_branches(CONSTR_get_network(c))-1) {
+  if ((tau == T-1) && (BRANCH_get_index(br) == NET_get_num_branches(CONSTR_get_network(c))-1)) {
     
     // Ensure lower triangular and save struct of H comb
     Hcounter_comb = 0;
@@ -521,7 +527,7 @@ void CONSTR_REG_TRAN_analyze_branch(Constr* c, Branch* br) {
   }
 }
 
-void CONSTR_REG_TRAN_eval_branch(Constr* c, Branch* br, Vec* var_values) {
+void CONSTR_REG_TRAN_eval_step(Constr* c, Branch* br, int tau, Vec* var_values) {
   
   // Local variables
   Bus* reg_bus;
@@ -578,14 +584,14 @@ void CONSTR_REG_TRAN_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 
     // v values
     if (BUS_has_flags(reg_bus,FLAG_VARS,BUS_VAR_VMAG))
-      v = VEC_get(var_values,BUS_get_index_v_mag(reg_bus));
+      v = VEC_get(var_values,BUS_get_index_v_mag(reg_bus,tau));
     else
-      v = BUS_get_v_mag(reg_bus);
+      v = BUS_get_v_mag(reg_bus,tau);
     vmax = BUS_get_v_max(reg_bus);
     vmin = BUS_get_v_min(reg_bus);
     if (BUS_has_flags(reg_bus,FLAG_VARS,BUS_VAR_VVIO)) {
-      vl = VEC_get(var_values,BUS_get_index_vl(reg_bus));
-      vh = VEC_get(var_values,BUS_get_index_vh(reg_bus));
+      vl = VEC_get(var_values,BUS_get_index_vl(reg_bus,tau));
+      vh = VEC_get(var_values,BUS_get_index_vh(reg_bus,tau));
     }
     else {
       vl = 0;
@@ -594,24 +600,24 @@ void CONSTR_REG_TRAN_eval_branch(Constr* c, Branch* br, Vec* var_values) {
     
     // t values
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) {
-      t = VEC_get(var_values,BRANCH_get_index_ratio(br));
+      t = VEC_get(var_values,BRANCH_get_index_ratio(br,tau));
     }
     else
-      t = BRANCH_get_ratio(br);
+      t = BRANCH_get_ratio(br,tau);
     tmax = BRANCH_get_ratio_max(br);
     tmin = BRANCH_get_ratio_min(br);
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO_DEV)) {
-      y = VEC_get(var_values,BRANCH_get_index_ratio_y(br));
-      z = VEC_get(var_values,BRANCH_get_index_ratio_z(br));
+      y = VEC_get(var_values,BRANCH_get_index_ratio_y(br,tau));
+      z = VEC_get(var_values,BRANCH_get_index_ratio_z(br,tau));
     }
     else {
-      if (t > BRANCH_get_ratio(br)) {
-	y = t-BRANCH_get_ratio(br);
+      if (t > BRANCH_get_ratio(br,tau)) {
+	y = t-BRANCH_get_ratio(br,tau);
 	z = 0;
       }
       else {
 	y = 0;
-	z = BRANCH_get_ratio(br)-t;
+	z = BRANCH_get_ratio(br,tau)-t;
       }
     }
 
@@ -780,7 +786,7 @@ void CONSTR_REG_TRAN_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   }
 }
 
-void CONSTR_REG_TRAN_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_REG_TRAN_store_sens_step(Constr* c, Branch* br, int tau, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Local variables
   Bus* reg_bus;
@@ -814,14 +820,14 @@ void CONSTR_REG_TRAN_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, 
     lamCompTmin = VEC_get(sf,*Jconstr_index);
     (*Jconstr_index)++; // compTmin
 
-    if (fabs(lamCompVmin) > fabs(BUS_get_sens_v_reg_by_tran(reg_bus)))
-      BUS_set_sens_v_reg_by_tran(reg_bus,lamCompVmin);
-    if (fabs(lamCompVmax) > fabs(BUS_get_sens_v_reg_by_tran(reg_bus)))
-      BUS_set_sens_v_reg_by_tran(reg_bus,lamCompVmax);
-    if (fabs(lamCompTmax) > fabs(BUS_get_sens_v_reg_by_tran(reg_bus)))
-      BUS_set_sens_v_reg_by_tran(reg_bus,lamCompTmax);
-    if (fabs(lamCompTmin) > fabs(BUS_get_sens_v_reg_by_tran(reg_bus)))
-      BUS_set_sens_v_reg_by_tran(reg_bus,lamCompTmin);
+    if (fabs(lamCompVmin) > fabs(BUS_get_sens_v_reg_by_tran(reg_bus,tau)))
+      BUS_set_sens_v_reg_by_tran(reg_bus,lamCompVmin,tau);
+    if (fabs(lamCompVmax) > fabs(BUS_get_sens_v_reg_by_tran(reg_bus,tau)))
+      BUS_set_sens_v_reg_by_tran(reg_bus,lamCompVmax,tau);
+    if (fabs(lamCompTmax) > fabs(BUS_get_sens_v_reg_by_tran(reg_bus,tau)))
+      BUS_set_sens_v_reg_by_tran(reg_bus,lamCompTmax,tau);
+    if (fabs(lamCompTmin) > fabs(BUS_get_sens_v_reg_by_tran(reg_bus,tau)))
+      BUS_set_sens_v_reg_by_tran(reg_bus,lamCompTmin,tau);
   }
 }
 
