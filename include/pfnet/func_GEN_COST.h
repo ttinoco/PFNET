@@ -16,11 +16,11 @@
 
 // Function prototypes
 void FUNC_GEN_COST_init(Func* f);
-void FUNC_GEN_COST_count_branch(Func* f, Branch *branch);
+void FUNC_GEN_COST_count_step(Func* f, Branch* br, int t);
 void FUNC_GEN_COST_allocate(Func* f);
 void FUNC_GEN_COST_clear(Func* f);
-void FUNC_GEN_COST_analyze_branch(Func* f, Branch *branch);
-void FUNC_GEN_COST_eval_branch(Func* f, Branch* branch, Vec* var_values);
+void FUNC_GEN_COST_analyze_step(Func* f, Branch* br, int t);
+void FUNC_GEN_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values);
 void FUNC_GEN_COST_free(Func* f);
 
 #endif

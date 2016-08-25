@@ -2237,11 +2237,11 @@ void NET_update_properties(Net* net, Vec* values) {
   // Update
   for (i = 0; i < NET_get_num_branches(net); i++) {
     for (t = 0; t < NET_get_num_periods(net); t++)
-      NET_update_properties_branch(net,NET_get_branch(net,i),t,values);
+      NET_update_properties_step(net,NET_get_branch(net,i),t,values);
   }
 }
 
-void NET_update_properties_branch(Net* net, Branch* br, int t, Vec* var_values) {
+void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
   
   // Local variables
   Bus* buses[2];

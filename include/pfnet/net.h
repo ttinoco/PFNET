@@ -149,7 +149,7 @@ char* NET_get_show_components_str(Net* net);
 void NET_show_properties(Net* net, int t);
 char* NET_get_show_properties_str(Net* net, int t);
 void NET_show_buses(Net* net, int number, int sort_by, int t);
-void NET_update_properties_branch(Net* net, Branch* br, int t, Vec* values);
+void NET_update_properties_step(Net* net, Branch* br, int t, Vec* values);
 void NET_update_properties(Net* net, Vec* values);
 void NET_update_set_points(Net* net);
 
