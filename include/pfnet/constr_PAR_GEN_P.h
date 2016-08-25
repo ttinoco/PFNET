@@ -18,12 +18,12 @@
 
 // Function prototypes
 void CONSTR_PAR_GEN_P_init(Constr* c);
-void CONSTR_PAR_GEN_P_count_branch(Constr* c, Branch* b);
+void CONSTR_PAR_GEN_P_count_step(Constr* c, Branch* br, int t);
 void CONSTR_PAR_GEN_P_allocate(Constr* c);
 void CONSTR_PAR_GEN_P_clear(Constr* c);
-void CONSTR_PAR_GEN_P_analyze_branch(Constr* c, Branch* b);
-void CONSTR_PAR_GEN_P_eval_branch(Constr* c, Branch* b, Vec* var_values);
-void CONSTR_PAR_GEN_P_store_sens_branch(Constr* c, Branch* b, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
+void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t);
+void CONSTR_PAR_GEN_P_eval_step(Constr* c, Branch* br, int t, Vec* var_values);
+void CONSTR_PAR_GEN_P_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void CONSTR_PAR_GEN_P_free(Constr* c);
 
 #endif

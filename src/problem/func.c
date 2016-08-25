@@ -8,8 +8,8 @@
  * PFNET is released under the BSD 2-clause license.
  */
 
-#include <pfnet/func.h>
 #include <pfnet/array.h>
+#include <pfnet/func.h>
 #include <pfnet/func_REG_VMAG.h>
 #include <pfnet/func_REG_VANG.h>
 #include <pfnet/func_REG_PQ.h>
@@ -52,13 +52,13 @@ struct Func {
   int Hcounter;         /**< @brief Counter of number of nonzero elements of the Hessian */
 
   // Functions
-  void (*func_init)(Func* f);                                          /**< @brief Initialization function */
-  void (*func_count_step)(Func* f, Branch* br, int t);                 /**< @brief Function for countinng nonzero entries */
-  void (*func_allocate)(Func* f);                                      /**< @brief Function for allocating required arrays */
-  void (*func_clear)(Func* f);                                         /**< @brief Function for clearing flags, counters, and function values */
-  void (*func_analyze_step)(Func* f, Branch* br, int t);               /**< @brief Function for analyzing sparsity pattern */
-  void (*func_eval_step)(Func* f, Branch* br, int t, Vec* var_values); /**< @brief Function for evaluating function */
-  void (*func_free)(Func* f);                                          /**< @brief Function for de-allocating any data used */
+  void (*func_init)(Func* f);                                    /**< @brief Initialization function */
+  void (*func_count_step)(Func* f, Branch* br, int t);           /**< @brief Function for countinng nonzero entries */
+  void (*func_allocate)(Func* f);                                /**< @brief Function for allocating required arrays */
+  void (*func_clear)(Func* f);                                   /**< @brief Function for clearing flags, counters, and function values */
+  void (*func_analyze_step)(Func* f, Branch* br, int t);         /**< @brief Function for analyzing sparsity pattern */
+  void (*func_eval_step)(Func* f, Branch* br, int t, Vec* vals); /**< @brief Function for evaluating function */
+  void (*func_free)(Func* f);                                    /**< @brief Function for de-allocating any data used */
 
   // List
   Func* next; /**< @brief List of functions for forming objective function */

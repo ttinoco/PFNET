@@ -16,12 +16,12 @@
 
 // Function prototypes
 void CONSTR_DC_FLOW_LIM_init(Constr* c);
-void CONSTR_DC_FLOW_LIM_count_branch(Constr* c, Branch* b);
+void CONSTR_DC_FLOW_LIM_count_step(Constr* c, Branch* br, int t);
 void CONSTR_DC_FLOW_LIM_allocate(Constr* c);
 void CONSTR_DC_FLOW_LIM_clear(Constr* c);
-void CONSTR_DC_FLOW_LIM_analyze_branch(Constr* c, Branch* b);
-void CONSTR_DC_FLOW_LIM_eval_branch(Constr* c, Branch* b, Vec* var_values);
-void CONSTR_DC_FLOW_LIM_store_sens_branch(Constr* c, Branch* b, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
+void CONSTR_DC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t);
+void CONSTR_DC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* var_values);
+void CONSTR_DC_FLOW_LIM_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void CONSTR_DC_FLOW_LIM_free(Constr* c);
 
 #endif
