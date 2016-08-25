@@ -2229,16 +2229,19 @@ void NET_update_properties(Net* net, Vec* values) {
   
   // Local variables
   int i;
+  int t;
 
   // Clear
   NET_clear_properties(net);
 
   // Update
-  for (i = 0; i < NET_get_num_branches(net); i++)
-    NET_update_properties_branch(net,NET_get_branch(net,i),values);
- }
+  for (i = 0; i < NET_get_num_branches(net); i++) {
+    for (t = 0; t < NET_get_num_periods(net); t++)
+      NET_update_properties_branch(net,NET_get_branch(net,i),t,values);
+  }
+}
 
-void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
+void NET_update_properties_branch(Net* net, Branch* br, int t, Vec* var_values) {
   
   // Local variables
   Bus* buses[2];
@@ -2282,7 +2285,6 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
 
   int k;
   int m;
-  int t;
   int T;
   
   // Check pointers
@@ -2305,329 +2307,326 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
   g_sh[0] = BRANCH_get_g_from(br);
   g_sh[1] = BRANCH_get_g_to(br);
 
-  // Time loop
+  // Periods
   T = net->num_periods;
-  for (t = 0; t < T; t++) {
 
-    // Bus data
-    for (k = 0; k < 2; k++) {
-      bus = buses[k];
-      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG) && var_values)
-	w[k] = VEC_get(var_values,BUS_get_index_v_ang(bus,t));
-      else
-	w[k] = BUS_get_v_ang(bus,t);
-      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-	v[k] = VEC_get(var_values,BUS_get_index_v_mag(bus,t));
-      else
-	v[k] = BUS_get_v_mag(bus,t);
-    }
+  // Bus data
+  for (k = 0; k < 2; k++) {
+    bus = buses[k];
+    if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG) && var_values)
+      w[k] = VEC_get(var_values,BUS_get_index_v_ang(bus,t));
+    else
+      w[k] = BUS_get_v_ang(bus,t);
+    if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) && var_values)
+      v[k] = VEC_get(var_values,BUS_get_index_v_mag(bus,t));
+    else
+      v[k] = BUS_get_v_mag(bus,t);
+  }
   
-    // Branch data
-    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
-      a = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
+  // Branch data
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
+    a = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
+  else
+    a = BRANCH_get_ratio(br,t);
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) && var_values)
+    phi = VEC_get(var_values,BRANCH_get_index_phase(br,t));
+  else
+    phi = BRANCH_get_phase(br,t);
+  
+  // Tap ratios
+  if (BRANCH_is_tap_changer(br)) {
+    
+    // Tap ratio limit violations
+    //***************************
+    da = 0;
+    if (a > BRANCH_get_ratio_max(br))
+      da = (a-BRANCH_get_ratio_max(br));
+    if (a < BRANCH_get_ratio_min(br)) 
+      da = (BRANCH_get_ratio_min(br)-a);
+    if (da > net->tran_r_vio[t])
+      net->tran_r_vio[t] = da;
+    
+    // Tap ratio actions
+    //******************
+    da = BRANCH_get_ratio_max(br)-BRANCH_get_ratio_min(br);
+    if (da < NET_CONTROL_EPS)
+      da = NET_CONTROL_EPS;
+    if (100.*fabs(a-BRANCH_get_ratio(br,t))/da > NET_CONTROL_ACTION_PCT)
+      net->num_actions[t]++;
+  }
+  
+  // Phase shifts
+  if (BRANCH_is_phase_shifter(br)) {
+    
+    // Phase shift limit violations
+    //*****************************
+    dphi = 0;
+    if (phi > BRANCH_get_phase_max(br))
+      dphi = (phi-BRANCH_get_phase_max(br));
+    if (phi < BRANCH_get_phase_min(br))
+      dphi = (BRANCH_get_phase_min(br)-phi);
+    if (dphi > net->tran_p_vio[t])
+      net->tran_p_vio[t] = dphi;
+    
+    // Phase shift actions
+    //********************
+    dphi = BRANCH_get_phase_max(br)-BRANCH_get_phase_min(br);
+    if (dphi < NET_CONTROL_EPS)
+      dphi = NET_CONTROL_EPS;
+    if (100.*fabs(phi-BRANCH_get_phase(br,t))/dphi > NET_CONTROL_ACTION_PCT)
+      net->num_actions[t]++;
+  }
+  
+  // Branch flows
+  for (k = 0; k < 2; k++) {
+    bus = buses[k];
+    if (k == 0) {
+      m = 1;
+      a_temp = a;
+      phi_temp = phi;
+    }
+    else {
+      m = 0;
+      a_temp = 1;
+      phi_temp = -phi;
+    }
+    flowP[k] = -a*v[k]*v[m]*(g*cos(w[k]-w[m]-phi_temp)+b*sin(w[k]-w[m]-phi_temp));
+    flowQ[k] = -a*v[k]*v[m]*(g*sin(w[k]-w[m]-phi_temp)-b*cos(w[k]-w[m]-phi_temp));
+    flowP_sh[k] =  a_temp*a_temp*(g_sh[k]+g)*v[k]*v[k];
+    flowQ_sh[k] = -a_temp*a_temp*(b_sh[k]+b)*v[k]*v[k];
+    
+    // Flows
+    BUS_inject_P(bus,-flowP_sh[k]-flowP[k],t); 
+    BUS_inject_Q(bus,-flowQ_sh[k]-flowQ[k],t);
+  }
+  
+  // Other quantities
+  for (k = 0; k < 2; k++) {
+    
+    bus = buses[k];
+    
+    // Skip if already counted
+    if (net->bus_counted[BUS_get_index(bus)*T+t])
+      continue;
     else
-      a = BRANCH_get_ratio(br,t);
-    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) && var_values)
-      phi = VEC_get(var_values,BRANCH_get_index_phase(br,t));
-    else
-      phi = BRANCH_get_phase(br,t);
-
-    // Tap ratios
-    if (BRANCH_is_tap_changer(br)) {
-
-      // Tap ratio limit violations
-      //***************************
-      da = 0;
-      if (a > BRANCH_get_ratio_max(br))
-	da = (a-BRANCH_get_ratio_max(br));
-      if (a < BRANCH_get_ratio_min(br)) 
-	da = (BRANCH_get_ratio_min(br)-a);
-      if (da > net->tran_r_vio[t])
-	net->tran_r_vio[t] = da;
-
-      // Tap ratio actions
-      //******************
-      da = BRANCH_get_ratio_max(br)-BRANCH_get_ratio_min(br);
-      if (da < NET_CONTROL_EPS)
-	da = NET_CONTROL_EPS;
-      if (100.*fabs(a-BRANCH_get_ratio(br,t))/da > NET_CONTROL_ACTION_PCT)
+      net->bus_counted[BUS_get_index(bus)*T+t] = TRUE;
+    
+    // Maximum and minimum voltage magnitudes
+    //***************************************
+    if (net->bus_v_max[t] == 0 && net->bus_v_min[t] == 0) {
+      net->bus_v_max[t] = v[k];
+      net->bus_v_min[t] = v[k];
+    }
+    else {
+      if (v[k] > net->bus_v_max[t])
+	net->bus_v_max[t] = v[k];
+      if (v[k] < net->bus_v_min[t])
+	net->bus_v_min[t] = v[k];
+    }
+    
+    // Voltage limit violations
+    //*************************
+    dv = 0;
+    if (v[k] > BUS_get_v_max(bus))
+      dv = v[k]-BUS_get_v_max(bus);
+    if (v[k] < BUS_get_v_min(bus))
+      dv = BUS_get_v_min(bus)-v[k];
+    if (dv > net->bus_v_vio[t])
+      net->bus_v_vio[t] = dv;
+    
+    // Tran-controlled
+    if (BUS_is_regulated_by_tran(bus)) {
+      if (dv > net->tran_v_vio[t])
+	net->tran_v_vio[t] = dv;
+    }
+    
+    // Shunt-controlled
+    if (BUS_is_regulated_by_shunt(bus)) {
+      if (dv > net->shunt_v_vio[t])
+	net->shunt_v_vio[t] = dv;
+    }
+    
+    // Bus regulated by gen
+    if (BUS_is_regulated_by_gen(bus)) {
+      
+      // Voltage set point deviation
+      //****************************
+      if (fabs(v[k]-BUS_get_v_set(bus,t)) > net->gen_v_dev[t])
+	net->gen_v_dev[t] = fabs(v[k]-BUS_get_v_set(bus,t));
+      
+      // Voltage set point action
+      //*************************
+      dv = BUS_get_v_max(bus)-BUS_get_v_min(bus);
+      if (dv < NET_CONTROL_EPS)
+	dv = NET_CONTROL_EPS;
+      if (100.*fabs(v[k]-BUS_get_v_set(bus,t))/dv > NET_CONTROL_ACTION_PCT)
 	net->num_actions[t]++;
     }
-
-    // Phase shifts
-    if (BRANCH_is_phase_shifter(br)) {
-
-      // Phase shift limit violations
+    
+    // Generators
+    for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+      
+      if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) && var_values)
+	P = VEC_get(var_values,GEN_get_index_P(gen,t));
+      else
+	P = GEN_get_P(gen,t);
+      if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q) && var_values)
+	Q = VEC_get(var_values,GEN_get_index_Q(gen,t));
+      else
+	Q = GEN_get_Q(gen,t);
+      
+      // Injections
+      BUS_inject_P(bus,P,t);
+      BUS_inject_Q(bus,Q,t);
+      
+      // Active power generation cost
       //*****************************
-      dphi = 0;
-      if (phi > BRANCH_get_phase_max(br))
-	dphi = (phi-BRANCH_get_phase_max(br));
-      if (phi < BRANCH_get_phase_min(br))
-	dphi = (BRANCH_get_phase_min(br)-phi);
-      if (dphi > net->tran_p_vio[t])
-	net->tran_p_vio[t] = dphi;
-
-      // Phase shift actions
-      //********************
-      dphi = BRANCH_get_phase_max(br)-BRANCH_get_phase_min(br);
-      if (dphi < NET_CONTROL_EPS)
-	dphi = NET_CONTROL_EPS;
-      if (100.*fabs(phi-BRANCH_get_phase(br,t))/dphi > NET_CONTROL_ACTION_PCT)
+      net->gen_P_cost[t] += GEN_get_P_cost_for(gen,P);
+      
+      // Reacive power
+      if (GEN_is_regulator(gen)) { // Should this be done for all generators?
+	
+	// Reactive power limit violations
+	//********************************
+	dQ = 0;
+	if (Q > GEN_get_Q_max(gen))
+	  dQ = (Q-GEN_get_Q_max(gen))*net->base_power; // MVAr
+	if (Q < GEN_get_Q_min(gen)) 
+	  dQ = (GEN_get_Q_min(gen)-Q)*net->base_power; // MVAr
+	if (dQ > net->gen_Q_vio[t])
+	  net->gen_Q_vio[t] = dQ;
+      }
+      
+      // Active power limit violations
+      //******************************
+      dP = 0;
+      if (P > GEN_get_P_max(gen))
+	dP = (P-GEN_get_P_max(gen))*net->base_power; // MW
+      if (P < GEN_get_P_min(gen)) 
+	dP = (GEN_get_P_min(gen)-P)*net->base_power; // MW
+      if (dP > net->gen_P_vio[t])
+	net->gen_P_vio[t] = dP;
+      
+      // Active power actions
+      //*********************
+      dP = GEN_get_P_max(gen)-GEN_get_P_min(gen);
+      if (dP < NET_CONTROL_EPS)
+	dP = NET_CONTROL_EPS;
+      if (100.*fabs(P-GEN_get_P(gen,t))/dP > NET_CONTROL_ACTION_PCT)
 	net->num_actions[t]++;
     }
-
-    // Branch flows
-    for (k = 0; k < 2; k++) {
-      bus = buses[k];
-      if (k == 0) {
-	m = 1;
-	a_temp = a;
-	phi_temp = phi;
-      }
-      else {
-	m = 0;
-	a_temp = 1;
-	phi_temp = -phi;
-      }
-      flowP[k] = -a*v[k]*v[m]*(g*cos(w[k]-w[m]-phi_temp)+b*sin(w[k]-w[m]-phi_temp));
-      flowQ[k] = -a*v[k]*v[m]*(g*sin(w[k]-w[m]-phi_temp)-b*cos(w[k]-w[m]-phi_temp));
-      flowP_sh[k] =  a_temp*a_temp*(g_sh[k]+g)*v[k]*v[k];
-      flowQ_sh[k] = -a_temp*a_temp*(b_sh[k]+b)*v[k]*v[k];
+    
+    // Loads
+    for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+      
+      if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P) && var_values)
+	P = VEC_get(var_values,LOAD_get_index_P(load,t));
+      else
+	P = LOAD_get_P(load,t);
+      
+      // Injections
+      BUS_inject_P(bus,-P,t);
+      BUS_inject_Q(bus,-LOAD_get_Q(load,t),t);
+      
+      // Active power consumption utility
+      //*********************************
+      net->load_P_util[t] += LOAD_get_P_util_for(load,P);
+      
+      // Active power limit violations
+      //******************************
+      dP = 0;
+      if (P > LOAD_get_P_max(load))
+	dP = (P-LOAD_get_P_max(load))*net->base_power; // MW
+      if (P < LOAD_get_P_min(load)) 
+	dP = (LOAD_get_P_min(load)-P)*net->base_power; // MW
+      if (dP > net->load_P_vio[t])
+	net->load_P_vio[t] = dP;
+      
+      // Active power actions
+      //*********************
+      dP = LOAD_get_P_max(load)-LOAD_get_P_min(load);
+      if (dP < NET_CONTROL_EPS)
+	dP = NET_CONTROL_EPS;
+      if (100.*fabs(P-LOAD_get_P(load,t))/dP > NET_CONTROL_ACTION_PCT)
+	net->num_actions[t]++;
+    }
+    
+    // Batteries
+    for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+      
+      if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P) && var_values)
+	P = (VEC_get(var_values,BAT_get_index_Pc(bat,t))-
+	     VEC_get(var_values,BAT_get_index_Pd(bat,t)));
+      else
+	P = BAT_get_P(bat,t);
+      
+      // Injections
+      BUS_inject_P(bus,-P,t);
+    }
+    
+    // Variable generators
+    for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+      
+      if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P) && var_values)
+	P = VEC_get(var_values,VARGEN_get_index_P(vargen,t));
+      else
+	P = VARGEN_get_P(vargen,t);
+      if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q) && var_values)
+	Q = VEC_get(var_values,VARGEN_get_index_Q(vargen,t));
+      else
+	Q = VARGEN_get_Q(vargen,t);
+      
+      // Injections
+      BUS_inject_P(bus,P,t);
+      BUS_inject_Q(bus,Q,t);
+    }
+    
+    // Shunts
+    for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+      
+      shunt_g = SHUNT_get_g(shunt);
+      if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) && var_values)
+	shunt_b = VEC_get(var_values,SHUNT_get_index_b(shunt,t));
+      else
+	shunt_b = SHUNT_get_b(shunt,t);
       
       // Flows
-      BUS_inject_P(bus,-flowP_sh[k]-flowP[k],t); 
-      BUS_inject_Q(bus,-flowQ_sh[k]-flowQ[k],t);
-    }
+      BUS_inject_P(bus,-shunt_g*v[k]*v[k],t);
+      BUS_inject_Q(bus,shunt_b*v[k]*v[k],t);
+      
+      // Switched shunts
+      if (SHUNT_is_switched_v(shunt)) {
+	
+	// Switched shunt susceptance violations
+	//**************************************
+	shunt_db = 0;
+	if (shunt_b > SHUNT_get_b_max(shunt))
+	  shunt_db = (shunt_b-SHUNT_get_b_max(shunt));
+	if (shunt_b < SHUNT_get_b_min(shunt)) 
+	  shunt_db = (SHUNT_get_b_min(shunt)-shunt_b);
+	if (shunt_db > net->shunt_b_vio[t])
+	  net->shunt_b_vio[t] = shunt_db;
+	
+	// Swtiched shunt susceptance actions
+	//***********************************
+	shunt_db = SHUNT_get_b_max(shunt)-SHUNT_get_b_min(shunt);
+	if (shunt_db < NET_CONTROL_EPS)
+	  shunt_db = NET_CONTROL_EPS;
+	if (100.*fabs(shunt_b-SHUNT_get_b(shunt,t))/shunt_db > NET_CONTROL_ACTION_PCT)
+	  net->num_actions[t]++;
+      }
+    }    
+  }
   
-    // Other quantities
-    for (k = 0; k < 2; k++) {
-      
-      bus = buses[k];
-    
-      // Skip if already counted
-      if (net->bus_counted[BUS_get_index(bus)*T+t])
-	continue;
-      else
-	net->bus_counted[BUS_get_index(bus)*T+t] = TRUE;
-    
-      // Maximum and minimum voltage magnitudes
-      //***************************************
-      if (net->bus_v_max[t] == 0 && net->bus_v_min[t] == 0) {
-	net->bus_v_max[t] = v[k];
-	net->bus_v_min[t] = v[k];
-      }
-      else {
-	if (v[k] > net->bus_v_max[t])
-	  net->bus_v_max[t] = v[k];
-	if (v[k] < net->bus_v_min[t])
-	  net->bus_v_min[t] = v[k];
-      }
-
-      // Voltage limit violations
-      //*************************
-      dv = 0;
-      if (v[k] > BUS_get_v_max(bus))
-	dv = v[k]-BUS_get_v_max(bus);
-      if (v[k] < BUS_get_v_min(bus))
-	dv = BUS_get_v_min(bus)-v[k];
-      if (dv > net->bus_v_vio[t])
-	net->bus_v_vio[t] = dv;
-    
-      // Tran-controlled
-      if (BUS_is_regulated_by_tran(bus)) {
-	if (dv > net->tran_v_vio[t])
-	  net->tran_v_vio[t] = dv;
-      }
-    
-      // Shunt-controlled
-      if (BUS_is_regulated_by_shunt(bus)) {
-	if (dv > net->shunt_v_vio[t])
-	  net->shunt_v_vio[t] = dv;
-      }
-
-      // Bus regulated by gen
-      if (BUS_is_regulated_by_gen(bus)) {
-
-	// Voltage set point deviation
-	//****************************
-	if (fabs(v[k]-BUS_get_v_set(bus,t)) > net->gen_v_dev[t])
-	  net->gen_v_dev[t] = fabs(v[k]-BUS_get_v_set(bus,t));
-	
-	// Voltage set point action
-	//*************************
-	dv = BUS_get_v_max(bus)-BUS_get_v_min(bus);
-	if (dv < NET_CONTROL_EPS)
-	  dv = NET_CONTROL_EPS;
-	if (100.*fabs(v[k]-BUS_get_v_set(bus,t))/dv > NET_CONTROL_ACTION_PCT)
-	  net->num_actions[t]++;
-      }
-
-      // Generators
-      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-	
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) && var_values)
-	  P = VEC_get(var_values,GEN_get_index_P(gen,t));
-	else
-	  P = GEN_get_P(gen,t);
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q) && var_values)
-	  Q = VEC_get(var_values,GEN_get_index_Q(gen,t));
-	else
-	  Q = GEN_get_Q(gen,t);
-
-	// Injections
-	BUS_inject_P(bus,P,t);
-	BUS_inject_Q(bus,Q,t);
-
-	// Active power generation cost
-	//*****************************
-	net->gen_P_cost[t] += GEN_get_P_cost_for(gen,P);
-      
-	// Reacive power
-	if (GEN_is_regulator(gen)) { // Should this be done for all generators?
-	  
-	  // Reactive power limit violations
-	  //********************************
-	  dQ = 0;
-	  if (Q > GEN_get_Q_max(gen))
-	    dQ = (Q-GEN_get_Q_max(gen))*net->base_power; // MVAr
-	  if (Q < GEN_get_Q_min(gen)) 
-	    dQ = (GEN_get_Q_min(gen)-Q)*net->base_power; // MVAr
-	  if (dQ > net->gen_Q_vio[t])
-	    net->gen_Q_vio[t] = dQ;
-	}
-
-	// Active power limit violations
-	//******************************
-	dP = 0;
-	if (P > GEN_get_P_max(gen))
-	  dP = (P-GEN_get_P_max(gen))*net->base_power; // MW
-	if (P < GEN_get_P_min(gen)) 
-	  dP = (GEN_get_P_min(gen)-P)*net->base_power; // MW
-	if (dP > net->gen_P_vio[t])
-	  net->gen_P_vio[t] = dP;
-
-	// Active power actions
-	//*********************
-	dP = GEN_get_P_max(gen)-GEN_get_P_min(gen);
-	if (dP < NET_CONTROL_EPS)
-	  dP = NET_CONTROL_EPS;
-	if (100.*fabs(P-GEN_get_P(gen,t))/dP > NET_CONTROL_ACTION_PCT)
-	  net->num_actions[t]++;
-      }
-
-      // Loads
-      for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
-
-	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P) && var_values)
-	  P = VEC_get(var_values,LOAD_get_index_P(load,t));
-	else
-	  P = LOAD_get_P(load,t);
-
-	// Injections
-	BUS_inject_P(bus,-P,t);
-	BUS_inject_Q(bus,-LOAD_get_Q(load,t),t);
-
-	// Active power consumption utility
-	//*********************************
-	net->load_P_util[t] += LOAD_get_P_util_for(load,P);
-
-	// Active power limit violations
-	//******************************
-	dP = 0;
-	if (P > LOAD_get_P_max(load))
-	  dP = (P-LOAD_get_P_max(load))*net->base_power; // MW
-	if (P < LOAD_get_P_min(load)) 
-	  dP = (LOAD_get_P_min(load)-P)*net->base_power; // MW
-	if (dP > net->load_P_vio[t])
-	  net->load_P_vio[t] = dP;
-
-	// Active power actions
-	//*********************
-	dP = LOAD_get_P_max(load)-LOAD_get_P_min(load);
-	if (dP < NET_CONTROL_EPS)
-	  dP = NET_CONTROL_EPS;
-	if (100.*fabs(P-LOAD_get_P(load,t))/dP > NET_CONTROL_ACTION_PCT)
-	  net->num_actions[t]++;
-      }
-
-      // Batteries
-      for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
-	
-	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P) && var_values)
-	  P = (VEC_get(var_values,BAT_get_index_Pc(bat,t))-
-	       VEC_get(var_values,BAT_get_index_Pd(bat,t)));
-	else
-	  P = BAT_get_P(bat,t);
-	
-	// Injections
-	BUS_inject_P(bus,-P,t);
-      }
-
-      // Variable generators
-      for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
-	
-	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P) && var_values)
-	  P = VEC_get(var_values,VARGEN_get_index_P(vargen,t));
-	else
-	  P = VARGEN_get_P(vargen,t);
-	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q) && var_values)
-	  Q = VEC_get(var_values,VARGEN_get_index_Q(vargen,t));
-	else
-	  Q = VARGEN_get_Q(vargen,t);
-	
-	// Injections
-	BUS_inject_P(bus,P,t);
-	BUS_inject_Q(bus,Q,t);
-      }
-
-      // Shunts
-      for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
-	
-	shunt_g = SHUNT_get_g(shunt);
-	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) && var_values)
-	  shunt_b = VEC_get(var_values,SHUNT_get_index_b(shunt,t));
-	else
-	  shunt_b = SHUNT_get_b(shunt,t);
-	
-	// Flows
-	BUS_inject_P(bus,-shunt_g*v[k]*v[k],t);
-	BUS_inject_Q(bus,shunt_b*v[k]*v[k],t);
-	
-	
-	// Switched shunts
-	if (SHUNT_is_switched_v(shunt)) {
-	  
-	  // Switched shunt susceptance violations
-	  //**************************************
-	  shunt_db = 0;
-	  if (shunt_b > SHUNT_get_b_max(shunt))
-	    shunt_db = (shunt_b-SHUNT_get_b_max(shunt));
-	  if (shunt_b < SHUNT_get_b_min(shunt)) 
-	    shunt_db = (SHUNT_get_b_min(shunt)-shunt_b);
-	  if (shunt_db > net->shunt_b_vio[t])
-	    net->shunt_b_vio[t] = shunt_db;
-
-	  // Swtiched shunt susceptance actions
-	  //***********************************
-	  shunt_db = SHUNT_get_b_max(shunt)-SHUNT_get_b_min(shunt);
-	  if (shunt_db < NET_CONTROL_EPS)
-	    shunt_db = NET_CONTROL_EPS;
-	  if (100.*fabs(shunt_b-SHUNT_get_b(shunt,t))/shunt_db > NET_CONTROL_ACTION_PCT)
-	    net->num_actions[t]++;
-	}
-      }    
-    }
-
-    // Power mismatches
-    if (BRANCH_get_index(br) == net->num_branches-1) {
-      BUS_array_get_max_mismatches(net->bus,
-				   net->num_buses,
-				   &(net->bus_P_mis[t]),
-				   &(net->bus_Q_mis[t]),
-				   t);
-      net->bus_P_mis[t] *= net->base_power;
-      net->bus_Q_mis[t] *= net->base_power;
-    }
+  // Power mismatches
+  if (BRANCH_get_index(br) == net->num_branches-1) {
+    BUS_array_get_max_mismatches(net->bus,
+				 net->num_buses,
+				 &(net->bus_P_mis[t]),
+				 &(net->bus_Q_mis[t]),
+				 t);
+    net->bus_P_mis[t] *= net->base_power;
+    net->bus_Q_mis[t] *= net->base_power;
   }
 }
 
