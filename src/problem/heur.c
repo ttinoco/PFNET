@@ -8,6 +8,8 @@
  * PFNET is released under the BSD 2-clause license.
  */
 
+
+#include <pfnet/array.h>
 #include <pfnet/heur.h>
 #include <pfnet/heur_PVPQ.h>
 
@@ -22,7 +24,7 @@ struct Heur {
   // Type functions
   void (*func_init)(Heur* h, Net* net);
   void (*func_clear)(Heur* h, Net* net);
-  void (*func_apply_to_branch)(Heur* h, Constr* clist, Net* net, Branch* br, Vec* var_values);
+  void (*func_apply_step)(Heur* h, Constr* clist, Net* net, Branch* br, int t, Vec* var_values);
   void (*func_free)(Heur* h);
 
   // Type data
@@ -30,24 +32,19 @@ struct Heur {
 
   // List
   struct Heur* next;
-
 };
 
 void HEUR_clear_bus_counted(Heur* h, int num) {
-  int i;
-  if (h) {
-    if (h->bus_counted) {
-      for (i = 0; i < num; i++)
-	h->bus_counted[i] = 0;
-    }
-  } 
+  if (h)
+    ARRAY_clear(h->bus_counted,char,num);
 }
 
 void HEUR_del(Heur* h) {
   if (h) {
 
     // Utils
-    free(h->bus_counted);
+    if (h->bus_counted)
+      free(h->bus_counted);
 
     // Data
     if (h->func_free)
@@ -91,11 +88,11 @@ Heur* HEUR_list_add(Heur* hlist, Heur* nh) {
   return hlist;
 }
 
-void HEUR_list_apply_to_branch(Heur* hlist, Constr* clist, Net* net, Branch* br, Vec* var_values) {
+void HEUR_list_apply_step(Heur* hlist, Constr* clist, Net* net, Branch* br, int t, Vec* var_values) {
   Heur* hh;
   if (hlist && net) {
     for (hh = hlist; hh != NULL; hh = HEUR_get_next(hh))
-      HEUR_apply_to_branch(hh,clist,net,br,var_values);
+      HEUR_apply_step(hh,clist,net,br,t,var_values);
   }
 }
 
@@ -130,13 +127,13 @@ Heur* HEUR_new(int type, Net* net) {
   if (type == HEUR_TYPE_PVPQ) { // PV-PQ switching heuristic
     h->func_init = HEUR_PVPQ_init;
     h->func_clear = HEUR_PVPQ_clear;
-    h->func_apply_to_branch = HEUR_PVPQ_apply_to_branch;
+    h->func_apply_step = HEUR_PVPQ_apply_step;
     h->func_free = HEUR_PVPQ_free;
   }
   else {
     h->func_init = NULL;
     h->func_clear = NULL;
-    h->func_apply_to_branch = NULL;
+    h->func_apply_step = NULL;
     h->func_free = NULL;
   }
 
@@ -162,7 +159,7 @@ void HEUR_clear(Heur* h, Net* net) {
     (*(h->func_clear))(h,net);
 }
 
-void HEUR_apply_to_branch(Heur* h, Constr* clist, Net* net, Branch* br, Vec* var_values) {
-  if (h && h->func_apply_to_branch)
-    (*(h->func_apply_to_branch))(h,clist,net,br,var_values);
+void HEUR_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, Vec* var_values) {
+  if (h && h->func_apply_step)
+    (*(h->func_apply_step))(h,clist,net,br,t,var_values);
 }
