@@ -1929,21 +1929,22 @@ cdef class VarGenerator:
 
     cdef cvargen.Vargen* _c_ptr
 
-    def __init__(self,alloc=True):
+    def __init__(self,alloc=True,num_periods=1):
         """
         Variable generator class.
 
         Parameters
         ----------
         alloc : {``True``, ``False``}
+        num_periods : int
         """
 
         pass
 
-    def __cinit__(self,alloc=True):
+    def __cinit__(self,alloc=True,num_periods=1):
         
         if alloc:
-            self._c_ptr = cvargen.VARGEN_new()
+            self._c_ptr = cvargen.VARGEN_new(num_periods)
         else:
             self._c_ptr = NULL
 
@@ -1968,6 +1969,10 @@ cdef class VarGenerator:
 
         return cvargen.VARGEN_has_flags(self._c_ptr,fmask,vmask)
 
+    property num_periods:
+        """ Number of time periods (int). """
+        def __get__(self): return cvargen.VARGEN_get_num_periods(self._c_ptr)
+
     property name:
         """ Variable generator name (string). """
         def __get__(self): return cvargen.VARGEN_get_name(self._c_ptr).decode('UTF-8')
@@ -1984,21 +1989,40 @@ cdef class VarGenerator:
         def __get__(self): return cvargen.VARGEN_get_index(self._c_ptr)
         
     property index_P:
-        """ Index of variable generator active power variable (int). """
-        def __get__(self): return cvargen.VARGEN_get_index_P(self._c_ptr)
+        """ Index of variable generator active power variable (int or array). """
+        def __get__(self): 
+            r = [cvargen.VARGEN_get_index_P(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property index_Q:
-        """ Index of variable generator reactive power variable (int). """
-        def __get__(self): return cvargen.VARGEN_get_index_Q(self._c_ptr)
+        """ Index of variable generator reactive power variable (int or array). """
+        def __get__(self): 
+            r = [cvargen.VARGEN_get_index_Q(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which variable generator is connected. """
         def __get__(self): return new_Bus(cvargen.VARGEN_get_bus(self._c_ptr))
 
     property P:
-        """ Variable generator active power (p.u. system base MVA) (float). """
-        def __get__(self): return cvargen.VARGEN_get_P(self._c_ptr)
-        def __set__(self,P): cvargen.VARGEN_set_P(self._c_ptr,P)
+        """ Variable generator active power (p.u. system base MVA) (float or array). """
+        def __get__(self): 
+            r = [cvargen.VARGEN_get_P(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
+        def __set__(self,P): 
+            cdef int t
+            cdef np.ndarray Par = np.array(P)
+            for t in range(np.minimum(Par.size,self.num_periods)):
+                cvargen.VARGEN_set_P(self._c_ptr,Par[t],t)
 
     property P_max:
         """ Variable generator active power upper limit (p.u. system base MVA) (float). """
@@ -2011,14 +2035,32 @@ cdef class VarGenerator:
         def __set__(self,P): cvargen.VARGEN_set_P_min(self._c_ptr,P)
 
     property P_std:
-        """ Variable generator active power standard deviation (p.u. system base MVA) (float). """
-        def __get__(self): return cvargen.VARGEN_get_P_std(self._c_ptr)
-        def __set__(self,P): cvargen.VARGEN_set_P_std(self._c_ptr,P)
+        """ Variable generator active power standard deviation (p.u. system base MVA) (float or array). """
+        def __get__(self): 
+            r = [cvargen.VARGEN_get_P_std(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
+        def __set__(self,P): 
+            cdef int t
+            cdef np.ndarray Par = np.array(P)
+            for t in range(np.minimum(Par.size,self.num_periods)):
+                cvargen.VARGEN_set_P_std(self._c_ptr,Par[t],t)
 
     property Q:
-        """ Variable generator reactive power (p.u. system base MVA) (float). """
-        def __get__(self): return cvargen.VARGEN_get_Q(self._c_ptr)
-        def __set__(self,Q): cvargen.VARGEN_set_Q(self._c_ptr,Q)
+        """ Variable generator reactive power (p.u. system base MVA) (float or array). """
+        def __get__(self): 
+            r = [cvargen.VARGEN_get_Q(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
+        def __set__(self,Q): 
+            cdef int t
+            cdef np.ndarray Qar = np.array(Q)
+            for t in range(np.minimum(Qar.size,self.num_periods)):
+                cvargen.VARGEN_set_Q(self._c_ptr,Qar[t],t)
 
     property Q_max:
         """ Variable generator maximum reactive power (p.u. system base MVA) (float). """
@@ -2069,21 +2111,22 @@ cdef class Battery:
 
     cdef cbat.Bat* _c_ptr
 
-    def __init__(self,alloc=True):
+    def __init__(self,alloc=True,num_periods=1):
         """
         Battery class.
 
         Parameters
         ----------
         alloc : {``True``, ``False``}
+        num_periods : int
         """
 
         pass
 
-    def __cinit__(self,alloc=True):
+    def __cinit__(self,alloc=True,num_periods=1):
         
         if alloc:
-            self._c_ptr = cbat.BAT_new()
+            self._c_ptr = cbat.BAT_new(num_periods)
         else:
             self._c_ptr = NULL
 
@@ -2108,6 +2151,10 @@ cdef class Battery:
 
         return cbat.BAT_has_flags(self._c_ptr,fmask,vmask)
 
+    property num_periods:
+        """ Number of time periods (int). """
+        def __get__(self): return cbat.BAT_get_num_periods(self._c_ptr)
+
     property obj_type:
         """ Object type (int). """
         def __get__(self): return cbat.BAT_get_obj_type(self._c_ptr)
@@ -2117,25 +2164,49 @@ cdef class Battery:
         def __get__(self): return cbat.BAT_get_index(self._c_ptr)
         
     property index_Pc:
-        """ Index of battery charging power variable (int). """
-        def __get__(self): return cbat.BAT_get_index_Pc(self._c_ptr)
+        """ Index of battery charging power variable (int or array). """
+        def __get__(self): 
+            r = [cbat.BAT_get_index_Pc(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property index_Pd:
-        """ Index of battery discharging power variable (int). """
-        def __get__(self): return cbat.BAT_get_index_Pd(self._c_ptr)
+        """ Index of battery discharging power variable (int or array). """
+        def __get__(self): 
+            r = [cbat.BAT_get_index_Pd(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property index_E:
-        """ Index of battery energy level variable (int). """
-        def __get__(self): return cbat.BAT_get_index_E(self._c_ptr)
+        """ Index of battery energy level variable (int or array). """
+        def __get__(self): 
+            r = [cbat.BAT_get_index_E(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which battery is connected. """
         def __get__(self): return new_Bus(cbat.BAT_get_bus(self._c_ptr))
 
     property P:
-        """ Battery charging power (p.u. system base MVA) (float). """
-        def __get__(self): return cbat.BAT_get_P(self._c_ptr)
-        def __set__(self,P): cbat.BAT_set_P(self._c_ptr,P)
+        """ Battery charging power (p.u. system base MVA) (float or array). """
+        def __get__(self): 
+            r = [cbat.BAT_get_P(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
+        def __set__(self,P): 
+            cdef int t
+            cdef np.ndarray Par = np.array(P)
+            for t in range(np.minimum(Par.size,self.num_periods)):
+                cbat.BAT_set_P(self._c_ptr,Par[t],t)
 
     property P_max:
         """ Battery charging power upper limit (p.u. system base MVA) (float). """
@@ -2148,9 +2219,18 @@ cdef class Battery:
         def __set__(self,P): cbat.BAT_set_P_min(self._c_ptr,P)
 
     property E:
-        """ Battery energy level (p.u. system base MVA times time unit) (float). """
-        def __get__(self): return cbat.BAT_get_E(self._c_ptr)
-        def __set__(self,E): cbat.BAT_set_E(self._c_ptr,E)
+        """ Battery energy level (p.u. system base MVA times time unit) (float or array). """
+        def __get__(self): 
+            r = [cbat.BAT_get_E(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
+        def __set__(self,E): 
+            cdef int t
+            cdef np.ndarray Ear = np.array(E)
+            for t in range(np.minimum(Ear.size,self.num_periods)):
+                cbat.BAT_set_E(self._c_ptr,Ear[t],t)
 
     property E_max:
         """ Battery energy level upper limit (p.u. system base MVA times time unit) (float). """
