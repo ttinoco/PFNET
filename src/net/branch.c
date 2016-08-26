@@ -584,7 +584,7 @@ REAL BRANCH_get_P_mk_series(Branch* br, Vec* var_values) {
       phi = BRANCH_get_phase(br);
 
     return (a_mk*a_mk*v_m*v_m*g_mk -
-            a_mk*a_km*v_k*v_m*( g_mk*cos(w_k-w_m+phi) + b_mk*sin(w_k-w_m+phi)));
+            a_mk*a_km*v_k*v_m*( g_mk*cos(w_m-w_k+phi) + b_mk*sin(w_m-w_k+phi)));
   }
   else
     return 0;
@@ -652,7 +652,7 @@ REAL BRANCH_get_Q_mk_series(Branch* br, Vec* var_values) {
       phi = BRANCH_get_phase(br);
 
     return (-a_mk*a_mk*v_m*v_m*b_mk -
-            a_mk*a_km*v_k*v_m*(g_mk*sin(w_k-w_m+phi) - b_mk*cos(w_k-w_m+phi)));
+            a_mk*a_km*v_k*v_m*(g_mk*sin(w_m-w_k+phi) - b_mk*cos(w_m-w_k+phi)));
   }
   else
     return 0;
