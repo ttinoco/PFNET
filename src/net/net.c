@@ -2315,14 +2315,33 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
     *  similar for mk
     */
 
-  // Update injected P,Q at buses k and m
+    if (TRUE) {
+      printf("** FLOWS **\n");
+      printf("%d --> %d\n", BUS_get_number(buses[0]), BUS_get_number(buses[1]));
+      printf("\tP_km\tQ_km\tP_mk\tQ_mk\tP_km_sr\tQ_km_sr\tP_mk_sr\tQ_mk_sr\tP_km_sh\tQ_km_sh\tP_mk_sh\tQ_mk_sh\n");
+      printf("\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\n",
+          BRANCH_get_P_km(br, var_values),
+          BRANCH_get_Q_km(br, var_values),
+          BRANCH_get_P_mk(br, var_values),
+          BRANCH_get_Q_mk(br, var_values),
+          BRANCH_get_P_km_series(br, var_values),
+          BRANCH_get_Q_km_series(br, var_values),
+          BRANCH_get_P_mk_series(br, var_values),
+          BRANCH_get_Q_mk_series(br, var_values),
+          BRANCH_get_P_k_shunt(br, var_values),
+          BRANCH_get_Q_k_shunt(br, var_values),
+          BRANCH_get_P_m_shunt(br, var_values),
+          BRANCH_get_Q_m_shunt(br, var_values));
+    }
+
+    // Update injected P,Q at buses k and m
     if (k == 0) {
-      BUS_inject_P(bus,-BRANCH_get_P_km(br, var_values));
-      BUS_inject_Q(bus,-BRANCH_get_Q_km(br, var_values));
+      BUS_inject_P(bus,BRANCH_get_P_km(br, var_values));
+      BUS_inject_Q(bus,BRANCH_get_Q_km(br, var_values));
     }
     else {
-      BUS_inject_P(bus,-BRANCH_get_P_mk(br, var_values));
-      BUS_inject_Q(bus,-BRANCH_get_Q_mk(br, var_values));
+      BUS_inject_P(bus,BRANCH_get_P_mk(br, var_values));
+      BUS_inject_Q(bus,BRANCH_get_Q_mk(br, var_values));
     }
   }
 
