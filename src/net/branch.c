@@ -346,7 +346,7 @@ REAL BRANCH_get_phase_min(Branch* br) {
     return 0;
 }
 
-// TODO: Branch flow calculations
+// Branch Flow calculations
 // P_km = -P_km_series - P_k_shunt
 REAL BRANCH_get_P_km(Branch* br, Vec* var_values) {
   if (br) {
@@ -833,7 +833,7 @@ REAL BRANCH_get_P_shunt_to(Branch* br, Vec* var_values) {
 REAL BRANCH_get_Q_shunt_to(Branch* br, Vec* var_values) {
   return BRANCH_get_Q_m_shunt(br, var_values);
 }
-
+// end Branch flow calculations
 
 REAL BRANCH_get_ratingA(Branch* br) {
   if (br)
