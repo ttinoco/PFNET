@@ -909,3 +909,12 @@ void BRANCH_show(Branch* br, int t) {
 	 br->type);
 }
 
+void BRANCH_propagate_data_in_time(Branch* br) {
+  int t;
+  if (br) {
+    for (t = 1; t < br->num_periods; t++) {
+      br->ratio[t] = br->ratio[0];
+      br->phase[t] = br->phase[0];
+    }
+  }
+}

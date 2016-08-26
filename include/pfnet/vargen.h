@@ -59,6 +59,7 @@ void* VARGEN_array_get(void* gen_array, int index);
 Vargen* VARGEN_array_new(int size, int num_periods);
 void VARGEN_array_show(Vargen* gen_array, int size, int t);
 void VARGEN_clear_flags(Vargen* gen, char flag_type);
+void VARGEN_propagate_data_in_time(Vargen* gen);
 char* VARGEN_get_name(Vargen* gen);
 Bus* VARGEN_get_bus(Vargen* gen);
 char VARGEN_get_obj_type(void* gen);

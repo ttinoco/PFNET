@@ -506,3 +506,13 @@ void BAT_show(Bat* bat, int t) {
 	   bat->index);
 }
 
+void BAT_propagate_data_in_time(Bat* bat) {
+  int t;
+  if (bat) {
+    for (t = 1; t < bat->num_periods; t++) {
+      bat->P[t] = bat->P[0];
+      bat->E[t] = bat->E[0];
+    }
+  }
+}
+

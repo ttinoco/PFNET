@@ -506,3 +506,13 @@ void VARGEN_show(Vargen* gen, int t) {
 	 VARGEN_is_wind(gen));
 }
 
+void VARGEN_propagate_data_in_time(Vargen* gen) {
+  int t;
+  if (gen) {
+    for (t = 1; t < gen->num_periods; t++) {
+      gen->P[t] = gen->P[0];
+      gen->Q[t] = gen->Q[0];
+    }
+  }
+}
+

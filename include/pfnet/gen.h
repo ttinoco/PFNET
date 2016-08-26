@@ -54,6 +54,7 @@ Gen* GEN_array_new(int size, int num_periods);
 void GEN_array_show(Gen* gen_array, int size, int t);
 void GEN_clear_sensitivities(Gen* gen);
 void GEN_clear_flags(Gen* gen, char flag_type);
+void GEN_propagate_data_in_time(Gen* gen);
 int GEN_get_num_periods(Gen* gen);
 REAL GEN_get_sens_P_u_bound(Gen* gen, int t);
 REAL GEN_get_sens_P_l_bound(Gen* gen, int t);

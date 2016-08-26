@@ -1491,3 +1491,14 @@ void BUS_show(Bus* bus, int t) {
 	 BUS_get_num_loads(bus),
 	 BUS_get_num_shunts(bus));
 }
+
+void BUS_propagate_data_in_time(Bus* bus) {
+  int t;
+  if (bus) {
+    for (t = 1; t < bus->num_periods; t++) {
+      bus->v_mag[t] = bus->v_mag[0];
+      bus->v_ang[t] = bus->v_ang[0];
+      bus->v_set[t] = bus->v_set[0];
+    }
+  }
+}

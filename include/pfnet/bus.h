@@ -137,6 +137,7 @@ void BUS_clear_flags(Bus* bus, char flag_type);
 void BUS_clear_sensitivities(Bus* bus);
 void BUS_clear_mismatches(Bus* bus);
 void BUS_clear_vargen(Bus* bus);
+void BUS_propagate_data_in_time(Bus* bus);
 char BUS_get_obj_type(void* bus);
 int BUS_get_degree(Bus* bus);
 REAL BUS_get_price(Bus* bus, int t);

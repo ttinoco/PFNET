@@ -491,3 +491,11 @@ void SHUNT_show(Shunt* shunt, int t) {
 	   BUS_get_number(shunt->bus),
 	   shunt->index);
 }
+
+void SHUNT_propagate_data_in_time(Shunt* shunt) {
+  int t;
+  if (shunt) {
+    for (t = 1; t < shunt->num_periods; t++)
+      shunt->b[t] = shunt->b[0];
+  }
+}

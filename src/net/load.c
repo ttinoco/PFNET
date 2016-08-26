@@ -480,3 +480,13 @@ void LOAD_show(Load* load, int t) {
 	   load->index);
 }
 
+void LOAD_propagate_data_in_time(Load* load) {
+  int t;
+  if (load) {
+    for (t = 1; t < load->num_periods; t++) {
+      load->P[t] = load->P[0];
+      load->Q[t] = load->Q[0];
+    }
+  }
+}
+

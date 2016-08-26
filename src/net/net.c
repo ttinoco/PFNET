@@ -1731,10 +1731,13 @@ void NET_load(Net* net, char* filename, int output_level) {
     net->error_flag = TRUE;
   }
 
+  // Propagate data
+  NET_propagate_data_in_time(net);
+
   // Set up utilities
   ARRAY_zalloc(net->bus_counted,char,net->num_buses*net->num_periods);
 
-  // Properties
+  // Update properties
   NET_update_properties(net,NULL);
 }
 
@@ -2649,4 +2652,42 @@ void NET_update_set_points(Net* net) {
 	BUS_set_v_set(bus,BUS_get_v_mag(bus,t),t);
     }
   }
+}
+
+void NET_propagate_data_in_time(Net* net) {
+  
+  // Local variables
+  int i;
+
+  // No net
+  if (!net)
+    return;
+
+  // Buses
+  for (i = 0; i < net->num_buses; i++) 
+    BUS_propagate_data_in_time(BUS_array_get(net->bus,i));
+
+  // Branches
+  for (i = 0; i < net->num_branches; i++) 
+    BRANCH_propagate_data_in_time(BRANCH_array_get(net->branch,i));
+
+  // Generators
+  for (i = 0; i < net->num_gens; i++) 
+    GEN_propagate_data_in_time(GEN_array_get(net->gen,i));
+
+  // Loads
+  for (i = 0; i < net->num_loads; i++) 
+    LOAD_propagate_data_in_time(LOAD_array_get(net->load,i));
+
+  // Vargens
+  for (i = 0; i < net->num_vargens; i++) 
+    VARGEN_propagate_data_in_time(VARGEN_array_get(net->vargen,i));
+
+  // Shunts
+  for (i = 0; i < net->num_shunts; i++) 
+    SHUNT_propagate_data_in_time(SHUNT_array_get(net->shunt,i));
+
+  // Batteries
+  for (i = 0; i < net->num_bats; i++) 
+    BAT_propagate_data_in_time(BAT_array_get(net->bat,i));
 }
