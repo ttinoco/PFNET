@@ -15,7 +15,7 @@
 #include <string.h>
 #include <ctype.h>
 
-char* trim(char *s) {
+static char* trim(char *s) {
   /* Trims string inplace. */
   
   char *ptr;
