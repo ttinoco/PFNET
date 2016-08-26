@@ -43,7 +43,7 @@ np.import_array()
 # Options
 #########
 
-OPTION_SP_SCALARS = True # for scalar outputs when num periods is 1
+OPTION_SP_SCALARS = True # for scalar outputs when num periods is 1 (single period)
 
 # Constants
 ###########
@@ -890,21 +890,22 @@ cdef class Branch:
 
     cdef cbranch.Branch* _c_ptr
 
-    def __init__(self,alloc=True):
+    def __init__(self,alloc=True,num_periods=1):
         """
         Branch class.
 
         Parameters
         ----------
         alloc : {``True``, ``False``}
+        num_periods : int
         """
 
         pass
 
-    def __cinit__(self,alloc=True):
+    def __cinit__(self,alloc=True,num_periods=1):
 
         if alloc:
-            self._c_ptr = cbranch.BRANCH_new()
+            self._c_ptr = cbranch.BRANCH_new(num_periods)
         else:
             self._c_ptr = NULL
 
@@ -1059,6 +1060,10 @@ cdef class Branch:
 
         return cbranch.BRANCH_has_flags(self._c_ptr,fmask,vmask)
 
+    property num_periods:
+        """ Number of time periods (int). """
+        def __get__(self): return cbus.BRANCH_get_num_periods(self._c_ptr)
+
     property obj_type:
         """ Object type (int). """
         def __get__(self): return cbranch.BRANCH_get_obj_type(self._c_ptr)
@@ -1068,24 +1073,49 @@ cdef class Branch:
         def __get__(self): return cbranch.BRANCH_get_index(self._c_ptr)
 
     property index_ratio:
-        """ Index of transformer tap ratio variable (int). """
-        def __get__(self): return cbranch.BRANCH_get_index_ratio(self._c_ptr)
+        """ Index of transformer tap ratio variable (int or array). """
+        def __get__(self): 
+            r = [cbranch.BRANCH_get_index_ratio(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property index_ratio_y:
-        """ Index of transformer tap ratio positive deviation variable (int). """
-        def __get__(self): return cbranch.BRANCH_get_index_ratio_y(self._c_ptr)
+        """ Index of transformer tap ratio positive deviation variable (int or array). """
+        def __get__(self): 
+            r = [cbranch.BRANCH_get_index_ratio_y(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property index_ratio_z:
-        """ Index of transformer tap ratio negative deviation variable (int). """
-        def __get__(self): return cbranch.BRANCH_get_index_ratio_z(self._c_ptr)
+        """ Index of transformer tap ratio negative deviation variable (int or array). """
+        def __get__(self): 
+            r = [cbranch.BRANCH_get_index_ratio_z(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property index_phase:
-        """ Index of transformer phase shift variable (int). """
-        def __get__(self): return cbranch.BRANCH_get_index_phase(self._c_ptr)
+        """ Index of transformer phase shift variable (int or array). """
+        def __get__(self): 
+            r = [cbranch.BRANCH_get_index_phase(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property ratio:
-        """ Transformer tap ratio (float). """
-        def __get__(self): return cbranch.BRANCH_get_ratio(self._c_ptr)
+        """ Transformer tap ratio (float or array). """
+        def __get__(self): 
+            r = [cbranch.BRANCH_get_ratio(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property ratio_max:
         """ Transformer tap ratio upper limit (float). """
@@ -1134,8 +1164,13 @@ cdef class Branch:
         def __get__(self): return cbranch.BRANCH_get_g_to(self._c_ptr)
 
     property phase:
-        """ Transformer phase shift (radians) (float). """
-        def __get__(self): return cbranch.BRANCH_get_phase(self._c_ptr)
+        """ Transformer phase shift (radians) (float or array). """
+        def __get__(self): 
+            r = [cbranch.BRANCH_get_phase(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property phase_max:
         """ Transformer phase shift upper limit (radians) (float). """
@@ -1161,16 +1196,31 @@ cdef class Branch:
         def __set__(self,r): cbranch.BRANCH_set_ratingC(self._c_ptr,r)
 
     property P_flow_DC:
-        """ Active power flow (DC approx.) from bus "from" to bus "to" (float). """
-        def __get__(self): return cbranch.BRANCH_get_P_flow_DC(self._c_ptr)
+        """ Active power flow (DC approx.) from bus "from" to bus "to" (float or array). """
+        def __get__(self): 
+            r = [cbranch.BRANCH_get_P_flow_DC(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property sens_P_u_bound:
-        """ Objective function sensitivity with respect to active power flow upper bound (float). """
-        def __get__(self): return cbranch.BRANCH_get_sens_P_u_bound(self._c_ptr)   
+        """ Objective function sensitivity with respect to active power flow upper bound (float or array). """
+        def __get__(self): 
+            r = [cbranch.BRANCH_get_sens_P_u_bound(self._c_ptr,t) for t in range(self.num_periods)] 
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property sens_P_l_bound:
-        """ Objective function sensitivity with respect to active power flow lower bound (float). """
-        def __get__(self): return cbranch.BRANCH_get_sens_P_l_bound(self._c_ptr)
+        """ Objective function sensitivity with respect to active power flow lower bound (float or array). """
+        def __get__(self): 
+            r = [cbranch.BRANCH_get_sens_P_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property outage:
         """ Flag that indicates whehter branch is on outage. """
