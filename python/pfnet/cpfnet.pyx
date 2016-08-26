@@ -1062,7 +1062,7 @@ cdef class Branch:
 
     property num_periods:
         """ Number of time periods (int). """
-        def __get__(self): return cbus.BRANCH_get_num_periods(self._c_ptr)
+        def __get__(self): return cbranch.BRANCH_get_num_periods(self._c_ptr)
 
     property obj_type:
         """ Object type (int). """
@@ -1212,7 +1212,7 @@ cdef class Branch:
                 return r[0]
             else:
                 return np.array(r)
-
+                
     property sens_P_l_bound:
         """ Objective function sensitivity with respect to active power flow lower bound (float or array). """
         def __get__(self): 
@@ -1271,21 +1271,22 @@ cdef class Generator:
 
     cdef cgen.Gen* _c_ptr
 
-    def __init__(self,alloc=True):
+    def __init__(self,alloc=True,num_periods=1):
         """
         Generator class.
 
         Parameters
         ----------
         alloc : {``True``, ``False``}
+        num_periods : int
         """
 
         pass
 
-    def __cinit__(self,alloc=True):
+    def __cinit__(self,alloc=True,num_periods=1):
 
         if alloc:
-            self._c_ptr = cgen.GEN_new()
+            self._c_ptr = cgen.GEN_new(num_periods)
         else:
             self._c_ptr = NULL
 
@@ -1393,6 +1394,10 @@ cdef class Generator:
 
         return cgen.GEN_has_flags(self._c_ptr,fmask,vmask)
 
+    property num_periods:
+        """ Number of time periods (int). """
+        def __get__(self): return cgen.GEN_get_num_periods(self._c_ptr)
+
     property obj_type:
         """ Object type (int). """
         def __get__(self): return cgen.GEN_get_obj_type(self._c_ptr)
@@ -1402,12 +1407,22 @@ cdef class Generator:
         def __get__(self): return cgen.GEN_get_index(self._c_ptr)
         
     property index_P:
-        """ Index of generator active power variable (int). """
-        def __get__(self): return cgen.GEN_get_index_P(self._c_ptr)
+        """ Index of generator active power variable (int or array). """
+        def __get__(self): 
+            r = [cgen.GEN_get_index_P(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property index_Q:
-        """ Index of generator reactive power variable (int). """
-        def __get__(self): return cgen.GEN_get_index_Q(self._c_ptr)
+        """ Index of generator reactive power variable (int or array). """
+        def __get__(self): 
+            r = [cgen.GEN_get_index_Q(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which generator is connected. """
@@ -1418,9 +1433,18 @@ cdef class Generator:
         def __get__(self): return new_Bus(cgen.GEN_get_reg_bus(self._c_ptr))
 
     property P:
-        """ Generator active power (p.u. system base MVA) (float). """
-        def __get__(self): return cgen.GEN_get_P(self._c_ptr)
-        def __set__(self,P): cgen.GEN_set_P(self._c_ptr,P)
+        """ Generator active power (p.u. system base MVA) (float or array). """
+        def __get__(self): 
+             r = [cgen.GEN_get_P(self._c_ptr,t) for t in range(self.num_periods)]
+             if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
+        def __set__(self,P): 
+            cdef int t
+            cdef np.ndarray Par = np.array(P)
+            for t in range(np.minimum(Par.size,self.num_periods)):
+                cgen.GEN_set_P(self._c_ptr,Par[t],t)
 
     property P_max:
         """ Generator active power upper limit (p.u. system base MVA) (float). """
@@ -1433,9 +1457,18 @@ cdef class Generator:
         def __set__(self,P): cgen.GEN_set_P_min(self._c_ptr,P)
             
     property Q:
-        """ Generator reactive power (p.u. system base MVA) (float). """
-        def __get__(self): return cgen.GEN_get_Q(self._c_ptr)
-        def __set__(self,Q): cgen.GEN_set_Q(self._c_ptr,Q)
+        """ Generator reactive power (p.u. system base MVA) (float or array). """
+        def __get__(self): 
+            r = [cgen.GEN_get_Q(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
+        def __set__(self,Q): 
+            cdef int t
+            cdef np.ndarray Qar = np.array(Q)
+            for t in range(np.minimum(Qar.size,self.num_periods)):
+                cgen.GEN_set_Q(self._c_ptr,Qar[t],t)
 
     property Q_max:
         """ Generator reactive power upper limit (p.u. system base MVA) (float). """
@@ -1446,9 +1479,14 @@ cdef class Generator:
         def __get__(self): return cgen.GEN_get_Q_min(self._c_ptr)
 
     property P_cost:
-        """ Active power generation cost ($/hr). """
-        def __get__(self): return cgen.GEN_get_P_cost(self._c_ptr)
-
+        """ Active power generation cost ($/hr) (float or array). """
+        def __get__(self): 
+            r = [cgen.GEN_get_P_cost(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
+            
     property cost_coeff_Q0:
         """ Coefficient for genertion cost function (constant term, units of $/hr). """
         def __get__(self): return cgen.GEN_get_cost_coeff_Q0(self._c_ptr)
@@ -1465,12 +1503,22 @@ cdef class Generator:
         def __set__(self,c): cgen.GEN_set_cost_coeff_Q2(self._c_ptr,c)
 
     property sens_P_u_bound:
-        """ Objective function sensitivity with respect to active power upper bound (float). """
-        def __get__(self): return cgen.GEN_get_sens_P_u_bound(self._c_ptr)   
+        """ Objective function sensitivity with respect to active power upper bound (float or array). """
+        def __get__(self): 
+            r = [cgen.GEN_get_sens_P_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property sens_P_l_bound:
-        """ Objective function sensitivity with respect to active power lower bound (float). """
-        def __get__(self): return cgen.GEN_get_sens_P_l_bound(self._c_ptr)
+        """ Objective function sensitivity with respect to active power lower bound (float or array). """
+        def __get__(self): 
+            r = [cgen.GEN_get_sens_P_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property outage:
         """ Flag that indicates whehter generator is on outage. """
