@@ -37,7 +37,7 @@ void FUNC_REG_SUSC_count_step(Func* f, Branch* br, int t) {
   // Local variables
   Bus* bus[2];
   Shunt* shunt;
-  int bus_index[2];
+  int bus_index_t[2];
   int* Hcounter;
   char* bus_counted;
   int k;
@@ -62,12 +62,12 @@ void FUNC_REG_SUSC_count_step(Func* f, Branch* br, int t) {
   bus[0] = BRANCH_get_bus_from(br);
   bus[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(bus[k]);
+    bus_index_t[k] = BUS_get_index(bus[k])*T+t;
   
   // Buses
   for (k = 0; k < 2; k++) {
     
-    if (!bus_counted[bus_index[k]*T+t]) {
+    if (!bus_counted[bus_index_t[k]]) {
 
       // Shunts
       for (shunt = BUS_get_shunt(bus[k]); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
@@ -83,7 +83,7 @@ void FUNC_REG_SUSC_count_step(Func* f, Branch* br, int t) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
@@ -110,7 +110,7 @@ void FUNC_REG_SUSC_analyze_step(Func* f, Branch* br, int t) {
   // Local variables
   Bus* bus[2];
   Shunt* shunt;
-  int bus_index[2];
+  int bus_index_t[2];
   int* Hcounter;
   char* bus_counted;
   Mat* H;
@@ -138,12 +138,12 @@ void FUNC_REG_SUSC_analyze_step(Func* f, Branch* br, int t) {
   bus[0] = BRANCH_get_bus_from(br);
   bus[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(bus[k]);
+    bus_index_t[k] = BUS_get_index(bus[k])*T+t;
 
   // Buses
   for (k = 0; k < 2; k++) {
     
-    if (!bus_counted[bus_index[k]*T+t]) {
+    if (!bus_counted[bus_index_t[k]]) {
       
       // Shunts
       for (shunt = BUS_get_shunt(bus[k]); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
@@ -176,7 +176,7 @@ void FUNC_REG_SUSC_analyze_step(Func* f, Branch* br, int t) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }  
 }
 
@@ -185,7 +185,7 @@ void FUNC_REG_SUSC_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   // Local variables
   Bus* bus[2];
   Shunt* shunt;
-  int bus_index[2];
+  int bus_index_t[2];
   char* bus_counted;
   REAL* phi;
   REAL* gphi;
@@ -215,12 +215,12 @@ void FUNC_REG_SUSC_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   bus[0] = BRANCH_get_bus_from(br);
   bus[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(bus[k]);
+    bus_index_t[k] = BUS_get_index(bus[k])*T+t;
 
   // Buses
   for (k = 0; k < 2; k++) {
 
-    if (!bus_counted[bus_index[k]*T+t]) {
+    if (!bus_counted[bus_index_t[k]]) {
     
       // Shunts
       for (shunt = BUS_get_shunt(bus[k]); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
@@ -258,7 +258,7 @@ void FUNC_REG_SUSC_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 

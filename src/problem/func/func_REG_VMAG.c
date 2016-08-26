@@ -37,7 +37,7 @@ void FUNC_REG_VMAG_count_step(Func* f, Branch* br, int t) {
   // Local variables
   Bus* buses[2];
   Bus* bus;
-  int bus_index[2];
+  int bus_index_t[2];
   int* Hcounter;
   char* bus_counted;
   int k;
@@ -62,14 +62,14 @@ void FUNC_REG_VMAG_count_step(Func* f, Branch* br, int t) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   for (k = 0; k < 2; k++) {
     
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]*T+t]) {
+    if (!bus_counted[bus_index_t[k]]) {
       
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) // v var
 	(*Hcounter)++;
@@ -86,7 +86,7 @@ void FUNC_REG_VMAG_count_step(Func* f, Branch* br, int t) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
@@ -113,7 +113,7 @@ void FUNC_REG_VMAG_analyze_step(Func* f, Branch* br, int t) {
   // Local variables
   Bus* buses[2];
   Bus* bus;
-  int bus_index[2];
+  int bus_index_t[2];
   int* Hcounter;
   char* bus_counted;
   Mat* H;
@@ -141,14 +141,14 @@ void FUNC_REG_VMAG_analyze_step(Func* f, Branch* br, int t) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   for (k = 0; k < 2; k++) {
     
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]*T+t]) {
+    if (!bus_counted[bus_index_t[k]]) {
       
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
 	MAT_set_i(H,*Hcounter,BUS_get_index_v_mag(bus,t));
@@ -183,7 +183,7 @@ void FUNC_REG_VMAG_analyze_step(Func* f, Branch* br, int t) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }  
 }
 
@@ -192,7 +192,7 @@ void FUNC_REG_VMAG_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   // Local variables
   Bus* buses[2];
   Bus* bus;
-  int bus_index[2];
+  int bus_index_t[2];
   char* bus_counted;
   REAL* phi;
   REAL* gphi;
@@ -231,14 +231,14 @@ void FUNC_REG_VMAG_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   for (k = 0; k < 2; k++) {
     
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]*T+t]) {
+    if (!bus_counted[bus_index_t[k]]) {
 
       // Set point
       vt = BUS_get_v_set(bus,t);
@@ -312,7 +312,7 @@ void FUNC_REG_VMAG_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 

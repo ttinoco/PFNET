@@ -39,7 +39,7 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Branch* br, int t) {
   Bus* bus;
   Gen* gen;
   Shunt* shunt;
-  int bus_index[2];
+  int bus_index_t[2];
   int* Hcounter;
   char* bus_counted;
   int k;
@@ -64,7 +64,7 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Branch* br, int t) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Tap ratio of tap-changing transformer
   if (BRANCH_is_tap_changer(br) && 
@@ -83,7 +83,7 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Branch* br, int t) {
     
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]*T+t]) {
+    if (!bus_counted[bus_index_t[k]]) {
 
       // Voltage mag of gen-regulated bus
       if (BUS_is_regulated_by_gen(bus) && 
@@ -112,7 +112,7 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Branch* br, int t) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
@@ -141,7 +141,7 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
   Bus* bus;
   Gen* gen;
   Shunt* shunt;
-  int bus_index[2];
+  int bus_index_t[2];
   int* Hcounter;
   char* bus_counted;
   Mat* H;
@@ -168,7 +168,7 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Tap ratio of tap-changing transformer
   if (BRANCH_is_tap_changer(br) && 
@@ -193,7 +193,7 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
     
     bus = buses[k];
     
-    if (!bus_counted[bus_index[k]*T+t]) {
+    if (!bus_counted[bus_index_t[k]]) {
 
       // Voltage mag of gen-regulated bus
       if (BUS_is_regulated_by_gen(bus) && 
@@ -231,7 +231,7 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }  
 }
 
@@ -242,7 +242,7 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   Bus* bus;
   Gen* gen;
   Shunt* shunt;
-  int bus_index[2];
+  int bus_index_t[2];
   int* Hcounter;
   char* bus_counted;
   REAL* phi;
@@ -278,7 +278,7 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Tap ratio of tap-changing transformer
   if (BRANCH_is_tap_changer(br) && 
@@ -339,7 +339,7 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
     
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]*T+t]) {
+    if (!bus_counted[bus_index_t[k]]) {
 
       // Voltage mag of gen-regulated bus
       if (BUS_is_regulated_by_gen(bus) && 
@@ -431,7 +431,7 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 

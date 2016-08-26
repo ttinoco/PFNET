@@ -59,7 +59,7 @@ void FUNC_NETCON_COST_analyze_step(Func* f, Branch* br, int t) {
   Gen* gen;
   Vargen* vargen;
   Bat* bat;
-  int bus_index[2];
+  int bus_index_t[2];
   char* bus_counted;
   REAL price;
   Vec* gphi;
@@ -85,7 +85,7 @@ void FUNC_NETCON_COST_analyze_step(Func* f, Branch* br, int t) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   for (k = 0; k < 2; k++) {
@@ -94,7 +94,7 @@ void FUNC_NETCON_COST_analyze_step(Func* f, Branch* br, int t) {
     
     price = BUS_get_price(bus,t);
     
-    if (!bus_counted[bus_index[k]*T+t]) {
+    if (!bus_counted[bus_index_t[k]]) {
       
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
@@ -124,7 +124,7 @@ void FUNC_NETCON_COST_analyze_step(Func* f, Branch* br, int t) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
@@ -137,7 +137,7 @@ void FUNC_NETCON_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   Gen* gen;
   Vargen* vargen;
   Bat* bat;
-  int bus_index[2];
+  int bus_index_t[2];
   char* bus_counted;
   REAL price;
   REAL* phi;
@@ -163,7 +163,7 @@ void FUNC_NETCON_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   for (k = 0; k < 2; k++) {
@@ -172,7 +172,7 @@ void FUNC_NETCON_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
     
     price = BUS_get_price(bus,t);
     
-    if (!bus_counted[bus_index[k]*T+t]) {
+    if (!bus_counted[bus_index_t[k]]) {
       
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
@@ -211,7 +211,7 @@ void FUNC_NETCON_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }  
 }
 

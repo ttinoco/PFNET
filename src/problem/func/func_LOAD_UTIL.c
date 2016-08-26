@@ -38,7 +38,7 @@ void FUNC_LOAD_UTIL_count_step(Func* f, Branch* br, int t) {
   Bus* buses[2];
   Bus* bus;
   Load* load;
-  int bus_index[2];
+  int bus_index_t[2];
   int* Hcounter;
   char* bus_counted;
   int k;
@@ -63,14 +63,14 @@ void FUNC_LOAD_UTIL_count_step(Func* f, Branch* br, int t) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   for (k = 0; k < 2; k++) {
     
     bus = buses[k];
     
-    if (!bus_counted[bus_index[k]*T+t]) {
+    if (!bus_counted[bus_index_t[k]]) {
       for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
 	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P))
 	  (*Hcounter)++;
@@ -78,7 +78,7 @@ void FUNC_LOAD_UTIL_count_step(Func* f, Branch* br, int t) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
@@ -106,7 +106,7 @@ void FUNC_LOAD_UTIL_analyze_step(Func* f, Branch* br, int t) {
   Bus* buses[2];
   Bus* bus;
   Load* load;
-  int bus_index[2];
+  int bus_index_t[2];
   int* Hcounter;
   char* bus_counted;
   Mat* H;
@@ -133,14 +133,14 @@ void FUNC_LOAD_UTIL_analyze_step(Func* f, Branch* br, int t) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
     
   // Buses
   for (k = 0; k < 2; k++) {
     
     bus = buses[k];
     
-    if (!bus_counted[bus_index[k]*T+t]) {
+    if (!bus_counted[bus_index_t[k]]) {
       for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
 	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
 	  MAT_set_i(H,*Hcounter,LOAD_get_index_P(load,t));
@@ -152,7 +152,7 @@ void FUNC_LOAD_UTIL_analyze_step(Func* f, Branch* br, int t) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
@@ -162,7 +162,7 @@ void FUNC_LOAD_UTIL_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   Bus* buses[2];
   Bus* bus;
   Load* load;
-  int bus_index[2];
+  int bus_index_t[2];
   char* bus_counted;
   REAL* phi;
   REAL* gphi;
@@ -194,14 +194,14 @@ void FUNC_LOAD_UTIL_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
     
   // Buses
   for (k = 0; k < 2; k++) {
     
     bus = buses[k];
     
-    if (!bus_counted[bus_index[k]*T+t]) {
+    if (!bus_counted[bus_index_t[k]]) {
       
       for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
 	
@@ -238,7 +238,7 @@ void FUNC_LOAD_UTIL_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
