@@ -35,13 +35,13 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
   Bat* bat;
   int* Acounter;
   char* bus_counted;
-  int bus_index[2];
+  int bus_index_t[2];
   int k;
   int m;
-  int T;
+  int num_buses;
 
-  // Number of periods
-  T = BRANCH_get_num_periods(br);
+  // Num buses
+  num_buses = NET_get_num_buses(CONSTR_get_network(c));
   
   // Constr data
   Acounter = CONSTR_get_Acounter_ptr(c);
@@ -59,7 +59,7 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
   bus[0] = BRANCH_get_bus_from(br);
   bus[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(bus[k]);
+    bus_index_t[k] = BUS_get_index(bus[k])+t*num_buses;
   
   // Branch
   //*******
@@ -98,7 +98,7 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
 
   for (k = 0; k < 2; k++) {
     
-    if (!bus_counted[bus_index[k]*T+t]) {
+    if (!bus_counted[bus_index_t[k]]) {
       
       // Generators
       for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
@@ -147,7 +147,7 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
@@ -189,17 +189,12 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
   Vec* rhs;
   int* Acounter;
   char* bus_counted;
-  int bus_index[2];
+  int bus_index_t[2];
   REAL b;
   REAL sign_phi;
   int k;
   int m;
   int num_buses;
-  int T;
-  int Pmis_index[2];
-
-  // Number of periods
-  T = BRANCH_get_num_periods(br);
 
   // Number of buses
   num_buses = NET_get_num_buses(CONSTR_get_network(c));
@@ -222,8 +217,7 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
   bus[0] = BRANCH_get_bus_from(br);
   bus[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++) {
-    bus_index[k] = BUS_get_index(bus[k]);
-    Pmis_index[k] = bus_index[k]+t*num_buses;
+    bus_index_t[k] = BUS_get_index(bus[k])+t*num_buses;
   }
  
   // Branch data
@@ -247,7 +241,7 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
     if (BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG)) { // wk var
       
       // A 
-      MAT_set_i(A,*Acounter,Pmis_index[k]); // Pk
+      MAT_set_i(A,*Acounter,bus_index_t[k]); // Pk
       MAT_set_j(A,*Acounter,BUS_get_index_v_ang(bus[k],t)); // wk
       MAT_set_d(A,*Acounter,b); 
       (*Acounter)++;
@@ -255,14 +249,14 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
     else {
       
       // b 
-      VEC_add_to_entry(rhs,Pmis_index[k],-b*BUS_get_v_ang(bus[k],t));
+      VEC_add_to_entry(rhs,bus_index_t[k],-b*BUS_get_v_ang(bus[k],t));
     }
 
     //***********
     if (BUS_has_flags(bus[m],FLAG_VARS,BUS_VAR_VANG)) { // wm var
       
       // A 
-      MAT_set_i(A,*Acounter,Pmis_index[k]); // Pk
+      MAT_set_i(A,*Acounter,bus_index_t[k]); // Pk
       MAT_set_j(A,*Acounter,BUS_get_index_v_ang(bus[m],t)); // wk
       MAT_set_d(A,*Acounter,-b);
       (*Acounter)++;
@@ -270,14 +264,14 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
     else {
       
       // b 
-      VEC_add_to_entry(rhs,Pmis_index[k],b*BUS_get_v_ang(bus[m],t));
+      VEC_add_to_entry(rhs,bus_index_t[k],b*BUS_get_v_ang(bus[m],t));
     }
 
     //**********
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) { // phi var
 
       // A
-      MAT_set_i(A,*Acounter,Pmis_index[k]); // Pk
+      MAT_set_i(A,*Acounter,bus_index_t[k]); // Pk
       MAT_set_j(A,*Acounter,BRANCH_get_index_phase(br,t)); // phi
       MAT_set_d(A,*Acounter,-b*sign_phi);
       (*Acounter)++; 
@@ -285,7 +279,7 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
     else {
       
       // b 
-      VEC_add_to_entry(rhs,Pmis_index[k],b*BRANCH_get_phase(br,t)*sign_phi);
+      VEC_add_to_entry(rhs,bus_index_t[k],b*BRANCH_get_phase(br,t)*sign_phi);
     }
   }
   
@@ -294,7 +288,7 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
 
   for (k = 0; k < 2; k++) {
     
-    if (!bus_counted[bus_index[k]*T+t]) {
+    if (!bus_counted[bus_index_t[k]]) {
       
       // Generators
       for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
@@ -303,7 +297,7 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // P var
 	  
 	  // A
-	  MAT_set_i(A,*Acounter,Pmis_index[k]); // Pk
+	  MAT_set_i(A,*Acounter,bus_index_t[k]); // Pk
 	  MAT_set_j(A,*Acounter,GEN_get_index_P(gen,t)); // Pg
 	  MAT_set_d(A,*Acounter,1.);
 	  (*Acounter)++; 
@@ -311,7 +305,7 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
 	else {
 	  
 	  // b
-	  VEC_add_to_entry(rhs,Pmis_index[k],-GEN_get_P(gen,t));
+	  VEC_add_to_entry(rhs,bus_index_t[k],-GEN_get_P(gen,t));
 	}
       }
 
@@ -322,7 +316,7 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
 	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) { // Pl var
 	  
 	  // A
-	  MAT_set_i(A,*Acounter,Pmis_index[k]); // Pk
+	  MAT_set_i(A,*Acounter,bus_index_t[k]); // Pk
 	  MAT_set_j(A,*Acounter,LOAD_get_index_P(load,t)); // Pl
 	  MAT_set_d(A,*Acounter,-1.);
 	  (*Acounter)++; 
@@ -330,7 +324,7 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
 	else {
 	  
 	  // b
-	  VEC_add_to_entry(rhs,Pmis_index[k],LOAD_get_P(load,t));
+	  VEC_add_to_entry(rhs,bus_index_t[k],LOAD_get_P(load,t));
 	}
       }
 
@@ -341,7 +335,7 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) { // Pg var
 	  
 	  // A
-	  MAT_set_i(A,*Acounter,Pmis_index[k]); // Pk
+	  MAT_set_i(A,*Acounter,bus_index_t[k]); // Pk
 	  MAT_set_j(A,*Acounter,VARGEN_get_index_P(vargen,t)); // Pg
 	  MAT_set_d(A,*Acounter,1.);
 	  (*Acounter)++; 
@@ -349,7 +343,7 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
 	else {
 	  
 	  // b
-	  VEC_add_to_entry(rhs,Pmis_index[k],-VARGEN_get_P(vargen,t));
+	  VEC_add_to_entry(rhs,bus_index_t[k],-VARGEN_get_P(vargen,t));
 	}
       }
 
@@ -360,13 +354,13 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
 	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) { // P var
 	  
 	  // A
-	  MAT_set_i(A,*Acounter,Pmis_index[k]); // Pk
+	  MAT_set_i(A,*Acounter,bus_index_t[k]); // Pk
 	  MAT_set_j(A,*Acounter,BAT_get_index_Pc(bat,t)); // Pc
 	  MAT_set_d(A,*Acounter,-1.);
 	  (*Acounter)++; 
 
 	  // A
-	  MAT_set_i(A,*Acounter,Pmis_index[k]); // Pk
+	  MAT_set_i(A,*Acounter,bus_index_t[k]); // Pk
 	  MAT_set_j(A,*Acounter,BAT_get_index_Pd(bat,t)); // Pd
 	  MAT_set_d(A,*Acounter,1.);
 	  (*Acounter)++; 
@@ -374,13 +368,13 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
 	else {
 	  
 	  // b
-	  VEC_add_to_entry(rhs,Pmis_index[k],BAT_get_P(bat,t));
+	  VEC_add_to_entry(rhs,bus_index_t[k],BAT_get_P(bat,t));
 	}
       }
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
@@ -392,15 +386,10 @@ void CONSTR_DCPF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf,
  
   // Local variables
   Bus* bus[2];
-  int bus_index[2];
+  int bus_index_t[2];
   char* bus_counted;
   int k;
   int num_buses;
-  int T;
-  int Pmis_index[2];
-
-  // Number of periods
-  T = BRANCH_get_num_periods(br);
 
   // Number of buses
   num_buses = NET_get_num_buses(CONSTR_get_network(c));
@@ -420,19 +409,18 @@ void CONSTR_DCPF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf,
   bus[0] = BRANCH_get_bus_from(br);
   bus[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++) {
-    bus_index[k] = BUS_get_index(bus[k]);
-    Pmis_index[k] = bus_index[k]+t*num_buses;
+    bus_index_t[k] = BUS_get_index(bus[k])+t*num_buses;
   }
 
   // Buses
   for (k = 0; k < 2; k++) {
     
     // Store P balance sensitivity
-    if (!bus_counted[bus_index[k]*T+t])
-      BUS_set_sens_P_balance(bus[k],VEC_get(sA,Pmis_index[k]),t);
+    if (!bus_counted[bus_index_t[k]])
+      BUS_set_sens_P_balance(bus[k],VEC_get(sA,bus_index_t[k]),t);
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 

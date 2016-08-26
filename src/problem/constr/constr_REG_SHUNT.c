@@ -57,7 +57,7 @@ void CONSTR_REG_SHUNT_count_step(Constr* c, Branch* br, int t) {
   int* Jconstr_index;
   int* Hcounter;
   char* bus_counted;
-  int bus_index[2];
+  int bus_index_t[2];
   int k;
   int T;
 
@@ -85,7 +85,7 @@ void CONSTR_REG_SHUNT_count_step(Constr* c, Branch* br, int t) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   //******
@@ -94,7 +94,7 @@ void CONSTR_REG_SHUNT_count_step(Constr* c, Branch* br, int t) {
 
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]*T+t]) { // not counted yet
+    if (!bus_counted[bus_index_t[k]]) { // not counted yet
 
       // Shunts
       //*******
@@ -198,7 +198,7 @@ void CONSTR_REG_SHUNT_count_step(Constr* c, Branch* br, int t) {
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
@@ -285,7 +285,7 @@ void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t) {
   int* Hcounter;
   int Hcounter_comb;
   char* bus_counted;
-  int bus_index[2];
+  int bus_index_t[2];
   int k;
   int m;
   int temp;
@@ -325,7 +325,7 @@ void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Branch
   //*******
@@ -337,7 +337,7 @@ void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t) {
 
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]*T+t]) { // not counted yet
+    if (!bus_counted[bus_index_t[k]]) { // not counted yet
  
       // Shunts
       //*******
@@ -547,7 +547,7 @@ void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 
   // Done
@@ -591,7 +591,7 @@ void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
   int* Jconstr_index;
   int* Hcounter;
   char* bus_counted;
-  int bus_index[2];
+  int bus_index_t[2];
   int k;
   REAL v;
   REAL vl;
@@ -635,7 +635,7 @@ void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Branch
   //*******
@@ -647,7 +647,7 @@ void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
     
     bus = buses[k];
     
-    if (!bus_counted[bus_index[k]*T+t]) { // not counted yet
+    if (!bus_counted[bus_index_t[k]]) { // not counted yet
       
       // Shunts
       //*******
@@ -845,7 +845,7 @@ void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
@@ -857,7 +857,7 @@ void CONSTR_REG_SHUNT_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec
   Shunt* shunt;
   int* Jconstr_index;
   char* bus_counted;
-  int bus_index[2];
+  int bus_index_t[2];
   REAL lamCompVmin;
   REAL lamCompVmax;
   REAL lamCompBmax;
@@ -884,7 +884,7 @@ void CONSTR_REG_SHUNT_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   //******
@@ -893,7 +893,7 @@ void CONSTR_REG_SHUNT_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec
 
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]*T+t]) { // not counted yet
+    if (!bus_counted[bus_index_t[k]]) { // not counted yet
 
       // Shunts
       //*******
@@ -921,7 +921,7 @@ void CONSTR_REG_SHUNT_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }  
 }
 

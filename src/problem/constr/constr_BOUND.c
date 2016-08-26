@@ -44,7 +44,7 @@ void CONSTR_BOUND_count_step(Constr* c, Branch* br, int t) {
   Shunt* shunt;
   int* Jcounter;
   char* bus_counted;
-  int bus_index[2];
+  int bus_index_t[2];
   int k;
   int T;
 
@@ -67,7 +67,7 @@ void CONSTR_BOUND_count_step(Constr* c, Branch* br, int t) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Tap ratio
   if (BRANCH_has_flags(br,FLAG_BOUNDED,BRANCH_VAR_RATIO) && 
@@ -88,7 +88,7 @@ void CONSTR_BOUND_count_step(Constr* c, Branch* br, int t) {
 
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]*T+t]) { // not counted yet
+    if (!bus_counted[bus_index_t[k]]) { // not counted yet
 
       // Voltage magnitude (V_MAG)
       if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VMAG) && BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
@@ -133,7 +133,7 @@ void CONSTR_BOUND_count_step(Constr* c, Branch* br, int t) {
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
@@ -196,7 +196,7 @@ void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
   int* Hj_comb;
   int* Jcounter;
   char* bus_counted;
-  int bus_index[2];
+  int bus_index_t[2];
   int index_var;
   int k;
   int T;
@@ -222,7 +222,7 @@ void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Branch
   //*******
@@ -286,7 +286,7 @@ void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
 
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]*T+t]) { // not counted yet
+    if (!bus_counted[bus_index_t[k]]) { // not counted yet
       
       // Voltage magnitude (V_MAG)
       if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VMAG) && BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
@@ -426,7 +426,7 @@ void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
     }	  
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 
   // Done (last branch and period)
@@ -457,7 +457,7 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
   Mat* H;
   int* Jcounter;
   char* bus_counted;
-  int bus_index[2];
+  int bus_index_t[2];
   int k;
   REAL u;
   REAL umin;
@@ -496,7 +496,7 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Branch
   //*******
@@ -576,7 +576,7 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]*T+t]) { // not counted yet
+    if (!bus_counted[bus_index_t[k]]) { // not counted yet
       
       // Voltage magnitude (V_MAG)
       if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VMAG) && 
@@ -758,7 +758,7 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
@@ -771,7 +771,7 @@ void CONSTR_BOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf
   Shunt* shunt;
   int* Jcounter;
   char* bus_counted;
-  int bus_index[2];
+  int bus_index_t[2];
   int k;
   int T;
 
@@ -794,7 +794,7 @@ void CONSTR_BOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Tap ratio
   if (BRANCH_has_flags(br,FLAG_BOUNDED,BRANCH_VAR_RATIO) && 
@@ -815,7 +815,7 @@ void CONSTR_BOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf
 
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]*T+t]) { // not counted yet
+    if (!bus_counted[bus_index_t[k]]) { // not counted yet
 
       // Voltage magnitude (V_MAG)
       if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VMAG) && 
@@ -864,7 +864,7 @@ void CONSTR_BOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]*T+t] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
