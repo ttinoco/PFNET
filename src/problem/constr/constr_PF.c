@@ -929,12 +929,12 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   // Branch data
   var_a = BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO);
   var_phi = BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE);
-  b = BRANCH_get_b(br);
-  b_sh[0] = BRANCH_get_b_k(br);
-  b_sh[1] = BRANCH_get_b_m(br);
-  g = BRANCH_get_g(br);
-  g_sh[0] = BRANCH_get_g_k(br);
-  g_sh[1] = BRANCH_get_g_m(br);
+  b = BRANCH_get_b(br);           // series susceptance
+  b_sh[0] = BRANCH_get_b_k(br);   //  total shunt susceptance on bus from (i)
+  b_sh[1] = BRANCH_get_b_m(br);   //  total shunt susceptance on bus to (j)
+  g = BRANCH_get_g(br);           // series conductance
+  g_sh[0] = BRANCH_get_g_k(br);   //  total shunt conductance on bus from (i)
+  g_sh[1] = BRANCH_get_g_m(br);   //  total shunt conductance on bus to (j)
   if (var_a)
     a = VEC_get(var_values,BRANCH_get_index_ratio(br));
   else

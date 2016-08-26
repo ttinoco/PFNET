@@ -14,7 +14,6 @@
 #include "types.h"
 #include "list.h"
 #include "vector.h"
-#include "net.h"
 
 // Branch types
 #define BRANCH_TYPE_LINE 0       /**< @brief Type: transmission line */
@@ -56,7 +55,6 @@ typedef struct Branch Branch;
 // Other
 typedef struct Bus Bus;
 typedef struct Vec Vec;
-typedef struct Net Net;
 
 // Prototypes
 void* BRANCH_array_get(void* br, int index);
@@ -99,20 +97,30 @@ Branch* BRANCH_get_next_m(Branch* br);
 REAL BRANCH_get_phase(Branch* br);
 REAL BRANCH_get_phase_max(Branch* br);
 REAL BRANCH_get_phase_min(Branch* br);
-// TODO: need further arguments for data
-REAL BRANCH_get_P_km(Net* net, Branch* br, Vec* var_values);
-REAL BRANCH_get_Q_km(Net* net, Branch* br, Vec* var_values);
-REAL BRANCH_get_P_mk(Net* net, Branch* br, Vec* var_values);
-REAL BRANCH_get_Q_mk(Net* net, Branch* br, Vec* var_values);
-REAL BRANCH_get_P_km_series(Net* net, Branch* br, Vec* var_values);
-REAL BRANCH_get_Q_km_series(Net* net, Branch* br, Vec* var_values);
-REAL BRANCH_get_P_mk_series(Net* net, Branch* br, Vec* var_values);
-REAL BRANCH_get_Q_mk_series(Net* net, Branch* br, Vec* var_values);
-REAL BRANCH_get_P_k_shunt(Net* net, Branch* br, Vec* var_values);
-REAL BRANCH_get_Q_k_shunt(Net* net, Branch* br, Vec* var_values);
-REAL BRANCH_get_P_m_shunt(Net* net, Branch* br, Vec* var_values);
-REAL BRANCH_get_Q_m_shunt(Net* net, Branch* br, Vec* var_values);
-// /TODO
+REAL BRANCH_get_P_km(Branch* br, Vec* var_values);
+REAL BRANCH_get_Q_km(Branch* br, Vec* var_values);
+REAL BRANCH_get_P_mk(Branch* br, Vec* var_values);
+REAL BRANCH_get_Q_mk(Branch* br, Vec* var_values);
+REAL BRANCH_get_P_km_series(Branch* br, Vec* var_values);
+REAL BRANCH_get_Q_km_series(Branch* br, Vec* var_values);
+REAL BRANCH_get_P_mk_series(Branch* br, Vec* var_values);
+REAL BRANCH_get_Q_mk_series(Branch* br, Vec* var_values);
+REAL BRANCH_get_P_k_shunt(Branch* br, Vec* var_values);
+REAL BRANCH_get_Q_k_shunt(Branch* br, Vec* var_values);
+REAL BRANCH_get_P_m_shunt(Branch* br, Vec* var_values);
+REAL BRANCH_get_Q_m_shunt(Branch* br, Vec* var_values);
+REAL BRANCH_get_P_from_to(Branch* br, Vec* var_values);   // @deprecated @see BRANCH_get_P_km
+REAL BRANCH_get_Q_from_to(Branch* br, Vec* var_values);   // @deprecated @see BRANCH_get_Q_km
+REAL BRANCH_get_P_to_from(Branch* br, Vec* var_values);   // @deprecated @see BRANCH_get_P_mk
+REAL BRANCH_get_Q_to_from(Branch* br, Vec* var_values);   // @deprecated @see BRANCH_get_Q_mk
+REAL BRANCH_get_P_series_from_to(Branch* br, Vec* var_values);    // @deprecated @see BRANCH_get_P_km_series
+REAL BRANCH_get_Q_series_from_to(Branch* br, Vec* var_values);    // @deprecated @see BRANCH_get_Q_km_series
+REAL BRANCH_get_P_series_to_from(Branch* br, Vec* var_values);    // @deprecated @see BRANCH_get_P_mk_series
+REAL BRANCH_get_Q_series_to_from(Branch* br, Vec* var_values);    // @deprecated @see BRANCH_get_Q_mk_series
+REAL BRANCH_get_P_shunt_from(Branch* br, Vec* var_values);    // @deprecated @see BRANCH_get_P_k_shunt
+REAL BRANCH_get_Q_shunt_from(Branch* br, Vec* var_values);    // @deprecated @see BRANCH_get_Q_k_shunt
+REAL BRANCH_get_P_shunt_to(Branch* br, Vec* var_values);    // @deprecated @see BRANCH_get_P_m_shunt
+REAL BRANCH_get_P_shunt_to(Branch* br, Vec* var_values);    // @deprecated @see BRANCH_get_Q_m_shunt
 REAL BRANCH_get_ratingA(Branch* br);
 REAL BRANCH_get_ratingB(Branch* br);
 REAL BRANCH_get_ratingC(Branch* br);

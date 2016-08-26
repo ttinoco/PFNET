@@ -1023,52 +1023,100 @@ cdef class Branch:
         def __get__(self): return cbranch.BRANCH_get_phase_min(self._c_ptr)
 
     property P_km:
-        """ Real power flow at bus "k" towards bus "m" (from -> to)(MW) (float). """
-        def __get__(self): return cbranch.BRANCH_get_P_km(self._c_ptr)
+        """ Real power flow at bus "k" towards bus "m" (from -> to)(p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_P_km(self._c_ptr, NULL)
 
     property Q_km:
-        """ Reactive power flow at bus "k" towards bus "m" (from -> to) (Mvar) (float). """
-        def __get__(self): return cbranch.BRANCH_get_Q_km(self._c_ptr)
+        """ Reactive power flow at bus "k" towards bus "m" (from -> to) (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_Q_km(self._c_ptr, NULL)
 
     property P_mk:
-        """ Real power flow at bus "m" towards bus "k" (to -> from) (MW) (float). """
-        def __get__(self): return cbranch.BRANCH_get_P_mk(self._c_ptr)
+        """ Real power flow at bus "m" towards bus "k" (to -> from) (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_P_mk(self._c_ptr, NULL)
 
     property Q_mk:
-        """ Reactive power flow at bus "m" towards bus "k" (to -> from) (Mvar) (float). """
-        def __get__(self): return cbranch.BRANCH_get_Q_mk(self._c_ptr)
+        """ Reactive power flow at bus "m" towards bus "k" (to -> from) (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_Q_mk(self._c_ptr, NULL)
 
     property P_km_series:
-        """ Real power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (MW) (float). """
-        def __get__(self): return cbranch.BRANCH_get_P_km_series(self._c_ptr)
+        """ Real power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_P_km_series(self._c_ptr, NULL)
 
     property Q_km_series:
-        """ Reactive power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (Mvar) (float). """
-        def __get__(self): return cbranch.BRANCH_get_Q_km_series(self._c_ptr)
+        """ Reactive power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_Q_km_series(self._c_ptr, NULL)
 
     property P_mk_series:
-        """ Real power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (MW) (float). """
-        def __get__(self): return cbranch.BRANCH_get_P_mk_series(self._c_ptr)
+        """ Real power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_P_mk_series(self._c_ptr, NULL)
 
     property Q_mk_series:
-        """ Reactive power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (Mvar) (float). """
-        def __get__(self): return cbranch.BRANCH_get_Q_mk_series(self._c_ptr)
+        """ Reactive power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_Q_mk_series(self._c_ptr, NULL)
 
     property P_k_shunt:
-        """ Real power flow into the shunt element at bus "k" (aka "from") (MW) (float). """
-        def __get__(self): return cbranch.BRANCH_get_P_k_shunt(self._c_ptr)
+        """ Real power flow into the shunt element at bus "k" (aka "from") (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_P_k_shunt(self._c_ptr, NULL)
 
     property Q_k_shunt:
-        """ Reactive power flow into the shunt element bus "k" (aka "from") (Mvar) (float). """
-        def __get__(self): return cbranch.BRANCH_get_Q_k_shunt(self._c_ptr)
+        """ Reactive power flow into the shunt element bus "k" (aka "from") (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_Q_k_shunt(self._c_ptr, NULL)
 
     property P_m_shunt:
-        """ Real power flow into the shunt element at bus "m" (aka "to") (MW) (float). """
-        def __get__(self): return cbranch.BRANCH_get_P_m_shunt(self._c_ptr)
+        """ Real power flow into the shunt element at bus "m" (aka "to") (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_P_m_shunt(self._c_ptr, NULL)
 
     property Q_m_shunt:
-        """ Reactive power flow into the shunt element at bus "m" (aka "to") (MW) (float). """
-        def __get__(self): return cbranch.BRANCH_get_Q_m_shunt(self._c_ptr)
+        """ Reactive power flow into the shunt element at bus "m" (aka "to") (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_Q_m_shunt(self._c_ptr, NULL)
+
+    property P_from_to:
+      """ (Deprecated, see P_km) Real power flow at bus "k" towards bus "m" (from -> to) (p.u.) (float). """
+      def __get__(self): return cbranch.BRANCH_get_P_from_to(self._c_ptr, NULL)
+
+    property Q_from_to:
+      """ (Deprecated, see Q_km) Reactive power flow at bus "k" towards bus "m" (from -> to) (p.u.) (float). """
+      def __get__(self): return cbranch.BRANCH_get_Q_from_to(self._c_ptr, NULL)
+
+    property P_to_from:
+      """ (Deprecated, see P_mk) Real power flow at bus "m" towards bus "k" (to -> from) (p.u.) (float). """
+      def __get__(self): return cbranch.BRANCH_get_P_to_from(self._c_ptr, NULL)
+
+    property Q_to_from:
+      """ (Deprecated, see Q_mk) Reactive power flow at bus "m" towards bus "k" (to -> from) (p.u.) (float). """
+      def __get__(self): return cbranch.BRANCH_get_Q_to_from(self._c_ptr, NULL)
+
+    property P_series_from_to:
+      """ (Deprecated, see P_km_series) Real power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (p.u.) (float). """
+      def __get__(self): return cbranch.BRANCH_get_P_series_from_to(self._c_ptr, NULL)
+
+    property Q_series_from_to:
+      """ (Deprecated, see Q_km_series) Reactive power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (p.u.) (float). """
+      def __get__(self): return cbranch.BRANCH_get_Q_series_from_to(self._c_ptr, NULL)
+
+    property P_series_to_from:
+      """ (Deprecated, see P_mk_series) Real power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (p.u.) (float). """
+      def __get__(self): return cbranch.BRANCH_get_P_series_to_from(self._c_ptr, NULL)
+
+    property Q_series_to_from:
+      """ (Deprecated, see Q_mk_series) Reactive power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (p.u.) (float). """
+      def __get__(self): return cbranch.BRANCH_get_Q_series_to_from(self._c_ptr, NULL)
+
+    property P_shunt_from:
+      """ (Deprecated, see P_k_shunt) Real power flow into the shunt element at bus "k" (aka "from") (p.u.) (float). """
+      def __get__(self): return cbranch.BRANCH_get_P_shunt_from(self._c_ptr, NULL)
+
+    property Q_shunt_from:
+      """ (Deprecated, see Q_k_shunt) Reactive power flow into the shunt element bus "k" (aka "from") (p.u.) (float). """
+      def __get__(self): return cbranch.BRANCH_get_Q_shunt_from(self._c_ptr, NULL)
+
+    property P_shunt_to:
+      """ (Deprecated, see P_m_shunt) Real power flow into the shunt element at bus "m" (aka "to") (p.u.) (float). """
+      def __get__(self): return cbranch.BRANCH_get_P_shunt_to(self._c_ptr, NULL)
+
+    property Q_shunt_to:
+      """ (Deprecated, see Q_m_shunt) Reactive power flow into the shunt element at bus "m" (aka "to") (p.u.) (float). """
+      def __get__(self): return cbranch.BRANCH_get_Q_shunt_to(self._c_ptr, NULL)
 
     property ratingA:
         """ Branch thermal rating A (p.u. system base power) (float). """
