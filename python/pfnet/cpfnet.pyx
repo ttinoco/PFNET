@@ -664,8 +664,8 @@ cdef class Bus:
     property Q_mis:
         """ Bus reactive power mismatch (p.u. system base MVA) (float or array). """
         def __get__(self):
-             r = [cbus.BUS_get_Q_mis(self._c_ptr,t) for t in range(self.num_periods)]
-             if OPTION_SP_SCALARS and self.num_periods == 1:
+            r = [cbus.BUS_get_Q_mis(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
                 return r[0]
             else:
                 return np.array(r)
@@ -1435,8 +1435,8 @@ cdef class Generator:
     property P:
         """ Generator active power (p.u. system base MVA) (float or array). """
         def __get__(self): 
-             r = [cgen.GEN_get_P(self._c_ptr,t) for t in range(self.num_periods)]
-             if OPTION_SP_SCALARS and self.num_periods == 1:
+            r = [cgen.GEN_get_P(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
                 return r[0]
             else:
                 return np.array(r)
@@ -1846,7 +1846,7 @@ cdef class Load:
             cdef int t
             cdef np.ndarray Qar = np.array(Q)
             for t in range(np.minimum(Qar.size,self.num_periods)):
-                cload.LOAD_set_Q(self._c_ptr,Qr[t],t)
+                cload.LOAD_set_Q(self._c_ptr,Qar[t],t)
 
     property P_util:
         """ Active power load utility ($/hr) (float or array). """
@@ -2276,21 +2276,22 @@ cdef class Network:
     cdef cnet.Net* _c_net
     cdef bint alloc
 
-    def __init__(self,alloc=True):
+    def __init__(self,alloc=True,num_periods=1):
         """
         Network class.
 
         Parameters
         ----------
         alloc : {``True``, ``False``}
+        num_periods : int
         """
 
         pass
      
-    def __cinit__(self,alloc=True):
+    def __cinit__(self,alloc=True,num_periods=1):
 
         if alloc:
-            self._c_net = cnet.NET_new()
+            self._c_net = cnet.NET_new(num_periods)
         else:
             self._c_net = NULL
         self.alloc = alloc
@@ -2366,13 +2367,14 @@ cdef class Network:
         
         cnet.NET_clear_sensitivities(self._c_net)
 
-    def create_sorted_bus_list(self,sort_by):
+    def create_sorted_bus_list(self,sort_by,t=0):
         """
         Creates list of buses sorted in descending order according to a specific quantity.
 
         Parameters
         ----------
         sort_by : int (:ref:`ref_bus_sens`, :ref:`ref_bus_mis`).
+        t : int
 
         Returns
         -------
@@ -2380,7 +2382,7 @@ cdef class Network:
         """
 
         buses = []
-        cdef cbus.Bus* b = cnet.NET_create_sorted_bus_list(self._c_net,sort_by)
+        cdef cbus.Bus* b = cnet.NET_create_sorted_bus_list(self._c_net,sort_by,t)
         while b is not NULL:
             buses.append(new_Bus(b))
             b = cbus.BUS_get_next(b)
@@ -2930,7 +2932,7 @@ cdef class Network:
         
         return cnet.NET_get_num_vargens(self._c_net)
 
-    def get_num_bats(self):
+    def get_num_batteries(self):
         """
         Gets number of batteries in the network.
 
@@ -3057,14 +3059,18 @@ cdef class Network:
         
         print(cnet.NET_get_show_components_str(self._c_net).decode('UTF-8'))
 	 	 
-    def show_properties(self):
+    def show_properties(self,t=0):
         """
         Shows information about the state of the network component quantities.
+        
+        Parameters
+        ----------
+        t : int (time period)
         """
 
-        print(cnet.NET_get_show_properties_str(self._c_net).decode('UTF-8'))
+        print(cnet.NET_get_show_properties_str(self._c_net,t).decode('UTF-8'))
 
-    def show_buses(self,number,sort_by):
+    def show_buses(self,number,sort_by,t=0):
         """
         Shows information about the most relevant network buses sorted by a specific quantity.
 
@@ -3072,9 +3078,10 @@ cdef class Network:
         ----------
         number : int
         sort_by : int (:ref:`ref_bus_sens`, :ref:`ref_bus_mis`)
+        t : int (time period)
         """
         
-        cnet.NET_show_buses(self._c_net,number,sort_by)
+        cnet.NET_show_buses(self._c_net,number,sort_by,t)
 
     def update_properties(self,values=None):
         """
@@ -3098,6 +3105,10 @@ cdef class Network:
         """
 
         cnet.NET_update_set_points(self._c_net)
+
+    property num_periods:
+        """ Number of time periods (int). """
+        def __get__(self): return cnet.NET_get_num_periods(self._c_net)
 
     property base_power:
         """ System base power (MVA) (float). """
@@ -3183,72 +3194,157 @@ cdef class Network:
         def __get__(self): return cnet.NET_get_num_sparse(self._c_net)
 
     property bus_v_max:
-        """ Maximum bus voltage magnitude (p.u.) (float). """
-        def __get__(self): return cnet.NET_get_bus_v_max(self._c_net)
+        """ Maximum bus voltage magnitude (p.u.) (float or array). """
+        def __get__(self): 
+            r = [cnet.NET_get_bus_v_max(self._c_net,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property bus_v_min:
-        """ Minimum bus voltage magnitude (p.u.) (float). """
-        def __get__(self): return cnet.NET_get_bus_v_min(self._c_net)
+        """ Minimum bus voltage magnitude (p.u.) (float or array). """
+        def __get__(self): 
+            r = [cnet.NET_get_bus_v_min(self._c_net,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property bus_v_vio:
-        """ Maximum bus voltage magnitude limit violation (p.u.) (float). """
-        def __get__(self): return cnet.NET_get_bus_v_vio(self._c_net)
+        """ Maximum bus voltage magnitude limit violation (p.u.) (float or array). """
+        def __get__(self): 
+            r = [cnet.NET_get_bus_v_vio(self._c_net,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property bus_P_mis:
-        """ Largest bus active power mismatch in the network (MW) (float). """
-        def __get__(self): return cnet.NET_get_bus_P_mis(self._c_net)
+        """ Largest bus active power mismatch in the network (MW) (float or array). """
+        def __get__(self): 
+            r = [cnet.NET_get_bus_P_mis(self._c_net,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property bus_Q_mis:
-        """ Largest bus reactive power mismatch in the network (MVAr) (float). """
-        def __get__(self): return cnet.NET_get_bus_Q_mis(self._c_net)
+        """ Largest bus reactive power mismatch in the network (MVAr) (float or array). """
+        def __get__(self): 
+            r = [cnet.NET_get_bus_Q_mis(self._c_net,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property gen_P_cost:
-        """ Total active power generation cost ($/hr) (float). """
-        def __get__(self): return cnet.NET_get_gen_P_cost(self._c_net)
+        """ Total active power generation cost ($/hr) (float or array). """
+        def __get__(self): 
+            r = [cnet.NET_get_gen_P_cost(self._c_net,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property gen_v_dev:
-        """ Largest voltage magnitude deviation from set point of bus regulated by generator (p.u.) (float). """
-        def __get__(self): return cnet.NET_get_gen_v_dev(self._c_net)
+        """ Largest voltage magnitude deviation from set point of bus regulated by generator (p.u.) (float or array). """
+        def __get__(self): 
+            r = [cnet.NET_get_gen_v_dev(self._c_net,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property gen_Q_vio:
-        """ Largest generator reactive power limit violation (MVAr) (float). """
-        def __get__(self): return cnet.NET_get_gen_Q_vio(self._c_net)
+        """ Largest generator reactive power limit violation (MVAr) (float or array). """
+        def __get__(self): 
+            r = [cnet.NET_get_gen_Q_vio(self._c_net,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property gen_P_vio:
-        """ Largest generator active power limit violation (MW) (float). """
-        def __get__(self): return cnet.NET_get_gen_P_vio(self._c_net)
+        """ Largest generator active power limit violation (MW) (float or array). """
+        def __get__(self): 
+            r = [cnet.NET_get_gen_P_vio(self._c_net,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property tran_v_vio:
-        """ Largest voltage magnitude band violation of voltage regulated by transformer (p.u.) (float). """
-        def __get__(self): return cnet.NET_get_tran_v_vio(self._c_net)
+        """ Largest voltage magnitude band violation of voltage regulated by transformer (p.u.) (float or array). """
+        def __get__(self): 
+            r = [cnet.NET_get_tran_v_vio(self._c_net,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property tran_r_vio:
-        """ Largest transformer tap ratio limit violation (float). """
-        def __get__(self): return cnet.NET_get_tran_r_vio(self._c_net)
+        """ Largest transformer tap ratio limit violation (float or array). """
+        def __get__(self): 
+            r = [cnet.NET_get_tran_r_vio(self._c_net,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property tran_p_vio:
-        """ Largest transformer phase shift limit violation (float). """
-        def __get__(self): return cnet.NET_get_tran_p_vio(self._c_net)
+        """ Largest transformer phase shift limit violation (float or array). """
+        def __get__(self): 
+            r = [cnet.NET_get_tran_p_vio(self._c_net,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property shunt_v_vio:
-        """ Largest voltage magnitude band violation of voltage regulated by switched shunt device (p.u.) (float). """
-        def __get__(self): return cnet.NET_get_shunt_v_vio(self._c_net)
+        """ Largest voltage magnitude band violation of voltage regulated by switched shunt device (p.u.) (float or array). """
+        def __get__(self): 
+            r = [cnet.NET_get_shunt_v_vio(self._c_net,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property shunt_b_vio:
-        """ Largest switched shunt susceptance limit violation (p.u.) (float). """
-        def __get__(self): return cnet.NET_get_shunt_b_vio(self._c_net)
+        """ Largest switched shunt susceptance limit violation (p.u.) (float or array). """
+        def __get__(self): 
+            r = [cnet.NET_get_shunt_b_vio(self._c_net,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property load_P_util:
-        """ Total active power consumption utility ($/hr) (float). """
-        def __get__(self): return cnet.NET_get_load_P_util(self._c_net)
+        """ Total active power consumption utility ($/hr) (float or array). """
+        def __get__(self): 
+            r = [cnet.NET_get_load_P_util(self._c_net,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property load_P_vio:
-        """ Largest load active power limit violation (MW) (float). """
-        def __get__(self): return cnet.NET_get_load_P_vio(self._c_net)
-
+        """ Largest load active power limit violation (MW) (float or array). """
+        def __get__(self): 
+            r = [cnet.NET_get_load_P_vio(self._c_net,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
+            
     property num_actions:
-        """ Number of control adjustments (int). """
-        def __get__(self): return cnet.NET_get_num_actions(self._c_net)
+        """ Number of control adjustments (int or array). """
+        def __get__(self): 
+            r = [cnet.NET_get_num_actions(self._c_net,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property vargen_corr_radius:
         """ Correlation radius of variable generators (number of edges). """
@@ -3544,29 +3640,31 @@ cdef class Graph:
         if cgraph.GRAPH_has_error(self._c_graph):
             raise GraphError(cgraph.GRAPH_get_error_string(self._c_graph))
 
-    def color_nodes_by_mismatch(self,mis_type):
+    def color_nodes_by_mismatch(self,mis_type,t=0):
         """
         Colors the graphs nodes according to their power mismatch.
         
         Parameters
         ----------
         mis_type : int (:ref:`ref_bus_mis`)
+        t : int
         """
         
-        cgraph.GRAPH_color_nodes_by_mismatch(self._c_graph,mis_type)
+        cgraph.GRAPH_color_nodes_by_mismatch(self._c_graph,mis_type,t)
         if cgraph.GRAPH_has_error(self._c_graph):
             raise GraphError(cgraph.GRAPH_get_error_string(self._c_graph))
 
-    def color_nodes_by_sensitivity(self,sens_type):
+    def color_nodes_by_sensitivity(self,sens_type,t=0):
         """
         Colors the graphs nodes according to their sensitivity.
 
         Parameters
         ----------
         sens_type : int (:ref:`ref_bus_sens`)
+        t : int
         """
 
-        cgraph.GRAPH_color_nodes_by_sensitivity(self._c_graph,sens_type)
+        cgraph.GRAPH_color_nodes_by_sensitivity(self._c_graph,sens_type,t)
         if cgraph.GRAPH_has_error(self._c_graph):
             raise GraphError(cgraph.GRAPH_get_error_string(self._c_graph))
 

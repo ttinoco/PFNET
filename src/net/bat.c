@@ -109,6 +109,13 @@ void BAT_clear_flags(Bat* bat, char flag_type) {
   }
 }
 
+int BAT_get_num_periods(Bat* bat) {
+  if (bat)
+    return bat->num_periods;
+  else
+    return 0;
+}
+
 char BAT_get_obj_type(void* bat) {
   if (bat)
     return OBJ_BAT;

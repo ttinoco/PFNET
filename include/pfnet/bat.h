@@ -47,6 +47,7 @@ Bat* BAT_array_new(int size, int num_periods);
 void BAT_array_show(Bat* bat_array, int size, int t);
 void BAT_clear_flags(Bat* bat, char flag_type);
 void BAT_propagate_data_in_time(Bat* bat);
+int BAT_get_num_periods(Bat* bat);
 char BAT_get_obj_type(void* bat);
 Bus* BAT_get_bus(Bat* bat);
 int BAT_get_index(Bat* bat);

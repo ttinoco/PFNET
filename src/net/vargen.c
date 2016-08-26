@@ -112,6 +112,13 @@ void VARGEN_clear_flags(Vargen* gen, char flag_type) {
   }
 }
 
+int VARGEN_get_num_periods(Vargen* gen) {
+  if (gen)
+    return gen->num_periods;
+  else
+    return 0;
+}
+
 char* VARGEN_get_name(Vargen* gen) {
   if (gen)
     return gen->name;

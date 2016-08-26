@@ -119,6 +119,13 @@ void LOAD_clear_flags(Load* load, char flag_type) {
   }
 }
 
+int LOAD_get_num_periods(Load* load) {
+  if (load)
+    return load->num_periods;
+  else
+    return 0;
+}
+
 REAL LOAD_get_sens_P_u_bound(Load* load, int t) {
   if (load && t >= 0 && t < load->num_periods)
     return load->sens_P_u_bound[t];
