@@ -1563,21 +1563,22 @@ cdef class Shunt:
 
     cdef cshunt.Shunt* _c_ptr
 
-    def __init__(self,alloc=True):
+    def __init__(self,alloc=True,num_periods=1):
         """
         Shunt class.
 
         Parameters
         ----------
         alloc : {``True``, ``False``}
+        num_periods : int
         """
 
         pass
 
-    def __cinit__(self,alloc=True):
+    def __cinit__(self,alloc=True,num_periods=1):
 
         if alloc:
-            self._c_ptr = cshunt.SHUNT_new()
+            self._c_ptr = cshunt.SHUNT_new(num_periods)
         else:
             self._c_ptr = NULL
 
@@ -1625,6 +1626,10 @@ cdef class Shunt:
         
         return cshunt.SHUNT_has_flags(self._c_ptr,fmask,vmask)
 
+    property num_periods:
+        """ Number of time periods (int). """
+        def __get__(self): return cshunt.SHUNT_get_num_periods(self._c_ptr)
+
     property obj_type:
         """ Object type (int). """
         def __get__(self): return cshunt.SHUNT_get_obj_type(self._c_ptr)
@@ -1634,16 +1639,31 @@ cdef class Shunt:
         def __get__(self): return cshunt.SHUNT_get_index(self._c_ptr)    
 
     property index_b:
-        """ Index of shunt susceptance variable (int). """
-        def __get__(self): return cshunt.SHUNT_get_index_b(self._c_ptr)
+        """ Index of shunt susceptance variable (int or array). """
+        def __get__(self): 
+            r = [cshunt.SHUNT_get_index_b(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property index_y:
-        """ Index of shunt susceptance positive deviation variable (int). """
-        def __get__(self): return cshunt.SHUNT_get_index_y(self._c_ptr)
+        """ Index of shunt susceptance positive deviation variable (int or array). """
+        def __get__(self): 
+            r = [cshunt.SHUNT_get_index_y(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property index_z:
-        """ Index of shunt susceptance negative deviation variable (int). """
-        def __get__(self): return cshunt.SHUNT_get_index_z(self._c_ptr)
+        """ Index of shunt susceptance negative deviation variable (int or array). """
+        def __get__(self): 
+            r = [cshunt.SHUNT_get_index_z(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which the shunt devices is connected. """
@@ -1658,8 +1678,13 @@ cdef class Shunt:
         def __get__(self): return cshunt.SHUNT_get_g(self._c_ptr)
             
     property b:
-        """ Shunt susceptance (p.u.) (float). """
-        def __get__(self): return cshunt.SHUNT_get_b(self._c_ptr)
+        """ Shunt susceptance (p.u.) (float or array). """
+        def __get__(self): 
+            r = [cshunt.SHUNT_get_b(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property b_max:
         """ Shunt susceptance upper limit (p.u.) (float). """
@@ -1709,21 +1734,22 @@ cdef class Load:
 
     cdef cload.Load* _c_ptr
 
-    def __init__(self,alloc=True):
+    def __init__(self,alloc=True,num_periods=1):
         """
         Load class.
 
         Parameters
         ----------
         alloc : {``True``, ``False``}
+        num_periods : int
         """
 
         pass
 
-    def __cinit__(self,alloc=True):
+    def __cinit__(self,alloc=True,num_periods=1):
 
         if alloc:
-            self._c_ptr = cload.LOAD_new()
+            self._c_ptr = cload.LOAD_new(num_periods)
         else:
             self._c_ptr = NULL
 
@@ -1759,6 +1785,10 @@ cdef class Load:
 
         return cload.LOAD_has_flags(self._c_ptr,fmask,vmask)
 
+    property num_periods:
+        """ Number of time periods (int). """
+        def __get__(self): return cload.LOAD_get_num_periods(self._c_ptr)
+
     property obj_type:
         """ Object type (int). """
         def __get__(self): return cload.LOAD_get_obj_type(self._c_ptr)
@@ -1768,17 +1798,31 @@ cdef class Load:
         def __get__(self): return cload.LOAD_get_index(self._c_ptr)
        
     property index_P:
-        """ Index of load active power variable (int). """
-        def __get__(self): return cload.LOAD_get_index_P(self._c_ptr)
+        """ Index of load active power variable (int or array). """
+        def __get__(self): 
+            r = [cload.LOAD_get_index_P(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
  
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which load is connected. """
         def __get__(self): return new_Bus(cload.LOAD_get_bus(self._c_ptr))
 
     property P:
-        """ Load active power (p.u. system base MVA) (float). """
-        def __get__(self): return cload.LOAD_get_P(self._c_ptr)
-        def __set__(self,value): cload.LOAD_set_P(self._c_ptr,value)
+        """ Load active power (p.u. system base MVA) (float or array). """
+        def __get__(self): 
+            r = [cload.LOAD_get_P(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
+        def __set__(self,P): 
+            cdef int t
+            cdef np.ndarray Par = np.array(P)
+            for t in range(np.minimum(Par.size,self.num_periods)):
+                cload.LOAD_set_P(self._c_ptr,Par[t],t)
        
     property P_max:
         """ Load active power upper limit (p.u. system base MVA) (float). """
@@ -1791,13 +1835,27 @@ cdef class Load:
         def __set__(self,P): cload.LOAD_set_P_min(self._c_ptr,P)
      
     property Q:
-        """ Load reactive power (p.u. system base MVA) (float). """
-        def __get__(self): return cload.LOAD_get_Q(self._c_ptr)
-        def __set__(self,value): cload.LOAD_set_Q(self._c_ptr,value)
+        """ Load reactive power (p.u. system base MVA) (float or array). """
+        def __get__(self): 
+            r = [cload.LOAD_get_Q(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
+        def __set__(self,Q): 
+            cdef int t
+            cdef np.ndarray Qar = np.array(Q)
+            for t in range(np.minimum(Qar.size,self.num_periods)):
+                cload.LOAD_set_Q(self._c_ptr,Qr[t],t)
 
     property P_util:
-        """ Active power load utility ($/hr). """
-        def __get__(self): return cload.LOAD_get_P_util(self._c_ptr)
+        """ Active power load utility ($/hr) (float or array). """
+        def __get__(self): 
+            r = [cload.LOAD_get_P_util(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property util_coeff_Q0:
         """ Coefficient for consumption utility function (constant term, units of $/hr). """
@@ -1815,12 +1873,22 @@ cdef class Load:
         def __set__(self,c): cload.LOAD_set_util_coeff_Q2(self._c_ptr,c)
 
     property sens_P_u_bound:
-        """ Objective function sensitivity with respect to active power upper bound (float). """
-        def __get__(self): return cload.LOAD_get_sens_P_u_bound(self._c_ptr)   
+        """ Objective function sensitivity with respect to active power upper bound (float or array). """
+        def __get__(self): 
+            r = [cload.LOAD_get_sens_P_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
     property sens_P_l_bound:
-        """ Objective function sensitivity with respect to active power lower bound (float). """
-        def __get__(self): return cload.LOAD_get_sens_P_l_bound(self._c_ptr)
+        """ Objective function sensitivity with respect to active power lower bound (float or array). """
+        def __get__(self): 
+            r = [cload.LOAD_get_sens_P_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
+            if OPTION_SP_SCALARS and self.num_periods == 1:
+                return r[0]
+            else:
+                return np.array(r)
 
 cdef new_Load(cload.Load* l):
     if l is not NULL:
