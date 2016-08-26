@@ -21,7 +21,7 @@ static char* test_problem_basic() {
 
   printf("test_problem_basic ...");
 
-  net  = NET_new();
+  net  = NET_new(1);
   p = PROB_new();
 
   Assert("error - bad prob net initialization",PROB_get_network(p) == NULL);
