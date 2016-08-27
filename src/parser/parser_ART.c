@@ -864,7 +864,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
     index++;
   }
 
-  // Bats
+  // Batteries
   index = 0;
   LIST_len(ART_Bat,parser->bat_list,next,num_bats);
   NET_set_bat_array(net,BAT_array_new(num_bats,num_periods),num_bats);

@@ -63,15 +63,7 @@ void* VARGEN_array_get(void* gen_array, int index) {
 void VARGEN_array_del(Vargen* gen_array, int size) {
   int i;
   Vargen* gen;
-
-  // debug
-  printf("VARGEN array del size %d\n",size);
-
-  if (gen_array) {
-
-    // debug
-    printf("VARGEN array del, gen_array not NULL\n");
-    
+  if (gen_array) {    
     for (i = 0; i < size; i++) {
       gen = &(gen_array[i]);
       free(gen->P);
@@ -357,6 +349,12 @@ void VARGEN_init(Vargen* gen, int num_periods) {
   gen->Q_max = 0;
   gen->Q_min = 0;
   gen->index = 0;
+
+  gen->P = NULL;
+  gen->P_std = NULL;
+  gen->Q = NULL;
+  gen->index_P = NULL;
+  gen->index_Q = NULL;
 
   ARRAY_zalloc(gen->P,REAL,T);
   ARRAY_zalloc(gen->P_std,REAL,T);

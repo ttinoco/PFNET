@@ -100,9 +100,6 @@ void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty
   int i;
   int t;
 
-  // DEBUG
-  printf("C CODE, add vargens\n");
-
   // Check
   if (!net)
     return;
@@ -119,13 +116,9 @@ void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty
   }
 
   // Clear
-  if (net->vargen)
-    free(net->vargen);
+  VARGEN_array_del(net->vargen,net->num_vargens);
   net->vargen = NULL;
   net->num_vargens = 0;
-
-  // DEBUG
-  printf("C CODE, add vargens, after clera\n");
   
   // Save
   net->vargen_corr_radius = corr_radius;
@@ -141,26 +134,14 @@ void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty
       max_total_load_P = total_load_P;
   }
 
-  // DEBUG
-  printf("C CODE, add vargens, max total load %.5f\n",max_total_load_P);
-
   // Number
   num = BUS_list_len(bus_list);
-
-  // DEBUG
-  printf("C CODE, add vargens, after bus list len\n");
 
   // Allocate
   NET_set_vargen_array(net,VARGEN_array_new(num,net->num_periods),num);
 
-  // DEBUG
-  printf("C CODE, add vargens, after set vargen array\n");
-
   // Set buses
   NET_set_vargen_buses(net,bus_list);
-
-  // DEBUG
-  printf("C CODE, add vargens, after set vargen buses\n");
 
   // Set hash
   for (i = 0; i < net->num_vargens; i++) {
@@ -377,8 +358,7 @@ void NET_clear_data(Net* net) {
   free(net->num_actions);
   
   // Free utils
-  if (net->bus_counted)
-    free(net->bus_counted);
+  free(net->bus_counted);
   
   // Re-initialize
   NET_init(net,net->num_periods);
@@ -1816,11 +1796,12 @@ void NET_set_vargen_array(Net* net, Vargen* gen, int num) {
   // Local variables
   int i;
 
-  // DEBUG
-  printf("C CODE, set var gen array\n");
-
   if (net) {
-    
+
+    // Clear vargens
+    for (i = 0; i < net->num_buses; i++)
+      BUS_clear_vargen(NET_get_bus(net,i));
+
     // Clear array
     VARGEN_array_del(net->vargen,net->num_vargens);
     net->vargen = NULL;
@@ -1830,18 +1811,12 @@ void NET_set_vargen_array(Net* net, Vargen* gen, int num) {
     VARGEN_hash_name_del(net->vargen_hash_name);
     net->vargen_hash_name = NULL;
 
-    // DEBUG
-    printf("C CODE, set var gen array, hash cleared\n");
-
     // Check hash length
     if (VARGEN_hash_name_len(net->vargen_hash_name) != 0) {
       sprintf(net->error_string,"unable to clear vargen hash table");
       net->error_flag = TRUE;
       return;
     }
-
-    // DEBUG
-    printf("C CODE, set var gen array, hash length checked\n");
 
     // Set
     net->vargen = gen;         // array
@@ -1858,10 +1833,12 @@ void NET_set_bat_array(Net* net, Bat* bat, int num) {
 
 void NET_set_vargen_buses(Net* net, Bus* bus_list) {
   
+  // Local vars
   int i;
   Bus* bus;
   Vargen* gen;
 
+  // No net
   if (!net)
     return;
 
