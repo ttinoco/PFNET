@@ -4,23 +4,19 @@ project(PFNET)
 # example cmake usage from raw-parser directory
 # $ mkdir build
 # $ cd build
-# $ cmake -DCMAKE_INSTALL_PREFIX=../.. -DRAW_PARSER_INSTALL_PREFIX=../.. ..
+# $ cmake -DCMAKE_INSTALL_PREFIX=../.. -DRAW_PARSER_SOURCE_DIR=../../raw-parser ..
 # $ make
-# $ ls # see libpfnet.{a,so,dylib} depending on configuration
+# $ ls # see libpfnet.{so,dylib} depending on configuration
 
 # pfnet debug mode
 set(PFNET_DEBUG OFF CACHE BOOL "set to ON to enable PFNET debug definition")
 
 # RAW_PARSER_INSTALL_PREFIX
-set(RAW_PARSER_INSTALL_PREFIX ""
+set(RAW_PARSER_SOURCE_DIR ""
     CACHE FILEPATH
-    "path to raw-parser install prefix")
+    "path to raw-parser source directory")
 
-if(NOT ${RAW_PARSER_INSTALL_PREFIX} STREQUAL "")
-  list(APPEND CMAKE_PREFIX_PATH ${RAW_PARSER_INSTALL_PREFIX})
-endif()
-
-# find source files
+# find PFNET source files
 file(GLOB_RECURSE pfnet_source src/*.c)
 
 # add include directory
@@ -44,13 +40,19 @@ else()
   add_definitions(-DNO_GRAPHVIZ)
 endif()
 
-# find raw_parser
-find_library(RAW_PARSER_LIB libraw_parser_static.a)
-if(RAW_PARSER_LIB)
-  message("raw-parser found: " ${RAW_PARSER_LIB})
-  target_link_libraries(pfnet ${RAW_PARSER_LIB})
+# add raw-parser if specified
+if(NOT ${RAW_PARSER_SOURCE_DIR} STREQUAL "")
+  include_directories(${RAW_PARSER_SOURCE_DIR}/include)
+  set(raw_parser_source ${RAW_PARSER_SOURCE_DIR}/src/RAW_net.c
+                        ${RAW_PARSER_SOURCE_DIR}/src/RAW_parser.c)
+  target_sources(pfnet PUBLIC ${raw_parser_source})
+  message("raw-parser not enabled.")
+  # install raw-parser headers also
+  install(DIRECTORY ${RAW_PARSER_SOURCE_DIR}/include/
+          DESTINATION include
+          FILES_MATCHING PATTERN "*.h")
 else()
-  message("raw-parser not found.")
+  message("raw-parser not enabled.")
   add_definitions(-DNO_RAW_PARSER)
 endif()
 
