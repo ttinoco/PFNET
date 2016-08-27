@@ -63,7 +63,15 @@ void* VARGEN_array_get(void* gen_array, int index) {
 void VARGEN_array_del(Vargen* gen_array, int size) {
   int i;
   Vargen* gen;
+
+  // debug
+  printf("VARGEN array del size %d\n",size);
+
   if (gen_array) {
+
+    // debug
+    printf("VARGEN array del, gen_array not NULL\n");
+    
     for (i = 0; i < size; i++) {
       gen = &(gen_array[i]);
       free(gen->P);
@@ -339,8 +347,7 @@ void VARGEN_init(Vargen* gen, int num_periods) {
 
   gen->bus = NULL;
   gen->type = VARGEN_TYPE_WIND;
-  for (i = 0; i < VARGEN_NAME_BUFFER_SIZE; i++) 
-    gen->name[i] = 0;
+  ARRAY_clear(gen->name,char,VARGEN_NAME_BUFFER_SIZE);
   gen->fixed = 0x00;
   gen->bounded = 0x00;
   gen->sparse = 0x00;

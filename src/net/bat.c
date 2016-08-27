@@ -252,11 +252,11 @@ void BAT_get_var_values(Bat* bat, Vec* values, int code) {
 	VEC_set(values,bat->index_Pd[t],0.);
 	break;
       default:
-	if (bat->P >= 0) {
+	if (bat->P[t] >= 0) {
 	  VEC_set(values,bat->index_Pc[t],bat->P[t]);
 	  VEC_set(values,bat->index_Pd[t],0.);
 	}
-	else {
+	else {	  
 	  VEC_set(values,bat->index_Pc[t],0.);
 	  VEC_set(values,bat->index_Pd[t],-bat->P[t]);
 	}

@@ -588,7 +588,7 @@ cdef class Bus:
                 return np.array(r)
         def __set__(self,p):
             cdef int t
-            cdef np.ndarray par = np.array(p)
+            cdef np.ndarray par = np.array(p).flatten()
             for t in range(np.minimum(par.size,self.num_periods)):
                 cbus.BUS_set_price(self._c_ptr,par[t],t)
 
@@ -617,7 +617,7 @@ cdef class Bus:
                 return np.array(r)
         def __set__(self,v):
             cdef int t
-            cdef np.ndarray var = np.array(v)
+            cdef np.ndarray var = np.array(v).flatten()
             for t in range(np.minimum(var.size,self.num_periods)):
                 cbus.BUS_set_v_mag(self._c_ptr,var[t],t)
 
@@ -631,7 +631,7 @@ cdef class Bus:
                 return np.array(r)
         def __set__(self,v):
             cdef int t
-            cdef np.ndarray var = np.array(v)
+            cdef np.ndarray var = np.array(v).flatten()
             for t in range(np.minimum(var.size,self.num_periods)):
                 cbus.BUS_set_v_ang(self._c_ptr,var[t],t)
 
@@ -761,7 +761,7 @@ cdef class Bus:
                 g = cgen.GEN_get_next(g)
             return gens
 
-    property reg_gens: 
+    property reg_generators: 
         """ List of :class:`generators <pfnet.Generator>` regulating the voltage magnitude of this bus (list). """
         def __get__(self):
             reg_gens = []
@@ -1442,7 +1442,7 @@ cdef class Generator:
                 return np.array(r)
         def __set__(self,P): 
             cdef int t
-            cdef np.ndarray Par = np.array(P)
+            cdef np.ndarray Par = np.array(P).flatten()
             for t in range(np.minimum(Par.size,self.num_periods)):
                 cgen.GEN_set_P(self._c_ptr,Par[t],t)
 
@@ -1466,7 +1466,7 @@ cdef class Generator:
                 return np.array(r)
         def __set__(self,Q): 
             cdef int t
-            cdef np.ndarray Qar = np.array(Q)
+            cdef np.ndarray Qar = np.array(Q).flatten()
             for t in range(np.minimum(Qar.size,self.num_periods)):
                 cgen.GEN_set_Q(self._c_ptr,Qar[t],t)
 
@@ -1820,7 +1820,7 @@ cdef class Load:
                 return np.array(r)
         def __set__(self,P): 
             cdef int t
-            cdef np.ndarray Par = np.array(P)
+            cdef np.ndarray Par = np.array(P).flatten()
             for t in range(np.minimum(Par.size,self.num_periods)):
                 cload.LOAD_set_P(self._c_ptr,Par[t],t)
        
@@ -1844,7 +1844,7 @@ cdef class Load:
                 return np.array(r)
         def __set__(self,Q): 
             cdef int t
-            cdef np.ndarray Qar = np.array(Q)
+            cdef np.ndarray Qar = np.array(Q).flatten()
             for t in range(np.minimum(Qar.size,self.num_periods)):
                 cload.LOAD_set_Q(self._c_ptr,Qar[t],t)
 
@@ -2020,7 +2020,7 @@ cdef class VarGenerator:
                 return np.array(r)
         def __set__(self,P): 
             cdef int t
-            cdef np.ndarray Par = np.array(P)
+            cdef np.ndarray Par = np.array(P).flatten()
             for t in range(np.minimum(Par.size,self.num_periods)):
                 cvargen.VARGEN_set_P(self._c_ptr,Par[t],t)
 
@@ -2044,7 +2044,7 @@ cdef class VarGenerator:
                 return np.array(r)
         def __set__(self,P): 
             cdef int t
-            cdef np.ndarray Par = np.array(P)
+            cdef np.ndarray Par = np.array(P).flatten()
             for t in range(np.minimum(Par.size,self.num_periods)):
                 cvargen.VARGEN_set_P_std(self._c_ptr,Par[t],t)
 
@@ -2058,7 +2058,7 @@ cdef class VarGenerator:
                 return np.array(r)
         def __set__(self,Q): 
             cdef int t
-            cdef np.ndarray Qar = np.array(Q)
+            cdef np.ndarray Qar = np.array(Q).flatten()
             for t in range(np.minimum(Qar.size,self.num_periods)):
                 cvargen.VARGEN_set_Q(self._c_ptr,Qar[t],t)
 
@@ -2204,7 +2204,7 @@ cdef class Battery:
                 return np.array(r)
         def __set__(self,P): 
             cdef int t
-            cdef np.ndarray Par = np.array(P)
+            cdef np.ndarray Par = np.array(P).flatten()
             for t in range(np.minimum(Par.size,self.num_periods)):
                 cbat.BAT_set_P(self._c_ptr,Par[t],t)
 
@@ -2228,7 +2228,7 @@ cdef class Battery:
                 return np.array(r)
         def __set__(self,E): 
             cdef int t
-            cdef np.ndarray Ear = np.array(E)
+            cdef np.ndarray Ear = np.array(E).flatten()
             for t in range(np.minimum(Ear.size,self.num_periods)):
                 cbat.BAT_set_E(self._c_ptr,Ear[t],t)
 
@@ -2811,7 +2811,7 @@ cdef class Network:
 
         return cnet.NET_get_num_tap_changers_Q(self._c_net)
 
-    def get_num_gens(self):
+    def get_num_generators(self):
         """
         Gets number of generators in the network.
 
@@ -2921,7 +2921,7 @@ cdef class Network:
 
         return cnet.NET_get_num_switched_shunts(self._c_net)
 
-    def get_num_vargens(self):
+    def get_num_var_generators(self):
         """
         Gets number of variable generators in the network.
 
@@ -3127,7 +3127,7 @@ cdef class Network:
     property generators:
         """ List of network :class:`generators <pfnet.Generator>` (list). """
         def __get__(self):
-            return [self.get_gen(i) for i in range(self.num_gens)]
+            return [self.get_gen(i) for i in range(self.num_generators)]
 
     property shunts:
         """ List of network :class:`shunts <pfnet.Shunt>` (list). """
@@ -3142,12 +3142,12 @@ cdef class Network:
     property var_generators:
         """ List of network :class:`variable generators <pfnet.VarGenerator>` (list). """
         def __get__(self):
-            return [self.get_vargen(i) for i in range(self.num_vargens)]
+            return [self.get_vargen(i) for i in range(self.num_var_generators)]
 
     property batteries:
         """ List of network :class:`batteries <pfnet.Battery>` (list). """
         def __get__(self):
-            return [self.get_bat(i) for i in range(self.num_bats)]
+            return [self.get_bat(i) for i in range(self.num_batteries)]
     
     property num_buses:
         """ Number of buses in the network (int). """
@@ -3157,7 +3157,7 @@ cdef class Network:
         """ Number of branches in the network (int). """
         def __get__(self): return cnet.NET_get_num_branches(self._c_net)
 
-    property num_gens:
+    property num_generators:
         """ Number of generators in the network (int). """
         def __get__(self): return cnet.NET_get_num_gens(self._c_net)
 
@@ -3169,11 +3169,11 @@ cdef class Network:
         """ Number of shunt devices in the network (int). """
         def __get__(self): return cnet.NET_get_num_shunts(self._c_net)
 
-    property num_vargens:
+    property num_var_generators:
         """ Number of variable generators in the network (int). """
         def __get__(self): return cnet.NET_get_num_vargens(self._c_net)
 
-    property num_bats:
+    property num_batteries:
         """ Number of batteries in the network (int). """
         def __get__(self): return cnet.NET_get_num_bats(self._c_net)
 

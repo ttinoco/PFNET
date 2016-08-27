@@ -15,6 +15,7 @@ Unreleased
 * Area/zone projections.
 * Branch bus name changes.
 * Branch AC flow getters.
+* Name changes in Python wrapper (trying to eliminate abbreviations, e.g. gens, bats, etc)
 
 Version 1.2.3
 -------------

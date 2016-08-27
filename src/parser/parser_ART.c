@@ -586,7 +586,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
     if (art_bus->pload != 0. || art_bus->qload != 0. || art_bus->qshunt != 0.)
       num_loads++;
   }
-  NET_set_load_array(net,LOAD_array_new(num_loads,num_loads),num_loads);
+  NET_set_load_array(net,LOAD_array_new(num_loads,num_periods),num_loads);
   index = 0;
   for (art_bus = parser->bus_list; art_bus != NULL; art_bus = art_bus->next) {
     if (art_bus->pload != 0. || art_bus->qload != 0. || art_bus->qshunt != 0.) {
