@@ -10,12 +10,14 @@ Targets
 Unreleased
 ----------
 * Multi-period support.
+* Option flag for getting scalar outputs when number of periods is one.
 * Function value independent of variable flags.
 * Bus number of variables.
 * Area/zone projections.
 * Branch bus name changes.
 * Branch AC flow getters.
-* Name changes in Python wrapper (trying to eliminate abbreviations, e.g. gens, bats, etc)
+* Name changes in Python wrapper (trying to eliminate abbreviations, e.g. gens, bats, etc).
+* Improved memory management and bookeeing when adding variable generators.
 
 Version 1.2.3
 -------------
