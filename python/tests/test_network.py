@@ -1228,9 +1228,13 @@ class TestNetwork(unittest.TestCase):
 
                 # E
                 bat.E_max = 22.2
+                bat.E_init = 0.22
+                bat.E_final = 1.2321
                 bat.E = 0.555
                 self.assertEqual(bat.E_max,22.2)
                 self.assertEqual(bat.E,0.555)
+                self.assertEqual(bat.E_init,0.22)
+                self.assertEqual(bat.E_final,1.2321)
 
                 # eta
                 bat.eta_c = 0.91

@@ -2219,7 +2219,7 @@ cdef class Battery:
         def __set__(self,P): cbat.BAT_set_P_min(self._c_ptr,P)
 
     property E:
-        """ Battery energy level (p.u. system base MVA times time unit) (float or array). """
+        """ Battery energy level at the beginning of a period (p.u. system base MVA times time unit) (float or array). """
         def __get__(self): 
             r = [cbat.BAT_get_E(self._c_ptr,t) for t in range(self.num_periods)]
             if OPTION_SP_SCALARS and self.num_periods == 1:
@@ -2231,6 +2231,16 @@ cdef class Battery:
             cdef np.ndarray Ear = np.array(E).flatten()
             for t in range(np.minimum(Ear.size,self.num_periods)):
                 cbat.BAT_set_E(self._c_ptr,Ear[t],t)
+
+    property E_init:
+        """ Initial battery energy level (p.u. system base MVA times time unit) (float). """
+        def __get__(self): return cbat.BAT_get_E_init(self._c_ptr)
+        def __set__(self,E): cbat.BAT_set_E_init(self._c_ptr,E)
+
+    property E_final:
+        """ Battery energy level at the end of the last period (p.u. system base MVA times time unit) (float). """
+        def __get__(self): return cbat.BAT_get_E_final(self._c_ptr)
+        def __set__(self,E): cbat.BAT_set_E_final(self._c_ptr,E)
 
     property E_max:
         """ Battery energy level upper limit (p.u. system base MVA times time unit) (float). """
