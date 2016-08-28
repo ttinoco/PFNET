@@ -547,6 +547,7 @@ class TestNetwork(unittest.TestCase):
             
     def test_gens(self):
 
+        # Single period
         net = self.net
 
         for case in test_cases.CASES:
@@ -646,8 +647,52 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(gen.sens_P_u_bound,0.)
                 self.assertEqual(gen.sens_P_l_bound,0.)
 
+        # Multi period
+        net = self.netMP
+
+        for case in test_cases.CASES:
+
+            net.clear_properties()
+            net.load(case)
+            net.clear_flags()
+
+            for gen in net.generators:
+                
+                self.assertEqual(gen.num_periods,self.T)
+                
+                # Propagation
+                for t in range(1,self.T):
+                    self.assertEqual(gen.P[t],gen.P[0])
+                    self.assertEqual(gen.Q[t],gen.Q[0])
+            
+                # Set
+                x = np.random.randn(self.T)
+                gen.P = x
+                for t in range(self.T):
+                    self.assertEqual(gen.P[t],x[t])
+                x = np.random.randn(self.T)
+                gen.Q = x
+                for t in range(self.T):
+                    self.assertEqual(gen.Q[t],x[t])
+                x = np.random.randn(self.T)
+
+            # Indexing
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_ANY,
+                          [pf.GEN_VAR_P,
+                           pf.GEN_VAR_Q])
+
+            index = 0
+            for gen in net.generators:
+                self.assertTrue(np.all(gen.index_P == range(index,index+self.T)))
+                index += self.T
+                self.assertTrue(np.all(gen.index_Q == range(index,index+self.T)))
+                index += self.T
+
     def test_branches(self):
-        
+
+        # Single period
         net = self.net
 
         for case in test_cases.CASES:
@@ -716,8 +761,45 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(branch.sens_P_u_bound,0.)
                 self.assertEqual(branch.sens_P_l_bound,0.)
 
+        # Multi period
+        net = self.netMP
+
+        for case in test_cases.CASES:
+
+            net.clear_properties()
+            net.load(case)
+            net.clear_flags()
+
+            for branch in net.branches:
+                
+                self.assertEqual(branch.num_periods,self.T)
+                
+                # Propagation
+                for t in range(1,self.T):
+                    self.assertEqual(branch.ratio[t],branch.ratio[0])
+                    self.assertEqual(branch.phase[t],branch.phase[0])
+            
+            # Indexing
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_VARS,
+                          pf.BRANCH_PROP_ANY,
+                          [pf.BRANCH_VAR_RATIO,
+                           pf.BRANCH_VAR_PHASE,
+                           pf.BRANCH_VAR_RATIO_DEV])
+
+            index = 0
+            for branch in net.branches:
+                self.assertTrue(np.all(branch.index_ratio == range(index,index+self.T)))
+                index += self.T
+                self.assertTrue(np.all(branch.index_phase == range(index,index+self.T)))
+                index += self.T
+                self.assertTrue(np.all(branch.index_ratio_y == range(index,index+2*self.T,2)))
+                self.assertTrue(np.all(branch.index_ratio_z == range(index+1,index+2*self.T,2)))
+                index += 2*self.T
+
     def test_shunts(self):
-        
+
+        # Single period
         net = self.net
 
         for case in test_cases.CASES:
@@ -754,8 +836,41 @@ class TestNetwork(unittest.TestCase):
                     self.assertTrue(shunt.is_fixed())
                     self.assertRaises(pf.BusError,lambda : shunt.reg_bus)
 
+        # Multi period
+        net = self.netMP
+
+        for case in test_cases.CASES:
+
+            net.clear_properties()
+            net.load(case)
+            net.clear_flags()
+
+            for shunt in net.shunts:
+                
+                self.assertEqual(shunt.num_periods,self.T)
+                
+                # Propagation
+                for t in range(1,self.T):
+                    self.assertEqual(shunt.b[t],shunt.b[0])
+
+            # Indexing
+            net.set_flags(pf.OBJ_SHUNT,
+                          pf.FLAG_VARS,
+                          pf.SHUNT_PROP_ANY,
+                          [pf.SHUNT_VAR_SUSC,
+                           pf.SHUNT_VAR_SUSC_DEV])
+
+            index = 0
+            for shunt in net.shunts:
+                self.assertTrue(np.all(shunt.index_b == range(index,index+self.T)))
+                index += self.T
+                self.assertTrue(np.all(shunt.index_y == range(index,index+2*self.T,2)))
+                self.assertTrue(np.all(shunt.index_z == range(index+1,index+2*self.T,2)))
+                index += 2*self.T
+
     def test_loads(self):
 
+        # Single period
         net = self.net
 
         for case in test_cases.CASES:
@@ -828,6 +943,45 @@ class TestNetwork(unittest.TestCase):
                 # sens
                 self.assertEqual(load.sens_P_u_bound,0.)
                 self.assertEqual(load.sens_P_l_bound,0.)
+
+        # Multi period
+        net = self.netMP
+
+        for case in test_cases.CASES:
+
+            net.clear_properties()
+            net.load(case)
+            net.clear_flags()
+
+            for load in net.loads:
+                
+                self.assertEqual(load.num_periods,self.T)
+                
+                # Propagation
+                for t in range(1,self.T):
+                    self.assertEqual(load.P[t],load.P[0])
+                    self.assertEqual(load.Q[t],load.Q[0])
+            
+                # Set
+                x = np.random.randn(self.T)
+                load.P = x
+                for t in range(self.T):
+                    self.assertEqual(load.P[t],x[t])
+                x = np.random.randn(self.T)
+                load.Q = x
+                for t in range(self.T):
+                    self.assertEqual(load.Q[t],x[t])
+
+            # Indexing
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_VARS,
+                          pf.LOAD_PROP_ANY,
+                          [pf.LOAD_VAR_P])
+
+            index = 0
+            for load in net.loads:
+                self.assertTrue(np.all(load.index_P == range(index,index+self.T)))
+                index += self.T
 
     def test_vargens(self):
 
@@ -982,8 +1136,58 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(vg.P,(penetration/100.)*vg.P_max)
                 self.assertEqual(vg.P_std,(uncertainty/100.)*vg.P_max)
 
+        # Multi period
+        net = self.netMP
+
+        for case in test_cases.CASES:
+
+            net.clear_properties()
+            net.load(case)
+            net.clear_flags()
+            
+            net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
+            self.assertGreater(net.num_var_generators,0)
+
+            for vargen in net.var_generators:
+                
+                self.assertEqual(vargen.num_periods,self.T)
+                
+                # Propagation
+                for t in range(1,self.T):
+                    self.assertEqual(vargen.P[t],vargen.P[0])
+                    self.assertEqual(vargen.Q[t],vargen.Q[0])
+                    self.assertEqual(vargen.P_std[t],vargen.P_std[0])
+            
+                # Set
+                x = np.random.randn(self.T)
+                vargen.P = x
+                for t in range(self.T):
+                    self.assertEqual(vargen.P[t],x[t])
+                x = np.random.randn(self.T)
+                vargen.Q = x
+                for t in range(self.T):
+                    self.assertEqual(vargen.Q[t],x[t])
+                vargen.P_std = x
+                for t in range(self.T):
+                    self.assertEqual(vargen.P_std[t],x[t])
+
+            # Indexing
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          [pf.VARGEN_VAR_P,
+                           pf.VARGEN_VAR_Q])
+
+            index = 0
+            for vargen in net.var_generators:
+                self.assertTrue(np.all(vargen.index_P == range(index,index+self.T)))
+                index += self.T
+                self.assertTrue(np.all(vargen.index_Q == range(index,index+self.T)))
+                index += self.T
+
     def test_batteries(self):
 
+        # Single period
         net = self.net
 
         for case in test_cases.CASES:
@@ -1033,6 +1237,49 @@ class TestNetwork(unittest.TestCase):
                 bat.eta_d = 0.95
                 self.assertEqual(bat.eta_c,0.91)
                 self.assertEqual(bat.eta_d,0.95)
+
+        # Multi period
+        net = self.netMP
+
+        for case in test_cases.CASES:
+
+            net.clear_properties()
+            net.load(case)
+            net.clear_flags()
+            
+            for bat in net.batteries:
+                
+                self.assertEqual(bat.num_periods,self.T)
+                
+                # Propagation
+                for t in range(1,self.T):
+                    self.assertEqual(bat.P[t],bat.P[0])
+                    self.assertEqual(bat.E[t],bat.E[0])
+            
+                # Set
+                x = np.random.randn(self.T)
+                bat.P = x
+                for t in range(self.T):
+                    self.assertEqual(bat.P[t],x[t])
+                x = np.random.randn(self.T)
+                bat.E = x
+                for t in range(self.T):
+                    self.assertEqual(bat.E[t],x[t])
+
+            # Indexing
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          [pf.BAT_VAR_P,
+                           pf.BAT_VAR_E])
+
+            index = 0
+            for bat in net.batteries:
+                self.assertTrue(np.all(bat.index_Pc == range(index,index+2*self.T,2)))
+                self.assertTrue(np.all(bat.index_Pd == range(index+1,index+2*self.T,2)))
+                index += 2*self.T
+                self.assertTrue(np.all(bat.index_E == range(index,index+self.T)))
+                index += self.T
                                 
     def test_clear_flags(self):
        
@@ -1181,6 +1428,7 @@ class TestNetwork(unittest.TestCase):
 
     def test_properties(self):
 
+        # Single period
         net = self.net
         
         for case in test_cases.CASES:
