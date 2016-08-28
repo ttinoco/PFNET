@@ -17,7 +17,7 @@ class TestNetwork(unittest.TestCase):
     def setUp(self):
         
         # Networks
-        self.T = 10
+        self.T = 3
         self.net = pf.Network()
         self.netMP = pf.Network(self.T)
 
@@ -1428,13 +1428,15 @@ class TestNetwork(unittest.TestCase):
 
     def test_properties(self):
 
-        # Single period
+        # Single and multi period
         net = self.net
+        netMP = self.netMP
         
         for case in test_cases.CASES:
 
             net.clear_properties()
-            
+            netMP.clear_properties()
+
             self.assertEqual(net.bus_v_max,0.)
             self.assertEqual(net.bus_v_min,0.)
             self.assertEqual(net.bus_v_vio,0.)
@@ -1452,11 +1454,49 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.load_P_util,0.)
             self.assertEqual(net.load_P_vio,0.)
             self.assertEqual(net.num_actions,0)
-             
-            net.load(case)
 
+            self.assertEqual(netMP.bus_v_max.shape[0],self.T)
+            self.assertEqual(netMP.bus_v_min.shape[0],self.T)
+            self.assertEqual(netMP.bus_v_vio.shape[0],self.T)
+            self.assertEqual(netMP.bus_P_mis.shape[0],self.T)
+            self.assertEqual(netMP.bus_Q_mis.shape[0],self.T)
+            self.assertEqual(netMP.gen_P_cost.shape[0],self.T)
+            self.assertEqual(netMP.gen_v_dev.shape[0],self.T)
+            self.assertEqual(netMP.gen_Q_vio.shape[0],self.T)
+            self.assertEqual(netMP.gen_P_vio.shape[0],self.T)
+            self.assertEqual(netMP.tran_v_vio.shape[0],self.T)
+            self.assertEqual(netMP.tran_r_vio.shape[0],self.T)
+            self.assertEqual(netMP.tran_p_vio.shape[0],self.T)
+            self.assertEqual(netMP.shunt_v_vio.shape[0],self.T)
+            self.assertEqual(netMP.shunt_b_vio.shape[0],self.T)
+            self.assertEqual(netMP.load_P_util.shape[0],self.T)
+            self.assertEqual(netMP.load_P_vio.shape[0],self.T)
+            self.assertEqual(netMP.num_actions.shape[0],self.T)
+            
+            self.assertTrue(np.all(netMP.bus_v_max == 0))
+            self.assertTrue(np.all(netMP.bus_v_min == 0))
+            self.assertTrue(np.all(netMP.bus_v_vio == 0))
+            self.assertTrue(np.all(netMP.bus_P_mis == 0))
+            self.assertTrue(np.all(netMP.bus_Q_mis == 0))
+            self.assertTrue(np.all(netMP.gen_P_cost == 0))
+            self.assertTrue(np.all(netMP.gen_v_dev == 0))
+            self.assertTrue(np.all(netMP.gen_Q_vio == 0))
+            self.assertTrue(np.all(netMP.gen_P_vio == 0))
+            self.assertTrue(np.all(netMP.tran_v_vio == 0))
+            self.assertTrue(np.all(netMP.tran_r_vio == 0))
+            self.assertTrue(np.all(netMP.tran_p_vio == 0))
+            self.assertTrue(np.all(netMP.shunt_v_vio == 0))
+            self.assertTrue(np.all(netMP.shunt_b_vio == 0))
+            self.assertTrue(np.all(netMP.load_P_util == 0))
+            self.assertTrue(np.all(netMP.load_P_vio == 0))
+            self.assertTrue(np.all(netMP.num_actions == 0))
+ 
+            net.load(case)
+            netMP.load(case)
+            
             # add vargens
             net.add_vargens(net.get_load_buses(),50.,30.,5,0.05)
+            netMP.add_vargens(netMP.get_load_buses(),50.,30.,5,0.05)
             for vargen in net.var_generators:
                 self.assertTrue(isinstance(vargen.name,str) or isinstance(vargen.name,unicode))
                 self.assertEqual(vargen.name,"VARGEN %d" %(vargen.index+1))
@@ -1464,25 +1504,37 @@ class TestNetwork(unittest.TestCase):
                 vargen.P = 1.
                 vargen.Q = 2.
                 self.assertGreater(len(vargen.bus.loads),0)
+            for vargen in netMP.var_generators:
+                vargen.P = np.ones(self.T)
+                vargen.Q = 2*np.ones(self.T)
+                self.assertGreater(len(vargen.bus.loads),0)
 
             net.update_properties()
+            netMP.update_properties()
 
             self.assertEqual(net.num_vars,0)
+            self.assertEqual(netMP.num_vars,0)
 
             bus_v_max = net.bus_v_max
             bus_P_mis = net.bus_P_mis
 
             net.clear_properties()
             net.update_properties()
+            netMP.clear_properties()
+            netMP.update_properties()
 
             self.assertEqual(bus_v_max,net.bus_v_max)
             self.assertEqual(bus_P_mis,net.bus_P_mis)
-            
+            self.assertTrue(np.all(bus_v_max == netMP.bus_v_max))
+            self.assertTrue(np.all(bus_P_mis == netMP.bus_P_mis))
+ 
             x0 = net.get_var_values()
-
             self.assertEqual(x0.size,0)
-
             net.update_properties(x0)
+
+            x0MP = netMP.get_var_values()
+            self.assertEqual(x0MP.size,0)
+            netMP.update_properties(x0MP)
 
             self.assertGreater(net.bus_v_max,0.)
             self.assertGreater(net.bus_v_min,0.)
@@ -1555,6 +1607,13 @@ class TestNetwork(unittest.TestCase):
             self.assertLess(abs(net.tran_v_vio-tvvio),1e-10)
             self.assertLess(abs(net.shunt_v_vio-svvio),1e-10)
             self.assertLess(abs(net.gen_v_dev-vdev),1e-10)
+            
+            self.assertTrue(np.all(np.abs(netMP.bus_v_max-vmax) < 1e-10))
+            self.assertTrue(np.all(np.abs(netMP.bus_v_min-vmin) < 1e-10))
+            self.assertTrue(np.all(np.abs(netMP.bus_v_vio-vvio) < 1e-10))
+            self.assertTrue(np.all(np.abs(netMP.tran_v_vio-tvvio) < 1e-10))
+            self.assertTrue(np.all(np.abs(netMP.shunt_v_vio-svvio) < 1e-10))
+            self.assertTrue(np.all(np.abs(netMP.gen_v_dev-vdev) < 1e-10))
 
             # Generators
             Pvio = 0
@@ -1573,6 +1632,10 @@ class TestNetwork(unittest.TestCase):
             self.assertLess(abs(net.gen_Q_vio-Qvio*net.base_power),1e-10)
             self.assertLess(abs(net.gen_P_cost-Pcost),1e-8)
 
+            self.assertTrue(np.all(np.abs(netMP.gen_P_vio-Pvio*netMP.base_power) < 1e-10))
+            self.assertTrue(np.all(np.abs(netMP.gen_Q_vio-Qvio*netMP.base_power) < 1e-10))
+            self.assertTrue(np.all(np.abs(netMP.gen_P_cost-Pcost) < 1e-8))
+
             # Loads
             Pvio = 0
             Putil = 0
@@ -1587,6 +1650,9 @@ class TestNetwork(unittest.TestCase):
                     Pvio = dP
             self.assertLess(abs(net.load_P_vio-Pvio*net.base_power),1e-10)
             self.assertLess(abs(net.load_P_util-Putil),1e-7)
+
+            self.assertTrue(np.all(np.abs(netMP.load_P_vio-Pvio*netMP.base_power) < 1e-10))
+            self.assertTrue(np.all(np.abs(netMP.load_P_util-Putil) < 1e-7))
             
             # Transformers
             rvio = 0.
@@ -1606,8 +1672,11 @@ class TestNetwork(unittest.TestCase):
                         pvio = dp
             self.assertLess(np.abs(rvio-net.tran_r_vio),1e-10)
             self.assertLess(np.abs(pvio-net.tran_p_vio),1e-10)
-                
-            # Mismatches
+            
+            self.assertTrue(np.all(np.abs(netMP.tran_r_vio-rvio) < 1e-10))
+            self.assertTrue(np.all(np.abs(netMP.tran_p_vio-pvio) < 1e-10))
+    
+            # Mismatches 1
             constr = pf.Constraint(pf.CONSTR_TYPE_PF,net)
             constr.analyze()
             constr.eval(x0)
@@ -1624,7 +1693,29 @@ class TestNetwork(unittest.TestCase):
                 self.assertLess(np.abs(dQ-bus.Q_mis),1e-10)
             self.assertLess(np.abs(net.bus_P_mis-np.max(np.abs(dP_list))*net.base_power),1e-10)
             self.assertLess(np.abs(net.bus_Q_mis-np.max(np.abs(dQ_list))*net.base_power),1e-10)
-
+            
+            constrMP = pf.Constraint(pf.CONSTR_TYPE_PF,netMP)
+            constrMP.analyze()
+            constrMP.eval(x0MP)
+            fMP = constrMP.f
+            offset = 0
+            self.assertEqual(fMP.shape[0],2*netMP.num_buses*netMP.num_periods)
+            for t in range(self.T):
+                dP_list = []
+                dQ_list = []
+                ft = fMP[offset:offset+2*netMP.num_buses]
+                offset += 2*netMP.num_buses
+                for i in range(netMP.num_buses):
+                    bus = netMP.get_bus(i)
+                    dP = ft[bus.index_P]
+                    dQ = ft[bus.index_Q]
+                    dP_list.append(dP)
+                    dQ_list.append(dQ)
+                    self.assertLess(np.abs(dP-bus.P_mis[t]),1e-10)
+                    self.assertLess(np.abs(dQ-bus.Q_mis[t]),1e-10)
+                self.assertLess(np.abs(netMP.bus_P_mis[t]-np.max(np.abs(dP_list))*netMP.base_power),1e-10)
+                self.assertLess(np.abs(netMP.bus_Q_mis[t]-np.max(np.abs(dQ_list))*netMP.base_power),1e-10)
+            
             # Mismatches 2
             for vargen in net.var_generators:
                 vargen.P = 0.
@@ -1659,7 +1750,45 @@ class TestNetwork(unittest.TestCase):
                 self.assertLess(np.abs(fsaved[vargen.bus.index_Q]-
                                        vargen.bus.Q_mis),1e-10)
 
+            # Mismatches 2 (multiperiod)
+            for vargen in netMP.var_generators:
+                vargen.P = np.zeros(netMP.num_periods)
+                vargen.Q = np.zeros(netMP.num_periods)
+            netMP.update_properties()
+            fsaved = fMP.copy()
+            constrMP.eval(x0MP)
+            f = constrMP.f
+            n = netMP.num_buses
+            for vargen in netMP.var_generators:
+                for t in range(self.T):
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
+                                           f[vargen.bus.index_P+t*2*n]-1.),1e-10)
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
+                                           vargen.bus.P_mis[t]-1.),1e-10)
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
+                                           f[vargen.bus.index_Q+t*2*n]-2.),1e-10)
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
+                                           vargen.bus.Q_mis[t]-2.),1e-10)
+            for vargen in netMP.var_generators:
+                self.assertGreater(len(vargen.bus.loads),0)
+                vargen.bus.loads[0].P = vargen.bus.loads[0].P - 1.
+                vargen.bus.loads[0].Q = vargen.bus.loads[0].Q - 2.
+            netMP.update_properties()
+            constrMP.eval(x0MP)
+            f = constrMP.f
+            for vargen in netMP.var_generators:
+                for t in range(self.T):
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
+                                           f[vargen.bus.index_P+t*2*n]),1e-10)
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
+                                           vargen.bus.P_mis[t]),1e-10)
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
+                                           f[vargen.bus.index_Q+t*2*n]),1e-10)
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
+                                           vargen.bus.Q_mis[t]),1e-10)
+                    
             net.clear_properties()
+            netMP.clear_properties()
             
             self.assertEqual(net.bus_v_max,0.)
             self.assertEqual(net.bus_v_min,0.)
@@ -1678,6 +1807,24 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.load_P_vio,0.)
             self.assertEqual(net.num_actions,0.)
 
+            self.assertTrue(np.all(netMP.bus_v_max == 0))
+            self.assertTrue(np.all(netMP.bus_v_min == 0))
+            self.assertTrue(np.all(netMP.bus_v_vio == 0))
+            self.assertTrue(np.all(netMP.bus_P_mis == 0))
+            self.assertTrue(np.all(netMP.bus_Q_mis == 0))
+            self.assertTrue(np.all(netMP.gen_P_cost == 0))
+            self.assertTrue(np.all(netMP.gen_v_dev == 0))
+            self.assertTrue(np.all(netMP.gen_Q_vio == 0))
+            self.assertTrue(np.all(netMP.gen_P_vio == 0))
+            self.assertTrue(np.all(netMP.tran_v_vio == 0))
+            self.assertTrue(np.all(netMP.tran_r_vio == 0))
+            self.assertTrue(np.all(netMP.tran_p_vio == 0))
+            self.assertTrue(np.all(netMP.shunt_v_vio == 0))
+            self.assertTrue(np.all(netMP.shunt_b_vio == 0))
+            self.assertTrue(np.all(netMP.load_P_util == 0))
+            self.assertTrue(np.all(netMP.load_P_vio == 0))
+            self.assertTrue(np.all(netMP.num_actions == 0))
+            
     def test_bus_sorting(self):
 
         net = self.net
@@ -1837,6 +1984,7 @@ class TestNetwork(unittest.TestCase):
 
     def test_set_points(self):
 
+        # Single period
         net = self.net
 
         for case in test_cases.CASES:
@@ -1849,8 +1997,27 @@ class TestNetwork(unittest.TestCase):
                 if bus.is_regulated_by_gen():
                     self.assertEqual(bus.v_mag,bus.v_set)
 
+        # Multi period
+        net = self.netMP
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+
+            for bus in net.buses:
+                bus.v_mag = np.random.randn(self.T)
+
+            net.update_set_points()
+            
+            for bus in net.buses:
+                if bus.is_regulated_by_gen():
+                    self.assertTrue(np.all(bus.v_mag == bus.v_set))
+                    self.assertTupleEqual(bus.v_mag.shape,(self.T,))
+                    self.assertTupleEqual(bus.v_set.shape,(self.T,))
+
     def test_projections(self):
-       
+
+        # Single period
         net = self.net
 
         for case in test_cases.CASES:
@@ -2147,6 +2314,7 @@ class TestNetwork(unittest.TestCase):
 
     def test_variable_limits(self):
 
+        # Single period
         net = self.net
 
         for case in test_cases.CASES:
@@ -2332,6 +2500,7 @@ class TestNetwork(unittest.TestCase):
 
     def test_vargen_P_sigma(self):
 
+        # Single period
         net = self.net
 
         for case in test_cases.CASES:

@@ -40,7 +40,7 @@ void CONSTR_PF_init(Constr* c) {
   net = CONSTR_get_network(c);
   num_buses = NET_get_num_buses(net);
   num_periods = NET_get_num_periods(net);
-  CONSTR_set_Hcounter(c,(int*)calloc(num_buses,sizeof(int)),num_buses*num_periods);
+  CONSTR_set_Hcounter(c,(int*)calloc(num_buses*num_periods,sizeof(int)),num_buses*num_periods);
   data = (Constr_PF_Data*)malloc(sizeof(Constr_PF_Data));
   data->size = num_buses*num_periods;
   ARRAY_zalloc(data->dPdw_indices,int,num_buses*num_periods);
