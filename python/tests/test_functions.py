@@ -144,6 +144,24 @@ class TestFunctions(unittest.TestCase):
                 error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
+            # Value
+            dv = 0.2
+            func.eval(x0)
+            phi = 0
+            for bus in net.buses:
+                phi += 0.5*(((bus.v_mag-bus.v_set)/dv)**2.)
+                if bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VDEV):
+                    phi += 0.5*((np.abs(bus.v_mag-bus.v_set)/dv)**2.)
+            self.assertLess(np.abs(func.phi-phi),1e-10)
+            net.clear_flags()
+            self.assertEqual(net.num_vars,0)
+            func.analyze()
+            func.eval(np.zeros(0))
+            phi = 0
+            for bus in net.buses:
+                phi += 0.5*(((bus.v_mag-bus.v_set)/dv)**2.)
+            self.assertLess(np.abs(func.phi-phi),1e-10)
+
     def test_func_REG_PQ(self):
         
         # Constants
@@ -155,7 +173,7 @@ class TestFunctions(unittest.TestCase):
             
             net.load(case)
 
-            ng = net.num_gens
+            ng = net.num_generators
             nrg = net.get_num_reg_gens()
             ns = net.get_num_slack_gens()
             
@@ -257,6 +275,23 @@ class TestFunctions(unittest.TestCase):
                 Hd_approx = (g1-g0)/h
                 error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
+
+            # Value
+            func.eval(x0)
+            phi = 0
+            for gen in net.generators:
+                dP = np.max([1e-4,gen.P_max-gen.P_min])
+                dQ = np.max([1e-4,gen.Q_max-gen.Q_min])
+                Pmid = (gen.P_max+gen.P_min)/2.
+                Qmid = (gen.Q_max+gen.Q_min)/2.
+                phi += 0.5*(((gen.P-Pmid)/dP)**2.)
+                phi += 0.5*(((gen.Q-Qmid)/dQ)**2.)
+            self.assertLess(np.abs(func.phi-phi),1e-10)
+            net.clear_flags()
+            self.assertEqual(net.num_vars,0)
+            func.analyze()
+            func.eval(np.zeros(0))
+            self.assertLess(np.abs(func.phi-phi),1e-10)
 
     def test_func_REG_VANG(self):
         
@@ -377,6 +412,21 @@ class TestFunctions(unittest.TestCase):
                 Hd_approx = (g1-g0)/h
                 error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
+
+            # Value
+            func.eval(net.get_var_values())
+            phi = 0
+            dw = 3.1416
+            for bus in net.buses:
+                phi += 0.5*((bus.v_ang/dw)**2.)
+            for branch in net.branches:
+                phi += 0.5*(((branch.bus_from.v_ang-branch.bus_to.v_ang-branch.phase)/dw)**2.)
+            self.assertLess(np.abs(func.phi-phi),1e-10)
+            net.clear_flags()
+            self.assertEqual(net.num_vars,0)
+            func.analyze()
+            func.eval(np.zeros(0))
+            self.assertLess(np.abs(func.phi-phi),1e-10)
 
     def test_func_REG_RATIO(self):
         
@@ -632,7 +682,7 @@ class TestFunctions(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.GEN_PROP_ANY,
                           [pf.GEN_VAR_P,pf.GEN_VAR_Q])
-            self.assertEqual(net.num_vars,2*net.get_num_gens())
+            self.assertEqual(net.num_vars,2*net.get_num_generators())
             self.assertGreater(net.num_vars,0)
              
             x0 = net.get_var_values()
@@ -660,7 +710,7 @@ class TestFunctions(unittest.TestCase):
             self.assertEqual(func.Hcounter,0)
             
             func.analyze()
-            self.assertEqual(func.Hcounter,net.get_num_gens())
+            self.assertEqual(func.Hcounter,net.get_num_generators())
             func.eval(x0)
             self.assertEqual(func.Hcounter,0)
             
@@ -675,7 +725,7 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(g.shape,(net.num_vars,))
             self.assertTrue(type(H) is coo_matrix)
             self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
-            self.assertEqual(H.nnz,net.get_num_gens())
+            self.assertEqual(H.nnz,net.get_num_generators())
             self.assertTrue(np.all(H.row == H.col))
 
             self.assertTrue(not np.any(np.isinf(g)))
@@ -683,15 +733,6 @@ class TestFunctions(unittest.TestCase):
             self.assertTrue(not np.any(np.isinf(H.data)))
             self.assertTrue(not np.any(np.isnan(H.data)))
             
-            # value check
-            val = 0
-            for gen in net.generators:
-                self.assertTrue(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
-                val += (gen.cost_coeff_Q0 + 
-                        gen.cost_coeff_Q1*gen.P +
-                        gen.cost_coeff_Q2*(gen.P**2.))
-            self.assertLess(np.abs(val-f),1e-8)
-
             # Gradient check
             f0 = func.phi
             g0 = func.gphi.copy()
@@ -728,6 +769,26 @@ class TestFunctions(unittest.TestCase):
                 error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
+            # value check
+            val = 0
+            for gen in net.generators:
+                self.assertTrue(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
+                val += (gen.cost_coeff_Q0 + 
+                        gen.cost_coeff_Q1*gen.P +
+                        gen.cost_coeff_Q2*(gen.P**2.))
+            self.assertLess(np.abs(val-f),1e-8)
+            net.clear_flags()
+            self.assertEqual(net.num_vars,0)
+            func.analyze()
+            func.eval(np.zeros(0))
+            val = 0
+            for gen in net.generators:
+                self.assertFalse(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
+                val += (gen.cost_coeff_Q0 + 
+                        gen.cost_coeff_Q1*gen.P +
+                        gen.cost_coeff_Q2*(gen.P**2.))
+            self.assertLess(np.abs(val-func.phi),1e-8)
+
     def test_func_SP_CONTROLS(self):
         
         # Constants
@@ -762,7 +823,7 @@ class TestFunctions(unittest.TestCase):
                           pf.SHUNT_VAR_SUSC)
             self.assertEqual(net.num_vars,
                              (2*net.num_buses +
-                              net.num_gens +
+                              net.num_generators +
                               net.get_num_tap_changers() +
                               net.get_num_phase_shifters() +
                               net.get_num_switched_shunts()))
@@ -790,7 +851,7 @@ class TestFunctions(unittest.TestCase):
                           pf.SHUNT_VAR_SUSC)
             self.assertEqual(net.num_sparse,
                              (2*net.num_buses +
-                              net.num_gens +
+                              net.num_generators +
                               net.get_num_tap_changers() +
                               net.get_num_phase_shifters() +
                               net.get_num_switched_shunts()))
@@ -820,7 +881,7 @@ class TestFunctions(unittest.TestCase):
             self.assertEqual(func.Hcounter,0)
 
             Hcounter_manual = (net.get_num_buses_reg_by_gen() +
-                               net.get_num_gens() + 
+                               net.get_num_generators() + 
                                net.get_num_tap_changers() + 
                                net.get_num_phase_shifters() + 
                                net.get_num_switched_shunts())
@@ -1224,16 +1285,6 @@ class TestFunctions(unittest.TestCase):
             self.assertTrue(not np.any(np.isinf(H.data)))
             self.assertTrue(not np.any(np.isnan(H.data)))
             
-            # value check
-            val = 0
-            for load in net.loads:
-                self.assertTrue(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
-                val += (load.util_coeff_Q0 + 
-                        load.util_coeff_Q1*load.P +
-                        load.util_coeff_Q2*(load.P**2.))
-            net.update_properties()
-            self.assertLess(np.abs(val-f),1e-7)
-
             # Gradient check
             f0 = func.phi
             g0 = func.gphi.copy()
@@ -1269,6 +1320,26 @@ class TestFunctions(unittest.TestCase):
                 Hd_approx = (g1-g0)/h
                 error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
+
+            # value check
+            val = 0
+            for load in net.loads:
+                self.assertTrue(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+                val += (load.util_coeff_Q0 + 
+                        load.util_coeff_Q1*load.P +
+                        load.util_coeff_Q2*(load.P**2.))
+            self.assertLess(np.abs(val-f),1e-7)
+            net.clear_flags()
+            self.assertEqual(net.num_vars,0)
+            func.analyze()
+            func.eval(np.zeros(0))
+            val = 0
+            for load in net.loads:
+                self.assertFalse(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+                val += (load.util_coeff_Q0 + 
+                        load.util_coeff_Q1*load.P +
+                        load.util_coeff_Q2*(load.P**2.))
+            self.assertLess(np.abs(val-func.phi),1e-7)
 
     def test_func_NETCON_COST(self):
         
@@ -1314,9 +1385,9 @@ class TestFunctions(unittest.TestCase):
                           pf.BAT_VAR_P)
             self.assertEqual(net.num_vars,
                              (net.num_loads+
-                              net.num_gens+
-                              net.num_vargens+
-                              2*net.num_bats))
+                              net.num_generators+
+                              net.num_var_generators+
+                              2*net.num_batteries))
             self.assertGreater(net.num_vars,0)
              
             x0 = net.get_var_values()
@@ -1370,13 +1441,13 @@ class TestFunctions(unittest.TestCase):
                 for load in bus.loads:
                     self.assertTrue(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
                     val += bus.price*load.P
-                for bat in bus.bats:
+                for bat in bus.batteries:
                     self.assertTrue(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P))
                     val += bus.price*bat.P
-                for gen in bus.gens:
+                for gen in bus.generators:
                     self.assertTrue(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
                     val -= bus.price*gen.P
-                for vargen in bus.vargens:
+                for vargen in bus.var_generators:
                     self.assertTrue(vargen.has_flags(pf.FLAG_VARS,pf.VARGEN_VAR_P))
                     val -= bus.price*vargen.P
             self.assertLess(100*np.abs(val-f)/np.abs(f),1e-8)
@@ -1419,13 +1490,13 @@ class TestFunctions(unittest.TestCase):
                 for load in bus.loads:
                     self.assertFalse(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
                     val += bus.price*load.P
-                for bat in bus.bats:
+                for bat in bus.batteries:
                     self.assertFalse(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P))
                     val += bus.price*bat.P
-                for gen in bus.gens:
+                for gen in bus.generators:
                     self.assertFalse(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
                     val -= bus.price*gen.P
-                for vargen in bus.vargens:
+                for vargen in bus.var_generators:
                     self.assertFalse(vargen.has_flags(pf.FLAG_VARS,pf.VARGEN_VAR_P))
                     val -= bus.price*vargen.P
             self.assertLess(100*np.abs(val-func.phi)/np.abs(f),1e-8)
@@ -1470,6 +1541,10 @@ class TestFunctions(unittest.TestCase):
             # Network changes
             net.load(case)
 
+            # Gen powers
+            for gen in net.generators:
+                gen.P = gen.P + 0.01
+
             # Before updating network
             list(map(lambda f: f.clear_error(),functions))
             for f in functions:
@@ -1493,12 +1568,11 @@ class TestFunctions(unittest.TestCase):
             list(map(lambda f: f.eval(x0),functions))
 
             for f in functions:
-                self.assertEqual(f.phi,0.)
                 self.assertTrue(isinstance(f.gphi,np.ndarray))
                 self.assertTrue(isinstance(f.Hphi,coo_matrix))
                 self.assertEqual(f.gphi.size,0)
                 self.assertEqual(f.Hphi.nnz,0)
-
+                
             # Add variables
             net.set_flags(pf.OBJ_BUS,
                           pf.FLAG_VARS,
@@ -1526,7 +1600,7 @@ class TestFunctions(unittest.TestCase):
                           pf.SHUNT_VAR_SUSC)
             self.assertEqual(net.num_vars,
                              (2*net.num_buses + 
-                              2*net.num_gens +
+                              2*net.num_generators +
                               net.num_loads +
                               net.get_num_tap_changers()+
                               net.get_num_phase_shifters()+

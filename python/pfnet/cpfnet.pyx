@@ -3797,6 +3797,7 @@ cdef class Function:
         Analyzes function and allocates required vectors and matrices.
         """
 
+        cfunc.FUNC_del_matvec(self._c_func)
         cfunc.FUNC_count(self._c_func)
         cfunc.FUNC_allocate(self._c_func)
         cfunc.FUNC_analyze(self._c_func)
@@ -3945,7 +3946,8 @@ cdef class Constraint:
         """
         Analyzes constraint and allocates required vectors and matrices.
         """
-        
+
+        cconstr.CONSTR_del_matvec(self._c_constr)        
         cconstr.CONSTR_count(self._c_constr)
         cconstr.CONSTR_allocate(self._c_constr)     
         cconstr.CONSTR_analyze(self._c_constr)
