@@ -116,7 +116,9 @@ void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty
   }
 
   // Clear
+  VARGEN_hash_name_del(net->vargen_hash_name);
   VARGEN_array_del(net->vargen,net->num_vargens);
+  net->vargen_hash_name = NULL;
   net->vargen = NULL;
   net->num_vargens = 0;
   
@@ -819,7 +821,7 @@ void NET_init(Net* net, int num_periods) {
   net->bus_hash_number = NULL;
   net->bus_hash_name = NULL;
   net->vargen_hash_name = NULL;
-
+  
   // Number of components
   net->num_buses = 0;
   net->num_branches = 0;
@@ -1798,18 +1800,18 @@ void NET_set_vargen_array(Net* net, Vargen* gen, int num) {
 
   if (net) {
 
-    // Clear vargens
+    // Clear vargens connections to buses
     for (i = 0; i < net->num_buses; i++)
       BUS_clear_vargen(NET_get_bus(net,i));
+
+    // Clear hash
+    VARGEN_hash_name_del(net->vargen_hash_name);
+    net->vargen_hash_name = NULL;
 
     // Clear array
     VARGEN_array_del(net->vargen,net->num_vargens);
     net->vargen = NULL;
     net->num_vargens = 0;
-
-    // Clear hash
-    VARGEN_hash_name_del(net->vargen_hash_name);
-    net->vargen_hash_name = NULL;
 
     // Check hash length
     if (VARGEN_hash_name_len(net->vargen_hash_name) != 0) {

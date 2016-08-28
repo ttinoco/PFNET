@@ -16,17 +16,20 @@ class TestNetwork(unittest.TestCase):
     
     def setUp(self):
         
-        # Network
+        # Networks
+        self.T = 10
         self.net = pf.Network()
+        self.netMP = pf.Network(self.T)
 
     def test_network(self):
 
+        # Single period
         net = self.net
 
         for case in test_cases.CASES:
 
             net.clear_properties()
-
+            
             self.assertEqual(net.bus_v_max,0.)
             self.assertEqual(net.bus_v_min,0.)
             self.assertEqual(net.bus_P_mis,0.)
@@ -94,9 +97,57 @@ class TestNetwork(unittest.TestCase):
                              len([g for g in net.generators if g.P_min < g.P_max]))
             self.assertEqual(net.get_num_P_adjust_loads(),
                              len([l for l in net.loads if l.P_min < l.P_max]))
+        
+        # Multi period
+        net = self.netMP
+
+        for case in test_cases.CASES:
+
+            net.clear_properties()
+            
+            self.assertEqual(net.num_periods,self.T)
+
+            # prop type
+            self.assertTrue(isinstance(net.bus_v_max,np.ndarray))
+            self.assertTrue(isinstance(net.bus_v_min,np.ndarray))
+            self.assertTrue(isinstance(net.bus_v_vio,np.ndarray))
+            self.assertTrue(isinstance(net.bus_P_mis,np.ndarray))
+            self.assertTrue(isinstance(net.bus_Q_mis,np.ndarray))
+            self.assertTrue(isinstance(net.gen_P_cost,np.ndarray))
+            self.assertTrue(isinstance(net.gen_v_dev,np.ndarray))
+            self.assertTrue(isinstance(net.gen_Q_vio,np.ndarray))
+            self.assertTrue(isinstance(net.gen_P_vio,np.ndarray))
+            self.assertTrue(isinstance(net.tran_v_vio,np.ndarray))
+            self.assertTrue(isinstance(net.tran_r_vio,np.ndarray))
+            self.assertTrue(isinstance(net.tran_p_vio,np.ndarray))
+            self.assertTrue(isinstance(net.shunt_v_vio,np.ndarray))
+            self.assertTrue(isinstance(net.shunt_b_vio,np.ndarray))
+            self.assertTrue(isinstance(net.load_P_util,np.ndarray))
+            self.assertTrue(isinstance(net.load_P_vio,np.ndarray))
+            self.assertTrue(isinstance(net.num_actions,np.ndarray))
+
+            # prop shape
+            self.assertTupleEqual(net.bus_v_max.shape,(self.T,))
+            self.assertTupleEqual(net.bus_v_min.shape,(self.T,))
+            self.assertTupleEqual(net.bus_v_vio.shape,(self.T,))
+            self.assertTupleEqual(net.bus_P_mis.shape,(self.T,))
+            self.assertTupleEqual(net.bus_Q_mis.shape,(self.T,))
+            self.assertTupleEqual(net.gen_P_cost.shape,(self.T,))
+            self.assertTupleEqual(net.gen_v_dev.shape,(self.T,))
+            self.assertTupleEqual(net.gen_Q_vio.shape,(self.T,))
+            self.assertTupleEqual(net.gen_P_vio.shape,(self.T,))
+            self.assertTupleEqual(net.tran_v_vio.shape,(self.T,))
+            self.assertTupleEqual(net.tran_r_vio.shape,(self.T,))
+            self.assertTupleEqual(net.tran_p_vio.shape,(self.T,))
+            self.assertTupleEqual(net.shunt_v_vio.shape,(self.T,))
+            self.assertTupleEqual(net.shunt_b_vio.shape,(self.T,))
+            self.assertTupleEqual(net.load_P_util.shape,(self.T,))
+            self.assertTupleEqual(net.load_P_vio.shape,(self.T,))
+            self.assertTupleEqual(net.num_actions.shape,(self.T,))
 
     def test_variables(self):
 
+        # Single period
         net = self.net
 
         for case in test_cases.CASES:
@@ -181,6 +232,71 @@ class TestNetwork(unittest.TestCase):
             for bat in net.batteries:
                 self.assertTrue(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P))
                 self.assertTrue(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_E))
+
+        # Multi period
+        net = self.netMP
+
+        for case in test_cases.CASES:
+
+            net.clear_properties()
+            net.load(case)
+            net.clear_flags()
+
+            # add vargens
+            net.add_vargens(net.get_load_buses(),50.,30.,5,0.05)
+            self.assertGreater(net.num_var_generators,0)
+
+            net.set_flags(pf.OBJ_BUS,
+                          pf.FLAG_VARS,
+                          pf.BUS_PROP_ANY,
+                          [pf.BUS_VAR_VMAG,
+                           pf.BUS_VAR_VANG,
+                           pf.BUS_VAR_VDEV,
+                           pf.BUS_VAR_VVIO])
+
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_VARS,
+                          pf.BRANCH_PROP_ANY,
+                          [pf.BRANCH_VAR_RATIO,
+                           pf.BRANCH_VAR_RATIO_DEV,
+                           pf.BRANCH_VAR_PHASE])
+
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_ANY,
+                          [pf.GEN_VAR_P,
+                           pf.GEN_VAR_Q])
+
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_VARS,
+                          pf.LOAD_PROP_ANY,
+                          [pf.LOAD_VAR_P])
+
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          [pf.VARGEN_VAR_P,
+                           pf.VARGEN_VAR_Q])
+
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          [pf.BAT_VAR_P,
+                           pf.BAT_VAR_E])
+
+            net.set_flags(pf.OBJ_SHUNT,
+                          pf.FLAG_VARS,
+                          pf.SHUNT_PROP_ANY,
+                          [pf.SHUNT_VAR_SUSC,
+                           pf.SHUNT_VAR_SUSC_DEV])
+
+            self.assertEqual(net.num_vars,self.T*(net.num_buses*6+
+                                                  net.num_branches*4+
+                                                  net.num_generators*2+
+                                                  net.num_loads*1+
+                                                  net.num_batteries*3+
+                                                  net.num_var_generators*2+
+                                                  net.num_shunts*3))                            
 
     def test_buses(self):
 
@@ -658,6 +774,7 @@ class TestNetwork(unittest.TestCase):
 
     def test_vargens(self):
 
+        # Single period
         net = self.net
 
         for case in test_cases.CASES:

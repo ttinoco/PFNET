@@ -179,7 +179,7 @@ cdef class Bus:
     
     cdef cbus.Bus* _c_ptr
 
-    def __init__(self,alloc=True,num_periods=1):
+    def __init__(self,num_periods=1,alloc=True):
         """
         Bus class.
         
@@ -191,7 +191,7 @@ cdef class Bus:
         
         pass
 
-    def __cinit__(self,alloc=True,num_periods=1):
+    def __cinit__(self,num_periods=1,alloc=True):
 
         if alloc:
             self._c_ptr = cbus.BUS_new(num_periods)
@@ -890,7 +890,7 @@ cdef class Branch:
 
     cdef cbranch.Branch* _c_ptr
 
-    def __init__(self,alloc=True,num_periods=1):
+    def __init__(self,num_periods=1,alloc=True):
         """
         Branch class.
 
@@ -902,7 +902,7 @@ cdef class Branch:
 
         pass
 
-    def __cinit__(self,alloc=True,num_periods=1):
+    def __cinit__(self,num_periods=1,alloc=True):
 
         if alloc:
             self._c_ptr = cbranch.BRANCH_new(num_periods)
@@ -1271,7 +1271,7 @@ cdef class Generator:
 
     cdef cgen.Gen* _c_ptr
 
-    def __init__(self,alloc=True,num_periods=1):
+    def __init__(self,num_periods=1,alloc=True):
         """
         Generator class.
 
@@ -1283,7 +1283,7 @@ cdef class Generator:
 
         pass
 
-    def __cinit__(self,alloc=True,num_periods=1):
+    def __cinit__(self,num_periods=1,alloc=True):
 
         if alloc:
             self._c_ptr = cgen.GEN_new(num_periods)
@@ -1563,7 +1563,7 @@ cdef class Shunt:
 
     cdef cshunt.Shunt* _c_ptr
 
-    def __init__(self,alloc=True,num_periods=1):
+    def __init__(self,num_periods=1,alloc=True):
         """
         Shunt class.
 
@@ -1575,7 +1575,7 @@ cdef class Shunt:
 
         pass
 
-    def __cinit__(self,alloc=True,num_periods=1):
+    def __cinit__(self,num_periods=1,alloc=True):
 
         if alloc:
             self._c_ptr = cshunt.SHUNT_new(num_periods)
@@ -1734,7 +1734,7 @@ cdef class Load:
 
     cdef cload.Load* _c_ptr
 
-    def __init__(self,alloc=True,num_periods=1):
+    def __init__(self,num_periods=1,alloc=True):
         """
         Load class.
 
@@ -1746,7 +1746,7 @@ cdef class Load:
 
         pass
 
-    def __cinit__(self,alloc=True,num_periods=1):
+    def __cinit__(self,num_periods=1,alloc=True):
 
         if alloc:
             self._c_ptr = cload.LOAD_new(num_periods)
@@ -1929,7 +1929,7 @@ cdef class VarGenerator:
 
     cdef cvargen.Vargen* _c_ptr
 
-    def __init__(self,alloc=True,num_periods=1):
+    def __init__(self,num_periods=1,alloc=True):
         """
         Variable generator class.
 
@@ -1941,7 +1941,7 @@ cdef class VarGenerator:
 
         pass
 
-    def __cinit__(self,alloc=True,num_periods=1):
+    def __cinit__(self,num_periods=1,alloc=True):
         
         if alloc:
             self._c_ptr = cvargen.VARGEN_new(num_periods)
@@ -2111,7 +2111,7 @@ cdef class Battery:
 
     cdef cbat.Bat* _c_ptr
 
-    def __init__(self,alloc=True,num_periods=1):
+    def __init__(self,num_periods=1,alloc=True):
         """
         Battery class.
 
@@ -2123,7 +2123,7 @@ cdef class Battery:
 
         pass
 
-    def __cinit__(self,alloc=True,num_periods=1):
+    def __cinit__(self,num_periods=1,alloc=True):
         
         if alloc:
             self._c_ptr = cbat.BAT_new(num_periods)
@@ -2276,7 +2276,7 @@ cdef class Network:
     cdef cnet.Net* _c_net
     cdef bint alloc
 
-    def __init__(self,alloc=True,num_periods=1):
+    def __init__(self,num_periods=1,alloc=True):
         """
         Network class.
 
@@ -2288,7 +2288,7 @@ cdef class Network:
 
         pass
      
-    def __cinit__(self,alloc=True,num_periods=1):
+    def __cinit__(self,num_periods=1,alloc=True):
 
         if alloc:
             self._c_net = cnet.NET_new(num_periods)
@@ -3544,7 +3544,7 @@ cdef class Graph:
 
         pass
      
-    def __cinit__(self,Network net, alloc=True):
+    def __cinit__(self,Network net,alloc=True):
         
         self._c_net = net._c_net
         if alloc:
@@ -3738,7 +3738,7 @@ cdef class Function:
     cdef cfunc.Func* _c_func
     cdef bint alloc
 
-    def __init__(self, int type, float weight, Network net, alloc=True):
+    def __init__(self,int type,float weight,Network net,alloc=True):
         """
         Function class.
         
@@ -3752,7 +3752,7 @@ cdef class Function:
 
         pass
      
-    def __cinit__(self, int type, float weight, Network net, alloc=True):
+    def __cinit__(self,int type,float weight,Network net,alloc=True):
         
         if alloc:
             self._c_func = cfunc.FUNC_new(type,weight,net._c_net)
@@ -3888,7 +3888,7 @@ cdef class Constraint:
     cdef cnet.Net* _c_net
     cdef bint alloc
 
-    def __init__(self,int type, Network net, alloc=True):
+    def __init__(self,int type,Network net,alloc=True):
         """
         Contraint class.
 
@@ -3901,7 +3901,7 @@ cdef class Constraint:
 
         pass
      
-    def __cinit__(self,int type, Network net, alloc=True):
+    def __cinit__(self,int type,Network net,alloc=True):
 
         self._c_net = net._c_net
         if alloc:

@@ -18,6 +18,7 @@ Unreleased
 * Branch AC flow getters.
 * Name changes in Python wrapper (trying to eliminate abbreviations, e.g. gens, bats, etc).
 * Improved memory management and bookeeing when adding variable generators.
+* Battery initial and final energy levels.
 
 Version 1.2.3
 -------------
