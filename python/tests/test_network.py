@@ -300,6 +300,7 @@ class TestNetwork(unittest.TestCase):
 
     def test_buses(self):
 
+        # Single period
         net = self.net
 
         for case in test_cases.CASES:
@@ -486,8 +487,64 @@ class TestNetwork(unittest.TestCase):
             sum_deg = 0
             for i in range(net.num_buses):
                 sum_deg += net.get_bus(i).degree
-            self.assertEqual(sum_deg,2*net.num_branches)                
-                            
+            self.assertEqual(sum_deg,2*net.num_branches)
+
+        # Multi period
+        net = self.netMP
+
+        for case in test_cases.CASES:
+
+            net.clear_properties()
+            net.load(case)
+            net.clear_flags()
+
+            for bus in net.buses:
+                
+                self.assertEqual(bus.num_periods,self.T)
+                
+                # Propagation
+                for t in range(1,self.T):
+                    self.assertEqual(bus.v_mag[t],bus.v_mag[0])
+                    self.assertEqual(bus.v_ang[t],bus.v_ang[0])
+                    self.assertEqual(bus.v_set[t],bus.v_set[0])
+                    self.assertEqual(bus.price[t],bus.price[0])
+            
+                # Set
+                x = np.random.randn(self.T)
+                bus.v_mag = x
+                for t in range(self.T):
+                    self.assertEqual(bus.v_mag[t],x[t])
+                x = np.random.randn(self.T)
+                bus.v_ang = x
+                for t in range(self.T):
+                    self.assertEqual(bus.v_ang[t],x[t])
+                x = np.random.randn(self.T)
+                bus.price = x
+                for t in range(self.T):
+                    self.assertEqual(bus.price[t],x[t])
+
+            # Indexing
+            net.set_flags(pf.OBJ_BUS,
+                          pf.FLAG_VARS,
+                          pf.BUS_PROP_ANY,
+                          [pf.BUS_VAR_VMAG,
+                           pf.BUS_VAR_VANG,
+                           pf.BUS_VAR_VDEV,
+                           pf.BUS_VAR_VVIO])
+
+            index = 0
+            for bus in net.buses:
+                self.assertTrue(np.all(bus.index_v_mag == range(index,index+self.T)))
+                index += self.T
+                self.assertTrue(np.all(bus.index_v_ang == range(index,index+self.T)))
+                index += self.T
+                self.assertTrue(np.all(bus.index_y == range(index,index+2*self.T,2)))
+                self.assertTrue(np.all(bus.index_z == range(index+1,index+2*self.T,2)))
+                index += 2*self.T
+                self.assertTrue(np.all(bus.index_vl == range(index,index+2*self.T,2)))
+                self.assertTrue(np.all(bus.index_vh == range(index+1,index+2*self.T,2)))
+                index += 2*self.T
+            
     def test_gens(self):
 
         net = self.net
