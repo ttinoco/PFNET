@@ -151,18 +151,18 @@ class TestFlags(unittest.TestCase):
             self.assertEqual(net.num_vars,num_vars)
 
             # Vargens
-            self.assertGreater(net.num_vargens,0)
+            self.assertGreater(net.num_var_generators,0)
             net.set_flags(pf.OBJ_VARGEN,
                           pf.FLAG_VARS,
                           pf.VARGEN_PROP_ANY,
                           pf.VARGEN_VAR_P)
-            num_vars += net.num_vargens
+            num_vars += net.num_var_generators
             self.assertEqual(net.num_vars,num_vars)
             net.set_flags(pf.OBJ_VARGEN,
                           pf.FLAG_VARS,
                           pf.VARGEN_PROP_ANY,
                           pf.VARGEN_VAR_Q)
-            num_vars += net.num_vargens
+            num_vars += net.num_var_generators
             self.assertEqual(net.num_vars,num_vars)
             net.set_flags(pf.OBJ_VARGEN,
                           pf.FLAG_VARS,
@@ -176,7 +176,7 @@ class TestFlags(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.BAT_PROP_ANY,
                           pf.BAT_VAR_P|pf.BAT_VAR_E)
-            num_vars += 3*net.num_bats
+            num_vars += 3*net.num_batteries
             self.assertEqual(net.num_vars,num_vars)
 
             net.set_flags(pf.OBJ_BAT,
@@ -238,7 +238,7 @@ class TestFlags(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.GEN_PROP_ANY,
                           pf.GEN_VAR_Q)
-            num_vars += net.num_gens
+            num_vars += net.num_generators
             self.assertEqual(num_vars,net.num_vars)
 
             net.set_flags(pf.OBJ_LOAD,
@@ -259,14 +259,14 @@ class TestFlags(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.VARGEN_PROP_ANY,
                           pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
-            num_vars += net.num_vargens*2
+            num_vars += net.num_var_generators*2
             self.assertEqual(num_vars,net.num_vars)
 
             net.set_flags(pf.OBJ_BAT,
                           pf.FLAG_VARS,
                           pf.BAT_PROP_ANY,
                           pf.BAT_VAR_P|pf.BAT_VAR_E)
-            num_vars += 3*net.num_bats
+            num_vars += 3*net.num_batteries
             self.assertEqual(net.num_vars,num_vars)
  
             point = net.get_var_values()
@@ -297,7 +297,7 @@ class TestFlags(unittest.TestCase):
                 self.assertEqual(point[l.index_P],l.P)
 
             # check bats
-            for i in range(net.num_bats):
+            for i in range(net.num_batteries):
                 b = net.get_bat(i)
                 self.assertTrue(b.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P))
                 self.assertTrue(b.has_flags(pf.FLAG_VARS,pf.BAT_VAR_E))
@@ -378,7 +378,7 @@ class TestFlags(unittest.TestCase):
                               net.get_num_slack_gens() +
                               net.num_shunts +
                               net.num_loads+
-                              net.num_bats))
+                              net.num_batteries))
                              
             # loads
             for load in net.loads:
@@ -438,12 +438,12 @@ class TestFlags(unittest.TestCase):
             
             self.assertEqual(net.num_fixed,
                              (net.get_num_buses_reg_by_gen()*2 + 
-                              net.num_gens - net.get_num_reg_gens() + 
+                              net.num_generators - net.get_num_reg_gens() + 
                               net.get_num_phase_shifters() +
                               net.get_num_switched_shunts()+
-                              net.num_vargens*2 +
+                              net.num_var_generators*2 +
                               net.num_loads+
-                              3*net.num_bats))
+                              3*net.num_batteries))
 
             # loads
             for load in net.loads:
@@ -510,7 +510,7 @@ class TestFlags(unittest.TestCase):
 
             # add vargens
             net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
-            self.assertGreater(net.num_vargens,0)
+            self.assertGreater(net.num_var_generators,0)
 
             self.assertEqual(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
@@ -572,7 +572,7 @@ class TestFlags(unittest.TestCase):
                     self.assertFalse(gen.has_flags(pf.FLAG_FIXED,pf.GEN_VAR_P))
                 else:
                     self.assertFalse(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
-            num_vars += net.num_gens-net.get_num_reg_gens()
+            num_vars += net.num_generators-net.get_num_reg_gens()
             self.assertEqual(net.num_vars,num_vars)
             self.assertEqual(net.num_fixed,num_fixed)
 
