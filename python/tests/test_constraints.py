@@ -40,7 +40,7 @@ class TestConstraints(unittest.TestCase):
             for vargen in net.var_generators:
                 vargen.P = vargen.index*1.5
                 vargen.Q = vargen.index*2.5
-            self.assertGreater(net.num_vargens,0)
+            self.assertGreater(net.num_var_generators,0)
 
             self.assertEqual(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
@@ -91,8 +91,8 @@ class TestConstraints(unittest.TestCase):
                              net.get_num_tap_changers() +
                              net.get_num_phase_shifters() +
                              net.get_num_switched_shunts() +
-                             net.num_vargens*2+
-                             3*net.num_bats+
+                             net.num_var_generators*2+
+                             3*net.num_batteries+
                              net.num_loads)
             
             # Fixed
@@ -140,8 +140,8 @@ class TestConstraints(unittest.TestCase):
                              net.get_num_tap_changers() +
                              net.get_num_phase_shifters() +
                              net.get_num_switched_shunts() +
-                             net.num_vargens*2+
-                             3*net.num_bats+
+                             net.num_var_generators*2+
+                             3*net.num_batteries+
                              net.num_loads)
             
             x0 = net.get_var_values()
@@ -270,7 +270,7 @@ class TestConstraints(unittest.TestCase):
             for vargen in net.var_generators:
                 vargen.P = vargen.index*1.5
                 vargen.Q = vargen.index*2.5
-            self.assertGreater(net.num_vargens,0)
+            self.assertGreater(net.num_var_generators,0)
             
             self.assertEqual(net.num_bounded,0)
             self.assertEqual(net.num_vars,0)
@@ -324,8 +324,8 @@ class TestConstraints(unittest.TestCase):
                              net.get_num_tap_changers()*3 +
                              net.get_num_phase_shifters()*1 +
                              net.get_num_switched_shunts()*3 +
-                             net.num_vargens*2+
-                             3*net.num_bats)
+                             net.num_var_generators*2+
+                             3*net.num_batteries)
 
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -772,8 +772,8 @@ class TestConstraints(unittest.TestCase):
             for i in range(net.num_buses):
                 bus = net.get_bus(i)
                 if bus.is_slack():
-                    num_constr += len(bus.gens)-1 # P participation
-                    nnz += 2*(len(bus.gens)-1)
+                    num_constr += len(bus.generators)-1 # P participation
+                    nnz += 2*(len(bus.generators)-1)
             
             constr.analyze()
             self.assertEqual(nnz,constr.Acounter)
@@ -817,7 +817,7 @@ class TestConstraints(unittest.TestCase):
                         continue
                     counted[bus.number] = True
                     if bus.is_slack():
-                        gens = bus.gens
+                        gens = bus.generators
                         self.assertGreater(len(gens),0)
                         g1 = gens[0]
                         for g2 in gens[1:]:
@@ -838,8 +838,8 @@ class TestConstraints(unittest.TestCase):
             for i in range(net.num_buses):
                 bus = net.get_bus(i)
                 if bus.is_slack():
-                    self.assertGreater(len(bus.gens),0)
-                    for g in bus.gens:
+                    self.assertGreater(len(bus.generators),0)
+                    for g in bus.generators:
                         self.assertTrue(g.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
                         x[g.index_P] = 10.
             self.assertGreater(norm(x),0)
@@ -899,8 +899,8 @@ class TestConstraints(unittest.TestCase):
             for i in range(net.num_buses):
                 bus = net.get_bus(i)
                 if bus.is_regulated_by_gen():
-                    num_constr += len(bus.reg_gens)-1 # Q participation
-                    nnz += 2*(len(bus.reg_gens)-1)
+                    num_constr += len(bus.reg_generators)-1 # Q participation
+                    nnz += 2*(len(bus.reg_generators)-1)
             
             constr.analyze()
             self.assertEqual(nnz,constr.Acounter)
@@ -944,7 +944,7 @@ class TestConstraints(unittest.TestCase):
                         continue
                     counted[bus.number] = True
                     if bus.is_regulated_by_gen():
-                        reg_gens = bus.reg_gens
+                        reg_gens = bus.reg_generators
                         self.assertGreater(len(reg_gens),0)
                         g1 = reg_gens[0]
                         self.assertGreater(g1.Q_max,g1.Q_min)
@@ -967,8 +967,8 @@ class TestConstraints(unittest.TestCase):
             for i in range(net.num_buses):
                 bus = net.get_bus(i)
                 if bus.is_regulated_by_gen():
-                    self.assertGreater(len(bus.reg_gens),0)
-                    for g in bus.reg_gens:
+                    self.assertGreater(len(bus.reg_generators),0)
+                    for g in bus.reg_generators:
                         self.assertTrue(g.has_flags(pf.FLAG_VARS,pf.GEN_VAR_Q))
                         x[g.index_Q] = (g.Q_max+g.Q_min)/2.
             self.assertTrue(norm(A*x-b) < 1e-10)
@@ -984,11 +984,17 @@ class TestConstraints(unittest.TestCase):
             
             net.load(case)
 
+            # load
+            if sum([l.P for l in net.loads]) < 0:
+                lmin = np.min([l.P for l in net.loads])
+                for l in net.loads:
+                    l.P = l.P + np.abs(lmin)
+
             # add vargens
             load_buses = net.get_load_buses()
             net.add_vargens(load_buses,50.,30.,5,0.05)
-            self.assertGreater(net.num_vargens,0)
-            self.assertEqual(net.num_vargens,len(load_buses))
+            self.assertGreater(net.num_var_generators,0)
+            self.assertEqual(net.num_var_generators,len(load_buses))
             for vargen in net.var_generators:
                 vargen.Q = np.abs(vargen.P)
                 self.assertGreater(vargen.Q,0.)
@@ -1029,7 +1035,7 @@ class TestConstraints(unittest.TestCase):
                              net.get_num_tap_changers() +
                              net.get_num_phase_shifters() +
                              net.get_num_switched_shunts() +
-                             net.num_vargens*2)
+                             net.num_var_generators*2)
 
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -1070,7 +1076,7 @@ class TestConstraints(unittest.TestCase):
                         net.get_num_switched_shunts() +
                         net.get_num_slack_gens() +
                         net.get_num_reg_gens()+
-                        net.num_vargens*2)
+                        net.num_var_generators*2)
             
             constr.analyze()
             self.assertEqual(num_Jnnz,constr.Jcounter)
@@ -1303,7 +1309,7 @@ class TestConstraints(unittest.TestCase):
             for i in range(net.num_buses):
                 bus = net.get_bus(i)
                 if bus.is_regulated_by_gen() and not bus.is_slack():
-                    Jnnz += 2 + 2*len(bus.reg_gens)
+                    Jnnz += 2 + 2*len(bus.reg_generators)
                     
             Annz = 3*(net.get_num_buses_reg_by_gen()-net.get_num_slack_buses())
             
@@ -1485,7 +1491,7 @@ class TestConstraints(unittest.TestCase):
                           pf.SHUNT_VAR_SUSC)
             self.assertEqual(net.num_vars,
                              2*net.num_buses +
-                             2*net.num_gens +
+                             2*net.num_generators +
                              net.get_num_tap_changers() +
                              net.get_num_phase_shifters() +
                              net.get_num_switched_shunts())
@@ -1513,7 +1519,7 @@ class TestConstraints(unittest.TestCase):
                           pf.SHUNT_VAR_SUSC)
             self.assertEqual(net.num_bounded,
                              2*net.num_buses +
-                             2*net.num_gens +
+                             2*net.num_generators +
                              net.get_num_tap_changers() +
                              net.get_num_phase_shifters() +
                              net.get_num_switched_shunts())
@@ -2244,11 +2250,11 @@ class TestConstraints(unittest.TestCase):
                           pf.BAT_VAR_P|pf.BAT_VAR_E)
             self.assertEqual(net.num_vars,
                              (2*net.num_buses + 
-                              2*net.num_gens +
+                              2*net.num_generators +
                               net.get_num_tap_changers()+
                               net.get_num_phase_shifters()+
                               net.get_num_switched_shunts()+
-                              3*net.num_bats))
+                              3*net.num_batteries))
 
             x0 = net.get_var_values()
 
@@ -2286,12 +2292,12 @@ class TestConstraints(unittest.TestCase):
             # Add vargens
             load_buses = net.get_load_buses()
             net.add_vargens(load_buses,50.,30.,5,0.05)
-            self.assertGreater(net.num_vargens,0)
-            self.assertEqual(net.num_vargens,len([b for b in net.buses if b.loads]))
+            self.assertGreater(net.num_var_generators,0)
+            self.assertEqual(net.num_var_generators,len([b for b in net.buses if b.loads]))
             for b in net.buses:
                 if b.loads:
-                    self.assertGreater(len(b.vargens),0)
-                    for vargen in b.vargens:
+                    self.assertGreater(len(b.var_generators),0)
+                    for vargen in b.var_generators:
                         self.assertEqual(vargen.bus,b)
 
             # batteries
@@ -2326,11 +2332,11 @@ class TestConstraints(unittest.TestCase):
                           pf.BAT_VAR_P)
             self.assertEqual(net.num_vars,
                              (net.num_buses-net.get_num_slack_buses() +
-                              net.num_gens +
+                              net.num_generators +
                               net.num_loads + 
-                              net.num_vargens +
+                              net.num_var_generators +
                               net.get_num_phase_shifters()+
-                              2*net.num_bats))
+                              2*net.num_batteries))
             
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -2375,13 +2381,13 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.Jconstr_index,0)
             self.assertEqual(constr.Aconstr_index,0)
             self.assertEqual(constr.Acounter,
-                             (net.num_gens +
+                             (net.num_generators +
                               net.num_loads + 
-                              net.num_vargens +
+                              net.num_var_generators +
                               4*net.num_branches - 
                               2*r +
                               2*net.get_num_phase_shifters()+
-                              2*net.num_bats))
+                              2*net.num_batteries))
             self.assertTupleEqual(b.shape,(net.num_buses,))
             self.assertTupleEqual(f.shape,(0,))
             self.assertTupleEqual(A.shape,(net.num_buses,net.num_vars))
@@ -2391,13 +2397,13 @@ class TestConstraints(unittest.TestCase):
             constr.eval(x0)
             self.assertEqual(constr.Acounter,0)
             self.assertEqual(A.nnz,
-                             (net.num_gens +
+                             (net.num_generators +
                               net.num_loads + 
-                              net.num_vargens +
+                              net.num_var_generators +
                               4*net.num_branches - 
                               2*r +
                               2*net.get_num_phase_shifters()+
-                              2*net.num_bats))
+                              2*net.num_batteries))
             
             # Extract pieces
             P1 = net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VANG)
@@ -2437,13 +2443,13 @@ class TestConstraints(unittest.TestCase):
             mismatches = A*x0-b
             for bus in net.buses:
                 mis = 0
-                for gen in bus.gens:
+                for gen in bus.generators:
                     mis += gen.P
-                for vargen in bus.vargens:
+                for vargen in bus.var_generators:
                     mis += vargen.P
                 for load in bus.loads:
                     mis -= load.P
-                for bat in bus.bats:
+                for bat in bus.batteries:
                     mis -= bat.P
                 for br in bus.branches_from:
                     mis -= br.P_flow_DC
@@ -2476,13 +2482,13 @@ class TestConstraints(unittest.TestCase):
             mismatches1 = A1*x1-b1
             for bus in net.buses:
                 mis = 0
-                for gen in bus.gens:
+                for gen in bus.generators:
                     mis += gen.P
-                for vargen in bus.vargens:
+                for vargen in bus.var_generators:
                     mis += vargen.P
                 for load in bus.loads:
                     mis -= load.P
-                for bat in bus.bats:
+                for bat in bus.batteries:
                     mis -= bat.P
                 for br in bus.branches_from:
                     mis -= br.P_flow_DC
@@ -2651,11 +2657,17 @@ class TestConstraints(unittest.TestCase):
             
             net.load(case)
 
+            # load
+            if sum([l.P for l in net.loads]) < 0:
+                lmin = np.min([l.P for l in net.loads])
+                for l in net.loads:
+                    l.P = l.P + np.abs(lmin)
+
             # add vargens
             load_buses = net.get_load_buses()
             net.add_vargens(load_buses,50.,30.,5,0.05)
-            self.assertGreater(net.num_vargens,0)
-            self.assertEqual(net.num_vargens,len(load_buses))
+            self.assertGreater(net.num_var_generators,0)
+            self.assertEqual(net.num_var_generators,len(load_buses))
             for vargen in net.var_generators:
                 vargen.Q = np.abs(vargen.P)
                 self.assertGreater(vargen.Q,0.)
@@ -2696,7 +2708,7 @@ class TestConstraints(unittest.TestCase):
                              net.get_num_tap_changers() +
                              net.get_num_phase_shifters() +
                              net.get_num_switched_shunts() +
-                             net.num_vargens*2)
+                             net.num_var_generators*2)
 
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -2737,7 +2749,7 @@ class TestConstraints(unittest.TestCase):
                         net.get_num_switched_shunts() +
                         net.get_num_slack_gens() +
                         net.get_num_reg_gens()+
-                        net.num_vargens*2)
+                        net.num_var_generators*2)
             
             constr.analyze()
             self.assertEqual(constr.Acounter,0)
