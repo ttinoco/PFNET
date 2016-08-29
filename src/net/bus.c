@@ -806,19 +806,19 @@ Vec* BUS_get_var_indices(void* vbus, char var) {
   int t;
   if (!bus)
     return NULL;
-  if (var == BUS_VAR_VMAG) {
+  if ((var == BUS_VAR_VMAG) && (bus->vars & BUS_VAR_VMAG)) {
     indices = VEC_new(bus->num_periods);
     for (t = 0; t < bus->num_periods; t++)
       VEC_set(indices,t,bus->index_v_mag[t]);
     return indices;
   }
-  if (var == BUS_VAR_VANG) {
+  if ((var == BUS_VAR_VANG) && (bus->vars & BUS_VAR_VANG)) {
     indices = VEC_new(bus->num_periods);
     for (t = 0; t < bus->num_periods; t++)
       VEC_set(indices,t,bus->index_v_ang[t]);
     return indices;
   }
-  if (var == BUS_VAR_VDEV) {
+  if ((var == BUS_VAR_VDEV) && (bus->vars & BUS_VAR_VDEV)) {
     indices = VEC_new(2*bus->num_periods);
     for (t = 0; t < bus->num_periods; t++) {
       VEC_set(indices,2*t,bus->index_y[t]);
@@ -826,7 +826,7 @@ Vec* BUS_get_var_indices(void* vbus, char var) {
     }
     return indices;
   }
-  if (var == BUS_VAR_VVIO) {
+  if ((var == BUS_VAR_VVIO) && (bus->vars & BUS_VAR_VVIO)) {
     indices = VEC_new(2*bus->num_periods);
     for (t = 0; t < bus->num_periods; t++) {
       VEC_set(indices,2*t,bus->index_vl[t]);

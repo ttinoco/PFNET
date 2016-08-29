@@ -251,13 +251,13 @@ Vec* SHUNT_get_var_indices(void* vshunt, char var) {
   int t;
   if (!shunt)
     return NULL;
-  if (var == SHUNT_VAR_SUSC) {
+  if ((var == SHUNT_VAR_SUSC) && (shunt->vars & SHUNT_VAR_SUSC)) {
     indices = VEC_new(shunt->num_periods);
     for (t = 0; t < shunt->num_periods; t++)
       VEC_set(indices,t,shunt->index_b[t]);
     return indices;
   }
-  if (var == SHUNT_VAR_SUSC_DEV) {
+  if ((var == SHUNT_VAR_SUSC_DEV) && (shunt->vars & SHUNT_VAR_SUSC_DEV)) {
     indices = VEC_new(2*shunt->num_periods);
     for (t = 0; t < shunt->num_periods; t++) {
       VEC_set(indices,2*t,shunt->index_y[t]);

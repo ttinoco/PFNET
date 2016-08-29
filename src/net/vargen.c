@@ -265,13 +265,13 @@ Vec* VARGEN_get_var_indices(void* vgen, char var) {
   int t;
   if (!gen)
     return NULL;
-  if (var == VARGEN_VAR_P) {
+  if ((var == VARGEN_VAR_P) && (gen->vars & VARGEN_VAR_P)) {
     indices = VEC_new(gen->num_periods);
     for (t = 0; t < gen->num_periods; t++)
       VEC_set(indices,t,gen->index_P[t]);
     return indices;
   }
-  if (var == VARGEN_VAR_Q) {
+  if ((var == VARGEN_VAR_Q) && (gen->vars & VARGEN_VAR_Q)) {
     indices = VEC_new(gen->num_periods);
     for (t = 0; t < gen->num_periods; t++)
       VEC_set(indices,t,gen->index_Q[t]);

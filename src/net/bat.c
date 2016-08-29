@@ -285,7 +285,7 @@ Vec* BAT_get_var_indices(void* vbat, char var) {
   int t;
   if (!bat)
     return NULL;
-  if (var == BAT_VAR_P) {
+  if ((var == BAT_VAR_P) && (bat->vars & BAT_VAR_P)) {
     indices = VEC_new(2*bat->num_periods);
     for (t = 0; t < bat->num_periods; t++) {
       VEC_set(indices,2*t,bat->index_Pc[t]);
@@ -293,7 +293,7 @@ Vec* BAT_get_var_indices(void* vbat, char var) {
     }
     return indices;
   }
-  if (var == BAT_VAR_E) {
+  if ((var == BAT_VAR_E) && (bat->vars & BAT_VAR_E)) {
     indices = VEC_new(bat->num_periods);
     for (t = 0; t < bat->num_periods; t++)
       VEC_set(indices,t,bat->index_E[t]);

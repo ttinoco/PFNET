@@ -444,19 +444,19 @@ Vec* BRANCH_get_var_indices(void* vbr, char var) {
   int t;
   if (!br)
     return NULL;
-  if (var == BRANCH_VAR_RATIO) {
+  if ((var == BRANCH_VAR_RATIO) && (br->vars & BRANCH_VAR_RATIO)) {
     indices = VEC_new(br->num_periods);
     for (t = 0; t < br->num_periods; t++)
       VEC_set(indices,t,br->index_ratio[t]);
     return indices;
   }
-  if (var == BRANCH_VAR_PHASE) {
+  if ((var == BRANCH_VAR_PHASE) && (br->vars & BRANCH_VAR_PHASE)) {
     indices = VEC_new(br->num_periods);
     for (t = 0; t < br->num_periods; t++)
       VEC_set(indices,t,br->index_phase[t]);
     return indices;
   }
-  if (var == BRANCH_VAR_RATIO_DEV) {
+  if ((var == BRANCH_VAR_RATIO_DEV) && (br->vars & BRANCH_VAR_RATIO_DEV)) {
     indices = VEC_new(2*br->num_periods);
     for (t = 0; t < br->num_periods; t++) {
       VEC_set(indices,2*t,br->index_ratio_y[t]);

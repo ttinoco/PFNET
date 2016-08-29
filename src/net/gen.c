@@ -327,13 +327,13 @@ Vec* GEN_get_var_indices(void* vgen, char var) {
   int t;
   if (!gen)
     return NULL;
-  if (var == GEN_VAR_P) {
+  if ((var == GEN_VAR_P) && (gen->vars & GEN_VAR_P)) {
     indices = VEC_new(gen->num_periods);
     for (t = 0; t < gen->num_periods; t++)
       VEC_set(indices,t,gen->index_P[t]);
     return indices;
   }
-  if (var == GEN_VAR_Q) {
+  if ((var == GEN_VAR_Q) && (gen->vars & GEN_VAR_Q)) {
     indices = VEC_new(gen->num_periods);
     for (t = 0; t < gen->num_periods; t++)
       VEC_set(indices,t,gen->index_Q[t]);
