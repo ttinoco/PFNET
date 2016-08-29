@@ -279,27 +279,40 @@ void BAT_get_var_values(Bat* bat, Vec* values, int code) {
   }
 }
 
+int BAT_get_num_vars(void* vbat, char var) {
+  Bat* bat = (Bat*)vbat;
+  int num_vars = 0;
+  if (!bat)
+    return 0;
+  if ((var & BAT_VAR_P) && (bat->vars & BAT_VAR_P))
+    num_vars += 2*bat->num_periods;
+  if ((var & BAT_VAR_E) && (bat->vars & BAT_VAR_E)) 
+    num_vars += bat->num_periods;
+  return num_vars;
+}
+
 Vec* BAT_get_var_indices(void* vbat, char var) {
   Bat* bat = (Bat*)vbat;
   Vec* indices;
+  int num_vars;
+  int offset = 0;
   int t;
   if (!bat)
     return NULL;
-  if ((var == BAT_VAR_P) && (bat->vars & BAT_VAR_P)) {
-    indices = VEC_new(2*bat->num_periods);
+  indices = VEC_new(BAT_get_num_vars(vbat,var));
+  if ((var & BAT_VAR_P) && (bat->vars & BAT_VAR_P)) {
     for (t = 0; t < bat->num_periods; t++) {
-      VEC_set(indices,2*t,bat->index_Pc[t]);
-      VEC_set(indices,2*t+1,bat->index_Pd[t]);
+      VEC_set(indices,offset+2*t,bat->index_Pc[t]);
+      VEC_set(indices,offset+2*t+1,bat->index_Pd[t]);
     }
-    return indices;
+    offset += 2*bat->num_periods;
   }
-  if ((var == BAT_VAR_E) && (bat->vars & BAT_VAR_E)) {
-    indices = VEC_new(bat->num_periods);
+  if ((var & BAT_VAR_E) && (bat->vars & BAT_VAR_E)) {
     for (t = 0; t < bat->num_periods; t++)
-      VEC_set(indices,t,bat->index_E[t]);
-    return indices;
+      VEC_set(indices,offset+t,bat->index_E[t]);
+    offset += bat->num_periods;
   }
-  return NULL;
+  return indices;
 }
 
 BOOL BAT_has_flags(void* vbat, char flag_type, char mask) {

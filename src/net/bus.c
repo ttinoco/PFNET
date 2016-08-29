@@ -800,41 +800,56 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
   }
 }
 
+int BUS_get_num_vars(void* vbus, char var) {
+  Bus* bus = (Bus*)vbus;
+  int num_vars = 0;
+  if (!bus)
+    return 0;
+  if ((var & BUS_VAR_VMAG) && (bus->vars & BUS_VAR_VMAG))
+    num_vars += bus->num_periods;
+  if ((var & BUS_VAR_VANG) && (bus->vars & BUS_VAR_VANG))
+    num_vars += bus->num_periods;
+  if ((var & BUS_VAR_VDEV) && (bus->vars & BUS_VAR_VDEV))
+    num_vars += 2*bus->num_periods;
+  if ((var & BUS_VAR_VVIO) && (bus->vars & BUS_VAR_VVIO))
+    num_vars += 2*bus->num_periods;
+  return num_vars;
+}
+
 Vec* BUS_get_var_indices(void* vbus, char var) {
   Bus* bus = (Bus*)vbus;
   Vec* indices;
+  int num_vars;
+  int offset = 0;
   int t;
   if (!bus)
     return NULL;
-  if ((var == BUS_VAR_VMAG) && (bus->vars & BUS_VAR_VMAG)) {
-    indices = VEC_new(bus->num_periods);
+  indices = VEC_new(BUS_get_num_vars(vbus,var));
+  if ((var & BUS_VAR_VMAG) && (bus->vars & BUS_VAR_VMAG)) {
     for (t = 0; t < bus->num_periods; t++)
-      VEC_set(indices,t,bus->index_v_mag[t]);
-    return indices;
+      VEC_set(indices,offset+t,bus->index_v_mag[t]);
+    offset += bus->num_periods;
   }
-  if ((var == BUS_VAR_VANG) && (bus->vars & BUS_VAR_VANG)) {
-    indices = VEC_new(bus->num_periods);
+  if ((var & BUS_VAR_VANG) && (bus->vars & BUS_VAR_VANG)) {
     for (t = 0; t < bus->num_periods; t++)
-      VEC_set(indices,t,bus->index_v_ang[t]);
-    return indices;
+      VEC_set(indices,offset+t,bus->index_v_ang[t]);
+    offset += bus->num_periods;
   }
-  if ((var == BUS_VAR_VDEV) && (bus->vars & BUS_VAR_VDEV)) {
-    indices = VEC_new(2*bus->num_periods);
+  if ((var & BUS_VAR_VDEV) && (bus->vars & BUS_VAR_VDEV)) {
     for (t = 0; t < bus->num_periods; t++) {
-      VEC_set(indices,2*t,bus->index_y[t]);
-      VEC_set(indices,2*t+1,bus->index_z[t]);
+      VEC_set(indices,offset+2*t,bus->index_y[t]);
+      VEC_set(indices,offset+2*t+1,bus->index_z[t]);
     }
-    return indices;
+    offset += 2*bus->num_periods;
   }
-  if ((var == BUS_VAR_VVIO) && (bus->vars & BUS_VAR_VVIO)) {
-    indices = VEC_new(2*bus->num_periods);
+  if ((var & BUS_VAR_VVIO) && (bus->vars & BUS_VAR_VVIO)) {
     for (t = 0; t < bus->num_periods; t++) {
-      VEC_set(indices,2*t,bus->index_vl[t]);
-      VEC_set(indices,2*t+1,bus->index_vh[t]);
+      VEC_set(indices,offset+2*t,bus->index_vl[t]);
+      VEC_set(indices,offset+2*t+1,bus->index_vh[t]);
     }
-    return indices;
+    offset += 2*bus->num_periods;
   }
-  return NULL;
+  return indices;
 }
 
 REAL BUS_get_sens_P_balance(Bus* bus, int t) {

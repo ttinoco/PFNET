@@ -97,6 +97,7 @@ REAL BRANCH_get_ratingB(Branch* br);
 REAL BRANCH_get_ratingC(Branch* br);
 REAL BRANCH_get_P_flow_DC(Branch* br, int t);
 void BRANCH_get_var_values(Branch* br, Vec* values, int code);
+int BRANCH_get_num_vars(void* br, char var);
 Vec* BRANCH_get_var_indices(void* br, char var);
 BOOL BRANCH_has_flags(void* br, char flag_type, char mask);
 BOOL BRANCH_has_pos_ratio_v_sens(Branch* br);

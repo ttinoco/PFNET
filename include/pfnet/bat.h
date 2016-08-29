@@ -65,6 +65,7 @@ REAL BAT_get_E_max(Bat* bat);
 REAL BAT_get_eta_c(Bat* bat);
 REAL BAT_get_eta_d(Bat* bat);
 void BAT_get_var_values(Bat* bat, Vec* values, int code);
+int BAT_get_num_vars(void* bat, char var);
 Vec* BAT_get_var_indices(void* bat, char var);
 BOOL BAT_has_flags(void* bat, char flag_type, char mask);
 BOOL BAT_has_properties(void* bat, char prop);

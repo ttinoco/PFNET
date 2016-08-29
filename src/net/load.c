@@ -267,19 +267,31 @@ void LOAD_get_var_values(Load* load, Vec* values, int code) {
   }
 }
 
+int LOAD_get_num_vars(void* vload, char var) {
+  Load* load = (Load*)vload;
+  int num_vars = 0;
+  if (!load)
+    return 0;
+  if ((var & LOAD_VAR_P) && (load->vars & LOAD_VAR_P))
+    num_vars += load->num_periods;
+  return num_vars;
+}
+
 Vec* LOAD_get_var_indices(void* vload, char var) {
   Load* load = (Load*)vload;
   Vec* indices;
+  int num_vars;
+  int offset = 0;
   int t;
   if (!load)
     return NULL;
-  if ((var == LOAD_VAR_P) && (load->vars & LOAD_VAR_P)) {
-    indices = VEC_new(load->num_periods);
+  indices = VEC_new(LOAD_get_num_vars(vload,var));
+  if ((var & LOAD_VAR_P) && (load->vars & LOAD_VAR_P)) {
     for (t = 0; t < load->num_periods; t++)
-      VEC_set(indices,t,load->index_P[t]);
-    return indices;
+      VEC_set(indices,offset+t,load->index_P[t]);
+    offset += load->num_periods;
   }
-  return NULL;
+  return indices;
 }
 
 BOOL LOAD_has_flags(void* vload, char flag_type, char mask) {
