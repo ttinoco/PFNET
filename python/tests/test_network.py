@@ -2502,6 +2502,193 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(x[bat.index_Pd],0.)
                 self.assertEqual(x[bat.index_E],0.)
 
+        # Multi period
+        net = self.netMP
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+
+            self.assertGreater(net.num_buses,0)            
+            self.assertEqual(net.num_vars,0)
+            
+            # vargens
+            load_buses = net.get_load_buses()
+            net.add_vargens(load_buses,50.,30.,5,0.05)
+            self.assertGreater(net.num_var_generators,0)
+            self.assertEqual(net.num_var_generators,len(load_buses))
+
+            # set batteries
+            for bat in net.batteries:
+                if bat.index % 2 == 0:
+                    bat.P = -1*bat.P
+
+            # loads
+            for load in net.loads:
+                load.P_min = -2.4*(load.index+1)
+                load.P_max = 3.3*(load.index+1)
+            self.assertEqual(net.num_loads,net.get_num_P_adjust_loads())
+
+            # vars
+            net.set_flags(pf.OBJ_BUS,
+                          pf.FLAG_VARS,
+                          pf.BUS_PROP_ANY,
+                          pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG|pf.BUS_VAR_VDEV|pf.BUS_VAR_VVIO)
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_ANY,
+                          pf.GEN_VAR_P|pf.GEN_VAR_Q)
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_VARS,
+                          pf.LOAD_PROP_P_ADJUST,
+                          pf.LOAD_VAR_P)
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_VARS,
+                          pf.BRANCH_PROP_ANY,
+                          pf.BRANCH_VAR_RATIO|pf.BRANCH_VAR_RATIO_DEV|pf.BRANCH_VAR_PHASE)
+            net.set_flags(pf.OBJ_SHUNT,
+                          pf.FLAG_VARS,
+                          pf.SHUNT_PROP_ANY,
+                          pf.SHUNT_VAR_SUSC|pf.SHUNT_VAR_SUSC_DEV)
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P|pf.BAT_VAR_E)
+            self.assertEqual(net.num_vars,
+                             (6*net.num_buses +
+                              2*net.num_generators + 
+                              2*net.num_var_generators +
+                              4*net.num_branches + 
+                              3*net.num_shunts +
+                              net.get_num_P_adjust_loads()+
+                              3*net.num_batteries)*net.num_periods)
+            
+            # Add some interesting vargen values
+            for vargen in net.var_generators:
+                vargen.P = np.ones(self.T)*2*vargen.index
+                vargen.P_max = 3*vargen.index
+                vargen.P_min = 9*vargen.index
+                vargen.Q = np.ones(self.T)*4*vargen.index
+                vargen.Q_min = 1*vargen.index
+                vargen.Q_max = 5*vargen.index
+
+            # current
+            x = net.get_var_values()
+            self.assertEqual(x.size,net.num_vars)
+            for t in range(self.T):
+                for bus in net.buses:
+                    self.assertEqual(x[bus.index_v_mag[t]],bus.v_mag[t])
+                    self.assertEqual(x[bus.index_v_ang[t]],bus.v_ang[t])
+                    self.assertEqual(x[bus.index_y[t]],np.maximum(bus.v_mag[t]-bus.v_set[t],0))
+                    self.assertEqual(x[bus.index_z[t]],np.maximum(bus.v_set[t]-bus.v_mag[t],0))
+                    self.assertEqual(x[bus.index_vl[t]],0.)
+                    self.assertEqual(x[bus.index_vh[t]],0.)
+                for br in net.branches:
+                    self.assertEqual(x[br.index_ratio[t]],br.ratio[t])
+                    self.assertEqual(x[br.index_ratio_y[t]],0.)
+                    self.assertEqual(x[br.index_ratio_z[t]],0.)
+                    self.assertEqual(x[br.index_phase[t]],br.phase[t])
+                for gen in net.generators:
+                    self.assertEqual(x[gen.index_P[t]],gen.P[t])
+                    self.assertEqual(x[gen.index_Q[t]],gen.Q[t])
+                for load in net.loads:
+                    self.assertEqual(x[load.index_P[t]],load.P[t])
+                for vargen in net.var_generators:
+                    self.assertEqual(x[vargen.index_P[t]],vargen.index*2)
+                    self.assertEqual(x[vargen.index_P[t]],vargen.P[t])
+                    self.assertEqual(x[vargen.index_Q[t]],vargen.index*4)
+                    self.assertEqual(x[vargen.index_Q[t]],vargen.Q[t])
+                for shunt in net.shunts:
+                    self.assertEqual(x[shunt.index_b[t]],shunt.b[t])
+                    self.assertEqual(x[shunt.index_y[t]],0.)
+                    self.assertEqual(x[shunt.index_z[t]],0.)
+                for bat in net.batteries:
+                    if bat.P[t] >= 0:
+                        self.assertEqual(x[bat.index_Pc[t]],bat.P[t])
+                        self.assertEqual(x[bat.index_Pd[t]],0.)
+                    else:
+                        self.assertEqual(x[bat.index_Pc[t]],0.)
+                        self.assertEqual(x[bat.index_Pd[t]],-bat.P[t])
+                    self.assertEqual(x[bat.index_E[t]],bat.E[t])
+                
+            # upper limits
+            x = net.get_var_values(pf.UPPER_LIMITS)
+            self.assertEqual(x.size,net.num_vars)
+            self.assertEqual(pf.BUS_INF_V_MAG,100.)
+            self.assertEqual(pf.BRANCH_INF_RATIO,100.)
+            self.assertEqual(pf.SHUNT_INF_SUSC,1000.)
+            for t in range(self.T):
+                for bus in net.buses:
+                    self.assertEqual(x[bus.index_v_mag[t]],bus.v_max)
+                    self.assertEqual(x[bus.index_v_ang[t]],pf.BUS_INF_V_ANG)
+                    self.assertEqual(x[bus.index_y[t]],pf.BUS_INF_V_MAG)
+                    self.assertEqual(x[bus.index_z[t]],pf.BUS_INF_V_MAG)
+                    self.assertEqual(x[bus.index_vl[t]],pf.BUS_INF_V_MAG)
+                    self.assertEqual(x[bus.index_vh[t]],pf.BUS_INF_V_MAG)
+                for br in net.branches:
+                    self.assertEqual(x[br.index_ratio[t]],br.ratio_max)
+                    self.assertEqual(x[br.index_ratio_y[t]],pf.BRANCH_INF_RATIO)
+                    self.assertEqual(x[br.index_ratio_z[t]],pf.BRANCH_INF_RATIO)
+                    self.assertEqual(x[br.index_phase[t]],br.phase_max)
+                for gen in net.generators:
+                    self.assertEqual(x[gen.index_P[t]],gen.P_max)
+                    self.assertEqual(x[gen.index_Q[t]],gen.Q_max)
+                for load in net.loads:
+                    self.assertEqual(x[load.index_P[t]],load.P_max)
+                    self.assertEqual(x[load.index_P[t]],3.3*(load.index+1))
+                for vargen in net.var_generators:
+                    self.assertEqual(x[vargen.index_P[t]],3*vargen.index)
+                    self.assertEqual(x[vargen.index_P[t]],vargen.P_max)
+                    self.assertEqual(x[vargen.index_Q[t]],5*vargen.index)
+                    self.assertEqual(x[vargen.index_Q[t]],vargen.Q_max)
+                for shunt in net.shunts:
+                    self.assertEqual(x[shunt.index_b[t]],shunt.b_max)
+                    self.assertEqual(x[shunt.index_y[t]],pf.SHUNT_INF_SUSC)
+                    self.assertEqual(x[shunt.index_z[t]],pf.SHUNT_INF_SUSC)
+                for bat in net.batteries:
+                    self.assertEqual(x[bat.index_Pc[t]],bat.P_max)
+                    self.assertEqual(x[bat.index_Pd[t]],-bat.P_min)
+                    self.assertEqual(x[bat.index_E[t]],bat.E_max)
+                    
+            # lower limits
+            x = net.get_var_values(pf.LOWER_LIMITS)
+            self.assertEqual(x.size,net.num_vars)
+            for t in range(self.T):
+                for bus in net.buses:
+                    self.assertEqual(x[bus.index_v_mag[t]],bus.v_min)
+                    self.assertEqual(x[bus.index_v_ang[t]],-pf.BUS_INF_V_ANG)
+                    self.assertEqual(x[bus.index_y[t]],0.)
+                    self.assertEqual(x[bus.index_z[t]],0.)
+                    self.assertEqual(x[bus.index_vl[t]],0.)
+                    self.assertEqual(x[bus.index_vh[t]],0.)
+                for br in net.branches:
+                    self.assertEqual(x[br.index_ratio[t]],br.ratio_min)
+                    self.assertEqual(x[br.index_ratio_y[t]],0.)
+                    self.assertEqual(x[br.index_ratio_z[t]],0.)
+                    self.assertEqual(x[br.index_phase[t]],br.phase_min)
+                for gen in net.generators:
+                    self.assertEqual(x[gen.index_P[t]],gen.P_min)
+                    self.assertEqual(x[gen.index_Q[t]],gen.Q_min)
+                for load in net.loads:
+                    self.assertEqual(x[load.index_P[t]],load.P_min)
+                    self.assertEqual(x[load.index_P[t]],-2.4*(load.index+1))
+                for vargen in net.var_generators:
+                    self.assertEqual(x[vargen.index_P[t]],9.*vargen.index)
+                    self.assertEqual(x[vargen.index_Q[t]],1.*vargen.index)
+                    self.assertEqual(x[vargen.index_Q[t]],vargen.Q_min)
+                for shunt in net.shunts:
+                    self.assertEqual(x[shunt.index_b[t]],shunt.b_min)
+                    self.assertEqual(x[shunt.index_y[t]],0.)
+                    self.assertEqual(x[shunt.index_z[t]],0.)
+                for bat in net.batteries:
+                    self.assertEqual(x[bat.index_Pc[t]],0.)
+                    self.assertEqual(x[bat.index_Pd[t]],0.)
+                    self.assertEqual(x[bat.index_E[t]],0.)
+
     def test_vargen_P_sigma(self):
 
         # Single period
@@ -2569,6 +2756,65 @@ class TestNetwork(unittest.TestCase):
                 factor = cholesky(sigma.tocsc())
             except ImportError:
                 pass
+
+        # Multi period
+        net = self.netMP
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+            lmin = np.min([l.P[0] for l in net.loads])
+            for l in net.loads:
+                l.P = l.P + np.abs(lmin)
+            
+            spread = 2
+            corr = 0.1
+            P_MIN = 1e-5
+        
+            # Add renewable sources (at load buses)
+            gen_buses = net.get_gen_buses()
+            total_load = sum([l.P[0] for l in net.loads])
+            net.add_vargens(gen_buses,50.,30.,5,0.05)
+            self.assertEqual(net.num_var_generators,len([b for b in net.buses if b.generators]))
+            for vg in net.var_generators:
+                self.assertEqual(net.get_vargen_by_name(vg.name).name,vg.name)
+                self.assertEqual(vg.P_min,0)
+                self.assertEqual(vg.P_max,total_load/net.num_var_generators)
+                self.assertGreater(len(vg.bus.generators),0)
+                self.assertNotEqual(vg.P_max,0)
+                for t in range(self.T):
+                    self.assertEqual(vg.P[t],0.5*vg.P_max)
+                    self.assertEqual(vg.P_std[t],0.3*vg.P_max)
+                    self.assertNotEqual(vg.P_std[t],0)
+            self.assertLess(np.abs(sum([vg.P_max for vg in net.var_generators])-total_load),1e-10)
+
+            # Variables
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P)
+            self.assertEqual(net.num_vars,net.num_var_generators*self.T)
+            
+            # Correlation
+            sigma = net.create_vargen_P_sigma(spread,corr)
+
+            # Check
+            self.assertTrue(np.all(sigma.row >= sigma.col))
+            indexP2vargen = {}
+            for vg in net.var_generators:
+                for t in range(self.T):
+                    indexP2vargen[vg.index_P[t]] = vg
+            for k in range(sigma.nnz):
+                i = sigma.row[k]
+                j = sigma.col[k]
+                d = sigma.data[k]
+                vg1 = indexP2vargen[i]
+                vg2 = indexP2vargen[j]
+                for t in range(self.T):
+                    if i == j:
+                        self.assertLess(np.abs(d - vg1.P_std[t]**2.),1e-12)
+                    else:
+                        self.assertLess(np.abs(d - corr*vg1.P_std[t]*vg2.P_std[t]),1e-12)
 
     def tearDown(self):
         
