@@ -848,28 +848,30 @@ Vec* BUS_get_var_indices(void* vbus, char var, int t_start, int t_end) {
   // Indices
   indices = VEC_new(BUS_get_num_vars(vbus,var,t_start,t_end));
   if ((var & BUS_VAR_VMAG) && (bus->vars & BUS_VAR_VMAG)) {
-    for (t = t_start; t <= t_end; t++)
-      VEC_set(indices,offset+t,bus->index_v_mag[t]);
-    offset += bus->num_periods;
+    for (t = t_start; t <= t_end; t++) {
+      VEC_set(indices,offset,bus->index_v_mag[t]);
+      offset++;
+    }
   }
   if ((var & BUS_VAR_VANG) && (bus->vars & BUS_VAR_VANG)) {
-    for (t = t_start; t <= t_end; t++)
-      VEC_set(indices,offset+t,bus->index_v_ang[t]);
-    offset += bus->num_periods;
+    for (t = t_start; t <= t_end; t++) {
+      VEC_set(indices,offset,bus->index_v_ang[t]);
+      offset++;
+    }
   }
   if ((var & BUS_VAR_VDEV) && (bus->vars & BUS_VAR_VDEV)) {
     for (t = t_start; t <= t_end; t++) {
-      VEC_set(indices,offset+2*t,bus->index_y[t]);
-      VEC_set(indices,offset+2*t+1,bus->index_z[t]);
+      VEC_set(indices,offset,bus->index_y[t]);
+      VEC_set(indices,offset+1,bus->index_z[t]);
+      offset += 2;
     }
-    offset += 2*bus->num_periods;
   }
   if ((var & BUS_VAR_VVIO) && (bus->vars & BUS_VAR_VVIO)) {
     for (t = t_start; t <= t_end; t++) {
-      VEC_set(indices,offset+2*t,bus->index_vl[t]);
-      VEC_set(indices,offset+2*t+1,bus->index_vh[t]);
+      VEC_set(indices,offset,bus->index_vl[t]);
+      VEC_set(indices,offset+1,bus->index_vh[t]);
+      offset += 2;
     }
-    offset += 2*bus->num_periods;
   }
   return indices;
 }

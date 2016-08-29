@@ -15,7 +15,7 @@
 /** \defgroup flag_helpers Flag Helpers
  *  @{
  */
-#define ALL_VARS 0xFF    /**< @brief All variables. */
+#define ALL_VARS 125    /**< @brief All variables (0xFF). */
 /** @} */
 
 // Flag types

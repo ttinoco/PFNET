@@ -289,16 +289,17 @@ Vec* SHUNT_get_var_indices(void* vshunt, char var, int t_start, int t_end) {
   // Indices
   indices = VEC_new(SHUNT_get_num_vars(vshunt,var,t_start,t_end));
   if ((var & SHUNT_VAR_SUSC) && (shunt->vars & SHUNT_VAR_SUSC)) {
-    for (t = t_start; t <= t_end; t++)
-      VEC_set(indices,offset+t,shunt->index_b[t]);
-    offset += shunt->num_periods;
+    for (t = t_start; t <= t_end; t++) {
+      VEC_set(indices,offset,shunt->index_b[t]);
+      offset++;
+    }
   }
   if ((var & SHUNT_VAR_SUSC_DEV) && (shunt->vars & SHUNT_VAR_SUSC_DEV)) {
     for (t = t_start; t <= t_end; t++) {
-      VEC_set(indices,offset+2*t,shunt->index_y[t]);
-      VEC_set(indices,offset+2*t+1,shunt->index_z[t]);
+      VEC_set(indices,offset,shunt->index_y[t]);
+      VEC_set(indices,offset+1,shunt->index_z[t]);
+      offset += 2;
     }
-    offset += 2*shunt->num_periods;
   }
   return indices;
 }

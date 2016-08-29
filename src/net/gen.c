@@ -365,14 +365,16 @@ Vec* GEN_get_var_indices(void* vgen, char var, int t_start, int t_end) {
   // Indices
   indices = VEC_new(GEN_get_num_vars(vgen,var,t_start,t_end));
   if ((var & GEN_VAR_P) && (gen->vars & GEN_VAR_P)) {
-    for (t = t_start; t <= t_end; t++)
-      VEC_set(indices,offset+t,gen->index_P[t]);
-    offset += gen->num_periods;
+    for (t = t_start; t <= t_end; t++) {
+      VEC_set(indices,offset,gen->index_P[t]);
+      offset++;
+    }
   }
   if ((var & GEN_VAR_Q) && (gen->vars & GEN_VAR_Q)) {
-    for (t = t_start; t <= t_end; t++)
-      VEC_set(indices,offset+t,gen->index_Q[t]);
-    offset += gen->num_periods;
+    for (t = t_start; t <= t_end; t++) {
+      VEC_set(indices,offset,gen->index_Q[t]);
+      offset++;
+    }
   }
   return indices;
 }

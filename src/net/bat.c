@@ -324,15 +324,16 @@ Vec* BAT_get_var_indices(void* vbat, char var, int t_start, int t_end) {
   indices = VEC_new(BAT_get_num_vars(vbat,var,t_start,t_end));
   if ((var & BAT_VAR_P) && (bat->vars & BAT_VAR_P)) {
     for (t = t_start; t <= t_end; t++) {
-      VEC_set(indices,offset+2*t,bat->index_Pc[t]);
-      VEC_set(indices,offset+2*t+1,bat->index_Pd[t]);
+      VEC_set(indices,offset,bat->index_Pc[t]);
+      VEC_set(indices,offset+1,bat->index_Pd[t]);
+      offset += 2;
     }
-    offset += 2*bat->num_periods;
   }
   if ((var & BAT_VAR_E) && (bat->vars & BAT_VAR_E)) {
-    for (t = t_start; t <= t_end; t++)
-      VEC_set(indices,offset+t,bat->index_E[t]);
-    offset += bat->num_periods;
+    for (t = t_start; t <= t_end; t++) {
+      VEC_set(indices,offset,bat->index_E[t]);
+      offset++;
+    }
   }
   return indices;
 }

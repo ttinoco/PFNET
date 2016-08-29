@@ -484,21 +484,23 @@ Vec* BRANCH_get_var_indices(void* vbr, char var, int t_start, int t_end) {
   // Indices
   indices = VEC_new(BRANCH_get_num_vars(vbr,var,t_start,t_end));
   if ((var & BRANCH_VAR_RATIO) && (br->vars & BRANCH_VAR_RATIO)) {
-    for (t = t_start; t <= t_end; t++)
-      VEC_set(indices,offset+t,br->index_ratio[t]);
-    offset += br->num_periods;
+    for (t = t_start; t <= t_end; t++) {
+      VEC_set(indices,offset,br->index_ratio[t]);
+      offset++;
+    }
   }
   if ((var & BRANCH_VAR_PHASE) && (br->vars & BRANCH_VAR_PHASE)) {
-    for (t = t_start; t <= t_end; t++)
-      VEC_set(indices,offset+t,br->index_phase[t]);
-    offset += br->num_periods;
+    for (t = t_start; t <= t_end; t++) {
+      VEC_set(indices,offset,br->index_phase[t]);
+      offset++;
+    }
   }
   if ((var & BRANCH_VAR_RATIO_DEV) && (br->vars & BRANCH_VAR_RATIO_DEV)) {
-    for (t = t_start; t <= t_end; t++) {
-      VEC_set(indices,offset+2*t,br->index_ratio_y[t]);
-      VEC_set(indices,offset+2*t+1,br->index_ratio_z[t]);
+    for (t = t_start; t <= t_end; t++) { 
+      VEC_set(indices,offset,br->index_ratio_y[t]);
+      VEC_set(indices,offset+1,br->index_ratio_z[t]);
+      offset += 2;
     }
-    offset += 2*br->num_periods;
   }
   return indices;
 }

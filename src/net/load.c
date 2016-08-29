@@ -309,9 +309,10 @@ Vec* LOAD_get_var_indices(void* vload, char var, int t_start, int t_end) {
   // Indices
   indices = VEC_new(LOAD_get_num_vars(vload,var,t_start,t_end));
   if ((var & LOAD_VAR_P) && (load->vars & LOAD_VAR_P)) {
-    for (t = t_start; t <= t_end; t++)
-      VEC_set(indices,offset+t,load->index_P[t]);
-    offset += load->num_periods;
+    for (t = t_start; t <= t_end; t++) {
+      VEC_set(indices,offset,load->index_P[t]);
+      offset++;
+    }
   }
   return indices;
 }

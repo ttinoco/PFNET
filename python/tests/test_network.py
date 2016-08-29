@@ -17,7 +17,7 @@ class TestNetwork(unittest.TestCase):
     def setUp(self):
         
         # Networks
-        self.T = 3
+        self.T = 5
         self.net = pf.Network()
         self.netMP = pf.Network(self.T)
 
@@ -2618,6 +2618,90 @@ class TestNetwork(unittest.TestCase):
             for i in range(10):
                 x = np.random.randn(net.num_vars)
                 self.assertLess(np.linalg.norm(x-P.T*P*x),1e-12)
+
+    def test_fancy_projections(self):
+
+        # Multi period
+        net = self.netMP
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+
+            self.assertEqual(net.num_vars,0)
+
+            # Add vargens
+            load_buses = net.get_load_buses()
+            net.add_vargens(load_buses,50.,30.,5,0.05)
+            self.assertGreater(net.num_var_generators,0)
+            self.assertEqual(net.num_var_generators,len(load_buses))
+
+            # bus vmag and vang
+            net.set_flags(pf.OBJ_BUS,
+                          pf.FLAG_VARS,
+                          pf.BUS_PROP_NOT_SLACK,
+                          pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
+            
+            # gen powers
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_NOT_SLACK,
+                          pf.GEN_VAR_P)
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_REG,
+                          pf.GEN_VAR_Q)
+
+            # load active powers
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_VARS,
+                          pf.LOAD_PROP_ANY,
+                          pf.LOAD_VAR_P)
+            
+            # branch ratio and phase
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_VARS,
+                          pf.BRANCH_PROP_TAP_CHANGER_V,
+                          pf.BRANCH_VAR_RATIO)
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_VARS,
+                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          pf.BRANCH_VAR_PHASE)
+            
+            # shunt
+            net.set_flags(pf.OBJ_SHUNT,
+                          pf.FLAG_VARS,
+                          pf.SHUNT_PROP_SWITCHED_V,
+                          pf.SHUNT_VAR_SUSC)
+
+            # vargens
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
+
+            # batteries
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P|pf.BAT_VAR_E)
+
+            self.assertEqual(net.num_vars,
+                             (2*(net.num_buses-1) +
+                              net.num_generators-net.get_num_slack_gens() +
+                              net.get_num_reg_gens() +
+                              net.get_num_tap_changers_v() +
+                              net.get_num_phase_shifters() +
+                              net.get_num_switched_shunts() +
+                              2*net.get_num_var_generators()+
+                              net.num_loads+
+                              3*net.num_batteries)*self.T)
+
+            self.assertRaises(pf.NetworkError,net.get_var_projection,pf.OBJ_ALL,pf.BUS_VAR_VMAG,2,4)
+            self.assertTrue(net.has_error())
+            net.clear_error()
+            self.assertFalse(net.has_error())
+            P = net.get_var_projection(pf.OBJ_ALL,pf.ALL_VARS,2,2)
 
     def test_variable_limits(self):
 

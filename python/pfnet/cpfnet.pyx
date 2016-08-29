@@ -57,6 +57,7 @@ UPPER_LIMITS = cconstants.UPPER_LIMITS
 LOWER_LIMITS = cconstants.LOWER_LIMITS
 
 # Objects
+OBJ_ALL = cobjs.OBJ_ALL
 OBJ_BUS = cobjs.OBJ_BUS
 OBJ_GEN = cobjs.OBJ_GEN
 OBJ_BRANCH = cobjs.OBJ_BRANCH
@@ -67,6 +68,8 @@ OBJ_BAT = cobjs.OBJ_BAT
 OBJ_UNKNOWN = cobjs.OBJ_UNKNOWN
 
 # Flags
+ALL_VARS = cflags.ALL_VARS
+
 FLAG_VARS = cflags.FLAG_VARS
 FLAG_FIXED = cflags.FLAG_FIXED
 FLAG_BOUNDED = cflags.FLAG_BOUNDED

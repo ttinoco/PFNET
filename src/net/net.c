@@ -1533,7 +1533,7 @@ Mat* NET_get_var_projection(Net* net, char obj_type, char var, int t_start, int 
     t_end = net->num_periods-1;
 
   // Check
-  if (obj_type == OBJ_ALL && var != ALL_VARS) {
+  if ((obj_type == OBJ_ALL) && (var != ALL_VARS)) {
     sprintf(net->error_string,"component-specific flag cannot be used on all components");
     net->error_flag = TRUE;
     return NULL;

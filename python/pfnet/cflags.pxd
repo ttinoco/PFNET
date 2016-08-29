@@ -8,6 +8,8 @@
 
 cdef extern from "pfnet/flag_types.h":
 
+    cdef char ALL_VARS
+    
     cdef char FLAG_VARS
     cdef char FLAG_FIXED
     cdef char FLAG_BOUNDED 
