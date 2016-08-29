@@ -267,27 +267,49 @@ void LOAD_get_var_values(Load* load, Vec* values, int code) {
   }
 }
 
-int LOAD_get_num_vars(void* vload, char var) {
+int LOAD_get_num_vars(void* vload, char var, int t_start, int t_end) {
+
+  // Local vars
   Load* load = (Load*)vload;
   int num_vars = 0;
+  int dt;
+
+  // Checks
   if (!load)
     return 0;
+  if (t_start < 0)
+    t_start = 0;
+  if (t_end > load->num_periods-1)
+    t_end = load->num_periods-1;
+
+  // Num vars
+  dt = t_end-t_start+1;
   if ((var & LOAD_VAR_P) && (load->vars & LOAD_VAR_P))
-    num_vars += load->num_periods;
+    num_vars += dt;
   return num_vars;
 }
 
-Vec* LOAD_get_var_indices(void* vload, char var) {
+Vec* LOAD_get_var_indices(void* vload, char var, int t_start, int t_end) {
+
+  // Local vars
   Load* load = (Load*)vload;
   Vec* indices;
   int num_vars;
   int offset = 0;
   int t;
+
+  // Checks
   if (!load)
     return NULL;
-  indices = VEC_new(LOAD_get_num_vars(vload,var));
+  if (t_start < 0)
+    t_start = 0;
+  if (t_end > load->num_periods-1)
+    t_end = load->num_periods-1;
+
+  // Indices
+  indices = VEC_new(LOAD_get_num_vars(vload,var,t_start,t_end));
   if ((var & LOAD_VAR_P) && (load->vars & LOAD_VAR_P)) {
-    for (t = 0; t < load->num_periods; t++)
+    for (t = t_start; t <= t_end; t++)
       VEC_set(indices,offset+t,load->index_P[t]);
     offset += load->num_periods;
   }

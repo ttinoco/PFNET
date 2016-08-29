@@ -259,34 +259,56 @@ void VARGEN_get_var_values(Vargen* gen, Vec* values, int code) {
   }
 }
 
-int VARGEN_get_num_vars(void* vgen, char var) {
+int VARGEN_get_num_vars(void* vgen, char var, int t_start, int t_end) {
+
+  // Local vars
   Vargen* gen = (Vargen*)vgen;
   int num_vars = 0;
+  int dt;
+
+  // Checks
   if (!gen)
     return 0;
+  if (t_start < 0)
+    t_start = 0;
+  if (t_end > gen->num_periods-1)
+    t_end = gen->num_periods-1;
+
+  // Num vars
+  dt = t_end-t_start+1;
   if ((var & VARGEN_VAR_P) && (gen->vars & VARGEN_VAR_P))
-    num_vars += gen->num_periods;
+    num_vars += dt;
   if ((var & VARGEN_VAR_Q) && (gen->vars & VARGEN_VAR_Q))
-    num_vars += gen->num_periods;
+    num_vars += dt;
   return num_vars;
 }
 
-Vec* VARGEN_get_var_indices(void* vgen, char var) {
+Vec* VARGEN_get_var_indices(void* vgen, char var, int t_start, int t_end) {
+
+  // Local vars
   Vargen* gen = (Vargen*)vgen;
   Vec* indices;
   int num_vars;
   int offset = 0;
   int t;
+
+  // Checks
   if (!gen)
     return NULL;
-  indices = VEC_new(VARGEN_get_num_vars(vgen,var));
+  if (t_start < 0)
+    t_start = 0;
+  if (t_end > gen->num_periods-1)
+    t_end = gen->num_periods-1;
+
+  // Indices
+  indices = VEC_new(VARGEN_get_num_vars(vgen,var,t_start,t_end));
   if ((var & VARGEN_VAR_P) && (gen->vars & VARGEN_VAR_P)) {
-    for (t = 0; t < gen->num_periods; t++)
+    for (t = t_start; t <= t_end; t++)
       VEC_set(indices,offset+t,gen->index_P[t]);
     offset += gen->num_periods;
   }
   if ((var & VARGEN_VAR_Q) && (gen->vars & VARGEN_VAR_Q)) {
-    for (t = 0; t < gen->num_periods; t++)
+    for (t = t_start; t <= t_end; t++)
       VEC_set(indices,offset+t,gen->index_Q[t]);
     offset += gen->num_periods;
   }

@@ -1410,6 +1410,7 @@ Vec* NET_get_var_values(Net* net, int code) {
   return values;  
 }
 
+/*
 Mat* NET_get_var_projection(Net* net, char obj_type, char var) {
   
   // Local variables
@@ -1507,6 +1508,160 @@ Mat* NET_get_var_projection(Net* net, char obj_type, char var) {
     VEC_del(indices);
   }
        
+  // Return
+  return proj;
+}
+*/
+
+Mat* NET_get_var_projection(Net* net, char obj_type, char var, int t_start, int t_end) {
+  
+  // Local variables
+  int num_subvars;
+  Vec* indices;
+  Mat* proj;
+  int i;
+  int j;
+  
+  // Check
+  if (!net)
+    return NULL;
+
+  // Check
+  if (t_start < 0)
+    t_start = 0;
+  if (t_end > net->num_periods-1)
+    t_end = net->num_periods-1;
+
+  // Check
+  if (obj_type == OBJ_ALL && var != ALL_VARS) {
+    sprintf(net->error_string,"component-specific flag cannot be used on all components");
+    net->error_flag = TRUE;
+    return NULL;
+  }
+    
+  // Count
+  num_subvars = 0;
+  if ((obj_type == OBJ_BUS) || (obj_type == OBJ_ALL)) {
+    for (i = 0; i < net->num_buses; i++)
+      num_subvars += BUS_get_num_vars(NET_get_bus(net,i),var,t_start,t_end);
+  }
+  if ((obj_type == OBJ_GEN) || (obj_type == OBJ_ALL)) {
+    for (i = 0; i < net->num_gens; i++)
+      num_subvars += GEN_get_num_vars(NET_get_gen(net,i),var,t_start,t_end);
+  }
+  if ((obj_type == OBJ_LOAD) || (obj_type == OBJ_ALL)) {
+    for (i = 0; i < net->num_loads; i++)
+      num_subvars += LOAD_get_num_vars(NET_get_load(net,i),var,t_start,t_end);
+  }
+  if ((obj_type == OBJ_BRANCH) || (obj_type == OBJ_ALL)) {
+    for (i = 0; i < net->num_branches; i++)
+      num_subvars += BRANCH_get_num_vars(NET_get_branch(net,i),var,t_start,t_end);
+  }
+  if ((obj_type == OBJ_SHUNT) || (obj_type == OBJ_ALL)) {
+    for (i = 0; i < net->num_shunts; i++)
+      num_subvars += SHUNT_get_num_vars(NET_get_shunt(net,i),var,t_start,t_end);
+  }
+  if ((obj_type == OBJ_VARGEN) || (obj_type == OBJ_ALL)) {
+    for (i = 0; i < net->num_vargens; i++)
+      num_subvars += VARGEN_get_num_vars(NET_get_vargen(net,i),var,t_start,t_end);
+  }
+  if ((obj_type == OBJ_BAT) || (obj_type == OBJ_ALL)) {
+    for (i = 0; i < net->num_bats; i++)
+      num_subvars += BAT_get_num_vars(NET_get_bat(net,i),var,t_start,t_end);
+  }
+    
+  // Allocate
+  proj = MAT_new(num_subvars,
+		 net->num_vars,
+		 num_subvars);
+
+  // Fill
+  num_subvars = 0;
+  if ((obj_type == OBJ_BUS) || (obj_type == OBJ_ALL)) {
+    for (i = 0; i < net->num_buses; i++) {
+      indices = BUS_get_var_indices(NET_get_bus(net,i),var,t_start,t_end);
+      for (j = 0; j < VEC_get_size(indices); j++) {
+	MAT_set_i(proj,num_subvars,num_subvars);
+	MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+	MAT_set_d(proj,num_subvars,1.);
+	num_subvars++;
+      }
+      VEC_del(indices);
+    }      
+  }
+  if ((obj_type == OBJ_GEN) || (obj_type == OBJ_ALL)) {
+    for (i = 0; i < net->num_gens; i++) {
+      indices = GEN_get_var_indices(NET_get_gen(net,i),var,t_start,t_end);
+      for (j = 0; j < VEC_get_size(indices); j++) {
+	MAT_set_i(proj,num_subvars,num_subvars);
+	MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+	MAT_set_d(proj,num_subvars,1.);
+	num_subvars++;
+      }
+      VEC_del(indices);
+    }   
+  }
+  if ((obj_type == OBJ_LOAD) || (obj_type == OBJ_ALL)) {
+    for (i = 0; i < net->num_loads; i++) {
+      indices = LOAD_get_var_indices(NET_get_load(net,i),var,t_start,t_end);
+      for (j = 0; j < VEC_get_size(indices); j++) {
+	MAT_set_i(proj,num_subvars,num_subvars);
+	MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+	MAT_set_d(proj,num_subvars,1.);
+	num_subvars++;
+      }
+      VEC_del(indices);
+    }
+  }
+  if ((obj_type == OBJ_BRANCH) || (obj_type == OBJ_ALL)) {
+    for (i = 0; i < net->num_branches; i++) {
+      indices = BRANCH_get_var_indices(NET_get_branch(net,i),var,t_start,t_end);
+      for (j = 0; j < VEC_get_size(indices); j++) {
+	MAT_set_i(proj,num_subvars,num_subvars);
+	MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+	MAT_set_d(proj,num_subvars,1.);
+	num_subvars++;
+      }
+      VEC_del(indices);
+    }
+  }
+  if ((obj_type == OBJ_SHUNT) || (obj_type == OBJ_ALL)) {
+    for (i = 0; i < net->num_shunts; i++) {
+      indices = SHUNT_get_var_indices(NET_get_shunt(net,i),var,t_start,t_end);
+      for (j = 0; j < VEC_get_size(indices); j++) {
+	MAT_set_i(proj,num_subvars,num_subvars);
+	MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+	MAT_set_d(proj,num_subvars,1.);
+	num_subvars++;
+      }
+      VEC_del(indices);
+    }
+  }
+  if ((obj_type == OBJ_VARGEN) || (obj_type == OBJ_ALL)) {
+    for (i = 0; i < net->num_vargens; i++) {
+      indices = VARGEN_get_var_indices(NET_get_vargen(net,i),var,t_start,t_end);
+      for (j = 0; j < VEC_get_size(indices); j++) {
+	MAT_set_i(proj,num_subvars,num_subvars);
+	MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+	MAT_set_d(proj,num_subvars,1.);
+	num_subvars++;
+      }
+      VEC_del(indices);
+    }
+  }
+  if ((obj_type == OBJ_BAT) || (obj_type == OBJ_ALL)) {
+    for (i = 0; i < net->num_bats; i++) {
+      indices = BAT_get_var_indices(NET_get_bat(net,i),var,t_start,t_end);
+      for (j = 0; j < VEC_get_size(indices); j++) {
+	MAT_set_i(proj,num_subvars,num_subvars);
+	MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+	MAT_set_d(proj,num_subvars,1.);
+	num_subvars++;
+      }
+      VEC_del(indices);
+    }
+  }
+         
   // Return
   return proj;
 }

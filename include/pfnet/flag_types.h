@@ -11,6 +11,13 @@
 #ifndef __FLAGS_HEADER__
 #define __FLAGS_HEADER__
 
+// Flag helpers
+/** \defgroup flag_helpers Flag Helpers
+ *  @{
+ */
+#define ALL_VARS 0xFF    /**< @brief All variables. */
+/** @} */
+
 // Flag types
 /** \defgroup flag_types Flag Types
  *  @{

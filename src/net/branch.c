@@ -438,41 +438,63 @@ void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
   }   
 }
 
-int BRANCH_get_num_vars(void* vbr, char var) {
+int BRANCH_get_num_vars(void* vbr, char var, int t_start, int t_end) {
+
+  // Local vars
   Branch* br = (Branch*)vbr;
   int num_vars = 0;
+  int dt;
+
+  // Checks
   if (!br)
     return 0;
+  if (t_start < 0)
+    t_start = 0;
+  if (t_end > br->num_periods-1)
+    t_end = br->num_periods-1;
+
+  // Num vars
+  dt = t_end-t_start+1;
   if ((var & BRANCH_VAR_RATIO) && (br->vars & BRANCH_VAR_RATIO))
-    num_vars += br->num_periods;
+    num_vars += dt;
   if ((var & BRANCH_VAR_PHASE) && (br->vars & BRANCH_VAR_PHASE))
-    num_vars += br->num_periods;
+    num_vars += dt;
   if ((var & BRANCH_VAR_RATIO_DEV) && (br->vars & BRANCH_VAR_RATIO_DEV))
-    num_vars += 2*br->num_periods;
+    num_vars += 2*dt;
   return num_vars;
 }
 
-Vec* BRANCH_get_var_indices(void* vbr, char var) {
+Vec* BRANCH_get_var_indices(void* vbr, char var, int t_start, int t_end) {
+  
+  // Local vars
   Branch* br = (Branch*)vbr;
   Vec* indices;
   int num_vars;
   int offset = 0;
   int t;
+
+  // Checks
   if (!br)
     return NULL;
-  indices = VEC_new(BRANCH_get_num_vars(vbr,var));
+  if (t_start < 0)
+    t_start = 0;
+  if (t_end > br->num_periods-1)
+    t_end = br->num_periods-1;
+
+  // Indices
+  indices = VEC_new(BRANCH_get_num_vars(vbr,var,t_start,t_end));
   if ((var & BRANCH_VAR_RATIO) && (br->vars & BRANCH_VAR_RATIO)) {
-    for (t = 0; t < br->num_periods; t++)
+    for (t = t_start; t <= t_end; t++)
       VEC_set(indices,offset+t,br->index_ratio[t]);
     offset += br->num_periods;
   }
   if ((var & BRANCH_VAR_PHASE) && (br->vars & BRANCH_VAR_PHASE)) {
-    for (t = 0; t < br->num_periods; t++)
+    for (t = t_start; t <= t_end; t++)
       VEC_set(indices,offset+t,br->index_phase[t]);
     offset += br->num_periods;
   }
   if ((var & BRANCH_VAR_RATIO_DEV) && (br->vars & BRANCH_VAR_RATIO_DEV)) {
-    for (t = 0; t < br->num_periods; t++) {
+    for (t = t_start; t <= t_end; t++) {
       VEC_set(indices,offset+2*t,br->index_ratio_y[t]);
       VEC_set(indices,offset+2*t+1,br->index_ratio_z[t]);
     }

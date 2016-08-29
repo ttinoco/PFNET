@@ -2660,17 +2660,25 @@ cdef class Network:
         """
         return Vector(cnet.NET_get_var_values(self._c_net,code),owndata=True)
 
-    def get_var_projection(self,obj_type,var):
+    def get_var_projection(self,obj_type,var,t_start=0,t_end=None):
         """
         Gets projection matrix for specific object variables.
 
         Parameters
         ----------
         obj_type : int (:ref:`ref_net_obj`)
-        var : int (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`) 
+        var : int (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`)
+        t_start : int
+        t_end : int (inclusive)
         """
         
-        return Matrix(cnet.NET_get_var_projection(self._c_net,obj_type,var),owndata=True)
+        if t_end is None:
+            t_end = self.num_periods-1
+        m = Matrix(cnet.NET_get_var_projection(self._c_net,obj_type,var,t_start,t_end),owndata=True)
+        if cnet.NET_has_error(self._c_net):
+            raise NetworkError(cnet.NET_get_error_string(self._c_net))
+        else:
+            return m
 
     def get_num_buses(self):
         """

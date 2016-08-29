@@ -245,34 +245,56 @@ void SHUNT_get_var_values(Shunt* shunt, Vec* values, int code) {
   }
 }
 
-int SHUNT_get_num_vars(void* vshunt, char var) {
+int SHUNT_get_num_vars(void* vshunt, char var, int t_start, int t_end) {
+
+  // Local vars
   Shunt* shunt = (Shunt*)vshunt;
   int num_vars = 0;
+  int dt;
+
+  // Checks
   if (!shunt)
     return 0;
+  if (t_start < 0)
+    t_start = 0;
+  if (t_end > shunt->num_periods-1)
+    t_end = shunt->num_periods-1;
+
+  // Num vars
+  dt = t_end-t_start+1;
   if ((var & SHUNT_VAR_SUSC) && (shunt->vars & SHUNT_VAR_SUSC))
-    num_vars += shunt->num_periods;
+    num_vars += dt;
   if ((var & SHUNT_VAR_SUSC_DEV) && (shunt->vars & SHUNT_VAR_SUSC_DEV))
-    num_vars += 2*shunt->num_periods;
+    num_vars += 2*dt;
   return num_vars;
 }
 
-Vec* SHUNT_get_var_indices(void* vshunt, char var) {
+Vec* SHUNT_get_var_indices(void* vshunt, char var, int t_start, int t_end) {
+
+  // Local vars
   Shunt* shunt = (Shunt*)vshunt;
   Vec* indices;
   int num_vars;
   int offset = 0;
   int t;
+
+  // Checks
   if (!shunt)
     return NULL;
-  indices = VEC_new(SHUNT_get_num_vars(vshunt,var));
+  if (t_start < 0)
+    t_start = 0;
+  if (t_end > shunt->num_periods-1)
+    t_end = shunt->num_periods-1;
+
+  // Indices
+  indices = VEC_new(SHUNT_get_num_vars(vshunt,var,t_start,t_end));
   if ((var & SHUNT_VAR_SUSC) && (shunt->vars & SHUNT_VAR_SUSC)) {
-    for (t = 0; t < shunt->num_periods; t++)
+    for (t = t_start; t <= t_end; t++)
       VEC_set(indices,offset+t,shunt->index_b[t]);
     offset += shunt->num_periods;
   }
   if ((var & SHUNT_VAR_SUSC_DEV) && (shunt->vars & SHUNT_VAR_SUSC_DEV)) {
-    for (t = 0; t < shunt->num_periods; t++) {
+    for (t = t_start; t <= t_end; t++) {
       VEC_set(indices,offset+2*t,shunt->index_y[t]);
       VEC_set(indices,offset+2*t+1,shunt->index_z[t]);
     }
