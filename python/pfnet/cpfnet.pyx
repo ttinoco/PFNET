@@ -475,6 +475,26 @@ cdef class Bus:
         """
 
         return cbus.BUS_get_total_shunt_b(self._c_ptr,t)
+
+    def get_num_vars(self,var_mask,t_start=0,t_end=None):
+        """
+        Gets number of variables associated with the
+        given quantity.
+
+        Parameters
+        ----------
+        var_mask : int
+        t_start : int
+        t_end : int
+        
+        Returns
+        -------
+        num : int
+        """
+
+        if t_end is None:
+            t_end = self.num_periods-1
+        return cbus.BUS_get_num_vars(self._c_ptr,var_mask,t_start,t_end)
     
     def show(self,t=0):
         """

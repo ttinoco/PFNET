@@ -97,9 +97,9 @@ REAL BRANCH_get_ratingB(Branch* br);
 REAL BRANCH_get_ratingC(Branch* br);
 REAL BRANCH_get_P_flow_DC(Branch* br, int t);
 void BRANCH_get_var_values(Branch* br, Vec* values, int code);
-int BRANCH_get_num_vars(void* br, char var, int t_start, int t_end);
-Vec* BRANCH_get_var_indices(void* br, char var, int t_start, int t_end);
-BOOL BRANCH_has_flags(void* br, char flag_type, char mask);
+int BRANCH_get_num_vars(void* br, unsigned char var, int t_start, int t_end);
+Vec* BRANCH_get_var_indices(void* br, unsigned char var, int t_start, int t_end);
+BOOL BRANCH_has_flags(void* br, char flag_type, unsigned char mask);
 BOOL BRANCH_has_pos_ratio_v_sens(Branch* br);
 BOOL BRANCH_has_properties(void* br, char prop);
 void BRANCH_init(Branch* br, int num_periods);
@@ -150,7 +150,7 @@ void BRANCH_set_ratingA(Branch* br, REAL r);
 void BRANCH_set_ratingB(Branch* br, REAL r);
 void BRANCH_set_ratingC(Branch* br, REAL r);
 void BRANCH_set_var_values(Branch* br, Vec* values);
-int BRANCH_set_flags(void* vbr, char flag_type, char mask, int index);
+int BRANCH_set_flags(void* vbr, char flag_type, unsigned char mask, int index);
 void BRANCH_show(Branch* br, int t);
 
 #endif

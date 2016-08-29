@@ -259,7 +259,7 @@ void VARGEN_get_var_values(Vargen* gen, Vec* values, int code) {
   }
 }
 
-int VARGEN_get_num_vars(void* vgen, char var, int t_start, int t_end) {
+int VARGEN_get_num_vars(void* vgen, unsigned char var, int t_start, int t_end) {
 
   // Local vars
   Vargen* gen = (Vargen*)vgen;
@@ -283,7 +283,7 @@ int VARGEN_get_num_vars(void* vgen, char var, int t_start, int t_end) {
   return num_vars;
 }
 
-Vec* VARGEN_get_var_indices(void* vgen, char var, int t_start, int t_end) {
+Vec* VARGEN_get_var_indices(void* vgen, unsigned char var, int t_start, int t_end) {
 
   // Local vars
   Vargen* gen = (Vargen*)vgen;
@@ -317,7 +317,7 @@ Vec* VARGEN_get_var_indices(void* vgen, char var, int t_start, int t_end) {
   return indices;
 }
 
-BOOL VARGEN_has_flags(void* vgen, char flag_type, char mask) {
+BOOL VARGEN_has_flags(void* vgen, char flag_type, unsigned char mask) {
   Vargen* gen = (Vargen*)vgen;
   if (gen) {
     if (flag_type == FLAG_VARS)         // variables
@@ -487,7 +487,7 @@ void VARGEN_set_Q_min(Vargen* gen, REAL Q) {
     gen->Q_min = Q;
 }
 
-int VARGEN_set_flags(void* vgen, char flag_type, char mask, int index) {
+int VARGEN_set_flags(void* vgen, char flag_type, unsigned char mask, int index) {
 
   // Local variables
   char* flags_ptr = NULL;

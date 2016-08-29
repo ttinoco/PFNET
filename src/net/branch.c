@@ -438,7 +438,7 @@ void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
   }   
 }
 
-int BRANCH_get_num_vars(void* vbr, char var, int t_start, int t_end) {
+int BRANCH_get_num_vars(void* vbr, unsigned char var, int t_start, int t_end) {
 
   // Local vars
   Branch* br = (Branch*)vbr;
@@ -464,7 +464,7 @@ int BRANCH_get_num_vars(void* vbr, char var, int t_start, int t_end) {
   return num_vars;
 }
 
-Vec* BRANCH_get_var_indices(void* vbr, char var, int t_start, int t_end) {
+Vec* BRANCH_get_var_indices(void* vbr, unsigned char var, int t_start, int t_end) {
   
   // Local vars
   Branch* br = (Branch*)vbr;
@@ -512,7 +512,7 @@ BOOL BRANCH_has_pos_ratio_v_sens(Branch* branch) {
     return FALSE;
 }
 
-BOOL BRANCH_has_flags(void* vbr, char flag_type, char mask) {
+BOOL BRANCH_has_flags(void* vbr, char flag_type, unsigned char mask) {
   Branch* br = (Branch*)vbr;
   if (br) {
     if (flag_type == FLAG_VARS)
@@ -887,7 +887,7 @@ void BRANCH_set_var_values(Branch* br, Vec* values) {
   }
 }
 
-int BRANCH_set_flags(void* vbr, char flag_type, char mask, int index) {
+int BRANCH_set_flags(void* vbr, char flag_type, unsigned char mask, int index) {
 
   // Local variables
   char* flags_ptr = NULL;

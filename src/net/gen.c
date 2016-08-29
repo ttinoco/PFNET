@@ -321,7 +321,7 @@ void GEN_get_var_values(Gen* gen, Vec* values, int code) {
   }
 }
 
-int GEN_get_num_vars(void* vgen, char var, int t_start, int t_end) {
+int GEN_get_num_vars(void* vgen, unsigned char var, int t_start, int t_end) {
 
   // Local vars
   Gen* gen = (Gen*)vgen;
@@ -345,7 +345,7 @@ int GEN_get_num_vars(void* vgen, char var, int t_start, int t_end) {
   return num_vars;
 }
 
-Vec* GEN_get_var_indices(void* vgen, char var, int t_start, int t_end) {
+Vec* GEN_get_var_indices(void* vgen, unsigned char var, int t_start, int t_end) {
 
   // Local vars
   Gen* gen = (Gen*)vgen;
@@ -379,7 +379,7 @@ Vec* GEN_get_var_indices(void* vgen, char var, int t_start, int t_end) {
   return indices;
 }
 
-BOOL GEN_has_flags(void* vgen, char flag_type, char mask) {
+BOOL GEN_has_flags(void* vgen, char flag_type, unsigned char mask) {
   Gen* gen = (Gen*)vgen;
   if (gen) {
     if (flag_type == FLAG_VARS)
@@ -608,7 +608,7 @@ void GEN_set_Q_min(Gen* gen, REAL Q_min) {
     gen->Q_min = Q_min;
 }
 
-int GEN_set_flags(void* vgen, char flag_type, char mask, int index) {
+int GEN_set_flags(void* vgen, char flag_type, unsigned char mask, int index) {
 
   // Local variables
   char* flags_ptr = NULL;

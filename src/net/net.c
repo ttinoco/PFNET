@@ -1410,110 +1410,7 @@ Vec* NET_get_var_values(Net* net, int code) {
   return values;  
 }
 
-/*
-Mat* NET_get_var_projection(Net* net, char obj_type, char var) {
-  
-  // Local variables
-  int num_subvars;
-  Vec* indices;
-  Mat* proj;
-  int i;
-  int j;
-
-  int num;
-  void* obj;
-  void* array;
-  void* (*get_element)(void* array, int index);
-  Vec* (*get_var_indices)(void*,char);
-  
-  // Check
-  if (!net)
-    return NULL;
-
-  // Set pointers
-  switch (obj_type) {
-  case OBJ_BUS:
-    num = net->num_buses;
-    array = net->bus;
-    get_element = &BUS_array_get;
-    get_var_indices = &BUS_get_var_indices;
-    break;
-  case OBJ_GEN:
-    num = net->num_gens;
-    array = net->gen;
-    get_element = &GEN_array_get;
-    get_var_indices = &GEN_get_var_indices;
-    break;
-  case OBJ_LOAD:
-    num = net->num_loads;
-    array = net->load;
-    get_element = &LOAD_array_get;
-    get_var_indices = &LOAD_get_var_indices;
-    break;
-  case OBJ_BRANCH:
-    num = net->num_branches;
-    array = net->branch;
-    get_element = &BRANCH_array_get;
-    get_var_indices = &BRANCH_get_var_indices;
-    break;
-  case OBJ_SHUNT:
-    num = net->num_shunts;
-    array = net->shunt;
-    get_element = &SHUNT_array_get;
-    get_var_indices = &SHUNT_get_var_indices;
-    break;
-  case OBJ_VARGEN:
-    num = net->num_vargens;
-    array = net->vargen;
-    get_element = &VARGEN_array_get;
-    get_var_indices = &VARGEN_get_var_indices;
-    break;
-  case OBJ_BAT:
-    num = net->num_bats;
-    array = net->bat;
-    get_element = &BAT_array_get;
-    get_var_indices = &BAT_get_var_indices;
-    break;
-  default:
-    sprintf(net->error_string,"invalid object type");
-    net->error_flag = TRUE;
-    return NULL;
-  }
-    
-  // Count
-  num_subvars = 0;
-  for (i = 0; i < num; i++) {
-    obj = get_element(array,i);
-    indices = get_var_indices(obj,var);
-    num_subvars += VEC_get_size(indices);
-    VEC_del(indices);
-  }
-
-  // Allocate
-  proj = MAT_new(num_subvars,
-		 net->num_vars,
-		 num_subvars);
-  
-  // Fill
-  num_subvars = 0;
-  for (i = 0; i < num; i++) {
-    obj = get_element(array,i);
-    indices = get_var_indices(obj,var);
-    for (j = 0; j < VEC_get_size(indices); j++) {
-      MAT_set_i(proj,num_subvars,num_subvars);
-      MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
-      MAT_set_d(proj,num_subvars,1.);
-      num_subvars++;
-    }
-    VEC_del(indices);
-  }
-       
-  // Return
-  return proj;
-}
-*/
-
-Mat* NET_get_var_projection(Net* net, char obj_type, char var, int t_start, int t_end) {
+Mat* NET_get_var_projection(Net* net, char obj_type, unsigned char var, int t_start, int t_end) {
   
   // Local variables
   int num_subvars;
@@ -1533,7 +1430,7 @@ Mat* NET_get_var_projection(Net* net, char obj_type, char var, int t_start, int 
     t_end = net->num_periods-1;
 
   // Check
-  if ((obj_type == OBJ_ALL) && (var != ALL_VARS)) {
+  if ((obj_type == OBJ_ALL) && (var != 0xFF)) {
     sprintf(net->error_string,"component-specific flag cannot be used on all components");
     net->error_flag = TRUE;
     return NULL;
@@ -2002,7 +1899,7 @@ void NET_set_vargen_buses(Net* net, Bus* bus_list) {
   }
 }
 
-void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, char val_mask) {
+void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsigned char val_mask) {
 
   // Local variables
   int i;
@@ -2010,7 +1907,7 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, char
   void* obj;
   void* array;
   void* (*get_element)(void* array, int index);
-  int (*set_flags)(void*,char,char,int);
+  int (*set_flags)(void*,char,unsigned char,int);
   BOOL (*has_properties)(void*,char);
 
   // Check
@@ -2090,10 +1987,10 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, char
   }
 }
 
-void NET_set_flags_of_component(Net* net, void* obj, char obj_type, char flag_mask, char val_mask) {
+void NET_set_flags_of_component(Net* net, void* obj, char obj_type, char flag_mask, unsigned char val_mask) {
 
   // Local variables
-  int (*set_flags)(void*,char,char,int);
+  int (*set_flags)(void*,char,unsigned char,int);
   char (*get_obj_type)(void*);
 
   // Check

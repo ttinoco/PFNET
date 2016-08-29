@@ -279,7 +279,7 @@ void BAT_get_var_values(Bat* bat, Vec* values, int code) {
   }
 }
 
-int BAT_get_num_vars(void* vbat, char var, int t_start, int t_end) {
+int BAT_get_num_vars(void* vbat, unsigned char var, int t_start, int t_end) {
 
   // Local vars
   Bat* bat = (Bat*)vbat;
@@ -303,7 +303,7 @@ int BAT_get_num_vars(void* vbat, char var, int t_start, int t_end) {
   return num_vars;
 }
 
-Vec* BAT_get_var_indices(void* vbat, char var, int t_start, int t_end) {
+Vec* BAT_get_var_indices(void* vbat, unsigned char var, int t_start, int t_end) {
 
   // Local vars
   Bat* bat = (Bat*)vbat;
@@ -338,7 +338,7 @@ Vec* BAT_get_var_indices(void* vbat, char var, int t_start, int t_end) {
   return indices;
 }
 
-BOOL BAT_has_flags(void* vbat, char flag_type, char mask) {
+BOOL BAT_has_flags(void* vbat, char flag_type, unsigned char mask) {
   Bat* bat = (Bat*)vbat;
   if (bat) {
     if (flag_type == FLAG_VARS)
@@ -478,7 +478,7 @@ void BAT_set_eta_d(Bat* bat, REAL eta_d) {
     bat->eta_d = eta_d;
 }
 
-int BAT_set_flags(void* vbat, char flag_type, char mask, int index) {
+int BAT_set_flags(void* vbat, char flag_type, unsigned char mask, int index) {
 
   // Local variables
   char* flags_ptr = NULL;

@@ -800,7 +800,7 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
   }
 }
 
-int BUS_get_num_vars(void* vbus, char var, int t_start, int t_end) {
+int BUS_get_num_vars(void* vbus, unsigned char var, int t_start, int t_end) {
 
   // Local vars
   Bus* bus = (Bus*)vbus;
@@ -828,7 +828,7 @@ int BUS_get_num_vars(void* vbus, char var, int t_start, int t_end) {
   return num_vars;
 }
 
-Vec* BUS_get_var_indices(void* vbus, char var, int t_start, int t_end) {
+Vec* BUS_get_var_indices(void* vbus, unsigned char var, int t_start, int t_end) {
 
   // Local vars
   Bus* bus = (Bus*)vbus;
@@ -1101,7 +1101,7 @@ REAL BUS_get_quantity(Bus* bus, int qtype, int t) {
   }
 }
 
-BOOL BUS_has_flags(void* vbus, char flag_type, char mask) {
+BOOL BUS_has_flags(void* vbus, char flag_type, unsigned char mask) {
   Bus* bus = (Bus*)vbus;
   if (bus) {
     if (flag_type == FLAG_VARS)
@@ -1392,7 +1392,7 @@ void BUS_set_index(Bus* bus, int index) {
     bus->index = index;
 }
 
-int BUS_set_flags(void* vbus, char flag_type, char mask, int index) {
+int BUS_set_flags(void* vbus, char flag_type, unsigned char mask, int index) {
   
   // Local variables
   char* flags_ptr = NULL;

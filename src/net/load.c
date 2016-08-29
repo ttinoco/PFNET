@@ -267,7 +267,7 @@ void LOAD_get_var_values(Load* load, Vec* values, int code) {
   }
 }
 
-int LOAD_get_num_vars(void* vload, char var, int t_start, int t_end) {
+int LOAD_get_num_vars(void* vload, unsigned char var, int t_start, int t_end) {
 
   // Local vars
   Load* load = (Load*)vload;
@@ -289,7 +289,7 @@ int LOAD_get_num_vars(void* vload, char var, int t_start, int t_end) {
   return num_vars;
 }
 
-Vec* LOAD_get_var_indices(void* vload, char var, int t_start, int t_end) {
+Vec* LOAD_get_var_indices(void* vload, unsigned char var, int t_start, int t_end) {
 
   // Local vars
   Load* load = (Load*)vload;
@@ -317,7 +317,7 @@ Vec* LOAD_get_var_indices(void* vload, char var, int t_start, int t_end) {
   return indices;
 }
 
-BOOL LOAD_has_flags(void* vload, char flag_type, char mask) {
+BOOL LOAD_has_flags(void* vload, char flag_type, unsigned char mask) {
   Load* load = (Load*)vload;
   if (load) {
     if (flag_type == FLAG_VARS)
@@ -463,7 +463,7 @@ void LOAD_set_Q(Load* load, REAL Q, int t) {
     load->Q[t] = Q;
 }
 
-int LOAD_set_flags(void* vload, char flag_type, char mask, int index) {
+int LOAD_set_flags(void* vload, char flag_type, unsigned char mask, int index) {
 
   // Local variables
   char* flags_ptr = NULL;

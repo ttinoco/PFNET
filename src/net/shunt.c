@@ -245,7 +245,7 @@ void SHUNT_get_var_values(Shunt* shunt, Vec* values, int code) {
   }
 }
 
-int SHUNT_get_num_vars(void* vshunt, char var, int t_start, int t_end) {
+int SHUNT_get_num_vars(void* vshunt, unsigned char var, int t_start, int t_end) {
 
   // Local vars
   Shunt* shunt = (Shunt*)vshunt;
@@ -269,7 +269,7 @@ int SHUNT_get_num_vars(void* vshunt, char var, int t_start, int t_end) {
   return num_vars;
 }
 
-Vec* SHUNT_get_var_indices(void* vshunt, char var, int t_start, int t_end) {
+Vec* SHUNT_get_var_indices(void* vshunt, unsigned char var, int t_start, int t_end) {
 
   // Local vars
   Shunt* shunt = (Shunt*)vshunt;
@@ -304,7 +304,7 @@ Vec* SHUNT_get_var_indices(void* vshunt, char var, int t_start, int t_end) {
   return indices;
 }
 
-BOOL SHUNT_has_flags(void* vshunt, char flag_type, char mask) {
+BOOL SHUNT_has_flags(void* vshunt, char flag_type, unsigned char mask) {
   Shunt* shunt = (Shunt*)vshunt;
   if (shunt) {
     if (flag_type == FLAG_VARS)
@@ -459,7 +459,7 @@ void SHUNT_set_b_values(Shunt* shunt, REAL* values, int num, REAL norm) {
   }
 }
 
-int SHUNT_set_flags(void* vshunt, char flag_type, char mask, int index) {
+int SHUNT_set_flags(void* vshunt, char flag_type, unsigned char mask, int index) {
 
   // Local variables
   char* flags_ptr = NULL;

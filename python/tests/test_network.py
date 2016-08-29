@@ -2701,7 +2701,74 @@ class TestNetwork(unittest.TestCase):
             self.assertTrue(net.has_error())
             net.clear_error()
             self.assertFalse(net.has_error())
+
+            # bus all
+            P = net.get_var_projection(pf.OBJ_BUS,pf.ALL_VARS,2,3)
+            self.assertTrue(np.all(P.data == 1.))
+            self.assertTupleEqual(P.shape,(2*(net.num_buses-1)*2,net.num_vars))
+            
+            # gen all
+            P = net.get_var_projection(pf.OBJ_GEN,pf.ALL_VARS,2,4)
+            self.assertTrue(np.all(P.data == 1.))
+            self.assertTupleEqual(P.shape,((net.num_generators-net.get_num_slack_gens() +
+                                            net.get_num_reg_gens())*3,net.num_vars))
+
+            # load all
+            P = net.get_var_projection(pf.OBJ_LOAD,pf.ALL_VARS,1,4)
+            self.assertTrue(np.all(P.data == 1.))
+            self.assertTupleEqual(P.shape,(net.num_loads*4,net.num_vars))
+
+            # branch all
+            P = net.get_var_projection(pf.OBJ_BRANCH,pf.ALL_VARS)
+            self.assertTrue(np.all(P.data == 1.))
+            self.assertTupleEqual(P.shape,((net.get_num_tap_changers_v() +
+                                            net.get_num_phase_shifters())*self.T,net.num_vars))
+
+            # shunt all
+            P = net.get_var_projection(pf.OBJ_SHUNT,pf.ALL_VARS,3,3)
+            self.assertTrue(np.all(P.data == 1.))
+            self.assertTupleEqual(P.shape,(net.get_num_switched_shunts(),net.num_vars))
+
+            # vargen all
+            P = net.get_var_projection(pf.OBJ_VARGEN,pf.ALL_VARS,-1,2)
+            self.assertTrue(np.all(P.data == 1.))
+            self.assertTupleEqual(P.shape,(2*net.num_var_generators*3,net.num_vars))
+
+            # battery all
+            P = net.get_var_projection(pf.OBJ_BAT,pf.ALL_VARS,3,6)
+            self.assertTrue(np.all(P.data == 1.))
+            self.assertTupleEqual(P.shape,(net.num_batteries*3*2,net.num_vars))
+
+            # all all
             P = net.get_var_projection(pf.OBJ_ALL,pf.ALL_VARS,2,2)
+            self.assertTrue(np.all(P.data == 1.))
+            self.assertTupleEqual(P.shape,(net.num_vars/self.T,net.num_vars))
+            for t in range(self.T):
+                for bus in net.buses:
+                    if not bus.is_slack():
+                        a = np.where(P.col == bus.index_v_mag[t])[0]
+                        if t == 2:
+                            self.assertTupleEqual(a.shape,(1,))
+                        else:
+                            self.assertTupleEqual(a.shape,(0,))
+                        a = np.where(P.col == bus.index_v_ang[t])[0]
+                        if t == 2:
+                            self.assertTupleEqual(a.shape,(1,))
+                        else:
+                            self.assertTupleEqual(a.shape,(0,))
+                for gen in net.generators:
+                    if not gen.is_slack():
+                        a = np.where(P.col == gen.index_P[t])[0]
+                        if t == 2:
+                            self.assertTupleEqual(a.shape,(1,))
+                        else:
+                            self.assertTupleEqual(a.shape,(0,))
+                    if gen.is_regulator():
+                        a = np.where(P.col == gen.index_Q[t])[0]
+                        if t == 2:
+                            self.assertTupleEqual(a.shape,(1,))
+                        else:
+                            self.assertTupleEqual(a.shape,(0,))
 
     def test_variable_limits(self):
 

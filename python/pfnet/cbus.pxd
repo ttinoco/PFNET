@@ -60,6 +60,7 @@ cdef extern from "pfnet/bus.h":
     int BUS_get_index_P(Bus* bus)
     int BUS_get_index_Q(Bus* bus)
     int BUS_get_number(Bus* bus)
+    int BUS_get_num_vars(void* bus, char var, int t_start, int t_end)
     REAL BUS_get_price(Bus* bus, int t)
     char* BUS_get_name(Bus* bus)
     Gen* BUS_get_gen(Bus* bus)
