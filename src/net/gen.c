@@ -15,46 +15,48 @@
 struct Gen {
 
   // Bus
-  Bus* bus;            /**< @brief Bus to which generator is connected */
-  Bus* reg_bus;        /**< @brief Bus regulated by this generator */
+  Bus* bus;            /**< @brief Bus to which generator is connected. */
+  Bus* reg_bus;        /**< @brief Bus regulated by this generator. */
 
   // Times
   int num_periods;   /**< @brief Number of time periods. */
   
   // Flags
-  BOOL outage;         /**< @brief Flag for indicating that generator in on outage */
-  char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
-  char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
-  char vars;           /**< @brief Flags for indicating which quantities should be treated as variables */
-  char sparse;         /**< @brief Flags for indicating which control adjustments should be sparse */
+  BOOL outage;         /**< @brief Flag for indicating that generator in on outage. */
+  char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value. */
+  char bounded;        /**< @brief Flags for indicating which quantities should be bounded. */
+  char vars;           /**< @brief Flags for indicating which quantities should be treated as variables. */
+  char sparse;         /**< @brief Flags for indicating which control adjustments should be sparse. */
   
   // Active power
-  REAL* P;              /**< @brief Generator active power production (p.u. system base power) */
-  REAL P_max;          /**< @brief Maximum generator active power production (p.u.) */
-  REAL P_min;          /**< @brief Minimum generator active power production (p.u.) */
+  REAL* P;             /**< @brief Generator active power production (p.u. system base power). */
+  REAL P_max;          /**< @brief Maximum generator active power production (p.u.). */
+  REAL P_min;          /**< @brief Minimum generator active power production (p.u.). */
+  REAL dP_max;         /**< @brief Maximum generator active power ramping (p.u.). */
+  REAL P_prev;         /**< @brief Generator active power production during the previous time period (p.u.). */
 
   // Reactive power
-  REAL* Q;              /**< @brief Generator reactive power production (p.u. system base power) */
-  REAL Q_max;          /**< @brief Maximum generator reactive power production (p.u.) */
-  REAL Q_min;          /**< @brief Minimum generator reactive power production (p.u.) */
+  REAL* Q;             /**< @brief Generator reactive power production (p.u. system base power). */
+  REAL Q_max;          /**< @brief Maximum generator reactive power production (p.u.). */
+  REAL Q_min;          /**< @brief Minimum generator reactive power production (p.u.). */
 
   // Cost
-  REAL cost_coeff_Q0;  /**< @brief Generator cost coefficient (constant term, units of $/hr ) */
-  REAL cost_coeff_Q1;  /**< @brief Generator cost coefficient (linear term, units of $/(hr p.u.) ) */
-  REAL cost_coeff_Q2;  /**< @brief Generator cost coefficient (quadratic term, units of $/(hr p.u.^2) ) */
+  REAL cost_coeff_Q0;  /**< @brief Generator cost coefficient (constant term, units of $/hr ). */
+  REAL cost_coeff_Q1;  /**< @brief Generator cost coefficient (linear term, units of $/(hr p.u.) ). */
+  REAL cost_coeff_Q2;  /**< @brief Generator cost coefficient (quadratic term, units of $/(hr p.u.^2) ). */
 
   // Indices
-  int index;           /**< @brief Generator index */
-  int* index_P;         /**< @brief Active power index */
-  int* index_Q;         /**< @brief Reactive power index */
+  int index;           /**< @brief Generator index. */
+  int* index_P;        /**< @brief Active power index. */
+  int* index_Q;        /**< @brief Reactive power index. */
 
   // Sensitivities
-  REAL* sens_P_u_bound;  /**< @brief Sensitivity of active power upper bound */
-  REAL* sens_P_l_bound;  /**< @brief Sensitivity of active power lower bound */
+  REAL* sens_P_u_bound;  /**< @brief Sensitivity of active power upper bound. */
+  REAL* sens_P_l_bound;  /**< @brief Sensitivity of active power lower bound. */
 
   // List
-  Gen* next;     /**< @brief List of generators connected to a bus */
-  Gen* reg_next; /**< @brief List of generators regulating a bus */
+  Gen* next;     /**< @brief List of generators connected to a bus. */
+  Gen* reg_next; /**< @brief List of generators regulating a bus. */
 };
 
 void* GEN_array_get(void* gen_array, int index) {
@@ -247,6 +249,13 @@ REAL GEN_get_P(Gen* gen, int t) {
     return 0;
 }
 
+REAL GEN_get_dP_max(Gen* gen) {
+  if (gen)
+    return gen->dP_max;
+  else 
+    return 0;
+}
+
 REAL GEN_get_P_max(Gen* gen) {
   if (gen)
     return gen->P_max;
@@ -257,6 +266,13 @@ REAL GEN_get_P_max(Gen* gen) {
 REAL GEN_get_P_min(Gen* gen) {
   if (gen)
     return gen->P_min;
+  else 
+    return 0;
+}
+
+REAL GEN_get_P_prev(Gen* gen) {
+  if (gen)
+    return gen->P_prev;
   else 
     return 0;
 }
@@ -436,8 +452,10 @@ void GEN_init(Gen* gen, int num_periods) {
   gen->sparse = 0x00;
   gen->vars = 0x00;
   
+  gen->dP_max = 0;
   gen->P_max = 0;
   gen->P_min = 0;
+  gen->P_prev = 0;
     
   gen->Q_max = 0;
   gen->Q_min = 0;
@@ -583,14 +601,24 @@ void GEN_set_P(Gen* gen, REAL P, int t) {
     gen->P[t] = P;
 }
 
-void GEN_set_P_max(Gen* gen, REAL P_max) {
+void GEN_set_dP_max(Gen* gen, REAL P) {
   if (gen)
-    gen->P_max = P_max;
+    gen->dP_max = P;
 }
 
-void GEN_set_P_min(Gen* gen, REAL P_min) {
+void GEN_set_P_max(Gen* gen, REAL P) {
   if (gen)
-    gen->P_min = P_min;
+    gen->P_max = P;
+}
+
+void GEN_set_P_min(Gen* gen, REAL P) {
+  if (gen)
+    gen->P_min = P;
+}
+
+void GEN_set_P_prev(Gen* gen, REAL P) {
+  if (gen)
+    gen->P_prev = P;
 }
 
 void GEN_set_Q(Gen* gen, REAL Q, int t) {

@@ -24,19 +24,20 @@
 /** \defgroup constr_types Constraint Types
  *  @{
  */
-#define CONSTR_TYPE_UNKNOWN -1     /**< @brief Constraint type: unknown */
-#define CONSTR_TYPE_PF 0           /**< @brief Constraint type: power flow equations */
-#define CONSTR_TYPE_DCPF 1         /**< @brief Constraint type: DC power flow equations */
-#define CONSTR_TYPE_LINPF 2        /**< @brief Constraint type: Linear power flow equations */
-#define CONSTR_TYPE_FIX 3          /**< @brief Constraint type: variable fixing */
-#define CONSTR_TYPE_BOUND 4        /**< @brief Constraint type: variable bounds as nonlinear equality constraints */ 
-#define CONSTR_TYPE_PAR_GEN_P 5    /**< @brief Constraint type: generator participation (active power) */
-#define CONSTR_TYPE_PAR_GEN_Q 6    /**< @brief Constraint type: generator participation (reactive power) */
-#define CONSTR_TYPE_REG_GEN 7      /**< @brief Constraint type: voltage regualtion by generators */
-#define CONSTR_TYPE_REG_TRAN 8     /**< @brief Constraint type: voltage regulation by transformers */
-#define CONSTR_TYPE_REG_SHUNT 9    /**< @brief Constraint type: voltage regulation by shunt devices */
-#define CONSTR_TYPE_DC_FLOW_LIM 10 /**< @brief Constraint type: DC branch flow limits */
-#define CONSTR_TYPE_LBOUND 11      /**< @brief Constraint type: variable bounds as linear inequality constraints */
+#define CONSTR_TYPE_UNKNOWN -1     /**< @brief Constraint type: Unknown. */
+#define CONSTR_TYPE_PF 0           /**< @brief Constraint type: Power flow equations. */
+#define CONSTR_TYPE_DCPF 1         /**< @brief Constraint type: DC power flow equations. */
+#define CONSTR_TYPE_LINPF 2        /**< @brief Constraint type: Linearized power flow equations. */
+#define CONSTR_TYPE_FIX 3          /**< @brief Constraint type: Variable fixing. */
+#define CONSTR_TYPE_BOUND 4        /**< @brief Constraint type: Variable bounds as nonlinear equality constraints. */ 
+#define CONSTR_TYPE_PAR_GEN_P 5    /**< @brief Constraint type: Generator participation (active power). */
+#define CONSTR_TYPE_PAR_GEN_Q 6    /**< @brief Constraint type: Generator participation (reactive power). */
+#define CONSTR_TYPE_REG_GEN 7      /**< @brief Constraint type: Voltage regualtion by generators. */
+#define CONSTR_TYPE_REG_TRAN 8     /**< @brief Constraint type: Voltage regulation by transformers. */
+#define CONSTR_TYPE_REG_SHUNT 9    /**< @brief Constraint type: Voltage regulation by shunt devices. */
+#define CONSTR_TYPE_DC_FLOW_LIM 10 /**< @brief Constraint type: DC branch flow limits. */
+#define CONSTR_TYPE_LBOUND 11      /**< @brief Constraint type: Variable bounds as linear inequality constraints. */
+#define CONSTR_TYPE_GEN_RAMP 12    /**< @brief Constraint type: Generator active power ramping constraints. */
 /** @} */
 
 // Constraint types strings
@@ -53,6 +54,7 @@
 #define CONSTR_TYPE_REG_SHUNT_STR "REG_SHUNT"
 #define CONSTR_TYPE_DC_FLOW_LIM_STR "DC_FLOW_LIM"
 #define CONSTR_TYPE_LBOUND_STR "LBOUND"
+#define CONSTR_TYPE_GEN_RAMP_STR "GEN_RAMP"
 
 // Constraint
 typedef struct Constr Constr;

@@ -3428,6 +3428,159 @@ class TestConstraints(unittest.TestCase):
             self.assertGreater(norm(constr.b),0)
             self.assertLess(norm(constr.b - (constrPF.J*x0-constrPF.f)),1e-10)
 
+    def test_constr_GEN_RAMP(self):
+        
+        # Multi period
+        net = self.netMP
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+            self.assertEqual(net.num_vars,0)
+           
+            # Gens
+            for gen in net.generators:
+                gen.dP_max = np.random.rand()*100.
+                gen.P_prev = np.random.rand()*10.
+                gen.P = np.random.rand()*20
+
+            # Vars
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_NOT_SLACK,
+                          pf.GEN_VAR_P)
+            num = net.num_generators-net.get_num_slack_gens()
+            self.assertEqual(net.num_vars,num*self.T)
+
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+            
+            # Constraint
+            constr = pf.Constraint(pf.CONSTR_TYPE_GEN_RAMP,net)
+
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            l = constr.l
+            G = constr.G
+            u = constr.u
+            
+            # Before 
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(0,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,0))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(0,0))
+            self.assertEqual(A.nnz,0)
+            self.assertTrue(type(l) is np.ndarray)
+            self.assertTupleEqual(l.shape,(0,))
+            self.assertTrue(type(u) is np.ndarray)
+            self.assertTupleEqual(u.shape,(0,))
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(0,0))
+            self.assertEqual(G.nnz,0)
+            self.assertEqual(constr.Jcounter,0)
+            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.Gcounter,0)
+
+            constr.analyze()
+            self.assertEqual(constr.Acounter,0)
+            constr.eval(x0)
+            self.assertEqual(constr.Acounter,0)
+
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            l = constr.l
+            G = constr.G
+            u = constr.u
+            
+            # After
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(0,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,net.num_vars))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(0,net.num_vars))
+            self.assertEqual(A.nnz,0)
+            self.assertTrue(type(l) is np.ndarray)
+            self.assertTupleEqual(l.shape,(num*self.T,))
+            self.assertTrue(type(u) is np.ndarray)
+            self.assertTupleEqual(u.shape,(num*self.T,))
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(num*self.T,net.num_vars))
+            self.assertEqual(G.nnz,num*(1 + (self.T-1)*2))
+            self.assertEqual(constr.Jcounter,0)
+            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.Gcounter,0)
+            
+            for t in range(self.T):
+                for gen in net.generators:
+                    if not gen.is_slack():
+                        ac = np.where(G.col == gen.index_P[t])[0]
+
+                        # Last time
+                        if t == self.T-1:
+                            self.assertEqual(ac.size,1)
+                            i = G.row[ac[0]]
+                            self.assertEqual(G.data[ac[0]],1.)
+                            self.assertEqual(l[i],-gen.dP_max)
+                            self.assertEqual(u[i],gen.dP_max)
+                            ar = np.where(G.row == i)[0]
+                            self.assertEqual(ar.size,2)
+                            for j in ar:
+                                if G.col[j] == gen.index_P[t]:
+                                    pass
+                                else:
+                                    self.assertEqual(G.col[j],gen.index_P[t-1])
+                                    self.assertEqual(G.data[j],-1.)
+
+                        # Not last time
+                        else:
+                            self.assertEqual(ac.size,2)
+                            for i in ac:
+                                self.assertEqual(G.col[i],gen.index_P[t])
+
+                                # added
+                                if G.data[i] == -1.:
+                                    self.assertEqual(l[G.row[i]],-gen.dP_max)
+                                    self.assertEqual(u[G.row[i]],gen.dP_max)
+                                    ar = np.where(G.row == G.row[i])[0]
+                                    self.assertEqual(ar.size,2)
+                                    for j in ar:
+                                        if G.col[j] == gen.index_P[t]:
+                                            pass
+                                        else:
+                                            self.assertEqual(G.col[j],gen.index_P[t+1])
+                                            self.assertEqual(G.data[j],1.)
+
+                                # subtracted
+                                else:
+                                    if t == 0:
+                                        self.assertEqual(l[G.row[i]],-gen.dP_max+gen.P_prev)
+                                        self.assertEqual(u[G.row[i]],gen.dP_max+gen.P_prev)
+                                    else:
+                                        self.assertEqual(l[G.row[i]],-gen.dP_max)
+                                        self.assertEqual(u[G.row[i]],gen.dP_max)
+                                        ar = np.where(G.row == G.row[i])[0]
+                                        self.assertEqual(ar.size,2)
+                                        for j in ar:
+                                            if G.col[j] == gen.index_P[t]:
+                                                pass
+                                            else:
+                                                self.assertEqual(G.col[j],gen.index_P[t-1])
+                                                self.assertEqual(G.data[j],-1.)
+
     def tearDown(self):
         
         pass

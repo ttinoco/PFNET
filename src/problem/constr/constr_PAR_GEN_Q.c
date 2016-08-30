@@ -38,7 +38,6 @@ void CONSTR_PAR_GEN_Q_count_step(Constr* c, Branch* br, int t) {
   int* Aconstr_index;
   char* bus_counted;
   int i;
-  int j;
   int T;
 
   // Number of periods
@@ -123,7 +122,6 @@ void CONSTR_PAR_GEN_Q_analyze_step(Constr* c, Branch* br, int t) {
   Vec* b;
   Mat* A;
   int i;
-  int j;
   REAL Qmin1;
   REAL Qmin2;
   REAL dQ1;

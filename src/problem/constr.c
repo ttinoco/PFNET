@@ -22,6 +22,7 @@
 #include <pfnet/constr_REG_SHUNT.h>
 #include <pfnet/constr_DC_FLOW_LIM.h>
 #include <pfnet/constr_LBOUND.h>
+#include <pfnet/constr_GEN_RAMP.h>
 
 struct Constr {
 
@@ -209,6 +210,8 @@ char* CONSTR_get_type_str(Constr* c) {
       return CONSTR_TYPE_DC_FLOW_LIM_STR;
     case CONSTR_TYPE_LBOUND:
       return CONSTR_TYPE_LBOUND_STR;
+    case CONSTR_TYPE_GEN_RAMP:
+      return CONSTR_TYPE_GEN_RAMP_STR;
     default:
       return CONSTR_TYPE_UNKNOWN_STR;
     }
@@ -704,6 +707,16 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_eval_step = &CONSTR_LBOUND_eval_step;
     c->func_store_sens_step = &CONSTR_LBOUND_store_sens_step;
     c->func_free = &CONSTR_LBOUND_free;
+  }
+  else if (type == CONSTR_TYPE_GEN_RAMP) { // generator ramp constraints (lin ineq)
+    c->func_init = &CONSTR_GEN_RAMP_init;
+    c->func_count_step = &CONSTR_GEN_RAMP_count_step;
+    c->func_allocate = &CONSTR_GEN_RAMP_allocate;
+    c->func_clear = &CONSTR_GEN_RAMP_clear;
+    c->func_analyze_step = &CONSTR_GEN_RAMP_analyze_step;
+    c->func_eval_step = &CONSTR_GEN_RAMP_eval_step;
+    c->func_store_sens_step = &CONSTR_GEN_RAMP_store_sens_step;
+    c->func_free = &CONSTR_GEN_RAMP_free;
   }
   else { // unknown 
     c->func_init = NULL;

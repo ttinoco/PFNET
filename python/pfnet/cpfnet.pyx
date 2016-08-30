@@ -1469,6 +1469,16 @@ cdef class Generator:
             for t in range(np.minimum(Par.size,self.num_periods)):
                 cgen.GEN_set_P(self._c_ptr,Par[t],t)
 
+    property P_prev:
+        """ Generator active power during the previous time period (p.u. system base MVA) (float or array). """
+        def __get__(self): return cgen.GEN_get_P_prev(self._c_ptr)
+        def __set__(self,P): cgen.GEN_set_P_prev(self._c_ptr,P)
+
+    property dP_max:
+        """ Generator active power ramping limit (p.u. system base MVA) (float). """
+        def __get__(self): return cgen.GEN_get_dP_max(self._c_ptr)
+        def __set__(self,P): cgen.GEN_set_dP_max(self._c_ptr,P)
+
     property P_max:
         """ Generator active power upper limit (p.u. system base MVA) (float). """
         def __get__(self): return cgen.GEN_get_P_max(self._c_ptr)
@@ -3909,6 +3919,7 @@ CONSTR_TYPE_REG_TRAN = cconstr.CONSTR_TYPE_REG_TRAN
 CONSTR_TYPE_REG_SHUNT = cconstr.CONSTR_TYPE_REG_SHUNT
 CONSTR_TYPE_DC_FLOW_LIM = cconstr.CONSTR_TYPE_DC_FLOW_LIM
 CONSTR_TYPE_LBOUND = cconstr.CONSTR_TYPE_LBOUND
+CONSTR_TYPE_GEN_RAMP = cconstr.CONSTR_TYPE_GEN_RAMP
 
 class ConstraintError(Exception):
     """
