@@ -2319,7 +2319,6 @@ void NET_update_properties_branch(Net* net, Branch* br, Vec* var_values) {
     if (k == 0) {
       BUS_inject_P(bus,-BRANCH_get_P_km(br, var_values));
       BUS_inject_Q(bus,-BRANCH_get_Q_km(br, var_values));
-      }
     }
     else {
       BUS_inject_P(bus,-BRANCH_get_P_mk(br, var_values));

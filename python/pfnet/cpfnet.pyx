@@ -624,7 +624,10 @@ cdef class Bus:
             return reg_shunts
 
     property branches_from:
-        """ (Deprecated, see branches_k) List of :class:`branches <pfnet.Branch>` that have this bus on the "from" side (list). """
+        """ .. deprecated:: TBD  See :attr:`branches_k <pfnet.Bus.branches_k>`.
+
+        List of :class:`branches <pfnet.Branch>` that have this bus on the "from" side (list).
+        """
         def __get__(self):
             branches = []
             cdef cbranch.Branch* br = cbus.BUS_get_branch_from(self._c_ptr)
@@ -634,7 +637,7 @@ cdef class Bus:
             return branches
 
     property branches_k:
-        """ List of :class:`branches <pfnet.Branch` that have this bus on the "k" (aka "from" or "i") side (list). """
+        """ List of :class:`branches <pfnet.Branch>` that have this bus on the "k" (aka "from" or "i") side (list). """
         def __get__(self):
             branches = []
             cdef cbranch.Branch* br = cbus.BUS_get_branch_k(self._c_ptr)
@@ -644,7 +647,10 @@ cdef class Bus:
             return branches
 
     property branches_to:
-        """ (Deprecated, see branches_m) List of :class:`branches <pfnet.Branch>` that have this bus on the "to" side (list). """
+        """ .. deprecated:: TBD  See :attr:`branches_m <pfnet.Bus.branches_m>`.
+
+        List of :class:`branches <pfnet.Branch>` that have this bus on the "to" side (list).
+        """
         def __get__(self):
             branches = []
             cdef cbranch.Branch* br = cbus.BUS_get_branch_to(self._c_ptr)
@@ -951,7 +957,10 @@ cdef class Branch:
         def __set__(self,value): cbranch.BRANCH_set_ratio_min(self._c_ptr,value)
 
     property bus_from:
-        """ (Deprecated, see bus_k) :class:`Bus <pfnet.Bus>` connected to the "from" side. """
+        """ .. deprecated:: TBD  See :attr:`bus_k <pfnet.Branch.bus_k>`.
+
+        :class:`Bus <pfnet.Bus>` connected to the "from" side.
+        """
         def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_from(self._c_ptr))
 
     property bus_k:
@@ -959,7 +968,10 @@ cdef class Branch:
         def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_k(self._c_ptr))
 
     property bus_to:
-        """ (Deprecated, see bus_m) :class:`Bus <pfnet.Bus>` connected to the "to" side. """
+        """ .. deprecated:: TBD  See :attr:`bus_m <pfnet.Branch.bus_m>`.
+
+        :class:`Bus <pfnet.Bus>` connected to the "to" side.
+        """
         def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_to(self._c_ptr))
 
     property bus_m:
@@ -975,7 +987,9 @@ cdef class Branch:
         def __get__(self): return cbranch.BRANCH_get_b(self._c_ptr)
 
     property b_from:
-        """ (Deprecated, see b_k) Branch shunt susceptance at the "from" side (p.u.) (float). """
+        """ .. deprecated:: TBD  See :attr:`b_k <pfnet.Branch.b_k>`.
+
+        Branch shunt susceptance at the "from" side (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_b_from(self._c_ptr)
 
     property b_k:
@@ -983,7 +997,9 @@ cdef class Branch:
         def __get__(self): return cbranch.BRANCH_get_b_k(self._c_ptr)
 
     property b_to:
-        """ (Deprecated, see b_m) Branch shunt susceptance at the "to" side (p.u.) (float). """
+        """ .. deprecated:: TBD  See :attr:`b_m <pfnet.Branch.b_m>`.
+
+        Branch shunt susceptance at the "to" side (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_b_to(self._c_ptr)
 
     property b_m:
@@ -995,7 +1011,9 @@ cdef class Branch:
         def __get__(self): return cbranch.BRANCH_get_g(self._c_ptr)
 
     property g_from:
-        """ (Deprecated, see g_k) Branch shunt conductance at the "from" side (p.u.) (float). """
+        """ .. deprecated:: TBD  See :attr:`g_k <pfnet.Branch.g_k>`.
+
+        Branch shunt conductance at the "from" side (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_g_from(self._c_ptr)
 
     property g_k:
@@ -1003,7 +1021,9 @@ cdef class Branch:
         def __get__(self): return cbranch.BRANCH_get_g_k(self._c_ptr)
 
     property g_to:
-        """ (Deprecated, see g_m) Branch shunt conductance at the "to" side (p.u.) (float). """
+        """ .. deprecated:: TBD  See :attr:`g_m <pfnet.Branch.g_m>`.
+
+        Branch shunt conductance at the "to" side (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_g_to(self._c_ptr)
 
     property g_m:
@@ -1071,51 +1091,86 @@ cdef class Branch:
         def __get__(self): return cbranch.BRANCH_get_Q_m_shunt(self._c_ptr, NULL)
 
     property P_from_to:
-      """ (Deprecated, see P_km) Real power flow at bus "k" towards bus "m" (from -> to) (p.u.) (float). """
+      """ .. deprecated:: TBD  See :attr:`P_km <pfnet.Branch.P_km>`.
+
+      Real power flow at bus "k" towards bus "m" (from -> to) (p.u.) (float). """
       def __get__(self): return cbranch.BRANCH_get_P_from_to(self._c_ptr, NULL)
 
     property Q_from_to:
-      """ (Deprecated, see Q_km) Reactive power flow at bus "k" towards bus "m" (from -> to) (p.u.) (float). """
+      """ .. deprecated:: TBD  See :attr:`Q_km <pfnet.Branch.Q_km>`.
+
+      Reactive power flow at bus "k" towards bus "m" (from -> to) (p.u.) (float).
+      """
       def __get__(self): return cbranch.BRANCH_get_Q_from_to(self._c_ptr, NULL)
 
     property P_to_from:
-      """ (Deprecated, see P_mk) Real power flow at bus "m" towards bus "k" (to -> from) (p.u.) (float). """
+      """ .. deprecated:: TBD  See :attr:`P_mk <pfnet.Branch.P_mk>`.
+
+      Real power flow at bus "m" towards bus "k" (to -> from) (p.u.) (float).
+      """
       def __get__(self): return cbranch.BRANCH_get_P_to_from(self._c_ptr, NULL)
 
     property Q_to_from:
-      """ (Deprecated, see Q_mk) Reactive power flow at bus "m" towards bus "k" (to -> from) (p.u.) (float). """
+      """ .. deprecated:: TBD  See :attr:`Q_mk <pfnet.Branch.Q_mk>`.
+
+      Reactive power flow at bus "m" towards bus "k" (to -> from) (p.u.) (float).
+      """
       def __get__(self): return cbranch.BRANCH_get_Q_to_from(self._c_ptr, NULL)
 
     property P_series_from_to:
-      """ (Deprecated, see P_km_series) Real power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (p.u.) (float). """
+      """ .. deprecated:: TBD  See :attr:`P_km_series <pfnet.Branch.P_km_series>`.
+
+      Real power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (p.u.) (float).
+      """
       def __get__(self): return cbranch.BRANCH_get_P_series_from_to(self._c_ptr, NULL)
 
     property Q_series_from_to:
-      """ (Deprecated, see Q_km_series) Reactive power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (p.u.) (float). """
+      """ .. deprecated:: TBD  See :attr:`Q_km_series <pfnet.Branch.Q_km_series>`.
+
+      Reactive power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (p.u.) (float).
+      """
       def __get__(self): return cbranch.BRANCH_get_Q_series_from_to(self._c_ptr, NULL)
 
     property P_series_to_from:
-      """ (Deprecated, see P_mk_series) Real power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (p.u.) (float). """
+      """ .. deprecated:: TBD  See :attr:`P_mk_series <pfnet.Branch.P_mk_series>`.
+
+      Real power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (p.u.) (float).
+      """
       def __get__(self): return cbranch.BRANCH_get_P_series_to_from(self._c_ptr, NULL)
 
     property Q_series_to_from:
-      """ (Deprecated, see Q_mk_series) Reactive power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (p.u.) (float). """
+      """ .. deprecated:: TBD  See :attr:`Q_mk_series <pfnet.Branch.Q_mk_series>`.
+
+      Reactive power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (p.u.) (float).
+      """
       def __get__(self): return cbranch.BRANCH_get_Q_series_to_from(self._c_ptr, NULL)
 
     property P_shunt_from:
-      """ (Deprecated, see P_k_shunt) Real power flow into the shunt element at bus "k" (aka "from") (p.u.) (float). """
+      """ .. deprecated:: TBD  See :attr:`P_k_shunt <pfnet.Branch.P_k_shunt>`.
+
+      Real power flow into the shunt element at bus "k" (aka "from") (p.u.) (float).
+      """
       def __get__(self): return cbranch.BRANCH_get_P_shunt_from(self._c_ptr, NULL)
 
     property Q_shunt_from:
-      """ (Deprecated, see Q_k_shunt) Reactive power flow into the shunt element bus "k" (aka "from") (p.u.) (float). """
+      """ .. deprecated:: TBD  See :attr:`Q_k_shunt <pfnet.Branch.Q_k_shunt>`.
+
+      Reactive power flow into the shunt element bus "k" (aka "from") (p.u.) (float).
+      """
       def __get__(self): return cbranch.BRANCH_get_Q_shunt_from(self._c_ptr, NULL)
 
     property P_shunt_to:
-      """ (Deprecated, see P_m_shunt) Real power flow into the shunt element at bus "m" (aka "to") (p.u.) (float). """
+      """ .. deprecated:: TBD  See :attr:`P_m_shunt <pfnet.Branch.P_m_shunt>`.
+
+      Real power flow into the shunt element at bus "m" (aka "to") (p.u.) (float).
+      """
       def __get__(self): return cbranch.BRANCH_get_P_shunt_to(self._c_ptr, NULL)
 
     property Q_shunt_to:
-      """ (Deprecated, see Q_m_shunt) Reactive power flow into the shunt element at bus "m" (aka "to") (p.u.) (float). """
+      """ .. deprecated:: TBD  See :attr:`Q_m_shunt <pfnet.Branch.Q_m_shunt>`.
+
+      Reactive power flow into the shunt element at bus "m" (aka "to") (p.u.) (float).
+      """
       def __get__(self): return cbranch.BRANCH_get_Q_shunt_to(self._c_ptr, NULL)
 
     property ratingA:
