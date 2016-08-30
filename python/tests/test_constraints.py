@@ -22,13 +22,16 @@ class TestConstraints(unittest.TestCase):
     def setUp(self):
         
         # Network
+        self.T = 3
         self.net = pf.Network()
+        self.netMP = pf.Network(self.T)
 
         # Random
         np.random.seed(0)
 
     def test_constr_FIX(self):
 
+        # Single period
         net = self.net
 
         for case in test_cases.CASES:
@@ -257,6 +260,243 @@ class TestConstraints(unittest.TestCase):
                 self.assertEqual(A.col[ar[0]],load.index_P)
                 self.assertEqual(b[A.row[ar[0]]],load.P)
 
+        # Multi period
+        net = self.netMP
+
+        self.assertEqual(net.num_periods,self.T)
+        
+        for case in test_cases.CASES:
+            
+            net.load(case)
+            
+            # add vargens
+            net.add_vargens(net.get_load_buses(),50.,30.,5,0.05)
+            for vargen in net.var_generators:
+                vargen.P = np.random.rand(self.T)*10
+                vargen.Q = np.random.rand(self.T)*10
+                self.assertEqual(vargen.num_periods,self.T)
+            self.assertGreater(net.num_var_generators,0)
+            self.assertEqual(net.num_vars,0)
+            self.assertEqual(net.num_fixed,0)
+
+            # Vars
+            net.set_flags(pf.OBJ_BUS,
+                          pf.FLAG_VARS|pf.FLAG_FIXED,
+                          pf.BUS_PROP_ANY,
+                          [pf.BUS_VAR_VMAG,pf.BUS_VAR_VANG])
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS|pf.FLAG_FIXED,
+                          pf.GEN_PROP_SLACK,
+                          pf.GEN_VAR_P)
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS|pf.FLAG_FIXED,
+                          pf.GEN_PROP_REG,
+                          pf.GEN_VAR_Q)
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_VARS|pf.FLAG_FIXED,
+                          pf.BRANCH_PROP_TAP_CHANGER,
+                          pf.BRANCH_VAR_RATIO)
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_VARS|pf.FLAG_FIXED,
+                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          pf.BRANCH_VAR_PHASE)
+            net.set_flags(pf.OBJ_SHUNT,
+                          pf.FLAG_VARS|pf.FLAG_FIXED,
+                          pf.SHUNT_PROP_SWITCHED_V,
+                          pf.SHUNT_VAR_SUSC)
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS|pf.FLAG_FIXED,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS|pf.FLAG_FIXED,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P|pf.BAT_VAR_E)
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_VARS|pf.FLAG_FIXED,
+                          pf.LOAD_PROP_ANY,
+                          pf.LOAD_VAR_P)
+            self.assertGreater(net.num_vars,0)
+            self.assertEqual(net.num_fixed,net.num_vars)
+            self.assertEqual(net.num_vars,
+                             (2*net.num_buses +
+                              net.get_num_slack_gens() + 
+                              net.get_num_reg_gens() +
+                              net.get_num_tap_changers() +
+                              net.get_num_phase_shifters() +
+                              net.get_num_switched_shunts() +
+                              net.num_var_generators*2+
+                              3*net.num_batteries+
+                              net.num_loads)*self.T)
+
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+            
+            constr = pf.Constraint(pf.CONSTR_TYPE_FIX,net)
+
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            G = constr.G
+            l = constr.l
+            u = constr.u
+            
+            # Before 
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(0,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,0))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(0,0))
+            self.assertEqual(A.nnz,0)
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(0,0))
+            self.assertEqual(G.nnz,0)
+            self.assertTrue(type(l) is np.ndarray)
+            self.assertTupleEqual(l.shape,(0,))
+            self.assertTrue(type(u) is np.ndarray)
+            self.assertTupleEqual(u.shape,(0,))
+            
+            self.assertEqual(constr.Jcounter,0)
+            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.Gcounter,0)
+
+            Acounter = net.num_fixed+net.get_num_buses_reg_by_gen()*self.T
+            constr.analyze()
+            self.assertEqual(Acounter,constr.Acounter)
+            constr.eval(x0)
+            self.assertEqual(0,constr.Acounter)
+
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            G = constr.G
+            l = constr.l
+            u = constr.u
+                        
+            # After
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(net.num_fixed,))
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(net.num_fixed,net.num_vars))
+            self.assertEqual(A.nnz,net.num_fixed+net.get_num_buses_reg_by_gen()*self.T)
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,net.num_vars))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(0,net.num_vars))
+            self.assertEqual(G.nnz,0)
+            self.assertTrue(type(l) is np.ndarray)
+            self.assertTupleEqual(l.shape,(0,))
+            self.assertTrue(type(u) is np.ndarray)
+            self.assertTupleEqual(u.shape,(0,))
+            
+            self.assertTrue(not np.any(np.isinf(b)))
+            self.assertTrue(not np.any(np.isnan(b)))
+       
+            # Time loop
+            for t in range(self.T):
+
+                # bus
+                for bus in net.buses:
+                    ar = np.where(A.col == bus.index_v_mag[t])[0]
+                    self.assertEqual(ar.size,1)
+                    self.assertEqual(A.col[ar[0]],bus.index_v_mag[t])
+                    if bus.is_regulated_by_gen():
+                        self.assertEqual(b[A.row[ar[0]]],bus.v_set[t])
+                    else:
+                        self.assertEqual(b[A.row[ar[0]]],bus.v_mag[t])
+                    ar = np.where(A.col == bus.index_v_ang[t])[0]
+                    self.assertEqual(ar.size,1)
+                    self.assertEqual(A.col[ar[0]],bus.index_v_ang[t])
+                    self.assertEqual(b[A.row[ar[0]]],bus.v_ang[t])
+
+                # Gens
+                for gen in net.generators:
+                    if gen.is_slack():
+                        ar = np.where(A.col == gen.index_P[t])[0]
+                        self.assertEqual(ar.size,1)
+                        self.assertEqual(A.col[ar[0]],gen.index_P[t])
+                        self.assertEqual(b[A.row[ar[0]]],gen.P[t])
+                    if gen.is_regulator():
+                        ar = np.where(A.col == gen.index_Q[t])[0]
+                        if gen.index == gen.reg_bus.reg_generators[0].index:
+                            self.assertEqual(ar.size,2)
+                        else:
+                            self.assertEqual(ar.size,1)
+                        self.assertEqual(A.col[ar[0]],gen.index_Q[t])
+                        for i in range(ar.size):
+                            if A.data[ar[i]] == 1.:
+                                self.assertEqual(b[A.row[ar[i]]],gen.Q[t])
+                            else:
+                                self.assertEqual(A.data[ar[i]],0)                                
+
+                # Shunts
+                for shunt in net.shunts:
+                    if shunt.is_switched_v():
+                        ar = np.where(A.col == shunt.index_b[t])[0]
+                        self.assertEqual(ar.size,1)
+                        self.assertEqual(A.col[ar[0]],shunt.index_b[t])
+                        self.assertEqual(b[A.row[ar[0]]],shunt.b[t])
+                
+                # Branch
+                for branch in net.branches:
+                    if branch.is_tap_changer():
+                        ar = np.where(A.col == branch.index_ratio[t])[0]
+                        self.assertEqual(ar.size,1)
+                        self.assertEqual(A.col[ar[0]],branch.index_ratio[t])
+                        self.assertEqual(b[A.row[ar[0]]],branch.ratio[t])
+                    if branch.is_phase_shifter():
+                        ar = np.where(A.col == branch.index_phase[t])[0]
+                        self.assertEqual(ar.size,1)
+                        self.assertEqual(A.col[ar[0]],branch.index_phase[t])
+                        self.assertEqual(b[A.row[ar[0]]],branch.phase[t])
+
+
+
+                # Vargen
+                for vargen in net.var_generators:
+                    ar = np.where(A.col == vargen.index_P[t])[0]
+                    self.assertEqual(ar.size,1)
+                    self.assertEqual(A.col[ar[0]],vargen.index_P[t])
+                    self.assertEqual(b[A.row[ar[0]]],vargen.P[t])
+                    ar = np.where(A.col == vargen.index_Q[t])[0]
+                    self.assertEqual(ar.size,1)
+                    self.assertEqual(A.col[ar[0]],vargen.index_Q[t])
+                    self.assertEqual(b[A.row[ar[0]]],vargen.Q[t])
+                
+                # Batteries
+                for bat in net.batteries:
+                    ar = np.where(A.col == bat.index_Pc[t])[0]
+                    self.assertEqual(ar.size,1)
+                    self.assertEqual(A.col[ar[0]],bat.index_Pc[t])
+                    self.assertEqual(b[A.row[ar[0]]],max([bat.P[t],0]))
+                    ar = np.where(A.col == bat.index_Pd[t])[0]
+                    self.assertEqual(ar.size,1)
+                    self.assertEqual(A.col[ar[0]],bat.index_Pd[t])
+                    self.assertEqual(b[A.row[ar[0]]],max([-bat.P[t],0]))
+                    ar = np.where(A.col == bat.index_E[t])[0]
+                    self.assertEqual(ar.size,1)
+                    self.assertEqual(A.col[ar[0]],bat.index_E[t])
+                    self.assertEqual(b[A.row[ar[0]]],bat.E[t])
+
+                # Load
+                for load in net.loads:
+                    self.assertTrue(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+                    self.assertTrue(load.has_flags(pf.FLAG_FIXED,pf.LOAD_VAR_P))
+                    ar = np.where(A.col == load.index_P[t])[0]
+                    self.assertEqual(ar.size,1)
+                    self.assertEqual(A.col[ar[0]],load.index_P[t])
+                    self.assertEqual(b[A.row[ar[0]]],load.P[t])
+            
     def test_constr_LBOUND(self):
 
         net = self.net
