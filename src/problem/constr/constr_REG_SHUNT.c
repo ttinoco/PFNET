@@ -11,10 +11,10 @@
 #include <pfnet/constr_REG_SHUNT.h>
 
 void CONSTR_REG_SHUNT_init(Constr* c) {
-  
+
   // Local variables
   int num_Jconstr;
-  
+
   // Init
   num_Jconstr = 4*NET_get_num_switched_shunts(CONSTR_get_network(c));
   CONSTR_set_Hcounter(c,(int*)calloc(num_Jconstr,sizeof(int)),num_Jconstr);
@@ -22,29 +22,29 @@ void CONSTR_REG_SHUNT_init(Constr* c) {
 }
 
 void CONSTR_REG_SHUNT_clear(Constr* c) {
-  
+
   // f
   VEC_set_zero(CONSTR_get_f(c));
-  
+
   // J
   MAT_set_zero_d(CONSTR_get_J(c));
-  
+
   // H
   MAT_array_set_zero_d(CONSTR_get_H_array(c),CONSTR_get_H_array_size(c));
-  
+
   // Counters
   CONSTR_set_Acounter(c,0);
   CONSTR_set_Jcounter(c,0);
   CONSTR_set_Aconstr_index(c,0);
   CONSTR_set_Jconstr_index(c,0);
   CONSTR_clear_Hcounter(c);
-   
+
   // Flags
-  CONSTR_clear_bus_counted(c);  
+  CONSTR_clear_bus_counted(c);
 }
 
 void CONSTR_REG_SHUNT_count_branch(Constr* c, Branch* br) {
-  
+
   // Local variables
   Bus* buses[2];
   Bus* bus;
@@ -57,7 +57,7 @@ void CONSTR_REG_SHUNT_count_branch(Constr* c, Branch* br) {
   char* bus_counted;
   int bus_index[2];
   int k;
-  
+
   // Constr data
   Acounter = CONSTR_get_Acounter_ptr(c);
   Jcounter = CONSTR_get_Jcounter_ptr(c);
@@ -76,14 +76,14 @@ void CONSTR_REG_SHUNT_count_branch(Constr* c, Branch* br) {
     return;
 
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index[k] = BUS_get_index(buses[k]);
 
   // Buses
   //******
-  
+
   for (k = 0; k < 2; k++) {
 
     bus = buses[k];
@@ -92,30 +92,30 @@ void CONSTR_REG_SHUNT_count_branch(Constr* c, Branch* br) {
 
       // Shunts
       //*******
-      
+
       for (shunt = BUS_get_reg_shunt(bus); shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
-	
+
 	// Linear
 	//*******
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) &&     // b var
 	    SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC_DEV)) { // yz var
-	  
+
 	  // A
 	  (*Acounter)++; // b
 	  (*Acounter)++; // y
 	  (*Acounter)++; // z
-	  
-	  (*Aconstr_index)++;    
+
+	  (*Aconstr_index)++;
 	}
-    
+
 	// Nonlinear constraints 1 (vmax,vmin)
 	//************************************
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC_DEV)) { // yz var
-      
+
 	  // J
 	  (*Jcounter)++; // dcompVmin/dy
 	  (*Jcounter)++; // dcompVmax/dz
-      
+
 	  // H
 	  Hcounter[*Jconstr_index]++;   // y and y (vmin)
 	  Hcounter[*Jconstr_index+1]++; // z and z (vmax)
@@ -130,11 +130,11 @@ void CONSTR_REG_SHUNT_count_branch(Constr* c, Branch* br) {
 	}
 
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
-      
+
 	  // J
 	  (*Jcounter)++; // dcompVmin/dv
 	  (*Jcounter)++; // dcompVmax/dv
-      
+
 	  // H
 	  Hcounter[*Jconstr_index]++;   // v and v (vmin)
 	  Hcounter[*Jconstr_index+1]++; // v and v (vmax)
@@ -143,14 +143,14 @@ void CONSTR_REG_SHUNT_count_branch(Constr* c, Branch* br) {
 	    Hcounter[*Jconstr_index+1]++; // v and vh (vmax)
 	  }
 	}
-    
+
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var
-	  
+
 	  // J
 	  (*Jcounter)++; // dcompVmin/dvl
 	  (*Jcounter)++; // dcompVmax/dvh
 
-	  // H 
+	  // H
 	  Hcounter[*Jconstr_index]++;   // vl and vl (vmin)
 	  Hcounter[*Jconstr_index+1]++; // vh and vh (vmax)
 	}
@@ -171,14 +171,14 @@ void CONSTR_REG_SHUNT_count_branch(Constr* c, Branch* br) {
 	    Hcounter[*Jconstr_index+3]++; // b and vh (bmin)
 	  }
 	}
-	
+
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var
 
 	  // J
 	  (*Jcounter)++; // dcompBmax/dvl
 	  (*Jcounter)++; // dcompBmin/dvh
 
-	  // H 
+	  // H
 	  Hcounter[*Jconstr_index+2]++; // vl and vl (bmax)
 	  Hcounter[*Jconstr_index+3]++; // vh and vh (bmin)
 	}
@@ -202,21 +202,21 @@ void CONSTR_REG_SHUNT_allocate(Constr* c) {
   int Acounter;
   int Jcounter;
   int Aconstr_index;
-  int Jconstr_index; 
+  int Jconstr_index;
   int* Hcounter;
   Mat* H_array;
   Mat* H;
   int H_comb_nnz;
   int num_vars;
   int i;
-  
+
   Acounter = CONSTR_get_Acounter(c);
   Jcounter = CONSTR_get_Jcounter(c);
   Aconstr_index = CONSTR_get_Aconstr_index(c);
   Jconstr_index = CONSTR_get_Jconstr_index(c);
   Hcounter = CONSTR_get_Hcounter(c);
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
-  
+
   // b
   CONSTR_set_b(c,VEC_new(Aconstr_index));
 
@@ -224,7 +224,7 @@ void CONSTR_REG_SHUNT_allocate(Constr* c) {
   CONSTR_set_A(c,MAT_new(Aconstr_index, // size1 (rows)
 			 num_vars,      // size2 (cols)
 			 Acounter));    // nnz
-  
+
   // f
   CONSTR_set_f(c,VEC_new(Jconstr_index));
 
@@ -232,7 +232,7 @@ void CONSTR_REG_SHUNT_allocate(Constr* c) {
   CONSTR_set_J(c,MAT_new(Jconstr_index, // size1 (rows)
 			 num_vars,      // size2 (cols)
 			 Jcounter));    // nnz
-  
+
   // H
   H_comb_nnz = 0;
   H_array = MAT_array_new(Jconstr_index);
@@ -255,7 +255,7 @@ void CONSTR_REG_SHUNT_allocate(Constr* c) {
 }
 
 void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
-  
+
   // Local variables
   Bus* buses[2];
   Bus* bus;
@@ -312,28 +312,28 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
     return;
 
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index[k] = BUS_get_index(buses[k]);
 
   // Branch
   //*******
-  
+
   // Buses
   //******
-  
+
   for (k = 0; k < 2; k++) {
 
     bus = buses[k];
 
     if (!bus_counted[bus_index[k]]) { // not counted yet
- 
+
       // Shunts
       //*******
-      
+
       for (shunt = BUS_get_reg_shunt(bus); shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
-    
+
 	// Hessians (NOTE ORDER!!!)
 	Hvmin = MAT_array_get(H_array,*Jconstr_index);
 	Hvmax = MAT_array_get(H_array,*Jconstr_index+1);
@@ -347,7 +347,7 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
 	index_b = SHUNT_get_index_b(shunt);
 	index_y = SHUNT_get_index_y(shunt);
 	index_z = SHUNT_get_index_z(shunt);
-    
+
 	// Linear (b = b_0 + y - z)
 	//*************************
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) &&     // b var
@@ -355,50 +355,50 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
 
 	  // b
 	  VEC_set(b,*Aconstr_index,SHUNT_get_b(shunt)); // current susceptance value
-        
+
 	  // A
 	  MAT_set_i(A,*Acounter,*Aconstr_index);
 	  MAT_set_j(A,*Acounter,index_b);
 	  MAT_set_d(A,*Acounter,1.);
 	  (*Acounter)++; // b
-	  
+
 	  MAT_set_i(A,*Acounter,*Aconstr_index);
 	  MAT_set_j(A,*Acounter,index_y);
 	  MAT_set_d(A,*Acounter,-1.);
 	  (*Acounter)++; // y
-	  
+
 	  MAT_set_i(A,*Acounter,*Aconstr_index);
 	  MAT_set_j(A,*Acounter,index_z);
 	  MAT_set_d(A,*Acounter,1.);
 	  (*Acounter)++; // z
-	  
-	  (*Aconstr_index)++;    
+
+	  (*Aconstr_index)++;
 	}
-    
+
 	// Nonlinear constraints 1 (vmin,vmax)
 	//************************************
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC_DEV)) { // yz var
-	  
+
 	  // J
 	  MAT_set_i(J,*Jcounter,*Jconstr_index);
 	  MAT_set_j(J,*Jcounter,index_y);
 	  (*Jcounter)++; // dcompVmin/dy
-	  
+
 	  MAT_set_i(J,*Jcounter,*Jconstr_index+1);
 	  MAT_set_j(J,*Jcounter,index_z);
 	  (*Jcounter)++; // dcompVmax/dz
-      
-	  // H	
+
+	  // H
 	  MAT_set_i(Hvmin,Hcounter[*Jconstr_index],index_y);
 	  MAT_set_j(Hvmin,Hcounter[*Jconstr_index],index_y);
 	  Hcounter[*Jconstr_index]++;   // y and y (vmin)
-      
+
 	  MAT_set_i(Hvmax,Hcounter[*Jconstr_index+1],index_z);
 	  MAT_set_j(Hvmax,Hcounter[*Jconstr_index+1],index_z);
 	  Hcounter[*Jconstr_index+1]++; // z and z (vmax)
 
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
-	
+
 	    MAT_set_i(Hvmin,Hcounter[*Jconstr_index],index_y);
 	    MAT_set_j(Hvmin,Hcounter[*Jconstr_index],index_v);
 	    Hcounter[*Jconstr_index]++;   // y and v (vmin)
@@ -409,11 +409,11 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
 	  }
 
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
-	
+
 	    MAT_set_i(Hvmin,Hcounter[*Jconstr_index],index_y);
 	    MAT_set_j(Hvmin,Hcounter[*Jconstr_index],index_vl);
 	    Hcounter[*Jconstr_index]++;   // y and vl (vmin)
-	
+
 	    MAT_set_i(Hvmax,Hcounter[*Jconstr_index+1],index_z);
 	    MAT_set_j(Hvmax,Hcounter[*Jconstr_index+1],index_vl);
 	    Hcounter[*Jconstr_index+1]++; // z and vh (vmax)
@@ -421,7 +421,7 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
 	}
 
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
-      
+
 	  // J
 	  MAT_set_i(J,*Jcounter,*Jconstr_index);
 	  MAT_set_j(J,*Jcounter,index_v);
@@ -430,28 +430,28 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
 	  MAT_set_i(J,*Jcounter,*Jconstr_index+1);
 	  MAT_set_j(J,*Jcounter,index_v);
 	  (*Jcounter)++; // dcompVmax/dv
-      
+
 	  // H
 	  MAT_set_i(Hvmin,Hcounter[*Jconstr_index],index_v);
 	  MAT_set_j(Hvmin,Hcounter[*Jconstr_index],index_v);
 	  Hcounter[*Jconstr_index]++;   // v and v (vmin)
-      
+
 	  MAT_set_i(Hvmax,Hcounter[*Jconstr_index+1],index_v);
 	  MAT_set_j(Hvmax,Hcounter[*Jconstr_index+1],index_v);
 	  Hcounter[*Jconstr_index+1]++; // v and v (vmax)
 
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
-	    
+
 	    MAT_set_i(Hvmin,Hcounter[*Jconstr_index],index_v);
 	    MAT_set_j(Hvmin,Hcounter[*Jconstr_index],index_vl);
 	    Hcounter[*Jconstr_index]++;   // v and vl (vmin)
-	    
+
 	    MAT_set_i(Hvmax,Hcounter[*Jconstr_index+1],index_v);
 	    MAT_set_j(Hvmax,Hcounter[*Jconstr_index+1],index_vh);
 	    Hcounter[*Jconstr_index+1]++; // v and vh (vmax)
 	  }
 	}
-    
+
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var
 
 	  // J
@@ -463,7 +463,7 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
 	  MAT_set_j(J,*Jcounter,index_vh);
 	  (*Jcounter)++; // dcompVmax/dvh
 
-	  // H 
+	  // H
 	  MAT_set_i(Hvmin,Hcounter[*Jconstr_index],index_vl);
 	  MAT_set_j(Hvmin,Hcounter[*Jconstr_index],index_vl);
 	  Hcounter[*Jconstr_index]++;   // vl and vl (vmin)
@@ -476,7 +476,7 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
 	// Nonlinear constraints 2 (bmax,bmin)
 	//************************************
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) { // b var
-      
+
 	  // J
 	  MAT_set_i(J,*Jcounter,*Jconstr_index+2);
 	  MAT_set_j(J,*Jcounter,index_b);
@@ -485,7 +485,7 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
 	  MAT_set_i(J,*Jcounter,*Jconstr_index+3);
 	  MAT_set_j(J,*Jcounter,index_b);
 	  (*Jcounter)++; // dcompBmin/db
-	  
+
 	  // H
 	  MAT_set_i(Hbmax,Hcounter[*Jconstr_index+2],index_b);
 	  MAT_set_j(Hbmax,Hcounter[*Jconstr_index+2],index_b);
@@ -496,7 +496,7 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
 	  Hcounter[*Jconstr_index+3]++; // b and b (bmin)
 
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
-	
+
 	    MAT_set_i(Hbmax,Hcounter[*Jconstr_index+2],index_b);
 	    MAT_set_j(Hbmax,Hcounter[*Jconstr_index+2],index_vl);
 	    Hcounter[*Jconstr_index+2]++; // b and vl (bmax)
@@ -518,11 +518,11 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
 	  MAT_set_j(J,*Jcounter,index_vh);
 	  (*Jcounter)++; // dcompBmin/dvh
 
-	  // H 
+	  // H
 	  MAT_set_i(Hbmax,Hcounter[*Jconstr_index+2],index_vl);
 	  MAT_set_j(Hbmax,Hcounter[*Jconstr_index+2],index_vl);
 	  Hcounter[*Jconstr_index+2]++; // vl and vl (bmax)
-	  
+
 	  MAT_set_i(Hbmin,Hcounter[*Jconstr_index+3],index_vh);
 	  MAT_set_j(Hbmin,Hcounter[*Jconstr_index+3],index_vh);
 	  Hcounter[*Jconstr_index+3]++; // vh and vh (bmin)
@@ -535,14 +535,14 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
 	(*Jconstr_index)++; // compBmin
       }
     }
-    
+
     // Update counted flag
     bus_counted[bus_index[k]] = TRUE;
   }
 
   // Done
   if (BRANCH_get_index(br) == NET_get_num_branches(CONSTR_get_network(c))-1) {
-    
+
     // Ensure lower triangular and save struct of H comb
     Hcounter_comb = 0;
     Hi_comb = MAT_get_row_array(CONSTR_get_H_combined(c));
@@ -565,7 +565,7 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
 }
 
 void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
-  
+
   // Local variables
   Bus* buses[2];
   Bus* bus;
@@ -592,7 +592,7 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   REAL bmax;
   REAL bmin;
   REAL y;
-  REAL z;  
+  REAL z;
   REAL sqrtermVmin;
   REAL sqrtermVmax;
   REAL sqrtermBmax;
@@ -609,7 +609,7 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!f || !J || !Jcounter || !Jconstr_index || 
+  if (!f || !J || !Jcounter || !Jconstr_index ||
       !Hcounter || !bus_counted)
     return;
 
@@ -618,8 +618,8 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
     return;
 
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index[k] = BUS_get_index(buses[k]);
 
@@ -628,18 +628,18 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 
   // Buses
   //******
-  
+
   for (k = 0; k < 2; k++) {
-    
+
     bus = buses[k];
-    
+
     if (!bus_counted[bus_index[k]]) { // not counted yet
-      
+
       // Shunts
       //*******
-      
+
       for (shunt = BUS_get_reg_shunt(bus); shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
-    
+
 	// v values
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG))
 	  v = VEC_get(var_values,BUS_get_index_v_mag(bus));
@@ -655,7 +655,7 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	  vl = 0;
 	  vh = 0;
 	}
-    
+
 	// b values
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
 	  b = VEC_get(var_values,SHUNT_get_index_b(shunt));
@@ -684,7 +684,7 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	sqrtermVmax = sqrt( (vmax-v+vh)*(vmax-v+vh) + z*z + 2*CONSTR_REG_SHUNT_PARAM );
 	sqrtermBmax = sqrt( (bmax-b)*(bmax-b) + vl*vl + 2*CONSTR_REG_SHUNT_PARAM );
 	sqrtermBmin = sqrt( (b-bmin)*(b-bmin) + vh*vh + 2*CONSTR_REG_SHUNT_PARAM );
-    
+
 	// Hessians (NOTE ORDER!!!)
 	Hvmin = MAT_get_data_array(MAT_array_get(H_array,*Jconstr_index));
 	Hvmax = MAT_get_data_array(MAT_array_get(H_array,*Jconstr_index+1));
@@ -696,27 +696,27 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	f[*Jconstr_index+1] = ((vmax-v+vh) + z - sqrtermVmax)*norm; // vmax
 	f[*Jconstr_index+2] = ((bmax-b) + vl - sqrtermBmax)*norm;   // bmax
 	f[*Jconstr_index+3] = ((b-bmin) + vh - sqrtermBmin)*norm;   // bmin
-        
+
 	// Nonlinear constraints 1 (vmin,vmax)
 	//************************************
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC_DEV)) { // yz var
-      
+
 	  // J
 	  J[*Jcounter] = (1.-y/sqrtermVmin)*norm;
 	  (*Jcounter)++; // dcompVmin/dy
-      
+
 	  J[*Jcounter] = (1.-z/sqrtermVmax)*norm;
 	  (*Jcounter)++; // dcompVmax/dz
-      
-	  // H	
+
+	  // H
 	  Hvmin[Hcounter[*Jconstr_index]] = -(((v+vl-vmin)*(v+vl-vmin)+2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmin,3.))*norm;
 	  Hcounter[*Jconstr_index]++;   // y and y (vmin)
-      
+
 	  Hvmax[Hcounter[*Jconstr_index+1]] = -(((vmax-v+vh)*(vmax-v+vh)+2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmax,3.))*norm;
 	  Hcounter[*Jconstr_index+1]++; // z and z (vmax)
 
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
-	
+
 	    Hvmin[Hcounter[*Jconstr_index]] = ((v+vl-vmin)*y/pow(sqrtermVmin,3.))*norm;
 	    Hcounter[*Jconstr_index]++;   // y and v (vmin)
 
@@ -725,33 +725,33 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	  }
 
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
-	
+
 	    Hvmin[Hcounter[*Jconstr_index]] = ((v+vl-vmin)*y/pow(sqrtermVmin,3.))*norm;
 	    Hcounter[*Jconstr_index]++;   // y and vl (vmin)
-	
+
 	    Hvmax[Hcounter[*Jconstr_index+1]] = ((vmax-v+vh)*z/pow(sqrtermVmax,3.))*norm;
 	    Hcounter[*Jconstr_index+1]++; // z and vh (vmax)
 	  }
 	}
 
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
-      
+
 	  // J
 	  J[*Jcounter] = (1.-(v+vl-vmin)/sqrtermVmin)*norm;
 	  (*Jcounter)++; // dcompVmin/dv
 
 	  J[*Jcounter] = -((1.-(vmax-v+vh)/sqrtermVmax))*norm;
 	  (*Jcounter)++; // dcompVmax/dv
-	  
+
 	  // H
 	  Hvmin[Hcounter[*Jconstr_index]] = -((y*y + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmin,3.))*norm;
 	  Hcounter[*Jconstr_index]++;   // v and v (vmin)
-	  
+
 	  Hvmax[Hcounter[*Jconstr_index+1]] = -((z*z + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmax,3.))*norm;
 	  Hcounter[*Jconstr_index+1]++; // v and v (vmax)
-	  
+
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
-	
+
 	    Hvmin[Hcounter[*Jconstr_index]] = -((y*y + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmin,3.))*norm;
 	    Hcounter[*Jconstr_index]++;   // v and vl (vmin)
 
@@ -759,7 +759,7 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	    Hcounter[*Jconstr_index+1]++; // v and vh (vmax)
 	  }
 	}
-	
+
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var
 
 	  // J
@@ -769,10 +769,10 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	  J[*Jcounter] = (1.-(vmax-v+vh)/sqrtermVmax)*norm;
 	  (*Jcounter)++; // dcompVmax/dvh
 
-	  // H 
+	  // H
 	  Hvmin[Hcounter[*Jconstr_index]] = -((y*y + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmin,3.))*norm;
 	  Hcounter[*Jconstr_index]++;   // vl and vl (vmin)
-	  
+
 	  Hvmax[Hcounter[*Jconstr_index+1]] = -((z*z + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmax,3.))*norm;
 	  Hcounter[*Jconstr_index+1]++; // vh and vh (vmax)
 	}
@@ -780,21 +780,21 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	// Nonlinear constraints 2 (bmax,bmin)
 	//************************************
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) { // t var
-      
+
 	  // J
 	  J[*Jcounter] = -(1.-(bmax-b)/sqrtermBmax)*norm;
 	  (*Jcounter)++; // dcompBmax/db
-	  
+
 	  J[*Jcounter] = (1.-(b-bmin)/sqrtermBmin)*norm;
 	  (*Jcounter)++; // dcompBmin/db
-	  
+
 	  // H
 	  Hbmax[Hcounter[*Jconstr_index+2]] = -((vl*vl + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermBmax,3.))*norm;
 	  Hcounter[*Jconstr_index+2]++; // b and b (bmax)
-	  
+
 	  Hbmin[Hcounter[*Jconstr_index+3]] = -((vh*vh + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermBmin,3.))*norm;
 	  Hcounter[*Jconstr_index+3]++; // b and b (bmin)
-	  
+
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
 
 	    Hbmax[Hcounter[*Jconstr_index+2]] = -(vl*(bmax-b)/pow(sqrtermBmax,3.))*norm;
@@ -804,7 +804,7 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	    Hcounter[*Jconstr_index+3]++; // b and vh (bmin)
 	  }
 	}
-	
+
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var
 
 	  // J
@@ -814,7 +814,7 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	  J[*Jcounter] = (1.-vh/sqrtermBmin)*norm;
 	  (*Jcounter)++; // dcompBmin/dvh
 
-	  // H 
+	  // H
 	  Hbmax[Hcounter[*Jconstr_index+2]] = -(((bmax-b)*(bmax-b) + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermBmax,3.))*norm;
 	  Hcounter[*Jconstr_index+2]++; // vl and vl (bmax)
 
@@ -836,7 +836,7 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 }
 
 void CONSTR_REG_SHUNT_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
-  
+
   // Local variables
   Bus* buses[2];
   Bus* bus;
@@ -849,7 +849,7 @@ void CONSTR_REG_SHUNT_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf,
   REAL lamCompBmax;
   REAL lamCompBmin;
   int k;
-  
+
   // Constr data
   Jconstr_index = CONSTR_get_Jconstr_index_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
@@ -863,14 +863,14 @@ void CONSTR_REG_SHUNT_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf,
     return;
 
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index[k] = BUS_get_index(buses[k]);
 
   // Buses
   //******
-  
+
   for (k = 0; k < 2; k++) {
 
     bus = buses[k];
@@ -879,7 +879,7 @@ void CONSTR_REG_SHUNT_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf,
 
       // Shunts
       //*******
-      
+
       for (shunt = BUS_get_reg_shunt(bus); shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
 
 	lamCompVmin = VEC_get(sf,*Jconstr_index);
@@ -904,7 +904,7 @@ void CONSTR_REG_SHUNT_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf,
 
     // Update counted flag
     bus_counted[bus_index[k]] = TRUE;
-  }  
+  }
 }
 
 void CONSTR_REG_SHUNT_free(Constr* c) {

@@ -18,13 +18,13 @@ void FUNC_NETCON_COST_clear(Func* f) {
 
   // phi
   FUNC_set_phi(f,0);
-  
+
   // gphi
   // Constant
-  
+
   // Hphi
   // Zero
-    
+
   // Flags
   FUNC_clear_bus_counted(f);
 }
@@ -34,16 +34,16 @@ void FUNC_NETCON_COST_count_branch(Func* f, Branch* br) {
 }
 
 void FUNC_NETCON_COST_allocate(Func* f) {
-  
+
   // Local variables
   int num_vars;
-  
+
   num_vars = NET_get_num_vars(FUNC_get_network(f));
 
   // gphi
   FUNC_set_gphi(f,VEC_new(num_vars));
   VEC_set_zero(FUNC_get_gphi(f));
-  
+
   // Hphi
   FUNC_set_Hphi(f,MAT_new(num_vars,
 			  num_vars,
@@ -76,22 +76,22 @@ void FUNC_NETCON_COST_analyze_branch(Func* f, Branch* br) {
   // Check outage
   if (BRANCH_is_on_outage(br))
     return;
-  
+
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index[k] = BUS_get_index(buses[k]);
 
   // Buses
   for (k = 0; k < 2; k++) {
-    
+
     bus = buses[k];
 
     price = BUS_get_price(bus);
 
     if (!bus_counted[bus_index[k]]) {
-      
+
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
@@ -118,14 +118,14 @@ void FUNC_NETCON_COST_analyze_branch(Func* f, Branch* br) {
 	}
       }
     }
-    
+
     // Update counted flag
     bus_counted[bus_index[k]] = TRUE;
   }
 }
 
 void FUNC_NETCON_COST_eval_branch(Func* f, Branch* br, Vec* var_values) {
-  
+
     // Local variables
   Bus* buses[2];
   Bus* bus;
@@ -150,22 +150,22 @@ void FUNC_NETCON_COST_eval_branch(Func* f, Branch* br, Vec* var_values) {
   // Check outage
   if (BRANCH_is_on_outage(br))
     return;
-  
+
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index[k] = BUS_get_index(buses[k]);
 
   // Buses
   for (k = 0; k < 2; k++) {
-    
+
     bus = buses[k];
 
     price = BUS_get_price(bus);
 
     if (!bus_counted[bus_index[k]]) {
-      
+
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
@@ -201,10 +201,10 @@ void FUNC_NETCON_COST_eval_branch(Func* f, Branch* br, Vec* var_values) {
 	}
       }
     }
-    
+
     // Update counted flag
     bus_counted[bus_index[k]] = TRUE;
-  }  
+  }
 }
 
 void FUNC_NETCON_COST_free(Func* f) {

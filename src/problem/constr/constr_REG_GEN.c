@@ -11,11 +11,11 @@
 #include <pfnet/constr_REG_GEN.h>
 
 void CONSTR_REG_GEN_init(Constr* c) {
-  
+
   // Local variables
   Net* net;
   int num_Jconstr;
-  
+
   // Init
   net = CONSTR_get_network(c);
   num_Jconstr = 2*(NET_get_num_buses_reg_by_gen(net)-NET_get_num_slack_buses(net));
@@ -33,20 +33,20 @@ void CONSTR_REG_GEN_clear(Constr* c) {
 
   // H
   MAT_array_set_zero_d(CONSTR_get_H_array(c),CONSTR_get_H_array_size(c));
-  
+
   // Counters
   CONSTR_set_Acounter(c,0);
   CONSTR_set_Jcounter(c,0);
   CONSTR_set_Aconstr_index(c,0);
   CONSTR_set_Jconstr_index(c,0);
   CONSTR_clear_Hcounter(c);
-   
+
   // Flags
   CONSTR_clear_bus_counted(c);
 }
 
 void CONSTR_REG_GEN_count_branch(Constr* c, Branch* br) {
-  
+
   // Local variables
   Bus* buses[2];
   Bus* bus;
@@ -60,7 +60,7 @@ void CONSTR_REG_GEN_count_branch(Constr* c, Branch* br) {
   char* bus_counted;
   int bus_index[2];
   int k;
-  
+
   // Constr data
   Acounter = CONSTR_get_Acounter_ptr(c);
   Jcounter = CONSTR_get_Jcounter_ptr(c);
@@ -68,7 +68,7 @@ void CONSTR_REG_GEN_count_branch(Constr* c, Branch* br) {
   Jconstr_index = CONSTR_get_Jconstr_index_ptr(c);
   Hcounter = CONSTR_get_Hcounter(c);
   bus_counted = CONSTR_get_bus_counted(c);
-  
+
   // Check pointers
   if (!Acounter || !Jcounter || !Aconstr_index ||
       !Jconstr_index || !Hcounter || !bus_counted)
@@ -77,13 +77,13 @@ void CONSTR_REG_GEN_count_branch(Constr* c, Branch* br) {
   // Check outage
   if (BRANCH_is_on_outage(br))
     return;
- 
+
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index[k] = BUS_get_index(buses[k]);
-  
+
   // Buses
   //******
 
@@ -92,15 +92,15 @@ void CONSTR_REG_GEN_count_branch(Constr* c, Branch* br) {
     bus = buses[k];
 
     if (!bus_counted[bus_index[k]]) { // not counted yet
-      
+
       if (BUS_is_regulated_by_gen(bus) && // reg gen
 	  !BUS_is_slack(bus)) {           // not slack
-		
+
 	// Linear
 	//*******
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) && // v var
 	    BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) { // yz var
-	
+
 	  // A
 	  (*Acounter)++; // v
 	  (*Acounter)++; // y
@@ -109,12 +109,12 @@ void CONSTR_REG_GEN_count_branch(Constr* c, Branch* br) {
 	  // Inc A cosntr index
 	  (*Aconstr_index)++;
 	}
-	
+
 	// Nonlinear
 	//**********
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) { // yz var
 
-	  // J	  
+	  // J
 	  (*Jcounter)++; // dCompY/dy
 	  (*Jcounter)++; // dCompZ/dz
 
@@ -128,10 +128,10 @@ void CONSTR_REG_GEN_count_branch(Constr* c, Branch* br) {
 	    }
 	  }
 	}
-	
+
 	for (rg = BUS_get_reg_gen(bus); rg != NULL; rg = GEN_get_reg_next(rg)) {
 	  if (GEN_has_flags(rg,FLAG_VARS,GEN_VAR_Q)) { // Qg var
-	  
+
 	    // J
 	    (*Jcounter)++; // dcompY/dQ
 	    (*Jcounter)++; // dcompZ/dQ
@@ -152,8 +152,8 @@ void CONSTR_REG_GEN_count_branch(Constr* c, Branch* br) {
 	(*Jconstr_index)++; // dCompY
 	(*Jconstr_index)++; // dCompZ
       }
-    }	  
-    
+    }
+
     // Update counted flag
     bus_counted[bus_index[k]] = TRUE;
   }
@@ -165,21 +165,21 @@ void CONSTR_REG_GEN_allocate(Constr* c) {
   int Acounter;
   int Jcounter;
   int Aconstr_index;
-  int Jconstr_index; 
+  int Jconstr_index;
   int* Hcounter;
   Mat* H_array;
   Mat* H;
   int H_comb_nnz;
   int num_vars;
   int i;
-  
+
   Acounter = CONSTR_get_Acounter(c);
   Jcounter = CONSTR_get_Jcounter(c);
   Aconstr_index = CONSTR_get_Aconstr_index(c);
   Jconstr_index = CONSTR_get_Jconstr_index(c);
   Hcounter = CONSTR_get_Hcounter(c);
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
-  
+
   // b
   CONSTR_set_b(c,VEC_new(Aconstr_index));
 
@@ -187,7 +187,7 @@ void CONSTR_REG_GEN_allocate(Constr* c) {
   CONSTR_set_A(c,MAT_new(Aconstr_index, // size1 (rows)
 			 num_vars,      // size2 (cols)
 			 Acounter));    // nnz
-  
+
   // f
   CONSTR_set_f(c,VEC_new(Jconstr_index));
 
@@ -195,7 +195,7 @@ void CONSTR_REG_GEN_allocate(Constr* c) {
   CONSTR_set_J(c,MAT_new(Jconstr_index, // size1 (rows)
 			 num_vars,      // size2 (cols)
 			 Jcounter));    // nnz
-  
+
   // H
   H_comb_nnz = 0;
   H_array = MAT_array_new(Jconstr_index);
@@ -268,14 +268,14 @@ void CONSTR_REG_GEN_analyze_branch(Constr* c, Branch* br) {
     return;
 
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index[k] = BUS_get_index(buses[k]);
 
   // Branch
   //*******
-  
+
   // Buses
   //******
 
@@ -284,22 +284,22 @@ void CONSTR_REG_GEN_analyze_branch(Constr* c, Branch* br) {
     bus = buses[k];
 
     if (!bus_counted[bus_index[k]]) { // not counted yet
-      
+
       if (BUS_is_regulated_by_gen(bus) &&  // reg by gen
 	  !BUS_is_slack(bus)) {            // not slack
-	
+
 	// Hessians
 	Hy = MAT_array_get(H_array,*Jconstr_index);
 	Hz = MAT_array_get(H_array,*Jconstr_index+1);
-	
+
 	// Linear
 	//*******
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) && // v var
 	    BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) { // yz var
-	  
+
 	  // b
 	  VEC_set(b,*Aconstr_index,BUS_get_v_set(bus));
-	
+
 	  // A
 	  MAT_set_i(A,*Acounter,*Aconstr_index);
 	  MAT_set_j(A,*Acounter,BUS_get_index_v_mag(bus));
@@ -323,7 +323,7 @@ void CONSTR_REG_GEN_analyze_branch(Constr* c, Branch* br) {
 	// Nonlinear
 	//**********
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) {
-	  
+
 	  // J
 	  MAT_set_i(J,*Jcounter,*Jconstr_index);
 	  MAT_set_j(J,*Jcounter,BUS_get_index_y(bus));
@@ -337,11 +337,11 @@ void CONSTR_REG_GEN_analyze_branch(Constr* c, Branch* br) {
 	  MAT_set_i(Hy,Hcounter[*Jconstr_index],BUS_get_index_y(bus));
 	  MAT_set_j(Hy,Hcounter[*Jconstr_index],BUS_get_index_y(bus));
 	  Hcounter[*Jconstr_index]++;     // y and y
-	  
+
 	  MAT_set_i(Hz,Hcounter[*Jconstr_index+1],BUS_get_index_z(bus));
 	  MAT_set_j(Hz,Hcounter[*Jconstr_index+1],BUS_get_index_z(bus));
 	  Hcounter[*Jconstr_index+1]++;   // z and z
-	  
+
 	  for (rg = BUS_get_reg_gen(bus); rg != NULL; rg = GEN_get_reg_next(rg)) {
 	    if (GEN_has_flags(rg,FLAG_VARS,GEN_VAR_Q)) {
 
@@ -355,15 +355,15 @@ void CONSTR_REG_GEN_analyze_branch(Constr* c, Branch* br) {
 	    }
 	  }
 	}
-	  
+
 	for (rg = BUS_get_reg_gen(bus); rg != NULL; rg = GEN_get_reg_next(rg)) {
 	  if (GEN_has_flags(rg,FLAG_VARS,GEN_VAR_Q)) { // Qg var
-	  
+
 	    // J
 	    MAT_set_i(J,*Jcounter,*Jconstr_index);
 	    MAT_set_j(J,*Jcounter,GEN_get_index_Q(rg));
 	    (*Jcounter)++; // dcompY/dQ
-	    
+
 	    MAT_set_i(J,*Jcounter,*Jconstr_index+1);
 	    MAT_set_j(J,*Jcounter,GEN_get_index_Q(rg));
 	    (*Jcounter)++; // dcompZ/dQ
@@ -372,18 +372,18 @@ void CONSTR_REG_GEN_analyze_branch(Constr* c, Branch* br) {
 	    MAT_set_i(Hy,Hcounter[*Jconstr_index],GEN_get_index_Q(rg));
 	    MAT_set_j(Hy,Hcounter[*Jconstr_index],GEN_get_index_Q(rg));
 	    Hcounter[*Jconstr_index]++;   // Q and Q
-	    
+
 	    MAT_set_i(Hz,Hcounter[*Jconstr_index+1],GEN_get_index_Q(rg));
 	    MAT_set_j(Hz,Hcounter[*Jconstr_index+1],GEN_get_index_Q(rg));
 	    Hcounter[*Jconstr_index+1]++; // Q and Q
 
 	    for (rg1 = GEN_get_reg_next(rg); rg1 != NULL; rg1 = GEN_get_reg_next(rg1)) {
 	      if (GEN_has_flags(rg1,FLAG_VARS,GEN_VAR_Q)) {
-		
+
 		MAT_set_i(Hy,Hcounter[*Jconstr_index],GEN_get_index_Q(rg));
 		MAT_set_j(Hy,Hcounter[*Jconstr_index],GEN_get_index_Q(rg1));
 		Hcounter[*Jconstr_index]++;   // Q and Q1
-		
+
 		MAT_set_i(Hz,Hcounter[*Jconstr_index+1],GEN_get_index_Q(rg));
 		MAT_set_j(Hz,Hcounter[*Jconstr_index+1],GEN_get_index_Q(rg1));
 		Hcounter[*Jconstr_index+1]++; // Q and Q1
@@ -396,15 +396,15 @@ void CONSTR_REG_GEN_analyze_branch(Constr* c, Branch* br) {
 	(*Jconstr_index)++; // dCompY
 	(*Jconstr_index)++; // dCompZ
       }
-    }	  
-    
+    }
+
     // Update counted flag
     bus_counted[bus_index[k]] = TRUE;
   }
 
   // Done
   if (BRANCH_get_index(br) == NET_get_num_branches(CONSTR_get_network(c))-1) {
-    
+
     // Ensure lower triangular and save struct of H comb
     Hcounter_comb = 0;
     Hi_comb = MAT_get_row_array(CONSTR_get_H_combined(c));
@@ -427,7 +427,7 @@ void CONSTR_REG_GEN_analyze_branch(Constr* c, Branch* br) {
 }
 
 void CONSTR_REG_GEN_eval_branch(Constr* c, Branch* br, Vec* var_values) {
-  
+
   // Local variables
   Bus* buses[2];
   Bus* bus;
@@ -466,7 +466,7 @@ void CONSTR_REG_GEN_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!f || !J || !Jcounter || !Jconstr_index || 
+  if (!f || !J || !Jcounter || !Jconstr_index ||
       !Hcounter || !bus_counted)
     return;
 
@@ -475,14 +475,14 @@ void CONSTR_REG_GEN_eval_branch(Constr* c, Branch* br, Vec* var_values) {
     return;
 
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index[k] = BUS_get_index(buses[k]);
 
   // Branch
   //*******
-  
+
   // Buses
   //******
 
@@ -491,14 +491,14 @@ void CONSTR_REG_GEN_eval_branch(Constr* c, Branch* br, Vec* var_values) {
     bus = buses[k];
 
     if (!bus_counted[bus_index[k]]) { // not counted yet
-      
+
       if (BUS_is_regulated_by_gen(bus) &&  // reg by gen
 	  !BUS_is_slack(bus)) {            // not slack
 
 	// Hessians
 	Hy = MAT_get_data_array(MAT_array_get(H_array,*Jconstr_index));
 	Hz = MAT_get_data_array(MAT_array_get(H_array,*Jconstr_index+1));
-	
+
 	// Q value
 	Qsum = 0;
 	Qmax = 0;
@@ -517,7 +517,7 @@ void CONSTR_REG_GEN_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	// yz values
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) {
 	  y = VEC_get(var_values,BUS_get_index_y(bus)); // p.u.
-	  z = VEC_get(var_values,BUS_get_index_z(bus));	// p.u.		
+	  z = VEC_get(var_values,BUS_get_index_z(bus));	// p.u.
 	}
 	else {
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG))
@@ -532,7 +532,7 @@ void CONSTR_REG_GEN_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	  else {
 	    y = 0;
 	    z = v_set-v;
-	  } 
+	  }
 	}
 
 	// Terms
@@ -542,13 +542,13 @@ void CONSTR_REG_GEN_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	// f
 	f[*Jconstr_index] = Qy + y - sqrt_termY;   // CompY
 	f[*Jconstr_index+1] = Qz + z - sqrt_termZ; // CompZ
-	
+
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) {
-	  
+
 	  // J
 	  J[*Jcounter] = 1. - y/sqrt_termY;
 	  (*Jcounter)++; // dCompY/dy
-	  
+
 	  J[*Jcounter] = 1. - z/sqrt_termZ;
 	  (*Jcounter)++; // dCompZ/dz
 
@@ -560,7 +560,7 @@ void CONSTR_REG_GEN_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	  Hcounter[*Jconstr_index+1]++;   // z and z
 	  for (rg = BUS_get_reg_gen(bus); rg != NULL; rg = GEN_get_reg_next(rg)) {
 	    if (GEN_has_flags(rg,FLAG_VARS,GEN_VAR_Q)) {
-	      
+
 	      Hy[Hcounter[*Jconstr_index]] = Qy*y/pow(sqrt_termY,3.);
 	      Hcounter[*Jconstr_index]++;   // y and Q
 
@@ -569,10 +569,10 @@ void CONSTR_REG_GEN_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	    }
 	  }
 	}
-	
+
 	for (rg = BUS_get_reg_gen(bus); rg != NULL; rg = GEN_get_reg_next(rg)) {
 	  if (GEN_has_flags(rg,FLAG_VARS,GEN_VAR_Q)) { // Qg var
-	  
+
 	    // J
 	    J[*Jcounter] = 1. - Qy/sqrt_termY;
 	    (*Jcounter)++; // dcompY/dQ
@@ -583,16 +583,16 @@ void CONSTR_REG_GEN_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	    // H
 	    Hy[Hcounter[*Jconstr_index]] = -(y*y+2*CONSTR_REG_GEN_PARAM)/pow(sqrt_termY,3.);
 	    Hcounter[*Jconstr_index]++;   // Q and Q
-	    
+
 	    Hz[Hcounter[*Jconstr_index+1]] = -(z*z+2*CONSTR_REG_GEN_PARAM)/pow(sqrt_termZ,3.);
 	    Hcounter[*Jconstr_index+1]++; // Q and Q
-	    
+
 	    for (rg1 = GEN_get_reg_next(rg); rg1 != NULL; rg1 = GEN_get_reg_next(rg1)) {
 	      if (GEN_has_flags(rg1,FLAG_VARS,GEN_VAR_Q)) {
-	      
+
 		Hy[Hcounter[*Jconstr_index]] = -(y*y+2*CONSTR_REG_GEN_PARAM)/pow(sqrt_termY,3.);
 		Hcounter[*Jconstr_index]++;   // Q and Q1
-		
+
 		Hz[Hcounter[*Jconstr_index+1]] = -(z*z+2*CONSTR_REG_GEN_PARAM)/pow(sqrt_termZ,3.);
 		Hcounter[*Jconstr_index+1]++; // Q and Q1
 	      }
@@ -604,15 +604,15 @@ void CONSTR_REG_GEN_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	(*Jconstr_index)++; // dCompY
 	(*Jconstr_index)++; // dCompZ
       }
-    } 
-    
+    }
+
     // Update counted flag
     bus_counted[bus_index[k]] = TRUE;
   }
 }
 
 void CONSTR_REG_GEN_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
-  
+
   // Local variables
   Bus* buses[2];
   Bus* bus;
@@ -622,7 +622,7 @@ void CONSTR_REG_GEN_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, V
   REAL lamCompY;
   REAL lamCompZ;
   int k;
-  
+
   // Constr data
   Jconstr_index = CONSTR_get_Jconstr_index_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
@@ -634,13 +634,13 @@ void CONSTR_REG_GEN_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, V
   // Check outage
   if (BRANCH_is_on_outage(br))
     return;
- 
+
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index[k] = BUS_get_index(buses[k]);
-  
+
   // Buses
   //******
 
@@ -649,22 +649,22 @@ void CONSTR_REG_GEN_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, V
     bus = buses[k];
 
     if (!bus_counted[bus_index[k]]) { // not counted yet
-      
+
       if (BUS_is_regulated_by_gen(bus) && // reg gen
 	  !BUS_is_slack(bus)) {           // not slack
-	
+
 	lamCompY = VEC_get(sf,*Jconstr_index);
 	(*Jconstr_index)++; // dCompY
 	lamCompZ = VEC_get(sf,*Jconstr_index);
 	(*Jconstr_index)++; // dCompZ
-	
+
 	if (fabs(lamCompY) > fabs(lamCompZ))
 	  BUS_set_sens_v_reg_by_gen(bus,lamCompY);
 	else
 	  BUS_set_sens_v_reg_by_gen(bus,lamCompZ);
       }
-    }	  
-    
+    }
+
     // Update counted flag
     bus_counted[bus_index[k]] = TRUE;
   }

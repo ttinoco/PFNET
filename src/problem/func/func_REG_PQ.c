@@ -18,16 +18,16 @@ void FUNC_REG_PQ_clear(Func* f) {
 
   // phi
   FUNC_set_phi(f,0);
-  
+
   // gphi
   VEC_set_zero(FUNC_get_gphi(f));
 
   // Hphi
   // Constant so not clear it
-  
+
   // Counter
   FUNC_set_Hcounter(f,0);
-  
+
   // Flags
   FUNC_clear_bus_counted(f);
 }
@@ -55,19 +55,19 @@ void FUNC_REG_PQ_count_branch(Func* f, Branch* br) {
     return;
 
   // Bus data
-  bus[0] = BRANCH_get_bus_from(br);
-  bus[1] = BRANCH_get_bus_to(br);
+  bus[0] = BRANCH_get_bus_k(br);
+  bus[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index[k] = BUS_get_index(bus[k]);
 
   // Buses
   for (k = 0; k < 2; k++) {
-    
+
     if (!bus_counted[bus_index[k]]) {
 
       // Generators
       for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
-	
+
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) // Q var
 	  (*Hcounter)++;
 
@@ -75,18 +75,18 @@ void FUNC_REG_PQ_count_branch(Func* f, Branch* br) {
 	  (*Hcounter)++;
       }
     }
-    
+
     // Update counted flag
     bus_counted[bus_index[k]] = TRUE;
   }
 }
 
 void FUNC_REG_PQ_allocate(Func* f) {
-  
+
   // Local variables
   int num_vars;
   int Hcounter;
-  
+
   num_vars = NET_get_num_vars(FUNC_get_network(f));
   Hcounter = FUNC_get_Hcounter(f);
 
@@ -125,19 +125,19 @@ void FUNC_REG_PQ_analyze_branch(Func* f, Branch* br) {
     return;
 
   // Bus data
-  bus[0] = BRANCH_get_bus_from(br);
-  bus[1] = BRANCH_get_bus_to(br);
+  bus[0] = BRANCH_get_bus_k(br);
+  bus[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index[k] = BUS_get_index(bus[k]);
 
   // Buses
   for (k = 0; k < 2; k++) {
-    
+
     if (!bus_counted[bus_index[k]]) {
-      
+
       // Generators
       for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
-	
+
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) { // Q var
 
 	  dv = GEN_get_Q_max(gen)-GEN_get_Q_min(gen); // p.u.
@@ -151,7 +151,7 @@ void FUNC_REG_PQ_analyze_branch(Func* f, Branch* br) {
 	}
 
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // P var
-	  
+
 	  dv = GEN_get_P_max(gen)-GEN_get_P_min(gen); // p.u.
 	  if (dv < FUNC_REG_PQ_PARAM)
 	    dv = FUNC_REG_PQ_PARAM;
@@ -161,12 +161,12 @@ void FUNC_REG_PQ_analyze_branch(Func* f, Branch* br) {
 	  MAT_set_d(H,*Hcounter,1./(dv*dv));
 	  (*Hcounter)++;
 	}
-      }  
+      }
     }
-    
+
     // Update counted flag
     bus_counted[bus_index[k]] = TRUE;
-  }  
+  }
 }
 
 void FUNC_REG_PQ_eval_branch(Func* f, Branch* br, Vec* var_values) {
@@ -197,8 +197,8 @@ void FUNC_REG_PQ_eval_branch(Func* f, Branch* br, Vec* var_values) {
     return;
 
   // Bus data
-  bus[0] = BRANCH_get_bus_from(br);
-  bus[1] = BRANCH_get_bus_to(br);
+  bus[0] = BRANCH_get_bus_k(br);
+  bus[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index[k] = BUS_get_index(bus[k]);
 
@@ -206,12 +206,12 @@ void FUNC_REG_PQ_eval_branch(Func* f, Branch* br, Vec* var_values) {
   for (k = 0; k < 2; k++) {
 
     if (!bus_counted[bus_index[k]]) {
-      
+
       // Generators
       for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
-	
+
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) { // Q var
-	  
+
 	  // Normalization factor
 	  dv = GEN_get_Q_max(gen)-GEN_get_Q_min(gen); // p.u.
 	  if (dv < FUNC_REG_PQ_PARAM)
@@ -229,7 +229,7 @@ void FUNC_REG_PQ_eval_branch(Func* f, Branch* br, Vec* var_values) {
 	}
 
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // P var
-	  	
+
 	  // Normalization factor
 	  dv = GEN_get_P_max(gen)-GEN_get_P_min(gen); // p.u.
 	  if (dv < FUNC_REG_PQ_PARAM)
@@ -247,7 +247,7 @@ void FUNC_REG_PQ_eval_branch(Func* f, Branch* br, Vec* var_values) {
 	}
       }
     }
-    
+
     // Update counted flag
     bus_counted[bus_index[k]] = TRUE;
   }

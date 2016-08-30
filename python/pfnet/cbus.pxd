@@ -16,7 +16,7 @@ cdef extern from "pfnet/bus.h":
     ctypedef struct Vargen
     ctypedef struct Bat
     ctypedef double REAL
-    
+
     cdef char BUS_VAR_VMAG
     cdef char BUS_VAR_VANG
     cdef char BUS_VAR_VDEV
@@ -34,8 +34,8 @@ cdef extern from "pfnet/bus.h":
     cdef char BUS_PROP_NOT_SLACK
 
     cdef char BUS_SENS_LARGEST
-    cdef char BUS_SENS_P_BALANCE 
-    cdef char BUS_SENS_Q_BALANCE 
+    cdef char BUS_SENS_P_BALANCE
+    cdef char BUS_SENS_Q_BALANCE
     cdef char BUS_SENS_V_MAG_U_BOUND
     cdef char BUS_SENS_V_MAG_L_BOUND
     cdef char BUS_SENS_V_ANG_U_BOUND
@@ -43,7 +43,7 @@ cdef extern from "pfnet/bus.h":
     cdef char BUS_SENS_V_REG_BY_GEN
     cdef char BUS_SENS_V_REG_BY_TRAN
     cdef char BUS_SENS_V_REG_BY_SHUNT
-    
+
     cdef char BUS_MIS_LARGEST
     cdef char BUS_MIS_ACTIVE
     cdef char BUS_MIS_REACTIVE
@@ -65,8 +65,10 @@ cdef extern from "pfnet/bus.h":
     Gen* BUS_get_reg_gen(Bus* bus)
     Branch* BUS_get_reg_tran(Bus* bus)
     Shunt* BUS_get_reg_shunt(Bus* bus)
-    Branch* BUS_get_branch_from(Bus* bus)
-    Branch* BUS_get_branch_to(Bus* bus)
+    Branch* BUS_get_branch_from(Bus* bus)   # deprecated
+    Branch* BUS_get_branch_to(Bus* bus)     # deprecated
+    Branch* BUS_get_branch_k(Bus* bus)
+    Branch* BUS_get_branch_m(Bus* bus)
     Load* BUS_get_load(Bus* bus)
     Vargen* BUS_get_vargen(Bus* bus)
     Bat* BUS_get_bat(Bus* bus)
@@ -113,4 +115,3 @@ cdef extern from "pfnet/bus.h":
     void BUS_set_v_mag(Bus* bus, REAL v_mag)
     void BUS_set_v_ang(Bus* bus, REAL v_ang)
     void BUS_show(Bus* bus)
-    

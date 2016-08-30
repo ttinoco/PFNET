@@ -15,19 +15,19 @@ void FUNC_SLIM_VMAG_init(Func* f) {
 }
 
 void FUNC_SLIM_VMAG_clear(Func* f) {
-  
+
   // phi
   FUNC_set_phi(f,0);
-  
+
   // gphi
   VEC_set_zero(FUNC_get_gphi(f));
-  
+
   // Hphi
   // Constant so not clear it
-  
+
   // Counter
   FUNC_set_Hcounter(f,0);
-  
+
   // Flags
   FUNC_clear_bus_counted(f);
 }
@@ -55,14 +55,14 @@ void FUNC_SLIM_VMAG_count_branch(Func* f, Branch* br) {
     return;
 
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index[k] = BUS_get_index(buses[k]);
 
   // Buses
   for (k = 0; k < 2; k++) {
-    
+
     bus = buses[k];
 
     if (!bus_counted[bus_index[k]]) {
@@ -70,18 +70,18 @@ void FUNC_SLIM_VMAG_count_branch(Func* f, Branch* br) {
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) // v var
 	(*Hcounter)++;
     }
-    
+
     // Update counted flag
     bus_counted[bus_index[k]] = TRUE;
   }
 }
 
 void FUNC_SLIM_VMAG_allocate(Func* f) {
-  
+
   // Local variables
   int num_vars;
   int Hcounter;
-  
+
   num_vars = NET_get_num_vars(FUNC_get_network(f));
   Hcounter = FUNC_get_Hcounter(f);
 
@@ -118,24 +118,24 @@ void FUNC_SLIM_VMAG_analyze_branch(Func* f, Branch* br) {
   // Check outage
   if (BRANCH_is_on_outage(br))
     return;
-  
+
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index[k] = BUS_get_index(buses[k]);
 
   // Buses
   for (k = 0; k < 2; k++) {
-    
+
     bus = buses[k];
-    
+
     if (!bus_counted[bus_index[k]]) {
-      
+
       dv = BUS_get_v_max(bus)-BUS_get_v_min(bus);
       if (dv < FUNC_SLIM_VMAG_PARAM)
 	dv = FUNC_SLIM_VMAG_PARAM;
-      
+
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
 	MAT_set_i(H,*Hcounter,BUS_get_index_v_mag(bus));
 	MAT_set_j(H,*Hcounter,BUS_get_index_v_mag(bus));
@@ -143,10 +143,10 @@ void FUNC_SLIM_VMAG_analyze_branch(Func* f, Branch* br) {
 	(*Hcounter)++;
       }
     }
-    
+
     // Update counted flag
     bus_counted[bus_index[k]] = TRUE;
-  }  
+  }
 }
 
 void FUNC_SLIM_VMAG_eval_branch(Func* f, Branch* br, Vec* var_values) {
@@ -178,14 +178,14 @@ void FUNC_SLIM_VMAG_eval_branch(Func* f, Branch* br, Vec* var_values) {
     return;
 
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index[k] = BUS_get_index(buses[k]);
 
   // Buses
   for (k = 0; k < 2; k++) {
-    
+
     bus = buses[k];
 
     if (!bus_counted[bus_index[k]]) {
@@ -195,12 +195,12 @@ void FUNC_SLIM_VMAG_eval_branch(Func* f, Branch* br, Vec* var_values) {
 	dv = FUNC_SLIM_VMAG_PARAM;
 
       vmid = 0.5*(BUS_get_v_max(bus)+BUS_get_v_min(bus));
-      
+
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
 
 	// Index
 	index_v_mag = BUS_get_index_v_mag(bus);
-	
+
 	// v
 	v = VEC_get(var_values,index_v_mag);
 
@@ -211,7 +211,7 @@ void FUNC_SLIM_VMAG_eval_branch(Func* f, Branch* br, Vec* var_values) {
 	gphi[index_v_mag] = (v-vmid)/(dv*dv);
       }
     }
-    
+
     // Update counted flag
     bus_counted[bus_index[k]] = TRUE;
   }
