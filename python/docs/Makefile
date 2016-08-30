@@ -2,8 +2,21 @@
 #
 
 ifndef PFNET_DOCS
-$(error error 'PFNET_DOCS' must be set to the location to put documentation files)
+	$(error error 'PFNET_DOCS' must be set to the location to put documentation files)
 endif
+
+# check operating system, and set dependent variables
+ifeq ($(OS),Windows_NT)
+  OS_DETECTED := Windows
+else
+  OS_DETECTED := $(shell uname -s)
+endif
+ifeq ($(OS_DETECTED),Darwin)
+	export DYLD_LIBRARY_PATH=../../lib:$DYLD_LIBRARY_PATH
+else
+	export LD_LIBRARY_PATH=../../lib:$LD_LIBRARY_PATH
+endif
+
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
@@ -57,7 +70,7 @@ clean:
 	rm -rf $(BUILDDIR)/*
 
 html:
-	@cd ../; sudo python setup.py build_ext --inplace; cd docs
+	@cd ../; python setup.py build_ext --inplace; cd docs
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)."
