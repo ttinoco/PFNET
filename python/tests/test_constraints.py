@@ -2934,6 +2934,7 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_DC_FLOW_LIM(self):
                 
+        # Single period
         net = self.net
         
         for case in test_cases.CASES:
@@ -3085,6 +3086,54 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.Aconstr_index,0)
             self.assertEqual(constr.Gconstr_index,net.num_branches)
 
+        # Multi period
+        net = self.netMP
+
+        self.assertEqual(net.num_periods,self.T)
+        
+        for case in test_cases.CASES:
+            
+            net.load(case)
+
+            self.assertEqual(net.num_vars,0)
+
+            # Nonzero angles
+            for bus in net.buses:
+                bus.v_ang = np.random.randn()*np.ones(self.T)
+            
+            # Variables
+            net.set_flags(pf.OBJ_BUS,
+                          pf.FLAG_VARS,
+                          pf.BUS_PROP_NOT_SLACK,
+                          pf.BUS_VAR_VANG)
+            self.assertEqual(net.num_vars,(net.num_buses-net.get_num_slack_buses())*self.T)
+            
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+            
+            # Constraint
+            constr = pf.Constraint(pf.CONSTR_TYPE_DC_FLOW_LIM,net)
+            constr.analyze()
+            G = constr.G
+            l = constr.l
+            u = constr.u
+            self.assertTupleEqual(l.shape,(net.num_branches*self.T,))
+            self.assertTupleEqual(u.shape,(net.num_branches*self.T,))
+            self.assertTupleEqual(G.shape,(net.num_branches*self.T,net.num_vars))
+            Projs = []
+            for t in range(self.T):
+                Projs.append(net.get_var_projection(pf.OBJ_ALL,pf.ALL_VARS,t,t))
+            Gs = [G*P.T for P in Projs]
+            x0s = [P*x0 for P in Projs]
+            Gx0s = [(Gs[t]*x0s[t])[t*net.num_branches:(t+1)*net.num_branches] for t in range(self.T)]
+            ls = [l[t*net.num_branches:(t+1)*net.num_branches] for t in range(self.T)]
+            us = [u[t*net.num_branches:(t+1)*net.num_branches] for t in range(self.T)]
+            for t in range(self.T):
+                self.assertLess(np.linalg.norm(Gx0s[t]-Gx0s[0]),1e-10*np.linalg.norm(Gx0s[0]))
+                self.assertLess(np.linalg.norm(ls[t]-ls[0]),1e-10*np.linalg.norm(ls[0]))
+                self.assertLess(np.linalg.norm(us[t]-us[0]),1e-10*np.linalg.norm(us[0]))
+ 
     def test_constr_LINPF(self):
                 
         net = self.net
