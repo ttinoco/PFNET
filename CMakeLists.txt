@@ -22,8 +22,12 @@ file(GLOB_RECURSE pfnet_source src/*.c)
 # add include directory
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# add library target
+# add shared library target
 add_library(pfnet SHARED ${pfnet_source})
+
+# add static library target
+add_library(pfnet_static STATIC ${pfnet_source})
+set_property(TARGET pfnet_static PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # set the debug flag
 if(PFNET_DEBUG)
@@ -46,7 +50,8 @@ if(NOT ${RAW_PARSER_SOURCE_DIR} STREQUAL "")
   set(raw_parser_source ${RAW_PARSER_SOURCE_DIR}/src/RAW_net.c
                         ${RAW_PARSER_SOURCE_DIR}/src/RAW_parser.c)
   target_sources(pfnet PUBLIC ${raw_parser_source})
-  message("raw-parser not enabled.")
+  target_sources(pfnet_static PUBLIC ${raw_parser_source})
+  message("raw-parser enabled.")
   # install raw-parser headers also
   install(DIRECTORY ${RAW_PARSER_SOURCE_DIR}/include/
           DESTINATION include
@@ -57,7 +62,7 @@ else()
 endif()
 
 # install library to <prefix>/lib
-install(TARGETS pfnet
+install(TARGETS pfnet pfnet_static
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
 ## copy header files to <prefix>/include
