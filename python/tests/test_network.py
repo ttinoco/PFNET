@@ -2769,6 +2769,69 @@ class TestNetwork(unittest.TestCase):
                             self.assertTupleEqual(a.shape,(1,))
                         else:
                             self.assertTupleEqual(a.shape,(0,))
+                for branch in net.branches:
+                    if branch.is_tap_changer_v():
+                        a = np.where(P.col == branch.index_ratio[t])[0]
+                        if t == 2:
+                            self.assertTupleEqual(a.shape,(1,))
+                        else:
+                            self.assertTupleEqual(a.shape,(0,))
+                    if branch.is_phase_shifter():
+                        a = np.where(P.col == branch.index_phase[t])[0]
+                        if t == 2:
+                            self.assertTupleEqual(a.shape,(1,))
+                        else:
+                            self.assertTupleEqual(a.shape,(0,))
+                for load in net.loads:
+                    a = np.where(P.col == load.index_P[t])[0]
+                    if t == 2:
+                        self.assertTupleEqual(a.shape,(1,))
+                    else:
+                        self.assertTupleEqual(a.shape,(0,))
+                for shunt in net.shunts:
+                    if shunt.is_switched_v():
+                        a = np.where(P.col == shunt.index_b[t])[0]
+                        if t == 2:
+                            self.assertTupleEqual(a.shape,(1,))
+                        else:
+                            self.assertTupleEqual(a.shape,(0,))
+                for vargen in net.var_generators:
+                    a = np.where(P.col == vargen.index_P[t])[0]
+                    if t == 2:
+                        self.assertTupleEqual(a.shape,(1,))
+                    else:
+                        self.assertTupleEqual(a.shape,(0,))
+                    a = np.where(P.col == vargen.index_Q[t])[0]
+                    if t == 2:
+                        self.assertTupleEqual(a.shape,(1,))
+                    else:
+                        self.assertTupleEqual(a.shape,(0,))
+                for bat in net.batteries:
+                    a = np.where(P.col == bat.index_Pc[t])[0]
+                    if t == 2:
+                        self.assertTupleEqual(a.shape,(1,))
+                    else:
+                        self.assertTupleEqual(a.shape,(0,))
+                    a = np.where(P.col == bat.index_Pd[t])[0]
+                    if t == 2:
+                        self.assertTupleEqual(a.shape,(1,))
+                    else:
+                        self.assertTupleEqual(a.shape,(0,))
+                    a = np.where(P.col == bat.index_E[t])[0]
+                    if t == 2:
+                        self.assertTupleEqual(a.shape,(1,))
+                    else:
+                        self.assertTupleEqual(a.shape,(0,))
+
+            # Recovery
+            Projs = []
+            for t in range(self.T):
+                Projs.append(net.get_var_projection(pf.OBJ_ALL,pf.ALL_VARS,t,t))
+            x = net.get_var_values()
+            self.assertTupleEqual(x.shape,(net.num_vars,))
+            self.assertEqual(net.num_periods,self.T)
+            y = sum([P.T*P*x for P in Projs])
+            self.assertLess(np.linalg.norm(y-x),np.linalg.norm(x)*1e-10)
 
     def test_variable_limits(self):
 

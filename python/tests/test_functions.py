@@ -21,7 +21,9 @@ class TestFunctions(unittest.TestCase):
     def setUp(self):
         
         # Network
+        self.T = 5
         self.net = pf.Network()
+        self.netMP = pf.Network(self.T)
 
         # Random
         np.random.seed(1)
@@ -668,7 +670,7 @@ class TestFunctions(unittest.TestCase):
 
     def test_func_GEN_COST(self):
         
-        # Constants
+        # Single period
         h = 1e-9
         
         net = self.net
@@ -789,6 +791,141 @@ class TestFunctions(unittest.TestCase):
                         gen.cost_coeff_Q2*(gen.P**2.))
             self.assertLess(np.abs(val-func.phi),1e-8)
 
+        # Multi period
+        h = 1e-9
+        
+        net = self.netMP
+
+        self.assertEqual(net.num_periods,self.T)
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+
+            # Gen curves
+            data = {}
+            for gen in net.generators:
+                P = np.random.rand(self.T)
+                gen.P = P
+                data[gen.index] = P
+                self.assertEqual(gen.num_periods,self.T)
+ 
+            # Vars
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_ANY,
+                          [pf.GEN_VAR_P,pf.GEN_VAR_Q])
+            self.assertEqual(net.num_vars,2*net.get_num_generators()*self.T)
+            self.assertGreater(net.num_vars,0)
+             
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+            
+            # Function
+            func = pf.Function(pf.FUNC_TYPE_GEN_COST,1.,net)
+
+            self.assertEqual(func.type,pf.FUNC_TYPE_GEN_COST)
+
+            f = func.phi
+            g = func.gphi
+            H = func.Hphi
+            
+            # Before 
+            self.assertTrue(type(f) is float)
+            self.assertEqual(f,0.)
+            self.assertTrue(type(g) is np.ndarray)
+            self.assertTupleEqual(g.shape,(0,))
+            self.assertTrue(type(H) is coo_matrix)
+            self.assertTupleEqual(H.shape,(0,0))
+            self.assertEqual(H.nnz,0)
+            
+            self.assertEqual(func.Hcounter,0)
+            
+            func.analyze()
+            self.assertEqual(func.Hcounter,net.get_num_generators()*self.T)
+            func.eval(x0)
+            self.assertEqual(func.Hcounter,0)
+            
+            f = func.phi
+            g = func.gphi
+            H = func.Hphi
+            
+            # After
+            self.assertTrue(type(f) is float)
+            self.assertGreaterEqual(f,0.)
+            self.assertTrue(type(g) is np.ndarray)
+            self.assertTupleEqual(g.shape,(net.num_vars,))
+            self.assertTrue(type(H) is coo_matrix)
+            self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
+            self.assertEqual(H.nnz,net.get_num_generators()*self.T)
+            self.assertTrue(np.all(H.row == H.col))
+
+            self.assertTrue(not np.any(np.isinf(g)))
+            self.assertTrue(not np.any(np.isnan(g)))
+            self.assertTrue(not np.any(np.isinf(H.data)))
+            self.assertTrue(not np.any(np.isnan(H.data)))
+
+            # Gradient check
+            f0 = func.phi
+            g0 = func.gphi.copy()
+            for i in range(NUM_TRIALS):
+                
+                d = np.random.randn(net.num_vars)
+    
+                x = x0 + h*d
+                
+                func.eval(x)
+                f1 = func.phi
+                
+                gd_exact = np.dot(g0,d)
+                gd_approx = (f1-f0)/h
+                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
+                self.assertLessEqual(error,EPS)
+
+            # Hessian check
+            func.eval(x0)
+            g0 = func.gphi.copy()
+            H0 = func.Hphi.copy()
+            for i in range(NUM_TRIALS):
+                
+                d = np.random.randn(net.num_vars)
+    
+                x = x0 + h*d
+                
+                func.eval(x)
+
+                g1 = func.gphi.copy()
+                
+                Hd_exact = H0*d
+                Hd_approx = (g1-g0)/h
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
+                self.assertLessEqual(error,EPS)
+
+            # value check
+            val = 0
+            for t in range(self.T):
+                for gen in net.generators:
+                    self.assertTrue(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
+                    self.assertEqual(gen.P[t],data[gen.index][t])
+                    self.assertEqual(x0[gen.index_P[t]],gen.P[t])
+                    val += (gen.cost_coeff_Q0 + 
+                            gen.cost_coeff_Q1*gen.P[t] +
+                            gen.cost_coeff_Q2*(gen.P[t]**2.))
+            self.assertLess(np.abs(val-f),1e-10*np.abs(f))
+            net.clear_flags()
+            self.assertEqual(net.num_vars,0)
+            func.analyze()
+            func.eval(np.zeros(0))
+            val = 0
+            for t in range(self.T):
+                for gen in net.generators:
+                    self.assertFalse(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
+                    val += (gen.cost_coeff_Q0 + 
+                            gen.cost_coeff_Q1*gen.P[t] +
+                            gen.cost_coeff_Q2*(gen.P[t]**2.))
+            self.assertLess(np.abs(val-func.phi),1e-10*np.abs(func.phi))
+            
     def test_func_SP_CONTROLS(self):
         
         # Constants
@@ -1220,7 +1357,7 @@ class TestFunctions(unittest.TestCase):
 
     def test_func_LOAD_UTIL(self):
         
-        # Constants
+        # Single period
         h = 1e-9
         
         net = self.net
@@ -1341,10 +1478,145 @@ class TestFunctions(unittest.TestCase):
                         load.util_coeff_Q2*(load.P**2.))
             self.assertLess(np.abs(val-func.phi),1e-7)
 
+        # Multi period
+        h = 1e-9
+        
+        net = self.netMP
+
+        self.assertEqual(net.num_periods,self.T)
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+            
+            # Vars
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_VARS,
+                          pf.LOAD_PROP_ANY,
+                          pf.LOAD_VAR_P)
+            self.assertEqual(net.num_vars,net.num_loads*self.T)
+            self.assertGreater(net.num_vars,0)
+
+            # Load curves
+            data = {}
+            for load in net.loads:
+                P = np.random.rand(self.T)
+                load.P = P
+                data[load.index] = P
+                self.assertEqual(load.num_periods,self.T)
+             
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+            
+            # Function
+            func = pf.Function(pf.FUNC_TYPE_LOAD_UTIL,1.,net)
+
+            self.assertEqual(func.type,pf.FUNC_TYPE_LOAD_UTIL)
+
+            f = func.phi
+            g = func.gphi
+            H = func.Hphi
+            
+            # Before 
+            self.assertTrue(type(f) is float)
+            self.assertEqual(f,0.)
+            self.assertTrue(type(g) is np.ndarray)
+            self.assertTupleEqual(g.shape,(0,))
+            self.assertTrue(type(H) is coo_matrix)
+            self.assertTupleEqual(H.shape,(0,0))
+            self.assertEqual(H.nnz,0)
+            
+            self.assertEqual(func.Hcounter,0)
+            
+            func.analyze()
+            self.assertEqual(func.Hcounter,net.num_loads*self.T)
+            func.eval(x0)
+            self.assertEqual(func.Hcounter,0)
+            
+            f = func.phi
+            g = func.gphi
+            H = func.Hphi
+            
+            # After
+            self.assertTrue(type(f) is float)
+            self.assertNotEqual(f,0.)
+            self.assertTrue(type(g) is np.ndarray)
+            self.assertTupleEqual(g.shape,(net.num_vars,))
+            self.assertTrue(type(H) is coo_matrix)
+            self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
+            self.assertEqual(H.nnz,net.num_loads*self.T)
+            self.assertTrue(np.all(H.row == H.col))
+
+            self.assertTrue(not np.any(np.isinf(g)))
+            self.assertTrue(not np.any(np.isnan(g)))
+            self.assertTrue(not np.any(np.isinf(H.data)))
+            self.assertTrue(not np.any(np.isnan(H.data)))
+            
+            # Gradient check
+            f0 = func.phi
+            g0 = func.gphi.copy()
+            for i in range(NUM_TRIALS):
+                
+                d = np.random.randn(net.num_vars)
+    
+                x = x0 + h*d
+                
+                func.eval(x)
+                f1 = func.phi
+                
+                gd_exact = np.dot(g0,d)
+                gd_approx = (f1-f0)/h
+                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
+                self.assertLessEqual(error,EPS)
+
+            # Hessian check
+            func.eval(x0)
+            g0 = func.gphi.copy()
+            H0 = func.Hphi.copy()
+            for i in range(NUM_TRIALS):
+                
+                d = np.random.randn(net.num_vars)
+    
+                x = x0 + h*d
+                
+                func.eval(x)
+
+                g1 = func.gphi.copy()
+                
+                Hd_exact = H0*d
+                Hd_approx = (g1-g0)/h
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
+                self.assertLessEqual(error,EPS)
+
+            # value check
+            val = 0
+            for t in range(self.T):
+                for load in net.loads:
+                    self.assertTrue(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+                    self.assertEqual(load.P[t],data[load.index][t])
+                    self.assertEqual(x0[load.index_P[t]],load.P[t])
+                    val += (load.util_coeff_Q0 + 
+                            load.util_coeff_Q1*load.P[t] +
+                            load.util_coeff_Q2*(load.P[t]**2.))
+            self.assertLess(np.abs(val-f),1e-10*np.abs(f))
+            net.clear_flags()
+            self.assertEqual(net.num_vars,0)
+            func.analyze()
+            func.eval(np.zeros(0))
+            val = 0
+            for t in range(self.T):
+                for load in net.loads:
+                    self.assertFalse(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+                    val += (load.util_coeff_Q0 + 
+                            load.util_coeff_Q1*load.P[t] +
+                            load.util_coeff_Q2*(load.P[t]**2.))
+            self.assertLess(np.abs(val-func.phi),1e-10*np.abs(func.phi))
+
     def test_func_NETCON_COST(self):
         
-        # Constants
-        h = 1e-9
+        # Single period
+        h = 1e-7
         
         net = self.net
 
@@ -1450,7 +1722,7 @@ class TestFunctions(unittest.TestCase):
                 for vargen in bus.var_generators:
                     self.assertTrue(vargen.has_flags(pf.FLAG_VARS,pf.VARGEN_VAR_P))
                     val -= bus.price*vargen.P
-            self.assertLess(100*np.abs(val-f)/np.abs(f),1e-8)
+            self.assertLess(np.abs(val-f),1e-10*np.abs(f))
 
             # Gradient check
             f0 = func.phi
@@ -1499,8 +1771,191 @@ class TestFunctions(unittest.TestCase):
                 for vargen in bus.var_generators:
                     self.assertFalse(vargen.has_flags(pf.FLAG_VARS,pf.VARGEN_VAR_P))
                     val -= bus.price*vargen.P
-            self.assertLess(100*np.abs(val-func.phi)/np.abs(f),1e-8)
+            self.assertLess(np.abs(val-func.phi),1e-10*np.abs(f))
+
+        # Multi period
+        h = 1e-7
+        
+        net = self.netMP
+
+        self.assertEqual(net.num_periods,self.T)
+
+        for case in test_cases.CASES:
             
+            net.load(case)
+
+            # gens
+            for gen in net.generators:
+                self.assertEqual(gen.num_periods,self.T)
+                gen.P = np.random.rand(self.T)*10.
+
+            # loads
+            for load in net.loads:
+                self.assertEqual(load.num_periods,self.T)
+                load.P = np.random.rand(self.T)*10.
+
+            # prices
+            for bus in net.buses:
+                self.assertEqual(bus.num_periods,self.T)
+                bus.price = np.random.rand(self.T)*10.
+
+            # vargens
+            net.add_vargens(net.get_load_buses(),50.,30.,5,0.05)
+            for vargen in net.var_generators:
+                self.assertEqual(vargen.num_periods,self.T)
+                vargen.P = np.random.randn(self.T)*10.
+
+            # batteries
+            for bat in net.batteries:
+                self.assertEqual(bat.num_periods,self.T)
+                bat.P = np.random.randn(self.T)*10.
+            
+            # Vars
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_VARS,
+                          pf.LOAD_PROP_ANY,
+                          pf.LOAD_VAR_P)
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_ANY,
+                          pf.GEN_VAR_P)
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P)
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P)
+            self.assertEqual(net.num_vars,
+                             (net.num_loads+
+                              net.num_generators+
+                              net.num_var_generators+
+                              2*net.num_batteries)*self.T)
+            self.assertGreater(net.num_vars,0)
+             
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+            
+            # Function
+            func = pf.Function(pf.FUNC_TYPE_NETCON_COST,1.,net)
+
+            self.assertEqual(func.type,pf.FUNC_TYPE_NETCON_COST)
+
+            f = func.phi
+            g = func.gphi
+            H = func.Hphi
+            
+            # Before 
+            self.assertTrue(type(f) is float)
+            self.assertEqual(f,0.)
+            self.assertTrue(type(g) is np.ndarray)
+            self.assertTupleEqual(g.shape,(0,))
+            self.assertTrue(type(H) is coo_matrix)
+            self.assertTupleEqual(H.shape,(0,0))
+            self.assertEqual(H.nnz,0)
+            
+            self.assertEqual(func.Hcounter,0)
+            
+            func.analyze()
+            self.assertEqual(func.Hcounter,0)
+            func.eval(x0)
+            self.assertEqual(func.Hcounter,0)
+            
+            f = func.phi
+            g = func.gphi
+            H = func.Hphi
+            
+            # After
+            self.assertTrue(type(f) is float)
+            self.assertNotEqual(f,0.)
+            self.assertTrue(type(g) is np.ndarray)
+            self.assertTupleEqual(g.shape,(net.num_vars,))
+            self.assertTrue(type(H) is coo_matrix)
+            self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
+            self.assertEqual(H.nnz,0)
+
+            self.assertTrue(not np.any(np.isinf(g)))
+            self.assertTrue(not np.any(np.isnan(g)))
+            
+            # value and grad check
+            val = 0
+            for t in range(self.T):
+                for bus in net.buses:
+                    for load in bus.loads:
+                        self.assertTrue(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+                        self.assertEqual(load.P[t],x0[load.index_P[t]])
+                        self.assertEqual(g[load.index_P[t]],bus.price[t])
+                        val += bus.price[t]*load.P[t]
+                    for bat in bus.batteries:
+                        self.assertTrue(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P))
+                        self.assertEqual(bat.P[t],x0[bat.index_Pc[t]]-x0[bat.index_Pd[t]])
+                        self.assertEqual(g[bat.index_Pc[t]],bus.price[t])
+                        self.assertEqual(g[bat.index_Pd[t]],-bus.price[t])
+                        val += bus.price[t]*bat.P[t]
+                    for gen in bus.generators:
+                        self.assertTrue(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
+                        self.assertEqual(gen.P[t],x0[gen.index_P[t]])
+                        self.assertEqual(g[gen.index_P[t]],-bus.price[t])
+                        val -= bus.price[t]*gen.P[t]
+                    for vargen in bus.var_generators:
+                        self.assertTrue(vargen.has_flags(pf.FLAG_VARS,pf.VARGEN_VAR_P))
+                        self.assertEqual(vargen.P[t],x0[vargen.index_P[t]])
+                        self.assertEqual(g[vargen.index_P[t]],-bus.price[t])
+                        val -= bus.price[t]*vargen.P[t]
+            self.assertLess(np.abs(val-f),1e-10*np.abs(f))
+
+            # Gradient check
+            f0 = func.phi
+            g0 = func.gphi.copy()
+            for i in range(NUM_TRIALS):
+                
+                d = np.random.randn(net.num_vars)
+    
+                x = x0 + h*d
+                
+                func.eval(x)
+                f1 = func.phi
+                
+                gd_exact = np.dot(g0,d)
+                gd_approx = (f1-f0)/h
+                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
+                self.assertLessEqual(error,EPS)
+
+            # No variables
+            net.clear_flags()
+            self.assertEqual(net.num_vars,0)
+            
+            func = pf.Function(pf.FUNC_TYPE_NETCON_COST,1.,net)
+            self.assertEqual(func.type,pf.FUNC_TYPE_NETCON_COST)
+
+            x0 = net.get_var_values()
+
+            func.analyze()
+            func.eval(x0)
+            
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
+            
+            # value check
+            val = 0
+            for t in range(self.T):
+                for bus in net.buses:
+                    for load in bus.loads:
+                        self.assertFalse(load.has_flags(pf.FLAG_VARS,pf.LOAD_VAR_P))
+                        val += bus.price[t]*load.P[t]
+                    for bat in bus.batteries:
+                        self.assertFalse(bat.has_flags(pf.FLAG_VARS,pf.BAT_VAR_P))
+                        val += bus.price[t]*bat.P[t]
+                    for gen in bus.generators:
+                        self.assertFalse(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
+                        val -= bus.price[t]*gen.P[t]
+                    for vargen in bus.var_generators:
+                        self.assertFalse(vargen.has_flags(pf.FLAG_VARS,pf.VARGEN_VAR_P))
+                        val -= bus.price[t]*vargen.P[t]
+            self.assertLess(np.abs(val-func.phi),1e-10*np.abs(f))
+ 
     def test_robustness(self):
 
         for case in test_cases.CASES:
