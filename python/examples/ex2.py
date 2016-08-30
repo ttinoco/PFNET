@@ -53,7 +53,7 @@ print(shunt.index == 0)
 
 net.add_vargens(net.get_gen_buses(), 50., 50., 5, 0.05)
 
-print(net.num_vargens == len([b for b in net.buses if b.gens]))
+print(net.num_var_generators == len([b for b in net.buses if b.generators]))
 
 vargen = net.get_vargen(3)
 
