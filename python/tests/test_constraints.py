@@ -2717,6 +2717,7 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_DCPF(self):
                 
+        # Single period
         net = self.net
 
         for case in test_cases.CASES:
@@ -2932,6 +2933,143 @@ class TestConstraints(unittest.TestCase):
                     mis += br.P_flow_DC
                 self.assertLess(np.abs(mismatches1[bus.index]-mis),1e-8)
 
+        # Multi period
+        net = self.netMP
+
+        self.assertEqual(net.num_periods,self.T)
+
+        for case in test_cases.CASES:
+            
+            net.load(case)
+            
+            self.assertEqual(net.num_vars,0)
+            
+            # Add vargens
+            load_buses = net.get_load_buses()
+            net.add_vargens(load_buses,50.,30.,5,0.05)
+
+            # batteries
+            for bat in net.batteries:
+                bat.P = np.random.randn(self.T)*10
+
+            # Variables
+            net.set_flags(pf.OBJ_BUS,
+                          pf.FLAG_VARS,
+                          pf.BUS_PROP_NOT_SLACK,
+                          pf.BUS_VAR_VANG)
+            net.set_flags(pf.OBJ_GEN,
+                          pf.FLAG_VARS,
+                          pf.GEN_PROP_ANY,
+                          pf.GEN_VAR_P)
+            net.set_flags(pf.OBJ_LOAD,
+                          pf.FLAG_VARS,
+                          pf.LOAD_PROP_ANY,
+                          pf.LOAD_VAR_P)
+            net.set_flags(pf.OBJ_VARGEN,
+                          pf.FLAG_VARS,
+                          pf.VARGEN_PROP_ANY,
+                          pf.VARGEN_VAR_P)
+            net.set_flags(pf.OBJ_BRANCH,
+                          pf.FLAG_VARS,
+                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          pf.BRANCH_VAR_PHASE)
+            net.set_flags(pf.OBJ_BAT,
+                          pf.FLAG_VARS,
+                          pf.BAT_PROP_ANY,
+                          pf.BAT_VAR_P)
+            self.assertEqual(net.num_vars,
+                             (net.num_buses-net.get_num_slack_buses() +
+                              net.num_generators +
+                              net.num_loads + 
+                              net.num_var_generators +
+                              net.get_num_phase_shifters()+
+                              2*net.num_batteries)*self.T)
+            x0 = net.get_var_values()
+            
+            # Count something
+            r = 0
+            for b in net.buses:
+                if b.is_slack():
+                    r += len(b.branches)
+
+            # Constraint
+            constr = pf.Constraint(pf.CONSTR_TYPE_DCPF,net)
+
+            # Analyze
+            constr.analyze()
+            A = constr.A
+            b = constr.b
+            self.assertEqual(constr.Acounter,
+                             (net.num_generators +
+                              net.num_loads + 
+                              net.num_var_generators +
+                              4*net.num_branches - 
+                              2*r +
+                              2*net.get_num_phase_shifters()+
+                              2*net.num_batteries)*self.T)
+            self.assertTupleEqual(b.shape,(net.num_buses*self.T,))
+            self.assertTupleEqual(A.shape,(net.num_buses*self.T,net.num_vars))
+            self.assertEqual(A.nnz,constr.Acounter)
+            
+            # Eval
+            constr.eval(x0)
+            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(A.nnz,
+                             (net.num_generators +
+                              net.num_loads + 
+                              net.num_var_generators +
+                              4*net.num_branches - 
+                              2*r +
+                              2*net.get_num_phase_shifters()+
+                              2*net.num_batteries)*self.T)
+                
+            # Mismatches
+            mismatches = A*x0-b
+            for t in range(self.T):
+                for bus in net.buses:
+                    mis = 0
+                    for gen in bus.generators:
+                        mis += gen.P[t]
+                    for vargen in bus.var_generators:
+                        mis += vargen.P[t]
+                    for load in bus.loads:
+                        mis -= load.P[t]
+                    for bat in bus.batteries:
+                        mis -= bat.P[t]
+                    for br in bus.branches_from:
+                        mis -= br.P_flow_DC[t]
+                    for br in bus.branches_to:
+                        mis += br.P_flow_DC[t]
+                    self.assertLess(np.abs(mismatches[bus.index+t*net.num_buses]-mis),1e-8)
+
+            # No variables
+            net.clear_flags()
+            self.assertEqual(net.num_vars,0)
+            constr.del_matvec()
+            constr.analyze()
+            A1 = constr.A
+            b1 = constr.b
+            x1 = net.get_var_values()
+            self.assertTupleEqual(x1.shape,(0,))
+            
+            mismatches1 = A1*x1-b1
+            for t in range(self.T):
+                for bus in net.buses:
+                    mis = 0
+                    for gen in bus.generators:
+                        mis += gen.P[t]
+                    for vargen in bus.var_generators:
+                        mis += vargen.P[t]
+                    for load in bus.loads:
+                        mis -= load.P[t]
+                    for bat in bus.batteries:
+                        mis -= bat.P[t]
+                    for br in bus.branches_from:
+                        mis -= br.P_flow_DC[t]
+                    for br in bus.branches_to:
+                        mis += br.P_flow_DC[t]
+                    self.assertLess(np.abs(mismatches1[bus.index+t*net.num_buses]-mis),1e-8)
+            
     def test_constr_DC_FLOW_LIM(self):
                 
         # Single period
