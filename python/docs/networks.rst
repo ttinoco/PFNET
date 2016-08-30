@@ -37,7 +37,7 @@ Power networks can be loaded with data using the :func:`load() <pfnet.Network.lo
 Components
 ==========
 
-Power networks have several components. These are :ref:`buses <net_bus>`, :ref:`branches <net_branch>`, :ref:`generators <net_gen>`, :ref:`shunt devices <net_shunt>`, :ref:`loads <net_load>`, and :ref:`variable generators <net_vargen>` (*i.e.*, non-dispatchable). For obtaining an overview of the components that form a network, the class method :func:`show_components() <pfnet.Network.show_components>` can be used::
+Power networks have several components. These are :ref:`buses <net_bus>`, :ref:`branches <net_branch>`, :ref:`generators <net_gen>`, :ref:`shunt devices <net_shunt>`, :ref:`loads <net_load>`, :ref:`variable generators <net_vargen>` (*i.e.*, non-dispatchable), and :ref:`batteries <net_bat>`. For obtaining an overview of the components that form a network, the class method :func:`show_components() <pfnet.Network.show_components>` can be used::
 
   >>> net.show_components()
 
@@ -64,6 +64,7 @@ Power networks have several components. These are :ref:`buses <net_bus>`, :ref:`
   loads            : 11
     P adjust       : 0
   vargens          : 0
+  batteries        : 0
 
 .. _net_bus:
 
@@ -179,6 +180,13 @@ Similar to generators, the active and reactive powers produced by a variable gen
 The output of variable generators in a network is subject to random variations that can be correlated, especially for devices that are "nearby". The method :func:`create_vargen_P_sigma() <pfnet.Network.create_vargen_P_sigma>` of the :class:`Network <pfnet.Network>` class allows constructing a covariance matrix for these variations based on a "correlation distance" ``N`` and a given correlation coefficient. The cross-covariance between the variation of two devices that are connected to buses that are less than ``N`` branches away from each other is set such that it is consistent with the given correlation coefficient.
 
 Lastly, since many power network input files do not have variable generator information, these devices can be added to the network by using the :func:`add_vargens() <pfnet.Network.add_vargens>` method of the :class:`Network <pfnet.Network>` class.
+
+.. _net_bat:
+
+Batteries
+---------
+
+Batteries are objects of type :class:`Battery <pfnet.Battery>`. In addition to an :data:`index <pfnet.Battery.index>` field, these objects contain information such as energy level :data:`E <pfnet.Battery.E>`, charging power :data:`P <pfnet.Battery.P>`, and more.  
 
 .. _net_properties:
 
@@ -430,3 +438,40 @@ Once a contingency has been constructed, it can be applied and later cleared. Th
   >>> # generator and branch connected to buses again
   >>> print gen in gen_bus.gens, branch in branch_bus.branches
   True True
+
+.. _net_multi_period:
+
+Multiple Time Period
+====================
+
+PFNET can also be used to represent and analyze power networks over multiple time periods. By default, the networks created using :class:`Network() <pfnet.Network>`, as in all the examples above, are static. To consider multiple time periods, an argument needs to be passed to the class constructor::
+
+  >>> net = pf.Network(5)
+
+  >>> print net.num_periods
+  5
+
+In "multi-period" networks, certain quantities vary over time and hence are represented by vectors. Examples of such quantities are the :ref:`network properties <net_properties>`, generators powers, load powers, battery energy levels, bus voltages, etc. The example below shows how to set the load profile over the time periods and extract the maximum active power mismatches in the network at each time::
+
+  >>> for load in net.loads:
+  ...     load.P = np.random.rand(5)
+
+  >>> print net.loads[0].P
+  [ 0.84  0.47  0.62  0.65  0.36]
+
+  >>> net.update_properties()
+
+  >>> print([net.bus_P_mis[t] for t in range(5)])
+  [81.92, 87.35, 86.71, 93.61, 89.90]
+
+Lastly, for component quantities that can potentially vary over time, setting these quantities to be variables results in one variable for each time. For example, selecting the bus voltage magnitude of a bus to be variable leads to having one variable for each time period::
+
+  >>> bus = net.buses[3]
+
+  >>> net.set_flags_of_component(bus,pf.FLAG_VARS,pf.BUS_VAR_VMAG)
+
+  >>> print(net.num_vars)
+  5
+
+  >>> print bus.index_v_mag
+  [0 1 2 3 4]

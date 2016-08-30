@@ -423,6 +423,10 @@ Network
 Component Types
 ---------------
 
+.. data:: pfnet.OBJ_ALL
+
+	  All components.
+
 .. data:: pfnet.OBJ_BUS
 
 	  Bus.
@@ -462,19 +466,28 @@ Flag Types
 
 .. data:: pfnet.FLAG_VARS
 
-	  For specifying quantities as variables.
+	  For selecting quantities to be variables.
 
 .. data:: pfnet.FLAG_FIXED
 
-	  For specifying variables that should be fixed.
+	  For selecting variables to be fixed.
 
 .. data:: pfnet.FLAG_BOUNDED
 
-	  For specifying variables that should be bounded.
+	  For selecting variables to be bounded.
 
 .. data:: pfnet.FLAG_SPARSE
 
-	  For specifying control adjustments that should be sparse.
+	  For selecting control adjustments to be sparse.
+
+.. _ref_net_flag_all:
+
+Flag Short-Cuts
+---------------
+
+.. data:: pfnet.ALL_VARS
+
+	  For selecting all quantifies of a network component to be variables.
 
 .. _ref_var_values:
 

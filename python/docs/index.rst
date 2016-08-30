@@ -19,6 +19,7 @@ PFNET is released under the BSD 2-clause license.
 **Contributors**
 
 * `Tomas Tinoco De Rubira <http://n.ethz.ch/~tomast/>`_ (principal developer)
+* Martin Zellner (port to Python 3)
 
 **Documentation Contents**
 
