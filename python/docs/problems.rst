@@ -130,16 +130,16 @@ This function has type :data:`FUNC_TYPE_GEN_COST <pfnet.FUNC_TYPE_GEN_COST>`. It
 
 .. math::
 
-   \varphi(x) := \sum_k q_{k0} + q_{k1} P_k + q_{k2} P_k^2,
+   \varphi(x) := \sum_t \sum_k q_{k0} + q_{k1} P_k(t) + q_{k2} P_k(t)^2,
 
-where :math:`P_k` are generator active powers in per unit base system power, and :math:`q_{k0}`, :math:`q_{k1}`, and :math:`q_{k2}` are constant coefficients. These coefficients correspond to the attributes :data:`cost_coeff_Q0 <pfnet.Generator.cost_coeff_Q0>`, :data:`cost_coeff_Q1 <pfnet.Generator.cost_coeff_Q1>` and :data:`cost_coeff_Q2 <pfnet.Generator.cost_coeff_Q2>` of each :class:`Generator <pfnet.Generator>` object. 
+where :math:`P_k(t)` are generator active powers in per unit base system power, :math:`t` is the time period, and :math:`q_{k0}`, :math:`q_{k1}`, and :math:`q_{k2}` are constant coefficients. These coefficients correspond to the attributes :data:`cost_coeff_Q0 <pfnet.Generator.cost_coeff_Q0>`, :data:`cost_coeff_Q1 <pfnet.Generator.cost_coeff_Q1>` and :data:`cost_coeff_Q2 <pfnet.Generator.cost_coeff_Q2>` of each :class:`Generator <pfnet.Generator>` object. 
 
 .. _prob_func_NETCON_COST:
 
 Net Active Power Consumption Cost
 ---------------------------------
 
-This function has type :data:`FUNC_TYPE_NETCON_COST <pfnet.FUNC_TYPE_NETCON_COST>`. It measures the cost of net active power consumption of each bus using the price specified in the :data:`price <pfnet.Bus.price>` attribute of each :class:`Bus <pfnet.Bus>` object.
+This function has type :data:`FUNC_TYPE_NETCON_COST <pfnet.FUNC_TYPE_NETCON_COST>`. It measures the total cost of net active power consumption over the time periods using the price defined by the :data:`price <pfnet.Bus.price>` attribute of each :class:`Bus <pfnet.Bus>` object.
 
 .. _prob_func_LOAD_UTIL:
 
@@ -150,9 +150,9 @@ This function has type :data:`FUNC_TYPE_LOAD_UTIL <pfnet.FUNC_TYPE_LOAD_UTIL>`. 
 
 .. math::
 
-   \varphi(x) := \sum_k q_{k0} + q_{k1} P_k + q_{k2} P_k^2,
+   \varphi(x) := \sum_t \sum_k q_{k0} + q_{k1} P_k(t) + q_{k2} P_k(t)^2,
 
-where :math:`P_k` are load active powers in per unit base system power, and :math:`q_{k0}`, :math:`q_{k1}`, and :math:`q_{k2}` are constant coefficients. These coefficients correspond to the attributes :data:`util_coeff_Q0 <pfnet.Load.util_coeff_Q0>`, :data:`util_coeff_Q1 <pfnet.Load.util_coeff_Q1>` and :data:`util_coeff_Q2 <pfnet.Load.util_coeff_Q2>` of each :class:`Load <pfnet.Load>` object. 
+where :math:`P_k(t)` are load active powers in per unit base system power, :math:`t` is the time period, and :math:`q_{k0}`, :math:`q_{k1}`, and :math:`q_{k2}` are constant coefficients. These coefficients correspond to the attributes :data:`util_coeff_Q0 <pfnet.Load.util_coeff_Q0>`, :data:`util_coeff_Q1 <pfnet.Load.util_coeff_Q1>` and :data:`util_coeff_Q2 <pfnet.Load.util_coeff_Q2>` of each :class:`Load <pfnet.Load>` object. 
 
 .. _prob_func_REG_RATIO:
 
@@ -424,6 +424,19 @@ This constraint has type :data:`CONSTR_TYPE_REG_SHUNT <pfnet.CONSTR_TYPE_REG_SHU
    0 & \le (b_k - b^{\min}_k) \perp v^h_k \ge 0,
 
 for each bus :math:`k` whose voltage is regulated by switched shunt devices, where :math:`v` are bus voltage magnitudes, :math:`v^{\max}` and :math:`v^{\min}` are their band limits, :math:`v^l` and :math:`v^h` are voltage violations of band lower and upper limits, :math:`b` are switched shunt susceptances, :math:`b^0`, :math:`b^{\max}` and :math:`b^{\min}` are their current values and limits, and :math:`b^y` and :math:`b^z` are positive and negative deviations of :math:`b` from :math:`b^0` .
+
+.. _prob_constr_GEN_RAMP:
+
+Generator active power ramping
+------------------------------
+
+This constraint has type :data:`CONSTR_TYPE_GEN_RAMP <pfnet.CONSTR_TYPE_GEN_RAMP>`. It enforces generator active power ramping limits. It is given by
+
+.. math:: 
+   
+    -\delta P^{\max}_k \le P_k(t) - P_k(t-1) \le \delta P^{\max}
+
+for each generator :math:`k` and time period :math:`t`, where :math:`P_k(t)` are generator active powers, and :math:`\delta P^{\max}_k` are generator ramping limits. The ramping limits are defined by the :data:`dP_max <pfnet.Generator.dP_max>` attribute of each :class:`Generator <pfnet.Generator>` object. For :math:`t = 0`, :math:`P_k(t-1)` is the :data:`P_prev <pfnet.Generator.P_prev>` attribute of a :class:`Generator <pfnet.Generator>`.
 
 .. _prob_prob:
 

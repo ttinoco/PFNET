@@ -652,7 +652,11 @@ Constraint Types
 
 .. data:: pfnet.CONSTR_TYPE_DC_FLOW_LIM
 
-	  Constraint for enforcing DC power flow limits on every branch
+	  Constraint for enforcing DC power flow limits on every branch.
+
+.. data:: pfnet.CONSTR_TYPE_GEN_RAMP
+
+	  Constraint for enforcing generator active power ramping limits.
 
 .. _ref_constr_class:
 
