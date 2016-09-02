@@ -36,7 +36,7 @@ CSV_Parser* CSV_PARSER_new(void) {
   return csv;
 }
 
-size_t CSV_PARSER_parse(CSV_Parser* p, 
+size_t CSV_PARSER_parse(CSV_Parser* p,
 			char* buffer,
 			size_t len,
 			BOOL last,
@@ -46,7 +46,7 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
 			void (*cfield)(char*,void*),
 			void (*crecord)(void*),
 			void* data) {
-  
+
   // Local variables
   size_t buffer_index;
 
@@ -57,65 +57,67 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
     // single quote
     if (buffer[buffer_index] == '\'' && !p->in_string_double && !p->in_comment) {
       if (!p->in_string_single)
-	p->in_string_single = TRUE;
+        p->in_string_single = TRUE;
       else
-	p->in_string_single = FALSE;
+        p->in_string_single = FALSE;
     }
 
     // double quote
     else if (buffer[buffer_index] == '"' && !p->in_string_single && !p->in_comment) {
       if (!p->in_string_double)
-	p->in_string_double = TRUE;
+        p->in_string_double = TRUE;
       else
-	p->in_string_double = FALSE; 
+        p->in_string_double = FALSE;
     }
 
     // comment
     else if (buffer[buffer_index] == comment && !p->in_string_single && !p->in_string_double) {
       p->in_comment = TRUE;
     }
-    
+
     // end of field
     else if (buffer[buffer_index] == delimeter && !p->in_string_single && !p->in_string_double && !p->in_comment) {
       if (p->field_index > 0) {
-	p->field[p->field_index] = 0;
-	cfield(p->field,data);
-	p->field_index = 0;
+        p->field[p->field_index] = 0;
+        cfield(p->field,data);
+        p->field_index = 0;
       }
-      
+
       // skip remaining white if white is delimeter
       if (delimeter == ' ') {
-	while ((buffer[buffer_index] == ' ' || 
-		buffer[buffer_index] == '\t') &&
-	       buffer_index < len)
-	  buffer_index++;
-	buffer_index--;
+        while ((buffer[buffer_index] == ' ' ||
+                buffer[buffer_index] == '\t') &&
+                buffer_index < len)
+          buffer_index++;
+        buffer_index--;
       }
     }
-    
+
     // end of record
     else if (buffer[buffer_index] == end_of_record) {
       p->in_string_single = FALSE;
       p->in_string_double = FALSE;
       p->in_comment = FALSE;
       if (p->field_index > 0) {
-	p->field[p->field_index] = 0;
-	cfield(p->field,data);
-	p->field_index = 0;
+        p->field[p->field_index] = 0;
+        cfield(p->field,data);
+        p->field_index = 0;
       }
       crecord(data);
     }
 
-    // end of line (treat as end of field)
-    else if (buffer[buffer_index] == '\n') {
+    // end of line or return carriage (treat as end of field)
+    // return carriage also supports dos/windows end of line '\r\n'
+    else if ((buffer[buffer_index] == '\n') ||
+            (buffer[buffer_index] == '\r')) {
       p->in_comment = FALSE;
       if (p->field_index > 0) {
-	p->field[p->field_index] = 0;
-	cfield(p->field,data);
-	p->field_index = 0;
+        p->field[p->field_index] = 0;
+        cfield(p->field,data);
+        p->field_index = 0;
       }
     }
-    
+
     // in field
     else if (!p->in_comment) {
       p->field[p->field_index] = buffer[buffer_index];
@@ -132,7 +134,7 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
     p->field_index = 0;
     crecord(data);
   }
-  
+
   return buffer_index;
 }
 
@@ -140,4 +142,3 @@ void CSV_PARSER_del(CSV_Parser* p) {
   if (p)
     free(p);
 }
-
