@@ -35,7 +35,6 @@ library_dirs, sys.argv = get_args(sys.argv, '--library_dir')
 
 # add numpy directories
 include_dirs.append(numpy.get_include())
-print(include_dirs)
 
 libraries = []
 extra_compile_args = []
