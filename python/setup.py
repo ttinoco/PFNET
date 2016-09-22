@@ -73,4 +73,5 @@ setup(name='PFNET',
       author_email='ttinoco5687@gmail.com',
       url='https://github.com/ttinoco/PFNET',
       packages=['pfnet'],
+      install_requires=['numpy', 'scipy'],
       ext_modules=cythonize([ext]))
