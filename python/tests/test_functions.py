@@ -175,7 +175,7 @@ class TestFunctions(unittest.TestCase):
         # Constants
         h = 1e-9
         
-        net = self.net
+        net = self.netMP # multi period
 
         for case in test_cases.CASES:
             
@@ -194,8 +194,10 @@ class TestFunctions(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.GEN_PROP_REG,
                           pf.GEN_VAR_Q)
-            self.assertEqual(net.num_vars,ns+nrg)
+            self.assertEqual(net.num_vars,(ns+nrg)*self.T)
              
+            x0 = net.get_var_values()
+            net.set_var_values(x0+np.random.randn(x0.size))
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
@@ -221,7 +223,7 @@ class TestFunctions(unittest.TestCase):
             self.assertEqual(func.Hcounter,0)
             
             func.analyze()
-            self.assertEqual(func.Hcounter,nrg+ns)
+            self.assertEqual(func.Hcounter,(nrg+ns)*self.T)
             func.eval(x0)
             self.assertEqual(func.Hcounter,0)
             
@@ -236,7 +238,7 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(g.shape,(net.num_vars,))
             self.assertTrue(type(H) is coo_matrix)
             self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
-            self.assertEqual(H.nnz,nrg+ns)
+            self.assertEqual(H.nnz,(nrg+ns)*self.T)
             self.assertTrue(np.all(H.row == H.col))
 
             self.assertTrue(not np.any(np.isinf(g)))
@@ -287,26 +289,27 @@ class TestFunctions(unittest.TestCase):
             # Value
             func.eval(x0)
             phi = 0
-            for gen in net.generators:
-                dP = np.max([1e-4,gen.P_max-gen.P_min])
-                dQ = np.max([1e-4,gen.Q_max-gen.Q_min])
-                Pmid = (gen.P_max+gen.P_min)/2.
-                Qmid = (gen.Q_max+gen.Q_min)/2.
-                phi += 0.5*(((gen.P-Pmid)/dP)**2.)
-                phi += 0.5*(((gen.Q-Qmid)/dQ)**2.)
-            self.assertLess(np.abs(func.phi-phi),1e-10)
+            for t in range(self.T):
+                for gen in net.generators:
+                    dP = np.max([1e-4,gen.P_max-gen.P_min])
+                    dQ = np.max([1e-4,gen.Q_max-gen.Q_min])
+                    Pmid = (gen.P_max+gen.P_min)/2.
+                    Qmid = (gen.Q_max+gen.Q_min)/2.
+                    phi += 0.5*(((gen.P[t]-Pmid)/dP)**2.)
+                    phi += 0.5*(((gen.Q[t]-Qmid)/dQ)**2.)
+            self.assertLess(np.abs(func.phi-phi),1e-10*(func.phi+1.))
             net.clear_flags()
             self.assertEqual(net.num_vars,0)
             func.analyze()
             func.eval(np.zeros(0))
-            self.assertLess(np.abs(func.phi-phi),1e-10)
+            self.assertLess(np.abs(func.phi-phi),1e-10*(func.phi+1.))
 
     def test_func_REG_VANG(self):
         
         # Constants
         h = 1e-8
         
-        net = self.net
+        net = self.netMP # multi period
 
         for case in test_cases.CASES:
             
@@ -320,9 +323,10 @@ class TestFunctions(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.BUS_PROP_NOT_SLACK,
                           pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
-            self.assertEqual(net.num_vars,2*(nb-ns))
+            self.assertEqual(net.num_vars,2*(nb-ns)*self.T)
              
             x0 = net.get_var_values()+np.random.randn(net.num_vars)
+            net.set_var_values(x0)
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
@@ -361,7 +365,7 @@ class TestFunctions(unittest.TestCase):
             man_Hcounter += nb-ns
             
             func.analyze()
-            self.assertEqual(func.Hcounter,man_Hcounter)
+            self.assertEqual(func.Hcounter,man_Hcounter*self.T)
             func.eval(x0)
             self.assertEqual(func.Hcounter,0)
             
@@ -376,7 +380,7 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(g.shape,(net.num_vars,))
             self.assertTrue(type(H) is coo_matrix)
             self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
-            self.assertEqual(H.nnz,man_Hcounter)
+            self.assertEqual(H.nnz,man_Hcounter*self.T)
             self.assertTrue(np.all(H.row >= H.col))
 
             self.assertTrue(not np.any(np.isinf(g)))
@@ -425,23 +429,24 @@ class TestFunctions(unittest.TestCase):
             func.eval(net.get_var_values())
             phi = 0
             dw = 3.1416
-            for bus in net.buses:
-                phi += 0.5*((bus.v_ang/dw)**2.)
-            for branch in net.branches:
-                phi += 0.5*(((branch.bus_from.v_ang-branch.bus_to.v_ang-branch.phase)/dw)**2.)
-            self.assertLess(np.abs(func.phi-phi),1e-10)
+            for t in range(self.T):
+                for bus in net.buses:
+                    phi += 0.5*((bus.v_ang[t]/dw)**2.)
+                for branch in net.branches:
+                    phi += 0.5*(((branch.bus_from.v_ang[t]-branch.bus_to.v_ang[t]-branch.phase[t])/dw)**2.)
+            self.assertLess(np.abs(func.phi-phi),1e-10*(phi+1.))
             net.clear_flags()
             self.assertEqual(net.num_vars,0)
             func.analyze()
             func.eval(np.zeros(0))
-            self.assertLess(np.abs(func.phi-phi),1e-10)
+            self.assertLess(np.abs(func.phi-phi),1e-10*(phi+1.))
 
     def test_func_REG_RATIO(self):
         
         # Constants
         h = 1e-8
         
-        net = self.net
+        net = self.netMP # multiperiod
 
         for case in test_cases.CASES:
             
@@ -452,9 +457,10 @@ class TestFunctions(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.BRANCH_PROP_TAP_CHANGER_V,
                           pf.BRANCH_VAR_RATIO|pf.BRANCH_VAR_RATIO_DEV)
-            self.assertEqual(net.num_vars,3*net.get_num_tap_changers_v())
+            self.assertEqual(net.num_vars,3*net.get_num_tap_changers_v()*self.T)
              
             x0 = net.get_var_values()+np.random.randn(net.num_vars)
+            net.set_var_values(x0)
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
@@ -479,7 +485,7 @@ class TestFunctions(unittest.TestCase):
             self.assertEqual(func.Hcounter,0)
             
             func.analyze()
-            self.assertEqual(func.Hcounter,3*net.get_num_tap_changers_v())
+            self.assertEqual(func.Hcounter,3*net.get_num_tap_changers_v()*self.T)
             func.eval(x0)
             self.assertEqual(func.Hcounter,0)
             
@@ -494,7 +500,7 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(g.shape,(net.num_vars,))
             self.assertTrue(type(H) is coo_matrix)
             self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
-            self.assertEqual(H.nnz,3*net.get_num_tap_changers_v())
+            self.assertEqual(H.nnz,3*net.get_num_tap_changers_v()*self.T)
             self.assertTrue(np.all(H.row == H.col))
 
             self.assertTrue(not np.any(np.isinf(g)))
@@ -504,19 +510,20 @@ class TestFunctions(unittest.TestCase):
 
             # manual phi check
             phi_manual = 0;
-            for i in range(net.num_branches):
-                br = net.get_branch(i)
-                if br.is_tap_changer_v():
-                    self.assertTrue(br.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_RATIO))
-                    t = x0[br.index_ratio]
-                    tmax = br.ratio_max
-                    tmin = br.ratio_min
-                    t0 = br.ratio
-                    dt = np.maximum(tmax-tmin,1e-4)
-                    phi_manual += 0.5*((t-t0)/dt)**2.
-                    phi_manual += 0.5*(x0[br.index_ratio_y]/dt)**2.
-                    phi_manual += 0.5*(x0[br.index_ratio_z]/dt)**2.
-            self.assertLess(np.abs(func.phi-phi_manual),1e-9)
+            for tau in range(self.T):
+                for i in range(net.num_branches):
+                    br = net.get_branch(i)
+                    if br.is_tap_changer_v():
+                        self.assertTrue(br.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_RATIO))
+                        t = x0[br.index_ratio[tau]]
+                        tmax = br.ratio_max
+                        tmin = br.ratio_min
+                        t0 = br.ratio[tau]
+                        dt = np.maximum(tmax-tmin,1e-4)
+                        phi_manual += 0.5*((t-t0)/dt)**2.
+                        phi_manual += 0.5*(x0[br.index_ratio_y[tau]]/dt)**2.
+                        phi_manual += 0.5*(x0[br.index_ratio_z[tau]]/dt)**2.
+            self.assertLess(np.abs(func.phi-phi_manual),1e-10*(phi_manual+1.))
 
             # Gradient check
             f0 = func.phi
@@ -560,7 +567,7 @@ class TestFunctions(unittest.TestCase):
         # Constants
         h = 1e-8
         
-        net = self.net
+        net = self.netMP # multistage
 
         for case in test_cases.CASES:
             
@@ -571,9 +578,10 @@ class TestFunctions(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.SHUNT_PROP_SWITCHED_V,
                           pf.SHUNT_VAR_SUSC|pf.SHUNT_VAR_SUSC_DEV)
-            self.assertEqual(net.num_vars,3*net.get_num_switched_shunts())
+            self.assertEqual(net.num_vars,3*net.get_num_switched_shunts()*self.T)
              
-            x0 = net.get_var_values() + np.random.randn(net.num_vars)
+            x0 = net.get_var_values()+np.random.randn(net.num_vars)
+            net.set_var_values(x0)
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
@@ -598,7 +606,7 @@ class TestFunctions(unittest.TestCase):
             self.assertEqual(func.Hcounter,0)
             
             func.analyze()
-            self.assertEqual(func.Hcounter,3*net.get_num_switched_shunts())
+            self.assertEqual(func.Hcounter,3*net.get_num_switched_shunts()*self.T)
             func.eval(x0)
             self.assertEqual(func.Hcounter,0)
             
@@ -613,7 +621,7 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(g.shape,(net.num_vars,))
             self.assertTrue(type(H) is coo_matrix)
             self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
-            self.assertEqual(H.nnz,3*net.get_num_switched_shunts())
+            self.assertEqual(H.nnz,3*net.get_num_switched_shunts()*self.T)
             self.assertTrue(np.all(H.row == H.col))
 
             self.assertTrue(not np.any(np.isinf(g)))
@@ -623,19 +631,20 @@ class TestFunctions(unittest.TestCase):
 
             # manual phi check
             phi_manual = 0;
-            for i in range(net.num_shunts):
-                sh = net.get_shunt(i)
-                if sh.is_switched_v():
-                    self.assertTrue(sh.has_flags(pf.FLAG_VARS,pf.SHUNT_VAR_SUSC))
-                    b = x0[sh.index_b]
-                    bmax = sh.b_max
-                    bmin = sh.b_min
-                    b0 = sh.b
-                    db = np.maximum(bmax-bmin,1e-4)
-                    phi_manual += 0.5*((b-b0)/db)**2.
-                    phi_manual += 0.5*(x0[sh.index_y]/db)**2.
-                    phi_manual += 0.5*(x0[sh.index_z]/db)**2.
-            self.assertLess(np.abs(func.phi-phi_manual),1e-9)
+            for t in range(self.T):
+                for i in range(net.num_shunts):
+                    sh = net.get_shunt(i)
+                    if sh.is_switched_v():
+                        self.assertTrue(sh.has_flags(pf.FLAG_VARS,pf.SHUNT_VAR_SUSC))
+                        b = x0[sh.index_b[t]]
+                        bmax = sh.b_max
+                        bmin = sh.b_min
+                        b0 = sh.b[t]
+                        db = np.maximum(bmax-bmin,1e-4)
+                        phi_manual += 0.5*((b-b0)/db)**2.
+                        phi_manual += 0.5*(x0[sh.index_y[t]]/db)**2.
+                        phi_manual += 0.5*(x0[sh.index_z[t]]/db)**2.
+            self.assertLess(np.abs(func.phi-phi_manual),1e-10*(phi_manual+1.))
 
             # Gradient check
             f0 = func.phi
@@ -1134,7 +1143,7 @@ class TestFunctions(unittest.TestCase):
         # Constants
         h = 1e-8
         
-        net = self.net
+        net = self.netMP # multiperiod
 
         for case in test_cases.CASES:
             
@@ -1145,9 +1154,10 @@ class TestFunctions(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.BUS_PROP_ANY,
                           [pf.BUS_VAR_VMAG,pf.BUS_VAR_VANG])
-            self.assertEqual(net.num_vars,2*net.num_buses)
+            self.assertEqual(net.num_vars,2*net.num_buses*self.T)
              
-            x0 = net.get_var_values() + 1.*np.random.randn(net.num_vars)
+            x0 = net.get_var_values()+np.random.randn(net.num_vars)
+            net.set_var_values(x0)
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
@@ -1172,7 +1182,7 @@ class TestFunctions(unittest.TestCase):
             self.assertEqual(func.Hcounter,0)
             
             func.analyze()
-            self.assertEqual(func.Hcounter,net.num_buses)
+            self.assertEqual(func.Hcounter,net.num_buses*self.T)
             func.eval(x0)
             self.assertEqual(func.Hcounter,0)
             
@@ -1187,7 +1197,7 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(g.shape,(net.num_vars,))
             self.assertTrue(type(H) is coo_matrix)
             self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
-            self.assertEqual(H.nnz,net.num_buses)
+            self.assertEqual(H.nnz,net.num_buses*self.T)
             self.assertTrue(np.all(H.row == H.col))
 
             self.assertTrue(not np.any(np.isinf(g)))
@@ -1198,12 +1208,24 @@ class TestFunctions(unittest.TestCase):
             # f manual
             f_manual = 0
             eps = 1e-4
-            for bus in net.buses:
-                self.assertTrue(bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VMAG))
-                dv = np.maximum(bus.v_max-bus.v_min,eps)
-                vmid = 0.5*(bus.v_max+bus.v_min)
-                f_manual += 0.5*(((x0[bus.index_v_mag]-vmid)/dv)**2.)
-            self.assertLess(np.abs(f-f_manual)/f_manual,1e-4)
+            for t in range(self.T):
+                for bus in net.buses:
+                    self.assertTrue(bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VMAG))
+                    dv = np.maximum(bus.v_max-bus.v_min,eps)
+                    vmid = 0.5*(bus.v_max+bus.v_min)
+                    f_manual += 0.5*(((x0[bus.index_v_mag[t]]-vmid)/dv)**2.)
+            self.assertLess(np.abs(f-f_manual),1e-10*(f_manual+1.))
+
+            # f manual 1
+            f_manual = 0
+            eps = 1e-4
+            for t in range(self.T):
+                for bus in net.buses:
+                    self.assertTrue(bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VMAG))
+                    dv = np.maximum(bus.v_max-bus.v_min,eps)
+                    vmid = 0.5*(bus.v_max+bus.v_min)
+                    f_manual += 0.5*(((bus.v_mag[t]-vmid)/dv)**2.)
+            self.assertLess(np.abs(f-f_manual),1e-10*(f_manual+1.))
 
             # Gradient check
             f0 = func.phi
@@ -1249,7 +1271,7 @@ class TestFunctions(unittest.TestCase):
         # Constants
         h = 1e-8
         
-        net = self.net
+        net = self.netMP # multiperiod
 
         for case in test_cases.CASES:
             
@@ -1260,8 +1282,11 @@ class TestFunctions(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.BRANCH_PROP_PHASE_SHIFTER,
                           pf.BRANCH_VAR_PHASE)
-            self.assertEqual(net.num_vars,net.get_num_phase_shifters())
+            self.assertEqual(net.num_vars,net.get_num_phase_shifters()*self.T)
              
+            # values
+            x0 = net.get_var_values()+np.random.randn(net.num_vars)
+            net.set_var_values(x0)
             x0 = net.get_var_values()+np.random.randn(net.num_vars)
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
@@ -1287,7 +1312,7 @@ class TestFunctions(unittest.TestCase):
             self.assertEqual(func.Hcounter,0)
             
             func.analyze()
-            self.assertEqual(func.Hcounter,net.get_num_phase_shifters())
+            self.assertEqual(func.Hcounter,net.get_num_phase_shifters()*self.T)
             func.eval(x0)
             self.assertEqual(func.Hcounter,0)
             
@@ -1302,7 +1327,7 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(g.shape,(net.num_vars,))
             self.assertTrue(type(H) is coo_matrix)
             self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
-            self.assertEqual(H.nnz,net.get_num_phase_shifters())
+            self.assertEqual(H.nnz,net.get_num_phase_shifters()*self.T)
             self.assertTrue(np.all(H.row == H.col))
 
             self.assertTrue(not np.any(np.isinf(g)))
@@ -1312,17 +1337,18 @@ class TestFunctions(unittest.TestCase):
 
             # manual phi check
             phi_manual = 0;
-            for i in range(net.num_branches):
-                br = net.get_branch(i)
-                if br.is_phase_shifter():
-                    self.assertTrue(br.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_PHASE))
-                    p = x0[br.index_phase]
-                    pmax = br.phase_max
-                    pmin = br.phase_min
-                    p0 = br.phase
-                    dp = np.maximum(pmax-pmin,1e-4)
-                    phi_manual += 0.5*((p-p0)/dp)**2.
-            self.assertLess(np.abs(func.phi-phi_manual),1e-9)
+            for t in range(self.T):
+                for i in range(net.num_branches):
+                    br = net.get_branch(i)
+                    if br.is_phase_shifter():
+                        self.assertTrue(br.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_PHASE))
+                        p = x0[br.index_phase[t]]
+                        pmax = br.phase_max
+                        pmin = br.phase_min
+                        p0 = br.phase[t]
+                        dp = np.maximum(pmax-pmin,1e-4)
+                        phi_manual += 0.5*((p-p0)/dp)**2.
+            self.assertLess(np.abs(func.phi-phi_manual),1e-10*(phi_manual+1.))
 
             # Gradient check
             f0 = func.phi
@@ -1966,7 +1992,7 @@ class TestFunctions(unittest.TestCase):
 
         for case in test_cases.CASES:
 
-            net = pf.Network()
+            net = pf.Network(self.T) # multiperiod
             
             functions = [pf.Function(pf.FUNC_TYPE_GEN_COST,1.,net),
                          pf.Function(pf.FUNC_TYPE_REG_PHASE,1.,net),
@@ -2065,7 +2091,7 @@ class TestFunctions(unittest.TestCase):
                               net.num_loads +
                               net.get_num_tap_changers()+
                               net.get_num_phase_shifters()+
-                              net.get_num_switched_shunts()))
+                              net.get_num_switched_shunts())*self.T)
 
             x0 = net.get_var_values()
 
