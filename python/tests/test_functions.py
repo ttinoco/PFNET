@@ -33,7 +33,7 @@ class TestFunctions(unittest.TestCase):
         # Constants
         h = 1e-9
         
-        net = self.net
+        net = self.netMP # multi period
 
         for case in test_cases.CASES:
             
@@ -57,12 +57,16 @@ class TestFunctions(unittest.TestCase):
                           pf.FLAG_VARS,
                           pf.BUS_PROP_REG_BY_TRAN,
                           pf.BUS_VAR_VVIO)
-            self.assertEqual(net.num_vars,2*nb+2*(nrg-ns)+2*nrt)
+            self.assertEqual(net.num_vars,(2*nb+2*(nrg-ns)+2*nrt)*net.num_periods)
              
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
-            
+           
+            # Perturbation
+            net.set_var_values(x0 + np.random.randn(x0.size))
+            x0 = net.get_var_values()
+ 
             # Function
             func = pf.Function(pf.FUNC_TYPE_REG_VMAG,1.,net)
 
@@ -84,7 +88,7 @@ class TestFunctions(unittest.TestCase):
             self.assertEqual(func.Hcounter,0)
             
             func.analyze()
-            self.assertEqual(func.Hcounter,nb+2*(nrg-ns)+2*nrt)
+            self.assertEqual(func.Hcounter,(nb+2*(nrg-ns)+2*nrt)*net.num_periods)
             func.eval(x0)
             self.assertEqual(func.Hcounter,0)
             
@@ -99,7 +103,7 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(g.shape,(net.num_vars,))
             self.assertTrue(type(H) is coo_matrix)
             self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
-            self.assertEqual(H.nnz,nb+2*(nrg-ns)+2*nrt)
+            self.assertEqual(H.nnz,(nb+2*(nrg-ns)+2*nrt)*net.num_periods)
             self.assertTrue(np.all(H.row == H.col))
 
             self.assertTrue(not np.any(np.isinf(g)))
@@ -150,19 +154,21 @@ class TestFunctions(unittest.TestCase):
             dv = 0.2
             func.eval(x0)
             phi = 0
-            for bus in net.buses:
-                phi += 0.5*(((bus.v_mag-bus.v_set)/dv)**2.)
-                if bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VDEV):
-                    phi += 0.5*((np.abs(bus.v_mag-bus.v_set)/dv)**2.)
-            self.assertLess(np.abs(func.phi-phi),1e-10)
+            for t in range(net.num_periods):
+                for bus in net.buses:
+                    phi += 0.5*(((bus.v_mag[t]-bus.v_set[t])/dv)**2.)
+                    if bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VDEV):
+                        phi += 0.5*((np.abs(bus.v_mag[t]-bus.v_set[t])/dv)**2.)
+            self.assertLess(np.abs(func.phi-phi),1e-10*(func.phi+1))
             net.clear_flags()
             self.assertEqual(net.num_vars,0)
             func.analyze()
             func.eval(np.zeros(0))
             phi = 0
-            for bus in net.buses:
-                phi += 0.5*(((bus.v_mag-bus.v_set)/dv)**2.)
-            self.assertLess(np.abs(func.phi-phi),1e-10)
+            for t in range(net.num_periods):
+                for bus in net.buses:
+                    phi += 0.5*(((bus.v_mag[t]-bus.v_set[t])/dv)**2.)
+            self.assertLess(np.abs(func.phi-phi),1e-10*(func.phi+1))
 
     def test_func_REG_PQ(self):
         
