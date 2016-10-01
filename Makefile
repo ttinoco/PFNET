@@ -31,7 +31,7 @@ ifeq ($(NO_GRAPHVIZ),1)
 	CFLAGS += -DNO_GRAPHVIZ
 else
 	LDLIBS += -lgvc -lcgraph
-	CFLAGS += -I$(GRAPHVIZ)/include -lgvc -lcgraph
+	CFLAGS += -I$(GRAPHVIZ)/include # -lgvc -lcgraph
 endif
 
 SOURCES_LIB = $(shell echo src/*/*.c src/*/*/*.c)
@@ -50,12 +50,12 @@ lib : $(TARGET_LIB)
 
 $(TARGET_LIB) : $(OBJECTS_LIB)
 	mkdir -p lib
-	$(CC) $(CFLAGS) -L$(LIBDIR) -Wl,-rpath $(LIBDIR) -o $@ $(OBJECTS_LIB) $(LDFLAGS) $(LDLIBS)
+	$(CC) $(CFLAGS) -o $@ $(OBJECTS_LIB) $(LDFLAGS)
 
 .PHONY: test
 test : $(TARGET_TEST)
 tests/%.out: tests/%.c
-	$(CC) $(CFLAGS) -L$(LIBDIR) -Wl,-rpath $(LIBDIR) -o $@ $< -lpfnet $(LDLIBS)
+	$(CC) $(CFLAGS) -L$(LIBDIR) -o $@ $< -lpfnet $(LDLIBS)
 	./tests/run_tests.out ./data/ieee14.mat
 
 .PHONY: docs
