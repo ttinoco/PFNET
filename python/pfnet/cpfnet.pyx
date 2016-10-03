@@ -40,11 +40,6 @@ from scipy.sparse import coo_matrix, bmat
 
 np.import_array()
 
-# Options
-#########
-
-OPTION_SP_SCALARS = True # for scalar outputs when num periods is 1 (single period)
-
 # Constants
 ###########
 
@@ -139,6 +134,28 @@ class AttributeArray(np.ndarray):
     def __setitem__(self,key,value):
         self.func(value,key)
         np.ndarray.__setitem__(self,key,value)
+
+# Attribute int
+###############
+
+class AttributeInt(int):
+    
+    def __getitem__(self,key):
+        if key == 0:
+            return self
+        else:
+            raise ValueError
+
+# Attribute float
+#################
+
+class AttributeFloat(float):
+    
+    def __getitem__(self,key):
+        if key == 0:
+            return self
+        else:
+            raise ValueError
 
 # Bus
 #####
@@ -592,8 +609,8 @@ cdef class Bus:
         """ Index of voltage magnitude variable (int or array). """
         def __get__(self): 
             r = [cbus.BUS_get_index_v_mag(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
 
@@ -601,8 +618,8 @@ cdef class Bus:
         """ Index of voltage angle variable (int or array). """
         def __get__(self): 
             r = [cbus.BUS_get_index_v_ang(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
         
@@ -610,8 +627,8 @@ cdef class Bus:
         """ Index of voltage magnitude positive deviation variable (int or array). """
         def __get__(self): 
             r = [cbus.BUS_get_index_y(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)        
 
@@ -619,8 +636,8 @@ cdef class Bus:
         """ Index of voltage magnitude negative deviation variable (int or array). """
         def __get__(self): 
             r = [cbus.BUS_get_index_z(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)        
 
@@ -628,8 +645,8 @@ cdef class Bus:
         """ Index of voltage low limit violation variable (int or array). """
         def __get__(self): 
             r = [cbus.BUS_get_index_vl(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
 
@@ -637,8 +654,8 @@ cdef class Bus:
         """ Index of voltage high limit violation variable (int or array). """
         def __get__(self): 
             r = [cbus.BUS_get_index_vh(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
 
@@ -654,8 +671,8 @@ cdef class Bus:
         """ Bus energy price (float or array) ($ / (hr p.u.)). """
         def __get__(self): 
             r = [cbus.BUS_get_price(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return AttributeArray(r,self.set_price)
         def __set__(self,p):
@@ -683,8 +700,8 @@ cdef class Bus:
         """ Bus volatge magnitude (p.u. bus base kv) (float or array). """
         def __get__(self): 
             r = [cbus.BUS_get_v_mag(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return AttributeArray(r,self.set_v_mag)
         def __set__(self,v):
@@ -697,8 +714,8 @@ cdef class Bus:
         """ Bus voltage angle (radians) (float or array). """
         def __get__(self): 
             r = [cbus.BUS_get_v_ang(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return AttributeArray(r,self.set_v_ang)
         def __set__(self,v):
@@ -711,8 +728,8 @@ cdef class Bus:
         """ Bus voltage set point (p.u. bus base kv) (float or array). Equals one if bus is not regulated by a generator. """
         def __get__(self): 
             r = [cbus.BUS_get_v_set(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -728,8 +745,8 @@ cdef class Bus:
         """ Bus active power mismatch (p.u. system base MVA) (float or array). """
         def __get__(self): 
             r = [cbus.BUS_get_P_mis(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -737,8 +754,8 @@ cdef class Bus:
         """ Bus reactive power mismatch (p.u. system base MVA) (float or array). """
         def __get__(self):
             r = [cbus.BUS_get_Q_mis(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -746,8 +763,8 @@ cdef class Bus:
         """ Objective function sensitivity with respect to bus active power balance (float or array). """
         def __get__(self):
             r = [cbus.BUS_get_sens_P_balance(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -755,8 +772,8 @@ cdef class Bus:
         """ Objective function sensitivity with respect to bus reactive power balance (float or array). """
         def __get__(self): 
             r = [cbus.BUS_get_sens_Q_balance(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -764,8 +781,8 @@ cdef class Bus:
         """ Objective function sensitivity with respect to voltage magnitude upper bound (float or array). """
         def __get__(self): 
             r = [cbus.BUS_get_sens_v_mag_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -773,8 +790,8 @@ cdef class Bus:
         """ Objective function sensitivity with respect to voltage magnitude lower bound (float or array). """
         def __get__(self): 
             r = [cbus.BUS_get_sens_v_mag_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -782,8 +799,8 @@ cdef class Bus:
         """ Objective function sensitivity with respect to voltage angle upper bound (float or array). """
         def __get__(self): 
             r = [cbus.BUS_get_sens_v_ang_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -791,8 +808,8 @@ cdef class Bus:
         """ Objective function sensitivity with respect to voltage angle lower bound (float or array). """
         def __get__(self): 
             r = [cbus.BUS_get_sens_v_ang_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -800,8 +817,8 @@ cdef class Bus:
         """ Objective function sensitivity with respect to bus voltage regulation by generators (float or array). """
         def __get__(self): 
             r = [cbus.BUS_get_sens_v_reg_by_gen(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -809,8 +826,8 @@ cdef class Bus:
         """ Objective function sensitivity with respect to bus voltage regulation by transformers (float or array). """
         def __get__(self): 
             r = [cbus.BUS_get_sens_v_reg_by_tran(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -818,8 +835,8 @@ cdef class Bus:
         """ Objective function sensitivity with respect to bus voltage regulation by shunts (float or array). """
         def __get__(self): 
             r = [cbus.BUS_get_sens_v_reg_by_shunt(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -1148,8 +1165,8 @@ cdef class Branch:
         """ Index of transformer tap ratio variable (int or array). """
         def __get__(self): 
             r = [cbranch.BRANCH_get_index_ratio(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
 
@@ -1157,8 +1174,8 @@ cdef class Branch:
         """ Index of transformer tap ratio positive deviation variable (int or array). """
         def __get__(self): 
             r = [cbranch.BRANCH_get_index_ratio_y(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
 
@@ -1166,8 +1183,8 @@ cdef class Branch:
         """ Index of transformer tap ratio negative deviation variable (int or array). """
         def __get__(self): 
             r = [cbranch.BRANCH_get_index_ratio_z(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
 
@@ -1175,8 +1192,8 @@ cdef class Branch:
         """ Index of transformer phase shift variable (int or array). """
         def __get__(self): 
             r = [cbranch.BRANCH_get_index_phase(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
 
@@ -1184,8 +1201,8 @@ cdef class Branch:
         """ Transformer tap ratio (float or array). """
         def __get__(self): 
             r = [cbranch.BRANCH_get_ratio(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -1239,8 +1256,8 @@ cdef class Branch:
         """ Transformer phase shift (radians) (float or array). """
         def __get__(self): 
             r = [cbranch.BRANCH_get_phase(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -1271,8 +1288,8 @@ cdef class Branch:
         """ Active power flow (DC approx.) from bus "from" to bus "to" (float or array). """
         def __get__(self): 
             r = [cbranch.BRANCH_get_P_flow_DC(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -1280,8 +1297,8 @@ cdef class Branch:
         """ Objective function sensitivity with respect to active power flow upper bound (float or array). """
         def __get__(self): 
             r = [cbranch.BRANCH_get_sens_P_u_bound(self._c_ptr,t) for t in range(self.num_periods)] 
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
                 
@@ -1289,8 +1306,8 @@ cdef class Branch:
         """ Objective function sensitivity with respect to active power flow lower bound (float or array). """
         def __get__(self): 
             r = [cbranch.BRANCH_get_sens_P_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -1506,8 +1523,8 @@ cdef class Generator:
         """ Index of generator active power variable (int or array). """
         def __get__(self): 
             r = [cgen.GEN_get_index_P(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
 
@@ -1515,8 +1532,8 @@ cdef class Generator:
         """ Index of generator reactive power variable (int or array). """
         def __get__(self): 
             r = [cgen.GEN_get_index_Q(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
 
@@ -1532,8 +1549,8 @@ cdef class Generator:
         """ Generator active power (p.u. system base MVA) (float or array). """
         def __get__(self): 
             r = [cgen.GEN_get_P(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return AttributeArray(r,self.set_P)
         def __set__(self,P): 
@@ -1566,8 +1583,8 @@ cdef class Generator:
         """ Generator reactive power (p.u. system base MVA) (float or array). """
         def __get__(self): 
             r = [cgen.GEN_get_Q(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return AttributeArray(r,self.set_Q)
         def __set__(self,Q): 
@@ -1588,8 +1605,8 @@ cdef class Generator:
         """ Active power generation cost ($/hr) (float or array). """
         def __get__(self): 
             r = [cgen.GEN_get_P_cost(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
             
@@ -1612,8 +1629,8 @@ cdef class Generator:
         """ Objective function sensitivity with respect to active power upper bound (float or array). """
         def __get__(self): 
             r = [cgen.GEN_get_sens_P_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -1621,8 +1638,8 @@ cdef class Generator:
         """ Objective function sensitivity with respect to active power lower bound (float or array). """
         def __get__(self): 
             r = [cgen.GEN_get_sens_P_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -1748,8 +1765,8 @@ cdef class Shunt:
         """ Index of shunt susceptance variable (int or array). """
         def __get__(self): 
             r = [cshunt.SHUNT_get_index_b(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
 
@@ -1757,8 +1774,8 @@ cdef class Shunt:
         """ Index of shunt susceptance positive deviation variable (int or array). """
         def __get__(self): 
             r = [cshunt.SHUNT_get_index_y(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
 
@@ -1766,8 +1783,8 @@ cdef class Shunt:
         """ Index of shunt susceptance negative deviation variable (int or array). """
         def __get__(self): 
             r = [cshunt.SHUNT_get_index_z(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
 
@@ -1787,8 +1804,8 @@ cdef class Shunt:
         """ Shunt susceptance (p.u.) (float or array). """
         def __get__(self): 
             r = [cshunt.SHUNT_get_b(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -1931,8 +1948,8 @@ cdef class Load:
         """ Index of load active power variable (int or array). """
         def __get__(self): 
             r = [cload.LOAD_get_index_P(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
  
@@ -1944,8 +1961,8 @@ cdef class Load:
         """ Load active power (p.u. system base MVA) (float or array). """
         def __get__(self): 
             r = [cload.LOAD_get_P(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return AttributeArray(r,self.set_P)
         def __set__(self,P): 
@@ -1968,8 +1985,8 @@ cdef class Load:
         """ Load reactive power (p.u. system base MVA) (float or array). """
         def __get__(self): 
             r = [cload.LOAD_get_Q(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return AttributeArray(r,self.set_Q)
         def __set__(self,Q): 
@@ -1982,8 +1999,8 @@ cdef class Load:
         """ Active power load utility ($/hr) (float or array). """
         def __get__(self): 
             r = [cload.LOAD_get_P_util(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -2006,8 +2023,8 @@ cdef class Load:
         """ Objective function sensitivity with respect to active power upper bound (float or array). """
         def __get__(self): 
             r = [cload.LOAD_get_sens_P_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -2015,8 +2032,8 @@ cdef class Load:
         """ Objective function sensitivity with respect to active power lower bound (float or array). """
         def __get__(self): 
             r = [cload.LOAD_get_sens_P_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -2158,8 +2175,8 @@ cdef class VarGenerator:
         """ Index of variable generator active power variable (int or array). """
         def __get__(self): 
             r = [cvargen.VARGEN_get_index_P(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
 
@@ -2167,8 +2184,8 @@ cdef class VarGenerator:
         """ Index of variable generator reactive power variable (int or array). """
         def __get__(self): 
             r = [cvargen.VARGEN_get_index_Q(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
 
@@ -2180,8 +2197,8 @@ cdef class VarGenerator:
         """ Variable generator active power (p.u. system base MVA) (float or array). """
         def __get__(self): 
             r = [cvargen.VARGEN_get_P(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return AttributeArray(r,self.set_P)
         def __set__(self,P): 
@@ -2204,8 +2221,8 @@ cdef class VarGenerator:
         """ Variable generator active power standard deviation (p.u. system base MVA) (float or array). """
         def __get__(self): 
             r = [cvargen.VARGEN_get_P_std(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return AttributeArray(r,self.set_P_std)
         def __set__(self,P): 
@@ -2218,8 +2235,8 @@ cdef class VarGenerator:
         """ Variable generator reactive power (p.u. system base MVA) (float or array). """
         def __get__(self): 
             r = [cvargen.VARGEN_get_Q(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return AttributeArray(r,self.set_Q)
         def __set__(self,Q): 
@@ -2357,8 +2374,8 @@ cdef class Battery:
         """ Index of battery charging power variable (int or array). """
         def __get__(self): 
             r = [cbat.BAT_get_index_Pc(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
 
@@ -2366,8 +2383,8 @@ cdef class Battery:
         """ Index of battery discharging power variable (int or array). """
         def __get__(self): 
             r = [cbat.BAT_get_index_Pd(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
 
@@ -2375,8 +2392,8 @@ cdef class Battery:
         """ Index of battery energy level variable (int or array). """
         def __get__(self): 
             r = [cbat.BAT_get_index_E(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
 
@@ -2388,8 +2405,8 @@ cdef class Battery:
         """ Battery charging power (p.u. system base MVA) (float or array). """
         def __get__(self): 
             r = [cbat.BAT_get_P(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return AttributeArray(r,self.set_P)
         def __set__(self,P): 
@@ -2412,8 +2429,8 @@ cdef class Battery:
         """ Battery energy level at the beginning of a period (p.u. system base MVA times time unit) (float or array). """
         def __get__(self): 
             r = [cbat.BAT_get_E(self._c_ptr,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return AttributeArray(r,self.set_E)
         def __set__(self,E): 
@@ -3405,8 +3422,8 @@ cdef class Network:
         """ Maximum bus voltage magnitude (p.u.) (float or array). """
         def __get__(self): 
             r = [cnet.NET_get_bus_v_max(self._c_net,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -3414,8 +3431,8 @@ cdef class Network:
         """ Minimum bus voltage magnitude (p.u.) (float or array). """
         def __get__(self): 
             r = [cnet.NET_get_bus_v_min(self._c_net,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -3423,8 +3440,8 @@ cdef class Network:
         """ Maximum bus voltage magnitude limit violation (p.u.) (float or array). """
         def __get__(self): 
             r = [cnet.NET_get_bus_v_vio(self._c_net,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -3432,8 +3449,8 @@ cdef class Network:
         """ Largest bus active power mismatch in the network (MW) (float or array). """
         def __get__(self): 
             r = [cnet.NET_get_bus_P_mis(self._c_net,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -3441,8 +3458,8 @@ cdef class Network:
         """ Largest bus reactive power mismatch in the network (MVAr) (float or array). """
         def __get__(self): 
             r = [cnet.NET_get_bus_Q_mis(self._c_net,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -3450,8 +3467,8 @@ cdef class Network:
         """ Total active power generation cost ($/hr) (float or array). """
         def __get__(self): 
             r = [cnet.NET_get_gen_P_cost(self._c_net,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -3459,8 +3476,8 @@ cdef class Network:
         """ Largest voltage magnitude deviation from set point of bus regulated by generator (p.u.) (float or array). """
         def __get__(self): 
             r = [cnet.NET_get_gen_v_dev(self._c_net,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -3468,8 +3485,8 @@ cdef class Network:
         """ Largest generator reactive power limit violation (MVAr) (float or array). """
         def __get__(self): 
             r = [cnet.NET_get_gen_Q_vio(self._c_net,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -3477,8 +3494,8 @@ cdef class Network:
         """ Largest generator active power limit violation (MW) (float or array). """
         def __get__(self): 
             r = [cnet.NET_get_gen_P_vio(self._c_net,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -3486,8 +3503,8 @@ cdef class Network:
         """ Largest voltage magnitude band violation of voltage regulated by transformer (p.u.) (float or array). """
         def __get__(self): 
             r = [cnet.NET_get_tran_v_vio(self._c_net,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -3495,8 +3512,8 @@ cdef class Network:
         """ Largest transformer tap ratio limit violation (float or array). """
         def __get__(self): 
             r = [cnet.NET_get_tran_r_vio(self._c_net,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -3504,8 +3521,8 @@ cdef class Network:
         """ Largest transformer phase shift limit violation (float or array). """
         def __get__(self): 
             r = [cnet.NET_get_tran_p_vio(self._c_net,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -3513,8 +3530,8 @@ cdef class Network:
         """ Largest voltage magnitude band violation of voltage regulated by switched shunt device (p.u.) (float or array). """
         def __get__(self): 
             r = [cnet.NET_get_shunt_v_vio(self._c_net,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -3522,8 +3539,8 @@ cdef class Network:
         """ Largest switched shunt susceptance limit violation (p.u.) (float or array). """
         def __get__(self): 
             r = [cnet.NET_get_shunt_b_vio(self._c_net,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -3531,8 +3548,8 @@ cdef class Network:
         """ Total active power consumption utility ($/hr) (float or array). """
         def __get__(self): 
             r = [cnet.NET_get_load_P_util(self._c_net,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
 
@@ -3540,8 +3557,8 @@ cdef class Network:
         """ Largest load active power limit violation (MW) (float or array). """
         def __get__(self): 
             r = [cnet.NET_get_load_P_vio(self._c_net,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
             else:
                 return np.array(r)
             
@@ -3549,8 +3566,8 @@ cdef class Network:
         """ Number of control adjustments (int or array). """
         def __get__(self): 
             r = [cnet.NET_get_num_actions(self._c_net,t) for t in range(self.num_periods)]
-            if OPTION_SP_SCALARS and self.num_periods == 1:
-                return r[0]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
             else:
                 return np.array(r)
 
