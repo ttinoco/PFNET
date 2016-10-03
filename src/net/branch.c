@@ -469,7 +469,6 @@ Vec* BRANCH_get_var_indices(void* vbr, unsigned char var, int t_start, int t_end
   // Local vars
   Branch* br = (Branch*)vbr;
   Vec* indices;
-  int num_vars;
   int offset = 0;
   int t;
 

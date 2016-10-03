@@ -366,7 +366,6 @@ Vec* GEN_get_var_indices(void* vgen, unsigned char var, int t_start, int t_end) 
   // Local vars
   Gen* gen = (Gen*)vgen;
   Vec* indices;
-  int num_vars;
   int offset = 0;
   int t;
 

@@ -288,7 +288,6 @@ Vec* VARGEN_get_var_indices(void* vgen, unsigned char var, int t_start, int t_en
   // Local vars
   Vargen* gen = (Vargen*)vgen;
   Vec* indices;
-  int num_vars;
   int offset = 0;
   int t;
 
@@ -364,7 +363,6 @@ int VARGEN_hash_name_len(Vargen* vargen_hash) {
 void VARGEN_init(Vargen* gen, int num_periods) {
   
   // Local variables
-  int i;
   int T;
 
   // No vargen

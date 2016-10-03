@@ -308,7 +308,6 @@ Vec* BAT_get_var_indices(void* vbat, unsigned char var, int t_start, int t_end) 
   // Local vars
   Bat* bat = (Bat*)vbat;
   Vec* indices;
-  int num_vars;
   int offset = 0;
   int t;
 

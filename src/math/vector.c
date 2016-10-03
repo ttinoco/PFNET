@@ -98,7 +98,6 @@ void VEC_set(Vec* v, int index, REAL value) {
 }
 
 void VEC_set_zero(Vec* v) {
-  int i;
   if (v)
     ARRAY_clear(v->data,REAL,v->size);
 }

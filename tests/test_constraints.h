@@ -714,8 +714,6 @@ static char* test_constr_REG_TRAN() {
   int num_Annz;
   int num_Jnnz;
   int num;
-  int i;
-  Bus* bus;
 
   printf("test_constr_REG_TRAN ...");
 
@@ -826,8 +824,6 @@ static char* test_constr_REG_SHUNT() {
   int num_Annz;
   int num_Jnnz;
   int num;
-  int i;
-  Bus* bus;
 
   printf("test_constr_REG_SHUNT ...");
 

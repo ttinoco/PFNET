@@ -2516,7 +2516,7 @@ class TestConstraints(unittest.TestCase):
                 for i in range(net.num_branches):
                     br = net.get_branch(i)
                     for bus in [br.bus_from,br.bus_to]:
-                        if not counted.has_key((bus.index,t)):
+                        if (bus.index,t) not in counted:
                             for s in bus.reg_shunts:
                                 self.assertEqual(bus.number,s.reg_bus.number)
                                 self.assertTrue(bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VMAG))

@@ -12,8 +12,6 @@
 
 static char* test_problem_basic() {
 
-  Func* f;
-  Constr* c;
   Net* net;
   Prob* p;
   Vec* x;

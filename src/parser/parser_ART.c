@@ -267,7 +267,6 @@ void ART_PARSER_read(ART_Parser* parser, char* filename) {
   
   // Local variables
   FILE* file;
-  char* line;
   CSV_Parser* csv = CSV_PARSER_new();
   char buffer[ART_PARSER_BUFFER_SIZE];
   size_t bytes_read;

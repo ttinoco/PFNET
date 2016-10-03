@@ -30,7 +30,6 @@ struct Constr_PF_Data {
 void CONSTR_PF_init(Constr* c) {
   
   // Local variables
-  int i;
   Net* net;
   int num_buses;
   int num_periods;

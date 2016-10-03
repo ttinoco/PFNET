@@ -249,8 +249,6 @@ BOOL BUS_check(Bus* bus, BOOL verbose) {
 
   // Local variables
   BOOL bus_ok = TRUE;
-  REAL frac_sum;
-  Gen* gen;
 
   // Null
   if (!bus) {
@@ -833,7 +831,6 @@ Vec* BUS_get_var_indices(void* vbus, unsigned char var, int t_start, int t_end) 
   // Local vars
   Bus* bus = (Bus*)vbus;
   Vec* indices;
-  int num_vars;
   int offset = 0;
   int t;
 

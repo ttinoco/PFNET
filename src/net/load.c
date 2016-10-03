@@ -294,7 +294,6 @@ Vec* LOAD_get_var_indices(void* vload, unsigned char var, int t_start, int t_end
   // Local vars
   Load* load = (Load*)vload;
   Vec* indices;
-  int num_vars;
   int offset = 0;
   int t;
 

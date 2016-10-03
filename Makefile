@@ -7,7 +7,7 @@ CC = gcc
 INCDIR = ./include
 LIBDIR = ./lib
 LDLIBS = -lm
-CFLAGS = -I$(INCDIR) -fPIC -O3 -Wall -Wno-unused-variable
+CFLAGS = -I$(INCDIR) -fPIC -O3 -Wall
 
 ifeq ($(OS),Windows_NT)
   OS_DETECTED := Windows

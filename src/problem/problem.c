@@ -174,7 +174,6 @@ void PROB_apply_heuristics(Prob* p, Vec* point) {
 
   // Local variables
   Branch* br;
-  Constr* c;
   int i;
   int t;
   

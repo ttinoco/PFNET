@@ -171,7 +171,6 @@ void MAT_PARSER_read(MAT_Parser* parser, char* filename) {
   
   // Local variables
   FILE* file;
-  char* line;
   CSV_Parser* csv = CSV_PARSER_new();
   char buffer[MAT_PARSER_BUFFER_SIZE];
   size_t bytes_read;

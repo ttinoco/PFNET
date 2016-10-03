@@ -274,7 +274,6 @@ Vec* SHUNT_get_var_indices(void* vshunt, unsigned char var, int t_start, int t_e
   // Local vars
   Shunt* shunt = (Shunt*)vshunt;
   Vec* indices;
-  int num_vars;
   int offset = 0;
   int t;
 

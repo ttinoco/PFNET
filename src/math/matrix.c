@@ -231,7 +231,6 @@ void MAT_set_size2(Mat* m, int size2) {
 }
 
 void MAT_set_zero_d(Mat* m) {
-  int i;
   if (m)
     ARRAY_clear(m->data,REAL,m->nnz);
 }
@@ -262,7 +261,6 @@ void MAT_set_owns_rowcol(Mat* m, BOOL flag) {
 }
 
 void MAT_show(Mat* m) {
-  int i;
   if (m) {
     printf("\nMatrix\n");
     printf("size1 : %d\n",m->size1);
