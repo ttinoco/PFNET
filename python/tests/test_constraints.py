@@ -1156,7 +1156,7 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_PAR_GEN_P(self):
         
-        net = self.net
+        net = self.netMP # multi period
 
         for case in test_cases.CASES:
             
@@ -1173,7 +1173,7 @@ class TestConstraints(unittest.TestCase):
                           pf.GEN_PROP_REG,
                           pf.GEN_VAR_Q)
             self.assertGreater(net.num_vars,0)
-            self.assertEqual(net.num_vars,net.get_num_slack_gens()+net.get_num_reg_gens())
+            self.assertEqual(net.num_vars,(net.get_num_slack_gens()+net.get_num_reg_gens())*self.T)
             
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -1212,7 +1212,7 @@ class TestConstraints(unittest.TestCase):
                     nnz += 2*(len(bus.generators)-1)
             
             constr.analyze()
-            self.assertEqual(nnz,constr.Acounter)
+            self.assertEqual(nnz*self.T,constr.Acounter)
             constr.eval(x0)
             self.assertEqual(0,constr.Acounter)
             
@@ -1223,12 +1223,12 @@ class TestConstraints(unittest.TestCase):
             
             # After
             self.assertTrue(type(b) is np.ndarray)
-            self.assertTupleEqual(b.shape,(num_constr,))
+            self.assertTupleEqual(b.shape,(num_constr*self.T,))
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(A) is coo_matrix)
-            self.assertTupleEqual(A.shape,(num_constr,net.num_vars))
-            self.assertEqual(A.nnz,nnz)
+            self.assertTupleEqual(A.shape,(num_constr*self.T,net.num_vars))
+            self.assertEqual(A.nnz,nnz*self.T)
             self.assertTrue(type(J) is coo_matrix)
             self.assertTupleEqual(J.shape,(0,net.num_vars))
             self.assertEqual(J.nnz,0)
@@ -1240,50 +1240,52 @@ class TestConstraints(unittest.TestCase):
             Ai = A.row
             Aj = A.col
             Ad = A.data
-            self.assertEqual(Ai.size,nnz)
-            self.assertEqual(Aj.size,nnz)
-            self.assertEqual(Ad.size,nnz)
+            self.assertEqual(Ai.size,nnz*self.T)
+            self.assertEqual(Aj.size,nnz*self.T)
+            self.assertEqual(Ad.size,nnz*self.T)
             i = 0
             row = 0
             counted = {}
-            for k in range(net.num_branches):
-                br = net.get_branch(k)
-                for bus in [br.bus_from,br.bus_to]:
-                    if bus.number in counted:
-                        continue
-                    counted[bus.number] = True
-                    if bus.is_slack():
-                        gens = bus.generators
-                        self.assertGreater(len(gens),0)
-                        g1 = gens[0]
-                        for g2 in gens[1:]:
-                            self.assertEqual(b[row],0.)
-                            self.assertEqual(Ai[i],row)
-                            self.assertEqual(Aj[i],g1.index_P)
-                            self.assertEqual(Ad[i],1.)
-                            i += 1
-                            self.assertEqual(Ai[i],row)
-                            self.assertEqual(Aj[i],g2.index_P)
-                            self.assertEqual(Ad[i],-1.)
-                            i += 1
-                            row += 1
-            self.assertEqual(i,nnz)
+            for t in range(self.T):
+                for k in range(net.num_branches):
+                    br = net.get_branch(k)
+                    for bus in [br.bus_from,br.bus_to]:
+                        if (bus.number,t) in counted:
+                            continue
+                        counted[(bus.number,t)] = True
+                        if bus.is_slack():
+                            gens = bus.generators
+                            self.assertGreater(len(gens),0)
+                            g1 = gens[0]
+                            for g2 in gens[1:]:
+                                self.assertEqual(b[row],0.)
+                                self.assertEqual(Ai[i],row)
+                                self.assertEqual(Aj[i],g1.index_P[t])
+                                self.assertEqual(Ad[i],1.)
+                                i += 1
+                                self.assertEqual(Ai[i],row)
+                                self.assertEqual(Aj[i],g2.index_P[t])
+                                self.assertEqual(Ad[i],-1.)
+                                i += 1
+                                row += 1
+            self.assertEqual(i,nnz*self.T)
 
             # Last check
             x = np.zeros(net.num_vars)
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                if bus.is_slack():
-                    self.assertGreater(len(bus.generators),0)
-                    for g in bus.generators:
-                        self.assertTrue(g.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
-                        x[g.index_P] = 10.
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    if bus.is_slack():
+                        self.assertGreater(len(bus.generators),0)
+                        for g in bus.generators:
+                            self.assertTrue(g.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
+                            x[g.index_P[t]] = 10.
             self.assertGreater(norm(x),0)
             self.assertTrue(norm(A*x-b) < 1e-10)
 
     def test_constr_PAR_GEN_Q(self):
         
-        net = self.net
+        net = self.netMP # multi period
 
         for case in test_cases.CASES:
             
@@ -1300,7 +1302,7 @@ class TestConstraints(unittest.TestCase):
                           pf.GEN_PROP_REG,
                           pf.GEN_VAR_Q)
             self.assertGreater(net.num_vars,0)
-            self.assertEqual(net.num_vars,net.get_num_slack_gens()+net.get_num_reg_gens())
+            self.assertEqual(net.num_vars,(net.get_num_slack_gens()+net.get_num_reg_gens())*self.T)
             
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -1339,7 +1341,7 @@ class TestConstraints(unittest.TestCase):
                     nnz += 2*(len(bus.reg_generators)-1)
             
             constr.analyze()
-            self.assertEqual(nnz,constr.Acounter)
+            self.assertEqual(nnz*self.T,constr.Acounter)
             constr.eval(x0)
             self.assertEqual(0,constr.Acounter)
             
@@ -1350,12 +1352,12 @@ class TestConstraints(unittest.TestCase):
             
             # After
             self.assertTrue(type(b) is np.ndarray)
-            self.assertTupleEqual(b.shape,(num_constr,))
+            self.assertTupleEqual(b.shape,(num_constr*self.T,))
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(A) is coo_matrix)
-            self.assertTupleEqual(A.shape,(num_constr,net.num_vars))
-            self.assertEqual(A.nnz,nnz)
+            self.assertTupleEqual(A.shape,(num_constr*self.T,net.num_vars))
+            self.assertEqual(A.nnz,nnz*self.T)
             self.assertTrue(type(J) is coo_matrix)
             self.assertTupleEqual(J.shape,(0,net.num_vars))
             self.assertEqual(J.nnz,0)
@@ -1367,46 +1369,48 @@ class TestConstraints(unittest.TestCase):
             Ai = A.row
             Aj = A.col
             Ad = A.data
-            self.assertEqual(Ai.size,nnz)
-            self.assertEqual(Aj.size,nnz)
-            self.assertEqual(Ad.size,nnz)
+            self.assertEqual(Ai.size,nnz*self.T)
+            self.assertEqual(Aj.size,nnz*self.T)
+            self.assertEqual(Ad.size,nnz*self.T)
             i = 0
             row = 0
             counted = {}
-            for k in range(net.num_branches):
-                br = net.get_branch(k)
-                for bus in [br.bus_from,br.bus_to]:
-                    if bus.number in counted:
-                        continue
-                    counted[bus.number] = True
-                    if bus.is_regulated_by_gen():
-                        reg_gens = bus.reg_generators
-                        self.assertGreater(len(reg_gens),0)
-                        g1 = reg_gens[0]
-                        self.assertGreater(g1.Q_max,g1.Q_min)
-                        for g2 in reg_gens[1:]:
-                            self.assertTrue(np.abs(b[row]-(g1.Q_min/(g1.Q_max-g1.Q_min)-g2.Q_min/(g2.Q_max-g2.Q_min))) < 1e-10)
-                            self.assertGreater(g2.Q_max,g2.Q_min)
-                            self.assertEqual(Ai[i],row)
-                            self.assertEqual(Aj[i],g1.index_Q)
-                            self.assertTrue(np.abs(Ad[i]-1./(g1.Q_max-g1.Q_min)) < 1e-10)
-                            i += 1
-                            self.assertEqual(Ai[i],row)
-                            self.assertEqual(Aj[i],g2.index_Q)
-                            self.assertTrue(np.abs(Ad[i]+1./(g2.Q_max-g2.Q_min)) < 1e-10)
-                            i += 1
-                            row += 1
-            self.assertEqual(i,nnz)
+            for t in range(self.T):
+                for k in range(net.num_branches):
+                    br = net.get_branch(k)
+                    for bus in [br.bus_from,br.bus_to]:
+                        if (bus.number,t) in counted:
+                            continue
+                        counted[(bus.number,t)] = True
+                        if bus.is_regulated_by_gen():
+                            reg_gens = bus.reg_generators
+                            self.assertGreater(len(reg_gens),0)
+                            g1 = reg_gens[0]
+                            self.assertGreater(g1.Q_max,g1.Q_min)
+                            for g2 in reg_gens[1:]:
+                                self.assertTrue(np.abs(b[row]-(g1.Q_min/(g1.Q_max-g1.Q_min)-g2.Q_min/(g2.Q_max-g2.Q_min))) < 1e-10)
+                                self.assertGreater(g2.Q_max,g2.Q_min)
+                                self.assertEqual(Ai[i],row)
+                                self.assertEqual(Aj[i],g1.index_Q[t])
+                                self.assertTrue(np.abs(Ad[i]-1./(g1.Q_max-g1.Q_min)) < 1e-10)
+                                i += 1
+                                self.assertEqual(Ai[i],row)
+                                self.assertEqual(Aj[i],g2.index_Q[t])
+                                self.assertTrue(np.abs(Ad[i]+1./(g2.Q_max-g2.Q_min)) < 1e-10)
+                                i += 1
+                                row += 1
+            self.assertEqual(i,nnz*self.T)
 
             # Last check
             x = np.zeros(net.num_vars)
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                if bus.is_regulated_by_gen():
-                    self.assertGreater(len(bus.reg_generators),0)
-                    for g in bus.reg_generators:
-                        self.assertTrue(g.has_flags(pf.FLAG_VARS,pf.GEN_VAR_Q))
-                        x[g.index_Q] = (g.Q_max+g.Q_min)/2.
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    if bus.is_regulated_by_gen():
+                        self.assertGreater(len(bus.reg_generators),0)
+                        for g in bus.reg_generators:
+                            self.assertTrue(g.has_flags(pf.FLAG_VARS,pf.GEN_VAR_Q))
+                            x[g.index_Q[t]] = (g.Q_max+g.Q_min)/2.
             self.assertTrue(norm(A*x-b) < 1e-10)
 
     def test_constr_PF(self):
@@ -1414,14 +1418,14 @@ class TestConstraints(unittest.TestCase):
         # Constants
         h = 1e-10
         
-        net = self.net
+        net = self.netMP # multi period
 
         for case in test_cases.CASES:
             
             net.load(case)
 
             # load
-            if sum([l.P for l in net.loads]) < 0:
+            if sum([l.P[0] for l in net.loads]) < 0:
                 lmin = np.min([l.P for l in net.loads])
                 for l in net.loads:
                     l.P = l.P + np.abs(lmin)
@@ -1432,8 +1436,9 @@ class TestConstraints(unittest.TestCase):
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len(load_buses))
             for vargen in net.var_generators:
-                vargen.Q = np.abs(vargen.P)
-                self.assertGreater(vargen.Q,0.)
+                vargen.Q = np.abs(vargen.P)*np.ones(self.T)
+                for t in range(self.T):
+                    self.assertGreater(vargen.Q[t],0.)
 
             # Vars
             net.set_flags(pf.OBJ_BUS,
@@ -1465,13 +1470,13 @@ class TestConstraints(unittest.TestCase):
                           pf.VARGEN_PROP_ANY,
                           pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
             self.assertEqual(net.num_vars,
-                             2*net.get_num_buses() +
-                             net.get_num_slack_gens() +
-                             net.get_num_reg_gens() +
-                             net.get_num_tap_changers() +
-                             net.get_num_phase_shifters() +
-                             net.get_num_switched_shunts() +
-                             net.num_var_generators*2)
+                             (2*net.get_num_buses() +
+                              net.get_num_slack_gens() +
+                              net.get_num_reg_gens() +
+                              net.get_num_tap_changers() +
+                              net.get_num_phase_shifters() +
+                              net.get_num_switched_shunts() +
+                              net.num_var_generators*2)*self.T)
 
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -1504,7 +1509,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Acounter,0)
             self.assertEqual(constr.Gcounter,0)
-
+            
             num_Jnnz = (net.get_num_buses()*4 +
                         net.get_num_branches()*8 +
                         net.get_num_tap_changers()*4 +
@@ -1512,7 +1517,7 @@ class TestConstraints(unittest.TestCase):
                         net.get_num_switched_shunts() +
                         net.get_num_slack_gens() +
                         net.get_num_reg_gens()+
-                        net.num_var_generators*2)
+                        net.num_var_generators*2)*self.T
             
             constr.analyze()
             self.assertEqual(num_Jnnz,constr.Jcounter)
@@ -1529,11 +1534,11 @@ class TestConstraints(unittest.TestCase):
             
             # After
             self.assertTrue(type(f) is np.ndarray)
-            self.assertTupleEqual(f.shape,(2*net.num_buses,))
+            self.assertTupleEqual(f.shape,(2*net.num_buses*self.T,))
             self.assertTrue(type(b) is np.ndarray)
             self.assertTupleEqual(b.shape,(0,))
             self.assertTrue(type(J) is coo_matrix)
-            self.assertTupleEqual(J.shape,(2*net.num_buses,net.num_vars))
+            self.assertTupleEqual(J.shape,(2*net.num_buses*self.T,net.num_vars))
             self.assertEqual(J.nnz,num_Jnnz)
             self.assertTrue(type(A) is coo_matrix)
             self.assertTupleEqual(A.shape,(0,net.num_vars))
@@ -1546,48 +1551,56 @@ class TestConstraints(unittest.TestCase):
                                           net.get_num_branches()*12 +
                                           net.get_num_tap_changers()*9 +
                                           net.get_num_phase_shifters()*10 +
-                                          net.get_num_switched_shunts()))
+                                          net.get_num_switched_shunts())*self.T)
             
             self.assertTrue(not np.any(np.isinf(f)))
             self.assertTrue(not np.any(np.isnan(f)))
 
             # Cross check mismatches
             net.update_properties(x0)
-            dP_list = []
-            dQ_list = []
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                dP = f[bus.index_P]
-                dQ = f[bus.index_Q]
-                dP_list.append(dP)
-                dQ_list.append(dQ)
-                self.assertLess(np.abs(dP-bus.P_mis),1e-10)
-                self.assertLess(np.abs(dQ-bus.Q_mis),1e-10)
-            self.assertLess(np.abs(net.bus_P_mis-np.max(np.abs(dP_list))*net.base_power),1e-10)
-            self.assertLess(np.abs(net.bus_Q_mis-np.max(np.abs(dQ_list))*net.base_power),1e-10)
-            
+            dP_list = dict([(t,list()) for t in range(self.T)])
+            dQ_list = dict([(t,list()) for t in range(self.T)])
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    dP = f[bus.index_P+t*2*net.num_buses]
+                    dQ = f[bus.index_Q+t*2*net.num_buses]
+                    dP_list[t].append(dP)
+                    dQ_list[t].append(dQ)
+                    self.assertLess(np.abs(dP-bus.P_mis[t]),1e-10)
+                    self.assertLess(np.abs(dQ-bus.Q_mis[t]),1e-10)
+            self.assertLess(np.abs(net.bus_P_mis[t]-np.max(np.abs(dP_list[t]))*net.base_power),1e-10)
+            self.assertLess(np.abs(net.bus_Q_mis[t]-np.max(np.abs(dQ_list[t]))*net.base_power),1e-10)
+
             # Remove vargen injections
             fsaved = f.copy()
             x0saved = x0.copy()
-            for vargen in net.var_generators:
-                x0[vargen.index_P] = 0.
-                x0[vargen.index_Q] = 0.
+            for t in range(self.T):
+                for vargen in net.var_generators:
+                    x0[vargen.index_P[t]] = 0.
+                    x0[vargen.index_Q[t]] = 0.
             constr.eval(x0)
-            for vargen in net.var_generators:
-                self.assertLess(np.abs(fsaved[vargen.bus.index_P]-
-                                       constr.f[vargen.bus.index_P]-vargen.P),1e-10)
-                self.assertLess(np.abs(fsaved[vargen.bus.index_Q]-
-                                       constr.f[vargen.bus.index_Q]-vargen.Q),1e-10)
-            for vargen in net.var_generators:
-                vargen.bus.loads[0].P = vargen.bus.loads[0].P-vargen.P
-                vargen.bus.loads[0].Q = vargen.bus.loads[0].Q-vargen.Q
-                pass
+            for t in range(self.T):
+                for vargen in net.var_generators:
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*net.num_buses]-
+                                           constr.f[vargen.bus.index_P+t*2*net.num_buses]-vargen.P[t]),1e-10)
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*net.num_buses]-
+                                           constr.f[vargen.bus.index_Q+t*2*net.num_buses]-vargen.Q[t]),1e-10)
+            for t in range(self.T):
+                for vargen in net.var_generators:
+                    p = vargen.bus.loads[0].P[t]-vargen.P[t]
+                    vargen.bus.loads[0].P[t] = p
+                    self.assertEqual(vargen.bus.loads[0].P[t],p)
+                    q = vargen.bus.loads[0].Q[t]-vargen.Q[t]
+                    vargen.bus.loads[0].Q[t] = q
+                    self.assertEqual(vargen.bus.loads[0].Q[t],q)
             constr.eval(x0)
-            for vargen in net.var_generators:
-                self.assertLess(np.abs(fsaved[vargen.bus.index_P]-
-                                       constr.f[vargen.bus.index_P]),1e-10)
-                self.assertLess(np.abs(fsaved[vargen.bus.index_Q]-
-                                       constr.f[vargen.bus.index_Q]),1e-10)
+            for t in range(self.T):
+                for vargen in net.var_generators:
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*net.num_buses]-
+                                           constr.f[vargen.bus.index_P+t*2*net.num_buses]),1e-10)
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*net.num_buses]-
+                                           constr.f[vargen.bus.index_Q+t*2*net.num_buses]),1e-10)
 
             # Jacobian check
             x0 = x0saved.copy()
@@ -1663,21 +1676,50 @@ class TestConstraints(unittest.TestCase):
 
             # Sensitivities
             net.clear_sensitivities()
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                self.assertEqual(bus.sens_P_balance,0.)
-                self.assertEqual(bus.sens_Q_balance,0.)
-            sens = np.zeros(2*net.num_buses)
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                sens[2*bus.index] = 3.5*(2*bus.index)+0.33
-                sens[2*bus.index+1] = 3.5*(2*bus.index+1)+0.33
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    self.assertEqual(bus.sens_P_balance[t],0.)
+                    self.assertEqual(bus.sens_Q_balance[t],0.)
+            sens = np.zeros(2*net.num_buses*self.T)
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    self.assertEqual(bus.index_P,2*bus.index)
+                    self.assertEqual(bus.index_Q,2*bus.index+1)
+                    sens[bus.index_P+t*2*net.num_buses] = 3.5*bus.index_P+0.33+t*2*net.num_buses
+                    sens[bus.index_Q+t*2*net.num_buses] = 3.4*bus.index_Q+0.32+t*2*net.num_buses
             constr.store_sensitivities(None,sens,None,None)
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                self.assertEqual(bus.sens_P_balance,3.5*(2*bus.index)+0.33)
-                self.assertEqual(bus.sens_Q_balance,3.5*(2*bus.index+1)+0.33)
-
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    self.assertEqual(bus.sens_P_balance[t],3.5*bus.index_P+0.33+t*2*net.num_buses)
+                    self.assertEqual(bus.sens_Q_balance[t],3.4*bus.index_Q+0.32+t*2*net.num_buses)
+                    
+            # Mismatches
+            constr.eval(x0saved)
+            f = constr.f
+            J = constr.J
+            P_list = []
+            for t in range(self.T):
+                P_list.append(net.get_var_projection(pf.OBJ_ALL,pf.ALL_VARS,t_start=t,t_end=t))
+            f_list = [f[t*2*net.num_buses:(t+1)*2*net.num_buses] for t in range(self.T)]
+            for t in range(self.T-1):
+                self.assertLess(norm(f_list[t]-f_list[t+1]),1e-12*norm(f_list[t]))
+            Jx = J*x0saved
+            Jx_list = [Jx[t*2*net.num_buses:(t+1)*2*net.num_buses] for t in range(self.T)]
+            for t in range(self.T-1):
+                self.assertLess(norm(Jx_list[t]-Jx_list[t+1]),1e-12*norm(Jx_list[t]))
+            for i in range(10):
+                H_list = []
+                j = np.random.randint(0,2*net.num_buses)
+                for t in range(self.T):
+                    H_list.append(coo_matrix(P_list[t]*constr.get_H_single(t*2*net.num_buses+j)*P_list[t].T))
+                for t in range(self.T-1):
+                    self.assertTrue(np.all(H_list[t].row == H_list[t+1].row))
+                    self.assertTrue(np.all(H_list[t].col == H_list[t+1].col))
+                    self.assertLess(norm(H_list[t].data-H_list[t+1].data),1e-12*norm(H_list[t].data))
+                    
     def test_constr_REG_GEN(self):
         
         # Constants
@@ -3268,9 +3310,9 @@ class TestConstraints(unittest.TestCase):
             ls = [l[t*net.num_branches:(t+1)*net.num_branches] for t in range(self.T)]
             us = [u[t*net.num_branches:(t+1)*net.num_branches] for t in range(self.T)]
             for t in range(self.T):
-                self.assertLess(np.linalg.norm(Gx0s[t]-Gx0s[0]),1e-10*np.linalg.norm(Gx0s[0]))
-                self.assertLess(np.linalg.norm(ls[t]-ls[0]),1e-10*np.linalg.norm(ls[0]))
-                self.assertLess(np.linalg.norm(us[t]-us[0]),1e-10*np.linalg.norm(us[0]))
+                self.assertLess(norm(Gx0s[t]-Gx0s[0]),1e-10*norm(Gx0s[0]))
+                self.assertLess(norm(ls[t]-ls[0]),1e-10*norm(ls[0]))
+                self.assertLess(norm(us[t]-us[0]),1e-10*norm(us[0]))
  
     def test_constr_LINPF(self):
                 

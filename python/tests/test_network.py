@@ -523,6 +523,25 @@ class TestNetwork(unittest.TestCase):
                 for t in range(self.T):
                     self.assertEqual(bus.price[t],x[t])
 
+                # Set (attribute array)
+                for t in range(self.T):
+                    mag = np.random.randn()
+                    bus.v_mag[t] = mag
+                    self.assertEqual(mag,bus.v_mag[t])
+                    p = np.random.randn()
+                    bus.price[t] = p
+                    self.assertEqual(p,bus.price[t])
+                    ang = np.random.randn()
+                    bus.v_ang[t] = ang
+                    self.assertEqual(ang,bus.v_ang[t])
+
+                    mag = np.random.randn()
+                    ar = bus.v_mag
+                    self.assertTupleEqual(ar.shape,(self.T,))
+                    ar[t] = mag
+                    self.assertEqual(ar[t],mag)
+                    self.assertEqual(bus.v_mag[t],mag)
+                    
             # Indexing
             net.set_flags(pf.OBJ_BUS,
                           pf.FLAG_VARS,
@@ -675,6 +694,15 @@ class TestNetwork(unittest.TestCase):
                 for t in range(self.T):
                     self.assertEqual(gen.Q[t],x[t])
                 x = np.random.randn(self.T)
+
+                # Set (attribute array)
+                for t in range(self.T):
+                    p = np.random.randn()
+                    gen.P[t] = p
+                    self.assertEqual(gen.P[t],p)
+                    q = np.random.randn()
+                    gen.Q[t] = q
+                    self.assertEqual(gen.Q[t],q)
 
             # Indexing
             net.set_flags(pf.OBJ_GEN,
@@ -972,6 +1000,15 @@ class TestNetwork(unittest.TestCase):
                 for t in range(self.T):
                     self.assertEqual(load.Q[t],x[t])
 
+                # Set (attribute array)
+                for t in range(self.T):
+                    p = np.random.randn()
+                    load.P[t] = p
+                    self.assertEqual(load.P[t],p)
+                    q = np.random.randn()
+                    load.Q[t] = q
+                    self.assertEqual(load.Q[t],q)
+
             # Indexing
             net.set_flags(pf.OBJ_LOAD,
                           pf.FLAG_VARS,
@@ -1171,6 +1208,18 @@ class TestNetwork(unittest.TestCase):
                 for t in range(self.T):
                     self.assertEqual(vargen.P_std[t],x[t])
 
+                # Set (attribute array)
+                for t in range(self.T):
+                    p = np.random.randn()
+                    vargen.P[t] = p
+                    self.assertEqual(vargen.P[t],p)
+                    pstd = np.random.randn()
+                    vargen.P_std[t] = pstd
+                    self.assertEqual(vargen.P_std[t],pstd)
+                    q = np.random.randn()
+                    vargen.Q[t] = q
+                    self.assertEqual(vargen.Q[t],q)
+
             # Indexing
             net.set_flags(pf.OBJ_VARGEN,
                           pf.FLAG_VARS,
@@ -1269,6 +1318,15 @@ class TestNetwork(unittest.TestCase):
                 bat.E = x
                 for t in range(self.T):
                     self.assertEqual(bat.E[t],x[t])
+
+                # Set (attribute array)
+                for t in range(self.T):
+                    p = np.random.randn()
+                    bat.P[t] = p
+                    self.assertEqual(bat.P[t],p)
+                    e = np.random.randn()
+                    bat.E[t] = e
+                    self.assertEqual(bat.E[t],e)
 
             # Indexing
             net.set_flags(pf.OBJ_BAT,

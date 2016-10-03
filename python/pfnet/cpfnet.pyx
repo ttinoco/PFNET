@@ -127,6 +127,19 @@ cdef Matrix(cmat.Mat* m, owndata=False):
      else:
          return coo_matrix(([],([],[])),shape=(0,0))
 
+# Attribute arrray
+##################
+
+class AttributeArray(np.ndarray):
+
+    def __new__(cls,data,func=None):
+        cls.func = func
+        return np.asarray(data).view(cls)
+
+    def __setitem__(self,key,value):
+        self.func(value,key)
+        np.ndarray.__setitem__(self,key,value)
+
 # Bus
 #####
 
@@ -495,6 +508,42 @@ cdef class Bus:
         if t_end is None:
             t_end = self.num_periods-1
         return cbus.BUS_get_num_vars(self._c_ptr,var_mask,t_start,t_end)
+
+    def set_price(self,p,t=0):
+        """
+        Sets bus energy price.
+
+        Parameters
+        ----------
+        p : float
+        t : int
+        """
+
+        cbus.BUS_set_price(self._c_ptr,p,t)
+
+    def set_v_mag(self,v,t=0):
+        """
+        Sets bus voltage magnitude.
+
+        Parameters
+        ----------
+        v : float
+        t : int
+        """
+
+        cbus.BUS_set_v_mag(self._c_ptr,v,t)
+
+    def set_v_ang(self,v,t=0):
+        """
+        Sets bus voltage angle.
+
+        Parameters
+        ----------
+        v : float
+        t : int
+        """
+
+        cbus.BUS_set_v_ang(self._c_ptr,v,t)
     
     def show(self,t=0):
         """
@@ -608,7 +657,7 @@ cdef class Bus:
             if OPTION_SP_SCALARS and self.num_periods == 1:
                 return r[0]
             else:
-                return np.array(r)
+                return AttributeArray(r,self.set_price)
         def __set__(self,p):
             cdef int t
             cdef np.ndarray par = np.array(p).flatten()
@@ -637,7 +686,7 @@ cdef class Bus:
             if OPTION_SP_SCALARS and self.num_periods == 1:
                 return r[0]
             else:
-                return np.array(r)
+                return AttributeArray(r,self.set_v_mag)
         def __set__(self,v):
             cdef int t
             cdef np.ndarray var = np.array(v).flatten()
@@ -651,7 +700,7 @@ cdef class Bus:
             if OPTION_SP_SCALARS and self.num_periods == 1:
                 return r[0]
             else:
-                return np.array(r)
+                return AttributeArray(r,self.set_v_ang)
         def __set__(self,v):
             cdef int t
             cdef np.ndarray var = np.array(v).flatten()
@@ -1417,6 +1466,30 @@ cdef class Generator:
 
         return cgen.GEN_has_flags(self._c_ptr,fmask,vmask)
 
+    def set_P(self,P,t=0):
+        """"
+        Sets active power.
+
+        Parameters
+        ----------
+        P : float
+        t = int
+        """
+        
+        cgen.GEN_set_P(self._c_ptr,P,t)
+
+    def set_Q(self,Q,t=0):
+        """"
+        Sets reactive power.
+
+        Parameters
+        ----------
+        Q : float
+        t = int
+        """
+        
+        cgen.GEN_set_Q(self._c_ptr,Q,t)
+
     property num_periods:
         """ Number of time periods (int). """
         def __get__(self): return cgen.GEN_get_num_periods(self._c_ptr)
@@ -1462,7 +1535,7 @@ cdef class Generator:
             if OPTION_SP_SCALARS and self.num_periods == 1:
                 return r[0]
             else:
-                return np.array(r)
+                return AttributeArray(r,self.set_P)
         def __set__(self,P): 
             cdef int t
             cdef np.ndarray Par = np.array(P).flatten()
@@ -1496,7 +1569,7 @@ cdef class Generator:
             if OPTION_SP_SCALARS and self.num_periods == 1:
                 return r[0]
             else:
-                return np.array(r)
+                return AttributeArray(r,self.set_Q)
         def __set__(self,Q): 
             cdef int t
             cdef np.ndarray Qar = np.array(Q).flatten()
@@ -1818,6 +1891,30 @@ cdef class Load:
 
         return cload.LOAD_has_flags(self._c_ptr,fmask,vmask)
 
+    def set_P(self,P,t=0):
+        """"
+        Sets active power.
+
+        Parameters
+        ----------
+        P : float
+        t = int
+        """
+        
+        cload.LOAD_set_P(self._c_ptr,P,t)
+
+    def set_Q(self,Q,t=0):
+        """"
+        Sets reactive power.
+
+        Parameters
+        ----------
+        Q : float
+        t = int
+        """
+        
+        cload.LOAD_set_Q(self._c_ptr,Q,t)
+
     property num_periods:
         """ Number of time periods (int). """
         def __get__(self): return cload.LOAD_get_num_periods(self._c_ptr)
@@ -1850,7 +1947,7 @@ cdef class Load:
             if OPTION_SP_SCALARS and self.num_periods == 1:
                 return r[0]
             else:
-                return np.array(r)
+                return AttributeArray(r,self.set_P)
         def __set__(self,P): 
             cdef int t
             cdef np.ndarray Par = np.array(P).flatten()
@@ -1874,7 +1971,7 @@ cdef class Load:
             if OPTION_SP_SCALARS and self.num_periods == 1:
                 return r[0]
             else:
-                return np.array(r)
+                return AttributeArray(r,self.set_Q)
         def __set__(self,Q): 
             cdef int t
             cdef np.ndarray Qar = np.array(Q).flatten()
@@ -2002,6 +2099,42 @@ cdef class VarGenerator:
 
         return cvargen.VARGEN_has_flags(self._c_ptr,fmask,vmask)
 
+    def set_P(self,P,t=0):
+        """"
+        Sets active power.
+
+        Parameters
+        ----------
+        P : float
+        t = int
+        """
+        
+        cvargen.VARGEN_set_P(self._c_ptr,P,t)
+
+    def set_P_std(self,P,t=0):
+        """"
+        Sets active power standard deviation.
+
+        Parameters
+        ----------
+        P : float
+        t = int
+        """
+        
+        cvargen.VARGEN_set_P_std(self._c_ptr,P,t)
+
+    def set_Q(self,Q,t=0):
+        """"
+        Sets reactive power.
+
+        Parameters
+        ----------
+        Q : float
+        t = int
+        """
+        
+        cvargen.VARGEN_set_Q(self._c_ptr,Q,t)
+
     property num_periods:
         """ Number of time periods (int). """
         def __get__(self): return cvargen.VARGEN_get_num_periods(self._c_ptr)
@@ -2050,7 +2183,7 @@ cdef class VarGenerator:
             if OPTION_SP_SCALARS and self.num_periods == 1:
                 return r[0]
             else:
-                return np.array(r)
+                return AttributeArray(r,self.set_P)
         def __set__(self,P): 
             cdef int t
             cdef np.ndarray Par = np.array(P).flatten()
@@ -2074,7 +2207,7 @@ cdef class VarGenerator:
             if OPTION_SP_SCALARS and self.num_periods == 1:
                 return r[0]
             else:
-                return np.array(r)
+                return AttributeArray(r,self.set_P_std)
         def __set__(self,P): 
             cdef int t
             cdef np.ndarray Par = np.array(P).flatten()
@@ -2088,7 +2221,7 @@ cdef class VarGenerator:
             if OPTION_SP_SCALARS and self.num_periods == 1:
                 return r[0]
             else:
-                return np.array(r)
+                return AttributeArray(r,self.set_Q)
         def __set__(self,Q): 
             cdef int t
             cdef np.ndarray Qar = np.array(Q).flatten()
@@ -2183,6 +2316,30 @@ cdef class Battery:
         """
 
         return cbat.BAT_has_flags(self._c_ptr,fmask,vmask)
+        
+    def set_P(self,P,t=0):
+        """
+        Sets battery charging power.
+
+        Parameters
+        ----------
+        P : float
+        t : int
+        """
+        
+        cbat.BAT_set_P(self._c_ptr,P,t)
+
+    def set_E(self,E,t=0):
+        """
+        Sets battery energy level.
+
+        Parameters
+        ----------
+        E : float
+        t : int
+        """
+        
+        cbat.BAT_set_E(self._c_ptr,E,t)
 
     property num_periods:
         """ Number of time periods (int). """
@@ -2234,7 +2391,7 @@ cdef class Battery:
             if OPTION_SP_SCALARS and self.num_periods == 1:
                 return r[0]
             else:
-                return np.array(r)
+                return AttributeArray(r,self.set_P)
         def __set__(self,P): 
             cdef int t
             cdef np.ndarray Par = np.array(P).flatten()
@@ -2258,7 +2415,7 @@ cdef class Battery:
             if OPTION_SP_SCALARS and self.num_periods == 1:
                 return r[0]
             else:
-                return np.array(r)
+                return AttributeArray(r,self.set_E)
         def __set__(self,E): 
             cdef int t
             cdef np.ndarray Ear = np.array(E).flatten()
