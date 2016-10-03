@@ -1436,7 +1436,7 @@ class TestConstraints(unittest.TestCase):
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len(load_buses))
             for vargen in net.var_generators:
-                vargen.Q = np.abs(vargen.P)*np.ones(self.T)
+                vargen.Q = np.abs(vargen.P)
                 for t in range(self.T):
                     self.assertGreater(vargen.Q[t],0.)
 
@@ -1725,7 +1725,7 @@ class TestConstraints(unittest.TestCase):
         # Constants
         h = 1e-8
 
-        net = self.net
+        net = self.netMP # multi period
 
         for case in test_cases.CASES:
             
@@ -1752,7 +1752,7 @@ class TestConstraints(unittest.TestCase):
                              (2*(net.num_buses-net.get_num_slack_buses()) +
                               2*(net.get_num_buses_reg_by_gen()-net.get_num_slack_buses()) + 
                               net.get_num_slack_gens() + 
-                              net.get_num_reg_gens()))
+                              net.get_num_reg_gens())*self.T)
             
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -1795,14 +1795,14 @@ class TestConstraints(unittest.TestCase):
             rowsA = net.get_num_buses_reg_by_gen()-net.get_num_slack_buses()
                         
             constr.analyze()
-            self.assertEqual(constr.Jcounter,Jnnz)
-            self.assertEqual(constr.Acounter,Annz)
-            self.assertEqual(constr.Jconstr_index,rowsJ)
-            self.assertEqual(constr.Aconstr_index,rowsA)
+            self.assertEqual(constr.Jcounter,Jnnz*self.T)
+            self.assertEqual(constr.Acounter,Annz*self.T)
+            self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
+            self.assertEqual(constr.Aconstr_index,rowsA*self.T)
             constr.eval(x0)
-            self.assertEqual(constr.Jcounter,Jnnz)
+            self.assertEqual(constr.Jcounter,Jnnz*self.T)
             self.assertEqual(constr.Acounter,0)
-            self.assertEqual(constr.Jconstr_index,rowsJ)
+            self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
             self.assertEqual(constr.Aconstr_index,0)
             
             f = constr.f
@@ -1812,15 +1812,15 @@ class TestConstraints(unittest.TestCase):
             
             # After
             self.assertTrue(type(f) is np.ndarray)
-            self.assertTupleEqual(f.shape,(rowsJ,))
+            self.assertTupleEqual(f.shape,(rowsJ*self.T,))
             self.assertTrue(type(b) is np.ndarray)
-            self.assertTupleEqual(b.shape,(rowsA,))
+            self.assertTupleEqual(b.shape,(rowsA*self.T,))
             self.assertTrue(type(J) is coo_matrix)
-            self.assertTupleEqual(J.shape,(rowsJ,net.num_vars))
-            self.assertEqual(J.nnz,Jnnz)
+            self.assertTupleEqual(J.shape,(rowsJ*self.T,net.num_vars))
+            self.assertEqual(J.nnz,Jnnz*self.T)
             self.assertTrue(type(A) is coo_matrix)
-            self.assertTupleEqual(A.shape,(rowsA,net.num_vars))
-            self.assertEqual(A.nnz,Annz)
+            self.assertTupleEqual(A.shape,(rowsA*self.T,net.num_vars))
+            self.assertEqual(A.nnz,Annz*self.T)
             
             self.assertTrue(not np.any(np.isinf(b)))
             self.assertTrue(not np.any(np.isnan(b)))
@@ -1832,9 +1832,9 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(A.data)))
 
             # Ax=b check
-            self.assertEqual(norm(A.data,1),rowsA*3)
-            self.assertEqual(np.sum(A.data),net.get_num_buses_reg_by_gen()-net.get_num_slack_buses())
-            self.assertLess(norm(A*x0-b),1e-10)
+            self.assertEqual(norm(A.data,1),rowsA*3*self.T)
+            self.assertEqual(np.sum(A.data),(net.get_num_buses_reg_by_gen()-net.get_num_slack_buses())*self.T)
+            self.assertLess(norm(A*x0-b),1e-10*(norm(A.data)+1))
 
             # Jacobian check
             f0 = f.copy()
@@ -1911,36 +1911,39 @@ class TestConstraints(unittest.TestCase):
 
             # Sensitivities
             net.clear_sensitivities()
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                self.assertEqual(bus.sens_v_reg_by_gen,0.)
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    self.assertEqual(bus.sens_v_reg_by_gen[t],0.)
             sens = np.zeros(constr.f.size)
-            self.assertEqual(sens.size,rowsJ)
+            self.assertEqual(sens.size,rowsJ*self.T)
             Ji = constr.J.row
             Jj = constr.J.col
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                if bus.is_regulated_by_gen() and not bus.is_slack():
-                    indices = Ji[np.where(np.logical_or(Jj == bus.index_y,
-                                                        Jj == bus.index_z))[0]]
-                    self.assertEqual(indices.size,2)
-                    sens[indices[0]] = -bus.index-10
-                    sens[indices[1]] = bus.index+11*(bus.index % 2)
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    if bus.is_regulated_by_gen() and not bus.is_slack():
+                        indices = Ji[np.where(np.logical_or(Jj == bus.index_y[t],
+                                                            Jj == bus.index_z[t]))[0]]
+                        self.assertEqual(indices.size,2)
+                        sens[indices[0]] = -bus.index-10
+                        sens[indices[1]] = bus.index+11*(bus.index % 2)
             constr.store_sensitivities(np.zeros(constr.A.shape[0]),sens,None,None)
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                if bus.is_regulated_by_gen() and not bus.is_slack():
-                    if bus.index % 2 == 1:
-                        self.assertEqual(bus.sens_v_reg_by_gen,bus.index+11)
-                    else:
-                        self.assertEqual(bus.sens_v_reg_by_gen,-bus.index-10)
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    if bus.is_regulated_by_gen() and not bus.is_slack():
+                        if bus.index % 2 == 1:
+                            self.assertEqual(bus.sens_v_reg_by_gen[t],bus.index+11)
+                        else:
+                            self.assertEqual(bus.sens_v_reg_by_gen[t],-bus.index-10)
 
     def test_constr_BOUND(self):
         
         # Constants
         h = 1e-8
         
-        net = self.net
+        net = self.netMP # multi period
 
         for case in test_cases.CASES:
             
@@ -1968,11 +1971,11 @@ class TestConstraints(unittest.TestCase):
                           pf.SHUNT_PROP_SWITCHED_V,
                           pf.SHUNT_VAR_SUSC)
             self.assertEqual(net.num_vars,
-                             2*net.num_buses +
-                             2*net.num_generators +
-                             net.get_num_tap_changers() +
-                             net.get_num_phase_shifters() +
-                             net.get_num_switched_shunts())
+                             (2*net.num_buses +
+                              2*net.num_generators +
+                              net.get_num_tap_changers() +
+                              net.get_num_phase_shifters() +
+                              net.get_num_switched_shunts())*self.T)
 
             # Bound constraints
             net.set_flags(pf.OBJ_BUS,
@@ -1996,11 +1999,11 @@ class TestConstraints(unittest.TestCase):
                           pf.SHUNT_PROP_SWITCHED_V,
                           pf.SHUNT_VAR_SUSC)
             self.assertEqual(net.num_bounded,
-                             2*net.num_buses +
-                             2*net.num_generators +
-                             net.get_num_tap_changers() +
-                             net.get_num_phase_shifters() +
-                             net.get_num_switched_shunts())
+                             (2*net.num_buses +
+                              2*net.num_generators +
+                              net.get_num_tap_changers() +
+                              net.get_num_phase_shifters() +
+                              net.get_num_switched_shunts())*self.T)
             
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -2132,25 +2135,28 @@ class TestConstraints(unittest.TestCase):
 
             # Sensitivities
             net.clear_sensitivities()
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                self.assertEqual(bus.sens_v_mag_u_bound,0.)
-                self.assertEqual(bus.sens_v_mag_l_bound,0.)
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    self.assertEqual(bus.sens_v_mag_u_bound[t],0.)
+                    self.assertEqual(bus.sens_v_mag_l_bound[t],0.)
             sens = np.zeros(constr.f.size)
             Ji = constr.J.row
             Jj = constr.J.col
-            for i in range(net.num_buses): # buses
-                bus = net.get_bus(i)
-                indices = Ji[np.where(Jj == bus.index_v_mag)[0]]
-                self.assertEqual(indices.size,2)
-                sens[indices[0]] = bus.index*10.
-                sens[indices[1]] = -bus.index*10.
+            for t in range(self.T):
+                for i in range(net.num_buses): # buses
+                    bus = net.get_bus(i)
+                    indices = Ji[np.where(Jj == bus.index_v_mag[t])[0]]
+                    self.assertEqual(indices.size,2)
+                    sens[indices[0]] = bus.index*10.
+                    sens[indices[1]] = -bus.index*10.
             constr.store_sensitivities(None,sens,None,None)
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                self.assertEqual(bus.sens_v_mag_u_bound,bus.index*10.)
-                self.assertEqual(bus.sens_v_mag_l_bound,-bus.index*10.)
-            
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    self.assertEqual(bus.sens_v_mag_u_bound[t],bus.index*10.)
+                    self.assertEqual(bus.sens_v_mag_l_bound[t],-bus.index*10.)
+
     def test_constr_REG_TRAN(self):
         
         # Constants
@@ -2158,7 +2164,7 @@ class TestConstraints(unittest.TestCase):
         normal = 1e0
         eta = 1e-8
 
-        net = self.net
+        net = self.netMP # multi stage
 
         for case in test_cases.CASES:
             
@@ -2182,8 +2188,8 @@ class TestConstraints(unittest.TestCase):
                           pf.BRANCH_PROP_TAP_CHANGER_V,
                           pf.BRANCH_VAR_RATIO_DEV)
             self.assertEqual(net.num_vars,
-                             3*net.get_num_buses_reg_by_tran() +
-                             3*net.get_num_tap_changers_v())
+                             (3*net.get_num_buses_reg_by_tran() +
+                              3*net.get_num_tap_changers_v())*self.T)
 
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -2225,14 +2231,14 @@ class TestConstraints(unittest.TestCase):
             self.assertGreaterEqual(rowsA,0)
                         
             constr.analyze()
-            self.assertEqual(constr.Jcounter,Jnnz)
-            self.assertEqual(constr.Acounter,Annz)
-            self.assertEqual(constr.Jconstr_index,rowsJ)
-            self.assertEqual(constr.Aconstr_index,rowsA)
+            self.assertEqual(constr.Jcounter,Jnnz*self.T)
+            self.assertEqual(constr.Acounter,Annz*self.T)
+            self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
+            self.assertEqual(constr.Aconstr_index,rowsA*self.T)
             constr.eval(x0)
-            self.assertEqual(constr.Jcounter,Jnnz)
+            self.assertEqual(constr.Jcounter,Jnnz*self.T)
             self.assertEqual(constr.Acounter,0)
-            self.assertEqual(constr.Jconstr_index,rowsJ)
+            self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
             self.assertEqual(constr.Aconstr_index,0)
 
             f = constr.f
@@ -2242,15 +2248,15 @@ class TestConstraints(unittest.TestCase):
             
             # After
             self.assertTrue(type(f) is np.ndarray)
-            self.assertTupleEqual(f.shape,(rowsJ,))
+            self.assertTupleEqual(f.shape,(rowsJ*self.T,))
             self.assertTrue(type(b) is np.ndarray)
-            self.assertTupleEqual(b.shape,(rowsA,))
+            self.assertTupleEqual(b.shape,(rowsA*self.T,))
             self.assertTrue(type(J) is coo_matrix)
-            self.assertTupleEqual(J.shape,(rowsJ,net.num_vars))
-            self.assertEqual(J.nnz,Jnnz)
+            self.assertTupleEqual(J.shape,(rowsJ*self.T,net.num_vars))
+            self.assertEqual(J.nnz,Jnnz*self.T)
             self.assertTrue(type(A) is coo_matrix)
-            self.assertTupleEqual(A.shape,(rowsA,net.num_vars))
-            self.assertEqual(A.nnz,Annz)
+            self.assertTupleEqual(A.shape,(rowsA*self.T,net.num_vars))
+            self.assertEqual(A.nnz,Annz*self.T)
             
             self.assertTrue(not np.any(np.isinf(b)))
             self.assertTrue(not np.any(np.isnan(b)))
@@ -2262,27 +2268,28 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(A.data)))
 
             # Ax=b check
-            self.assertEqual(norm(A.data,1),rowsA*3)
-            self.assertEqual(np.sum(A.data),net.get_num_tap_changers_v())
-            self.assertLess(norm(A*x0-b),1e-10)
+            self.assertEqual(norm(A.data,1),rowsA*3*self.T)
+            self.assertEqual(np.sum(A.data),net.get_num_tap_changers_v()*self.T)
+            self.assertLess(norm(A*x0-b),1e-10*(1+norm(A.data)))
             
             # f check
             index = 0
-            for i in range(net.num_branches):
-                br = net.get_branch(i)
-                if br.is_tap_changer_v():
-                    self.assertTrue(br.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_RATIO))
-                    self.assertTrue(br.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_RATIO_DEV))
-                    bus = br.reg_bus
-                    fvmin = ((bus.v_mag-bus.v_min) - np.sqrt((bus.v_mag-bus.v_min)**2. + 2*eta))*normal
-                    fvmax = ((bus.v_max-bus.v_mag) - np.sqrt((bus.v_max-bus.v_mag)**2. + 2*eta))*normal
-                    ftmax = ((br.ratio_max-br.ratio) - np.sqrt((br.ratio_max-br.ratio)**2. + 2*eta))*normal
-                    ftmin = ((br.ratio-br.ratio_min) - np.sqrt((br.ratio-br.ratio_min)**2. + 2*eta))*normal
-                    self.assertLess(np.abs(fvmin-f[index]),1e-10)
-                    self.assertLess(np.abs(fvmax-f[index+1]),1e-10)
-                    self.assertLess(np.abs(ftmax-f[index+2]),1e-10)
-                    self.assertLess(np.abs(ftmin-f[index+3]),1e-10)
-                    index += 4
+            for t in range(self.T):
+                for i in range(net.num_branches):
+                    br = net.get_branch(i)
+                    if br.is_tap_changer_v():
+                        self.assertTrue(br.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_RATIO))
+                        self.assertTrue(br.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_RATIO_DEV))
+                        bus = br.reg_bus
+                        fvmin = ((bus.v_mag[t]-bus.v_min) - np.sqrt((bus.v_mag[t]-bus.v_min)**2. + 2*eta))*normal
+                        fvmax = ((bus.v_max-bus.v_mag[t]) - np.sqrt((bus.v_max-bus.v_mag[t])**2. + 2*eta))*normal
+                        ftmax = ((br.ratio_max-br.ratio[t]) - np.sqrt((br.ratio_max-br.ratio[t])**2. + 2*eta))*normal
+                        ftmin = ((br.ratio[t]-br.ratio_min) - np.sqrt((br.ratio[t]-br.ratio_min)**2. + 2*eta))*normal
+                        self.assertLess(np.abs(fvmin-f[index]),1e-10*(1+np.abs(fvmin)))
+                        self.assertLess(np.abs(fvmax-f[index+1]),1e-10*(1+np.abs(fvmax)))
+                        self.assertLess(np.abs(ftmax-f[index+2]),1e-10*(1+np.abs(ftmax)))
+                        self.assertLess(np.abs(ftmin-f[index+3]),1e-10*(1+np.abs(ftmin)))
+                        index += 4
             
             # Jacobian check
             f0 = f.copy()
@@ -2360,25 +2367,28 @@ class TestConstraints(unittest.TestCase):
 
             # Sensitivities
             net.clear_sensitivities()
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                self.assertEqual(bus.sens_v_reg_by_tran,0.)
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    self.assertEqual(bus.sens_v_reg_by_tran[t],0.)
             sens = np.zeros(constr.f.size)
             Ji = constr.J.row
             Jj = constr.J.col
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                if bus.is_regulated_by_tran():
-                    indices = Ji[np.where(np.logical_or(Jj == bus.index_vh,
-                                                        Jj == bus.index_vl))[0]]
-                    self.assertEqual(indices.size,4*len(bus.reg_trans))
-                    j = np.random.randint(0,indices.size)                        
-                    sens[indices[j]] = -bus.index - max([tran.index for tran in bus.reg_trans])
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    if bus.is_regulated_by_tran():
+                        indices = Ji[np.where(np.logical_or(Jj == bus.index_vh[t],
+                                                            Jj == bus.index_vl[t]))[0]]
+                        self.assertEqual(indices.size,4*len(bus.reg_trans))
+                        j = np.random.randint(0,indices.size)                        
+                        sens[indices[j]] = -bus.index - max([tran.index for tran in bus.reg_trans])
             constr.store_sensitivities(np.zeros(constr.A.shape[0]),sens,None,None)
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                if bus.is_regulated_by_tran():
-                    self.assertEqual(bus.sens_v_reg_by_tran,-bus.index-max([tran.index for tran in bus.reg_trans]))
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    if bus.is_regulated_by_tran():
+                        self.assertEqual(bus.sens_v_reg_by_tran[t],-bus.index-max([tran.index for tran in bus.reg_trans]))
 
     def test_constr_REG_SHUNT(self):
         
@@ -2387,7 +2397,7 @@ class TestConstraints(unittest.TestCase):
         normal = 1e0
         eta = 1e-8
 
-        net = self.net
+        net = self.netMP # multi period
 
         for case in test_cases.CASES:
             
@@ -2411,8 +2421,8 @@ class TestConstraints(unittest.TestCase):
                           pf.SHUNT_PROP_SWITCHED_V,
                           pf.SHUNT_VAR_SUSC_DEV)
             self.assertEqual(net.num_vars,
-                             3*net.get_num_buses_reg_by_shunt() +
-                             3*net.get_num_switched_shunts())
+                             (3*net.get_num_buses_reg_by_shunt() +
+                              3*net.get_num_switched_shunts())*self.T)
 
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -2454,14 +2464,14 @@ class TestConstraints(unittest.TestCase):
             self.assertGreaterEqual(rowsA,0)
                         
             constr.analyze()
-            self.assertEqual(constr.Jcounter,Jnnz)
-            self.assertEqual(constr.Acounter,Annz)
-            self.assertEqual(constr.Jconstr_index,rowsJ)
-            self.assertEqual(constr.Aconstr_index,rowsA)
+            self.assertEqual(constr.Jcounter,Jnnz*self.T)
+            self.assertEqual(constr.Acounter,Annz*self.T)
+            self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
+            self.assertEqual(constr.Aconstr_index,rowsA*self.T)
             constr.eval(x0)
-            self.assertEqual(constr.Jcounter,Jnnz)
+            self.assertEqual(constr.Jcounter,Jnnz*self.T)
             self.assertEqual(constr.Acounter,0)
-            self.assertEqual(constr.Jconstr_index,rowsJ)
+            self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
             self.assertEqual(constr.Aconstr_index,0)
 
             f = constr.f
@@ -2471,18 +2481,18 @@ class TestConstraints(unittest.TestCase):
             
             # After
             self.assertTrue(type(f) is np.ndarray)
-            self.assertTupleEqual(f.shape,(rowsJ,))
+            self.assertTupleEqual(f.shape,(rowsJ*self.T,))
             self.assertTrue(type(b) is np.ndarray)
-            self.assertTupleEqual(b.shape,(rowsA,))
+            self.assertTupleEqual(b.shape,(rowsA*self.T,))
             self.assertTrue(type(J) is coo_matrix)
-            self.assertTupleEqual(J.shape,(rowsJ,net.num_vars))
-            self.assertEqual(J.nnz,Jnnz)
-            self.assertTrue(np.all(J.row <= rowsJ-1))
+            self.assertTupleEqual(J.shape,(rowsJ*self.T,net.num_vars))
+            self.assertEqual(J.nnz,Jnnz*self.T)
+            self.assertTrue(np.all(J.row <= rowsJ*self.T-1))
             self.assertTrue(np.all(J.col <= net.num_vars-1))
             self.assertTrue(type(A) is coo_matrix)
-            self.assertTupleEqual(A.shape,(rowsA,net.num_vars))
-            self.assertEqual(A.nnz,Annz)
-            self.assertTrue(np.all(A.row <= rowsA-1))
+            self.assertTupleEqual(A.shape,(rowsA*self.T,net.num_vars))
+            self.assertEqual(A.nnz,Annz*self.T)
+            self.assertTrue(np.all(A.row <= rowsA*self.T-1))
             self.assertTrue(np.all(A.col <= net.num_vars-1))
             
             self.assertTrue(not np.any(np.isinf(b)))
@@ -2495,37 +2505,38 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(A.data)))
 
             # Ax=b check
-            self.assertEqual(norm(A.data,1),rowsA*3)
-            self.assertEqual(np.sum(A.data),net.get_num_switched_shunts())
-            self.assertLess(norm(A*x0-b),1e-10)
+            self.assertEqual(norm(A.data,1),rowsA*3*self.T)
+            self.assertEqual(np.sum(A.data),net.get_num_switched_shunts()*self.T)
+            self.assertLess(norm(A*x0-b),1e-10*(1+norm(A.data)))
 
             # f check
             index = 0
-            counted = np.zeros(net.num_buses)
-            for i in range(net.num_branches):
-                br = net.get_branch(i)
-                for bus in [br.bus_from,br.bus_to]:
-                    if not counted[bus.index]:
-                        for s in bus.reg_shunts:
-                            self.assertEqual(bus.number,s.reg_bus.number)
-                            self.assertTrue(bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VMAG))
-                            self.assertTrue(bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VVIO))
-                            self.assertTrue(s.has_flags(pf.FLAG_VARS,pf.SHUNT_VAR_SUSC))
-                            self.assertTrue(s.has_flags(pf.FLAG_VARS,pf.SHUNT_VAR_SUSC_DEV))
-                            self.assertEqual(x0[s.index_y],0.)
-                            self.assertEqual(x0[s.index_z],0.)
-                            self.assertEqual(x0[bus.index_vl],0.)
-                            self.assertEqual(x0[bus.index_vh],0.)
-                            fvmin = ((bus.v_mag-bus.v_min) - np.sqrt((bus.v_mag-bus.v_min)**2. + 2.*eta))*normal
-                            fvmax = ((bus.v_max-bus.v_mag) - np.sqrt((bus.v_max-bus.v_mag)**2. + 2.*eta))*normal
-                            fbmax = ((s.b_max-s.b) - np.sqrt((s.b_max-s.b)**2. + 2*eta))*normal
-                            fbmin = ((s.b-s.b_min) - np.sqrt((s.b-s.b_min)**2. + 2*eta))*normal
-                            self.assertLess(np.abs(fvmin-f[index]),1e-10)
-                            self.assertLess(np.abs(fvmax-f[index+1]),1e-10)
-                            self.assertLess(np.abs(fbmax-f[index+2]),1e-10)
-                            self.assertLess(np.abs(fbmin-f[index+3]),1e-10)
-                            index += 4
-                    counted[bus.index] = 1
+            counted = {}
+            for t in range(self.T):
+                for i in range(net.num_branches):
+                    br = net.get_branch(i)
+                    for bus in [br.bus_from,br.bus_to]:
+                        if not counted.has_key((bus.index,t)):
+                            for s in bus.reg_shunts:
+                                self.assertEqual(bus.number,s.reg_bus.number)
+                                self.assertTrue(bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VMAG))
+                                self.assertTrue(bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VVIO))
+                                self.assertTrue(s.has_flags(pf.FLAG_VARS,pf.SHUNT_VAR_SUSC))
+                                self.assertTrue(s.has_flags(pf.FLAG_VARS,pf.SHUNT_VAR_SUSC_DEV))
+                                self.assertEqual(x0[s.index_y[t]],0.)
+                                self.assertEqual(x0[s.index_z[t]],0.)
+                                self.assertEqual(x0[bus.index_vl[t]],0.)
+                                self.assertEqual(x0[bus.index_vh[t]],0.)
+                                fvmin = ((bus.v_mag[t]-bus.v_min) - np.sqrt((bus.v_mag[t]-bus.v_min)**2. + 2.*eta))*normal
+                                fvmax = ((bus.v_max-bus.v_mag[t]) - np.sqrt((bus.v_max-bus.v_mag[t])**2. + 2.*eta))*normal
+                                fbmax = ((s.b_max-s.b[t]) - np.sqrt((s.b_max-s.b[t])**2. + 2*eta))*normal
+                                fbmin = ((s.b[t]-s.b_min) - np.sqrt((s.b[t]-s.b_min)**2. + 2*eta))*normal
+                                self.assertLess(np.abs(fvmin-f[index]),1e-10*(1+np.abs(fvmin)))
+                                self.assertLess(np.abs(fvmax-f[index+1]),1e-10*(1+np.abs(fvmax)))
+                                self.assertLess(np.abs(fbmax-f[index+2]),1e-10*(1+np.abs(fbmax)))
+                                self.assertLess(np.abs(fbmin-f[index+3]),1e-10*(1+np.abs(fbmin)))
+                                index += 4
+                        counted[(bus.index,t)] = True
             
             # Jacobian check
             f0 = f.copy()
@@ -2603,31 +2614,34 @@ class TestConstraints(unittest.TestCase):
             
             # Sensitivities
             net.clear_sensitivities()
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                self.assertEqual(bus.sens_v_reg_by_shunt,0.)
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    self.assertEqual(bus.sens_v_reg_by_shunt[t],0.)
             sens = np.zeros(constr.f.size)
             Ji = constr.J.row
             Jj = constr.J.col
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                if bus.is_regulated_by_shunt():
-                    indices = Ji[np.where(np.logical_or(Jj == bus.index_vh,
-                                                        Jj == bus.index_vl))[0]]
-                    self.assertEqual(indices.size,4*len(bus.reg_shunts))
-                    j = np.random.randint(0,indices.size)           
-                    sens[indices[j]] = -bus.index - max([s.index for s in bus.reg_shunts])
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    if bus.is_regulated_by_shunt():
+                        indices = Ji[np.where(np.logical_or(Jj == bus.index_vh[t],
+                                                            Jj == bus.index_vl[t]))[0]]
+                        self.assertEqual(indices.size,4*len(bus.reg_shunts))
+                        j = np.random.randint(0,indices.size)           
+                        sens[indices[j]] = -bus.index - max([s.index for s in bus.reg_shunts])
             constr.store_sensitivities(np.zeros(constr.A.shape[0]),sens,None,None)
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                if bus.is_regulated_by_shunt():
-                    self.assertEqual(bus.sens_v_reg_by_shunt,-bus.index-max([s.index for s in bus.reg_shunts]))
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    if bus.is_regulated_by_shunt():
+                        self.assertEqual(bus.sens_v_reg_by_shunt[t],-bus.index-max([s.index for s in bus.reg_shunts]))
 
     def test_robustness(self):
 
         for case in test_cases.CASES:
 
-            net = pf.Network()
+            net = pf.Network(self.T) # multi period
 
             constraints = [pf.Constraint(pf.CONSTR_TYPE_BOUND,net),
                            pf.Constraint(pf.CONSTR_TYPE_FIX,net),
@@ -2732,7 +2746,7 @@ class TestConstraints(unittest.TestCase):
                               net.get_num_tap_changers()+
                               net.get_num_phase_shifters()+
                               net.get_num_switched_shunts()+
-                              3*net.num_batteries))
+                              3*net.num_batteries)*self.T)
 
             x0 = net.get_var_values()
 
@@ -3316,14 +3330,14 @@ class TestConstraints(unittest.TestCase):
  
     def test_constr_LINPF(self):
                 
-        net = self.net
+        net = self.netMP # mult period
 
         for case in test_cases.CASES:
             
             net.load(case)
 
             # load
-            if sum([l.P for l in net.loads]) < 0:
+            if sum([l.P[0] for l in net.loads]) < 0:
                 lmin = np.min([l.P for l in net.loads])
                 for l in net.loads:
                     l.P = l.P + np.abs(lmin)
@@ -3335,7 +3349,8 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_var_generators,len(load_buses))
             for vargen in net.var_generators:
                 vargen.Q = np.abs(vargen.P)
-                self.assertGreater(vargen.Q,0.)
+                for t in range(self.T):
+                    self.assertGreater(vargen.Q[t],0.)
 
             # Vars
             net.set_flags(pf.OBJ_BUS,
@@ -3367,13 +3382,13 @@ class TestConstraints(unittest.TestCase):
                           pf.VARGEN_PROP_ANY,
                           pf.VARGEN_VAR_P|pf.VARGEN_VAR_Q)
             self.assertEqual(net.num_vars,
-                             2*net.get_num_buses() +
-                             net.get_num_slack_gens() +
-                             net.get_num_reg_gens() +
-                             net.get_num_tap_changers() +
-                             net.get_num_phase_shifters() +
-                             net.get_num_switched_shunts() +
-                             net.num_var_generators*2)
+                             (2*net.get_num_buses() +
+                              net.get_num_slack_gens() +
+                              net.get_num_reg_gens() +
+                              net.get_num_tap_changers() +
+                              net.get_num_phase_shifters() +
+                              net.get_num_switched_shunts() +
+                              net.num_var_generators*2)*self.T)
 
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -3429,12 +3444,12 @@ class TestConstraints(unittest.TestCase):
             
             # After
             self.assertTrue(type(b) is np.ndarray)
-            self.assertTupleEqual(b.shape,(2*net.num_buses,))
+            self.assertTupleEqual(b.shape,(2*net.num_buses*self.T,))
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(A) is coo_matrix)
-            self.assertTupleEqual(A.shape,(2*net.num_buses,net.num_vars))
-            self.assertEqual(A.nnz,num_Annz)
+            self.assertTupleEqual(A.shape,(2*net.num_buses*self.T,net.num_vars))
+            self.assertEqual(A.nnz,num_Annz*self.T)
             self.assertTrue(type(J) is coo_matrix)
             self.assertTupleEqual(J.shape,(0,net.num_vars))
             self.assertEqual(J.nnz,0)
@@ -3456,7 +3471,7 @@ class TestConstraints(unittest.TestCase):
             self.assertGreater(norm(A.col),0)
             self.assertGreater(norm(A.data),0)
             self.assertGreater(norm(b),0)
-            self.assertLess(norm(b - (constrPF.J*x0-constrPF.f)),1e-10)
+            self.assertLess(norm(b-(constrPF.J*x0-constrPF.f)),1e-10*(norm(b)+1))
 
             # After eval
             constr.eval(np.zeros(x0.size))
@@ -3468,7 +3483,7 @@ class TestConstraints(unittest.TestCase):
             self.assertGreater(norm(constr.A.col),0)
             self.assertGreater(norm(constr.A.data),0)
             self.assertGreater(norm(constr.b),0)
-            self.assertLess(norm(constr.b - (constrPF.J*x0-constrPF.f)),1e-10)
+            self.assertLess(norm(constr.b-(constrPF.J*x0-constrPF.f)),1e-10*(norm(b)+1))
 
     def test_constr_GEN_RAMP(self):
         
