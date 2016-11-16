@@ -16,9 +16,11 @@ else
 endif
 $(warning $(OS_DETECTED))
 ifeq ($(OS_DETECTED),Darwin)
-	LDFLAGS += -dynamiclib
+	LDFLAGS += -dynamiclib  -Wl,-flat_namespace -Wl,-undefined,suppress
+	LDFLAGS2 += -Wl,-rpath,$(LIBDIR)
 else
 	LDFLAGS += -shared
+	LDFLAGS2 += -Wl,-rpath=$(LIBDIR)
 endif
 
 # Raw parser
@@ -57,7 +59,7 @@ $(TARGET_LIB) : $(OBJECTS_LIB)
 .PHONY: test
 test : $(TARGET_TEST)
 tests/%.out: tests/%.c
-	$(CC) $(CFLAGS) -L$(LIBDIR) -o $@ $< -lpfnet $(LDLIBS)
+	$(CC) $(CFLAGS) -L$(LIBDIR) $(LDFLAGS2) -o $@ $< -lpfnet $(LDLIBS)
 	./tests/run_tests.out ./data/ieee14.mat
 
 .PHONY: single
