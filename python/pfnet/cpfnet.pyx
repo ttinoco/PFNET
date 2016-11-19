@@ -139,7 +139,10 @@ class AttributeArray(np.ndarray):
 ###############
 
 class AttributeInt(int):
-    
+
+    def __len__(self):
+        return 0
+
     def __getitem__(self,key):
         if key == 0:
             return self
