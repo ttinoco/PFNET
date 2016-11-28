@@ -1339,6 +1339,12 @@ Bus* BUS_new(int num_periods) {
     return NULL;
 }
 
+void BUS_set_next(Bus* bus, Bus* next_bus) {
+  if (bus) {
+    bus->next = next_bus;
+  }
+}
+
 void BUS_set_number(Bus* bus, int number) {
   if (bus)
     bus->number = number;

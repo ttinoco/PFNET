@@ -2543,9 +2543,18 @@ cdef class Network:
                      correlation coefficient
         """
         
-        cdef Bus b = buses[0] if buses else None
-        if b:
-            cnet.NET_add_vargens(self._c_net,b._c_ptr,penetration,uncertainty,corr_radius,corr_value)
+        cdef Bus head = buses[0] if buses else None
+        cdef Bus prev = head
+        cdef Bus curr 
+        for b in buses[1:]:
+            curr = b
+            cbus.BUS_set_next(prev._c_ptr,curr._c_ptr)
+            prev = curr
+        if prev is not None:
+            cbus.BUS_set_next(prev._c_ptr,NULL)
+
+        if head:
+            cnet.NET_add_vargens(self._c_net,head._c_ptr,penetration,uncertainty,corr_radius,corr_value)
         else:
             cnet.NET_add_vargens(self._c_net,NULL,penetration,uncertainty,corr_radius,corr_value)
         if cnet.NET_has_error(self._c_net):

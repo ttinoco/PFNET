@@ -228,6 +228,7 @@ Bus* BUS_list_add(Bus* bus_list, Bus* bus);
 Bus* BUS_list_add_sorting(Bus* bus_list, Bus* bus, int sort_by, int t);
 int BUS_list_len(Bus* bus_list);
 Bus* BUS_new(int num_periods);
+void BUS_set_next(Bus* bus, Bus* next_bus);
 void BUS_set_number(Bus* bus, int number);
 void BUS_set_name(Bus* bus, char* name);
 void BUS_set_price(Bus* bus, REAL price, int t);

@@ -110,6 +110,7 @@ cdef extern from "pfnet/bus.h":
     bint BUS_is_regulated_by_shunt(Bus* bus)
     bint BUS_has_flags(Bus* bus, char flag_type, char mask)
     Bus* BUS_new(int num_periods)
+    void BUS_set_next(Bus* bus, Bus* next_bus)
     void BUS_set_name(Bus* bus, char* name)
     void BUS_set_price(Bus* bus, REAL price, int t)
     void BUS_set_v_mag(Bus* bus, REAL v_mag, int t)
