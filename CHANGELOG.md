@@ -2,23 +2,26 @@ Targets
 -------
 * Mechanism for changing constraint parameters.
 * MAT or ART data writer.
+* CIM parser in python.
 * Rich object comparisons for all network components.
 * Need AC branch flow limits.
 * Instructions for adding new functions and constraints.
-* Make an Autotools build. (long-term)
+* Use Autotools.
 
 Unreleased
 ----------
-* Multi-period support.
-* Option flag for getting scalar outputs when number of periods is one.
-* Function value independent of variable flags.
-* Bus number of variables.
 * Area/zone projections.
 * Branch bus name changes.
 * Branch AC flow getters.
-* Name changes in Python wrapper (trying to eliminate abbreviations, e.g. gens, bats, etc).
-* Improved memory management and bookeeing when adding variable generators.
 * Battery initial and final energy levels.
+
+Version 1.2.4
+-------------
+* Multi-period support.
+* Function value independent of variable flags.
+* Name changes in Python wrapper (trying to eliminate abbreviations, e.g. gens, bats, etc).
+* Improved memory management and bookkeeping when adding variable generators.
+* Routine for getting number of variables of Bus.
 
 Version 1.2.3
 -------------
