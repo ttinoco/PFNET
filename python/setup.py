@@ -30,7 +30,7 @@ else:
     libraries.append('gvc')
 
 setup(name='PFNET',
-      version='1.3',
+      version='1.2.4',
       license='BSD 2-clause license',
       description='Power Flow Network Library',
       author='Tomas Tinoco De Rubira',

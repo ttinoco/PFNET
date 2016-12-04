@@ -37,29 +37,21 @@ To build the library without raw parsing capabilities (no `libraw_parser` depend
 
 Building the C documentation for PFNET requires [Doxygen](http://www.stack.nl/~dimitri/doxygen/). The environment variable `PFNET_DOCS` must be set to the location where the documentation will be moved to once it is built:
 
-```
-export PFNET_DOCS=../pfnet-docs
-```
+    export PFNET_DOCS=../pfnet-docs
 
 To build the documentation, run the following commands from the home directory of PFNET:
 
-```
-make docs
-```
+    make docs
 
 ## Build Instructions (Mac OS X)
 
 In Mac OS X, PFNET can be easily installed using [Homebrew](http://brew.sh):
 
-```
-brew install https://raw.githubusercontent.com/ttinoco/PFNET/master/pfnet.rb
-```
+    brew install https://raw.githubusercontent.com/ttinoco/PFNET/master/pfnet.rb
 
 To build the latest (possibly unstable) version you can add the `--HEAD` flag:
 
-```
-brew install --HEAD https://raw.githubusercontent.com/ttinoco/PFNET/master/pfnet.rb
-```
+    brew install --HEAD https://raw.githubusercontent.com/ttinoco/PFNET/master/pfnet.rb
 
 Since Homebrew does currently not support external dependencies, PFNET cannot be built with raw parsing capabilities with this method.
 
@@ -76,6 +68,6 @@ Wrappers for PFNET are available for the following languages:
 
 ## Contributors
 
-- [Tomas Tinoco De Rubira](http://n.ethz.ch/~tomast/) (principal developer)
+- [Tomas Tinoco De Rubira](http://n.ethz.ch/~tomast/)
 - Martin Zellner (port to Python 3)
 - Adam Wigington (cross-platfrom integration, testing)

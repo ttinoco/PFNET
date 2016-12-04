@@ -17,14 +17,14 @@ PFNET for Python has the following dependencies:
 * `Scipy <http://www.scipy.org>`_ (>=0.13.3): a collection of mathematical algorithms and functions built on top of Numpy.
 * `PFNET <https://github.com/ttinoco/PFNET>`_ (== 1.2.4): underlying C routines wrapped by this package (``libpfnet``).
 * `Graphviz <http://www.graphviz.org/>`_ (>= 2.38): graph visualization library (``libgvc``) (Optional).
-* `Raw parser <some_URL>`_ (>=1.11): library for parsing power flow files in PSSE raw format version 32 (``libraw_parser``) (Optional).
+* `Raw parser <some_URL>`_ (>=1.2): library for parsing power flow files in PSSE raw format version 32 (``libraw_parser``) (Optional).
 
 .. _start_download:
 
 Download
 ========
 
-The latest version of PFNET can be downloaded from `<https://github.com/ttinoco/PFNET/archive/multi_period.zip>`_.
+The latest version of PFNET can be downloaded from `<https://github.com/ttinoco/PFNET>`_.
 
 .. _start_installation:
 
