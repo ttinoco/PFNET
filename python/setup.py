@@ -38,8 +38,8 @@ setup(name='PFNET',
       url='https://github.com/ttinoco/PFNET',
       packages=['pfnet'],
       ext_modules=cythonize([Extension("pfnet.cpfnet",
-                                       [os.path.join("pfnet", 'cpfnet.pyx')],
+                                       [os.path.join("pfnet",'cpfnet.pyx')],
                                        libraries=libraries,
                                        extra_compile_args=extra_compile_args,
                                        library_dirs=["../lib"],
-                                       include_dirs=["../include", np.get_include()])]))
+                                       include_dirs=["../include",np.get_include()])]))
