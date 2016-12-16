@@ -43,14 +43,7 @@ np.import_array()
 # Constants
 ###########
 
-# Pi
 PI = cconstants.PI
-
-# Var values
-CURRENT= cconstants.CURRENT
-UPPER_LIMITS = cconstants.UPPER_LIMITS
-LOWER_LIMITS = cconstants.LOWER_LIMITS
-
 
 # C pointer
 ###########
@@ -153,12 +146,6 @@ BUS_PROP_REG_BY_TRAN = cbus.BUS_PROP_REG_BY_TRAN
 BUS_PROP_REG_BY_SHUNT = cbus.BUS_PROP_REG_BY_SHUNT
 BUS_PROP_NOT_REG_BY_GEN = cbus.BUS_PROP_NOT_REG_BY_GEN
 BUS_PROP_NOT_SLACK = cbus.BUS_PROP_NOT_SLACK
-
-# Variables
-BUS_VAR_VMAG = cbus.BUS_VAR_VMAG
-BUS_VAR_VANG = cbus.BUS_VAR_VANG
-BUS_VAR_VDEV = cbus.BUS_VAR_VDEV
-BUS_VAR_VVIO = cbus.BUS_VAR_VVIO
 
 # Infinite
 BUS_INF_V_MAG = cbus.BUS_INF_V_MAG
@@ -282,7 +269,7 @@ cdef class Bus:
 
         return cbus.BUS_is_regulated_by_shunt(self._c_ptr)
 
-    def has_flags(self,flag_type,vmask):
+    def has_flags(self,flag_type,q):
         """
         Determines whether the bus has the flags associated with 
         certain quantities set.
@@ -290,15 +277,19 @@ cdef class Bus:
         Parameters
         ----------
         flag_type : string (:ref:`ref_net_flag`)
-        vmask : int (:ref:`ref_bus_var`)
+        q : string or list of strings (:ref:`ref_bus_var`)
 
         Returns
         -------
         flag : {``True``, ``False``}
         """
-
-        return cbus.BUS_has_flags(self._c_ptr,str2flag[flag_type],vmask)
-
+        
+        q = q if isinstance(q,list) else [q]
+        
+        return cbus.BUS_has_flags(self._c_ptr,
+                                  str2flag[flag_type],
+                                  reduce(lambda x,y: x|y,[str2q[self.obj_type][qq] for qq in q],0))
+        
     def get_largest_sens(self,t=0):
         """
         Gets the bus sensitivity of largest absolute value.
@@ -491,14 +482,14 @@ cdef class Bus:
 
         return cbus.BUS_get_total_shunt_b(self._c_ptr,t)
 
-    def get_num_vars(self,var_mask,t_start=0,t_end=None):
+    def get_num_vars(self,q,t_start=0,t_end=None):
         """
         Gets number of variables associated with the
         given quantity.
 
         Parameters
         ----------
-        var_mask : int
+        q : string or list of strings (:ref:`ref_bus_var`)
         t_start : int
         t_end : int
         
@@ -507,9 +498,14 @@ cdef class Bus:
         num : int
         """
 
+        q = q if isinstance(q,list) else [q]
+
         if t_end is None:
             t_end = self.num_periods-1
-        return cbus.BUS_get_num_vars(self._c_ptr,var_mask,t_start,t_end)
+        return cbus.BUS_get_num_vars(self._c_ptr,
+                                     reduce(lambda x,y: x|y,[str2q[self.obj_type][qq] for qq in q],0),
+                                     t_start,
+                                     t_end)
 
     def set_price(self,p,t=0):
         """
@@ -939,11 +935,6 @@ BRANCH_PROP_TAP_CHANGER_Q = cbranch.BRANCH_PROP_TAP_CHANGER_Q
 BRANCH_PROP_PHASE_SHIFTER = cbranch.BRANCH_PROP_PHASE_SHIFTER
 BRANCH_PROP_NOT_OUT = cbranch.BRANCH_PROP_NOT_OUT
 
-# Variables
-BRANCH_VAR_RATIO = cbranch.BRANCH_VAR_RATIO
-BRANCH_VAR_RATIO_DEV = cbranch.BRANCH_VAR_RATIO_DEV
-BRANCH_VAR_PHASE = cbranch.BRANCH_VAR_PHASE
-
 # Infinite
 BRANCH_INF_RATIO = cbranch.BRANCH_INF_RATIO
 BRANCH_INF_FLOW = cbranch.BRANCH_INF_FLOW
@@ -1117,7 +1108,7 @@ cdef class Branch:
 
         return cbranch.BRANCH_is_tap_changer_Q(self._c_ptr)
 
-    def has_flags(self,flag_type,vmask):
+    def has_flags(self,flag_type,q):
         """
         Determines whether the branch has the flags associated with
         specific quantities set.
@@ -1125,14 +1116,18 @@ cdef class Branch:
         Parameters
         ----------
         flag_type : string (:ref:`ref_net_flag`)
-        vmask : int (:ref:`ref_branch_var`)
+        q : string or list of strings (:ref:`ref_branch_var`)
 
         Returns
         -------
         flag : {``True``, ``False``}
         """
 
-        return cbranch.BRANCH_has_flags(self._c_ptr,str2flag[flag_type],vmask)
+        q = q if isinstance(q,list) else [q]
+
+        return cbranch.BRANCH_has_flags(self._c_ptr,
+                                        str2flag[flag_type],
+                                        reduce(lambda x,y: x|y,[str2q[self.obj_type][qq] for qq in q],0))
 
     property num_periods:
         """ Number of time periods (int). """
@@ -1320,10 +1315,6 @@ GEN_PROP_NOT_SLACK = cgen.GEN_PROP_NOT_SLACK
 GEN_PROP_NOT_OUT = cgen.GEN_PROP_NOT_OUT
 GEN_PROP_P_ADJUST = cgen.GEN_PROP_P_ADJUST
 
-# Variables
-GEN_VAR_P = cgen.GEN_VAR_P
-GEN_VAR_Q = cgen.GEN_VAR_Q
-
 # Infinity
 GEN_INF_P = cgen.GEN_INF_P
 GEN_INF_Q = cgen.GEN_INF_Q
@@ -1451,7 +1442,7 @@ cdef class Generator:
         
         return cgen.GEN_is_P_adjustable(self._c_ptr)
 
-    def has_flags(self,flag_type,vmask):
+    def has_flags(self,flag_type,q):
         """ 
         Determines whether the generator has the flags associated with
         certain quantities set. 
@@ -1459,14 +1450,18 @@ cdef class Generator:
         Parameters
         ----------
         flag_type : string (:ref:`ref_net_flag`)
-        vmask : int (:ref:`ref_gen_var`)
+        q : string or list of strings (:ref:`ref_gen_var`)
         
         Returns
         -------
         flag : {``True``, ``False``}
         """
 
-        return cgen.GEN_has_flags(self._c_ptr,str2flag[flag_type],vmask)
+        q = q if isinstance(q,list) else [q]
+
+        return cgen.GEN_has_flags(self._c_ptr,
+                                  str2flag[flag_type],
+                                  reduce(lambda x,y: x|y,[str2q[self.obj_type][qq] for qq in q],0))
 
     def set_P(self,P,t=0):
         """"
@@ -1647,10 +1642,6 @@ cdef new_Generator(cgen.Gen* g):
 SHUNT_PROP_ANY = cshunt.SHUNT_PROP_ANY
 SHUNT_PROP_SWITCHED_V = cshunt.SHUNT_PROP_SWITCHED_V
 
-# Variables
-SHUNT_VAR_SUSC = cshunt.SHUNT_VAR_SUSC
-SHUNT_VAR_SUSC_DEV = cshunt.SHUNT_VAR_SUSC_DEV
-
 # Infinite
 SHUNT_INF_SUSC = cshunt.SHUNT_INF_SUSC
 
@@ -1717,7 +1708,7 @@ cdef class Shunt:
         
         return cshunt.SHUNT_is_switched_v(self._c_ptr)
 
-    def has_flags(self,flag_type,vmask):
+    def has_flags(self,flag_type,q):
         """
         Determines whether the shunt devices has flags associated with 
         certain quantities set.
@@ -1725,14 +1716,18 @@ cdef class Shunt:
         Parameters
         ----------
         flag_type : string (:ref:`ref_net_flag`)
-        vmask : int (:ref:`ref_bus_var`)
+        q : string or list of strings (:ref:`ref_bus_var`)
 
         Returns
         -------
         flag : {``True``, ``False``}
         """
+
+        q = q if isinstance(q,list) else [q]
         
-        return cshunt.SHUNT_has_flags(self._c_ptr,str2flag[flag_type],vmask)
+        return cshunt.SHUNT_has_flags(self._c_ptr,
+                                      str2flag[flag_type],
+                                      reduce(lambda x,y: x|y,[str2q[self.obj_type][qq] for qq in q],0))
 
     property num_periods:
         """ Number of time periods (int). """
@@ -1819,9 +1814,6 @@ cdef new_Shunt(cshunt.Shunt* s):
 LOAD_PROP_ANY = cload.LOAD_PROP_ANY
 LOAD_PROP_P_ADJUST = cload.LOAD_PROP_P_ADJUST
 
-# Variables
-LOAD_VAR_P = cload.LOAD_VAR_P
-
 # Infinity
 LOAD_INF_P = cload.LOAD_INF_P
 
@@ -1876,7 +1868,7 @@ cdef class Load:
         
         return cload.LOAD_is_P_adjustable(self._c_ptr)
 
-    def has_flags(self,flag_type,vmask):
+    def has_flags(self,flag_type,q):
         """ 
         Determines whether the load has the flags associated with
         certain quantities set. 
@@ -1884,14 +1876,18 @@ cdef class Load:
         Parameters
         ----------
         flag_type : string (:ref:`ref_net_flag`)
-        vmask : int (:ref:`ref_load_var`)
+        q : string or list of strings (:ref:`ref_load_var`)
         
         Returns
         -------
         flag : {``True``, ``False``}
         """
 
-        return cload.LOAD_has_flags(self._c_ptr,str2flag[flag_type],vmask)
+        q = q if isinstance(q,list) else [q]
+
+        return cload.LOAD_has_flags(self._c_ptr,
+                                    str2flag[flag_type],
+                                    reduce(lambda x,y: x|y,[str2q[self.obj_type][qq] for qq in q],0))
 
     def set_P(self,P,t=0):
         """"
@@ -2036,10 +2032,6 @@ cdef new_Load(cload.Load* l):
 # Properties
 VARGEN_PROP_ANY = cvargen.VARGEN_PROP_ANY
 
-# Variables
-VARGEN_VAR_P = cvargen.VARGEN_VAR_P
-VARGEN_VAR_Q = cvargen.VARGEN_VAR_Q
-
 # Infinity
 VARGEN_INF_P = cvargen.VARGEN_INF_P
 VARGEN_INF_Q = cvargen.VARGEN_INF_Q
@@ -2084,7 +2076,7 @@ cdef class VarGenerator:
 
         return new_CPtr(self._c_ptr)
 
-    def has_flags(self,flag_type,vmask):
+    def has_flags(self,flag_type,q):
         """ 
         Determines whether the variable generator has the flags associated with
         certain quantities set. 
@@ -2092,14 +2084,18 @@ cdef class VarGenerator:
         Parameters
         ----------
         flag_type : string (:ref:`ref_net_flag`)
-        vmask : int (:ref:`ref_vargen_var`)
+        q : string or list of strings (:ref:`ref_vargen_var`)
         
         Returns
         -------
         flag : {``True``, ``False``}
         """
 
-        return cvargen.VARGEN_has_flags(self._c_ptr,str2flag[flag_type],vmask)
+        q = q if isinstance(q,list) else [q]
+
+        return cvargen.VARGEN_has_flags(self._c_ptr,
+                                        str2flag[flag_type],
+                                        reduce(lambda x,y: x|y,[str2q[self.obj_type][qq] for qq in q],0))
 
     def set_P(self,P,t=0):
         """"
@@ -2254,10 +2250,6 @@ cdef new_VarGenerator(cvargen.Vargen* g):
 # Properties
 BAT_PROP_ANY = cbat.BAT_PROP_ANY
 
-# Variables
-BAT_VAR_P = cbat.BAT_VAR_P
-BAT_VAR_E = cbat.BAT_VAR_E
-
 # Infinity
 BAT_INF_P = cbat.BAT_INF_P
 BAT_INF_E = cbat.BAT_INF_E
@@ -2302,7 +2294,7 @@ cdef class Battery:
 
         return new_CPtr(self._c_ptr)
 
-    def has_flags(self,flag_type,vmask):
+    def has_flags(self,flag_type,q):
         """ 
         Determines whether the battery has the flags associated with
         certain quantities set. 
@@ -2310,14 +2302,18 @@ cdef class Battery:
         Parameters
         ----------
         flag_type : string (:ref:`ref_net_flag`)
-        vmask : int (:ref:`ref_bat_var`)
+        q : string or list of strings (:ref:`ref_bat_var`)
         
         Returns
         -------
         flag : {``True``, ``False``}
         """
 
-        return cbat.BAT_has_flags(self._c_ptr,str2flag[flag_type],vmask)
+        q = q if isinstance(q,list) else [q]
+
+        return cbat.BAT_has_flags(self._c_ptr,
+                                  str2flag[flag_type],
+                                  reduce(lambda x,y: x|y,[str2q[self.obj_type][qq] for qq in q],0))
         
     def set_P(self,P,t=0):
         """
@@ -2847,35 +2843,42 @@ cdef class Network:
             b = cbus.BUS_get_next(b)
         return buses
 
-    def get_var_values(self,code=CURRENT):
+    def get_var_values(self,option='current'):
         """
         Gets network variable values.
 
         Parameters
         ----------
-        code : int (See var values)
+        option : string (See var values)
 
         Returns
         -------
         values : :class:`ndarray <numpy.ndarray>`
         """
-        return Vector(cnet.NET_get_var_values(self._c_net,code),owndata=True)
+        return Vector(cnet.NET_get_var_values(self._c_net,str2const[option]),owndata=True)
 
-    def get_var_projection(self,obj_type,var,t_start=0,t_end=None):
+    def get_var_projection(self,obj_type,q,t_start=0,t_end=None):
         """
         Gets projection matrix for specific object variables.
 
         Parameters
         ----------
         obj_type : string (:ref:`ref_net_obj`)
-        var : int (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`)
+        q : string or list of strings (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`)
         t_start : int
         t_end : int (inclusive)
         """
+
+        q = q if isinstance(q,list) else [q]
         
         if t_end is None:
             t_end = self.num_periods-1
-        m = Matrix(cnet.NET_get_var_projection(self._c_net,str2obj[obj_type],var,t_start,t_end),owndata=True)
+        m = Matrix(cnet.NET_get_var_projection(self._c_net,
+                                               str2obj[obj_type],
+                                               reduce(lambda x,y: x|y,[str2q[obj_type][qq] for qq in q],0),
+                                               t_start,
+                                               t_end),
+                   owndata=True)
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
         else:
@@ -3212,7 +3215,7 @@ cdef class Network:
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
 
-    def set_flags(self,obj_type,flags,props,vals):
+    def set_flags(self,obj_type,flags,props,q):
         """
         Sets flags of network components with specific properties.
 
@@ -3221,21 +3224,21 @@ cdef class Network:
         obj_type : string (:ref:`ref_net_obj`)
         flags : string or list of strings (:ref:`ref_net_flag`)
         props : int or list (:ref:`ref_bus_prop`, :ref:`ref_branch_prop`, :ref:`ref_gen_prop`, :ref:`ref_shunt_prop`, :ref:`ref_load_prop`, :ref:`ref_vargen_prop`, :ref:`ref_bat_prop`)
-        vals : int or list (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`)
+        q : string or list of strings (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`)
         """
 
-        props = props if isinstance(props,list) else [props]
-        vals = vals if isinstance(vals,list) else [vals]
         flags = flags if isinstance(flags,list) else [flags]
+        props = props if isinstance(props,list) else [props]
+        q = q if isinstance(q,list) else [q]
         cnet.NET_set_flags(self._c_net,
                            str2obj[obj_type],
                            reduce(lambda x,y: x|y,[str2flag[f] for f in flags],0),
                            reduce(lambda x,y: x|y,props,0),
-                           reduce(lambda x,y: x|y,vals,0))
+                           reduce(lambda x,y: x|y,[str2q[obj_type][qq] for qq in q],0))
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
 
-    def set_flags_of_component(self,obj,flags,vals):
+    def set_flags_of_component(self,obj,flags,q):
         """
         Sets flags of network components with specific properties.
 
@@ -3243,17 +3246,17 @@ cdef class Network:
         ----------
         obj : :class:`Bus <pfnet.Bus>`, :class:`Branch <pfnet.Branch>`, :class:`Generator <pfnet.Generator>`, :class:`Load <pfnet.Load>`, :class:`Shunt <pfnet.Shunt>`, :class:`VarGenerator <pfnet.VarGenerator>`, :class:`Battery <pfnet.Battery>` 
         flags : string or list of strings (:ref:`ref_net_flag`)
-        vals : int or list (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`)
+        q : string or list of strings (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`)
         """
         
         cdef CPtr ptr = obj._get_c_ptr()
-        vals = vals if isinstance(vals,list) else [vals]
         flags = flags if isinstance(flags,list) else [flags]
+        q = q if isinstance(q,list) else [q]
         cnet.NET_set_flags_of_component(self._c_net,
                                         ptr._c_ptr,
                                         str2obj[obj.obj_type],
                                         reduce(lambda x,y: x|y,[str2flag[f] for f in flags],0),
-                                        reduce(lambda x,y: x|y,vals,0))
+                                        reduce(lambda x,y: x|y,[str2q[obj.obj_type][qq] for qq in q],0))
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
 
