@@ -429,8 +429,8 @@ class TestContingency(unittest.TestCase):
             net.clear_flags()
 
             # variables
-            net.set_flags(pf.OBJ_GEN,
-                          pf.FLAG_VARS,
+            net.set_flags('generator',
+                          'variable',
                           pf.GEN_PROP_ANY,
                           pf.GEN_VAR_P)
             self.assertEqual(net.num_vars,net.num_generators)
@@ -526,24 +526,24 @@ class TestContingency(unittest.TestCase):
             net.clear_flags()
 
             # variables
-            net.set_flags(pf.OBJ_GEN,
-                          pf.FLAG_VARS,
+            net.set_flags('generator',
+                          'variable',
                           pf.GEN_PROP_ANY,
                           pf.GEN_VAR_P)
-            net.set_flags(pf.OBJ_GEN,
-                          pf.FLAG_VARS,
+            net.set_flags('generator',
+                          'variable',
                           pf.GEN_PROP_REG,
                           pf.GEN_VAR_Q)
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_VARS,
+            net.set_flags('bus',
+                          'variable',
                           pf.BUS_PROP_ANY,
                           pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
-            net.set_flags(pf.OBJ_BRANCH,
-                          pf.FLAG_VARS,
+            net.set_flags('branch',
+                          'variable',
                           pf.BRANCH_PROP_TAP_CHANGER,
                           pf.BRANCH_VAR_RATIO)
-            net.set_flags(pf.OBJ_SHUNT,
-                          pf.FLAG_VARS,
+            net.set_flags('shunt',
+                          'variable',
                           pf.SHUNT_PROP_SWITCHED_V,
                           pf.SHUNT_VAR_SUSC)
             self.assertEqual(net.num_vars,
@@ -640,16 +640,16 @@ class TestContingency(unittest.TestCase):
             net.clear_flags()
 
             # variables
-            net.set_flags(pf.OBJ_GEN,
-                          pf.FLAG_VARS,
+            net.set_flags('generator',
+                          'variable',
                           pf.GEN_PROP_ANY,
                           pf.GEN_VAR_P)
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_VARS,
+            net.set_flags('bus',
+                          'variable',
                           pf.BUS_PROP_NOT_SLACK,
                           pf.BUS_VAR_VANG)
-            net.set_flags(pf.OBJ_BRANCH,
-                          pf.FLAG_VARS,
+            net.set_flags('branch',
+                          'variable',
                           pf.BRANCH_PROP_PHASE_SHIFTER,
                           pf.BRANCH_VAR_PHASE)
             self.assertEqual(net.num_vars,
@@ -740,12 +740,12 @@ class TestContingency(unittest.TestCase):
             net.clear_flags()
 
             # variables
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_VARS,
+            net.set_flags('bus',
+                          'variable',
                           pf.BUS_PROP_NOT_SLACK,
                           pf.BUS_VAR_VANG)
-            net.set_flags(pf.OBJ_BRANCH,
-                          pf.FLAG_VARS,
+            net.set_flags('branch',
+                          'variable',
                           pf.BRANCH_PROP_PHASE_SHIFTER,
                           pf.BRANCH_VAR_PHASE)
             self.assertEqual(net.num_vars,
@@ -838,26 +838,26 @@ class TestContingency(unittest.TestCase):
             cont.apply()
 
             # variables
-            net.set_flags(pf.OBJ_GEN,
-                          pf.FLAG_VARS,
+            net.set_flags('generator',
+                          'variable',
                           pf.GEN_PROP_NOT_OUT,
                           pf.GEN_VAR_P)
-            net.set_flags(pf.OBJ_BRANCH,
-                          pf.FLAG_VARS,
+            net.set_flags('branch',
+                          'variable',
                           pf.BRANCH_PROP_NOT_OUT,
                           pf.BRANCH_VAR_RATIO)
             self.assertEqual(net.num_vars,
                              (net.num_generators-1+net.num_branches-2))
             for gen in net.generators:
                 if gen.index != 0:
-                    self.assertTrue(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
+                    self.assertTrue(gen.has_flags('variable',pf.GEN_VAR_P))
                 else:
-                    self.assertFalse(gen.has_flags(pf.FLAG_VARS,pf.GEN_VAR_P))
+                    self.assertFalse(gen.has_flags('variable',pf.GEN_VAR_P))
             for br in net.branches:
                 if br.index not in [0,1]:
-                    self.assertTrue(br.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_RATIO))
+                    self.assertTrue(br.has_flags('variable',pf.BRANCH_VAR_RATIO))
                 else:
-                    self.assertFalse(br.has_flags(pf.FLAG_VARS,pf.BRANCH_VAR_RATIO))
+                    self.assertFalse(br.has_flags('variable',pf.BRANCH_VAR_RATIO))
 
  
     def tearDown(self):

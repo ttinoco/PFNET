@@ -3229,7 +3229,7 @@ cdef class Network:
         flags = flags if isinstance(flags,list) else [flags]
         cnet.NET_set_flags(self._c_net,
                            str2obj[obj_type],
-                           reduce(lambda x,y: str2flag[x]|str2flag[y],flags,'none'),
+                           reduce(lambda x,y: x|y,[str2flag[f] for f in flags],0),
                            reduce(lambda x,y: x|y,props,0),
                            reduce(lambda x,y: x|y,vals,0))
         if cnet.NET_has_error(self._c_net):
@@ -3252,7 +3252,7 @@ cdef class Network:
         cnet.NET_set_flags_of_component(self._c_net,
                                         ptr._c_ptr,
                                         str2obj[obj.obj_type],
-                                        reduce(lambda x,y: str2flag[x]|str2flag[y],flags,'none'),
+                                        reduce(lambda x,y: x|y,[str2flag[f] for f in flags],0),
                                         reduce(lambda x,y: x|y,vals,0))
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))

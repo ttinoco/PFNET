@@ -25,8 +25,7 @@ str2obj = {'all' : cobjs.OBJ_ALL,
 obj2str = dict([(v,k) for k,v in str2obj.items()])
 
 # Flags
-str2flag = {'none' : cflags.FLAG_NONE,
-            'variable' : cflags.FLAG_VARS,
+str2flag = {'variable' : cflags.FLAG_VARS,
             'fixed' : cflags.FLAG_FIXED,
             'bounded' : cflags.FLAG_BOUNDED,
             'sparse' : cflags.FLAG_SPARSE}

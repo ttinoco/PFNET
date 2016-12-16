@@ -42,28 +42,28 @@ class TestProblem(unittest.TestCase):
             p.network = net
             
             # Variables
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_VARS,
+            net.set_flags('bus',
+                          'variable',
                           pf.BUS_PROP_NOT_SLACK,
                           [pf.BUS_VAR_VMAG,pf.BUS_VAR_VANG])
-            net.set_flags(pf.OBJ_GEN,
-                          pf.FLAG_VARS,
+            net.set_flags('generator',
+                          'variable',
                           pf.GEN_PROP_SLACK,
                           pf.GEN_VAR_P)
-            net.set_flags(pf.OBJ_GEN,
-                          pf.FLAG_VARS,
+            net.set_flags('generator',
+                          'variable',
                           pf.GEN_PROP_REG,
                           pf.GEN_VAR_Q)
-            net.set_flags(pf.OBJ_BRANCH,
-                          pf.FLAG_VARS,
+            net.set_flags('branch',
+                          'variable',
                           pf.BRANCH_PROP_TAP_CHANGER_V,
                           pf.BRANCH_VAR_RATIO)
-            net.set_flags(pf.OBJ_BRANCH,
-                          pf.FLAG_VARS,
+            net.set_flags('branch',
+                          'variable',
                           pf.BRANCH_PROP_PHASE_SHIFTER,
                           pf.BRANCH_VAR_PHASE)
-            net.set_flags(pf.OBJ_SHUNT,
-                          pf.FLAG_VARS,
+            net.set_flags('shunt',
+                          'variable',
                           pf.SHUNT_PROP_SWITCHED_V,
                           pf.SHUNT_VAR_SUSC)
             
@@ -76,20 +76,20 @@ class TestProblem(unittest.TestCase):
                              net.get_num_switched_shunts())
                              
             # Fixed
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_FIXED,
+            net.set_flags('bus',
+                          'fixed',
                           pf.BUS_PROP_REG_BY_GEN,
                           pf.BUS_VAR_VMAG)
-            net.set_flags(pf.OBJ_BRANCH,
-                          pf.FLAG_FIXED,
+            net.set_flags('branch',
+                          'fixed',
                           pf.BRANCH_PROP_TAP_CHANGER_V,
                           pf.BRANCH_VAR_RATIO)
-            net.set_flags(pf.OBJ_BRANCH,
-                          pf.FLAG_FIXED,
+            net.set_flags('branch',
+                          'fixed',
                           pf.BRANCH_PROP_PHASE_SHIFTER,
                           pf.BRANCH_VAR_PHASE)
-            net.set_flags(pf.OBJ_SHUNT,
-                          pf.FLAG_FIXED,
+            net.set_flags('shunt',
+                          'fixed',
                           pf.SHUNT_PROP_SWITCHED_V,
                           pf.SHUNT_VAR_SUSC)
             self.assertEqual(net.num_fixed,
@@ -279,36 +279,36 @@ class TestProblem(unittest.TestCase):
             p.network = net
             
             # Variables
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_VARS,
+            net.set_flags('bus',
+                          'variable',
                           pf.BUS_PROP_NOT_SLACK,
                           pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_VARS,
+            net.set_flags('bus',
+                          'variable',
                           pf.BUS_PROP_NOT_SLACK|pf.BUS_PROP_REG_BY_GEN,
                           pf.BUS_VAR_VDEV)
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_VARS,
+            net.set_flags('bus',
+                          'variable',
                           pf.BUS_PROP_REG_BY_TRAN,
                           pf.BUS_VAR_VVIO)
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_VARS,
+            net.set_flags('bus',
+                          'variable',
                           pf.BUS_PROP_REG_BY_SHUNT,
                           pf.BUS_VAR_VVIO)
-            net.set_flags(pf.OBJ_GEN,
-                          pf.FLAG_VARS,
+            net.set_flags('generator',
+                          'variable',
                           pf.GEN_PROP_SLACK,
                           pf.GEN_VAR_P)
-            net.set_flags(pf.OBJ_GEN,
-                          pf.FLAG_VARS,
+            net.set_flags('generator',
+                          'variable',
                           pf.GEN_PROP_REG,
                           pf.GEN_VAR_Q)
-            net.set_flags(pf.OBJ_BRANCH,
-                          pf.FLAG_VARS,
+            net.set_flags('branch',
+                          'variable',
                           pf.BRANCH_PROP_TAP_CHANGER_V,
                           pf.BRANCH_VAR_RATIO|pf.BRANCH_VAR_RATIO_DEV)
-            net.set_flags(pf.OBJ_SHUNT,
-                          pf.FLAG_VARS,
+            net.set_flags('shunt',
+                          'variable',
                           pf.SHUNT_PROP_SWITCHED_V,
                           pf.SHUNT_VAR_SUSC|pf.SHUNT_VAR_SUSC_DEV)                          
 
@@ -551,8 +551,8 @@ class TestProblem(unittest.TestCase):
             net.load(case)
             p.network = net
 
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_VARS,
+            net.set_flags('bus',
+                          'variable',
                           pf.BUS_PROP_ANY,
                           pf.BUS_VAR_VMAG)
             self.assertEqual(net.num_vars,net.num_buses)
@@ -582,8 +582,8 @@ class TestProblem(unittest.TestCase):
             self.assertEqual(net.num_bounded,0)
             
             # flags
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_VARS|pf.FLAG_BOUNDED,
+            net.set_flags('bus',
+                          ['variable','bounded'],
                           pf.BUS_PROP_ANY,
                           pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
             
