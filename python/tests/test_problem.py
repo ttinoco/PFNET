@@ -45,27 +45,27 @@ class TestProblem(unittest.TestCase):
             net.set_flags('bus',
                           'variable',
                           pf.BUS_PROP_NOT_SLACK,
-                          [pf.BUS_VAR_VMAG,pf.BUS_VAR_VANG])
+                          ['voltage magnitude','voltage angle'])
             net.set_flags('generator',
                           'variable',
                           pf.GEN_PROP_SLACK,
-                          pf.GEN_VAR_P)
+                          'active power')
             net.set_flags('generator',
                           'variable',
                           pf.GEN_PROP_REG,
-                          pf.GEN_VAR_Q)
+                          'reactive power')
             net.set_flags('branch',
                           'variable',
                           pf.BRANCH_PROP_TAP_CHANGER_V,
-                          pf.BRANCH_VAR_RATIO)
+                          'tap ratio')
             net.set_flags('branch',
                           'variable',
                           pf.BRANCH_PROP_PHASE_SHIFTER,
-                          pf.BRANCH_VAR_PHASE)
+                          'phase shift')
             net.set_flags('shunt',
                           'variable',
                           pf.SHUNT_PROP_SWITCHED_V,
-                          pf.SHUNT_VAR_SUSC)
+                          'susceptance')
             
             self.assertEqual(net.num_vars,
                              2*(net.num_buses-net.get_num_slack_buses()) +
@@ -79,19 +79,19 @@ class TestProblem(unittest.TestCase):
             net.set_flags('bus',
                           'fixed',
                           pf.BUS_PROP_REG_BY_GEN,
-                          pf.BUS_VAR_VMAG)
+                          'voltage magnitude')
             net.set_flags('branch',
                           'fixed',
                           pf.BRANCH_PROP_TAP_CHANGER_V,
-                          pf.BRANCH_VAR_RATIO)
+                          'tap ratio')
             net.set_flags('branch',
                           'fixed',
                           pf.BRANCH_PROP_PHASE_SHIFTER,
-                          pf.BRANCH_VAR_PHASE)
+                          'phase shift')
             net.set_flags('shunt',
                           'fixed',
                           pf.SHUNT_PROP_SWITCHED_V,
-                          pf.SHUNT_VAR_SUSC)
+                          'susceptance')
             self.assertEqual(net.num_fixed,
                              net.get_num_buses_reg_by_gen() +
                              net.get_num_tap_changers_v() +
@@ -282,35 +282,35 @@ class TestProblem(unittest.TestCase):
             net.set_flags('bus',
                           'variable',
                           pf.BUS_PROP_NOT_SLACK,
-                          pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
+                          ['voltage magnitude','voltage angle'])
             net.set_flags('bus',
                           'variable',
                           pf.BUS_PROP_NOT_SLACK|pf.BUS_PROP_REG_BY_GEN,
-                          pf.BUS_VAR_VDEV)
+                          'voltage magnitude deviation')
             net.set_flags('bus',
                           'variable',
                           pf.BUS_PROP_REG_BY_TRAN,
-                          pf.BUS_VAR_VVIO)
+                          'voltage magnitude violation')
             net.set_flags('bus',
                           'variable',
                           pf.BUS_PROP_REG_BY_SHUNT,
-                          pf.BUS_VAR_VVIO)
+                          'voltage magnitude violation')
             net.set_flags('generator',
                           'variable',
                           pf.GEN_PROP_SLACK,
-                          pf.GEN_VAR_P)
+                          'active power')
             net.set_flags('generator',
                           'variable',
                           pf.GEN_PROP_REG,
-                          pf.GEN_VAR_Q)
+                          'reactive power')
             net.set_flags('branch',
                           'variable',
                           pf.BRANCH_PROP_TAP_CHANGER_V,
-                          pf.BRANCH_VAR_RATIO|pf.BRANCH_VAR_RATIO_DEV)
+                          ['tap ratio','tap ratio deviation'])
             net.set_flags('shunt',
                           'variable',
                           pf.SHUNT_PROP_SWITCHED_V,
-                          pf.SHUNT_VAR_SUSC|pf.SHUNT_VAR_SUSC_DEV)                          
+                          ['susceptance','susceptance deviation'])                          
 
             reg_by_tran_or_shunt = 0
             for i in range(net.num_buses):
@@ -554,7 +554,7 @@ class TestProblem(unittest.TestCase):
             net.set_flags('bus',
                           'variable',
                           pf.BUS_PROP_ANY,
-                          pf.BUS_VAR_VMAG)
+                          'voltage magnitude')
             self.assertEqual(net.num_vars,net.num_buses)
 
             l = p.get_lower_limits()
@@ -585,7 +585,7 @@ class TestProblem(unittest.TestCase):
             net.set_flags('bus',
                           ['variable','bounded'],
                           pf.BUS_PROP_ANY,
-                          pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
+                          ['voltage magnitude','voltage angle'])
             
             self.assertGreater(net.num_buses,0)
             self.assertEqual(net.num_vars,net.num_buses*2)
