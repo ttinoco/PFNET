@@ -432,7 +432,7 @@ class TestContingency(unittest.TestCase):
             net.set_flags('generator',
                           'variable',
                           pf.GEN_PROP_ANY,
-                          pf.GEN_VAR_P)
+                          'active power')
             self.assertEqual(net.num_vars,net.num_generators)
 
             # pre contingency
@@ -529,23 +529,23 @@ class TestContingency(unittest.TestCase):
             net.set_flags('generator',
                           'variable',
                           pf.GEN_PROP_ANY,
-                          pf.GEN_VAR_P)
+                          'active power')
             net.set_flags('generator',
                           'variable',
                           pf.GEN_PROP_REG,
-                          pf.GEN_VAR_Q)
+                          'reactive power')
             net.set_flags('bus',
                           'variable',
                           pf.BUS_PROP_ANY,
-                          pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
+                          ['voltage magnitude','voltage angle'])
             net.set_flags('branch',
                           'variable',
                           pf.BRANCH_PROP_TAP_CHANGER,
-                          pf.BRANCH_VAR_RATIO)
+                          'tap ratio')
             net.set_flags('shunt',
                           'variable',
                           pf.SHUNT_PROP_SWITCHED_V,
-                          pf.SHUNT_VAR_SUSC)
+                          'susceptance')
             self.assertEqual(net.num_vars,
                              (net.num_generators +
                               net.get_num_reg_gens() +
@@ -643,15 +643,15 @@ class TestContingency(unittest.TestCase):
             net.set_flags('generator',
                           'variable',
                           pf.GEN_PROP_ANY,
-                          pf.GEN_VAR_P)
+                          'active power')
             net.set_flags('bus',
                           'variable',
                           pf.BUS_PROP_NOT_SLACK,
-                          pf.BUS_VAR_VANG)
+                          'voltage angle')
             net.set_flags('branch',
                           'variable',
                           pf.BRANCH_PROP_PHASE_SHIFTER,
-                          pf.BRANCH_VAR_PHASE)
+                          'phase shift')
             self.assertEqual(net.num_vars,
                              (net.num_generators +
                               net.num_buses-net.get_num_slack_buses() +
@@ -743,11 +743,11 @@ class TestContingency(unittest.TestCase):
             net.set_flags('bus',
                           'variable',
                           pf.BUS_PROP_NOT_SLACK,
-                          pf.BUS_VAR_VANG)
+                          'voltage angle')
             net.set_flags('branch',
                           'variable',
                           pf.BRANCH_PROP_PHASE_SHIFTER,
-                          pf.BRANCH_VAR_PHASE)
+                          'phase shift')
             self.assertEqual(net.num_vars,
                              (net.num_buses-net.get_num_slack_buses() +
                               net.get_num_phase_shifters()))
@@ -841,23 +841,23 @@ class TestContingency(unittest.TestCase):
             net.set_flags('generator',
                           'variable',
                           pf.GEN_PROP_NOT_OUT,
-                          pf.GEN_VAR_P)
+                          'active power')
             net.set_flags('branch',
                           'variable',
                           pf.BRANCH_PROP_NOT_OUT,
-                          pf.BRANCH_VAR_RATIO)
+                          'tap ratio')
             self.assertEqual(net.num_vars,
                              (net.num_generators-1+net.num_branches-2))
             for gen in net.generators:
                 if gen.index != 0:
-                    self.assertTrue(gen.has_flags('variable',pf.GEN_VAR_P))
+                    self.assertTrue(gen.has_flags('variable','active power'))
                 else:
-                    self.assertFalse(gen.has_flags('variable',pf.GEN_VAR_P))
+                    self.assertFalse(gen.has_flags('variable','active power'))
             for br in net.branches:
                 if br.index not in [0,1]:
-                    self.assertTrue(br.has_flags('variable',pf.BRANCH_VAR_RATIO))
+                    self.assertTrue(br.has_flags('variable','tap ratio'))
                 else:
-                    self.assertFalse(br.has_flags('variable',pf.BRANCH_VAR_RATIO))
+                    self.assertFalse(br.has_flags('variable','tap ratio'))
 
  
     def tearDown(self):
