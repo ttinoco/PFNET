@@ -438,7 +438,7 @@ class TestContingency(unittest.TestCase):
             # pre contingency
             net.update_properties()
             gen_cost_base = net.gen_P_cost
-            func = pf.Function(pf.FUNC_TYPE_GEN_COST,1.,net)
+            func = pf.Function('generation cost',1.,net)
             func.analyze()
             func.eval(net.get_var_values())
             phi_base = func.phi
@@ -559,7 +559,7 @@ class TestContingency(unittest.TestCase):
             for bus in net.buses:
                 mismatches[bus.index_P] = bus.P_mis
                 mismatches[bus.index_Q] = bus.Q_mis
-            constr = pf.Constraint(pf.CONSTR_TYPE_PF,net)
+            constr = pf.Constraint('AC power balance',net)
             constr.analyze()
             constr.eval(net.get_var_values())
             f = constr.f.copy()
@@ -658,7 +658,7 @@ class TestContingency(unittest.TestCase):
                               net.get_num_phase_shifters()))
 
             # pre contingency
-            constr = pf.Constraint(pf.CONSTR_TYPE_DCPF,net)
+            constr = pf.Constraint('DC power balance',net)
             constr.analyze()
             constr.eval(net.get_var_values())
             A = constr.A.copy()
@@ -753,7 +753,7 @@ class TestContingency(unittest.TestCase):
                               net.get_num_phase_shifters()))
 
             # pre contingency
-            constr = pf.Constraint(pf.CONSTR_TYPE_DC_FLOW_LIM,net)
+            constr = pf.Constraint('DC branch flow limits',net)
             constr.analyze()
             constr.eval(net.get_var_values())
             G = constr.G.copy()

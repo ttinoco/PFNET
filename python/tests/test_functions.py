@@ -68,9 +68,9 @@ class TestFunctions(unittest.TestCase):
             x0 = net.get_var_values()
  
             # Function
-            func = pf.Function(pf.FUNC_TYPE_REG_VMAG,1.,net)
+            func = pf.Function('voltage magnitude regularization',1.,net)
 
-            self.assertEqual(func.type,pf.FUNC_TYPE_REG_VMAG)
+            self.assertEqual(func.type,'voltage magnitude regularization')
 
             f = func.phi
             g = func.gphi
@@ -203,9 +203,9 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Function
-            func = pf.Function(pf.FUNC_TYPE_REG_PQ,1.,net)
+            func = pf.Function('generator powers regularization',1.,net)
 
-            self.assertEqual(func.type,pf.FUNC_TYPE_REG_PQ)
+            self.assertEqual(func.type,'generator powers regularization')
 
             f = func.phi
             g = func.gphi
@@ -331,9 +331,9 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Function
-            func = pf.Function(pf.FUNC_TYPE_REG_VANG,1.,net)
+            func = pf.Function('voltage angle regularization',1.,net)
 
-            self.assertEqual(func.type,pf.FUNC_TYPE_REG_VANG)
+            self.assertEqual(func.type,'voltage angle regularization')
 
             f = func.phi
             g = func.gphi
@@ -465,9 +465,9 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Function
-            func = pf.Function(pf.FUNC_TYPE_REG_RATIO,1.,net)
+            func = pf.Function('tap ratio regularization',1.,net)
 
-            self.assertEqual(func.type,pf.FUNC_TYPE_REG_RATIO)
+            self.assertEqual(func.type,'tap ratio regularization')
 
             f = func.phi
             g = func.gphi
@@ -586,9 +586,9 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Function
-            func = pf.Function(pf.FUNC_TYPE_REG_SUSC,1.,net)
+            func = pf.Function('susceptance regularization',1.,net)
 
-            self.assertEqual(func.type,pf.FUNC_TYPE_REG_SUSC)
+            self.assertEqual(func.type,'susceptance regularization')
 
             f = func.phi
             g = func.gphi
@@ -707,9 +707,9 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Function
-            func = pf.Function(pf.FUNC_TYPE_GEN_COST,1.,net)
+            func = pf.Function('generation cost',1.,net)
 
-            self.assertEqual(func.type,pf.FUNC_TYPE_GEN_COST)
+            self.assertEqual(func.type,'generation cost')
 
             f = func.phi
             g = func.gphi
@@ -838,9 +838,9 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Function
-            func = pf.Function(pf.FUNC_TYPE_GEN_COST,1.,net)
+            func = pf.Function('generation cost',1.,net)
 
-            self.assertEqual(func.type,pf.FUNC_TYPE_GEN_COST)
+            self.assertEqual(func.type,'generation cost')
 
             f = func.phi
             g = func.gphi
@@ -1013,9 +1013,9 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Function
-            func = pf.Function(pf.FUNC_TYPE_SP_CONTROLS,1.,net)
+            func = pf.Function('sparse controls penalty',1.,net)
 
-            self.assertEqual(func.type,pf.FUNC_TYPE_SP_CONTROLS)
+            self.assertEqual(func.type,'sparse controls penalty')
 
             f = func.phi
             g = func.gphi
@@ -1162,9 +1162,9 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Function
-            func = pf.Function(pf.FUNC_TYPE_SLIM_VMAG,1.,net)
+            func = pf.Function('soft voltage magnitude limits',1.,net)
 
-            self.assertEqual(func.type,pf.FUNC_TYPE_SLIM_VMAG)
+            self.assertEqual(func.type,'soft voltage magnitude limits')
 
             f = func.phi
             g = func.gphi
@@ -1292,9 +1292,9 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Function
-            func = pf.Function(pf.FUNC_TYPE_REG_PHASE,1.,net)
+            func = pf.Function('phase shift regularization',1.,net)
 
-            self.assertEqual(func.type,pf.FUNC_TYPE_REG_PHASE)
+            self.assertEqual(func.type,'phase shift regularization')
 
             f = func.phi
             g = func.gphi
@@ -1411,9 +1411,9 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Function
-            func = pf.Function(pf.FUNC_TYPE_LOAD_UTIL,1.,net)
+            func = pf.Function('consumption utility',1.,net)
 
-            self.assertEqual(func.type,pf.FUNC_TYPE_LOAD_UTIL)
+            self.assertEqual(func.type,'consumption utility')
 
             f = func.phi
             g = func.gphi
@@ -1542,9 +1542,9 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Function
-            func = pf.Function(pf.FUNC_TYPE_LOAD_UTIL,1.,net)
+            func = pf.Function('consumption utility',1.,net)
 
-            self.assertEqual(func.type,pf.FUNC_TYPE_LOAD_UTIL)
+            self.assertEqual(func.type,'consumption utility')
 
             f = func.phi
             g = func.gphi
@@ -1699,9 +1699,9 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Function
-            func = pf.Function(pf.FUNC_TYPE_NETCON_COST,1.,net)
+            func = pf.Function('net consumption cost',1.,net)
 
-            self.assertEqual(func.type,pf.FUNC_TYPE_NETCON_COST)
+            self.assertEqual(func.type,'net consumption cost')
 
             f = func.phi
             g = func.gphi
@@ -1777,8 +1777,8 @@ class TestFunctions(unittest.TestCase):
             net.clear_flags()
             self.assertEqual(net.num_vars,0)
             
-            func = pf.Function(pf.FUNC_TYPE_NETCON_COST,1.,net)
-            self.assertEqual(func.type,pf.FUNC_TYPE_NETCON_COST)
+            func = pf.Function('net consumption cost',1.,net)
+            self.assertEqual(func.type,'net consumption cost')
 
             x0 = net.get_var_values()
 
@@ -1871,9 +1871,9 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Function
-            func = pf.Function(pf.FUNC_TYPE_NETCON_COST,1.,net)
+            func = pf.Function('net consumption cost',1.,net)
 
-            self.assertEqual(func.type,pf.FUNC_TYPE_NETCON_COST)
+            self.assertEqual(func.type,'net consumption cost')
 
             f = func.phi
             g = func.gphi
@@ -1959,8 +1959,8 @@ class TestFunctions(unittest.TestCase):
             net.clear_flags()
             self.assertEqual(net.num_vars,0)
             
-            func = pf.Function(pf.FUNC_TYPE_NETCON_COST,1.,net)
-            self.assertEqual(func.type,pf.FUNC_TYPE_NETCON_COST)
+            func = pf.Function('net consumption cost',1.,net)
+            self.assertEqual(func.type,'net consumption cost')
 
             x0 = net.get_var_values()
 
@@ -1994,16 +1994,17 @@ class TestFunctions(unittest.TestCase):
 
             net = pf.Network(self.T) # multiperiod
             
-            functions = [pf.Function(pf.FUNC_TYPE_GEN_COST,1.,net),
-                         pf.Function(pf.FUNC_TYPE_REG_PHASE,1.,net),
-                         pf.Function(pf.FUNC_TYPE_REG_PQ,1.,net),
-                         pf.Function(pf.FUNC_TYPE_REG_RATIO,1.,net),
-                         pf.Function(pf.FUNC_TYPE_REG_SUSC,1.,net),
-                         pf.Function(pf.FUNC_TYPE_REG_VANG,1.,net),
-                         pf.Function(pf.FUNC_TYPE_REG_VMAG,1.,net),
-                         pf.Function(pf.FUNC_TYPE_SLIM_VMAG,1.,net),
-                         pf.Function(pf.FUNC_TYPE_SP_CONTROLS,1.,net),
-                         pf.Function(pf.FUNC_TYPE_LOAD_UTIL,1.,net)]
+            functions = [pf.Function('generation cost',1.,net),
+                         pf.Function('phase shift regularization',1.,net),
+                         pf.Function('generator powers regularization',1.,net),
+                         pf.Function('tap ratio regularization',1.,net),
+                         pf.Function('susceptance regularization',1.,net),
+                         pf.Function('voltage angle regularization',1.,net),
+                         pf.Function('voltage magnitude regularization',1.,net),
+                         pf.Function('soft voltage magnitude limits',1.,net),
+                         pf.Function('sparse controls penalty',1.,net),
+                         pf.Function('consumption utility',1.,net),
+                         pf.Function('net consumption cost',1.,net)]
             
             x0 = net.get_var_values()
         

@@ -99,14 +99,14 @@ class TestProblem(unittest.TestCase):
                              net.get_num_switched_shunts())
                              
             # Constraints
-            p.add_constraint(pf.CONSTR_TYPE_PF)
-            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_P)
-            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_Q)
-            p.add_constraint(pf.CONSTR_TYPE_FIX)
+            p.add_constraint('AC power balance')
+            p.add_constraint('generator active power participation')
+            p.add_constraint('generator reactive power participation')
+            p.add_constraint('variable fixing')
             self.assertEqual(len(p.constraints),4)
 
             # Check adding redundant constraints
-            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_P)
+            p.add_constraint('generator active power participation')
             self.assertEqual(len(p.constraints),4)
             
             # Functions
@@ -248,7 +248,7 @@ class TestProblem(unittest.TestCase):
             sens = np.random.randn(p.f.size)
             offset = 0
             for c in p.constraints:
-                if c.type == pf.CONSTR_TYPE_PF:
+                if c.type == 'AC power balance':
                     break
                 else:
                     offset += c.f.size
@@ -328,24 +328,24 @@ class TestProblem(unittest.TestCase):
                              3*net.get_num_switched_shunts())
                              
             # Constraints
-            p.add_constraint(pf.CONSTR_TYPE_PF)
-            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_P)
-            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_Q)
-            p.add_constraint(pf.CONSTR_TYPE_REG_GEN)
-            p.add_constraint(pf.CONSTR_TYPE_REG_TRAN)
-            p.add_constraint(pf.CONSTR_TYPE_REG_SHUNT)
+            p.add_constraint('AC power balance')
+            p.add_constraint('generator active power participation')
+            p.add_constraint('generator reactive power participation')
+            p.add_constraint('voltage regulation by generators')
+            p.add_constraint('voltage regulation by transformers')
+            p.add_constraint('voltage regulation by shunts')
             self.assertEqual(len(p.constraints),6)
 
             # Check adding redundant constraints
-            p.add_constraint(pf.CONSTR_TYPE_PF)
+            p.add_constraint('AC power balance')
             self.assertEqual(len(p.constraints),6)
             
             # Functions
-            p.add_function(pf.FUNC_TYPE_REG_VMAG,1.)
-            p.add_function(pf.FUNC_TYPE_REG_VANG,5.)
-            p.add_function(pf.FUNC_TYPE_REG_PQ,8.)
-            p.add_function(pf.FUNC_TYPE_REG_RATIO,3.)            
-            p.add_function(pf.FUNC_TYPE_REG_SUSC,1.)
+            p.add_function('voltage magnitude regularization',1.)
+            p.add_function('voltage angle regularization',5.)
+            p.add_function('generator powers regularization',8.)
+            p.add_function('tap ratio regularization',3.)            
+            p.add_function('susceptance regularization',1.)
             self.assertEqual(len(p.functions),5)
                 
             # Init point
@@ -524,7 +524,7 @@ class TestProblem(unittest.TestCase):
             sens = np.random.randn(p.f.size)
             offset = 0
             for c in p.constraints:
-                if c.type == pf.CONSTR_TYPE_PF:
+                if c.type == 'AC power balance':
                     break
                 else:
                     offset += c.f.size
@@ -593,14 +593,14 @@ class TestProblem(unittest.TestCase):
             
             self.assertEqual(len(p.constraints),0)
 
-            p.add_constraint(pf.CONSTR_TYPE_LBOUND)
-            p.add_constraint(pf.CONSTR_TYPE_DC_FLOW_LIM)
+            p.add_constraint('variable bounds')
+            p.add_constraint('DC branch flow limits')
 
             self.assertEqual(len(p.constraints),2)
 
-            constr1 = p.find_constraint(pf.CONSTR_TYPE_LBOUND)
-            constr2 = p.find_constraint(pf.CONSTR_TYPE_DC_FLOW_LIM)
-            self.assertRaises(pf.ProblemError,p.find_constraint,pf.CONSTR_TYPE_PF)
+            constr1 = p.find_constraint('variable bounds')
+            constr2 = p.find_constraint('DC branch flow limits')
+            self.assertRaises(pf.ProblemError,p.find_constraint,'AC power balance')
 
             p.analyze()
 

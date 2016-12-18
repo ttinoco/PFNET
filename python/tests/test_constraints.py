@@ -151,7 +151,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
-            constr = pf.Constraint(pf.CONSTR_TYPE_FIX,net)
+            constr = pf.Constraint('variable fixing',net)
 
             f = constr.f
             J = constr.J
@@ -333,7 +333,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
-            constr = pf.Constraint(pf.CONSTR_TYPE_FIX,net)
+            constr = pf.Constraint('variable fixing',net)
 
             f = constr.f
             J = constr.J
@@ -572,7 +572,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
-            constr = pf.Constraint(pf.CONSTR_TYPE_LBOUND,net)
+            constr = pf.Constraint('variable bounds',net)
 
             f = constr.f
             J = constr.J
@@ -795,7 +795,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
-            constr = pf.Constraint(pf.CONSTR_TYPE_LBOUND,net)
+            constr = pf.Constraint('variable bounds',net)
                         
             constr.analyze()
 
@@ -1043,7 +1043,7 @@ class TestConstraints(unittest.TestCase):
                               3*net.num_batteries)*self.T)
             
             x0 = net.get_var_values()
-            constr = pf.Constraint(pf.CONSTR_TYPE_LBOUND,net)
+            constr = pf.Constraint('variable bounds',net)
             constr.analyze()
             constr.eval(x0)
             
@@ -1130,7 +1130,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_bounded,net.num_vars)
             
             x0 = net.get_var_values()
-            constr = pf.Constraint(pf.CONSTR_TYPE_LBOUND,net)
+            constr = pf.Constraint('variable bounds',net)
             constr.analyze()
             constr.eval(x0)
             
@@ -1195,7 +1195,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Constraint
-            constr = pf.Constraint(pf.CONSTR_TYPE_PAR_GEN_P,net)
+            constr = pf.Constraint('generator active power participation',net)
 
             f = constr.f
             J = constr.J
@@ -1324,7 +1324,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Constraint
-            constr = pf.Constraint(pf.CONSTR_TYPE_PAR_GEN_Q,net)
+            constr = pf.Constraint('generator reactive power participation',net)
 
             f = constr.f
             J = constr.J
@@ -1498,7 +1498,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Constraint
-            constr = pf.Constraint(pf.CONSTR_TYPE_PF,net)
+            constr = pf.Constraint('AC power balance',net)
 
             f = constr.f
             J = constr.J
@@ -1774,7 +1774,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Constraint
-            constr = pf.Constraint(pf.CONSTR_TYPE_REG_GEN,net)
+            constr = pf.Constraint('voltage regulation by generators',net)
             
             f = constr.f
             J = constr.J
@@ -2025,7 +2025,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Constraint
-            constr = pf.Constraint(pf.CONSTR_TYPE_BOUND,net)
+            constr = pf.Constraint('variable nonlinear bounds',net)
 
             f = constr.f
             J = constr.J
@@ -2211,7 +2211,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Constraint
-            constr = pf.Constraint(pf.CONSTR_TYPE_REG_TRAN,net)
+            constr = pf.Constraint('voltage regulation by transformers',net)
             
             f = constr.f
             J = constr.J
@@ -2444,7 +2444,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Constraint
-            constr = pf.Constraint(pf.CONSTR_TYPE_REG_SHUNT,net)
+            constr = pf.Constraint('voltage regulation by shunts',net)
             
             f = constr.f
             J = constr.J
@@ -2658,14 +2658,15 @@ class TestConstraints(unittest.TestCase):
 
             net = pf.Network(self.T) # multi period
 
-            constraints = [pf.Constraint(pf.CONSTR_TYPE_BOUND,net),
-                           pf.Constraint(pf.CONSTR_TYPE_FIX,net),
-                           pf.Constraint(pf.CONSTR_TYPE_PAR_GEN_P,net),
-                           pf.Constraint(pf.CONSTR_TYPE_PAR_GEN_Q,net),
-                           pf.Constraint(pf.CONSTR_TYPE_PF,net),
-                           pf.Constraint(pf.CONSTR_TYPE_REG_GEN,net),
-                           pf.Constraint(pf.CONSTR_TYPE_REG_SHUNT,net),
-                           pf.Constraint(pf.CONSTR_TYPE_REG_TRAN,net)]
+            constraints = [pf.Constraint('variable nonlinear bounds',net),
+                           pf.Constraint('variable fixing',net),
+                           pf.Constraint('generator active power participation',net),
+                           pf.Constraint('generator reactive power participation',net),
+                           pf.Constraint('AC power balance',net),
+                           pf.Constraint('DC power balance',net),
+                           pf.Constraint('voltage regulation by generators',net),
+                           pf.Constraint('voltage regulation by transformers',net),
+                           pf.Constraint('voltage regulation by shunts',net)]
 
             x0 = net.get_var_values()
         
@@ -2851,7 +2852,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Constraint
-            constr = pf.Constraint(pf.CONSTR_TYPE_DCPF,net)
+            constr = pf.Constraint('DC power balance',net)
             
             f = constr.f
             J = constr.J
@@ -3064,7 +3065,7 @@ class TestConstraints(unittest.TestCase):
                     r += len(b.branches)
 
             # Constraint
-            constr = pf.Constraint(pf.CONSTR_TYPE_DCPF,net)
+            constr = pf.Constraint('DC power balance',net)
 
             # Analyze
             constr.analyze()
@@ -3164,7 +3165,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Constraint
-            constr = pf.Constraint(pf.CONSTR_TYPE_DC_FLOW_LIM,net)
+            constr = pf.Constraint('DC branch flow limits',net)
             
             f = constr.f
             J = constr.J
@@ -3322,7 +3323,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Constraint
-            constr = pf.Constraint(pf.CONSTR_TYPE_DC_FLOW_LIM,net)
+            constr = pf.Constraint('DC branch flow limits',net)
             constr.analyze()
             G = constr.G
             l = constr.l
@@ -3410,7 +3411,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Constraint
-            constr = pf.Constraint(pf.CONSTR_TYPE_LINPF,net)
+            constr = pf.Constraint('linearized AC power balance',net)
 
             f = constr.f
             J = constr.J
@@ -3475,7 +3476,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(b)))
 
             # Check with ACPF
-            constrPF = pf.Constraint(pf.CONSTR_TYPE_PF,net)
+            constrPF = pf.Constraint('AC power balance',net)
             constrPF.analyze()
             constrPF.eval(x0)
             self.assertEqual(A.nnz,constrPF.J.nnz)
@@ -3529,7 +3530,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
             
             # Constraint
-            constr = pf.Constraint(pf.CONSTR_TYPE_GEN_RAMP,net)
+            constr = pf.Constraint('generator ramp limits',net)
 
             f = constr.f
             J = constr.J

@@ -1739,7 +1739,7 @@ class TestNetwork(unittest.TestCase):
             self.assertTrue(np.all(np.abs(netMP.tran_p_vio-pvio) < 1e-10))
     
             # Mismatches 1
-            constr = pf.Constraint(pf.CONSTR_TYPE_PF,net)
+            constr = pf.Constraint('AC power balance',net)
             constr.analyze()
             constr.eval(x0)
             f = constr.f
@@ -1756,7 +1756,7 @@ class TestNetwork(unittest.TestCase):
             self.assertLess(np.abs(net.bus_P_mis-np.max(np.abs(dP_list))*net.base_power),1e-10)
             self.assertLess(np.abs(net.bus_Q_mis-np.max(np.abs(dQ_list))*net.base_power),1e-10)
             
-            constrMP = pf.Constraint(pf.CONSTR_TYPE_PF,netMP)
+            constrMP = pf.Constraint('AC power balance',netMP)
             constrMP.analyze()
             constrMP.eval(x0MP)
             fMP = constrMP.f
@@ -1916,11 +1916,11 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.num_bounded,net.num_buses)
             
             # Store random bus sensitivities
-            constr = [pf.Constraint(pf.CONSTR_TYPE_PF,net),
-                      pf.Constraint(pf.CONSTR_TYPE_BOUND,net),
-                      pf.Constraint(pf.CONSTR_TYPE_REG_GEN,net),
-                      pf.Constraint(pf.CONSTR_TYPE_REG_TRAN,net),
-                      pf.Constraint(pf.CONSTR_TYPE_REG_SHUNT,net)]
+            constr = [pf.Constraint('AC power balance',net),
+                      pf.Constraint('variable nonlinear bounds',net),
+                      pf.Constraint('voltage regulation by generators',net),
+                      pf.Constraint('voltage regulation by transformers',net),
+                      pf.Constraint('voltage regulation by shunts',net)]
             for c in constr:
                 c.analyze()
                 c.eval(x0)

@@ -3889,19 +3889,6 @@ cdef class Graph:
 # Function
 ##########
 
-# Types
-FUNC_TYPE_REG_VMAG = cfunc.FUNC_TYPE_REG_VMAG
-FUNC_TYPE_REG_VANG = cfunc.FUNC_TYPE_REG_VANG
-FUNC_TYPE_REG_PQ = cfunc.FUNC_TYPE_REG_PQ
-FUNC_TYPE_REG_RATIO = cfunc.FUNC_TYPE_REG_RATIO
-FUNC_TYPE_REG_PHASE = cfunc.FUNC_TYPE_REG_PHASE
-FUNC_TYPE_REG_SUSC = cfunc.FUNC_TYPE_REG_SUSC
-FUNC_TYPE_GEN_COST = cfunc.FUNC_TYPE_GEN_COST
-FUNC_TYPE_SP_CONTROLS = cfunc.FUNC_TYPE_SP_CONTROLS
-FUNC_TYPE_SLIM_VMAG = cfunc.FUNC_TYPE_SLIM_VMAG
-FUNC_TYPE_LOAD_UTIL = cfunc.FUNC_TYPE_LOAD_UTIL
-FUNC_TYPE_NETCON_COST = cfunc.FUNC_TYPE_NETCON_COST
-
 class FunctionError(Exception):
     """
     Function error exception.
@@ -3920,13 +3907,13 @@ cdef class Function:
     cdef cfunc.Func* _c_func
     cdef bint alloc
 
-    def __init__(self,int type,float weight,Network net,alloc=True):
+    def __init__(self,ftype,weight,Network net,alloc=True):
         """
         Function class.
         
         Parameters
         ----------
-        type : int (:ref:`ref_func_type`)
+        ftype : string (:ref:`ref_func_type`)
         weight : float
         net : :class:`Network <pfnet.Network>`
         alloc : {``True``, ``False``}
@@ -3934,10 +3921,10 @@ cdef class Function:
 
         pass
      
-    def __cinit__(self,int type,float weight,Network net,alloc=True):
+    def __cinit__(self,ftype,weight,Network net,alloc=True):
         
         if alloc:
-            self._c_func = cfunc.FUNC_new(type,weight,net._c_net)
+            self._c_func = cfunc.FUNC_new(str2func[ftype],weight,net._c_net)
         else:
             self._c_func = NULL
         self.alloc = alloc
@@ -4003,8 +3990,8 @@ cdef class Function:
             raise FunctionError(cfunc.FUNC_get_error_string(self._c_func))
 
     property type:
-        """ Function type (int). """
-        def __get__(self): return cfunc.FUNC_get_type(self._c_func)
+        """ Function type (string) (:ref:`ref_func_type`). """
+        def __get__(self): return func2str[cfunc.FUNC_get_type(self._c_func)]
 
     property Hcounter:
         """ Number of nonzero entries in Hessian matrix (int). """
@@ -4037,21 +4024,6 @@ cdef new_Function(cfunc.Func* f, cnet.Net* n):
 # Constraint
 ############
 
-# Types
-CONSTR_TYPE_PF = cconstr.CONSTR_TYPE_PF
-CONSTR_TYPE_DCPF = cconstr.CONSTR_TYPE_DCPF
-CONSTR_TYPE_LINPF = cconstr.CONSTR_TYPE_LINPF
-CONSTR_TYPE_FIX = cconstr.CONSTR_TYPE_FIX
-CONSTR_TYPE_BOUND = cconstr.CONSTR_TYPE_BOUND
-CONSTR_TYPE_PAR_GEN_P = cconstr.CONSTR_TYPE_PAR_GEN_P
-CONSTR_TYPE_PAR_GEN_Q = cconstr.CONSTR_TYPE_PAR_GEN_Q
-CONSTR_TYPE_REG_GEN = cconstr.CONSTR_TYPE_REG_GEN
-CONSTR_TYPE_REG_TRAN = cconstr.CONSTR_TYPE_REG_TRAN
-CONSTR_TYPE_REG_SHUNT = cconstr.CONSTR_TYPE_REG_SHUNT
-CONSTR_TYPE_DC_FLOW_LIM = cconstr.CONSTR_TYPE_DC_FLOW_LIM
-CONSTR_TYPE_LBOUND = cconstr.CONSTR_TYPE_LBOUND
-CONSTR_TYPE_GEN_RAMP = cconstr.CONSTR_TYPE_GEN_RAMP
-
 class ConstraintError(Exception):
     """
     Constraint error exception.
@@ -4071,24 +4043,24 @@ cdef class Constraint:
     cdef cnet.Net* _c_net
     cdef bint alloc
 
-    def __init__(self,int type,Network net,alloc=True):
+    def __init__(self,ctype,Network net,alloc=True):
         """
         Contraint class.
 
         Parameters
         ----------
-        type : int (:ref:`ref_constr_type`)
+        ctype : string (:ref:`ref_constr_type`)
         net : :class:`Network <pfnet.Network>`
         alloc : {``True``, ``False``}
         """
 
         pass
      
-    def __cinit__(self,int type,Network net,alloc=True):
+    def __cinit__(self,ctype,Network net,alloc=True):
 
         self._c_net = net._c_net
         if alloc:
-            self._c_constr = cconstr.CONSTR_new(type,net._c_net)
+            self._c_constr = cconstr.CONSTR_new(str2constr[ctype],net._c_net)
         else:
             self._c_constr = NULL
         self.alloc = alloc
@@ -4212,8 +4184,8 @@ cdef class Constraint:
         return Matrix(cconstr.CONSTR_get_H_single(self._c_constr,i))
 
     property type:
-        """ Constraint type (:ref:`ref_constr_type`) (int). """
-        def __get__(self): return cconstr.CONSTR_get_type(self._c_constr)
+        """ Constraint type (string) (:ref:`ref_constr_type`). """
+        def __get__(self): return constr2str[cconstr.CONSTR_get_type(self._c_constr)]
 
     property Acounter:
         """ Number of nonzero entries in the matrix of linear equality constraints (int). """
@@ -4350,10 +4322,10 @@ cdef class Problem:
         
         Parameters
         ----------
-        ctype : int (:ref:`ref_constr_type`)
+        ctype : string (:ref:`ref_constr_type`)
         """
 
-        cprob.PROB_add_constr(self._c_prob,ctype)
+        cprob.PROB_add_constr(self._c_prob,str2constr[ctype])
 
     def add_function(self,ftype,weight):
         """
@@ -4361,11 +4333,11 @@ cdef class Problem:
 
         Parameters
         ----------
-        ftype : int (:ref:`ref_func_type`)
+        ftype : string (:ref:`ref_func_type`)
         weight : float
         """
 
-        cprob.PROB_add_func(self._c_prob,ftype,weight)
+        cprob.PROB_add_func(self._c_prob,str2func[ftype],weight)
 
     def add_heuristic(self,htype):
 
@@ -4448,17 +4420,17 @@ cdef class Problem:
         if cprob.PROB_has_error(self._c_prob):
             raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 
-    def find_constraint(self,type):
+    def find_constraint(self,ctype):
         """
         Finds constraint of give type among the constraints of this optimization problem.
 
         Parameters
         ----------
-        type : int (:ref:`ref_constr_type`)
+        type : string (:ref:`ref_constr_type`)
         """
         
         cdef cnet.Net* n = cprob.PROB_get_network(self._c_prob)
-        c = cprob.PROB_find_constr(self._c_prob,type)
+        c = cprob.PROB_find_constr(self._c_prob,str2constr[ctype])
         if c is not NULL:
             return new_Constraint(c,n)
         else:
