@@ -431,7 +431,7 @@ class TestContingency(unittest.TestCase):
             # variables
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_ANY,
+                          'any',
                           'active power')
             self.assertEqual(net.num_vars,net.num_generators)
 
@@ -528,23 +528,23 @@ class TestContingency(unittest.TestCase):
             # variables
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_ANY,
+                          'any',
                           'active power')
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_REG,
+                          'regulator',
                           'reactive power')
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_ANY,
+                          'any',
                           ['voltage magnitude','voltage angle'])
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_TAP_CHANGER,
+                          'tap changer',
                           'tap ratio')
             net.set_flags('shunt',
                           'variable',
-                          pf.SHUNT_PROP_SWITCHED_V,
+                          'switching - v',
                           'susceptance')
             self.assertEqual(net.num_vars,
                              (net.num_generators +
@@ -642,15 +642,15 @@ class TestContingency(unittest.TestCase):
             # variables
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_ANY,
+                          'any',
                           'active power')
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_NOT_SLACK,
+                          'not slack',
                           'voltage angle')
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          'phase shifter',
                           'phase shift')
             self.assertEqual(net.num_vars,
                              (net.num_generators +
@@ -742,11 +742,11 @@ class TestContingency(unittest.TestCase):
             # variables
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_NOT_SLACK,
+                          'not slack',
                           'voltage angle')
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          'phase shifter',
                           'phase shift')
             self.assertEqual(net.num_vars,
                              (net.num_buses-net.get_num_slack_buses() +
@@ -840,11 +840,11 @@ class TestContingency(unittest.TestCase):
             # variables
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_NOT_OUT,
+                          'not on outage',
                           'active power')
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_NOT_OUT,
+                          'not on outage',
                           'tap ratio')
             self.assertEqual(net.num_vars,
                              (net.num_generators-1+net.num_branches-2))

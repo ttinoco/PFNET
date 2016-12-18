@@ -11,6 +11,13 @@
 cimport cobjs
 cimport cflags
 cimport cconstants
+cimport cbus
+cimport cbranch
+cimport cgen
+cimport cshunt
+cimport cload
+cimport cvargen
+cimport cbat
 
 # Objects
 str2obj = {'all' : cobjs.OBJ_ALL,
@@ -36,7 +43,7 @@ str2const = {'current' : cconstants.CURRENT,
              'upper limits' : cconstants.UPPER_LIMITS,
              'lower limits' : cconstants.LOWER_LIMITS}
 
-# Variables
+# Quantities
 str2q_bus = {'all' : cflags.ALL_VARS, 
              'voltage magnitude' : cbus.BUS_VAR_VMAG, 
              'voltage angle' : cbus.BUS_VAR_VANG,
@@ -75,6 +82,49 @@ str2q = {'all' : {'all' : cflags.ALL_VARS},
          'load' : str2q_load,
          'variable generator' : str2q_vargen,
          'battery' : str2q_bat}
+
+# Properties
+str2prop_bus = {'any' :  cbus.BUS_PROP_ANY,
+                'slack' : cbus.BUS_PROP_SLACK,
+                'regulated by generator' : cbus.BUS_PROP_REG_BY_GEN,
+                'regulated by transformer' : cbus.BUS_PROP_REG_BY_TRAN,
+                'regulated by shunt' : cbus.BUS_PROP_REG_BY_SHUNT,
+                'not slack' : cbus.BUS_PROP_NOT_SLACK,
+                'not regulated by generator' : cbus.BUS_PROP_NOT_REG_BY_GEN}
+
+str2prop_branch = {'any' : cbranch.BRANCH_PROP_ANY,
+                   'tap changer' : cbranch.BRANCH_PROP_TAP_CHANGER,
+                   'tap changer - v' : cbranch.BRANCH_PROP_TAP_CHANGER_V,
+                   'tap changer - Q' : cbranch.BRANCH_PROP_TAP_CHANGER_Q,
+                   'phase shifter' : cbranch.BRANCH_PROP_PHASE_SHIFTER,
+                   'not on outage' : cbranch.BRANCH_PROP_NOT_OUT}
+
+str2prop_gen = {'any' : cgen.GEN_PROP_ANY,
+                'slack' : cgen.GEN_PROP_SLACK,
+                'regulator' : cgen.GEN_PROP_REG,
+                'not slack' : cgen.GEN_PROP_NOT_SLACK,
+                'not regulator' : cgen.GEN_PROP_NOT_REG,
+                'not on outage' : cgen.GEN_PROP_NOT_OUT,
+                'adjustable active power' : cgen.GEN_PROP_P_ADJUST}
+
+str2prop_shunt =  {'any' : cshunt.SHUNT_PROP_ANY,
+                   'switching - v' : cshunt.SHUNT_PROP_SWITCHED_V}
+
+str2prop_load = {'any' : cload.LOAD_PROP_ANY,
+                 'adjustable active power' : cload.LOAD_PROP_P_ADJUST}
+
+str2prop_vargen = {'any' : cvargen.VARGEN_PROP_ANY}
+
+str2prop_bat = {'any' : cbat.BAT_PROP_ANY}
+
+str2prop = {'bus' : str2prop_bus,
+            'branch' : str2prop_branch,
+            'generator' : str2prop_gen,
+            'shunt' : str2prop_shunt,
+            'load' : str2prop_load,
+            'variable generator' : str2prop_vargen,
+            'battery' : str2prop_bat}
+
 
 
 

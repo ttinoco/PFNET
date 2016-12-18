@@ -138,15 +138,6 @@ class AttributeFloat(float):
 # Bus
 #####
 
-# Properties
-BUS_PROP_ANY = cbus.BUS_PROP_ANY
-BUS_PROP_SLACK = cbus.BUS_PROP_SLACK
-BUS_PROP_REG_BY_GEN = cbus.BUS_PROP_REG_BY_GEN
-BUS_PROP_REG_BY_TRAN = cbus.BUS_PROP_REG_BY_TRAN
-BUS_PROP_REG_BY_SHUNT = cbus.BUS_PROP_REG_BY_SHUNT
-BUS_PROP_NOT_REG_BY_GEN = cbus.BUS_PROP_NOT_REG_BY_GEN
-BUS_PROP_NOT_SLACK = cbus.BUS_PROP_NOT_SLACK
-
 # Infinite
 BUS_INF_V_MAG = cbus.BUS_INF_V_MAG
 BUS_INF_V_ANG = cbus.BUS_INF_V_ANG
@@ -927,14 +918,6 @@ cdef new_Bus(cbus.Bus* b):
 # Branch
 ########
 
-# Properties
-BRANCH_PROP_ANY = cbranch.BRANCH_PROP_ANY
-BRANCH_PROP_TAP_CHANGER = cbranch.BRANCH_PROP_TAP_CHANGER
-BRANCH_PROP_TAP_CHANGER_V = cbranch.BRANCH_PROP_TAP_CHANGER_V
-BRANCH_PROP_TAP_CHANGER_Q = cbranch.BRANCH_PROP_TAP_CHANGER_Q
-BRANCH_PROP_PHASE_SHIFTER = cbranch.BRANCH_PROP_PHASE_SHIFTER
-BRANCH_PROP_NOT_OUT = cbranch.BRANCH_PROP_NOT_OUT
-
 # Infinite
 BRANCH_INF_RATIO = cbranch.BRANCH_INF_RATIO
 BRANCH_INF_FLOW = cbranch.BRANCH_INF_FLOW
@@ -1306,15 +1289,6 @@ cdef new_Branch(cbranch.Branch* b):
 # Generator
 ###########
 
-# Properties
-GEN_PROP_ANY = cgen.GEN_PROP_ANY
-GEN_PROP_SLACK = cgen.GEN_PROP_SLACK
-GEN_PROP_REG = cgen.GEN_PROP_REG
-GEN_PROP_NOT_REG = cgen.GEN_PROP_NOT_REG
-GEN_PROP_NOT_SLACK = cgen.GEN_PROP_NOT_SLACK
-GEN_PROP_NOT_OUT = cgen.GEN_PROP_NOT_OUT
-GEN_PROP_P_ADJUST = cgen.GEN_PROP_P_ADJUST
-
 # Infinity
 GEN_INF_P = cgen.GEN_INF_P
 GEN_INF_Q = cgen.GEN_INF_Q
@@ -1638,10 +1612,6 @@ cdef new_Generator(cgen.Gen* g):
 # Shunt
 #######
 
-# Properties
-SHUNT_PROP_ANY = cshunt.SHUNT_PROP_ANY
-SHUNT_PROP_SWITCHED_V = cshunt.SHUNT_PROP_SWITCHED_V
-
 # Infinite
 SHUNT_INF_SUSC = cshunt.SHUNT_INF_SUSC
 
@@ -1809,10 +1779,6 @@ cdef new_Shunt(cshunt.Shunt* s):
 
 # Load
 ######
-
-# Properties
-LOAD_PROP_ANY = cload.LOAD_PROP_ANY
-LOAD_PROP_P_ADJUST = cload.LOAD_PROP_P_ADJUST
 
 # Infinity
 LOAD_INF_P = cload.LOAD_INF_P
@@ -2029,9 +1995,6 @@ cdef new_Load(cload.Load* l):
 # Variable Generator
 ####################
 
-# Properties
-VARGEN_PROP_ANY = cvargen.VARGEN_PROP_ANY
-
 # Infinity
 VARGEN_INF_P = cvargen.VARGEN_INF_P
 VARGEN_INF_Q = cvargen.VARGEN_INF_Q
@@ -2246,9 +2209,6 @@ cdef new_VarGenerator(cvargen.Vargen* g):
 
 # Battery
 #########
-
-# Properties
-BAT_PROP_ANY = cbat.BAT_PROP_ANY
 
 # Infinity
 BAT_INF_P = cbat.BAT_INF_P
@@ -3223,7 +3183,7 @@ cdef class Network:
         ----------
         obj_type : string (:ref:`ref_net_obj`)
         flags : string or list of strings (:ref:`ref_net_flag`)
-        props : int or list (:ref:`ref_bus_prop`, :ref:`ref_branch_prop`, :ref:`ref_gen_prop`, :ref:`ref_shunt_prop`, :ref:`ref_load_prop`, :ref:`ref_vargen_prop`, :ref:`ref_bat_prop`)
+        props : string or list of strings (:ref:`ref_bus_prop`, :ref:`ref_branch_prop`, :ref:`ref_gen_prop`, :ref:`ref_shunt_prop`, :ref:`ref_load_prop`, :ref:`ref_vargen_prop`, :ref:`ref_bat_prop`)
         q : string or list of strings (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`)
         """
 
@@ -3233,7 +3193,7 @@ cdef class Network:
         cnet.NET_set_flags(self._c_net,
                            str2obj[obj_type],
                            reduce(lambda x,y: x|y,[str2flag[f] for f in flags],0),
-                           reduce(lambda x,y: x|y,props,0),
+                           reduce(lambda x,y: x|y,[str2prop[obj_type][pp] for pp in props],0),
                            reduce(lambda x,y: x|y,[str2q[obj_type][qq] for qq in q],0))
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))

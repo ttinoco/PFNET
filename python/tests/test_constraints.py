@@ -51,39 +51,39 @@ class TestConstraints(unittest.TestCase):
             # Vars
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_ANY,
+                          'any',
                           ['voltage magnitude','voltage angle'])
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_SLACK,
+                          'slack',
                           'active power')
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_REG,
+                          'regulator',
                           'reactive power')
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_TAP_CHANGER,
+                          'tap changer',
                           'tap ratio')
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          'phase shifter',
                           'phase shift')
             net.set_flags('shunt',
                           'variable',
-                          pf.SHUNT_PROP_SWITCHED_V,
+                          'switching - v',
                           'susceptance')
             net.set_flags('variable generator',
                           'variable',
-                          pf.VARGEN_PROP_ANY,
+                          'any',
                           ['active power','reactive power'])
             net.set_flags('battery',
                           'variable',
-                          pf.BAT_PROP_ANY,
+                          'any',
                           ['charging power','energy level'])
             net.set_flags('load',
                           'variable',
-                          pf.LOAD_PROP_ANY,
+                          'any',
                           'active power')
             self.assertGreater(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
@@ -101,39 +101,39 @@ class TestConstraints(unittest.TestCase):
             # Fixed
             net.set_flags('bus',
                           'fixed',
-                          pf.BUS_PROP_SLACK,
+                          'slack',
                           ['voltage magnitude','voltage angle'])
             net.set_flags('bus',
                           'fixed',
-                          pf.BUS_PROP_REG_BY_GEN,
+                          'regulated by generator',
                           'voltage magnitude')
             net.set_flags('generator',
                           'fixed',
-                          pf.GEN_PROP_REG,
+                          'regulator',
                           'reactive power')
             net.set_flags('branch',
                           'fixed',
-                          pf.BRANCH_PROP_TAP_CHANGER,
+                          'tap changer',
                           'tap ratio')
             net.set_flags('branch',
                           'fixed',
-                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          'phase shifter',
                           'phase shift')
             net.set_flags('shunt',
                           'fixed',
-                          pf.SHUNT_PROP_SWITCHED_V,
+                          'switching - v',
                           'susceptance')
             net.set_flags('variable generator',
                           'fixed',
-                          pf.VARGEN_PROP_ANY,
+                          'any',
                           ['active power','reactive power'])
             net.set_flags('battery',
                           'fixed',
-                          pf.BAT_PROP_ANY,
+                          'any',
                           ['charging power','energy level'])
             net.set_flags('load',
                           'fixed',
-                          pf.LOAD_PROP_ANY,
+                          'any',
                           'active power')
             self.assertGreater(net.num_fixed,0)
             self.assertEqual(net.num_fixed,
@@ -282,39 +282,39 @@ class TestConstraints(unittest.TestCase):
             # Vars
             net.set_flags('bus',
                           ['variable','fixed'],
-                          pf.BUS_PROP_ANY,
+                          'any',
                           ['voltage magnitude','voltage angle'])
             net.set_flags('generator',
                           ['variable','fixed'],
-                          pf.GEN_PROP_SLACK,
+                          'slack',
                           'active power')
             net.set_flags('generator',
                           ['variable','fixed'],
-                          pf.GEN_PROP_REG,
+                          'regulator',
                           'reactive power')
             net.set_flags('branch',
                           ['variable','fixed'],
-                          pf.BRANCH_PROP_TAP_CHANGER,
+                          'tap changer',
                           'tap ratio')
             net.set_flags('branch',
                           ['variable','fixed'],
-                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          'phase shifter',
                           'phase shift')
             net.set_flags('shunt',
                           ['variable','fixed'],
-                          pf.SHUNT_PROP_SWITCHED_V,
+                          'switching - v',
                           'susceptance')
             net.set_flags('variable generator',
                           ['variable','fixed'],
-                          pf.VARGEN_PROP_ANY,
+                          'any',
                           ['active power','reactive power'])
             net.set_flags('battery',
                           ['variable','fixed'],
-                          pf.BAT_PROP_ANY,
+                          'any',
                           ['charging power','energy level'])
             net.set_flags('load',
                           ['variable','fixed'],
-                          pf.LOAD_PROP_ANY,
+                          'any',
                           'active power')
             self.assertGreater(net.num_vars,0)
             self.assertEqual(net.num_fixed,net.num_vars)
@@ -525,35 +525,35 @@ class TestConstraints(unittest.TestCase):
             # Vars
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_REG_BY_GEN,
+                          'regulated by generator',
                           ['voltage magnitude','voltage angle','voltage magnitude deviation','voltage magnitude violation'])
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_REG,
+                          'regulator',
                           ['active power','reactive power'])
             net.set_flags('load',
                           'variable',
-                          pf.LOAD_PROP_P_ADJUST,
+                          'adjustable active power',
                           'active power')
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_TAP_CHANGER,
+                          'tap changer',
                           ['tap ratio','tap ratio deviation'])
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          'phase shifter',
                           'phase shift')
             net.set_flags('shunt',
                           'variable',
-                          pf.SHUNT_PROP_SWITCHED_V,
+                          'switching - v',
                           ['susceptance','susceptance deviation'])
             net.set_flags('variable generator',
                           'variable',
-                          pf.VARGEN_PROP_ANY,
+                          'any',
                           ['active power','reactive power'])
             net.set_flags('battery',
                           'variable',
-                          pf.BAT_PROP_ANY,
+                          'any',
                           ['charging power','energy level'])
             num_vars_saved = net.num_vars
             self.assertGreater(net.num_vars,0)
@@ -757,35 +757,35 @@ class TestConstraints(unittest.TestCase):
             # Add bounded flags
             net.set_flags('bus',
                           'bounded',
-                          pf.BUS_PROP_REG_BY_GEN,
+                          'regulated by generator',
                           ['voltage magnitude','voltage angle','voltage magnitude deviation','voltage magnitude violation'])
             net.set_flags('generator',
                           'bounded',
-                          pf.GEN_PROP_REG,
+                          'regulator',
                           ['active power','reactive power'])
             net.set_flags('load',
                           'bounded',
-                          pf.LOAD_PROP_P_ADJUST,
+                          'adjustable active power',
                           'active power')
             net.set_flags('branch',
                           'bounded',
-                          pf.BRANCH_PROP_TAP_CHANGER,
+                          'tap changer',
                           ['tap ratio','tap ratio deviation'])
             net.set_flags('branch',
                           'bounded',
-                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          'phase shifter',
                           'phase shift')
             net.set_flags('shunt',
                           'bounded',
-                          pf.SHUNT_PROP_SWITCHED_V,
+                          'switching - v',
                           ['susceptance','susceptance deviation'])
             net.set_flags('variable generator',
                           'bounded',
-                          pf.VARGEN_PROP_ANY,
+                          'any',
                           ['active power','reactive power'])
             net.set_flags('battery',
                           'bounded',
-                          pf.BAT_PROP_ANY,
+                          'any',
                           ['charging power','energy level'])
             self.assertEqual(net.num_vars,num_vars_saved)
             self.assertEqual(net.num_fixed,0)
@@ -1000,35 +1000,35 @@ class TestConstraints(unittest.TestCase):
             # Vars
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_ANY,
+                          'any',
                           ['voltage magnitude','voltage angle'])
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_ANY,
+                          'any',
                           ['active power','reactive power'])
             net.set_flags('load',
                           'variable',
-                          pf.LOAD_PROP_ANY,
+                          'any',
                           'active power')
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_TAP_CHANGER,
+                          'tap changer',
                           ['tap ratio'])
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          'phase shifter',
                           'phase shift')
             net.set_flags('shunt',
                           'variable',
-                          pf.SHUNT_PROP_SWITCHED_V,
+                          'switching - v',
                           ['susceptance'])
             net.set_flags('variable generator',
                           'variable',
-                          pf.VARGEN_PROP_ANY,
+                          'any',
                           ['active power','reactive power'])
             net.set_flags('battery',
                           'variable',
-                          pf.BAT_PROP_ANY,
+                          'any',
                           ['charging power','energy level'])
             self.assertGreater(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
@@ -1096,35 +1096,35 @@ class TestConstraints(unittest.TestCase):
             # Bounded
             net.set_flags('bus',
                           'bounded',
-                          pf.BUS_PROP_ANY,
+                          'any',
                           ['voltage magnitude','voltage angle'])
             net.set_flags('generator',
                           'bounded',
-                          pf.GEN_PROP_ANY,
+                          'any',
                           ['active power','reactive power'])
             net.set_flags('load',
                           'bounded',
-                          pf.LOAD_PROP_ANY,
+                          'any',
                           'active power')
             net.set_flags('branch',
                           'bounded',
-                          pf.BRANCH_PROP_TAP_CHANGER,
+                          'tap changer',
                           ['tap ratio'])
             net.set_flags('branch',
                           'bounded',
-                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          'phase shifter',
                           'phase shift')
             net.set_flags('shunt',
                           'bounded',
-                          pf.SHUNT_PROP_SWITCHED_V,
+                          'switching - v',
                           ['susceptance'])
             net.set_flags('variable generator',
                           'bounded',
-                          pf.VARGEN_PROP_ANY,
+                          'any',
                           ['active power','reactive power'])
             net.set_flags('battery',
                           'bounded',
-                          pf.BAT_PROP_ANY,
+                          'any',
                           ['charging power','energy level'])
             self.assertGreater(net.num_vars,0)
             self.assertEqual(net.num_bounded,net.num_vars)
@@ -1181,11 +1181,11 @@ class TestConstraints(unittest.TestCase):
             # Vars
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_SLACK,
+                          'slack',
                           ['active power','reactive power'])
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_REG,
+                          'regulator',
                           'reactive power')
             self.assertGreater(net.num_vars,0)
             self.assertEqual(net.num_vars,(net.get_num_slack_gens()+net.get_num_reg_gens())*self.T)
@@ -1310,11 +1310,11 @@ class TestConstraints(unittest.TestCase):
             # Vars
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_SLACK,
+                          'slack',
                           ['active power','reactive power'])
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_REG,
+                          'regulator',
                           'reactive power')
             self.assertGreater(net.num_vars,0)
             self.assertEqual(net.num_vars,(net.get_num_slack_gens()+net.get_num_reg_gens())*self.T)
@@ -1458,31 +1458,31 @@ class TestConstraints(unittest.TestCase):
             # Vars
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_ANY,
+                          'any',
                           ['voltage magnitude','voltage angle'])
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_SLACK,
+                          'slack',
                           'active power')
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_REG,
+                          'regulator',
                           'reactive power')
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_TAP_CHANGER,
+                          'tap changer',
                           'tap ratio')
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          'phase shifter',
                           'phase shift')
             net.set_flags('shunt',
                           'variable',
-                          pf.SHUNT_PROP_SWITCHED_V,
+                          'switching - v',
                           'susceptance')
             net.set_flags('variable generator',
                           'variable',
-                          pf.VARGEN_PROP_ANY,
+                          'any',
                           ['active power','reactive power'])
             self.assertEqual(net.num_vars,
                              (2*net.get_num_buses() +
@@ -1749,19 +1749,19 @@ class TestConstraints(unittest.TestCase):
             # Vars
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_NOT_SLACK,
+                          'not slack',
                           ['voltage magnitude','voltage angle'])
             net.set_flags('bus',
                           'variable',
-                          [pf.BUS_PROP_NOT_SLACK,pf.BUS_PROP_REG_BY_GEN],
+                          ['not slack','regulated by generator'],
                           'voltage magnitude deviation')
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_SLACK,
+                          'slack',
                           'active power')
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_REG,
+                          'regulator',
                           'reactive power')
             self.assertEqual(net.num_vars,
                              (2*(net.num_buses-net.get_num_slack_buses()) +
@@ -1967,23 +1967,23 @@ class TestConstraints(unittest.TestCase):
             # Vars
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_ANY,
+                          'any',
                           ['voltage magnitude','voltage angle'])
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_ANY,
+                          'any',
                           ['active power','reactive power'])
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_TAP_CHANGER,
+                          'tap changer',
                           'tap ratio')
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          'phase shifter',
                           'phase shift')
             net.set_flags('shunt',
                           'variable',
-                          pf.SHUNT_PROP_SWITCHED_V,
+                          'switching - v',
                           'susceptance')
             self.assertEqual(net.num_vars,
                              (2*net.num_buses +
@@ -1995,23 +1995,23 @@ class TestConstraints(unittest.TestCase):
             # Bound constraints
             net.set_flags('bus',
                           'bounded',
-                          pf.BUS_PROP_ANY,
+                          'any',
                           ['voltage magnitude','voltage angle'])
             net.set_flags('generator',
                           'bounded',
-                          pf.GEN_PROP_ANY,
+                          'any',
                           ['active power','reactive power'])
             net.set_flags('branch',
                           'bounded',
-                          pf.BRANCH_PROP_TAP_CHANGER,
+                          'tap changer',
                           'tap ratio')
             net.set_flags('branch',
                           'bounded',
-                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          'phase shifter',
                           'phase shift')
             net.set_flags('shunt',
                           'bounded',
-                          pf.SHUNT_PROP_SWITCHED_V,
+                          'switching - v',
                           'susceptance')
             self.assertEqual(net.num_bounded,
                              (2*net.num_buses +
@@ -2188,19 +2188,19 @@ class TestConstraints(unittest.TestCase):
             # Vars
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_REG_BY_TRAN,
+                          'regulated by transformer',
                           'voltage magnitude')
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_REG_BY_TRAN,
+                          'regulated by transformer',
                           'voltage magnitude violation')
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_TAP_CHANGER_V,
+                          'tap changer - v',
                           'tap ratio')
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_TAP_CHANGER_V,
+                          'tap changer - v',
                           'tap ratio deviation')
             self.assertEqual(net.num_vars,
                              (3*net.get_num_buses_reg_by_tran() +
@@ -2421,19 +2421,19 @@ class TestConstraints(unittest.TestCase):
             # Vars
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_REG_BY_SHUNT,
+                          'regulated by shunt',
                           'voltage magnitude')
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_REG_BY_SHUNT,
+                          'regulated by shunt',
                           'voltage magnitude violation')
             net.set_flags('shunt',
                           'variable',
-                          pf.SHUNT_PROP_SWITCHED_V,
+                          'switching - v',
                           'susceptance')
             net.set_flags('shunt',
                           'variable',
-                          pf.SHUNT_PROP_SWITCHED_V,
+                          'switching - v',
                           'susceptance deviation')
             self.assertEqual(net.num_vars,
                              (3*net.get_num_buses_reg_by_shunt() +
@@ -2733,27 +2733,27 @@ class TestConstraints(unittest.TestCase):
             # Add variables
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_ANY,
+                          'any',
                           ['voltage magnitude','voltage angle'])
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_ANY,
+                          'any',
                           ['active power','reactive power'])
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_TAP_CHANGER,
+                          'tap changer',
                           'tap ratio')
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          'phase shifter',
                           'phase shift')
             net.set_flags('shunt',
                           'variable',
-                          pf.SHUNT_PROP_SWITCHED_V,
+                          'switching - v',
                           'susceptance')
             net.set_flags('battery',
                           'variable',
-                          pf.BAT_PROP_ANY,
+                          'any',
                           ['charging power','energy level'])
             self.assertEqual(net.num_vars,
                              (2*net.num_buses + 
@@ -2816,27 +2816,27 @@ class TestConstraints(unittest.TestCase):
             # Variables
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_NOT_SLACK,
+                          'not slack',
                           'voltage angle')
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_ANY,
+                          'any',
                           'active power')
             net.set_flags('load',
                           'variable',
-                          pf.LOAD_PROP_ANY,
+                          'any',
                           'active power')
             net.set_flags('variable generator',
                           'variable',
-                          pf.VARGEN_PROP_ANY,
+                          'any',
                           'active power')
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          'phase shifter',
                           'phase shift')
             net.set_flags('battery',
                           'variable',
-                          pf.BAT_PROP_ANY,
+                          'any',
                           'charging power')
             self.assertEqual(net.num_vars,
                              (net.num_buses-net.get_num_slack_buses() +
@@ -3026,27 +3026,27 @@ class TestConstraints(unittest.TestCase):
             # Variables
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_NOT_SLACK,
+                          'not slack',
                           'voltage angle')
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_ANY,
+                          'any',
                           'active power')
             net.set_flags('load',
                           'variable',
-                          pf.LOAD_PROP_ANY,
+                          'any',
                           'active power')
             net.set_flags('variable generator',
                           'variable',
-                          pf.VARGEN_PROP_ANY,
+                          'any',
                           'active power')
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          'phase shifter',
                           'phase shift')
             net.set_flags('battery',
                           'variable',
-                          pf.BAT_PROP_ANY,
+                          'any',
                           'charging power')
             self.assertEqual(net.num_vars,
                              (net.num_buses-net.get_num_slack_buses() +
@@ -3155,7 +3155,7 @@ class TestConstraints(unittest.TestCase):
             # Variables
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_NOT_SLACK,
+                          'not slack',
                           'voltage angle')
             self.assertEqual(net.num_vars,net.num_buses-net.get_num_slack_buses())
             
@@ -3313,7 +3313,7 @@ class TestConstraints(unittest.TestCase):
             # Variables
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_NOT_SLACK,
+                          'not slack',
                           'voltage angle')
             self.assertEqual(net.num_vars,(net.num_buses-net.get_num_slack_buses())*self.T)
             
@@ -3370,31 +3370,31 @@ class TestConstraints(unittest.TestCase):
             # Vars
             net.set_flags('bus',
                           'variable',
-                          pf.BUS_PROP_ANY,
+                          'any',
                           ['voltage magnitude','voltage angle'])
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_SLACK,
+                          'slack',
                           'active power')
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_REG,
+                          'regulator',
                           'reactive power')
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_TAP_CHANGER,
+                          'tap changer',
                           'tap ratio')
             net.set_flags('branch',
                           'variable',
-                          pf.BRANCH_PROP_PHASE_SHIFTER,
+                          'phase shifter',
                           'phase shift')
             net.set_flags('shunt',
                           'variable',
-                          pf.SHUNT_PROP_SWITCHED_V,
+                          'switching - v',
                           'susceptance')
             net.set_flags('variable generator',
                           'variable',
-                          pf.VARGEN_PROP_ANY,
+                          'any',
                           ['active power','reactive power'])
             self.assertEqual(net.num_vars,
                              (2*net.get_num_buses() +
@@ -3519,7 +3519,7 @@ class TestConstraints(unittest.TestCase):
             # Vars
             net.set_flags('generator',
                           'variable',
-                          pf.GEN_PROP_NOT_SLACK,
+                          'not slack',
                           'active power')
             num = net.num_generators-net.get_num_slack_gens()
             self.assertEqual(net.num_vars,num*self.T)
