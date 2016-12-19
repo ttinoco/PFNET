@@ -268,7 +268,7 @@ cdef class Bus:
         Parameters
         ----------
         flag_type : string (:ref:`ref_net_flag`)
-        q : string or list of strings (:ref:`ref_bus_var`)
+        q : string or list of strings (:ref:`ref_bus_q`)
 
         Returns
         -------
@@ -480,7 +480,7 @@ cdef class Bus:
 
         Parameters
         ----------
-        q : string or list of strings (:ref:`ref_bus_var`)
+        q : string or list of strings (:ref:`ref_bus_q`)
         t_start : int
         t_end : int
         
@@ -1099,7 +1099,7 @@ cdef class Branch:
         Parameters
         ----------
         flag_type : string (:ref:`ref_net_flag`)
-        q : string or list of strings (:ref:`ref_branch_var`)
+        q : string or list of strings (:ref:`ref_branch_q`)
 
         Returns
         -------
@@ -1424,7 +1424,7 @@ cdef class Generator:
         Parameters
         ----------
         flag_type : string (:ref:`ref_net_flag`)
-        q : string or list of strings (:ref:`ref_gen_var`)
+        q : string or list of strings (:ref:`ref_gen_q`)
         
         Returns
         -------
@@ -1686,7 +1686,7 @@ cdef class Shunt:
         Parameters
         ----------
         flag_type : string (:ref:`ref_net_flag`)
-        q : string or list of strings (:ref:`ref_bus_var`)
+        q : string or list of strings (:ref:`ref_bus_q`)
 
         Returns
         -------
@@ -1842,7 +1842,7 @@ cdef class Load:
         Parameters
         ----------
         flag_type : string (:ref:`ref_net_flag`)
-        q : string or list of strings (:ref:`ref_load_var`)
+        q : string or list of strings (:ref:`ref_load_q`)
         
         Returns
         -------
@@ -2047,7 +2047,7 @@ cdef class VarGenerator:
         Parameters
         ----------
         flag_type : string (:ref:`ref_net_flag`)
-        q : string or list of strings (:ref:`ref_vargen_var`)
+        q : string or list of strings (:ref:`ref_vargen_q`)
         
         Returns
         -------
@@ -2262,7 +2262,7 @@ cdef class Battery:
         Parameters
         ----------
         flag_type : string (:ref:`ref_net_flag`)
-        q : string or list of strings (:ref:`ref_bat_var`)
+        q : string or list of strings (:ref:`ref_bat_q`)
         
         Returns
         -------
@@ -2824,7 +2824,7 @@ cdef class Network:
         Parameters
         ----------
         obj_type : string (:ref:`ref_net_obj`)
-        q : string or list of strings (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`)
+        q : string or list of strings (:ref:`ref_bus_q`, :ref:`ref_branch_q`, :ref:`ref_gen_q`, :ref:`ref_shunt_q`, :ref:`ref_load_q`, :ref:`ref_vargen_q`, :ref:`ref_bat_q`)
         t_start : int
         t_end : int (inclusive)
         """
@@ -3184,7 +3184,7 @@ cdef class Network:
         obj_type : string (:ref:`ref_net_obj`)
         flags : string or list of strings (:ref:`ref_net_flag`)
         props : string or list of strings (:ref:`ref_bus_prop`, :ref:`ref_branch_prop`, :ref:`ref_gen_prop`, :ref:`ref_shunt_prop`, :ref:`ref_load_prop`, :ref:`ref_vargen_prop`, :ref:`ref_bat_prop`)
-        q : string or list of strings (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`)
+        q : string or list of strings (:ref:`ref_bus_q`, :ref:`ref_branch_q`, :ref:`ref_gen_q`, :ref:`ref_shunt_q`, :ref:`ref_load_q`, :ref:`ref_vargen_q`, :ref:`ref_bat_q`)
         """
 
         flags = flags if isinstance(flags,list) else [flags]
@@ -3206,7 +3206,7 @@ cdef class Network:
         ----------
         obj : :class:`Bus <pfnet.Bus>`, :class:`Branch <pfnet.Branch>`, :class:`Generator <pfnet.Generator>`, :class:`Load <pfnet.Load>`, :class:`Shunt <pfnet.Shunt>`, :class:`VarGenerator <pfnet.VarGenerator>`, :class:`Battery <pfnet.Battery>` 
         flags : string or list of strings (:ref:`ref_net_flag`)
-        q : string or list of strings (:ref:`ref_bus_var`, :ref:`ref_branch_var`, :ref:`ref_gen_var`, :ref:`ref_shunt_var`, :ref:`ref_load_var`, :ref:`ref_vargen_var`, :ref:`ref_bat_var`)
+        q : string or list of strings (:ref:`ref_bus_q`, :ref:`ref_branch_q`, :ref:`ref_gen_q`, :ref:`ref_shunt_q`, :ref:`ref_load_q`, :ref:`ref_vargen_q`, :ref:`ref_bat_q`)
         """
         
         cdef CPtr ptr = obj._get_c_ptr()

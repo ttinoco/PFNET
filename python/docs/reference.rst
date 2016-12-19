@@ -32,54 +32,24 @@ Bus
 Bus Properties
 --------------
 
-.. data:: pfnet.BUS_PROP_ANY 
- 
-	  Any bus.
-           
-.. data:: pfnet.BUS_PROP_SLACK
+.. data:: 'any'
+.. data:: 'slack'
+.. data:: 'regulated by generator'
+.. data:: 'regulated by transformer'
+.. data:: 'regulated by shunt'
+.. data:: 'not slack'
+.. data:: 'not regulated by generator'
 
-	  Slack bus.
- 
-.. data:: pfnet.BUS_PROP_REG_BY_GEN
+.. _ref_bus_q:
 
-          Bus with voltage magnitude regulated by one or more generators.
+Bus Quantities
+--------------
 
-.. data:: pfnet.BUS_PROP_REG_BY_TRAN
-
-	  Bus with voltage magnitude regulated by one or more tap-changing transformers.
-
-.. data:: pfnet.BUS_PROP_REG_BY_SHUNT
-
-	  Bus with voltage magnitude regulated by one or more switched shunt devices.
-	  
-.. data:: pfnet.BUS_PROP_NOT_REG_BY_GEN
-
-	  Bus with voltage magnitude that is not regulated by generators.
-
-.. data:: pfnet.BUS_PROP_NOT_SLACK
-
-	  Bus that is not a slack bus. 
-
-.. _ref_bus_var:
-
-Bus Variables
--------------
-
-.. data:: pfnet.BUS_VAR_VMAG
-
-          Bus voltage magnitude.
-
-.. data:: pfnet.BUS_VAR_VANG
-
-          Bus voltage angle.
-
-.. data:: pfnet.BUS_VAR_VDEV
-
-          Bus voltage magnitude positive and negative set-point deviations.
-
-.. data:: pfnet.BUS_VAR_VVIO
-
-          Bus voltage magnitude upper and lower bound violations.
+.. data:: 'all'
+.. data:: 'voltage angle'
+.. data:: 'voltage magnitude'
+.. data:: 'voltage magnitude deviation' 
+.. data:: 'voltage magnitude violation'
 
 .. _ref_bus_sens:
 
@@ -161,46 +131,22 @@ Branch
 Branch Properties
 -----------------
 
-.. data:: pfnet.BRANCH_PROP_ANY
+.. data:: 'any'
+.. data:: 'tap changer'
+.. data:: 'tap changer - v' (controls voltage magnitude)
+.. data:: 'tap changer - Q' (controls reactive flow)
+.. data:: 'phase shifter'
+.. data:: 'not on outage'
 
-	  Any branch.
+.. _ref_branch_q:
 
-.. data:: pfnet.BRANCH_PROP_TAP_CHANGER
+Branch Quantities
+-----------------
 
-	  Branch that is tap-changing transformer.
-
-.. data:: pfnet.BRANCH_PROP_TAP_CHANGER_V
-
-	  Branch that is tap-changing transformer regulating a bus voltage magnitude.
-
-.. data:: pfnet.BRANCH_PROP_TAP_CHANGER_Q 
-
-	  Branch that is tap-changing transformer regulating reactive power flow.
-
-.. data:: pfnet.BRANCH_PROP_PHASE_SHIFTER
-
-	  Branch that is phase-shifting transformer regulating active power flow.
-
-.. data:: pfnet.BRANCH_PROP_NOT_OUT
-
-	  Branch that is not on outage.
-
-.. _ref_branch_var:
-
-Branch Variables
-----------------
-
-.. data:: pfnet.BRANCH_VAR_RATIO
-
-	  Transformer tap ratio.
-
-.. data:: pfnet.BRANCH_VAR_RATIO_DEV
-
-	  Transformer tap ratio deviations from current value.
-
-.. data:: pfnet.BRANCH_VAR_PHASE
-
-	  Transformer phase shift.
+.. data:: 'all'
+.. data:: 'phase shift'
+.. data:: 'tap ratio'
+.. data:: 'tap ratio deviation'
 
 .. _ref_branch_class:
 
@@ -220,46 +166,22 @@ Generator
 Generator Properties
 --------------------
 
-.. data:: pfnet.GEN_PROP_ANY
+.. data:: 'any'
+.. data:: 'slack'
+.. data:: 'regulator'
+.. data:: 'not slack' 
+.. data:: 'not regulator'
+.. data:: 'not on outage'
+.. data:: 'adjustable active power'
 
-	  Any generator.
+.. _ref_gen_q:
 
-.. data:: pfnet.GEN_PROP_SLACK
+Generator Quantities
+--------------------
 
-	  Slack generator.
-
-.. data:: pfnet.GEN_PROP_REG
-
-	  Generator that regulates a bus voltage magnitude.
-
-.. data:: pfnet.GEN_PROP_NOT_REG
-
-	  Generator that does not regulate a bus voltage magnitude.
-
-.. data:: pfnet.GEN_PROP_NOT_SLACK
-
-	  Generator that is not a slack generator.
-
-.. data:: pfnet.GEN_PROP_NOT_OUT
-
-	  Generator that is not on outage.
-
-.. data:: pfnet.GEN_PROP_P_ADJUST
-
-	  Generator that can adjust its active power, e.g., :math:`P_{\min} < P_{\max}`.
-
-.. _ref_gen_var:
-
-Generator Variables
--------------------
-
-.. data:: pfnet.GEN_VAR_P
-
-	  Generator active power.
-
-.. data:: pfnet.GEN_VAR_Q
-
-	  Generator reactive power.
+.. data:: 'all'
+.. data:: 'active power'
+.. data:: 'reactive power' 
 
 .. _ref_gen_class:
 
@@ -279,26 +201,17 @@ Shunt
 Shunt Properties
 ----------------
 
-.. data:: pfnet.SHUNT_PROP_ANY
+.. data:: 'any'
+.. data:: 'switching - v' (controls voltage magnitude)
 
-	  Any shunt.
+.. _ref_shunt_q:
 
-.. data:: pfnet.SHUNT_PROP_SWITCHED_V
+Shunt Quantities
+----------------
 
-	  Switched shunt devices that regulates a bus voltage magnitude.
-
-.. _ref_shunt_var:
-
-Shunt Variables
----------------
-
-.. data:: pfnet.SHUNT_VAR_SUSC
-
-	  Switched shunt susceptance.
-
-.. data:: pfnet.SHUNT_VAR_SUSC_DEV
-
-	  Switched shunt susceptance deviations from current point.
+.. data:: 'all'
+.. data:: 'susceptance'
+.. data:: 'susceptance deviation'
 
 .. _ref_shunt_class:
 
@@ -318,22 +231,16 @@ Load
 Load Properties
 ---------------
 
-.. data:: pfnet.LOAD_PROP_ANY
+.. data:: 'any'
+.. data:: 'adjustable active power'
 
-	  Any load.
+.. _ref_load_q:
 
-.. data:: pfnet.LOAD_PROP_P_ADJUST
+Load Quantities
+---------------
 
-	  Load that can adjust its active power, e.g., :math:`P_{\min} < P_{\max}`.
-
-.. _ref_load_var:
-
-Load Variables
---------------
-
-.. data:: pfnet.LOAD_VAR_P
-
-	  Load active power.
+.. data:: 'all'
+.. data:: 'active power'
 
 .. _ref_load_class:
 
@@ -353,22 +260,16 @@ Variable Generator
 Variable Generator Properties
 -----------------------------
 
-.. data:: pfnet.VARGEN_PROP_ANY
+.. data:: 'any' 
 
-	  Any variable generator.
+.. _ref_vargen_q:
 
-.. _ref_vargen_var:
+Variable Generator Quantities
+-----------------------------
 
-Variable Generator Variables
-----------------------------
-
-.. data:: pfnet.VARGEN_VAR_P
-
-	  Variable generator active power.
-
-.. data:: pfnet.VARGEN_VAR_Q
-
-	  Variable generator reactive power.
+.. data:: 'all' 
+.. data:: 'active power'
+.. data:: 'reactive power'
 
 .. _ref_vargen_class:
 
@@ -388,22 +289,16 @@ Battery
 Battery Properties
 ------------------
 
-.. data:: pfnet.BAT_PROP_ANY
+.. data:: 'any'
 
-	  Any battery.
+.. _ref_bat_q:
 
-.. _ref_bat_var:
+Battery Quantities
+------------------
 
-Battery Variables
------------------
-
-.. data:: pfnet.BAT_VAR_P
-
-	  Battery charging/discharging power.
-
-.. data:: pfnet.BAT_VAR_E
-
-	  Battery energy level.
+.. data:: 'all' 
+.. data:: 'charging power'
+.. data:: 'energy level'
 
 .. _ref_bat_class:
 
@@ -423,88 +318,45 @@ Network
 Component Types
 ---------------
 
-.. data:: pfnet.OBJ_ALL
-
-	  All components.
-
-.. data:: pfnet.OBJ_BUS
-
-	  Bus.
-
-.. data:: pfnet.OBJ_GEN
-
-	  Generator.
-
-.. data:: pfnet.OBJ_BRANCH
-
-	  Branch.
-
-.. data:: pfnet.OBJ_SHUNT
-
-	  Shunt device.
-
-.. data:: pfnet.OBJ_LOAD
-
-	  Load.
-
-.. data:: pfnet.OBJ_VARGEN
-
-	  Variable generator (solar, wind, etc).
-
-.. data:: pfnet.OBJ_BAT
-
-	  Battery.
-
-.. data:: pfnet.OBJ_UNKNOWN
-
-	  Unknown network component.
+.. data:: 'all'
+.. data:: 'bus'
+.. data:: 'generator'
+.. data:: 'branch'
+.. data:: 'shunt' 
+.. data:: 'load'
+.. data:: 'variable generator'
+.. data:: 'battery'
+.. data:: 'unknown' 
 
 .. _ref_net_flag:
 
 Flag Types
 ----------
 
-.. data:: pfnet.FLAG_VARS
+.. data:: 'variable'
 
 	  For selecting quantities to be variables.
 
-.. data:: pfnet.FLAG_FIXED
+.. data:: 'fixed'
 
 	  For selecting variables to be fixed.
 
-.. data:: pfnet.FLAG_BOUNDED
+.. data:: 'bounded'
 
 	  For selecting variables to be bounded.
 
-.. data:: pfnet.FLAG_SPARSE
+.. data:: 'sparse'
 
 	  For selecting control adjustments to be sparse.
 
-.. _ref_net_flag_all:
-
-Flag Short-Cuts
----------------
-
-.. data:: pfnet.ALL_VARS
-
-	  For selecting all quantifies of a network component to be variables.
-
 .. _ref_var_values:
 
-Variable Value Codes
---------------------
+Variable Value Options
+----------------------
 
-.. data:: pfnet.CURRENT
-
-	  Current variable value.
-
-.. data:: pfnet.UPPER_LIMIT
-
-	  Upper limit of variable.
-
-.. data:: pfnet.LOWER_LIMIT
-
-	  Lower limit of variable.
+.. data:: 'current'
+.. data:: 'upper limits'
+.. data:: 'lower limits'
 
 .. _ref_net_class:
 
@@ -540,54 +392,18 @@ Function
 Function Types
 --------------
 
-.. data:: pfnet.FUNC_TYPE_UNKNOWN
-
-	  Unknown function.
-
-.. data:: pfnet.FUNC_TYPE_REG_VMAG
-	  
-	  Bus voltage magnitude regularization.
-
-.. data:: pfnet.FUNC_TYPE_SLIM_VMAG
-	  
-	  Bus voltage magnitude soft limits penalty.
-
-.. data:: pfnet.FUNC_TYPE_REG_VANG
-
-	  Bus voltage angle regularization.
-
-.. data:: pfnet.FUNC_TYPE_REG_PQ
-
-	  Generator active and reactive power regularization.
-
-.. data:: pfnet.FUNC_TYPE_GEN_COST
-
-          Active power generation cost.
-
-.. data:: pfnet.FUNC_TYPE_NETCON_COST
-
-          Net power consumption cost.
-
-.. data:: pfnet.FUNC_TYPE_LOAD_UTIL
-
-          Active power consumption utility.
-
-.. data:: pfnet.FUNC_TYPE_REG_RATIO
-
-	  Transformer tap ratio regularization.
-
-.. data:: pfnet.FUNC_TYPE_REG_PHASE
-
-	  Transformer phase shift regularization.
-
-.. data:: pfnet.FUNC_TYPE_REG_SUSC
-
-	  Switched shunt susceptance regularization.
-
-.. data:: pfnet.FUNC_TYPE_SP_CONTROLS
-
-	  Sparsity-inducing penalty for control adjustments.
-
+.. data:: 'voltage magnitude regularization' 
+.. data:: 'voltage angle regularization'
+.. data:: 'generator powers regularization'
+.. data:: 'tap ratio regularization'
+.. data:: 'phase shift regularization'
+.. data:: 'susceptance regularization'
+.. data:: 'generation cost'
+.. data:: 'sparse controls penalty'
+.. data:: 'soft voltage magnitude limits'
+.. data:: 'consumption utility' 
+.. data:: 'net consumption cost'
+ 
 .. _ref_func_class:
 
 Function Class
@@ -606,57 +422,19 @@ Constraint
 Constraint Types
 ----------------
 
-.. data:: pfnet.CONSTR_TYPE_PF
-
-	  Constraint for enforcing AC power balance at every bus of the network. 
-
-.. data:: pfnet.CONSTR_TYPE_DCPF
-
-	  Constraint for enforcing DC power balance at every bus of the network. 
-
-.. data:: pfnet.CONSTR_TYPE_LINPF
-
-	  Constraint for enforcing linearized power balance at every bus of the network. 
-
-.. data:: pfnet.CONSTR_TYPE_FIX
-
-	  Constraint for fixing a subset of variables to their current value.
-
-.. data:: pfnet.CONSTR_TYPE_BOUND
-
-	  Constraint for forcing a subset of variables to be within their bounds (nonlinear).
-
-.. data:: pfnet.CONSTR_TYPE_LBOUND
-
-	  Constraint for forcing a subset of variables to be within their bounds (linear).
-
-.. data:: pfnet.CONSTR_TYPE_PAR_GEN_P
-
-	  Constraint for enforcing generator active power participations.
-
-.. data:: pfnet.CONSTR_TYPE_PAR_GEN_Q
-
-	  Constraint for enforcing generator reactive power participations.
-
-.. data:: pfnet.CONSTR_TYPE_REG_GEN
-
-	  Constraint for enforcing voltage set point regulation by generators.
-
-.. data:: pfnet.CONSTR_TYPE_REG_TRAN
-	  
-	  Constraint for enforcing voltage band regulation by tap-changing transformers.
-
-.. data:: pfnet.CONSTR_TYPE_REG_SHUNT
-
-	  Constraint for enforcing voltage band regulation by switched shunt devices.
-
-.. data:: pfnet.CONSTR_TYPE_DC_FLOW_LIM
-
-	  Constraint for enforcing DC power flow limits on every branch.
-
-.. data:: pfnet.CONSTR_TYPE_GEN_RAMP
-
-	  Constraint for enforcing generator active power ramping limits.
+.. data:: 'AC power balance'
+.. data:: 'DC power balance'
+.. data:: 'linearized AC power balance'
+.. data:: 'variable fixing' 
+.. data:: 'variable nonlinear bounds'
+.. data:: 'generator active power participation'
+.. data:: 'generator reactive power participation'
+.. data:: 'voltage regulation by generators'
+.. data:: 'voltage regulation by transformers'
+.. data:: 'voltage regulation by shunts'
+.. data:: 'DC branch flow limits'
+.. data:: 'variable bounds'
+.. data:: 'generator ramp limits'
 
 .. _ref_constr_class:
 

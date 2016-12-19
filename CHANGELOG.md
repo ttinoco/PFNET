@@ -14,7 +14,10 @@ Unreleased
 * Branch bus name changes.
 * Branch AC flow getters.
 * Battery initial and final energy levels.
-* Strings instead of constants in python wrapper for object types, flag types, properties, object quantities, function and constraint types. 
+
+Version 1.2.5
+-------------
+* Strings instead of constants in python wrapper for object types, flag types, properties, object quantities, function and constraint types.
 
 Version 1.2.4
 -------------

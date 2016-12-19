@@ -29,7 +29,7 @@ print([net.bus_P_mis[t] for t in range(5)])
 
 bus = net.buses[3]
 
-net.set_flags_of_component(bus,pf.FLAG_VARS,pf.BUS_VAR_VMAG)
+net.set_flags_of_component(bus,'variable','voltage magnitude')
 
 print(net.num_vars)
 
