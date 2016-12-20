@@ -68,3 +68,11 @@ Requirements to build the PFNET Python documentation:
 * `Sphinx <http://www.sphinx-doc.org/>`_ (>=1.4).
 
 To build the documentation the environment variable ``PFNET_DOCS`` must be set. The generated files will be placed in the directory ``PFNET_DOCS/python``. To generate the files, run `make` from the ``python/docs`` directory of the PFNET package.
+
+For example, to build the html documentation files run::
+
+  > make html
+
+It may also be necessary to pass the environment variable with the path to the dynamic shared libraries using ``LD_LIBRARY_PATH`` on Linux or ``DYLD_FALLBACK_LIBRARY_PATH`` on Mac OSX. This command would then be::
+
+  > make html DYLD_FALLBACK_LIBRARY_PATH=$PFNET/lib
