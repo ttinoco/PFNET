@@ -1,8 +1,9 @@
-# Automake
-# AM_CPPFLAGS = -I$(
+# Automake options
 AUTOMAKE_OPTIONS = subdir-objects
+ACLOCAL_AMFLAGS = -I m4
 
 # libraries
+
 lib_LTLIBRARIES = libpfnet.la
 
 # sources (note all headers are in $PFNET/include/pfnet)
@@ -66,7 +67,8 @@ libpfnet_la_SOURCES = $(graph_src) $(math_src) $(net_src) $(parser_src) \
 		      array.h constants.h flag_types.h list.h obj_types.h \
 		      types.h uthash.h
 
+
 libpfnet_la_CFLAGS = -I../include
 # libpfnet_la_LDFLAGS = -shared  # want both static and shared
-libpfnet_la_LIBADD = -L../lib -lm -lraw_parser
+libpfnet_la_LIBADD = -L../lib -lm
 

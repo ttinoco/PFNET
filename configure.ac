@@ -2,12 +2,15 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT(PFNET, 1.2.4, ttinoco5687@gmail.com)
+AC_INIT(PFNET, 1.2.5, ttinoco5687@gmail.com)
 AM_INIT_AUTOMAKE([foreign])
-LT_INIT()
 AC_CONFIG_SRCDIR([tools/mpc2mat.m])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
+# add libtools
+LT_INIT
+# LT_LANG([C++])
+
 
 # Checks for programs.
 AC_PROG_CC
@@ -25,6 +28,27 @@ AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT8_T
 AC_CHECK_TYPES([ptrdiff_t])
+
+# Checks for optional libraries/packages.
+
+# Check for Graphviz, optional.
+# option 1 use autoconf to check for specific libs/headers
+# i'm only checking one function in each library
+# this first checks if cgraph is available and if so then also check gvc
+# it will automatically add the libraries if successful, otherwise add no graphviz to cflags
+AC_CHECK_LIB([cgraph], [agopen], 
+  [AC_CHECK_LIB([gvc], [gvContext], [], [CFLAGS+=" -DNO_GRAPHVIZ"])], 
+  [CFLAGS+=" -DNO_GRAPHVIZ"])
+AC_CHECK_HEADERS(graphviz/cgraph.h)
+AC_CHECK_HEADERS(graphviz/gvc.h)
+# option 2 is to use pkg-config (assumes using pkg manager)
+#PKG_PROG_PKG_CONFIG()
+#PKG_CHECK_MODULES([GRAPHVIZ], [libcgraph >= 2.36 libgvc], [HAVE_GRAPHVIZ=1], [HAVE_GRAPVHIZ=0])
+#AM_CONDITIONAL([WITH_GRAPHVIZ], [tests "$HAVE_GRAPHVIZ" -eq 1])
+
+# Check for RAW_PARSER, optional.
+# checks if raw-parser is availble and will automatically add to LIBS, otherwise add no raw parser to cflags
+AC_CHECK_LIB([raw_parser], [RAW_PARSER_new], [], [CFLAGS+=" -DNO_RAW_PARSER"])
 
 # Checks for library functions.
 AC_FUNC_ERROR_AT_LINE
