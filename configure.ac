@@ -50,8 +50,20 @@ AC_CHECK_HEADERS(graphviz/gvc.h)
 
 # Check for RAW_PARSER, optional.
 # checks if raw-parser is availble and will automatically add to LIBS, otherwise add no raw parser to cflags
-AC_MSG_WARN([raw_parser must be built with '-lpfnet' or be able to locate the unresolved symbols for libpfnet])
-AC_CHECK_LIB([raw_parser], [RAW_PARSER_new], [], [CFLAGS+=" -DNO_RAW_PARSER"])
+
+AC_CHECK_LIB([raw_parser], [RAW_PARSER_new], 
+   [],
+   [CFLAGS+=" -DNO_RAW_PARSER"])
+  #[AC_MSG_WARN([Building with raw-parser.]) \
+  #[AC_MSG_WARN([Building without raw-parser.]) \
+
+# Check for Doxygen to build docs
+AC_CHECK_PROGS([DOXYGEN], [doxygen])
+if test -z "$DOXYGEN"; then 
+  AC_MSG_WARN([Doxygen not found - continuing without Doxygen support])
+else
+  AC_CONFIG_FILES([docs/Doxyfile])
+fi
 
 # Checks for library functions.
 AC_FUNC_ERROR_AT_LINE
