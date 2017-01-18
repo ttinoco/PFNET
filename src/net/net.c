@@ -2319,23 +2319,11 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
   REAL dphi;
   // REAL phi_temp;
 
-  // REAL b;
-  // REAL b_sh[2];
-
-  // REAL g;
-  // REAL g_sh[2];
-
-  // REAL flowP[2];
-  // REAL flowP_sh[2];
-  // REAL flowQ[2];
-  // REAL flowQ_sh[2];
-
   REAL shunt_b;
   REAL shunt_db;
   REAL shunt_g;
 
   int k;
-  int m;
   int T;
 
   // Check pointers
@@ -2350,13 +2338,8 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
 
-  // Branch
-  b = BRANCH_get_b(br);          // series susceptance
-  b_sh[0] = BRANCH_get_b_k(br);  // shunt susceptances
-  b_sh[1] = BRANCH_get_b_m(br);
-  g = BRANCH_get_g(br);          // series conductance
-  g_sh[0] = BRANCH_get_g_k(br);  // shunt conductances
-  g_sh[1] = BRANCH_get_g_m(br);
+  // Periods
+  T = net->num_periods;
 
   // Voltage angle and magnitudes
   for (k = 0; k < 2; k++) {
@@ -2437,12 +2420,12 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
 
     // Update injected P,Q at buses k and m
     if (k == 0) {
-      BUS_inject_P(bus,-BRANCH_get_P_km(br, var_values));
-      BUS_inject_Q(bus,-BRANCH_get_Q_km(br, var_values));
+      BUS_inject_P(bus,-BRANCH_get_P_km(br, var_values, t),t);
+      BUS_inject_Q(bus,-BRANCH_get_Q_km(br, var_values, t),t);
     }
     else {
-      BUS_inject_P(bus,-BRANCH_get_P_mk(br, var_values));
-      BUS_inject_Q(bus,-BRANCH_get_Q_mk(br, var_values));
+      BUS_inject_P(bus,-BRANCH_get_P_mk(br, var_values, t),t);
+      BUS_inject_Q(bus,-BRANCH_get_Q_mk(br, var_values, t),t);
     }
   }
 

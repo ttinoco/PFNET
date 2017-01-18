@@ -1071,7 +1071,7 @@ void CONSTR_PF_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
       J[data->dQdv_indices[bus_index_t[k]]] -= 2*Q_kk[k]/v[k] + Q_km[k]/v[k]; // dQk/dvk
 
       // H
-      Hcounter_val = Hcounter[bus_index_T[k]];
+      Hcounter_val = Hcounter[bus_index_t[k]];
       HP[k][data->dvdv_indices[bus_index_t[k]]] -= 2.*P_kk[k]/(v[k]*v[k]); // vk and vk
       HQ[k][data->dvdv_indices[bus_index_t[k]]] -= 2.*Q_kk[k]/(v[k]*v[k]);
       if (var_w[m]) { // vk and wm

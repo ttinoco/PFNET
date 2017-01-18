@@ -473,9 +473,9 @@ REAL BRANCH_get_P_km_series(Branch* br, Vec* var_values, int t) {
 
     // get tap ratio from k (updated if a variable), a_mk = 1 always
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
-      a_km = VEC_get(var_values,BRANCH_get_index_ratio(br));
+      a_km = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
     else
-      a_km = BRANCH_get_ratio(br);
+      a_km = BRANCH_get_ratio(br,t);
 
     // get phase shift angle (updated if a variable) this should be subtracted on side 'm' (to)
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) && var_values)
@@ -945,8 +945,8 @@ REAL BRANCH_get_P_flow_DC(Branch* br, int t) {
      "from" to bus "to". */
 
   if (br && t >= 0 && t < br->num_periods) {
-    return -(br->b)*(BUS_get_v_ang(br->bus_from,t)-
-		     BUS_get_v_ang(br->bus_to,t)-
+    return -(br->b)*(BUS_get_v_ang(br->bus_k,t)-
+		     BUS_get_v_ang(br->bus_m,t)-
 		     br->phase[t]);
   }
   else
