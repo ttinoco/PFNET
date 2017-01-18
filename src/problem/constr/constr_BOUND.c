@@ -35,7 +35,7 @@ void CONSTR_BOUND_clear(Constr* c) {
   CONSTR_clear_bus_counted(c);
 }
 
-void CONSTR_BOUND_count_branch(Constr* c, Branch* br) {
+void CONSTR_BOUND_count_step(Constr* c, Branch* br, int t) {
 
   // Local variables
   Bus* buses[2];
@@ -44,8 +44,12 @@ void CONSTR_BOUND_count_branch(Constr* c, Branch* br) {
   Shunt* shunt;
   int* Jcounter;
   char* bus_counted;
-  int bus_index[2];
+  int bus_index_t[2];
   int k;
+  int T;
+
+  // Number of periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   Jcounter = CONSTR_get_Jcounter_ptr(c);
@@ -63,7 +67,7 @@ void CONSTR_BOUND_count_branch(Constr* c, Branch* br) {
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Tap ratio
   if (BRANCH_has_flags(br,FLAG_BOUNDED,BRANCH_VAR_RATIO) &&
@@ -84,7 +88,7 @@ void CONSTR_BOUND_count_branch(Constr* c, Branch* br) {
 
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]]) { // not counted yet
+    if (!bus_counted[bus_index_t[k]]) { // not counted yet
 
       // Voltage magnitude (V_MAG)
       if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VMAG) && BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
@@ -129,7 +133,7 @@ void CONSTR_BOUND_count_branch(Constr* c, Branch* br) {
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
@@ -176,7 +180,7 @@ void CONSTR_BOUND_allocate(Constr* c) {
 				  Jcounter)); // nnz
 }
 
-void CONSTR_BOUND_analyze_branch(Constr* c, Branch* br) {
+void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
 
   // Local variables
   Bus* buses[2];
@@ -192,9 +196,13 @@ void CONSTR_BOUND_analyze_branch(Constr* c, Branch* br) {
   int* Hj_comb;
   int* Jcounter;
   char* bus_counted;
-  int bus_index[2];
+  int bus_index_t[2];
   int index_var;
   int k;
+  int T;
+
+  // Number of periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   J = CONSTR_get_J(c);
@@ -214,7 +222,7 @@ void CONSTR_BOUND_analyze_branch(Constr* c, Branch* br) {
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Branch
   //*******
@@ -223,7 +231,7 @@ void CONSTR_BOUND_analyze_branch(Constr* c, Branch* br) {
   if (BRANCH_has_flags(br,FLAG_BOUNDED,BRANCH_VAR_RATIO) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) {
 
-    index_var = BRANCH_get_index_ratio(br);
+    index_var = BRANCH_get_index_ratio(br,t);
 
     // J
     MAT_set_i(J,*Jcounter,*Jcounter);
@@ -249,7 +257,7 @@ void CONSTR_BOUND_analyze_branch(Constr* c, Branch* br) {
   if (BRANCH_has_flags(br,FLAG_BOUNDED,BRANCH_VAR_PHASE) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
 
-    index_var = BRANCH_get_index_phase(br);
+    index_var = BRANCH_get_index_phase(br,t);
 
     // J
     MAT_set_i(J,*Jcounter,*Jcounter);
@@ -278,12 +286,12 @@ void CONSTR_BOUND_analyze_branch(Constr* c, Branch* br) {
 
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]]) { // not counted yet
+    if (!bus_counted[bus_index_t[k]]) { // not counted yet
 
       // Voltage magnitude (V_MAG)
       if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VMAG) && BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
 
-	index_var = BUS_get_index_v_mag(bus);
+	index_var = BUS_get_index_v_mag(bus,t);
 
 	// J
 	MAT_set_i(J,*Jcounter,*Jcounter);
@@ -308,7 +316,7 @@ void CONSTR_BOUND_analyze_branch(Constr* c, Branch* br) {
       // Volage angle (V_ANG)
       if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VANG) && BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) {
 
-	index_var = BUS_get_index_v_ang(bus);
+	index_var = BUS_get_index_v_ang(bus,t);
 
 	// J
 	MAT_set_i(J,*Jcounter,*Jcounter);
@@ -337,7 +345,7 @@ void CONSTR_BOUND_analyze_branch(Constr* c, Branch* br) {
 	if (GEN_has_flags(gen,FLAG_BOUNDED,GEN_VAR_P) &&
 	    GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
 
-	  index_var = GEN_get_index_P(gen);
+	  index_var = GEN_get_index_P(gen,t);
 
 	  // J
 	  MAT_set_i(J,*Jcounter,*Jcounter);
@@ -363,7 +371,7 @@ void CONSTR_BOUND_analyze_branch(Constr* c, Branch* br) {
 	if (GEN_has_flags(gen,FLAG_BOUNDED,GEN_VAR_Q) &&
 	    GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) {
 
-	  index_var = GEN_get_index_Q(gen);
+	  index_var = GEN_get_index_Q(gen,t);
 
 	  // J
 	  MAT_set_i(J,*Jcounter,*Jcounter);
@@ -393,7 +401,7 @@ void CONSTR_BOUND_analyze_branch(Constr* c, Branch* br) {
 	if (SHUNT_has_flags(shunt,FLAG_BOUNDED,SHUNT_VAR_SUSC) &&
 	    SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
 
-	  index_var = SHUNT_get_index_b(shunt);
+	  index_var = SHUNT_get_index_b(shunt,t);
 
 	  // J
 	  MAT_set_i(J,*Jcounter,*Jcounter);
@@ -418,11 +426,11 @@ void CONSTR_BOUND_analyze_branch(Constr* c, Branch* br) {
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 
-  // Done
-  if (BRANCH_get_index(br) == NET_get_num_branches(CONSTR_get_network(c))-1) {
+  // Done (last branch and period)
+  if ((t == T-1) && (BRANCH_get_index(br) == NET_get_num_branches(CONSTR_get_network(c))-1)) {
 
     // Ensure lower triangular and save struct of H comb
     Hi_comb = MAT_get_row_array(CONSTR_get_H_combined(c));
@@ -436,7 +444,7 @@ void CONSTR_BOUND_analyze_branch(Constr* c, Branch* br) {
   }
 }
 
-void CONSTR_BOUND_eval_branch(Constr* c, Branch* br, Vec* var_values) {
+void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 
   // Local variables
   Bus* buses[2];
@@ -449,7 +457,7 @@ void CONSTR_BOUND_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   Mat* H;
   int* Jcounter;
   char* bus_counted;
-  int bus_index[2];
+  int bus_index_t[2];
   int k;
   REAL u;
   REAL umin;
@@ -461,6 +469,10 @@ void CONSTR_BOUND_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   REAL eps;
   REAL sqrterm1;
   REAL sqrterm2;
+  int T;
+
+  // Number of periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   f = VEC_get_data(CONSTR_get_f(c));
@@ -484,7 +496,7 @@ void CONSTR_BOUND_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Branch
   //*******
@@ -493,7 +505,7 @@ void CONSTR_BOUND_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   if (BRANCH_has_flags(br,FLAG_BOUNDED,BRANCH_VAR_RATIO) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) {
 
-    u = VEC_get(var_values,BRANCH_get_index_ratio(br));
+    u = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
     umax = BRANCH_get_ratio_max(br);
     umin = BRANCH_get_ratio_min(br);
     du = (umax-umin > eps) ? umax-umin : eps;
@@ -527,7 +539,7 @@ void CONSTR_BOUND_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   if (BRANCH_has_flags(br,FLAG_BOUNDED,BRANCH_VAR_PHASE) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
 
-    u = VEC_get(var_values,BRANCH_get_index_phase(br));
+    u = VEC_get(var_values,BRANCH_get_index_phase(br,t));
     umax = BRANCH_get_phase_max(br);
     umin = BRANCH_get_phase_min(br);
     du = (umax-umin > eps) ? umax-umin : eps;
@@ -564,12 +576,13 @@ void CONSTR_BOUND_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]]) { // not counted yet
+    if (!bus_counted[bus_index_t[k]]) { // not counted yet
 
       // Voltage magnitude (V_MAG)
-      if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VMAG) && BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
+      if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VMAG) &&
+	  BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
 
-	u = VEC_get(var_values,BUS_get_index_v_mag(bus));
+	u = VEC_get(var_values,BUS_get_index_v_mag(bus,t));
 	umax = BUS_get_v_max(bus);
 	umin = BUS_get_v_min(bus);
 	du = (umax-umin > eps) ? umax-umin : eps;
@@ -600,11 +613,12 @@ void CONSTR_BOUND_eval_branch(Constr* c, Branch* br, Vec* var_values) {
       }
 
       // Volage angle (V_ANG)
-      if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VANG) && BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) {
+      if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VANG) &&
+	  BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) {
 
-	u = VEC_get(var_values,BUS_get_index_v_ang(bus));
-	umax = PI;
-	umin = -PI;
+	u = VEC_get(var_values,BUS_get_index_v_ang(bus,t));
+	umax = 2*PI;
+	umin = -2*PI;
 	du = (umax-umin > eps) ? umax-umin : eps;
 
 	a1 = umax-u;
@@ -639,7 +653,7 @@ void CONSTR_BOUND_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	if (GEN_has_flags(gen,FLAG_BOUNDED,GEN_VAR_P) &&
 	    GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
 
-	  u = VEC_get(var_values,GEN_get_index_P(gen));
+	  u = VEC_get(var_values,GEN_get_index_P(gen,t));
 	  umax = GEN_get_P_max(gen);
 	  umin = GEN_get_P_min(gen);
 	  du = (umax-umin > eps) ? umax-umin : eps;
@@ -673,7 +687,7 @@ void CONSTR_BOUND_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	if (GEN_has_flags(gen,FLAG_BOUNDED,GEN_VAR_Q) &&
 	    GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) {
 
-	  u = VEC_get(var_values,GEN_get_index_Q(gen));
+	  u = VEC_get(var_values,GEN_get_index_Q(gen,t));
 	  umax = GEN_get_Q_max(gen);
 	  umin = GEN_get_Q_min(gen);
 	  du = (umax-umin > eps) ? umax-umin : eps;
@@ -711,7 +725,7 @@ void CONSTR_BOUND_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	if (SHUNT_has_flags(shunt,FLAG_BOUNDED,SHUNT_VAR_SUSC) &&
 	    SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
 
-	  u = VEC_get(var_values,SHUNT_get_index_b(shunt));
+	  u = VEC_get(var_values,SHUNT_get_index_b(shunt,t));
 	  umax = SHUNT_get_b_max(shunt);
 	  umin = SHUNT_get_b_min(shunt);
 	  du = (umax-umin > eps) ? umax-umin : eps;
@@ -744,11 +758,11 @@ void CONSTR_BOUND_eval_branch(Constr* c, Branch* br, Vec* var_values) {
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
-void CONSTR_BOUND_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_BOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Local variables
   Bus* buses[2];
@@ -757,8 +771,12 @@ void CONSTR_BOUND_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec
   Shunt* shunt;
   int* Jcounter;
   char* bus_counted;
-  int bus_index[2];
+  int bus_index_t[2];
   int k;
+  int T;
+
+  // Number of periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   Jcounter = CONSTR_get_Jcounter_ptr(c);
@@ -776,7 +794,7 @@ void CONSTR_BOUND_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Tap ratio
   if (BRANCH_has_flags(br,FLAG_BOUNDED,BRANCH_VAR_RATIO) &&
@@ -797,18 +815,20 @@ void CONSTR_BOUND_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec
 
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]]) { // not counted yet
+    if (!bus_counted[bus_index_t[k]]) { // not counted yet
 
       // Voltage magnitude (V_MAG)
-      if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VMAG) && BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
-	BUS_set_sens_v_mag_u_bound(bus,VEC_get(sf,*Jcounter));
+      if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VMAG) &&
+	  BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
+	BUS_set_sens_v_mag_u_bound(bus,VEC_get(sf,*Jcounter),t);
 	(*Jcounter)++; // upper bound
-	BUS_set_sens_v_mag_l_bound(bus,VEC_get(sf,*Jcounter));
+	BUS_set_sens_v_mag_l_bound(bus,VEC_get(sf,*Jcounter),t);
 	(*Jcounter)++; // lower bound
       }
 
       // Volage angle (V_ANG)
-      if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VANG) && BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) {
+      if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VANG) &&
+	  BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) {
 	(*Jcounter)++; // upper bound
 	(*Jcounter)++; // lower bound
       }
@@ -844,7 +864,7 @@ void CONSTR_BOUND_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 

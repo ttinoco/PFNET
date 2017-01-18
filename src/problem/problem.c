@@ -8,6 +8,7 @@
  * PFNET is released under the BSD 2-clause license.
  */
 
+#include <pfnet/array.h>
 #include <pfnet/problem.h>
 
 struct Prob {
@@ -85,7 +86,9 @@ void PROB_analyze(Prob* p) {
   int Hcombnnz;
   int num_vars;
   int i;
+  int t;
   
+  // No p
   if (!p)
     return;
 
@@ -94,10 +97,12 @@ void PROB_analyze(Prob* p) {
   FUNC_list_clear(p->func);
   
   // Count
-  for (i = 0; i < NET_get_num_branches(p->net); i++) {
-    br = NET_get_branch(p->net,i);
-    CONSTR_list_count_branch(p->constr,br);
-    FUNC_list_count_branch(p->func,br);
+  for (t = 0; t < NET_get_num_periods(p->net); t++) {
+    for (i = 0; i < NET_get_num_branches(p->net); i++) {
+      br = NET_get_branch(p->net,i);
+      CONSTR_list_count_step(p->constr,br,t);
+      FUNC_list_count_step(p->func,br,t);
+    }
   }
     
   // Allocate
@@ -109,10 +114,12 @@ void PROB_analyze(Prob* p) {
   FUNC_list_clear(p->func);
 
   // Analyze
-  for (i = 0; i < NET_get_num_branches(p->net); i++) {
-    br = NET_get_branch(p->net,i);
-    CONSTR_list_analyze_branch(p->constr,br);
-    FUNC_list_analyze_branch(p->func,br);
+  for (t = 0; t < NET_get_num_periods(p->net); t++) {
+    for (i = 0; i < NET_get_num_branches(p->net); i++) {
+      br = NET_get_branch(p->net,i);
+      CONSTR_list_analyze_step(p->constr,br,t);
+      FUNC_list_analyze_step(p->func,br,t);
+    }
   }
 
   // Delete matvec
@@ -167,9 +174,10 @@ void PROB_apply_heuristics(Prob* p, Vec* point) {
 
   // Local variables
   Branch* br;
-  Constr* c;
   int i;
+  int t;
   
+  // No p
   if (!p)
     return;
 
@@ -177,11 +185,13 @@ void PROB_apply_heuristics(Prob* p, Vec* point) {
   HEUR_list_clear(p->heur,p->net);
 
   // Apply
-  for (i = 0; i < NET_get_num_branches(p->net); i++) {
-    br = NET_get_branch(p->net,i);
-    HEUR_list_apply_to_branch(p->heur,p->constr,p->net,br,point);
+  for (t = 0; t < NET_get_num_periods(p->net); t++) {
+    for (i = 0; i < NET_get_num_branches(p->net); i++) {
+      br = NET_get_branch(p->net,i);
+      HEUR_list_apply_step(p->heur,p->constr,p->net,br,t,point);
+    }
   }
-
+  
   // Udpate A and b
   PROB_update_lin(p);
 }
@@ -191,7 +201,9 @@ void PROB_eval(Prob* p, Vec* point) {
   // Local variables
   Branch* br;
   int i;
+  int t;
   
+  // No p
   if (!p)
     return;
 
@@ -201,11 +213,13 @@ void PROB_eval(Prob* p, Vec* point) {
   NET_clear_properties(p->net);
 
   // Eval
-  for (i = 0; i < NET_get_num_branches(p->net); i++) {
-    br = NET_get_branch(p->net,i);
-    CONSTR_list_eval_branch(p->constr,br,point);
-    FUNC_list_eval_branch(p->func,br,point);
-    NET_update_properties_branch(p->net,br,point);
+  for (t = 0; t < NET_get_num_periods(p->net); t++) {
+    for (i = 0; i < NET_get_num_branches(p->net); i++) {
+      br = NET_get_branch(p->net,i);
+      CONSTR_list_eval_step(p->constr,br,t,point);
+      FUNC_list_eval_step(p->func,br,t,point);
+      NET_update_properties_step(p->net,br,t,point);
+    }
   }
 
   // Update 
@@ -217,7 +231,9 @@ void PROB_store_sens(Prob* p, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Local variables
   Branch* br;
   int i;
+  int t;
   
+  // No p
   if (!p)
     return;
 
@@ -235,9 +251,11 @@ void PROB_store_sens(Prob* p, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   CONSTR_list_clear(p->constr);
 
   // Store sens
-  for (i = 0; i < NET_get_num_branches(p->net); i++) {
-    br = NET_get_branch(p->net,i);
-    CONSTR_list_store_sens_branch(p->constr,br,sA,sf,sGu,sGl);
+  for (t = 0; t < NET_get_num_periods(p->net); t++) {
+    for (i = 0; i < NET_get_num_branches(p->net); i++) {
+      br = NET_get_branch(p->net,i);
+      CONSTR_list_store_sens_step(p->constr,br,t,sA,sf,sGu,sGl);
+    }
   }
 }
 
@@ -245,7 +263,6 @@ void PROB_del(Prob* p) {
   if (p) {
     PROB_clear(p);
     free(p);
-    p = NULL;
   }
 }
 
@@ -303,6 +320,7 @@ void PROB_combine_H(Prob* p, Vec* coeff, BOOL ensure_psd) {
   REAL* Hcomb_constr;
   int i;
   
+  // Check inputs
   if (!p || !coeff)
     return;
 

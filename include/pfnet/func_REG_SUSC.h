@@ -18,11 +18,11 @@
 
 // Function prototypes
 void FUNC_REG_SUSC_init(Func* f);
-void FUNC_REG_SUSC_count_branch(Func* f, Branch *branch);
+void FUNC_REG_SUSC_count_step(Func* f, Branch* br, int t);
 void FUNC_REG_SUSC_allocate(Func* f);
 void FUNC_REG_SUSC_clear(Func* f);
-void FUNC_REG_SUSC_analyze_branch(Func* f, Branch *branch);
-void FUNC_REG_SUSC_eval_branch(Func* f, Branch* branch, Vec* var_values);
+void FUNC_REG_SUSC_analyze_step(Func* f, Branch* br, int t);
+void FUNC_REG_SUSC_eval_step(Func* f, Branch* br, int t, Vec* var_values);
 void FUNC_REG_SUSC_free(Func* f);
 
 #endif

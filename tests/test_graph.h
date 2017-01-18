@@ -18,7 +18,7 @@ static char* test_graph_basic() {
 
   printf("test_graph_basic ...");
 
-  net = NET_new();
+  net = NET_new(1);
 
   NET_load(net,test_case,0);
 

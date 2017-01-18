@@ -10,13 +10,16 @@
 
 #include <pfnet/branch.h>
 #include <pfnet/bus.h>
-#include <pfnet/vector.h>
+#include <pfnet/array.h>
 
 // Branch
 struct Branch {
 
   // Properties
   char type;         /**< @brief %Branch type */
+
+  // Times
+  int num_periods;   /**< @brief Number of time periods. */
 
   // Buses
   Bus* bus_k;        /**< @brief Bus connected to the "k" side */
@@ -34,13 +37,13 @@ struct Branch {
   REAL b_m;          /**< @brief %Shunt shunt susceptance "m" side (p.u.) */
 
   // Tap ratio
-  REAL ratio;        /**< @brief Transformer taps ratio (p.u.) */
+  REAL* ratio;       /**< @brief Transformer taps ratio (p.u.) */
   REAL ratio_max;    /**< @brief Maximum transformer taps ratio (p.u.) */
   REAL ratio_min;    /**< @brief Minimum transformer taps ratio (p.u.) */
   char num_ratios;   /**< @brief Number of tap positions */
 
   // Phase shift
-  REAL phase;        /**< @brief Transformer phase shift (radians) */
+  REAL* phase;       /**< @brief Transformer phase shift (radians) */
   REAL phase_max;    /**< @brief Maximum transformer phase shift (radians) */
   REAL phase_min;    /**< @brief Minimum transformer phase shift (radians) */
 
@@ -64,17 +67,15 @@ struct Branch {
   char sparse;           /**< @brief Flags for indicating which control adjustments should be sparse */
 
   // Indices
-  int index;         /**< @brief Branch index */
-  int index_ratio;   /**< @brief Taps ratio index */
-  int index_ratio_y; /**< @brief Taps ratio positive deviation index */
-  int index_ratio_z; /**< @brief Taps ratio negative deviation index */
-  int index_phase;   /**< @brief Phase shift index */
-  int index_P;       /**< @brief Branch active power flow index */
-  int index_Q;       /**< @brief Branch reactive power flow index */
+  int index;          /**< @brief Branch index */
+  int* index_ratio;   /**< @brief Taps ratio index */
+  int* index_ratio_y; /**< @brief Taps ratio positive deviation index */
+  int* index_ratio_z; /**< @brief Taps ratio negative deviation index */
+  int* index_phase;   /**< @brief Phase shift index */
 
   // Sensitivities
-  REAL sens_P_u_bound;  /**< @brief Sensitivity of active power flow upper bound */
-  REAL sens_P_l_bound;  /**< @brief Sensitivity of active power flow lower bound */
+  REAL* sens_P_u_bound;  /**< @brief Sensitivity of active power flow upper bound */
+  REAL* sens_P_l_bound;  /**< @brief Sensitivity of active power flow lower bound */
 
   // List
   Branch* reg_next;   /**< @brief List of branches regulating a bus voltage magnitude */
@@ -82,27 +83,52 @@ struct Branch {
   Branch* next_m;     /**< @brief List of branches connected to a bus in the "m" side */
 };
 
-void* BRANCH_array_get(void* branch, int index) {
-  if (branch)
-    return (void*)&(((Branch*)branch)[index]);
+void* BRANCH_array_get(void* br_array, int index) {
+  if (br_array)
+    return (void*)&(((Branch*)br_array)[index]);
   else
     return NULL;
 }
 
-Branch* BRANCH_array_new(int num) {
+void BRANCH_array_del(Branch* br_array, int size) {
   int i;
-  Branch* branch = (Branch*)malloc(sizeof(Branch)*num);
-  for (i = 0; i < num; i++) {
-    BRANCH_init(&(branch[i]));
-    BRANCH_set_index(&(branch[i]),i);
+  Branch* br;
+  if (br_array) {
+    for (i = 0; i < size; i++) {
+      br = &(br_array[i]);
+      free(br->ratio);
+      free(br->phase);
+      free(br->index_ratio);
+      free(br->index_ratio_y);
+      free(br->index_ratio_z);
+      free(br->index_phase);
+      free(br->sens_P_u_bound);
+      free(br->sens_P_l_bound);
+    }
+    free(br_array);
   }
-  return branch;
 }
 
-void BRANCH_array_show(Branch* branch, int num) {
+Branch* BRANCH_array_new(int size, int num_periods) {
   int i;
-  for (i = 0; i < num; i++)
-    BRANCH_show(&(branch[i]));
+  if (num_periods > 0) {
+    Branch* br_array = (Branch*)malloc(sizeof(Branch)*size);
+    for (i = 0; i < size; i++) {
+      BRANCH_init(&(br_array[i]),num_periods);
+      BRANCH_set_index(&(br_array[i]),i);
+    }
+    return br_array;
+  }
+  else
+    return NULL;
+}
+
+void BRANCH_array_show(Branch* br_array, int size, int t) {
+  int i;
+  if (br_array) {
+    for (i = 0; i < size; i++)
+      BRANCH_show(&(br_array[i]),t);
+  }
 }
 
 void BRANCH_clear_flags(Branch* br, char flag_type) {
@@ -119,10 +145,20 @@ void BRANCH_clear_flags(Branch* br, char flag_type) {
 }
 
 void BRANCH_clear_sensitivities(Branch* br) {
+  int t;
   if (br) {
-    br->sens_P_u_bound = 0;
-    br->sens_P_l_bound = 0;
+    for (t = 0; t < br->num_periods; t++) {
+      br->sens_P_u_bound[t] = 0;
+      br->sens_P_l_bound[t] = 0;
+    }
   }
+}
+
+int BRANCH_get_num_periods(Branch* br) {
+  if (br)
+    return br->num_periods;
+  else
+    return 0;
 }
 
 char BRANCH_get_type(Branch* br) {
@@ -139,16 +175,16 @@ char BRANCH_get_obj_type(void* br) {
     return OBJ_UNKNOWN;
 }
 
-REAL BRANCH_get_sens_P_u_bound(Branch* br) {
-  if (br)
-    return br->sens_P_u_bound;
+REAL BRANCH_get_sens_P_u_bound(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->sens_P_u_bound[t];
   else
     return 0;
 }
 
-REAL BRANCH_get_sens_P_l_bound(Branch* br) {
-  if (br)
-    return br->sens_P_l_bound;
+REAL BRANCH_get_sens_P_l_bound(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->sens_P_l_bound[t];
   else
     return 0;
 }
@@ -160,37 +196,37 @@ int BRANCH_get_index(Branch* br) {
     return 0;
 }
 
-int BRANCH_get_index_ratio(Branch* br) {
-  if (br)
-    return br->index_ratio;
+int BRANCH_get_index_ratio(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->index_ratio[t];
   else
     return 0;
 }
 
-int BRANCH_get_index_ratio_y(Branch* br) {
-  if (br)
-    return br->index_ratio_y;
+int BRANCH_get_index_ratio_y(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->index_ratio_y[t];
   else
     return 0;
 }
 
-int BRANCH_get_index_ratio_z(Branch* br) {
-  if (br)
-    return br->index_ratio_z;
+int BRANCH_get_index_ratio_z(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->index_ratio_z[t];
   else
     return 0;
 }
 
-int BRANCH_get_index_phase(Branch* br) {
-  if (br)
-    return br->index_phase;
+int BRANCH_get_index_phase(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->index_phase[t];
   else
     return 0;
 }
 
-REAL BRANCH_get_ratio(Branch* br) {
-  if (br)
-    return br->ratio;
+REAL BRANCH_get_ratio(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->ratio[t];
   else
     return 0;
 }
@@ -325,9 +361,9 @@ Branch* BRANCH_get_next_m(Branch* br) {
     return NULL;
 }
 
-REAL BRANCH_get_phase(Branch* br) {
-  if (br)
-    return br->phase;
+REAL BRANCH_get_phase(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->phase[t];
   else
     return 0;
 }
@@ -348,46 +384,46 @@ REAL BRANCH_get_phase_min(Branch* br) {
 
 // Branch Flow calculations
 // P_km = -P_km_series - P_k_shunt
-REAL BRANCH_get_P_km(Branch* br, Vec* var_values) {
-  if (br) {
-    return (BRANCH_get_P_km_series(br,var_values) +
-            BRANCH_get_P_k_shunt(br,var_values));
+REAL BRANCH_get_P_km(Branch* br, Vec* var_values, int t) {
+  if (br && t >= 0 && t < br->num_periods) {
+    return (BRANCH_get_P_km_series(br,var_values,t) +
+            BRANCH_get_P_k_shunt(br,var_values,t));
   }
   return 0;
 }
 
 // Q_km = -Q_km_series  Q_k_shunt
-REAL BRANCH_get_Q_km(Branch* br, Vec* var_values) {
-  if (br) {
-    return (BRANCH_get_Q_km_series(br,var_values) +
-            BRANCH_get_Q_k_shunt(br,var_values));
+REAL BRANCH_get_Q_km(Branch* br, Vec* var_values, int t) {
+  if (br && t >= 0 && t < br->num_periods) {
+    return (BRANCH_get_Q_km_series(br,var_values,t) +
+            BRANCH_get_Q_k_shunt(br,var_values,t));
   }
   else
     return 0;
 }
 
 // P_mk = -P_mk_series - P_m_shunt
-REAL BRANCH_get_P_mk(Branch* br, Vec* var_values) {
-  if (br) {
-    return (BRANCH_get_P_mk_series(br,var_values) +
-            BRANCH_get_P_m_shunt(br,var_values));
+REAL BRANCH_get_P_mk(Branch* br, Vec* var_values, int t) {
+  if (br && t >= 0 && t < br->num_periods) {
+    return (BRANCH_get_P_mk_series(br,var_values,t) +
+            BRANCH_get_P_m_shunt(br,var_values,t));
   }
   else
     return 0;
 }
 
 // Q_mk = -Q_mk_series - Q_m_shunt
-REAL BRANCH_get_Q_mk(Branch* br, Vec* var_values) {
-  if (br) {
-    return (BRANCH_get_Q_mk_series(br,var_values) +
-            BRANCH_get_Q_m_shunt(br,var_values));
+REAL BRANCH_get_Q_mk(Branch* br, Vec* var_values, int t) {
+  if (br && t >= 0 && t < br->num_periods) {
+    return (BRANCH_get_Q_mk_series(br,var_values,t) +
+            BRANCH_get_Q_m_shunt(br,var_values,t));
   }
   else
     return 0;
 }
 
 // P_km_series = a_km^2*v_k^2*g_km - a_km*a_mk*v_k*v_m*( g_km*cos(w_k-w_m-phi) + b_km*sin(w_k-w_m-phi))
-REAL BRANCH_get_P_km_series(Branch* br, Vec* var_values) {
+REAL BRANCH_get_P_km_series(Branch* br, Vec* var_values, int t) {
   // buses
   Bus* bus_k;
   Bus* bus_m;
@@ -406,30 +442,30 @@ REAL BRANCH_get_P_km_series(Branch* br, Vec* var_values) {
   REAL g_km;
   REAL b_km;
 
-  if (br) {
+  if (br && t >= 0 && t < br->num_periods) {
     // get k (from) and m (to) buses
     bus_k = BRANCH_get_bus_k(br);
     bus_m = BRANCH_get_bus_m(br);
 
     // get voltage angles (updated if it is a variable)
     if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VANG) && var_values)
-      w_k = VEC_get(var_values,BUS_get_index_v_ang(bus_k));
+      w_k = VEC_get(var_values,BUS_get_index_v_ang(bus_k,t));
     else
-      w_k = BUS_get_v_ang(bus_k);
+      w_k = BUS_get_v_ang(bus_k,t);
     if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VANG) && var_values)
-      w_m = VEC_get(var_values,BUS_get_index_v_ang(bus_m));
+      w_m = VEC_get(var_values,BUS_get_index_v_ang(bus_m,t));
     else
-      w_m = BUS_get_v_ang(bus_m);
+      w_m = BUS_get_v_ang(bus_m,t);
 
     // get voltage magnitudes (updated if it is a variable)
     if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k));
+      v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k,t));
     else
-      v_k = BUS_get_v_mag(bus_k);
+      v_k = BUS_get_v_mag(bus_k,t);
     if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m));
+      v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m,t));
     else
-      v_m = BUS_get_v_mag(bus_m);
+      v_m = BUS_get_v_mag(bus_m,t);
 
     // get series conductance and susceptance
     g_km = BRANCH_get_g(br);
@@ -443,9 +479,9 @@ REAL BRANCH_get_P_km_series(Branch* br, Vec* var_values) {
 
     // get phase shift angle (updated if a variable) this should be subtracted on side 'm' (to)
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) && var_values)
-      phi = VEC_get(var_values,BRANCH_get_index_phase(br));
+      phi = VEC_get(var_values,BRANCH_get_index_phase(br,t));
     else
-      phi = BRANCH_get_phase(br);
+      phi = BRANCH_get_phase(br,t);
 
     return (a_km*a_km*v_k*v_k*g_km -
             a_km*a_mk*v_k*v_m*( g_km*cos(w_k-w_m-phi) + b_km*sin(w_k-w_m-phi)));
@@ -455,7 +491,7 @@ REAL BRANCH_get_P_km_series(Branch* br, Vec* var_values) {
 }
 
 // Q_km_series = -a_km^2*v_k^2*b_km - a_km*a_mk*v_k*v_m*( g_km*sin(w_k-w_m-phi) - b_km*cos(w_k-w_m-phi))
-REAL BRANCH_get_Q_km_series(Branch* br, Vec* var_values) {
+REAL BRANCH_get_Q_km_series(Branch* br, Vec* var_values, int t) {
   // buses
   Bus* bus_k;
   Bus* bus_m;
@@ -474,30 +510,30 @@ REAL BRANCH_get_Q_km_series(Branch* br, Vec* var_values) {
   REAL g_km;
   REAL b_km;
 
-  if (br) {
+  if (br && t >= 0 && t < br->num_periods) {
     // get k (from) and m (to) buses
     bus_k = BRANCH_get_bus_k(br);
     bus_m = BRANCH_get_bus_m(br);
 
     // get voltage angles (updated if it is a variable)
     if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VANG) && var_values)
-      w_k = VEC_get(var_values,BUS_get_index_v_ang(bus_k));
+      w_k = VEC_get(var_values,BUS_get_index_v_ang(bus_k,t));
     else
-      w_k = BUS_get_v_ang(bus_k);
+      w_k = BUS_get_v_ang(bus_k,t);
     if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VANG) && var_values)
-      w_m = VEC_get(var_values,BUS_get_index_v_ang(bus_m));
+      w_m = VEC_get(var_values,BUS_get_index_v_ang(bus_m,t));
     else
-      w_m = BUS_get_v_ang(bus_m);
+      w_m = BUS_get_v_ang(bus_m,t);
 
     // get voltage magnitudes (updated if it is a variable)
     if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k));
+      v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k,t));
     else
-      v_k = BUS_get_v_mag(bus_k);
+      v_k = BUS_get_v_mag(bus_k,t);
     if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m));
+      v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m,t));
     else
-      v_m = BUS_get_v_mag(bus_m);
+      v_m = BUS_get_v_mag(bus_m,t);
 
     // get series conductance and susceptance
     g_km = BRANCH_get_g(br);
@@ -505,15 +541,15 @@ REAL BRANCH_get_Q_km_series(Branch* br, Vec* var_values) {
 
     // get tap ratio from k (updated if a variable), a_mk = 1 always
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
-      a_km = VEC_get(var_values,BRANCH_get_index_ratio(br));
+      a_km = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
     else
-      a_km = BRANCH_get_ratio(br);
+      a_km = BRANCH_get_ratio(br,t);
 
     // get phase shift angle (updated if a variable) this should be subtracted on side 'm' (to)
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) && var_values)
-      phi = VEC_get(var_values,BRANCH_get_index_phase(br));
+      phi = VEC_get(var_values,BRANCH_get_index_phase(br,t));
     else
-      phi = BRANCH_get_phase(br);
+      phi = BRANCH_get_phase(br,t);
 
     return (-a_km*a_km*v_k*v_k*b_km -
             a_km*a_mk*v_k*v_m*( g_km*sin(w_k-w_m-phi) - b_km*cos(w_k-w_m-phi)));
@@ -523,7 +559,7 @@ REAL BRANCH_get_Q_km_series(Branch* br, Vec* var_values) {
 }
 
 // P_mk_series = -a_mk^2*v_m^2*g_mk - a_mk*a_km*v_k*v_m*( g_mk*cos(w_k-w_m+phi) + b_mk*sin(w_k-w_m+phi))
-REAL BRANCH_get_P_mk_series(Branch* br, Vec* var_values) {
+REAL BRANCH_get_P_mk_series(Branch* br, Vec* var_values, int t) {
   // buses
   Bus* bus_k;
   Bus* bus_m;
@@ -542,30 +578,30 @@ REAL BRANCH_get_P_mk_series(Branch* br, Vec* var_values) {
   REAL g_mk;  // equal to g_km
   REAL b_mk;  // equal to b_km
 
-  if (br) {
+  if (br && t >= 0 && t < br->num_periods) {
     // get k (from) and m (to) buses
     bus_k = BRANCH_get_bus_k(br);
     bus_m = BRANCH_get_bus_m(br);
 
     // get voltage angles (updated if it is a variable)
     if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VANG) && var_values)
-      w_k = VEC_get(var_values,BUS_get_index_v_ang(bus_k));
+      w_k = VEC_get(var_values,BUS_get_index_v_ang(bus_k,t));
     else
-      w_k = BUS_get_v_ang(bus_k);
+      w_k = BUS_get_v_ang(bus_k,t);
     if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VANG) && var_values)
-      w_m = VEC_get(var_values,BUS_get_index_v_ang(bus_m));
+      w_m = VEC_get(var_values,BUS_get_index_v_ang(bus_m,t));
     else
-      w_m = BUS_get_v_ang(bus_m);
+      w_m = BUS_get_v_ang(bus_m,t);
 
     // get voltage magnitudes (updated if it is a variable)
     if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k));
+      v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k,t));
     else
-      v_k = BUS_get_v_mag(bus_k);
+      v_k = BUS_get_v_mag(bus_k,t);
     if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m));
+      v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m,t));
     else
-      v_m = BUS_get_v_mag(bus_m);
+      v_m = BUS_get_v_mag(bus_m,t);
 
     // get series conductance and susceptance
     g_mk = BRANCH_get_g(br);
@@ -573,15 +609,15 @@ REAL BRANCH_get_P_mk_series(Branch* br, Vec* var_values) {
 
     // get tap ratio from k (updated if a variable), a_mk = 1 always
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
-      a_km = VEC_get(var_values,BRANCH_get_index_ratio(br));
+      a_km = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
     else
-      a_km = BRANCH_get_ratio(br);
+      a_km = BRANCH_get_ratio(br,t);
 
     // get phase shift angle (updated if a variable) this should be subtracted on side 'm' (to)
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) && var_values)
-      phi = VEC_get(var_values,BRANCH_get_index_phase(br));
+      phi = VEC_get(var_values,BRANCH_get_index_phase(br,t));
     else
-      phi = BRANCH_get_phase(br);
+      phi = BRANCH_get_phase(br,t);
 
     return (a_mk*a_mk*v_m*v_m*g_mk -
             a_mk*a_km*v_k*v_m*( g_mk*cos(w_m-w_k+phi) + b_mk*sin(w_m-w_k+phi)));
@@ -591,7 +627,7 @@ REAL BRANCH_get_P_mk_series(Branch* br, Vec* var_values) {
 }
 
 // Q_mk_series = -a_mk^2*v_m^2*b_mk - a_mk*a_km*v_k*v_m*( g_mk*sin(w_k-w_m+phi) - b_mk*cos(w_k-w_m+phi))
-REAL BRANCH_get_Q_mk_series(Branch* br, Vec* var_values) {
+REAL BRANCH_get_Q_mk_series(Branch* br, Vec* var_values, int t) {
   // buses
   Bus* bus_k;
   Bus* bus_m;
@@ -610,30 +646,30 @@ REAL BRANCH_get_Q_mk_series(Branch* br, Vec* var_values) {
   REAL g_mk;  // equal to g_km
   REAL b_mk;  // equal to b_km
 
-  if (br) {
+  if (br && t >= 0 && t < br->num_periods) {
     // get k (from) and m (to) buses
     bus_k = BRANCH_get_bus_k(br);
     bus_m = BRANCH_get_bus_m(br);
 
     // get voltage angles (updated if it is a variable)
     if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VANG) && var_values)
-      w_k = VEC_get(var_values,BUS_get_index_v_ang(bus_k));
+      w_k = VEC_get(var_values,BUS_get_index_v_ang(bus_k,t));
     else
-      w_k = BUS_get_v_ang(bus_k);
+      w_k = BUS_get_v_ang(bus_k,t);
     if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VANG) && var_values)
-      w_m = VEC_get(var_values,BUS_get_index_v_ang(bus_m));
+      w_m = VEC_get(var_values,BUS_get_index_v_ang(bus_m,t));
     else
-      w_m = BUS_get_v_ang(bus_m);
+      w_m = BUS_get_v_ang(bus_m,t);
 
     // get voltage magnitudes (updated if it is a variable)
     if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k));
+      v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k,t));
     else
-      v_k = BUS_get_v_mag(bus_k);
+      v_k = BUS_get_v_mag(bus_k,t);
     if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m));
+      v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m,t));
     else
-      v_m = BUS_get_v_mag(bus_m);
+      v_m = BUS_get_v_mag(bus_m,t);
 
     // get series conductance and susceptance
     g_mk = BRANCH_get_g(br);
@@ -641,15 +677,15 @@ REAL BRANCH_get_Q_mk_series(Branch* br, Vec* var_values) {
 
     // get tap ratio from k (updated if a variable), a_mk = 1 always
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
-      a_km = VEC_get(var_values,BRANCH_get_index_ratio(br));
+      a_km = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
     else
-      a_km = BRANCH_get_ratio(br);
+      a_km = BRANCH_get_ratio(br,t);
 
     // get phase shift angle (updated if a variable) this should be subtracted on side 'm' (to)
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) && var_values)
-      phi = VEC_get(var_values,BRANCH_get_index_phase(br));
+      phi = VEC_get(var_values,BRANCH_get_index_phase(br,t));
     else
-      phi = BRANCH_get_phase(br);
+      phi = BRANCH_get_phase(br,t);
 
     return (-a_mk*a_mk*v_m*v_m*b_mk -
             a_mk*a_km*v_k*v_m*(g_mk*sin(w_m-w_k+phi) - b_mk*cos(w_m-w_k+phi)));
@@ -659,30 +695,30 @@ REAL BRANCH_get_Q_mk_series(Branch* br, Vec* var_values) {
 }
 
 // P_k_shunt = v_k^2*a_km^2*g_sh_k
-REAL BRANCH_get_P_k_shunt(Branch* br, Vec* var_values) {
+REAL BRANCH_get_P_k_shunt(Branch* br, Vec* var_values, int t) {
   Bus* bus_k;   // bus k / from
   REAL v_k;     // voltage
   REAL a_km;    // tap ratio
   REAL g_sh_k;  // shunt conductance should be the sum of all shunt conductances at point k "(from)"
 
-  if (br) {
+  if (br && t >= 0 && t < br->num_periods) {
     // get bus k (from)
     bus_k = BRANCH_get_bus_k(br);
 
     // get voltage magnitudes (updated if it is a variable)
     if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k));
+      v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k,t));
     else
-      v_k = BUS_get_v_mag(bus_k);
+      v_k = BUS_get_v_mag(bus_k,t);
 
     // get shunt conductance
     g_sh_k = BRANCH_get_g_k(br);
 
     // get tap ratio from k (updated if a variable), a_mk = 1 always
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
-      a_km = VEC_get(var_values,BRANCH_get_index_ratio(br));
+      a_km = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
     else
-      a_km = BRANCH_get_ratio(br);
+      a_km = BRANCH_get_ratio(br,t);
 
     return v_k*v_k*a_km*a_km*g_sh_k;
   }
@@ -691,30 +727,30 @@ REAL BRANCH_get_P_k_shunt(Branch* br, Vec* var_values) {
 }
 
 // Q_k_shunt = v_k^2*a_km^2*b_sh_k
-REAL BRANCH_get_Q_k_shunt(Branch* br, Vec* var_values) {
+REAL BRANCH_get_Q_k_shunt(Branch* br, Vec* var_values, int t) {
   Bus* bus_k;   // bus k / from
   REAL v_k;     // voltage
   REAL a_km;    // tap ratio
   REAL b_sh_k;  // shunt susceptance should be the sum of all shunt susceptances at point k ("from"))
 
-  if (br) {
+  if (br && t >= 0 && t < br->num_periods) {
     // get bus k (from)
     bus_k = BRANCH_get_bus_k(br);
 
     // get voltage magnitudes (updated if it is a variable)
     if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k));
+      v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k,t));
     else
-      v_k = BUS_get_v_mag(bus_k);
+      v_k = BUS_get_v_mag(bus_k,t);
 
     // get shunt susceptance
     b_sh_k = BRANCH_get_b_k(br);
 
     // get tap ratio from k (updated if a variable), a_mk = 1 always
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
-      a_km = VEC_get(var_values,BRANCH_get_index_ratio(br));
+      a_km = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
     else
-      a_km = BRANCH_get_ratio(br);
+      a_km = BRANCH_get_ratio(br,t);
 
     return -v_k*v_k*a_km*a_km*b_sh_k;
   }
@@ -723,21 +759,21 @@ REAL BRANCH_get_Q_k_shunt(Branch* br, Vec* var_values) {
 }
 
 // P_m_shunt = v_m^2*a_mk^2*g_sh_m
-REAL BRANCH_get_P_m_shunt(Branch* br, Vec* var_values) {
+REAL BRANCH_get_P_m_shunt(Branch* br, Vec* var_values, int t) {
   Bus* bus_m;      // bus m / to
   REAL v_m;        // voltage
   REAL a_mk = 1.;  // a_mk always equals 1
   REAL g_sh_m;     // shunt conductance should be the sum of all shunt conductances at point m ("to")
 
-  if (br) {
+  if (br && t >= 0 && t < br->num_periods) {
     // get bus m (to)
     bus_m = BRANCH_get_bus_m(br);
 
     // get voltage magnitudes (updated if it is a variable)
     if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m));
+      v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m,t));
     else
-      v_m = BUS_get_v_mag(bus_m);
+      v_m = BUS_get_v_mag(bus_m,t);
 
     // get shunt conductance
     g_sh_m = BRANCH_get_g_m(br);
@@ -749,21 +785,21 @@ REAL BRANCH_get_P_m_shunt(Branch* br, Vec* var_values) {
 }
 
 // Q_m_shunt = v_m^2*a_mk^2*b_sh_m
-REAL BRANCH_get_Q_m_shunt(Branch* br, Vec* var_values) {
+REAL BRANCH_get_Q_m_shunt(Branch* br, Vec* var_values, int t) {
   Bus* bus_m;      // bus at m (to)
   REAL v_m;        // voltage
   REAL a_mk = 1.;  // a_mk always equals 1
   REAL b_sh_m;     // shunt susceptance should be the sum of all shunt susceptance at point m ("to")
 
-  if (br) {
+  if (br && t >= 0 && t < br->num_periods) {
     // get bus m (to)
     bus_m = BRANCH_get_bus_m(br);
 
     // get voltage magnitudes (updated if it is a variable)
     if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m));
+      v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m,t));
     else
-      v_m = BUS_get_v_mag(bus_m);
+      v_m = BUS_get_v_mag(bus_m,t);
 
     // get shunt susceptance
     b_sh_m = BRANCH_get_b_m(br);
@@ -775,63 +811,111 @@ REAL BRANCH_get_Q_m_shunt(Branch* br, Vec* var_values) {
 }
 
 // @deprecated @see BRANCH_get_P_km
-REAL BRANCH_get_P_from_to(Branch* br, Vec* var_values) {
-  return BRANCH_get_P_km(br, var_values);
+REAL BRANCH_get_P_from_to(Branch* br, Vec* var_values, int t) {
+  if (br && t >= 0 && t < br->num_periods) {
+    return BRANCH_get_P_km(br, var_values, t);
+  }
+  else
+    return 0;
 }
 
  // @deprecated @see BRANCH_get_Q_km
-REAL BRANCH_get_Q_from_to(Branch* br, Vec* var_values) {
-  return BRANCH_get_Q_km(br, var_values);
+REAL BRANCH_get_Q_from_to(Branch* br, Vec* var_values, int t) {
+  if (br && t >= 0 && t < br->num_periods) {
+    return BRANCH_get_Q_km(br, var_values, t);
+  }
+  else
+    return 0;
 }
 
 // @deprecated @see BRANCH_get_P_mk
-REAL BRANCH_get_P_to_from(Branch* br, Vec* var_values) {
-  return BRANCH_get_P_mk(br, var_values);
+REAL BRANCH_get_P_to_from(Branch* br, Vec* var_values, int t) {
+  if (br && t >= 0 && t < br->num_periods) {
+    return BRANCH_get_P_mk(br, var_values, t);
+  }
+  else
+    return 0;
 }
 
 // @deprecated @see BRANCH_get_Q_mk
-REAL BRANCH_get_Q_to_from(Branch* br, Vec* var_values) {
-  return BRANCH_get_Q_mk(br, var_values);
+REAL BRANCH_get_Q_to_from(Branch* br, Vec* var_values, int t) {
+  if (br && t >= 0 && t < br->num_periods) {
+    return BRANCH_get_Q_mk(br, var_values, t);
+  }
+  else
+    return 0;
 }
 
 // @deprecated @see BRANCH_get_P_km_series
-REAL BRANCH_get_P_series_from_to(Branch* br, Vec* var_values) {
-  return BRANCH_get_P_km_series(br, var_values);
+REAL BRANCH_get_P_series_from_to(Branch* br, Vec* var_values, int t) {
+  if (br && t >= 0 && t < br->num_periods) {
+    return BRANCH_get_P_km_series(br, var_values, t);
+  }
+  else
+    return 0;
 }
 
 // @deprecated @see BRANCH_get_Q_km_series
-REAL BRANCH_get_Q_series_from_to(Branch* br, Vec* var_values) {
-  return BRANCH_get_Q_km_series(br, var_values);
+REAL BRANCH_get_Q_series_from_to(Branch* br, Vec* var_values, int t) {
+  if (br && t >= 0 && t < br->num_periods) {
+    return BRANCH_get_Q_km_series(br, var_values, t);
+  }
+  else
+    return 0;
 }
 
 // @deprecated @see BRANCH_get_P_mk_series
-REAL BRANCH_get_P_series_to_from(Branch* br, Vec* var_values) {
-  return BRANCH_get_P_mk_series(br, var_values);
+REAL BRANCH_get_P_series_to_from(Branch* br, Vec* var_values, int t) {
+  if (br && t >= 0 && t < br->num_periods) {
+    return BRANCH_get_P_mk_series(br, var_values, t);
+  }
+  else
+    return 0;
 }
 
 // @deprecated @see BRANCH_get_Q_mk_series
-REAL BRANCH_get_Q_series_to_from(Branch* br, Vec* var_values) {
-  return BRANCH_get_Q_mk_series(br, var_values);
+REAL BRANCH_get_Q_series_to_from(Branch* br, Vec* var_values, int t) {
+  if (br && t >= 0 && t < br->num_periods) {
+    return BRANCH_get_Q_mk_series(br, var_values, t);
+  }
+  else
+    return 0;
 }
 
 // @deprecated @see BRANCH_get_P_k_shunt
-REAL BRANCH_get_P_shunt_from(Branch* br, Vec* var_values) {
-  return BRANCH_get_P_k_shunt(br, var_values);
+REAL BRANCH_get_P_shunt_from(Branch* br, Vec* var_values, int t) {
+  if (br && t >= 0 && t < br->num_periods) {
+    return BRANCH_get_P_k_shunt(br, var_values, t);
+  }
+  else
+    return 0;
 }
 
 // @deprecated @see BRANCH_get_Q_k_shunt
-REAL BRANCH_get_Q_shunt_from(Branch* br, Vec* var_values) {
-  return BRANCH_get_Q_k_shunt(br, var_values);
+REAL BRANCH_get_Q_shunt_from(Branch* br, Vec* var_values, int t) {
+  if (br && t >= 0 && t < br->num_periods) {
+    return BRANCH_get_Q_k_shunt(br, var_values, t);
+  }
+  else
+    return 0;
 }
 
 // @deprecated @see BRANCH_get_P_m_shunt
-REAL BRANCH_get_P_shunt_to(Branch* br, Vec* var_values) {
-  return BRANCH_get_P_m_shunt(br, var_values);
+REAL BRANCH_get_P_shunt_to(Branch* br, Vec* var_values, int t) {
+  if (br && t >= 0 && t < br->num_periods) {
+    return BRANCH_get_P_m_shunt(br, var_values, t);
+  }
+  else
+    return 0;
 }
 
 // @deprecated @see BRANCH_get_Q_m_shunt
-REAL BRANCH_get_Q_shunt_to(Branch* br, Vec* var_values) {
-  return BRANCH_get_Q_m_shunt(br, var_values);
+REAL BRANCH_get_Q_shunt_to(Branch* br, Vec* var_values, int t) {
+  if (br && t >= 0 && t < br->num_periods) {
+    return BRANCH_get_Q_m_shunt(br, var_values, t);
+  }
+  else
+    return 0;
 }
 // end Branch flow calculations
 
@@ -856,14 +940,14 @@ REAL BRANCH_get_ratingC(Branch* br) {
     return 0;
 }
 
-REAL BRANCH_get_P_flow_DC(Branch* br) {
+REAL BRANCH_get_P_flow_DC(Branch* br, int t) {
   /* Active power flow (DC approx) from bus
      "from" to bus "to". */
 
-  if (br) {
-    return -(br->b)*(BUS_get_v_ang(br->bus_k)-
-		     BUS_get_v_ang(br->bus_m)-
-		     br->phase);
+  if (br && t >= 0 && t < br->num_periods) {
+    return -(br->b)*(BUS_get_v_ang(br->bus_from,t)-
+		     BUS_get_v_ang(br->bus_to,t)-
+		     br->phase[t]);
   }
   else
     return 0;
@@ -871,73 +955,122 @@ REAL BRANCH_get_P_flow_DC(Branch* br) {
 
 void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
 
+  // Local vars
+  int t;
+
   // No branch
   if (!br)
     return;
 
-  if (br->vars & BRANCH_VAR_RATIO) { // taps ratio
-    switch(code) {
-    case UPPER_LIMITS:
-      VEC_set(values,br->index_ratio,br->ratio_max);
-      break;
-    case LOWER_LIMITS:
-      VEC_set(values,br->index_ratio,br->ratio_min);
-      break;
-    default:
-      VEC_set(values,br->index_ratio,br->ratio);
+  // Time loop
+  for (t = 0; t < br->num_periods; t++) {
+
+    if (br->vars & BRANCH_VAR_RATIO) { // taps ratio
+      switch(code) {
+      case UPPER_LIMITS:
+	VEC_set(values,br->index_ratio[t],br->ratio_max);
+	break;
+      case LOWER_LIMITS:
+	VEC_set(values,br->index_ratio[t],br->ratio_min);
+	break;
+      default:
+	VEC_set(values,br->index_ratio[t],br->ratio[t]);
+      }
     }
-  }
-  if (br->vars & BRANCH_VAR_PHASE) { // phase shift
-    switch(code) {
-    case UPPER_LIMITS:
-      VEC_set(values,br->index_phase,br->phase_max);
-      break;
-    case LOWER_LIMITS:
-      VEC_set(values,br->index_phase,br->phase_min);
-      break;
-    default:
-      VEC_set(values,br->index_phase,br->phase);
+    if (br->vars & BRANCH_VAR_PHASE) { // phase shift
+      switch(code) {
+      case UPPER_LIMITS:
+	VEC_set(values,br->index_phase[t],br->phase_max);
+	break;
+      case LOWER_LIMITS:
+	VEC_set(values,br->index_phase[t],br->phase_min);
+	break;
+      default:
+	VEC_set(values,br->index_phase[t],br->phase[t]);
+      }
     }
-  }
-  if (br->vars & BRANCH_VAR_RATIO_DEV) { // tap ratio deviations
-    switch(code) {
-    case UPPER_LIMITS:
-      VEC_set(values,br->index_ratio_y,BRANCH_INF_RATIO);
-      VEC_set(values,br->index_ratio_z,BRANCH_INF_RATIO);
-      break;
-    case LOWER_LIMITS:
-      VEC_set(values,br->index_ratio_y,0.);
-      VEC_set(values,br->index_ratio_z,0.);
-      break;
-    default:
-      VEC_set(values,br->index_ratio_y,0.);
-      VEC_set(values,br->index_ratio_z,0.);
+    if (br->vars & BRANCH_VAR_RATIO_DEV) { // tap ratio deviations
+      switch(code) {
+      case UPPER_LIMITS:
+	VEC_set(values,br->index_ratio_y[t],BRANCH_INF_RATIO);
+	VEC_set(values,br->index_ratio_z[t],BRANCH_INF_RATIO);
+	break;
+      case LOWER_LIMITS:
+	VEC_set(values,br->index_ratio_y[t],0.);
+	VEC_set(values,br->index_ratio_z[t],0.);
+	break;
+      default:
+	VEC_set(values,br->index_ratio_y[t],0.);
+	VEC_set(values,br->index_ratio_z[t],0.);
+      }
     }
   }
 }
 
-Vec* BRANCH_get_var_indices(void* vbr, char var) {
+int BRANCH_get_num_vars(void* vbr, unsigned char var, int t_start, int t_end) {
+
+  // Local vars
+  Branch* br = (Branch*)vbr;
+  int num_vars = 0;
+  int dt;
+
+  // Checks
+  if (!br)
+    return 0;
+  if (t_start < 0)
+    t_start = 0;
+  if (t_end > br->num_periods-1)
+    t_end = br->num_periods-1;
+
+  // Num vars
+  dt = t_end-t_start+1;
+  if ((var & BRANCH_VAR_RATIO) && (br->vars & BRANCH_VAR_RATIO))
+    num_vars += dt;
+  if ((var & BRANCH_VAR_PHASE) && (br->vars & BRANCH_VAR_PHASE))
+    num_vars += dt;
+  if ((var & BRANCH_VAR_RATIO_DEV) && (br->vars & BRANCH_VAR_RATIO_DEV))
+    num_vars += 2*dt;
+  return num_vars;
+}
+
+Vec* BRANCH_get_var_indices(void* vbr, unsigned char var, int t_start, int t_end) {
+
+  // Local vars
   Branch* br = (Branch*)vbr;
   Vec* indices;
+  int offset = 0;
+  int t;
+
+  // Checks
   if (!br)
     return NULL;
-  if (var == BRANCH_VAR_RATIO) {
-    indices = VEC_new(1);
-    VEC_set(indices,0,br->index_ratio);
-    return indices;
+  if (t_start < 0)
+    t_start = 0;
+  if (t_end > br->num_periods-1)
+    t_end = br->num_periods-1;
+
+  // Indices
+  indices = VEC_new(BRANCH_get_num_vars(vbr,var,t_start,t_end));
+  if ((var & BRANCH_VAR_RATIO) && (br->vars & BRANCH_VAR_RATIO)) {
+    for (t = t_start; t <= t_end; t++) {
+      VEC_set(indices,offset,br->index_ratio[t]);
+      offset++;
+    }
   }
-  if (var == BRANCH_VAR_PHASE) {
-    indices = VEC_new(1);
-    VEC_set(indices,0,br->index_phase);
-    return indices;
+  if ((var & BRANCH_VAR_PHASE) && (br->vars & BRANCH_VAR_PHASE)) {
+    for (t = t_start; t <= t_end; t++) {
+      VEC_set(indices,offset,br->index_phase[t]);
+      offset++;
+    }
   }
-  if (var == BRANCH_VAR_RATIO_DEV) {
-    indices = VEC_new(2);
-    VEC_set(indices,0,br->index_ratio_y);
-    VEC_set(indices,1,br->index_ratio_z);
-    return indices;
+  if ((var & BRANCH_VAR_RATIO_DEV) && (br->vars & BRANCH_VAR_RATIO_DEV)) {
+    for (t = t_start; t <= t_end; t++) {
+      VEC_set(indices,offset,br->index_ratio_y[t]);
+      VEC_set(indices,offset+1,br->index_ratio_z[t]);
+      offset += 2;
+    }
   }
-  return NULL;
+  return indices;
 }
 
 BOOL BRANCH_has_pos_ratio_v_sens(Branch* branch) {
@@ -947,7 +1080,7 @@ BOOL BRANCH_has_pos_ratio_v_sens(Branch* branch) {
     return FALSE;
 }
 
-BOOL BRANCH_has_flags(void* vbr, char flag_type, char mask) {
+BOOL BRANCH_has_flags(void* vbr, char flag_type, unsigned char mask) {
   Branch* br = (Branch*)vbr;
   if (br) {
     if (flag_type == FLAG_VARS)
@@ -981,7 +1114,18 @@ BOOL BRANCH_has_properties(void* vbr, char prop) {
   return TRUE;
 }
 
-void BRANCH_init(Branch* br) {
+void BRANCH_init(Branch* br, int num_periods) {
+
+  // Local vars
+  int T;
+  int t;
+
+  // No branch
+  if (!br)
+    return;
+
+  T = num_periods;
+  br->num_periods = num_periods;
 
   br->type = BRANCH_TYPE_LINE;
 
@@ -996,12 +1140,10 @@ void BRANCH_init(Branch* br) {
   br->b_k = 0;
   br->b_m = 0;
 
-  br->ratio = 1;
   br->ratio_max = 1;
   br->ratio_min = 1;
   br->num_ratios = 1;
 
-  br->phase = 0;
   br->phase_max = 0;
   br->phase_min = 0;
 
@@ -1022,19 +1164,24 @@ void BRANCH_init(Branch* br) {
   br->sparse = 0x00;
 
   br->index = 0;
-  br->index_ratio = 0;
-  br->index_ratio_y = 0;
-  br->index_ratio_z = 0;
-  br->index_phase = 0;
-  br->index_P = 0;
-  br->index_Q = 0;
 
-  br->sens_P_u_bound = 0;
-  br->sens_P_l_bound = 0;
+  ARRAY_zalloc(br->ratio,REAL,T);
+  ARRAY_zalloc(br->phase,REAL,T);
+
+  ARRAY_zalloc(br->index_ratio,int,T);
+  ARRAY_zalloc(br->index_ratio_y,int,T);
+  ARRAY_zalloc(br->index_ratio_z,int,T);
+  ARRAY_zalloc(br->index_phase,int,T);
+
+  ARRAY_zalloc(br->sens_P_u_bound,REAL,T);
+  ARRAY_zalloc(br->sens_P_l_bound,REAL,T);
+
+  for (t = 0; t < br->num_periods; t++)
+    br->ratio[t] = 1.;
 
   br->reg_next = NULL;
-  br->next_k = NULL;
-  br->next_m = NULL;
+  br->next_k = NULL;  // replaces br->from_next
+  br->next_m = NULL;  // replaces br->to_next
 };
 
 BOOL BRANCH_is_equal(Branch* br, Branch* other) {
@@ -1162,20 +1309,24 @@ int BRANCH_list_m_len(Branch* m_br_list) {
   return len;
 }
 
-Branch* BRANCH_new(void) {
-  Branch* branch = (Branch*)malloc(sizeof(Branch));
-  BRANCH_init(branch);
-  return branch;
+Branch* BRANCH_new(int num_periods) {
+  if (num_periods > 0) {
+    Branch* branch = (Branch*)malloc(sizeof(Branch));
+    BRANCH_init(branch,num_periods);
+    return branch;
+  }
+  else
+    return NULL;
 }
 
-void BRANCH_set_sens_P_u_bound(Branch* br, REAL value) {
-  if (br)
-    br->sens_P_u_bound = value;
+void BRANCH_set_sens_P_u_bound(Branch* br, REAL value, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    br->sens_P_u_bound[t] = value;
 }
 
-void BRANCH_set_sens_P_l_bound(Branch* br, REAL value) {
-  if (br)
-    br->sens_P_l_bound = value;
+void BRANCH_set_sens_P_l_bound(Branch* br, REAL value, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    br->sens_P_l_bound[t] = value;
 }
 
 void BRANCH_set_index(Branch* br, int index) {
@@ -1257,9 +1408,9 @@ void BRANCH_set_b_m(Branch* br, REAL b_m) {
     br->b_m = b_m;
 }
 
-void BRANCH_set_ratio(Branch* br, REAL ratio) {
-  if (br)
-    br->ratio = ratio;
+void BRANCH_set_ratio(Branch* br, REAL ratio, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    br->ratio[t] = ratio;
 }
 
 void BRANCH_set_ratio_max(Branch* br, REAL ratio) {
@@ -1282,9 +1433,9 @@ void BRANCH_set_outage(Branch* br, BOOL outage) {
     br->outage = outage;
 }
 
-void BRANCH_set_phase(Branch* br, REAL phase) {
-  if (br)
-    br->phase = phase;
+void BRANCH_set_phase(Branch* br, REAL phase, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    br->phase[t] = phase;
 }
 
 void BRANCH_set_phase_max(Branch* br, REAL phase) {
@@ -1334,22 +1485,30 @@ void BRANCH_set_ratingC(Branch* br, REAL r) {
 
 void BRANCH_set_var_values(Branch* br, Vec* values) {
 
+  // Local vars
+  int t;
+
   // No branch
   if (!br)
     return;
 
-  // Set variable values
-  if (br->vars & BRANCH_VAR_RATIO)    // taps ratio
-    br->ratio = VEC_get(values,br->index_ratio);
-  if (br->vars & BRANCH_VAR_PHASE)    // phase shift
-    br->phase = VEC_get(values,br->index_phase);
+  // Time loop
+  for (t = 0; t < br->num_periods; t++) {
+
+    // Ratio and phase
+    if (br->vars & BRANCH_VAR_RATIO)    // taps ratio
+      br->ratio[t] = VEC_get(values,br->index_ratio[t]);
+    if (br->vars & BRANCH_VAR_PHASE)    // phase shift
+      br->phase[t] = VEC_get(values,br->index_phase[t]);
+  }
 }
 
-int BRANCH_set_flags(void* vbr, char flag_type, char mask, int index) {
+int BRANCH_set_flags(void* vbr, char flag_type, unsigned char mask, int index) {
 
   // Local variables
   char* flags_ptr = NULL;
   Branch* br = (Branch*)vbr;
+  int t;
 
   // Check branch
   if (!br)
@@ -1369,31 +1528,47 @@ int BRANCH_set_flags(void* vbr, char flag_type, char mask, int index) {
 
   // Set flags
   if (!((*flags_ptr) & BRANCH_VAR_RATIO) && (mask & BRANCH_VAR_RATIO)) { // taps ratio
-    if (flag_type == FLAG_VARS)
-      br->index_ratio = index;
+    if (flag_type == FLAG_VARS) {
+      for (t = 0; t < br->num_periods; t++)
+	br->index_ratio[t] = index+t;
+    }
     (*flags_ptr) |= BRANCH_VAR_RATIO;
-    index++;
+    index += br->num_periods;
   }
   if (!((*flags_ptr) & BRANCH_VAR_PHASE) && (mask & BRANCH_VAR_PHASE)) { // phase shift
-    if (flag_type == FLAG_VARS)
-      br->index_phase = index;
+    if (flag_type == FLAG_VARS) {
+      for (t = 0; t < br->num_periods; t++)
+	br->index_phase[t] = index+t;
+    }
     (*flags_ptr) |= BRANCH_VAR_PHASE;
-    index++;
+    index += br->num_periods;
   }
   if (!((*flags_ptr) & BRANCH_VAR_RATIO_DEV) && (mask & BRANCH_VAR_RATIO_DEV)) { // taps ratio deviations
     if (flag_type == FLAG_VARS) {
-      br->index_ratio_y = index;
-      br->index_ratio_z = index+1;
+      for (t = 0; t < br->num_periods; t++) {
+	br->index_ratio_y[t] = index+2*t;
+	br->index_ratio_z[t] = index+2*t+1;
+      }
     }
     (*flags_ptr) |= BRANCH_VAR_RATIO_DEV;
-    index += 2;
+    index += 2*br->num_periods;
   }
   return index;
 }
 
-void BRANCH_show(Branch* br) {
+void BRANCH_show(Branch* br, int t) {
   printf("branch %d\t%d\t%d\n",
 	 BUS_get_number(br->bus_k),
 	 BUS_get_number(br->bus_m),
 	 br->type);
+}
+
+void BRANCH_propagate_data_in_time(Branch* br) {
+  int t;
+  if (br) {
+    for (t = 1; t < br->num_periods; t++) {
+      br->ratio[t] = br->ratio[0];
+      br->phase[t] = br->phase[0];
+    }
+  }
 }

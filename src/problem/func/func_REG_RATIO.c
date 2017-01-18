@@ -29,7 +29,7 @@ void FUNC_REG_RATIO_clear(Func* f) {
   FUNC_set_Hcounter(f,0);
 }
 
-void FUNC_REG_RATIO_count_branch(Func* f, Branch* br) {
+void FUNC_REG_RATIO_count_step(Func* f, Branch* br, int t) {
 
   // Local variables
   int* Hcounter;
@@ -72,12 +72,12 @@ void FUNC_REG_RATIO_allocate(Func* f) {
 			  Hcounter));
 }
 
-void FUNC_REG_RATIO_analyze_branch(Func* f, Branch* br) {
+void FUNC_REG_RATIO_analyze_step(Func* f, Branch* br, int t) {
 
   // Local variables
   int* Hcounter;
   Mat* H;
-  REAL dt;
+  REAL da;
 
   // Constr data
   H = FUNC_get_Hphi(f);
@@ -92,39 +92,39 @@ void FUNC_REG_RATIO_analyze_branch(Func* f, Branch* br) {
     return;
 
   // Normalization factor
-  dt = BRANCH_get_ratio_max(br)-BRANCH_get_ratio_min(br);
-  if (dt < FUNC_REG_RATIO_PARAM)
-    dt = FUNC_REG_RATIO_PARAM;
+  da = BRANCH_get_ratio_max(br)-BRANCH_get_ratio_min(br);
+  if (da < FUNC_REG_RATIO_PARAM)
+    da = FUNC_REG_RATIO_PARAM;
   
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) { // ratio var
-    MAT_set_i(H,*Hcounter,BRANCH_get_index_ratio(br));
-    MAT_set_j(H,*Hcounter,BRANCH_get_index_ratio(br));
-    MAT_set_d(H,*Hcounter,1./(dt*dt));
+    MAT_set_i(H,*Hcounter,BRANCH_get_index_ratio(br,t));
+    MAT_set_j(H,*Hcounter,BRANCH_get_index_ratio(br,t));
+    MAT_set_d(H,*Hcounter,1./(da*da));
     (*Hcounter)++;
   }
   
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO_DEV)) { // ratio dev var
-    
-    MAT_set_i(H,*Hcounter,BRANCH_get_index_ratio_y(br));
-    MAT_set_j(H,*Hcounter,BRANCH_get_index_ratio_y(br));
-    MAT_set_d(H,*Hcounter,1./(dt*dt));
+   
+    MAT_set_i(H,*Hcounter,BRANCH_get_index_ratio_y(br,t));
+    MAT_set_j(H,*Hcounter,BRANCH_get_index_ratio_y(br,t));
+    MAT_set_d(H,*Hcounter,1./(da*da));
     (*Hcounter)++;
 
-    MAT_set_i(H,*Hcounter,BRANCH_get_index_ratio_z(br));
-    MAT_set_j(H,*Hcounter,BRANCH_get_index_ratio_z(br));
-    MAT_set_d(H,*Hcounter,1./(dt*dt));
+    MAT_set_i(H,*Hcounter,BRANCH_get_index_ratio_z(br,t));
+    MAT_set_j(H,*Hcounter,BRANCH_get_index_ratio_z(br,t));
+    MAT_set_d(H,*Hcounter,1./(da*da));
     (*Hcounter)++;
   }
 }
 
-void FUNC_REG_RATIO_eval_branch(Func* f, Branch* br, Vec* var_values) {
+void FUNC_REG_RATIO_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
   // Local variables
   REAL* phi;
   REAL* gphi;
-  REAL t;
-  REAL dt;
-  REAL t0;
+  REAL a;
+  REAL da;
+  REAL a0;
 
   // Constr data
   phi = FUNC_get_phi_ptr(f);
@@ -139,27 +139,33 @@ void FUNC_REG_RATIO_eval_branch(Func* f, Branch* br, Vec* var_values) {
     return;
   
   // Normalizatin factor
-  dt = BRANCH_get_ratio_max(br)-BRANCH_get_ratio_min(br);
-  if (dt < FUNC_REG_RATIO_PARAM)
-    dt = FUNC_REG_RATIO_PARAM;
+  da = BRANCH_get_ratio_max(br)-BRANCH_get_ratio_min(br);
+  if (da < FUNC_REG_RATIO_PARAM)
+    da = FUNC_REG_RATIO_PARAM;
 
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) { // ratio var    
     
-    t0 = BRANCH_get_ratio(br);
-    t = VEC_get(var_values,BRANCH_get_index_ratio(br));
-    (*phi) += 0.5*pow((t-t0)/dt,2.);
-    gphi[BRANCH_get_index_ratio(br)] = (t-t0)/(dt*dt);
+    a0 = BRANCH_get_ratio(br,t);
+    a = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
+    (*phi) += 0.5*pow((a-a0)/da,2.);
+    gphi[BRANCH_get_index_ratio(br,t)] = (a-a0)/(da*da);
   }
-
+  else {
+    // nothing because a0-a0 = 0
+  }
+  
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO_DEV)) { // ratio dev var
     
-    t = VEC_get(var_values,BRANCH_get_index_ratio_y(br));
-    (*phi) += 0.5*pow(t/dt,2.);
-    gphi[BRANCH_get_index_ratio_y(br)] = t/(dt*dt);
+    a = VEC_get(var_values,BRANCH_get_index_ratio_y(br,t));
+    (*phi) += 0.5*pow(a/da,2.);
+    gphi[BRANCH_get_index_ratio_y(br,t)] = a/(da*da);
 
-    t = VEC_get(var_values,BRANCH_get_index_ratio_z(br));
-    (*phi) += 0.5*pow(t/dt,2.);
-    gphi[BRANCH_get_index_ratio_z(br)] = t/(dt*dt);
+    a = VEC_get(var_values,BRANCH_get_index_ratio_z(br,t));
+    (*phi) += 0.5*pow(a/da,2.);
+    gphi[BRANCH_get_index_ratio_z(br,t)] = a/(da*da);
+  }
+  else {
+    // nothing becuase a0-a0 = 0
   }
 }
     

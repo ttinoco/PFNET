@@ -16,7 +16,7 @@ static char* test_net_new() {
 
   printf("test_net_new ... ");
 
-  net = NET_new();
+  net = NET_new(1);
 
   Assert("error - failed to create net",net != NULL);
 
@@ -31,7 +31,7 @@ static char* test_net_load() {
 
   printf("test_net_load ... ");
 
-  net = NET_new();
+  net = NET_new(1);
   Assert("error - invalid number of buses",NET_get_num_buses(net) == 0);
   NET_load(net,test_case,0);
   Assert("error - failed to parse case",!NET_has_error(net));
@@ -48,7 +48,7 @@ static char* test_net_check() {
 
   printf("test_net_check ... ");
 
-  net = NET_new();				
+  net = NET_new(1);				
   NET_load(net,test_case,0);
   Assert("error - net check failed",NET_check(net,0));
   NET_del(net);
@@ -63,7 +63,7 @@ static char* test_net_variables() {
 
   printf("test_net_variables ... ");
   
-  net = NET_new();				
+  net = NET_new(1);				
 
   NET_load(net,test_case,0);
 
@@ -109,7 +109,7 @@ static char* test_net_fixed() {
 
   printf("test_net_fixed ... ");
 
-  net = NET_new();	
+  net = NET_new(1);	
 			
   NET_load(net,test_case,0);
   
@@ -164,7 +164,7 @@ static char* test_net_properties() {
 
   printf("test_net_properties ... ");
 
-  net = NET_new();
+  net = NET_new(1);
 
   NET_load(net,test_case,0);
 
@@ -172,8 +172,8 @@ static char* test_net_properties() {
     
     bus = NET_get_bus(net,i);
     
-    if (BUS_get_v_mag(bus) > busvmax)
-      busvmax = BUS_get_v_mag(bus);
+    if (BUS_get_v_mag(bus,0) > busvmax)
+      busvmax = BUS_get_v_mag(bus,0);
 
   }
 
@@ -184,17 +184,17 @@ static char* test_net_properties() {
     if (GEN_is_regulator(gen)) {
       
       dQ = 0;
-      if (GEN_get_Q(gen) > GEN_get_Q_max(gen))
-	dQ = GEN_get_Q(gen)-GEN_get_Q_max(gen);
-      if (GEN_get_Q(gen) < GEN_get_Q_min(gen))
-	dQ = GEN_get_Q_min(gen)-GEN_get_Q(gen);
+      if (GEN_get_Q(gen,0) > GEN_get_Q_max(gen))
+	dQ = GEN_get_Q(gen,0)-GEN_get_Q_max(gen);
+      if (GEN_get_Q(gen,0) < GEN_get_Q_min(gen))
+	dQ = GEN_get_Q_min(gen)-GEN_get_Q(gen,0);
       if (dQ > genQvio)
 	genQvio = dQ;
     }
   }
   
-  Assert("error - bad network property (bus_v_max)",busvmax == NET_get_bus_v_max(net));
-  Assert("error - bad network property (gen_Q_vio)",genQvio*NET_get_base_power(net) == NET_get_gen_Q_vio(net));
+  Assert("error - bad network property (bus_v_max)",busvmax == NET_get_bus_v_max(net,0));
+  Assert("error - bad network property (gen_Q_vio)",genQvio*NET_get_base_power(net) == NET_get_gen_Q_vio(net,0));
 
   NET_del(net);
   printf("ok\n");
@@ -211,7 +211,7 @@ static char* test_net_init_point() {
 
   printf("test_net_init_point ... ");
 
-  net = NET_new();
+  net = NET_new(1);
 
   NET_load(net,test_case,0);
   
@@ -239,15 +239,15 @@ static char* test_net_init_point() {
   for (i = 0; i < NET_get_num_buses(net); i++) {
     bus = NET_get_bus(net,i);
     Assert("error - bad vars flag of bus",BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG|BUS_VAR_VANG));
-    Assert("error - bad voltage init point",BUS_get_v_mag(bus) == VEC_get(point,BUS_get_index_v_mag(bus)));
-    Assert("error - bad voltage init point",BUS_get_v_ang(bus) == VEC_get(point,BUS_get_index_v_ang(bus)));
+    Assert("error - bad voltage init point",BUS_get_v_mag(bus,0) == VEC_get(point,BUS_get_index_v_mag(bus,0)));
+    Assert("error - bad voltage init point",BUS_get_v_ang(bus,0) == VEC_get(point,BUS_get_index_v_ang(bus,0)));
   }
   for (i = 0; i < NET_get_num_gens(net); i++) {
     gen = NET_get_gen(net,i);
     if (GEN_is_slack(gen)) {
       Assert("error - bad vars flag of gen",GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P|GEN_VAR_Q));
-      Assert("error - bad gen init point",GEN_get_P(gen) == VEC_get(point,GEN_get_index_P(gen)));
-      Assert("error - bad gen init point",GEN_get_Q(gen) == VEC_get(point,GEN_get_index_Q(gen)));
+      Assert("error - bad gen init point",GEN_get_P(gen,0) == VEC_get(point,GEN_get_index_P(gen,0)));
+      Assert("error - bad gen init point",GEN_get_Q(gen,0) == VEC_get(point,GEN_get_index_Q(gen,0)));
     }
     else {
       Assert("error - bad vars flag of gen",!GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P));

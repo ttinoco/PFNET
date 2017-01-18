@@ -29,20 +29,21 @@ cdef extern from "pfnet/branch.h":
     cdef char BRANCH_PROP_PHASE_SHIFTER
     cdef char BRANCH_PROP_NOT_OUT
 
-    REAL BRANCH_get_sens_P_u_bound(Branch* br)
-    REAL BRANCH_get_sens_P_l_bound(Branch* br)
+    REAL BRANCH_get_sens_P_u_bound(Branch* br, int t)
+    REAL BRANCH_get_sens_P_l_bound(Branch* br, int t)
     char BRANCH_get_obj_type(void* br)
+    int BRANCH_get_num_periods(Branch* br)
     int BRANCH_get_index(Branch* br)
-    int BRANCH_get_index_ratio(Branch* br)
-    int BRANCH_get_index_ratio_y(Branch* br)
-    int BRANCH_get_index_ratio_z(Branch* br)
-    int BRANCH_get_index_phase(Branch* br)
+    int BRANCH_get_index_ratio(Branch* br, int t)
+    int BRANCH_get_index_ratio_y(Branch* br, int t)
+    int BRANCH_get_index_ratio_z(Branch* br, int t)
+    int BRANCH_get_index_phase(Branch* br, int t)
     Bus* BRANCH_get_bus_from(Branch* br)    # deprecated
     Bus* BRANCH_get_bus_to(Branch* br)      # deprecated
     Bus* BRANCH_get_bus_k(Branch* br)
     Bus* BRANCH_get_bus_m(Branch* br)
     Bus* BRANCH_get_reg_bus(Branch* br)
-    REAL BRANCH_get_ratio(Branch* br)
+    REAL BRANCH_get_ratio(Branch* br, int t)
     REAL BRANCH_get_ratio_max(Branch* br)
     REAL BRANCH_get_ratio_min(Branch* br)
     REAL BRANCH_get_b(Branch* br)
@@ -55,7 +56,7 @@ cdef extern from "pfnet/branch.h":
     REAL BRANCH_get_g_to(Branch* br)        # deprecated
     REAL BRANCH_get_g_k(Branch* br)
     REAL BRANCH_get_g_m(Branch* br)
-    REAL BRANCH_get_phase(Branch* br)
+    REAL BRANCH_get_phase(Branch* br, int t)
     REAL BRANCH_get_phase_max(Branch* br)
     REAL BRANCH_get_phase_min(Branch* br)
     REAL BRANCH_get_P_km(Branch* br, cvec.Vec* values)
@@ -85,7 +86,7 @@ cdef extern from "pfnet/branch.h":
     REAL BRANCH_get_ratingA(Branch* br)
     REAL BRANCH_get_ratingB(Branch* br)
     REAL BRANCH_get_ratingC(Branch* br)
-    REAL BRANCH_get_P_flow_DC(Branch* br)
+    REAL BRANCH_get_P_flow_DC(Branch* br, int t)
     Branch* BRANCH_get_reg_next(Branch* br)
     Branch* BRANCH_get_from_next(Branch* br)      # deprecated
     Branch* BRANCH_get_to_next(Branch* br)        # deprecated
@@ -101,7 +102,7 @@ cdef extern from "pfnet/branch.h":
     bint BRANCH_is_tap_changer_v(Branch* br)
     bint BRANCH_is_tap_changer_Q(Branch* br)
     bint BRANCH_has_flags(Branch* br, char flag_type, char mask)
-    Branch* BRANCH_new()
+    Branch* BRANCH_new(int num_periods)
     void BRANCH_set_ratio_max(Branch* br, REAL ratio)
     void BRANCH_set_ratio_min(Branch* br, REAL ratio)
     void BRANCH_set_ratingA(Branch* br, REAL r)

@@ -1,11 +1,13 @@
 NO_RAW_PARSER ?=0
 NO_GRAPHVIZ ?=0
 
+FILE ?=
+
 CC = gcc
 INCDIR = ./include
 LIBDIR = ./lib
 LDLIBS = -lm
-CFLAGS = -I$(INCDIR) -fPIC -O3 -Wall -Wno-unused-variable
+CFLAGS = -I$(INCDIR) -fPIC -O3 -Wall
 
 ifeq ($(OS),Windows_NT)
   OS_DETECTED := Windows
@@ -14,9 +16,11 @@ else
 endif
 $(warning $(OS_DETECTED))
 ifeq ($(OS_DETECTED),Darwin)
-	LDFLAGS += -dynamiclib
+	LDFLAGS += -dynamiclib  -Wl,-flat_namespace -Wl,-undefined,suppress
+	LDFLAGS2 += -Wl,-rpath,$(LIBDIR)
 else
 	LDFLAGS += -shared
+	LDFLAGS2 += -Wl,-rpath=$(LIBDIR)
 endif
 
 # Raw parser
@@ -31,7 +35,7 @@ ifeq ($(NO_GRAPHVIZ),1)
 	CFLAGS += -DNO_GRAPHVIZ
 else
 	LDLIBS += -lgvc -lcgraph
-	CFLAGS += -I$(GRAPHVIZ)/include -lgvc -lcgraph
+	CFLAGS += -I$(GRAPHVIZ)/include # -lgvc -lcgraph
 endif
 
 SOURCES_LIB = $(shell echo src/*/*.c src/*/*/*.c)
@@ -50,26 +54,26 @@ lib : $(TARGET_LIB)
 
 $(TARGET_LIB) : $(OBJECTS_LIB)
 	mkdir -p lib
-	$(CC) $(CFLAGS) -L$(LIBDIR) -Wl,-rpath $(LIBDIR) -o $@ $(OBJECTS_LIB) $(LDFLAGS) $(LDLIBS)
+	$(CC) $(CFLAGS) -o $@ $(OBJECTS_LIB) $(LDFLAGS)
 
 .PHONY: test
 test : $(TARGET_TEST)
 tests/%.out: tests/%.c
-	$(CC) $(CFLAGS) -L$(LIBDIR) -Wl,-rpath $(LIBDIR) -o $@ $< -lpfnet $(LDLIBS)
+	$(CC) $(CFLAGS) -L$(LIBDIR) $(LDFLAGS2) -o $@ $< -lpfnet $(LDLIBS)
 	./tests/run_tests.out ./data/ieee14.mat
 
 .PHONY: single
-single:
+single: 
 ifndef FILE
 	$(error error: 'FILE' must be specified)
 else
-	$(CC) -c $(CFLAGS) -Wfatal-errors $(FILE)
+	$(CC) -c $(CFLAGS) -Wfatal-errors $(FILE) -o $(basename $(FILE)).o
 endif
 
 .PHONY: docs
 docs :
 ifndef PFNET_DOCS
-	$(error error: 'PFNET_DOCS' must be set to a location to put documentation files)
+	$(error error: 'PFNET_DOCS' must be set to the location to put documentation files)
 else
 	doxygen ./docs/Doxyfile
 endif

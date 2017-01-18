@@ -8,6 +8,7 @@
  * PFNET is released under the BSD 2-clause license.
  */
 
+#include <pfnet/array.h>
 #include <pfnet/constr_PF.h>
 
 struct Constr_PF_Data {
@@ -29,31 +30,25 @@ struct Constr_PF_Data {
 void CONSTR_PF_init(Constr* c) {
 
   // Local variables
-  int i;
+  Net* net;
   int num_buses;
+  int num_periods;
   Constr_PF_Data* data;
 
   // Init
-  num_buses = NET_get_num_buses(CONSTR_get_network(c));
-  CONSTR_set_Hcounter(c,(int*)calloc(num_buses,sizeof(int)),num_buses);
+  net = CONSTR_get_network(c);
+  num_buses = NET_get_num_buses(net);
+  num_periods = NET_get_num_periods(net);
+  CONSTR_set_Hcounter(c,(int*)calloc(num_buses*num_periods,sizeof(int)),num_buses*num_periods);
   data = (Constr_PF_Data*)malloc(sizeof(Constr_PF_Data));
-  data->size = num_buses;
-  data->dPdw_indices = (int*)malloc(sizeof(int)*num_buses);
-  data->dQdw_indices = (int*)malloc(sizeof(int)*num_buses);
-  data->dPdv_indices = (int*)malloc(sizeof(int)*num_buses);
-  data->dQdv_indices = (int*)malloc(sizeof(int)*num_buses);
-  data->dwdw_indices = (int*)malloc(sizeof(int)*num_buses);
-  data->dwdv_indices = (int*)malloc(sizeof(int)*num_buses);
-  data->dvdv_indices = (int*)malloc(sizeof(int)*num_buses);
-  for (i = 0; i < num_buses; i++) {
-    data->dPdw_indices[i] = 0;
-    data->dQdw_indices[i] = 0;
-    data->dPdv_indices[i] = 0;
-    data->dQdv_indices[i] = 0;
-    data->dwdw_indices[i] = 0;
-    data->dwdv_indices[i] = 0;
-    data->dvdv_indices[i] = 0;
-  }
+  data->size = num_buses*num_periods;
+  ARRAY_zalloc(data->dPdw_indices,int,num_buses*num_periods);
+  ARRAY_zalloc(data->dQdw_indices,int,num_buses*num_periods);
+  ARRAY_zalloc(data->dPdv_indices,int,num_buses*num_periods);
+  ARRAY_zalloc(data->dQdv_indices,int,num_buses*num_periods);
+  ARRAY_zalloc(data->dwdw_indices,int,num_buses*num_periods);
+  ARRAY_zalloc(data->dwdv_indices,int,num_buses*num_periods);
+  ARRAY_zalloc(data->dvdv_indices,int,num_buses*num_periods);
   CONSTR_set_data(c,(void*)data);
 }
 
@@ -76,7 +71,7 @@ void CONSTR_PF_clear(Constr* c) {
   CONSTR_clear_bus_counted(c);
 }
 
-void CONSTR_PF_count_branch(Constr* c, Branch* br) {
+void CONSTR_PF_count_step(Constr* c, Branch* br, int t) {
 
   // Local variables
   Bus* bus[2];
@@ -94,7 +89,7 @@ void CONSTR_PF_count_branch(Constr* c, Branch* br) {
   int* dwdw_indices;
   int* dwdv_indices;
   int* dvdv_indices;
-  int bus_index[2];
+  int bus_index_t[2];
   BOOL var_v[2];
   BOOL var_w[2];
   BOOL var_a;
@@ -102,6 +97,10 @@ void CONSTR_PF_count_branch(Constr* c, Branch* br) {
   Constr_PF_Data* data;
   int k;
   int m;
+  int num_buses;
+
+  // Num buses
+  num_buses = NET_get_num_buses(CONSTR_get_network(c));
 
   // Constr data
   Jcounter = CONSTR_get_Jcounter_ptr(c);
@@ -132,7 +131,7 @@ void CONSTR_PF_count_branch(Constr* c, Branch* br) {
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++) {
-    bus_index[k] = BUS_get_index(bus[k]);
+    bus_index_t[k] = BUS_get_index(bus[k])+t*num_buses;
     var_v[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG);
     var_w[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG);
   }
@@ -159,7 +158,7 @@ void CONSTR_PF_count_branch(Constr* c, Branch* br) {
       (*Jcounter)++; // dQm/dwk
 
       // H
-      Hcounter_val = Hcounter[bus_index[k]];
+      Hcounter_val = Hcounter[bus_index_t[k]];
       if (var_w[m]) // wk and wm
 	Hcounter_val++;
       if (var_v[m]) // wk and vm
@@ -168,7 +167,7 @@ void CONSTR_PF_count_branch(Constr* c, Branch* br) {
 	Hcounter_val++;
       if (var_phi)  // wk and phi
 	Hcounter_val++;
-      Hcounter[bus_index[k]] = Hcounter_val;
+      Hcounter[bus_index_t[k]] = Hcounter_val;
     }
 
     //**********
@@ -179,7 +178,7 @@ void CONSTR_PF_count_branch(Constr* c, Branch* br) {
       (*Jcounter)++; // dQm/dvk
 
       // H
-      Hcounter_val = Hcounter[bus_index[k]];
+      Hcounter_val = Hcounter[bus_index_t[k]];
       if (var_w[m]) // vk and wm
 	Hcounter_val++;
       if (var_v[m]) // vk and vm
@@ -188,7 +187,7 @@ void CONSTR_PF_count_branch(Constr* c, Branch* br) {
 	Hcounter_val++;
       if (var_phi)  // vk and phi
 	Hcounter_val++;
-      Hcounter[bus_index[k]] = Hcounter_val;
+      Hcounter[bus_index_t[k]] = Hcounter_val;
     }
 
     //***********
@@ -198,7 +197,7 @@ void CONSTR_PF_count_branch(Constr* c, Branch* br) {
       // Nothing
 
       // H
-      Hcounter_val = Hcounter[bus_index[k]];
+      Hcounter_val = Hcounter[bus_index_t[k]];
       Hcounter_val++; // wm and wm
       if (var_v[m])   // wm and vm
 	Hcounter_val++;
@@ -206,7 +205,7 @@ void CONSTR_PF_count_branch(Constr* c, Branch* br) {
 	Hcounter_val++;
       if (var_phi)    // wm and phi
 	Hcounter_val++;
-      Hcounter[bus_index[k]] = Hcounter_val;
+      Hcounter[bus_index_t[k]] = Hcounter_val;
     }
 
     //***********
@@ -217,9 +216,9 @@ void CONSTR_PF_count_branch(Constr* c, Branch* br) {
 
       // H
       if (var_a)   // vm and a
-	Hcounter[bus_index[k]]++;
+	Hcounter[bus_index_t[k]]++;
       if (var_phi) // vm and phi
-	Hcounter[bus_index[k]]++;
+	Hcounter[bus_index_t[k]]++;
     }
 
     //********
@@ -231,9 +230,9 @@ void CONSTR_PF_count_branch(Constr* c, Branch* br) {
 
       // H
       if (k == 0)  // a and a (important check k==0)
-	Hcounter[bus_index[k]]++;
+	Hcounter[bus_index_t[k]]++;
       if (var_phi) // a and phi
-	Hcounter[bus_index[k]]++;
+	Hcounter[bus_index_t[k]]++;
     }
 
     //**********
@@ -244,7 +243,7 @@ void CONSTR_PF_count_branch(Constr* c, Branch* br) {
       (*Jcounter)++; // dQk/dphi
 
       // H
-      Hcounter[bus_index[k]]++; // phi and phi
+      Hcounter[bus_index_t[k]]++; // phi and phi
     }
   }
 
@@ -253,40 +252,40 @@ void CONSTR_PF_count_branch(Constr* c, Branch* br) {
 
   for (k = 0; k < 2; k++) {
 
-    if (!bus_counted[bus_index[k]]) {
+    if (!bus_counted[bus_index_t[k]]) {
 
       //***********
       if (var_w[k]) { // wk var
 
 	// J
-	dPdw_indices[bus_index[k]] = *Jcounter; // dPk/dwk
+	dPdw_indices[bus_index_t[k]] = *Jcounter; // dPk/dwk
 	(*Jcounter)++;
-	dQdw_indices[bus_index[k]] = *Jcounter; // dQk/dwk
+	dQdw_indices[bus_index_t[k]] = *Jcounter; // dQk/dwk
 	(*Jcounter)++;
 
 	// H
-	Hcounter_val = Hcounter[bus_index[k]];
-	dwdw_indices[bus_index[k]] = Hcounter_val; // wk and wk
+	Hcounter_val = Hcounter[bus_index_t[k]];
+	dwdw_indices[bus_index_t[k]] = Hcounter_val; // wk and wk
 	Hcounter_val++;
 	if (var_v[k]) { // wk and vk
-	  dwdv_indices[bus_index[k]] = Hcounter_val;
+	  dwdv_indices[bus_index_t[k]] = Hcounter_val;
 	  Hcounter_val++;
 	}
-	Hcounter[bus_index[k]] = Hcounter_val;
+	Hcounter[bus_index_t[k]] = Hcounter_val;
       }
 
       //***********
       if (var_v[k]) { // vk var
 
 	// J
-	dPdv_indices[bus_index[k]] = *Jcounter; // dPk/dvk
+	dPdv_indices[bus_index_t[k]] = *Jcounter; // dPk/dvk
 	(*Jcounter)++;
-	dQdv_indices[bus_index[k]] = *Jcounter; // dQk/dvk
+	dQdv_indices[bus_index_t[k]] = *Jcounter; // dQk/dvk
 	(*Jcounter)++;
 
 	// H
-	dvdv_indices[bus_index[k]] = Hcounter[bus_index[k]]; // vk and vk
-	Hcounter[bus_index[k]]++;
+	dvdv_indices[bus_index_t[k]] = Hcounter[bus_index_t[k]]; // vk and vk
+	Hcounter[bus_index_t[k]]++;
       }
 
       // Generators
@@ -336,13 +335,13 @@ void CONSTR_PF_count_branch(Constr* c, Branch* br) {
 
 	  // H
 	  if (var_v[k])
-	    Hcounter[bus_index[k]]++; // b an vk
+	    Hcounter[bus_index_t[k]]++; // b an vk
 	}
       }
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
@@ -351,6 +350,7 @@ void CONSTR_PF_allocate(Constr* c) {
   // Local variables
   Net* net;
   int num_buses;
+  int num_periods;
   int num_constr;
   int num_vars;
   int Jcounter;
@@ -363,12 +363,15 @@ void CONSTR_PF_allocate(Constr* c) {
   int* row;
   int* col;
   int i;
+  int t;
   int H_comb_nnz;
+  int bus_index_t;
 
   net = CONSTR_get_network(c);
   num_buses = NET_get_num_buses(net);
+  num_periods = NET_get_num_periods(net);
   num_vars = NET_get_num_vars(net);
-  num_constr = 2*num_buses;
+  num_constr = 2*num_buses*num_periods;
   Jcounter = CONSTR_get_Jcounter(c);
   Hcounter = CONSTR_get_Hcounter(c);
 
@@ -393,34 +396,37 @@ void CONSTR_PF_allocate(Constr* c) {
   H_comb_nnz = 0;
   H_array = MAT_array_new(num_constr);
   CONSTR_set_H_array(c,H_array,num_constr);
-  for (i = 0; i < num_buses; i++) {
-    P_index = BUS_get_index_P(NET_get_bus(net,i));
-    Q_index = BUS_get_index_Q(NET_get_bus(net,i));
-    HP = MAT_array_get(H_array,P_index);
-    HQ = MAT_array_get(H_array,Q_index);
-    MAT_set_nnz(HP,Hcounter[i]);
-    MAT_set_nnz(HQ,Hcounter[i]);
-    MAT_set_size1(HP,num_vars);
-    MAT_set_size1(HQ,num_vars);
-    MAT_set_size2(HP,num_vars);
-    MAT_set_size2(HQ,num_vars);
+  for (t = 0; t < num_periods; t++) {
+    for (i = 0; i < num_buses; i++) {
+      bus_index_t = i+t*num_buses;
+      P_index = BUS_get_index_P(NET_get_bus(net,i))+t*2*num_buses;
+      Q_index = BUS_get_index_Q(NET_get_bus(net,i))+t*2*num_buses;
+      HP = MAT_array_get(H_array,P_index);
+      HQ = MAT_array_get(H_array,Q_index);
+      MAT_set_nnz(HP,Hcounter[bus_index_t]);
+      MAT_set_nnz(HQ,Hcounter[bus_index_t]);
+      MAT_set_size1(HP,num_vars);
+      MAT_set_size1(HQ,num_vars);
+      MAT_set_size2(HP,num_vars);
+      MAT_set_size2(HQ,num_vars);
 
-    MAT_set_owns_rowcol(HP,TRUE);
-    MAT_set_owns_rowcol(HQ,FALSE);
+      MAT_set_owns_rowcol(HP,TRUE);
+      MAT_set_owns_rowcol(HQ,FALSE);
 
-    row = (int*)calloc(Hcounter[i],sizeof(int));
-    col = (int*)calloc(Hcounter[i],sizeof(int));
+      ARRAY_zalloc(row,int,Hcounter[bus_index_t]);
+      ARRAY_zalloc(col,int,Hcounter[bus_index_t]);
 
-    MAT_set_row_array(HP,row); // same row array
-    MAT_set_row_array(HQ,row);
+      MAT_set_row_array(HP,row); // same row array
+      MAT_set_row_array(HQ,row);
 
-    MAT_set_col_array(HP,col); // same col array
-    MAT_set_col_array(HQ,col);
+      MAT_set_col_array(HP,col); // same col array
+      MAT_set_col_array(HQ,col);
 
-    MAT_set_data_array(HP,(REAL*)malloc(Hcounter[i]*sizeof(REAL))); // different data array
-    MAT_set_data_array(HQ,(REAL*)malloc(Hcounter[i]*sizeof(REAL)));
+      MAT_set_data_array(HP,(REAL*)malloc(Hcounter[bus_index_t]*sizeof(REAL))); // different data array
+      MAT_set_data_array(HQ,(REAL*)malloc(Hcounter[bus_index_t]*sizeof(REAL)));
 
-    H_comb_nnz += 2*Hcounter[i];
+      H_comb_nnz += 2*Hcounter[bus_index_t];
+    }
   }
 
   // H combined
@@ -429,7 +435,7 @@ void CONSTR_PF_allocate(Constr* c) {
 				  H_comb_nnz)); // nnz
 }
 
-void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
+void CONSTR_PF_analyze_step(Constr* c, Branch* br, int t) {
 
   // Local variables
   Bus* bus[2];
@@ -448,7 +454,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
   int* Hj;
   int* Hi_comb;
   int* Hj_comb;
-  int bus_index[2];
+  int bus_index_t[2];
   int w_index[2];
   int v_index[2];
   int P_index[2];
@@ -462,6 +468,14 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
   int k;
   int m;
   int temp;
+  int num_buses;
+  int T;
+
+  // Num buses
+  num_buses = NET_get_num_buses(CONSTR_get_network(c));
+
+  // Num periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   J = CONSTR_get_J(c);
@@ -482,11 +496,11 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++) {
-    bus_index[k] = BUS_get_index(bus[k]);
-    w_index[k] = BUS_get_index_v_ang(bus[k]);
-    v_index[k] = BUS_get_index_v_mag(bus[k]);
-    P_index[k] = BUS_get_index_P(bus[k]);
-    Q_index[k] = BUS_get_index_Q(bus[k]);
+    bus_index_t[k] = BUS_get_index(bus[k])+t*num_buses;
+    P_index[k] = BUS_get_index_P(bus[k])+t*2*num_buses;
+    Q_index[k] = BUS_get_index_Q(bus[k])+t*2*num_buses;
+    w_index[k] = BUS_get_index_v_ang(bus[k],t);
+    v_index[k] = BUS_get_index_v_mag(bus[k],t);
     var_w[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG);
     var_v[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG);
     H[k] = MAT_array_get(H_array,P_index[k]);
@@ -495,8 +509,8 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
   // Branch data
   var_a = BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO);
   var_phi = BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE);
-  a_index = BRANCH_get_index_ratio(br);
-  phi_index = BRANCH_get_index_phase(br);
+  a_index = BRANCH_get_index_ratio(br,t);
+  phi_index = BRANCH_get_index_phase(br,t);
 
   // Branch
   //*******
@@ -521,7 +535,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
       (*Jcounter)++;
 
       // H
-      Hcounter_val = Hcounter[bus_index[k]];
+      Hcounter_val = Hcounter[bus_index_t[k]];
       if (var_w[m]) { // wk and wm
 	MAT_set_i(H[k],Hcounter_val,w_index[k]);
 	MAT_set_j(H[k],Hcounter_val,w_index[m]);
@@ -542,7 +556,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
 	MAT_set_j(H[k],Hcounter_val,phi_index);
 	Hcounter_val++;
       }
-      Hcounter[bus_index[k]] = Hcounter_val;
+      Hcounter[bus_index_t[k]] = Hcounter_val;
     }
 
     //***********
@@ -558,7 +572,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
       (*Jcounter)++;
 
       // H
-      Hcounter_val = Hcounter[bus_index[k]];
+      Hcounter_val = Hcounter[bus_index_t[k]];
       if (var_w[m]) { // vk and wm
 	MAT_set_i(H[k],Hcounter_val,v_index[k]);
 	MAT_set_j(H[k],Hcounter_val,w_index[m]);
@@ -579,7 +593,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
 	MAT_set_j(H[k],Hcounter_val,phi_index);
 	Hcounter_val++;
       }
-      Hcounter[bus_index[k]] = Hcounter_val;
+      Hcounter[bus_index_t[k]] = Hcounter_val;
     }
 
     //***********
@@ -589,7 +603,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
       // Nothing
 
       // H
-      Hcounter_val = Hcounter[bus_index[k]];
+      Hcounter_val = Hcounter[bus_index_t[k]];
       MAT_set_i(H[k],Hcounter_val,w_index[m]); // wm and wm
       MAT_set_j(H[k],Hcounter_val,w_index[m]);
       Hcounter_val++;
@@ -608,7 +622,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
 	MAT_set_j(H[k],Hcounter_val,phi_index);
 	Hcounter_val++;
       }
-      Hcounter[bus_index[k]] = Hcounter_val;
+      Hcounter[bus_index_t[k]] = Hcounter_val;
     }
 
     //***********
@@ -618,7 +632,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
       // Nothing
 
       // H
-      Hcounter_val = Hcounter[bus_index[k]];
+      Hcounter_val = Hcounter[bus_index_t[k]];
       if (var_a) {   // vm and a
 	MAT_set_i(H[k],Hcounter_val,v_index[m]);
 	MAT_set_j(H[k],Hcounter_val,a_index);
@@ -629,7 +643,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
 	MAT_set_j(H[k],Hcounter_val,phi_index);
 	Hcounter_val++;
       }
-      Hcounter[bus_index[k]] = Hcounter_val;
+      Hcounter[bus_index_t[k]] = Hcounter_val;
     }
 
     //********
@@ -645,7 +659,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
       (*Jcounter)++;
 
       // H
-      Hcounter_val = Hcounter[bus_index[k]];
+      Hcounter_val = Hcounter[bus_index_t[k]];
       if (k == 0) { // a and a (important check k==0)
 	MAT_set_i(H[k],Hcounter_val,a_index);
 	MAT_set_j(H[k],Hcounter_val,a_index);
@@ -656,7 +670,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
 	MAT_set_j(H[k],Hcounter_val,phi_index);
 	Hcounter_val++;
       }
-      Hcounter[bus_index[k]] = Hcounter_val;
+      Hcounter[bus_index_t[k]] = Hcounter_val;
     }
 
     //**********
@@ -672,11 +686,11 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
       (*Jcounter)++;
 
       // H
-      Hcounter_val = Hcounter[bus_index[k]];
+      Hcounter_val = Hcounter[bus_index_t[k]];
       MAT_set_i(H[k],Hcounter_val,phi_index);
       MAT_set_j(H[k],Hcounter_val,phi_index);
       Hcounter_val++; // phi and phi
-      Hcounter[bus_index[k]] = Hcounter_val;
+      Hcounter[bus_index_t[k]] = Hcounter_val;
     }
   }
 
@@ -685,7 +699,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
 
   for (k = 0; k < 2; k++) {
 
-    if (!bus_counted[bus_index[k]]) {
+    if (!bus_counted[bus_index_t[k]]) {
 
       //***********
       if (var_w[k]) { // wk var
@@ -700,7 +714,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
 	(*Jcounter)++;
 
 	// H
-	Hcounter_val = Hcounter[bus_index[k]];
+	Hcounter_val = Hcounter[bus_index_t[k]];
 	MAT_set_i(H[k],Hcounter_val,w_index[k]); // wk and wk
 	MAT_set_j(H[k],Hcounter_val,w_index[k]);
 	Hcounter_val++;
@@ -709,7 +723,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
 	  MAT_set_j(H[k],Hcounter_val,v_index[k]);
 	  Hcounter_val++;
 	}
-	Hcounter[bus_index[k]] = Hcounter_val;
+	Hcounter[bus_index_t[k]] = Hcounter_val;
       }
 
       //***********
@@ -725,11 +739,11 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
 	(*Jcounter)++;
 
 	// H
-	Hcounter_val = Hcounter[bus_index[k]];
+	Hcounter_val = Hcounter[bus_index_t[k]];
 	MAT_set_i(H[k],Hcounter_val,v_index[k]); // vk and vk
 	MAT_set_j(H[k],Hcounter_val,v_index[k]);
 	Hcounter_val++;
-	Hcounter[bus_index[k]] = Hcounter_val;
+	Hcounter[bus_index_t[k]] = Hcounter_val;
       }
 
       // Generators
@@ -740,7 +754,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
 
 	  // J
 	  MAT_set_i(J,*Jcounter,P_index[k]);             // dPk/dPg
-	  MAT_set_j(J,*Jcounter,GEN_get_index_P(gen));
+	  MAT_set_j(J,*Jcounter,GEN_get_index_P(gen,t));
 	  (*Jcounter)++;
 	}
 
@@ -749,7 +763,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
 
 	  // J
 	  MAT_set_i(J,*Jcounter,Q_index[k]);             // dQk/dQg
-	  MAT_set_j(J,*Jcounter,GEN_get_index_Q(gen));
+	  MAT_set_j(J,*Jcounter,GEN_get_index_Q(gen,t));
 	  (*Jcounter)++;
 	}
       }
@@ -762,7 +776,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
 
 	  // J
 	  MAT_set_i(J,*Jcounter,P_index[k]);             // dPk/dPg
-	  MAT_set_j(J,*Jcounter,VARGEN_get_index_P(vargen));
+	  MAT_set_j(J,*Jcounter,VARGEN_get_index_P(vargen,t));
 	  (*Jcounter)++;
 	}
 
@@ -771,7 +785,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
 
 	  // J
 	  MAT_set_i(J,*Jcounter,Q_index[k]);             // dQk/dQg
-	  MAT_set_j(J,*Jcounter,VARGEN_get_index_Q(vargen));
+	  MAT_set_j(J,*Jcounter,VARGEN_get_index_Q(vargen,t));
 	  (*Jcounter)++;
 	}
       }
@@ -784,27 +798,27 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
 
 	  // J
 	  MAT_set_i(J,*Jcounter,Q_index[k]);         // dQk/db
-	  MAT_set_j(J,*Jcounter,SHUNT_get_index_b(shunt));
+	  MAT_set_j(J,*Jcounter,SHUNT_get_index_b(shunt,t));
 	  (*Jcounter)++; // dQk/db
 
 	  // H
 	  if (var_v[k]) {
-	    Hcounter_val = Hcounter[bus_index[k]];
-	    MAT_set_i(H[k],Hcounter_val,SHUNT_get_index_b(shunt)); // b and vk
+	    Hcounter_val = Hcounter[bus_index_t[k]];
+	    MAT_set_i(H[k],Hcounter_val,SHUNT_get_index_b(shunt,t)); // b and vk
 	    MAT_set_j(H[k],Hcounter_val,v_index[k]);
 	    Hcounter_val++;
-	    Hcounter[bus_index[k]] = Hcounter_val;
+	    Hcounter[bus_index_t[k]] = Hcounter_val;
 	  }
 	}
       }
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 
   // Done
-  if (BRANCH_get_index(br) == NET_get_num_branches(CONSTR_get_network(c))-1) {
+  if ((t == T-1) && (BRANCH_get_index(br) == NET_get_num_branches(CONSTR_get_network(c))-1)) {
 
     // Ensure lower triangular and save struct of H comb
     Hcounter_comb = 0;
@@ -827,7 +841,7 @@ void CONSTR_PF_analyze_branch(Constr* c, Branch* br) {
   }
 }
 
-void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
+void CONSTR_PF_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 
   // Local variables
   Bus* bus[2];
@@ -846,7 +860,7 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   REAL* HP[2];
   REAL* HQ[2];
 
-  int bus_index[2];
+  int bus_index_t[2];
   BOOL var_v[2];
   BOOL var_w[2];
   int P_index[2];
@@ -888,6 +902,11 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   REAL indicator_a;
   REAL indicator_phi;
 
+  int num_buses;
+
+  // Num buses
+  num_buses = NET_get_num_buses(CONSTR_get_network(c));
+
   // Constr data
   f = VEC_get_data(CONSTR_get_f(c));
   J = MAT_get_data_array(CONSTR_get_J(c));
@@ -909,21 +928,21 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++) {
-    bus_index[k] = BUS_get_index(bus[k]);
-    P_index[k] = BUS_get_index_P(bus[k]);    // index in f for active power mismatch
-    Q_index[k] = BUS_get_index_Q(bus[k]);    // index in f for reactive power mismatch
+    bus_index_t[k] = BUS_get_index(bus[k])+t*num_buses;
+    P_index[k] = BUS_get_index_P(bus[k])+t*2*num_buses; // index in f for active power mismatch
+    Q_index[k] = BUS_get_index_Q(bus[k])+t*2*num_buses; // index in f for reactive power mismatch
     var_w[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG);
     var_v[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG);
     HP[k] = MAT_get_data_array(MAT_array_get(H_array,P_index[k]));
     HQ[k] = MAT_get_data_array(MAT_array_get(H_array,Q_index[k]));
     if (var_w[k])
-      w[k] = VEC_get(var_values,BUS_get_index_v_ang(bus[k]));
+      w[k] = VEC_get(var_values,BUS_get_index_v_ang(bus[k],t));
     else
-      w[k] = BUS_get_v_ang(bus[k]);
+      w[k] = BUS_get_v_ang(bus[k],t);
     if (var_v[k])
-      v[k] = VEC_get(var_values,BUS_get_index_v_mag(bus[k]));
+      v[k] = VEC_get(var_values,BUS_get_index_v_mag(bus[k],t));
     else
-      v[k] = BUS_get_v_mag(bus[k]);
+      v[k] = BUS_get_v_mag(bus[k],t);
   }
 
   // Branch data
@@ -936,13 +955,13 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   g_sh[0] = BRANCH_get_g_k(br);   //  total shunt conductance on bus from (i)
   g_sh[1] = BRANCH_get_g_m(br);   //  total shunt conductance on bus to (j)
   if (var_a)
-    a = VEC_get(var_values,BRANCH_get_index_ratio(br));
+    a = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
   else
-    a = BRANCH_get_ratio(br);
+    a = BRANCH_get_ratio(br,t);
   if (var_phi)
-    phi = VEC_get(var_values,BRANCH_get_index_phase(br));
+    phi = VEC_get(var_values,BRANCH_get_index_phase(br,t));
   else
-    phi = BRANCH_get_phase(br);
+    phi = BRANCH_get_phase(br,t);
 
   // Branch flows
   for (k = 0; k < 2; k++) {
@@ -1004,16 +1023,16 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
       J[*Jcounter] = P_km[m];  // dQm/dwk
       (*Jcounter)++;
 
-      J[data->dPdw_indices[bus_index[k]]] += Q_km[k];  // dPk/dwk
-      J[data->dQdw_indices[bus_index[k]]] -= P_km[k]; // dQk/dwk
+      J[data->dPdw_indices[bus_index_t[k]]] += Q_km[k];  // dPk/dwk
+      J[data->dQdw_indices[bus_index_t[k]]] -= P_km[k]; // dQk/dwk
 
       // H
-      Hcounter_val = Hcounter[bus_index[k]];
-      HP[k][data->dwdw_indices[bus_index[k]]] += P_km[k]; // wk and wk
-      HQ[k][data->dwdw_indices[bus_index[k]]] += Q_km[k];
+      Hcounter_val = Hcounter[bus_index_t[k]];
+      HP[k][data->dwdw_indices[bus_index_t[k]]] += P_km[k]; // wk and wk
+      HQ[k][data->dwdw_indices[bus_index_t[k]]] += Q_km[k];
       if (var_v[k]) { // wk and vk
-	HP[k][data->dwdv_indices[bus_index[k]]] += Q_km[k]/v[k]; // wk and wk
-	HQ[k][data->dwdv_indices[bus_index[k]]] -= P_km[k]/v[k];
+	HP[k][data->dwdv_indices[bus_index_t[k]]] += Q_km[k]/v[k]; // wk and wk
+	HQ[k][data->dwdv_indices[bus_index_t[k]]] -= P_km[k]/v[k];
       }
       if (var_w[m]) { // wk and wm
 	HP[k][Hcounter_val] = -P_km[k];
@@ -1035,7 +1054,7 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	HQ[k][Hcounter_val] = -Q_km[k]*indicator_phi;
 	Hcounter_val++;
       }
-      Hcounter[bus_index[k]] = Hcounter_val;
+      Hcounter[bus_index_t[k]] = Hcounter_val;
     }
 
     //************
@@ -1048,13 +1067,13 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
       J[*Jcounter] = -Q_km[m]/v[k]; // dQm/dvk
       (*Jcounter)++;
 
-      J[data->dPdv_indices[bus_index[k]]] -= 2*P_kk[k]/v[k] + P_km[k]/v[k]; // dPk/dvk
-      J[data->dQdv_indices[bus_index[k]]] -= 2*Q_kk[k]/v[k] + Q_km[k]/v[k]; // dQk/dvk
+      J[data->dPdv_indices[bus_index_t[k]]] -= 2*P_kk[k]/v[k] + P_km[k]/v[k]; // dPk/dvk
+      J[data->dQdv_indices[bus_index_t[k]]] -= 2*Q_kk[k]/v[k] + Q_km[k]/v[k]; // dQk/dvk
 
       // H
-      Hcounter_val = Hcounter[bus_index[k]];
-      HP[k][data->dvdv_indices[bus_index[k]]] -= 2.*P_kk[k]/(v[k]*v[k]); // vk and vk
-      HQ[k][data->dvdv_indices[bus_index[k]]] -= 2.*Q_kk[k]/(v[k]*v[k]);
+      Hcounter_val = Hcounter[bus_index_T[k]];
+      HP[k][data->dvdv_indices[bus_index_t[k]]] -= 2.*P_kk[k]/(v[k]*v[k]); // vk and vk
+      HQ[k][data->dvdv_indices[bus_index_t[k]]] -= 2.*Q_kk[k]/(v[k]*v[k]);
       if (var_w[m]) { // vk and wm
 	HP[k][Hcounter_val] = -Q_km[k]/v[k];
 	HQ[k][Hcounter_val] = P_km[k]/v[k];
@@ -1075,7 +1094,7 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	HQ[k][Hcounter_val] = indicator_phi*P_km[k]/v[k];
 	Hcounter_val++;
       }
-      Hcounter[bus_index[k]] = Hcounter_val;
+      Hcounter[bus_index_t[k]] = Hcounter_val;
     }
 
     //***********
@@ -1085,7 +1104,7 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
       // Nothing
 
       // H
-      Hcounter_val = Hcounter[bus_index[k]];
+      Hcounter_val = Hcounter[bus_index_t[k]];
       HP[k][Hcounter_val] = P_km[k]; // wm and wm
       HQ[k][Hcounter_val] = Q_km[k];
       Hcounter_val++;
@@ -1104,7 +1123,7 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	HQ[k][Hcounter_val] = Q_km[k]*indicator_phi;;
 	Hcounter_val++;
       }
-      Hcounter[bus_index[k]] = Hcounter_val;
+      Hcounter[bus_index_t[k]] = Hcounter_val;
     }
 
     //***********
@@ -1114,7 +1133,7 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
       // Nothing
 
       // H
-      Hcounter_val = Hcounter[bus_index[k]];
+      Hcounter_val = Hcounter[bus_index_t[k]];
       if (var_a) {   // vm and a
 	HP[k][Hcounter_val] = -P_km[k]/(a*v[m]);
 	HQ[k][Hcounter_val] = -Q_km[k]/(a*v[m]);
@@ -1125,7 +1144,7 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	HQ[k][Hcounter_val] = indicator_phi*P_km[k]/v[m];
 	Hcounter_val++;
       }
-      Hcounter[bus_index[k]] = Hcounter_val;
+      Hcounter[bus_index_t[k]] = Hcounter_val;
     }
 
     //********
@@ -1139,7 +1158,7 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
       (*Jcounter)++;
 
       // H
-      Hcounter_val = Hcounter[bus_index[k]];
+      Hcounter_val = Hcounter[bus_index_t[k]];
       if (k == 0) { // a and a (important check k==0)
 	HP[k][Hcounter_val] = -P_kk[k]*2./(a*a);
 	HQ[k][Hcounter_val] = -Q_kk[k]*2./(a*a);
@@ -1150,7 +1169,7 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	HQ[k][Hcounter_val] = indicator_phi*P_km[k]/a;
 	Hcounter_val++;
       }
-      Hcounter[bus_index[k]] = Hcounter_val;
+      Hcounter[bus_index_t[k]] = Hcounter_val;
     }
 
     //**********
@@ -1164,11 +1183,11 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
       (*Jcounter)++;
 
       // H
-      Hcounter_val = Hcounter[bus_index[k]];
+      Hcounter_val = Hcounter[bus_index_t[k]];
       HP[k][Hcounter_val] = P_km[k];
       HQ[k][Hcounter_val] = Q_km[k];
       Hcounter_val++; // phi and phi
-      Hcounter[bus_index[k]] = Hcounter_val;
+      Hcounter[bus_index_t[k]] = Hcounter_val;
     }
   }
 
@@ -1177,7 +1196,7 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 
   for (k = 0; k < 2; k++) {
 
-    if (!bus_counted[bus_index[k]]) {
+    if (!bus_counted[bus_index_t[k]]) {
 
       //***********
       if (var_w[k]) { // wk var
@@ -1190,9 +1209,9 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	(*Jcounter)++;
 
 	// H
-	Hcounter[bus_index[k]]++;   // wk and wk
+	Hcounter[bus_index_t[k]]++;   // wk and wk
 	if (var_v[k]) {
-	  Hcounter[bus_index[k]]++; // wk and vk
+	  Hcounter[bus_index_t[k]]++; // wk and vk
 	}
       }
 
@@ -1207,7 +1226,7 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	(*Jcounter)++;
 
 	// H
-	Hcounter[bus_index[k]]++; // vk and vk
+	Hcounter[bus_index_t[k]]++; // vk and vk
       }
 
       // Generators
@@ -1215,13 +1234,13 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 
 	// Var values
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
-	  Pg = VEC_get(var_values,GEN_get_index_P(gen)); // p.u.
+	  Pg = VEC_get(var_values,GEN_get_index_P(gen,t)); // p.u.
 	else
-	  Pg = GEN_get_P(gen);                           // p.u.
+	  Pg = GEN_get_P(gen,t);                           // p.u.
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
-	  Qg = VEC_get(var_values,GEN_get_index_Q(gen)); // p.u.
+	  Qg = VEC_get(var_values,GEN_get_index_Q(gen,t)); // p.u.
 	else
-	  Qg = GEN_get_Q(gen);                           // p.u.
+	  Qg = GEN_get_Q(gen,t);                           // p.u.
 
 	// f
 	f[P_index[k]] += Pg;
@@ -1249,13 +1268,13 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 
 	// Var values
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P))
-	  Pg = VEC_get(var_values,VARGEN_get_index_P(vargen)); // p.u.
+	  Pg = VEC_get(var_values,VARGEN_get_index_P(vargen,t)); // p.u.
 	else
-	  Pg = VARGEN_get_P(vargen);                           // p.u.
+	  Pg = VARGEN_get_P(vargen,t);                           // p.u.
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q))
-	  Qg = VEC_get(var_values,VARGEN_get_index_Q(vargen)); // p.u.
+	  Qg = VEC_get(var_values,VARGEN_get_index_Q(vargen,t)); // p.u.
 	else
-	  Qg = VARGEN_get_Q(vargen);                           // p.u.
+	  Qg = VARGEN_get_Q(vargen,t);                           // p.u.
 
 	// f
 	f[P_index[k]] += Pg;
@@ -1282,15 +1301,15 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
       for (load = BUS_get_load(bus[k]); load != NULL; load = LOAD_get_next(load)) {
 
 	// f
-	f[P_index[k]] -= LOAD_get_P(load); // p.u.
-	f[Q_index[k]] -= LOAD_get_Q(load); // p.u.
+	f[P_index[k]] -= LOAD_get_P(load,t); // p.u.
+	f[Q_index[k]] -= LOAD_get_Q(load,t); // p.u.
       }
 
       // Batteries
       for (bat = BUS_get_bat(bus[k]); bat != NULL; bat = BAT_get_next(bat)) {
 
 	// f
-	f[P_index[k]] -= BAT_get_P(bat); // p.u.
+	f[P_index[k]] -= BAT_get_P(bat,t); // p.u.
       }
 
       // Shunts
@@ -1299,9 +1318,9 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	// Values
 	shunt_g = SHUNT_get_g(shunt);
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC))
-	  shunt_b = VEC_get(var_values,SHUNT_get_index_b(shunt)); // p.u.
+	  shunt_b = VEC_get(var_values,SHUNT_get_index_b(shunt,t)); // p.u.
 	else
-	  shunt_b = SHUNT_get_b(shunt);
+	  shunt_b = SHUNT_get_b(shunt,t);
 
 	// f
 	f[P_index[k]] -= shunt_g*v[k]*v[k]; // p.u.
@@ -1311,12 +1330,12 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 	if (var_v[k]) { // var v
 
 	  // J
-	  J[data->dPdv_indices[bus_index[k]]] -= 2*shunt_g*v[k]; // dPk/dvk
-	  J[data->dQdv_indices[bus_index[k]]] += 2*shunt_b*v[k]; // dQk/dvk
+	  J[data->dPdv_indices[bus_index_t[k]]] -= 2*shunt_g*v[k]; // dPk/dvk
+	  J[data->dQdv_indices[bus_index_t[k]]] += 2*shunt_b*v[k]; // dQk/dvk
 
 	  // H
-	  HP[k][data->dvdv_indices[bus_index[k]]] -= 2*shunt_g; // vk and vk
-	  HQ[k][data->dvdv_indices[bus_index[k]]] += 2*shunt_b;
+	  HP[k][data->dvdv_indices[bus_index_t[k]]] -= 2*shunt_g; // vk and vk
+	  HQ[k][data->dvdv_indices[bus_index_t[k]]] += 2*shunt_b;
 	}
 
 	//**************************************
@@ -1328,27 +1347,31 @@ void CONSTR_PF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 
 	  // H
 	  if (var_v[k]) {
-	    Hcounter_val = Hcounter[bus_index[k]];
+	    Hcounter_val = Hcounter[bus_index_t[k]];
 	    HP[k][Hcounter_val] = 0;
 	    HQ[k][Hcounter_val] = 2*v[k];
 	    Hcounter_val++; // b and vk
-	    Hcounter[bus_index[k]] = Hcounter_val;
+	    Hcounter[bus_index_t[k]] = Hcounter_val;
 	  }
 	}
       }
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
-void CONSTR_PF_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_PF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Local variables
   Bus* bus[2];
   char* bus_counted;
   int k;
+  int num_buses;
+
+  // Num buses
+  num_buses = NET_get_num_buses(CONSTR_get_network(c));
 
   // Constr data
   bus_counted = CONSTR_get_bus_counted(c);
@@ -1365,11 +1388,11 @@ void CONSTR_PF_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* s
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++) {
-    if (!bus_counted[BUS_get_index(bus[k])]) {
-      BUS_set_sens_P_balance(bus[k],VEC_get(sf,BUS_get_index_P(bus[k]))); // sens of P balance
-      BUS_set_sens_Q_balance(bus[k],VEC_get(sf,BUS_get_index_Q(bus[k]))); // sens of Q balance
+    if (!bus_counted[BUS_get_index(bus[k])+t*num_buses]) {
+      BUS_set_sens_P_balance(bus[k],VEC_get(sf,BUS_get_index_P(bus[k])+t*2*num_buses),t); // sens of P balance
+      BUS_set_sens_Q_balance(bus[k],VEC_get(sf,BUS_get_index_Q(bus[k])+t*2*num_buses),t); // sens of Q balance
     }
-    bus_counted[BUS_get_index(bus[k])] = TRUE;
+    bus_counted[BUS_get_index(bus[k])+t*num_buses] = TRUE;
   }
 }
 

@@ -23,8 +23,8 @@
 
 typedef struct Graph Graph;
 
-void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type);
-void GRAPH_color_nodes_by_sensitivity(Graph* g, int sens_type);
+void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type, int t);
+void GRAPH_color_nodes_by_sensitivity(Graph* g, int sens_type, int t);
 void GRAPH_del(Graph* g);
 void GRAPH_clear_error(Graph* g);
 char* GRAPH_get_error_string(Graph* g);

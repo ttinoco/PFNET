@@ -267,7 +267,6 @@ void ART_PARSER_read(ART_Parser* parser, char* filename) {
 
   // Local variables
   FILE* file;
-  char* line;
   CSV_Parser* csv = CSV_PARSER_new();
   char buffer[ART_PARSER_BUFFER_SIZE];
   size_t bytes_read;
@@ -539,6 +538,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   REAL den;
   REAL g;
   REAL b;
+  int num_periods;
 
   // Check
   if (!parser || !net)
@@ -547,11 +547,14 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   // Base power
   NET_set_base_power(net,parser->base_power);
 
+  // Num periods
+  num_periods = NET_get_num_periods(net);
+
   // Buses
   index = 0;
   num_buses = 0;
   LIST_len(ART_Bus,parser->bus_list,next,num_buses);
-  NET_set_bus_array(net,BUS_array_new(num_buses),num_buses);
+  NET_set_bus_array(net,BUS_array_new(num_buses,num_periods),num_buses);
   for (art_bus = parser->bus_list; art_bus != NULL; art_bus = art_bus->next) {
     art_bus->index = index;
     bus = NET_get_bus(net,index);
@@ -582,7 +585,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
     if (art_bus->pload != 0. || art_bus->qload != 0. || art_bus->qshunt != 0.)
       num_loads++;
   }
-  NET_set_load_array(net,LOAD_array_new(num_loads),num_loads);
+  NET_set_load_array(net,LOAD_array_new(num_loads,num_periods),num_loads);
   index = 0;
   for (art_bus = parser->bus_list; art_bus != NULL; art_bus = art_bus->next) {
     if (art_bus->pload != 0. || art_bus->qload != 0. || art_bus->qshunt != 0.) {
@@ -590,10 +593,10 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       load = NET_get_load(net,index);
       BUS_add_load(bus,load);                             // connect load to bus
       LOAD_set_bus(load,bus);                             // connect bus to load
-      LOAD_set_P(load,art_bus->pload/parser->base_power); // per unit
-      LOAD_set_Q(load,(art_bus->qload-art_bus->qshunt)/parser->base_power); // per unit
-      LOAD_set_P_min(load,LOAD_get_P(load));              // Pmin = P = Pmax
-      LOAD_set_P_max(load,LOAD_get_P(load));              // Pmin = P = Pmax
+      LOAD_set_P(load,art_bus->pload/parser->base_power,0); // per unit 
+      LOAD_set_Q(load,(art_bus->qload-art_bus->qshunt)/parser->base_power,0); // per unit
+      LOAD_set_P_min(load,LOAD_get_P(load,0));              // Pmin = P = Pmax
+      LOAD_set_P_max(load,LOAD_get_P(load,0));              // Pmin = P = Pmax
       index++;
     }
   }
@@ -604,7 +607,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
     if (art_bus->bshunt != 0.)
       num_shunts++;
   }
-  NET_set_shunt_array(net,SHUNT_array_new(num_shunts),num_shunts);
+  NET_set_shunt_array(net,SHUNT_array_new(num_shunts,num_periods),num_shunts);
   index = 0;
   for (art_bus = parser->bus_list; art_bus != NULL; art_bus = art_bus->next) {
     if (art_bus->bshunt != 0.) {
@@ -612,9 +615,9 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       shunt = NET_get_shunt(net,index);
       BUS_add_shunt(bus,shunt);                              // connect shunt to bus
       SHUNT_set_bus(shunt,bus);                              // connect bus to shunt
-      SHUNT_set_b(shunt,art_bus->bshunt/parser->base_power); // per unit
-      SHUNT_set_b_max(shunt,SHUNT_get_b(shunt));             // per unit
-      SHUNT_set_b_min(shunt,SHUNT_get_b(shunt));             // per unit
+      SHUNT_set_b(shunt,art_bus->bshunt/parser->base_power,0); // per unit
+      SHUNT_set_b_max(shunt,SHUNT_get_b(shunt,0));             // per unit
+      SHUNT_set_b_min(shunt,SHUNT_get_b(shunt,0));             // per unit
       index++;
     }
   }
@@ -625,7 +628,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
     if (art_gen->br != 0)
       num_gens++;
   }
-  NET_set_gen_array(net,GEN_array_new(num_gens),num_gens);
+  NET_set_gen_array(net,GEN_array_new(num_gens,num_periods),num_gens);
   index = 0;
   for (art_gen = parser->gener_list; art_gen != NULL; art_gen = art_gen->next) {
     if (art_gen->br != 0) {
@@ -636,17 +639,17 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 	gen = NET_get_gen(net,index);
 	BUS_add_gen(bus,gen);                                // connect gen to bus
 	GEN_set_bus(gen,bus);                                // connect bus to gen
-	GEN_set_P(gen,art_gen->p/parser->base_power);        // per unit
+	GEN_set_P(gen,art_gen->p/parser->base_power,0);        // per unit
 	GEN_set_P_max(gen,GEN_INF_P);                        // per unit
 	GEN_set_P_min(gen,-GEN_INF_P);                       // per unit
-	GEN_set_Q(gen,art_gen->q/parser->base_power);        // per unit
+	GEN_set_Q(gen,art_gen->q/parser->base_power,0);        // per unit
 	GEN_set_Q_max(gen,art_gen->qmax/parser->base_power); // per unit
 	GEN_set_Q_min(gen,art_gen->qmin/parser->base_power); // per unit
 	if (art_gen->vimp != 0.) {
 	  GEN_set_reg_bus(gen,bus);
 	  BUS_add_reg_gen(bus,gen);
-	  BUS_set_v_set(bus,art_gen->vimp); // p.u.
-	  BUS_set_v_mag(bus,art_gen->vimp); // p.u.
+	  BUS_set_v_set(bus,art_gen->vimp,0); // p.u.
+	  BUS_set_v_mag(bus,art_gen->vimp,0); // p.u.
 	}
 	else if (BUS_is_slack(bus)) {
 	  sprintf(parser->error_string,"invalid imposed voltage of slack generator %s",art_gen->name);
@@ -674,7 +677,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       num_transfo++;
   }
   num_branches = num_lines + num_transfo;
-  NET_set_branch_array(net,BRANCH_array_new(num_branches),num_branches);
+  NET_set_branch_array(net,BRANCH_array_new(num_branches,num_periods),num_branches);
 
   // Lines
   index = 0;
@@ -761,13 +764,13 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 	BRANCH_set_b_m(branch,(art_transfo->b1/100.)*(art_transfo->snom/parser->base_power));   // per unit (VB1,SNOM)
 	BRANCH_set_b_k(branch,(art_transfo->b2/100.)*(art_transfo->snom/parser->base_power)); // per unit (VB1,SNOM)
 
-	BRANCH_set_ratio(branch,100./art_transfo->n);          // units of bus_k_base/bus_m_base
-	BRANCH_set_ratio_max(branch,BRANCH_get_ratio(branch));
-	BRANCH_set_ratio_min(branch,BRANCH_get_ratio(branch));
+	BRANCH_set_ratio(branch,100./art_transfo->n,0);          // units of bus_from_base/bus_to_base
+	BRANCH_set_ratio_max(branch,BRANCH_get_ratio(branch,0));
+	BRANCH_set_ratio_min(branch,BRANCH_get_ratio(branch,0));
 
-	BRANCH_set_phase(branch,-art_transfo->phi*PI/180.);    // radians
-	BRANCH_set_phase_max(branch,BRANCH_get_phase(branch));
-	BRANCH_set_phase_min(branch,BRANCH_get_phase(branch));
+	BRANCH_set_phase(branch,-art_transfo->phi*PI/180.,0);    // radians
+	BRANCH_set_phase_max(branch,BRANCH_get_phase(branch,0));
+	BRANCH_set_phase_min(branch,BRANCH_get_phase(branch,0));
 
       }
       else {
@@ -804,7 +807,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 	BRANCH_set_ratio_min(branch,100./art_ltcv->nlast);
 
 	// Voltage limits
-	BUS_set_v_set(bus,art_ltcv->vdes); // per unit
+	BUS_set_v_set(bus,art_ltcv->vdes,0); // per unit
 	BUS_set_v_max(bus,art_ltcv->vdes+art_ltcv->tolv);
 	BUS_set_v_min(bus,art_ltcv->vdes-art_ltcv->tolv);
 
@@ -835,7 +838,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   // Vargens
   index = 0;
   LIST_len(ART_Vargen,parser->vargen_list,next,num_vargens);
-  NET_set_vargen_array(net,VARGEN_array_new(num_vargens),num_vargens);
+  NET_set_vargen_array(net,VARGEN_array_new(num_vargens,num_periods),num_vargens);
   for (art_vargen = parser->vargen_list; art_vargen != NULL; art_vargen = art_vargen->next) {
     art_bus = NULL;
     HASH_FIND_STR(parser->bus_hash,art_vargen->bus,art_bus);
@@ -845,10 +848,10 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       BUS_add_vargen(bus,vargen);                                   // connect vargen to bus
       VARGEN_set_bus(vargen,bus);                                   // connect bus to vargen
       VARGEN_set_name(vargen,art_vargen->name);
-      VARGEN_set_P(vargen,art_vargen->p/parser->base_power);        // per unit
+      VARGEN_set_P(vargen,art_vargen->p/parser->base_power,0);        // per unit
       VARGEN_set_P_max(vargen,art_vargen->pmax/parser->base_power); // per unit
       VARGEN_set_P_min(vargen,art_vargen->pmin/parser->base_power); // per unit
-      VARGEN_set_Q(vargen,art_vargen->q/parser->base_power);        // per unit
+      VARGEN_set_Q(vargen,art_vargen->q/parser->base_power,0);        // per unit
       VARGEN_set_Q_max(vargen,art_vargen->qmax/parser->base_power); // per unit
       VARGEN_set_Q_min(vargen,art_vargen->qmin/parser->base_power); // per unit
       NET_vargen_hash_name_add(net,vargen);
@@ -860,10 +863,10 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
     index++;
   }
 
-  // Bats
+  // Batteries
   index = 0;
   LIST_len(ART_Bat,parser->bat_list,next,num_bats);
-  NET_set_bat_array(net,BAT_array_new(num_bats),num_bats);
+  NET_set_bat_array(net,BAT_array_new(num_bats,num_periods),num_bats);
   for (art_bat = parser->bat_list; art_bat != NULL; art_bat = art_bat->next) {
     art_bus = NULL;
     HASH_FIND_STR(parser->bus_hash,art_bat->bus,art_bus);
@@ -872,10 +875,10 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       bat = NET_get_bat(net,index);
       BUS_add_bat(bus,bat);                                // connect bat to bus
       BAT_set_bus(bat,bus);                                // connect bus to bat
-      BAT_set_P(bat,art_bat->p/parser->base_power);        // per unit
+      BAT_set_P(bat,art_bat->p/parser->base_power,0);        // per unit
       BAT_set_P_max(bat,art_bat->pmax/parser->base_power); // per unit
       BAT_set_P_min(bat,art_bat->pmin/parser->base_power); // per unit
-      BAT_set_E(bat,art_bat->e/parser->base_power);        // per unit times hour
+      BAT_set_E(bat,art_bat->e/parser->base_power,0);        // per unit times hour
       BAT_set_E_max(bat,art_bat->emax/parser->base_power); // per unit times hour
       BAT_set_eta_c(bat,art_bat->eta_c);                   // unitless
       BAT_set_eta_d(bat,art_bat->eta_d);                   // unitless

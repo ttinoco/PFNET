@@ -30,7 +30,7 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(net.base_power,100.)
 
                 self.assertEqual(net.num_buses,3)
-                self.assertEqual(net.num_gens,4)
+                self.assertEqual(net.num_generators,4)
                 self.assertEqual(net.num_loads,3)
                 self.assertEqual(net.num_branches,3)
 
@@ -45,19 +45,19 @@ class TestParser(unittest.TestCase):
                 branch13 = net.get_branch(0)
                 branch23 = net.get_branch(1)
                 branch12 = net.get_branch(2)
-
-                self.assertEqual(len(bus1.gens),2)
-                self.assertEqual(len(bus2.gens),1)
-                self.assertEqual(len(bus3.gens),1)
+                
+                self.assertEqual(len(bus1.generators),2)
+                self.assertEqual(len(bus2.generators),1)
+                self.assertEqual(len(bus3.generators),1)
 
                 self.assertEqual(len(bus1.loads),1)
                 self.assertEqual(len(bus2.loads),1)
                 self.assertEqual(len(bus3.loads),1)
 
-                gen1a = bus1.gens[0]
-                gen1b = bus1.gens[1]
-                gen2 = bus2.gens[0]
-                gen3 = bus3.gens[0]
+                gen1a = bus1.generators[0]
+                gen1b = bus1.generators[1]
+                gen2 = bus2.generators[0]
+                gen3 = bus3.generators[0]
 
                 load1 = bus1.loads[0]
                 load2 = bus2.loads[0]
@@ -147,10 +147,10 @@ class TestParser(unittest.TestCase):
 
                 # numbers
                 self.assertEqual(net.num_buses,10)
-                self.assertEqual(net.num_gens,5)
+                self.assertEqual(net.num_generators,5)
                 self.assertEqual(net.num_loads,10)
                 self.assertEqual(net.num_shunts,0)
-                self.assertEqual(net.num_vargens,0)
+                self.assertEqual(net.num_var_generators,0)
                 self.assertEqual(net.num_branches,13)
 
                 # buses
@@ -205,21 +205,21 @@ class TestParser(unittest.TestCase):
                     self.assertEqual(load.P_min,load.P)
 
                 # generators
-                self.assertEqual(len(bus1.gens),0)
-                self.assertEqual(len(bus2.gens),1)
-                self.assertEqual(len(bus3.gens),1)
-                self.assertEqual(len(bus4.gens),0)
-                self.assertEqual(len(bus5.gens),1)
-                self.assertEqual(len(bus6.gens),0)
-                self.assertEqual(len(bus7.gens),1)
-                self.assertEqual(len(bus8.gens),1)
-                self.assertEqual(len(bus9.gens),0)
-                self.assertEqual(len(bus10.gens),0)
-                gen1 = bus2.gens[0]
-                gen2 = bus3.gens[0]
-                gen3 = bus5.gens[0]
-                gen4 = bus7.gens[0]
-                gen5 = bus8.gens[0]
+                self.assertEqual(len(bus1.generators),0)
+                self.assertEqual(len(bus2.generators),1)
+                self.assertEqual(len(bus3.generators),1)
+                self.assertEqual(len(bus4.generators),0)
+                self.assertEqual(len(bus5.generators),1)
+                self.assertEqual(len(bus6.generators),0)
+                self.assertEqual(len(bus7.generators),1)
+                self.assertEqual(len(bus8.generators),1)
+                self.assertEqual(len(bus9.generators),0)
+                self.assertEqual(len(bus10.generators),0)
+                gen1 = bus2.generators[0]
+                gen2 = bus3.generators[0]
+                gen3 = bus5.generators[0]
+                gen4 = bus7.generators[0]
+                gen5 = bus8.generators[0]
 
                 self.assertEqual(gen1.bus,bus2)
                 self.assertEqual(gen2.bus,bus3)
@@ -373,7 +373,7 @@ class TestParser(unittest.TestCase):
                 net.load(case)
 
                 self.assertEqual(net.num_buses,31)
-                self.assertEqual(net.num_bats,3)
+                self.assertEqual(net.num_batteries,3)
                 b1 = net.get_bat(0)
                 b2 = net.get_bat(1)
                 b3 = net.get_bat(2)
@@ -381,9 +381,9 @@ class TestParser(unittest.TestCase):
 
                 self.assertEqual(b1.bus.name,"N18")
                 self.assertEqual(b1.index,0)
-                self.assertTrue(all(list(map(lambda y: isinstance(y,pf.Battery),b1.bus.bats))))
-                self.assertEqual(len(b1.bus.bats),2)
-                self.assertEqual(list(map(lambda y: y.index,b1.bus.bats)),[b1.index,b2.index])
+                self.assertTrue(all(list(map(lambda y: isinstance(y,pf.Battery),b1.bus.batteries))))
+                self.assertEqual(len(b1.bus.batteries),2)
+                self.assertEqual(list(map(lambda y: y.index,b1.bus.batteries)),[b1.index,b2.index])
                 self.assertEqual(b1.P,6./net.base_power)
                 self.assertEqual(b1.P_min,-7./net.base_power)
                 self.assertEqual(b1.P_max,8./net.base_power)
@@ -394,9 +394,9 @@ class TestParser(unittest.TestCase):
 
                 self.assertEqual(b2.bus.name,"N18")
                 self.assertEqual(b2.index,1)
-                self.assertTrue(all(list(map(lambda y: isinstance(y,pf.Battery),b2.bus.bats))))
-                self.assertEqual(len(b2.bus.bats),2)
-                self.assertEqual(list(map(lambda y: y.index,b2.bus.bats)),[b1.index,b2.index])
+                self.assertTrue(all(list(map(lambda y: isinstance(y,pf.Battery),b2.bus.batteries))))
+                self.assertEqual(len(b2.bus.batteries),2)
+                self.assertEqual(list(map(lambda y: y.index,b2.bus.batteries)),[b1.index,b2.index])
                 self.assertEqual(b2.P,3./net.base_power)
                 self.assertEqual(b2.P_min,-3./net.base_power)
                 self.assertEqual(b2.P_max,9./net.base_power)
@@ -407,9 +407,9 @@ class TestParser(unittest.TestCase):
 
                 self.assertEqual(b3.bus.name,"N15")
                 self.assertEqual(b3.index,2)
-                self.assertTrue(all(list(map(lambda y: isinstance(y,pf.Battery),b3.bus.bats))))
-                self.assertEqual(len(b3.bus.bats),1)
-                self.assertEqual(list(map(lambda y: y.index,b3.bus.bats)),[b3.index])
+                self.assertTrue(all(list(map(lambda y: isinstance(y,pf.Battery),b3.bus.batteries))))
+                self.assertEqual(len(b3.bus.batteries),1)
+                self.assertEqual(list(map(lambda y: y.index,b3.bus.batteries)),[b3.index])
                 self.assertEqual(b3.P,2./net.base_power)
                 self.assertEqual(b3.P_min,-4./net.base_power)
                 self.assertEqual(b3.P_max,5./net.base_power)

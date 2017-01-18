@@ -19,12 +19,12 @@ typedef struct Constr_PF_Data Constr_PF_Data;
 
 // Function prototypes
 void CONSTR_PF_init(Constr* c);
-void CONSTR_PF_count_branch(Constr* c, Branch* b);
+void CONSTR_PF_count_step(Constr* c, Branch* br, int t);
 void CONSTR_PF_allocate(Constr* c);
 void CONSTR_PF_clear(Constr* c);
-void CONSTR_PF_analyze_branch(Constr* c, Branch* b);
-void CONSTR_PF_eval_branch(Constr* c, Branch* b, Vec* var_values);
-void CONSTR_PF_store_sens_branch(Constr* c, Branch* b, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
+void CONSTR_PF_analyze_step(Constr* c, Branch* br, int t);
+void CONSTR_PF_eval_step(Constr* c, Branch* br, int t, Vec* var_values);
+void CONSTR_PF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void CONSTR_PF_free(Constr* c);
 
 #endif

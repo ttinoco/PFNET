@@ -10,78 +10,108 @@
 
 #include <pfnet/gen.h>
 #include <pfnet/bus.h>
+#include <pfnet/array.h>
 
 struct Gen {
 
   // Bus
-  Bus* bus;            /**< @brief Bus to which generator is connected */
-  Bus* reg_bus;        /**< @brief Bus regulated by this generator */
+  Bus* bus;            /**< @brief Bus to which generator is connected. */
+  Bus* reg_bus;        /**< @brief Bus regulated by this generator. */
+
+  // Times
+  int num_periods;   /**< @brief Number of time periods. */
   
   // Flags
-  BOOL outage;         /**< @brief Flag for indicating that generator in on outage */
-  char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
-  char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
-  char vars;           /**< @brief Flags for indicating which quantities should be treated as variables */
-  char sparse;         /**< @brief Flags for indicating which control adjustments should be sparse */
+  BOOL outage;         /**< @brief Flag for indicating that generator in on outage. */
+  char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value. */
+  char bounded;        /**< @brief Flags for indicating which quantities should be bounded. */
+  char vars;           /**< @brief Flags for indicating which quantities should be treated as variables. */
+  char sparse;         /**< @brief Flags for indicating which control adjustments should be sparse. */
   
   // Active power
-  REAL P;              /**< @brief Generator active power production (p.u. system base power) */
-  REAL P_max;          /**< @brief Maximum generator active power production (p.u.) */
-  REAL P_min;          /**< @brief Minimum generator active power production (p.u.) */
+  REAL* P;             /**< @brief Generator active power production (p.u. system base power). */
+  REAL P_max;          /**< @brief Maximum generator active power production (p.u.). */
+  REAL P_min;          /**< @brief Minimum generator active power production (p.u.). */
+  REAL dP_max;         /**< @brief Maximum generator active power ramping (p.u.). */
+  REAL P_prev;         /**< @brief Generator active power production during the previous time period (p.u.). */
 
   // Reactive power
-  REAL Q;              /**< @brief Generator reactive power production (p.u. system base power) */
-  REAL Q_max;          /**< @brief Maximum generator reactive power production (p.u.) */
-  REAL Q_min;          /**< @brief Minimum generator reactive power production (p.u.) */
+  REAL* Q;             /**< @brief Generator reactive power production (p.u. system base power). */
+  REAL Q_max;          /**< @brief Maximum generator reactive power production (p.u.). */
+  REAL Q_min;          /**< @brief Minimum generator reactive power production (p.u.). */
 
   // Cost
-  REAL cost_coeff_Q0;  /**< @brief Generator cost coefficient (constant term, units of $/hr ) */
-  REAL cost_coeff_Q1;  /**< @brief Generator cost coefficient (linear term, units of $/(hr p.u.) ) */
-  REAL cost_coeff_Q2;  /**< @brief Generator cost coefficient (quadratic term, units of $/(hr p.u.^2) ) */
+  REAL cost_coeff_Q0;  /**< @brief Generator cost coefficient (constant term, units of $/hr ). */
+  REAL cost_coeff_Q1;  /**< @brief Generator cost coefficient (linear term, units of $/(hr p.u.) ). */
+  REAL cost_coeff_Q2;  /**< @brief Generator cost coefficient (quadratic term, units of $/(hr p.u.^2) ). */
 
   // Indices
-  int index;           /**< @brief Generator index */
-  int index_P;         /**< @brief Active power index */
-  int index_Q;         /**< @brief Reactive power index */
+  int index;           /**< @brief Generator index. */
+  int* index_P;        /**< @brief Active power index. */
+  int* index_Q;        /**< @brief Reactive power index. */
 
   // Sensitivities
-  REAL sens_P_u_bound;  /**< @brief Sensitivity of active power upper bound */
-  REAL sens_P_l_bound;  /**< @brief Sensitivity of active power lower bound */
+  REAL* sens_P_u_bound;  /**< @brief Sensitivity of active power upper bound. */
+  REAL* sens_P_l_bound;  /**< @brief Sensitivity of active power lower bound. */
 
   // List
-  Gen* next;     /**< @brief List of generators connected to a bus */
-  Gen* reg_next; /**< @brief List of generators regulating a bus */
+  Gen* next;     /**< @brief List of generators connected to a bus. */
+  Gen* reg_next; /**< @brief List of generators regulating a bus. */
 };
 
-void* GEN_array_get(void* gen, int index) {
-  if (gen)
-    return (void*)&(((Gen*)gen)[index]);
+void* GEN_array_get(void* gen_array, int index) {
+  if (gen_array)
+    return (void*)&(((Gen*)gen_array)[index]);
   else 
     return NULL;
 }
 
-Gen* GEN_array_new(int num) {
+void GEN_array_del(Gen* gen_array, int size) {
   int i;
-  Gen* gen = (Gen*)malloc(sizeof(Gen)*num);
-  for (i = 0; i < num; i++) {
-    GEN_init(&(gen[i]));
-    GEN_set_index(&(gen[i]),i);
-  }
-  return gen;
+  Gen* gen;
+  if (gen_array) {
+    for (i = 0; i < size; i++) {
+      gen = &(gen_array[i]);
+      free(gen->P);
+      free(gen->Q);
+      free(gen->index_P);
+      free(gen->index_Q);
+      free(gen->sens_P_u_bound);
+      free(gen->sens_P_l_bound);
+    }
+    free(gen_array);
+  }  
 }
 
-void GEN_array_show(Gen* gen, int num) {
+Gen* GEN_array_new(int size, int num_periods) {
   int i;
-  if (gen) {
-    for (i = 0; i < num; i++) 
-      GEN_show(&(gen[i]));
+  if (num_periods > 0) {
+    Gen* gen_array = (Gen*)malloc(sizeof(Gen)*size);
+    for (i = 0; i < size; i++) {
+      GEN_init(&(gen_array[i]),num_periods);
+      GEN_set_index(&(gen_array[i]),i);
+    }
+    return gen_array;
+  }
+  else
+    return NULL;
+}
+
+void GEN_array_show(Gen* gen_array, int size, int t) {
+  int i;
+  if (gen_array) {
+    for (i = 0; i < size; i++) 
+      GEN_show(&(gen_array[i]),t);
   }
 }
 
 void GEN_clear_sensitivities(Gen* gen) {
+  int t;
   if (gen) {
-    gen->sens_P_u_bound = 0;
-    gen->sens_P_l_bound = 0;
+    for (t = 0; t < gen->num_periods; t++) {
+      gen->sens_P_u_bound[t] = 0;
+      gen->sens_P_l_bound[t] = 0;
+    }
   }
 }
 
@@ -98,16 +128,23 @@ void GEN_clear_flags(Gen* gen, char flag_type) {
   }
 }
 
-REAL GEN_get_sens_P_u_bound(Gen* gen) {
+int GEN_get_num_periods(Gen* gen) {
   if (gen)
-    return gen->sens_P_u_bound;
+    return gen->num_periods;
   else
     return 0;
 }
 
-REAL GEN_get_sens_P_l_bound(Gen* gen) {
-  if (gen)
-    return gen->sens_P_l_bound;
+REAL GEN_get_sens_P_u_bound(Gen* gen, int t) {
+  if (gen && t >= 0 && t < gen->num_periods)
+    return gen->sens_P_u_bound[t];
+  else
+    return 0;
+}
+
+REAL GEN_get_sens_P_l_bound(Gen* gen, int t) {
+  if (gen && t >= 0 && t < gen->num_periods)
+    return gen->sens_P_l_bound[t];
   else
     return 0;
 }
@@ -133,14 +170,14 @@ Bus* GEN_get_reg_bus(Gen* gen) {
     return NULL;
 }
 
-REAL GEN_get_P_cost(Gen* gen) {
-  if (gen)
-    return GEN_get_P_cost_at(gen,gen->P); // $/hr
+REAL GEN_get_P_cost(Gen* gen, int t) {
+  if (gen && t >= 0 && t < gen->num_periods)
+    return GEN_get_P_cost_for(gen,gen->P[t]); // $/hr
   else
     return 0;
 }
 
-REAL GEN_get_P_cost_at(Gen* gen, REAL P) {
+REAL GEN_get_P_cost_for(Gen* gen, REAL P) {
   if (gen)
     return (gen->cost_coeff_Q0 + 
 	    gen->cost_coeff_Q1*P +
@@ -177,16 +214,16 @@ int GEN_get_index(Gen* gen) {
     return 0;
 }
 
-int GEN_get_index_P(Gen* gen) {
-  if (gen)
-    return gen->index_P;
+int GEN_get_index_P(Gen* gen, int t) {
+  if (gen && t >= 0 && t < gen->num_periods)
+    return gen->index_P[t];
   else
     return 0;
 }
 
-int GEN_get_index_Q(Gen* gen) {
-  if (gen)
-    return gen->index_Q;
+int GEN_get_index_Q(Gen* gen, int t) {
+  if (gen && t >= 0 && t < gen->num_periods)
+    return gen->index_Q[t];
   else
     return 0;
 }
@@ -205,9 +242,16 @@ Gen* GEN_get_reg_next(Gen* gen) {
     return NULL;
 }
 
-REAL GEN_get_P(Gen* gen) {
+REAL GEN_get_P(Gen* gen, int t) {
+  if (gen && t >= 0 && t < gen->num_periods)
+    return gen->P[t];
+  else 
+    return 0;
+}
+
+REAL GEN_get_dP_max(Gen* gen) {
   if (gen)
-    return gen->P;
+    return gen->dP_max;
   else 
     return 0;
 }
@@ -226,9 +270,16 @@ REAL GEN_get_P_min(Gen* gen) {
     return 0;
 }
 
-REAL GEN_get_Q(Gen* gen) {
+REAL GEN_get_P_prev(Gen* gen) {
   if (gen)
-    return gen->Q;
+    return gen->P_prev;
+  else 
+    return 0;
+}
+
+REAL GEN_get_Q(Gen* gen, int t) {
+  if (gen && t >= 0 && t < gen->num_periods)
+    return gen->Q[t];
   else
     return 0;
 }
@@ -248,55 +299,102 @@ REAL GEN_get_Q_min(Gen* gen) {
 }
 
 void GEN_get_var_values(Gen* gen, Vec* values, int code) {
+
+  // Local vars
+  int t;
   
+  // No gen
   if (!gen)
     return;
 
-  if (gen->vars & GEN_VAR_P) { // active power
-    switch(code) {
-    case UPPER_LIMITS:
-      VEC_set(values,gen->index_P,gen->P_max);
-      break;
-    case LOWER_LIMITS:
-      VEC_set(values,gen->index_P,gen->P_min);
-      break;
-    default:
-      VEC_set(values,gen->index_P,gen->P);
+  // Time loop
+  for (t = 0; t < gen->num_periods; t++) {
+    
+    if (gen->vars & GEN_VAR_P) { // active power
+      switch(code) {
+      case UPPER_LIMITS:
+	VEC_set(values,gen->index_P[t],gen->P_max);
+	break;
+      case LOWER_LIMITS:
+	VEC_set(values,gen->index_P[t],gen->P_min);
+	break;
+      default:
+	VEC_set(values,gen->index_P[t],gen->P[t]);
+      }
     }
-  }
-  if (gen->vars & GEN_VAR_Q) { // reactive power
-    switch(code) {
-    case UPPER_LIMITS:
-      VEC_set(values,gen->index_Q,gen->Q_max);
-      break;
-    case LOWER_LIMITS:
-      VEC_set(values,gen->index_Q,gen->Q_min);
-      break;
-    default:
-      VEC_set(values,gen->index_Q,gen->Q);
+    if (gen->vars & GEN_VAR_Q) { // reactive power
+      switch(code) {
+      case UPPER_LIMITS:
+	VEC_set(values,gen->index_Q[t],gen->Q_max);
+	break;
+      case LOWER_LIMITS:
+	VEC_set(values,gen->index_Q[t],gen->Q_min);
+	break;
+      default:
+	VEC_set(values,gen->index_Q[t],gen->Q[t]);
+      }
     }
   }
 }
 
-Vec* GEN_get_var_indices(void* vgen, char var) {
+int GEN_get_num_vars(void* vgen, unsigned char var, int t_start, int t_end) {
+
+  // Local vars
+  Gen* gen = (Gen*)vgen;
+  int num_vars = 0;
+  int dt;
+
+  // Checks
+  if (!gen)
+    return 0;
+  if (t_start < 0)
+    t_start = 0;
+  if (t_end > gen->num_periods-1)
+    t_end = gen->num_periods-1;
+
+  // Num vars
+  dt = t_end-t_start+1;
+  if ((var & GEN_VAR_P) && (gen->vars & GEN_VAR_P))
+    num_vars += dt;
+  if ((var & GEN_VAR_Q) && (gen->vars & GEN_VAR_Q))
+    num_vars += dt;
+  return num_vars;
+}
+
+Vec* GEN_get_var_indices(void* vgen, unsigned char var, int t_start, int t_end) {
+
+  // Local vars
   Gen* gen = (Gen*)vgen;
   Vec* indices;
+  int offset = 0;
+  int t;
+
+  // Checks
   if (!gen)
     return NULL;
-  if (var == GEN_VAR_P) {
-    indices = VEC_new(1);
-    VEC_set(indices,0,gen->index_P);
-    return indices;
+  if (t_start < 0)
+    t_start = 0;
+  if (t_end > gen->num_periods-1)
+    t_end = gen->num_periods-1;
+
+  // Indices
+  indices = VEC_new(GEN_get_num_vars(vgen,var,t_start,t_end));
+  if ((var & GEN_VAR_P) && (gen->vars & GEN_VAR_P)) {
+    for (t = t_start; t <= t_end; t++) {
+      VEC_set(indices,offset,gen->index_P[t]);
+      offset++;
+    }
   }
-  if (var == GEN_VAR_Q) {
-    indices = VEC_new(1);
-    VEC_set(indices,0,gen->index_Q);
-    return indices;
+  if ((var & GEN_VAR_Q) && (gen->vars & GEN_VAR_Q)) {
+    for (t = t_start; t <= t_end; t++) {
+      VEC_set(indices,offset,gen->index_Q[t]);
+      offset++;
+    }
   }
-  return NULL;
+  return indices;
 }
 
-BOOL GEN_has_flags(void* vgen, char flag_type, char mask) {
+BOOL GEN_has_flags(void* vgen, char flag_type, unsigned char mask) {
   Gen* gen = (Gen*)vgen;
   if (gen) {
     if (flag_type == FLAG_VARS)
@@ -332,40 +430,50 @@ BOOL GEN_has_properties(void* vgen, char prop) {
   return TRUE;
 }
 
-void GEN_init(Gen* gen) {
-  if (gen) {
+void GEN_init(Gen* gen, int num_periods) {
+
+  // Local vars
+  int T;
+
+  // No gen
+  if (!gen)
+    return;
+
+  T = num_periods;
+  gen->num_periods = num_periods;
         
-    gen->bus = NULL;
-    gen->reg_bus = NULL;
+  gen->bus = NULL;
+  gen->reg_bus = NULL;
+  
+  gen->outage = FALSE;
+  gen->fixed = 0x00;
+  gen->bounded = 0x00;
+  gen->sparse = 0x00;
+  gen->vars = 0x00;
+  
+  gen->dP_max = 0;
+  gen->P_max = 0;
+  gen->P_min = 0;
+  gen->P_prev = 0;
     
-    gen->outage = FALSE;
-    gen->fixed = 0x00;
-    gen->bounded = 0x00;
-    gen->sparse = 0x00;
-    gen->vars = 0x00;
-    
-    gen->P = 0;
-    gen->P_max = 0;
-    gen->P_min = 0;
-    
-    gen->Q = 0;
-    gen->Q_max = 0;
-    gen->Q_min = 0;
-    
-    gen->cost_coeff_Q0 = 0;
-    gen->cost_coeff_Q1 = 2000.;
-    gen->cost_coeff_Q2 = 100.;
-    
-    gen->index = 0;
-    gen->index_P = 0;
-    gen->index_Q = 0;
-    
-    gen->sens_P_u_bound = 0;
-    gen->sens_P_l_bound = 0;
-    
-    gen->next = NULL;
-    gen->reg_next = NULL;
-  }
+  gen->Q_max = 0;
+  gen->Q_min = 0;
+  
+  gen->cost_coeff_Q0 = 0;
+  gen->cost_coeff_Q1 = 2000.;
+  gen->cost_coeff_Q2 = 100.;
+  
+  gen->index = 0;
+
+  ARRAY_zalloc(gen->P,REAL,T);
+  ARRAY_zalloc(gen->Q,REAL,T);
+  ARRAY_zalloc(gen->index_P,int,T);
+  ARRAY_zalloc(gen->index_Q,int,T);
+  ARRAY_zalloc(gen->sens_P_u_bound,REAL,T);
+  ARRAY_zalloc(gen->sens_P_l_bound,REAL,T);
+  
+  gen->next = NULL;
+  gen->reg_next = NULL;
 }
 
 BOOL GEN_is_equal(Gen* gen, Gen* other) {
@@ -432,20 +540,24 @@ int GEN_list_reg_len(Gen* reg_gen_list) {
   return len;
 }
 
-Gen* GEN_new(void) {
-  Gen* gen = (Gen*)malloc(sizeof(Gen));
-  GEN_init(gen);
-  return gen;
+Gen* GEN_new(int num_periods) {
+  if (num_periods > 0) {
+    Gen* gen = (Gen*)malloc(sizeof(Gen));
+    GEN_init(gen,num_periods);
+    return gen;
+  }
+  else
+    return NULL;
 }
 
-void GEN_set_sens_P_u_bound(Gen* gen, REAL value) {
-  if (gen)
-    gen->sens_P_u_bound = value;
+void GEN_set_sens_P_u_bound(Gen* gen, REAL value, int t) {
+  if (gen && t >= 0 && t < gen->num_periods)
+    gen->sens_P_u_bound[t] = value;
 }
 
-void GEN_set_sens_P_l_bound(Gen* gen, REAL value) {
-  if (gen)
-    gen->sens_P_l_bound = value;
+void GEN_set_sens_P_l_bound(Gen* gen, REAL value, int t) {
+  if (gen && t >= 0 && t < gen->num_periods)
+    gen->sens_P_l_bound[t] = value;
 }
 
 void GEN_set_cost_coeff_Q0(Gen* gen, REAL q) {
@@ -483,24 +595,34 @@ void GEN_set_index(Gen* gen, int index) {
     gen->index = index;
 }
 
-void GEN_set_P(Gen* gen, REAL P) {
-  if (gen)
-    gen->P = P;
+void GEN_set_P(Gen* gen, REAL P, int t) {
+  if (gen && t >= 0 && t < gen->num_periods)
+    gen->P[t] = P;
 }
 
-void GEN_set_P_max(Gen* gen, REAL P_max) {
+void GEN_set_dP_max(Gen* gen, REAL P) {
   if (gen)
-    gen->P_max = P_max;
+    gen->dP_max = P;
 }
 
-void GEN_set_P_min(Gen* gen, REAL P_min) {
+void GEN_set_P_max(Gen* gen, REAL P) {
   if (gen)
-    gen->P_min = P_min;
+    gen->P_max = P;
 }
 
-void GEN_set_Q(Gen* gen, REAL Q) {
+void GEN_set_P_min(Gen* gen, REAL P) {
   if (gen)
-    gen->Q = Q;
+    gen->P_min = P;
+}
+
+void GEN_set_P_prev(Gen* gen, REAL P) {
+  if (gen)
+    gen->P_prev = P;
+}
+
+void GEN_set_Q(Gen* gen, REAL Q, int t) {
+  if (gen && t >= 0 && t < gen->num_periods)
+    gen->Q[t] = Q;
 }
 
 void GEN_set_Q_max(Gen* gen, REAL Q_max) {
@@ -513,13 +635,14 @@ void GEN_set_Q_min(Gen* gen, REAL Q_min) {
     gen->Q_min = Q_min;
 }
 
-int GEN_set_flags(void* vgen, char flag_type, char mask, int index) {
+int GEN_set_flags(void* vgen, char flag_type, unsigned char mask, int index) {
 
   // Local variables
   char* flags_ptr = NULL;
   Gen* gen = (Gen*)vgen;
+  int t;
 
-  // Check gen
+  // No gen
   if (!gen)
     return 0;
 
@@ -537,31 +660,56 @@ int GEN_set_flags(void* vgen, char flag_type, char mask, int index) {
 
   // Set flags
   if (!((*flags_ptr) & GEN_VAR_P) && (mask & GEN_VAR_P)) {
-    if (flag_type == FLAG_VARS)
-      gen->index_P = index;
+    if (flag_type == FLAG_VARS) {
+      for (t = 0; t < gen->num_periods; t++)
+	gen->index_P[t] = index+t;
+    }
     (*flags_ptr) |= GEN_VAR_P;
-    index++;
+    index += gen->num_periods;
   }
   if (!((*flags_ptr) & GEN_VAR_Q) && (mask & GEN_VAR_Q)) {
-    if (flag_type == FLAG_VARS)
-      gen->index_Q = index;
+    if (flag_type == FLAG_VARS) {
+      for (t = 0; t < gen->num_periods; t++)
+	gen->index_Q[t] = index+t;
+    }
     (*flags_ptr) |= GEN_VAR_Q;
-    index++;
+    index += gen->num_periods;
   }
   return index;  
 }
 
 void GEN_set_var_values(Gen* gen, Vec* values) {
-  
+ 
+  // Local vars
+  int t;
+ 
+  // No gen
   if (!gen)
     return;
-  if (gen->vars & GEN_VAR_P) // active power (p.u.)
-    gen->P = VEC_get(values,gen->index_P);
-  if (gen->vars & GEN_VAR_Q) // reactive power (p.u.)
-    gen->Q = VEC_get(values,gen->index_Q);
+
+  // Time loop
+  for (t = 0; t < gen->num_periods; t++) {
+
+    if (gen->vars & GEN_VAR_P) // active power (p.u.)
+      gen->P[t] = VEC_get(values,gen->index_P[t]);
+    if (gen->vars & GEN_VAR_Q) // reactive power (p.u.)
+      gen->Q[t] = VEC_get(values,gen->index_Q[t]);
+  }
 }
 
-void GEN_show(Gen* gen) {
-  printf("gen %d\t%d\n",BUS_get_number(gen->bus),BUS_get_number(gen->reg_bus));
+void GEN_show(Gen* gen, int t) {
+  printf("gen %d\t%d\n",
+	 BUS_get_number(gen->bus),
+	 BUS_get_number(gen->reg_bus));
+}
+
+void GEN_propagate_data_in_time(Gen* gen) {
+  int t;
+  if (gen) {
+    for (t = 1; t < gen->num_periods; t++) {
+      gen->P[t] = gen->P[0];
+      gen->Q[t] = gen->Q[0];
+    }
+  }
 }
 

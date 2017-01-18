@@ -57,21 +57,24 @@ typedef struct Bus Bus;
 typedef struct Vec Vec;
 
 // Prototypes
+void BRANCH_array_del(Branch* br_array, int size);
 void* BRANCH_array_get(void* br, int index);
-Branch* BRANCH_array_new(int num);
-void BRANCH_array_show(Branch* br, int num);
+Branch* BRANCH_array_new(int size, int num_periods);
+void BRANCH_array_show(Branch* br, int size, int t);
 void BRANCH_clear_sensitivities(Branch* br);
 void BRANCH_clear_flags(Branch* br, char flag_type);
+void BRANCH_propagate_data_in_time(Branch* br);
+int BRANCH_get_num_periods(Branch* br);
 char BRANCH_get_type(Branch* br);
 char BRANCH_get_obj_type(void* br);
-REAL BRANCH_get_sens_P_u_bound(Branch* br);
-REAL BRANCH_get_sens_P_l_bound(Branch* br);
+REAL BRANCH_get_sens_P_u_bound(Branch* br, int t);
+REAL BRANCH_get_sens_P_l_bound(Branch* br, int t);
 int BRANCH_get_index(Branch* br);
-int BRANCH_get_index_ratio(Branch* br);
-int BRANCH_get_index_ratio_y(Branch* br);
-int BRANCH_get_index_ratio_z(Branch* br);
-int BRANCH_get_index_phase(Branch* br);
-REAL BRANCH_get_ratio(Branch* br);
+int BRANCH_get_index_ratio(Branch* br, int t);
+int BRANCH_get_index_ratio_y(Branch* br, int t);
+int BRANCH_get_index_ratio_z(Branch* br, int t);
+int BRANCH_get_index_phase(Branch* br, int t);
+REAL BRANCH_get_ratio(Branch* br, int t);
 REAL BRANCH_get_ratio_max(Branch* br);
 REAL BRANCH_get_ratio_min(Branch* br);
 REAL BRANCH_get_b(Branch* br);
@@ -94,7 +97,7 @@ Branch* BRANCH_get_from_next(Branch* br);   // @deprecated @see BRANCH_get_next_
 Branch* BRANCH_get_to_next(Branch* br);     // @deprecated @see BRANCH_get_next_m
 Branch* BRANCH_get_next_k(Branch* br);
 Branch* BRANCH_get_next_m(Branch* br);
-REAL BRANCH_get_phase(Branch* br);
+REAL BRANCH_get_phase(Branch* br, int t);
 REAL BRANCH_get_phase_max(Branch* br);
 REAL BRANCH_get_phase_min(Branch* br);
 REAL BRANCH_get_P_km(Branch* br, Vec* var_values);
@@ -124,13 +127,14 @@ REAL BRANCH_get_P_shunt_to(Branch* br, Vec* var_values);    // @deprecated @see 
 REAL BRANCH_get_ratingA(Branch* br);
 REAL BRANCH_get_ratingB(Branch* br);
 REAL BRANCH_get_ratingC(Branch* br);
-REAL BRANCH_get_P_flow_DC(Branch* br);
+REAL BRANCH_get_P_flow_DC(Branch* br, int t);
 void BRANCH_get_var_values(Branch* br, Vec* values, int code);
-Vec* BRANCH_get_var_indices(void* br, char var);
-BOOL BRANCH_has_flags(void* br, char flag_type, char mask);
+int BRANCH_get_num_vars(void* br, unsigned char var, int t_start, int t_end);
+Vec* BRANCH_get_var_indices(void* br, unsigned char var, int t_start, int t_end);
+BOOL BRANCH_has_flags(void* br, char flag_type, unsigned char mask);
 BOOL BRANCH_has_pos_ratio_v_sens(Branch* br);
 BOOL BRANCH_has_properties(void* br, char prop);
-void BRANCH_init(Branch* br);
+void BRANCH_init(Branch* br, int num_periods);
 BOOL BRANCH_is_equal(Branch* br, Branch* other);
 BOOL BRANCH_is_on_outage(Branch* br);
 BOOL BRANCH_is_fixed_tran(Branch* br);
@@ -154,10 +158,10 @@ int BRANCH_list_to_len(Branch* to_br_list);                       // @deprecated
 Branch* BRANCH_list_m_add(Branch* m_br_list, Branch* br);
 Branch* BRANCH_list_m_del(Branch* m_br_list, Branch* br);
 int BRANCH_list_m_len(Branch* m_br_list);
-Branch* BRANCH_new(void);
+Branch* BRANCH_new(int num_periods);
 void BRANCH_set_outage(Branch* branch, BOOL outage);
-void BRANCH_set_sens_P_u_bound(Branch* br, REAL value);
-void BRANCH_set_sens_P_l_bound(Branch* br, REAL value);
+void BRANCH_set_sens_P_u_bound(Branch* br, REAL value, int t);
+void BRANCH_set_sens_P_l_bound(Branch* br, REAL value, int t);
 void BRANCH_set_index(Branch* br, int index);
 void BRANCH_set_type(Branch* br, int type);
 void BRANCH_set_bus_from(Branch* br, Bus* bus_from);    // @deprecated @see BRANCH_set_bus_k
@@ -175,11 +179,11 @@ void BRANCH_set_b_from(Branch* br, REAL b_from);        // @deprecated @see BRAN
 void BRANCH_set_b_to(Branch* br, REAL b_to);            // @deprecated @see BRANCH_set_b_m
 void BRANCH_set_b_k(Branch* br, REAL b_k);
 void BRANCH_set_b_m(Branch* br, REAL b_m);
-void BRANCH_set_ratio(Branch* br, REAL ratio);
+void BRANCH_set_ratio(Branch* br, REAL ratio, int t);
 void BRANCH_set_ratio_max(Branch* br, REAL ratio);
 void BRANCH_set_ratio_min(Branch* br, REAL ratio);
 void BRANCH_set_pos_ratio_v_sens(Branch* br, BOOL flag);
-void BRANCH_set_phase(Branch* br, REAL phase);
+void BRANCH_set_phase(Branch* br, REAL phase, int t);
 void BRANCH_set_phase_max(Branch* br, REAL phase);
 void BRANCH_set_phase_min(Branch* br, REAL phase);
 void BRANCH_set_P_max(Branch* br, REAL P_max);
@@ -190,7 +194,7 @@ void BRANCH_set_ratingA(Branch* br, REAL r);
 void BRANCH_set_ratingB(Branch* br, REAL r);
 void BRANCH_set_ratingC(Branch* br, REAL r);
 void BRANCH_set_var_values(Branch* br, Vec* values);
-int BRANCH_set_flags(void* vbr, char flag_type, char mask, int index);
-void BRANCH_show(Branch* br);
+int BRANCH_set_flags(void* vbr, char flag_type, unsigned char mask, int index);
+void BRANCH_show(Branch* br, int t);
 
 #endif
