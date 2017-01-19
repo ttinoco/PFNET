@@ -17,5 +17,6 @@
 
 char* trim(char* s);
 char* strtoupper(char s[]);
+char* strtolower(char s[]);
 
 #endif

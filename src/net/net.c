@@ -1717,6 +1717,7 @@ void NET_load(Net* net, char* filename, int output_level) {
 
   // Extension
   ext = strrchr(filename,'.');
+  ext = strtolower(ext);
 
   // Parse
   if (!ext) {
