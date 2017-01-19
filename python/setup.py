@@ -58,6 +58,7 @@ if pfnet_args:
 else:
     # dynamic link
     libraries.append("pfnet")
+    libraries.append("raw_parser")
     ext = Extension("pfnet.cpfnet",
                     [os.path.join("pfnet", 'cpfnet.pyx')],
                     libraries=libraries,

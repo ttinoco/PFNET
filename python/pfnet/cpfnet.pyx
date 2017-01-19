@@ -822,6 +822,11 @@ cdef class Bus:
                 g = cgen.GEN_get_next(g)
             return gens
 
+    property gens:
+        """ List of :class:`generators <pfnet.Generator>` connected to this bus (list). """
+        def __get__(self):
+            return self.generators
+
     property reg_generators:
         """ List of :class:`generators <pfnet.Generator>` regulating the voltage magnitude of this bus (list). """
         def __get__(self):
@@ -831,6 +836,11 @@ cdef class Bus:
                 reg_gens.append(new_Generator(g))
                 g = cgen.GEN_get_reg_next(g)
             return reg_gens
+
+    property reg_gens:
+        """ List of :class:`generators <pfnet.Generator>` regulating the voltage magnitude of this bus (list). """
+        def __get__(self):
+            return self.reg_generators
 
     property reg_trans:
         """ List of :class:`tap-changing transformers <pfnet.Branch>` regulating the voltage magnitude of this bus (list). """
@@ -924,6 +934,11 @@ cdef class Bus:
                 g = cvargen.VARGEN_get_next(g)
             return vargens
 
+    property var_gens:
+        """ List of :class:`variable generators <pfnet.VarGenerator>` connected to this bus (list). """
+        def __get__(self):
+            return self.var_generators
+
     property batteries:
         """ List of :class:`batteries <pfnet.Battery>` connected to this bus (list). """
         def __get__(self):
@@ -933,6 +948,12 @@ cdef class Bus:
                 bats.append(new_Battery(b))
                 b = cbat.BAT_get_next(b)
             return bats
+
+    property bats:
+        """ List of :class:`batteries <pfnet.Battery>` connected to this bus (list). """
+        def __get__(self):
+            return self.batteries
+
 
 cdef new_Bus(cbus.Bus* b):
     if b is not NULL:
@@ -3320,6 +3341,17 @@ cdef class Network:
 
         return cnet.NET_get_num_gens(self._c_net)
 
+    def get_num_gens(self):
+        """
+        Gets number of generators in the network.
+
+        Returns
+        -------
+        num : int
+        """
+
+        return self.get_num_generators()
+
     def get_num_gens_not_on_outage(self):
         """
         Gets number of generators in the network that are not on outage.
@@ -3430,6 +3462,17 @@ cdef class Network:
 
         return cnet.NET_get_num_vargens(self._c_net)
 
+    def get_num_var_gens(self):
+        """
+        Gets number of variable generators in the network.
+
+        Returns
+        -------
+        num : int
+        """
+
+        return self.get_num_var_generators()
+
     def get_num_batteries(self):
         """
         Gets number of batteries in the network.
@@ -3440,6 +3483,17 @@ cdef class Network:
         """
 
         return cnet.NET_get_num_bats(self._c_net)
+
+    def get_num_bats(self):
+        """
+        Gets number of batteries in the network.
+
+        Returns
+        -------
+        num : int
+        """
+
+        return self.get_num_bats()
 
     def get_properties(self):
         """
@@ -3627,6 +3681,14 @@ cdef class Network:
         def __get__(self):
             return [self.get_gen(i) for i in range(self.num_generators)]
 
+    property gens:
+        """ List of network :class:`generators <pfnet.Generator>` (list). """
+        def __get__(self):
+            if self.num_generators > 0:
+                return self.generators
+            else:
+                return []
+
     property shunts:
         """ List of network :class:`shunts <pfnet.Shunt>` (list). """
         def __get__(self):
@@ -3642,10 +3704,26 @@ cdef class Network:
         def __get__(self):
             return [self.get_vargen(i) for i in range(self.num_var_generators)]
 
+    property var_gens:
+        """ List of network :class:`variable generators <pfnet.VarGenerator>` (list). """
+        def __get__(self):
+            if self.num_var_generators > 0:
+                return self.var_generators
+            else:
+                return []
+
     property batteries:
         """ List of network :class:`batteries <pfnet.Battery>` (list). """
         def __get__(self):
             return [self.get_bat(i) for i in range(self.num_batteries)]
+
+    property bats:
+        """ List of network :class:`batteries <pfnet.Battery>` (list). """
+        def __get__(self):
+            if self.num_batteries > 0:
+                return self.batteries
+            else:
+                return []
 
     property num_buses:
         """ Number of buses in the network (int). """
@@ -3659,6 +3737,10 @@ cdef class Network:
         """ Number of generators in the network (int). """
         def __get__(self): return cnet.NET_get_num_gens(self._c_net)
 
+    property num_gens:
+        """ Number of generators in the network (int). """
+        def __get__(self): return self.num_generators
+
     property num_loads:
         """ Number of loads in the network (int). """
         def __get__(self): return cnet.NET_get_num_loads(self._c_net)
@@ -3671,9 +3753,17 @@ cdef class Network:
         """ Number of variable generators in the network (int). """
         def __get__(self): return cnet.NET_get_num_vargens(self._c_net)
 
+    property num_vargens:
+        """ Number of variable generators in the network (int). """
+        def __get__(self): return self.num_var_generators
+
     property num_batteries:
         """ Number of batteries in the network (int). """
         def __get__(self): return cnet.NET_get_num_bats(self._c_net)
+
+    property num_bats:
+        """ Number of batteries in the network (int). """
+        def __get__(self): return self.num_batteries
 
     property num_vars:
         """ Number of network quantities that have been set to variable (int). """
