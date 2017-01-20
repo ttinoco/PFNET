@@ -917,6 +917,7 @@ REAL BRANCH_get_Q_shunt_to(Branch* br, Vec* var_values, int t) {
   else
     return 0;
 }
+
 // end Branch flow calculations
 
 REAL BRANCH_get_ratingA(Branch* br) {

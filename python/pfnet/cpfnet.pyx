@@ -1558,16 +1558,17 @@ cdef class Branch:
               return np.array(r)
 
     property Q_shunt_to:
-      """ .. deprecated:: TBD  See :attr:`Q_m_shunt <pfnet.Branch.Q_m_shunt>`.
+        """ .. deprecated:: TBD  See :attr:`Q_m_shunt <pfnet.Branch.Q_m_shunt>`.
 
-      Reactive power flow into the shunt element at bus "m" (aka "to") (p.u.) (float or array).
-      """
-      def __get__(self):
-          r = [cbranch.BRANCH_get_Q_shunt_to(self._c_ptr,NULL,t) for t in range(self.num_periods)]
-          if self.num_periods == 1:
-              return AttributeFloat(r[0])
-          else:
-              return np.array(r)
+        Reactive power flow into the shunt element at bus "m" (aka "to") (p.u.) (float or array).
+        """
+        def __get__(self):
+            r = [cbranch.BRANCH_get_Q_shunt_to(self._c_ptr,NULL,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return np.array(r)
+
 
     property ratingA:
         """ Branch thermal rating A (p.u. system base power) (float). """

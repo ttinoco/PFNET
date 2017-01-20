@@ -15,7 +15,7 @@ from scipy.sparse import coo_matrix, bmat, triu
 class TestNetwork(unittest.TestCase):
 
     def setUp(self):
-        
+
         # Networks
         self.T = 5
         self.net = pf.Network()
@@ -824,6 +824,72 @@ class TestNetwork(unittest.TestCase):
                 self.assertTrue(np.all(branch.index_ratio_y == range(index,index+2*self.T,2)))
                 self.assertTrue(np.all(branch.index_ratio_z == range(index+1,index+2*self.T,2)))
                 index += 2*self.T
+
+
+    def test_branch_flows(self):
+
+        # Single period
+        net = self.net
+
+        for case in test_cases.CASES:
+
+            net.load(case)
+
+            for branch in net.branches:
+
+                # basic checks absolute value greater than 0
+                self.assertGreaterEqual(np.abs(branch.P_km), 0.)
+                self.assertGreaterEqual(np.abs(branch.Q_km), 0.)
+                self.assertGreaterEqual(np.abs(branch.P_mk), 0.)
+                self.assertGreaterEqual(np.abs(branch.Q_mk), 0.)
+                self.assertGreaterEqual(np.abs(branch.P_km_series), 0.)
+                self.assertGreaterEqual(np.abs(branch.Q_km_series), 0.)
+                self.assertGreaterEqual(np.abs(branch.P_mk_series), 0.)
+                self.assertGreaterEqual(np.abs(branch.Q_mk_series), 0.)
+                self.assertGreaterEqual(np.abs(branch.P_k_shunt), 0.)
+                self.assertGreaterEqual(np.abs(branch.Q_k_shunt), 0.)
+                self.assertGreaterEqual(np.abs(branch.P_m_shunt), 0.)
+                self.assertGreaterEqual(np.abs(branch.Q_m_shunt), 0.)
+
+                # check flow at bus equal to shunt + series elements
+                self.assertTrue(branch.P_km == branch.P_km_series+branch.P_k_shunt)
+                self.assertTrue(branch.Q_km == branch.Q_km_series+branch.Q_k_shunt)
+                self.assertTrue(branch.P_mk == branch.P_mk_series+branch.P_m_shunt)
+                self.assertTrue(branch.Q_mk == branch.Q_mk_series+branch.Q_m_shunt)
+
+                # check from-to matches k-m
+                self.assertTrue(branch.P_km == branch.P_from_to)
+                self.assertTrue(branch.Q_km == branch.Q_from_to)
+                self.assertTrue(branch.P_mk == branch.P_to_from)
+                self.assertTrue(branch.Q_mk == branch.Q_to_from)
+                self.assertTrue(branch.P_km_series == branch.P_series_from_to)
+                self.assertTrue(branch.Q_km_series == branch.Q_series_from_to)
+                self.assertTrue(branch.P_mk_series == branch.P_series_to_from)
+                self.assertTrue(branch.Q_mk_series == branch.Q_series_to_from)
+                self.assertTrue(branch.P_k_shunt == branch.P_shunt_from)
+                self.assertTrue(branch.Q_k_shunt == branch.Q_shunt_from)
+                self.assertTrue(branch.P_m_shunt == branch.P_shunt_to)
+                self.assertTrue(branch.Q_m_shunt == branch.Q_shunt_to)
+
+        # Multi-period
+        net = self.netMP
+
+        for case in test_cases.CASES:
+
+            net.clear_properties()
+            net.load(case)
+            net.clear_flags()
+
+            for branch in net.branches:
+
+                self.assertEqual(branch.num_periods,self.T)
+
+                # Propagation
+                for t in range(1,self.T):
+                    self.assertEqual(branch.P_km[t],branch.P_km[0])
+                    self.assertEqual(branch.Q_km[t],branch.Q_km[0])
+                    self.assertEqual(branch.P_mk[t],branch.P_mk[0])
+                    self.assertEqual(branch.Q_mk[t],branch.Q_mk[0])
 
     def test_shunts(self):
 

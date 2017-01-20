@@ -123,7 +123,7 @@ REAL BRANCH_get_Q_series_to_from(Branch* br, Vec* var_values, int t);    // @dep
 REAL BRANCH_get_P_shunt_from(Branch* br, Vec* var_values, int t);    // @deprecated @see BRANCH_get_P_k_shunt
 REAL BRANCH_get_Q_shunt_from(Branch* br, Vec* var_values, int t);    // @deprecated @see BRANCH_get_Q_k_shunt
 REAL BRANCH_get_P_shunt_to(Branch* br, Vec* var_values, int t);    // @deprecated @see BRANCH_get_P_m_shunt
-REAL BRANCH_get_P_shunt_to(Branch* br, Vec* var_values, int t);    // @deprecated @see BRANCH_get_Q_m_shunt
+REAL BRANCH_get_Q_shunt_to(Branch* br, Vec* var_values, int t);    // @deprecated @see BRANCH_get_Q_m_shunt
 REAL BRANCH_get_ratingA(Branch* br);
 REAL BRANCH_get_ratingB(Branch* br);
 REAL BRANCH_get_ratingC(Branch* br);
