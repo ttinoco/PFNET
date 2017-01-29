@@ -17,13 +17,12 @@ AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
 # Checks for libraries.
-AC_CHECK_LIB([cgraph], [agopen])
-AC_CHECK_LIB([gvc], [gvContext])
-AC_CHECK_LIB([raw_parser], [RAW_PARSER_new])
+AC_CHECK_LIB(gvc, gvContext)
+AC_CHECK_LIB(cgraph, agopen)
+AC_CHECK_LIB(raw_parser, RAW_PARSER_new)
 
 # Checks for header files.
 AC_CHECK_HEADERS([stddef.h stdint.h stdlib.h string.h])
-AC_CHECK_HEADERS(graphviz/cgraph.h)
 AC_CHECK_HEADERS(graphviz/gvc.h)
 
 # Checks for typedefs, structures, and compiler characteristics.

@@ -3,19 +3,27 @@
 .idea/*
 
 # Builds
+*.o
 lib/*
 python/build/*
-*.o
 python/pfnet/*.so
 
 # pycache
 *.pyc
 
-# Test output
+# Tests
 tests/*.out
+tests/run_tests
+tests/run_tests.sh.log
+tests/run_tests.sh.trs
+tests/test-suite.log
 
 # Autotools
+*.lo
+*.la
 .deps/
+.dirstamp
+.libs/
 aclocal.m4
 autom4te.cache/
 autoscan.log

@@ -3,14 +3,14 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
 
 #include <pfnet/parser_RAW.h>
 
-#ifdef NO_RAW_PARSER
+#ifndef HAVE_LIBRAW_PARSER
 
 struct RAW_Parser;
 

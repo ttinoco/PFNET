@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include "net.h"
 
-#ifndef NO_GRAPHVIZ
+#ifdef HAVE_GRAPHVIZ_GVC_H
 #include <graphviz/gvc.h>
 #endif
 
