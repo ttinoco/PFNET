@@ -14,4 +14,9 @@ python/pfnet/*.so
 # Test output
 tests/*.out
 
+# Autotools
+aclocal.m4
+autom4te.cache/
+config.log
+configure
 
