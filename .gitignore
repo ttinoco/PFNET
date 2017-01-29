@@ -15,8 +15,29 @@ python/pfnet/*.so
 tests/*.out
 
 # Autotools
+.deps/
 aclocal.m4
 autom4te.cache/
-config.log
+autoscan.log
+compile
 configure
-
+config.guess
+config.log
+config.status
+config.sub
+depcomp
+include/pfnet/config.h
+include/pfnet/config.h.in
+include/pfnet/stamp-h1
+install-sh
+libtool
+ltmain.sh
+m4/
+Makefile
+Makefile.in
+missing
+src/Makefile
+src/Makefile.in
+test-driver
+tests/Makefile
+tests/Makefile.in
