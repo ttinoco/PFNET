@@ -12,16 +12,16 @@ import pfnet as pf
 net = pf.Network()
 net.load(sys.argv[1])
 
-net.set_flags(pf.OBJ_BUS,
-              pf.FLAG_VARS,
-              pf.BUS_PROP_ANY,
-              pf.BUS_VAR_VMAG)
+net.set_flags('bus',
+              'variable',
+              'any',
+              'voltage magnitude')
 
 print(net.num_vars == net.num_buses)
 
-func = pf.Function(pf.FUNC_TYPE_REG_VMAG,0.3,net)
+func = pf.Function('voltage magnitude regularization',0.3,net)
 
-print(func.type == pf.FUNC_TYPE_REG_VMAG)
+print(func.type == 'voltage magnitude regularization')
 
 print(func.weight)
 

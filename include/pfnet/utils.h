@@ -1,5 +1,5 @@
 /** @file utils.h
- *  @brief This file some utiliy functions.
+ *  @brief This file lists utility functions.
  *
  * This file is part of PFNET.
  *
@@ -15,17 +15,8 @@
 #include <string.h>
 #include <ctype.h>
 
-static char* trim(char *s) {
-  /* Trims string inplace. */
-
-  char *ptr;
-  if (!s)
-    return NULL;   // handle NULL string
-  if (!*s)
-    return s;      // handle empty string
-  for (ptr = s + strlen(s) - 1; (ptr >= s) && isspace(*ptr); --ptr);
-  ptr[1] = '\0';
-  return s;
-}
+char* trim(char* s);
+char* strtoupper(char s[]);
+char* strtolower(char s[]);
 
 #endif

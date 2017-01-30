@@ -13,10 +13,12 @@
 void CONSTR_REG_SHUNT_init(Constr* c) {
 
   // Local variables
+  Net* net;
   int num_Jconstr;
 
   // Init
-  num_Jconstr = 4*NET_get_num_switched_shunts(CONSTR_get_network(c));
+  net = CONSTR_get_network(c);
+  num_Jconstr = 4*NET_get_num_switched_shunts(CONSTR_get_network(c))*NET_get_num_periods(net);
   CONSTR_set_Hcounter(c,(int*)calloc(num_Jconstr,sizeof(int)),num_Jconstr);
   CONSTR_set_data(c,NULL);
 }
@@ -43,7 +45,7 @@ void CONSTR_REG_SHUNT_clear(Constr* c) {
   CONSTR_clear_bus_counted(c);
 }
 
-void CONSTR_REG_SHUNT_count_branch(Constr* c, Branch* br) {
+void CONSTR_REG_SHUNT_count_step(Constr* c, Branch* br, int t) {
 
   // Local variables
   Bus* buses[2];
@@ -55,8 +57,12 @@ void CONSTR_REG_SHUNT_count_branch(Constr* c, Branch* br) {
   int* Jconstr_index;
   int* Hcounter;
   char* bus_counted;
-  int bus_index[2];
+  int bus_index_t[2];
   int k;
+  int T;
+
+  // Number of periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   Acounter = CONSTR_get_Acounter_ptr(c);
@@ -79,7 +85,7 @@ void CONSTR_REG_SHUNT_count_branch(Constr* c, Branch* br) {
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   //******
@@ -88,7 +94,7 @@ void CONSTR_REG_SHUNT_count_branch(Constr* c, Branch* br) {
 
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]]) { // not counted yet
+    if (!bus_counted[bus_index_t[k]]) { // not counted yet
 
       // Shunts
       //*******
@@ -192,7 +198,7 @@ void CONSTR_REG_SHUNT_count_branch(Constr* c, Branch* br) {
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
@@ -254,7 +260,7 @@ void CONSTR_REG_SHUNT_allocate(Constr* c) {
 				  H_comb_nnz)); // nnz
 }
 
-void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
+void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t) {
 
   // Local variables
   Bus* buses[2];
@@ -279,7 +285,7 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
   int* Hcounter;
   int Hcounter_comb;
   char* bus_counted;
-  int bus_index[2];
+  int bus_index_t[2];
   int k;
   int m;
   int temp;
@@ -289,6 +295,10 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
   int index_b;
   int index_y;
   int index_z;
+  int T;
+
+  // Number of periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   b = CONSTR_get_b(c);
@@ -315,7 +325,7 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Branch
   //*******
@@ -327,7 +337,7 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
 
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]]) { // not counted yet
+    if (!bus_counted[bus_index_t[k]]) { // not counted yet
 
       // Shunts
       //*******
@@ -341,12 +351,12 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
 	Hbmin = MAT_array_get(H_array,*Jconstr_index+3);
 
 	// Indices
-	index_v = BUS_get_index_v_mag(bus);
-	index_vl = BUS_get_index_vl(bus);
-	index_vh = BUS_get_index_vh(bus);
-	index_b = SHUNT_get_index_b(shunt);
-	index_y = SHUNT_get_index_y(shunt);
-	index_z = SHUNT_get_index_z(shunt);
+	index_v = BUS_get_index_v_mag(bus,t);
+	index_vl = BUS_get_index_vl(bus,t);
+	index_vh = BUS_get_index_vh(bus,t);
+	index_b = SHUNT_get_index_b(shunt,t);
+	index_y = SHUNT_get_index_y(shunt,t);
+	index_z = SHUNT_get_index_z(shunt,t);
 
 	// Linear (b = b_0 + y - z)
 	//*************************
@@ -354,7 +364,7 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
 	    SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC_DEV)) { // yz var
 
 	  // b
-	  VEC_set(b,*Aconstr_index,SHUNT_get_b(shunt)); // current susceptance value
+	  VEC_set(b,*Aconstr_index,SHUNT_get_b(shunt,t)); // current susceptance value
 
 	  // A
 	  MAT_set_i(A,*Acounter,*Aconstr_index);
@@ -537,11 +547,11 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 
   // Done
-  if (BRANCH_get_index(br) == NET_get_num_branches(CONSTR_get_network(c))-1) {
+  if ((t == T-1) && (BRANCH_get_index(br) == NET_get_num_branches(CONSTR_get_network(c))-1)) {
 
     // Ensure lower triangular and save struct of H comb
     Hcounter_comb = 0;
@@ -564,7 +574,7 @@ void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* br) {
   }
 }
 
-void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
+void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 
   // Local variables
   Bus* buses[2];
@@ -581,7 +591,7 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   int* Jconstr_index;
   int* Hcounter;
   char* bus_counted;
-  int bus_index[2];
+  int bus_index_t[2];
   int k;
   REAL v;
   REAL vl;
@@ -598,6 +608,10 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   REAL sqrtermBmax;
   REAL sqrtermBmin;
   REAL norm = CONSTR_REG_SHUNT_NORM;
+  int T;
+
+  // Number of periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   f = VEC_get_data(CONSTR_get_f(c));
@@ -621,7 +635,7 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Branch
   //*******
@@ -633,7 +647,7 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]]) { // not counted yet
+    if (!bus_counted[bus_index_t[k]]) { // not counted yet
 
       // Shunts
       //*******
@@ -642,14 +656,14 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 
 	// v values
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG))
-	  v = VEC_get(var_values,BUS_get_index_v_mag(bus));
+	  v = VEC_get(var_values,BUS_get_index_v_mag(bus,t));
 	else
-	  v = BUS_get_v_mag(bus);
+	  v = BUS_get_v_mag(bus,t);
 	vmax = BUS_get_v_max(bus);
 	vmin = BUS_get_v_min(bus);
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
-	  vl = VEC_get(var_values,BUS_get_index_vl(bus));
-	  vh = VEC_get(var_values,BUS_get_index_vh(bus));
+	  vl = VEC_get(var_values,BUS_get_index_vl(bus,t));
+	  vh = VEC_get(var_values,BUS_get_index_vh(bus,t));
 	}
 	else {
 	  vl = 0;
@@ -658,24 +672,24 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
 
 	// b values
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
-	  b = VEC_get(var_values,SHUNT_get_index_b(shunt));
+	  b = VEC_get(var_values,SHUNT_get_index_b(shunt,t));
 	}
 	else
-	  b = SHUNT_get_b(shunt);
+	  b = SHUNT_get_b(shunt,t);
 	bmax = SHUNT_get_b_max(shunt);
 	bmin = SHUNT_get_b_min(shunt);
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC_DEV)) {
-	  y = VEC_get(var_values,SHUNT_get_index_y(shunt));
-	  z = VEC_get(var_values,SHUNT_get_index_z(shunt));
+	  y = VEC_get(var_values,SHUNT_get_index_y(shunt,t));
+	  z = VEC_get(var_values,SHUNT_get_index_z(shunt,t));
 	}
 	else {
-	  if (b > SHUNT_get_b(shunt)) {
-	    y = b-SHUNT_get_b(shunt);
+	  if (b > SHUNT_get_b(shunt,t)) {
+	    y = b-SHUNT_get_b(shunt,t);
 	    z = 0;
 	  }
 	  else {
 	    y = 0;
-	    z = SHUNT_get_b(shunt)-b;
+	    z = SHUNT_get_b(shunt,t)-b;
 	  }
 	}
 
@@ -831,11 +845,11 @@ void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* br, Vec* var_values) {
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
-void CONSTR_REG_SHUNT_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_REG_SHUNT_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Local variables
   Bus* buses[2];
@@ -843,12 +857,16 @@ void CONSTR_REG_SHUNT_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf,
   Shunt* shunt;
   int* Jconstr_index;
   char* bus_counted;
-  int bus_index[2];
+  int bus_index_t[2];
   REAL lamCompVmin;
   REAL lamCompVmax;
   REAL lamCompBmax;
   REAL lamCompBmin;
   int k;
+  int T;
+
+  // Number of periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   Jconstr_index = CONSTR_get_Jconstr_index_ptr(c);
@@ -866,7 +884,7 @@ void CONSTR_REG_SHUNT_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf,
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   //******
@@ -875,7 +893,7 @@ void CONSTR_REG_SHUNT_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf,
 
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]]) { // not counted yet
+    if (!bus_counted[bus_index_t[k]]) { // not counted yet
 
       // Shunts
       //*******
@@ -891,19 +909,19 @@ void CONSTR_REG_SHUNT_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf,
 	lamCompBmin = VEC_get(sf,*Jconstr_index);
 	(*Jconstr_index)++; // compBmin
 
-	if (fabs(lamCompVmin) > fabs(BUS_get_sens_v_reg_by_shunt(bus)))
-	  BUS_set_sens_v_reg_by_shunt(bus,lamCompVmin);
-	if (fabs(lamCompVmax) > fabs(BUS_get_sens_v_reg_by_shunt(bus)))
-	  BUS_set_sens_v_reg_by_shunt(bus,lamCompVmax);
-	if (fabs(lamCompBmax) > fabs(BUS_get_sens_v_reg_by_shunt(bus)))
-	  BUS_set_sens_v_reg_by_shunt(bus,lamCompBmax);
-	if (fabs(lamCompBmin) > fabs(BUS_get_sens_v_reg_by_shunt(bus)))
-	  BUS_set_sens_v_reg_by_shunt(bus,lamCompBmin);
+	if (fabs(lamCompVmin) > fabs(BUS_get_sens_v_reg_by_shunt(bus,t)))
+	  BUS_set_sens_v_reg_by_shunt(bus,lamCompVmin,t);
+	if (fabs(lamCompVmax) > fabs(BUS_get_sens_v_reg_by_shunt(bus,t)))
+	  BUS_set_sens_v_reg_by_shunt(bus,lamCompVmax,t);
+	if (fabs(lamCompBmax) > fabs(BUS_get_sens_v_reg_by_shunt(bus,t)))
+	  BUS_set_sens_v_reg_by_shunt(bus,lamCompBmax,t);
+	if (fabs(lamCompBmin) > fabs(BUS_get_sens_v_reg_by_shunt(bus,t)))
+	  BUS_set_sens_v_reg_by_shunt(bus,lamCompBmin,t);
       }
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 

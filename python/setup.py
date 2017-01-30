@@ -58,6 +58,7 @@ if pfnet_args:
 else:
     # dynamic link
     libraries.append("pfnet")
+    libraries.append("raw_parser")
     ext = Extension("pfnet.cpfnet",
                     [os.path.join("pfnet", 'cpfnet.pyx')],
                     libraries=libraries,
@@ -66,7 +67,7 @@ else:
                     extra_compile_args=extra_compile_args)
 
 setup(name='PFNET',
-      version='1.3',
+      version='1.2.5',
       license='BSD 2-clause license',
       description='Power Flow Network Library',
       author='Tomas Tinoco De Rubira',

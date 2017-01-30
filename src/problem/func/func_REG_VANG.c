@@ -32,15 +32,19 @@ void FUNC_REG_VANG_clear(Func* f) {
   FUNC_clear_bus_counted(f);
 }
 
-void FUNC_REG_VANG_count_branch(Func* f, Branch* br) {
+void FUNC_REG_VANG_count_step(Func* f, Branch* br, int t) {
 
   // Local variables
   Bus* buses[2];
-  int bus_index[2];
+  int bus_index_t[2];
   Bus* bus;
   int* Hcounter;
   char* bus_counted;
   int k;
+  int T;
+
+  // Num periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   Hcounter = FUNC_get_Hcounter_ptr(f);
@@ -58,7 +62,7 @@ void FUNC_REG_VANG_count_branch(Func* f, Branch* br) {
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Branch
   if (BUS_has_flags(buses[0],FLAG_VARS,BUS_VAR_VANG)) { // wk var
@@ -74,15 +78,15 @@ void FUNC_REG_VANG_count_branch(Func* f, Branch* br) {
   for (k = 0; k < 2; k++) {
 
     bus = buses[k];
-
-    if (!bus_counted[bus_index[k]]) {
+    
+    if (!bus_counted[bus_index_t[k]]) {
 
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) // w var
 	(*Hcounter)++; // w and w
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
@@ -104,11 +108,11 @@ void FUNC_REG_VANG_allocate(Func* f) {
 			  Hcounter));
 }
 
-void FUNC_REG_VANG_analyze_branch(Func* f, Branch* br) {
+void FUNC_REG_VANG_analyze_step(Func* f, Branch* br, int t) {
 
   // Local variables
   Bus* buses[2];
-  int bus_index[2];
+  int bus_index_t[2];
   int index_v_ang[2];
   Bus* bus;
   int* Hcounter;
@@ -116,6 +120,10 @@ void FUNC_REG_VANG_analyze_branch(Func* f, Branch* br) {
   Mat* H;
   int k;
   REAL dw = FUNC_REG_VANG_PARAM;
+  int T;
+
+  // Num periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   H = FUNC_get_Hphi(f);
@@ -134,8 +142,8 @@ void FUNC_REG_VANG_analyze_branch(Func* f, Branch* br) {
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++) {
-    bus_index[k] = BUS_get_index(buses[k]);
-    index_v_ang[k] = BUS_get_index_v_ang(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
+    index_v_ang[k] = BUS_get_index_v_ang(buses[k],t);
   }
 
   // Branch
@@ -170,7 +178,7 @@ void FUNC_REG_VANG_analyze_branch(Func* f, Branch* br) {
 
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]]) {
+    if (!bus_counted[bus_index_t[k]]) {
 
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) { // v var
 	MAT_set_i(H,*Hcounter,index_v_ang[k]);
@@ -181,15 +189,15 @@ void FUNC_REG_VANG_analyze_branch(Func* f, Branch* br) {
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
-void FUNC_REG_VANG_eval_branch(Func* f, Branch* br, Vec* var_values) {
+void FUNC_REG_VANG_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
   // Local variables
   Bus* buses[2];
-  int bus_index[2];
+  int bus_index_t[2];
   int index_v_ang[2];
   REAL w[2];
   BOOL var_w[2];
@@ -201,6 +209,10 @@ void FUNC_REG_VANG_eval_branch(Func* f, Branch* br, Vec* var_values) {
   int k;
   REAL wdiff;
   REAL dw = FUNC_REG_VANG_PARAM;
+  int T;
+
+  // Num periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   phi = FUNC_get_phi_ptr(f);
@@ -219,44 +231,41 @@ void FUNC_REG_VANG_eval_branch(Func* f, Branch* br, Vec* var_values) {
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++) {
-    bus_index[k] = BUS_get_index(buses[k]);
-    index_v_ang[k] = BUS_get_index_v_ang(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
+    index_v_ang[k] = BUS_get_index_v_ang(buses[k],t);
     var_w[k] = BUS_has_flags(buses[k],FLAG_VARS,BUS_VAR_VANG);
     if (var_w[k])
       w[k] = VEC_get(var_values,index_v_ang[k]);
     else
-      w[k] = BUS_get_v_ang(buses[k]);
+      w[k] = BUS_get_v_ang(buses[k],t);
   }
 
   // Branch data
-  shift = BRANCH_get_phase(br); // radians
+  shift = BRANCH_get_phase(br,t); // radians
 
-  // Branch
-  if (var_w[0] || var_w[1]) { // wk or wm var
+  // Difference
+  wdiff = w[0]-w[1]-shift;
 
-    wdiff = (w[0]-w[1]-shift);
+  // phi
+  (*phi) += 0.5*pow(wdiff/dw,2.);
 
-    // phi
-    (*phi) += 0.5*pow(wdiff/dw,2.);
-
-    // gphi
-    if (var_w[0]) // wk var
-      gphi[index_v_ang[0]] += wdiff/(dw*dw);
-    if (var_w[1]) // wm var
-      gphi[index_v_ang[1]] -= wdiff/(dw*dw);
-  }
+  // gphi
+  if (var_w[0]) // wk var
+    gphi[index_v_ang[0]] += wdiff/(dw*dw);
+  if (var_w[1]) // wm var
+    gphi[index_v_ang[1]] -= wdiff/(dw*dw);
 
   // Buses
   for (k = 0; k < 2; k++) {
 
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]]) {
+    if (!bus_counted[bus_index_t[k]]) {
+
+      // phi
+      (*phi) += 0.5*pow(w[k]/dw,2.);
 
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) { // v var
-
-	// phi
-	(*phi) += 0.5*pow(w[k]/dw,2.);
 
 	// gphi
 	gphi[index_v_ang[k]] += w[k]/(dw*dw);
@@ -264,7 +273,7 @@ void FUNC_REG_VANG_eval_branch(Func* f, Branch* br, Vec* var_values) {
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 

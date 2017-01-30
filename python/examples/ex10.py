@@ -25,16 +25,16 @@ print(c1.has_gen_outage(gen), c1.has_branch_outage(branch))
 gen_bus = gen.bus
 branch_bus = branch.bus_k
 
-print(gen in gen_bus.gens, branch in branch_bus.branches)
+print(gen in gen_bus.generators, branch in branch_bus.branches)
 
 c1.apply()
 
 print(gen.is_on_outage(), branch.is_on_outage())
 
-print(gen in gen_bus.gens, branch in branch_bus.branches)
+print(gen in gen_bus.generators, branch in branch_bus.branches)
 
 c1.clear()
 
 print(gen.is_on_outage(), branch.is_on_outage())
 
-print(gen in gen_bus.gens, branch in branch_bus.branches)
+print(gen in gen_bus.generators, branch in branch_bus.branches)

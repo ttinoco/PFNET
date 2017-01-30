@@ -29,7 +29,7 @@ void FUNC_REG_PHASE_clear(Func* f) {
   FUNC_set_Hcounter(f,0);
 }
 
-void FUNC_REG_PHASE_count_branch(Func* f, Branch* br) {
+void FUNC_REG_PHASE_count_step(Func* f, Branch* br, int t) {
 
   // Local variables
   int* Hcounter;
@@ -67,7 +67,7 @@ void FUNC_REG_PHASE_allocate(Func* f) {
 			  Hcounter));
 }
 
-void FUNC_REG_PHASE_analyze_branch(Func* f, Branch* br) {
+void FUNC_REG_PHASE_analyze_step(Func* f, Branch* br, int t) {
 
   // Local variables
   int* Hcounter;
@@ -92,14 +92,14 @@ void FUNC_REG_PHASE_analyze_branch(Func* f, Branch* br) {
     dp = FUNC_REG_PHASE_PARAM;
   
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) { // phase var
-    MAT_set_i(H,*Hcounter,BRANCH_get_index_phase(br));
-    MAT_set_j(H,*Hcounter,BRANCH_get_index_phase(br));
+    MAT_set_i(H,*Hcounter,BRANCH_get_index_phase(br,t));
+    MAT_set_j(H,*Hcounter,BRANCH_get_index_phase(br,t));
     MAT_set_d(H,*Hcounter,1./(dp*dp));
     (*Hcounter)++;
   }
 }
 
-void FUNC_REG_PHASE_eval_branch(Func* f, Branch* br, Vec* var_values) {
+void FUNC_REG_PHASE_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
   // Local variables
   REAL* phi;
@@ -127,10 +127,13 @@ void FUNC_REG_PHASE_eval_branch(Func* f, Branch* br, Vec* var_values) {
 
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) { // phase var    
     
-    p0 = BRANCH_get_phase(br);
-    p = VEC_get(var_values,BRANCH_get_index_phase(br));
+    p0 = BRANCH_get_phase(br,t);
+    p = VEC_get(var_values,BRANCH_get_index_phase(br,t));
     (*phi) += 0.5*pow((p-p0)/dp,2.);
-    gphi[BRANCH_get_index_phase(br)] = (p-p0)/(dp*dp);
+    gphi[BRANCH_get_index_phase(br,t)] = (p-p0)/(dp*dp);
+  }
+  else {
+    // nothing because p0-p0 = 0
   }
 }
     

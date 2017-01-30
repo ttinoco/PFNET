@@ -9,6 +9,7 @@
  */
 
 #include <pfnet/vector.h>
+#include <pfnet/array.h>
 
 struct Vec {
   int size;
@@ -21,8 +22,11 @@ void VEC_add_to_entry(Vec* v, int index, REAL value) {
 }
 
 void VEC_del(Vec* v) {
-  if (v)
-    free(v->data);
+  if (v) {
+    if (v->data)
+      free(v->data);
+    free(v);
+  }
 }
 
 REAL VEC_get(Vec* v, int index) {
@@ -94,11 +98,8 @@ void VEC_set(Vec* v, int index, REAL value) {
 }
 
 void VEC_set_zero(Vec* v) {
-  int i;
-  if (v) {
-    for (i = 0; i < v->size; i++) 
-      v->data[i] = 0;
-  }
+  if (v)
+    ARRAY_clear(v->data,REAL,v->size);
 }
 
 void VEC_show(Vec* v) {

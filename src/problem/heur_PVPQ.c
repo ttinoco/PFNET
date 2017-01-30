@@ -18,22 +18,27 @@ struct Heur_PVPQ_Data {
 void HEUR_PVPQ_init(Heur* h, Net* net) {
 
   // Local variables
-  int num_buses;
   Bus* bus;
+  int num_buses;
+  int num_periods;
   Heur_PVPQ_Data* data;
   int i;
+  int t;
 
   // Init
   num_buses = NET_get_num_buses(net);
-  HEUR_set_bus_counted(h,(char*)calloc(num_buses,sizeof(char)));
+  num_periods = NET_get_num_periods(net);
+  HEUR_set_bus_counted(h,(char*)calloc(num_buses*num_periods,sizeof(char)));
   data = (Heur_PVPQ_Data*)malloc(sizeof(Heur_PVPQ_Data));
-  data->reg_flag = (char*)malloc(sizeof(char)*num_buses);
-  for (i = 0; i < num_buses; i++) {
-    bus = NET_get_bus(net,i);
-    if (BUS_is_regulated_by_gen(bus))
-      data->reg_flag[i] = TRUE;
-    else
-      data->reg_flag[i] = FALSE;
+  data->reg_flag = (char*)malloc(sizeof(char)*num_buses*num_periods);
+  for (t = 0; t < num_periods; t++) {
+    for (i = 0; i < num_buses; i++) {
+      bus = NET_get_bus(net,i);
+      if (BUS_is_regulated_by_gen(bus))
+	data->reg_flag[i*num_periods+t] = TRUE;
+      else
+	data->reg_flag[i*num_periods+t] = FALSE;
+    }
   }
   HEUR_set_data(h,(void*)data);
 }
@@ -42,14 +47,15 @@ void HEUR_PVPQ_clear(Heur* h, Net* net) {
 
   // Local variables
   int num_buses;
+  int num_periods;
 
   // Clear bus counted flags
   num_buses = NET_get_num_buses(net);
-  HEUR_clear_bus_counted(h,num_buses);
-
+  num_periods = NET_get_num_periods(net);
+  HEUR_clear_bus_counted(h,num_buses*num_periods);
 }
 
-void HEUR_PVPQ_apply_to_branch(Heur* h, Constr* clist, Net* net, Branch* br, Vec* var_values) {
+void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, Vec* var_values) {
 
   // Local variables
   Vec* f;
@@ -60,7 +66,7 @@ void HEUR_PVPQ_apply_to_branch(Heur* h, Constr* clist, Net* net, Branch* br, Vec
   char* bus_counted;
   Heur_PVPQ_Data* data;
   char* reg_flag;
-  int bus_index[2];
+  int bus_index_t[2];
   int k;
   int i;
   Constr* pf;
@@ -74,19 +80,27 @@ void HEUR_PVPQ_apply_to_branch(Heur* h, Constr* clist, Net* net, Branch* br, Vec
   int j_old;
   int j_new;
   REAL b_new;
+  int T;
+  int num_buses;
+
+  // Num periods
+  T = BRANCH_get_num_periods(br);
+
+  // Num buses
+  num_buses = NET_get_num_buses(net);
 
   // Heur data
   bus_counted = HEUR_get_bus_counted(h);
   data = (Heur_PVPQ_Data*)HEUR_get_data(h);
   reg_flag = data->reg_flag;
 
-  // Bus k (from/i) data
+  // Bus from data
   bus[0] = BRANCH_get_bus_k(br);
-  bus_index[0] = BUS_get_index(bus[0]);
+  bus_index_t[0] = BUS_get_index(bus[0])*T+t;
 
-  // Bus m (to/j) data
+  // Bus to data
   bus[1] = BRANCH_get_bus_m(br);
-  bus_index[1] = BUS_get_index(bus[1]);
+  bus_index_t[1] = BUS_get_index(bus[1])*T+t;
 
   // Power flow constraints
   for (pf = clist; pf != NULL; pf = CONSTR_get_next(pf)) {
@@ -112,7 +126,7 @@ void HEUR_PVPQ_apply_to_branch(Heur* h, Constr* clist, Net* net, Branch* br, Vec
   // Buses
   for (k = 0; k < 2; k++) {
 
-    if (!bus_counted[bus_index[k]] &&                     // not counted
+    if (!bus_counted[bus_index_t[k]] &&                   // not counted
 	!BUS_is_slack(bus[k]) &&                          // not slack
 	BUS_is_regulated_by_gen(bus[k]) &&                // regulated
 	BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG) &&   // v mag is variable
@@ -120,51 +134,51 @@ void HEUR_PVPQ_apply_to_branch(Heur* h, Constr* clist, Net* net, Branch* br, Vec
 	GEN_has_flags(BUS_get_reg_gen(bus[k]),FLAG_VARS,GEN_VAR_Q)) { // reg gen Q is variable
 
       // Voltage magnitude
-      v = VEC_get(var_values,BUS_get_index_v_mag(bus[k]));
-      v_set = BUS_get_v_set(bus[k]);
+      v = VEC_get(var_values,BUS_get_index_v_mag(bus[k],t));
+      v_set = BUS_get_v_set(bus[k],t);
 
       // Regulating generator (first one in list of reg gens)
       gen = BUS_get_reg_gen(bus[k]);
-      Q = VEC_get(var_values,GEN_get_index_Q(gen)); // per unit
-      Qmax = GEN_get_Q_max(gen);                    // per unit
-      Qmin = GEN_get_Q_min(gen);                    // per unit
+      Q = VEC_get(var_values,GEN_get_index_Q(gen,t)); // per unit
+      Qmax = GEN_get_Q_max(gen);                      // per unit
+      Qmin = GEN_get_Q_min(gen);                      // per unit
 
       // Switch flag
       switch_flag = FALSE;
 
       // Currently regulated
-      if (reg_flag[bus_index[k]]) {
+      if (reg_flag[bus_index_t[k]]) {
 
 	// Violations
 	if (Q > Qmax) {
 
 	  // Set data
-	  j_old = BUS_get_index_v_mag(bus[k]);
-	  j_new = GEN_get_index_Q(gen);
+	  j_old = BUS_get_index_v_mag(bus[k],t);
+	  j_new = GEN_get_index_Q(gen,t);
 	  b_new = Qmax;
 	  switch_flag = TRUE;
-	  reg_flag[bus_index[k]] = FALSE;
+	  reg_flag[bus_index_t[k]] = FALSE;
 
 	  // Update vector of var values
 	  while (gen) {
 	    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
-	      VEC_set(var_values,GEN_get_index_Q(gen),GEN_get_Q_max(gen));
+	      VEC_set(var_values,GEN_get_index_Q(gen,t),GEN_get_Q_max(gen));
 	    gen = GEN_get_reg_next(gen);
 	  }
 	}
 	else if (Q < Qmin) {
 
 	  // Set data
-	  j_old = BUS_get_index_v_mag(bus[k]);
-	  j_new = GEN_get_index_Q(gen);
+	  j_old = BUS_get_index_v_mag(bus[k],t);
+	  j_new = GEN_get_index_Q(gen,t);
 	  b_new = Qmin;
 	  switch_flag = TRUE;
-	  reg_flag[bus_index[k]] = FALSE;
+	  reg_flag[bus_index_t[k]] = FALSE;
 
 	  // Update vector of var values
 	  while (gen) {
 	    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
-	      VEC_set(var_values,GEN_get_index_Q(gen),GEN_get_Q_min(gen));
+	      VEC_set(var_values,GEN_get_index_Q(gen,t),GEN_get_Q_min(gen));
 	    gen = GEN_get_reg_next(gen);
 	  }
 	}
@@ -176,31 +190,31 @@ void HEUR_PVPQ_apply_to_branch(Heur* h, Constr* clist, Net* net, Branch* br, Vec
 	// Q at Qmin and v < v_set
 	if (fabs(Q-Qmin) < fabs(Q-Qmax) && v < v_set) {
 
-	  Q = Q - VEC_get(f,2*BUS_get_index(GEN_get_bus(gen))+1); // per unit (see constr_PF)
+	  Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen))+t*2*num_buses); // per unit (see constr_PF)
 
 	  if (Q >= Qmax) {
 
 	    // Set data
-	    j_old = GEN_get_index_Q(gen);
-	    j_new = GEN_get_index_Q(gen);
+	    j_old = GEN_get_index_Q(gen,t);
+	    j_new = GEN_get_index_Q(gen,t);
 	    b_new = Qmax;
 	    switch_flag = TRUE;
 
 	    // Update vector of var values
 	    while (gen) {
 	      if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
-		VEC_set(var_values,GEN_get_index_Q(gen),GEN_get_Q_max(gen));
+		VEC_set(var_values,GEN_get_index_Q(gen,t),GEN_get_Q_max(gen));
 	      gen = GEN_get_reg_next(gen);
 	    }
 	  }
 	  else if (Qmin < Q && Q < Qmax) {
 
 	    // Set data
-	    j_old = GEN_get_index_Q(gen);
-	    j_new = BUS_get_index_v_mag(bus[k]);
+	    j_old = GEN_get_index_Q(gen,t);
+	    j_new = BUS_get_index_v_mag(bus[k],t);
 	    b_new = v_set;
 	    switch_flag = TRUE;
-	    reg_flag[bus_index[k]] = TRUE;
+	    reg_flag[bus_index_t[k]] = TRUE;
 
 	    // Udpate vector of var values
 	    VEC_set(var_values,j_new,b_new);
@@ -210,31 +224,31 @@ void HEUR_PVPQ_apply_to_branch(Heur* h, Constr* clist, Net* net, Branch* br, Vec
 	// Q at Qmax and v > v_set
 	else if (fabs(Q-Qmax) < fabs(Q-Qmin) && v > v_set) {
 
-	  Q = Q - VEC_get(f,2*BUS_get_index(GEN_get_bus(gen))+1); // per unit (see constr_PF)
+	  Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen))+t*2*num_buses); // per unit (see constr_PF)
 
 	  if (Q <= Qmin) {
 
 	    // Set data
-	    j_old = GEN_get_index_Q(gen);
-	    j_new = GEN_get_index_Q(gen);
+	    j_old = GEN_get_index_Q(gen,t);
+	    j_new = GEN_get_index_Q(gen,t);
 	    b_new = Qmin;
 	    switch_flag = TRUE;
 
 	    // Update vector of var values
 	    while (gen) {
 	      if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
-		VEC_set(var_values,GEN_get_index_Q(gen),GEN_get_Q_min(gen));
+		VEC_set(var_values,GEN_get_index_Q(gen,t),GEN_get_Q_min(gen));
 	      gen = GEN_get_reg_next(gen);
 	    }
 	  }
 	  else if (Qmin < Q && Q < Qmax) {
 
 	    // Set data
-	    j_old = GEN_get_index_Q(gen);
-	    j_new = BUS_get_index_v_mag(bus[k]);
+	    j_old = GEN_get_index_Q(gen,t);
+	    j_new = BUS_get_index_v_mag(bus[k],t);
 	    b_new = v_set;
 	    switch_flag = TRUE;
-	    reg_flag[bus_index[k]] = TRUE;
+	    reg_flag[bus_index_t[k]] = TRUE;
 
 	    // Udpate vector of var values
 	    VEC_set(var_values,j_new,b_new);
@@ -256,7 +270,7 @@ void HEUR_PVPQ_apply_to_branch(Heur* h, Constr* clist, Net* net, Branch* br, Vec
     }
 
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 

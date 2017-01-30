@@ -231,7 +231,7 @@ void GRAPH_set_edges_property(Graph* g, char* prop, char* value) {
   #endif
 }
 
-void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type) {
+void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type, int t) {
 
   // Local variables
   #ifndef NO_GRAPHVIZ
@@ -268,7 +268,7 @@ void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type) {
     bus = NET_get_bus(g->net,i);
 
     // Mismatch
-    mis = BUS_get_quantity(bus,mis_type)*NET_get_base_power(g->net); // MW or MVAr
+    mis = BUS_get_quantity(bus,mis_type,t)*NET_get_base_power(g->net); // MW or MVAr
 
     // Value
     val = log10(fabs(mis) > eps ? fabs(mis) : eps);
@@ -294,7 +294,7 @@ void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type) {
   #endif
 }
 
-void GRAPH_color_nodes_by_sensitivity(Graph* g, int sens_type) {
+void GRAPH_color_nodes_by_sensitivity(Graph* g, int sens_type, int t) {
 
   // Local variables
   #ifndef NO_GRAPHVIZ
@@ -332,7 +332,7 @@ void GRAPH_color_nodes_by_sensitivity(Graph* g, int sens_type) {
       bus = NET_get_bus(g->net,j);
 
       // Sensitivity
-      sens = BUS_get_quantity(bus,sens_type);
+      sens = BUS_get_quantity(bus,sens_type,t);
 
       if (i == 0) {
 	if (fabs(sens) > max_sens)

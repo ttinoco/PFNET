@@ -24,19 +24,20 @@
 /** \defgroup constr_types Constraint Types
  *  @{
  */
-#define CONSTR_TYPE_UNKNOWN -1     /**< @brief Constraint type: unknown */
-#define CONSTR_TYPE_PF 0           /**< @brief Constraint type: power flow equations */
-#define CONSTR_TYPE_DCPF 1         /**< @brief Constraint type: DC power flow equations */
-#define CONSTR_TYPE_LINPF 2        /**< @brief Constraint type: Linear power flow equations */
-#define CONSTR_TYPE_FIX 3          /**< @brief Constraint type: variable fixing */
-#define CONSTR_TYPE_BOUND 4        /**< @brief Constraint type: variable bounds as nonlinear equality constraints */ 
-#define CONSTR_TYPE_PAR_GEN_P 5    /**< @brief Constraint type: generator participation (active power) */
-#define CONSTR_TYPE_PAR_GEN_Q 6    /**< @brief Constraint type: generator participation (reactive power) */
-#define CONSTR_TYPE_REG_GEN 7      /**< @brief Constraint type: voltage regualtion by generators */
-#define CONSTR_TYPE_REG_TRAN 8     /**< @brief Constraint type: voltage regulation by transformers */
-#define CONSTR_TYPE_REG_SHUNT 9    /**< @brief Constraint type: voltage regulation by shunt devices */
-#define CONSTR_TYPE_DC_FLOW_LIM 10 /**< @brief Constraint type: DC branch flow limits */
-#define CONSTR_TYPE_LBOUND 11      /**< @brief Constraint type: variable bounds as linear inequality constraints */
+#define CONSTR_TYPE_UNKNOWN -1     /**< @brief Constraint type: Unknown. */
+#define CONSTR_TYPE_PF 0           /**< @brief Constraint type: Power flow equations. */
+#define CONSTR_TYPE_DCPF 1         /**< @brief Constraint type: DC power flow equations. */
+#define CONSTR_TYPE_LINPF 2        /**< @brief Constraint type: Linearized power flow equations. */
+#define CONSTR_TYPE_FIX 3          /**< @brief Constraint type: Variable fixing. */
+#define CONSTR_TYPE_BOUND 4        /**< @brief Constraint type: Variable bounds as nonlinear equality constraints. */ 
+#define CONSTR_TYPE_PAR_GEN_P 5    /**< @brief Constraint type: Generator participation (active power). */
+#define CONSTR_TYPE_PAR_GEN_Q 6    /**< @brief Constraint type: Generator participation (reactive power). */
+#define CONSTR_TYPE_REG_GEN 7      /**< @brief Constraint type: Voltage regualtion by generators. */
+#define CONSTR_TYPE_REG_TRAN 8     /**< @brief Constraint type: Voltage regulation by transformers. */
+#define CONSTR_TYPE_REG_SHUNT 9    /**< @brief Constraint type: Voltage regulation by shunt devices. */
+#define CONSTR_TYPE_DC_FLOW_LIM 10 /**< @brief Constraint type: DC branch flow limits. */
+#define CONSTR_TYPE_LBOUND 11      /**< @brief Constraint type: Variable bounds as linear inequality constraints. */
+#define CONSTR_TYPE_GEN_RAMP 12    /**< @brief Constraint type: Generator active power ramping constraints. */
 /** @} */
 
 // Constraint types strings
@@ -53,6 +54,7 @@
 #define CONSTR_TYPE_REG_SHUNT_STR "REG_SHUNT"
 #define CONSTR_TYPE_DC_FLOW_LIM_STR "DC_FLOW_LIM"
 #define CONSTR_TYPE_LBOUND_STR "LBOUND"
+#define CONSTR_TYPE_GEN_RAMP_STR "GEN_RAMP"
 
 // Constraint
 typedef struct Constr Constr;
@@ -98,12 +100,12 @@ Constr* CONSTR_list_add(Constr* clist, Constr* nc);
 int CONSTR_list_len(Constr* clist);
 void CONSTR_list_del(Constr* clist);
 void CONSTR_list_combine_H(Constr* clist, Vec* coeff, BOOL ensure_psd);
-void CONSTR_list_count_branch(Constr* clist, Branch* br);
+void CONSTR_list_count_step(Constr* clist, Branch* br, int t);
 void CONSTR_list_allocate(Constr* clist);
 void CONSTR_list_clear(Constr* clist);
-void CONSTR_list_analyze_branch(Constr* clist, Branch* br);
-void CONSTR_list_eval_branch(Constr* clist, Branch* br, Vec* var_values);
-void CONSTR_list_store_sens_branch(Constr* clist, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
+void CONSTR_list_analyze_step(Constr* clist, Branch* br, int t);
+void CONSTR_list_eval_step(Constr* clist, Branch* br, int t, Vec* var_values);
+void CONSTR_list_store_sens_step(Constr* clist, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 Constr* CONSTR_new(int type, Net* net);
 void CONSTR_set_b(Constr* c, Vec* b);
 void CONSTR_set_A(Constr* c, Mat* A);
@@ -124,15 +126,15 @@ void CONSTR_set_Jconstr_index(Constr* c, int index);
 void CONSTR_set_bus_counted(Constr* c, char* counted, int size);
 void CONSTR_set_data(Constr* c, void* data);
 void CONSTR_count(Constr* c);
-void CONSTR_count_branch(Constr* c, Branch* br);
+void CONSTR_count_step(Constr* c, Branch* br, int t);
 void CONSTR_allocate(Constr* c);
 void CONSTR_clear(Constr* c);
 void CONSTR_analyze(Constr* c);
-void CONSTR_analyze_branch(Constr* c, Branch* br);
+void CONSTR_analyze_step(Constr* c, Branch* br, int t);
 void CONSTR_eval(Constr* c, Vec* var_values);
-void CONSTR_eval_branch(Constr* c, Branch* br, Vec* var_values);
+void CONSTR_eval_step(Constr* c, Branch* br, int t, Vec* var_values);
 void CONSTR_store_sens(Constr* c, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
-void CONSTR_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
+void CONSTR_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 BOOL CONSTR_is_safe_to_count(Constr* c);
 BOOL CONSTR_is_safe_to_analyze(Constr* c);
 BOOL CONSTR_is_safe_to_eval(Constr* c, Vec* values);

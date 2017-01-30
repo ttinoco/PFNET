@@ -42,30 +42,30 @@ class TestProblem(unittest.TestCase):
             p.network = net
             
             # Variables
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_VARS,
-                          pf.BUS_PROP_NOT_SLACK,
-                          [pf.BUS_VAR_VMAG,pf.BUS_VAR_VANG])
-            net.set_flags(pf.OBJ_GEN,
-                          pf.FLAG_VARS,
-                          pf.GEN_PROP_SLACK,
-                          pf.GEN_VAR_P)
-            net.set_flags(pf.OBJ_GEN,
-                          pf.FLAG_VARS,
-                          pf.GEN_PROP_REG,
-                          pf.GEN_VAR_Q)
-            net.set_flags(pf.OBJ_BRANCH,
-                          pf.FLAG_VARS,
-                          pf.BRANCH_PROP_TAP_CHANGER_V,
-                          pf.BRANCH_VAR_RATIO)
-            net.set_flags(pf.OBJ_BRANCH,
-                          pf.FLAG_VARS,
-                          pf.BRANCH_PROP_PHASE_SHIFTER,
-                          pf.BRANCH_VAR_PHASE)
-            net.set_flags(pf.OBJ_SHUNT,
-                          pf.FLAG_VARS,
-                          pf.SHUNT_PROP_SWITCHED_V,
-                          pf.SHUNT_VAR_SUSC)
+            net.set_flags('bus',
+                          'variable',
+                          'not slack',
+                          ['voltage magnitude','voltage angle'])
+            net.set_flags('generator',
+                          'variable',
+                          'slack',
+                          'active power')
+            net.set_flags('generator',
+                          'variable',
+                          'regulator',
+                          'reactive power')
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer - v',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+            net.set_flags('shunt',
+                          'variable',
+                          'switching - v',
+                          'susceptance')
             
             self.assertEqual(net.num_vars,
                              2*(net.num_buses-net.get_num_slack_buses()) +
@@ -76,22 +76,22 @@ class TestProblem(unittest.TestCase):
                              net.get_num_switched_shunts())
                              
             # Fixed
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_FIXED,
-                          pf.BUS_PROP_REG_BY_GEN,
-                          pf.BUS_VAR_VMAG)
-            net.set_flags(pf.OBJ_BRANCH,
-                          pf.FLAG_FIXED,
-                          pf.BRANCH_PROP_TAP_CHANGER_V,
-                          pf.BRANCH_VAR_RATIO)
-            net.set_flags(pf.OBJ_BRANCH,
-                          pf.FLAG_FIXED,
-                          pf.BRANCH_PROP_PHASE_SHIFTER,
-                          pf.BRANCH_VAR_PHASE)
-            net.set_flags(pf.OBJ_SHUNT,
-                          pf.FLAG_FIXED,
-                          pf.SHUNT_PROP_SWITCHED_V,
-                          pf.SHUNT_VAR_SUSC)
+            net.set_flags('bus',
+                          'fixed',
+                          'regulated by generator',
+                          'voltage magnitude')
+            net.set_flags('branch',
+                          'fixed',
+                          'tap changer - v',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'fixed',
+                          'phase shifter',
+                          'phase shift')
+            net.set_flags('shunt',
+                          'fixed',
+                          'switching - v',
+                          'susceptance')
             self.assertEqual(net.num_fixed,
                              net.get_num_buses_reg_by_gen() +
                              net.get_num_tap_changers_v() +
@@ -99,14 +99,14 @@ class TestProblem(unittest.TestCase):
                              net.get_num_switched_shunts())
                              
             # Constraints
-            p.add_constraint(pf.CONSTR_TYPE_PF)
-            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_P)
-            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_Q)
-            p.add_constraint(pf.CONSTR_TYPE_FIX)
+            p.add_constraint('AC power balance')
+            p.add_constraint('generator active power participation')
+            p.add_constraint('generator reactive power participation')
+            p.add_constraint('variable fixing')
             self.assertEqual(len(p.constraints),4)
 
             # Check adding redundant constraints
-            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_P)
+            p.add_constraint('generator active power participation')
             self.assertEqual(len(p.constraints),4)
             
             # Functions
@@ -248,7 +248,7 @@ class TestProblem(unittest.TestCase):
             sens = np.random.randn(p.f.size)
             offset = 0
             for c in p.constraints:
-                if c.type == pf.CONSTR_TYPE_PF:
+                if c.type == 'AC power balance':
                     break
                 else:
                     offset += c.f.size
@@ -279,38 +279,38 @@ class TestProblem(unittest.TestCase):
             p.network = net
             
             # Variables
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_VARS,
-                          pf.BUS_PROP_NOT_SLACK,
-                          pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_VARS,
-                          pf.BUS_PROP_NOT_SLACK|pf.BUS_PROP_REG_BY_GEN,
-                          pf.BUS_VAR_VDEV)
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_VARS,
-                          pf.BUS_PROP_REG_BY_TRAN,
-                          pf.BUS_VAR_VVIO)
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_VARS,
-                          pf.BUS_PROP_REG_BY_SHUNT,
-                          pf.BUS_VAR_VVIO)
-            net.set_flags(pf.OBJ_GEN,
-                          pf.FLAG_VARS,
-                          pf.GEN_PROP_SLACK,
-                          pf.GEN_VAR_P)
-            net.set_flags(pf.OBJ_GEN,
-                          pf.FLAG_VARS,
-                          pf.GEN_PROP_REG,
-                          pf.GEN_VAR_Q)
-            net.set_flags(pf.OBJ_BRANCH,
-                          pf.FLAG_VARS,
-                          pf.BRANCH_PROP_TAP_CHANGER_V,
-                          pf.BRANCH_VAR_RATIO|pf.BRANCH_VAR_RATIO_DEV)
-            net.set_flags(pf.OBJ_SHUNT,
-                          pf.FLAG_VARS,
-                          pf.SHUNT_PROP_SWITCHED_V,
-                          pf.SHUNT_VAR_SUSC|pf.SHUNT_VAR_SUSC_DEV)                          
+            net.set_flags('bus',
+                          'variable',
+                          'not slack',
+                          ['voltage magnitude','voltage angle'])
+            net.set_flags('bus',
+                          'variable',
+                          ['not slack','regulated by generator'],
+                          'voltage magnitude deviation')
+            net.set_flags('bus',
+                          'variable',
+                          'regulated by transformer',
+                          'voltage magnitude violation')
+            net.set_flags('bus',
+                          'variable',
+                          'regulated by shunt',
+                          'voltage magnitude violation')
+            net.set_flags('generator',
+                          'variable',
+                          'slack',
+                          'active power')
+            net.set_flags('generator',
+                          'variable',
+                          'regulator',
+                          'reactive power')
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer - v',
+                          ['tap ratio','tap ratio deviation'])
+            net.set_flags('shunt',
+                          'variable',
+                          'switching - v',
+                          ['susceptance','susceptance deviation'])                          
 
             reg_by_tran_or_shunt = 0
             for i in range(net.num_buses):
@@ -328,24 +328,24 @@ class TestProblem(unittest.TestCase):
                              3*net.get_num_switched_shunts())
                              
             # Constraints
-            p.add_constraint(pf.CONSTR_TYPE_PF)
-            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_P)
-            p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_Q)
-            p.add_constraint(pf.CONSTR_TYPE_REG_GEN)
-            p.add_constraint(pf.CONSTR_TYPE_REG_TRAN)
-            p.add_constraint(pf.CONSTR_TYPE_REG_SHUNT)
+            p.add_constraint('AC power balance')
+            p.add_constraint('generator active power participation')
+            p.add_constraint('generator reactive power participation')
+            p.add_constraint('voltage regulation by generators')
+            p.add_constraint('voltage regulation by transformers')
+            p.add_constraint('voltage regulation by shunts')
             self.assertEqual(len(p.constraints),6)
 
             # Check adding redundant constraints
-            p.add_constraint(pf.CONSTR_TYPE_PF)
+            p.add_constraint('AC power balance')
             self.assertEqual(len(p.constraints),6)
             
             # Functions
-            p.add_function(pf.FUNC_TYPE_REG_VMAG,1.)
-            p.add_function(pf.FUNC_TYPE_REG_VANG,5.)
-            p.add_function(pf.FUNC_TYPE_REG_PQ,8.)
-            p.add_function(pf.FUNC_TYPE_REG_RATIO,3.)            
-            p.add_function(pf.FUNC_TYPE_REG_SUSC,1.)
+            p.add_function('voltage magnitude regularization',1.)
+            p.add_function('voltage angle regularization',5.)
+            p.add_function('generator powers regularization',8.)
+            p.add_function('tap ratio regularization',3.)            
+            p.add_function('susceptance regularization',1.)
             self.assertEqual(len(p.functions),5)
                 
             # Init point
@@ -524,7 +524,7 @@ class TestProblem(unittest.TestCase):
             sens = np.random.randn(p.f.size)
             offset = 0
             for c in p.constraints:
-                if c.type == pf.CONSTR_TYPE_PF:
+                if c.type == 'AC power balance':
                     break
                 else:
                     offset += c.f.size
@@ -551,10 +551,10 @@ class TestProblem(unittest.TestCase):
             net.load(case)
             p.network = net
 
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_VARS,
-                          pf.BUS_PROP_ANY,
-                          pf.BUS_VAR_VMAG)
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          'voltage magnitude')
             self.assertEqual(net.num_vars,net.num_buses)
 
             l = p.get_lower_limits()
@@ -582,10 +582,10 @@ class TestProblem(unittest.TestCase):
             self.assertEqual(net.num_bounded,0)
             
             # flags
-            net.set_flags(pf.OBJ_BUS,
-                          pf.FLAG_VARS|pf.FLAG_BOUNDED,
-                          pf.BUS_PROP_ANY,
-                          pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
+            net.set_flags('bus',
+                          ['variable','bounded'],
+                          'any',
+                          ['voltage magnitude','voltage angle'])
             
             self.assertGreater(net.num_buses,0)
             self.assertEqual(net.num_vars,net.num_buses*2)
@@ -593,14 +593,14 @@ class TestProblem(unittest.TestCase):
             
             self.assertEqual(len(p.constraints),0)
 
-            p.add_constraint(pf.CONSTR_TYPE_LBOUND)
-            p.add_constraint(pf.CONSTR_TYPE_DC_FLOW_LIM)
+            p.add_constraint('variable bounds')
+            p.add_constraint('DC branch flow limits')
 
             self.assertEqual(len(p.constraints),2)
 
-            constr1 = p.find_constraint(pf.CONSTR_TYPE_LBOUND)
-            constr2 = p.find_constraint(pf.CONSTR_TYPE_DC_FLOW_LIM)
-            self.assertRaises(pf.ProblemError,p.find_constraint,pf.CONSTR_TYPE_PF)
+            constr1 = p.find_constraint('variable bounds')
+            constr2 = p.find_constraint('DC branch flow limits')
+            self.assertRaises(pf.ProblemError,p.find_constraint,'AC power balance')
 
             p.analyze()
 

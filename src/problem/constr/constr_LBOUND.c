@@ -26,7 +26,7 @@ void CONSTR_LBOUND_clear(Constr* c) {
   CONSTR_clear_bus_counted(c);
 }
 
-void CONSTR_LBOUND_count_branch(Constr* c, Branch* br) {
+void CONSTR_LBOUND_count_step(Constr* c, Branch* br, int t) {
   // Nothing
 }
 
@@ -53,7 +53,7 @@ void CONSTR_LBOUND_allocate(Constr *c) {
 			 num_vars)); // nnz
 }
 
-void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
+void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 
   // Local variables
   Bus* buses[2];
@@ -71,6 +71,10 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
   int index;
   int index1;
   int index2;
+  int T;
+
+  // Number of periods
+  T = BRANCH_get_num_periods(br);
 
   // Cosntr data
   l = CONSTR_get_l(c);
@@ -92,7 +96,7 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 
   // Tap ratio
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) {
-    index = BRANCH_get_index_ratio(br);
+    index = BRANCH_get_index_ratio(br,t);
     MAT_set_i(G,index,index);
     MAT_set_j(G,index,index);
     MAT_set_d(G,index,1.);
@@ -108,8 +112,8 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 
   // Tap ratio dev
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO_DEV)) {
-    index1 = BRANCH_get_index_ratio_y(br);
-    index2 = BRANCH_get_index_ratio_z(br);
+    index1 = BRANCH_get_index_ratio_y(br,t);
+    index2 = BRANCH_get_index_ratio_z(br,t);
     MAT_set_i(G,index1,index1);
     MAT_set_j(G,index1,index1);
     MAT_set_d(G,index1,1.);
@@ -124,7 +128,7 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 
   // Phase shift
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
-    index = BRANCH_get_index_phase(br);
+    index = BRANCH_get_index_phase(br,t);
     MAT_set_i(G,index,index);
     MAT_set_j(G,index,index);
     MAT_set_d(G,index,1.);
@@ -143,11 +147,11 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 
     bus = buses[i];
 
-    if (!bus_counted[BUS_get_index(bus)]) {
+    if (!bus_counted[BUS_get_index(bus)*T+t]) {
 
       // Voltage magnitude (V_MAG)
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
-	index = BUS_get_index_v_mag(bus);
+	index = BUS_get_index_v_mag(bus,t);
 	MAT_set_i(G,index,index);
 	MAT_set_j(G,index,index);
 	MAT_set_d(G,index,1.);
@@ -163,8 +167,8 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 
       // Voltage magnitude dev (V_DEV)
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) {
-	index1 = BUS_get_index_y(bus);
-	index2 = BUS_get_index_z(bus);
+	index1 = BUS_get_index_y(bus,t);
+	index2 = BUS_get_index_z(bus,t);
 	MAT_set_i(G,index1,index1);
 	MAT_set_j(G,index1,index1);
 	MAT_set_d(G,index1,1.);
@@ -179,8 +183,8 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 
       // Voltage magnitude vio (V_VIO)
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
-	index1 = BUS_get_index_vl(bus);
-	index2 = BUS_get_index_vh(bus);
+	index1 = BUS_get_index_vl(bus,t);
+	index2 = BUS_get_index_vh(bus,t);
 	MAT_set_i(G,index1,index1);
 	MAT_set_j(G,index1,index1);
 	MAT_set_d(G,index1,1.);
@@ -195,7 +199,7 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 
       // Voltage angle (V_ANG)
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) {
-	index = BUS_get_index_v_ang(bus);
+	index = BUS_get_index_v_ang(bus,t);
 	MAT_set_i(G,index,index);
 	MAT_set_j(G,index,index);
 	MAT_set_d(G,index,1.);
@@ -208,7 +212,7 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 
 	// Active power (P)
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
-	  index = GEN_get_index_P(gen);
+	  index = GEN_get_index_P(gen,t);
 	  MAT_set_i(G,index,index);
 	  MAT_set_j(G,index,index);
 	  MAT_set_d(G,index,1.);
@@ -224,7 +228,7 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 
 	// Reactive power (Q)
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) {
-	  index = GEN_get_index_Q(gen);
+	  index = GEN_get_index_Q(gen,t);
 	  MAT_set_i(G,index,index);
 	  MAT_set_j(G,index,index);
 	  MAT_set_d(G,index,1.);
@@ -244,7 +248,7 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 
 	// Active power (P)
 	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
-	  index = LOAD_get_index_P(load);
+	  index = LOAD_get_index_P(load,t);
 	  MAT_set_i(G,index,index);
 	  MAT_set_j(G,index,index);
 	  MAT_set_d(G,index,1.);
@@ -264,7 +268,7 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 
 	// Active power (P)
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) {
-	  index = VARGEN_get_index_P(vargen);
+	  index = VARGEN_get_index_P(vargen,t);
 	  MAT_set_i(G,index,index);
 	  MAT_set_j(G,index,index);
 	  MAT_set_d(G,index,1.);
@@ -280,7 +284,7 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 
 	// Reactive power (Q)
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q)) {
-	  index = VARGEN_get_index_Q(vargen);
+	  index = VARGEN_get_index_Q(vargen,t);
 	  MAT_set_i(G,index,index);
 	  MAT_set_j(G,index,index);
 	  MAT_set_d(G,index,1.);
@@ -300,7 +304,7 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 
 	// Susceptance (b)
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
-	  index = SHUNT_get_index_b(shunt);
+	  index = SHUNT_get_index_b(shunt,t);
 	  MAT_set_i(G,index,index);
 	  MAT_set_j(G,index,index);
 	  MAT_set_d(G,index,1.);
@@ -316,8 +320,8 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 
 	// Susceptance dev
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC_DEV)) {
-	  index1 = SHUNT_get_index_y(shunt);
-	  index2 = SHUNT_get_index_z(shunt);
+	  index1 = SHUNT_get_index_y(shunt,t);
+	  index2 = SHUNT_get_index_z(shunt,t);
 	  MAT_set_i(G,index1,index1);
 	  MAT_set_j(G,index1,index1);
 	  MAT_set_d(G,index1,1.);
@@ -337,8 +341,8 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 	// Charging/discharging power (P)
 	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
 
-	  index1 = BAT_get_index_Pc(bat);
-	  index2 = BAT_get_index_Pd(bat);
+	  index1 = BAT_get_index_Pc(bat,t);
+	  index2 = BAT_get_index_Pd(bat,t);
 
 	  MAT_set_i(G,index1,index1);
 	  MAT_set_j(G,index1,index1);
@@ -368,7 +372,7 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
 
 	// Energy level (E)
 	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_E)) {
-	  index = BAT_get_index_E(bat);
+	  index = BAT_get_index_E(bat,t);
 	  MAT_set_i(G,index,index);
 	  MAT_set_j(G,index,index);
 	  MAT_set_d(G,index,1.);
@@ -385,15 +389,15 @@ void CONSTR_LBOUND_analyze_branch(Constr* c, Branch* br) {
     }
 
     // Update counted flag
-    bus_counted[BUS_get_index(bus)] = TRUE;
+    bus_counted[BUS_get_index(bus)*T+t] = TRUE;
   }
 }
 
-void CONSTR_LBOUND_eval_branch(Constr* c, Branch* br, Vec* var_values) {
+void CONSTR_LBOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
   // Nothing to do
 }
 
-void CONSTR_LBOUND_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_LBOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Local variables
   Bus* buses[2];
@@ -402,6 +406,10 @@ void CONSTR_LBOUND_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Ve
   Load* load;
   char* bus_counted;
   int i;
+  int T;
+
+  // Number of periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   bus_counted = CONSTR_get_bus_counted(c);
@@ -423,12 +431,12 @@ void CONSTR_LBOUND_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Ve
 
     bus = buses[i];
 
-    if (!bus_counted[BUS_get_index(bus)]) {
+    if (!bus_counted[BUS_get_index(bus)*T+t]) {
 
       // Voltage angle (V_ANG)
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) {
-	BUS_set_sens_v_ang_u_bound(bus,VEC_get(sGu,BUS_get_index_v_ang(bus)));
-	BUS_set_sens_v_ang_l_bound(bus,VEC_get(sGl,BUS_get_index_v_ang(bus)));
+	BUS_set_sens_v_ang_u_bound(bus,VEC_get(sGu,BUS_get_index_v_ang(bus,t)),t);
+	BUS_set_sens_v_ang_l_bound(bus,VEC_get(sGl,BUS_get_index_v_ang(bus,t)),t);
       }
 
       // Generators
@@ -436,8 +444,8 @@ void CONSTR_LBOUND_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Ve
 
 	// Active power (P)
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
-	  GEN_set_sens_P_u_bound(gen,VEC_get(sGu,GEN_get_index_P(gen)));
-	  GEN_set_sens_P_l_bound(gen,VEC_get(sGl,GEN_get_index_P(gen)));
+	  GEN_set_sens_P_u_bound(gen,VEC_get(sGu,GEN_get_index_P(gen,t)),t);
+	  GEN_set_sens_P_l_bound(gen,VEC_get(sGl,GEN_get_index_P(gen,t)),t);
 	}
       }
 
@@ -446,14 +454,14 @@ void CONSTR_LBOUND_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Ve
 
 	// Active power (P)
 	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
-	  LOAD_set_sens_P_u_bound(load,VEC_get(sGu,LOAD_get_index_P(load)));
-	  LOAD_set_sens_P_l_bound(load,VEC_get(sGl,LOAD_get_index_P(load)));
+	  LOAD_set_sens_P_u_bound(load,VEC_get(sGu,LOAD_get_index_P(load,t)),t);
+	  LOAD_set_sens_P_l_bound(load,VEC_get(sGl,LOAD_get_index_P(load,t)),t);
 	}
       }
     }
 
     // Update counted flag
-    bus_counted[BUS_get_index(bus)] = TRUE;
+    bus_counted[BUS_get_index(bus)*T+t] = TRUE;
   }
 }
 

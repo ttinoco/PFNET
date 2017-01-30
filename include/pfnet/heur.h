@@ -32,7 +32,7 @@ char* HEUR_get_bus_counted(Heur *h);
 void* HEUR_get_data(Heur* h);
 Heur* HEUR_get_next(Heur* h);
 Heur* HEUR_list_add(Heur* hlist, Heur* nh);
-void HEUR_list_apply_to_branch(Heur* hlist, Constr* clist, Net* net, Branch* br, Vec* var_values);
+void HEUR_list_apply_step(Heur* hlist, Constr* clist, Net* net, Branch* br, int t, Vec* var_values);
 void HEUR_list_clear(Heur* hlist, Net* net);
 void HEUR_list_del(Heur* hlist);
 int HEUR_list_len(Heur* hlist);
@@ -40,6 +40,6 @@ Heur* HEUR_new(int type, Net* net);
 void HEUR_set_bus_counted(Heur* h, char* counted);
 void HEUR_set_data(Heur* h, void* data);
 void HEUR_clear(Heur* h, Net* net);
-void HEUR_apply_to_branch(Heur* h, Constr* clist, Net* net, Branch* br, Vec* var_values);
+void HEUR_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, Vec* var_values);
 
 #endif

@@ -9,34 +9,34 @@ def NRsolve(net):
     net.clear_flags()
 
     # bus voltage angles
-    net.set_flags(pf.OBJ_BUS,
-                  pf.FLAG_VARS,
-                  pf.BUS_PROP_NOT_SLACK,
-                  pf.BUS_VAR_VANG)
+    net.set_flags('bus',
+                  'variable',
+                  'not slack',
+                  'voltage angle')
     
     # bus voltage magnitudes
-    net.set_flags(pf.OBJ_BUS,
-                  pf.FLAG_VARS,
-                  pf.BUS_PROP_NOT_REG_BY_GEN,
-                  pf.BUS_VAR_VMAG)
+    net.set_flags('bus',
+                  'variable',
+                  'not regulated by generator',
+                  'voltage magnitude')
     
     # slack gens active powers
-    net.set_flags(pf.OBJ_GEN,
-                  pf.FLAG_VARS,
-                  pf.GEN_PROP_SLACK,
-                  pf.GEN_VAR_P)
+    net.set_flags('generator',
+                  'variable',
+                  'slack',
+                  'active power')
     
     # regulator gens reactive powers
-    net.set_flags(pf.OBJ_GEN,
-                  pf.FLAG_VARS,
-                  pf.GEN_PROP_REG,
-                  pf.GEN_VAR_Q)
+    net.set_flags('generator',
+                  'variable',
+                  'regulator',
+                  'reactive power')
 
     p = pf.Problem()
     p.set_network(net)
-    p.add_constraint(pf.CONSTR_TYPE_PF)         # power flow
-    p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_P)  # generator participation
-    p.add_constraint(pf.CONSTR_TYPE_PAR_GEN_Q)  # generator participation
+    p.add_constraint('AC power balance')  
+    p.add_constraint('generator active power participation')  
+    p.add_constraint('generator reactive power participation')
     p.analyze()
     
     x = p.get_init_point()

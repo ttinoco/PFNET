@@ -15,9 +15,9 @@ PFNET for Python has the following dependencies:
 
 * `Numpy <http://www.numpy.org>`_ (>=1.8.2): the fundamental package for scientific computing in Python.
 * `Scipy <http://www.scipy.org>`_ (>=0.13.3): a collection of mathematical algorithms and functions built on top of Numpy.
-* `PFNET <https://github.com/ttinoco/PFNET>`_ (== 1.3): underlying C routines wrapped by this package (``libpfnet``).
+* `PFNET <https://github.com/ttinoco/PFNET>`_ (== 1.2.5): underlying C routines wrapped by this package (``libpfnet``).
 * `Graphviz <http://www.graphviz.org/>`_ (>= 2.38): graph visualization library (``libgvc``) (Optional).
-* `Raw parser <some_URL>`_ (>=1.0): library for parsing power flow files in PSSE raw format version 32 (``libraw_parser``) (Optional).
+* `Raw parser <some_URL>`_ (>=1.2): library for parsing power flow files in PSSE raw format version 32 (``libraw_parser``) (Optional).
 
 .. _start_download:
 
@@ -68,3 +68,11 @@ Requirements to build the PFNET Python documentation:
 * `Sphinx <http://www.sphinx-doc.org/>`_ (>=1.4).
 
 To build the documentation the environment variable ``PFNET_DOCS`` must be set. The generated files will be placed in the directory ``PFNET_DOCS/python``. To generate the files, run `make` from the ``python/docs`` directory of the PFNET package.
+
+For example, to build the html documentation files run::
+
+  > make html
+
+It may also be necessary to pass the environment variable with the path to the dynamic shared libraries using ``LD_LIBRARY_PATH`` on Linux or ``DYLD_FALLBACK_LIBRARY_PATH`` on Mac OSX. This command would then be::
+
+  > make html DYLD_FALLBACK_LIBRARY_PATH=$PFNET/lib

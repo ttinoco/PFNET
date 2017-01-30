@@ -171,7 +171,6 @@ void MAT_PARSER_read(MAT_Parser* parser, char* filename) {
 
   // Local variables
   FILE* file;
-  char* line;
   CSV_Parser* csv = CSV_PARSER_new();
   char buffer[MAT_PARSER_BUFFER_SIZE];
   size_t bytes_read;
@@ -274,12 +273,17 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
   REAL b;
   REAL t;
   REAL z;
+  int num_periods;
 
+  // Check inputs
   if (!parser || !net)
     return;
 
   // Base
   NET_set_base_power(net,parser->base_power);
+
+  // Num periods
+  num_periods = NET_get_num_periods(net);
 
   // Buses
   index = 0;
@@ -288,13 +292,13 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
     if (mat_bus->type != MAT_BUS_TYPE_IS)
       num_buses++;
   }
-  NET_set_bus_array(net,BUS_array_new(num_buses),num_buses); // allocate buses
+  NET_set_bus_array(net,BUS_array_new(num_buses,num_periods),num_buses); // allocate buses
   for (mat_bus = parser->bus_list; mat_bus != NULL; mat_bus = mat_bus->next) {
     bus = NET_get_bus(net,index);           // get bus
     BUS_set_number(bus,mat_bus->number);
     BUS_set_name(bus,mat_bus->name);
-    BUS_set_v_mag(bus,mat_bus->Vm);         // per unit
-    BUS_set_v_ang(bus,mat_bus->Va*PI/180.); // radians
+    BUS_set_v_mag(bus,mat_bus->Vm,0);         // per unit
+    BUS_set_v_ang(bus,mat_bus->Va*PI/180.,0); // radians
     if (mat_bus->type == MAT_BUS_TYPE_SL)
       BUS_set_slack(bus,TRUE);
     NET_bus_hash_number_add(net,bus);
@@ -309,17 +313,17 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
     if (mat_bus->type != MAT_BUS_TYPE_IS && (mat_bus->Pd != 0 || mat_bus->Qd != 0))
       num_loads++;
   }
-  NET_set_load_array(net,LOAD_array_new(num_loads),num_loads);
+  NET_set_load_array(net,LOAD_array_new(num_loads,num_periods),num_loads);
   for (mat_bus = parser->bus_list; mat_bus != NULL; mat_bus = mat_bus->next) {
     if (mat_bus->type != MAT_BUS_TYPE_IS && (mat_bus->Pd != 0 || mat_bus->Qd != 0)) {
       bus = BUS_hash_number_find(NET_get_bus_hash_number(net),mat_bus->number);
       load = NET_get_load(net,index);
-      BUS_add_load(bus,load);                          // connect load to bus
-      LOAD_set_bus(load,bus);                          // connect bus to load
-      LOAD_set_P(load,mat_bus->Pd/parser->base_power); // per unit
-      LOAD_set_Q(load,mat_bus->Qd/parser->base_power); // per unit
-      LOAD_set_P_min(load,LOAD_get_P(load));           // Pmin = P = Pmax
-      LOAD_set_P_max(load,LOAD_get_P(load));           // Pmin = P = Pmax
+      BUS_add_load(bus,load);                            // connect load to bus
+      LOAD_set_bus(load,bus);                            // connect bus to load
+      LOAD_set_P(load,mat_bus->Pd/parser->base_power,0); // per unit
+      LOAD_set_Q(load,mat_bus->Qd/parser->base_power,0); // per unit
+      LOAD_set_P_min(load,LOAD_get_P(load,0));             // Pmin = P = Pmax
+      LOAD_set_P_max(load,LOAD_get_P(load,0));             // Pmin = P = Pmax
       index++;
     }
   }
@@ -331,17 +335,17 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
     if (mat_bus->type != MAT_BUS_TYPE_IS && (mat_bus->Gs != 0 || mat_bus->Bs != 0))
       num_shunts++;
   }
-  NET_set_shunt_array(net,SHUNT_array_new(num_shunts),num_shunts);
+  NET_set_shunt_array(net,SHUNT_array_new(num_shunts,num_periods),num_shunts);
   for (mat_bus = parser->bus_list; mat_bus != NULL; mat_bus = mat_bus->next) {
     if (mat_bus->type != MAT_BUS_TYPE_IS && (mat_bus->Gs != 0 || mat_bus->Bs != 0)) {
       bus = BUS_hash_number_find(NET_get_bus_hash_number(net),mat_bus->number);
       shunt = NET_get_shunt(net,index);
-      BUS_add_shunt(bus,shunt);                          // connect shunt to bus
-      SHUNT_set_bus(shunt,bus);                          // connect bus to shunt
-      SHUNT_set_g(shunt,mat_bus->Gs/parser->base_power); // per unit
-      SHUNT_set_b(shunt,mat_bus->Bs/parser->base_power); // per unit
-      SHUNT_set_b_max(shunt,SHUNT_get_b(shunt));         // per unit
-      SHUNT_set_b_min(shunt,SHUNT_get_b(shunt));         // per unit
+      BUS_add_shunt(bus,shunt);                            // connect shunt to bus
+      SHUNT_set_bus(shunt,bus);                            // connect bus to shunt
+      SHUNT_set_g(shunt,mat_bus->Gs/parser->base_power);   // per unit
+      SHUNT_set_b(shunt,mat_bus->Bs/parser->base_power,0); // per unit
+      SHUNT_set_b_max(shunt,SHUNT_get_b(shunt,0));         // per unit
+      SHUNT_set_b_min(shunt,SHUNT_get_b(shunt,0));         // per unit
       index++;
     }
   }
@@ -353,28 +357,28 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
     if (mat_gen->status > 0)
       num_gens++;
   }
-  NET_set_gen_array(net,GEN_array_new(num_gens),num_gens);
+  NET_set_gen_array(net,GEN_array_new(num_gens,num_periods),num_gens);
   for (mat_gen = parser->gen_list; mat_gen != NULL; mat_gen = mat_gen->next) {
     if (mat_gen->status > 0) {
       bus = BUS_hash_number_find(NET_get_bus_hash_number(net),mat_gen->bus_number);
       gen = NET_get_gen(net,index);
       BUS_add_gen(bus,gen);                                // connect gen to bus
       GEN_set_bus(gen,bus);                                // connect bus to gen
-      GEN_set_P(gen,mat_gen->Pg/parser->base_power);       // per unit
+      GEN_set_P(gen,mat_gen->Pg/parser->base_power,0);     // per unit
       GEN_set_P_max(gen,mat_gen->Pmax/parser->base_power); // per unit
       GEN_set_P_min(gen,mat_gen->Pmin/parser->base_power); // per unit
-      GEN_set_Q(gen,mat_gen->Qg/parser->base_power);       // per unit
+      GEN_set_Q(gen,mat_gen->Qg/parser->base_power,0);     // per unit
       GEN_set_Q_max(gen,mat_gen->Qmax/parser->base_power); // per unit
       GEN_set_Q_min(gen,mat_gen->Qmin/parser->base_power); // per unit
       if (BUS_is_slack(bus))  { // generator provides regulation
 	GEN_set_reg_bus(gen,bus);
 	BUS_add_reg_gen(bus,gen);
-	BUS_set_v_set(bus,mat_gen->Vg); // p.u.
+	BUS_set_v_set(bus,mat_gen->Vg,0); // p.u.
       }
       else if (GEN_get_Q_max(gen) > GEN_get_Q_min(gen)) { // generator provides regulation
 	GEN_set_reg_bus(gen,bus);
 	BUS_add_reg_gen(bus,gen);
-	BUS_set_v_set(bus,mat_gen->Vg); // p.u.
+	BUS_set_v_set(bus,mat_gen->Vg,0); // p.u.
       }
       else if (GEN_get_Q_max(gen) < GEN_get_Q_min(gen)) {
 	GEN_set_Q_max(gen,mat_gen->Qmin/parser->base_power); // per unit
@@ -388,7 +392,7 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
   index = 0;
   num_branches = 0;
   LIST_len(MAT_Branch,parser->branch_list,next,num_branches);
-  NET_set_branch_array(net,BRANCH_array_new(num_branches),num_branches);
+  NET_set_branch_array(net,BRANCH_array_new(num_branches,num_periods),num_branches);
   for (mat_branch = parser->branch_list; mat_branch != NULL; mat_branch = mat_branch->next) {
     busA = BUS_hash_number_find(NET_get_bus_hash_number(net),mat_branch->bus_k_number);
     busB = BUS_hash_number_find(NET_get_bus_hash_number(net),mat_branch->bus_m_number);
@@ -407,16 +411,16 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
       BRANCH_set_type(branch,BRANCH_TYPE_LINE);
     else
       BRANCH_set_type(branch,BRANCH_TYPE_TRAN_FIXED);
-    BRANCH_set_bus_k(branch,busA);
-    BRANCH_set_bus_m(branch,busB);
-    BUS_add_branch_k(busA,branch);
-    BUS_add_branch_m(busB,branch);
-    BRANCH_set_ratio(branch,1./t);                         // units of bus_k_base/bus_m_base
-    BRANCH_set_ratio_max(branch,BRANCH_get_ratio(branch));
-    BRANCH_set_ratio_min(branch,BRANCH_get_ratio(branch));
-    BRANCH_set_phase(branch,z);                            // radians
-    BRANCH_set_phase_max(branch,BRANCH_get_phase(branch));
-    BRANCH_set_phase_min(branch,BRANCH_get_phase(branch));
+    BRANCH_set_bus_from(branch,busA);
+    BRANCH_set_bus_to(branch,busB);
+    BUS_add_branch_from(busA,branch);
+    BUS_add_branch_to(busB,branch);
+    BRANCH_set_ratio(branch,1./t,0);                         // units of bus_from_base/bus_to_base
+    BRANCH_set_ratio_max(branch,BRANCH_get_ratio(branch,0));
+    BRANCH_set_ratio_min(branch,BRANCH_get_ratio(branch,0));
+    BRANCH_set_phase(branch,z,0);                            // radians
+    BRANCH_set_phase_max(branch,BRANCH_get_phase(branch,0));
+    BRANCH_set_phase_min(branch,BRANCH_get_phase(branch,0));
     BRANCH_set_g(branch,g);                                // per unit
     BRANCH_set_b(branch,b);                                // per unit
     BRANCH_set_b_k(branch,mat_branch->b/2.);            // per unit

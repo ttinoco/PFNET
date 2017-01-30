@@ -21,7 +21,7 @@ typedef struct Heur_PVPQ_Data Heur_PVPQ_Data;
 // Function prototypes
 void HEUR_PVPQ_init(Heur* h, Net* net);
 void HEUR_PVPQ_clear(Heur* h, Net* net);
-void HEUR_PVPQ_apply_to_branch(Heur* h, Constr* clist, Net* net, Branch* br, Vec* var_values);
+void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, Vec* var_values);
 void HEUR_PVPQ_free(Heur* h);
 
 #endif

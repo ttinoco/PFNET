@@ -16,12 +16,12 @@
 
 // Function prototypes
 void CONSTR_LINPF_init(Constr* c);
-void CONSTR_LINPF_count_branch(Constr* c, Branch* b);
+void CONSTR_LINPF_count_step(Constr* c, Branch* br, int t);
 void CONSTR_LINPF_allocate(Constr* c);
 void CONSTR_LINPF_clear(Constr* c);
-void CONSTR_LINPF_analyze_branch(Constr* c, Branch* b);
-void CONSTR_LINPF_eval_branch(Constr* c, Branch* b, Vec* var_values);
-void CONSTR_LINPF_store_sens_branch(Constr* c, Branch* b, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
+void CONSTR_LINPF_analyze_step(Constr* c, Branch* br, int t);
+void CONSTR_LINPF_eval_step(Constr* c, Branch* br, int t, Vec* var_values);
+void CONSTR_LINPF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void CONSTR_LINPF_free(Constr* c);
 
 #endif
