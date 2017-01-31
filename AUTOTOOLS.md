@@ -10,4 +10,5 @@ Procedure for using autoconf and automake
 * run **automake**
 * run **aclocal**
 * run **autoconf**
+* seems that **autoreconf --force** runs all
 * configure, make, make check, make install

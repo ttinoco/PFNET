@@ -12,6 +12,7 @@
 #define __PARSER_RAW_HEADER__
 
 #include "net.h"
+#include "config.h"
 
 // Struct
 typedef struct RAW_Parser RAW_Parser;

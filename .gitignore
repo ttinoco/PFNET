@@ -29,6 +29,7 @@ autom4te.cache/
 autoscan.log
 compile
 configure
+configure.scan
 config.guess
 config.log
 config.status

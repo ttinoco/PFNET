@@ -13,6 +13,7 @@
 
 #include <stdlib.h>
 #include "net.h"
+#include "config.h"
 
 #ifdef HAVE_GRAPHVIZ_GVC_H
 #include <graphviz/gvc.h>
