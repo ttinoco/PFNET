@@ -823,9 +823,8 @@ cdef class Bus:
             return gens
 
     property gens:
-        """ List of :class:`generators <pfnet.Generator>` connected to this bus (list). """
-        def __get__(self):
-            return self.generators
+        """ Same as :attr:`generators`. """
+        def __get__(self): return self.generators
 
     property reg_generators:
         """ List of :class:`generators <pfnet.Generator>` regulating the voltage magnitude of this bus (list). """
@@ -839,8 +838,7 @@ cdef class Bus:
 
     property reg_gens:
         """ List of :class:`generators <pfnet.Generator>` regulating the voltage magnitude of this bus (list). """
-        def __get__(self):
-            return self.reg_generators
+        def __get__(self): return self.reg_generators
 
     property reg_trans:
         """ List of :class:`tap-changing transformers <pfnet.Branch>` regulating the voltage magnitude of this bus (list). """
@@ -867,13 +865,7 @@ cdef class Bus:
 
         List of :class:`branches <pfnet.Branch>` that have this bus on the "from" side (list).
         """
-        def __get__(self):
-            branches = []
-            cdef cbranch.Branch* br = cbus.BUS_get_branch_from(self._c_ptr)
-            while br is not NULL:
-                branches.append(new_Branch(br))
-                br = cbranch.BRANCH_get_from_next(br)
-            return branches
+        def __get__(self): return self.branches_k
 
     property branches_k:
         """ List of :class:`branches <pfnet.Branch>` that have this bus on the "k" (aka "from" or "i") side (list). """
@@ -890,13 +882,7 @@ cdef class Bus:
 
         List of :class:`branches <pfnet.Branch>` that have this bus on the "to" side (list).
         """
-        def __get__(self):
-            branches = []
-            cdef cbranch.Branch* br = cbus.BUS_get_branch_to(self._c_ptr)
-            while br is not NULL:
-                branches.append(new_Branch(br))
-                br = cbranch.BRANCH_get_to_next(br)
-            return branches
+        def __get__(self): return self.branches_m
 
     property branches_m:
         """ List of :class:`branches <pfnet.Branch>` that have this bus on the "m" (aka "to" or "j") side (list). """
@@ -935,9 +921,8 @@ cdef class Bus:
             return vargens
 
     property var_gens:
-        """ List of :class:`variable generators <pfnet.VarGenerator>` connected to this bus (list). """
-        def __get__(self):
-            return self.var_generators
+        """ Same as :attr:`var_generators. """
+        def __get__(self): return self.var_generators
 
     property batteries:
         """ List of :class:`batteries <pfnet.Battery>` connected to this bus (list). """
@@ -950,9 +935,8 @@ cdef class Bus:
             return bats
 
     property bats:
-        """ List of :class:`batteries <pfnet.Battery>` connected to this bus (list). """
-        def __get__(self):
-            return self.batteries
+        """ Same as :attr:`batteries`. """
+        def __get__(self): return self.batteries
 
 
 cdef new_Bus(cbus.Bus* b):
@@ -1232,7 +1216,7 @@ cdef class Branch:
 
         :class:`Bus <pfnet.Bus>` connected to the "from" side.
         """
-        def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_from(self._c_ptr))
+        def __get__(self): return self.bus_k
 
     property bus_k:
         """ :class:`Bus <pfnet.Bus>` connected to the "k" (aka "from" or "i") side. """
@@ -1243,11 +1227,11 @@ cdef class Branch:
 
         :class:`Bus <pfnet.Bus>` connected to the "to" side.
         """
-        def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_to(self._c_ptr))
+        def __get__(self): return self.bus_m
 
     property bus_m:
         """ :class:`Bus <pfnet.Bus>` connected to the "m" (aka "to" or "j") side. """
-        def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_to(self._c_ptr))
+        def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_m(self._c_ptr))
 
     property reg_bus:
         """ :class:`Bus <pfnet.Bus>` whose voltage is regulated by this tap-changing transformer. """
@@ -1261,7 +1245,7 @@ cdef class Branch:
         """ .. deprecated:: TBD  See :attr:`b_k <pfnet.Branch.b_k>`.
 
         Branch shunt susceptance at the "from" side (p.u.) (float). """
-        def __get__(self): return cbranch.BRANCH_get_b_from(self._c_ptr)
+        def __get__(self): return self.b_k
 
     property b_k:
         """ Branch shunt susceptance at the "k" (aka "from" or "i") side (p.u.) (float). """
@@ -1271,7 +1255,7 @@ cdef class Branch:
         """ .. deprecated:: TBD  See :attr:`b_m <pfnet.Branch.b_m>`.
 
         Branch shunt susceptance at the "to" side (p.u.) (float). """
-        def __get__(self): return cbranch.BRANCH_get_b_to(self._c_ptr)
+        def __get__(self): return self.b_m
 
     property b_m:
         """ Branch shunt susceptance at the "m" (aka "to" or "j") side (p.u.) (float). """
@@ -1285,7 +1269,7 @@ cdef class Branch:
         """ .. deprecated:: TBD  See :attr:`g_k <pfnet.Branch.g_k>`.
 
         Branch shunt conductance at the "from" side (p.u.) (float). """
-        def __get__(self): return cbranch.BRANCH_get_g_from(self._c_ptr)
+        def __get__(self): return self.g_k
 
     property g_k:
         """ Branch shunt conductance at the "k" (aka "from" or "i") side (p.u.) (float). """
@@ -1295,7 +1279,7 @@ cdef class Branch:
         """ .. deprecated:: TBD  See :attr:`g_m <pfnet.Branch.g_m>`.
 
         Branch shunt conductance at the "to" side (p.u.) (float). """
-        def __get__(self): return cbranch.BRANCH_get_g_to(self._c_ptr)
+        def __get__(self): return self.g_m
 
     property g_m:
         """ Branch shunt conductance at the "m" (aka "to" or "j") side (p.u.) (float). """
@@ -1427,148 +1411,87 @@ cdef class Branch:
                 return np.array(r)
 
     property P_from_to:
-      """ .. deprecated:: TBD  See :attr:`P_km <pfnet.Branch.P_km>`.
+        """ .. deprecated:: TBD  See :attr:`P_km <pfnet.Branch.P_km>`.
 
-      Real power flow at bus "k" towards bus "m" (from -> to) (p.u.) (float or array). """
-      def __get__(self):
-          r = [cbranch.BRANCH_get_P_from_to(self._c_ptr,NULL,t) for t in range(self.num_periods)]
-          if self.num_periods == 1:
-              return AttributeFloat(r[0])
-          else:
-              return np.array(r)
+        Real power flow at bus "k" towards bus "m" (from -> to) (p.u.) (float or array). """
+        def __get__(self): return self.P_km
 
     property Q_from_to:
-      """ .. deprecated:: TBD  See :attr:`Q_km <pfnet.Branch.Q_km>`.
+        """ .. deprecated:: TBD  See :attr:`Q_km <pfnet.Branch.Q_km>`.
 
-      Reactive power flow at bus "k" towards bus "m" (from -> to) (p.u.) (float or array).
-      """
-      def __get__(self):
-          r = [cbranch.BRANCH_get_Q_from_to(self._c_ptr,NULL,t) for t in range(self.num_periods)]
-          if self.num_periods == 1:
-              return AttributeFloat(r[0])
-          else:
-              return np.array(r)
+        Reactive power flow at bus "k" towards bus "m" (from -> to) (p.u.) (float or array).
+        """
+        def __get__(self): return self.Q_km
 
     property P_to_from:
-      """ .. deprecated:: TBD  See :attr:`P_mk <pfnet.Branch.P_mk>`.
+        """ .. deprecated:: TBD  See :attr:`P_mk <pfnet.Branch.P_mk>`.
 
-      Real power flow at bus "m" towards bus "k" (to -> from) (p.u.) (float or array).
-      """
-      def __get__(self):
-          r = [cbranch.BRANCH_get_P_to_from(self._c_ptr,NULL,t) for t in range(self.num_periods)]
-          if self.num_periods == 1:
-              return AttributeFloat(r[0])
-          else:
-              return np.array(r)
+        Real power flow at bus "m" towards bus "k" (to -> from) (p.u.) (float or array).
+        """
+        def __get__(self): return self.P_mk
 
     property Q_to_from:
-      """ .. deprecated:: TBD  See :attr:`Q_mk <pfnet.Branch.Q_mk>`.
+        """ .. deprecated:: TBD  See :attr:`Q_mk <pfnet.Branch.Q_mk>`.
 
-      Reactive power flow at bus "m" towards bus "k" (to -> from) (p.u.) (float or array).
-      """
-      def __get__(self):
-          r = [cbranch.BRANCH_get_Q_to_from(self._c_ptr,NULL,t) for t in range(self.num_periods)]
-          if self.num_periods == 1:
-              return AttributeFloat(r[0])
-          else:
-              return np.array(r)
+        Reactive power flow at bus "m" towards bus "k" (to -> from) (p.u.) (float or array).
+        """
+        def __get__(self): return self.Q_mk
 
     property P_series_from_to:
-      """ .. deprecated:: TBD  See :attr:`P_km_series <pfnet.Branch.P_km_series>`.
+        """ .. deprecated:: TBD  See :attr:`P_km_series <pfnet.Branch.P_km_series>`.
 
-      Real power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (p.u.) (float or array).
-      """
-      def __get__(self):
-          r = [cbranch.BRANCH_get_P_series_from_to(self._c_ptr,NULL,t) for t in range(self.num_periods)]
-          if self.num_periods == 1:
-              return AttributeFloat(r[0])
-          else:
-              return np.array(r)
+        Real power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (p.u.) (float or array).
+        """
+        def __get__(self): return self.P_km_series
 
     property Q_series_from_to:
-      """ .. deprecated:: TBD  See :attr:`Q_km_series <pfnet.Branch.Q_km_series>`.
+        """ .. deprecated:: TBD  See :attr:`Q_km_series <pfnet.Branch.Q_km_series>`.
 
-      Reactive power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (p.u.) (float or array).
-      """
-      def __get__(self):
-          r = [cbranch.BRANCH_get_Q_series_from_to(self._c_ptr,NULL,t) for t in range(self.num_periods)]
-          if self.num_periods == 1:
-              return AttributeFloat(r[0])
-          else:
-              return np.array(r)
+        Reactive power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (p.u.) (float or array).
+        """
+        def __get__(self): return self.Q_km_series
 
     property P_series_to_from:
-      """ .. deprecated:: TBD  See :attr:`P_mk_series <pfnet.Branch.P_mk_series>`.
+        """ .. deprecated:: TBD  See :attr:`P_mk_series <pfnet.Branch.P_mk_series>`.
 
-      Real power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (p.u.) (float or array).
-      """
-      def __get__(self):
-          r = [cbranch.BRANCH_get_P_series_to_from(self._c_ptr,NULL,t) for t in range(self.num_periods)]
-          if self.num_periods == 1:
-              return AttributeFloat(r[0])
-          else:
-              return np.array(r)
+        Real power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (p.u.) (float or array).
+        """
+        def __get__(self): return self.P_mk_series
 
     property Q_series_to_from:
-      """ .. deprecated:: TBD  See :attr:`Q_mk_series <pfnet.Branch.Q_mk_series>`.
+        """ .. deprecated:: TBD  See :attr:`Q_mk_series <pfnet.Branch.Q_mk_series>`.
 
-      Reactive power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (p.u.) (float or array).
-      """
-      def __get__(self):
-          r = [cbranch.BRANCH_get_Q_series_to_from(self._c_ptr,NULL,t) for t in range(self.num_periods)]
-          if self.num_periods == 1:
-              return AttributeFloat(r[0])
-          else:
-              return np.array(r)
+        Reactive power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (p.u.) (float or array).
+        """
+        def __get__(self): return self.Q_mk_series
 
     property P_shunt_from:
-      """ .. deprecated:: TBD  See :attr:`P_k_shunt <pfnet.Branch.P_k_shunt>`.
+        """ .. deprecated:: TBD  See :attr:`P_k_shunt <pfnet.Branch.P_k_shunt>`.
 
-      Real power flow into the shunt element at bus "k" (aka "from") (p.u.) (float or array).
-      """
-      def __get__(self):
-          r = [cbranch.BRANCH_get_P_shunt_from(self._c_ptr,NULL,t) for t in range(self.num_periods)]
-          if self.num_periods == 1:
-              return AttributeFloat(r[0])
-          else:
-              return np.array(r)
+        Real power flow into the shunt element at bus "k" (aka "from") (p.u.) (float or array).
+        """
+        def __get__(self): return self.P_k_shunt
 
     property Q_shunt_from:
-      """ .. deprecated:: TBD  See :attr:`Q_k_shunt <pfnet.Branch.Q_k_shunt>`.
+        """ .. deprecated:: TBD  See :attr:`Q_k_shunt <pfnet.Branch.Q_k_shunt>`.
 
-      Reactive power flow into the shunt element bus "k" (aka "from") (p.u.) (float or array).
-      """
-      def __get__(self):
-          r = [cbranch.BRANCH_get_Q_shunt_from(self._c_ptr,NULL,t) for t in range(self.num_periods)]
-          if self.num_periods == 1:
-              return AttributeFloat(r[0])
-          else:
-              return np.array(r)
+        Reactive power flow into the shunt element bus "k" (aka "from") (p.u.) (float or array).
+        """
+        def __get__(self): return self.Q_k_shunt
 
     property P_shunt_to:
-      """ .. deprecated:: TBD  See :attr:`P_m_shunt <pfnet.Branch.P_m_shunt>`.
+        """ .. deprecated:: TBD  See :attr:`P_m_shunt <pfnet.Branch.P_m_shunt>`.
 
-      Real power flow into the shunt element at bus "m" (aka "to") (p.u.) (float or array).
-      """
-      def __get__(self):
-          r = [cbranch.BRANCH_get_P_shunt_to(self._c_ptr,NULL,t) for t in range(self.num_periods)]
-          if self.num_periods == 1:
-              return AttributeFloat(r[0])
-          else:
-              return np.array(r)
+        Real power flow into the shunt element at bus "m" (aka "to") (p.u.) (float or array).
+        """
+        def __get__(self): return self.P_m_shunt
 
     property Q_shunt_to:
         """ .. deprecated:: TBD  See :attr:`Q_m_shunt <pfnet.Branch.Q_m_shunt>`.
 
         Reactive power flow into the shunt element at bus "m" (aka "to") (p.u.) (float or array).
         """
-        def __get__(self):
-            r = [cbranch.BRANCH_get_Q_shunt_to(self._c_ptr,NULL,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
-
+        def __get__(self): return self.Q_m_shunt
 
     property ratingA:
         """ Branch thermal rating A (p.u. system base power) (float). """
@@ -1585,10 +1508,19 @@ cdef class Branch:
         def __get__(self): return cbranch.BRANCH_get_ratingC(self._c_ptr)
         def __set__(self,r): cbranch.BRANCH_set_ratingC(self._c_ptr,r)
 
-    property P_flow_DC:
+    property P_km_DC:
         """ Active power flow (DC approx.) from bus "k/from" to bus "m/to" (float). """
         def __get__(self):
-            r = [cbranch.BRANCH_get_P_flow_DC(self._c_ptr,t) for t in range(self.num_periods)]
+            r = [cbranch.BRANCH_get_P_km_DC(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return np.array(r)
+
+    property P_mk_DC:
+        """ Active power flow (DC approx.) from bus "m/to" to bus "k/from" (float). """
+        def __get__(self):
+            r = [cbranch.BRANCH_get_P_mk_DC(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
                 return AttributeFloat(r[0])
             else:
@@ -3684,11 +3616,7 @@ cdef class Network:
 
     property gens:
         """ List of network :class:`generators <pfnet.Generator>` (list). """
-        def __get__(self):
-            if self.num_generators > 0:
-                return self.generators
-            else:
-                return []
+        def __get__(self): return self.generators
 
     property shunts:
         """ List of network :class:`shunts <pfnet.Shunt>` (list). """
@@ -3707,11 +3635,7 @@ cdef class Network:
 
     property var_gens:
         """ List of network :class:`variable generators <pfnet.VarGenerator>` (list). """
-        def __get__(self):
-            if self.num_var_generators > 0:
-                return self.var_generators
-            else:
-                return []
+        def __get__(self): return self.var_generators
 
     property batteries:
         """ List of network :class:`batteries <pfnet.Battery>` (list). """
@@ -3720,11 +3644,7 @@ cdef class Network:
 
     property bats:
         """ List of network :class:`batteries <pfnet.Battery>` (list). """
-        def __get__(self):
-            if self.num_batteries > 0:
-                return self.batteries
-            else:
-                return []
+        def __get__(self): return self.batteries
 
     property num_buses:
         """ Number of buses in the network (int). """

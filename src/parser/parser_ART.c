@@ -593,7 +593,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       load = NET_get_load(net,index);
       BUS_add_load(bus,load);                             // connect load to bus
       LOAD_set_bus(load,bus);                             // connect bus to load
-      LOAD_set_P(load,art_bus->pload/parser->base_power,0); // per unit 
+      LOAD_set_P(load,art_bus->pload/parser->base_power,0); // per unit
       LOAD_set_Q(load,(art_bus->qload-art_bus->qshunt)/parser->base_power,0); // per unit
       LOAD_set_P_min(load,LOAD_get_P(load,0));              // Pmin = P = Pmax
       LOAD_set_P_max(load,LOAD_get_P(load,0));              // Pmin = P = Pmax
@@ -764,7 +764,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 	BRANCH_set_b_m(branch,(art_transfo->b1/100.)*(art_transfo->snom/parser->base_power));   // per unit (VB1,SNOM)
 	BRANCH_set_b_k(branch,(art_transfo->b2/100.)*(art_transfo->snom/parser->base_power)); // per unit (VB1,SNOM)
 
-	BRANCH_set_ratio(branch,100./art_transfo->n,0);          // units of bus_from_base/bus_to_base
+	BRANCH_set_ratio(branch,100./art_transfo->n,0);          // units of bus_k_base/bus_m_base
 	BRANCH_set_ratio_max(branch,BRANCH_get_ratio(branch,0));
 	BRANCH_set_ratio_min(branch,BRANCH_get_ratio(branch,0));
 

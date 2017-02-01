@@ -433,7 +433,7 @@ class TestFunctions(unittest.TestCase):
                 for bus in net.buses:
                     phi += 0.5*((bus.v_ang[t]/dw)**2.)
                 for branch in net.branches:
-                    phi += 0.5*(((branch.bus_from.v_ang[t]-branch.bus_to.v_ang[t]-branch.phase[t])/dw)**2.)
+                    phi += 0.5*(((branch.bus_k.v_ang[t]-branch.bus_m.v_ang[t]-branch.phase[t])/dw)**2.)
             self.assertLess(np.abs(func.phi-phi),1e-10*(phi+1.))
             net.clear_flags()
             self.assertEqual(net.num_vars,0)

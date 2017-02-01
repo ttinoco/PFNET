@@ -603,24 +603,24 @@ int NET_get_bus_neighbors(Net* net, Bus* bus, int spread, int* neighbors, char* 
     num_new = 0;
     while (neighbors_curr < neighbors_total) {
       bus1 = NET_get_bus(net,neighbors[neighbors_curr]);
-      for (br = BUS_get_branch_from(bus1); br != NULL; br = BRANCH_get_from_next(br)) {
-	if (bus1 != BRANCH_get_bus_from(br)) {
+      for (br = BUS_get_branch_k(bus1); br != NULL; br = BRANCH_get_next_k(br)) {
+	if (bus1 != BRANCH_get_bus_k(br)) {
 	  sprintf(net->error_string,"unable to construct covariance matrix");
 	  net->error_flag = TRUE;
 	}
-	bus2 = BRANCH_get_bus_to(br);
+	bus2 = BRANCH_get_bus_m(br);
 	if (!queued[BUS_get_index(bus2)]) {
 	  neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
 	  queued[BUS_get_index(bus2)] = TRUE;
 	  num_new++;
 	}
       }
-      for (br = BUS_get_branch_to(bus1); br != NULL; br = BRANCH_get_to_next(br)) {
-	if (bus1 != BRANCH_get_bus_to(br)) {
+      for (br = BUS_get_branch_m(bus1); br != NULL; br = BRANCH_get_next_m(br)) {
+	if (bus1 != BRANCH_get_bus_m(br)) {
 	  sprintf(net->error_string,"unable to construct covariance matrix");
 	  net->error_flag = TRUE;
 	}
-	bus2 = BRANCH_get_bus_from(br);
+	bus2 = BRANCH_get_bus_k(br);
 	if (!queued[BUS_get_index(bus2)]) {
 	  neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
 	  queued[BUS_get_index(bus2)] = TRUE;

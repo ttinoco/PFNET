@@ -411,11 +411,11 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
       BRANCH_set_type(branch,BRANCH_TYPE_LINE);
     else
       BRANCH_set_type(branch,BRANCH_TYPE_TRAN_FIXED);
-    BRANCH_set_bus_from(branch,busA);
-    BRANCH_set_bus_to(branch,busB);
-    BUS_add_branch_from(busA,branch);
-    BUS_add_branch_to(busB,branch);
-    BRANCH_set_ratio(branch,1./t,0);                         // units of bus_from_base/bus_to_base
+    BRANCH_set_bus_k(branch,busA);
+    BRANCH_set_bus_m(branch,busB);
+    BUS_add_branch_k(busA,branch);
+    BUS_add_branch_m(busB,branch);
+    BRANCH_set_ratio(branch,1./t,0);                         // units of bus_k_base/bus_m_base
     BRANCH_set_ratio_max(branch,BRANCH_get_ratio(branch,0));
     BRANCH_set_ratio_min(branch,BRANCH_get_ratio(branch,0));
     BRANCH_set_phase(branch,z,0);                            // radians

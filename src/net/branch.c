@@ -252,19 +252,11 @@ REAL BRANCH_get_b(Branch* br) {
     return 0;
 }
 
-REAL BRANCH_get_b_from(Branch* br) {
-  return BRANCH_get_b_k(br);
-}
-
 REAL BRANCH_get_b_k(Branch* br) {
   if (br)
     return br->b_k;
   else
     return 0;
-}
-
-REAL BRANCH_get_b_to(Branch* br) {
-  return BRANCH_get_b_m(br);
 }
 
 REAL BRANCH_get_b_m(Branch* br) {
@@ -281,19 +273,11 @@ REAL BRANCH_get_g(Branch* br) {
     return 0;
 }
 
-REAL BRANCH_get_g_from(Branch* br) {
-  return BRANCH_get_g_k(br);
-}
-
 REAL BRANCH_get_g_k(Branch* br) {
   if (br)
     return br->g_k;
   else
     return 0;
-}
-
-REAL BRANCH_get_g_to(Branch* br) {
-  return BRANCH_get_g_m(br);
 }
 
 REAL BRANCH_get_g_m(Branch* br) {
@@ -303,19 +287,11 @@ REAL BRANCH_get_g_m(Branch* br) {
     return 0;
 }
 
-Bus* BRANCH_get_bus_from(Branch* br) {
-  return BRANCH_get_bus_k(br);
-}
-
 Bus* BRANCH_get_bus_k(Branch* br) {
   if (br)
     return br->bus_k;
   else
     return NULL;
-}
-
-Bus* BRANCH_get_bus_to(Branch* br) {
-  return BRANCH_get_bus_m(br);
 }
 
 Bus* BRANCH_get_bus_m(Branch* br) {
@@ -339,19 +315,11 @@ Branch* BRANCH_get_reg_next(Branch* br) {
     return NULL;
 }
 
-Branch* BRANCH_get_from_next(Branch* br) {
-  return BRANCH_get_next_k(br);
-}
-
 Branch* BRANCH_get_next_k(Branch* br) {
   if (br)
     return br->next_k;
   else
     return NULL;
-}
-
-Branch* BRANCH_get_to_next(Branch* br) {
-  return BRANCH_get_next_m(br);
 }
 
 Branch* BRANCH_get_next_m(Branch* br) {
@@ -810,116 +778,6 @@ REAL BRANCH_get_Q_m_shunt(Branch* br, Vec* var_values, int t) {
     return 0;
 }
 
-// @deprecated @see BRANCH_get_P_km
-REAL BRANCH_get_P_from_to(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_P_km(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
- // @deprecated @see BRANCH_get_Q_km
-REAL BRANCH_get_Q_from_to(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_Q_km(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_P_mk
-REAL BRANCH_get_P_to_from(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_P_mk(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_Q_mk
-REAL BRANCH_get_Q_to_from(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_Q_mk(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_P_km_series
-REAL BRANCH_get_P_series_from_to(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_P_km_series(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_Q_km_series
-REAL BRANCH_get_Q_series_from_to(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_Q_km_series(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_P_mk_series
-REAL BRANCH_get_P_series_to_from(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_P_mk_series(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_Q_mk_series
-REAL BRANCH_get_Q_series_to_from(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_Q_mk_series(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_P_k_shunt
-REAL BRANCH_get_P_shunt_from(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_P_k_shunt(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_Q_k_shunt
-REAL BRANCH_get_Q_shunt_from(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_Q_k_shunt(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_P_m_shunt
-REAL BRANCH_get_P_shunt_to(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_P_m_shunt(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_Q_m_shunt
-REAL BRANCH_get_Q_shunt_to(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_Q_m_shunt(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// end Branch flow calculations
-
 REAL BRANCH_get_ratingA(Branch* br) {
   if (br)
     return br->ratingA;
@@ -941,13 +799,28 @@ REAL BRANCH_get_ratingC(Branch* br) {
     return 0;
 }
 
-REAL BRANCH_get_P_flow_DC(Branch* br, int t) {
+// P_km_DC = -b (w_k - w_m - Phi_km)
+REAL BRANCH_get_P_km_DC(Branch* br, int t) {
   /* Active power flow (DC approx) from bus
-     "from" to bus "to". */
+     "k" to bus "m". */
 
   if (br && t >= 0 && t < br->num_periods) {
     return -(br->b)*(BUS_get_v_ang(br->bus_k,t)-
 		     BUS_get_v_ang(br->bus_m,t)-
+		     br->phase[t]);
+  }
+  else
+    return 0;
+}
+
+// P_mk_DC = -b (w_m - w_m - Phi_km)
+REAL BRANCH_get_P_mk_DC(Branch* br, int t) {
+  /* Active power flow (DC approx) from bus
+     "m" to bus "k". */
+
+  if (br && t >= 0 && t < br->num_periods) {
+    return -(br->b)*(BUS_get_v_ang(br->bus_m,t)-
+		     BUS_get_v_ang(br->bus_k,t)+
 		     br->phase[t]);
   }
   else
@@ -1254,26 +1127,14 @@ int BRANCH_list_reg_len(Branch* reg_br_list) {
   return len;
 }
 
-Branch* BRANCH_list_from_add(Branch* from_br_list, Branch* br) {
-  return BRANCH_list_k_add(from_br_list, br);
-}
-
 Branch* BRANCH_list_k_add(Branch* k_br_list, Branch* br) {
   LIST_add(Branch,k_br_list,br,next_k);
   return k_br_list;
 }
 
-Branch* BRANCH_list_from_del(Branch* from_br_list, Branch* br) {
-  return BRANCH_list_k_del(from_br_list, br);
-}
-
 Branch* BRANCH_list_k_del(Branch* k_br_list, Branch* br) {
   LIST_del(Branch,k_br_list,br,next_k);
   return k_br_list;
-}
-
-int BRANCH_list_from_len(Branch* from_br_list) {
-  return BRANCH_list_k_len(from_br_list);
 }
 
 int BRANCH_list_k_len(Branch* k_br_list) {
@@ -1282,26 +1143,14 @@ int BRANCH_list_k_len(Branch* k_br_list) {
   return len;
 }
 
-Branch* BRANCH_list_to_add(Branch* to_br_list, Branch* br) {
-  return BRANCH_list_m_add(to_br_list,br);
-}
-
 Branch* BRANCH_list_m_add(Branch* m_br_list, Branch* br) {
   LIST_add(Branch,m_br_list,br,next_m);
   return m_br_list;
 }
 
-Branch* BRANCH_list_to_del(Branch* to_br_list, Branch* br) {
-  return BRANCH_list_m_del(to_br_list,br);
-}
-
 Branch* BRANCH_list_m_del(Branch* m_br_list, Branch* br) {
   LIST_del(Branch,m_br_list,br,next_m);
   return m_br_list;
-}
-
-int BRANCH_list_to_len(Branch* to_br_list) {
-  return BRANCH_list_m_len(to_br_list);
 }
 
 int BRANCH_list_m_len(Branch* m_br_list) {
@@ -1340,17 +1189,9 @@ void BRANCH_set_type(Branch* br, int type) {
     br->type = type;
 }
 
-void BRANCH_set_bus_from(Branch* br, Bus* bus_from) {
-  BRANCH_set_bus_k(br, bus_from);
-}
-
 void BRANCH_set_bus_k(Branch* br, Bus* bus_k) {
   if (br)
     br->bus_k = bus_k;
-}
-
-void BRANCH_set_bus_to(Branch* br, Bus* bus_to) {
-  BRANCH_set_bus_m(br, bus_to);
 }
 
 void BRANCH_set_bus_m(Branch* br, Bus* bus_m) {
@@ -1368,17 +1209,9 @@ void BRANCH_set_g(Branch* br, REAL g) {
     br->g = g;
 }
 
-void BRANCH_set_g_from(Branch* br, REAL g_from) {
-  BRANCH_set_g_k(br, g_from);
-}
-
 void BRANCH_set_g_k(Branch* br, REAL g_k) {
   if (br)
     br->g_k = g_k;
-}
-
-void BRANCH_set_g_to(Branch* br, REAL g_to) {
-  BRANCH_set_g_m(br, g_to);
 }
 
 void BRANCH_set_g_m(Branch* br, REAL g_m) {
@@ -1391,17 +1224,9 @@ void BRANCH_set_b(Branch* br, REAL b) {
     br->b = b;
 }
 
-void BRANCH_set_b_from(Branch* br, REAL b_from) {
-  BRANCH_set_b_k(br, b_from);
-}
-
 void BRANCH_set_b_k(Branch* br, REAL b_k) {
   if (br)
     br->b_k = b_k;
-}
-
-void BRANCH_set_b_to(Branch* br, REAL b_to) {
-  BRANCH_set_b_m(br, b_to);
 }
 
 void BRANCH_set_b_m(Branch* br, REAL b_m) {

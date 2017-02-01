@@ -1264,7 +1264,7 @@ class TestConstraints(unittest.TestCase):
             for t in range(self.T):
                 for k in range(net.num_branches):
                     br = net.get_branch(k)
-                    for bus in [br.bus_from,br.bus_to]:
+                    for bus in [br.bus_k,br.bus_m]:
                         if (bus.number,t) in counted:
                             continue
                         counted[(bus.number,t)] = True
@@ -1393,7 +1393,7 @@ class TestConstraints(unittest.TestCase):
             for t in range(self.T):
                 for k in range(net.num_branches):
                     br = net.get_branch(k)
-                    for bus in [br.bus_from,br.bus_to]:
+                    for bus in [br.bus_k,br.bus_m]:
                         if (bus.number,t) in counted:
                             continue
                         counted[(bus.number,t)] = True
@@ -2530,7 +2530,7 @@ class TestConstraints(unittest.TestCase):
             for t in range(self.T):
                 for i in range(net.num_branches):
                     br = net.get_branch(i)
-                    for bus in [br.bus_from,br.bus_to]:
+                    for bus in [br.bus_k,br.bus_m]:
                         if (bus.index,t) not in counted:
                             for s in bus.reg_shunts:
                                 self.assertEqual(bus.number,s.reg_bus.number)
@@ -2961,9 +2961,9 @@ class TestConstraints(unittest.TestCase):
                 for bat in bus.batteries:
                     mis -= bat.P
                 for br in bus.branches_k:
-                    mis -= br.P_flow_DC
+                    mis -= br.P_km_DC
                 for br in bus.branches_m:
-                    mis += br.P_flow_DC
+                    mis += br.P_km_DC
                 self.assertLess(np.abs(mismatches[bus.index]-mis),1e-8)
 
             # no variables
@@ -3000,9 +3000,9 @@ class TestConstraints(unittest.TestCase):
                 for bat in bus.batteries:
                     mis -= bat.P
                 for br in bus.branches_k:
-                    mis -= br.P_flow_DC
+                    mis -= br.P_km_DC
                 for br in bus.branches_m:
-                    mis += br.P_flow_DC
+                    mis -= br.P_mk_DC
                 self.assertLess(np.abs(mismatches1[bus.index]-mis),1e-8)
 
         # Multi period
@@ -3108,10 +3108,10 @@ class TestConstraints(unittest.TestCase):
                         mis -= load.P[t]
                     for bat in bus.batteries:
                         mis -= bat.P[t]
-                    for br in bus.branches_from:
-                        mis -= br.P_flow_DC[t]
-                    for br in bus.branches_to:
-                        mis += br.P_flow_DC[t]
+                    for br in bus.branches_k:
+                        mis -= br.P_km_DC[t]
+                    for br in bus.branches_m:
+                        mis -= br.P_mk_DC[t]
                     self.assertLess(np.abs(mismatches[bus.index+t*net.num_buses]-mis),1e-8)
 
             # No variables
@@ -3136,10 +3136,10 @@ class TestConstraints(unittest.TestCase):
                         mis -= load.P[t]
                     for bat in bus.batteries:
                         mis -= bat.P[t]
-                    for br in bus.branches_from:
-                        mis -= br.P_flow_DC[t]
-                    for br in bus.branches_to:
-                        mis += br.P_flow_DC[t]
+                    for br in bus.branches_k:
+                        mis -= br.P_km_DC[t]
+                    for br in bus.branches_m:
+                        mis -= br.P_mk_DC[t]
                     self.assertLess(np.abs(mismatches1[bus.index+t*net.num_buses]-mis),1e-8)
 
     def test_constr_DC_FLOW_LIM(self):
@@ -3272,7 +3272,7 @@ class TestConstraints(unittest.TestCase):
                     flow = Gx0[index]-branch.b*(-bus2.v_ang-branch.phase)
                 else:
                     flow = Gx0[index]-branch.b*(-branch.phase)
-                self.assertLess(np.abs(branch.P_flow_DC-flow),1e-10)
+                self.assertLess(np.abs(branch.P_km_DC-flow),1e-10)
                 index += 1
 
             # Sensitivities

@@ -86,7 +86,8 @@ cdef extern from "pfnet/branch.h":
     REAL BRANCH_get_ratingA(Branch* br)
     REAL BRANCH_get_ratingB(Branch* br)
     REAL BRANCH_get_ratingC(Branch* br)
-    REAL BRANCH_get_P_flow_DC(Branch* br, int t)
+    REAL BRANCH_get_P_km_DC(Branch* br, int t)
+    REAL BRANCH_get_P_mk_DC(Branch* br, int t)
     Branch* BRANCH_get_reg_next(Branch* br)
     Branch* BRANCH_get_from_next(Branch* br)      # deprecated
     Branch* BRANCH_get_to_next(Branch* br)        # deprecated
