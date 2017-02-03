@@ -41,6 +41,7 @@ include_dirs.append(numpy.get_include())
 
 libraries = []
 extra_compile_args = []
+extra_objects = []
 
 # graphviz
 if no_gvc:
@@ -57,22 +58,18 @@ else:
 if pfnet_args:
     # static link
     pfnet_lib = pfnet_args[-1]
-    ext = Extension("pfnet.cpfnet",
-                    [os.path.join("pfnet", 'cpfnet.pyx')],
-                    libraries=libraries,
-                    include_dirs=include_dirs,
-                    library_dirs=library_dirs,
-                    extra_objects=[pfnet_lib],
-                    extra_compile_args=extra_compile_args)
+    extra_objects.append(pfnet_lib)
 else:
     # dynamic link
     libraries.append("pfnet")
-    ext = Extension("pfnet.cpfnet",
-                    [os.path.join("pfnet", 'cpfnet.pyx')],
-                    libraries=libraries,
-                    include_dirs=include_dirs,
-                    library_dirs=library_dirs,
-                    extra_compile_args=extra_compile_args)
+
+ext = Extension("pfnet.cpfnet",
+                [os.path.join("pfnet", 'cpfnet.pyx')],
+                libraries=libraries,
+                include_dirs=include_dirs,
+                library_dirs=library_dirs,
+                extra_objects=extra_objects,
+                extra_compile_args=extra_compile_args)
 
 setup(name='PFNET',
       version='1.2.5',
