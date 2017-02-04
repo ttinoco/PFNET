@@ -1,15 +1,29 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
-class PythonParser:
+class BaseParser:
     """
-    Python parser base class.
+    Parser base class.
     """
+
+    def __init__(self):
+        """
+        Constructor.
+        """
+
+        #: Output level (int)
+        self.output_level = 0
+
+        #: Error flag (boolean)
+        self.error_flag = False
+
+        #: Error string (string)
+        self.error_string = ""
 
     def read(self,filename):
         """
@@ -20,6 +34,18 @@ class PythonParser:
         filename : string
         """
         
+        pass
+
+    def set(self,key,value):
+        """
+        Sets parser option.
+
+        Parameters
+        ----------
+        key : string
+        value : float
+        """
+
         pass
 
     def show(self):

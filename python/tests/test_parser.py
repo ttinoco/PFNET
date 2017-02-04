@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -17,6 +17,17 @@ class TestParser(unittest.TestCase):
         
         # Network
         self.net = pf.Network()
+
+    def test_dummy(self):
+
+        if pf.info['python parsers']:
+            net = pf.Network()
+            net.load('foo.dummy')
+            self.assertEqual(net.num_buses,0)
+        else:
+            net = pf.Network()
+            self.assertRaises(pf.NetworkError,net.load,'foo.dummy')
+            self.assertTrue(net.has_error())
 
     def test_sys_problem2(self):
 

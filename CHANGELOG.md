@@ -11,6 +11,7 @@ Targets
 Unreleased
 ----------
 * Python-based parsers.
+* info dictionary in Python wrapper that indictes availability of graphviz, python-based parser, raw parser.
 * Area/zone projections.
 * Branch bus name changes.
 * Branch AC flow getters.

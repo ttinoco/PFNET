@@ -25,11 +25,15 @@ AC_CHECK_HEADERS(graphviz/gvc.h)
 # Option "-Wl,-rpath,$RAW_PARSER/lib" needed for "make check" without LD_LIBRARY_PATH
 AC_CHECK_FILES([$RAW_PARSER/lib/libraw_parser.so],
 	[AC_DEFINE([HAVE_RAW_PARSER],[1],[Define to 1 if you have the raw parser library.]),
-	 LDFLAGS="$LDFLAGS -L$RAW_PARSER/lib -lraw_parser -Wl,-rpath,$RAW_PARSER/lib"])
+	 LDFLAGS="$LDFLAGS -L$RAW_PARSER/lib -lraw_parser -Wl,-rpath,$RAW_PARSER/lib"],
+	[AC_DEFINE([HAVE_RAW_PARSER],[0],[Define to 0 if you do not have the raw parser library.])])
 
-# Python
+# Python2.7-based parsers
 AC_CHECK_HEADERS(python2.7/Python.h)
 AC_CHECK_LIB(python2.7, PyImport_ImportModule)
+AC_CHECK_FILES([./python/pfnet/cpfnet.so],
+	[AC_DEFINE([HAVE_LIBCPFNET],[1],[Define to 1 if you have the cpfnet library.]),
+	 LDFLAGS="$LDFLAGS -L$PWD/python/pfnet -l:cpfnet.so -Wl,-rpath,$PWD/python/pfnet"])
 
 # Checks for other header files.
 AC_CHECK_HEADERS([stddef.h stdint.h stdlib.h string.h])

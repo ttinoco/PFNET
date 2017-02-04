@@ -10,6 +10,8 @@
 
 #include <pfnet/parser_PYTHON.h>
 
+#if HAVE_PYTHON_PARSER
+
 struct PYTHON_Parser {
 
   // Error
@@ -43,7 +45,7 @@ PYTHON_Parser* PYTHON_PARSER_new(char* classname) {
   module = PyImport_ImportModule("pfnet.parser");
   if (!module) {
     parser->error_flag = TRUE;
-    strcpy(parser->error_string,"unable to import Python module");
+    strcpy(parser->error_string,"unable to import Python parser module");
     return parser;
   }
 
@@ -51,7 +53,7 @@ PYTHON_Parser* PYTHON_PARSER_new(char* classname) {
   class = PyObject_GetAttrString(module,classname);
   if (!class) {
     parser->error_flag = TRUE;
-    strcpy(parser->error_string,"unable to get Python module class");
+    strcpy(parser->error_string,"unable to get Python parser class");
     return parser;
   }
 
@@ -71,7 +73,11 @@ void PYTHON_PARSER_read(PYTHON_Parser* parser, char* filename) {
   if (!parser)
     return;
 
-  PyObject_CallMethod(parser->instance,"read","s",filename);
+  PyObject* result = PyObject_CallMethod(parser->instance,"read","s",filename);
+  if (!result) {
+    parser->error_flag = TRUE;
+    strcpy(parser->error_string,"unable to call method 'read' of Python parser");
+  }
 }
 
 void PYTHON_PARSER_show(PYTHON_Parser* parser) {
@@ -79,7 +85,11 @@ void PYTHON_PARSER_show(PYTHON_Parser* parser) {
   if (!parser)
     return;
 
-  PyObject_CallMethod(parser->instance,"show","");
+  PyObject* result = PyObject_CallMethod(parser->instance,"show","");
+  if (!result) {
+    parser->error_flag = TRUE;
+    strcpy(parser->error_string,"unable to call method 'show' of Python parser");
+  }
 }
 
 void PYTHON_PARSER_load(PYTHON_Parser* parser, Net* net) {
@@ -89,7 +99,11 @@ void PYTHON_PARSER_load(PYTHON_Parser* parser, Net* net) {
   
   PyObject* network = new_Network(net);
 
-  PyObject_CallMethod(parser->instance,"load","O",network);
+  PyObject* result = PyObject_CallMethod(parser->instance,"load","O",network);
+  if (!result) {
+    parser->error_flag = TRUE;
+    strcpy(parser->error_string,"unable to call method 'load' of Python parser");
+  }
 }
 
 void PYTHON_PARSER_del(PYTHON_Parser* parser) {
@@ -130,8 +144,30 @@ char* PYTHON_PARSER_get_error_string(PYTHON_Parser* parser) {
     return parser->error_string;
   else {
     PyObject* result = PyObject_CallMethod(parser->instance, "get_error_string","");
-    strcpy(parser->error_string,PyString_AsString(result));
-    Py_DECREF(result);
-    return parser->error_string;
+    if (result) {
+      strcpy(parser->error_string,PyString_AsString(result));
+      Py_DECREF(result);
+      return parser->error_string;
+    }
+    else {
+      strcpy(parser->error_string,"unable to call method 'get_error_string' of Python parser");
+      return parser->error_string;
+    }
   }
 }
+
+void PYTHON_PARSER_set(PYTHON_Parser* parser, char* key, REAL value) {
+  if (!parser)
+    return;
+  else if (!parser->instance)
+    return;
+  else {
+    PyObject* result = PyObject_CallMethod(parser->instance,"set","sd",key,value);
+    if (!result) {
+      parser->error_flag = TRUE;
+      strcpy(parser->error_string,"unable to call method 'set' of Python parser");
+    }
+  }
+}
+
+#endif

@@ -2,16 +2,13 @@
 AUTOMAKE_OPTIONS = subdir-objects
 ACLOCAL_AMFLAGS = -I m4
 
-# local paths for includes and libs
+# local paths for includes
 inc_path = $(top_srcdir)/include/pfnet
-lib_path = $(top_srcdir)/lib
 
 # libraries
-
 lib_LTLIBRARIES = libpfnet.la
 
 # sources (note all headers are in $PFNET/include/pfnet)
-
 graph_src = 	graph/graph.c 
 
 graph_hdr = 	$(inc_path)/graph.h
@@ -131,7 +128,7 @@ libpfnet_la_SOURCES = 	$(graph_src) $(math_src) $(net_src) $(parser_src) \
 
 # have to move back a directory $PFNET/include/pfnet/*.h
 libpfnet_la_CFLAGS = -I$(inc_path)/..
-# libpfnet_la_LDFLAGS = -shared  # want both static and shared
+#libpfnet_la_LDFLAGS = -shared # want both static and shared
 libpfnet_la_LIBADD = -lm
 
 pkginclude_HEADERS = 	$(graph_hdr) $(math_hdr) $(net_hdr) $(parser_hdr) \

@@ -1,40 +1,41 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
-from parser import PythonParser
+from __future__ import print_function
+from parser import BaseParser
 
-class DummyPythonParser(PythonParser):
+class DummyParser(BaseParser):
 
     def __init__(self):
-
-        print "DummyPythonParser created"
         
-        self.error_flag = False
-        self.error_string = ""
-
+        BaseParser.__init__(self)
+        
     def __del__(self):
 
-        print "DummyPythonParser destroyed"
+        pass
 
     def read(self,filename):
         
-        print "DummyPythonParser asked to read file %s" %filename
+        pass
+        
+    def set(self,key,value):
+
+        if key == 'output_level':
+            self.output_level = value
 
     def show(self):
 
-        print "DummyPythonParser asked to show"
+        pass
 
     def load(self,network):
         
-        print "DummyPythonParser asked to load network"
-        print "Network received by DummyPythonParser is of type",type(network)
-        network.show_components()
-
+        pass
+        
     def has_error(self):
 
         return self.error_flag

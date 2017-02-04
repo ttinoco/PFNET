@@ -30,6 +30,8 @@ cimport cconstr
 cimport cfunc
 cimport cheur
 cimport cprob
+cimport cparser_python
+cimport cparser_raw
 
 from scipy import misc
 import tempfile
@@ -39,6 +41,13 @@ from scipy.sparse import coo_matrix
 include "cstrings.pyx"
 
 np.import_array()
+
+# Information
+#############
+
+info = {'graphviz': bool(cgraph.HAVE_GRAPHVIZ),
+        'python parsers': bool(cparser_python.HAVE_PYTHON_PARSER),
+        'raw parser': bool(cparser_raw.HAVE_RAW_PARSER)}
 
 # Constants
 ###########

@@ -10,7 +10,7 @@
 
 #include <pfnet/parser_RAW.h>
 
-#ifndef HAVE_RAW_PARSER
+#if !HAVE_RAW_PARSER
 
 struct RAW_Parser;
 

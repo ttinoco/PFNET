@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -1724,9 +1724,9 @@ void NET_load(Net* net, char* filename, int output_level) {
     sprintf(net->error_string,"unable to find extension in %s",filename);
     net->error_flag = TRUE;
   }
+
+  // PSSE RAW
   else if (strcmp(ext+1,"raw") == 0) {
-  
-    // PSSE RAW
     RAW_Parser* parser = RAW_PARSER_new();
     RAW_PARSER_set(parser,"output_level",output_level);
     RAW_PARSER_read(parser,filename);
@@ -1739,9 +1739,9 @@ void NET_load(Net* net, char* filename, int output_level) {
     }
     RAW_PARSER_del(parser);
   }
+
+  // MATPOWER MAT
   else if (strcmp(ext+1,"mat") == 0) {
-  
-    // MATPOWER MAT
     MAT_Parser* parser = MAT_PARSER_new();
     MAT_PARSER_set(parser,"output_level",output_level);
     MAT_PARSER_read(parser,filename);
@@ -1754,9 +1754,9 @@ void NET_load(Net* net, char* filename, int output_level) {
     }
     MAT_PARSER_del(parser);
   }
+
+  // ARTERE ART  
   else if (strcmp(ext+1,"art") == 0) {
-  
-    // ARTERE ART
     ART_Parser* parser = ART_PARSER_new();
     ART_PARSER_set(parser,"output_level",output_level);
     ART_PARSER_read(parser,filename);
@@ -1769,14 +1769,14 @@ void NET_load(Net* net, char* filename, int output_level) {
     }
     ART_PARSER_del(parser);
   }
+
+  // DUMMY PYTHON
+  #if HAVE_PYTHON_PARSER
   else if (strcmp(ext+1,"dummy") == 0) {
-    
-    // DUMMY PYTHON
-    PYTHON_Parser* parser = PYTHON_PARSER_new("DummyPythonParser");
+    PYTHON_Parser* parser = PYTHON_PARSER_new("DummyParser");
+    PYTHON_PARSER_set(parser,"output_level",output_level);
     PYTHON_PARSER_read(parser,filename);
-    #ifdef DEBUG
-      PYTHON_PARSER_show(parser);
-    #endif
+    PYTHON_PARSER_show(parser);
     if (!PYTHON_PARSER_has_error(parser))
       PYTHON_PARSER_load(parser,net);
     if (PYTHON_PARSER_has_error(parser)) {
@@ -1785,6 +1785,9 @@ void NET_load(Net* net, char* filename, int output_level) {
     }
     PYTHON_PARSER_del(parser);
   }
+  #endif
+
+  // UNKNOWN
   else {
     sprintf(net->error_string,"invalid file type (%s)",ext+1);
     net->error_flag = TRUE;
