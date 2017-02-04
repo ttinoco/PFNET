@@ -24,7 +24,7 @@ AC_CHECK_HEADERS(graphviz/gvc.h)
 # Checks for raw parser
 AC_CHECK_FILES([$RAW_PARSER/lib/libraw_parser.so],
 	[AC_DEFINE([HAVE_RAW_PARSER],[1],[Define to 1 if you have the raw parser library.]),
-	 LDFLAGS="$LDFLAGS -lraw_parser"])
+	 LDFLAGS="$LDFLAGS -L$RAW_PARSER/lib -lraw_parser -Wl,-rpath,$RAW_PARSER/lib"])
 
 # Checks for other header files.
 AC_CHECK_HEADERS([stddef.h stdint.h stdlib.h string.h])
