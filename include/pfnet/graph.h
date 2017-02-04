@@ -15,7 +15,11 @@
 #include "net.h"
 #include "config.h"
 
-#ifdef HAVE_GRAPHVIZ_GVC_H
+#if defined(HAVE_GRAPHVIZ_GVC_H) && defined(HAVE_LIBGVC) && defined(HAVE_LIBCGRAPH)
+#define HAVE_GRAPHVIZ 1
+#endif
+
+#ifdef HAVE_GRAPHVIZ
 #include <graphviz/gvc.h>
 #endif
 
