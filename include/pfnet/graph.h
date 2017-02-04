@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -13,8 +13,13 @@
 
 #include <stdlib.h>
 #include "net.h"
+#include "config.h"
 
-#ifndef NO_GRAPHVIZ
+#if defined(HAVE_GRAPHVIZ_GVC_H) && defined(HAVE_LIBGVC) && defined(HAVE_LIBCGRAPH)
+#define HAVE_GRAPHVIZ 1
+#endif
+
+#ifdef HAVE_GRAPHVIZ
 #include <graphviz/gvc.h>
 #endif
 
@@ -23,8 +28,8 @@
 
 typedef struct Graph Graph;
 
-void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type);
-void GRAPH_color_nodes_by_sensitivity(Graph* g, int sens_type);
+void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type, int t);
+void GRAPH_color_nodes_by_sensitivity(Graph* g, int sens_type, int t);
 void GRAPH_del(Graph* g);
 void GRAPH_clear_error(Graph* g);
 char* GRAPH_get_error_string(Graph* g);

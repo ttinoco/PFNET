@@ -32,15 +32,19 @@ void FUNC_REG_VMAG_clear(Func* f) {
   FUNC_clear_bus_counted(f);
 }
 
-void FUNC_REG_VMAG_count_branch(Func* f, Branch* br) {
+void FUNC_REG_VMAG_count_step(Func* f, Branch* br, int t) {
 
   // Local variables
   Bus* buses[2];
   Bus* bus;
-  int bus_index[2];
+  int bus_index_t[2];
   int* Hcounter;
   char* bus_counted;
   int k;
+  int T;
+ 
+  // Num periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   Hcounter = FUNC_get_Hcounter_ptr(f);
@@ -58,14 +62,14 @@ void FUNC_REG_VMAG_count_branch(Func* f, Branch* br) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   for (k = 0; k < 2; k++) {
     
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]]) {
+    if (!bus_counted[bus_index_t[k]]) {
       
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) // v var
 	(*Hcounter)++;
@@ -82,7 +86,7 @@ void FUNC_REG_VMAG_count_branch(Func* f, Branch* br) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
@@ -104,17 +108,21 @@ void FUNC_REG_VMAG_allocate(Func* f) {
 			  Hcounter));
 }
 
-void FUNC_REG_VMAG_analyze_branch(Func* f, Branch* br) {
+void FUNC_REG_VMAG_analyze_step(Func* f, Branch* br, int t) {
 
   // Local variables
   Bus* buses[2];
   Bus* bus;
-  int bus_index[2];
+  int bus_index_t[2];
   int* Hcounter;
   char* bus_counted;
   Mat* H;
   int k;
   REAL dv = FUNC_REG_VMAG_PARAM;
+  int T;
+ 
+  // Num periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   H = FUNC_get_Hphi(f);
@@ -133,58 +141,58 @@ void FUNC_REG_VMAG_analyze_branch(Func* f, Branch* br) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   for (k = 0; k < 2; k++) {
     
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]]) {
+    if (!bus_counted[bus_index_t[k]]) {
       
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
-	MAT_set_i(H,*Hcounter,BUS_get_index_v_mag(bus));
-	MAT_set_j(H,*Hcounter,BUS_get_index_v_mag(bus));
+	MAT_set_i(H,*Hcounter,BUS_get_index_v_mag(bus,t));
+	MAT_set_j(H,*Hcounter,BUS_get_index_v_mag(bus,t));
 	MAT_set_d(H,*Hcounter,1./(dv*dv));
 	(*Hcounter)++;
       }
       
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) { // yz var
-	MAT_set_i(H,*Hcounter,BUS_get_index_y(bus));
-	MAT_set_j(H,*Hcounter,BUS_get_index_y(bus));
+	MAT_set_i(H,*Hcounter,BUS_get_index_y(bus,t));
+	MAT_set_j(H,*Hcounter,BUS_get_index_y(bus,t));
 	MAT_set_d(H,*Hcounter,1./(dv*dv));
 	(*Hcounter)++; // y var
 
-	MAT_set_i(H,*Hcounter,BUS_get_index_z(bus));
-	MAT_set_j(H,*Hcounter,BUS_get_index_z(bus));
+	MAT_set_i(H,*Hcounter,BUS_get_index_z(bus,t));
+	MAT_set_j(H,*Hcounter,BUS_get_index_z(bus,t));
 	MAT_set_d(H,*Hcounter,1./(dv*dv));
 	(*Hcounter)++; // z var
       }
 
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var
-	MAT_set_i(H,*Hcounter,BUS_get_index_vl(bus));
-	MAT_set_j(H,*Hcounter,BUS_get_index_vl(bus));
+	MAT_set_i(H,*Hcounter,BUS_get_index_vl(bus,t));
+	MAT_set_j(H,*Hcounter,BUS_get_index_vl(bus,t));
 	MAT_set_d(H,*Hcounter,1./(dv*dv));
 	(*Hcounter)++; // vl var
 
-	MAT_set_i(H,*Hcounter,BUS_get_index_vh(bus));
-	MAT_set_j(H,*Hcounter,BUS_get_index_vh(bus));
+	MAT_set_i(H,*Hcounter,BUS_get_index_vh(bus,t));
+	MAT_set_j(H,*Hcounter,BUS_get_index_vh(bus,t));
 	MAT_set_d(H,*Hcounter,1./(dv*dv));
 	(*Hcounter)++; // vz var
       }
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }  
 }
 
-void FUNC_REG_VMAG_eval_branch(Func* f, Branch* br, Vec* var_values) {
+void FUNC_REG_VMAG_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
   // Local variables
   Bus* buses[2];
   Bus* bus;
-  int bus_index[2];
+  int bus_index_t[2];
   char* bus_counted;
   REAL* phi;
   REAL* gphi;
@@ -201,6 +209,10 @@ void FUNC_REG_VMAG_eval_branch(Func* f, Branch* br, Vec* var_values) {
   REAL vh;
   REAL dv = FUNC_REG_VMAG_PARAM;
   int k;
+  int T;
+ 
+  // Num periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   phi = FUNC_get_phi_ptr(f);
@@ -219,23 +231,25 @@ void FUNC_REG_VMAG_eval_branch(Func* f, Branch* br, Vec* var_values) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   for (k = 0; k < 2; k++) {
     
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]]) {
+    if (!bus_counted[bus_index_t[k]]) {
+
+      // Set point
+      vt = BUS_get_v_set(bus,t);
       
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
 
 	// Index
-	index_v_mag = BUS_get_index_v_mag(bus);
+	index_v_mag = BUS_get_index_v_mag(bus,t);
 
 	// v
 	v = VEC_get(var_values,index_v_mag);
-	vt = BUS_get_v_set(bus);
 
 	// phi
 	(*phi) += 0.5*pow((v-vt)/dv,2.);
@@ -243,12 +257,20 @@ void FUNC_REG_VMAG_eval_branch(Func* f, Branch* br, Vec* var_values) {
 	// gphi
 	gphi[index_v_mag] = (v-vt)/(dv*dv);
       }
+      else {
+
+	// v
+	v = BUS_get_v_mag(bus,t);
+
+	// phi
+	(*phi) += 0.5*pow((v-vt)/dv,2.);
+      }
 
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) { // yz var
 
 	// Indices
-	index_y = BUS_get_index_y(bus);
-	index_z = BUS_get_index_z(bus);
+	index_y = BUS_get_index_y(bus,t);
+	index_z = BUS_get_index_z(bus,t);
 
 	// y z
 	y = VEC_get(var_values,index_y);
@@ -262,12 +284,15 @@ void FUNC_REG_VMAG_eval_branch(Func* f, Branch* br, Vec* var_values) {
 	gphi[index_y] = y/(dv*dv);
 	gphi[index_z] = z/(dv*dv);
       }
+      else {	
+	// nothing
+      }
 
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var
 
 	// Indices
-	index_vl = BUS_get_index_vl(bus);
-	index_vh = BUS_get_index_vh(bus);
+	index_vl = BUS_get_index_vl(bus,t);
+	index_vh = BUS_get_index_vh(bus,t);
 
 	// vl and vh
 	vl = VEC_get(var_values,index_vl);
@@ -280,11 +305,14 @@ void FUNC_REG_VMAG_eval_branch(Func* f, Branch* br, Vec* var_values) {
 	// gphi
 	gphi[index_vl] = vl/(dv*dv);
 	gphi[index_vh] = vh/(dv*dv);
-      }      
+      }
+      else {
+	// nothing
+      }
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 

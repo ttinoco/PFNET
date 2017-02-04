@@ -1,6 +1,7 @@
 class Pfnet < Formula
   desc "Library for modeling and analyzing electric power networks"
   homepage "https://github.com/ttinoco/PFNET"
+  head "https://github.com/ttinoco/PFNET.git"
   url "https://github.com/ttinoco/PFNET/archive/1.2.1.tar.gz"
   sha256 "ba0ddfb6eacb617d6a4ae7e425305b2a982d921f9b0cb706a7fb14a6a3214dd2"
   

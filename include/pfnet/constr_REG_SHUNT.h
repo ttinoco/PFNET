@@ -20,12 +20,12 @@
 
 // Function prototypes
 void CONSTR_REG_SHUNT_init(Constr* c);
-void CONSTR_REG_SHUNT_count_branch(Constr* c, Branch* b);
+void CONSTR_REG_SHUNT_count_step(Constr* c, Branch* br, int t);
 void CONSTR_REG_SHUNT_allocate(Constr* c);
 void CONSTR_REG_SHUNT_clear(Constr* c);
-void CONSTR_REG_SHUNT_analyze_branch(Constr* c, Branch* b);
-void CONSTR_REG_SHUNT_eval_branch(Constr* c, Branch* b, Vec* var_values);
-void CONSTR_REG_SHUNT_store_sens_branch(Constr* c, Branch* b, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
+void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t);
+void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* var_values);
+void CONSTR_REG_SHUNT_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void CONSTR_REG_SHUNT_free(Constr* c);
 
 #endif

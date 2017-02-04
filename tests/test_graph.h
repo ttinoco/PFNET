@@ -18,9 +18,9 @@ static char* test_graph_basic() {
 
   printf("test_graph_basic ...");
 
-  net = NET_new();
+  net = NET_new(1);
 
-  NET_load(net,test_case);
+  NET_load(net,test_case,0);
 
   g = GRAPH_new(net);
   Assert("error - unable to create graph",g != NULL);

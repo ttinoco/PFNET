@@ -24,11 +24,11 @@ void CONSTR_LINPF_clear(Constr* c) {
   CONSTR_clear(acpf);
 }
 
-void CONSTR_LINPF_count_branch(Constr* c, Branch* br) {
+void CONSTR_LINPF_count_step(Constr* c, Branch* br, int t) {
 
   // ACPF
   Constr* acpf = (Constr*)CONSTR_get_data(c);
-  CONSTR_count_branch(acpf,br);
+  CONSTR_count_step(acpf,br,t);
 }
 
 void CONSTR_LINPF_allocate(Constr* c) {
@@ -59,7 +59,7 @@ void CONSTR_LINPF_allocate(Constr* c) {
   CONSTR_set_u(c,VEC_new(0));
 }
 
-void CONSTR_LINPF_analyze_branch(Constr* c, Branch* br) {
+void CONSTR_LINPF_analyze_step(Constr* c, Branch* br, int t) {
 
   // Local vars
   Constr* acpf;
@@ -68,16 +68,20 @@ void CONSTR_LINPF_analyze_branch(Constr* c, Branch* br) {
   Mat* J;
   Vec* x0;
   Vec* b;
+  int T;
+
+  // Number of periods
+  T = BRANCH_get_num_periods(br);
 
   // Net
   net = CONSTR_get_network(c);
 
   // ACPF
   acpf = (Constr*)CONSTR_get_data(c);
-  CONSTR_analyze_branch(acpf,br);
+  CONSTR_analyze_step(acpf,br,t);
 
   // Done 
-  if (BRANCH_get_index(br) == NET_get_num_branches(net)-1) {
+  if ((t == T-1) && (BRANCH_get_index(br) == NET_get_num_branches(net)-1)) {
     x0 = NET_get_var_values(net,CURRENT);
     CONSTR_eval(acpf,x0);
     J = CONSTR_get_J(acpf);
@@ -89,11 +93,11 @@ void CONSTR_LINPF_analyze_branch(Constr* c, Branch* br) {
   }
 }
 
-void CONSTR_LINPF_eval_branch(Constr* c, Branch* br, Vec* var_values) {
+void CONSTR_LINPF_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
   // Nothing
 }
 
-void CONSTR_LINPF_store_sens_branch(Constr* c, Branch* br, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_LINPF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing for now
 }
  

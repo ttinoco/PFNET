@@ -32,21 +32,25 @@ void FUNC_GEN_COST_clear(Func* f) {
   FUNC_clear_bus_counted(f);
 }
 
-void FUNC_GEN_COST_count_branch(Func* f, Branch* br) {
-
+void FUNC_GEN_COST_count_step(Func* f, Branch* br, int t) {
+  
   // Local variables
   Bus* buses[2];
   Bus* bus;
   Gen* gen;
-  int bus_index[2];
+  int bus_index_t[2];
   int* Hcounter;
   char* bus_counted;
   int k;
-  
+  int T;
+ 
+  // Num periods
+  T = BRANCH_get_num_periods(br);
+ 
   // Constr data
   Hcounter = FUNC_get_Hcounter_ptr(f);
   bus_counted = FUNC_get_bus_counted(f);
-
+  
   // Check pointers
   if (!Hcounter || !bus_counted)
     return;
@@ -59,14 +63,14 @@ void FUNC_GEN_COST_count_branch(Func* f, Branch* br) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   for (k = 0; k < 2; k++) {
     
     bus = buses[k];
 
-    if (!bus_counted[bus_index[k]]) {
+    if (!bus_counted[bus_index_t[k]]) {
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
 	  (*Hcounter)++;
@@ -74,7 +78,7 @@ void FUNC_GEN_COST_count_branch(Func* f, Branch* br) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
@@ -96,17 +100,21 @@ void FUNC_GEN_COST_allocate(Func* f) {
 			  Hcounter));
 }
 
-void FUNC_GEN_COST_analyze_branch(Func* f, Branch* br) {
+void FUNC_GEN_COST_analyze_step(Func* f, Branch* br, int t) {
 
   // Local variables
   Bus* buses[2];
   Bus* bus;
   Gen* gen;
-  int bus_index[2];
+  int bus_index_t[2];
   int* Hcounter;
   char* bus_counted;
   Mat* H;
   int k;
+  int T;
+
+  // Num periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   H = FUNC_get_Hphi(f);
@@ -125,18 +133,18 @@ void FUNC_GEN_COST_analyze_branch(Func* f, Branch* br) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   for (k = 0; k < 2; k++) {
     
     bus = buses[k];
-
-    if (!bus_counted[bus_index[k]]) {
+    
+    if (!bus_counted[bus_index_t[k]]) {
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
-	  MAT_set_i(H,*Hcounter,GEN_get_index_P(gen));
-	  MAT_set_j(H,*Hcounter,GEN_get_index_P(gen));
+	  MAT_set_i(H,*Hcounter,GEN_get_index_P(gen,t));
+	  MAT_set_j(H,*Hcounter,GEN_get_index_P(gen,t));
 	  MAT_set_d(H,*Hcounter,2.*GEN_get_cost_coeff_Q2(gen));
 	  (*Hcounter)++;
 	}
@@ -144,17 +152,17 @@ void FUNC_GEN_COST_analyze_branch(Func* f, Branch* br) {
     }
     
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
-void FUNC_GEN_COST_eval_branch(Func* f, Branch* br, Vec* var_values) {
+void FUNC_GEN_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
   // Local variables
   Bus* buses[2];
   Bus* bus;
   Gen* gen;
-  int bus_index[2];
+  int bus_index_t[2];
   char* bus_counted;
   REAL* phi;
   REAL* gphi;
@@ -164,6 +172,10 @@ void FUNC_GEN_COST_eval_branch(Func* f, Branch* br, Vec* var_values) {
   REAL Q1;
   REAL Q2;
   int k;
+  int T;
+
+  // Num periods
+  T = BRANCH_get_num_periods(br);
 
   // Constr data
   phi = FUNC_get_phi_ptr(f);
@@ -182,25 +194,26 @@ void FUNC_GEN_COST_eval_branch(Func* f, Branch* br, Vec* var_values) {
   buses[0] = BRANCH_get_bus_from(br);
   buses[1] = BRANCH_get_bus_to(br);
   for (k = 0; k < 2; k++)
-    bus_index[k] = BUS_get_index(buses[k]);
+    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   for (k = 0; k < 2; k++) {
     
     bus = buses[k];
     
-    if (!bus_counted[bus_index[k]]) {
+    if (!bus_counted[bus_index_t[k]]) {
       
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-
+	
 	Q0 = GEN_get_cost_coeff_Q0(gen);
 	Q1 = GEN_get_cost_coeff_Q1(gen);
 	Q2 = GEN_get_cost_coeff_Q2(gen);
-      
+	
+	// Variable
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
 	  
 	  // Index
-	  index_P = GEN_get_index_P(gen);
+	  index_P = GEN_get_index_P(gen,t);
 	  
 	  // P
 	  P = VEC_get(var_values,index_P);
@@ -211,11 +224,21 @@ void FUNC_GEN_COST_eval_branch(Func* f, Branch* br, Vec* var_values) {
 	  // gphi
 	  gphi[index_P] = Q1 + 2.*Q2*P;
 	}
+	
+	// Constant
+	else {
+	  
+	  // P
+	  P = GEN_get_P(gen,t);
+	  
+	  // phi
+	  (*phi) += Q0 + Q1*P + Q2*pow(P,2.);
+	}
       }
     }
-
+    
     // Update counted flag
-    bus_counted[bus_index[k]] = TRUE;
+    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 

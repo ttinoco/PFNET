@@ -19,12 +19,12 @@
 
 // Function prototypes
 void CONSTR_REG_GEN_init(Constr* c);
-void CONSTR_REG_GEN_count_branch(Constr* c, Branch* b);
+void CONSTR_REG_GEN_count_step(Constr* c, Branch* br, int t);
 void CONSTR_REG_GEN_allocate(Constr* c);
 void CONSTR_REG_GEN_clear(Constr* c);
-void CONSTR_REG_GEN_analyze_branch(Constr* c, Branch* b);
-void CONSTR_REG_GEN_eval_branch(Constr* c, Branch* b, Vec* var_values);
-void CONSTR_REG_GEN_store_sens_branch(Constr* c, Branch* b, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
+void CONSTR_REG_GEN_analyze_step(Constr* c, Branch* br, int t);
+void CONSTR_REG_GEN_eval_step(Constr* c, Branch* br, int t, Vec* var_values);
+void CONSTR_REG_GEN_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void CONSTR_REG_GEN_free(Constr* c);
 
 #endif

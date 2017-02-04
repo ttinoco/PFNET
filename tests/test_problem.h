@@ -12,8 +12,6 @@
 
 static char* test_problem_basic() {
 
-  Func* f;
-  Constr* c;
   Net* net;
   Prob* p;
   Vec* x;
@@ -21,7 +19,7 @@ static char* test_problem_basic() {
 
   printf("test_problem_basic ...");
 
-  net  = NET_new();
+  net  = NET_new(1);
   p = PROB_new();
 
   Assert("error - bad prob net initialization",PROB_get_network(p) == NULL);
@@ -29,7 +27,7 @@ static char* test_problem_basic() {
   PROB_set_network(p,net);
 
   // Load
-  NET_load(net,test_case);
+  NET_load(net,test_case,0);
 
   // Set variables
   NET_set_flags(net,

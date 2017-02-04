@@ -14,10 +14,10 @@ net.load(sys.argv[1])
 
 print(net.num_vars)
 
-net.set_flags(pf.OBJ_BUS,
-              pf.FLAG_VARS,
-              pf.BUS_PROP_REG_BY_GEN,
-              pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
+net.set_flags('bus',
+              'variable',
+              'regulated by generator',
+              ['voltage magnitude', 'voltage angle'])
 
 print(net.num_vars, 2*net.get_num_buses_reg_by_gen())
 
@@ -29,15 +29,15 @@ print(values.shape)
 
 bus = [b for b in net.buses if b.is_regulated_by_gen()][0]
 
-print(bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VMAG))
+print(bus.has_flags('variable','voltage magnitude'))
 
-print(bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VANG))
+print(bus.has_flags('variable','voltage angle'))
 
 print(bus.v_mag, net.get_var_values()[bus.index_v_mag])
 
 print(bus.v_ang, net.get_var_values()[bus.index_v_ang])
 
-print(bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VANG))
+print(bus.has_flags('variable','voltage angle'))
 
 values = net.get_var_values()
 
@@ -52,6 +52,6 @@ net.clear_flags()
 
 for bus in net.buses:
     if bus.index % 3 == 0:
-        net.set_flags_of_component(bus,pf.FLAG_VARS,pf.BUS_VAR_VMAG)
+        net.set_flags_of_component(bus,'variable','voltage magnitude')
 
-print(net.num_vars, net.num_buses, len([b for b in net.buses if b.index % 3 == 0]))
+print(net.num_vars, len([b for b in net.buses if b.index % 3 == 0]), net.num_buses)

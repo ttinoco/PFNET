@@ -8,6 +8,7 @@
 
 cdef extern from "pfnet/obj_types.h":
 
+    cdef char OBJ_ALL
     cdef char OBJ_BUS
     cdef char OBJ_GEN
     cdef char OBJ_BRANCH

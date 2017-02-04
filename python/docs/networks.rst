@@ -37,7 +37,7 @@ Power networks can be loaded with data using the :func:`load() <pfnet.Network.lo
 Components
 ==========
 
-Power networks have several components. These are :ref:`buses <net_bus>`, :ref:`branches <net_branch>`, :ref:`generators <net_gen>`, :ref:`shunt devices <net_shunt>`, :ref:`loads <net_load>`, and :ref:`variable generators <net_vargen>` (*i.e.*, non-dispatchable). For obtaining an overview of the components that form a network, the class method :func:`show_components() <pfnet.Network.show_components>` can be used::
+Power networks have several components. These are :ref:`buses <net_bus>`, :ref:`branches <net_branch>`, :ref:`generators <net_gen>`, :ref:`shunt devices <net_shunt>`, :ref:`loads <net_load>`, :ref:`variable generators <net_vargen>` (*i.e.*, non-dispatchable), and :ref:`batteries <net_bat>`. For obtaining an overview of the components that form a network, the class method :func:`show_components() <pfnet.Network.show_components>` can be used::
 
   >>> net.show_components()
 
@@ -64,6 +64,7 @@ Power networks have several components. These are :ref:`buses <net_bus>`, :ref:`
   loads            : 11
     P adjust       : 0
   vargens          : 0
+  batteries        : 0
 
 .. _net_bus:
 
@@ -180,6 +181,13 @@ The output of variable generators in a network is subject to random variations t
 
 Lastly, since many power network input files do not have variable generator information, these devices can be added to the network by using the :func:`add_vargens() <pfnet.Network.add_vargens>` method of the :class:`Network <pfnet.Network>` class.
 
+.. _net_bat:
+
+Batteries
+---------
+
+Batteries are objects of type :class:`Battery <pfnet.Battery>`. In addition to an :data:`index <pfnet.Battery.index>` field, these objects contain information such as energy level :data:`E <pfnet.Battery.E>`, charging power :data:`P <pfnet.Battery.P>`, and more.  
+
 .. _net_properties:
 
 Properties
@@ -240,9 +248,9 @@ Variables
 
 Network quantities can be specified to be ``variables``. This is useful to represent network quantities with vectors and turn the network properties described above as functions of these vectors. 
 
-To set network quantities as variables, the :class:`Network <pfnet.Network>` class method :func:`set_flags() <pfnet.Network.set_flags>` is used. This method takes as arguments a :ref:`component type <ref_net_obj>`, a :ref:`flag mask <ref_net_flag>` for specifying which flags types to set, a ``property mask`` for targeting components with specific properties, and a ``variable mask`` for specifying which component quantities should be affected.
+To set network quantities as variables, the :class:`Network <pfnet.Network>` class method :func:`set_flags() <pfnet.Network.set_flags>` is used. This method takes as arguments a :ref:`component type <ref_net_obj>`, one or more :ref:`flag types <ref_net_flag>`, one or more ``component properties``, and one or more ``component quantities``.
 
-**Property masks** are component-specific. They can be combined using ``logical OR`` to make properties more complex. More information can be found in the following sections:
+**Component properties** are component-specific. They can be combined into a list to make properties more complex and target a specific subset of components of a given type. More information can be found in the following sections:
 
 * :ref:`ref_bus_prop`
 * :ref:`ref_branch_prop`
@@ -251,14 +259,14 @@ To set network quantities as variables, the :class:`Network <pfnet.Network>` cla
 * :ref:`ref_shunt_prop`
 * :ref:`ref_vargen_prop`
 
-**Variable masks** are also component-specific. They can be combined using ``logical OR`` to target more than one component quantity. More information can be found in the following sections:
+**Component quantities** are also component-specific. They can be combined into a list to specify all quantities that should be affected by the method :func:`set_flags() <pfnet.Network.set_flags>`. More information can be found in the following sections:
 
-* :ref:`ref_bus_var`
-* :ref:`ref_branch_var`
-* :ref:`ref_gen_var`
-* :ref:`ref_load_var`
-* :ref:`ref_shunt_var`
-* :ref:`ref_vargen_var`
+* :ref:`ref_bus_q`
+* :ref:`ref_branch_q`
+* :ref:`ref_gen_q`
+* :ref:`ref_load_q`
+* :ref:`ref_shunt_q`
+* :ref:`ref_vargen_q`
 
 The following example shows how to set as variables all the voltage magnitudes and angles of buses regulated by generators::
 
@@ -270,10 +278,10 @@ The following example shows how to set as variables all the voltage magnitudes a
   >>> print net.num_vars
   0
 
-  >>> net.set_flags(pf.OBJ_BUS,
-  ...               pf.FLAG_VARS,
-  ...               pf.BUS_PROP_REG_BY_GEN,
-  ...               pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
+  >>> net.set_flags('bus',
+  ...               'variable',
+  ...               'regulated by generator',
+  ...               ['voltage magnitude', 'voltage angle'])
 
   >>> print net.num_vars, 2*net.get_num_buses_reg_by_gen()
   10 10
@@ -294,10 +302,10 @@ The network components that have quantities set as variables have indices that c
 
   >>> bus = [b for b in net.buses if b.is_reg_by_gen()][0]
 
-  >>> print bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VMAG)
+  >>> print bus.has_flags('variable','voltage magnitude')
   True
 
-  >>> bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VANG)
+  >>> bus.has_flags('variable','voltage angle')
   True
 
   >>> print bus.v_mag, net.get_var_values()[bus.index_v_mag]
@@ -308,7 +316,7 @@ The network components that have quantities set as variables have indices that c
 
 A vector of variable values can be used to update the corresponding network quantities. This is done with the :class:`Network <pfnet.Network>` class method :func:`set_var_values() <pfnet.Network.set_var_values>`::
 
-  >>> bus.has_flags(pf.FLAG_VARS,pf.BUS_VAR_VANG)
+  >>> bus.has_flags('variable','voltage angle')
   True
 
   >>> values = net.get_var_values()
@@ -322,17 +330,17 @@ A vector of variable values can be used to update the corresponding network quan
   >>> print bus.v_mag
   1.20
 
-As we will see in later, variables are also useful for constructing network optimization problems.
+As we will seen in later, variables are also useful for constructing network optimization problems.
 
-The class method :func:`get_var_values() <pfnet.Network.get_var_values>` can also be used to get upper or lower limits of the variables. To do this, a valid :ref:`variable value code <ref_var_values>` must be passed to this method.
+The class method :func:`get_var_values() <pfnet.Network.get_var_values>` can also be used to get upper or lower limits of the variables. To do this, a valid :ref:`variable value option <ref_var_values>` must be passed to this method.
 
-In addition to the class method :func:`set_flags() <pfnet.Network.set_flags>`, which allows specifying variables of components having certain properties, one can also use the :class:`Network <pfnet.Network>` class method :func:`set_flags_of_component() <pfnet.Network.set_flags_of_component>` to specify variables of individual components. This is useful when the desired components cannot be targeted using a ``property mask``. For example, the following code illustrates how to set as variables the voltage magnitudes of buses whose indices are multiples of three::
+In addition to the class method :func:`set_flags() <pfnet.Network.set_flags>`, which allows specifying variables of components having certain properties, one can also use the :class:`Network <pfnet.Network>` class method :func:`set_flags_of_component() <pfnet.Network.set_flags_of_component>` to specify variables of individual components. This is useful when the desired components cannot be targeted using the available ``component properties``. For example, the following code illustrates how to set as variables the voltage magnitudes of buses whose indices are multiples of three::
 
   >>> net.clear_flags()
 
   >>> for bus in net.buses:
   ...     if bus.index % 3 == 0:
-  ...         net.set_flags_of_component(bus,pf.FLAG_VARS,pf.BUS_VAR_VMAG)
+  ...         net.set_flags_of_component(bus,'variable','voltage magnitude')
 
   >>> print net.num_vars, len([b for b in net.buses if b.index % 3 == 0]), net.num_buses
   5 5 14
@@ -342,7 +350,7 @@ In addition to the class method :func:`set_flags() <pfnet.Network.set_flags>`, w
 Projections
 ===========
 
-As explained above, once the network variables have been set, a vector with the current values of the selected variables is obtained with the class method :func:`get_var_values() <pfnet.Network.get_var_values>`. To extract subvectors that contain values of specific variables, projection matrices can be used. These :ref:`matrices <ref_mat>` can be obtained using the class method :func:`get_var_projection() <pfnet.Network.get_var_projection>`, which take as arguments a :ref:`component type <ref_net_obj>` and a ``variable mask``, *e.g.*, :ref:`bus variable masks <ref_bus_var>`. The next example sets the variables of the network to be the bus voltage magnitudes and angles of all the buses, extracts the vector of values of all variables, and then extracts two subvectors having only voltage magnitudes and only voltage angles, respectively::
+As explained above, once the network variables have been set, a vector with the current values of the selected variables is obtained with the class method :func:`get_var_values() <pfnet.Network.get_var_values>`. To extract subvectors that contain values of specific variables, projection matrices can be used. These :ref:`matrices <ref_mat>` can be obtained using the class method :func:`get_var_projection() <pfnet.Network.get_var_projection>`, which take as arguments a :ref:`component type <ref_net_obj>` and one or more ``component quantities``, *e.g.*, :ref:`bus quantities <ref_bus_q>`. The next example sets the variables of the network to be the bus voltage magnitudes and angles of all the buses, extracts the vector of values of all variables, and then extracts two subvectors having only voltage magnitudes and only voltage angles, respectively::
 
   >>> import numpy as np
   >>> import pfnet as pf
@@ -350,16 +358,16 @@ As explained above, once the network variables have been set, a vector with the 
   >>> net = pf.Network()
   >>> net.load('ieee14.mat')
 
-  >>> net.set_flags(pf.OBJ_BUS,
-  ...               pf.FLAG_VARS,
-  ...               pf.BUS_PROP_ANY,
-  ...               pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
+  >>> net.set_flags('bus',
+  ...               'variable',
+  ...               'any',
+  ...               ['voltage magnitude','voltage angle'])
 
   >>> print net.num_vars, 2*net.num_buses
   28 28
 
-  >>> P1 = net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VMAG)
-  >>> P2 = net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VANG)
+  >>> P1 = net.get_var_projection('bus','voltage magnitude')
+  >>> P2 = net.get_var_projection('bus','voltage angle')
 
   >>> print type(P1)
   <class 'scipy.sparse.coo.coo_matrix'>
@@ -379,7 +387,6 @@ As explained above, once the network variables have been set, a vector with the 
 
   >>> print np.linalg.norm(x - (P1.T*v_mags+P2.T*v_angs))
   0.0
-
 
 .. _net_cont:
 
@@ -430,3 +437,40 @@ Once a contingency has been constructed, it can be applied and later cleared. Th
   >>> # generator and branch connected to buses again
   >>> print gen in gen_bus.gens, branch in branch_bus.branches
   True True
+
+.. _net_multi_period:
+
+Multiple Time Periods
+=====================
+
+PFNET can also be used to represent and analyze power networks over multiple time periods. By default, the networks created using :class:`Network() <pfnet.Network>`, as in all the examples above, are static. To consider multiple time periods, an argument needs to be passed to the class constructor::
+
+  >>> net = pf.Network(5)
+
+  >>> print net.num_periods
+  5
+
+In "multi-period" networks, certain quantities vary over time and hence are represented by vectors. Examples of such quantities are the :ref:`network properties <net_properties>`, generators powers, load powers, battery energy levels, bus voltages, etc. The example below shows how to set the load profile over the time periods and extract the maximum active power mismatches in the network at each time::
+
+  >>> for load in net.loads:
+  ...     load.P = np.random.rand(5)
+
+  >>> print net.loads[0].P
+  [ 0.84  0.47  0.62  0.65  0.36]
+
+  >>> net.update_properties()
+
+  >>> print([net.bus_P_mis[t] for t in range(5)])
+  [81.92, 87.35, 86.71, 93.61, 89.90]
+
+Lastly, for component quantities that can potentially vary over time, setting these quantities to be variables results in one variable for each time. For example, selecting the bus voltage magnitude of a bus to be variable leads to having one variable for each time period::
+
+  >>> bus = net.buses[3]
+
+  >>> net.set_flags_of_component(bus,'variable','voltage magnitude')
+
+  >>> print(net.num_vars)
+  5
+
+  >>> print bus.index_v_mag
+  [0 1 2 3 4]

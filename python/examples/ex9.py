@@ -13,15 +13,15 @@ import pfnet as pf
 net = pf.Network()
 net.load(sys.argv[1])
 
-net.set_flags(pf.OBJ_BUS,
-              pf.FLAG_VARS,
-              pf.BUS_PROP_ANY,
-              pf.BUS_VAR_VMAG|pf.BUS_VAR_VANG)
+net.set_flags('bus',
+              'variable',
+              'any',
+              ['voltage magnitude','voltage angle'])
 
 print(net.num_vars, 2*net.num_buses)
 
-P1 = net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VMAG)
-P2 = net.get_var_projection(pf.OBJ_BUS,pf.BUS_VAR_VANG)
+P1 = net.get_var_projection('bus','voltage magnitude')
+P2 = net.get_var_projection('bus','voltage angle')
 
 print(type(P1))
 

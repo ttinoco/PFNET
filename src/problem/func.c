@@ -8,6 +8,7 @@
  * PFNET is released under the BSD 2-clause license.
  */
 
+#include <pfnet/array.h>
 #include <pfnet/func.h>
 #include <pfnet/func_REG_VMAG.h>
 #include <pfnet/func_REG_VANG.h>
@@ -51,26 +52,21 @@ struct Func {
   int Hcounter;         /**< @brief Counter of number of nonzero elements of the Hessian */
 
   // Functions
-  void (*func_init)(Func* f); /**< @brief Initialization function */
-  void (*func_count_branch)(Func* f, Branch *branch); /**< @brief Function for countinng nonzero entries */
-  void (*func_allocate)(Func* f); /**< @brief Function for allocating required arrays */
-  void (*func_clear)(Func* f); /**< @brief Function for clearing flags, counters, and function values */
-  void (*func_analyze_branch)(Func* f, Branch *branch); /**< @brief Function for analyzing sparsity pattern */
-  void (*func_eval_branch)(Func* f, Branch* branch, Vec* var_values); /**< @brief Function for evaluating function */
-  void (*func_free)(Func* f); /**< @brief Function for de-allocating any data used */
+  void (*func_init)(Func* f);                                    /**< @brief Initialization function */
+  void (*func_count_step)(Func* f, Branch* br, int t);           /**< @brief Function for countinng nonzero entries */
+  void (*func_allocate)(Func* f);                                /**< @brief Function for allocating required arrays */
+  void (*func_clear)(Func* f);                                   /**< @brief Function for clearing flags, counters, and function values */
+  void (*func_analyze_step)(Func* f, Branch* br, int t);         /**< @brief Function for analyzing sparsity pattern */
+  void (*func_eval_step)(Func* f, Branch* br, int t, Vec* vals); /**< @brief Function for evaluating function */
+  void (*func_free)(Func* f);                                    /**< @brief Function for de-allocating any data used */
 
   // List
   Func* next; /**< @brief List of functions for forming objective function */
 };
 
 void FUNC_clear_bus_counted(Func* f) {
-  int i;
-  if (f) {
-    if (f->bus_counted) {
-      for (i = 0; i < f->bus_counted_size; i++)
-	f->bus_counted[i] = 0;
-    }
-  } 
+  if (f)
+    ARRAY_clear(f->bus_counted,char,f->bus_counted_size);
 }
 
 void FUNC_del_matvec(Func* f) {
@@ -226,10 +222,10 @@ void FUNC_list_del(Func* flist) {
   LIST_map(Func,flist,f,next,{FUNC_del(f);});
 }
 
-void FUNC_list_count_branch(Func* f, Branch* b) {
+void FUNC_list_count_step(Func* f, Branch* br, int t) {
   Func* ff;
   for (ff = f; ff != NULL; ff = FUNC_get_next(ff))
-    FUNC_count_branch(ff,b);
+    FUNC_count_step(ff,br,t);
 }
 
 void FUNC_list_allocate(Func* f) {
@@ -244,16 +240,16 @@ void FUNC_list_clear(Func* f) {
     FUNC_clear(ff);
 }
 
-void FUNC_list_analyze_branch(Func* f, Branch* b) {
+void FUNC_list_analyze_step(Func* f, Branch* br, int t) {
   Func* ff;
   for (ff = f; ff != NULL; ff = FUNC_get_next(ff))
-    FUNC_analyze_branch(ff,b);
+    FUNC_analyze_step(ff,br,t);
 }
 
-void FUNC_list_eval_branch(Func* f, Branch* b, Vec* values) {
+void FUNC_list_eval_step(Func* f, Branch* br, int t, Vec* values) {
   Func* ff;
   for (ff = f; ff != NULL; ff = FUNC_get_next(ff))
-    FUNC_eval_branch(ff,b,values);
+    FUNC_eval_step(ff,br,t,values);
 }
 
 Func* FUNC_new(int type, REAL weight, Net* net) {
@@ -285,121 +281,121 @@ Func* FUNC_new(int type, REAL weight, Net* net) {
 
   case FUNC_TYPE_REG_VMAG: // Volage magnitude regularization
     f->func_init = FUNC_REG_VMAG_init;
-    f->func_count_branch = FUNC_REG_VMAG_count_branch;
+    f->func_count_step = FUNC_REG_VMAG_count_step;
     f->func_allocate = FUNC_REG_VMAG_allocate;
     f->func_clear = FUNC_REG_VMAG_clear;
-    f->func_analyze_branch = FUNC_REG_VMAG_analyze_branch;
-    f->func_eval_branch = FUNC_REG_VMAG_eval_branch;
+    f->func_analyze_step = FUNC_REG_VMAG_analyze_step;
+    f->func_eval_step = FUNC_REG_VMAG_eval_step;
     f->func_free = FUNC_REG_VMAG_free;
     break;
 
   case FUNC_TYPE_REG_VANG: // Volage angle regularization
     f->func_init = FUNC_REG_VANG_init;
-    f->func_count_branch = FUNC_REG_VANG_count_branch;
+    f->func_count_step = FUNC_REG_VANG_count_step;
     f->func_allocate = FUNC_REG_VANG_allocate;
     f->func_clear = FUNC_REG_VANG_clear;
-    f->func_analyze_branch = FUNC_REG_VANG_analyze_branch;
-    f->func_eval_branch = FUNC_REG_VANG_eval_branch;
+    f->func_analyze_step = FUNC_REG_VANG_analyze_step;
+    f->func_eval_step = FUNC_REG_VANG_eval_step;
     f->func_free = FUNC_REG_VANG_free;
     break;
     
   case FUNC_TYPE_REG_PQ: // Generator reactive power regularization
     f->func_init = FUNC_REG_PQ_init;
-    f->func_count_branch = FUNC_REG_PQ_count_branch;
+    f->func_count_step = FUNC_REG_PQ_count_step;
     f->func_allocate = FUNC_REG_PQ_allocate;
     f->func_clear = FUNC_REG_PQ_clear;
-    f->func_analyze_branch = FUNC_REG_PQ_analyze_branch;
-    f->func_eval_branch = FUNC_REG_PQ_eval_branch;
+    f->func_analyze_step = FUNC_REG_PQ_analyze_step;
+    f->func_eval_step = FUNC_REG_PQ_eval_step;
     f->func_free = FUNC_REG_PQ_free;
     break;
 
   case FUNC_TYPE_REG_RATIO: // Transformer tap ratio regularization
     f->func_init = FUNC_REG_RATIO_init;
-    f->func_count_branch = FUNC_REG_RATIO_count_branch;
+    f->func_count_step = FUNC_REG_RATIO_count_step;
     f->func_allocate = FUNC_REG_RATIO_allocate;
     f->func_clear = FUNC_REG_RATIO_clear;
-    f->func_analyze_branch = FUNC_REG_RATIO_analyze_branch;
-    f->func_eval_branch = FUNC_REG_RATIO_eval_branch;
+    f->func_analyze_step = FUNC_REG_RATIO_analyze_step;
+    f->func_eval_step = FUNC_REG_RATIO_eval_step;
     f->func_free = FUNC_REG_RATIO_free;
     break;
 
   case FUNC_TYPE_REG_PHASE: // Transformer phase shift regularization
     f->func_init = FUNC_REG_PHASE_init;
-    f->func_count_branch = FUNC_REG_PHASE_count_branch;
+    f->func_count_step = FUNC_REG_PHASE_count_step;
     f->func_allocate = FUNC_REG_PHASE_allocate;
     f->func_clear = FUNC_REG_PHASE_clear;
-    f->func_analyze_branch = FUNC_REG_PHASE_analyze_branch;
-    f->func_eval_branch = FUNC_REG_PHASE_eval_branch;
+    f->func_analyze_step = FUNC_REG_PHASE_analyze_step;
+    f->func_eval_step = FUNC_REG_PHASE_eval_step;
     f->func_free = FUNC_REG_PHASE_free;
     break;
 
   case FUNC_TYPE_REG_SUSC: // Transformer tap ratio regularization
     f->func_init = FUNC_REG_SUSC_init;
-    f->func_count_branch = FUNC_REG_SUSC_count_branch;
+    f->func_count_step = FUNC_REG_SUSC_count_step;
     f->func_allocate = FUNC_REG_SUSC_allocate;
     f->func_clear = FUNC_REG_SUSC_clear;
-    f->func_analyze_branch = FUNC_REG_SUSC_analyze_branch;
-    f->func_eval_branch = FUNC_REG_SUSC_eval_branch;
+    f->func_analyze_step = FUNC_REG_SUSC_analyze_step;
+    f->func_eval_step = FUNC_REG_SUSC_eval_step;
     f->func_free = FUNC_REG_SUSC_free;
     break;
 
   case FUNC_TYPE_GEN_COST: // Generator power production cost
     f->func_init = FUNC_GEN_COST_init;
-    f->func_count_branch = FUNC_GEN_COST_count_branch;
+    f->func_count_step = FUNC_GEN_COST_count_step;
     f->func_allocate = FUNC_GEN_COST_allocate;
     f->func_clear = FUNC_GEN_COST_clear;
-    f->func_analyze_branch = FUNC_GEN_COST_analyze_branch;
-    f->func_eval_branch = FUNC_GEN_COST_eval_branch;
+    f->func_analyze_step = FUNC_GEN_COST_analyze_step;
+    f->func_eval_step = FUNC_GEN_COST_eval_step;
     f->func_free = FUNC_GEN_COST_free;
     break;
 
   case FUNC_TYPE_SP_CONTROLS: // Sparse controls
     f->func_init = FUNC_SP_CONTROLS_init;
-    f->func_count_branch = FUNC_SP_CONTROLS_count_branch;
+    f->func_count_step = FUNC_SP_CONTROLS_count_step;
     f->func_allocate = FUNC_SP_CONTROLS_allocate;
     f->func_clear = FUNC_SP_CONTROLS_clear;
-    f->func_analyze_branch = FUNC_SP_CONTROLS_analyze_branch;
-    f->func_eval_branch = FUNC_SP_CONTROLS_eval_branch;
+    f->func_analyze_step = FUNC_SP_CONTROLS_analyze_step;
+    f->func_eval_step = FUNC_SP_CONTROLS_eval_step;
     f->func_free = FUNC_SP_CONTROLS_free;
     break;
 
   case FUNC_TYPE_SLIM_VMAG: // Voltage magnitude soft limits
     f->func_init = FUNC_SLIM_VMAG_init;
-    f->func_count_branch = FUNC_SLIM_VMAG_count_branch;
+    f->func_count_step = FUNC_SLIM_VMAG_count_step;
     f->func_allocate = FUNC_SLIM_VMAG_allocate;
     f->func_clear = FUNC_SLIM_VMAG_clear;
-    f->func_analyze_branch = FUNC_SLIM_VMAG_analyze_branch;
-    f->func_eval_branch = FUNC_SLIM_VMAG_eval_branch;
+    f->func_analyze_step = FUNC_SLIM_VMAG_analyze_step;
+    f->func_eval_step = FUNC_SLIM_VMAG_eval_step;
     f->func_free = FUNC_SLIM_VMAG_free;
     break;
 
   case FUNC_TYPE_LOAD_UTIL: // Load power consumption utility
     f->func_init = FUNC_LOAD_UTIL_init;
-    f->func_count_branch = FUNC_LOAD_UTIL_count_branch;
+    f->func_count_step = FUNC_LOAD_UTIL_count_step;
     f->func_allocate = FUNC_LOAD_UTIL_allocate;
     f->func_clear = FUNC_LOAD_UTIL_clear;
-    f->func_analyze_branch = FUNC_LOAD_UTIL_analyze_branch;
-    f->func_eval_branch = FUNC_LOAD_UTIL_eval_branch;
+    f->func_analyze_step = FUNC_LOAD_UTIL_analyze_step;
+    f->func_eval_step = FUNC_LOAD_UTIL_eval_step;
     f->func_free = FUNC_LOAD_UTIL_free;
     break;
 
   case FUNC_TYPE_NETCON_COST: // Net bust power consumption cost
     f->func_init = FUNC_NETCON_COST_init;
-    f->func_count_branch = FUNC_NETCON_COST_count_branch;
+    f->func_count_step = FUNC_NETCON_COST_count_step;
     f->func_allocate = FUNC_NETCON_COST_allocate;
     f->func_clear = FUNC_NETCON_COST_clear;
-    f->func_analyze_branch = FUNC_NETCON_COST_analyze_branch;
-    f->func_eval_branch = FUNC_NETCON_COST_eval_branch;
+    f->func_analyze_step = FUNC_NETCON_COST_analyze_step;
+    f->func_eval_step = FUNC_NETCON_COST_eval_step;
     f->func_free = FUNC_NETCON_COST_free;
     break;
  
   default:
     f->func_init = NULL;
-    f->func_count_branch = NULL;
+    f->func_count_step = NULL;
     f->func_allocate = NULL;
     f->func_clear = NULL;
-    f->func_analyze_branch = NULL;
-    f->func_eval_branch = NULL;
+    f->func_analyze_step = NULL;
+    f->func_eval_step = NULL;
     f->func_free = NULL;
     break;
   }
@@ -430,24 +426,29 @@ void FUNC_set_Hcounter(Func* f, int counter) {
     f->Hcounter = counter;
 }
 
-void FUNC_set_bus_counted(Func* f, char* counted, int size) {
+void FUNC_set_bus_counted(Func* f, char* bus_counted, int size) {
   if (f) {
-    f->bus_counted = counted;
+    if (f->bus_counted)
+      free(f->bus_counted);
+    f->bus_counted = bus_counted;
     f->bus_counted_size = size;
   }  
 }
 
 void FUNC_count(Func* f) {
   int i;
+  int t;
   Net* net = FUNC_get_network(f);
   FUNC_clear(f);
-  for (i = 0; i < NET_get_num_branches(net); i++) 
-    FUNC_count_branch(f,NET_get_branch(net,i));
+  for (t = 0; t < NET_get_num_periods(net); t++) {
+    for (i = 0; i < NET_get_num_branches(net); i++)
+      FUNC_count_step(f,NET_get_branch(net,i),t);
+  }
 }
 
-void FUNC_count_branch(Func* f, Branch* b) {
-  if (f && f->func_count_branch && FUNC_is_safe_to_count(f))
-    (*(f->func_count_branch))(f,b);
+void FUNC_count_step(Func* f, Branch* br, int t) {
+  if (f && f->func_count_step && FUNC_is_safe_to_count(f))
+    (*(f->func_count_step))(f,br,t);
 }
 
 void FUNC_allocate(Func* f) {
@@ -464,32 +465,39 @@ void FUNC_clear(Func* f) {
 
 void FUNC_analyze(Func* f) {
   int i;
+  int t;
   Net* net = FUNC_get_network(f);
   FUNC_clear(f);
-  for (i = 0; i < NET_get_num_branches(net); i++) 
-    FUNC_analyze_branch(f,NET_get_branch(net,i));
+  for (t = 0; t < NET_get_num_periods(net); t++) {
+    for (i = 0; i < NET_get_num_branches(net); i++)
+      FUNC_analyze_step(f,NET_get_branch(net,i),t);
+  }
 }
 
-void FUNC_analyze_branch(Func* f, Branch* b) {
-  if (f && f->func_analyze_branch && FUNC_is_safe_to_analyze(f))
-    (*(f->func_analyze_branch))(f,b);
+void FUNC_analyze_step(Func* f, Branch* br, int t) {
+  if (f && f->func_analyze_step && FUNC_is_safe_to_analyze(f))
+    (*(f->func_analyze_step))(f,br,t);
 }
 
 void FUNC_eval(Func* f, Vec* values) {
   int i;
+  int t;
   Net* net = FUNC_get_network(f);
   FUNC_clear(f);
-  for (i = 0; i < NET_get_num_branches(net); i++) 
-    FUNC_eval_branch(f,NET_get_branch(net,i),values);
+  for (t = 0; t < NET_get_num_periods(net); t++) {
+    for (i = 0; i < NET_get_num_branches(net); i++)
+      FUNC_eval_step(f,NET_get_branch(net,i),t,values);
+  }
 }
 
-void FUNC_eval_branch(Func* f, Branch* b, Vec* values) {
-  if (f && f->func_eval_branch && FUNC_is_safe_to_eval(f,values))
-    (*(f->func_eval_branch))(f,b,values);
+void FUNC_eval_step(Func* f, Branch* br, int t, Vec* values) {
+  if (f && f->func_eval_step && FUNC_is_safe_to_eval(f,values))
+    (*(f->func_eval_step))(f,br,t,values);
 }
 
 BOOL FUNC_is_safe_to_count(Func* f) {
-  if (FUNC_get_bus_counted_size(f) == NET_get_num_buses(FUNC_get_network(f)))
+  Net* net = FUNC_get_network(f);
+  if (FUNC_get_bus_counted_size(f) == NET_get_num_buses(net)*NET_get_num_periods(net))
     return TRUE;
   else {
     sprintf(f->error_string,"function is not safe to count");
@@ -500,7 +508,7 @@ BOOL FUNC_is_safe_to_count(Func* f) {
 
 BOOL FUNC_is_safe_to_analyze(Func* f) {
   Net* net = FUNC_get_network(f);
-  if (FUNC_get_bus_counted_size(f) == NET_get_num_buses(net) &&
+  if (FUNC_get_bus_counted_size(f) == NET_get_num_buses(net)*NET_get_num_periods(net) &&
       MAT_get_size1(f->Hphi) == NET_get_num_vars(net) &&
       MAT_get_size2(f->Hphi) == NET_get_num_vars(net))
     return TRUE;
@@ -513,7 +521,7 @@ BOOL FUNC_is_safe_to_analyze(Func* f) {
 
 BOOL FUNC_is_safe_to_eval(Func* f, Vec* values) {
   Net* net = FUNC_get_network(f);
-  if (FUNC_get_bus_counted_size(f) == NET_get_num_buses(net) &&
+  if (FUNC_get_bus_counted_size(f) == NET_get_num_buses(net)*NET_get_num_periods(net) &&
       MAT_get_size1(f->Hphi) == NET_get_num_vars(net) &&
       MAT_get_size2(f->Hphi) == NET_get_num_vars(net) &&
       VEC_get_size(f->gphi) == NET_get_num_vars(net) &&
@@ -548,14 +556,16 @@ char* FUNC_get_error_string(Func* f) {
 }
 
 void FUNC_update_network(Func* f) {
+  
+  // No f
   if (!f)
     return;
  
   // Bus counted
   if (f->bus_counted)
     free(f->bus_counted);
-  f->bus_counted_size = NET_get_num_buses(f->net);
-  f->bus_counted = (char*)calloc(NET_get_num_buses(f->net),sizeof(char));
+  f->bus_counted_size = NET_get_num_buses(f->net)*NET_get_num_periods(f->net);
+  ARRAY_zalloc(f->bus_counted,char,f->bus_counted_size);
 
   // Type-specific data
   if (f->func_free)

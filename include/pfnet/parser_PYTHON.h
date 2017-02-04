@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -12,6 +12,8 @@
 #define __PARSER_PYTHON_HEADER__
 
 #include "net.h"
+#include <python2.7/Python.h>
+#include <../python/pfnet/cpfnet.h>
 
 // Buffer
 #define PYTHON_PARSER_BUFFER_SIZE 1024

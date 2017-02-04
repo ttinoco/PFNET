@@ -3,14 +3,12 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
 
 #include <pfnet/parser_PYTHON.h>
-#include <python2.7/Python.h>       /* NOTE: needs conditional compilation */
-#include <../python/pfnet/cpfnet.h> /* NOTE: needs conditional compilation */
 
 struct PYTHON_Parser {
 

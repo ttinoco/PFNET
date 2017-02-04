@@ -13,7 +13,7 @@
 static char* test_constr_BOUND() {
   
   // Local variables
-  Net *net;
+  Net* net;
   Vec* x;
   Constr* c;
   int num;
@@ -23,8 +23,8 @@ static char* test_constr_BOUND() {
   printf("test_constr_BOUND ...");
 
   // Load
-  net = NET_new();
-  NET_load(net,test_case);
+  net = NET_new(1);
+  NET_load(net,test_case,0);
 
   // Set flags
   NET_set_flags(net,OBJ_BUS,
@@ -107,7 +107,7 @@ static char* test_constr_BOUND() {
 static char* test_constr_FIX() {
   
   // Local variables
-  Net *net;
+  Net* net;
   Vec* x;
   Constr* c;
   int num;
@@ -117,8 +117,8 @@ static char* test_constr_FIX() {
   printf("test_constr_FIX ...");
 
   // Load
-  net = NET_new();
-  NET_load(net,test_case);
+  net = NET_new(1);
+  NET_load(net,test_case,0);
 
   // Set flags
   NET_set_flags(net,OBJ_BUS,
@@ -202,7 +202,7 @@ static char* test_constr_FIX() {
 static char* test_constr_PAR_GEN_P() {
   
   // Local variables
-  Net *net;
+  Net* net;
   Vec* x;
   Constr* c;
   int num;
@@ -215,8 +215,8 @@ static char* test_constr_PAR_GEN_P() {
   printf("test_constr_PAR_GEN_P ...");
 
   // Load
-  net = NET_new();
-  NET_load(net,test_case);
+  net = NET_new(1);
+  NET_load(net,test_case,0);
 
   // Set flags
   NET_set_flags(net,
@@ -320,7 +320,7 @@ static char* test_constr_PAR_GEN_P() {
 static char* test_constr_PAR_GEN_Q() {
   
   // Local variables
-  Net *net;
+  Net* net;
   Vec* x;
   Constr* c;
   int num;
@@ -333,8 +333,8 @@ static char* test_constr_PAR_GEN_Q() {
   printf("test_constr_PAR_GEN_Q ...");
 
   // Load
-  net = NET_new();
-  NET_load(net,test_case);
+  net = NET_new(1);
+  NET_load(net,test_case,0);
 
   // Set flags
   NET_set_flags(net,
@@ -438,7 +438,7 @@ static char* test_constr_PAR_GEN_Q() {
 static char* test_constr_PF() {
   
   // Local variables
-  Net *net;
+  Net* net;
   Vec* x;
   Constr* c;
   Vec* f;
@@ -454,8 +454,8 @@ static char* test_constr_PF() {
   printf("test_constr_PF ...");
 
   // Load
-  net = NET_new();
-  NET_load(net,test_case);
+  net = NET_new(1);
+  NET_load(net,test_case,0);
 
   // Set variables
   NET_set_flags(net,
@@ -583,7 +583,7 @@ static char* test_constr_PF() {
 static char* test_constr_REG_GEN() {
   
   // Local variables
-  Net *net;
+  Net* net;
   Vec* x;
   Constr* c;
   Vec* b;
@@ -600,8 +600,8 @@ static char* test_constr_REG_GEN() {
   printf("test_constr_REG_GEN ...");
 
   // Load
-  net = NET_new();
-  NET_load(net,test_case);
+  net = NET_new(1);
+  NET_load(net,test_case,0);
 
   // Set variables
   NET_set_flags(net,
@@ -703,7 +703,7 @@ static char* test_constr_REG_GEN() {
 static char* test_constr_REG_TRAN() {
   
   // Local variables
-  Net *net;
+  Net* net;
   Vec* x;
   Constr* c;
   Vec* b;
@@ -714,14 +714,12 @@ static char* test_constr_REG_TRAN() {
   int num_Annz;
   int num_Jnnz;
   int num;
-  int i;
-  Bus* bus;
 
   printf("test_constr_REG_TRAN ...");
 
   // Load
-  net = NET_new();
-  NET_load(net,test_case);
+  net = NET_new(1);
+  NET_load(net,test_case,0);
 
   // Set variables
   NET_set_flags(net,
@@ -815,7 +813,7 @@ static char* test_constr_REG_TRAN() {
 static char* test_constr_REG_SHUNT() {
   
   // Local variables
-  Net *net;
+  Net* net;
   Vec* x;
   Constr* c;
   Vec* b;
@@ -826,14 +824,12 @@ static char* test_constr_REG_SHUNT() {
   int num_Annz;
   int num_Jnnz;
   int num;
-  int i;
-  Bus* bus;
 
   printf("test_constr_REG_SHUNT ...");
 
   // Load
-  net = NET_new();
-  NET_load(net,test_case);
+  net = NET_new(1);
+  NET_load(net,test_case,0);
 
   // Set variables
   NET_set_flags(net,
