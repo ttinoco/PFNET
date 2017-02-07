@@ -6,6 +6,7 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
+import math
 import pfnet as pf
 import unittest
 from . import test_cases
@@ -837,19 +838,74 @@ class TestNetwork(unittest.TestCase):
 
             for branch in net.branches:
 
-                # basic checks absolute value greater than 0
-                self.assertGreaterEqual(np.abs(branch.P_km), 0.)
-                self.assertGreaterEqual(np.abs(branch.Q_km), 0.)
-                self.assertGreaterEqual(np.abs(branch.P_mk), 0.)
-                self.assertGreaterEqual(np.abs(branch.Q_mk), 0.)
-                self.assertGreaterEqual(np.abs(branch.P_km_series), 0.)
-                self.assertGreaterEqual(np.abs(branch.Q_km_series), 0.)
-                self.assertGreaterEqual(np.abs(branch.P_mk_series), 0.)
-                self.assertGreaterEqual(np.abs(branch.Q_mk_series), 0.)
-                self.assertGreaterEqual(np.abs(branch.P_k_shunt), 0.)
-                self.assertGreaterEqual(np.abs(branch.Q_k_shunt), 0.)
-                self.assertGreaterEqual(np.abs(branch.P_m_shunt), 0.)
-                self.assertGreaterEqual(np.abs(branch.Q_m_shunt), 0.)
+                # transformer tap ratios
+                a_km = branch.ratio
+                a_mk = 1.
+                # transformer phase shift
+                phi = branch.phase
+                # voltage magnitude and angles
+                v_k = branch.bus_k.v_mag
+                w_k = branch.bus_k.v_ang
+                v_m = branch.bus_m.v_mag
+                w_m = branch.bus_m.v_ang
+                # conductances
+                g_km = branch.g
+                g_k_sh = branch.g_k
+                g_mk = branch.g
+                g_m_sh = branch.g_m
+                # susceptances
+                b_km = branch.b
+                b_k_sh = branch.b_k
+                b_mk = branch.b
+                b_m_sh = branch.b_m
+
+                # intermediate calculations
+                v_k_tap_squared = math.pow(v_k,2) * math.pow(a_km,2)
+                v_m_tap_squared = math.pow(v_m,2) * math.pow(a_mk,2)
+                v_k_v_m_tap = v_k * v_m * a_km * a_mk
+                cos_km = math.cos(w_k-w_m-phi)
+                sin_km = math.sin(w_k-w_m-phi)
+                cos_mk = math.cos(w_m-w_k+phi)
+                sin_mk = math.sin(w_m-w_k+phi)
+
+                # flows in shunt elements of pi model
+                # P_k_sh = v_k^2*a_km^2*g_k_sh
+                P_k_sh = v_k_tap_squared * g_k_sh
+                # Q_k_sh = -v_k^2*a_km^2*b_k_sh
+                Q_k_sh = -v_k_tap_squared * b_k_sh
+                # P_m_sh = v_m^2*a_mk^2*g_m_sh
+                P_m_sh = v_m_tap_squared * g_m_sh
+                # Q_m_sh = -v_m^2*a_mk^2*b_m_sh
+                Q_m_sh = -v_m_tap_squared * b_m_sh
+
+                # flows in series elements of pi model
+                # P_km_ser = a_km^2*v_k^2*g_km - a_km*a_mk*v_k*v_m*( g_km*cos(w_k-w_m-phi) + b_km*sin(w_k-w_m-phi))
+                P_km_ser = v_k_tap_squared * g_km - v_k_v_m_tap * (g_km*cos_km + b_km*sin_km)
+                # Q_km_ser = -a_km^2*v_k^2*b_km - a_km*a_mk*v_k*v_m*( g_km*sin(w_k-w_m-phi) - b_km*cos(w_k-w_m-phi))
+                Q_km_ser = -v_k_tap_squared * b_km - v_k_v_m_tap * (g_km*sin_km - b_km*cos_km)
+                # P_mk_ser = a_mk^2*v_m^2*g_mk - a_mk*a_km*v_k*v_m*( g_mk*cos(w_k-w_m+phi) + b_mk*sin(w_k-w_m+phi))
+                P_mk_ser = v_m_tap_squared * g_mk - v_k_v_m_tap * (g_mk*cos_mk + b_mk*sin_mk)
+                # Q_mk_ser = -a_mk^2*v_m^2*b_mk - a_mk*a_km*v_k*v_m*( g_mk*sin(w_k-w_m+phi) - b_mk*cos(w_k-w_m+phi))
+                Q_mk_ser = -v_m_tap_squared * b_mk - v_k_v_m_tap * (g_mk*sin_mk - b_mk*cos_mk)
+
+                # flows as measured from the bus
+                P_km = P_km_ser + P_k_sh
+                Q_km = Q_km_ser + Q_k_sh
+                P_mk = P_mk_ser + P_m_sh
+                Q_mk = Q_mk_ser + Q_m_sh
+
+                self.assertAlmostEqual(branch.P_k_shunt, P_k_sh)
+                self.assertAlmostEqual(branch.Q_k_shunt, Q_k_sh)
+                self.assertAlmostEqual(branch.P_m_shunt, P_m_sh)
+                self.assertAlmostEqual(branch.Q_m_shunt, Q_m_sh)
+                self.assertAlmostEqual(branch.P_km_series, P_km_ser)
+                self.assertAlmostEqual(branch.Q_km_series, Q_km_ser)
+                self.assertAlmostEqual(branch.P_mk_series, P_mk_ser)
+                self.assertAlmostEqual(branch.Q_mk_series, Q_mk_ser)
+                self.assertAlmostEqual(branch.P_km, P_km)
+                self.assertAlmostEqual(branch.Q_km, Q_km)
+                self.assertAlmostEqual(branch.P_mk, P_mk)
+                self.assertAlmostEqual(branch.Q_mk, Q_mk)
 
                 # check flow at bus equal to shunt + series elements
                 self.assertTrue(branch.P_km == branch.P_km_series+branch.P_k_shunt)

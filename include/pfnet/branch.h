@@ -22,6 +22,21 @@
 #define BRANCH_TYPE_TRAN_TAP_Q 3 /**< @brief Type: tap-changing transformer that regulates reactive power flow */
 #define BRANCH_TYPE_TRAN_PHASE 4 /**< @brief Type: phase-shifting transformer that regulates active power flow*/
 
+// Branch flows
+#define BRANCH_P_KM 0           /**< @brief Type: real power flow at the 'k' bus */
+#define BRANCH_Q_KM 1           /**< @brief Type: reactive power flow at the 'k' bus */
+#define BRANCH_P_KM_SERIES 2    /**< @brief Type: real power flow on the series element from 'k' to 'm' */
+#define BRANCH_Q_KM_SERIES 3    /**< @brief Type: reactive power flow on the series element from 'k' to 'm' */
+#define BRANCH_P_K_SHUNT 4      /**< @brief Type: real power flow on the shunt element from 'k' */
+#define BRANCH_Q_K_SHUNT 5      /**< @brief Type: reactive power flow on the shunt element from 'k' */
+#define BRANCH_P_MK 6           /**< @brief Type: real power flow at the 'm' bus */
+#define BRANCH_Q_MK 7           /**< @brief Type: reactive power flow at the 'm' bus */
+#define BRANCH_P_MK_SERIES 8    /**< @brief Type: real power flow on the series element from 'm' to 'k' */
+#define BRANCH_Q_MK_SERIES 9    /**< @brief Type: reactive power flow on the series element from 'm' to 'k' */
+#define BRANCH_P_M_SHUNT 10      /**< @brief Type: real power flow on the shunt element from 'm' */
+#define BRANCH_Q_M_SHUNT 11      /**< @brief Type: reactive power flow on the shunt element from 'm' */
+#define BRANCH_FLOW_SIZE 12      /**< @brief Type: the number of branch flows for a single branch including both directions */
+
 // Variables
 /** \defgroup branch_vars Branch Variable Masks
  *  @{
@@ -92,6 +107,7 @@ Branch* BRANCH_get_next_m(Branch* br);
 REAL BRANCH_get_phase(Branch* br, int t);
 REAL BRANCH_get_phase_max(Branch* br);
 REAL BRANCH_get_phase_min(Branch* br);
+void BRANCH_compute_flows(Branch* br, Vec* var_values, int t, REAL* flows);
 REAL BRANCH_get_P_km(Branch* br, Vec* var_values, int t);
 REAL BRANCH_get_Q_km(Branch* br, Vec* var_values, int t);
 REAL BRANCH_get_P_mk(Branch* br, Vec* var_values, int t);
