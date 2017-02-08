@@ -224,6 +224,8 @@ class TestProblem(unittest.TestCase):
             # Check Hcombined
             coeff = np.random.randn(f.shape[0])
             p.eval(x0)
+            self.assertRaises(pf.ProblemError,p.combine_H,np.zeros(f.shape[0]+1),False)
+            p.clear_error()
             p.combine_H(coeff,False)
             J0 = p.J.copy()
             g0 = J0.T*coeff
@@ -505,6 +507,8 @@ class TestProblem(unittest.TestCase):
             # Check Hcombined
             coeff = np.random.randn(f.shape[0])
             p.eval(x0)
+            self.assertRaises(pf.ProblemError,p.combine_H,np.zeros(f.shape[0]+1),False)
+            p.clear_error()
             p.combine_H(coeff,False)
             J0 = p.J.copy()
             g0 = J0.T*coeff

@@ -196,6 +196,13 @@ void PROB_apply_heuristics(Prob* p, Vec* point) {
   PROB_update_lin(p);
 }
 
+void PROB_clear_error(Prob* p) {
+  if (p) {
+    p->error_flag = FALSE;
+    strcpy(p->error_string,"");
+  }
+}
+
 void PROB_eval(Prob* p, Vec* point) {
 
   // Local variables

@@ -2508,7 +2508,7 @@ cdef class Network:
 
     def clear_error(self):
         """ 
-        Clear error flag and message string.
+        Clears error flag and message string.
         """
 
         cnet.NET_clear_error(self._c_net);
@@ -3766,7 +3766,7 @@ cdef class Graph:
 
     def clear_error(self):
         """ 
-        Clear error flag and message string.
+        Clears error flag and message string.
         """
 
         cgraph.GRAPH_clear_error(self._c_graph);
@@ -3956,7 +3956,7 @@ cdef class Function:
 
     def clear_error(self):
         """
-        Clears internal error flag.
+        Clears error flag and string.
         """
 
         cfunc.FUNC_clear_error(self._c_func)
@@ -4092,7 +4092,7 @@ cdef class Constraint:
 
     def clear_error(self):
         """
-        Clears internal error flag.
+        Clears error flag and string.
         """
 
         cconstr.CONSTR_clear_error(self._c_constr)
@@ -4363,6 +4363,13 @@ cdef class Problem:
 
         cprob.PROB_clear(self._c_prob)
 
+    def clear_error(self):
+        """
+        Clears error flag and string.
+        """
+
+        cprob.PROB_clear_error(self._c_prob)
+
     def combine_H(self,coeff,ensure_psd=False):
         """
         Forms and saves a linear combination of the individual constraint Hessians.
@@ -4376,6 +4383,8 @@ cdef class Problem:
         cdef np.ndarray[double,mode='c'] x = coeff
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if coeff.size else NULL
         cprob.PROB_combine_H(self._c_prob,v,ensure_psd)
+        if cprob.PROB_has_error(self._c_prob):
+            raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 
     def eval(self,var_values):
         """

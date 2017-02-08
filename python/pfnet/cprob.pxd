@@ -25,6 +25,7 @@ cdef extern from "pfnet/problem.h":
     void PROB_store_sens(Prob* p, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl)
     void PROB_del(Prob* p)
     void PROB_clear(Prob* p)
+    void PROB_clear_error(Prob* p)
     void PROB_combine_H(Prob* p, Vec* coeff, bint ensure_psd)
     Constr* PROB_find_constr(Prob* p, int constr_type)
     Constr* PROB_get_constr(Prob* p)
