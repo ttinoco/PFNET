@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -63,5 +63,8 @@ char* PROB_get_show_str(Prob* p);
 void PROB_update_lin(Prob* p);
 void PROB_update_nonlin_struc(Prob* p);
 void PROB_update_nonlin_data(Prob* p);
+int PROB_get_num_primal_variables(Prob* p);
+int PROB_get_num_linear_equality_constraints(Prob* p);
+int PROB_get_num_nonlinear_equality_constraints(Prob* p);
 
 #endif

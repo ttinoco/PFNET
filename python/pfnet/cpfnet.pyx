@@ -3,7 +3,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -4363,7 +4363,7 @@ cdef class Problem:
 
         cprob.PROB_clear(self._c_prob)
 
-    def combine_H(self,coeff,ensure_psd):
+    def combine_H(self,coeff,ensure_psd=False):
         """
         Forms and saves a linear combination of the individual constraint Hessians.
 
@@ -4498,6 +4498,39 @@ cdef class Problem:
 
         cprob.PROB_update_lin(self._c_prob)
 
+    def get_num_primal_variables(self):
+        """ 
+        Gets number of primal variables. 
+
+        Returns
+        -------
+        num : int
+        """
+        
+        return self.num_primal_variables
+
+    def get_num_linear_equality_constraints(self):    
+        """ 
+        Gets number of linear equality constraints.
+
+        Returns
+        -------
+        num : int
+        """
+        
+        return self.num_linear_equality_constraints
+
+    def get_num_nonlinear_equality_constraints(self):
+        """ 
+        Number of nonlinear equality constraints.
+
+        Returns
+        -------
+        num : int
+        """
+        
+        return self.num_nonlinear_equality_constraints
+
     property network:
         """ Power network associated with this optimization problem (:class:`Network <pfnet.Network>`). """
         def __get__(self): return new_Network(cprob.PROB_get_network(self._c_prob))
@@ -4582,3 +4615,15 @@ cdef class Problem:
     property nu:
         """ Initial dual point (:class:`ndarray <numpy.ndarray>`). """
         def __get__(self): return None
+
+    property num_primal_variables:
+        """ Number of primal variables (int). """
+        def __get__(self): return cprob.PROB_get_num_primal_variables(self._c_prob)
+
+    property num_linear_equality_constraints:    
+        """ Number of linear equality constraints (int). """
+        def __get__(self): return cprob.PROB_get_num_linear_equality_constraints(self._c_prob)
+
+    property num_nonlinear_equality_constraints:
+        """ Number of nonlinear equality constraints (int). """
+        def __get__(self): return cprob.PROB_get_num_nonlinear_equality_constraints(self._c_prob)
