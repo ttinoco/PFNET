@@ -3156,6 +3156,10 @@ cdef class Network:
         """
         Indicates whether the network has the error flag set due to an
         invalid operation.
+
+        Returns
+        -------
+        flag : {``True``, ``False``}
         """
 
         return cnet.NET_has_error(self._c_net)
@@ -3219,7 +3223,6 @@ cdef class Network:
                                         reduce(lambda x,y: x|y,[str2q[obj.obj_type][qq] for qq in q],0))
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
-
 
     def set_var_values(self,values):
         """
@@ -4385,6 +4388,18 @@ cdef class Problem:
         cprob.PROB_combine_H(self._c_prob,v,ensure_psd)
         if cprob.PROB_has_error(self._c_prob):
             raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
+
+    def has_error(self):
+        """
+        Indicates whether the problem has the error flag set due to an
+        invalid operation.
+
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+
+        return cprob.PROB_has_error(self._c_prob)
 
     def eval(self,var_values):
         """

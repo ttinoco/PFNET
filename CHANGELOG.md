@@ -14,6 +14,7 @@ Unreleased
 * Branch bus name changes.
 * Branch AC flow getters.
 * Battery initial and final energy levels.
+* Improved error handling in Problem Python class (has_error, clear_error, error checks in combine_H).
 
 Version 1.2.5
 -------------
