@@ -942,7 +942,7 @@ class TestNetwork(unittest.TestCase):
                 self.assertAlmostEqual(flowsR['Q_km'], branch.get_Q_km(var_values=xR))
                 self.assertAlmostEqual(flowsR['P_mk'], branch.get_P_mk(var_values=xR))
                 self.assertAlmostEqual(flowsR['Q_mk'], branch.get_Q_mk(var_values=xR))
-#TODO TEST
+
         # Multi-period
         net = self.netMP
 
