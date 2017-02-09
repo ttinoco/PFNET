@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -159,7 +159,15 @@ class TestProblem(unittest.TestCase):
             b = p.b.copy()
             A = p.A.copy()
             J = p.J.copy()
-                        
+
+            # Numbers
+            self.assertEqual(x0.size,p.num_primal_variables)
+            self.assertEqual(A.shape[0],p.num_linear_equality_constraints)
+            self.assertEqual(f.size,p.num_nonlinear_equality_constraints)
+            self.assertEqual(p.num_primal_variables,p.get_num_primal_variables())
+            self.assertEqual(p.num_linear_equality_constraints,p.get_num_linear_equality_constraints())
+            self.assertEqual(p.num_nonlinear_equality_constraints,p.get_num_nonlinear_equality_constraints())
+ 
             # phi
             self.assertTrue(type(phi) is float)
             self.assertEqual(phi,0.)
@@ -216,6 +224,10 @@ class TestProblem(unittest.TestCase):
             # Check Hcombined
             coeff = np.random.randn(f.shape[0])
             p.eval(x0)
+            self.assertRaises(pf.ProblemError,p.combine_H,np.zeros(f.shape[0]+1),False)
+            self.assertTrue(p.has_error())
+            p.clear_error()
+            self.assertFalse(p.has_error())
             p.combine_H(coeff,False)
             J0 = p.J.copy()
             g0 = J0.T*coeff
@@ -396,6 +408,11 @@ class TestProblem(unittest.TestCase):
             b = p.b.copy()
             A = p.A.copy()
             J = p.J.copy()
+
+            # Numbers
+            self.assertEqual(x0.size,p.num_primal_variables)
+            self.assertEqual(A.shape[0],p.num_linear_equality_constraints)
+            self.assertEqual(f.size,p.num_nonlinear_equality_constraints)
                         
             # phi
             self.assertTrue(type(phi) is float)
@@ -492,6 +509,10 @@ class TestProblem(unittest.TestCase):
             # Check Hcombined
             coeff = np.random.randn(f.shape[0])
             p.eval(x0)
+            self.assertRaises(pf.ProblemError,p.combine_H,np.zeros(f.shape[0]+1),False)
+            self.assertTrue(p.has_error())
+            p.clear_error()
+            self.assertFalse(p.has_error())
             p.combine_H(coeff,False)
             J0 = p.J.copy()
             g0 = J0.T*coeff

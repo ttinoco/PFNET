@@ -3,7 +3,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -3578,6 +3578,10 @@ cdef class Network:
         """
         Indicates whether the network has the error flag set due to an
         invalid operation.
+
+        Returns
+        -------
+        flag : {``True``, ``False``}
         """
 
         return cnet.NET_has_error(self._c_net)
@@ -3641,7 +3645,6 @@ cdef class Network:
                                         reduce(lambda x,y: x|y,[str2q[obj.obj_type][qq] for qq in q],0))
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
-
 
     def set_var_values(self,values):
         """
@@ -4402,7 +4405,7 @@ cdef class Function:
 
     def clear_error(self):
         """
-        Clears internal error flag.
+        Clears error flag and string.
         """
 
         cfunc.FUNC_clear_error(self._c_func)
@@ -4538,7 +4541,7 @@ cdef class Constraint:
 
     def clear_error(self):
         """
-        Clears internal error flag.
+        Clears error flag and string.
         """
 
         cconstr.CONSTR_clear_error(self._c_constr)
@@ -4809,7 +4812,14 @@ cdef class Problem:
 
         cprob.PROB_clear(self._c_prob)
 
-    def combine_H(self,coeff,ensure_psd):
+    def clear_error(self):
+        """
+        Clears error flag and string.
+        """
+
+        cprob.PROB_clear_error(self._c_prob)
+
+    def combine_H(self,coeff,ensure_psd=False):
         """
         Forms and saves a linear combination of the individual constraint Hessians.
 
@@ -4822,6 +4832,20 @@ cdef class Problem:
         cdef np.ndarray[double,mode='c'] x = coeff
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if coeff.size else NULL
         cprob.PROB_combine_H(self._c_prob,v,ensure_psd)
+        if cprob.PROB_has_error(self._c_prob):
+            raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
+
+    def has_error(self):
+        """
+        Indicates whether the problem has the error flag set due to an
+        invalid operation.
+
+        Returns
+        -------
+        flag : {``True``, ``False``}
+        """
+
+        return cprob.PROB_has_error(self._c_prob)
 
     def eval(self,var_values):
         """
@@ -4944,6 +4968,39 @@ cdef class Problem:
 
         cprob.PROB_update_lin(self._c_prob)
 
+    def get_num_primal_variables(self):
+        """ 
+        Gets number of primal variables. 
+
+        Returns
+        -------
+        num : int
+        """
+        
+        return self.num_primal_variables
+
+    def get_num_linear_equality_constraints(self):    
+        """ 
+        Gets number of linear equality constraints.
+
+        Returns
+        -------
+        num : int
+        """
+        
+        return self.num_linear_equality_constraints
+
+    def get_num_nonlinear_equality_constraints(self):
+        """ 
+        Number of nonlinear equality constraints.
+
+        Returns
+        -------
+        num : int
+        """
+        
+        return self.num_nonlinear_equality_constraints
+
     property network:
         """ Power network associated with this optimization problem (:class:`Network <pfnet.Network>`). """
         def __get__(self): return new_Network(cprob.PROB_get_network(self._c_prob))
@@ -5028,3 +5085,15 @@ cdef class Problem:
     property nu:
         """ Initial dual point (:class:`ndarray <numpy.ndarray>`). """
         def __get__(self): return None
+
+    property num_primal_variables:
+        """ Number of primal variables (int). """
+        def __get__(self): return cprob.PROB_get_num_primal_variables(self._c_prob)
+
+    property num_linear_equality_constraints:    
+        """ Number of linear equality constraints (int). """
+        def __get__(self): return cprob.PROB_get_num_linear_equality_constraints(self._c_prob)
+
+    property num_nonlinear_equality_constraints:
+        """ Number of nonlinear equality constraints (int). """
+        def __get__(self): return cprob.PROB_get_num_nonlinear_equality_constraints(self._c_prob)

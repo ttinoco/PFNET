@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -194,6 +194,13 @@ void PROB_apply_heuristics(Prob* p, Vec* point) {
   
   // Udpate A and b
   PROB_update_lin(p);
+}
+
+void PROB_clear_error(Prob* p) {
+  if (p) {
+    p->error_flag = FALSE;
+    strcpy(p->error_string,"");
+  }
 }
 
 void PROB_eval(Prob* p, Vec* point) {
@@ -810,5 +817,35 @@ void PROB_update_lin(Prob* p) {
       Grow++;
     }
   }
+}
+
+int PROB_get_num_primal_variables(Prob* p) {
+  if (!p)
+    return 0;
+  if (p->gphi)
+    return VEC_get_size(p->gphi);
+  if (p->Hphi)
+    return MAT_get_size1(p->Hphi);
+  if (p->A)
+    return MAT_get_size2(p->A);
+  if (p->J)
+    return MAT_get_size2(p->J);
+  return 0;
+}
+
+int PROB_get_num_linear_equality_constraints(Prob* p) {
+  if (!p)
+    return 0;
+  if (p->A)
+    return MAT_get_size1(p->A);
+  return 0;
+}
+
+int PROB_get_num_nonlinear_equality_constraints(Prob* p) {
+  if (!p)
+    return 0;
+  if (p->f)
+    return VEC_get_size(p->f);
+  return 0;
 }
 
