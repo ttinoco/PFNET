@@ -575,8 +575,8 @@ Bus* NET_create_sorted_bus_list(Net* net, int sort_by, int t) {
 }
 
 int NET_get_bus_neighbors(Net* net, Bus* bus, int spread, int* neighbors, char* queued) {
-  /* Returns number of neighbors including itself that are at most "spread"
-   * branches away.
+  /** Returns number of neighbors including itself that are at most "spread"
+   *  branches away.
    */
 
   // Local variables
@@ -637,12 +637,12 @@ int NET_get_bus_neighbors(Net* net, Bus* bus, int spread, int* neighbors, char* 
 }
 
 Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
-  /* This function constructs a "spatial" covariance matrix for the active powers of
-   * variable generators. The matrix is constructed such that the correlation
-   * coefficients of the (variable) active powers of vargens that are less than
-   * "spread" branches away is equal to "corr". Only the lower triangular part
-   * of the covaraicen matrix is stored. The resulting matrix should be checked
-   * to make sure it is a valid covariance matrix.
+  /** This function constructs a "spatial" covariance matrix for the active powers of
+   *  variable generators. The matrix is constructed such that the correlation
+   *  coefficients of the (variable) active powers of vargens that are less than
+   *  "spread" branches away is equal to "corr". Only the lower triangular part
+   *  of the covaraicen matrix is stored. The resulting matrix should be checked
+   *  to make sure it is a valid covariance matrix.
    */
 
   // Local variables

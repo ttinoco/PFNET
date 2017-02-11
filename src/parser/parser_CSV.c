@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -54,7 +54,7 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
   buffer_index = 0;
   while (buffer_index < len) {
 
-    // single quote
+    // Single quote
     if (buffer[buffer_index] == '\'' && !p->in_string_double && !p->in_comment) {
       if (!p->in_string_single)
         p->in_string_single = TRUE;
@@ -62,7 +62,7 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
         p->in_string_single = FALSE;
     }
 
-    // double quote
+    // Double quote
     else if (buffer[buffer_index] == '"' && !p->in_string_single && !p->in_comment) {
       if (!p->in_string_double)
         p->in_string_double = TRUE;
@@ -70,12 +70,12 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
         p->in_string_double = FALSE;
     }
 
-    // comment
+    // Comment
     else if (buffer[buffer_index] == comment && !p->in_string_single && !p->in_string_double) {
       p->in_comment = TRUE;
     }
 
-    // end of field
+    // End of field
     else if (buffer[buffer_index] == delimeter && !p->in_string_single && !p->in_string_double && !p->in_comment) {
       if (p->field_index > 0) {
         p->field[p->field_index] = 0;
@@ -83,7 +83,7 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
         p->field_index = 0;
       }
 
-      // skip remaining white if white is delimeter
+      // Skip remaining white if white is delimeter
       if (delimeter == ' ') {
         while ((buffer[buffer_index] == ' ' ||
                 buffer[buffer_index] == '\t') &&
@@ -93,7 +93,7 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
       }
     }
 
-    // end of record
+    // End of record
     else if (buffer[buffer_index] == end_of_record) {
       p->in_string_single = FALSE;
       p->in_string_double = FALSE;
@@ -106,10 +106,10 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
       crecord(data);
     }
 
-    // end of line or return carriage (treat as end of field)
-    // return carriage also supports dos/windows end of line '\r\n'
+    // End of line or return carriage (treat as end of field).
+    // Return carriage also supports dos/windows end of line '\r\n'
     else if ((buffer[buffer_index] == '\n') ||
-            (buffer[buffer_index] == '\r')) {
+	     (buffer[buffer_index] == '\r')) {
       p->in_comment = FALSE;
       if (p->field_index > 0) {
         p->field[p->field_index] = 0;
@@ -118,7 +118,7 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
       }
     }
 
-    // in field
+    // In field
     else if (!p->in_comment) {
       p->field[p->field_index] = buffer[buffer_index];
       p->field_index++;
