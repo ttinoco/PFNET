@@ -1,16 +1,16 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
 import math
-import pfnet as pf
 import unittest
-from . import test_cases
 import numpy as np
+import pfnet as pf
+from . import test_cases
 from scipy.sparse import coo_matrix, bmat, triu
 
 class TestNetwork(unittest.TestCase):
@@ -832,7 +832,6 @@ class TestNetwork(unittest.TestCase):
         # Single period
         net = self.net
 
-
         for case in test_cases.CASES:
 
             net.load(case)
@@ -860,11 +859,7 @@ class TestNetwork(unittest.TestCase):
 
             x0 = net.get_var_values()
             xR = x0 + np.random.random(x0.size)/10.
-            vmagR = net.get_var_projection('bus', 'voltage magnitude') * xR
-            vangR = net.get_var_projection('bus', 'voltage angle') * xR
-            tapsR = net.get_var_projection('branch', 'tap ratio') * xR
-            phaseR = net.get_var_projection('branch', 'phase shift') * xR
-
+            
             for branch in net.branches:
 
                 # compute branch flows
@@ -917,12 +912,12 @@ class TestNetwork(unittest.TestCase):
 
                 # check passing variables to calculate flows
                 ############################################
-                flowsR = compute_branch_flows({'ratio': tapsR[branch.index],
-                                               'phase': phaseR[branch.index],
-                                               'bus_k.v_mag': vmagR[branch.bus_k.index],
-                                               'bus_k.v_ang': vangR[branch.bus_k.index],
-                                               'bus_m.v_mag': vmagR[branch.bus_m.index],
-                                               'bus_m.v_ang': vangR[branch.bus_m.index],
+                flowsR = compute_branch_flows({'ratio': xR[branch.index_ratio],
+                                               'phase': xR[branch.index_phase],
+                                               'bus_k.v_mag': xR[branch.bus_k.index_v_mag],
+                                               'bus_k.v_ang': xR[branch.bus_k.index_v_ang],
+                                               'bus_m.v_mag': xR[branch.bus_m.index_v_mag],
+                                               'bus_m.v_ang': xR[branch.bus_m.index_v_ang],
                                                'g' : branch.g,
                                                'g_k' : branch.g_k,
                                                'g_m' : branch.g_m,
@@ -3554,28 +3549,33 @@ def compute_branch_flows(parameters):
     -------
     flows : dict
     """
-    # transformer tap ratios
+    
+    # Transformer tap ratios
     a_km = parameters['ratio']
     a_mk = 1.
-    # transformer phase shift
+    
+    # Transformer phase shift
     phi = parameters['phase']
-    # voltage magnitude and angles
+    
+    # Voltage magnitude and angles
     v_k = parameters['bus_k.v_mag']
     w_k = parameters['bus_k.v_ang']
     v_m = parameters['bus_m.v_mag']
     w_m = parameters['bus_m.v_ang']
-    # conductances
+    
+    # Conductances
     g_km = parameters['g']
     g_k_sh = parameters['g_k']
     g_mk = parameters['g']
     g_m_sh = parameters['g_m']
-    # susceptances
+    
+    # Susceptances
     b_km = parameters['b']
     b_k_sh = parameters['b_k']
     b_mk = parameters['b']
     b_m_sh = parameters['b_m']
 
-    # intermediate calculations
+    # Intermediate calculations
     v_k_tap_squared = math.pow(v_k,2) * math.pow(a_km,2)
     v_m_tap_squared = math.pow(v_m,2) * math.pow(a_mk,2)
     v_k_v_m_tap = v_k * v_m * a_km * a_mk
@@ -3585,27 +3585,36 @@ def compute_branch_flows(parameters):
     sin_mk = math.sin(w_m-w_k+phi)
 
     flows = {}
-    # flows in shunt elements of pi model
+    
+    # Flows in shunt elements of pi model
+    
     # P_k_sh = v_k^2*a_km^2*g_k_sh
     flows['P_k_sh'] = v_k_tap_squared * g_k_sh
+    
     # Q_k_sh = -v_k^2*a_km^2*b_k_sh
     flows['Q_k_sh'] = -v_k_tap_squared * b_k_sh
+    
     # P_m_sh = v_m^2*a_mk^2*g_m_sh
     flows['P_m_sh'] = v_m_tap_squared * g_m_sh
+    
     # Q_m_sh = -v_m^2*a_mk^2*b_m_sh
     flows['Q_m_sh'] = -v_m_tap_squared * b_m_sh
 
-    # flows in series elements of pi model
+    # Flows in series elements of pi model
+    
     # P_km_ser = a_km^2*v_k^2*g_km - a_km*a_mk*v_k*v_m*( g_km*cos(w_k-w_m-phi) + b_km*sin(w_k-w_m-phi))
     flows['P_km_ser'] = v_k_tap_squared * g_km - v_k_v_m_tap * (g_km*cos_km + b_km*sin_km)
+    
     # Q_km_ser = -a_km^2*v_k^2*b_km - a_km*a_mk*v_k*v_m*( g_km*sin(w_k-w_m-phi) - b_km*cos(w_k-w_m-phi))
     flows['Q_km_ser'] = -v_k_tap_squared * b_km - v_k_v_m_tap * (g_km*sin_km - b_km*cos_km)
+    
     # P_mk_ser = a_mk^2*v_m^2*g_mk - a_mk*a_km*v_k*v_m*( g_mk*cos(w_k-w_m+phi) + b_mk*sin(w_k-w_m+phi))
     flows['P_mk_ser'] = v_m_tap_squared * g_mk - v_k_v_m_tap * (g_mk*cos_mk + b_mk*sin_mk)
+    
     # Q_mk_ser = -a_mk^2*v_m^2*b_mk - a_mk*a_km*v_k*v_m*( g_mk*sin(w_k-w_m+phi) - b_mk*cos(w_k-w_m+phi))
     flows['Q_mk_ser'] = -v_m_tap_squared * b_mk - v_k_v_m_tap * (g_mk*sin_mk - b_mk*cos_mk)
 
-    # flows as measured from the bus
+    # Flows as measured from the bus
     flows['P_km'] = flows['P_km_ser'] + flows['P_k_sh']
     flows['Q_km'] = flows['Q_km_ser'] + flows['Q_k_sh']
     flows['P_mk'] = flows['P_mk_ser'] + flows['P_m_sh']
