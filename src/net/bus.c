@@ -47,14 +47,14 @@ struct Bus {
   Load* load;          /**< @brief List of loads connected to bus */
   Shunt* shunt;        /**< @brief List of shunt devices connected to bus */
   Shunt* reg_shunt;    /**< @brief List of shunt devices regulating the voltage magnitude of bus */
-  Branch* branch_from; /**< @brief List of branches having this bus on the "from" side */
-  Branch* branch_to;   /**< @brief List of branches having this bus on the "to" side */
+  Branch* branch_k;    /**< @brief List of branches having this bus on the "k" side */
+  Branch* branch_m;    /**< @brief List of branches having this bus on the "m" side */
   Vargen* vargen;      /**< @brief List of variable generators connected to bus */
   Bat* bat;            /**< @brief List of batteries connected to bus */
 
   // Price
   REAL* price;        /**< @brief Energy price at bus ($/ (hr p.u.)) */
-  
+
   // Indices
   int index;          /**< @brief Bus index */
   int* index_v_mag;   /**< @brief Voltage magnitude index */
@@ -78,7 +78,7 @@ struct Bus {
   // Mismatches
   REAL* P_mis; /**< @brief Active power mismatch (p.u. system base power) */
   REAL* Q_mis; /**< @brief Reactive power mismatch (p.u. system base power) */
-  
+
   // Hash
   UT_hash_handle hh_number; /**< @brief Handle for bus hash table based on numbers */
   UT_hash_handle hh_name;   /**< @brief Handle for bus hash table based on names */
@@ -132,24 +132,24 @@ void BUS_add_reg_shunt(Bus* bus, Shunt* reg_shunt) {
     bus->reg_shunt = SHUNT_list_reg_add(bus->reg_shunt,reg_shunt);
 }
 
-void BUS_add_branch_from(Bus* bus, Branch* branch) {
+void BUS_add_branch_k(Bus* bus, Branch* branch) {
   if (bus)
-    bus->branch_from = BRANCH_list_from_add(bus->branch_from,branch);
+    bus->branch_k = BRANCH_list_k_add(bus->branch_k,branch);
 }
 
-void BUS_del_branch_from(Bus* bus, Branch* branch) {
+void BUS_del_branch_k(Bus* bus, Branch* branch) {
   if (bus)
-    bus->branch_from = BRANCH_list_from_del(bus->branch_from,branch);
+    bus->branch_k = BRANCH_list_k_del(bus->branch_k,branch);
 }
 
-void BUS_add_branch_to(Bus* bus, Branch* branch) {
+void BUS_add_branch_m(Bus* bus, Branch* branch) {
   if (bus)
-    bus->branch_to = BRANCH_list_to_add(bus->branch_to,branch);
+    bus->branch_m = BRANCH_list_m_add(bus->branch_m,branch);
 }
 
-void BUS_del_branch_to(Bus* bus, Branch* branch) {
+void BUS_del_branch_m(Bus* bus, Branch* branch) {
   if (bus)
-    bus->branch_to = BRANCH_list_to_del(bus->branch_to,branch);
+    bus->branch_m = BRANCH_list_m_del(bus->branch_m,branch);
 }
 
 void BUS_add_vargen(Bus* bus, Vargen* gen) {
@@ -228,7 +228,7 @@ Bus* BUS_array_new(int size, int num_periods) {
 void BUS_array_show(Bus* bus_array, int size, int t) {
   int i;
   if (bus_array) {
-    for (i = 0; i < size; i++) 
+    for (i = 0; i < size; i++)
       BUS_show(&(bus_array[i]),t);
   }
 }
@@ -254,7 +254,7 @@ BOOL BUS_check(Bus* bus, BOOL verbose) {
   if (!bus) {
     if (verbose)
       fprintf(stderr,"NULL bus\n");
-    return FALSE;    
+    return FALSE;
   }
 
   // v limits
@@ -337,8 +337,8 @@ char BUS_get_obj_type(void* bus) {
 
 int BUS_get_degree(Bus* bus) {
   if (bus) {
-    return (BRANCH_list_from_len(bus->branch_from) +
-	    BRANCH_list_to_len(bus->branch_to));
+    return (BRANCH_list_k_len(bus->branch_k) +
+	    BRANCH_list_m_len(bus->branch_m));
   }
   else
     return 0;
@@ -501,7 +501,7 @@ int BUS_get_num_bats(Bus* bus) {
 Gen* BUS_get_gen(Bus* bus) {
   if (bus)
     return bus->gen;
-  else 
+  else
     return NULL;
 }
 
@@ -540,16 +540,16 @@ Shunt* BUS_get_reg_shunt(Bus* bus) {
     return NULL;
 }
 
-Branch* BUS_get_branch_from(Bus* bus) {
+Branch* BUS_get_branch_k(Bus* bus) {
   if (bus)
-    return bus->branch_from;
+    return bus->branch_k;
   else
     return NULL;
 }
 
-Branch* BUS_get_branch_to(Bus* bus) {
+Branch* BUS_get_branch_m(Bus* bus) {
   if (bus)
-    return bus->branch_to;
+    return bus->branch_m;
   else
     return NULL;
 }
@@ -557,14 +557,14 @@ Branch* BUS_get_branch_to(Bus* bus) {
 Vargen* BUS_get_vargen(Bus* bus) {
   if (bus)
     return bus->vargen;
-  else 
+  else
     return NULL;
 }
 
 Bat* BUS_get_bat(Bus* bus) {
   if (bus)
     return bus->bat;
-  else 
+  else
     return NULL;
 }
 
@@ -667,7 +667,7 @@ REAL BUS_get_total_shunt_g(Bus* bus) {
   REAL g = 0;
   if (!bus)
     return 0;
-  for (shunt = bus->shunt; shunt != NULL; shunt = SHUNT_get_next(shunt)) 
+  for (shunt = bus->shunt; shunt != NULL; shunt = SHUNT_get_next(shunt))
     g += SHUNT_get_g(shunt);
   return g;
 }
@@ -677,7 +677,7 @@ REAL BUS_get_total_shunt_b(Bus* bus, int t) {
   REAL b = 0;
   if (!bus || t < 0 || t >= bus->num_periods)
     return 0;
-  for (shunt = bus->shunt; shunt != NULL; shunt = SHUNT_get_next(shunt)) 
+  for (shunt = bus->shunt; shunt != NULL; shunt = SHUNT_get_next(shunt))
     b += SHUNT_get_b(shunt,t);
   return b;
 }
@@ -685,7 +685,7 @@ REAL BUS_get_total_shunt_b(Bus* bus, int t) {
 REAL BUS_get_v_mag(Bus* bus, int t) {
   if (!bus || t < 0 || t >= bus->num_periods)
     return 0;
-  else 
+  else
     return bus->v_mag[t];
 }
 
@@ -706,14 +706,14 @@ REAL BUS_get_v_set(Bus* bus, int t) {
 REAL BUS_get_v_max(Bus* bus) {
   if (!bus)
     return 0;
-  else 
+  else
     return bus->v_max;
 }
 
 REAL BUS_get_v_min(Bus* bus) {
   if (!bus)
     return 0;
-  else 
+  else
     return bus->v_min;
 }
 
@@ -739,9 +739,9 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
 	break;
       default:
 	VEC_set(values,bus->index_v_mag[t],bus->v_mag[t]);
-      }    
+      }
     }
-    
+
     // Voltage angle
     if (bus->vars & BUS_VAR_VANG) {
       switch(code) {
@@ -755,30 +755,30 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
 	VEC_set(values,bus->index_v_ang[t],bus->v_ang[t]);
       }
     }
-    
+
     // Voltage magnitude deviations
     if (bus->vars & BUS_VAR_VDEV) {
       switch(code) {
       case UPPER_LIMITS:
-	VEC_set(values,bus->index_y[t],BUS_INF_V_MAG); 
+	VEC_set(values,bus->index_y[t],BUS_INF_V_MAG);
 	VEC_set(values,bus->index_z[t],BUS_INF_V_MAG);
 	break;
       case LOWER_LIMITS:
-	VEC_set(values,bus->index_y[t],0.); 
+	VEC_set(values,bus->index_y[t],0.);
 	VEC_set(values,bus->index_z[t],0.);
 	break;
       default:
 	if (bus->v_mag[t] > bus->v_set[t]) { // pos voltage mag deviation
-	  VEC_set(values,bus->index_y[t],bus->v_mag[t]-bus->v_set[t]); 
+	  VEC_set(values,bus->index_y[t],bus->v_mag[t]-bus->v_set[t]);
 	  VEC_set(values,bus->index_z[t],0.);
 	}
 	else {                         // neg voltage mag deviation
 	  VEC_set(values,bus->index_y[t],0.);
-	  VEC_set(values,bus->index_z[t],bus->v_set[t]-bus->v_mag[t]); 
+	  VEC_set(values,bus->index_z[t],bus->v_set[t]-bus->v_mag[t]);
 	}
       }
     }
-    
+
     // Voltage magnitude bound violations
     if (bus->vars & BUS_VAR_VVIO) {
       switch(code) {
@@ -939,31 +939,31 @@ REAL BUS_get_sens_v_reg_by_shunt(Bus* bus, int t) {
 REAL BUS_get_largest_sens(Bus* bus, int t) {
   REAL sens = 0;
   if (bus && t >= 0 && t < bus->num_periods) {
-    
+
     if (fabs(bus->sens_P_balance[t]) >= fabs(sens))
       sens = bus->sens_P_balance[t];
-    
+
     if (fabs(bus->sens_Q_balance[t]) >= fabs(sens))
       sens = bus->sens_Q_balance[t];
-    
+
     if (fabs(bus->sens_v_mag_u_bound[t]) >= fabs(sens))
       sens = bus->sens_v_mag_u_bound[t];
-    
+
     if (fabs(bus->sens_v_mag_l_bound[t]) >= fabs(sens))
       sens = bus->sens_v_mag_l_bound[t];
 
     if (fabs(bus->sens_v_ang_u_bound[t]) >= fabs(sens))
       sens = bus->sens_v_ang_u_bound[t];
-    
+
     if (fabs(bus->sens_v_ang_l_bound[t]) >= fabs(sens))
       sens = bus->sens_v_ang_l_bound[t];
-    
+
     if (fabs(bus->sens_v_reg_by_gen[t]) >= fabs(sens))
       sens = bus->sens_v_reg_by_gen[t];
-    
+
     if (fabs(bus->sens_v_reg_by_tran[t]) >= fabs(sens))
       sens = bus->sens_v_reg_by_tran[t];
-    
+
     if (fabs(bus->sens_v_reg_by_shunt[t]) >= fabs(sens))
       sens = bus->sens_v_reg_by_shunt[t];
   }
@@ -978,7 +978,7 @@ int BUS_get_largest_sens_type(Bus* bus, int t) {
     if (fabs(bus->sens_P_balance[t]) >= fabs(sens)) {
       sens = bus->sens_P_balance[t];
       type = BUS_SENS_P_BALANCE;
-    }    
+    }
 
     if (fabs(bus->sens_Q_balance[t]) >= fabs(sens)) {
       sens = bus->sens_Q_balance[t];
@@ -1051,48 +1051,48 @@ int BUS_get_largest_mis_type(Bus* bus, int t) {
 }
 
 REAL BUS_get_quantity(Bus* bus, int qtype, int t) {
-  
+
   switch (qtype) {
-  
+
   case BUS_SENS_LARGEST:
     return BUS_get_largest_sens(bus,t);
-  
+
   case BUS_SENS_P_BALANCE:
     return BUS_get_sens_P_balance(bus,t);
-  
+
   case BUS_SENS_Q_BALANCE:
     return BUS_get_sens_Q_balance(bus,t);
-  
+
   case BUS_SENS_V_MAG_U_BOUND:
     return BUS_get_sens_v_mag_u_bound(bus,t);
-  
+
   case BUS_SENS_V_MAG_L_BOUND:
     return BUS_get_sens_v_mag_l_bound(bus,t);
 
   case BUS_SENS_V_ANG_U_BOUND:
     return BUS_get_sens_v_ang_u_bound(bus,t);
-  
+
   case BUS_SENS_V_ANG_L_BOUND:
     return BUS_get_sens_v_ang_l_bound(bus,t);
-  
+
   case BUS_SENS_V_REG_BY_GEN:
     return BUS_get_sens_v_reg_by_gen(bus,t);
-  
+
   case BUS_SENS_V_REG_BY_TRAN:
     return BUS_get_sens_v_reg_by_tran(bus,t);
-  
+
   case BUS_SENS_V_REG_BY_SHUNT:
     return BUS_get_sens_v_reg_by_shunt(bus,t);
-  
+
   case BUS_MIS_LARGEST:
     return BUS_get_largest_mis(bus,t);
-  
+
   case BUS_MIS_ACTIVE:
     return BUS_get_P_mis(bus,t);
-  
+
   case BUS_MIS_REACTIVE:
     return BUS_get_Q_mis(bus,t);
-  
+
   default:
     return 0;
   }
@@ -1175,7 +1175,7 @@ int BUS_hash_name_len(Bus* bus_hash) {
 }
 
 void BUS_init(Bus* bus, int num_periods) {
-  
+
   // Local vars
   int i;
   int T;
@@ -1189,7 +1189,7 @@ void BUS_init(Bus* bus, int num_periods) {
   bus->num_periods = num_periods;
 
   bus->number = 0;
-  for (i = 0; i < BUS_NAME_BUFFER_SIZE; i++) 
+  for (i = 0; i < BUS_NAME_BUFFER_SIZE; i++)
     bus->name[i] = 0;
 
   bus->index = 0;
@@ -1209,8 +1209,8 @@ void BUS_init(Bus* bus, int num_periods) {
   bus->reg_shunt = NULL;
   bus->load = NULL;
   bus->shunt = NULL;
-  bus->branch_from = NULL;
-  bus->branch_to = NULL;
+  bus->branch_k = NULL;
+  bus->branch_m = NULL;
   bus->vargen = NULL;
   bus->bat = NULL;
 
@@ -1304,14 +1304,14 @@ Bus* BUS_list_add_sorting(Bus* bus_list, Bus* bus_new, int sort_by, int t) {
   REAL val_bus_new;
 
   for (bus = bus_list; bus != NULL; bus = bus->next) {
-    
+
     // Get sorting quantities
     val_bus = BUS_get_quantity(bus,sort_by,t);
     val_bus_new = BUS_get_quantity(bus_new,sort_by,t);
 
     if (fabs(val_bus_new) >= fabs(val_bus)) // new bus comes before
-      break;      
-    bus_prev = bus;    
+      break;
+    bus_prev = bus;
   }
 
   // New bus comes before bus
@@ -1396,12 +1396,12 @@ void BUS_set_index(Bus* bus, int index) {
 }
 
 int BUS_set_flags(void* vbus, char flag_type, unsigned char mask, int index) {
-  
+
   // Local variables
   char* flags_ptr = NULL;
   Bus* bus = (Bus*)vbus;
   int t;
-  
+
   // Check bus
   if (!bus)
     return index;
@@ -1417,7 +1417,7 @@ int BUS_set_flags(void* vbus, char flag_type, unsigned char mask, int index) {
     flags_ptr = &(bus->sparse);
   else
     return index;
-  
+
   // Set flags
   if (!((*flags_ptr) & BUS_VAR_VMAG) && (mask & BUS_VAR_VMAG)) { // voltage magnitude
     if (flag_type == FLAG_VARS) {
@@ -1472,7 +1472,7 @@ void BUS_set_var_values(Bus* bus, Vec* values) {
 
     // Voltage
     if (bus->vars & BUS_VAR_VMAG)      // voltage magnitude (p.u.)
-      bus->v_mag[t] = VEC_get(values,bus->index_v_mag[t]); 
+      bus->v_mag[t] = VEC_get(values,bus->index_v_mag[t]);
     if (bus->vars & BUS_VAR_VANG)      // voltage angle (radians)
       bus->v_ang[t] = VEC_get(values,bus->index_v_ang[t]);
   }

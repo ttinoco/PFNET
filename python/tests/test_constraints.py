@@ -18,9 +18,9 @@ EPS = 2e0 # %
 TOL = 1e-4
 
 class TestConstraints(unittest.TestCase):
-    
+
     def setUp(self):
-        
+
         # Network
         self.T = 3
         self.net = pf.Network()
@@ -35,7 +35,7 @@ class TestConstraints(unittest.TestCase):
         net = self.net
 
         for case in test_cases.CASES:
-            
+
             net.load(case)
 
             # add vargens
@@ -89,7 +89,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_fixed,0)
             self.assertEqual(net.num_vars,
                              2*net.num_buses +
-                             net.get_num_slack_gens() + 
+                             net.get_num_slack_gens() +
                              net.get_num_reg_gens() +
                              net.get_num_tap_changers() +
                              net.get_num_phase_shifters() +
@@ -97,7 +97,7 @@ class TestConstraints(unittest.TestCase):
                              net.num_var_generators*2+
                              3*net.num_batteries+
                              net.num_loads)
-            
+
             # Fixed
             net.set_flags('bus',
                           'fixed',
@@ -146,11 +146,11 @@ class TestConstraints(unittest.TestCase):
                              net.num_var_generators*2+
                              3*net.num_batteries+
                              net.num_loads)
-            
+
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
-            
+
             constr = pf.Constraint('variable fixing',net)
 
             f = constr.f
@@ -160,8 +160,8 @@ class TestConstraints(unittest.TestCase):
             G = constr.G
             l = constr.l
             u = constr.u
-            
-            # Before 
+
+            # Before
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(b) is np.ndarray)
@@ -179,7 +179,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(l.shape,(0,))
             self.assertTrue(type(u) is np.ndarray)
             self.assertTupleEqual(u.shape,(0,))
-            
+
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Acounter,0)
             self.assertEqual(constr.Gcounter,0)
@@ -197,7 +197,7 @@ class TestConstraints(unittest.TestCase):
             G = constr.G
             l = constr.l
             u = constr.u
-            
+
             # After
             self.assertTrue(type(b) is np.ndarray)
             self.assertTupleEqual(b.shape,(net.num_fixed,))
@@ -216,10 +216,10 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(l.shape,(0,))
             self.assertTrue(type(u) is np.ndarray)
             self.assertTupleEqual(u.shape,(0,))
-            
+
             self.assertTrue(not np.any(np.isinf(b)))
             self.assertTrue(not np.any(np.isnan(b)))
-        
+
             # Vargen
             for vargen in net.var_generators:
                 ar = np.where(A.col == vargen.index_P)[0]
@@ -264,11 +264,11 @@ class TestConstraints(unittest.TestCase):
         net = self.netMP
 
         self.assertEqual(net.num_periods,self.T)
-        
+
         for case in test_cases.CASES:
-            
+
             net.load(case)
-            
+
             # add vargens
             net.add_vargens(net.get_load_buses(),50.,30.,5,0.05)
             for vargen in net.var_generators:
@@ -320,7 +320,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_fixed,net.num_vars)
             self.assertEqual(net.num_vars,
                              (2*net.num_buses +
-                              net.get_num_slack_gens() + 
+                              net.get_num_slack_gens() +
                               net.get_num_reg_gens() +
                               net.get_num_tap_changers() +
                               net.get_num_phase_shifters() +
@@ -332,7 +332,7 @@ class TestConstraints(unittest.TestCase):
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
-            
+
             constr = pf.Constraint('variable fixing',net)
 
             f = constr.f
@@ -342,8 +342,8 @@ class TestConstraints(unittest.TestCase):
             G = constr.G
             l = constr.l
             u = constr.u
-            
-            # Before 
+
+            # Before
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(b) is np.ndarray)
@@ -361,7 +361,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(l.shape,(0,))
             self.assertTrue(type(u) is np.ndarray)
             self.assertTupleEqual(u.shape,(0,))
-            
+
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Acounter,0)
             self.assertEqual(constr.Gcounter,0)
@@ -379,7 +379,7 @@ class TestConstraints(unittest.TestCase):
             G = constr.G
             l = constr.l
             u = constr.u
-                        
+
             # After
             self.assertTrue(type(b) is np.ndarray)
             self.assertTupleEqual(b.shape,(net.num_fixed,))
@@ -398,10 +398,10 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(l.shape,(0,))
             self.assertTrue(type(u) is np.ndarray)
             self.assertTupleEqual(u.shape,(0,))
-            
+
             self.assertTrue(not np.any(np.isinf(b)))
             self.assertTrue(not np.any(np.isnan(b)))
-       
+
             # Time loop
             for t in range(self.T):
 
@@ -437,7 +437,7 @@ class TestConstraints(unittest.TestCase):
                             if A.data[ar[i]] == 1.:
                                 self.assertEqual(b[A.row[ar[i]]],gen.Q[t])
                             else:
-                                self.assertEqual(A.data[ar[i]],0)                                
+                                self.assertEqual(A.data[ar[i]],0)
 
                 # Shunts
                 for shunt in net.shunts:
@@ -446,7 +446,7 @@ class TestConstraints(unittest.TestCase):
                         self.assertEqual(ar.size,1)
                         self.assertEqual(A.col[ar[0]],shunt.index_b[t])
                         self.assertEqual(b[A.row[ar[0]]],shunt.b[t])
-                
+
                 # Branch
                 for branch in net.branches:
                     if branch.is_tap_changer():
@@ -472,7 +472,7 @@ class TestConstraints(unittest.TestCase):
                     self.assertEqual(ar.size,1)
                     self.assertEqual(A.col[ar[0]],vargen.index_Q[t])
                     self.assertEqual(b[A.row[ar[0]]],vargen.Q[t])
-                
+
                 # Batteries
                 for bat in net.batteries:
                     ar = np.where(A.col == bat.index_Pc[t])[0]
@@ -496,14 +496,14 @@ class TestConstraints(unittest.TestCase):
                     self.assertEqual(ar.size,1)
                     self.assertEqual(A.col[ar[0]],load.index_P[t])
                     self.assertEqual(b[A.row[ar[0]]],load.P[t])
-            
+
     def test_constr_LBOUND(self):
 
         # Single period
         net = self.net
 
         for case in test_cases.CASES:
-            
+
             net.load(case)
 
             # add vargens
@@ -512,7 +512,7 @@ class TestConstraints(unittest.TestCase):
                 vargen.P = vargen.index*1.5
                 vargen.Q = vargen.index*2.5
             self.assertGreater(net.num_var_generators,0)
-            
+
             self.assertEqual(net.num_bounded,0)
             self.assertEqual(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
@@ -561,7 +561,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_vars,
                              net.get_num_buses_reg_by_gen()*6 +
                              net.get_num_reg_gens()*2 +
-                             net.get_num_P_adjust_loads() + 
+                             net.get_num_P_adjust_loads() +
                              net.get_num_tap_changers()*3 +
                              net.get_num_phase_shifters()*1 +
                              net.get_num_switched_shunts()*3 +
@@ -571,7 +571,7 @@ class TestConstraints(unittest.TestCase):
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
-            
+
             constr = pf.Constraint('variable bounds',net)
 
             f = constr.f
@@ -581,8 +581,8 @@ class TestConstraints(unittest.TestCase):
             G = constr.G
             l = constr.l
             u = constr.u
-            
-            # Before 
+
+            # Before
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(b) is np.ndarray)
@@ -600,7 +600,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(l.shape,(0,))
             self.assertTrue(type(u) is np.ndarray)
             self.assertTupleEqual(u.shape,(0,))
-            
+
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Acounter,0)
             self.assertEqual(constr.Gcounter,0)
@@ -621,7 +621,7 @@ class TestConstraints(unittest.TestCase):
             G = constr.G
             l = constr.l
             u = constr.u
-            
+
             # After
             self.assertTrue(type(b) is np.ndarray)
             self.assertTupleEqual(b.shape,(0,))
@@ -643,19 +643,19 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(l.shape,(net.num_vars,))
             self.assertTrue(type(u) is np.ndarray)
             self.assertTupleEqual(u.shape,(net.num_vars,))
-            
+
             E = G-eye(net.num_vars)
             self.assertGreater(G.nnz,0)
             self.assertGreater(norm(G.data,np.inf),0.5)
             self.assertEqual(E.nnz,0)
-            
+
             self.assertTrue(not np.any(np.isinf(l)))
             self.assertTrue(not np.any(np.isnan(l)))
             self.assertTrue(not np.any(np.isinf(u)))
             self.assertTrue(not np.any(np.isnan(u)))
             self.assertTrue(not np.any(np.isinf(b)))
             self.assertTrue(not np.any(np.isnan(b)))
-        
+
             # Bounds
             for bus in net.buses:
                 if bus.is_regulated_by_gen():
@@ -682,7 +682,7 @@ class TestConstraints(unittest.TestCase):
                                                     'voltage angle',
                                                     'voltage magnitude deviation',
                                                     'voltage magnitude violation']))
-                    
+
             for branch in net.branches:
                 if branch.is_tap_changer():
                     self.assertTrue(branch.has_flags('variable',
@@ -704,7 +704,7 @@ class TestConstraints(unittest.TestCase):
                 else:
                     self.assertFalse(branch.has_flags('variable',
                                                       'phase shift'))
-            
+
             for gen in net.generators:
                 if gen.is_regulator():
                     self.assertTrue(gen.has_flags('variable',
@@ -742,7 +742,7 @@ class TestConstraints(unittest.TestCase):
                     self.assertEqual(l[shunt.index_z],0.)
                 else:
                     self.assertFalse(shunt.has_flags('variable',
-                                                     ['susceptance','susceptance deviation']))              
+                                                     ['susceptance','susceptance deviation']))
 
             for bat in net.batteries:
                 self.assertTrue(bat.has_flags('variable','charging power'))
@@ -753,7 +753,7 @@ class TestConstraints(unittest.TestCase):
                 self.assertEqual(l[bat.index_Pd],0.)
                 self.assertEqual(u[bat.index_E],pf.BAT_INF_E)
                 self.assertEqual(l[bat.index_E],0.)
-                    
+
             # Add bounded flags
             net.set_flags('bus',
                           'bounded',
@@ -794,9 +794,9 @@ class TestConstraints(unittest.TestCase):
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
-            
+
             constr = pf.Constraint('variable bounds',net)
-                        
+
             constr.analyze()
 
             G = constr.G
@@ -813,7 +813,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(l.shape,(net.num_vars,))
             self.assertTrue(type(u) is np.ndarray)
             self.assertTupleEqual(u.shape,(net.num_vars,))
-            
+
             E = G-eye(net.num_vars)
             self.assertGreater(G.nnz,0)
             self.assertGreater(norm(G.data,np.inf),0.5)
@@ -850,7 +850,7 @@ class TestConstraints(unittest.TestCase):
                                                     'voltage angle',
                                                     'voltage magnitude deviation',
                                                     'voltage magnitude violation']))
-            
+
             for branch in net.branches:
                 if branch.is_tap_changer():
                     self.assertTrue(branch.has_flags('bounded',
@@ -872,7 +872,7 @@ class TestConstraints(unittest.TestCase):
                 else:
                     self.assertFalse(branch.has_flags('bounded',
                                                       'phase shift'))
-            
+
             for gen in net.generators:
                 if gen.is_regulator():
                     self.assertTrue(gen.has_flags('bounded',
@@ -937,10 +937,10 @@ class TestConstraints(unittest.TestCase):
             for load in net.loads:
                 self.assertEqual(load.sens_P_u_bound,0.)
                 self.assertEqual(load.sens_P_l_bound,0.)
-            
+
             mu = np.random.randn(net.num_vars)
             pi = np.random.randn(net.num_vars)
-            
+
             constr.store_sensitivities(None,None,mu,pi)
 
             for bus in net.buses:
@@ -978,7 +978,7 @@ class TestConstraints(unittest.TestCase):
         net = self.netMP
 
         for case in test_cases.CASES:
-            
+
             net.load(case)
 
             # add vargens
@@ -1035,18 +1035,18 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_vars,
                              (net.num_buses*2 +
                               net.num_generators*2 +
-                              net.num_loads + 
+                              net.num_loads +
                               net.get_num_tap_changers() +
                               net.get_num_phase_shifters() +
                               net.get_num_switched_shunts() +
                               net.num_var_generators*2+
                               3*net.num_batteries)*self.T)
-            
+
             x0 = net.get_var_values()
             constr = pf.Constraint('variable bounds',net)
             constr.analyze()
             constr.eval(x0)
-            
+
             G = constr.G
             l = constr.l
             u = constr.u
@@ -1061,7 +1061,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(l.shape,(net.num_vars,))
             self.assertTrue(type(u) is np.ndarray)
             self.assertTupleEqual(u.shape,(net.num_vars,))
-            
+
             for t in range(self.T):
                 for bus in net.buses:
                     self.assertEqual(u[bus.index_v_mag[t]],pf.BUS_INF_V_MAG)
@@ -1092,7 +1092,7 @@ class TestConstraints(unittest.TestCase):
                     if shunt.is_switched_v():
                         self.assertEqual(u[shunt.index_b[t]],pf.SHUNT_INF_SUSC)
                         self.assertEqual(l[shunt.index_b[t]],-pf.SHUNT_INF_SUSC)
-            
+
             # Bounded
             net.set_flags('bus',
                           'bounded',
@@ -1128,12 +1128,12 @@ class TestConstraints(unittest.TestCase):
                           ['charging power','energy level'])
             self.assertGreater(net.num_vars,0)
             self.assertEqual(net.num_bounded,net.num_vars)
-            
+
             x0 = net.get_var_values()
             constr = pf.Constraint('variable bounds',net)
             constr.analyze()
             constr.eval(x0)
-            
+
             G = constr.G
             l = constr.l
             u = constr.u
@@ -1170,14 +1170,14 @@ class TestConstraints(unittest.TestCase):
                         self.assertEqual(l[shunt.index_b[t]],shunt.b_min)
 
     def test_constr_PAR_GEN_P(self):
-        
+
         net = self.netMP # multi period
 
         for case in test_cases.CASES:
-            
+
             net.load(case)
             self.assertEqual(net.num_vars,0)
-            
+
             # Vars
             net.set_flags('generator',
                           'variable',
@@ -1189,11 +1189,11 @@ class TestConstraints(unittest.TestCase):
                           'reactive power')
             self.assertGreater(net.num_vars,0)
             self.assertEqual(net.num_vars,(net.get_num_slack_gens()+net.get_num_reg_gens())*self.T)
-            
+
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
-            
+
             # Constraint
             constr = pf.Constraint('generator active power participation',net)
 
@@ -1201,8 +1201,8 @@ class TestConstraints(unittest.TestCase):
             J = constr.J
             A = constr.A
             b = constr.b
-            
-            # Before 
+
+            # Before
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(b) is np.ndarray)
@@ -1213,7 +1213,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(A) is coo_matrix)
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
-            
+
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Acounter,0)
 
@@ -1225,17 +1225,17 @@ class TestConstraints(unittest.TestCase):
                 if bus.is_slack():
                     num_constr += len(bus.generators)-1 # P participation
                     nnz += 2*(len(bus.generators)-1)
-            
+
             constr.analyze()
             self.assertEqual(nnz*self.T,constr.Acounter)
             constr.eval(x0)
             self.assertEqual(0,constr.Acounter)
-            
+
             f = constr.f
             J = constr.J
             A = constr.A
             b = constr.b
-            
+
             # After
             self.assertTrue(type(b) is np.ndarray)
             self.assertTupleEqual(b.shape,(num_constr*self.T,))
@@ -1247,7 +1247,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(J) is coo_matrix)
             self.assertTupleEqual(J.shape,(0,net.num_vars))
             self.assertEqual(J.nnz,0)
-            
+
             self.assertTrue(not np.any(np.isinf(b)))
             self.assertTrue(not np.any(np.isnan(b)))
 
@@ -1264,7 +1264,7 @@ class TestConstraints(unittest.TestCase):
             for t in range(self.T):
                 for k in range(net.num_branches):
                     br = net.get_branch(k)
-                    for bus in [br.bus_from,br.bus_to]:
+                    for bus in [br.bus_k,br.bus_m]:
                         if (bus.number,t) in counted:
                             continue
                         counted[(bus.number,t)] = True
@@ -1299,14 +1299,14 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(norm(A*x-b) < 1e-10)
 
     def test_constr_PAR_GEN_Q(self):
-        
+
         net = self.netMP # multi period
 
         for case in test_cases.CASES:
-            
+
             net.load(case)
             self.assertEqual(net.num_vars,0)
-            
+
             # Vars
             net.set_flags('generator',
                           'variable',
@@ -1318,11 +1318,11 @@ class TestConstraints(unittest.TestCase):
                           'reactive power')
             self.assertGreater(net.num_vars,0)
             self.assertEqual(net.num_vars,(net.get_num_slack_gens()+net.get_num_reg_gens())*self.T)
-            
+
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
-            
+
             # Constraint
             constr = pf.Constraint('generator reactive power participation',net)
 
@@ -1330,8 +1330,8 @@ class TestConstraints(unittest.TestCase):
             J = constr.J
             A = constr.A
             b = constr.b
-            
-            # Before 
+
+            # Before
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(b) is np.ndarray)
@@ -1342,7 +1342,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(A) is coo_matrix)
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
-            
+
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Acounter,0)
 
@@ -1354,17 +1354,17 @@ class TestConstraints(unittest.TestCase):
                 if bus.is_regulated_by_gen():
                     num_constr += len(bus.reg_generators)-1 # Q participation
                     nnz += 2*(len(bus.reg_generators)-1)
-            
+
             constr.analyze()
             self.assertEqual(nnz*self.T,constr.Acounter)
             constr.eval(x0)
             self.assertEqual(0,constr.Acounter)
-            
+
             f = constr.f
             J = constr.J
             A = constr.A
             b = constr.b
-            
+
             # After
             self.assertTrue(type(b) is np.ndarray)
             self.assertTupleEqual(b.shape,(num_constr*self.T,))
@@ -1376,7 +1376,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(J) is coo_matrix)
             self.assertTupleEqual(J.shape,(0,net.num_vars))
             self.assertEqual(J.nnz,0)
-            
+
             self.assertTrue(not np.any(np.isinf(b)))
             self.assertTrue(not np.any(np.isnan(b)))
 
@@ -1393,7 +1393,7 @@ class TestConstraints(unittest.TestCase):
             for t in range(self.T):
                 for k in range(net.num_branches):
                     br = net.get_branch(k)
-                    for bus in [br.bus_from,br.bus_to]:
+                    for bus in [br.bus_k,br.bus_m]:
                         if (bus.number,t) in counted:
                             continue
                         counted[(bus.number,t)] = True
@@ -1429,14 +1429,14 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(norm(A*x-b) < 1e-10)
 
     def test_constr_PF(self):
-        
+
         # Constants
         h = 1e-10
-        
+
         net = self.netMP # multi period
 
         for case in test_cases.CASES:
-            
+
             net.load(case)
 
             # load
@@ -1496,7 +1496,7 @@ class TestConstraints(unittest.TestCase):
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
-            
+
             # Constraint
             constr = pf.Constraint('AC power balance',net)
 
@@ -1505,8 +1505,8 @@ class TestConstraints(unittest.TestCase):
             A = constr.A
             b = constr.b
             G = constr.G
-            
-            # Before 
+
+            # Before
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(b) is np.ndarray)
@@ -1524,7 +1524,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Acounter,0)
             self.assertEqual(constr.Gcounter,0)
-            
+
             num_Jnnz = (net.get_num_buses()*4 +
                         net.get_num_branches()*8 +
                         net.get_num_tap_changers()*4 +
@@ -1533,20 +1533,20 @@ class TestConstraints(unittest.TestCase):
                         net.get_num_slack_gens() +
                         net.get_num_reg_gens()+
                         net.num_var_generators*2)*self.T
-            
+
             constr.analyze()
             self.assertEqual(num_Jnnz,constr.Jcounter)
             constr.eval(x0)
             self.assertEqual(num_Jnnz,constr.Jcounter)
-            
+
             f = constr.f
             J = constr.J
             A = constr.A
             b = constr.b
             G = constr.G
             constr.combine_H(np.ones(f.size),False)
-            Hcomb = constr.H_combined            
-            
+            Hcomb = constr.H_combined
+
             # After
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(2*net.num_buses*self.T,))
@@ -1567,7 +1567,7 @@ class TestConstraints(unittest.TestCase):
                                           net.get_num_tap_changers()*9 +
                                           net.get_num_phase_shifters()*10 +
                                           net.get_num_switched_shunts())*self.T)
-            
+
             self.assertTrue(not np.any(np.isinf(f)))
             self.assertTrue(not np.any(np.isnan(f)))
 
@@ -1623,14 +1623,14 @@ class TestConstraints(unittest.TestCase):
             f0 = constr.f.copy()
             J0 = constr.J.copy()
             for i in range(NUM_TRIALS):
-                
+
                 d = np.random.randn(net.num_vars)
-    
+
                 x = x0 + h*d
-                
+
                 constr.eval(x)
                 f1 = constr.f
-                
+
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
                 error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),TOL)
@@ -1638,26 +1638,26 @@ class TestConstraints(unittest.TestCase):
 
             # Sigle Hessian check
             for i in range(NUM_TRIALS):
-                
+
                 j = np.random.randint(0,f.shape[0])
 
                 constr.eval(x0)
-                
+
                 g0 = constr.J.tocsr()[j,:].toarray().flatten()
                 H0 = constr.get_H_single(j)
 
                 self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
-                
+
                 H0 = (H0 + H0.T) - triu(H0)
-                
+
                 d = np.random.randn(net.num_vars)
-    
+
                 x = x0 + h*d
-                
+
                 constr.eval(x)
 
                 g1 = constr.J.tocsr()[j,:].toarray().flatten()
-                
+
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
                 error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
@@ -1675,15 +1675,15 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
             H0 = (H0 + H0.T) - triu(H0)
             for i in range(NUM_TRIALS):
-                
+
                 d = np.random.randn(net.num_vars)
-    
+
                 x = x0 + h*d
-                
+
                 constr.eval(x)
-                
+
                 g1 = constr.J.T*coeff
-                
+
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
                 error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
@@ -1710,7 +1710,7 @@ class TestConstraints(unittest.TestCase):
                     bus = net.get_bus(i)
                     self.assertEqual(bus.sens_P_balance[t],3.5*bus.index_P+0.33+t*2*net.num_buses)
                     self.assertEqual(bus.sens_Q_balance[t],3.4*bus.index_Q+0.32+t*2*net.num_buses)
-                    
+
             # Mismatches
             constr.eval(x0saved)
             f = constr.f
@@ -1734,18 +1734,18 @@ class TestConstraints(unittest.TestCase):
                     self.assertTrue(np.all(H_list[t].row == H_list[t+1].row))
                     self.assertTrue(np.all(H_list[t].col == H_list[t+1].col))
                     self.assertLess(norm(H_list[t].data-H_list[t+1].data),1e-12*norm(H_list[t].data))
-                    
+
     def test_constr_REG_GEN(self):
-        
+
         # Constants
         h = 1e-8
 
         net = self.netMP # multi period
 
         for case in test_cases.CASES:
-            
+
             net.load(case)
-            
+
             # Vars
             net.set_flags('bus',
                           'variable',
@@ -1765,23 +1765,23 @@ class TestConstraints(unittest.TestCase):
                           'reactive power')
             self.assertEqual(net.num_vars,
                              (2*(net.num_buses-net.get_num_slack_buses()) +
-                              2*(net.get_num_buses_reg_by_gen()-net.get_num_slack_buses()) + 
-                              net.get_num_slack_gens() + 
+                              2*(net.get_num_buses_reg_by_gen()-net.get_num_slack_buses()) +
+                              net.get_num_slack_gens() +
                               net.get_num_reg_gens())*self.T)
-            
+
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
-            
+
             # Constraint
             constr = pf.Constraint('voltage regulation by generators',net)
-            
+
             f = constr.f
             J = constr.J
             A = constr.A
             b = constr.b
-            
-            # Before 
+
+            # Before
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(b) is np.ndarray)
@@ -1792,23 +1792,23 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(A) is coo_matrix)
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
-            
+
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Acounter,0)
             self.assertEqual(constr.Jconstr_index,0)
             self.assertEqual(constr.Aconstr_index,0)
-            
+
             Jnnz = 0
             for i in range(net.num_buses):
                 bus = net.get_bus(i)
                 if bus.is_regulated_by_gen() and not bus.is_slack():
                     Jnnz += 2 + 2*len(bus.reg_generators)
-                    
+
             Annz = 3*(net.get_num_buses_reg_by_gen()-net.get_num_slack_buses())
-            
+
             rowsJ = 2*(net.get_num_buses_reg_by_gen()-net.get_num_slack_buses())
             rowsA = net.get_num_buses_reg_by_gen()-net.get_num_slack_buses()
-                        
+
             constr.analyze()
             self.assertEqual(constr.Jcounter,Jnnz*self.T)
             self.assertEqual(constr.Acounter,Annz*self.T)
@@ -1819,12 +1819,12 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.Acounter,0)
             self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
             self.assertEqual(constr.Aconstr_index,0)
-            
+
             f = constr.f
             J = constr.J
             A = constr.A
             b = constr.b
-            
+
             # After
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(rowsJ*self.T,))
@@ -1836,7 +1836,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(A) is coo_matrix)
             self.assertTupleEqual(A.shape,(rowsA*self.T,net.num_vars))
             self.assertEqual(A.nnz,Annz*self.T)
-            
+
             self.assertTrue(not np.any(np.isinf(b)))
             self.assertTrue(not np.any(np.isnan(b)))
             self.assertTrue(not np.any(np.isinf(f)))
@@ -1855,14 +1855,14 @@ class TestConstraints(unittest.TestCase):
             f0 = f.copy()
             J0 = J.copy()
             for i in range(NUM_TRIALS):
-                
+
                 d = np.random.randn(net.num_vars)
-    
+
                 x = x0 + h*d
-                
+
                 constr.eval(x)
                 f1 = constr.f
-                
+
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
                 error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),TOL)
@@ -1877,22 +1877,22 @@ class TestConstraints(unittest.TestCase):
                 j = np.random.randint(0,f.shape[0])
 
                 constr.eval(x0)
-                
+
                 g0 = constr.J.tocsr()[j,:].toarray().flatten()
                 H0 = constr.get_H_single(j)
 
                 self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
-                
+
                 H0 = (H0 + H0.T) - triu(H0)
-                
+
                 d = np.random.randn(net.num_vars)
-    
+
                 x = x0 + h*d
-                
+
                 constr.eval(x)
 
                 g1 = constr.J.tocsr()[j,:].toarray().flatten()
-                
+
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
                 error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
@@ -1910,15 +1910,15 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
             H0 = (H0 + H0.T) - triu(H0)
             for i in range(NUM_TRIALS):
-                
+
                 d = np.random.randn(net.num_vars)
-    
+
                 x = x0 + h*d
-                
+
                 constr.eval(x)
-                
+
                 g1 = constr.J.T*coeff
-                
+
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
                 error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
@@ -1954,16 +1954,16 @@ class TestConstraints(unittest.TestCase):
                             self.assertEqual(bus.sens_v_reg_by_gen[t],-bus.index-10)
 
     def test_constr_BOUND(self):
-        
+
         # Constants
         h = 1e-8
-        
+
         net = self.netMP # multi period
 
         for case in test_cases.CASES:
-            
+
             net.load(case)
-            
+
             # Vars
             net.set_flags('bus',
                           'variable',
@@ -2019,11 +2019,11 @@ class TestConstraints(unittest.TestCase):
                               net.get_num_tap_changers() +
                               net.get_num_phase_shifters() +
                               net.get_num_switched_shunts())*self.T)
-            
+
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
-            
+
             # Constraint
             constr = pf.Constraint('variable nonlinear bounds',net)
 
@@ -2031,8 +2031,8 @@ class TestConstraints(unittest.TestCase):
             J = constr.J
             A = constr.A
             b = constr.b
-            
-            # Before 
+
+            # Before
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(b) is np.ndarray)
@@ -2043,10 +2043,10 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(A) is coo_matrix)
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
-            
+
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Acounter,0)
-            
+
             Jcounter = 2*net.num_vars
             constr.analyze()
             self.assertEqual(Jcounter,constr.Jcounter)
@@ -2056,12 +2056,12 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(Jcounter,constr.Jcounter)
             constr.eval(x0)
             self.assertEqual(Jcounter,constr.Jcounter)
-                        
+
             f = constr.f
             J = constr.J
             A = constr.A
             b = constr.b
-            
+
             # After
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(2*net.num_vars,))
@@ -2072,7 +2072,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(A) is coo_matrix)
             self.assertTupleEqual(A.shape,(0,net.num_vars))
             self.assertEqual(A.nnz,0)
-            
+
             self.assertTrue(not np.any(np.isinf(f)))
             self.assertTrue(not np.any(np.isnan(f)))
 
@@ -2080,14 +2080,14 @@ class TestConstraints(unittest.TestCase):
             f0 = f.copy()
             J0 = J.copy()
             for i in range(NUM_TRIALS):
-                
+
                 d = np.random.randn(net.num_vars)
-    
+
                 x = x0 + h*d
-                
+
                 constr.eval(x)
                 f1 = constr.f
-                
+
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
                 error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),TOL)
@@ -2095,32 +2095,32 @@ class TestConstraints(unittest.TestCase):
 
             # Sigle Hessian check
             for i in range(NUM_TRIALS):
-                
+
                 j = np.random.randint(0,f.shape[0])
 
                 constr.eval(x0)
-                
+
                 g0 = constr.J.tocsr()[j,:].toarray().flatten()
                 H0 = constr.get_H_single(j)
-                
+
                 self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
                 self.assertEqual(H0.nnz,1)
-                
+
                 H0 = (H0 + H0.T) - triu(H0)
-                
+
                 d = np.random.randn(net.num_vars)
-    
+
                 x = x0 + h*d
-                
+
                 constr.eval(x)
 
                 g1 = constr.J.tocsr()[j,:].toarray().flatten()
-                
+
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
                 error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
-                
+
             # Combined Hessian check
             coeff = np.random.randn(f0.shape[0])
             constr.eval(x0)
@@ -2134,15 +2134,15 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(H0.nnz,2*net.num_vars)
             H0 = (H0 + H0.T) - triu(H0)
             for i in range(NUM_TRIALS):
-                
+
                 d = np.random.randn(net.num_vars)
-    
+
                 x = x0 + h*d
-                
+
                 constr.eval(x)
-                
+
                 g1 = constr.J.T*coeff
-                
+
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
                 error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
@@ -2173,7 +2173,7 @@ class TestConstraints(unittest.TestCase):
                     self.assertEqual(bus.sens_v_mag_l_bound[t],-bus.index*10.)
 
     def test_constr_REG_TRAN(self):
-        
+
         # Constants
         h = 1e-8
         normal = 1e0
@@ -2182,9 +2182,9 @@ class TestConstraints(unittest.TestCase):
         net = self.netMP # multi stage
 
         for case in test_cases.CASES:
-            
+
             net.load(case)
-            
+
             # Vars
             net.set_flags('bus',
                           'variable',
@@ -2209,16 +2209,16 @@ class TestConstraints(unittest.TestCase):
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
-            
+
             # Constraint
             constr = pf.Constraint('voltage regulation by transformers',net)
-            
+
             f = constr.f
             J = constr.J
             A = constr.A
             b = constr.b
-            
-            # Before 
+
+            # Before
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(b) is np.ndarray)
@@ -2229,7 +2229,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(A) is coo_matrix)
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
-            
+
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Acounter,0)
             self.assertEqual(constr.Jconstr_index,0)
@@ -2239,12 +2239,12 @@ class TestConstraints(unittest.TestCase):
             Annz = 3*net.get_num_tap_changers_v()
             self.assertGreaterEqual(Jnnz,0)
             self.assertGreaterEqual(Annz,0)
-            
+
             rowsJ = 4*net.get_num_tap_changers_v()
             rowsA = net.get_num_tap_changers_v()
             self.assertGreaterEqual(rowsJ,0)
             self.assertGreaterEqual(rowsA,0)
-                        
+
             constr.analyze()
             self.assertEqual(constr.Jcounter,Jnnz*self.T)
             self.assertEqual(constr.Acounter,Annz*self.T)
@@ -2260,7 +2260,7 @@ class TestConstraints(unittest.TestCase):
             J = constr.J
             A = constr.A
             b = constr.b
-            
+
             # After
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(rowsJ*self.T,))
@@ -2272,7 +2272,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(A) is coo_matrix)
             self.assertTupleEqual(A.shape,(rowsA*self.T,net.num_vars))
             self.assertEqual(A.nnz,Annz*self.T)
-            
+
             self.assertTrue(not np.any(np.isinf(b)))
             self.assertTrue(not np.any(np.isnan(b)))
             self.assertTrue(not np.any(np.isinf(f)))
@@ -2286,7 +2286,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(norm(A.data,1),rowsA*3*self.T)
             self.assertEqual(np.sum(A.data),net.get_num_tap_changers_v()*self.T)
             self.assertLess(norm(A*x0-b),1e-10*(1+norm(A.data)))
-            
+
             # f check
             index = 0
             for t in range(self.T):
@@ -2305,20 +2305,20 @@ class TestConstraints(unittest.TestCase):
                         self.assertLess(np.abs(ftmax-f[index+2]),1e-10*(1+np.abs(ftmax)))
                         self.assertLess(np.abs(ftmin-f[index+3]),1e-10*(1+np.abs(ftmin)))
                         index += 4
-            
+
             # Jacobian check
             f0 = f.copy()
             J0 = J.copy()
 
             for i in range(NUM_TRIALS):
-                
+
                 d = np.random.randn(net.num_vars)
-    
+
                 x = x0 + h*d
-                
+
                 constr.eval(x)
                 f1 = constr.f
-                
+
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
                 error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),TOL)
@@ -2331,24 +2331,24 @@ class TestConstraints(unittest.TestCase):
                     continue
 
                 j = np.random.randint(0,f.shape[0])
-                
+
                 constr.eval(x0)
-                
+
                 g0 = constr.J.tocsr()[j,:].toarray().flatten()
                 H0 = constr.get_H_single(j)
 
                 self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
-                
+
                 H0 = (H0 + H0.T) - triu(H0)
-                
+
                 d = np.random.randn(net.num_vars)
-    
+
                 x = x0 + h*d
-                
+
                 constr.eval(x)
 
                 g1 = constr.J.tocsr()[j,:].toarray().flatten()
-                
+
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
                 error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
@@ -2366,15 +2366,15 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
             H0 = (H0 + H0.T) - triu(H0)
             for i in range(NUM_TRIALS):
-                
+
                 d = np.random.randn(net.num_vars)
-    
+
                 x = x0 + h*d
-                
+
                 constr.eval(x)
-                
+
                 g1 = constr.J.T*coeff
-                
+
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
                 error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
@@ -2396,7 +2396,7 @@ class TestConstraints(unittest.TestCase):
                         indices = Ji[np.where(np.logical_or(Jj == bus.index_vh[t],
                                                             Jj == bus.index_vl[t]))[0]]
                         self.assertEqual(indices.size,4*len(bus.reg_trans))
-                        j = np.random.randint(0,indices.size)                        
+                        j = np.random.randint(0,indices.size)
                         sens[indices[j]] = -bus.index - max([tran.index for tran in bus.reg_trans])
             constr.store_sensitivities(np.zeros(constr.A.shape[0]),sens,None,None)
             for t in range(self.T):
@@ -2406,7 +2406,7 @@ class TestConstraints(unittest.TestCase):
                         self.assertEqual(bus.sens_v_reg_by_tran[t],-bus.index-max([tran.index for tran in bus.reg_trans]))
 
     def test_constr_REG_SHUNT(self):
-        
+
         # Constants
         h = 1e-8
         normal = 1e0
@@ -2415,9 +2415,9 @@ class TestConstraints(unittest.TestCase):
         net = self.netMP # multi period
 
         for case in test_cases.CASES:
-            
+
             net.load(case)
-            
+
             # Vars
             net.set_flags('bus',
                           'variable',
@@ -2442,16 +2442,16 @@ class TestConstraints(unittest.TestCase):
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
-            
+
             # Constraint
             constr = pf.Constraint('voltage regulation by shunts',net)
-            
+
             f = constr.f
             J = constr.J
             A = constr.A
             b = constr.b
-            
-            # Before 
+
+            # Before
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(b) is np.ndarray)
@@ -2462,7 +2462,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(A) is coo_matrix)
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
-            
+
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Acounter,0)
             self.assertEqual(constr.Jconstr_index,0)
@@ -2472,12 +2472,12 @@ class TestConstraints(unittest.TestCase):
             Annz = 3*net.get_num_switched_shunts()
             self.assertGreaterEqual(Jnnz,0)
             self.assertGreaterEqual(Annz,0)
-            
+
             rowsJ = 4*net.get_num_switched_shunts()
             rowsA = net.get_num_switched_shunts()
             self.assertGreaterEqual(rowsJ,0)
             self.assertGreaterEqual(rowsA,0)
-                        
+
             constr.analyze()
             self.assertEqual(constr.Jcounter,Jnnz*self.T)
             self.assertEqual(constr.Acounter,Annz*self.T)
@@ -2493,7 +2493,7 @@ class TestConstraints(unittest.TestCase):
             J = constr.J
             A = constr.A
             b = constr.b
-            
+
             # After
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(rowsJ*self.T,))
@@ -2509,7 +2509,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(A.nnz,Annz*self.T)
             self.assertTrue(np.all(A.row <= rowsA*self.T-1))
             self.assertTrue(np.all(A.col <= net.num_vars-1))
-            
+
             self.assertTrue(not np.any(np.isinf(b)))
             self.assertTrue(not np.any(np.isnan(b)))
             self.assertTrue(not np.any(np.isinf(f)))
@@ -2530,7 +2530,7 @@ class TestConstraints(unittest.TestCase):
             for t in range(self.T):
                 for i in range(net.num_branches):
                     br = net.get_branch(i)
-                    for bus in [br.bus_from,br.bus_to]:
+                    for bus in [br.bus_k,br.bus_m]:
                         if (bus.index,t) not in counted:
                             for s in bus.reg_shunts:
                                 self.assertEqual(bus.number,s.reg_bus.number)
@@ -2552,20 +2552,20 @@ class TestConstraints(unittest.TestCase):
                                 self.assertLess(np.abs(fbmin-f[index+3]),1e-10*(1+np.abs(fbmin)))
                                 index += 4
                         counted[(bus.index,t)] = True
-            
+
             # Jacobian check
             f0 = f.copy()
             J0 = J.copy()
 
             for i in range(NUM_TRIALS):
-                
+
                 d = np.random.randn(net.num_vars)
-    
+
                 x = x0 + h*d
-                
+
                 constr.eval(x)
                 f1 = constr.f
-                
+
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
                 error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),TOL)
@@ -2578,24 +2578,24 @@ class TestConstraints(unittest.TestCase):
                     continue
 
                 j = np.random.randint(0,f.shape[0])
-                
+
                 constr.eval(x0)
-                
+
                 g0 = constr.J.tocsr()[j,:].toarray().flatten()
                 H0 = constr.get_H_single(j)
 
                 self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
-                
+
                 H0 = (H0 + H0.T) - triu(H0)
-                
+
                 d = np.random.randn(net.num_vars)
-    
+
                 x = x0 + h*d
-                
+
                 constr.eval(x)
 
                 g1 = constr.J.tocsr()[j,:].toarray().flatten()
-                
+
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
                 error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
@@ -2613,20 +2613,20 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
             H0 = (H0 + H0.T) - triu(H0)
             for i in range(NUM_TRIALS):
-                
+
                 d = np.random.randn(net.num_vars)
-    
+
                 x = x0 + h*d
-                
+
                 constr.eval(x)
-                
+
                 g1 = constr.J.T*coeff
-                
+
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
                 error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
-            
+
             # Sensitivities
             net.clear_sensitivities()
             for t in range(self.T):
@@ -2643,7 +2643,7 @@ class TestConstraints(unittest.TestCase):
                         indices = Ji[np.where(np.logical_or(Jj == bus.index_vh[t],
                                                             Jj == bus.index_vl[t]))[0]]
                         self.assertEqual(indices.size,4*len(bus.reg_shunts))
-                        j = np.random.randint(0,indices.size)           
+                        j = np.random.randint(0,indices.size)
                         sens[indices[j]] = -bus.index - max([s.index for s in bus.reg_shunts])
             constr.store_sensitivities(np.zeros(constr.A.shape[0]),sens,None,None)
             for t in range(self.T):
@@ -2669,7 +2669,7 @@ class TestConstraints(unittest.TestCase):
                            pf.Constraint('voltage regulation by shunts',net)]
 
             x0 = net.get_var_values()
-        
+
             for c in constraints:
                 self.assertTrue(isinstance(c.b,np.ndarray))
                 self.assertTrue(isinstance(c.A,coo_matrix))
@@ -2718,7 +2718,7 @@ class TestConstraints(unittest.TestCase):
 
             # Update network
             list(map(lambda c: c.update_network(),constraints))
-            
+
             # After updating network
             list(map(lambda c: c.analyze(),constraints))
             list(map(lambda c: c.eval(x0),constraints))
@@ -2757,7 +2757,7 @@ class TestConstraints(unittest.TestCase):
                           'any',
                           ['charging power','energy level'])
             self.assertEqual(net.num_vars,
-                             (2*net.num_buses + 
+                             (2*net.num_buses +
                               2*net.num_generators +
                               net.get_num_tap_changers()+
                               net.get_num_phase_shifters()+
@@ -2788,16 +2788,16 @@ class TestConstraints(unittest.TestCase):
                     self.assertTupleEqual(c.get_H_single(0).shape,(0,0))
 
     def test_constr_DCPF(self):
-                
+
         # Single period
         net = self.net
 
         for case in test_cases.CASES:
-            
+
             net.load(case)
-            
+
             self.assertEqual(net.num_vars,0)
-            
+
             # Add vargens
             load_buses = net.get_load_buses()
             net.add_vargens(load_buses,50.,30.,5,0.05)
@@ -2842,24 +2842,24 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_vars,
                              (net.num_buses-net.get_num_slack_buses() +
                               net.num_generators +
-                              net.num_loads + 
+                              net.num_loads +
                               net.num_var_generators +
                               net.get_num_phase_shifters()+
                               2*net.num_batteries))
-            
+
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
-            
+
             # Constraint
             constr = pf.Constraint('DC power balance',net)
-            
+
             f = constr.f
             J = constr.J
             A = constr.A
             b = constr.b
 
-            # Before 
+            # Before
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(b) is np.ndarray)
@@ -2879,7 +2879,7 @@ class TestConstraints(unittest.TestCase):
             for b in net.buses:
                 if b.is_slack():
                     r += len(b.branches)
-            
+
             # Analyze
             constr.analyze()
             f = constr.f
@@ -2891,9 +2891,9 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.Aconstr_index,0)
             self.assertEqual(constr.Acounter,
                              (net.num_generators +
-                              net.num_loads + 
+                              net.num_loads +
                               net.num_var_generators +
-                              4*net.num_branches - 
+                              4*net.num_branches -
                               2*r +
                               2*net.get_num_phase_shifters()+
                               2*net.num_batteries))
@@ -2901,19 +2901,19 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(f.shape,(0,))
             self.assertTupleEqual(A.shape,(net.num_buses,net.num_vars))
             self.assertEqual(A.nnz,constr.Acounter)
-            self.assertTupleEqual(J.shape,(0,net.num_vars)) 
-            
+            self.assertTupleEqual(J.shape,(0,net.num_vars))
+
             constr.eval(x0)
             self.assertEqual(constr.Acounter,0)
             self.assertEqual(A.nnz,
                              (net.num_generators +
-                              net.num_loads + 
+                              net.num_loads +
                               net.num_var_generators +
-                              4*net.num_branches - 
+                              4*net.num_branches -
                               2*r +
                               2*net.get_num_phase_shifters()+
                               2*net.num_batteries))
-            
+
             # Extract pieces
             P1 = net.get_var_projection('bus','voltage angle')
             P2 = net.get_var_projection('generator','active power')
@@ -2947,7 +2947,7 @@ class TestConstraints(unittest.TestCase):
                 self.assertNotEqual(bus.sens_P_balance,0.)
                 self.assertEqual(bus.sens_Q_balance,0.)
                 self.assertEqual(bus.sens_P_balance,new_sens[bus.index])
-                
+
             # mismatches
             mismatches = A*x0-b
             for bus in net.buses:
@@ -2960,10 +2960,10 @@ class TestConstraints(unittest.TestCase):
                     mis -= load.P
                 for bat in bus.batteries:
                     mis -= bat.P
-                for br in bus.branches_from:
-                    mis -= br.P_flow_DC
-                for br in bus.branches_to:
-                    mis += br.P_flow_DC
+                for br in bus.branches_k:
+                    mis -= br.P_km_DC
+                for br in bus.branches_m:
+                    mis += br.P_km_DC
                 self.assertLess(np.abs(mismatches[bus.index]-mis),1e-8)
 
             # no variables
@@ -2987,7 +2987,7 @@ class TestConstraints(unittest.TestCase):
             x1 = net.get_var_values()
             self.assertTrue(type(x1) is np.ndarray)
             self.assertTupleEqual(x1.shape,(net.num_vars,))
-            
+
             mismatches1 = A1*x1-b1
             for bus in net.buses:
                 mis = 0
@@ -2999,10 +2999,10 @@ class TestConstraints(unittest.TestCase):
                     mis -= load.P
                 for bat in bus.batteries:
                     mis -= bat.P
-                for br in bus.branches_from:
-                    mis -= br.P_flow_DC
-                for br in bus.branches_to:
-                    mis += br.P_flow_DC
+                for br in bus.branches_k:
+                    mis -= br.P_km_DC
+                for br in bus.branches_m:
+                    mis -= br.P_mk_DC
                 self.assertLess(np.abs(mismatches1[bus.index]-mis),1e-8)
 
         # Multi period
@@ -3011,11 +3011,11 @@ class TestConstraints(unittest.TestCase):
         self.assertEqual(net.num_periods,self.T)
 
         for case in test_cases.CASES:
-            
+
             net.load(case)
-            
+
             self.assertEqual(net.num_vars,0)
-            
+
             # Add vargens
             load_buses = net.get_load_buses()
             net.add_vargens(load_buses,50.,30.,5,0.05)
@@ -3052,12 +3052,12 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_vars,
                              (net.num_buses-net.get_num_slack_buses() +
                               net.num_generators +
-                              net.num_loads + 
+                              net.num_loads +
                               net.num_var_generators +
                               net.get_num_phase_shifters()+
                               2*net.num_batteries)*self.T)
             x0 = net.get_var_values()
-            
+
             # Count something
             r = 0
             for b in net.buses:
@@ -3073,28 +3073,28 @@ class TestConstraints(unittest.TestCase):
             b = constr.b
             self.assertEqual(constr.Acounter,
                              (net.num_generators +
-                              net.num_loads + 
+                              net.num_loads +
                               net.num_var_generators +
-                              4*net.num_branches - 
+                              4*net.num_branches -
                               2*r +
                               2*net.get_num_phase_shifters()+
                               2*net.num_batteries)*self.T)
             self.assertTupleEqual(b.shape,(net.num_buses*self.T,))
             self.assertTupleEqual(A.shape,(net.num_buses*self.T,net.num_vars))
             self.assertEqual(A.nnz,constr.Acounter)
-            
+
             # Eval
             constr.eval(x0)
             self.assertEqual(constr.Acounter,0)
             self.assertEqual(A.nnz,
                              (net.num_generators +
-                              net.num_loads + 
+                              net.num_loads +
                               net.num_var_generators +
-                              4*net.num_branches - 
+                              4*net.num_branches -
                               2*r +
                               2*net.get_num_phase_shifters()+
                               2*net.num_batteries)*self.T)
-                
+
             # Mismatches
             mismatches = A*x0-b
             for t in range(self.T):
@@ -3108,10 +3108,10 @@ class TestConstraints(unittest.TestCase):
                         mis -= load.P[t]
                     for bat in bus.batteries:
                         mis -= bat.P[t]
-                    for br in bus.branches_from:
-                        mis -= br.P_flow_DC[t]
-                    for br in bus.branches_to:
-                        mis += br.P_flow_DC[t]
+                    for br in bus.branches_k:
+                        mis -= br.P_km_DC[t]
+                    for br in bus.branches_m:
+                        mis -= br.P_mk_DC[t]
                     self.assertLess(np.abs(mismatches[bus.index+t*net.num_buses]-mis),1e-8)
 
             # No variables
@@ -3123,7 +3123,7 @@ class TestConstraints(unittest.TestCase):
             b1 = constr.b
             x1 = net.get_var_values()
             self.assertTupleEqual(x1.shape,(0,))
-            
+
             mismatches1 = A1*x1-b1
             for t in range(self.T):
                 for bus in net.buses:
@@ -3136,37 +3136,37 @@ class TestConstraints(unittest.TestCase):
                         mis -= load.P[t]
                     for bat in bus.batteries:
                         mis -= bat.P[t]
-                    for br in bus.branches_from:
-                        mis -= br.P_flow_DC[t]
-                    for br in bus.branches_to:
-                        mis += br.P_flow_DC[t]
+                    for br in bus.branches_k:
+                        mis -= br.P_km_DC[t]
+                    for br in bus.branches_m:
+                        mis -= br.P_mk_DC[t]
                     self.assertLess(np.abs(mismatches1[bus.index+t*net.num_buses]-mis),1e-8)
-            
+
     def test_constr_DC_FLOW_LIM(self):
-                
+
         # Single period
         net = self.net
-        
+
         for case in test_cases.CASES:
-            
+
             net.load(case)
 
             self.assertEqual(net.num_vars,0)
-            
+
             # Variables
             net.set_flags('bus',
                           'variable',
                           'not slack',
                           'voltage angle')
             self.assertEqual(net.num_vars,net.num_buses-net.get_num_slack_buses())
-            
+
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
-            
+
             # Constraint
             constr = pf.Constraint('DC branch flow limits',net)
-            
+
             f = constr.f
             J = constr.J
             A = constr.A
@@ -3175,7 +3175,7 @@ class TestConstraints(unittest.TestCase):
             l = constr.l
             u = constr.u
 
-            # Before 
+            # Before
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(b) is np.ndarray)
@@ -3199,7 +3199,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.Jconstr_index,0)
             self.assertEqual(constr.Aconstr_index,0)
             self.assertEqual(constr.Gconstr_index,0)
-            
+
             # Analyze
             constr.analyze()
             f = constr.f
@@ -3218,19 +3218,19 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(f.shape,(0,))
             self.assertTupleEqual(l.shape,(net.num_branches,))
             self.assertTupleEqual(u.shape,(net.num_branches,))
-            
-            self.assertTupleEqual(A.shape,(0,net.num_vars)) 
+
+            self.assertTupleEqual(A.shape,(0,net.num_vars))
             self.assertTupleEqual(J.shape,(0,net.num_vars))
             self.assertTupleEqual(G.shape,(net.num_branches,net.num_vars))
             self.assertEqual(G.nnz,constr.Gcounter)
-            
+
             self.assertTrue(np.all(l <= u))
 
             num = 0
             for br in net.branches:
-                if not br.bus_from.is_slack():
+                if not br.bus_k.is_slack():
                     num += 1
-                if not br.bus_to.is_slack():
+                if not br.bus_m.is_slack():
                     num += 1
             self.assertEqual(num,constr.Gcounter)
 
@@ -3238,18 +3238,18 @@ class TestConstraints(unittest.TestCase):
             index = 0
             for br in net.branches:
                 off = 0
-                if br.bus_from.is_slack():
-                    off = br.b*br.bus_from.v_ang
+                if br.bus_k.is_slack():
+                    off = br.b*br.bus_k.v_ang
                 else:
                     self.assertEqual(G.row[counter],index)
-                    self.assertEqual(G.col[counter],br.bus_from.index_v_ang)
+                    self.assertEqual(G.col[counter],br.bus_k.index_v_ang)
                     self.assertEqual(G.data[counter],-br.b)
                     counter += 1
-                if br.bus_to.is_slack():
-                    off = -br.b*br.bus_to.v_ang
+                if br.bus_m.is_slack():
+                    off = -br.b*br.bus_m.v_ang
                 else:
                     self.assertEqual(G.row[counter],index)
-                    self.assertEqual(G.col[counter],br.bus_to.index_v_ang)
+                    self.assertEqual(G.col[counter],br.bus_m.index_v_ang)
                     self.assertEqual(G.data[counter],br.b)
                     counter += 1
                 rating = br.ratingA if br.ratingA > 0 else pf.BRANCH_INF_FLOW
@@ -3264,15 +3264,15 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(Gx0.shape,(net.num_branches,))
             index = 0
             for branch in net.branches:
-                bus1 = branch.bus_from
-                bus2 = branch.bus_to
+                bus1 = branch.bus_k
+                bus2 = branch.bus_m
                 if bus1.is_slack():
                     flow = Gx0[index]-branch.b*(bus1.v_ang-branch.phase)
                 elif bus2.is_slack():
                     flow = Gx0[index]-branch.b*(-bus2.v_ang-branch.phase)
                 else:
                     flow = Gx0[index]-branch.b*(-branch.phase)
-                self.assertLess(np.abs(branch.P_flow_DC-flow),1e-10)
+                self.assertLess(np.abs(branch.P_km_DC-flow),1e-10)
                 index += 1
 
             # Sensitivities
@@ -3300,9 +3300,9 @@ class TestConstraints(unittest.TestCase):
         net = self.netMP
 
         self.assertEqual(net.num_periods,self.T)
-        
+
         for case in test_cases.CASES:
-            
+
             net.load(case)
 
             self.assertEqual(net.num_vars,0)
@@ -3310,18 +3310,18 @@ class TestConstraints(unittest.TestCase):
             # Nonzero angles
             for bus in net.buses:
                 bus.v_ang = np.random.randn()*np.ones(self.T)
-            
+
             # Variables
             net.set_flags('bus',
                           'variable',
                           'not slack',
                           'voltage angle')
             self.assertEqual(net.num_vars,(net.num_buses-net.get_num_slack_buses())*self.T)
-            
+
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
-            
+
             # Constraint
             constr = pf.Constraint('DC branch flow limits',net)
             constr.analyze()
@@ -3343,13 +3343,13 @@ class TestConstraints(unittest.TestCase):
                 self.assertLess(norm(Gx0s[t]-Gx0s[0]),1e-10*norm(Gx0s[0]))
                 self.assertLess(norm(ls[t]-ls[0]),1e-10*norm(ls[0]))
                 self.assertLess(norm(us[t]-us[0]),1e-10*norm(us[0]))
- 
+
     def test_constr_LINPF(self):
-                
+
         net = self.netMP # mult period
 
         for case in test_cases.CASES:
-            
+
             net.load(case)
 
             # load
@@ -3409,7 +3409,7 @@ class TestConstraints(unittest.TestCase):
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
-            
+
             # Constraint
             constr = pf.Constraint('linearized AC power balance',net)
 
@@ -3418,8 +3418,8 @@ class TestConstraints(unittest.TestCase):
             A = constr.A
             b = constr.b
             G = constr.G
-            
-            # Before 
+
+            # Before
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(b) is np.ndarray)
@@ -3446,18 +3446,18 @@ class TestConstraints(unittest.TestCase):
                         net.get_num_slack_gens() +
                         net.get_num_reg_gens()+
                         net.num_var_generators*2)
-            
+
             constr.analyze()
             self.assertEqual(constr.Acounter,0)
             constr.eval(x0)
             self.assertEqual(constr.Acounter,0)
-            
+
             f = constr.f
             J = constr.J
             A = constr.A
             b = constr.b
             G = constr.G
-            
+
             # After
             self.assertTrue(type(b) is np.ndarray)
             self.assertTupleEqual(b.shape,(2*net.num_buses*self.T,))
@@ -3502,15 +3502,15 @@ class TestConstraints(unittest.TestCase):
             self.assertLess(norm(constr.b-(constrPF.J*x0-constrPF.f)),1e-10*(norm(b)+1))
 
     def test_constr_GEN_RAMP(self):
-        
+
         # Multi period
         net = self.netMP
 
         for case in test_cases.CASES:
-            
+
             net.load(case)
             self.assertEqual(net.num_vars,0)
-           
+
             # Gens
             for gen in net.generators:
                 gen.dP_max = np.random.rand()*100.
@@ -3528,7 +3528,7 @@ class TestConstraints(unittest.TestCase):
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
-            
+
             # Constraint
             constr = pf.Constraint('generator ramp limits',net)
 
@@ -3539,8 +3539,8 @@ class TestConstraints(unittest.TestCase):
             l = constr.l
             G = constr.G
             u = constr.u
-            
-            # Before 
+
+            # Before
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(b) is np.ndarray)
@@ -3574,7 +3574,7 @@ class TestConstraints(unittest.TestCase):
             l = constr.l
             G = constr.G
             u = constr.u
-            
+
             # After
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
@@ -3596,7 +3596,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.Jcounter,0)
             self.assertEqual(constr.Acounter,0)
             self.assertEqual(constr.Gcounter,0)
-            
+
             for t in range(self.T):
                 for gen in net.generators:
                     if not gen.is_slack():
@@ -3655,5 +3655,5 @@ class TestConstraints(unittest.TestCase):
                                                 self.assertEqual(G.data[j],-1.)
 
     def tearDown(self):
-        
+
         pass

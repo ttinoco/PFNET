@@ -1,4 +1,3 @@
-
 # PyCharm Project Files
 .idea/*
 
@@ -14,4 +13,5 @@ python/pfnet/*.so
 # Test output
 tests/*.out
 
-
+# cmake
+/build

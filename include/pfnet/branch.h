@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -21,6 +21,21 @@
 #define BRANCH_TYPE_TRAN_TAP_V 2 /**< @brief Type: tap-changing transformer that regulates bus voltage magnitude */
 #define BRANCH_TYPE_TRAN_TAP_Q 3 /**< @brief Type: tap-changing transformer that regulates reactive power flow */
 #define BRANCH_TYPE_TRAN_PHASE 4 /**< @brief Type: phase-shifting transformer that regulates active power flow*/
+
+// Branch flows
+#define BRANCH_P_KM 0           /**< @brief Type: real power flow at the 'k' bus */
+#define BRANCH_Q_KM 1           /**< @brief Type: reactive power flow at the 'k' bus */
+#define BRANCH_P_KM_SERIES 2    /**< @brief Type: real power flow on the series element from 'k' to 'm' */
+#define BRANCH_Q_KM_SERIES 3    /**< @brief Type: reactive power flow on the series element from 'k' to 'm' */
+#define BRANCH_P_K_SHUNT 4      /**< @brief Type: real power flow on the shunt element from 'k' */
+#define BRANCH_Q_K_SHUNT 5      /**< @brief Type: reactive power flow on the shunt element from 'k' */
+#define BRANCH_P_MK 6           /**< @brief Type: real power flow at the 'm' bus */
+#define BRANCH_Q_MK 7           /**< @brief Type: reactive power flow at the 'm' bus */
+#define BRANCH_P_MK_SERIES 8    /**< @brief Type: real power flow on the series element from 'm' to 'k' */
+#define BRANCH_Q_MK_SERIES 9    /**< @brief Type: reactive power flow on the series element from 'm' to 'k' */
+#define BRANCH_P_M_SHUNT 10     /**< @brief Type: real power flow on the shunt element from 'm' */
+#define BRANCH_Q_M_SHUNT 11     /**< @brief Type: reactive power flow on the shunt element from 'm' */
+#define BRANCH_FLOW_SIZE 12     /**< @brief Type: the number of branch flows for a single branch including both directions */
 
 // Variables
 /** \defgroup branch_vars Branch Variable Masks
@@ -78,24 +93,38 @@ REAL BRANCH_get_ratio(Branch* br, int t);
 REAL BRANCH_get_ratio_max(Branch* br);
 REAL BRANCH_get_ratio_min(Branch* br);
 REAL BRANCH_get_b(Branch* br);
-REAL BRANCH_get_b_from(Branch* br);
-REAL BRANCH_get_b_to(Branch* br);
+REAL BRANCH_get_b_k(Branch* br);
+REAL BRANCH_get_b_m(Branch* br);
 REAL BRANCH_get_g(Branch* br);
-REAL BRANCH_get_g_from(Branch* br);
-REAL BRANCH_get_g_to(Branch* br);
-Bus* BRANCH_get_bus_from(Branch* br);
-Bus* BRANCH_get_bus_to(Branch* br);
+REAL BRANCH_get_g_k(Branch* br);
+REAL BRANCH_get_g_m(Branch* br);
+Bus* BRANCH_get_bus_k(Branch* br);
+Bus* BRANCH_get_bus_m(Branch* br);
 Bus* BRANCH_get_reg_bus(Branch* br);
 Branch* BRANCH_get_reg_next(Branch* br);
-Branch* BRANCH_get_from_next(Branch* br);
-Branch* BRANCH_get_to_next(Branch* br);
+Branch* BRANCH_get_next_k(Branch* br);
+Branch* BRANCH_get_next_m(Branch* br);
 REAL BRANCH_get_phase(Branch* br, int t);
 REAL BRANCH_get_phase_max(Branch* br);
 REAL BRANCH_get_phase_min(Branch* br);
+void BRANCH_compute_flows(Branch* br, Vec* var_values, int t, REAL* flows);
+REAL BRANCH_get_P_km(Branch* br, Vec* var_values, int t);
+REAL BRANCH_get_Q_km(Branch* br, Vec* var_values, int t);
+REAL BRANCH_get_P_mk(Branch* br, Vec* var_values, int t);
+REAL BRANCH_get_Q_mk(Branch* br, Vec* var_values, int t);
+REAL BRANCH_get_P_km_series(Branch* br, Vec* var_values, int t);
+REAL BRANCH_get_Q_km_series(Branch* br, Vec* var_values, int t);
+REAL BRANCH_get_P_mk_series(Branch* br, Vec* var_values, int t);
+REAL BRANCH_get_Q_mk_series(Branch* br, Vec* var_values, int t);
+REAL BRANCH_get_P_k_shunt(Branch* br, Vec* var_values, int t);
+REAL BRANCH_get_Q_k_shunt(Branch* br, Vec* var_values, int t);
+REAL BRANCH_get_P_m_shunt(Branch* br, Vec* var_values, int t);
+REAL BRANCH_get_Q_m_shunt(Branch* br, Vec* var_values, int t);
 REAL BRANCH_get_ratingA(Branch* br);
 REAL BRANCH_get_ratingB(Branch* br);
 REAL BRANCH_get_ratingC(Branch* br);
-REAL BRANCH_get_P_flow_DC(Branch* br, int t);
+REAL BRANCH_get_P_km_DC(Branch* br, int t);
+REAL BRANCH_get_P_mk_DC(Branch* br, int t);
 void BRANCH_get_var_values(Branch* br, Vec* values, int code);
 int BRANCH_get_num_vars(void* br, unsigned char var, int t_start, int t_end);
 Vec* BRANCH_get_var_indices(void* br, unsigned char var, int t_start, int t_end);
@@ -114,27 +143,27 @@ BOOL BRANCH_is_tap_changer_Q(Branch* br);
 Branch* BRANCH_list_reg_add(Branch* reg_br_list, Branch* br);
 Branch* BRANCH_list_reg_del(Branch* reg_br_list, Branch* br);
 int BRANCH_list_reg_len(Branch* reg_br_list);
-Branch* BRANCH_list_from_add(Branch* from_br_list, Branch* br);
-Branch* BRANCH_list_from_del(Branch* from_br_list, Branch* br);
-int BRANCH_list_from_len(Branch* from_br_list);
-Branch* BRANCH_list_to_add(Branch* to_br_list, Branch* br);
-Branch* BRANCH_list_to_del(Branch* to_br_list, Branch* br);
-int BRANCH_list_to_len(Branch* to_br_list);
+Branch* BRANCH_list_k_add(Branch* k_br_list, Branch* br);
+Branch* BRANCH_list_k_del(Branch* k_br_list, Branch* br);
+int BRANCH_list_k_len(Branch* k_br_list);
+Branch* BRANCH_list_m_add(Branch* m_br_list, Branch* br);
+Branch* BRANCH_list_m_del(Branch* m_br_list, Branch* br);
+int BRANCH_list_m_len(Branch* m_br_list);
 Branch* BRANCH_new(int num_periods);
-void BRANCH_set_outage(Branch* br, BOOL outage);
+void BRANCH_set_outage(Branch* branch, BOOL outage);
 void BRANCH_set_sens_P_u_bound(Branch* br, REAL value, int t);
 void BRANCH_set_sens_P_l_bound(Branch* br, REAL value, int t);
 void BRANCH_set_index(Branch* br, int index);
 void BRANCH_set_type(Branch* br, int type);
-void BRANCH_set_bus_from(Branch* br, Bus* bus_from);
-void BRANCH_set_bus_to(Branch* br, Bus* bus_to);
+void BRANCH_set_bus_k(Branch* br, Bus* bus_k);
+void BRANCH_set_bus_m(Branch* br, Bus* bus_m);
 void BRANCH_set_reg_bus(Branch* br, Bus* reg_bus);
 void BRANCH_set_g(Branch* br, REAL g);
-void BRANCH_set_g_from(Branch* br, REAL g_from);
-void BRANCH_set_g_to(Branch* br, REAL g_to);
+void BRANCH_set_g_k(Branch* br, REAL g_k);
+void BRANCH_set_g_m(Branch* br, REAL g_m);
 void BRANCH_set_b(Branch* br, REAL b);
-void BRANCH_set_b_from(Branch* br, REAL b_from);
-void BRANCH_set_b_to(Branch* br, REAL b_to);
+void BRANCH_set_b_k(Branch* br, REAL b_k);
+void BRANCH_set_b_m(Branch* br, REAL b_m);
 void BRANCH_set_ratio(Branch* br, REAL ratio, int t);
 void BRANCH_set_ratio_max(Branch* br, REAL ratio);
 void BRANCH_set_ratio_min(Branch* br, REAL ratio);

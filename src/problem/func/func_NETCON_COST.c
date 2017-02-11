@@ -18,13 +18,13 @@ void FUNC_NETCON_COST_clear(Func* f) {
 
   // phi
   FUNC_set_phi(f,0);
-  
+
   // gphi
   // Constant
-  
+
   // Hphi
   // Zero
-    
+
   // Flags
   FUNC_clear_bus_counted(f);
 }
@@ -34,16 +34,16 @@ void FUNC_NETCON_COST_count_step(Func* f, Branch* br, int t) {
 }
 
 void FUNC_NETCON_COST_allocate(Func* f) {
-  
+
   // Local variables
   int num_vars;
-  
+
   num_vars = NET_get_num_vars(FUNC_get_network(f));
 
   // gphi
   FUNC_set_gphi(f,VEC_new(num_vars));
   VEC_set_zero(FUNC_get_gphi(f));
-  
+
   // Hphi
   FUNC_set_Hphi(f,MAT_new(num_vars,
 			  num_vars,
@@ -80,40 +80,40 @@ void FUNC_NETCON_COST_analyze_step(Func* f, Branch* br, int t) {
   // Check outage
   if (BRANCH_is_on_outage(br))
     return;
-  
+
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   for (k = 0; k < 2; k++) {
-    
+
     bus = buses[k];
     
     price = BUS_get_price(bus,t);
-    
+
     if (!bus_counted[bus_index_t[k]]) {
-      
+
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
 	  VEC_set(gphi,GEN_get_index_P(gen,t),-price);
       }
-      
+
       // Variable generators
       for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P))
 	  VEC_set(gphi,VARGEN_get_index_P(vargen,t),-price);
       }
-      
+
       // Loads
       for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
 	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P))
 	  VEC_set(gphi,LOAD_get_index_P(load,t),price);
       }
-      
+
       // Battery charging
       for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
 	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
@@ -122,14 +122,14 @@ void FUNC_NETCON_COST_analyze_step(Func* f, Branch* br, int t) {
 	}
       }
     }
-    
+
     // Update counted flag
     bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
 void FUNC_NETCON_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
-  
+
   // Local variables
   Bus* buses[2];
   Bus* bus;
@@ -158,22 +158,22 @@ void FUNC_NETCON_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   // Check outage
   if (BRANCH_is_on_outage(br))
     return;
-  
+
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   for (k = 0; k < 2; k++) {
-    
+
     bus = buses[k];
-    
+
     price = BUS_get_price(bus,t);
-    
+
     if (!bus_counted[bus_index_t[k]]) {
-      
+
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
@@ -181,7 +181,7 @@ void FUNC_NETCON_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 	else
 	  (*phi) -= price*GEN_get_P(gen,t);
       }
-      
+
       // Variable generators
       for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P))
@@ -189,7 +189,7 @@ void FUNC_NETCON_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 	else
 	  (*phi) -= price*VARGEN_get_P(vargen,t);
       }
-      
+
       // Loads
       for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
 	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P))
@@ -197,7 +197,7 @@ void FUNC_NETCON_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 	else
 	  (*phi) += price*LOAD_get_P(load,t);
       }
-      
+
       // Battery charging
       for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
 	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
@@ -209,10 +209,10 @@ void FUNC_NETCON_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 	}
       }
     }
-    
+
     // Update counted flag
     bus_counted[bus_index_t[k]] = TRUE;
-  }  
+  }
 }
 
 void FUNC_NETCON_COST_free(Func* f) {

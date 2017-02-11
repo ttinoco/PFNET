@@ -29,8 +29,8 @@ void GRAPH_del(Graph* g) {
   if (g) {
 
     #ifndef NO_GRAPHVIZ
-    gvFreeLayout(g->gvc,g->G); 
-    agclose(g->G); 
+    gvFreeLayout(g->gvc,g->G);
+    agclose(g->G);
     gvFreeContext(g->gvc);
     #endif
 
@@ -60,9 +60,9 @@ void GRAPH_clear_error(Graph* g) {
 }
 
 Graph* GRAPH_new(Net* net) {
-  
+
   Graph* g;
-  
+
   #ifndef NO_GRAPHVIZ
   Branch* br;
   Bus* busk;
@@ -72,7 +72,7 @@ Graph* GRAPH_new(Net* net) {
   Agnode_t* nodem;
   int i;
   #endif
-   
+
   // Init
   g = (Graph*)malloc(sizeof(Graph));
   g->net = net;
@@ -84,7 +84,7 @@ Graph* GRAPH_new(Net* net) {
   #ifndef NO_GRAPHVIZ
   g->gvc = gvContext();
   g->G = agopen("network",Agundirected,NULL);
- 
+
   // Graph options
   agattr(g->G,AGRAPH,"size","10,7");
   agattr(g->G,AGRAPH,"ratio","true");
@@ -93,7 +93,7 @@ Graph* GRAPH_new(Net* net) {
   agattr(g->G,AGRAPH,"K","1.0");
   agattr(g->G,AGRAPH,"start","1");
   agattr(g->G,AGRAPH,"dpi","96");
-  
+
   // Node options
   agattr(g->G,AGNODE,"shape","circle");
   agattr(g->G,AGNODE,"width","0.5");
@@ -107,23 +107,23 @@ Graph* GRAPH_new(Net* net) {
   // Edge options
   agattr(g->G,AGEDGE,"style","filled");
   agattr(g->G,AGEDGE,"color","black");
-  
+
   // Construct graph
   for (i = 0; i < NET_get_num_branches(net); i++) {
-    
+
     br = NET_get_branch(net,i);
-    
-    busk = BRANCH_get_bus_from(br);
+
+    busk = BRANCH_get_bus_k(br);
     sprintf(buffer,"%d",BUS_get_number(busk));
     nodek = agnode(g->G,strdup(buffer),TRUE);
-    
-    busm = BRANCH_get_bus_to(br);
+
+    busm = BRANCH_get_bus_m(br);
     sprintf(buffer,"%d",BUS_get_number(busm));
     nodem = agnode(g->G,strdup(buffer),TRUE);
-    
+
     sprintf(buffer,"%d",BRANCH_get_index(br));
     agedge(g->G,nodek,nodem,strdup(buffer),TRUE);
-  } 
+  }
   #endif
 
   return g;
@@ -137,7 +137,7 @@ BOOL GRAPH_can_viz(Graph* g) {
     return FALSE;
     #endif
   }
-  return FALSE;  
+  return FALSE;
 }
 
 void GRAPH_set_layout(Graph* g) {
@@ -158,7 +158,7 @@ void GRAPH_set_node_property(Graph* g, Bus* bus, char* prop, char* value) {
   Agsym_t* att;
   Agnode_t* node;
   char buffer[100];
-  
+
   // Set property
   if (g) {
     sprintf(buffer,"%d",BUS_get_number(bus));
@@ -174,12 +174,12 @@ void GRAPH_set_node_property(Graph* g, Bus* bus, char* prop, char* value) {
   }
   #endif
 }
-  
+
 void GRAPH_set_nodes_property(Graph* g, char* prop, char* value) {
-  
+
   // Local variables
   int i;
-  
+
   // Set property
   if (g) {
     for (i = 0; i < NET_get_num_buses(g->net); i++)
@@ -201,23 +201,23 @@ void GRAPH_set_edges_property(Graph* g, char* prop, char* value) {
   Bus* busm;
   char buffer[100];
   int i;
-  
+
   // Set property
   if (g) {
     for (i = 0; i < NET_get_num_branches(g->net); i++) {
-      
+
       branch = NET_get_branch(g->net,i);
-      
-      busk = BRANCH_get_bus_from(branch);
+
+      busk = BRANCH_get_bus_k(branch);
       sprintf(buffer,"%d",BUS_get_number(busk));
       nodek = agnode(g->G,buffer,FALSE);
 
-      busm = BRANCH_get_bus_to(branch);
+      busm = BRANCH_get_bus_m(branch);
       sprintf(buffer,"%d",BUS_get_number(busm));
       nodem = agnode(g->G,buffer,FALSE);
 
       sprintf(buffer,"%d",BRANCH_get_index(branch));
-      edge = agedge(g->G,nodek,nodem,buffer,FALSE);      
+      edge = agedge(g->G,nodek,nodem,buffer,FALSE);
       att = agattrsym(edge,prop);
       if (att)
 	agxset(edge,att,value);
@@ -232,7 +232,7 @@ void GRAPH_set_edges_property(Graph* g, char* prop, char* value) {
 }
 
 void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type, int t) {
-  
+
   // Local variables
   #ifndef NO_GRAPHVIZ
   Agsym_t* att;
@@ -245,7 +245,7 @@ void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type, int t) {
   REAL eps = 1e-8;
   int i;
   #endif
-  
+
   // Check graph and network
   if (!g || !g->net)
     return;
@@ -261,7 +261,7 @@ void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type, int t) {
   NET_update_properties(g->net,NULL);
 
   #ifndef NO_GRAPHVIZ
-  
+
   // Color
   for (i = 0; i < NET_get_num_buses(g->net); i++) {
 
@@ -269,7 +269,7 @@ void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type, int t) {
 
     // Mismatch
     mis = BUS_get_quantity(bus,mis_type,t)*NET_get_base_power(g->net); // MW or MVAr
-    
+
     // Value
     val = log10(fabs(mis) > eps ? fabs(mis) : eps);
     if (val > 3.)
@@ -284,7 +284,7 @@ void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type, int t) {
     // Node
     sprintf(buffer,"%d",BUS_get_number(bus));
     node = agnode(g->G,buffer,FALSE);
-    
+
     // Color scheme and value
     sprintf(buffer,"%d",(int)val);
     att = agattrsym(node,"fillcolor");
@@ -308,7 +308,7 @@ void GRAPH_color_nodes_by_sensitivity(Graph* g, int sens_type, int t) {
   int j;
   REAL max_sens = 1e-10;
   #endif
-  
+
   // Check graph and network
   if (!g || !g->net)
     return;
@@ -319,34 +319,34 @@ void GRAPH_color_nodes_by_sensitivity(Graph* g, int sens_type, int t) {
     g->error_flag = TRUE;
     return;
   }
-  
+
   // Update properties
   NET_update_properties(g->net,NULL);
 
   #ifndef NO_GRAPHVIZ
-  
+
   // Color
   for (i = 0; i < 2; i++) {
     for (j = 0; j < NET_get_num_buses(g->net); j++) {
-      
+
       bus = NET_get_bus(g->net,j);
-    
+
       // Sensitivity
       sens = BUS_get_quantity(bus,sens_type,t);
-      
+
       if (i == 0) {
 	if (fabs(sens) > max_sens)
 	  max_sens = fabs(sens);       // for normalizing
       }
       else {
-	
+
 	// Value
 	sens = 5.*(-sens/max_sens)+6.; // red = large pos, blue = large neg
-	
+
 	// Node
 	sprintf(buffer,"%d",BUS_get_number(bus));
 	node = agnode(g->G,buffer,FALSE);
-	
+
 	// Color scheme and value
 	sprintf(buffer,"%d",(int)sens);
 	att = agattrsym(node,"fillcolor");
@@ -364,7 +364,7 @@ void GRAPH_write(Graph* g, char* format, char* filename) {
     g->error_flag = TRUE;
     return;
   }
-  
+
   if (!g->layout_done) {
     sprintf(g->error_string,"graph has no layout");
     g->error_flag = TRUE;

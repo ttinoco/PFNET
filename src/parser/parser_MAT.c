@@ -13,16 +13,16 @@
 struct MAT_Bus {
   int number;
   char name[MAT_BUS_NAME_BUFFER_SIZE];
-  int type;               
+  int type;
   REAL Pd;                // MW
   REAL Qd;                // MVAr
   REAL Gs;                // MW
   REAL Bs;                // MVAr
-  int area;               
+  int area;
   REAL Vm;                // per unit
   REAL Va;                // degrees
   REAL basekv;            // kV
-  int zone;               
+  int zone;
   REAL maxVm;             // per unit
   REAL minVm;             // per unit
   struct MAT_Bus* next;
@@ -37,7 +37,7 @@ struct MAT_Gen {
   REAL Qmin;              // MVAr
   REAL Vg;                // per unit
   REAL mBase;             // MVA
-  int status;            
+  int status;
   REAL Pmax;              // MW
   REAL Pmin;              // MW
   struct MAT_Gen* next;
@@ -45,17 +45,17 @@ struct MAT_Gen {
 };
 
 struct MAT_Branch {
-  int bus_from_number;
-  int bus_to_number;
+  int bus_k_number;         // from/i bus number (1st bus listed)
+  int bus_m_number;         // to/j bus number (2nd bus listed)
   REAL r;                   // per unit
   REAL x;                   // per unit
   REAL b;                   // per unit
   REAL rateA;               // MVA
   REAL rateB;               // MVA
   REAL rateC;               // MVA
-  REAL ratio;               
+  REAL ratio;
   REAL angle;               // degrees
-  int status;                
+  int status;
   struct MAT_Branch* next;
 };
 
@@ -92,7 +92,7 @@ struct MAT_Parser {
 
   // Base
   REAL base_power;
-  
+
   // Buses
   MAT_Bus* bus;
   MAT_Bus* bus_list;
@@ -122,7 +122,7 @@ void MAT_PARSER_clear_token(MAT_Parser* parser) {
 }
 
 MAT_Parser* MAT_PARSER_new(void) {
-  
+
   // Allocate
   MAT_Parser* parser = (MAT_Parser*)malloc(sizeof(MAT_Parser));
 
@@ -146,7 +146,7 @@ MAT_Parser* MAT_PARSER_new(void) {
   parser->bus = NULL;
   parser->bus_list = NULL;
   parser->bus_hash = NULL;
-  
+
   // Generators
   parser->gen = NULL;
   parser->gen_list = NULL;
@@ -168,7 +168,7 @@ MAT_Parser* MAT_PARSER_new(void) {
 }
 
 void MAT_PARSER_read(MAT_Parser* parser, char* filename) {
-  
+
   // Local variables
   FILE* file;
   CSV_Parser* csv = CSV_PARSER_new();
@@ -178,7 +178,7 @@ void MAT_PARSER_read(MAT_Parser* parser, char* filename) {
   // No parser
   if (!parser)
     return;
-  
+
   // Open file
   file = fopen(filename,"rb");
   if (!file) {
@@ -187,7 +187,7 @@ void MAT_PARSER_read(MAT_Parser* parser, char* filename) {
     CSV_PARSER_del(csv);
     return;
   }
-  
+
   // Parse
   while ((bytes_read=fread(buffer,1,MAT_PARSER_BUFFER_SIZE,file)) > 0) {
     if (CSV_PARSER_parse(csv,
@@ -205,7 +205,7 @@ void MAT_PARSER_read(MAT_Parser* parser, char* filename) {
       break;
     }
   }
- 
+
   // Free and close
   CSV_PARSER_del(csv);
   fclose(file);
@@ -218,7 +218,7 @@ void MAT_PARSER_show(MAT_Parser* parser) {
   int len_gen_list;
   int len_branch_list;
   int len_cost_list;
-  int len_util_list;  
+  int len_util_list;
 
   if (!parser)
     return;
@@ -320,8 +320,8 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
       load = NET_get_load(net,index);
       BUS_add_load(bus,load);                            // connect load to bus
       LOAD_set_bus(load,bus);                            // connect bus to load
-      LOAD_set_P(load,mat_bus->Pd/parser->base_power,0); // per unit 
-      LOAD_set_Q(load,mat_bus->Qd/parser->base_power,0); // per unit 
+      LOAD_set_P(load,mat_bus->Pd/parser->base_power,0); // per unit
+      LOAD_set_Q(load,mat_bus->Qd/parser->base_power,0); // per unit
       LOAD_set_P_min(load,LOAD_get_P(load,0));             // Pmin = P = Pmax
       LOAD_set_P_max(load,LOAD_get_P(load,0));             // Pmin = P = Pmax
       index++;
@@ -342,8 +342,8 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
       shunt = NET_get_shunt(net,index);
       BUS_add_shunt(bus,shunt);                            // connect shunt to bus
       SHUNT_set_bus(shunt,bus);                            // connect bus to shunt
-      SHUNT_set_g(shunt,mat_bus->Gs/parser->base_power);   // per unit 
-      SHUNT_set_b(shunt,mat_bus->Bs/parser->base_power,0); // per unit 
+      SHUNT_set_g(shunt,mat_bus->Gs/parser->base_power);   // per unit
+      SHUNT_set_b(shunt,mat_bus->Bs/parser->base_power,0); // per unit
       SHUNT_set_b_max(shunt,SHUNT_get_b(shunt,0));         // per unit
       SHUNT_set_b_min(shunt,SHUNT_get_b(shunt,0));         // per unit
       index++;
@@ -371,12 +371,12 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
       GEN_set_Q_max(gen,mat_gen->Qmax/parser->base_power); // per unit
       GEN_set_Q_min(gen,mat_gen->Qmin/parser->base_power); // per unit
       if (BUS_is_slack(bus))  { // generator provides regulation
-	GEN_set_reg_bus(gen,bus);           
+	GEN_set_reg_bus(gen,bus);
 	BUS_add_reg_gen(bus,gen);
 	BUS_set_v_set(bus,mat_gen->Vg,0); // p.u.
       }
       else if (GEN_get_Q_max(gen) > GEN_get_Q_min(gen)) { // generator provides regulation
-	GEN_set_reg_bus(gen,bus);       
+	GEN_set_reg_bus(gen,bus);
 	BUS_add_reg_gen(bus,gen);
 	BUS_set_v_set(bus,mat_gen->Vg,0); // p.u.
       }
@@ -394,8 +394,8 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
   LIST_len(MAT_Branch,parser->branch_list,next,num_branches);
   NET_set_branch_array(net,BRANCH_array_new(num_branches,num_periods),num_branches);
   for (mat_branch = parser->branch_list; mat_branch != NULL; mat_branch = mat_branch->next) {
-    busA = BUS_hash_number_find(NET_get_bus_hash_number(net),mat_branch->bus_from_number);
-    busB = BUS_hash_number_find(NET_get_bus_hash_number(net),mat_branch->bus_to_number);
+    busA = BUS_hash_number_find(NET_get_bus_hash_number(net),mat_branch->bus_k_number);
+    busB = BUS_hash_number_find(NET_get_bus_hash_number(net),mat_branch->bus_m_number);
     branch = NET_get_branch(net,index);
     r = mat_branch->r;
     x = mat_branch->x;
@@ -411,20 +411,20 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
       BRANCH_set_type(branch,BRANCH_TYPE_LINE);
     else
       BRANCH_set_type(branch,BRANCH_TYPE_TRAN_FIXED);
-    BRANCH_set_bus_from(branch,busA);
-    BRANCH_set_bus_to(branch,busB);
-    BUS_add_branch_from(busA,branch);
-    BUS_add_branch_to(busB,branch);
-    BRANCH_set_ratio(branch,1./t,0);                         // units of bus_from_base/bus_to_base
+    BRANCH_set_bus_k(branch,busA);
+    BRANCH_set_bus_m(branch,busB);
+    BUS_add_branch_k(busA,branch);
+    BUS_add_branch_m(busB,branch);
+    BRANCH_set_ratio(branch,1./t,0);                         // units of bus_k_base/bus_m_base
     BRANCH_set_ratio_max(branch,BRANCH_get_ratio(branch,0));
     BRANCH_set_ratio_min(branch,BRANCH_get_ratio(branch,0));
     BRANCH_set_phase(branch,z,0);                            // radians
     BRANCH_set_phase_max(branch,BRANCH_get_phase(branch,0));
-    BRANCH_set_phase_min(branch,BRANCH_get_phase(branch,0));			   
+    BRANCH_set_phase_min(branch,BRANCH_get_phase(branch,0));
     BRANCH_set_g(branch,g);                                // per unit
     BRANCH_set_b(branch,b);                                // per unit
-    BRANCH_set_b_from(branch,mat_branch->b/2.);            // per unit
-    BRANCH_set_b_to(branch,mat_branch->b/2.);              // per unit
+    BRANCH_set_b_k(branch,mat_branch->b/2.);            // per unit
+    BRANCH_set_b_m(branch,mat_branch->b/2.);              // per unit
     BRANCH_set_ratingA(branch,mat_branch->rateA/parser->base_power); // p.u.
     BRANCH_set_ratingB(branch,mat_branch->rateB/parser->base_power); // p.u.
     BRANCH_set_ratingC(branch,mat_branch->rateC/parser->base_power); // p.u.
@@ -475,7 +475,7 @@ void MAT_PARSER_del(MAT_Parser* parser) {
   LIST_map(MAT_Util,parser->util_list,util,next,{free(util);});
 
   // Parser
-  free(parser);  
+  free(parser);
 }
 
 BOOL MAT_PARSER_has_error(MAT_Parser* parser) {
@@ -521,7 +521,7 @@ void MAT_PARSER_callback_field(char* s, void* data) {
     MAT_PARSER_parse_util_field((char*)s,parser);
     break;
   }
-    
+
   // Update field
   parser->field++;
 
@@ -626,7 +626,7 @@ void MAT_PARSER_parse_bus_field(char* s, MAT_Parser* parser) {
 
   if (!parser)
     return;
-  
+
   // Token
   if (strstr(s,MAT_END_TOKEN) != NULL) {
     parser->state = MAT_PARSER_STATE_TOKEN;
@@ -647,7 +647,7 @@ void MAT_PARSER_parse_bus_field(char* s, MAT_Parser* parser) {
   // Fields
   if (parser->bus) {
     switch (parser->field) {
-    case 0: 
+    case 0:
       parser->bus->number = atoi(s);
       snprintf(parser->bus->name,(size_t)(MAT_BUS_NAME_BUFFER_SIZE-1),
 	       "BUS %d",parser->bus->number);
@@ -731,34 +731,34 @@ void MAT_PARSER_parse_gen_field(char* s, MAT_Parser* parser) {
   // Fields
   if (parser->gen) {
     switch (parser->field) {
-    case 0: 
+    case 0:
       parser->gen->bus_number = atoi(s);
       break;
-    case 1: 
+    case 1:
       parser->gen->Pg = atof(s);
       break;
-    case 2: 
+    case 2:
       parser->gen->Qg = atof(s);
       break;
-    case 3: 
+    case 3:
       parser->gen->Qmax = atof(s);
       break;
-    case 4: 
+    case 4:
       parser->gen->Qmin = atof(s);
       break;
-    case 5: 
+    case 5:
       parser->gen->Vg = atof(s);
       break;
-    case 6: 
+    case 6:
       parser->gen->mBase = atof(s);
       break;
-    case 7: 
+    case 7:
       parser->gen->status = atoi(s);
       break;
-    case 8: 
+    case 8:
       parser->gen->Pmax = atof(s);
       break;
-    case 9: 
+    case 9:
       parser->gen->Pmin = atof(s);
       break;
     }
@@ -769,7 +769,7 @@ void MAT_PARSER_parse_gen_row(MAT_Parser* parser) {
 
   if (!parser)
     return;
-  
+
   if (parser->gen && parser->record >= 0)
     LIST_push(parser->gen_list,parser->gen,next);
   parser->gen = NULL;
@@ -802,34 +802,34 @@ void MAT_PARSER_parse_branch_field(char* s, MAT_Parser* parser) {
   // Fields
   if (parser->branch) {
     switch (parser->field) {
-    case 0: 
-      parser->branch->bus_from_number = atoi(s);
+    case 0:
+      parser->branch->bus_k_number = atoi(s);
       break;
-    case 1: 
-      parser->branch->bus_to_number = atoi(s);
+    case 1:
+      parser->branch->bus_m_number = atoi(s);
       break;
-    case 2: 
+    case 2:
       parser->branch->r = atof(s);
       break;
-    case 3: 
+    case 3:
       parser->branch->x = atof(s);
       break;
-    case 4: 
+    case 4:
       parser->branch->b = atof(s);
       break;
-    case 5: 
+    case 5:
       parser->branch->rateA = atof(s);
       break;
-    case 6: 
+    case 6:
       parser->branch->rateB = atof(s);
       break;
-    case 7: 
+    case 7:
       parser->branch->rateC = atof(s);
       break;
-    case 8: 
+    case 8:
       parser->branch->ratio = atof(s);
       break;
-    case 9: 
+    case 9:
       parser->branch->angle = atof(s);
       break;
     }
@@ -845,7 +845,7 @@ void MAT_PARSER_parse_branch_row(MAT_Parser* parser) {
     LIST_push(parser->branch_list,parser->branch,next);
   parser->branch = NULL;
   parser->field = 0;
-  parser->record++;  
+  parser->record++;
 }
 
 void MAT_PARSER_parse_cost_field(char* s, MAT_Parser* parser) {
@@ -873,16 +873,16 @@ void MAT_PARSER_parse_cost_field(char* s, MAT_Parser* parser) {
   // Fields
   if (parser->cost) {
     switch (parser->field) {
-    case 0: 
+    case 0:
       parser->cost->gen_index = atoi(s);
       break;
-    case 1: 
+    case 1:
       parser->cost->Q2 = atof(s);
       break;
-    case 2: 
+    case 2:
       parser->cost->Q1 = atof(s);
       break;
-    case 3: 
+    case 3:
       parser->cost->Q0 = atof(s);
       break;
     }
@@ -893,7 +893,7 @@ void MAT_PARSER_parse_cost_row(MAT_Parser* parser) {
 
   if (!parser)
     return;
-  
+
   if (parser->cost && parser->record >= 0)
     LIST_push(parser->cost_list,parser->cost,next);
   parser->cost = NULL;
@@ -926,16 +926,16 @@ void MAT_PARSER_parse_util_field(char* s, MAT_Parser* parser) {
   // Fields
   if (parser->util) {
     switch (parser->field) {
-    case 0: 
+    case 0:
       parser->util->load_index = atoi(s);
       break;
-    case 1: 
+    case 1:
       parser->util->Q2 = atof(s);
       break;
-    case 2: 
+    case 2:
       parser->util->Q1 = atof(s);
       break;
-    case 3: 
+    case 3:
       parser->util->Q0 = atof(s);
       break;
     }
@@ -946,7 +946,7 @@ void MAT_PARSER_parse_util_row(MAT_Parser* parser) {
 
   if (!parser)
     return;
-  
+
   if (parser->util && parser->record >= 0)
     LIST_push(parser->util_list,parser->util,next);
   parser->util = NULL;
@@ -955,7 +955,7 @@ void MAT_PARSER_parse_util_row(MAT_Parser* parser) {
 }
 
 void MAT_PARSER_set(MAT_Parser* parser, char* key, REAL value) {
-  
+
   if (!parser)
     return;
 

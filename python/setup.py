@@ -1,16 +1,16 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
+import os
 import sys
+import numpy as np
 from Cython.Build import cythonize
 from distutils.core import setup, Extension
-import numpy as np
-import os
 
 libraries = ['pfnet']
 extra_compile_args = []

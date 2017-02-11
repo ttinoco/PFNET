@@ -12,23 +12,23 @@
 #include <assert.h>
 
 void CONSTR_GEN_RAMP_init(Constr* c) {
-  
+
   // Init
   CONSTR_set_data(c,NULL);
 }
 
 void CONSTR_GEN_RAMP_clear(Constr* c) {
-  
+
   // Counters
   CONSTR_set_Gcounter(c,0);
   CONSTR_set_Gconstr_index(c,0);
-  
+
   // Flags
   CONSTR_clear_bus_counted(c);
 }
 
 void CONSTR_GEN_RAMP_count_step(Constr* c, Branch* br, int t) {
-  
+
   // Local variables
   Bus* buses[2];
   Bus* bus;
@@ -41,7 +41,7 @@ void CONSTR_GEN_RAMP_count_step(Constr* c, Branch* br, int t) {
 
   // Number of periods
   T = BRANCH_get_num_periods(br);
-  
+
   // Constr data
   Gcounter = CONSTR_get_Gcounter_ptr(c);
   Gconstr_index = CONSTR_get_Gconstr_index_ptr(c);
@@ -56,16 +56,16 @@ void CONSTR_GEN_RAMP_count_step(Constr* c, Branch* br, int t) {
     return;
 
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
 
   // Buses
   for (i = 0; i < 2; i++) {
-    
+
     bus = buses[i];
-    
+
     if (!bus_counted[BUS_get_index(bus)*T+t]) {
-      
+
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
 
@@ -81,17 +81,17 @@ void CONSTR_GEN_RAMP_count_step(Constr* c, Branch* br, int t) {
     }
 
     // Update counted flag
-    bus_counted[BUS_get_index(bus)*T+t] = TRUE;    
+    bus_counted[BUS_get_index(bus)*T+t] = TRUE;
   }
 }
 
 void CONSTR_GEN_RAMP_allocate(Constr* c) {
-  
+
   // Local variables
   int num_constr;
   int num_vars;
   int Gcounter;
-  
+
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
   num_constr = CONSTR_get_Gconstr_index(c);
   Gcounter = CONSTR_get_Gcounter(c);
@@ -113,7 +113,7 @@ void CONSTR_GEN_RAMP_allocate(Constr* c) {
 }
 
 void CONSTR_GEN_RAMP_analyze_step(Constr* c, Branch* br, int t) {
-  
+
   // Local variables
   Bus* buses[2];
   Bus* bus;
@@ -129,7 +129,7 @@ void CONSTR_GEN_RAMP_analyze_step(Constr* c, Branch* br, int t) {
 
   // Number of periods
   T = BRANCH_get_num_periods(br);
-  
+
   // Cosntr data
   l = CONSTR_get_l(c);
   u = CONSTR_get_u(c);
@@ -147,57 +147,57 @@ void CONSTR_GEN_RAMP_analyze_step(Constr* c, Branch* br, int t) {
     return;
 
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
 
   // Buses
   for (i = 0; i < 2; i++) {
-    
+
     bus = buses[i];
-    
+
     if (!bus_counted[BUS_get_index(bus)*T+t]) {
-      
+
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-	
+
 	// Variables
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // -dP_max <= P_t - P_{t-1} <= dP_max
-	  
+
 	  // G
 	  MAT_set_i(G,*Gcounter,*Gconstr_index);
 	  MAT_set_j(G,*Gcounter,GEN_get_index_P(gen,t));
 	  MAT_set_d(G,*Gcounter,1.);
-	  
+
 	  if (t == 0) {
 
 	    // l u
 	    VEC_set(l,*Gconstr_index,-GEN_get_dP_max(gen)+GEN_get_P_prev(gen));
 	    VEC_set(u,*Gconstr_index,GEN_get_dP_max(gen)+GEN_get_P_prev(gen));
-	    
+
 	    (*Gcounter) += 1;
 	  }
 	  else {
-	    
+
 	    // l u
 	    VEC_set(l,*Gconstr_index,-GEN_get_dP_max(gen));
 	    VEC_set(u,*Gconstr_index,GEN_get_dP_max(gen));
-	    
+
 	    // G
 	    MAT_set_i(G,*Gcounter+1,*Gconstr_index);
 	    MAT_set_j(G,*Gcounter+1,GEN_get_index_P(gen,t-1));
 	    MAT_set_d(G,*Gcounter+1,-1.);
-	    
+
 	    (*Gcounter) += 2;
 	  }
-	  
+
 	  (*Gconstr_index)++;
 	}
       }
     }
 
     // Update counted flag
-    bus_counted[BUS_get_index(bus)*T+t] = TRUE;   
-  }  
+    bus_counted[BUS_get_index(bus)*T+t] = TRUE;
+  }
 }
 
 void CONSTR_GEN_RAMP_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {

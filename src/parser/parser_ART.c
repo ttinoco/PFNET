@@ -18,15 +18,15 @@ struct ART_Bus {
   REAL pload;   // mw
   REAL qload;   // mvar
   REAL bshunt;  // mvar
-  REAL qshunt;  // mvar 
+  REAL qshunt;  // mvar
   struct ART_Bus* next;
   UT_hash_handle hh;
 };
 
 struct ART_Line {
   char name[22];
-  char from_bus[10];
-  char to_bus[10];
+  char k_bus[10];     // from/i bus
+  char m_bus[10];     // to/j bus`
   REAL r;             // ohms
   REAL x;             // ohms
   REAL wc_half;       // micro siemens
@@ -38,8 +38,8 @@ struct ART_Line {
 struct ART_Transfo {
   char name[22];
   int index;
-  char from_bus[10];
-  char to_bus[10];
+  char k_bus[10];     // from/i bus
+  char m_bus[10];     // to/j bus
   REAL r;             // % on the Vb1,SNOM base
   REAL x;             // % on the Vb1,SNOM base
   REAL b1;            // % on the Vb1,SNOM base
@@ -55,30 +55,30 @@ struct ART_Transfo {
 struct ART_Ltcv {
   char name[22];
   char con_bus[10];
-  REAL nfirst;      // %           
-  REAL nlast;       // %    
-  int nbpos; 
+  REAL nfirst;      // %
+  REAL nlast;       // %
+  int nbpos;
   REAL tolv;        // per unit
-  REAL vdes;        // per unit 
+  REAL vdes;        // per unit
   struct ART_Ltcv* next;
 };
 
 struct ART_Trfo {
   char name[22];
-  char from_bus[10];
-  char to_bus[10];
+  char k_bus[10];     // from/i bus number
+  char m_bus[10];     // to/j bus number
   char con_bus[10];
   REAL r;             // % on the Vb1,SNOM base
   REAL x;             // % on the Vb1,SNOM base
   REAL b;             // % on the Vb1,SNOM base
   REAL n;             // % on the Vb1,Vb2 base
   REAL snom;          // mva
-  REAL nfirst;        // %           
-  REAL nlast;         // %    
-  int nbpos; 
+  REAL nfirst;        // %
+  REAL nlast;         // %
+  int nbpos;
   REAL tolv;          // per unit
   REAL vdes;          // per unit
-  REAL br;            // breaker         
+  REAL br;            // breaker
   struct ART_Trfo* next;
 };
 
@@ -87,8 +87,8 @@ struct ART_Pshiftp {
   char monbranch[10];
   REAL phafirst;      // degress
   REAL phalast;       // degrees
-  int nbpos;  
-  int sign;           // 1 or -1 
+  int nbpos;
+  int sign;           // 1 or -1
   REAL pdes;          // mw
   REAL tolp;          // mw
   struct ART_Pshiftp* next;
@@ -98,7 +98,7 @@ struct ART_Gener {
   char name[22];
   char con_bus[10]; // connected bus
   char mon_bus[10]; // not used
-  REAL p;           // mw 
+  REAL p;           // mw
   REAL q;           // mvar
   REAL vimp;        // per unit
   REAL snom;        // MVA
@@ -153,7 +153,7 @@ struct ART_Parser {
 
   // Base
   REAL base_power; // MVA
-  
+
   // Buses
   ART_Bus* bus;
   ART_Bus* bus_list;
@@ -198,7 +198,7 @@ struct ART_Parser {
 };
 
 ART_Parser* ART_PARSER_new(void) {
-  
+
   // Allocate
   ART_Parser* parser = (ART_Parser*)malloc(sizeof(ART_Parser));
 
@@ -264,7 +264,7 @@ ART_Parser* ART_PARSER_new(void) {
 }
 
 void ART_PARSER_read(ART_Parser* parser, char* filename) {
-  
+
   // Local variables
   FILE* file;
   CSV_Parser* csv = CSV_PARSER_new();
@@ -274,7 +274,7 @@ void ART_PARSER_read(ART_Parser* parser, char* filename) {
   // No parser
   if (!parser)
     return;
-  
+
   // Open file
   file = fopen(filename,"rb");
   if (!file) {
@@ -283,7 +283,7 @@ void ART_PARSER_read(ART_Parser* parser, char* filename) {
     CSV_PARSER_del(csv);
     return;
   }
-  
+
   // Parse
   while ((bytes_read=fread(buffer,1,ART_PARSER_BUFFER_SIZE,file)) > 0) {
     if (CSV_PARSER_parse(csv,
@@ -301,7 +301,7 @@ void ART_PARSER_read(ART_Parser* parser, char* filename) {
       break;
     }
   }
- 
+
   // Free and close
   CSV_PARSER_del(csv);
   fclose(file);
@@ -339,7 +339,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   LIST_len(ART_Slack,parser->slack_list,next,len_slack_list);
   LIST_len(ART_Vargen,parser->vargen_list,next,len_vargen_list);
   LIST_len(ART_Bat,parser->bat_list,next,len_bat_list);
-  
+
   // Show
   printf("\nParsed Data\n");
   printf("base power   : %.2f\n",parser->base_power);
@@ -375,22 +375,22 @@ void ART_PARSER_show(ART_Parser* parser) {
   for (line = parser->line_list; line != NULL; line = line->next) {
     printf("Line %s %s %s %.5f %.5f %.5f %.5f %.5f\n",
 	   line->name,
-	   line->from_bus,
-	   line->to_bus,
+	   line->k_bus,
+	   line->m_bus,
 	   line->r,
 	   line->x,
 	   line->wc_half,
 	   line->snom,
 	   line->br);
   }
-  
+
   // Debugging TRANSFO
   ART_Transfo* transfo;
   for (transfo = parser->transfo_list; transfo != NULL; transfo = transfo->next) {
     printf("Transfo %s %s %s %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f\n",
 	   transfo->name,
-	   transfo->from_bus,
-	   transfo->to_bus,
+	   transfo->k_bus,
+	   transfo->m_bus,
 	   transfo->r,
 	   transfo->x,
 	   transfo->b1,
@@ -419,8 +419,8 @@ void ART_PARSER_show(ART_Parser* parser) {
   for (trfo = parser->trfo_list; trfo != NULL; trfo = trfo->next) {
     printf("Trfo %s %s %s %s %.5f %.5f %.5f %.5f %.5f %.5f %.5f %d %.5f %.5f %.5f\n",
 	   trfo->name,
-	   trfo->from_bus,
-	   trfo->to_bus,
+	   trfo->k_bus,
+	   trfo->m_bus,
 	   trfo->con_bus,
 	   trfo->r,
 	   trfo->x,
@@ -464,7 +464,7 @@ void ART_PARSER_show(ART_Parser* parser) {
 	   gener->qmax,
 	   gener->br);
   }
-  
+
   // Debugging SLACK
   ART_Slack* slack;
   for (slack = parser->slack_list; slack != NULL; slack = slack->next) {
@@ -502,7 +502,7 @@ void ART_PARSER_show(ART_Parser* parser) {
 }
 
 void ART_PARSER_load(ART_Parser* parser, Net* net) {
-  
+
   // Local variables
   int index;
   int num_buses;
@@ -543,7 +543,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   // Check
   if (!parser || !net)
     return;
-  
+
   // Base power
   NET_set_base_power(net,parser->base_power);
 
@@ -593,7 +593,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       load = NET_get_load(net,index);
       BUS_add_load(bus,load);                             // connect load to bus
       LOAD_set_bus(load,bus);                             // connect bus to load
-      LOAD_set_P(load,art_bus->pload/parser->base_power,0); // per unit 
+      LOAD_set_P(load,art_bus->pload/parser->base_power,0); // per unit
       LOAD_set_Q(load,(art_bus->qload-art_bus->qshunt)/parser->base_power,0); // per unit
       LOAD_set_P_min(load,LOAD_get_P(load,0));              // Pmin = P = Pmax
       LOAD_set_P_max(load,LOAD_get_P(load,0));              // Pmin = P = Pmax
@@ -615,7 +615,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       shunt = NET_get_shunt(net,index);
       BUS_add_shunt(bus,shunt);                              // connect shunt to bus
       SHUNT_set_bus(shunt,bus);                              // connect bus to shunt
-      SHUNT_set_b(shunt,art_bus->bshunt/parser->base_power,0); // per unit 
+      SHUNT_set_b(shunt,art_bus->bshunt/parser->base_power,0); // per unit
       SHUNT_set_b_max(shunt,SHUNT_get_b(shunt,0));             // per unit
       SHUNT_set_b_min(shunt,SHUNT_get_b(shunt,0));             // per unit
       index++;
@@ -646,7 +646,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 	GEN_set_Q_max(gen,art_gen->qmax/parser->base_power); // per unit
 	GEN_set_Q_min(gen,art_gen->qmin/parser->base_power); // per unit
 	if (art_gen->vimp != 0.) {
-	  GEN_set_reg_bus(gen,bus);           
+	  GEN_set_reg_bus(gen,bus);
 	  BUS_add_reg_gen(bus,gen);
 	  BUS_set_v_set(bus,art_gen->vimp,0); // p.u.
 	  BUS_set_v_mag(bus,art_gen->vimp,0); // p.u.
@@ -675,7 +675,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   for (art_transfo = parser->transfo_list; art_transfo != NULL; art_transfo = art_transfo->next) {
     if (art_transfo->br != 0)
       num_transfo++;
-  }  
+  }
   num_branches = num_lines + num_transfo;
   NET_set_branch_array(net,BRANCH_array_new(num_branches,num_periods),num_branches);
 
@@ -683,40 +683,40 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
   index = 0;
   for (art_line = parser->line_list; art_line != NULL; art_line = art_line->next) {
     if (art_line->br != 0) {
-      
+
       art_busA = NULL;
       art_busB = NULL;
-      HASH_FIND_STR(parser->bus_hash,art_line->from_bus,art_busA);
-      HASH_FIND_STR(parser->bus_hash,art_line->to_bus,art_busB);
+      HASH_FIND_STR(parser->bus_hash,art_line->k_bus,art_busA);
+      HASH_FIND_STR(parser->bus_hash,art_line->m_bus,art_busB);
 
       if (art_busA && art_busB) {
 
 	busA = NET_get_bus(net,art_busA->index);
 	busB = NET_get_bus(net,art_busB->index);
 	branch = NET_get_branch(net,index);
-	
+
 	BRANCH_set_type(branch,BRANCH_TYPE_LINE);
-	
-	BRANCH_set_bus_from(branch,busA);
-	BRANCH_set_bus_to(branch,busB);
-	BUS_add_branch_from(busA,branch);
-	BUS_add_branch_to(busB,branch);
-	
+
+	BRANCH_set_bus_k(branch,busA);
+	BRANCH_set_bus_m(branch,busB);
+	BUS_add_branch_k(busA,branch);
+	BUS_add_branch_m(busB,branch);
+
 	r = art_line->r*(parser->base_power*1e6)/pow(art_busA->vnom*1e3,2.); // per unit
 	x = art_line->x*(parser->base_power*1e6)/pow(art_busA->vnom*1e3,2.); // per unit
 
 	den = pow(r,2.)+pow(x,2.);
 	g = r/den;
 	b = -x/den;
-	
+
 	BRANCH_set_g(branch,g);                                // per unit
 	BRANCH_set_b(branch,b);                                // per unit
 
 	b = (art_line->wc_half*1e-6)*pow(art_busA->vnom*1e3,2.)/(parser->base_power*1e6); // per unit
-	
-	BRANCH_set_b_from(branch,b);            // per unit
-	BRANCH_set_b_to(branch,b);              // per unit
-	
+
+	BRANCH_set_b_k(branch,b);            // per unit
+	BRANCH_set_b_m(branch,b);              // per unit
+
       }
       else {
 	sprintf(parser->error_string,"unable to find buses of line %s",art_line->name);
@@ -726,65 +726,65 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       index++;
     }
   }
-  
+
   // Transfo
   for (art_transfo = parser->transfo_list; art_transfo != NULL; art_transfo = art_transfo->next) {
     if (art_transfo->br != 0) {
-      
+
       art_transfo->index = index;
-      
+
       art_busA = NULL;
       art_busB = NULL;
-      HASH_FIND_STR(parser->bus_hash,art_transfo->from_bus,art_busA);
-      HASH_FIND_STR(parser->bus_hash,art_transfo->to_bus,art_busB);
+      HASH_FIND_STR(parser->bus_hash,art_transfo->k_bus,art_busA);
+      HASH_FIND_STR(parser->bus_hash,art_transfo->m_bus,art_busB);
 
       if (art_busA && art_busB) {
-	
+
 	busA = NET_get_bus(net,art_busA->index);
 	busB = NET_get_bus(net,art_busB->index);
 	branch = NET_get_branch(net,index);
 
 	BRANCH_set_type(branch,BRANCH_TYPE_TRAN_FIXED);
-	
-	BRANCH_set_bus_from(branch,busB);  // reversed
-	BRANCH_set_bus_to(branch,busA);    // reversed
-	BUS_add_branch_from(busB,branch);
-	BUS_add_branch_to(busA,branch);
-	
-	r = (art_transfo->r/100.)*(parser->base_power/art_transfo->snom); // per unit (VB1,SNOM) 
+
+	BRANCH_set_bus_k(branch,busB);  // reversed
+	BRANCH_set_bus_m(branch,busA);    // reversed
+	BUS_add_branch_k(busB,branch);
+	BUS_add_branch_m(busA,branch);
+
+	r = (art_transfo->r/100.)*(parser->base_power/art_transfo->snom); // per unit (VB1,SNOM)
 	x = (art_transfo->x/100.)*(parser->base_power/art_transfo->snom); // per unit (VB1,SNOM)
 
 	den = pow(r,2.)+pow(x,2.);
 	g = r/den;
 	b = -x/den;
-	
+
 	BRANCH_set_g(branch,g);                                // per unit
 	BRANCH_set_b(branch,b);                                // per unit
 
-	BRANCH_set_b_to(branch,(art_transfo->b1/100.)*(art_transfo->snom/parser->base_power));   // per unit (VB1,SNOM)
-	BRANCH_set_b_from(branch,(art_transfo->b2/100.)*(art_transfo->snom/parser->base_power)); // per unit (VB1,SNOM)
+	BRANCH_set_b_m(branch,(art_transfo->b1/100.)*(art_transfo->snom/parser->base_power));   // per unit (VB1,SNOM)
+	BRANCH_set_b_k(branch,(art_transfo->b2/100.)*(art_transfo->snom/parser->base_power)); // per unit (VB1,SNOM)
 
-	BRANCH_set_ratio(branch,100./art_transfo->n,0);          // units of bus_from_base/bus_to_base
+	BRANCH_set_ratio(branch,100./art_transfo->n,0);          // units of bus_k_base/bus_m_base
 	BRANCH_set_ratio_max(branch,BRANCH_get_ratio(branch,0));
 	BRANCH_set_ratio_min(branch,BRANCH_get_ratio(branch,0));
 
 	BRANCH_set_phase(branch,-art_transfo->phi*PI/180.,0);    // radians
 	BRANCH_set_phase_max(branch,BRANCH_get_phase(branch,0));
 	BRANCH_set_phase_min(branch,BRANCH_get_phase(branch,0));
-	
+
       }
       else {
 	sprintf(parser->error_string,"unable to find buses of transfo %s",art_transfo->name);
 	parser->error_flag = TRUE;
       }
-      
+
       index++;
     }
   }
-  
+
   // LTC-V
   for (art_ltcv = parser->ltcv_list; art_ltcv != NULL; art_ltcv = art_ltcv->next) {
-    
+
     art_transfo = NULL;
     HASH_FIND_STR(parser->transfo_hash,art_ltcv->name,art_transfo);
     if (art_transfo) {
@@ -792,12 +792,12 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       art_bus = NULL;
       HASH_FIND_STR(parser->bus_hash,art_ltcv->con_bus,art_bus);
       if (art_bus) {
-	
+
 	branch = NET_get_branch(net,art_transfo->index);
 	bus = NET_get_bus(net,art_bus->index);
-	busA = BRANCH_get_bus_from(branch);
-	busB = BRANCH_get_bus_to(branch);
-	
+	busA = BRANCH_get_bus_k(branch);
+	busB = BRANCH_get_bus_m(branch);
+
 	BRANCH_set_type(branch,BRANCH_TYPE_TRAN_TAP_V); // tap changer tap that regulates voltage
 	BRANCH_set_reg_bus(branch,bus);                 // branch regulates bus
 	BUS_add_reg_tran(bus,branch);               // add regulating transformer to bus
@@ -809,7 +809,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 	// Voltage limits
 	BUS_set_v_set(bus,art_ltcv->vdes,0); // per unit
 	BUS_set_v_max(bus,art_ltcv->vdes+art_ltcv->tolv);
-	BUS_set_v_min(bus,art_ltcv->vdes-art_ltcv->tolv);	
+	BUS_set_v_min(bus,art_ltcv->vdes-art_ltcv->tolv);
 
 	// tap-voltage sensitivity
 	if (busA == bus)
@@ -827,14 +827,14 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 		art_ltcv->con_bus,
 		art_ltcv->name);
 	parser->error_flag = TRUE;
-      }   
+      }
     }
     else {
       sprintf(parser->error_string,"unable to find LTC-V transformer %s",art_ltcv->name);
       parser->error_flag = TRUE;
-    }   
+    }
   }
-  
+
   // Vargens
   index = 0;
   LIST_len(ART_Vargen,parser->vargen_list,next,num_vargens);
@@ -932,7 +932,7 @@ void ART_PARSER_del(ART_Parser* parser) {
   LIST_map(ART_Bat,parser->bat_list,bat,next,{free(bat);});
 
   // Parser
-  free(parser);  
+  free(parser);
 }
 
 BOOL ART_PARSER_has_error(ART_Parser* parser) {
@@ -956,15 +956,15 @@ void ART_PARSER_callback_field(char* s, void* data) {
 
   // Field callback
   switch (parser->state) {
-    
+
   case ART_PARSER_STATE_INIT:
     if (parser->field == 0) {
-            
+
       // Bus
       if (strstr(s,ART_BUS_TOKEN) != NULL) {
 	parser->state = ART_PARSER_STATE_BUS;
       }
-      
+
       // Line
       else if (strstr(s,ART_LINE_TOKEN) != NULL) {
 	parser->state = ART_PARSER_STATE_LINE;
@@ -1003,20 +1003,20 @@ void ART_PARSER_callback_field(char* s, void* data) {
       // Vargen
       else if (strstr(s,ART_VARGEN_TOKEN) != NULL) {
 	parser->state = ART_PARSER_STATE_VARGEN;
-      }	
+      }
 
       // Bat
       else if (strstr(s,ART_BAT_TOKEN) != NULL) {
 	parser->state = ART_PARSER_STATE_BAT;
-      }	
-      
+      }
+
       // Base
       else if (strstr(s,ART_BASE_TOKEN) != NULL) {
 	parser->state = ART_PARSER_STATE_BASE;
-      }	
+      }
     }
     break;
-    
+
   case ART_PARSER_STATE_BUS:
     ART_PARSER_parse_bus_field((char*)s,parser);
     break;
@@ -1051,7 +1051,7 @@ void ART_PARSER_callback_field(char* s, void* data) {
     ART_PARSER_parse_base_field((char*)s,parser);
     break;
   }
-    
+
   // Update field
   parser->field++;
 }
@@ -1100,7 +1100,7 @@ void ART_PARSER_callback_record(void *data) {
   case ART_PARSER_STATE_BASE:
     ART_PARSER_parse_base_record(parser);
     break;
-  }  
+  }
 }
 
 void ART_PARSER_parse_bus_field(char* s, ART_Parser* parser) {
@@ -1172,10 +1172,10 @@ void ART_PARSER_parse_line_field(char* s, ART_Parser* parser) {
       strcpy(parser->line->name,s);
       break;
     case 2:
-      strcpy(parser->line->from_bus,s);
+      strcpy(parser->line->k_bus,s);
       break;
     case 3:
-      strcpy(parser->line->to_bus,s);
+      strcpy(parser->line->m_bus,s);
       break;
     case 4:
       parser->line->r = atof(s);
@@ -1227,10 +1227,10 @@ void ART_PARSER_parse_transfo_field(char* s, ART_Parser* parser) {
       strcpy(parser->transfo->name,s);
       break;
     case 2:
-      strcpy(parser->transfo->from_bus,s);
+      strcpy(parser->transfo->k_bus,s);
       break;
     case 3:
-      strcpy(parser->transfo->to_bus,s);
+      strcpy(parser->transfo->m_bus,s);
       break;
     case 4:
       parser->transfo->r = atof(s);
@@ -1283,9 +1283,9 @@ void ART_PARSER_parse_ltcv_field(char* s, ART_Parser* parser) {
   // New ltcv
   if (parser->field == 1) {
     parser->ltcv = (ART_Ltcv*)malloc(sizeof(ART_Ltcv));
-    parser->ltcv->next = NULL;    
+    parser->ltcv->next = NULL;
   }
-  
+
   // Fields
   if (parser->ltcv) {
     switch (parser->field) {
@@ -1345,10 +1345,10 @@ void ART_PARSER_parse_trfo_field(char* s, ART_Parser* parser) {
       strcpy(parser->trfo->name,s);
       break;
     case 2:
-      strcpy(parser->trfo->from_bus,s);
+      strcpy(parser->trfo->k_bus,s);
       break;
     case 3:
-      strcpy(parser->trfo->to_bus,s);
+      strcpy(parser->trfo->m_bus,s);
       break;
     case 4:
       strcpy(parser->trfo->con_bus,s);
@@ -1411,9 +1411,9 @@ void ART_PARSER_parse_pshiftp_field(char* s, ART_Parser* parser) {
   // New pshiftp
   if (parser->field == 1) {
     parser->pshiftp = (ART_Pshiftp*)malloc(sizeof(ART_Pshiftp));
-    parser->pshiftp->next = NULL;    
+    parser->pshiftp->next = NULL;
   }
-  
+
   // Fields
   if (parser->pshiftp) {
     switch (parser->field) {
@@ -1687,7 +1687,7 @@ void ART_PARSER_parse_base_record(ART_Parser* parser) {
 }
 
 void ART_PARSER_set(ART_Parser* parser, char* key, REAL value) {
-  
+
   if (!parser)
     return;
 

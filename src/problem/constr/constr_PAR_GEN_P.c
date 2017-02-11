@@ -12,23 +12,23 @@
 #include <assert.h>
 
 void CONSTR_PAR_GEN_P_init(Constr* c) {
-  
+
   // Init
   CONSTR_set_data(c,NULL);
 }
 
 void CONSTR_PAR_GEN_P_clear(Constr* c) {
-  
+
   // Counters
   CONSTR_set_Acounter(c,0);
   CONSTR_set_Aconstr_index(c,0);
-  
+
   // Flags
   CONSTR_clear_bus_counted(c);
 }
 
 void CONSTR_PAR_GEN_P_count_step(Constr* c, Branch* br, int t) {
-  
+
   // Local variables
   Bus* buses[2];
   Bus* bus;
@@ -42,7 +42,7 @@ void CONSTR_PAR_GEN_P_count_step(Constr* c, Branch* br, int t) {
 
   // Number of periods
   T = BRANCH_get_num_periods(br);
-  
+
   // Constr data
   Acounter = CONSTR_get_Acounter_ptr(c);
   Aconstr_index = CONSTR_get_Aconstr_index_ptr(c);
@@ -57,16 +57,16 @@ void CONSTR_PAR_GEN_P_count_step(Constr* c, Branch* br, int t) {
     return;
 
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
 
   // Buses
   for (i = 0; i < 2; i++) {
-    
+
     bus = buses[i];
-    
+
     if (!bus_counted[BUS_get_index(bus)*T+t]) {
-      
+
       // Active power of slack generators
       if (BUS_is_slack(bus)) {
 	gen1 = BUS_get_gen(bus);
@@ -81,17 +81,17 @@ void CONSTR_PAR_GEN_P_count_step(Constr* c, Branch* br, int t) {
     }
 
     // Update counted flag
-    bus_counted[BUS_get_index(bus)*T+t] = TRUE;    
+    bus_counted[BUS_get_index(bus)*T+t] = TRUE;
   }
 }
 
 void CONSTR_PAR_GEN_P_allocate(Constr* c) {
-  
+
   // Local variables
   int num_constr;
   int num_vars;
   int Acounter;
-  
+
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
   num_constr = CONSTR_get_Aconstr_index(c);
   Acounter = CONSTR_get_Acounter(c);
@@ -110,7 +110,7 @@ void CONSTR_PAR_GEN_P_allocate(Constr* c) {
 }
 
 void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t) {
-  
+
   // Local variables
   Bus* buses[2];
   Bus* bus;
@@ -126,7 +126,7 @@ void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t) {
 
   // Number of periods
   T = BRANCH_get_num_periods(br);
-  
+
   // Cosntr data
   b = CONSTR_get_b(c);
   A = CONSTR_get_A(c);
@@ -143,18 +143,18 @@ void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t) {
     return;
 
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
 
   // Buses
   for (i = 0; i < 2; i++) {
-    
+
     bus = buses[i];
-    
+
     if (!bus_counted[BUS_get_index(bus)*T+t]) {
-      
+
       // Active power of slack generators
-      if (BUS_is_slack(bus)) {	
+      if (BUS_is_slack(bus)) {
 	gen1 = BUS_get_gen(bus);
 	for (gen2 = GEN_get_next(gen1); gen2 != NULL; gen2 = GEN_get_next(gen2)) {
 	  VEC_set(b,*Aconstr_index,0.);
@@ -180,8 +180,8 @@ void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t) {
     }
 
     // Update counted flag
-    bus_counted[BUS_get_index(bus)*T+t] = TRUE;   
-  }  
+    bus_counted[BUS_get_index(bus)*T+t] = TRUE;
+  }
 }
 
 void CONSTR_PAR_GEN_P_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
