@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -2310,7 +2310,6 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
   REAL dP;
 
   REAL v[2];
-  REAL w[2];
   REAL dv;
 
   REAL a;
@@ -2340,13 +2339,9 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
   // Periods
   T = net->num_periods;
 
-  // Voltage angle and magnitudes
+  // Voltage magnitudes
   for (k = 0; k < 2; k++) {
     bus = buses[k];
-    if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG) && var_values)
-      w[k] = VEC_get(var_values,BUS_get_index_v_ang(bus,t));
-    else
-      w[k] = BUS_get_v_ang(bus,t);
     if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) && var_values)
       v[k] = VEC_get(var_values,BUS_get_index_v_mag(bus,t));
     else
@@ -2409,14 +2404,9 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
 
   // Branch flows
   for (k = 0; k < 2; k++) {
+    
     bus = buses[k];
-    /* Branch flow equations for reference:
-    *  theta = w_k-w_m-theta_km+theta_mk
-    *  P_km =  a_km^2*v_k^2*(g_km + gsh_km) - a_km*a_mk*v_k*v_m*( g_km*cos(theta) + b_km*sin(theta) )
-    *  Q_km = -a_km^2*v_k^2*(b_km + bsh_km) - a_km*a_mk*v_k*v_m*( g_km*sin(theta) - b_km*cos(theta) )
-    *  similar for mk
-    */
-
+    
     // Update injected P,Q at buses k and m
     if (k == 0) {
       BUS_inject_P(bus,-BRANCH_get_P_km(br, var_values, t),t);
