@@ -1140,7 +1140,7 @@ cdef class Branch:
 
     def get_P_km(self,var_values=None):
         """
-        Gets the real power flow at bus "k" towards bus "m" (from -> to)(p.u.)
+        Gets the real power flow at bus "k" towards bus "m" (from -> to) (p.u.)
 
         Parameters
         ----------
@@ -1150,6 +1150,7 @@ cdef class Branch:
         -------
         P_km : float or :class:`ndarray <numpy.ndarray>`
         """
+
         cdef np.ndarray[double,mode='c'] x = var_values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
         r = [cbranch.BRANCH_get_P_km(self._c_ptr,v,t) for t in range(self.num_periods)]
@@ -1170,6 +1171,7 @@ cdef class Branch:
         -------
         Q_km : float or :class:`ndarray <numpy.ndarray>`
         """
+
         cdef np.ndarray[double,mode='c'] x = var_values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
         r = [cbranch.BRANCH_get_Q_km(self._c_ptr,v,t) for t in range(self.num_periods)]
@@ -1190,6 +1192,7 @@ cdef class Branch:
         -------
         P_mk : float or :class:`ndarray <numpy.ndarray>`
         """
+
         cdef np.ndarray[double,mode='c'] x = var_values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
         r = [cbranch.BRANCH_get_P_mk(self._c_ptr,v,t) for t in range(self.num_periods)]
@@ -1210,6 +1213,7 @@ cdef class Branch:
         -------
         Q_mk : float or :class:`ndarray <numpy.ndarray>`
         """
+
         cdef np.ndarray[double,mode='c'] x = var_values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
         r = [cbranch.BRANCH_get_Q_mk(self._c_ptr,v,t) for t in range(self.num_periods)]
@@ -1230,6 +1234,7 @@ cdef class Branch:
         -------
         P_km_series : float or :class:`ndarray <numpy.ndarray>`
         """
+
         cdef np.ndarray[double,mode='c'] x = var_values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
         r = [cbranch.BRANCH_get_P_km_series(self._c_ptr,v,t) for t in range(self.num_periods)]
@@ -1250,6 +1255,7 @@ cdef class Branch:
         -------
         Q_km_series : float or :class:`ndarray <numpy.ndarray>`
         """
+
         cdef np.ndarray[double,mode='c'] x = var_values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
         r = [cbranch.BRANCH_get_Q_km_series(self._c_ptr,v,t) for t in range(self.num_periods)]
@@ -1270,6 +1276,7 @@ cdef class Branch:
         -------
         P_mk_series : float or :class:`ndarray <numpy.ndarray>`
         """
+
         cdef np.ndarray[double,mode='c'] x = var_values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
         r = [cbranch.BRANCH_get_P_mk_series(self._c_ptr,v,t) for t in range(self.num_periods)]
@@ -1290,6 +1297,7 @@ cdef class Branch:
         -------
         Q_mk_series : float or :class:`ndarray <numpy.ndarray>`
         """
+
         cdef np.ndarray[double,mode='c'] x = var_values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
         r = [cbranch.BRANCH_get_Q_mk_series(self._c_ptr,v,t) for t in range(self.num_periods)]
@@ -1310,6 +1318,7 @@ cdef class Branch:
         -------
         P_k_shunt : float or :class:`ndarray <numpy.ndarray>`
         """
+
         cdef np.ndarray[double,mode='c'] x = var_values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
         r = [cbranch.BRANCH_get_P_k_shunt(self._c_ptr,v,t) for t in range(self.num_periods)]
@@ -1330,6 +1339,7 @@ cdef class Branch:
         -------
         Q_k_shunt : float or :class:`ndarray <numpy.ndarray>`
         """
+
         cdef np.ndarray[double,mode='c'] x = var_values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
         r = [cbranch.BRANCH_get_Q_k_shunt(self._c_ptr,v,t) for t in range(self.num_periods)]
@@ -1350,6 +1360,7 @@ cdef class Branch:
         -------
         P_m_shunt : float or :class:`ndarray <numpy.ndarray>`
         """
+
         cdef np.ndarray[double,mode='c'] x = var_values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
         r = [cbranch.BRANCH_get_P_m_shunt(self._c_ptr,v,t) for t in range(self.num_periods)]
@@ -1370,6 +1381,7 @@ cdef class Branch:
         -------
         Q_m_shunt : float or :class:`ndarray <numpy.ndarray>`
         """
+
         cdef np.ndarray[double,mode='c'] x = var_values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
         r = [cbranch.BRANCH_get_Q_m_shunt(self._c_ptr,v,t) for t in range(self.num_periods)]
@@ -1604,8 +1616,6 @@ cdef class Branch:
 
     property Q_series_from_to:
         """ .. deprecated:: 1.2.5  Same as :attr:`Q_km_series <pfnet.Branch.Q_km_series>`.
-
-        Reactive power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (p.u.) (float or array).
         """
         def __get__(self): return self.Q_km_series
 
