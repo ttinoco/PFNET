@@ -2409,12 +2409,12 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
     
     // Update injected P,Q at buses k and m
     if (k == 0) {
-      BUS_inject_P(bus,-BRANCH_get_P_km(br, var_values, t),t);
-      BUS_inject_Q(bus,-BRANCH_get_Q_km(br, var_values, t),t);
+      BUS_inject_P(bus,-BRANCH_get_P_km(br,var_values,t),t);
+      BUS_inject_Q(bus,-BRANCH_get_Q_km(br,var_values,t),t);
     }
     else {
-      BUS_inject_P(bus,-BRANCH_get_P_mk(br, var_values, t),t);
-      BUS_inject_Q(bus,-BRANCH_get_Q_mk(br, var_values, t),t);
+      BUS_inject_P(bus,-BRANCH_get_P_mk(br,var_values,t),t);
+      BUS_inject_Q(bus,-BRANCH_get_Q_mk(br,var_values,t),t);
     }
   }
 
