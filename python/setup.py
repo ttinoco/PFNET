@@ -49,12 +49,6 @@ if no_gvc:
 else:
     libraries.append('gvc')
 
-# raw-parser
-if no_raw_parser:
-    extra_compile_args.append("-DNO_RAW_PARSER")
-else:
-    libraries.append('raw_parser')
-
 if pfnet_args:
     # static link
     pfnet_lib = pfnet_args[-1]
@@ -62,6 +56,12 @@ if pfnet_args:
 else:
     # dynamic link
     libraries.append("pfnet")
+
+    # raw-parser (not needed if static link)
+    if no_raw_parser:
+        extra_compile_args.append("-DNO_RAW_PARSER")
+    else:
+        libraries.append('raw_parser')
 
 ext = Extension("pfnet.cpfnet",
                 [os.path.join("pfnet", 'cpfnet.pyx')],
