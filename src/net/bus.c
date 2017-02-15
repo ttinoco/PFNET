@@ -136,17 +136,9 @@ void BUS_add_reg_shunt(Bus* bus, Shunt* reg_shunt) {
     bus->reg_shunt = SHUNT_list_reg_add(bus->reg_shunt,reg_shunt);
 }
 
-void BUS_add_branch_from(Bus* bus, Branch* branch) {
-  BUS_add_branch_k(bus, branch);
-}
-
 void BUS_add_branch_k(Bus* bus, Branch* branch) {
   if (bus)
     bus->branch_k = BRANCH_list_k_add(bus->branch_k,branch);
-}
-
-void BUS_del_branch_from(Bus* bus, Branch* branch) {
-  BUS_del_branch_k(bus, branch);
 }
 
 void BUS_del_branch_k(Bus* bus, Branch* branch) {
@@ -154,17 +146,9 @@ void BUS_del_branch_k(Bus* bus, Branch* branch) {
     bus->branch_k = BRANCH_list_k_del(bus->branch_k,branch);
 }
 
-void BUS_add_branch_to(Bus* bus, Branch* branch) {
-  BUS_add_branch_m(bus, branch);
-}
-
 void BUS_add_branch_m(Bus* bus, Branch* branch) {
   if (bus)
     bus->branch_m = BRANCH_list_m_add(bus->branch_m,branch);
-}
-
-void BUS_del_branch_to(Bus* bus, Branch* branch) {
-  BUS_del_branch_m(bus, branch);
 }
 
 void BUS_del_branch_m(Bus* bus, Branch* branch) {
@@ -560,19 +544,11 @@ Shunt* BUS_get_reg_shunt(Bus* bus) {
     return NULL;
 }
 
-Branch* BUS_get_branch_from(Bus* bus) {
-  return BUS_get_branch_k(bus);
-}
-
 Branch* BUS_get_branch_k(Bus* bus) {
   if (bus)
     return bus->branch_k;
   else
     return NULL;
-}
-
-Branch* BUS_get_branch_to(Bus* bus) {
-  return BUS_get_branch_m(bus);
 }
 
 Branch* BUS_get_branch_m(Bus* bus) {

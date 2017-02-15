@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -575,8 +575,8 @@ Bus* NET_create_sorted_bus_list(Net* net, int sort_by, int t) {
 }
 
 int NET_get_bus_neighbors(Net* net, Bus* bus, int spread, int* neighbors, char* queued) {
-  /* Returns number of neighbors including itself that are at most "spread"
-   * branches away.
+  /** Returns number of neighbors including itself that are at most "spread"
+   *  branches away.
    */
 
   // Local variables
@@ -603,24 +603,24 @@ int NET_get_bus_neighbors(Net* net, Bus* bus, int spread, int* neighbors, char* 
     num_new = 0;
     while (neighbors_curr < neighbors_total) {
       bus1 = NET_get_bus(net,neighbors[neighbors_curr]);
-      for (br = BUS_get_branch_from(bus1); br != NULL; br = BRANCH_get_from_next(br)) {
-	if (bus1 != BRANCH_get_bus_from(br)) {
+      for (br = BUS_get_branch_k(bus1); br != NULL; br = BRANCH_get_next_k(br)) {
+	if (bus1 != BRANCH_get_bus_k(br)) {
 	  sprintf(net->error_string,"unable to construct covariance matrix");
 	  net->error_flag = TRUE;
 	}
-	bus2 = BRANCH_get_bus_to(br);
+	bus2 = BRANCH_get_bus_m(br);
 	if (!queued[BUS_get_index(bus2)]) {
 	  neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
 	  queued[BUS_get_index(bus2)] = TRUE;
 	  num_new++;
 	}
       }
-      for (br = BUS_get_branch_to(bus1); br != NULL; br = BRANCH_get_to_next(br)) {
-	if (bus1 != BRANCH_get_bus_to(br)) {
+      for (br = BUS_get_branch_m(bus1); br != NULL; br = BRANCH_get_next_m(br)) {
+	if (bus1 != BRANCH_get_bus_m(br)) {
 	  sprintf(net->error_string,"unable to construct covariance matrix");
 	  net->error_flag = TRUE;
 	}
-	bus2 = BRANCH_get_bus_from(br);
+	bus2 = BRANCH_get_bus_k(br);
 	if (!queued[BUS_get_index(bus2)]) {
 	  neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
 	  queued[BUS_get_index(bus2)] = TRUE;
@@ -637,12 +637,12 @@ int NET_get_bus_neighbors(Net* net, Bus* bus, int spread, int* neighbors, char* 
 }
 
 Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
-  /* This function constructs a "spatial" covariance matrix for the active powers of
-   * variable generators. The matrix is constructed such that the correlation
-   * coefficients of the (variable) active powers of vargens that are less than
-   * "spread" branches away is equal to "corr". Only the lower triangular part
-   * of the covaraicen matrix is stored. The resulting matrix should be checked
-   * to make sure it is a valid covariance matrix.
+  /** This function constructs a "spatial" covariance matrix for the active powers of
+   *  variable generators. The matrix is constructed such that the correlation
+   *  coefficients of the (variable) active powers of vargens that are less than
+   *  "spread" branches away is equal to "corr". Only the lower triangular part
+   *  of the covaraicen matrix is stored. The resulting matrix should be checked
+   *  to make sure it is a valid covariance matrix.
    */
 
   // Local variables
@@ -2310,15 +2310,12 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
   REAL dP;
 
   REAL v[2];
-  REAL w[2];
   REAL dv;
 
   REAL a;
   REAL da;
-  // REAL a_temp;
   REAL phi;
   REAL dphi;
-  // REAL phi_temp;
 
   REAL shunt_b;
   REAL shunt_db;
@@ -2342,13 +2339,9 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
   // Periods
   T = net->num_periods;
 
-  // Voltage angle and magnitudes
+  // Voltage magnitudes
   for (k = 0; k < 2; k++) {
     bus = buses[k];
-    if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG) && var_values)
-      w[k] = VEC_get(var_values,BUS_get_index_v_ang(bus,t));
-    else
-      w[k] = BUS_get_v_ang(bus,t);
     if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) && var_values)
       v[k] = VEC_get(var_values,BUS_get_index_v_mag(bus,t));
     else
@@ -2411,22 +2404,17 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
 
   // Branch flows
   for (k = 0; k < 2; k++) {
+    
     bus = buses[k];
-    /* Branch flow equations for refernce:
-    *  theta = w_k-w_m-theta_km+theta_mk
-    *  P_km =  a_km^2*v_k^2*(g_km + gsh_km) - a_km*a_mk*v_k*v_m*( g_km*cos(theta) + b_km*sin(theta) )
-    *  Q_km = -a_km^2*v_k^2*(b_km + bsh_km) - a_km*a_mk*v_k*v_m*( g_km*sin(theta) - b_km*cos(theta) )
-    *  similar for mk
-    */
-
+    
     // Update injected P,Q at buses k and m
     if (k == 0) {
-      BUS_inject_P(bus,-BRANCH_get_P_km(br, var_values, t),t);
-      BUS_inject_Q(bus,-BRANCH_get_Q_km(br, var_values, t),t);
+      BUS_inject_P(bus,-BRANCH_get_P_km(br,var_values,t),t);
+      BUS_inject_Q(bus,-BRANCH_get_Q_km(br,var_values,t),t);
     }
     else {
-      BUS_inject_P(bus,-BRANCH_get_P_mk(br, var_values, t),t);
-      BUS_inject_Q(bus,-BRANCH_get_Q_mk(br, var_values, t),t);
+      BUS_inject_P(bus,-BRANCH_get_P_mk(br,var_values,t),t);
+      BUS_inject_Q(bus,-BRANCH_get_Q_mk(br,var_values,t),t);
     }
   }
 

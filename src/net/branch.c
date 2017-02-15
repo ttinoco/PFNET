@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -252,19 +252,11 @@ REAL BRANCH_get_b(Branch* br) {
     return 0;
 }
 
-REAL BRANCH_get_b_from(Branch* br) {
-  return BRANCH_get_b_k(br);
-}
-
 REAL BRANCH_get_b_k(Branch* br) {
   if (br)
     return br->b_k;
   else
     return 0;
-}
-
-REAL BRANCH_get_b_to(Branch* br) {
-  return BRANCH_get_b_m(br);
 }
 
 REAL BRANCH_get_b_m(Branch* br) {
@@ -281,19 +273,11 @@ REAL BRANCH_get_g(Branch* br) {
     return 0;
 }
 
-REAL BRANCH_get_g_from(Branch* br) {
-  return BRANCH_get_g_k(br);
-}
-
 REAL BRANCH_get_g_k(Branch* br) {
   if (br)
     return br->g_k;
   else
     return 0;
-}
-
-REAL BRANCH_get_g_to(Branch* br) {
-  return BRANCH_get_g_m(br);
 }
 
 REAL BRANCH_get_g_m(Branch* br) {
@@ -303,19 +287,11 @@ REAL BRANCH_get_g_m(Branch* br) {
     return 0;
 }
 
-Bus* BRANCH_get_bus_from(Branch* br) {
-  return BRANCH_get_bus_k(br);
-}
-
 Bus* BRANCH_get_bus_k(Branch* br) {
   if (br)
     return br->bus_k;
   else
     return NULL;
-}
-
-Bus* BRANCH_get_bus_to(Branch* br) {
-  return BRANCH_get_bus_m(br);
 }
 
 Bus* BRANCH_get_bus_m(Branch* br) {
@@ -339,19 +315,11 @@ Branch* BRANCH_get_reg_next(Branch* br) {
     return NULL;
 }
 
-Branch* BRANCH_get_from_next(Branch* br) {
-  return BRANCH_get_next_k(br);
-}
-
 Branch* BRANCH_get_next_k(Branch* br) {
   if (br)
     return br->next_k;
   else
     return NULL;
-}
-
-Branch* BRANCH_get_to_next(Branch* br) {
-  return BRANCH_get_next_m(br);
 }
 
 Branch* BRANCH_get_next_m(Branch* br) {
@@ -382,543 +350,266 @@ REAL BRANCH_get_phase_min(Branch* br) {
     return 0;
 }
 
-// Branch Flow calculations
-// P_km = -P_km_series - P_k_shunt
+void BRANCH_compute_flows(Branch* br, Vec* var_values, int t, REAL* flows) {
+  /** Compute the flows in this branch's pi model equivalent
+   *  including the flow from the bus, the flow in the shunt elements,
+   *  and the flow in the series element. These values are returned in 
+   *  the 'flows' argument.
+   */
+
+  int i;
+  
+  // Buses
+  Bus* bus_k;
+  Bus* bus_m;
+  
+  // Voltages
+  REAL v_k;
+  REAL v_m;
+  
+  // Angles
+  REAL w_k;
+  REAL w_m;
+  
+  // Phase shift
+  REAL phi;
+  
+  // Tap ratios
+  REAL a_km;
+  REAL a_mk = 1.;
+  
+  // Series conductance and susceptance
+  REAL g_km;
+  REAL b_km;
+  REAL g_mk;
+  REAL b_mk;
+  
+  // Shunt conductance and susceptance
+  REAL g_k_sh;
+  REAL b_k_sh;
+  REAL g_m_sh;
+  REAL b_m_sh;
+
+  // Intermediate values
+  REAL v_k_tap_squared;
+  REAL v_m_tap_squared;
+  REAL v_k_v_m_tap;
+  REAL theta_km;
+  REAL theta_mk;
+
+  // Check inputs
+  if (!flows)
+    return;
+  else if (!br || t < 0) {
+    for (i=0; i < BRANCH_FLOW_SIZE; i++)
+      flows[i] = 0;
+    return;
+  }
+
+  // Populate the local variables
+  bus_k = BRANCH_get_bus_k(br);
+  bus_m = BRANCH_get_bus_m(br);
+
+  // Get voltage angles
+  if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VANG) && var_values)
+    w_k = VEC_get(var_values,BUS_get_index_v_ang(bus_k,t));
+  else
+    w_k = BUS_get_v_ang(bus_k,t);
+  if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VANG) && var_values)
+    w_m = VEC_get(var_values,BUS_get_index_v_ang(bus_m,t));
+  else
+    w_m = BUS_get_v_ang(bus_m,t);
+
+  // Get voltage magnitudes
+  if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VMAG) && var_values)
+    v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k,t));
+  else
+    v_k = BUS_get_v_mag(bus_k,t);
+  if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VMAG) && var_values)
+    v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m,t));
+  else
+    v_m = BUS_get_v_mag(bus_m,t);
+
+  // Get series conductance and susceptance
+  g_km = BRANCH_get_g(br);
+  b_km = BRANCH_get_b(br);
+  g_mk = g_km;
+  b_mk = b_km;
+  g_k_sh = BRANCH_get_g_k(br);
+  b_k_sh = BRANCH_get_b_k(br);
+  g_m_sh = BRANCH_get_g_m(br);
+  b_m_sh = BRANCH_get_b_m(br);
+
+  // Get tap ratio from k, a_mk = 1 always
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
+    a_km = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
+  else
+    a_km = BRANCH_get_ratio(br,t);
+
+  // Get phase shift angle, this should be subtracted on side "m" (to)
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) && var_values)
+    phi = VEC_get(var_values,BRANCH_get_index_phase(br,t));
+  else
+    phi = BRANCH_get_phase(br,t);
+
+  // Repeated calculations
+  v_k_tap_squared = a_km*a_km*v_k*v_k;
+  v_m_tap_squared = a_mk*a_mk*v_m*v_m;
+  v_k_v_m_tap = a_km*a_mk*v_k*v_m;
+  theta_km = w_k-w_m-phi;
+  theta_mk = w_m-w_k+phi;
+
+  // Calculate series elements
+  // P_km_series = a_km^2*v_k^2*g_km - a_km*a_mk*v_k*v_m*( g_km*cos(w_k-w_m-phi) + b_km*sin(w_k-w_m-phi))
+  flows[BRANCH_P_KM_SERIES] = (v_k_tap_squared*g_km -
+			       v_k_v_m_tap*( g_km*cos(theta_km) + b_km*sin(theta_km)));
+  
+  // Q_km_series = -a_km^2*v_k^2*b_km - a_km*a_mk*v_k*v_m*( g_km*sin(w_k-w_m-phi) - b_km*cos(w_k-w_m-phi))
+  flows[BRANCH_Q_KM_SERIES] = (-v_k_tap_squared*b_km -
+			       v_k_v_m_tap*( g_km*sin(theta_km) - b_km*cos(theta_km)));
+  
+  // P_mk_series = a_mk^2*v_m^2*g_mk - a_mk*a_km*v_k*v_m*( g_mk*cos(w_k-w_m+phi) + b_mk*sin(w_k-w_m+phi))
+  flows[BRANCH_P_MK_SERIES] = (v_m_tap_squared*g_mk -
+			       v_k_v_m_tap*( g_mk*cos(theta_mk) + b_mk*sin(theta_mk)));
+  
+  // Q_mk_series = -a_mk^2*v_m^2*b_mk - a_mk*a_km*v_k*v_m*( g_mk*sin(w_k-w_m+phi) - b_mk*cos(w_k-w_m+phi))
+  flows[BRANCH_Q_MK_SERIES] = (-v_m_tap_squared*b_mk -
+			       v_k_v_m_tap*( g_mk*sin(theta_mk) - b_mk*cos(theta_mk)));
+
+  // Calculate shunt elements
+  // P_k_shunt = v_k^2*a_km^2*g_k_sh
+  flows[BRANCH_P_K_SHUNT] = v_k_tap_squared*g_k_sh;
+
+  // Q_k_shunt = -v_k^2*a_km^2*b_k_sh
+  flows[BRANCH_Q_K_SHUNT] = -v_k_tap_squared*b_k_sh;
+
+  // P_m_shunt = v_m^2*a_mk^2*g_m_sh
+  flows[BRANCH_P_M_SHUNT] = v_m_tap_squared*g_m_sh;
+
+  // Q_m_shunt = -v_m^2*a_mk^2*b_m_sh
+  flows[BRANCH_Q_M_SHUNT] = -v_m_tap_squared*b_m_sh;
+
+  // Total flows from the given bus
+  // P_km = P_km_series + P_k_shunt
+  flows[BRANCH_P_KM] = flows[BRANCH_P_KM_SERIES] + flows[BRANCH_P_K_SHUNT];
+  
+  // Q_km = Q_km_series + Q_k_shunt
+  flows[BRANCH_Q_KM] = flows[BRANCH_Q_KM_SERIES] + flows[BRANCH_Q_K_SHUNT];
+  
+  // P_mk = P_mk_series + P_m_shunt
+  flows[BRANCH_P_MK] = flows[BRANCH_P_MK_SERIES] + flows[BRANCH_P_M_SHUNT];
+  
+  // Q_mk = Q_mk_series + Q_m_shunt
+  flows[BRANCH_Q_MK] = flows[BRANCH_Q_MK_SERIES] + flows[BRANCH_Q_M_SHUNT];
+}
+
 REAL BRANCH_get_P_km(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return (BRANCH_get_P_km_series(br,var_values,t) +
-            BRANCH_get_P_k_shunt(br,var_values,t));
-  }
-  return 0;
+  /** Get the real power flow measured at bus "k" towards bus "m".
+   *  P_km = P_km_series + P_k_shunt
+   */
+  REAL flows[BRANCH_FLOW_SIZE];
+  BRANCH_compute_flows(br,var_values,t,flows);
+  return flows[BRANCH_P_KM];
 }
 
-// Q_km = -Q_km_series  Q_k_shunt
 REAL BRANCH_get_Q_km(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return (BRANCH_get_Q_km_series(br,var_values,t) +
-            BRANCH_get_Q_k_shunt(br,var_values,t));
-  }
-  else
-    return 0;
+  /** Get the reactive power flow measured at bus "k" towards bus "m".
+   *  Q_km = Q_km_series + Q_k_shunt
+   */
+  REAL flows[BRANCH_FLOW_SIZE];
+  BRANCH_compute_flows(br,var_values,t,flows);
+  return flows[BRANCH_Q_KM];
 }
 
-// P_mk = -P_mk_series - P_m_shunt
 REAL BRANCH_get_P_mk(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return (BRANCH_get_P_mk_series(br,var_values,t) +
-            BRANCH_get_P_m_shunt(br,var_values,t));
-  }
-  else
-    return 0;
+  /** Get the real power flow measured at bus "m" towards bus "k".
+   *  P_mk = P_mk_series + P_m_shunt
+   */
+  REAL flows[BRANCH_FLOW_SIZE];
+  BRANCH_compute_flows(br,var_values,t,flows);
+  return flows[BRANCH_P_MK];
 }
 
-// Q_mk = -Q_mk_series - Q_m_shunt
 REAL BRANCH_get_Q_mk(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return (BRANCH_get_Q_mk_series(br,var_values,t) +
-            BRANCH_get_Q_m_shunt(br,var_values,t));
-  }
-  else
-    return 0;
+  /** Get the reactive power flow measured at bus "m" towards bus "k".
+   *  Q_mk = Q_mk_series + Q_m_shunt
+   */
+  REAL flows[BRANCH_FLOW_SIZE];
+  BRANCH_compute_flows(br,var_values,t,flows);
+  return flows[BRANCH_Q_MK];
 }
 
-// P_km_series = a_km^2*v_k^2*g_km - a_km*a_mk*v_k*v_m*( g_km*cos(w_k-w_m-phi) + b_km*sin(w_k-w_m-phi))
 REAL BRANCH_get_P_km_series(Branch* br, Vec* var_values, int t) {
-  // buses
-  Bus* bus_k;
-  Bus* bus_m;
-  // voltages
-  REAL v_k;
-  REAL v_m;
-  // angles
-  REAL w_k;
-  REAL w_m;
-  // phase shift
-  REAL phi;
-  // tap ratios
-  REAL a_km;
-  REAL a_mk = 1.;
-  // series conductance and susceptance
-  REAL g_km;
-  REAL b_km;
-
-  if (br && t >= 0 && t < br->num_periods) {
-    // get k (from) and m (to) buses
-    bus_k = BRANCH_get_bus_k(br);
-    bus_m = BRANCH_get_bus_m(br);
-
-    // get voltage angles (updated if it is a variable)
-    if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VANG) && var_values)
-      w_k = VEC_get(var_values,BUS_get_index_v_ang(bus_k,t));
-    else
-      w_k = BUS_get_v_ang(bus_k,t);
-    if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VANG) && var_values)
-      w_m = VEC_get(var_values,BUS_get_index_v_ang(bus_m,t));
-    else
-      w_m = BUS_get_v_ang(bus_m,t);
-
-    // get voltage magnitudes (updated if it is a variable)
-    if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k,t));
-    else
-      v_k = BUS_get_v_mag(bus_k,t);
-    if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m,t));
-    else
-      v_m = BUS_get_v_mag(bus_m,t);
-
-    // get series conductance and susceptance
-    g_km = BRANCH_get_g(br);
-    b_km = BRANCH_get_b(br);
-
-    // get tap ratio from k (updated if a variable), a_mk = 1 always
-    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
-      a_km = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
-    else
-      a_km = BRANCH_get_ratio(br,t);
-
-    // get phase shift angle (updated if a variable) this should be subtracted on side 'm' (to)
-    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) && var_values)
-      phi = VEC_get(var_values,BRANCH_get_index_phase(br,t));
-    else
-      phi = BRANCH_get_phase(br,t);
-
-    return (a_km*a_km*v_k*v_k*g_km -
-            a_km*a_mk*v_k*v_m*( g_km*cos(w_k-w_m-phi) + b_km*sin(w_k-w_m-phi)));
-  }
-  else
-    return 0;
+  /** Get the real power flow across the series element from bus "k" to bus "m".
+   *  P_km_series = a_km^2*v_k^2*g_km - a_km*a_mk*v_k*v_m*( g_km*cos(w_k-w_m-phi) + b_km*sin(w_k-w_m-phi))
+   */
+  REAL flows[BRANCH_FLOW_SIZE];
+  BRANCH_compute_flows(br,var_values,t,flows);
+  return flows[BRANCH_P_KM_SERIES];
 }
 
-// Q_km_series = -a_km^2*v_k^2*b_km - a_km*a_mk*v_k*v_m*( g_km*sin(w_k-w_m-phi) - b_km*cos(w_k-w_m-phi))
 REAL BRANCH_get_Q_km_series(Branch* br, Vec* var_values, int t) {
-  // buses
-  Bus* bus_k;
-  Bus* bus_m;
-  // voltages
-  REAL v_k;
-  REAL v_m;
-  // angles
-  REAL w_k;
-  REAL w_m;
-  // phase shift
-  REAL phi;
-  // tap ratios
-  REAL a_km;
-  REAL a_mk = 1.;
-  // series conductance and susceptance
-  REAL g_km;
-  REAL b_km;
-
-  if (br && t >= 0 && t < br->num_periods) {
-    // get k (from) and m (to) buses
-    bus_k = BRANCH_get_bus_k(br);
-    bus_m = BRANCH_get_bus_m(br);
-
-    // get voltage angles (updated if it is a variable)
-    if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VANG) && var_values)
-      w_k = VEC_get(var_values,BUS_get_index_v_ang(bus_k,t));
-    else
-      w_k = BUS_get_v_ang(bus_k,t);
-    if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VANG) && var_values)
-      w_m = VEC_get(var_values,BUS_get_index_v_ang(bus_m,t));
-    else
-      w_m = BUS_get_v_ang(bus_m,t);
-
-    // get voltage magnitudes (updated if it is a variable)
-    if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k,t));
-    else
-      v_k = BUS_get_v_mag(bus_k,t);
-    if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m,t));
-    else
-      v_m = BUS_get_v_mag(bus_m,t);
-
-    // get series conductance and susceptance
-    g_km = BRANCH_get_g(br);
-    b_km = BRANCH_get_b(br);
-
-    // get tap ratio from k (updated if a variable), a_mk = 1 always
-    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
-      a_km = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
-    else
-      a_km = BRANCH_get_ratio(br,t);
-
-    // get phase shift angle (updated if a variable) this should be subtracted on side 'm' (to)
-    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) && var_values)
-      phi = VEC_get(var_values,BRANCH_get_index_phase(br,t));
-    else
-      phi = BRANCH_get_phase(br,t);
-
-    return (-a_km*a_km*v_k*v_k*b_km -
-            a_km*a_mk*v_k*v_m*( g_km*sin(w_k-w_m-phi) - b_km*cos(w_k-w_m-phi)));
-  }
-  else
-    return 0;
+  /** Get the reactive power flow across the series element from bus "k" to bus "m".
+   *  Q_km_series = -a_km^2*v_k^2*b_km - a_km*a_mk*v_k*v_m*( g_km*sin(w_k-w_m-phi) - b_km*cos(w_k-w_m-phi))
+   */
+  REAL flows[BRANCH_FLOW_SIZE];
+  BRANCH_compute_flows(br,var_values,t,flows);
+  return flows[BRANCH_Q_KM_SERIES];
 }
 
-// P_mk_series = -a_mk^2*v_m^2*g_mk - a_mk*a_km*v_k*v_m*( g_mk*cos(w_k-w_m+phi) + b_mk*sin(w_k-w_m+phi))
 REAL BRANCH_get_P_mk_series(Branch* br, Vec* var_values, int t) {
-  // buses
-  Bus* bus_k;
-  Bus* bus_m;
-  // voltages
-  REAL v_k;
-  REAL v_m;
-  // angles
-  REAL w_k;
-  REAL w_m;
-  // phase shift
-  REAL phi;
-  // tap ratios
-  REAL a_km;
-  REAL a_mk = 1.;
-  // series conductance and susceptance
-  REAL g_mk;  // equal to g_km
-  REAL b_mk;  // equal to b_km
-
-  if (br && t >= 0 && t < br->num_periods) {
-    // get k (from) and m (to) buses
-    bus_k = BRANCH_get_bus_k(br);
-    bus_m = BRANCH_get_bus_m(br);
-
-    // get voltage angles (updated if it is a variable)
-    if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VANG) && var_values)
-      w_k = VEC_get(var_values,BUS_get_index_v_ang(bus_k,t));
-    else
-      w_k = BUS_get_v_ang(bus_k,t);
-    if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VANG) && var_values)
-      w_m = VEC_get(var_values,BUS_get_index_v_ang(bus_m,t));
-    else
-      w_m = BUS_get_v_ang(bus_m,t);
-
-    // get voltage magnitudes (updated if it is a variable)
-    if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k,t));
-    else
-      v_k = BUS_get_v_mag(bus_k,t);
-    if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m,t));
-    else
-      v_m = BUS_get_v_mag(bus_m,t);
-
-    // get series conductance and susceptance
-    g_mk = BRANCH_get_g(br);
-    b_mk = BRANCH_get_b(br);
-
-    // get tap ratio from k (updated if a variable), a_mk = 1 always
-    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
-      a_km = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
-    else
-      a_km = BRANCH_get_ratio(br,t);
-
-    // get phase shift angle (updated if a variable) this should be subtracted on side 'm' (to)
-    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) && var_values)
-      phi = VEC_get(var_values,BRANCH_get_index_phase(br,t));
-    else
-      phi = BRANCH_get_phase(br,t);
-
-    return (a_mk*a_mk*v_m*v_m*g_mk -
-            a_mk*a_km*v_k*v_m*( g_mk*cos(w_m-w_k+phi) + b_mk*sin(w_m-w_k+phi)));
-  }
-  else
-    return 0;
+  /** Get the real power flow across the series element from bus "m" to bus "k".
+   *  P_mk_series = -a_mk^2*v_m^2*g_mk - a_mk*a_km*v_k*v_m*( g_mk*cos(w_k-w_m+phi) + b_mk*sin(w_k-w_m+phi))
+   */
+  REAL flows[BRANCH_FLOW_SIZE];
+  BRANCH_compute_flows(br,var_values,t,flows);
+  return flows[BRANCH_P_MK_SERIES];
 }
 
-// Q_mk_series = -a_mk^2*v_m^2*b_mk - a_mk*a_km*v_k*v_m*( g_mk*sin(w_k-w_m+phi) - b_mk*cos(w_k-w_m+phi))
 REAL BRANCH_get_Q_mk_series(Branch* br, Vec* var_values, int t) {
-  // buses
-  Bus* bus_k;
-  Bus* bus_m;
-  // voltages
-  REAL v_k;
-  REAL v_m;
-  // angles
-  REAL w_k;
-  REAL w_m;
-  // phase shift
-  REAL phi;
-  // tap ratios
-  REAL a_km;
-  REAL a_mk = 1.;
-  // series conductance and susceptance
-  REAL g_mk;  // equal to g_km
-  REAL b_mk;  // equal to b_km
-
-  if (br && t >= 0 && t < br->num_periods) {
-    // get k (from) and m (to) buses
-    bus_k = BRANCH_get_bus_k(br);
-    bus_m = BRANCH_get_bus_m(br);
-
-    // get voltage angles (updated if it is a variable)
-    if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VANG) && var_values)
-      w_k = VEC_get(var_values,BUS_get_index_v_ang(bus_k,t));
-    else
-      w_k = BUS_get_v_ang(bus_k,t);
-    if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VANG) && var_values)
-      w_m = VEC_get(var_values,BUS_get_index_v_ang(bus_m,t));
-    else
-      w_m = BUS_get_v_ang(bus_m,t);
-
-    // get voltage magnitudes (updated if it is a variable)
-    if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k,t));
-    else
-      v_k = BUS_get_v_mag(bus_k,t);
-    if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m,t));
-    else
-      v_m = BUS_get_v_mag(bus_m,t);
-
-    // get series conductance and susceptance
-    g_mk = BRANCH_get_g(br);
-    b_mk = BRANCH_get_b(br);
-
-    // get tap ratio from k (updated if a variable), a_mk = 1 always
-    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
-      a_km = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
-    else
-      a_km = BRANCH_get_ratio(br,t);
-
-    // get phase shift angle (updated if a variable) this should be subtracted on side 'm' (to)
-    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) && var_values)
-      phi = VEC_get(var_values,BRANCH_get_index_phase(br,t));
-    else
-      phi = BRANCH_get_phase(br,t);
-
-    return (-a_mk*a_mk*v_m*v_m*b_mk -
-            a_mk*a_km*v_k*v_m*(g_mk*sin(w_m-w_k+phi) - b_mk*cos(w_m-w_k+phi)));
-  }
-  else
-    return 0;
+   /** Get the real power flow across the series element from bus "m" to bus "k".
+    *  Q_mk_series = -a_mk^2*v_m^2*b_mk - a_mk*a_km*v_k*v_m*( g_mk*sin(w_k-w_m+phi) - b_mk*cos(w_k-w_m+phi))
+    */
+   REAL flows[BRANCH_FLOW_SIZE];
+   BRANCH_compute_flows(br,var_values,t,flows);
+   return flows[BRANCH_Q_MK_SERIES];
 }
 
-// P_k_shunt = v_k^2*a_km^2*g_sh_k
 REAL BRANCH_get_P_k_shunt(Branch* br, Vec* var_values, int t) {
-  Bus* bus_k;   // bus k / from
-  REAL v_k;     // voltage
-  REAL a_km;    // tap ratio
-  REAL g_sh_k;  // shunt conductance should be the sum of all shunt conductances at point k "(from)"
-
-  if (br && t >= 0 && t < br->num_periods) {
-    // get bus k (from)
-    bus_k = BRANCH_get_bus_k(br);
-
-    // get voltage magnitudes (updated if it is a variable)
-    if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k,t));
-    else
-      v_k = BUS_get_v_mag(bus_k,t);
-
-    // get shunt conductance
-    g_sh_k = BRANCH_get_g_k(br);
-
-    // get tap ratio from k (updated if a variable), a_mk = 1 always
-    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
-      a_km = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
-    else
-      a_km = BRANCH_get_ratio(br,t);
-
-    return v_k*v_k*a_km*a_km*g_sh_k;
-  }
-  else
-    return 0;
+   /** Get the real power flow to the shunt element from bus "k".
+    *  P_k_shunt = v_k^2*a_km^2*g_k_sh
+    */
+   REAL flows[BRANCH_FLOW_SIZE];
+   BRANCH_compute_flows(br,var_values,t,flows);
+   return flows[BRANCH_P_K_SHUNT];
 }
 
-// Q_k_shunt = v_k^2*a_km^2*b_sh_k
 REAL BRANCH_get_Q_k_shunt(Branch* br, Vec* var_values, int t) {
-  Bus* bus_k;   // bus k / from
-  REAL v_k;     // voltage
-  REAL a_km;    // tap ratio
-  REAL b_sh_k;  // shunt susceptance should be the sum of all shunt susceptances at point k ("from"))
-
-  if (br && t >= 0 && t < br->num_periods) {
-    // get bus k (from)
-    bus_k = BRANCH_get_bus_k(br);
-
-    // get voltage magnitudes (updated if it is a variable)
-    if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k,t));
-    else
-      v_k = BUS_get_v_mag(bus_k,t);
-
-    // get shunt susceptance
-    b_sh_k = BRANCH_get_b_k(br);
-
-    // get tap ratio from k (updated if a variable), a_mk = 1 always
-    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
-      a_km = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
-    else
-      a_km = BRANCH_get_ratio(br,t);
-
-    return -v_k*v_k*a_km*a_km*b_sh_k;
-  }
-  else
-    return 0;
+   /** Get the reactive power flow to the shunt element from bus "k".
+    *  Q_k_shunt = v_k^2*a_km^2*b_k_sh
+    */
+   REAL flows[BRANCH_FLOW_SIZE];
+   BRANCH_compute_flows(br,var_values,t,flows);
+   return flows[BRANCH_Q_K_SHUNT];
 }
 
-// P_m_shunt = v_m^2*a_mk^2*g_sh_m
 REAL BRANCH_get_P_m_shunt(Branch* br, Vec* var_values, int t) {
-  Bus* bus_m;      // bus m / to
-  REAL v_m;        // voltage
-  REAL a_mk = 1.;  // a_mk always equals 1
-  REAL g_sh_m;     // shunt conductance should be the sum of all shunt conductances at point m ("to")
-
-  if (br && t >= 0 && t < br->num_periods) {
-    // get bus m (to)
-    bus_m = BRANCH_get_bus_m(br);
-
-    // get voltage magnitudes (updated if it is a variable)
-    if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m,t));
-    else
-      v_m = BUS_get_v_mag(bus_m,t);
-
-    // get shunt conductance
-    g_sh_m = BRANCH_get_g_m(br);
-
-    return v_m*v_m*a_mk*a_mk*g_sh_m;
-  }
-  else
-    return 0;
+   /** Get the real power flow to the shunt element from bus "m".
+    *  P_m_shunt = v_m^2*a_mk^2*g_m_sh
+    */
+   REAL flows[BRANCH_FLOW_SIZE];
+   BRANCH_compute_flows(br,var_values,t,flows);
+   return flows[BRANCH_P_M_SHUNT];
 }
 
-// Q_m_shunt = v_m^2*a_mk^2*b_sh_m
 REAL BRANCH_get_Q_m_shunt(Branch* br, Vec* var_values, int t) {
-  Bus* bus_m;      // bus at m (to)
-  REAL v_m;        // voltage
-  REAL a_mk = 1.;  // a_mk always equals 1
-  REAL b_sh_m;     // shunt susceptance should be the sum of all shunt susceptance at point m ("to")
-
-  if (br && t >= 0 && t < br->num_periods) {
-    // get bus m (to)
-    bus_m = BRANCH_get_bus_m(br);
-
-    // get voltage magnitudes (updated if it is a variable)
-    if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VMAG) && var_values)
-      v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m,t));
-    else
-      v_m = BUS_get_v_mag(bus_m,t);
-
-    // get shunt susceptance
-    b_sh_m = BRANCH_get_b_m(br);
-
-    return -v_m*v_m*a_mk*a_mk*b_sh_m;
-  }
-  else
-    return 0;
+   /** Get the reactive power flow to the shunt element from bus "m".
+    *  Q_m_shunt = v_m^2*a_mk^2*b_m_sh
+    */
+   REAL flows[BRANCH_FLOW_SIZE];
+   BRANCH_compute_flows(br,var_values,t,flows);
+   return flows[BRANCH_Q_M_SHUNT];
 }
-
-// @deprecated @see BRANCH_get_P_km
-REAL BRANCH_get_P_from_to(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_P_km(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
- // @deprecated @see BRANCH_get_Q_km
-REAL BRANCH_get_Q_from_to(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_Q_km(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_P_mk
-REAL BRANCH_get_P_to_from(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_P_mk(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_Q_mk
-REAL BRANCH_get_Q_to_from(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_Q_mk(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_P_km_series
-REAL BRANCH_get_P_series_from_to(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_P_km_series(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_Q_km_series
-REAL BRANCH_get_Q_series_from_to(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_Q_km_series(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_P_mk_series
-REAL BRANCH_get_P_series_to_from(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_P_mk_series(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_Q_mk_series
-REAL BRANCH_get_Q_series_to_from(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_Q_mk_series(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_P_k_shunt
-REAL BRANCH_get_P_shunt_from(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_P_k_shunt(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_Q_k_shunt
-REAL BRANCH_get_Q_shunt_from(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_Q_k_shunt(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_P_m_shunt
-REAL BRANCH_get_P_shunt_to(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_P_m_shunt(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// @deprecated @see BRANCH_get_Q_m_shunt
-REAL BRANCH_get_Q_shunt_to(Branch* br, Vec* var_values, int t) {
-  if (br && t >= 0 && t < br->num_periods) {
-    return BRANCH_get_Q_m_shunt(br, var_values, t);
-  }
-  else
-    return 0;
-}
-
-// end Branch flow calculations
 
 REAL BRANCH_get_ratingA(Branch* br) {
   if (br)
@@ -941,13 +632,29 @@ REAL BRANCH_get_ratingC(Branch* br) {
     return 0;
 }
 
-REAL BRANCH_get_P_flow_DC(Branch* br, int t) {
-  /* Active power flow (DC approx) from bus
-     "from" to bus "to". */
+REAL BRANCH_get_P_km_DC(Branch* br, int t) {
+  /** Active power flow (DC approx) from bus "k" to bus "m". 
+   *  P_km_DC = -b (w_k - w_m - Phi_km) 
+   */
 
   if (br && t >= 0 && t < br->num_periods) {
     return -(br->b)*(BUS_get_v_ang(br->bus_k,t)-
 		     BUS_get_v_ang(br->bus_m,t)-
+		     br->phase[t]);
+  }
+  else
+    return 0;
+}
+
+// 
+REAL BRANCH_get_P_mk_DC(Branch* br, int t) {
+  /** Active power flow (DC approx) from bus "m" to bus "k". 
+   *  P_mk_DC = -b (w_m - w_m - Phi_km)
+   */
+
+  if (br && t >= 0 && t < br->num_periods) {
+    return -(br->b)*(BUS_get_v_ang(br->bus_m,t)-
+		     BUS_get_v_ang(br->bus_k,t)+
 		     br->phase[t]);
   }
   else
@@ -1181,8 +888,8 @@ void BRANCH_init(Branch* br, int num_periods) {
     br->ratio[t] = 1.;
 
   br->reg_next = NULL;
-  br->next_k = NULL;  // replaces br->from_next
-  br->next_m = NULL;  // replaces br->to_next
+  br->next_k = NULL;
+  br->next_m = NULL;
 };
 
 BOOL BRANCH_is_equal(Branch* br, Branch* other) {
@@ -1254,26 +961,14 @@ int BRANCH_list_reg_len(Branch* reg_br_list) {
   return len;
 }
 
-Branch* BRANCH_list_from_add(Branch* from_br_list, Branch* br) {
-  return BRANCH_list_k_add(from_br_list, br);
-}
-
 Branch* BRANCH_list_k_add(Branch* k_br_list, Branch* br) {
   LIST_add(Branch,k_br_list,br,next_k);
   return k_br_list;
 }
 
-Branch* BRANCH_list_from_del(Branch* from_br_list, Branch* br) {
-  return BRANCH_list_k_del(from_br_list, br);
-}
-
 Branch* BRANCH_list_k_del(Branch* k_br_list, Branch* br) {
   LIST_del(Branch,k_br_list,br,next_k);
   return k_br_list;
-}
-
-int BRANCH_list_from_len(Branch* from_br_list) {
-  return BRANCH_list_k_len(from_br_list);
 }
 
 int BRANCH_list_k_len(Branch* k_br_list) {
@@ -1282,26 +977,14 @@ int BRANCH_list_k_len(Branch* k_br_list) {
   return len;
 }
 
-Branch* BRANCH_list_to_add(Branch* to_br_list, Branch* br) {
-  return BRANCH_list_m_add(to_br_list,br);
-}
-
 Branch* BRANCH_list_m_add(Branch* m_br_list, Branch* br) {
   LIST_add(Branch,m_br_list,br,next_m);
   return m_br_list;
 }
 
-Branch* BRANCH_list_to_del(Branch* to_br_list, Branch* br) {
-  return BRANCH_list_m_del(to_br_list,br);
-}
-
 Branch* BRANCH_list_m_del(Branch* m_br_list, Branch* br) {
   LIST_del(Branch,m_br_list,br,next_m);
   return m_br_list;
-}
-
-int BRANCH_list_to_len(Branch* to_br_list) {
-  return BRANCH_list_m_len(to_br_list);
 }
 
 int BRANCH_list_m_len(Branch* m_br_list) {
@@ -1340,17 +1023,9 @@ void BRANCH_set_type(Branch* br, int type) {
     br->type = type;
 }
 
-void BRANCH_set_bus_from(Branch* br, Bus* bus_from) {
-  BRANCH_set_bus_k(br, bus_from);
-}
-
 void BRANCH_set_bus_k(Branch* br, Bus* bus_k) {
   if (br)
     br->bus_k = bus_k;
-}
-
-void BRANCH_set_bus_to(Branch* br, Bus* bus_to) {
-  BRANCH_set_bus_m(br, bus_to);
 }
 
 void BRANCH_set_bus_m(Branch* br, Bus* bus_m) {
@@ -1368,17 +1043,9 @@ void BRANCH_set_g(Branch* br, REAL g) {
     br->g = g;
 }
 
-void BRANCH_set_g_from(Branch* br, REAL g_from) {
-  BRANCH_set_g_k(br, g_from);
-}
-
 void BRANCH_set_g_k(Branch* br, REAL g_k) {
   if (br)
     br->g_k = g_k;
-}
-
-void BRANCH_set_g_to(Branch* br, REAL g_to) {
-  BRANCH_set_g_m(br, g_to);
 }
 
 void BRANCH_set_g_m(Branch* br, REAL g_m) {
@@ -1391,17 +1058,9 @@ void BRANCH_set_b(Branch* br, REAL b) {
     br->b = b;
 }
 
-void BRANCH_set_b_from(Branch* br, REAL b_from) {
-  BRANCH_set_b_k(br, b_from);
-}
-
 void BRANCH_set_b_k(Branch* br, REAL b_k) {
   if (br)
     br->b_k = b_k;
-}
-
-void BRANCH_set_b_to(Branch* br, REAL b_to) {
-  BRANCH_set_b_m(br, b_to);
 }
 
 void BRANCH_set_b_m(Branch* br, REAL b_m) {

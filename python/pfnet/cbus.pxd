@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -67,8 +67,6 @@ cdef extern from "pfnet/bus.h":
     Gen* BUS_get_reg_gen(Bus* bus)
     Branch* BUS_get_reg_tran(Bus* bus)
     Shunt* BUS_get_reg_shunt(Bus* bus)
-    Branch* BUS_get_branch_from(Bus* bus)   # deprecated
-    Branch* BUS_get_branch_to(Bus* bus)     # deprecated
     Branch* BUS_get_branch_k(Bus* bus)
     Branch* BUS_get_branch_m(Bus* bus)
     Load* BUS_get_load(Bus* bus)

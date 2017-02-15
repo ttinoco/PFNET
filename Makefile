@@ -35,7 +35,7 @@ ifeq ($(NO_GRAPHVIZ),1)
 	CFLAGS += -DNO_GRAPHVIZ
 else
 	LDLIBS += -lgvc -lcgraph
-	CFLAGS += -I$(GRAPHVIZ)/include # -lgvc -lcgraph
+	CFLAGS += -I$(GRAPHVIZ)/include
 endif
 
 SOURCES_LIB = $(shell echo src/*/*.c src/*/*/*.c)
