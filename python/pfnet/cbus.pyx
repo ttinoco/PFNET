@@ -585,6 +585,34 @@ cdef class Bus:
         """ Bus voltage lower bound (p.u. bus base kv) (float). """
         def __get__(self): return cbus.BUS_get_v_min(self._c_ptr)
 
+    property v_norm_hi_limit:
+        """ Bus normal voltage violation upper limit (p.u. bus base kv) (float). """
+        def __get__(self):
+            return cbus.BUS_get_v_norm_hi_limit(self._c_ptr)
+        def __set__(self,value):
+            cbus.BUS_set_v_norm_hi_limit(self._c_ptr,value)
+
+    property v_norm_lo_limit:
+        """ Bus normal voltage violation upper limit (p.u. bus base kv) (float). """
+        def __get__(self):
+            return cbus.BUS_get_v_norm_lo_limit(self._c_ptr)
+        def __set__(self,value):
+            cbus.BUS_set_v_norm_lo_limit(self._c_ptr,value)
+
+    property v_emer_hi_limit:
+        """ Bus emergency voltage violation upper limit (p.u. bus base kv) (float). """
+        def __get__(self):
+            return cbus.BUS_get_v_emer_hi_limit(self._c_ptr)
+        def __set__(self,value):
+            cbus.BUS_set_v_emer_hi_limit(self._c_ptr,value)
+
+    property v_emer_lo_limit:
+        """ Bus emergency voltage violation upper limit (p.u. bus base kv) (float). """
+        def __get__(self):
+            return cbus.BUS_get_v_emer_lo_limit(self._c_ptr)
+        def __set__(self,value):
+            cbus.BUS_set_v_emer_lo_limit(self._c_ptr,value)
+
     property P_mis:
         """ Bus active power mismatch (p.u. system base MVA) (float or array). """
         def __get__(self):
