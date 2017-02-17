@@ -11,10 +11,14 @@ Targets
 Unreleased
 ----------
 * Area/zone projections.
+* Battery initial and final energy levels.
+
+Version 1.2.6 (pre-release)
+---------------------------
 * Branch bus name changes (from/to to k/m).
 * Branch AC flow getters.
-* Battery initial and final energy levels.
 * Improved error handling in Problem Python class (has_error, clear_error, error checks in combine_H).
+* Separated python wrapper pyx into multiple files.
 
 Version 1.2.5
 -------------
