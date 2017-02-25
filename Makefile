@@ -76,6 +76,7 @@ ifndef PFNET_DOCS
 	$(error error: 'PFNET_DOCS' must be set to the location to put documentation files)
 else
 	doxygen ./docs/Doxyfile
+	cd ./docs; make html
 endif
 
 .PHONY: clean
