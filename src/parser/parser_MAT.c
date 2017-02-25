@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -299,6 +299,8 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
     BUS_set_name(bus,mat_bus->name);
     BUS_set_v_mag(bus,mat_bus->Vm,0);         // per unit
     BUS_set_v_ang(bus,mat_bus->Va*PI/180.,0); // radians
+    BUS_set_v_max(bus,mat_bus->maxVm);        // per unit
+    BUS_set_v_min(bus,mat_bus->minVm);        // per unit
     if (mat_bus->type == MAT_BUS_TYPE_SL)
       BUS_set_slack(bus,TRUE);
     NET_bus_hash_number_add(net,bus);
