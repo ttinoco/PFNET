@@ -15,3 +15,6 @@ tests/*.out
 
 # cmake
 /build
+
+# Python examples
+graph.png

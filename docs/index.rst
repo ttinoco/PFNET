@@ -21,6 +21,11 @@ PFNET is released under the BSD 2-clause license.
 * `Python <http://ttinoco.github.io/PFNET/python>`_
 * `Matlab <http://ttinoco.github.io/PFNET/matlab>`_ (getting started)
 
+**Contributors**
+
+* `Tomas Tinoco De Rubira <http://n.ethz.ch/~tomast/>`_
+* Adam Wigington (cross-platfrom integration, testing)
+
 **Documentation Contents**
 
 .. toctree::
@@ -30,11 +35,6 @@ PFNET is released under the BSD 2-clause license.
    Getting Started<start>
    Extensions<extensions>
    Source Code Reference (Doxygen) <http://ttinoco.github.io/PFNET/c>
-
-**Contributors**
-
-* `Tomas Tinoco De Rubira <http://n.ethz.ch/~tomast/>`_
-* Adam Wigington (cross-platfrom integration, testing)
 
 Indices and tables
 ==================

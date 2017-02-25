@@ -601,7 +601,7 @@ cdef class Branch:
         def __get__(self): return cbranch.BRANCH_get_phase_min(self._c_ptr)
 
     property P_km:
-        """ Real power flow at bus "k" towards bus "m" (from -> to)(p.u.) (float or array). """
+        """ Real power flow at bus "k" towards bus "m" (from -> to) (p.u.) (float or array). """
         def __get__(self):
             return self.get_P_km()
 
