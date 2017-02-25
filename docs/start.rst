@@ -53,3 +53,10 @@ Since Homebrew does currently not support external dependencies, PFNET cannot be
 If building from source directly, the instructions for Linux should suffice but substitute ``$DYLD_FALLBACK_LIBRARY_PATH`` for ``$LD_LIBRARY_PATH``.
 
 .. _Graphviz: http://www.graphviz.org/
+
+.. _start_example:
+
+Example
+=======
+
+Coming soon. 
