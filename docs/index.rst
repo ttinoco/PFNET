@@ -21,10 +21,10 @@ PFNET is released under the BSD 2-clause license.
 * `Python <http://ttinoco.github.io/PFNET/python>`_
 * `Matlab <http://ttinoco.github.io/PFNET/matlab>`_ (getting started)
 
-**Contributors**
+**Contributors (alphabetical)**
 
 * `Tomas Tinoco De Rubira <http://n.ethz.ch/~tomast/>`_
-* Adam Wigington (cross-platfrom integration, testing)
+* Adam Wigington
 
 **Documentation Contents**
 

@@ -16,11 +16,11 @@ PFNET is a library for modeling and analyzing electric power networks. It provid
 
 PFNET is released under the BSD 2-clause license.
 
-**Contributors**
+**Contributors (alphabetical)**
 
 * `Tomas Tinoco De Rubira <http://n.ethz.ch/~tomast/>`_
-* Martin Zellner (port to Python 3)
-* Adam Wigington (cross-platfrom integration, testing)
+* Adam Wigington
+* Martin Zellner
 
 **Documentation Contents**
 
