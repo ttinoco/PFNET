@@ -1,14 +1,27 @@
-function mpc2mat(mpc,mat_file,random_cost)
+function mpc2mat(mpc,mat_file)
 %MPC2MAT Converts an "mpc" MATPOWER structure to a CSV file.
 %   MPC2MAT(MPT, MAT_FILE)
 %   Converts an "mpc" MATPOWER structure to a CSV file.
 %
 %   Input:
-%      MPC : MATPOWER case structure.
+%      MPC : MATPOWER case structure (version 2).
 %      MAT_FILE: name of output CSV file.
-%      random_cost: flag for random generator cost coefficients.
+% 
+%   Note: 
+%      It only supports quadratic costs. If costs are not
+%      quadratic, then random quadratic costs are assigned.
 
 disp('Executing mpc2mat');
+
+%% version
+if mpc.version ~= '2'
+  error('mpc2mat: Only MPC version 2 is supported')
+end
+
+%% gen length
+if size(mpc.gencost)(1) > 0 && size(mpc.gencost)(1) ~= size(mpc.gen)(1)
+  error('mpc2mat: Bad generator cost data')
+end
 
 %% file parts
 [path name ext] = fileparts(mat_file);
@@ -93,12 +106,13 @@ fprintf(fid,'END\n');
 fprintf(fid,'COST\n');
 fprintf(fid,'gen index,Q2 ($/hr MW2),Q1 ($/hr MW),Q0 ($/hr)\n');
 for i=1:size(mpc.gencost)(1)
-    if ~random_cost && mpc.gencost(i,1) == 2 && mpc.gencost(i,4) == 3
+    if mpc.gencost(i,1) == 2 && mpc.gencost(i,4) == 3
        fprintf(fid,'%d,',i-1);
        fprintf(fid,'%.8f,',mpc.gencost(i,5));
        fprintf(fid,'%.8f,',mpc.gencost(i,6));
        fprintf(fid,'%.8f\n',mpc.gencost(i,7));
     else
+       warning('unsupported cost function; using random quadratic costs')
        fprintf(fid,'%d,',i-1);
        fprintf(fid,'%.8f,',0.04*rand()+0.01);
        fprintf(fid,'%.8f,',40.*rand()+10.);
