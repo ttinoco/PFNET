@@ -75,8 +75,10 @@ docs :
 ifndef PFNET_DOCS
 	$(error error: 'PFNET_DOCS' must be set to the location to put documentation files)
 else
-	doxygen ./docs/Doxyfile
+	cd ./docs; doxygen Doxyfile
 	cd ./docs; make html
+	cd ./python/docs; make html
+	cd ./matlab/docs; make html
 endif
 
 .PHONY: clean
