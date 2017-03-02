@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -19,7 +19,7 @@ void CONSTR_DCPF_init(Constr* c) {
 void CONSTR_DCPF_clear(Constr* c) {
 
   // Counters
-  CONSTR_set_Acounter(c,0);
+  CONSTR_set_A_nnz(c,0);
 
   // Flags
   CONSTR_clear_bus_counted(c);
@@ -33,7 +33,7 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
   Load* load;
   Vargen* vargen;
   Bat* bat;
-  int* Acounter;
+  int* A_nnz;
   char* bus_counted;
   int bus_index_t[2];
   int k;
@@ -44,11 +44,11 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
   num_buses = NET_get_num_buses(CONSTR_get_network(c));
 
   // Constr data
-  Acounter = CONSTR_get_Acounter_ptr(c);
+  A_nnz = CONSTR_get_A_nnz_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!Acounter || !bus_counted)
+  if (!A_nnz || !bus_counted)
     return;
 
   // Check outage
@@ -75,21 +75,21 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
     if (BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG)) { // wk var
 
       // A
-      (*Acounter)++; // Pk
+      (*A_nnz)++; // Pk
     }
 
     //***********
     if (BUS_has_flags(bus[m],FLAG_VARS,BUS_VAR_VANG)) { // wm var
 
       // A
-      (*Acounter)++; // Pk
+      (*A_nnz)++; // Pk
     }
 
     //**********
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) { // phi var
 
       // A
-      (*Acounter)++; // Pk
+      (*A_nnz)++; // Pk
     }
   }
 
@@ -107,7 +107,7 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // P var
 
 	  // A
-	  (*Acounter)++; // Pk
+	  (*A_nnz)++; // Pk
 	}
       }
 
@@ -118,7 +118,7 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
 	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) { // P var
 
 	  // A
-	  (*Acounter)++; // Pk
+	  (*A_nnz)++; // Pk
 	}
       }
 
@@ -129,7 +129,7 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) { // P var
 
 	  // A
-	  (*Acounter)++; // Pk
+	  (*A_nnz)++; // Pk
 	}
       }
 
@@ -140,8 +140,8 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
 	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) { // P var
 
 	  // A
-	  (*Acounter)++; // Pc
-	  (*Acounter)++; // Pd
+	  (*A_nnz)++; // Pc
+	  (*A_nnz)++; // Pd
 	}
       }
     }
@@ -157,12 +157,12 @@ void CONSTR_DCPF_allocate(Constr* c) {
   Net* net;
   int num_buses;
   int num_vars;
-  int Acounter;
+  int A_nnz;
 
   net = CONSTR_get_network(c);
   num_buses = NET_get_num_buses(net);
   num_vars = NET_get_num_vars(net);
-  Acounter = CONSTR_get_Acounter(c);
+  A_nnz = CONSTR_get_A_nnz(c);
 
   // J f
   CONSTR_set_J(c,MAT_new(0,num_vars,0));
@@ -174,7 +174,7 @@ void CONSTR_DCPF_allocate(Constr* c) {
   // A
   CONSTR_set_A(c,MAT_new(num_buses*NET_get_num_periods(net), // size1 (rows)
 			 num_vars,                           // size2 (cols)
-			 Acounter));                         // nnz
+			 A_nnz));                         // nnz
 }
 
 void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
@@ -187,7 +187,7 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
   Bat* bat;
   Mat* A;
   Vec* rhs;
-  int* Acounter;
+  int* A_nnz;
   char* bus_counted;
   int bus_index_t[2];
   REAL b;
@@ -202,11 +202,11 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
   // Constr data
   A = CONSTR_get_A(c);
   rhs = CONSTR_get_b(c);
-  Acounter = CONSTR_get_Acounter_ptr(c);
+  A_nnz = CONSTR_get_A_nnz_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!Acounter || !bus_counted)
+  if (!A_nnz || !bus_counted)
     return;
 
   // Check outage
@@ -241,10 +241,10 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
     if (BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG)) { // wk var
 
       // A
-      MAT_set_i(A,*Acounter,bus_index_t[k]); // Pk
-      MAT_set_j(A,*Acounter,BUS_get_index_v_ang(bus[k],t)); // wk
-      MAT_set_d(A,*Acounter,b);
-      (*Acounter)++;
+      MAT_set_i(A,*A_nnz,bus_index_t[k]); // Pk
+      MAT_set_j(A,*A_nnz,BUS_get_index_v_ang(bus[k],t)); // wk
+      MAT_set_d(A,*A_nnz,b);
+      (*A_nnz)++;
     }
     else {
 
@@ -256,10 +256,10 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
     if (BUS_has_flags(bus[m],FLAG_VARS,BUS_VAR_VANG)) { // wm var
 
       // A
-      MAT_set_i(A,*Acounter,bus_index_t[k]); // Pk
-      MAT_set_j(A,*Acounter,BUS_get_index_v_ang(bus[m],t)); // wk
-      MAT_set_d(A,*Acounter,-b);
-      (*Acounter)++;
+      MAT_set_i(A,*A_nnz,bus_index_t[k]); // Pk
+      MAT_set_j(A,*A_nnz,BUS_get_index_v_ang(bus[m],t)); // wk
+      MAT_set_d(A,*A_nnz,-b);
+      (*A_nnz)++;
     }
     else {
 
@@ -271,10 +271,10 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) { // phi var
 
       // A
-      MAT_set_i(A,*Acounter,bus_index_t[k]); // Pk
-      MAT_set_j(A,*Acounter,BRANCH_get_index_phase(br,t)); // phi
-      MAT_set_d(A,*Acounter,-b*sign_phi);
-      (*Acounter)++;
+      MAT_set_i(A,*A_nnz,bus_index_t[k]); // Pk
+      MAT_set_j(A,*A_nnz,BRANCH_get_index_phase(br,t)); // phi
+      MAT_set_d(A,*A_nnz,-b*sign_phi);
+      (*A_nnz)++;
     }
     else {
 
@@ -297,10 +297,10 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // P var
 
 	  // A
-	  MAT_set_i(A,*Acounter,bus_index_t[k]); // Pk
-	  MAT_set_j(A,*Acounter,GEN_get_index_P(gen,t)); // Pg
-	  MAT_set_d(A,*Acounter,1.);
-	  (*Acounter)++;
+	  MAT_set_i(A,*A_nnz,bus_index_t[k]); // Pk
+	  MAT_set_j(A,*A_nnz,GEN_get_index_P(gen,t)); // Pg
+	  MAT_set_d(A,*A_nnz,1.);
+	  (*A_nnz)++;
 	}
 	else {
 
@@ -316,10 +316,10 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
 	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) { // Pl var
 
 	  // A
-	  MAT_set_i(A,*Acounter,bus_index_t[k]); // Pk
-	  MAT_set_j(A,*Acounter,LOAD_get_index_P(load,t)); // Pl
-	  MAT_set_d(A,*Acounter,-1.);
-	  (*Acounter)++;
+	  MAT_set_i(A,*A_nnz,bus_index_t[k]); // Pk
+	  MAT_set_j(A,*A_nnz,LOAD_get_index_P(load,t)); // Pl
+	  MAT_set_d(A,*A_nnz,-1.);
+	  (*A_nnz)++;
 	}
 	else {
 
@@ -335,10 +335,10 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) { // Pg var
 
 	  // A
-	  MAT_set_i(A,*Acounter,bus_index_t[k]); // Pk
-	  MAT_set_j(A,*Acounter,VARGEN_get_index_P(vargen,t)); // Pg
-	  MAT_set_d(A,*Acounter,1.);
-	  (*Acounter)++;
+	  MAT_set_i(A,*A_nnz,bus_index_t[k]); // Pk
+	  MAT_set_j(A,*A_nnz,VARGEN_get_index_P(vargen,t)); // Pg
+	  MAT_set_d(A,*A_nnz,1.);
+	  (*A_nnz)++;
 	}
 	else {
 
@@ -354,16 +354,16 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
 	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) { // P var
 
 	  // A
-	  MAT_set_i(A,*Acounter,bus_index_t[k]); // Pk
-	  MAT_set_j(A,*Acounter,BAT_get_index_Pc(bat,t)); // Pc
-	  MAT_set_d(A,*Acounter,-1.);
-	  (*Acounter)++;
+	  MAT_set_i(A,*A_nnz,bus_index_t[k]); // Pk
+	  MAT_set_j(A,*A_nnz,BAT_get_index_Pc(bat,t)); // Pc
+	  MAT_set_d(A,*A_nnz,-1.);
+	  (*A_nnz)++;
 
 	  // A
-	  MAT_set_i(A,*Acounter,bus_index_t[k]); // Pk
-	  MAT_set_j(A,*Acounter,BAT_get_index_Pd(bat,t)); // Pd
-	  MAT_set_d(A,*Acounter,1.);
-	  (*Acounter)++;
+	  MAT_set_i(A,*A_nnz,bus_index_t[k]); // Pk
+	  MAT_set_j(A,*A_nnz,BAT_get_index_Pd(bat,t)); // Pd
+	  MAT_set_d(A,*A_nnz,1.);
+	  (*A_nnz)++;
 	}
 	else {
 

@@ -173,17 +173,17 @@ cdef class Constraint:
         """ Constraint type (string) (:ref:`ref_constr_type`). """
         def __get__(self): return constr2str[cconstr.CONSTR_get_type(self._c_constr)]
 
-    property Acounter:
+    property A_nnz:
         """ Number of nonzero entries in the matrix of linear equality constraints (int). """
-        def __get__(self): return cconstr.CONSTR_get_Acounter(self._c_constr)
+        def __get__(self): return cconstr.CONSTR_get_A_nnz(self._c_constr)
 
-    property Gcounter:
+    property G_nnz:
         """ Number of nonzero entries in the matrix of linear inequality constraints (int). """
-        def __get__(self): return cconstr.CONSTR_get_Gcounter(self._c_constr)
+        def __get__(self): return cconstr.CONSTR_get_G_nnz(self._c_constr)
 
-    property Jcounter:
+    property J_nnz:
         """ Number of nonzero entries in the Jacobian matrix of the nonlinear equality constraints (int). """
-        def __get__(self): return cconstr.CONSTR_get_Jcounter(self._c_constr)
+        def __get__(self): return cconstr.CONSTR_get_J_nnz(self._c_constr)
 
     property Aconstr_index:
         """ Index of linear equality constraint (int). """

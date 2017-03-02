@@ -13,7 +13,7 @@
 void CONSTR_BOUND_init(Constr* c) {
 
   // Init
-  CONSTR_set_Hcounter(c,NULL,0);
+ CONSTR_set_H_nnz(c,NULL,0);
   CONSTR_set_data(c,NULL);
 }
 
@@ -29,7 +29,7 @@ void CONSTR_BOUND_clear(Constr* c) {
   MAT_array_set_zero_d(CONSTR_get_H_array(c),CONSTR_get_H_array_size(c));
 
   // Counters
-  CONSTR_set_Jcounter(c,0);
+  CONSTR_set_J_nnz(c,0);
 
   // Flags
   CONSTR_clear_bus_counted(c);
@@ -42,7 +42,7 @@ void CONSTR_BOUND_count_step(Constr* c, Branch* br, int t) {
   Bus* bus;
   Gen* gen;
   Shunt* shunt;
-  int* Jcounter;
+  int* J_nnz;
   char* bus_counted;
   int bus_index_t[2];
   int k;
@@ -52,11 +52,11 @@ void CONSTR_BOUND_count_step(Constr* c, Branch* br, int t) {
   T = BRANCH_get_num_periods(br);
 
   // Constr data
-  Jcounter = CONSTR_get_Jcounter_ptr(c);
+  J_nnz = CONSTR_get_J_nnz_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!Jcounter || !bus_counted)
+  if (!J_nnz || !bus_counted)
     return;
 
   // Check outage
@@ -72,15 +72,15 @@ void CONSTR_BOUND_count_step(Constr* c, Branch* br, int t) {
   // Tap ratio
   if (BRANCH_has_flags(br,FLAG_BOUNDED,BRANCH_VAR_RATIO) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) {
-    (*Jcounter)++; // upper bound
-    (*Jcounter)++; // lower bound
+    (*J_nnz)++; // upper bound
+    (*J_nnz)++; // lower bound
   }
 
   // Phase shift
   if (BRANCH_has_flags(br,FLAG_BOUNDED,BRANCH_VAR_PHASE) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
-    (*Jcounter)++; // upper bound
-    (*Jcounter)++; // lower bound
+    (*J_nnz)++; // upper bound
+    (*J_nnz)++; // lower bound
   }
 
   // Buses
@@ -92,14 +92,14 @@ void CONSTR_BOUND_count_step(Constr* c, Branch* br, int t) {
 
       // Voltage magnitude (V_MAG)
       if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VMAG) && BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
-	(*Jcounter)++; // upper bound
-	(*Jcounter)++; // lower bound
+	(*J_nnz)++; // upper bound
+	(*J_nnz)++; // lower bound
       }
 
       // Volage angle (V_ANG)
       if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VANG) && BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) {
-	(*Jcounter)++; // upper bound
-	(*Jcounter)++; // lower bound
+	(*J_nnz)++; // upper bound
+	(*J_nnz)++; // lower bound
       }
 
       // Generators
@@ -108,15 +108,15 @@ void CONSTR_BOUND_count_step(Constr* c, Branch* br, int t) {
 	// Active power (P)
 	if (GEN_has_flags(gen,FLAG_BOUNDED,GEN_VAR_P) &&
 	    GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
-	  (*Jcounter)++; // upper bound
-	  (*Jcounter)++; // lower bound
+	  (*J_nnz)++; // upper bound
+	  (*J_nnz)++; // lower bound
 	}
 
 	// Reactive power (Q)
 	if (GEN_has_flags(gen,FLAG_BOUNDED,GEN_VAR_Q) &&
 	    GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) {
-	  (*Jcounter)++; // upper bound
-	  (*Jcounter)++; // lower bound
+	  (*J_nnz)++; // upper bound
+	  (*J_nnz)++; // lower bound
 	}
       }
 
@@ -126,8 +126,8 @@ void CONSTR_BOUND_count_step(Constr* c, Branch* br, int t) {
 	// Shunt suscepatnace (b)
 	if (SHUNT_has_flags(shunt,FLAG_BOUNDED,SHUNT_VAR_SUSC) &&
 	    SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
-	  (*Jcounter)++; // upper bound
-	  (*Jcounter)++; // lower bound
+	  (*J_nnz)++; // upper bound
+	  (*J_nnz)++; // lower bound
 	}
       }
     }
@@ -140,13 +140,13 @@ void CONSTR_BOUND_count_step(Constr* c, Branch* br, int t) {
 void CONSTR_BOUND_allocate(Constr* c) {
 
   // Local variables
-  int Jcounter;
+  int J_nnz;
   Mat* H_array;
   Mat* H;
   int num_vars;
   int i;
 
-  Jcounter = CONSTR_get_Jcounter(c);
+  J_nnz = CONSTR_get_J_nnz(c);
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
 
   // A b
@@ -154,17 +154,17 @@ void CONSTR_BOUND_allocate(Constr* c) {
   CONSTR_set_b(c,VEC_new(0));
 
   // f
-  CONSTR_set_f(c,VEC_new(Jcounter));
+  CONSTR_set_f(c,VEC_new(J_nnz));
 
   // J
-  CONSTR_set_J(c,MAT_new(Jcounter,   // size1 (rows)
+  CONSTR_set_J(c,MAT_new(J_nnz,   // size1 (rows)
 			 num_vars,   // size2 (cols)
-			 Jcounter)); // nnz
+			 J_nnz)); // nnz
 
   // H
-  H_array = MAT_array_new(Jcounter);
-  CONSTR_set_H_array(c,H_array,Jcounter);
-  for (i = 0; i < Jcounter; i++) {
+  H_array = MAT_array_new(J_nnz);
+  CONSTR_set_H_array(c,H_array,J_nnz);
+  for (i = 0; i < J_nnz; i++) {
     H = MAT_array_get(H_array,i);
     MAT_set_nnz(H,1);
     MAT_set_size1(H,num_vars);
@@ -177,7 +177,7 @@ void CONSTR_BOUND_allocate(Constr* c) {
   // H combined
   CONSTR_set_H_combined(c,MAT_new(num_vars,   // size1 (rows)
 				  num_vars,   // size2 (cols)
-				  Jcounter)); // nnz
+				  J_nnz)); // nnz
 }
 
 void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
@@ -194,7 +194,7 @@ void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
   int* Hj;
   int* Hi_comb;
   int* Hj_comb;
-  int* Jcounter;
+  int* J_nnz;
   char* bus_counted;
   int bus_index_t[2];
   int index_var;
@@ -207,11 +207,11 @@ void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
   // Constr data
   J = CONSTR_get_J(c);
   H_array = CONSTR_get_H_array(c);
-  Jcounter = CONSTR_get_Jcounter_ptr(c);
+  J_nnz = CONSTR_get_J_nnz_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!Jcounter || !bus_counted)
+  if (!J_nnz || !bus_counted)
     return;
 
   // Check outage
@@ -234,23 +234,23 @@ void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
     index_var = BRANCH_get_index_ratio(br,t);
 
     // J
-    MAT_set_i(J,*Jcounter,*Jcounter);
-    MAT_set_j(J,*Jcounter,index_var);
+    MAT_set_i(J,*J_nnz,*J_nnz);
+    MAT_set_j(J,*J_nnz,index_var);
 
-    MAT_set_i(J,*Jcounter+1,*Jcounter+1);
-    MAT_set_j(J,*Jcounter+1,index_var);
+    MAT_set_i(J,*J_nnz+1,*J_nnz+1);
+    MAT_set_j(J,*J_nnz+1,index_var);
 
     // H
-    H = MAT_array_get(H_array,*Jcounter);
+    H = MAT_array_get(H_array,*J_nnz);
     MAT_set_i(H,0,index_var);
     MAT_set_j(H,0,index_var);
 
-    H = MAT_array_get(H_array,*Jcounter+1);
+    H = MAT_array_get(H_array,*J_nnz+1);
     MAT_set_i(H,0,index_var);
     MAT_set_j(H,0,index_var);
 
-    (*Jcounter)++;
-    (*Jcounter)++;
+    (*J_nnz)++;
+    (*J_nnz)++;
   }
 
   // Phase shift
@@ -260,23 +260,23 @@ void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
     index_var = BRANCH_get_index_phase(br,t);
 
     // J
-    MAT_set_i(J,*Jcounter,*Jcounter);
-    MAT_set_j(J,*Jcounter,index_var);
+    MAT_set_i(J,*J_nnz,*J_nnz);
+    MAT_set_j(J,*J_nnz,index_var);
 
-    MAT_set_i(J,*Jcounter+1,*Jcounter+1);
-    MAT_set_j(J,*Jcounter+1,index_var);
+    MAT_set_i(J,*J_nnz+1,*J_nnz+1);
+    MAT_set_j(J,*J_nnz+1,index_var);
 
     // H
-    H = MAT_array_get(H_array,*Jcounter);
+    H = MAT_array_get(H_array,*J_nnz);
     MAT_set_i(H,0,index_var);
     MAT_set_j(H,0,index_var);
 
-    H = MAT_array_get(H_array,*Jcounter+1);
+    H = MAT_array_get(H_array,*J_nnz+1);
     MAT_set_i(H,0,index_var);
     MAT_set_j(H,0,index_var);
 
-    (*Jcounter)++;
-    (*Jcounter)++;
+    (*J_nnz)++;
+    (*J_nnz)++;
   }
 
   // Buses
@@ -294,23 +294,23 @@ void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
 	index_var = BUS_get_index_v_mag(bus,t);
 
 	// J
-	MAT_set_i(J,*Jcounter,*Jcounter);
-	MAT_set_j(J,*Jcounter,index_var);
+	MAT_set_i(J,*J_nnz,*J_nnz);
+	MAT_set_j(J,*J_nnz,index_var);
 
-	MAT_set_i(J,*Jcounter+1,*Jcounter+1);
-	MAT_set_j(J,*Jcounter+1,index_var);
+	MAT_set_i(J,*J_nnz+1,*J_nnz+1);
+	MAT_set_j(J,*J_nnz+1,index_var);
 
 	// H
-	H = MAT_array_get(H_array,*Jcounter);
+	H = MAT_array_get(H_array,*J_nnz);
 	MAT_set_i(H,0,index_var);
 	MAT_set_j(H,0,index_var);
 
-	H = MAT_array_get(H_array,*Jcounter+1);
+	H = MAT_array_get(H_array,*J_nnz+1);
 	MAT_set_i(H,0,index_var);
 	MAT_set_j(H,0,index_var);
 
-	(*Jcounter)++;
-	(*Jcounter)++;
+	(*J_nnz)++;
+	(*J_nnz)++;
       }
 
       // Volage angle (V_ANG)
@@ -319,23 +319,23 @@ void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
 	index_var = BUS_get_index_v_ang(bus,t);
 
 	// J
-	MAT_set_i(J,*Jcounter,*Jcounter);
-	MAT_set_j(J,*Jcounter,index_var);
+	MAT_set_i(J,*J_nnz,*J_nnz);
+	MAT_set_j(J,*J_nnz,index_var);
 
-	MAT_set_i(J,*Jcounter+1,*Jcounter+1);
-	MAT_set_j(J,*Jcounter+1,index_var);
+	MAT_set_i(J,*J_nnz+1,*J_nnz+1);
+	MAT_set_j(J,*J_nnz+1,index_var);
 
 	// H
-	H = MAT_array_get(H_array,*Jcounter);
+	H = MAT_array_get(H_array,*J_nnz);
 	MAT_set_i(H,0,index_var);
 	MAT_set_j(H,0,index_var);
 
-	H = MAT_array_get(H_array,*Jcounter+1);
+	H = MAT_array_get(H_array,*J_nnz+1);
 	MAT_set_i(H,0,index_var);
 	MAT_set_j(H,0,index_var);
 
-	(*Jcounter)++;
-	(*Jcounter)++;
+	(*J_nnz)++;
+	(*J_nnz)++;
       }
 
       // Generators
@@ -348,23 +348,23 @@ void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  index_var = GEN_get_index_P(gen,t);
 
 	  // J
-	  MAT_set_i(J,*Jcounter,*Jcounter);
-	  MAT_set_j(J,*Jcounter,index_var);
+	  MAT_set_i(J,*J_nnz,*J_nnz);
+	  MAT_set_j(J,*J_nnz,index_var);
 
-	  MAT_set_i(J,*Jcounter+1,*Jcounter+1);
-	  MAT_set_j(J,*Jcounter+1,index_var);
+	  MAT_set_i(J,*J_nnz+1,*J_nnz+1);
+	  MAT_set_j(J,*J_nnz+1,index_var);
 
 	  // H
-	  H = MAT_array_get(H_array,*Jcounter);
+	  H = MAT_array_get(H_array,*J_nnz);
 	  MAT_set_i(H,0,index_var);
 	  MAT_set_j(H,0,index_var);
 
-	  H = MAT_array_get(H_array,*Jcounter+1);
+	  H = MAT_array_get(H_array,*J_nnz+1);
 	  MAT_set_i(H,0,index_var);
 	  MAT_set_j(H,0,index_var);
 
-	  (*Jcounter)++;
-	  (*Jcounter)++;
+	  (*J_nnz)++;
+	  (*J_nnz)++;
 	}
 
 	// Reactive power (Q)
@@ -374,23 +374,23 @@ void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  index_var = GEN_get_index_Q(gen,t);
 
 	  // J
-	  MAT_set_i(J,*Jcounter,*Jcounter);
-	  MAT_set_j(J,*Jcounter,index_var);
+	  MAT_set_i(J,*J_nnz,*J_nnz);
+	  MAT_set_j(J,*J_nnz,index_var);
 
-	  MAT_set_i(J,*Jcounter+1,*Jcounter+1);
-	  MAT_set_j(J,*Jcounter+1,index_var);
+	  MAT_set_i(J,*J_nnz+1,*J_nnz+1);
+	  MAT_set_j(J,*J_nnz+1,index_var);
 
 	  // H
-	  H = MAT_array_get(H_array,*Jcounter);
+	  H = MAT_array_get(H_array,*J_nnz);
 	  MAT_set_i(H,0,index_var);
 	  MAT_set_j(H,0,index_var);
 
-	  H = MAT_array_get(H_array,*Jcounter+1);
+	  H = MAT_array_get(H_array,*J_nnz+1);
 	  MAT_set_i(H,0,index_var);
 	  MAT_set_j(H,0,index_var);
 
-	  (*Jcounter)++;
-	  (*Jcounter)++;
+	  (*J_nnz)++;
+	  (*J_nnz)++;
 	}
       }
 
@@ -404,23 +404,23 @@ void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  index_var = SHUNT_get_index_b(shunt,t);
 
 	  // J
-	  MAT_set_i(J,*Jcounter,*Jcounter);
-	  MAT_set_j(J,*Jcounter,index_var);
+	  MAT_set_i(J,*J_nnz,*J_nnz);
+	  MAT_set_j(J,*J_nnz,index_var);
 
-	  MAT_set_i(J,*Jcounter+1,*Jcounter+1);
-	  MAT_set_j(J,*Jcounter+1,index_var);
+	  MAT_set_i(J,*J_nnz+1,*J_nnz+1);
+	  MAT_set_j(J,*J_nnz+1,index_var);
 
 	  // H
-	  H = MAT_array_get(H_array,*Jcounter);
+	  H = MAT_array_get(H_array,*J_nnz);
 	  MAT_set_i(H,0,index_var);
 	  MAT_set_j(H,0,index_var);
 
-	  H = MAT_array_get(H_array,*Jcounter+1);
+	  H = MAT_array_get(H_array,*J_nnz+1);
 	  MAT_set_i(H,0,index_var);
 	  MAT_set_j(H,0,index_var);
 
-	  (*Jcounter)++;
-	  (*Jcounter)++;
+	  (*J_nnz)++;
+	  (*J_nnz)++;
 	}
       }
     }
@@ -455,7 +455,7 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
   REAL* f;
   REAL* J;
   Mat* H;
-  int* Jcounter;
+  int* J_nnz;
   char* bus_counted;
   int bus_index_t[2];
   int k;
@@ -478,11 +478,11 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
   f = VEC_get_data(CONSTR_get_f(c));
   J = MAT_get_data_array(CONSTR_get_J(c));
   H_array = CONSTR_get_H_array(c);
-  Jcounter = CONSTR_get_Jcounter_ptr(c);
+  J_nnz = CONSTR_get_J_nnz_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!f || !J || !Jcounter || !bus_counted)
+  if (!f || !J || !J_nnz || !bus_counted)
     return;
 
   // Check outage
@@ -517,22 +517,22 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
     sqrterm2 = sqrt(a2*a2+b*b+eps*eps);
 
     // f
-    f[*Jcounter]   = a1 + b - sqrterm1; // upper
-    f[*Jcounter+1] = a2 + b - sqrterm2; // lower
+    f[*J_nnz]   = a1 + b - sqrterm1; // upper
+    f[*J_nnz+1] = a2 + b - sqrterm2; // lower
 
     // J
-    J[*Jcounter]   = -(1-a1/sqrterm1);
-    J[*Jcounter+1] = (1-a2/sqrterm2);
+    J[*J_nnz]   = -(1-a1/sqrterm1);
+    J[*J_nnz+1] = (1-a2/sqrterm2);
 
     // H
-    H = MAT_array_get(H_array,*Jcounter);
+    H = MAT_array_get(H_array,*J_nnz);
     MAT_set_d(H,0,-(b*b+eps*eps)/(sqrterm1*sqrterm1*sqrterm1));
 
-    H = MAT_array_get(H_array,*Jcounter+1);
+    H = MAT_array_get(H_array,*J_nnz+1);
     MAT_set_d(H,0,-(b*b+eps*eps)/(sqrterm2*sqrterm2*sqrterm2));
 
-    (*Jcounter)++;
-    (*Jcounter)++;
+    (*J_nnz)++;
+    (*J_nnz)++;
   }
 
   // Phase shift
@@ -551,22 +551,22 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
     sqrterm2 = sqrt(a2*a2+b*b+eps*eps);
 
     // f
-    f[*Jcounter]   = a1 + b - sqrterm1; // upper
-    f[*Jcounter+1] = a2 + b - sqrterm2; // lower
+    f[*J_nnz]   = a1 + b - sqrterm1; // upper
+    f[*J_nnz+1] = a2 + b - sqrterm2; // lower
 
     // J
-    J[*Jcounter]   = -(1-a1/sqrterm1);
-    J[*Jcounter+1] = (1-a2/sqrterm2);
+    J[*J_nnz]   = -(1-a1/sqrterm1);
+    J[*J_nnz+1] = (1-a2/sqrterm2);
 
     // H
-    H = MAT_array_get(H_array,*Jcounter);
+    H = MAT_array_get(H_array,*J_nnz);
     MAT_set_d(H,0,-(b*b+eps*eps)/(sqrterm1*sqrterm1*sqrterm1));
 
-    H = MAT_array_get(H_array,*Jcounter+1);
+    H = MAT_array_get(H_array,*J_nnz+1);
     MAT_set_d(H,0,-(b*b+eps*eps)/(sqrterm2*sqrterm2*sqrterm2));
 
-    (*Jcounter)++;
-    (*Jcounter)++;
+    (*J_nnz)++;
+    (*J_nnz)++;
   }
 
   // Buses
@@ -594,22 +594,22 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 	sqrterm2 = sqrt(a2*a2+b*b+eps*eps);
 
 	// f
-	f[*Jcounter]   = a1 + b - sqrterm1; // upper
-	f[*Jcounter+1] = a2 + b - sqrterm2; // lower
+	f[*J_nnz]   = a1 + b - sqrterm1; // upper
+	f[*J_nnz+1] = a2 + b - sqrterm2; // lower
 
 	// J
-	J[*Jcounter]   = -(1-a1/sqrterm1);
-	J[*Jcounter+1] = (1-a2/sqrterm2);
+	J[*J_nnz]   = -(1-a1/sqrterm1);
+	J[*J_nnz+1] = (1-a2/sqrterm2);
 
 	// H
-	H = MAT_array_get(H_array,*Jcounter);
+	H = MAT_array_get(H_array,*J_nnz);
 	MAT_set_d(H,0,-(b*b+eps*eps)/(sqrterm1*sqrterm1*sqrterm1));
 
-	H = MAT_array_get(H_array,*Jcounter+1);
+	H = MAT_array_get(H_array,*J_nnz+1);
 	MAT_set_d(H,0,-(b*b+eps*eps)/(sqrterm2*sqrterm2*sqrterm2));
 
-	(*Jcounter)++;
-	(*Jcounter)++;
+	(*J_nnz)++;
+	(*J_nnz)++;
       }
 
       // Volage angle (V_ANG)
@@ -628,22 +628,22 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 	sqrterm2 = sqrt(a2*a2+b*b+eps*eps);
 
 	// f
-	f[*Jcounter]   = a1 + b - sqrterm1; // upper
-	f[*Jcounter+1] = a2 + b - sqrterm2; // lower
+	f[*J_nnz]   = a1 + b - sqrterm1; // upper
+	f[*J_nnz+1] = a2 + b - sqrterm2; // lower
 
 	// J
-	J[*Jcounter]   = -(1-a1/sqrterm1);
-	J[*Jcounter+1] = (1-a2/sqrterm2);
+	J[*J_nnz]   = -(1-a1/sqrterm1);
+	J[*J_nnz+1] = (1-a2/sqrterm2);
 
 	// H
-	H = MAT_array_get(H_array,*Jcounter);
+	H = MAT_array_get(H_array,*J_nnz);
 	MAT_set_d(H,0,-(b*b+eps*eps)/(sqrterm1*sqrterm1*sqrterm1));
 
-	H = MAT_array_get(H_array,*Jcounter+1);
+	H = MAT_array_get(H_array,*J_nnz+1);
 	MAT_set_d(H,0,-(b*b+eps*eps)/(sqrterm2*sqrterm2*sqrterm2));
 
-	(*Jcounter)++;
-	(*Jcounter)++;
+	(*J_nnz)++;
+	(*J_nnz)++;
       }
 
       // Generators
@@ -665,22 +665,22 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 	  sqrterm2 = sqrt(a2*a2+b*b+eps*eps);
 
 	  // f
-	  f[*Jcounter]   = a1 + b - sqrterm1; // upper
-	  f[*Jcounter+1] = a2 + b - sqrterm2; // lower
+	  f[*J_nnz]   = a1 + b - sqrterm1; // upper
+	  f[*J_nnz+1] = a2 + b - sqrterm2; // lower
 
 	  // J
-	  J[*Jcounter]   = -(1-a1/sqrterm1);
-	  J[*Jcounter+1] = (1-a2/sqrterm2);
+	  J[*J_nnz]   = -(1-a1/sqrterm1);
+	  J[*J_nnz+1] = (1-a2/sqrterm2);
 
 	  // H
-	  H = MAT_array_get(H_array,*Jcounter);
+	  H = MAT_array_get(H_array,*J_nnz);
 	  MAT_set_d(H,0,-(b*b+eps*eps)/(sqrterm1*sqrterm1*sqrterm1));
 
-	  H = MAT_array_get(H_array,*Jcounter+1);
+	  H = MAT_array_get(H_array,*J_nnz+1);
 	  MAT_set_d(H,0,-(b*b+eps*eps)/(sqrterm2*sqrterm2*sqrterm2));
 
-	  (*Jcounter)++;
-	  (*Jcounter)++;
+	  (*J_nnz)++;
+	  (*J_nnz)++;
 	}
 
 	// Reactive power (Q)
@@ -699,22 +699,22 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 	  sqrterm2 = sqrt(a2*a2+b*b+eps*eps);
 
 	  // f
-	  f[*Jcounter]   = a1 + b - sqrterm1; // upper
-	  f[*Jcounter+1] = a2 + b - sqrterm2; // lower
+	  f[*J_nnz]   = a1 + b - sqrterm1; // upper
+	  f[*J_nnz+1] = a2 + b - sqrterm2; // lower
 
 	  // J
-	  J[*Jcounter]   = -(1-a1/sqrterm1);
-	  J[*Jcounter+1] = (1-a2/sqrterm2);
+	  J[*J_nnz]   = -(1-a1/sqrterm1);
+	  J[*J_nnz+1] = (1-a2/sqrterm2);
 
 	  // H
-	  H = MAT_array_get(H_array,*Jcounter);
+	  H = MAT_array_get(H_array,*J_nnz);
 	  MAT_set_d(H,0,-(b*b+eps*eps)/(sqrterm1*sqrterm1*sqrterm1));
 
-	  H = MAT_array_get(H_array,*Jcounter+1);
+	  H = MAT_array_get(H_array,*J_nnz+1);
 	  MAT_set_d(H,0,-(b*b+eps*eps)/(sqrterm2*sqrterm2*sqrterm2));
 
-	  (*Jcounter)++;
-	  (*Jcounter)++;
+	  (*J_nnz)++;
+	  (*J_nnz)++;
 	}
       }
 
@@ -737,22 +737,22 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 	  sqrterm2 = sqrt(a2*a2+b*b+eps*eps);
 
 	  // f
-	  f[*Jcounter]   = a1 + b - sqrterm1; // upper
-	  f[*Jcounter+1] = a2 + b - sqrterm2; // lower
+	  f[*J_nnz]   = a1 + b - sqrterm1; // upper
+	  f[*J_nnz+1] = a2 + b - sqrterm2; // lower
 
 	  // J
-	  J[*Jcounter]   = -(1-a1/sqrterm1);
-	  J[*Jcounter+1] = (1-a2/sqrterm2);
+	  J[*J_nnz]   = -(1-a1/sqrterm1);
+	  J[*J_nnz+1] = (1-a2/sqrterm2);
 
 	  // H
-	  H = MAT_array_get(H_array,*Jcounter);
+	  H = MAT_array_get(H_array,*J_nnz);
 	  MAT_set_d(H,0,-(b*b+eps*eps)/(sqrterm1*sqrterm1*sqrterm1));
 
-	  H = MAT_array_get(H_array,*Jcounter+1);
+	  H = MAT_array_get(H_array,*J_nnz+1);
 	  MAT_set_d(H,0,-(b*b+eps*eps)/(sqrterm2*sqrterm2*sqrterm2));
 
-	  (*Jcounter)++;
-	  (*Jcounter)++;
+	  (*J_nnz)++;
+	  (*J_nnz)++;
 	}
       }
     }
@@ -769,7 +769,7 @@ void CONSTR_BOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf
   Bus* bus;
   Gen* gen;
   Shunt* shunt;
-  int* Jcounter;
+  int* J_nnz;
   char* bus_counted;
   int bus_index_t[2];
   int k;
@@ -779,11 +779,11 @@ void CONSTR_BOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf
   T = BRANCH_get_num_periods(br);
 
   // Constr data
-  Jcounter = CONSTR_get_Jcounter_ptr(c);
+  J_nnz = CONSTR_get_J_nnz_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!Jcounter || !bus_counted)
+  if (!J_nnz || !bus_counted)
     return;
 
   // Check outage
@@ -799,15 +799,15 @@ void CONSTR_BOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf
   // Tap ratio
   if (BRANCH_has_flags(br,FLAG_BOUNDED,BRANCH_VAR_RATIO) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) {
-    (*Jcounter)++; // upper bound
-    (*Jcounter)++; // lower bound
+    (*J_nnz)++; // upper bound
+    (*J_nnz)++; // lower bound
   }
 
   // Phase shift
   if (BRANCH_has_flags(br,FLAG_BOUNDED,BRANCH_VAR_PHASE) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
-    (*Jcounter)++; // upper bound
-    (*Jcounter)++; // lower bound
+    (*J_nnz)++; // upper bound
+    (*J_nnz)++; // lower bound
   }
 
   // Buses
@@ -820,17 +820,17 @@ void CONSTR_BOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf
       // Voltage magnitude (V_MAG)
       if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VMAG) &&
 	  BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
-	BUS_set_sens_v_mag_u_bound(bus,VEC_get(sf,*Jcounter),t);
-	(*Jcounter)++; // upper bound
-	BUS_set_sens_v_mag_l_bound(bus,VEC_get(sf,*Jcounter),t);
-	(*Jcounter)++; // lower bound
+	BUS_set_sens_v_mag_u_bound(bus,VEC_get(sf,*J_nnz),t);
+	(*J_nnz)++; // upper bound
+	BUS_set_sens_v_mag_l_bound(bus,VEC_get(sf,*J_nnz),t);
+	(*J_nnz)++; // lower bound
       }
 
       // Volage angle (V_ANG)
       if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VANG) &&
 	  BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) {
-	(*Jcounter)++; // upper bound
-	(*Jcounter)++; // lower bound
+	(*J_nnz)++; // upper bound
+	(*J_nnz)++; // lower bound
       }
 
       // Generators
@@ -839,15 +839,15 @@ void CONSTR_BOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf
 	// Active power (P)
 	if (GEN_has_flags(gen,FLAG_BOUNDED,GEN_VAR_P) &&
 	    GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
-	  (*Jcounter)++; // upper bound
-	  (*Jcounter)++; // lower bound
+	  (*J_nnz)++; // upper bound
+	  (*J_nnz)++; // lower bound
 	}
 
 	// Reactive power (Q)
 	if (GEN_has_flags(gen,FLAG_BOUNDED,GEN_VAR_Q) &&
 	    GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) {
-	  (*Jcounter)++; // upper bound
-	  (*Jcounter)++; // lower bound
+	  (*J_nnz)++; // upper bound
+	  (*J_nnz)++; // lower bound
 	}
       }
 
@@ -857,8 +857,8 @@ void CONSTR_BOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf
 	// Susceptance
 	if (SHUNT_has_flags(shunt,FLAG_BOUNDED,SHUNT_VAR_SUSC) &&
 	    SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
-	  (*Jcounter)++; // upper bound
-	  (*Jcounter)++; // lower bound
+	  (*J_nnz)++; // upper bound
+	  (*J_nnz)++; // lower bound
 	}
       }
     }

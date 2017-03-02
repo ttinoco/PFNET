@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -19,7 +19,7 @@ void CONSTR_LBOUND_init(Constr* c) {
 void CONSTR_LBOUND_clear(Constr* c) {
 
   // Counters
-  CONSTR_set_Gcounter(c,0);
+  CONSTR_set_G_nnz(c,0);
   CONSTR_set_Gconstr_index(c,0);
 
   // Flags

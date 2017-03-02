@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -180,15 +180,15 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(u) is np.ndarray)
             self.assertTupleEqual(u.shape,(0,))
 
-            self.assertEqual(constr.Jcounter,0)
-            self.assertEqual(constr.Acounter,0)
-            self.assertEqual(constr.Gcounter,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
 
-            Acounter = net.num_fixed+net.get_num_buses_reg_by_gen()
+            A_nnz = net.num_fixed+net.get_num_buses_reg_by_gen()
             constr.analyze()
-            self.assertEqual(Acounter,constr.Acounter)
+            self.assertEqual(A_nnz,constr.A_nnz)
             constr.eval(x0)
-            self.assertEqual(0,constr.Acounter)
+            self.assertEqual(0,constr.A_nnz)
 
             f = constr.f
             J = constr.J
@@ -362,15 +362,15 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(u) is np.ndarray)
             self.assertTupleEqual(u.shape,(0,))
 
-            self.assertEqual(constr.Jcounter,0)
-            self.assertEqual(constr.Acounter,0)
-            self.assertEqual(constr.Gcounter,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
 
-            Acounter = net.num_fixed+net.get_num_buses_reg_by_gen()*self.T
+            A_nnz = net.num_fixed+net.get_num_buses_reg_by_gen()*self.T
             constr.analyze()
-            self.assertEqual(Acounter,constr.Acounter)
+            self.assertEqual(A_nnz,constr.A_nnz)
             constr.eval(x0)
-            self.assertEqual(0,constr.Acounter)
+            self.assertEqual(0,constr.A_nnz)
 
             f = constr.f
             J = constr.J
@@ -601,18 +601,18 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(u) is np.ndarray)
             self.assertTupleEqual(u.shape,(0,))
 
-            self.assertEqual(constr.Jcounter,0)
-            self.assertEqual(constr.Acounter,0)
-            self.assertEqual(constr.Gcounter,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
 
             constr.analyze()
-            self.assertEqual(constr.Jcounter,0)
-            self.assertEqual(constr.Acounter,0)
-            self.assertEqual(constr.Gcounter,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
             constr.eval(x0)
-            self.assertEqual(constr.Jcounter,0)
-            self.assertEqual(constr.Acounter,0)
-            self.assertEqual(constr.Gcounter,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
 
             f = constr.f
             J = constr.J
@@ -1214,8 +1214,8 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
 
-            self.assertEqual(constr.Jcounter,0)
-            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
 
             # Manual count
             nnz = 0
@@ -1227,9 +1227,9 @@ class TestConstraints(unittest.TestCase):
                     nnz += 2*(len(bus.generators)-1)
 
             constr.analyze()
-            self.assertEqual(nnz*self.T,constr.Acounter)
+            self.assertEqual(nnz*self.T,constr.A_nnz)
             constr.eval(x0)
-            self.assertEqual(0,constr.Acounter)
+            self.assertEqual(0,constr.A_nnz)
 
             f = constr.f
             J = constr.J
@@ -1343,8 +1343,8 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
 
-            self.assertEqual(constr.Jcounter,0)
-            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
 
             # Manual count
             nnz = 0
@@ -1356,9 +1356,9 @@ class TestConstraints(unittest.TestCase):
                     nnz += 2*(len(bus.reg_generators)-1)
 
             constr.analyze()
-            self.assertEqual(nnz*self.T,constr.Acounter)
+            self.assertEqual(nnz*self.T,constr.A_nnz)
             constr.eval(x0)
-            self.assertEqual(0,constr.Acounter)
+            self.assertEqual(0,constr.A_nnz)
 
             f = constr.f
             J = constr.J
@@ -1521,9 +1521,9 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(G.shape,(0,0))
             self.assertEqual(G.nnz,0)
 
-            self.assertEqual(constr.Jcounter,0)
-            self.assertEqual(constr.Acounter,0)
-            self.assertEqual(constr.Gcounter,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
 
             num_Jnnz = (net.get_num_buses()*4 +
                         net.get_num_branches()*8 +
@@ -1535,9 +1535,9 @@ class TestConstraints(unittest.TestCase):
                         net.num_var_generators*2)*self.T
 
             constr.analyze()
-            self.assertEqual(num_Jnnz,constr.Jcounter)
+            self.assertEqual(num_Jnnz,constr.J_nnz)
             constr.eval(x0)
-            self.assertEqual(num_Jnnz,constr.Jcounter)
+            self.assertEqual(num_Jnnz,constr.J_nnz)
 
             f = constr.f
             J = constr.J
@@ -1793,8 +1793,8 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
 
-            self.assertEqual(constr.Jcounter,0)
-            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
             self.assertEqual(constr.Jconstr_index,0)
             self.assertEqual(constr.Aconstr_index,0)
 
@@ -1810,13 +1810,13 @@ class TestConstraints(unittest.TestCase):
             rowsA = net.get_num_buses_reg_by_gen()-net.get_num_slack_buses()
 
             constr.analyze()
-            self.assertEqual(constr.Jcounter,Jnnz*self.T)
-            self.assertEqual(constr.Acounter,Annz*self.T)
+            self.assertEqual(constr.J_nnz,Jnnz*self.T)
+            self.assertEqual(constr.A_nnz,Annz*self.T)
             self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
             self.assertEqual(constr.Aconstr_index,rowsA*self.T)
             constr.eval(x0)
-            self.assertEqual(constr.Jcounter,Jnnz*self.T)
-            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.J_nnz,Jnnz*self.T)
+            self.assertEqual(constr.A_nnz,0)
             self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
             self.assertEqual(constr.Aconstr_index,0)
 
@@ -2044,18 +2044,18 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
 
-            self.assertEqual(constr.Jcounter,0)
-            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
 
-            Jcounter = 2*net.num_vars
+            J_nnz = 2*net.num_vars
             constr.analyze()
-            self.assertEqual(Jcounter,constr.Jcounter)
+            self.assertEqual(J_nnz,constr.J_nnz)
             constr.eval(x0)
-            self.assertEqual(Jcounter,constr.Jcounter)
+            self.assertEqual(J_nnz,constr.J_nnz)
             constr.store_sensitivities(None,np.zeros(constr.J.shape[0]),None,None)
-            self.assertEqual(Jcounter,constr.Jcounter)
+            self.assertEqual(J_nnz,constr.J_nnz)
             constr.eval(x0)
-            self.assertEqual(Jcounter,constr.Jcounter)
+            self.assertEqual(J_nnz,constr.J_nnz)
 
             f = constr.f
             J = constr.J
@@ -2230,8 +2230,8 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
 
-            self.assertEqual(constr.Jcounter,0)
-            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
             self.assertEqual(constr.Jconstr_index,0)
             self.assertEqual(constr.Aconstr_index,0)
 
@@ -2246,13 +2246,13 @@ class TestConstraints(unittest.TestCase):
             self.assertGreaterEqual(rowsA,0)
 
             constr.analyze()
-            self.assertEqual(constr.Jcounter,Jnnz*self.T)
-            self.assertEqual(constr.Acounter,Annz*self.T)
+            self.assertEqual(constr.J_nnz,Jnnz*self.T)
+            self.assertEqual(constr.A_nnz,Annz*self.T)
             self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
             self.assertEqual(constr.Aconstr_index,rowsA*self.T)
             constr.eval(x0)
-            self.assertEqual(constr.Jcounter,Jnnz*self.T)
-            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.J_nnz,Jnnz*self.T)
+            self.assertEqual(constr.A_nnz,0)
             self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
             self.assertEqual(constr.Aconstr_index,0)
 
@@ -2463,8 +2463,8 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
 
-            self.assertEqual(constr.Jcounter,0)
-            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
             self.assertEqual(constr.Jconstr_index,0)
             self.assertEqual(constr.Aconstr_index,0)
 
@@ -2479,13 +2479,13 @@ class TestConstraints(unittest.TestCase):
             self.assertGreaterEqual(rowsA,0)
 
             constr.analyze()
-            self.assertEqual(constr.Jcounter,Jnnz*self.T)
-            self.assertEqual(constr.Acounter,Annz*self.T)
+            self.assertEqual(constr.J_nnz,Jnnz*self.T)
+            self.assertEqual(constr.A_nnz,Annz*self.T)
             self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
             self.assertEqual(constr.Aconstr_index,rowsA*self.T)
             constr.eval(x0)
-            self.assertEqual(constr.Jcounter,Jnnz*self.T)
-            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.J_nnz,Jnnz*self.T)
+            self.assertEqual(constr.A_nnz,0)
             self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
             self.assertEqual(constr.Aconstr_index,0)
 
@@ -2870,8 +2870,8 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(A) is coo_matrix)
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
-            self.assertEqual(constr.Jcounter,0)
-            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
             self.assertEqual(constr.Jconstr_index,0)
             self.assertEqual(constr.Aconstr_index,0)
 
@@ -2886,10 +2886,10 @@ class TestConstraints(unittest.TestCase):
             J = constr.J
             A = constr.A
             b = constr.b
-            self.assertEqual(constr.Jcounter,0)
+            self.assertEqual(constr.J_nnz,0)
             self.assertEqual(constr.Jconstr_index,0)
             self.assertEqual(constr.Aconstr_index,0)
-            self.assertEqual(constr.Acounter,
+            self.assertEqual(constr.A_nnz,
                              (net.num_generators +
                               net.num_loads +
                               net.num_var_generators +
@@ -2900,11 +2900,11 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(b.shape,(net.num_buses,))
             self.assertTupleEqual(f.shape,(0,))
             self.assertTupleEqual(A.shape,(net.num_buses,net.num_vars))
-            self.assertEqual(A.nnz,constr.Acounter)
+            self.assertEqual(A.nnz,constr.A_nnz)
             self.assertTupleEqual(J.shape,(0,net.num_vars))
 
             constr.eval(x0)
-            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.A_nnz,0)
             self.assertEqual(A.nnz,
                              (net.num_generators +
                               net.num_loads +
@@ -2975,14 +2975,14 @@ class TestConstraints(unittest.TestCase):
             J1 = constr.J
             A1 = constr.A
             b1 = constr.b
-            self.assertEqual(constr.Jcounter,0)
+            self.assertEqual(constr.J_nnz,0)
             self.assertEqual(constr.Jconstr_index,0)
             self.assertEqual(constr.Aconstr_index,0)
-            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.A_nnz,0)
             self.assertTupleEqual(b1.shape,(net.num_buses,))
             self.assertTupleEqual(f1.shape,(0,))
             self.assertTupleEqual(A1.shape,(net.num_buses,net.num_vars))
-            self.assertEqual(A1.nnz,constr.Acounter)
+            self.assertEqual(A1.nnz,constr.A_nnz)
             self.assertTupleEqual(J1.shape,(0,net.num_vars))
             x1 = net.get_var_values()
             self.assertTrue(type(x1) is np.ndarray)
@@ -3071,7 +3071,7 @@ class TestConstraints(unittest.TestCase):
             constr.analyze()
             A = constr.A
             b = constr.b
-            self.assertEqual(constr.Acounter,
+            self.assertEqual(constr.A_nnz,
                              (net.num_generators +
                               net.num_loads +
                               net.num_var_generators +
@@ -3081,11 +3081,11 @@ class TestConstraints(unittest.TestCase):
                               2*net.num_batteries)*self.T)
             self.assertTupleEqual(b.shape,(net.num_buses*self.T,))
             self.assertTupleEqual(A.shape,(net.num_buses*self.T,net.num_vars))
-            self.assertEqual(A.nnz,constr.Acounter)
+            self.assertEqual(A.nnz,constr.A_nnz)
 
             # Eval
             constr.eval(x0)
-            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.A_nnz,0)
             self.assertEqual(A.nnz,
                              (net.num_generators +
                               net.num_loads +
@@ -3193,9 +3193,9 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(G) is coo_matrix)
             self.assertTupleEqual(G.shape,(0,0))
             self.assertEqual(G.nnz,0)
-            self.assertEqual(constr.Jcounter,0)
-            self.assertEqual(constr.Acounter,0)
-            self.assertEqual(constr.Gcounter,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
             self.assertEqual(constr.Jconstr_index,0)
             self.assertEqual(constr.Aconstr_index,0)
             self.assertEqual(constr.Gconstr_index,0)
@@ -3209,7 +3209,7 @@ class TestConstraints(unittest.TestCase):
             l = constr.l
             u = constr.u
             G = constr.G
-            self.assertEqual(constr.Jcounter,0)
+            self.assertEqual(constr.J_nnz,0)
             self.assertEqual(constr.Jconstr_index,0)
             self.assertEqual(constr.Aconstr_index,0)
             self.assertEqual(constr.Gconstr_index,net.num_branches)
@@ -3222,7 +3222,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(A.shape,(0,net.num_vars))
             self.assertTupleEqual(J.shape,(0,net.num_vars))
             self.assertTupleEqual(G.shape,(net.num_branches,net.num_vars))
-            self.assertEqual(G.nnz,constr.Gcounter)
+            self.assertEqual(G.nnz,constr.G_nnz)
 
             self.assertTrue(np.all(l <= u))
 
@@ -3232,7 +3232,7 @@ class TestConstraints(unittest.TestCase):
                     num += 1
                 if not br.bus_m.is_slack():
                     num += 1
-            self.assertEqual(num,constr.Gcounter)
+            self.assertEqual(num,constr.G_nnz)
 
             counter = 0
             index = 0
@@ -3289,9 +3289,9 @@ class TestConstraints(unittest.TestCase):
                 self.assertEqual(branch.sens_P_u_bound,mu[index])
                 self.assertEqual(branch.sens_P_l_bound,pi[index])
                 index += 1
-            self.assertEqual(constr.Jcounter,0)
-            self.assertEqual(constr.Acounter,0)
-            self.assertEqual(constr.Gcounter,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
             self.assertEqual(constr.Jconstr_index,0)
             self.assertEqual(constr.Aconstr_index,0)
             self.assertEqual(constr.Gconstr_index,net.num_branches)
@@ -3434,9 +3434,9 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(G.shape,(0,0))
             self.assertEqual(G.nnz,0)
 
-            self.assertEqual(constr.Jcounter,0)
-            self.assertEqual(constr.Acounter,0)
-            self.assertEqual(constr.Gcounter,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
 
             num_Annz = (net.get_num_buses()*4 +
                         net.get_num_branches()*8 +
@@ -3448,9 +3448,9 @@ class TestConstraints(unittest.TestCase):
                         net.num_var_generators*2)
 
             constr.analyze()
-            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.A_nnz,0)
             constr.eval(x0)
-            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.A_nnz,0)
 
             f = constr.f
             J = constr.J
@@ -3558,14 +3558,14 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(G) is coo_matrix)
             self.assertTupleEqual(G.shape,(0,0))
             self.assertEqual(G.nnz,0)
-            self.assertEqual(constr.Jcounter,0)
-            self.assertEqual(constr.Acounter,0)
-            self.assertEqual(constr.Gcounter,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
 
             constr.analyze()
-            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.A_nnz,0)
             constr.eval(x0)
-            self.assertEqual(constr.Acounter,0)
+            self.assertEqual(constr.A_nnz,0)
 
             f = constr.f
             J = constr.J
@@ -3593,9 +3593,9 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(G) is coo_matrix)
             self.assertTupleEqual(G.shape,(num*self.T,net.num_vars))
             self.assertEqual(G.nnz,num*(1 + (self.T-1)*2))
-            self.assertEqual(constr.Jcounter,0)
-            self.assertEqual(constr.Acounter,0)
-            self.assertEqual(constr.Gcounter,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
 
             for t in range(self.T):
                 for gen in net.generators:

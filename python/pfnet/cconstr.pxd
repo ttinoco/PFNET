@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -33,9 +33,9 @@ cdef extern from "pfnet/constr.h":
     void CONSTR_del(Constr* c)
     void CONSTR_del_matvec(Constr* constr)
     Constr* CONSTR_new(int type, Net* net)
-    int CONSTR_get_Acounter(Constr* c)
-    int CONSTR_get_Gcounter(Constr* c)
-    int CONSTR_get_Jcounter(Constr* c)
+    int CONSTR_get_A_nnz(Constr* c)
+    int CONSTR_get_G_nnz(Constr* c)
+    int CONSTR_get_J_nnz(Constr* c)
     int CONSTR_get_Aconstr_index(Constr* c)
     int CONSTR_get_Gconstr_index(Constr* c)
     int CONSTR_get_Jconstr_index(Constr* c)
