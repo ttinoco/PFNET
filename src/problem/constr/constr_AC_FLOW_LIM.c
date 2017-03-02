@@ -11,12 +11,40 @@
 #include <pfnet/constr_AC_FLOW_LIM.h>
 
 void CONSTR_AC_FLOW_LIM_init(Constr* c) {
+  
+  // Local variables
+  Net* net;
+  int num_branches;
+  int num_periods;
 
+  // Init
+  net = CONSTR_get_network(c);
+  num_branches = NET_get_num_branches(net);
+  num_periods = NET_get_num_periods(net);
+  CONSTR_set_Hcounter(c,(int*)calloc(num_branches*num_periods,sizeof(int)),num_branches*num_periods);
+  CONSTR_set_data(c,NULL);
 
 }
 
 void CONSTR_AC_FLOW_LIM_clear(Constr* c) {
 
+  // f
+  VEC_set_zero(CONSTR_get_f(c));
+
+  // J
+  MAT_set_zero_d(CONSTR_get_J(c));
+
+  // H
+  MAT_array_set_zero_d(CONSTR_get_H_array(c),CONSTR_get_H_array_size(c));
+
+  // Counters
+  CONSTR_set_Jcounter(c,0);
+  CONSTR_set_Jbar_counter(c,0);
+  CONSTR_set_Jconstr_index(c,0);
+  CONSTR_clear_Hcounter(c);
+
+  // Flags
+  CONSTR_clear_bus_counted(c);
   
 }
 

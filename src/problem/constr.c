@@ -40,31 +40,39 @@ struct Constr {
   
   // Nonlinear (f(x) = 0)
   Vec* f;           /**< @brief Vector of nonlinear constraint violations */
-  Mat* J;           /**< @brief Jacobian matrix of nonlinear constraints */
+  Mat* J;           /**< @brief Jacobian matrix of nonlinear constraints wrt. variables */
+  Mat* Jbar;        /**< @brief Jacobian matrix of nonlinear constraints wrt. extra variables */
   Mat* H_array;     /**< @brief Array of Hessian matrices of nonlinear constraints */
   int H_array_size; /**< @brief Size of Hessian array */
   Mat* H_combined;  /**< @brief Linear combination of Hessians of the nonlinear constraints */
-
+  
   // Linear equality (Ax = b)
   Mat* A;           /**< @brief Matrix of constraint normals of linear equality constraints */
   Vec* b;           /**< @brief Right-hand side vector of linear equality constraints */
 
   // Linear inequalities (l <= Gx <= h)
-  Mat* G;           /** @brief Matrix of constraint normals of linear inequality constraints */
+  Mat* G;           /** @brief Matrix of constraint normals of linear inequality constraints wrt. variables */
+  Mat* Gbar;        /** @brief Matrix of constraint normals of linear inequality constraints wrt. extra variables */
   Vec* l;           /** @brief Lower bound for linear inequality contraints */
   Vec* u;           /** @brief Upper bound for linear inequality contraints */
   
+  // Extra variables
+  int num_extra_vars;          /** @brief Number of extra variables (set by problem) */
+  int num_local_extra_vars;    /** @brief Number of local extra variables (set during count) */
+  int local_extra_vars_offset; /** @brief Offset for local extra variables (set by problem) */
+  
   // Utils
-  int Acounter;         /**< @brief Counter for nonzeros of matrix A */
-  int Jcounter;         /**< @brief Counter for nonzeros of matrix J */
-  int Gcounter;         /**< @brief Counter for nonzeros of matrix G */
-  int* Hcounter;        /**< @brief Array of counters of nonzeros of nonlinear constraint Hessians */
-  int Hcounter_size;    /**< @brief Size of array of counter of Hessian nonzeros */
-  int Aconstr_index;    /**< @brief Index for linear equality constraints */
-  int Jconstr_index;    /**< @brief Index for nonlinear constraints */
-  int Gconstr_index;    /**< @brief Index for linear inequality constraints */
-  char* bus_counted;    /**< @brief Flag for processing buses */
-  int bus_counted_size; /**< @brief Size of array of flags for processing buses */
+  int A_nnz;             /**< @brief Counter for nonzeros of matrix A */
+  int J_nnz;             /**< @brief Counter for nonzeros of matrix J */
+  int Jbar_nnz;          /**< @brief Counter for nonzeros of matrix Jbar */
+  int G_nnz;             /**< @brief Counter for nonzeros of matrix G */
+  int* H_nnz;            /**< @brief Array of counters of nonzeros of nonlinear constraint Hessians */
+  int H_nnz_size;        /**< @brief Size of array of counter of Hessian nonzeros */
+  int Aconstr_index;     /**< @brief Index for linear equality constraints */
+  int Jconstr_index;     /**< @brief Index for nonlinear constraints */
+  int Gconstr_index;     /**< @brief Index for linear inequality constraints */
+  char* bus_counted;     /**< @brief Flag for processing buses */
+  int bus_counted_size;  /**< @brief Size of array of flags for processing buses */
 
   // Type functions
   void (*func_init)(Constr* c);                                       /**< @brief Initialization function */
@@ -84,9 +92,45 @@ struct Constr {
   Constr* next; /**< @brief List of constraints */
 };
 
-void CONSTR_clear_Hcounter(Constr* c) {
+int CONSTR_get_num_extra_vars(Constr* c) {
   if (c)
-    ARRAY_clear(c->Hcounter,int,c->Hcounter_size);
+    return c->num_extra_vars;
+  else
+    return 0;
+}
+
+int CONSTR_get_num_local_extra_vars(Constr* c) {
+  if (c)
+    return c->num_local_extra_vars;
+  else
+    return 0;
+}
+
+int CONSTR_get_local_extra_vars_offset(Constr* c) {
+  if (c)
+    return c->local_extra_vars_offset;
+  else
+    return 0;
+}
+
+void CONSTR_set_num_extra_vars(Constr* c, int num) {
+  if (c)
+    c->num_extra_vars = num;
+}
+
+void CONSTR_set_num_local_extra_vars(Constr* c, int num) {
+  if (c)
+    c->num_local_extra_vars = num;
+}
+
+void CONSTR_set_local_extra_vars_offset(Constr* c, int offset) {
+  if (c)
+    c->local_extra_vars_offset = offset;
+}
+
+void CONSTR_clear_H_nnz(Constr* c) {
+  if (c)
+    ARRAY_clear(c->H_nnz,int,c->H_nnz_size);
 }
 
 void CONSTR_clear_bus_counted(Constr* c) {
@@ -101,7 +145,7 @@ void CONSTR_combine_H(Constr* c, Vec* coeff, BOOL ensure_psd) {
   REAL* Hd_comb;
   REAL* coeffd;
   REAL coeffk;
-  int Hcounter_comb;
+  int H_nnz_comb;
   int k;
   int m;
 
@@ -117,7 +161,7 @@ void CONSTR_combine_H(Constr* c, Vec* coeff, BOOL ensure_psd) {
   }
   
   // Combine
-  Hcounter_comb = 0;
+  H_nnz_comb = 0;
   coeffd = VEC_get_data(coeff);
   Hd_comb = MAT_get_data_array(c->H_combined);
   for (k = 0; k < c->H_array_size; k++) {
@@ -127,8 +171,8 @@ void CONSTR_combine_H(Constr* c, Vec* coeff, BOOL ensure_psd) {
     else
       coeffk = coeffd[k];
     for (m = 0; m < MAT_get_nnz(MAT_array_get(c->H_array,k)); m++) {
-      Hd_comb[Hcounter_comb] = coeffk*Hd[m];
-      Hcounter_comb++;
+      Hd_comb[H_nnz_comb] = coeffk*Hd[m];
+      H_nnz_comb++;
     }
   }
 }
@@ -141,7 +185,9 @@ void CONSTR_del_matvec(Constr* c) {
     MAT_del(c->A);
     VEC_del(c->f);
     MAT_del(c->J);
+    MAT_del(c->Jbar);
     MAT_del(c->G);
+    MAT_del(c->Gbar);
     VEC_del(c->l);
     VEC_del(c->u);
     MAT_array_del(c->H_array,c->H_array_size);
@@ -150,7 +196,9 @@ void CONSTR_del_matvec(Constr* c) {
     c->A = NULL;
     c->f = NULL;
     c->J = NULL;
+    c->Jbar = NULL;
     c->G = NULL;
+    c->Gbar = NULL;
     c->l = NULL;
     c->u = NULL;
     c->H_array = NULL;
@@ -168,8 +216,8 @@ void CONSTR_del(Constr* c) {
     // Utils
     if (c->bus_counted)
       free(c->bus_counted);
-    if (c->Hcounter)
-      free(c->Hcounter);
+    if (c->H_nnz)
+      free(c->H_nnz);
 
     // Data
     if (c->func_free)
@@ -242,6 +290,13 @@ Mat* CONSTR_get_J(Constr* c) {
     return NULL;
 }
 
+Mat* CONSTR_get_Jbar(Constr* c) {
+  if (c)
+    return c->Jbar;
+  else
+    return NULL;
+}
+
 Mat* CONSTR_get_H_array(Constr* c) {
   if (c)
     return c->H_array;
@@ -270,58 +325,72 @@ Mat* CONSTR_get_H_combined(Constr* c) {
     return NULL;
 }
 
-int CONSTR_get_Acounter(Constr* c) {
+int CONSTR_get_A_nnz(Constr* c) {
   if (c)
-    return c->Acounter;
+    return c->A_nnz;
   else
     return 0;
 }
 
-int* CONSTR_get_Acounter_ptr(Constr* c) {
+int* CONSTR_get_A_nnz_ptr(Constr* c) {
   if (c)
-    return &(c->Acounter);
+    return &(c->A_nnz);
   else
     return NULL;
 }
 
-int CONSTR_get_Gcounter(Constr* c) {
+int CONSTR_get_G_nnz(Constr* c) {
   if (c)
-    return c->Gcounter;
+    return c->G_nnz;
   else
     return 0;
 }
 
-int* CONSTR_get_Gcounter_ptr(Constr* c) {
+int* CONSTR_get_G_nnz_ptr(Constr* c) {
   if (c)
-    return &(c->Gcounter);
+    return &(c->G_nnz);
   else
     return NULL;
 }
 
-int CONSTR_get_Jcounter(Constr* c) {
+int CONSTR_get_J_nnz(Constr* c) {
   if (c)
-    return c->Jcounter;
+    return c->J_nnz;
   else
     return 0;
 }
 
-int* CONSTR_get_Jcounter_ptr(Constr* c) {
+int CONSTR_get_Jbar_nnz(Constr* c) {
   if (c)
-    return &(c->Jcounter);
+    return c->Jbar_nnz;
   else
     return 0;
 }
 
-int* CONSTR_get_Hcounter(Constr* c) {
+int* CONSTR_get_J_nnz_ptr(Constr* c) {
   if (c)
-    return c->Hcounter;
+    return &(c->J_nnz);
+  else
+    return 0;
+}
+
+int* CONSTR_get_Jbar_nnz_ptr(Constr* c) {
+  if (c)
+    return &(c->Jbar_nnz);
+  else
+    return 0;
+}
+
+int* CONSTR_get_H_nnz(Constr* c) {
+  if (c)
+    return c->H_nnz;
   else
     return NULL;
 }
 
-int CONSTR_get_Hcounter_size(Constr* c) {
+int CONSTR_get_H_nnz_size(Constr* c) {
   if (c)
-    return c->Hcounter_size;
+    return c->H_nnz_size;
   else
     return 0;
 }
@@ -534,24 +603,32 @@ Constr* CONSTR_new(int type, Net* net) {
   // Network
   c->net = net;
 
+  // Vars
+  c->num_extra_vars = 0;
+  c->num_local_extra_vars = 0;
+  c->local_extra_vars_offset = 0;
+
   // Fields
   c->type = type;
   strcpy(c->type_str,"");
   c->f = NULL;
   c->J = NULL;
+  c->Jbar = NULL;
   c->H_array = NULL;  
   c->H_array_size = 0;
   c->H_combined = NULL;
   c->A = NULL;
   c->b = NULL;
   c->G = NULL;
+  c->Gbar = NULL;
   c->l = NULL;
   c->u = NULL;
-  c->Acounter = 0;
-  c->Jcounter = 0;
-  c->Gcounter = 0;
-  c->Hcounter = NULL;
-  c->Hcounter_size = 0;
+  c->A_nnz = 0;
+  c->J_nnz = 0;
+  c->Jbar_nnz = 0;
+  c->G_nnz = 0;
+  c->H_nnz = NULL;
+  c->H_nnz_size = 0;
   c->Aconstr_index = 0;
   c->Jconstr_index = 0;
   c->Gconstr_index = 0;
@@ -786,6 +863,11 @@ void CONSTR_set_J(Constr* c, Mat* J) {
     c->J = J;
 }
 
+void CONSTR_set_Jbar(Constr* c, Mat* Jbar) {
+  if (c)
+    c->Jbar = Jbar;
+}
+
 void CONSTR_set_H_array(Constr* c, Mat* array, int size) {
   if (c) {
     c->H_array = array;
@@ -798,27 +880,32 @@ void CONSTR_set_H_combined(Constr* c, Mat* H_combined) {
     c->H_combined = H_combined;
 }
 
-void CONSTR_set_Acounter(Constr* c, int counter) {
+void CONSTR_set_A_nnz(Constr* c, int nnz) {
   if (c)
-    c->Acounter = counter;
+    c->A_nnz = nnz;
 }
 
-void CONSTR_set_Gcounter(Constr* c, int counter) {
+void CONSTR_set_G_nnz(Constr* c, int nnz) {
   if (c)
-    c->Gcounter = counter;
+    c->G_nnz = nnz;
 }
 
-void CONSTR_set_Jcounter(Constr* c, int counter) {
+void CONSTR_set_J_nnz(Constr* c, int nnz) {
   if (c)
-    c->Jcounter = counter;
+    c->J_nnz = nnz;
 }
 
-void CONSTR_set_Hcounter(Constr* c, int* counter, int size) {
+void CONSTR_set_Jbar_nnz(Constr* c, int nnz) {
+  if (c)
+    c->Jbar_nnz = nnz;
+}
+
+void CONSTR_set_H_nnz(Constr* c, int* nnz, int size) {
   if (c) {
-    if (c->Hcounter)
-      free(c->Hcounter);
-    c->Hcounter = counter;
-    c->Hcounter_size = size;
+    if (c->H_nnz)
+      free(c->H_nnz);
+    c->H_nnz = nnz;
+    c->H_nnz_size = size;
   }
 }
 
@@ -962,9 +1049,9 @@ BOOL CONSTR_is_safe_to_analyze(Constr* c) {
   Net* net = CONSTR_get_network(c);
   if (CONSTR_get_bus_counted_size(c) == NET_get_num_buses(net)*NET_get_num_periods(net) &&
       MAT_get_size2(c->A) == NET_get_num_vars(net) &&
-      MAT_get_size2(c->J) == NET_get_num_vars(net)) {
+      MAT_get_size2(c->J) == NET_get_num_vars(net) &&
+      MAT_get_size2(c->Jbar) == CONSTR_get_num_extra_vars(c))
     return TRUE;
-  }
   else {
     sprintf(c->error_string,"constraint is not safe to analyze");
     c->error_flag = TRUE;
@@ -977,6 +1064,7 @@ BOOL CONSTR_is_safe_to_eval(Constr* c, Vec* values) {
   if (CONSTR_get_bus_counted_size(c) == NET_get_num_buses(net)*NET_get_num_periods(net) &&
       MAT_get_size2(c->A) == NET_get_num_vars(net) &&
       MAT_get_size2(c->J) == NET_get_num_vars(net) &&
+      MAT_get_size2(c->Jbar) == CONSTR_get_num_extra_vars(c) &&
       VEC_get_size(values) == NET_get_num_vars(net))
     return TRUE;
   else {
