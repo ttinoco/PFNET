@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -21,6 +21,7 @@
 #include <pfnet/constr_REG_TRAN.h>
 #include <pfnet/constr_REG_SHUNT.h>
 #include <pfnet/constr_DC_FLOW_LIM.h>
+#include <pfnet/constr_AC_FLOW_LIM.h>
 #include <pfnet/constr_LBOUND.h>
 #include <pfnet/constr_GEN_RAMP.h>
 
@@ -34,8 +35,9 @@ struct Constr {
   Net* net;    /**< @brief Power network */
 
   // Type
-  int type; /**< @brief Constraint type */
-
+  int type;                           /**< @brief Constraint type */
+  char type_str[CONSTR_BUFFER_SIZE];  /**< @brief Constraint type string */
+  
   // Nonlinear (f(x) = 0)
   Vec* f;           /**< @brief Vector of nonlinear constraint violations */
   Mat* J;           /**< @brief Jacobian matrix of nonlinear constraints */
@@ -111,6 +113,7 @@ void CONSTR_combine_H(Constr* c, Vec* coeff, BOOL ensure_psd) {
   if (VEC_get_size(coeff) != c->H_array_size) {
     sprintf(c->error_string,"invalid dimensions");
     c->error_flag = TRUE;
+    return;
   }
   
   // Combine
@@ -185,38 +188,9 @@ int CONSTR_get_type(Constr* c) {
 
 char* CONSTR_get_type_str(Constr* c) {
   if (c)
-    switch (c->type) {
-    case CONSTR_TYPE_PF:
-      return CONSTR_TYPE_PF_STR;
-    case CONSTR_TYPE_DCPF:
-      return CONSTR_TYPE_DCPF_STR;
-    case CONSTR_TYPE_LINPF:
-      return CONSTR_TYPE_LINPF_STR;
-    case CONSTR_TYPE_FIX:
-      return CONSTR_TYPE_FIX_STR;
-    case CONSTR_TYPE_BOUND:
-      return CONSTR_TYPE_BOUND_STR;
-    case CONSTR_TYPE_PAR_GEN_P:
-      return CONSTR_TYPE_PAR_GEN_P_STR;
-    case CONSTR_TYPE_PAR_GEN_Q:
-      return CONSTR_TYPE_PAR_GEN_Q_STR;
-    case CONSTR_TYPE_REG_GEN:
-      return CONSTR_TYPE_REG_GEN_STR;
-    case CONSTR_TYPE_REG_TRAN:
-      return CONSTR_TYPE_REG_TRAN_STR;
-    case CONSTR_TYPE_REG_SHUNT:
-      return CONSTR_TYPE_REG_SHUNT_STR;
-    case CONSTR_TYPE_DC_FLOW_LIM:
-      return CONSTR_TYPE_DC_FLOW_LIM_STR;
-    case CONSTR_TYPE_LBOUND:
-      return CONSTR_TYPE_LBOUND_STR;
-    case CONSTR_TYPE_GEN_RAMP:
-      return CONSTR_TYPE_GEN_RAMP_STR;
-    default:
-      return CONSTR_TYPE_UNKNOWN_STR;
-    }
+    return c->type_str;
   else
-    return CONSTR_TYPE_UNKNOWN_STR;
+    return "unknown";
 }
 
 Vec* CONSTR_get_b(Constr* c) {
@@ -562,6 +536,7 @@ Constr* CONSTR_new(int type, Net* net) {
 
   // Fields
   c->type = type;
+  strcpy(c->type_str,"");
   c->f = NULL;
   c->J = NULL;
   c->H_array = NULL;  
@@ -588,7 +563,10 @@ Constr* CONSTR_new(int type, Net* net) {
   c->bus_counted = NULL;
 
   // Constraint functions
-  if (type == CONSTR_TYPE_PF) { // power flow
+  switch (type) {
+
+    // AC power flow
+  case CONSTR_TYPE_PF: 
     c->func_init = &CONSTR_PF_init;
     c->func_count_step = &CONSTR_PF_count_step;
     c->func_allocate = &CONSTR_PF_allocate;
@@ -597,8 +575,10 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_eval_step = &CONSTR_PF_eval_step;
     c->func_store_sens_step = &CONSTR_PF_store_sens_step;
     c->func_free = &CONSTR_PF_free;
-  }
-  else if (type == CONSTR_TYPE_DCPF) { // DC power flow
+    break;
+  
+    // DC power flow
+  case CONSTR_TYPE_DCPF:
     c->func_init = &CONSTR_DCPF_init;
     c->func_count_step = &CONSTR_DCPF_count_step;
     c->func_allocate = &CONSTR_DCPF_allocate;
@@ -607,8 +587,10 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_eval_step = &CONSTR_DCPF_eval_step;
     c->func_store_sens_step = &CONSTR_DCPF_store_sens_step;
     c->func_free = &CONSTR_DCPF_free;
-  }
-  else if (type == CONSTR_TYPE_LINPF) { // DC power flow
+    break;
+  
+    // linearized power flow
+  case CONSTR_TYPE_LINPF:
     c->func_init = &CONSTR_LINPF_init;
     c->func_count_step = &CONSTR_LINPF_count_step;
     c->func_allocate = &CONSTR_LINPF_allocate;
@@ -617,8 +599,10 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_eval_step = &CONSTR_LINPF_eval_step;
     c->func_store_sens_step = &CONSTR_LINPF_store_sens_step;
     c->func_free = &CONSTR_LINPF_free;
-  }
-  else if (type == CONSTR_TYPE_PAR_GEN_P) { // generator participation (active power)
+    break;
+  
+    // generator participation (active power)
+  case CONSTR_TYPE_PAR_GEN_P:
     c->func_init = &CONSTR_PAR_GEN_P_init;
     c->func_count_step = &CONSTR_PAR_GEN_P_count_step;
     c->func_allocate = &CONSTR_PAR_GEN_P_allocate;
@@ -627,8 +611,10 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_eval_step = &CONSTR_PAR_GEN_P_eval_step;
     c->func_store_sens_step = &CONSTR_PAR_GEN_P_store_sens_step;
     c->func_free = &CONSTR_PAR_GEN_P_free;
-  }
-  else if (type == CONSTR_TYPE_PAR_GEN_Q) { // generator participation (reactive power)
+    break;
+
+    // generator participation (reactive power)
+  case CONSTR_TYPE_PAR_GEN_Q:
     c->func_init = &CONSTR_PAR_GEN_Q_init;
     c->func_count_step = &CONSTR_PAR_GEN_Q_count_step;
     c->func_allocate = &CONSTR_PAR_GEN_Q_allocate;
@@ -637,8 +623,10 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_eval_step = &CONSTR_PAR_GEN_Q_eval_step;
     c->func_store_sens_step = &CONSTR_PAR_GEN_Q_store_sens_step;
     c->func_free = &CONSTR_PAR_GEN_Q_free;
-  }
-  else if (type == CONSTR_TYPE_FIX) { // variable fixing
+    break;
+
+    // variable fixing
+  case CONSTR_TYPE_FIX:
     c->func_init = &CONSTR_FIX_init;
     c->func_count_step = &CONSTR_FIX_count_step;
     c->func_allocate = &CONSTR_FIX_allocate;
@@ -647,8 +635,10 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_eval_step = &CONSTR_FIX_eval_step;
     c->func_store_sens_step = &CONSTR_FIX_store_sens_step;
     c->func_free = &CONSTR_FIX_free;
-  }
-  else if (type == CONSTR_TYPE_REG_GEN) { // voltage regulation by generator
+    break;
+    
+    // voltage regulation by generator
+  case CONSTR_TYPE_REG_GEN:
     c->func_init = &CONSTR_REG_GEN_init;
     c->func_count_step = &CONSTR_REG_GEN_count_step;
     c->func_allocate = &CONSTR_REG_GEN_allocate;
@@ -657,8 +647,10 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_eval_step = &CONSTR_REG_GEN_eval_step;
     c->func_store_sens_step = &CONSTR_REG_GEN_store_sens_step;
     c->func_free = &CONSTR_REG_GEN_free;
-  }
-  else if (type == CONSTR_TYPE_REG_TRAN) { // voltage regulation by transformer
+    break;
+    
+    // voltage regulation by transformer
+  case CONSTR_TYPE_REG_TRAN:
     c->func_init = &CONSTR_REG_TRAN_init;
     c->func_count_step = &CONSTR_REG_TRAN_count_step;
     c->func_allocate = &CONSTR_REG_TRAN_allocate;
@@ -667,8 +659,10 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_eval_step = &CONSTR_REG_TRAN_eval_step;
     c->func_store_sens_step = &CONSTR_REG_TRAN_store_sens_step;
     c->func_free = &CONSTR_REG_TRAN_free;
-  }
-  else if (type == CONSTR_TYPE_REG_SHUNT) { // voltage regulation by shunt device
+    break;
+
+    // voltage regulation by shunt device
+  case CONSTR_TYPE_REG_SHUNT:
     c->func_init = &CONSTR_REG_SHUNT_init;
     c->func_count_step = &CONSTR_REG_SHUNT_count_step;
     c->func_allocate = &CONSTR_REG_SHUNT_allocate;
@@ -677,8 +671,10 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_eval_step = &CONSTR_REG_SHUNT_eval_step;
     c->func_store_sens_step = &CONSTR_REG_SHUNT_store_sens_step;
     c->func_free = &CONSTR_REG_SHUNT_free;
-  }
-  else if (type == CONSTR_TYPE_BOUND) { // variable bounds (nonlin eq)
+    break;
+  
+    // variable bounds (nonlin eq)
+  case CONSTR_TYPE_BOUND:
     c->func_init = &CONSTR_BOUND_init;
     c->func_count_step = &CONSTR_BOUND_count_step;
     c->func_allocate = &CONSTR_BOUND_allocate;
@@ -687,8 +683,10 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_eval_step = &CONSTR_BOUND_eval_step;
     c->func_store_sens_step = &CONSTR_BOUND_store_sens_step;
     c->func_free = &CONSTR_BOUND_free;
-  }
-  else if (type == CONSTR_TYPE_DC_FLOW_LIM) { // DC branch flow limits
+    break;
+
+    // DC branch flow limits
+  case CONSTR_TYPE_DC_FLOW_LIM:
     c->func_init = &CONSTR_DC_FLOW_LIM_init;
     c->func_count_step = &CONSTR_DC_FLOW_LIM_count_step;
     c->func_allocate = &CONSTR_DC_FLOW_LIM_allocate;
@@ -697,8 +695,22 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_eval_step = &CONSTR_DC_FLOW_LIM_eval_step;
     c->func_store_sens_step = &CONSTR_DC_FLOW_LIM_store_sens_step;
     c->func_free = &CONSTR_DC_FLOW_LIM_free;
-  }
-  else if (type == CONSTR_TYPE_LBOUND) { // variable bounds (lin ineq)
+    break;
+
+    // AC branch flow limits
+  case CONSTR_TYPE_AC_FLOW_LIM:
+    c->func_init = &CONSTR_AC_FLOW_LIM_init;
+    c->func_count_step = &CONSTR_AC_FLOW_LIM_count_step;
+    c->func_allocate = &CONSTR_AC_FLOW_LIM_allocate;
+    c->func_clear = &CONSTR_AC_FLOW_LIM_clear;
+    c->func_analyze_step = &CONSTR_AC_FLOW_LIM_analyze_step;
+    c->func_eval_step = &CONSTR_AC_FLOW_LIM_eval_step;
+    c->func_store_sens_step = &CONSTR_AC_FLOW_LIM_store_sens_step;
+    c->func_free = &CONSTR_AC_FLOW_LIM_free;
+    break;
+
+    // variable bounds (lin ineq)
+  case CONSTR_TYPE_LBOUND:
     c->func_init = &CONSTR_LBOUND_init;
     c->func_count_step = &CONSTR_LBOUND_count_step;
     c->func_allocate = &CONSTR_LBOUND_allocate;
@@ -707,8 +719,10 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_eval_step = &CONSTR_LBOUND_eval_step;
     c->func_store_sens_step = &CONSTR_LBOUND_store_sens_step;
     c->func_free = &CONSTR_LBOUND_free;
-  }
-  else if (type == CONSTR_TYPE_GEN_RAMP) { // generator ramp constraints (lin ineq)
+    break;
+
+    // generator ramp constraints (lin ineq)
+  case CONSTR_TYPE_GEN_RAMP:
     c->func_init = &CONSTR_GEN_RAMP_init;
     c->func_count_step = &CONSTR_GEN_RAMP_count_step;
     c->func_allocate = &CONSTR_GEN_RAMP_allocate;
@@ -717,8 +731,10 @@ Constr* CONSTR_new(int type, Net* net) {
     c->func_eval_step = &CONSTR_GEN_RAMP_eval_step;
     c->func_store_sens_step = &CONSTR_GEN_RAMP_store_sens_step;
     c->func_free = &CONSTR_GEN_RAMP_free;
-  }
-  else { // unknown 
+    break;
+    
+    // unknown
+  default: 
     c->func_init = NULL;
     c->func_count_step = NULL;
     c->func_allocate = NULL;

@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -24,6 +24,7 @@
 /** \defgroup constr_types Constraint Types
  *  @{
  */
+
 #define CONSTR_TYPE_UNKNOWN -1     /**< @brief Constraint type: Unknown. */
 #define CONSTR_TYPE_PF 0           /**< @brief Constraint type: Power flow equations. */
 #define CONSTR_TYPE_DCPF 1         /**< @brief Constraint type: DC power flow equations. */
@@ -36,25 +37,11 @@
 #define CONSTR_TYPE_REG_TRAN 8     /**< @brief Constraint type: Voltage regulation by transformers. */
 #define CONSTR_TYPE_REG_SHUNT 9    /**< @brief Constraint type: Voltage regulation by shunt devices. */
 #define CONSTR_TYPE_DC_FLOW_LIM 10 /**< @brief Constraint type: DC branch flow limits. */
-#define CONSTR_TYPE_LBOUND 11      /**< @brief Constraint type: Variable bounds as linear inequality constraints. */
-#define CONSTR_TYPE_GEN_RAMP 12    /**< @brief Constraint type: Generator active power ramping constraints. */
-/** @} */
+#define CONSTR_TYPE_AC_FLOW_LIM 11 /**< @brief Constraint type: AC branch flow limits (using current magnitude). */
+#define CONSTR_TYPE_LBOUND 12      /**< @brief Constraint type: Variable bounds as linear inequality constraints. */
+#define CONSTR_TYPE_GEN_RAMP 13    /**< @brief Constraint type: Generator active power ramping constraints. */
 
-// Constraint types strings
-#define CONSTR_TYPE_UNKNOWN_STR "UNKNOWN"
-#define CONSTR_TYPE_PF_STR "PF"
-#define CONSTR_TYPE_DCPF_STR "DCPF"
-#define CONSTR_TYPE_LINPF_STR "LINPF"
-#define CONSTR_TYPE_FIX_STR "FIX"
-#define CONSTR_TYPE_BOUND_STR "BOUND"
-#define CONSTR_TYPE_PAR_GEN_P_STR "PAR_GEN_P"
-#define CONSTR_TYPE_PAR_GEN_Q_STR "PAR_GEN_Q"
-#define CONSTR_TYPE_REG_GEN_STR "REG_GEN"
-#define CONSTR_TYPE_REG_TRAN_STR "REG_TRAN"
-#define CONSTR_TYPE_REG_SHUNT_STR "REG_SHUNT"
-#define CONSTR_TYPE_DC_FLOW_LIM_STR "DC_FLOW_LIM"
-#define CONSTR_TYPE_LBOUND_STR "LBOUND"
-#define CONSTR_TYPE_GEN_RAMP_STR "GEN_RAMP"
+/** @} */
 
 // Constraint
 typedef struct Constr Constr;
