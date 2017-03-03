@@ -185,17 +185,17 @@ cdef class Constraint:
         """ Number of nonzero entries in the Jacobian matrix of the nonlinear equality constraints (int). """
         def __get__(self): return cconstr.CONSTR_get_J_nnz(self._c_constr)
 
-    property Aconstr_index:
-        """ Index of linear equality constraint (int). """
-        def __get__(self): return cconstr.CONSTR_get_Aconstr_index(self._c_constr)
+    property A_row:
+        """ Number of linear equality constraints (int). """
+        def __get__(self): return cconstr.CONSTR_get_A_row(self._c_constr)
 
-    property Gconstr_index:
-        """ Index of linear ineqquality constraint (int). """
-        def __get__(self): return cconstr.CONSTR_get_Gconstr_index(self._c_constr)
+    property G_row:
+        """ Number of linear ineqquality constraint (int). """
+        def __get__(self): return cconstr.CONSTR_get_G_row(self._c_constr)
 
-    property Jconstr_index:
-        """ Index of nonlinear equality constraint (int). """
-        def __get__(self): return cconstr.CONSTR_get_Jconstr_index(self._c_constr)
+    property J_row:
+        """ Number of nonlinear equality constraint (int). """
+        def __get__(self): return cconstr.CONSTR_get_J_row(self._c_constr)
 
     property f:
         """ Vector of nonlinear equality constraint violations (:class:`ndarray <numpy.ndarray>`). """

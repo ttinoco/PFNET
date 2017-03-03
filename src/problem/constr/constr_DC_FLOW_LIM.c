@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -20,22 +20,22 @@ void CONSTR_DC_FLOW_LIM_clear(Constr* c) {
 
   // Counters
   CONSTR_set_G_nnz(c,0);
-  CONSTR_set_Gconstr_index(c,0);
+  CONSTR_set_G_row(c,0);
 }
 
 void CONSTR_DC_FLOW_LIM_count_step(Constr* c, Branch* br, int t) {
 
   // Local variables
   int* G_nnz;
-  int* Gconstr_index;
+  int* G_row;
   Bus* bus[2];
 
   // Constr data
   G_nnz = CONSTR_get_G_nnz_ptr(c);
-  Gconstr_index = CONSTR_get_Gconstr_index_ptr(c);
+  G_row = CONSTR_get_G_row_ptr(c);
 
   // Check pointer
-  if (!G_nnz || !Gconstr_index)
+  if (!G_nnz || !G_row)
     return;
 
   // Check outage
@@ -64,7 +64,7 @@ void CONSTR_DC_FLOW_LIM_count_step(Constr* c, Branch* br, int t) {
   }
 
   // Constraint index
-  (*Gconstr_index)++;
+  (*G_row)++;
 }
 
 void CONSTR_DC_FLOW_LIM_allocate(Constr* c) {
@@ -73,12 +73,12 @@ void CONSTR_DC_FLOW_LIM_allocate(Constr* c) {
   Net* net;
   int num_vars;
   int G_nnz;
-  int Gconstr_index;
+  int G_row;
 
   net = CONSTR_get_network(c);
   num_vars = NET_get_num_vars(net);
   G_nnz = CONSTR_get_G_nnz(c);
-  Gconstr_index = CONSTR_get_Gconstr_index(c);
+  G_row = CONSTR_get_G_row(c);
 
   // J f
   CONSTR_set_J(c,MAT_new(0,num_vars,0));
@@ -89,11 +89,11 @@ void CONSTR_DC_FLOW_LIM_allocate(Constr* c) {
   CONSTR_set_b(c,VEC_new(0));
 
   // h
-  CONSTR_set_l(c,VEC_new(Gconstr_index));
-  CONSTR_set_u(c,VEC_new(Gconstr_index));
+  CONSTR_set_l(c,VEC_new(G_row));
+  CONSTR_set_u(c,VEC_new(G_row));
 
   // G
-  CONSTR_set_G(c,MAT_new(Gconstr_index, // size1 (rows)
+  CONSTR_set_G(c,MAT_new(G_row, // size1 (rows)
 			 num_vars,      // size2 (cols)
 			 G_nnz));    // nnz
 }
@@ -106,7 +106,7 @@ void CONSTR_DC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
   Vec* l;
   Vec* u;
   int* G_nnz;
-  int* Gconstr_index;
+  int* G_row;
   REAL b;
   double rating;
 
@@ -115,10 +115,10 @@ void CONSTR_DC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
   l = CONSTR_get_l(c);
   u = CONSTR_get_u(c);
   G_nnz = CONSTR_get_G_nnz_ptr(c);
-  Gconstr_index = CONSTR_get_Gconstr_index_ptr(c);
+  G_row = CONSTR_get_G_row_ptr(c);
 
   // Check pointer
-  if (!G_nnz || !Gconstr_index)
+  if (!G_nnz || !G_row)
     return;
 
   // Check outage
@@ -135,13 +135,13 @@ void CONSTR_DC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
   else
     rating = BRANCH_INF_FLOW;
 
-  VEC_set(l,*Gconstr_index,-rating); // p.u.
-  VEC_set(u,*Gconstr_index,rating);  // p.u.
+  VEC_set(l,*G_row,-rating); // p.u.
+  VEC_set(u,*G_row,rating);  // p.u.
 
   if (BUS_has_flags(bus[0],FLAG_VARS,BUS_VAR_VANG)) { // wk var
 
     // G
-    MAT_set_i(G,*G_nnz,*Gconstr_index);
+    MAT_set_i(G,*G_nnz,*G_row);
     MAT_set_j(G,*G_nnz,BUS_get_index_v_ang(bus[0],t)); // wk
     MAT_set_d(G,*G_nnz,-b);
     (*G_nnz)++;
@@ -149,14 +149,14 @@ void CONSTR_DC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
   else {
 
     // b
-    VEC_add_to_entry(l,*Gconstr_index,b*BUS_get_v_ang(bus[0],t));
-    VEC_add_to_entry(u,*Gconstr_index,b*BUS_get_v_ang(bus[0],t));
+    VEC_add_to_entry(l,*G_row,b*BUS_get_v_ang(bus[0],t));
+    VEC_add_to_entry(u,*G_row,b*BUS_get_v_ang(bus[0],t));
   }
 
   if (BUS_has_flags(bus[1],FLAG_VARS,BUS_VAR_VANG)) { // wm var
 
     // G
-    MAT_set_i(G,*G_nnz,*Gconstr_index);
+    MAT_set_i(G,*G_nnz,*G_row);
     MAT_set_j(G,*G_nnz,BUS_get_index_v_ang(bus[1],t)); // wk
     MAT_set_d(G,*G_nnz,b);
     (*G_nnz)++;
@@ -164,14 +164,14 @@ void CONSTR_DC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
   else {
 
     // b
-    VEC_add_to_entry(l,*Gconstr_index,-b*BUS_get_v_ang(bus[1],t));
-    VEC_add_to_entry(u,*Gconstr_index,-b*BUS_get_v_ang(bus[1],t));
+    VEC_add_to_entry(l,*G_row,-b*BUS_get_v_ang(bus[1],t));
+    VEC_add_to_entry(u,*G_row,-b*BUS_get_v_ang(bus[1],t));
   }
 
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) { // phi var
 
     // G
-    MAT_set_i(G,*G_nnz,*Gconstr_index);
+    MAT_set_i(G,*G_nnz,*G_row);
     MAT_set_j(G,*G_nnz,BRANCH_get_index_phase(br,t)); // phi
     MAT_set_d(G,*G_nnz,b);
     (*G_nnz)++;
@@ -179,12 +179,12 @@ void CONSTR_DC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
   else {
 
     // b
-    VEC_add_to_entry(l,*Gconstr_index,-b*BRANCH_get_phase(br,t));
-    VEC_add_to_entry(u,*Gconstr_index,-b*BRANCH_get_phase(br,t));
+    VEC_add_to_entry(l,*G_row,-b*BRANCH_get_phase(br,t));
+    VEC_add_to_entry(u,*G_row,-b*BRANCH_get_phase(br,t));
   }
 
   // Constraint index
-  (*Gconstr_index)++;
+  (*G_row)++;
 }
 
 void CONSTR_DC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
@@ -194,13 +194,13 @@ void CONSTR_DC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* var_values)
 void CONSTR_DC_FLOW_LIM_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Local variables
-  int* Gconstr_index;
+  int* G_row;
 
   // Constr data
-  Gconstr_index = CONSTR_get_Gconstr_index_ptr(c);
+  G_row = CONSTR_get_G_row_ptr(c);
 
   // Check pointer
-  if (!Gconstr_index)
+  if (!G_row)
     return;
 
   // Check outage
@@ -208,11 +208,11 @@ void CONSTR_DC_FLOW_LIM_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, V
     return;
 
   // Store sensitivies
-  BRANCH_set_sens_P_u_bound(br,VEC_get(sGu,*Gconstr_index),t);
-  BRANCH_set_sens_P_l_bound(br,VEC_get(sGl,*Gconstr_index),t);
+  BRANCH_set_sens_P_u_bound(br,VEC_get(sGu,*G_row),t);
+  BRANCH_set_sens_P_l_bound(br,VEC_get(sGl,*G_row),t);
 
   // Constraint index
-  (*Gconstr_index)++;
+  (*G_row)++;
 }
 
 void CONSTR_DC_FLOW_LIM_free(Constr* c) {

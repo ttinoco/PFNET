@@ -21,7 +21,7 @@ void CONSTR_PAR_GEN_P_clear(Constr* c) {
 
   // Counters
   CONSTR_set_A_nnz(c,0);
-  CONSTR_set_Aconstr_index(c,0);
+  CONSTR_set_A_row(c,0);
 
   // Flags
   CONSTR_clear_bus_counted(c);
@@ -35,7 +35,7 @@ void CONSTR_PAR_GEN_P_count_step(Constr* c, Branch* br, int t) {
   Gen* gen1;
   Gen* gen2;
   int* A_nnz;
-  int* Aconstr_index;
+  int* A_row;
   char* bus_counted;
   int i;
   int T;
@@ -45,11 +45,11 @@ void CONSTR_PAR_GEN_P_count_step(Constr* c, Branch* br, int t) {
 
   // Constr data
   A_nnz = CONSTR_get_A_nnz_ptr(c);
-  Aconstr_index = CONSTR_get_Aconstr_index_ptr(c);
+  A_row = CONSTR_get_A_row_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointer
-  if (!A_nnz || !Aconstr_index || !bus_counted)
+  if (!A_nnz || !A_row || !bus_counted)
     return;
 
   // Check outage
@@ -75,7 +75,7 @@ void CONSTR_PAR_GEN_P_count_step(Constr* c, Branch* br, int t) {
 	    (*A_nnz)++;
 	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_P))
 	    (*A_nnz)++;
-	  (*Aconstr_index)++;
+	  (*A_row)++;
 	}
       }
     }
@@ -93,7 +93,7 @@ void CONSTR_PAR_GEN_P_allocate(Constr* c) {
   int A_nnz;
 
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
-  num_constr = CONSTR_get_Aconstr_index(c);
+  num_constr = CONSTR_get_A_row(c);
   A_nnz = CONSTR_get_A_nnz(c);
 
   // J f
@@ -117,7 +117,7 @@ void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t) {
   Gen* gen1;
   Gen* gen2;
   int* A_nnz;
-  int* Aconstr_index;
+  int* A_row;
   char* bus_counted;
   Vec* b;
   Mat* A;
@@ -131,11 +131,11 @@ void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t) {
   b = CONSTR_get_b(c);
   A = CONSTR_get_A(c);
   A_nnz = CONSTR_get_A_nnz_ptr(c);
-  Aconstr_index = CONSTR_get_Aconstr_index_ptr(c);
+  A_row = CONSTR_get_A_row_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!A_nnz || !Aconstr_index || !bus_counted)
+  if (!A_nnz || !A_row || !bus_counted)
     return;
 
   // Check outage
@@ -157,24 +157,24 @@ void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t) {
       if (BUS_is_slack(bus)) {
 	gen1 = BUS_get_gen(bus);
 	for (gen2 = GEN_get_next(gen1); gen2 != NULL; gen2 = GEN_get_next(gen2)) {
-	  VEC_set(b,*Aconstr_index,0.);
+	  VEC_set(b,*A_row,0.);
 	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_P)) {
-	    MAT_set_i(A,*A_nnz,*Aconstr_index);
+	    MAT_set_i(A,*A_nnz,*A_row);
 	    MAT_set_j(A,*A_nnz,GEN_get_index_P(gen1,t));
 	    MAT_set_d(A,*A_nnz,1.);
 	    (*A_nnz)++;
 	  }
 	  else
-	    VEC_add_to_entry(b,*Aconstr_index,-GEN_get_P(gen1,t));
+	    VEC_add_to_entry(b,*A_row,-GEN_get_P(gen1,t));
 	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_P)) {
-	    MAT_set_i(A,*A_nnz,*Aconstr_index);
+	    MAT_set_i(A,*A_nnz,*A_row);
 	    MAT_set_j(A,*A_nnz,GEN_get_index_P(gen2,t));
 	    MAT_set_d(A,*A_nnz,-1.);
 	    (*A_nnz)++;
 	  }
 	  else
-	    VEC_add_to_entry(b,*Aconstr_index,GEN_get_P(gen2,t));
-	  (*Aconstr_index)++;
+	    VEC_add_to_entry(b,*A_row,GEN_get_P(gen2,t));
+	  (*A_row)++;
 	}
       }
     }

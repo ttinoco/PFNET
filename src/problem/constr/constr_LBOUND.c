@@ -20,7 +20,7 @@ void CONSTR_LBOUND_clear(Constr* c) {
 
   // Counters
   CONSTR_set_G_nnz(c,0);
-  CONSTR_set_Gconstr_index(c,0);
+  CONSTR_set_G_row(c,0);
 
   // Flags
   CONSTR_clear_bus_counted(c);

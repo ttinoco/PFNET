@@ -40,7 +40,7 @@ void CONSTR_AC_FLOW_LIM_clear(Constr* c) {
   // Counters
   CONSTR_set_J_nnz(c,0);
   CONSTR_set_Jbar_nnz(c,0);
-  CONSTR_set_Jconstr_index(c,0);
+  CONSTR_set_J_row(c,0);
   CONSTR_clear_H_nnz(c);
 
   // Flags

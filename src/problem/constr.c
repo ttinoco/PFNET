@@ -61,16 +61,16 @@ struct Constr {
   int num_local_extra_vars;    /** @brief Number of local extra variables (set during count) */
   int local_extra_vars_offset; /** @brief Offset for local extra variables (set by problem) */
   
-  // Utils
+  // Counters and flags
   int A_nnz;             /**< @brief Counter for nonzeros of matrix A */
   int J_nnz;             /**< @brief Counter for nonzeros of matrix J */
   int Jbar_nnz;          /**< @brief Counter for nonzeros of matrix Jbar */
   int G_nnz;             /**< @brief Counter for nonzeros of matrix G */
   int* H_nnz;            /**< @brief Array of counters of nonzeros of nonlinear constraint Hessians */
   int H_nnz_size;        /**< @brief Size of array of counter of Hessian nonzeros */
-  int Aconstr_index;     /**< @brief Index for linear equality constraints */
-  int Jconstr_index;     /**< @brief Index for nonlinear constraints */
-  int Gconstr_index;     /**< @brief Index for linear inequality constraints */
+  int A_row;             /**< @brief Counter for linear equality constraints */
+  int J_row;             /**< @brief Counter for nonlinear constraints */
+  int G_row;             /**< @brief Counter for linear inequality constraints */
   char* bus_counted;     /**< @brief Flag for processing buses */
   int bus_counted_size;  /**< @brief Size of array of flags for processing buses */
 
@@ -395,45 +395,45 @@ int CONSTR_get_H_nnz_size(Constr* c) {
     return 0;
 }
 
-int CONSTR_get_Aconstr_index(Constr* c) {
+int CONSTR_get_A_row(Constr* c) {
   if (c)
-    return c->Aconstr_index;
+    return c->A_row;
   else
     return 0;
 }
 
-int* CONSTR_get_Aconstr_index_ptr(Constr* c) {
+int* CONSTR_get_A_row_ptr(Constr* c) {
   if (c)
-    return &(c->Aconstr_index);
+    return &(c->A_row);
   else
     return NULL;
 }
 
-int CONSTR_get_Gconstr_index(Constr* c) {
+int CONSTR_get_G_row(Constr* c) {
   if (c)
-    return c->Gconstr_index;
+    return c->G_row;
   else
     return 0;
 }
 
-int* CONSTR_get_Gconstr_index_ptr(Constr* c) {
+int* CONSTR_get_G_row_ptr(Constr* c) {
   if (c)
-    return &(c->Gconstr_index);
+    return &(c->G_row);
   else
     return NULL;
 }
 
-int CONSTR_get_Jconstr_index(Constr* c) {
+int CONSTR_get_J_row(Constr* c) {
   if (c)
-    return c->Jconstr_index;
+    return c->J_row;
   else
     return 0;
 }
 
 
-int* CONSTR_get_Jconstr_index_ptr(Constr* c) {
+int* CONSTR_get_J_row_ptr(Constr* c) {
   if (c)
-    return &(c->Jconstr_index);
+    return &(c->J_row);
   else
     return NULL;
 }
@@ -629,9 +629,9 @@ Constr* CONSTR_new(int type, Net* net) {
   c->G_nnz = 0;
   c->H_nnz = NULL;
   c->H_nnz_size = 0;
-  c->Aconstr_index = 0;
-  c->Jconstr_index = 0;
-  c->Gconstr_index = 0;
+  c->A_row = 0;
+  c->J_row = 0;
+  c->G_row = 0;
   c->data = NULL;
   c->next = NULL;
 
@@ -909,19 +909,19 @@ void CONSTR_set_H_nnz(Constr* c, int* nnz, int size) {
   }
 }
 
-void CONSTR_set_Aconstr_index(Constr* c, int index) {
+void CONSTR_set_A_row(Constr* c, int index) {
   if (c)
-    c->Aconstr_index = index;
+    c->A_row = index;
 }
 
-void CONSTR_set_Gconstr_index(Constr* c, int index) {
+void CONSTR_set_G_row(Constr* c, int index) {
   if (c)
-    c->Gconstr_index = index;
+    c->G_row = index;
 }
 
-void CONSTR_set_Jconstr_index(Constr* c, int index) {
+void CONSTR_set_J_row(Constr* c, int index) {
   if (c)
-    c->Jconstr_index = index;
+    c->J_row = index;
 }
 
 void CONSTR_set_bus_counted(Constr* c, char* counted, int size) {

@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -13,7 +13,7 @@
 void CONSTR_BOUND_init(Constr* c) {
 
   // Init
- CONSTR_set_H_nnz(c,NULL,0);
+  CONSTR_set_H_nnz(c,NULL,0);
   CONSTR_set_data(c,NULL);
 }
 

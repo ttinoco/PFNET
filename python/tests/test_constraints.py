@@ -1795,8 +1795,8 @@ class TestConstraints(unittest.TestCase):
 
             self.assertEqual(constr.J_nnz,0)
             self.assertEqual(constr.A_nnz,0)
-            self.assertEqual(constr.Jconstr_index,0)
-            self.assertEqual(constr.Aconstr_index,0)
+            self.assertEqual(constr.J_row,0)
+            self.assertEqual(constr.A_row,0)
 
             Jnnz = 0
             for i in range(net.num_buses):
@@ -1812,13 +1812,13 @@ class TestConstraints(unittest.TestCase):
             constr.analyze()
             self.assertEqual(constr.J_nnz,Jnnz*self.T)
             self.assertEqual(constr.A_nnz,Annz*self.T)
-            self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
-            self.assertEqual(constr.Aconstr_index,rowsA*self.T)
+            self.assertEqual(constr.J_row,rowsJ*self.T)
+            self.assertEqual(constr.A_row,rowsA*self.T)
             constr.eval(x0)
             self.assertEqual(constr.J_nnz,Jnnz*self.T)
             self.assertEqual(constr.A_nnz,0)
-            self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
-            self.assertEqual(constr.Aconstr_index,0)
+            self.assertEqual(constr.J_row,rowsJ*self.T)
+            self.assertEqual(constr.A_row,0)
 
             f = constr.f
             J = constr.J
@@ -2232,8 +2232,8 @@ class TestConstraints(unittest.TestCase):
 
             self.assertEqual(constr.J_nnz,0)
             self.assertEqual(constr.A_nnz,0)
-            self.assertEqual(constr.Jconstr_index,0)
-            self.assertEqual(constr.Aconstr_index,0)
+            self.assertEqual(constr.J_row,0)
+            self.assertEqual(constr.A_row,0)
 
             Jnnz = 10*net.get_num_tap_changers_v()
             Annz = 3*net.get_num_tap_changers_v()
@@ -2248,13 +2248,13 @@ class TestConstraints(unittest.TestCase):
             constr.analyze()
             self.assertEqual(constr.J_nnz,Jnnz*self.T)
             self.assertEqual(constr.A_nnz,Annz*self.T)
-            self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
-            self.assertEqual(constr.Aconstr_index,rowsA*self.T)
+            self.assertEqual(constr.J_row,rowsJ*self.T)
+            self.assertEqual(constr.A_row,rowsA*self.T)
             constr.eval(x0)
             self.assertEqual(constr.J_nnz,Jnnz*self.T)
             self.assertEqual(constr.A_nnz,0)
-            self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
-            self.assertEqual(constr.Aconstr_index,0)
+            self.assertEqual(constr.J_row,rowsJ*self.T)
+            self.assertEqual(constr.A_row,0)
 
             f = constr.f
             J = constr.J
@@ -2465,8 +2465,8 @@ class TestConstraints(unittest.TestCase):
 
             self.assertEqual(constr.J_nnz,0)
             self.assertEqual(constr.A_nnz,0)
-            self.assertEqual(constr.Jconstr_index,0)
-            self.assertEqual(constr.Aconstr_index,0)
+            self.assertEqual(constr.J_row,0)
+            self.assertEqual(constr.A_row,0)
 
             Jnnz = 10*net.get_num_switched_shunts()
             Annz = 3*net.get_num_switched_shunts()
@@ -2481,13 +2481,13 @@ class TestConstraints(unittest.TestCase):
             constr.analyze()
             self.assertEqual(constr.J_nnz,Jnnz*self.T)
             self.assertEqual(constr.A_nnz,Annz*self.T)
-            self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
-            self.assertEqual(constr.Aconstr_index,rowsA*self.T)
+            self.assertEqual(constr.J_row,rowsJ*self.T)
+            self.assertEqual(constr.A_row,rowsA*self.T)
             constr.eval(x0)
             self.assertEqual(constr.J_nnz,Jnnz*self.T)
             self.assertEqual(constr.A_nnz,0)
-            self.assertEqual(constr.Jconstr_index,rowsJ*self.T)
-            self.assertEqual(constr.Aconstr_index,0)
+            self.assertEqual(constr.J_row,rowsJ*self.T)
+            self.assertEqual(constr.A_row,0)
 
             f = constr.f
             J = constr.J
@@ -2872,8 +2872,8 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(A.nnz,0)
             self.assertEqual(constr.J_nnz,0)
             self.assertEqual(constr.A_nnz,0)
-            self.assertEqual(constr.Jconstr_index,0)
-            self.assertEqual(constr.Aconstr_index,0)
+            self.assertEqual(constr.J_row,0)
+            self.assertEqual(constr.A_row,0)
 
             r = 0
             for b in net.buses:
@@ -2887,8 +2887,8 @@ class TestConstraints(unittest.TestCase):
             A = constr.A
             b = constr.b
             self.assertEqual(constr.J_nnz,0)
-            self.assertEqual(constr.Jconstr_index,0)
-            self.assertEqual(constr.Aconstr_index,0)
+            self.assertEqual(constr.J_row,0)
+            self.assertEqual(constr.A_row,0)
             self.assertEqual(constr.A_nnz,
                              (net.num_generators +
                               net.num_loads +
@@ -2976,8 +2976,8 @@ class TestConstraints(unittest.TestCase):
             A1 = constr.A
             b1 = constr.b
             self.assertEqual(constr.J_nnz,0)
-            self.assertEqual(constr.Jconstr_index,0)
-            self.assertEqual(constr.Aconstr_index,0)
+            self.assertEqual(constr.J_row,0)
+            self.assertEqual(constr.A_row,0)
             self.assertEqual(constr.A_nnz,0)
             self.assertTupleEqual(b1.shape,(net.num_buses,))
             self.assertTupleEqual(f1.shape,(0,))
@@ -3196,9 +3196,9 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.J_nnz,0)
             self.assertEqual(constr.A_nnz,0)
             self.assertEqual(constr.G_nnz,0)
-            self.assertEqual(constr.Jconstr_index,0)
-            self.assertEqual(constr.Aconstr_index,0)
-            self.assertEqual(constr.Gconstr_index,0)
+            self.assertEqual(constr.J_row,0)
+            self.assertEqual(constr.A_row,0)
+            self.assertEqual(constr.G_row,0)
 
             # Analyze
             constr.analyze()
@@ -3210,9 +3210,9 @@ class TestConstraints(unittest.TestCase):
             u = constr.u
             G = constr.G
             self.assertEqual(constr.J_nnz,0)
-            self.assertEqual(constr.Jconstr_index,0)
-            self.assertEqual(constr.Aconstr_index,0)
-            self.assertEqual(constr.Gconstr_index,net.num_branches)
+            self.assertEqual(constr.J_row,0)
+            self.assertEqual(constr.A_row,0)
+            self.assertEqual(constr.G_row,net.num_branches)
 
             self.assertTupleEqual(b.shape,(0,))
             self.assertTupleEqual(f.shape,(0,))
@@ -3292,9 +3292,9 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.J_nnz,0)
             self.assertEqual(constr.A_nnz,0)
             self.assertEqual(constr.G_nnz,0)
-            self.assertEqual(constr.Jconstr_index,0)
-            self.assertEqual(constr.Aconstr_index,0)
-            self.assertEqual(constr.Gconstr_index,net.num_branches)
+            self.assertEqual(constr.J_row,0)
+            self.assertEqual(constr.A_row,0)
+            self.assertEqual(constr.G_row,net.num_branches)
 
         # Multi period
         net = self.netMP
