@@ -184,7 +184,7 @@ void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_PAR_GEN_P_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
+void CONSTR_PAR_GEN_P_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* extra_values) {
   // Nothing to do
 }
 

@@ -841,7 +841,7 @@ void CONSTR_PF_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_PF_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
+void CONSTR_PF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* extra_values) {
 
   // Local variables
   Bus* bus[2];
@@ -936,11 +936,11 @@ void CONSTR_PF_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
     HP[k] = MAT_get_data_array(MAT_array_get(H_array,P_index[k]));
     HQ[k] = MAT_get_data_array(MAT_array_get(H_array,Q_index[k]));
     if (var_w[k])
-      w[k] = VEC_get(var_values,BUS_get_index_v_ang(bus[k],t));
+      w[k] = VEC_get(values,BUS_get_index_v_ang(bus[k],t));
     else
       w[k] = BUS_get_v_ang(bus[k],t);
     if (var_v[k])
-      v[k] = VEC_get(var_values,BUS_get_index_v_mag(bus[k],t));
+      v[k] = VEC_get(values,BUS_get_index_v_mag(bus[k],t));
     else
       v[k] = BUS_get_v_mag(bus[k],t);
   }
@@ -955,11 +955,11 @@ void CONSTR_PF_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
   g_sh[0] = BRANCH_get_g_k(br);   //  total shunt conductance on bus from (i)
   g_sh[1] = BRANCH_get_g_m(br);   //  total shunt conductance on bus to (j)
   if (var_a)
-    a = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
+    a = VEC_get(values,BRANCH_get_index_ratio(br,t));
   else
     a = BRANCH_get_ratio(br,t);
   if (var_phi)
-    phi = VEC_get(var_values,BRANCH_get_index_phase(br,t));
+    phi = VEC_get(values,BRANCH_get_index_phase(br,t));
   else
     phi = BRANCH_get_phase(br,t);
 
@@ -1234,11 +1234,11 @@ void CONSTR_PF_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 
 	// Var values
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
-	  Pg = VEC_get(var_values,GEN_get_index_P(gen,t)); // p.u.
+	  Pg = VEC_get(values,GEN_get_index_P(gen,t)); // p.u.
 	else
 	  Pg = GEN_get_P(gen,t);                           // p.u.
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
-	  Qg = VEC_get(var_values,GEN_get_index_Q(gen,t)); // p.u.
+	  Qg = VEC_get(values,GEN_get_index_Q(gen,t)); // p.u.
 	else
 	  Qg = GEN_get_Q(gen,t);                           // p.u.
 
@@ -1268,11 +1268,11 @@ void CONSTR_PF_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 
 	// Var values
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P))
-	  Pg = VEC_get(var_values,VARGEN_get_index_P(vargen,t)); // p.u.
+	  Pg = VEC_get(values,VARGEN_get_index_P(vargen,t)); // p.u.
 	else
 	  Pg = VARGEN_get_P(vargen,t);                           // p.u.
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q))
-	  Qg = VEC_get(var_values,VARGEN_get_index_Q(vargen,t)); // p.u.
+	  Qg = VEC_get(values,VARGEN_get_index_Q(vargen,t)); // p.u.
 	else
 	  Qg = VARGEN_get_Q(vargen,t);                           // p.u.
 
@@ -1318,7 +1318,7 @@ void CONSTR_PF_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 	// Values
 	shunt_g = SHUNT_get_g(shunt);
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC))
-	  shunt_b = VEC_get(var_values,SHUNT_get_index_b(shunt,t)); // p.u.
+	  shunt_b = VEC_get(values,SHUNT_get_index_b(shunt,t)); // p.u.
 	else
 	  shunt_b = SHUNT_get_b(shunt,t);
 

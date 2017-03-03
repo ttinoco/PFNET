@@ -187,7 +187,7 @@ void CONSTR_DC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
   (*G_row)++;
 }
 
-void CONSTR_DC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
+void CONSTR_DC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* extra_values) {
   // Nothing
 }
 

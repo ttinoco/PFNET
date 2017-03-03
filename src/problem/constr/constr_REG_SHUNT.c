@@ -574,7 +574,7 @@ void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
+void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* extra_values) {
 
   // Local variables
   Bus* buses[2];
@@ -656,14 +656,14 @@ void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 
 	// v values
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG))
-	  v = VEC_get(var_values,BUS_get_index_v_mag(bus,t));
+	  v = VEC_get(values,BUS_get_index_v_mag(bus,t));
 	else
 	  v = BUS_get_v_mag(bus,t);
 	vmax = BUS_get_v_max(bus);
 	vmin = BUS_get_v_min(bus);
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
-	  vl = VEC_get(var_values,BUS_get_index_vl(bus,t));
-	  vh = VEC_get(var_values,BUS_get_index_vh(bus,t));
+	  vl = VEC_get(values,BUS_get_index_vl(bus,t));
+	  vh = VEC_get(values,BUS_get_index_vh(bus,t));
 	}
 	else {
 	  vl = 0;
@@ -672,15 +672,15 @@ void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 
 	// b values
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
-	  b = VEC_get(var_values,SHUNT_get_index_b(shunt,t));
+	  b = VEC_get(values,SHUNT_get_index_b(shunt,t));
 	}
 	else
 	  b = SHUNT_get_b(shunt,t);
 	bmax = SHUNT_get_b_max(shunt);
 	bmin = SHUNT_get_b_min(shunt);
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC_DEV)) {
-	  y = VEC_get(var_values,SHUNT_get_index_y(shunt,t));
-	  z = VEC_get(var_values,SHUNT_get_index_z(shunt,t));
+	  y = VEC_get(values,SHUNT_get_index_y(shunt,t));
+	  z = VEC_get(values,SHUNT_get_index_z(shunt,t));
 	}
 	else {
 	  if (b > SHUNT_get_b(shunt,t)) {

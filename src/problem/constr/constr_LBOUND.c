@@ -393,7 +393,7 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_LBOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
+void CONSTR_LBOUND_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* extra_values) {
   // Nothing to do
 }
 

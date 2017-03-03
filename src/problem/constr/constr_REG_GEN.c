@@ -434,7 +434,7 @@ void CONSTR_REG_GEN_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_REG_GEN_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
+void CONSTR_REG_GEN_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* extra_values) {
 
   // Local variables
   Bus* buses[2];
@@ -517,7 +517,7 @@ void CONSTR_REG_GEN_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 	Qmin = 0;
 	for (rg = BUS_get_reg_gen(bus); rg != NULL; rg = GEN_get_reg_next(rg)) {
 	  if (GEN_has_flags(rg,FLAG_VARS,GEN_VAR_Q))
-	    Qsum += VEC_get(var_values,GEN_get_index_Q(rg,t)); // p.u.
+	    Qsum += VEC_get(values,GEN_get_index_Q(rg,t)); // p.u.
 	  else
 	    Qsum += GEN_get_Q(rg,t);      // p.u.
 	  Qmax += GEN_get_Q_max(rg); // p.u.
@@ -528,12 +528,12 @@ void CONSTR_REG_GEN_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 
 	// yz values
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) {
-	  y = VEC_get(var_values,BUS_get_index_y(bus,t)); // p.u.
-	  z = VEC_get(var_values,BUS_get_index_z(bus,t));	// p.u.
+	  y = VEC_get(values,BUS_get_index_y(bus,t)); // p.u.
+	  z = VEC_get(values,BUS_get_index_z(bus,t));	// p.u.
 	}
 	else {
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG))
-	    v = VEC_get(var_values,BUS_get_index_v_mag(bus,t)); // p.u.
+	    v = VEC_get(values,BUS_get_index_v_mag(bus,t)); // p.u.
 	  else
 	    v = BUS_get_v_mag(bus,t);   // p.u.
 	  v_set = BUS_get_v_set(bus,t); // p.u.

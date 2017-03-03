@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -22,7 +22,7 @@ void CONSTR_PAR_GEN_Q_count_step(Constr* c, Branch* br, int t);
 void CONSTR_PAR_GEN_Q_allocate(Constr* c);
 void CONSTR_PAR_GEN_Q_clear(Constr* c);
 void CONSTR_PAR_GEN_Q_analyze_step(Constr* c, Branch* br, int t);
-void CONSTR_PAR_GEN_Q_eval_step(Constr* c, Branch* br, int t, Vec* var_values);
+void CONSTR_PAR_GEN_Q_eval_step(Constr* c, Branch* br, int t, Vec* v, Vec* ev);
 void CONSTR_PAR_GEN_Q_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void CONSTR_PAR_GEN_Q_free(Constr* c);
 

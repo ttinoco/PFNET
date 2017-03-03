@@ -444,7 +444,7 @@ void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
+void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* extra_values) {
 
   // Local variables
   Bus* buses[2];
@@ -505,7 +505,7 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
   if (BRANCH_has_flags(br,FLAG_BOUNDED,BRANCH_VAR_RATIO) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) {
 
-    u = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
+    u = VEC_get(values,BRANCH_get_index_ratio(br,t));
     umax = BRANCH_get_ratio_max(br);
     umin = BRANCH_get_ratio_min(br);
     du = (umax-umin > eps) ? umax-umin : eps;
@@ -539,7 +539,7 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
   if (BRANCH_has_flags(br,FLAG_BOUNDED,BRANCH_VAR_PHASE) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
 
-    u = VEC_get(var_values,BRANCH_get_index_phase(br,t));
+    u = VEC_get(values,BRANCH_get_index_phase(br,t));
     umax = BRANCH_get_phase_max(br);
     umin = BRANCH_get_phase_min(br);
     du = (umax-umin > eps) ? umax-umin : eps;
@@ -582,7 +582,7 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
       if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VMAG) &&
 	  BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
 
-	u = VEC_get(var_values,BUS_get_index_v_mag(bus,t));
+	u = VEC_get(values,BUS_get_index_v_mag(bus,t));
 	umax = BUS_get_v_max(bus);
 	umin = BUS_get_v_min(bus);
 	du = (umax-umin > eps) ? umax-umin : eps;
@@ -616,7 +616,7 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
       if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VANG) &&
 	  BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) {
 
-	u = VEC_get(var_values,BUS_get_index_v_ang(bus,t));
+	u = VEC_get(values,BUS_get_index_v_ang(bus,t));
 	umax = 2*PI;
 	umin = -2*PI;
 	du = (umax-umin > eps) ? umax-umin : eps;
@@ -653,7 +653,7 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 	if (GEN_has_flags(gen,FLAG_BOUNDED,GEN_VAR_P) &&
 	    GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
 
-	  u = VEC_get(var_values,GEN_get_index_P(gen,t));
+	  u = VEC_get(values,GEN_get_index_P(gen,t));
 	  umax = GEN_get_P_max(gen);
 	  umin = GEN_get_P_min(gen);
 	  du = (umax-umin > eps) ? umax-umin : eps;
@@ -687,7 +687,7 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 	if (GEN_has_flags(gen,FLAG_BOUNDED,GEN_VAR_Q) &&
 	    GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) {
 
-	  u = VEC_get(var_values,GEN_get_index_Q(gen,t));
+	  u = VEC_get(values,GEN_get_index_Q(gen,t));
 	  umax = GEN_get_Q_max(gen);
 	  umin = GEN_get_Q_min(gen);
 	  du = (umax-umin > eps) ? umax-umin : eps;
@@ -725,7 +725,7 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 	if (SHUNT_has_flags(shunt,FLAG_BOUNDED,SHUNT_VAR_SUSC) &&
 	    SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
 
-	  u = VEC_get(var_values,SHUNT_get_index_b(shunt,t));
+	  u = VEC_get(values,SHUNT_get_index_b(shunt,t));
 	  umax = SHUNT_get_b_max(shunt);
 	  umin = SHUNT_get_b_min(shunt);
 	  du = (umax-umin > eps) ? umax-umin : eps;
