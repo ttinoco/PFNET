@@ -26,6 +26,7 @@ cdef extern from "pfnet/constr.h":
     cdef char CONSTR_TYPE_REG_TRAN
     cdef char CONSTR_TYPE_REG_SHUNT
     cdef char CONSTR_TYPE_DC_FLOW_LIM
+    cdef char CONSTR_TYPE_AC_FLOW_LIM
     cdef char CONSTR_TYPE_LBOUND
     cdef char CONSTR_TYPE_GEN_RAMP
     
@@ -41,11 +42,13 @@ cdef extern from "pfnet/constr.h":
     int CONSTR_get_J_row(Constr* c)
     Vec* CONSTR_get_f(Constr* c)
     Mat* CONSTR_get_J(Constr* c)
+    Mat* CONSTR_get_Jbar(Constr* c)
     Vec* CONSTR_get_b(Constr* c)
     Mat* CONSTR_get_A(Constr* c)
     Vec* CONSTR_get_l(Constr* c)
     Vec* CONSTR_get_u(Constr* c)
     Mat* CONSTR_get_G(Constr* c)
+    Mat* CONSTR_get_Gbar(Constr* c)
     Mat* CONSTR_get_H_single(Constr* c, int i)
     Mat* CONSTR_get_H_combined(Constr* c)
     int CONSTR_get_type(Constr* c)
@@ -53,7 +56,7 @@ cdef extern from "pfnet/constr.h":
     void CONSTR_count(Constr* c)
     void CONSTR_allocate(Constr* c)
     void CONSTR_analyze(Constr* c)
-    void CONSTR_eval(Constr* c, Vec* values)
+    void CONSTR_eval(Constr* c, Vec* values, Vec* extra_values)
     void CONSTR_store_sens(Constr* c, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl)
     bint CONSTR_has_error(Constr* c)
     void CONSTR_clear_error(Constr * c)

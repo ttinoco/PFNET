@@ -111,18 +111,21 @@ cdef class Constraint:
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
 
-    def eval(self,var_values):
+    def eval(self,values,extra_values=None):
         """
         Evaluates constraint violations, Jacobian, and individual Hessian matrices.
 
         Parameters
         ----------
-        var_values : :class:`ndarray <numpy.ndarray>`
+        values : :class:`ndarray <numpy.ndarray>`
+        extra_values : :class:`ndarray <numpy.ndarray>`
         """
 
-        cdef np.ndarray[double,mode='c'] x = var_values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if var_values.size else NULL
-        cconstr.CONSTR_eval(self._c_constr,v)
+        cdef np.ndarray[double,mode='c'] x = values
+        cdef np.ndarray[double,mode='c'] y = extra_values
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),x.size) if values.size else NULL
+        cdef cvec.Vec* ev = cvec.VEC_new_from_array(<cconstr.REAL*>(y.data),y.size) if y is not None else NULL
+        cconstr.CONSTR_eval(self._c_constr,v,ev)
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
 
@@ -205,6 +208,10 @@ cdef class Constraint:
         """ Jacobian matrix of nonlinear equality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
         def __get__(self): return Matrix(cconstr.CONSTR_get_J(self._c_constr))
 
+    property Jbar:
+        """ Jacobian matrix of nonlinear equality constraints wrt. extra variables (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
+        def __get__(self): return Matrix(cconstr.CONSTR_get_Jbar(self._c_constr))
+
     property b:
         """ Right-hand side vector of linear equality constraints (:class:`ndarray <numpy.ndarray>`). """
         def __get__(self): return Vector(cconstr.CONSTR_get_b(self._c_constr))
@@ -224,6 +231,10 @@ cdef class Constraint:
     property G:
         """ Matrix for linear inequality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
         def __get__(self): return Matrix(cconstr.CONSTR_get_G(self._c_constr))
+
+    property Gbar:
+        """ Matrix for linear inequality constraints, for extra variables (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
+        def __get__(self): return Matrix(cconstr.CONSTR_get_Gbar(self._c_constr))
 
     property H_combined:
         """ Linear combination of Hessian matrices of individual nonlinear equality constraints (only the lower triangular part) (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """

@@ -4,7 +4,6 @@ Targets
 * MAT or ART data writer.
 * CIM parser in python.
 * Rich object comparisons for all network components.
-* Need AC branch flow limits.
 * Instructions for adding new functions and constraints.
 * Use Autotools.
 
@@ -12,6 +11,8 @@ Unreleased
 ----------
 * Area/zone projections.
 * Battery initial and final energy levels.
+* Constraint that enforces AC branch flow limits using current magnitudes.
+* Support for extra variables in constraints (Jbar, Gbar matrices).
 
 Version 1.2.6
 -------------

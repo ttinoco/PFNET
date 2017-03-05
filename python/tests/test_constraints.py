@@ -3654,6 +3654,281 @@ class TestConstraints(unittest.TestCase):
                                                 self.assertEqual(G.col[j],gen.index_P[t-1])
                                                 self.assertEqual(G.data[j],-1.)
 
+    def test_constr_AC_FLOW_LIM(self):
+
+        # Constants
+        h = 1e-10
+
+        net = self.netMP # multi period
+
+        for case in test_cases.CASES:
+
+            net.load(case)
+
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+            self.assertEqual(net.num_vars,
+                             (2*net.get_num_buses() +
+                              net.get_num_tap_changers() +
+                              net.get_num_phase_shifters())*self.T)
+
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+
+            # Constraint
+            constr = pf.Constraint('AC branch flow limits',net)
+
+            f = constr.f
+            J = constr.J
+            Jbar = constr.Jbar
+            A = constr.A
+            b = constr.b
+            G = constr.G
+            Gbar = constr.Gbar
+
+            """
+            # Before
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(0,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,0))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(0,0))
+            self.assertEqual(A.nnz,0)
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(0,0))
+            self.assertEqual(G.nnz,0)
+
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
+
+            num_Jnnz = (net.get_num_buses()*4 +
+                        net.get_num_branches()*8 +
+                        net.get_num_tap_changers()*4 +
+                        net.get_num_phase_shifters()*4 +
+                        net.get_num_switched_shunts() +
+                        net.get_num_slack_gens() +
+                        net.get_num_reg_gens()+
+                        net.num_var_generators*2)*self.T
+
+            constr.analyze()
+            self.assertEqual(num_Jnnz,constr.J_nnz)
+            constr.eval(x0)
+            self.assertEqual(num_Jnnz,constr.J_nnz)
+
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            G = constr.G
+            constr.combine_H(np.ones(f.size),False)
+            Hcomb = constr.H_combined
+
+            # After
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(2*net.num_buses*self.T,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(0,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(2*net.num_buses*self.T,net.num_vars))
+            self.assertEqual(J.nnz,num_Jnnz)
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(0,net.num_vars))
+            self.assertEqual(A.nnz,0)
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(0,net.num_vars))
+            self.assertEqual(G.nnz,0)
+            self.assertTupleEqual(Hcomb.shape,(net.num_vars,net.num_vars))
+            self.assertEqual(Hcomb.nnz,2*(net.get_num_buses()*3 +
+                                          net.get_num_branches()*12 +
+                                          net.get_num_tap_changers()*9 +
+                                          net.get_num_phase_shifters()*10 +
+                                          net.get_num_switched_shunts())*self.T)
+
+            self.assertTrue(not np.any(np.isinf(f)))
+            self.assertTrue(not np.any(np.isnan(f)))
+
+            # Cross check mismatches
+            net.update_properties(x0)
+            dP_list = dict([(t,list()) for t in range(self.T)])
+            dQ_list = dict([(t,list()) for t in range(self.T)])
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    dP = f[bus.index_P+t*2*net.num_buses]
+                    dQ = f[bus.index_Q+t*2*net.num_buses]
+                    dP_list[t].append(dP)
+                    dQ_list[t].append(dQ)
+                    self.assertLess(np.abs(dP-bus.P_mis[t]),1e-10)
+                    self.assertLess(np.abs(dQ-bus.Q_mis[t]),1e-10)
+            self.assertLess(np.abs(net.bus_P_mis[t]-np.max(np.abs(dP_list[t]))*net.base_power),1e-10)
+            self.assertLess(np.abs(net.bus_Q_mis[t]-np.max(np.abs(dQ_list[t]))*net.base_power),1e-10)
+
+            # Remove vargen injections
+            fsaved = f.copy()
+            x0saved = x0.copy()
+            for t in range(self.T):
+                for vargen in net.var_generators:
+                    x0[vargen.index_P[t]] = 0.
+                    x0[vargen.index_Q[t]] = 0.
+            constr.eval(x0)
+            for t in range(self.T):
+                for vargen in net.var_generators:
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*net.num_buses]-
+                                           constr.f[vargen.bus.index_P+t*2*net.num_buses]-vargen.P[t]),1e-10)
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*net.num_buses]-
+                                           constr.f[vargen.bus.index_Q+t*2*net.num_buses]-vargen.Q[t]),1e-10)
+            for t in range(self.T):
+                for vargen in net.var_generators:
+                    p = vargen.bus.loads[0].P[t]-vargen.P[t]
+                    vargen.bus.loads[0].P[t] = p
+                    self.assertEqual(vargen.bus.loads[0].P[t],p)
+                    q = vargen.bus.loads[0].Q[t]-vargen.Q[t]
+                    vargen.bus.loads[0].Q[t] = q
+                    self.assertEqual(vargen.bus.loads[0].Q[t],q)
+            constr.eval(x0)
+            for t in range(self.T):
+                for vargen in net.var_generators:
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*net.num_buses]-
+                                           constr.f[vargen.bus.index_P+t*2*net.num_buses]),1e-10)
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*net.num_buses]-
+                                           constr.f[vargen.bus.index_Q+t*2*net.num_buses]),1e-10)
+
+            # Jacobian check
+            x0 = x0saved.copy()
+            constr.eval(x0)
+            f0 = constr.f.copy()
+            J0 = constr.J.copy()
+            for i in range(NUM_TRIALS):
+
+                d = np.random.randn(net.num_vars)
+
+                x = x0 + h*d
+
+                constr.eval(x)
+                f1 = constr.f
+
+                Jd_exact = J0*d
+                Jd_approx = (f1-f0)/h
+                error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),TOL)
+                self.assertLessEqual(error,EPS)
+
+            # Sigle Hessian check
+            for i in range(NUM_TRIALS):
+
+                j = np.random.randint(0,f.shape[0])
+
+                constr.eval(x0)
+
+                g0 = constr.J.tocsr()[j,:].toarray().flatten()
+                H0 = constr.get_H_single(j)
+
+                self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
+
+                H0 = (H0 + H0.T) - triu(H0)
+
+                d = np.random.randn(net.num_vars)
+
+                x = x0 + h*d
+
+                constr.eval(x)
+
+                g1 = constr.J.tocsr()[j,:].toarray().flatten()
+
+                Hd_exact = H0*d
+                Hd_approx = (g1-g0)/h
+                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
+                self.assertLessEqual(error,EPS)
+
+            # Combined Hessian check
+            coeff = np.random.randn(f0.shape[0])
+            constr.eval(x0)
+            constr.combine_H(coeff,False)
+            J0 = constr.J
+            g0 = J0.T*coeff
+            H0 = constr.H_combined.copy()
+            self.assertTrue(type(H0) is coo_matrix)
+            self.assertTupleEqual(H0.shape,(net.num_vars,net.num_vars))
+            self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
+            H0 = (H0 + H0.T) - triu(H0)
+            for i in range(NUM_TRIALS):
+
+                d = np.random.randn(net.num_vars)
+
+                x = x0 + h*d
+
+                constr.eval(x)
+
+                g1 = constr.J.T*coeff
+
+                Hd_exact = H0*d
+                Hd_approx = (g1-g0)/h
+                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
+                self.assertLessEqual(error,EPS)
+
+            # Sensitivities
+            net.clear_sensitivities()
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    self.assertEqual(bus.sens_P_balance[t],0.)
+                    self.assertEqual(bus.sens_Q_balance[t],0.)
+            sens = np.zeros(2*net.num_buses*self.T)
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    self.assertEqual(bus.index_P,2*bus.index)
+                    self.assertEqual(bus.index_Q,2*bus.index+1)
+                    sens[bus.index_P+t*2*net.num_buses] = 3.5*bus.index_P+0.33+t*2*net.num_buses
+                    sens[bus.index_Q+t*2*net.num_buses] = 3.4*bus.index_Q+0.32+t*2*net.num_buses
+            constr.store_sensitivities(None,sens,None,None)
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    self.assertEqual(bus.sens_P_balance[t],3.5*bus.index_P+0.33+t*2*net.num_buses)
+                    self.assertEqual(bus.sens_Q_balance[t],3.4*bus.index_Q+0.32+t*2*net.num_buses)
+
+            # Mismatches
+            constr.eval(x0saved)
+            f = constr.f
+            J = constr.J
+            P_list = []
+            for t in range(self.T):
+                P_list.append(net.get_var_projection('all','all',t_start=t,t_end=t))
+            f_list = [f[t*2*net.num_buses:(t+1)*2*net.num_buses] for t in range(self.T)]
+            for t in range(self.T-1):
+                self.assertLess(norm(f_list[t]-f_list[t+1]),1e-12*norm(f_list[t]))
+            Jx = J*x0saved
+            Jx_list = [Jx[t*2*net.num_buses:(t+1)*2*net.num_buses] for t in range(self.T)]
+            for t in range(self.T-1):
+                self.assertLess(norm(Jx_list[t]-Jx_list[t+1]),1e-12*norm(Jx_list[t]))
+            for i in range(10):
+                H_list = []
+                j = np.random.randint(0,2*net.num_buses)
+                for t in range(self.T):
+                    H_list.append(coo_matrix(P_list[t]*constr.get_H_single(t*2*net.num_buses+j)*P_list[t].T))
+                for t in range(self.T-1):
+                    self.assertTrue(np.all(H_list[t].row == H_list[t+1].row))
+                    self.assertTrue(np.all(H_list[t].col == H_list[t+1].col))
+                    self.assertLess(norm(H_list[t].data-H_list[t+1].data),1e-12*norm(H_list[t].data))
+            """
+
     def tearDown(self):
 
         pass
