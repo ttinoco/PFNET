@@ -221,6 +221,10 @@ void CONSTR_AC_FLOW_LIM_allocate(Constr* c) {
   int* col;
   int i;
 
+  // Extra vars discrepancy
+  if (CONSTR_get_num_local_extra_vars(c) > CONSTR_get_num_extra_vars(c))
+    CONSTR_set_num_extra_vars(c,CONSTR_get_num_local_extra_vars(c));
+
   // Data
   net = CONSTR_get_network(c);
   num_vars = NET_get_num_vars(net);

@@ -3660,6 +3660,7 @@ class TestConstraints(unittest.TestCase):
         h = 1e-10
 
         net = self.netMP # multi period
+        self.assertGreater(net.num_periods,1)
 
         for case in test_cases.CASES:
 
@@ -3697,9 +3698,13 @@ class TestConstraints(unittest.TestCase):
             b = constr.b
             G = constr.G
             Gbar = constr.Gbar
+            l = constr.l
+            u = constr.u
 
-            """
             # Before
+            self.assertEqual(constr.num_extra_vars,0)
+            self.assertEqual(constr.num_local_extra_vars,0)
+            self.assertEqual(constr.local_extra_vars_offset,0)
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(b) is np.ndarray)
@@ -3707,28 +3712,97 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(J) is coo_matrix)
             self.assertTupleEqual(J.shape,(0,0))
             self.assertEqual(J.nnz,0)
+            self.assertTrue(type(Jbar) is coo_matrix)
+            self.assertTupleEqual(Jbar.shape,(0,0))
+            self.assertEqual(Jbar.nnz,0)
             self.assertTrue(type(A) is coo_matrix)
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
             self.assertTrue(type(G) is coo_matrix)
             self.assertTupleEqual(G.shape,(0,0))
             self.assertEqual(G.nnz,0)
+            self.assertTrue(type(Gbar) is coo_matrix)
+            self.assertTupleEqual(Gbar.shape,(0,0))
+            self.assertEqual(Gbar.nnz,0)
+            self.assertTrue(type(u) is np.ndarray)
+            self.assertTupleEqual(u.shape,(0,))
+            self.assertTrue(type(l) is np.ndarray)
+            self.assertTupleEqual(l.shape,(0,))
 
             self.assertEqual(constr.J_nnz,0)
             self.assertEqual(constr.A_nnz,0)
             self.assertEqual(constr.G_nnz,0)
 
-            num_Jnnz = (net.get_num_buses()*4 +
-                        net.get_num_branches()*8 +
-                        net.get_num_tap_changers()*4 +
-                        net.get_num_phase_shifters()*4 +
-                        net.get_num_switched_shunts() +
-                        net.get_num_slack_gens() +
-                        net.get_num_reg_gens()+
-                        net.num_var_generators*2)*self.T
+            num_constr = net.get_num_branches()*2*self.T
+            num_Jnnz = (net.get_num_branches()*8 +
+                        net.get_num_tap_changers()*2 +
+                        net.get_num_phase_shifters()*2)*self.T
 
             constr.analyze()
             self.assertEqual(num_Jnnz,constr.J_nnz)
+           
+            f = constr.f
+            J = constr.J
+            Jbar = constr.Jbar
+            A = constr.A
+            b = constr.b
+            G = constr.G
+            Gbar = constr.Gbar
+            l = constr.l
+            u = constr.u
+            
+            # After
+            self.assertEqual(constr.num_extra_vars,num_constr)       # yes, got set
+            self.assertEqual(constr.num_local_extra_vars,num_constr) # yes, it remains
+            self.assertEqual(constr.local_extra_vars_offset,0)
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(num_constr,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(0,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(num_constr,net.num_vars))
+            self.assertEqual(J.nnz,num_Jnnz)
+            self.assertTrue(type(Jbar) is coo_matrix)
+            self.assertTupleEqual(Jbar.shape,(num_constr,num_constr))
+            self.assertEqual(Jbar.nnz,num_constr)
+            self.assertTrue(np.all(Jbar.row == Jbar.col))
+            self.assertTrue(np.all(Jbar.data == -1.))
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(0,net.num_vars))
+            self.assertEqual(A.nnz,0)
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(num_constr,net.num_vars))
+            self.assertEqual(G.nnz,0)
+            self.assertTrue(type(Gbar) is coo_matrix)
+            self.assertTupleEqual(Gbar.shape,(num_constr,num_constr))
+            self.assertEqual(Gbar.nnz,num_constr)
+            self.assertTrue(np.all(Gbar.row == Jbar.col))
+            self.assertTrue(np.all(Gbar.data == 1.))
+            self.assertTrue(type(u) is np.ndarray)
+            self.assertTupleEqual(u.shape,(num_constr,))
+            self.assertTrue(type(l) is np.ndarray)
+            self.assertTupleEqual(l.shape,(num_constr,))
+            self.assertTrue(np.all(l == 0.))
+            for t in range(net.num_periods):
+                for branch in net.branches:
+                    i = t*net.num_branches*2+2*branch.index
+                    self.assertEqual(u[i],branch.ratingA)
+                    self.assertEqual(u[i+1],branch.ratingA)
+
+            # Hessian structure
+            for i in range(constr.J.shape[0]):
+                H = constr.get_H_single(i)
+                self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
+                self.assertTrue(np.all(H.row >= H.col))
+            Hcomb = constr.H_combined
+            H_comb_nnz = 2*(net.num_branches*10 +
+                            net.get_num_tap_changers()*5+
+                            net.get_num_phase_shifters()*5)*self.T
+            self.assertTupleEqual(Hcomb.shape,(net.num_vars,net.num_vars))
+            self.assertTrue(np.all(Hcomb.row >= Hcomb.col))
+            self.assertEqual(Hcomb.nnz,H_comb_nnz)
+
+            """
             constr.eval(x0)
             self.assertEqual(num_Jnnz,constr.J_nnz)
 

@@ -53,7 +53,7 @@ cdef extern from "numpy/arrayobject.h":
 cdef Vector(cvec.Vec* v, owndata=False):
      cdef np.npy_intp shape[1]
      if v is not NULL:
-         shape[0] = <np.npy_intp> cvec.VEC_get_size(v)
+         shape[0] = <np.npy_intp>cvec.VEC_get_size(v)
          arr = np.PyArray_SimpleNewFromData(1,shape,np.NPY_DOUBLE,cvec.VEC_get_data(v))
          if owndata:
              PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
