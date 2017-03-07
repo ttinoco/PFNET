@@ -240,6 +240,20 @@ cdef class Constraint:
         """ Linear combination of Hessian matrices of individual nonlinear equality constraints (only the lower triangular part) (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
         def __get__(self): return Matrix(cconstr.CONSTR_get_H_combined(self._c_constr))
 
+    property num_extra_vars:
+            """ Total number of extra variables for constraints (set by problem) (int). """
+            def __get__(self): return cconstr.CONSTR_get_num_extra_vars(self._c_constr)
+            def __set__(self, num): cconstr.CONSTR_set_num_extra_vars(self._c_constr,num)
+
+    property local_extra_vars_offset:
+            """ Offset for local extra variables for constraint (set by problem) (int). """
+            def __get__(self): return cconstr.CONSTR_get_local_extra_vars_offset(self._c_constr)
+            def __set__(self, offset): cconstr.CONSTR_set_local_extra_vars_offset(self._c_constr,offset)
+
+    property num_local_extra_vars:
+            """ Number of local extra variables for constraint (set during "count" only, then cleared) (int). """
+            def __get__(self): return cconstr.CONSTR_get_num_local_extra_vars(self._c_constr)
+
 cdef new_Constraint(cconstr.Constr* c, cnet.Net* n):
     if c is not NULL and n is not NULL:
         constr = Constraint(0,new_Network(n),alloc=False)
