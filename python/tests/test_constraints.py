@@ -3802,10 +3802,13 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(np.all(Hcomb.row >= Hcomb.col))
             self.assertEqual(Hcomb.nnz,H_comb_nnz)
 
-            """
             constr.eval(x0)
+            self.assertEqual(num_constr,constr.J_row)
             self.assertEqual(num_Jnnz,constr.J_nnz)
 
+            print 'list'
+            
+            """
             f = constr.f
             J = constr.J
             A = constr.A

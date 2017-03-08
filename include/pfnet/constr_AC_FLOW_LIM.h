@@ -14,6 +14,9 @@
 #include <math.h>
 #include "constr.h"
 
+// Parameters
+#define CONSTR_AC_FLOW_LIM_PARAM 1e-8
+
 // Function prototypes
 void CONSTR_AC_FLOW_LIM_init(Constr* c);
 void CONSTR_AC_FLOW_LIM_count_step(Constr* c, Branch* br, int t);
