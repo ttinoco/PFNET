@@ -76,15 +76,15 @@ struct Constr {
   int bus_counted_size;  /**< @brief Size of array of flags for processing buses */
 
   // Type functions
-  void (*func_init)(Constr* c);                                          /**< @brief Initialization function */
-  void (*func_count_step)(Constr* c, Branch* br, int t);                 /**< @brief Function for counting nonzero entries */
-  void (*func_allocate)(Constr* c);                                      /**< @brief Function for allocating required arrays */
-  void (*func_clear)(Constr* c);                                         /**< @brief Function for clearing flags, counters, and function values */
-  void (*func_analyze_step)(Constr* c, Branch* br, int t);               /**< @brief Function for analyzing sparsity pattern */
-  void (*func_eval_step)(Constr* c, Branch* br, int t, Vec* v, Vec* ev); /**< @brief Function for evaluating constraint */
+  void (*func_init)(Constr* c);                                       /**< @brief Initialization function */
+  void (*func_count_step)(Constr* c, Branch* br, int t);              /**< @brief Function for counting nonzero entries */
+  void (*func_allocate)(Constr* c);                                   /**< @brief Function for allocating required arrays */
+  void (*func_clear)(Constr* c);                                      /**< @brief Function for clearing flags, counters, and function values */
+  void (*func_analyze_step)(Constr* c, Branch* br, int t);            /**< @brief Function for analyzing sparsity pattern */
+  void (*func_eval_step)(Constr* c, Branch* br, int t, Vec* v);       /**< @brief Function for evaluating constraint */
   void (*func_store_sens_step)(Constr* c, Branch* br, int t,
-			       Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);    /**< @brief Func. for storing sensitivities */
-  void (*func_free)(Constr* c);                                          /**< @brief Function for de-allocating any data used */
+			       Vec* sA, Vec* sf, Vec* sGu, Vec* sGl); /**< @brief Func. for storing sensitivities */
+  void (*func_free)(Constr* c);                                       /**< @brief Function for de-allocating any data used */
 
   // Type data
   void* data; /**< @brief Type-dependent constraint data structure */
@@ -549,10 +549,10 @@ void CONSTR_list_analyze_step(Constr* clist, Branch* br, int t) {
     CONSTR_analyze_step(cc,br,t);
 }
 
-void CONSTR_list_eval_step(Constr* clist, Branch* br, int t, Vec* values, Vec* extra_values) {
+void CONSTR_list_eval_step(Constr* clist, Branch* br, int t, Vec* values) {
   Constr* cc;
   for (cc = clist; cc != NULL; cc = CONSTR_get_next(cc))
-    CONSTR_eval_step(cc,br,t,values,extra_values);
+    CONSTR_eval_step(cc,br,t,values);
 }
 
 void CONSTR_list_store_sens_step(Constr* clist, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
@@ -1015,20 +1015,20 @@ void CONSTR_analyze_step(Constr* c, Branch* br, int t) {
     (*(c->func_analyze_step))(c,br,t);
 }
 
-void CONSTR_eval(Constr* c, Vec* values, Vec* extra_values) {
+void CONSTR_eval(Constr* c, Vec* values) {
   int i;
   int t;
   Net* net = CONSTR_get_network(c);
   CONSTR_clear(c);
   for (t = 0; t < NET_get_num_periods(net); t++) {
     for (i = 0; i < NET_get_num_branches(net); i++)
-      CONSTR_eval_step(c,NET_get_branch(net,i),t,values,extra_values);
+      CONSTR_eval_step(c,NET_get_branch(net,i),t,values);
   }
 }
 
-void CONSTR_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* extra_values) {
-  if (c && c->func_eval_step && CONSTR_is_safe_to_eval(c,values,extra_values))
-    (*(c->func_eval_step))(c,br,t,values,extra_values);
+void CONSTR_eval_step(Constr* c, Branch* br, int t, Vec* values) {
+  if (c && c->func_eval_step && CONSTR_is_safe_to_eval(c,values))
+    (*(c->func_eval_step))(c,br,t,values);
 }
 
 void CONSTR_store_sens(Constr* c, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
@@ -1092,14 +1092,13 @@ BOOL CONSTR_is_safe_to_analyze(Constr* c) {
   }
 }
 
-BOOL CONSTR_is_safe_to_eval(Constr* c, Vec* values, Vec* extra_values) {
+BOOL CONSTR_is_safe_to_eval(Constr* c, Vec* values) {
   Net* net = CONSTR_get_network(c);
   if (CONSTR_get_bus_counted_size(c) == NET_get_num_buses(net)*NET_get_num_periods(net) &&
       MAT_get_size2(c->A) == NET_get_num_vars(net) &&
       MAT_get_size2(c->J) == NET_get_num_vars(net) &&
       MAT_get_size2(c->Jbar) == CONSTR_get_num_extra_vars(c) &&
-      VEC_get_size(values) == NET_get_num_vars(net) &&
-      VEC_get_size(extra_values) == CONSTR_get_num_extra_vars(c))
+      VEC_get_size(values) == NET_get_num_vars(net))
     return TRUE;
   else {
     sprintf(c->error_string,"constraint is not safe to eval");

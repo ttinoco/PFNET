@@ -200,7 +200,7 @@ void CONSTR_GEN_RAMP_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_GEN_RAMP_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* extra_values) {
+void CONSTR_GEN_RAMP_eval_step(Constr* c, Branch* br, int t, Vec* values) {
   // Nothing to do
 }
 

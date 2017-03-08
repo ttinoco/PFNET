@@ -444,7 +444,7 @@ void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* extra_values) {
+void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* values) {
 
   // Local variables
   Bus* buses[2];

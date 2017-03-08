@@ -23,7 +23,7 @@ void CONSTR_BOUND_count_step(Constr* c, Branch* br, int t);
 void CONSTR_BOUND_allocate(Constr* c);
 void CONSTR_BOUND_clear(Constr* c);
 void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t);
-void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* v, Vec* ev);
+void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* v);
 void CONSTR_BOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void CONSTR_BOUND_free(Constr* c);
 

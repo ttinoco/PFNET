@@ -111,21 +111,18 @@ cdef class Constraint:
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
 
-    def eval(self,values,extra_values=None):
+    def eval(self,values):
         """
         Evaluates constraint violations, Jacobian, and individual Hessian matrices.
 
         Parameters
         ----------
         values : :class:`ndarray <numpy.ndarray>`
-        extra_values : :class:`ndarray <numpy.ndarray>`
         """
 
         cdef np.ndarray[double,mode='c'] x = values
-        cdef np.ndarray[double,mode='c'] y = extra_values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),x.size) if values.size else NULL
-        cdef cvec.Vec* ev = cvec.VEC_new_from_array(<cconstr.REAL*>(y.data),y.size) if y is not None else NULL
-        cconstr.CONSTR_eval(self._c_constr,v,ev)
+        cconstr.CONSTR_eval(self._c_constr,v)
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
 

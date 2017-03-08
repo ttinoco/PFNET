@@ -24,7 +24,7 @@ void CONSTR_REG_SHUNT_count_step(Constr* c, Branch* br, int t);
 void CONSTR_REG_SHUNT_allocate(Constr* c);
 void CONSTR_REG_SHUNT_clear(Constr* c);
 void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t);
-void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* v, Vec* ev);
+void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* v);
 void CONSTR_REG_SHUNT_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void CONSTR_REG_SHUNT_free(Constr* c);
 

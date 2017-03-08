@@ -227,7 +227,7 @@ void PROB_eval(Prob* p, Vec* point) {
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
     for (i = 0; i < NET_get_num_branches(p->net); i++) {
       br = NET_get_branch(p->net,i);
-      CONSTR_list_eval_step(p->constr,br,t,point,NULL); // careful
+      CONSTR_list_eval_step(p->constr,br,t,point); 
       FUNC_list_eval_step(p->func,br,t,point);
       NET_update_properties_step(p->net,br,t,point);
     }

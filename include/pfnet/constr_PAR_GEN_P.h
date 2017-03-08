@@ -22,7 +22,7 @@ void CONSTR_PAR_GEN_P_count_step(Constr* c, Branch* br, int t);
 void CONSTR_PAR_GEN_P_allocate(Constr* c);
 void CONSTR_PAR_GEN_P_clear(Constr* c);
 void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t);
-void CONSTR_PAR_GEN_P_eval_step(Constr* c, Branch* br, int t, Vec* v, Vec* ev);
+void CONSTR_PAR_GEN_P_eval_step(Constr* c, Branch* br, int t, Vec* v);
 void CONSTR_PAR_GEN_P_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void CONSTR_PAR_GEN_P_free(Constr* c);
 
