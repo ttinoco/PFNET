@@ -3859,8 +3859,6 @@ class TestConstraints(unittest.TestCase):
                 error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),1.)
                 self.assertLessEqual(error,EPS)
 
-            """
-
             # Sigle Hessian check
             for i in range(NUM_TRIALS):
 
@@ -3872,7 +3870,7 @@ class TestConstraints(unittest.TestCase):
                 H0 = constr.get_H_single(j)
 
                 self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
-
+                
                 H0 = (H0 + H0.T) - triu(H0)
 
                 d = np.random.randn(net.num_vars)
@@ -3880,7 +3878,7 @@ class TestConstraints(unittest.TestCase):
                 x = x0 + h*d
 
                 constr.eval(x)
-
+                
                 g1 = constr.J.tocsr()[j,:].toarray().flatten()
 
                 Hd_exact = H0*d
@@ -3913,53 +3911,6 @@ class TestConstraints(unittest.TestCase):
                 Hd_approx = (g1-g0)/h
                 error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
-
-            # Sensitivities
-            net.clear_sensitivities()
-            for t in range(self.T):
-                for i in range(net.num_buses):
-                    bus = net.get_bus(i)
-                    self.assertEqual(bus.sens_P_balance[t],0.)
-                    self.assertEqual(bus.sens_Q_balance[t],0.)
-            sens = np.zeros(2*net.num_buses*self.T)
-            for t in range(self.T):
-                for i in range(net.num_buses):
-                    bus = net.get_bus(i)
-                    self.assertEqual(bus.index_P,2*bus.index)
-                    self.assertEqual(bus.index_Q,2*bus.index+1)
-                    sens[bus.index_P+t*2*net.num_buses] = 3.5*bus.index_P+0.33+t*2*net.num_buses
-                    sens[bus.index_Q+t*2*net.num_buses] = 3.4*bus.index_Q+0.32+t*2*net.num_buses
-            constr.store_sensitivities(None,sens,None,None)
-            for t in range(self.T):
-                for i in range(net.num_buses):
-                    bus = net.get_bus(i)
-                    self.assertEqual(bus.sens_P_balance[t],3.5*bus.index_P+0.33+t*2*net.num_buses)
-                    self.assertEqual(bus.sens_Q_balance[t],3.4*bus.index_Q+0.32+t*2*net.num_buses)
-
-            # Mismatches
-            constr.eval(x0saved)
-            f = constr.f
-            J = constr.J
-            P_list = []
-            for t in range(self.T):
-                P_list.append(net.get_var_projection('all','all',t_start=t,t_end=t))
-            f_list = [f[t*2*net.num_buses:(t+1)*2*net.num_buses] for t in range(self.T)]
-            for t in range(self.T-1):
-                self.assertLess(norm(f_list[t]-f_list[t+1]),1e-12*norm(f_list[t]))
-            Jx = J*x0saved
-            Jx_list = [Jx[t*2*net.num_buses:(t+1)*2*net.num_buses] for t in range(self.T)]
-            for t in range(self.T-1):
-                self.assertLess(norm(Jx_list[t]-Jx_list[t+1]),1e-12*norm(Jx_list[t]))
-            for i in range(10):
-                H_list = []
-                j = np.random.randint(0,2*net.num_buses)
-                for t in range(self.T):
-                    H_list.append(coo_matrix(P_list[t]*constr.get_H_single(t*2*net.num_buses+j)*P_list[t].T))
-                for t in range(self.T-1):
-                    self.assertTrue(np.all(H_list[t].row == H_list[t+1].row))
-                    self.assertTrue(np.all(H_list[t].col == H_list[t+1].col))
-                    self.assertLess(norm(H_list[t].data-H_list[t+1].data),1e-12*norm(H_list[t].data))
-            """
 
     def tearDown(self):
 
