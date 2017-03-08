@@ -11,6 +11,8 @@
 #include <pfnet/array.h>
 #include <pfnet/constr_AC_FLOW_LIM.h>
 
+#define HESSIAN_VAL() -(R*dRdx + I*dIdx)*(R*dRdy + I*dIdy)/sqrterm3+(dRdy*dRdx+dIdy*dIdx+R*d2Rdydx+I*d2Idydx)/sqrterm
+
 void CONSTR_AC_FLOW_LIM_init(Constr* c) {
   
   // Local variables
@@ -614,7 +616,12 @@ void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* values) {
   REAL I;
   REAL dRdx;
   REAL dIdx;
+  REAL dRdy;
+  REAL dIdy;
+  REAL d2Rdydx;
+  REAL d2Idydx;
   REAL sqrterm;
+  REAL sqrterm3;
 
   REAL costheta;
   REAL sintheta;
@@ -700,7 +707,8 @@ void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* values) {
     R = a_temp*a_temp*(g_sh[k]+g)*v[k]-a*v[m]*(g*costheta-b*sintheta);
     I = a_temp*a_temp*(b_sh[k]+b)*v[k]-a*v[m]*(g*sintheta+b*costheta);
     sqrterm = sqrt(R*R+I*I+CONSTR_AC_FLOW_LIM_PARAM);
-
+    sqrterm3 = sqrterm*sqrterm*sqrterm;
+    
     H = MAT_get_data_array(MAT_array_get(H_array,*J_row));
 
     // f
@@ -708,9 +716,9 @@ void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* values) {
     
     //***********
     if (var_w[k]) { // wk var
-    
-      dRdx = -a*v[m]*(g*sintheta+b*costheta);
-      dIdx = -a*v[m]*(-g*costheta+b*sintheta);
+      
+      dRdx = -a*v[m]*(g*sintheta+b*costheta);  // dRdwk
+      dIdx = -a*v[m]*(-g*costheta+b*sintheta); // dIdwk 
 	
       // J
       J[*J_nnz] = (R*dRdx + I*dIdx)/sqrterm;
@@ -718,20 +726,52 @@ void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* values) {
       
       // H
       H_nnz_val = H_nnz[(*J_row)];
+
+      dRdy = dRdx;
+      dIdy = dIdx;
+      d2Rdydx = -a*v[m]*(-g*costheta+b*sintheta);
+      d2Idydx = -a*v[m]*(-g*sintheta-b*costheta);
+      H[H_nnz_val] = HESSIAN_VAL();
       H_nnz_val++;   // wk and wk
+
       if (var_v[k]) {
+	dRdy = a_temp*a_temp*(g_sh[k]+g);
+	dIdy = a_temp*a_temp*(b_sh[k]+b);
+	d2Rdydx = 0;
+	d2Idydx = 0;
+	H[H_nnz_val] = HESSIAN_VAL();
 	H_nnz_val++; // wk and vk
       }
       if (var_w[m]) {
+	dRdy = -a*v[m]*(-g*sintheta-b*costheta);
+	dIdy = -a*v[m]*(g*costheta-b*sintheta);
+	d2Rdydx = -a*v[m]*(g*costheta-b*sintheta);
+	d2Idydx = -a*v[m]*(g*sintheta+b*costheta);
+	H[H_nnz_val] = HESSIAN_VAL();
 	H_nnz_val++; // wk and wm
       }
       if (var_v[m]) {
+	dRdy = -a*(g*costheta-b*sintheta);
+	dIdy = -a*(g*sintheta+b*costheta);
+	d2Rdydx = -a*(g*sintheta+b*costheta);
+	d2Idydx = -a*(-g*costheta+b*sintheta);
+	H[H_nnz_val] = HESSIAN_VAL();
 	H_nnz_val++; // wk and vm
       }
       if (var_a) {
+	dRdy = indicator_a*2.*a_temp*(g_sh[k]+g)*v[k]-v[m]*(g*costheta-b*sintheta);
+	dIdy = indicator_a*2.*a_temp*(b_sh[k]+b)*v[k]-v[m]*(g*sintheta+b*costheta);
+	d2Rdydx = -v[m]*(g*sintheta+b*costheta);
+	d2Idydx = -v[m]*(-g*costheta+b*sintheta);
+	H[H_nnz_val] = HESSIAN_VAL();
 	H_nnz_val++; // wk and a
       }
       if (var_phi) {
+	dRdy = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
+	dIdy = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
+	d2Rdydx = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
+	d2Idydx = -indicator_phi*a*v[m]*(g*sintheta+b*costheta);
+	H[H_nnz_val] = HESSIAN_VAL();
 	H_nnz_val++; // wk and phi
       }
       H_nnz[(*J_row)] = H_nnz_val;
@@ -749,17 +789,47 @@ void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* values) {
       
       // H
       H_nnz_val = H_nnz[(*J_row)];
+      
+      dRdy = dRdx;
+      dIdy = dIdx;
+      d2Rdydx = 0;
+      d2Idydx = 0;
+      H[H_nnz_val] = HESSIAN_VAL();
       H_nnz_val++;   // vk and vk
+
       if (var_w[m]) {
+	dRdy = -a*v[m]*(-g*sintheta-b*costheta);
+	dIdy = -a*v[m]*(g*costheta-b*sintheta);
+	d2Rdydx = 0;
+	d2Idydx = 0;
+	H[H_nnz_val] = HESSIAN_VAL();
 	H_nnz_val++; // vk and wm
       }
+
       if (var_v[m]) { 
+	dRdy = -a*(g*costheta-b*sintheta);
+	dIdy = -a*(g*sintheta+b*costheta);
+	d2Rdydx = 0;
+	d2Idydx = 0;
+	H[H_nnz_val] = HESSIAN_VAL();
 	H_nnz_val++; // vk and vm
       }
+
       if (var_a) {
+	dRdy = indicator_a*2.*a_temp*(g_sh[k]+g)*v[k]-v[m]*(g*costheta-b*sintheta);
+	dIdy = indicator_a*2.*a_temp*(b_sh[k]+b)*v[k]-v[m]*(g*sintheta+b*costheta);
+	d2Rdydx = indicator_a*2.*a_temp*(g_sh[k]+g);
+	d2Idydx = indicator_a*2.*a_temp*(b_sh[k]+b);
+	H[H_nnz_val] = HESSIAN_VAL();
 	H_nnz_val++; // vk and a
       }
+
       if (var_phi) {  
+	dRdy = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
+	dIdy = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
+	d2Rdydx = 0;
+	d2Idydx = 0;
+	H[H_nnz_val] = HESSIAN_VAL();
 	H_nnz_val++; // vk and phi
       }
       H_nnz[(*J_row)] = H_nnz_val;
@@ -777,14 +847,38 @@ void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* values) {
       
       // H
       H_nnz_val = H_nnz[(*J_row)];
+
+      dRdy = dRdx;
+      dIdy = dIdx;
+      d2Rdydx = -a*v[m]*(-g*costheta+b*sintheta);
+      d2Idydx = -a*v[m]*(-g*sintheta-b*costheta);
+      H[H_nnz_val] = HESSIAN_VAL();
       H_nnz_val++;   // wm and wm
+
       if (var_v[m]) {
+	dRdy = -a*(g*costheta-b*sintheta);
+	dIdy = -a*(g*sintheta+b*costheta);
+	d2Rdydx = -a*(-g*sintheta-b*costheta);
+	d2Idydx = -a*(g*costheta-b*sintheta);
+	H[H_nnz_val] = HESSIAN_VAL();
 	H_nnz_val++; // wm and vm
       }
+
       if (var_a) {
+	dRdy = indicator_a*2.*a_temp*(g_sh[k]+g)*v[k]-v[m]*(g*costheta-b*sintheta);
+	dIdy = indicator_a*2.*a_temp*(b_sh[k]+b)*v[k]-v[m]*(g*sintheta+b*costheta);
+	d2Rdydx = -v[m]*(-g*sintheta-b*costheta);
+	d2Idydx = -v[m]*(g*costheta-b*sintheta);
+	H[H_nnz_val] = HESSIAN_VAL();
 	H_nnz_val++; // wm and a
       }
+
       if (var_phi) {
+	dRdy = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
+	dIdy = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
+	d2Rdydx = -indicator_phi*a*v[m]*(-g*costheta+b*sintheta);
+	d2Idydx = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
+	H[H_nnz_val] = HESSIAN_VAL();
 	H_nnz_val++; // wm and phi
       }
       H_nnz[(*J_row)] = H_nnz_val;
@@ -802,11 +896,29 @@ void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* values) {
       
       // H
       H_nnz_val = H_nnz[(*J_row)];
+
+      dRdy = dRdx;
+      dIdy = dIdx;
+      d2Rdydx = 0;
+      d2Idydx = 0;
+      H[H_nnz_val] = HESSIAN_VAL();
       H_nnz_val++;   // vm and vm
+
       if (var_a) {
+	dRdy = indicator_a*2.*a_temp*(g_sh[k]+g)*v[k]-v[m]*(g*costheta-b*sintheta);
+	dIdy = indicator_a*2.*a_temp*(b_sh[k]+b)*v[k]-v[m]*(g*sintheta+b*costheta);
+	d2Rdydx = -(g*costheta-b*sintheta);
+	d2Idydx = -(g*sintheta+b*costheta);
+	H[H_nnz_val] = HESSIAN_VAL();
 	H_nnz_val++; // vm and a
       }
+
       if (var_phi) {
+	dRdy = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
+	dIdy = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
+	d2Rdydx = -indicator_phi*a*(-g*sintheta-b*costheta);
+	d2Idydx = -indicator_phi*a*(g*costheta-b*sintheta);
+	H[H_nnz_val] = HESSIAN_VAL();
 	H_nnz_val++; // vm and phi
       }
       H_nnz[(*J_row)] = H_nnz_val;
@@ -824,8 +936,20 @@ void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* values) {
       
       // H
       H_nnz_val = H_nnz[(*J_row)];
+
+      dRdy = dRdx;
+      dIdy = dIdx;
+      d2Rdydx = indicator_a*2.*(g_sh[k]+g)*v[k];
+      d2Idydx = indicator_a*2.*(b_sh[k]+b)*v[k];
+      H[H_nnz_val] = HESSIAN_VAL();
       H_nnz_val++;   // a and a
+
       if (var_phi) {
+	dRdy = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
+	dIdy = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
+	d2Rdydx = -indicator_phi*v[m]*(-g*sintheta-b*costheta);
+	d2Idydx = -indicator_phi*v[m]*(g*costheta-b*sintheta);
+	H[H_nnz_val] = HESSIAN_VAL();
 	H_nnz_val++; // a and phi
       }
       H_nnz[(*J_row)] = H_nnz_val;
@@ -843,6 +967,12 @@ void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* values) {
       
       // H
       H_nnz_val = H_nnz[(*J_row)];
+
+      dRdy = dRdx;
+      dIdy = dIdx;
+      d2Rdydx = -indicator_phi*a*v[m]*(-g*costheta+b*sintheta);
+      d2Idydx = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
+      H[H_nnz_val] = HESSIAN_VAL();
       H_nnz_val++;   // phi and phi
       H_nnz[(*J_row)] = H_nnz_val;
     }
