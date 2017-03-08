@@ -42,6 +42,10 @@ void CONSTR_DC_FLOW_LIM_count_step(Constr* c, Branch* br, int t) {
   if (BRANCH_is_on_outage(br))
     return;
 
+  // Zero limits
+  if (BRANCH_get_ratingA(br) == 0.)
+    return;
+  
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
 
@@ -125,15 +129,16 @@ void CONSTR_DC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
   if (BRANCH_is_on_outage(br))
     return;
 
+  // Zero limits
+  if (BRANCH_get_ratingA(br) == 0.)
+    return;
+
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
 
   b = BRANCH_get_b(br);
 
-  if (BRANCH_get_ratingA(br) > 0)
-    rating = BRANCH_get_ratingA(br);
-  else
-    rating = BRANCH_INF_FLOW;
+  rating = BRANCH_get_ratingA(br); // p.u.
 
   VEC_set(l,*G_row,-rating); // p.u.
   VEC_set(u,*G_row,rating);  // p.u.
@@ -205,6 +210,10 @@ void CONSTR_DC_FLOW_LIM_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, V
 
   // Check outage
   if (BRANCH_is_on_outage(br))
+    return;
+
+  // Zero limits
+  if (BRANCH_get_ratingA(br) == 0.)
     return;
 
   // Store sensitivies

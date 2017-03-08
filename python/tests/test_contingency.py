@@ -739,6 +739,10 @@ class TestContingency(unittest.TestCase):
             net.load(case)
             net.clear_flags()
 
+            for branch in net.branches:
+                if branch.ratingA == 0.:
+                    branch.ratingA = 100.
+
             # variables
             net.set_flags('bus',
                           'variable',

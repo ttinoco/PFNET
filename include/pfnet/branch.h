@@ -50,7 +50,6 @@
 
 // Infinity
 #define BRANCH_INF_RATIO 100. /**< @brief Infinite tap ratio */
-#define BRANCH_INF_FLOW 1000. /**< @brief Infinite power flow (p.u.) */
 
 // Properties
 /** \defgroup branch_props Branch Property Masks

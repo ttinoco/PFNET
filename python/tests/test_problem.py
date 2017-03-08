@@ -637,15 +637,17 @@ class TestProblem(unittest.TestCase):
             u = p.u
             G = p.G
 
+            num_dc = len([br for br in net.branches if br.ratingA != 0.])
+
             self.assertTupleEqual(l1.shape,(net.num_vars,))
             self.assertTupleEqual(u1.shape,(net.num_vars,))
             self.assertTupleEqual(G1.shape,(net.num_vars,net.num_vars))
-            self.assertTupleEqual(l2.shape,(net.num_branches,))
-            self.assertTupleEqual(u2.shape,(net.num_branches,))
-            self.assertTupleEqual(G2.shape,(net.num_branches,net.num_vars))
-            self.assertTupleEqual(l.shape,(net.num_vars+net.num_branches,))
-            self.assertTupleEqual(u.shape,(net.num_vars+net.num_branches,))
-            self.assertTupleEqual(G.shape,(net.num_vars+net.num_branches,net.num_vars))
+            self.assertTupleEqual(l2.shape,(num_dc,))
+            self.assertTupleEqual(u2.shape,(num_dc,))
+            self.assertTupleEqual(G2.shape,(num_dc,net.num_vars))
+            self.assertTupleEqual(l.shape,(net.num_vars+num_dc,))
+            self.assertTupleEqual(u.shape,(net.num_vars+num_dc,))
+            self.assertTupleEqual(G.shape,(net.num_vars+num_dc,net.num_vars))
             
             self.assertLess(np.linalg.norm(l-np.hstack((l1,l2)),np.inf),1e-12)
             self.assertLess(np.linalg.norm(u-np.hstack((u1,u2)),np.inf),1e-12)

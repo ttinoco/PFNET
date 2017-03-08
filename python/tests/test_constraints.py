@@ -2666,7 +2666,8 @@ class TestConstraints(unittest.TestCase):
                            pf.Constraint('DC power balance',net),
                            pf.Constraint('voltage regulation by generators',net),
                            pf.Constraint('voltage regulation by transformers',net),
-                           pf.Constraint('voltage regulation by shunts',net)]
+                           pf.Constraint('voltage regulation by shunts',net),
+                           pf.Constraint('AC branch flow limits',net)]
 
             x0 = net.get_var_values()
 
@@ -3167,6 +3168,9 @@ class TestConstraints(unittest.TestCase):
             # Constraint
             constr = pf.Constraint('DC branch flow limits',net)
 
+            # Num constr
+            num_constr = len([br for br in net.branches if br.ratingA != 0.])
+
             f = constr.f
             J = constr.J
             A = constr.A
@@ -3212,22 +3216,24 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.J_nnz,0)
             self.assertEqual(constr.J_row,0)
             self.assertEqual(constr.A_row,0)
-            self.assertEqual(constr.G_row,net.num_branches)
+            self.assertEqual(constr.G_row,num_constr)
 
             self.assertTupleEqual(b.shape,(0,))
             self.assertTupleEqual(f.shape,(0,))
-            self.assertTupleEqual(l.shape,(net.num_branches,))
-            self.assertTupleEqual(u.shape,(net.num_branches,))
+            self.assertTupleEqual(l.shape,(num_constr,))
+            self.assertTupleEqual(u.shape,(num_constr,))
 
             self.assertTupleEqual(A.shape,(0,net.num_vars))
             self.assertTupleEqual(J.shape,(0,net.num_vars))
-            self.assertTupleEqual(G.shape,(net.num_branches,net.num_vars))
+            self.assertTupleEqual(G.shape,(num_constr,net.num_vars))
             self.assertEqual(G.nnz,constr.G_nnz)
 
             self.assertTrue(np.all(l <= u))
 
             num = 0
             for br in net.branches:
+                if br.ratingA == 0.:
+                    continue
                 if not br.bus_k.is_slack():
                     num += 1
                 if not br.bus_m.is_slack():
@@ -3237,6 +3243,8 @@ class TestConstraints(unittest.TestCase):
             counter = 0
             index = 0
             for br in net.branches:
+                if br.ratingA == 0.:
+                    continue
                 off = 0
                 if br.bus_k.is_slack():
                     off = br.b*br.bus_k.v_ang
@@ -3252,7 +3260,7 @@ class TestConstraints(unittest.TestCase):
                     self.assertEqual(G.col[counter],br.bus_m.index_v_ang)
                     self.assertEqual(G.data[counter],br.b)
                     counter += 1
-                rating = br.ratingA if br.ratingA > 0 else pf.BRANCH_INF_FLOW
+                rating = br.ratingA
                 self.assertEqual(l[index],-rating+off-br.b*br.phase)
                 self.assertEqual(u[index],rating+off-br.b*br.phase)
                 index += 1
@@ -3261,9 +3269,11 @@ class TestConstraints(unittest.TestCase):
 
             # Flow
             Gx0 = constr.G*x0
-            self.assertTupleEqual(Gx0.shape,(net.num_branches,))
+            self.assertTupleEqual(Gx0.shape,(num_constr,))
             index = 0
             for branch in net.branches:
+                if branch.ratingA == 0.:
+                    continue
                 bus1 = branch.bus_k
                 bus2 = branch.bus_m
                 if bus1.is_slack():
@@ -3280,12 +3290,13 @@ class TestConstraints(unittest.TestCase):
             for branch in net.branches:
                 self.assertEqual(branch.sens_P_u_bound,0.)
                 self.assertEqual(branch.sens_P_l_bound,0.)
-            mu = np.random.randn(net.num_branches)
-            pi = np.random.randn(net.num_branches)
-            self.assertEqual(constr.G.shape[0],net.num_branches)
+            mu = np.random.randn(num_constr)
+            pi = np.random.randn(num_constr)
+            self.assertEqual(constr.G.shape[0],num_constr)
             constr.store_sensitivities(None,None,mu,pi)
             for branch in net.branches:
-                self.assertEqual(index,branch.index)
+                if branch.ratingA == 0.:
+                    continue
                 self.assertEqual(branch.sens_P_u_bound,mu[index])
                 self.assertEqual(branch.sens_P_l_bound,pi[index])
                 index += 1
@@ -3294,7 +3305,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.G_nnz,0)
             self.assertEqual(constr.J_row,0)
             self.assertEqual(constr.A_row,0)
-            self.assertEqual(constr.G_row,net.num_branches)
+            self.assertEqual(constr.G_row,num_constr)
 
         # Multi period
         net = self.netMP
@@ -3322,27 +3333,30 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
 
+            # Num constr
+            num_constr = len([br for br in net.branches if br.ratingA != 0.])
+
             # Constraint
             constr = pf.Constraint('DC branch flow limits',net)
             constr.analyze()
             G = constr.G
             l = constr.l
             u = constr.u
-            self.assertTupleEqual(l.shape,(net.num_branches*self.T,))
-            self.assertTupleEqual(u.shape,(net.num_branches*self.T,))
-            self.assertTupleEqual(G.shape,(net.num_branches*self.T,net.num_vars))
+            self.assertTupleEqual(l.shape,(num_constr*self.T,))
+            self.assertTupleEqual(u.shape,(num_constr*self.T,))
+            self.assertTupleEqual(G.shape,(num_constr*self.T,net.num_vars))
             Projs = []
             for t in range(self.T):
                 Projs.append(net.get_var_projection('all','all',t,t))
             Gs = [G*P.T for P in Projs]
             x0s = [P*x0 for P in Projs]
-            Gx0s = [(Gs[t]*x0s[t])[t*net.num_branches:(t+1)*net.num_branches] for t in range(self.T)]
-            ls = [l[t*net.num_branches:(t+1)*net.num_branches] for t in range(self.T)]
-            us = [u[t*net.num_branches:(t+1)*net.num_branches] for t in range(self.T)]
+            Gx0s = [(Gs[t]*x0s[t])[t*num_constr:(t+1)*num_constr] for t in range(self.T)]
+            ls = [l[t*num_constr:(t+1)*num_constr] for t in range(self.T)]
+            us = [u[t*num_constr:(t+1)*num_constr] for t in range(self.T)]
             for t in range(self.T):
-                self.assertLess(norm(Gx0s[t]-Gx0s[0]),1e-10*norm(Gx0s[0]))
-                self.assertLess(norm(ls[t]-ls[0]),1e-10*norm(ls[0]))
-                self.assertLess(norm(us[t]-us[0]),1e-10*norm(us[0]))
+                self.assertLessEqual(norm(Gx0s[t]-Gx0s[0]),1e-10*norm(Gx0s[0]))
+                self.assertLessEqual(norm(ls[t]-ls[0]),1e-10*norm(ls[0]))
+                self.assertLessEqual(norm(us[t]-us[0]),1e-10*norm(us[0]))
 
     def test_constr_LINPF(self):
 
@@ -3689,6 +3703,18 @@ class TestConstraints(unittest.TestCase):
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
+
+            # Constr
+            constr = pf.Constraint('AC branch flow limits',net)
+            constr.analyze()
+            num_constr = len([br for br in net.branches if br.ratingA != 0.])*2*net.num_periods
+            self.assertTupleEqual(constr.f.shape,(num_constr,))
+            self.assertEqual(constr.J_row,num_constr)
+
+            # zero ratings
+            for br in net.branches:
+                if br.ratingA == 0.:
+                    br.ratingA = 100.
 
             # Constraint
             constr = pf.Constraint('AC branch flow limits',net)

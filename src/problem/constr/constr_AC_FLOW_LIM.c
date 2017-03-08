@@ -74,6 +74,10 @@ void CONSTR_AC_FLOW_LIM_count_step(Constr* c, Branch* br, int t) {
   // Check outage
   if (BRANCH_is_on_outage(br))
     return;
+
+  // Check zero rating
+  if (BRANCH_get_ratingA(br) == 0.)
+    return;
   
   // Bus data
   bus[0] = BRANCH_get_bus_k(br);
@@ -338,6 +342,10 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
 
   // Check outage
   if (BRANCH_is_on_outage(br))
+    return;
+
+  // Check zero rating
+  if (BRANCH_get_ratingA(br) == 0.)
     return;
   
   // Bus data
@@ -643,6 +651,10 @@ void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* values) {
 
   // Check outage
   if (BRANCH_is_on_outage(br))
+    return;
+
+  // Check zero rating
+  if (BRANCH_get_ratingA(br) == 0.)
     return;
   
   // Bus data
