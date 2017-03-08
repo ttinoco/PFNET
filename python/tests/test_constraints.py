@@ -14,7 +14,7 @@ from numpy.linalg import norm
 from scipy.sparse import coo_matrix,triu,tril,eye
 
 NUM_TRIALS = 25
-EPS = 2e0 # %
+EPS = 2.2 # %
 TOL = 1e-4
 
 class TestConstraints(unittest.TestCase):
@@ -3657,7 +3657,9 @@ class TestConstraints(unittest.TestCase):
     def test_constr_AC_FLOW_LIM(self):
 
         # Constants
-        h = 1e-10
+        h = 1e-11
+        tol = 1e-3
+        eps = 1.1 # %
 
         net = self.netMP # multi period
         self.assertGreater(net.num_periods,1)
@@ -3751,7 +3753,7 @@ class TestConstraints(unittest.TestCase):
             l = constr.l
             u = constr.u
             
-            # After
+            # After analyze
             self.assertEqual(constr.num_extra_vars,num_constr)       # yes, got set
             self.assertEqual(constr.num_local_extra_vars,num_constr) # yes, it remains
             self.assertEqual(constr.local_extra_vars_offset,0)
@@ -3805,90 +3807,41 @@ class TestConstraints(unittest.TestCase):
             constr.eval(x0)
             self.assertEqual(num_constr,constr.J_row)
             self.assertEqual(num_Jnnz,constr.J_nnz)
-
-            print 'list'
             
-            """
             f = constr.f
             J = constr.J
             A = constr.A
             b = constr.b
             G = constr.G
+            Jbar = constr.Jbar
+            Gbar = constr.Gbar
+            l = constr.l
+            u = constr.u
             constr.combine_H(np.ones(f.size),False)
             Hcomb = constr.H_combined
 
-            # After
-            self.assertTrue(type(f) is np.ndarray)
-            self.assertTupleEqual(f.shape,(2*net.num_buses*self.T,))
-            self.assertTrue(type(b) is np.ndarray)
-            self.assertTupleEqual(b.shape,(0,))
-            self.assertTrue(type(J) is coo_matrix)
-            self.assertTupleEqual(J.shape,(2*net.num_buses*self.T,net.num_vars))
-            self.assertEqual(J.nnz,num_Jnnz)
-            self.assertTrue(type(A) is coo_matrix)
-            self.assertTupleEqual(A.shape,(0,net.num_vars))
-            self.assertEqual(A.nnz,0)
-            self.assertTrue(type(G) is coo_matrix)
-            self.assertTupleEqual(G.shape,(0,net.num_vars))
-            self.assertEqual(G.nnz,0)
-            self.assertTupleEqual(Hcomb.shape,(net.num_vars,net.num_vars))
-            self.assertEqual(Hcomb.nnz,2*(net.get_num_buses()*3 +
-                                          net.get_num_branches()*12 +
-                                          net.get_num_tap_changers()*9 +
-                                          net.get_num_phase_shifters()*10 +
-                                          net.get_num_switched_shunts())*self.T)
-
+            # After eval
             self.assertTrue(not np.any(np.isinf(f)))
             self.assertTrue(not np.any(np.isnan(f)))
-
-            # Cross check mismatches
-            net.update_properties(x0)
-            dP_list = dict([(t,list()) for t in range(self.T)])
-            dQ_list = dict([(t,list()) for t in range(self.T)])
-            for t in range(self.T):
-                for i in range(net.num_buses):
-                    bus = net.get_bus(i)
-                    dP = f[bus.index_P+t*2*net.num_buses]
-                    dQ = f[bus.index_Q+t*2*net.num_buses]
-                    dP_list[t].append(dP)
-                    dQ_list[t].append(dQ)
-                    self.assertLess(np.abs(dP-bus.P_mis[t]),1e-10)
-                    self.assertLess(np.abs(dQ-bus.Q_mis[t]),1e-10)
-            self.assertLess(np.abs(net.bus_P_mis[t]-np.max(np.abs(dP_list[t]))*net.base_power),1e-10)
-            self.assertLess(np.abs(net.bus_Q_mis[t]-np.max(np.abs(dQ_list[t]))*net.base_power),1e-10)
-
-            # Remove vargen injections
-            fsaved = f.copy()
-            x0saved = x0.copy()
-            for t in range(self.T):
-                for vargen in net.var_generators:
-                    x0[vargen.index_P[t]] = 0.
-                    x0[vargen.index_Q[t]] = 0.
-            constr.eval(x0)
-            for t in range(self.T):
-                for vargen in net.var_generators:
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*net.num_buses]-
-                                           constr.f[vargen.bus.index_P+t*2*net.num_buses]-vargen.P[t]),1e-10)
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*net.num_buses]-
-                                           constr.f[vargen.bus.index_Q+t*2*net.num_buses]-vargen.Q[t]),1e-10)
-            for t in range(self.T):
-                for vargen in net.var_generators:
-                    p = vargen.bus.loads[0].P[t]-vargen.P[t]
-                    vargen.bus.loads[0].P[t] = p
-                    self.assertEqual(vargen.bus.loads[0].P[t],p)
-                    q = vargen.bus.loads[0].Q[t]-vargen.Q[t]
-                    vargen.bus.loads[0].Q[t] = q
-                    self.assertEqual(vargen.bus.loads[0].Q[t],q)
-            constr.eval(x0)
-            for t in range(self.T):
-                for vargen in net.var_generators:
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*net.num_buses]-
-                                           constr.f[vargen.bus.index_P+t*2*net.num_buses]),1e-10)
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*net.num_buses]-
-                                           constr.f[vargen.bus.index_Q+t*2*net.num_buses]),1e-10)
+            
+            # Cross check current magnitudes
+            for t in range(net.num_periods):
+                for branch in net.branches:
+                    i = t*net.num_branches*2+2*branch.index
+                    Pkm = branch.get_P_km()[t]
+                    Qkm = branch.get_Q_km()[t]
+                    Pmk = branch.get_P_mk()[t]
+                    Qmk = branch.get_Q_mk()[t]
+                    vk = branch.bus_k.v_mag[t]
+                    vm = branch.bus_m.v_mag[t]
+                    ikmmag = np.abs((Pkm/vk) + 1j*(Qkm/vk))
+                    imkmag = np.abs((Pmk/vm) + 1j*(Qmk/vm))
+                    error_km = 100.*np.abs(ikmmag-f[i])/max([ikmmag,tol])
+                    error_mk = 100.*np.abs(imkmag-f[i+1])/max([imkmag,tol])
+                    self.assertLess(error_km,eps)
+                    self.assertLess(error_mk,eps)
 
             # Jacobian check
-            x0 = x0saved.copy()
             constr.eval(x0)
             f0 = constr.f.copy()
             J0 = constr.J.copy()
@@ -3903,8 +3856,10 @@ class TestConstraints(unittest.TestCase):
 
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
-                error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),TOL)
+                error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),1.)
                 self.assertLessEqual(error,EPS)
+
+            """
 
             # Sigle Hessian check
             for i in range(NUM_TRIALS):
