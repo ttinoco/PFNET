@@ -30,7 +30,7 @@ struct Constr {
   // Error
   BOOL error_flag;                       /**< @brief Error flag */
   char error_string[CONSTR_BUFFER_SIZE]; /**< @brief Error string */
-
+  
   // Network
   Net* net;    /**< @brief Power network */
 
@@ -57,9 +57,7 @@ struct Constr {
   Vec* u;           /** @brief Upper bound for linear inequality contraints */
   
   // Extra variables
-  int num_extra_vars;          /** @brief Number of extra variables (set by problem) */
-  int num_local_extra_vars;    /** @brief Number of local extra variables (set during count) */
-  int local_extra_vars_offset; /** @brief Offset for local extra variables (set by problem) */
+  int num_extra_vars;          /** @brief Number of extra variables (set during count) */
   
   // Counters and flags
   int A_nnz;             /**< @brief Counter for nonzeros of matrix A */
@@ -74,7 +72,7 @@ struct Constr {
   int G_row;             /**< @brief Counter for linear inequality constraints */
   char* bus_counted;     /**< @brief Flag for processing buses */
   int bus_counted_size;  /**< @brief Size of array of flags for processing buses */
-
+  
   // Type functions
   void (*func_init)(Constr* c);                                       /**< @brief Initialization function */
   void (*func_count_step)(Constr* c, Branch* br, int t);              /**< @brief Function for counting nonzero entries */
@@ -100,33 +98,9 @@ int CONSTR_get_num_extra_vars(Constr* c) {
     return 0;
 }
 
-int CONSTR_get_num_local_extra_vars(Constr* c) {
-  if (c)
-    return c->num_local_extra_vars;
-  else
-    return 0;
-}
-
-int CONSTR_get_local_extra_vars_offset(Constr* c) {
-  if (c)
-    return c->local_extra_vars_offset;
-  else
-    return 0;
-}
-
 void CONSTR_set_num_extra_vars(Constr* c, int num) {
   if (c)
     c->num_extra_vars = num;
-}
-
-void CONSTR_set_num_local_extra_vars(Constr* c, int num) {
-  if (c)
-    c->num_local_extra_vars = num;
-}
-
-void CONSTR_set_local_extra_vars_offset(Constr* c, int offset) {
-  if (c)
-    c->local_extra_vars_offset = offset;
 }
 
 void CONSTR_clear_H_nnz(Constr* c) {
@@ -627,8 +601,6 @@ Constr* CONSTR_new(int type, Net* net) {
 
   // Vars
   c->num_extra_vars = 0;
-  c->num_local_extra_vars = 0;
-  c->local_extra_vars_offset = 0;
 
   // Fields
   c->type = type;

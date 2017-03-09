@@ -381,3 +381,7 @@ cdef class Problem:
     property num_nonlinear_equality_constraints:
         """ Number of nonlinear equality constraints (int). """
         def __get__(self): return cprob.PROB_get_num_nonlinear_equality_constraints(self._c_prob)
+
+    property num_extra_vars:
+        """ Number of extra varaibles (int). """
+        def __get__(self): return cprob.PROB_get_num_extra_vars(self._c_prob)

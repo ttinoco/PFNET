@@ -55,3 +55,4 @@ cdef extern from "pfnet/problem.h":
     int PROB_get_num_primal_variables(Prob* p)
     int PROB_get_num_linear_equality_constraints(Prob* p)
     int PROB_get_num_nonlinear_equality_constraints(Prob* p)
+    int PROB_get_num_extra_vars(Prob* p)

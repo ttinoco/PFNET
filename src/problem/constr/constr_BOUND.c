@@ -157,9 +157,9 @@ void CONSTR_BOUND_allocate(Constr* c) {
   CONSTR_set_f(c,VEC_new(J_nnz));
 
   // J
-  CONSTR_set_J(c,MAT_new(J_nnz,   // size1 (rows)
-			 num_vars,   // size2 (cols)
-			 J_nnz)); // nnz
+  CONSTR_set_J(c,MAT_new(J_nnz,    // size1 (rows)
+			 num_vars, // size2 (cols)
+			 J_nnz));  // nnz
 
   // H
   H_array = MAT_array_new(J_nnz);

@@ -206,8 +206,8 @@ void CONSTR_AC_FLOW_LIM_count_step(Constr* c, Branch* br, int t) {
     // Constraint counter
     (*J_row)++;
     
-    // Num local extra vars
-    CONSTR_set_num_local_extra_vars(c,*J_row);
+    // Num extra vars
+    CONSTR_set_num_extra_vars(c,*J_row);
   }
 }
 
@@ -227,10 +227,6 @@ void CONSTR_AC_FLOW_LIM_allocate(Constr* c) {
   int* col;
   int i;
 
-  // Extra vars discrepancy
-  if (CONSTR_get_num_local_extra_vars(c) > CONSTR_get_num_extra_vars(c))
-    CONSTR_set_num_extra_vars(c,CONSTR_get_num_local_extra_vars(c));
-
   // Data
   net = CONSTR_get_network(c);
   num_vars = NET_get_num_vars(net);
@@ -248,7 +244,7 @@ void CONSTR_AC_FLOW_LIM_allocate(Constr* c) {
 			 num_vars, // columns
 			 0));      // nnz
   CONSTR_set_Gbar(c,MAT_new(J_row,          // rows
-			    num_extra_vars, // columns (total, not just local)
+			    num_extra_vars, // columns
 			    J_row));        // nnz
   CONSTR_set_l(c,VEC_new(J_row));
   CONSTR_set_u(c,VEC_new(J_row));
@@ -259,7 +255,7 @@ void CONSTR_AC_FLOW_LIM_allocate(Constr* c) {
 			 num_vars, // size2 (cols)
 			 J_nnz));  // nnz
   CONSTR_set_Jbar(c,MAT_new(J_row,          // size1 (rows)
-			    num_extra_vars, // size2 (cols) (total, not just local)
+			    num_extra_vars, // size2 (cols)
 			    J_row));        // nnz
 
   // H
@@ -314,7 +310,6 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
   int w_index[2];
   int a_index;
   int phi_index;
-  int offset;
   int temp;
   int k;
   int m;
@@ -333,7 +328,6 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
   J_nnz = CONSTR_get_J_nnz_ptr(c);
   H_nnz = CONSTR_get_H_nnz(c);
   J_row = CONSTR_get_J_row_ptr(c);
-  offset = CONSTR_get_local_extra_vars_offset(c);
  
   // Check pointers
   if (!J_nnz || !H_nnz || !J_row || !J || !Jbar || 
@@ -549,12 +543,12 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
 
     // Jbar
     MAT_set_i(Jbar,*J_row,*J_row);
-    MAT_set_j(Jbar,*J_row,offset+*J_row);
+    MAT_set_j(Jbar,*J_row,*J_row);
     MAT_set_d(Jbar,*J_row,-1.);
 
     // Gbar, l, u
     MAT_set_i(Gbar,*J_row,*J_row);
-    MAT_set_j(Gbar,*J_row,offset+*J_row);
+    MAT_set_j(Gbar,*J_row,*J_row);
     MAT_set_d(Gbar,*J_row,1.);
     VEC_set(l,*J_row,0.);
     VEC_set(u,*J_row,BRANCH_get_ratingA(br));

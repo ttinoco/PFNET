@@ -3731,8 +3731,6 @@ class TestConstraints(unittest.TestCase):
 
             # Before
             self.assertEqual(constr.num_extra_vars,0)
-            self.assertEqual(constr.num_local_extra_vars,0)
-            self.assertEqual(constr.local_extra_vars_offset,0)
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(0,))
             self.assertTrue(type(b) is np.ndarray)
@@ -3780,9 +3778,7 @@ class TestConstraints(unittest.TestCase):
             u = constr.u
             
             # After analyze
-            self.assertEqual(constr.num_extra_vars,num_constr)       # yes, got set
-            self.assertEqual(constr.num_local_extra_vars,num_constr) # yes, it remains
-            self.assertEqual(constr.local_extra_vars_offset,0)
+            self.assertEqual(constr.num_extra_vars,num_constr)
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(num_constr,))
             self.assertTrue(type(b) is np.ndarray)
