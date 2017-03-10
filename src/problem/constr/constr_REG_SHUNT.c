@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -11,51 +11,51 @@
 #include <pfnet/constr_REG_SHUNT.h>
 
 void CONSTR_REG_SHUNT_init(Constr* c) {
-  
+
   // Local variables
   Net* net;
   int num_Jconstr;
-  
+
   // Init
   net = CONSTR_get_network(c);
   num_Jconstr = 4*NET_get_num_switched_shunts(CONSTR_get_network(c))*NET_get_num_periods(net);
-  CONSTR_set_Hcounter(c,(int*)calloc(num_Jconstr,sizeof(int)),num_Jconstr);
+  CONSTR_set_H_nnz(c,(int*)calloc(num_Jconstr,sizeof(int)),num_Jconstr);
   CONSTR_set_data(c,NULL);
 }
 
 void CONSTR_REG_SHUNT_clear(Constr* c) {
-  
+
   // f
   VEC_set_zero(CONSTR_get_f(c));
-  
+
   // J
   MAT_set_zero_d(CONSTR_get_J(c));
-  
+
   // H
   MAT_array_set_zero_d(CONSTR_get_H_array(c),CONSTR_get_H_array_size(c));
-  
+
   // Counters
-  CONSTR_set_Acounter(c,0);
-  CONSTR_set_Jcounter(c,0);
-  CONSTR_set_Aconstr_index(c,0);
-  CONSTR_set_Jconstr_index(c,0);
-  CONSTR_clear_Hcounter(c);
-   
+  CONSTR_set_A_nnz(c,0);
+  CONSTR_set_J_nnz(c,0);
+  CONSTR_set_A_row(c,0);
+  CONSTR_set_J_row(c,0);
+  CONSTR_clear_H_nnz(c);
+
   // Flags
-  CONSTR_clear_bus_counted(c);  
+  CONSTR_clear_bus_counted(c);
 }
 
 void CONSTR_REG_SHUNT_count_step(Constr* c, Branch* br, int t) {
-  
+
   // Local variables
   Bus* buses[2];
   Bus* bus;
   Shunt* shunt;
-  int* Acounter;
-  int* Jcounter;
-  int* Aconstr_index;
-  int* Jconstr_index;
-  int* Hcounter;
+  int* A_nnz;
+  int* J_nnz;
+  int* A_row;
+  int* J_row;
+  int* H_nnz;
   char* bus_counted;
   int bus_index_t[2];
   int k;
@@ -63,18 +63,18 @@ void CONSTR_REG_SHUNT_count_step(Constr* c, Branch* br, int t) {
 
   // Number of periods
   T = BRANCH_get_num_periods(br);
-  
+
   // Constr data
-  Acounter = CONSTR_get_Acounter_ptr(c);
-  Jcounter = CONSTR_get_Jcounter_ptr(c);
-  Aconstr_index = CONSTR_get_Aconstr_index_ptr(c);
-  Jconstr_index = CONSTR_get_Jconstr_index_ptr(c);
-  Hcounter = CONSTR_get_Hcounter(c);
+  A_nnz = CONSTR_get_A_nnz_ptr(c);
+  J_nnz = CONSTR_get_J_nnz_ptr(c);
+  A_row = CONSTR_get_A_row_ptr(c);
+  J_row = CONSTR_get_J_row_ptr(c);
+  H_nnz = CONSTR_get_H_nnz(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!Acounter || !Jcounter || !Aconstr_index ||
-      !Jconstr_index || !Hcounter || !bus_counted)
+  if (!A_nnz || !J_nnz || !A_row ||
+      !J_row || !H_nnz || !bus_counted)
     return;
 
   // Check outage
@@ -82,14 +82,14 @@ void CONSTR_REG_SHUNT_count_step(Constr* c, Branch* br, int t) {
     return;
 
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   //******
-  
+
   for (k = 0; k < 2; k++) {
 
     bus = buses[k];
@@ -98,67 +98,67 @@ void CONSTR_REG_SHUNT_count_step(Constr* c, Branch* br, int t) {
 
       // Shunts
       //*******
-      
+
       for (shunt = BUS_get_reg_shunt(bus); shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
-	
+
 	// Linear
 	//*******
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) &&     // b var
 	    SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC_DEV)) { // yz var
-	  
+
 	  // A
-	  (*Acounter)++; // b
-	  (*Acounter)++; // y
-	  (*Acounter)++; // z
-	  
-	  (*Aconstr_index)++;    
+	  (*A_nnz)++; // b
+	  (*A_nnz)++; // y
+	  (*A_nnz)++; // z
+
+	  (*A_row)++;
 	}
-    
+
 	// Nonlinear constraints 1 (vmax,vmin)
 	//************************************
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC_DEV)) { // yz var
-      
+
 	  // J
-	  (*Jcounter)++; // dcompVmin/dy
-	  (*Jcounter)++; // dcompVmax/dz
-      
+	  (*J_nnz)++; // dcompVmin/dy
+	  (*J_nnz)++; // dcompVmax/dz
+
 	  // H
-	  Hcounter[*Jconstr_index]++;   // y and y (vmin)
-	  Hcounter[*Jconstr_index+1]++; // z and z (vmax)
+	  H_nnz[*J_row]++;   // y and y (vmin)
+	  H_nnz[*J_row+1]++; // z and z (vmax)
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
-	    Hcounter[*Jconstr_index]++;   // y and v (vmin)
-	    Hcounter[*Jconstr_index+1]++; // z and v (vmax)
+	    H_nnz[*J_row]++;   // y and v (vmin)
+	    H_nnz[*J_row+1]++; // z and v (vmax)
 	  }
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
-	    Hcounter[*Jconstr_index]++;   // y and vl (vmin)
-	    Hcounter[*Jconstr_index+1]++; // z and vh (vmax)
+	    H_nnz[*J_row]++;   // y and vl (vmin)
+	    H_nnz[*J_row+1]++; // z and vh (vmax)
 	  }
 	}
 
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
-      
+
 	  // J
-	  (*Jcounter)++; // dcompVmin/dv
-	  (*Jcounter)++; // dcompVmax/dv
-      
+	  (*J_nnz)++; // dcompVmin/dv
+	  (*J_nnz)++; // dcompVmax/dv
+
 	  // H
-	  Hcounter[*Jconstr_index]++;   // v and v (vmin)
-	  Hcounter[*Jconstr_index+1]++; // v and v (vmax)
+	  H_nnz[*J_row]++;   // v and v (vmin)
+	  H_nnz[*J_row+1]++; // v and v (vmax)
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
-	    Hcounter[*Jconstr_index]++;   // v and vl (vmin)
-	    Hcounter[*Jconstr_index+1]++; // v and vh (vmax)
+	    H_nnz[*J_row]++;   // v and vl (vmin)
+	    H_nnz[*J_row+1]++; // v and vh (vmax)
 	  }
 	}
-    
-	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var
-	  
-	  // J
-	  (*Jcounter)++; // dcompVmin/dvl
-	  (*Jcounter)++; // dcompVmax/dvh
 
-	  // H 
-	  Hcounter[*Jconstr_index]++;   // vl and vl (vmin)
-	  Hcounter[*Jconstr_index+1]++; // vh and vh (vmax)
+	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var
+
+	  // J
+	  (*J_nnz)++; // dcompVmin/dvl
+	  (*J_nnz)++; // dcompVmax/dvh
+
+	  // H
+	  H_nnz[*J_row]++;   // vl and vl (vmin)
+	  H_nnz[*J_row+1]++; // vh and vh (vmax)
 	}
 
 	// Nonlinear constraints 2 (bmax,bmin)
@@ -166,34 +166,34 @@ void CONSTR_REG_SHUNT_count_step(Constr* c, Branch* br, int t) {
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) { // b var
 
 	  // J
-	  (*Jcounter)++; // dcompBmax/db
-	  (*Jcounter)++; // dcompBmin/db
+	  (*J_nnz)++; // dcompBmax/db
+	  (*J_nnz)++; // dcompBmin/db
 
 	  // H
-	  Hcounter[*Jconstr_index+2]++; // b and b (bmax)
-	  Hcounter[*Jconstr_index+3]++; // b and b (bmin)
+	  H_nnz[*J_row+2]++; // b and b (bmax)
+	  H_nnz[*J_row+3]++; // b and b (bmin)
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
-	    Hcounter[*Jconstr_index+2]++; // b and vl (bmax)
-	    Hcounter[*Jconstr_index+3]++; // b and vh (bmin)
+	    H_nnz[*J_row+2]++; // b and vl (bmax)
+	    H_nnz[*J_row+3]++; // b and vh (bmin)
 	  }
 	}
-	
+
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var
 
 	  // J
-	  (*Jcounter)++; // dcompBmax/dvl
-	  (*Jcounter)++; // dcompBmin/dvh
+	  (*J_nnz)++; // dcompBmax/dvl
+	  (*J_nnz)++; // dcompBmin/dvh
 
-	  // H 
-	  Hcounter[*Jconstr_index+2]++; // vl and vl (bmax)
-	  Hcounter[*Jconstr_index+3]++; // vh and vh (bmin)
+	  // H
+	  H_nnz[*J_row+2]++; // vl and vl (bmax)
+	  H_nnz[*J_row+3]++; // vh and vh (bmin)
 	}
 
 	// Inc J constr index
-	(*Jconstr_index)++; // compVmin
-	(*Jconstr_index)++; // compVmax
-	(*Jconstr_index)++; // compBmax
-	(*Jconstr_index)++; // compBmin
+	(*J_row)++; // compVmin
+	(*J_row)++; // compVmax
+	(*J_row)++; // compBmax
+	(*J_row)++; // compBmin
       }
     }
 
@@ -205,53 +205,53 @@ void CONSTR_REG_SHUNT_count_step(Constr* c, Branch* br, int t) {
 void CONSTR_REG_SHUNT_allocate(Constr* c) {
 
   // Local variables
-  int Acounter;
-  int Jcounter;
-  int Aconstr_index;
-  int Jconstr_index; 
-  int* Hcounter;
+  int A_nnz;
+  int J_nnz;
+  int A_row;
+  int J_row;
+  int* H_nnz;
   Mat* H_array;
   Mat* H;
   int H_comb_nnz;
   int num_vars;
   int i;
-  
-  Acounter = CONSTR_get_Acounter(c);
-  Jcounter = CONSTR_get_Jcounter(c);
-  Aconstr_index = CONSTR_get_Aconstr_index(c);
-  Jconstr_index = CONSTR_get_Jconstr_index(c);
-  Hcounter = CONSTR_get_Hcounter(c);
+
+  A_nnz = CONSTR_get_A_nnz(c);
+  J_nnz = CONSTR_get_J_nnz(c);
+  A_row = CONSTR_get_A_row(c);
+  J_row = CONSTR_get_J_row(c);
+  H_nnz = CONSTR_get_H_nnz(c);
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
-  
+
   // b
-  CONSTR_set_b(c,VEC_new(Aconstr_index));
+  CONSTR_set_b(c,VEC_new(A_row));
 
   // A
-  CONSTR_set_A(c,MAT_new(Aconstr_index, // size1 (rows)
+  CONSTR_set_A(c,MAT_new(A_row, // size1 (rows)
 			 num_vars,      // size2 (cols)
-			 Acounter));    // nnz
-  
+			 A_nnz));    // nnz
+
   // f
-  CONSTR_set_f(c,VEC_new(Jconstr_index));
+  CONSTR_set_f(c,VEC_new(J_row));
 
   // J
-  CONSTR_set_J(c,MAT_new(Jconstr_index, // size1 (rows)
+  CONSTR_set_J(c,MAT_new(J_row, // size1 (rows)
 			 num_vars,      // size2 (cols)
-			 Jcounter));    // nnz
-  
+			 J_nnz));    // nnz
+
   // H
   H_comb_nnz = 0;
-  H_array = MAT_array_new(Jconstr_index);
-  CONSTR_set_H_array(c,H_array,Jconstr_index);
-  for (i = 0; i < Jconstr_index; i++) {
+  H_array = MAT_array_new(J_row);
+  CONSTR_set_H_array(c,H_array,J_row);
+  for (i = 0; i < J_row; i++) {
     H = MAT_array_get(H_array,i);
-    MAT_set_nnz(H,Hcounter[i]);
+    MAT_set_nnz(H,H_nnz[i]);
     MAT_set_size1(H,num_vars);
     MAT_set_size2(H,num_vars);
-    MAT_set_row_array(H,(int*)calloc(Hcounter[i],sizeof(int)));
-    MAT_set_col_array(H,(int*)calloc(Hcounter[i],sizeof(int)));
-    MAT_set_data_array(H,(REAL*)malloc(Hcounter[i]*sizeof(REAL)));
-    H_comb_nnz += Hcounter[i];
+    MAT_set_row_array(H,(int*)calloc(H_nnz[i],sizeof(int)));
+    MAT_set_col_array(H,(int*)calloc(H_nnz[i],sizeof(int)));
+    MAT_set_data_array(H,(REAL*)malloc(H_nnz[i]*sizeof(REAL)));
+    H_comb_nnz += H_nnz[i];
   }
 
   // H combined
@@ -261,7 +261,7 @@ void CONSTR_REG_SHUNT_allocate(Constr* c) {
 }
 
 void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t) {
-  
+
   // Local variables
   Bus* buses[2];
   Bus* bus;
@@ -278,12 +278,12 @@ void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t) {
   int* Hj;
   int* Hi_comb;
   int* Hj_comb;
-  int* Acounter;
-  int* Jcounter;
-  int* Aconstr_index;
-  int* Jconstr_index;
-  int* Hcounter;
-  int Hcounter_comb;
+  int* A_nnz;
+  int* J_nnz;
+  int* A_row;
+  int* J_row;
+  int* H_nnz;
+  int H_nnz_comb;
   char* bus_counted;
   int bus_index_t[2];
   int k;
@@ -305,16 +305,16 @@ void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t) {
   A = CONSTR_get_A(c);
   J = CONSTR_get_J(c);
   H_array = CONSTR_get_H_array(c);
-  Acounter = CONSTR_get_Acounter_ptr(c);
-  Jcounter = CONSTR_get_Jcounter_ptr(c);
-  Aconstr_index = CONSTR_get_Aconstr_index_ptr(c);
-  Jconstr_index = CONSTR_get_Jconstr_index_ptr(c);
-  Hcounter = CONSTR_get_Hcounter(c);
+  A_nnz = CONSTR_get_A_nnz_ptr(c);
+  J_nnz = CONSTR_get_J_nnz_ptr(c);
+  A_row = CONSTR_get_A_row_ptr(c);
+  J_row = CONSTR_get_J_row_ptr(c);
+  H_nnz = CONSTR_get_H_nnz(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!Acounter || !Jcounter || !Aconstr_index ||
-      !Jconstr_index || !Hcounter || !bus_counted)
+  if (!A_nnz || !J_nnz || !A_row ||
+      !J_row || !H_nnz || !bus_counted)
     return;
 
   // Check outage
@@ -322,33 +322,33 @@ void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t) {
     return;
 
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Branch
   //*******
-  
+
   // Buses
   //******
-  
+
   for (k = 0; k < 2; k++) {
 
     bus = buses[k];
 
     if (!bus_counted[bus_index_t[k]]) { // not counted yet
- 
+
       // Shunts
       //*******
-      
+
       for (shunt = BUS_get_reg_shunt(bus); shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
-    
+
 	// Hessians (NOTE ORDER!!!)
-	Hvmin = MAT_array_get(H_array,*Jconstr_index);
-	Hvmax = MAT_array_get(H_array,*Jconstr_index+1);
-	Hbmax = MAT_array_get(H_array,*Jconstr_index+2);
-	Hbmin = MAT_array_get(H_array,*Jconstr_index+3);
+	Hvmin = MAT_array_get(H_array,*J_row);
+	Hvmax = MAT_array_get(H_array,*J_row+1);
+	Hbmax = MAT_array_get(H_array,*J_row+2);
+	Hbmin = MAT_array_get(H_array,*J_row+3);
 
 	// Indices
 	index_v = BUS_get_index_v_mag(bus,t);
@@ -357,204 +357,204 @@ void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t) {
 	index_b = SHUNT_get_index_b(shunt,t);
 	index_y = SHUNT_get_index_y(shunt,t);
 	index_z = SHUNT_get_index_z(shunt,t);
-    
+
 	// Linear (b = b_0 + y - z)
 	//*************************
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) &&     // b var
 	    SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC_DEV)) { // yz var
 
 	  // b
-	  VEC_set(b,*Aconstr_index,SHUNT_get_b(shunt,t)); // current susceptance value
-        
+	  VEC_set(b,*A_row,SHUNT_get_b(shunt,t)); // current susceptance value
+
 	  // A
-	  MAT_set_i(A,*Acounter,*Aconstr_index);
-	  MAT_set_j(A,*Acounter,index_b);
-	  MAT_set_d(A,*Acounter,1.);
-	  (*Acounter)++; // b
-	  
-	  MAT_set_i(A,*Acounter,*Aconstr_index);
-	  MAT_set_j(A,*Acounter,index_y);
-	  MAT_set_d(A,*Acounter,-1.);
-	  (*Acounter)++; // y
-	  
-	  MAT_set_i(A,*Acounter,*Aconstr_index);
-	  MAT_set_j(A,*Acounter,index_z);
-	  MAT_set_d(A,*Acounter,1.);
-	  (*Acounter)++; // z
-	  
-	  (*Aconstr_index)++;    
+	  MAT_set_i(A,*A_nnz,*A_row);
+	  MAT_set_j(A,*A_nnz,index_b);
+	  MAT_set_d(A,*A_nnz,1.);
+	  (*A_nnz)++; // b
+
+	  MAT_set_i(A,*A_nnz,*A_row);
+	  MAT_set_j(A,*A_nnz,index_y);
+	  MAT_set_d(A,*A_nnz,-1.);
+	  (*A_nnz)++; // y
+
+	  MAT_set_i(A,*A_nnz,*A_row);
+	  MAT_set_j(A,*A_nnz,index_z);
+	  MAT_set_d(A,*A_nnz,1.);
+	  (*A_nnz)++; // z
+
+	  (*A_row)++;
 	}
-    
+
 	// Nonlinear constraints 1 (vmin,vmax)
 	//************************************
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC_DEV)) { // yz var
-	  
+
 	  // J
-	  MAT_set_i(J,*Jcounter,*Jconstr_index);
-	  MAT_set_j(J,*Jcounter,index_y);
-	  (*Jcounter)++; // dcompVmin/dy
-	  
-	  MAT_set_i(J,*Jcounter,*Jconstr_index+1);
-	  MAT_set_j(J,*Jcounter,index_z);
-	  (*Jcounter)++; // dcompVmax/dz
-      
-	  // H	
-	  MAT_set_i(Hvmin,Hcounter[*Jconstr_index],index_y);
-	  MAT_set_j(Hvmin,Hcounter[*Jconstr_index],index_y);
-	  Hcounter[*Jconstr_index]++;   // y and y (vmin)
-      
-	  MAT_set_i(Hvmax,Hcounter[*Jconstr_index+1],index_z);
-	  MAT_set_j(Hvmax,Hcounter[*Jconstr_index+1],index_z);
-	  Hcounter[*Jconstr_index+1]++; // z and z (vmax)
+	  MAT_set_i(J,*J_nnz,*J_row);
+	  MAT_set_j(J,*J_nnz,index_y);
+	  (*J_nnz)++; // dcompVmin/dy
+
+	  MAT_set_i(J,*J_nnz,*J_row+1);
+	  MAT_set_j(J,*J_nnz,index_z);
+	  (*J_nnz)++; // dcompVmax/dz
+
+	  // H
+	  MAT_set_i(Hvmin,H_nnz[*J_row],index_y);
+	  MAT_set_j(Hvmin,H_nnz[*J_row],index_y);
+	  H_nnz[*J_row]++;   // y and y (vmin)
+
+	  MAT_set_i(Hvmax,H_nnz[*J_row+1],index_z);
+	  MAT_set_j(Hvmax,H_nnz[*J_row+1],index_z);
+	  H_nnz[*J_row+1]++; // z and z (vmax)
 
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
-	
-	    MAT_set_i(Hvmin,Hcounter[*Jconstr_index],index_y);
-	    MAT_set_j(Hvmin,Hcounter[*Jconstr_index],index_v);
-	    Hcounter[*Jconstr_index]++;   // y and v (vmin)
 
-	    MAT_set_i(Hvmax,Hcounter[*Jconstr_index+1],index_z);
-	    MAT_set_j(Hvmax,Hcounter[*Jconstr_index+1],index_v);
-	    Hcounter[*Jconstr_index+1]++; // z and v (vmax)
+	    MAT_set_i(Hvmin,H_nnz[*J_row],index_y);
+	    MAT_set_j(Hvmin,H_nnz[*J_row],index_v);
+	    H_nnz[*J_row]++;   // y and v (vmin)
+
+	    MAT_set_i(Hvmax,H_nnz[*J_row+1],index_z);
+	    MAT_set_j(Hvmax,H_nnz[*J_row+1],index_v);
+	    H_nnz[*J_row+1]++; // z and v (vmax)
 	  }
 
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
-	
-	    MAT_set_i(Hvmin,Hcounter[*Jconstr_index],index_y);
-	    MAT_set_j(Hvmin,Hcounter[*Jconstr_index],index_vl);
-	    Hcounter[*Jconstr_index]++;   // y and vl (vmin)
-	
-	    MAT_set_i(Hvmax,Hcounter[*Jconstr_index+1],index_z);
-	    MAT_set_j(Hvmax,Hcounter[*Jconstr_index+1],index_vl);
-	    Hcounter[*Jconstr_index+1]++; // z and vh (vmax)
+
+	    MAT_set_i(Hvmin,H_nnz[*J_row],index_y);
+	    MAT_set_j(Hvmin,H_nnz[*J_row],index_vl);
+	    H_nnz[*J_row]++;   // y and vl (vmin)
+
+	    MAT_set_i(Hvmax,H_nnz[*J_row+1],index_z);
+	    MAT_set_j(Hvmax,H_nnz[*J_row+1],index_vl);
+	    H_nnz[*J_row+1]++; // z and vh (vmax)
 	  }
 	}
 
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
-      
-	  // J
-	  MAT_set_i(J,*Jcounter,*Jconstr_index);
-	  MAT_set_j(J,*Jcounter,index_v);
-	  (*Jcounter)++; // dcompVmin/dv
 
-	  MAT_set_i(J,*Jcounter,*Jconstr_index+1);
-	  MAT_set_j(J,*Jcounter,index_v);
-	  (*Jcounter)++; // dcompVmax/dv
-      
+	  // J
+	  MAT_set_i(J,*J_nnz,*J_row);
+	  MAT_set_j(J,*J_nnz,index_v);
+	  (*J_nnz)++; // dcompVmin/dv
+
+	  MAT_set_i(J,*J_nnz,*J_row+1);
+	  MAT_set_j(J,*J_nnz,index_v);
+	  (*J_nnz)++; // dcompVmax/dv
+
 	  // H
-	  MAT_set_i(Hvmin,Hcounter[*Jconstr_index],index_v);
-	  MAT_set_j(Hvmin,Hcounter[*Jconstr_index],index_v);
-	  Hcounter[*Jconstr_index]++;   // v and v (vmin)
-      
-	  MAT_set_i(Hvmax,Hcounter[*Jconstr_index+1],index_v);
-	  MAT_set_j(Hvmax,Hcounter[*Jconstr_index+1],index_v);
-	  Hcounter[*Jconstr_index+1]++; // v and v (vmax)
+	  MAT_set_i(Hvmin,H_nnz[*J_row],index_v);
+	  MAT_set_j(Hvmin,H_nnz[*J_row],index_v);
+	  H_nnz[*J_row]++;   // v and v (vmin)
+
+	  MAT_set_i(Hvmax,H_nnz[*J_row+1],index_v);
+	  MAT_set_j(Hvmax,H_nnz[*J_row+1],index_v);
+	  H_nnz[*J_row+1]++; // v and v (vmax)
 
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
-	    
-	    MAT_set_i(Hvmin,Hcounter[*Jconstr_index],index_v);
-	    MAT_set_j(Hvmin,Hcounter[*Jconstr_index],index_vl);
-	    Hcounter[*Jconstr_index]++;   // v and vl (vmin)
-	    
-	    MAT_set_i(Hvmax,Hcounter[*Jconstr_index+1],index_v);
-	    MAT_set_j(Hvmax,Hcounter[*Jconstr_index+1],index_vh);
-	    Hcounter[*Jconstr_index+1]++; // v and vh (vmax)
+
+	    MAT_set_i(Hvmin,H_nnz[*J_row],index_v);
+	    MAT_set_j(Hvmin,H_nnz[*J_row],index_vl);
+	    H_nnz[*J_row]++;   // v and vl (vmin)
+
+	    MAT_set_i(Hvmax,H_nnz[*J_row+1],index_v);
+	    MAT_set_j(Hvmax,H_nnz[*J_row+1],index_vh);
+	    H_nnz[*J_row+1]++; // v and vh (vmax)
 	  }
 	}
-    
+
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var
 
 	  // J
-	  MAT_set_i(J,*Jcounter,*Jconstr_index);
-	  MAT_set_j(J,*Jcounter,index_vl);
-	  (*Jcounter)++; // dcompVmin/dvl
+	  MAT_set_i(J,*J_nnz,*J_row);
+	  MAT_set_j(J,*J_nnz,index_vl);
+	  (*J_nnz)++; // dcompVmin/dvl
 
-	  MAT_set_i(J,*Jcounter,*Jconstr_index+1);
-	  MAT_set_j(J,*Jcounter,index_vh);
-	  (*Jcounter)++; // dcompVmax/dvh
+	  MAT_set_i(J,*J_nnz,*J_row+1);
+	  MAT_set_j(J,*J_nnz,index_vh);
+	  (*J_nnz)++; // dcompVmax/dvh
 
-	  // H 
-	  MAT_set_i(Hvmin,Hcounter[*Jconstr_index],index_vl);
-	  MAT_set_j(Hvmin,Hcounter[*Jconstr_index],index_vl);
-	  Hcounter[*Jconstr_index]++;   // vl and vl (vmin)
+	  // H
+	  MAT_set_i(Hvmin,H_nnz[*J_row],index_vl);
+	  MAT_set_j(Hvmin,H_nnz[*J_row],index_vl);
+	  H_nnz[*J_row]++;   // vl and vl (vmin)
 
-	  MAT_set_i(Hvmax,Hcounter[*Jconstr_index+1],index_vh);
-	  MAT_set_j(Hvmax,Hcounter[*Jconstr_index+1],index_vh);
-	  Hcounter[*Jconstr_index+1]++; // vh and vh (vmax)
+	  MAT_set_i(Hvmax,H_nnz[*J_row+1],index_vh);
+	  MAT_set_j(Hvmax,H_nnz[*J_row+1],index_vh);
+	  H_nnz[*J_row+1]++; // vh and vh (vmax)
 	}
 
 	// Nonlinear constraints 2 (bmax,bmin)
 	//************************************
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) { // b var
-      
+
 	  // J
-	  MAT_set_i(J,*Jcounter,*Jconstr_index+2);
-	  MAT_set_j(J,*Jcounter,index_b);
-	  (*Jcounter)++; // dcompBmax/db
+	  MAT_set_i(J,*J_nnz,*J_row+2);
+	  MAT_set_j(J,*J_nnz,index_b);
+	  (*J_nnz)++; // dcompBmax/db
 
-	  MAT_set_i(J,*Jcounter,*Jconstr_index+3);
-	  MAT_set_j(J,*Jcounter,index_b);
-	  (*Jcounter)++; // dcompBmin/db
-	  
+	  MAT_set_i(J,*J_nnz,*J_row+3);
+	  MAT_set_j(J,*J_nnz,index_b);
+	  (*J_nnz)++; // dcompBmin/db
+
 	  // H
-	  MAT_set_i(Hbmax,Hcounter[*Jconstr_index+2],index_b);
-	  MAT_set_j(Hbmax,Hcounter[*Jconstr_index+2],index_b);
-	  Hcounter[*Jconstr_index+2]++; // b and b (bmax)
+	  MAT_set_i(Hbmax,H_nnz[*J_row+2],index_b);
+	  MAT_set_j(Hbmax,H_nnz[*J_row+2],index_b);
+	  H_nnz[*J_row+2]++; // b and b (bmax)
 
-	  MAT_set_i(Hbmin,Hcounter[*Jconstr_index+3],index_b);
-	  MAT_set_j(Hbmin,Hcounter[*Jconstr_index+3],index_b);
-	  Hcounter[*Jconstr_index+3]++; // b and b (bmin)
+	  MAT_set_i(Hbmin,H_nnz[*J_row+3],index_b);
+	  MAT_set_j(Hbmin,H_nnz[*J_row+3],index_b);
+	  H_nnz[*J_row+3]++; // b and b (bmin)
 
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
-	
-	    MAT_set_i(Hbmax,Hcounter[*Jconstr_index+2],index_b);
-	    MAT_set_j(Hbmax,Hcounter[*Jconstr_index+2],index_vl);
-	    Hcounter[*Jconstr_index+2]++; // b and vl (bmax)
 
-	    MAT_set_i(Hbmin,Hcounter[*Jconstr_index+3],index_b);
-	    MAT_set_j(Hbmin,Hcounter[*Jconstr_index+3],index_vh);
-	    Hcounter[*Jconstr_index+3]++; // b and vh (bmin)
+	    MAT_set_i(Hbmax,H_nnz[*J_row+2],index_b);
+	    MAT_set_j(Hbmax,H_nnz[*J_row+2],index_vl);
+	    H_nnz[*J_row+2]++; // b and vl (bmax)
+
+	    MAT_set_i(Hbmin,H_nnz[*J_row+3],index_b);
+	    MAT_set_j(Hbmin,H_nnz[*J_row+3],index_vh);
+	    H_nnz[*J_row+3]++; // b and vh (bmin)
 	  }
 	}
 
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var
 
 	  // J
-	  MAT_set_i(J,*Jcounter,*Jconstr_index+2);
-	  MAT_set_j(J,*Jcounter,index_vl);
-	  (*Jcounter)++; // dcompBmax/dvl
+	  MAT_set_i(J,*J_nnz,*J_row+2);
+	  MAT_set_j(J,*J_nnz,index_vl);
+	  (*J_nnz)++; // dcompBmax/dvl
 
-	  MAT_set_i(J,*Jcounter,*Jconstr_index+3);
-	  MAT_set_j(J,*Jcounter,index_vh);
-	  (*Jcounter)++; // dcompBmin/dvh
+	  MAT_set_i(J,*J_nnz,*J_row+3);
+	  MAT_set_j(J,*J_nnz,index_vh);
+	  (*J_nnz)++; // dcompBmin/dvh
 
-	  // H 
-	  MAT_set_i(Hbmax,Hcounter[*Jconstr_index+2],index_vl);
-	  MAT_set_j(Hbmax,Hcounter[*Jconstr_index+2],index_vl);
-	  Hcounter[*Jconstr_index+2]++; // vl and vl (bmax)
-	  
-	  MAT_set_i(Hbmin,Hcounter[*Jconstr_index+3],index_vh);
-	  MAT_set_j(Hbmin,Hcounter[*Jconstr_index+3],index_vh);
-	  Hcounter[*Jconstr_index+3]++; // vh and vh (bmin)
+	  // H
+	  MAT_set_i(Hbmax,H_nnz[*J_row+2],index_vl);
+	  MAT_set_j(Hbmax,H_nnz[*J_row+2],index_vl);
+	  H_nnz[*J_row+2]++; // vl and vl (bmax)
+
+	  MAT_set_i(Hbmin,H_nnz[*J_row+3],index_vh);
+	  MAT_set_j(Hbmin,H_nnz[*J_row+3],index_vh);
+	  H_nnz[*J_row+3]++; // vh and vh (bmin)
 	}
 
 	// Inc J constr index
-	(*Jconstr_index)++; // compVmin
-	(*Jconstr_index)++; // compVmax
-	(*Jconstr_index)++; // compBmax
-	(*Jconstr_index)++; // compBmin
+	(*J_row)++; // compVmin
+	(*J_row)++; // compVmax
+	(*J_row)++; // compBmax
+	(*J_row)++; // compBmin
       }
     }
-    
+
     // Update counted flag
     bus_counted[bus_index_t[k]] = TRUE;
   }
 
   // Done
   if ((t == T-1) && (BRANCH_get_index(br) == NET_get_num_branches(CONSTR_get_network(c))-1)) {
-    
+
     // Ensure lower triangular and save struct of H comb
-    Hcounter_comb = 0;
+    H_nnz_comb = 0;
     Hi_comb = MAT_get_row_array(CONSTR_get_H_combined(c));
     Hj_comb = MAT_get_col_array(CONSTR_get_H_combined(c));
     for (k = 0; k < CONSTR_get_H_array_size(c); k++) {
@@ -566,16 +566,16 @@ void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t) {
 	  Hi[m] = Hj[m];
 	  Hj[m] = temp;
 	}
-	Hi_comb[Hcounter_comb] = Hi[m];
-	Hj_comb[Hcounter_comb] = Hj[m];
-	Hcounter_comb++;
+	Hi_comb[H_nnz_comb] = Hi[m];
+	Hj_comb[H_nnz_comb] = Hj[m];
+	H_nnz_comb++;
       }
     }
   }
 }
 
-void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
-  
+void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* values) {
+
   // Local variables
   Bus* buses[2];
   Bus* bus;
@@ -587,9 +587,9 @@ void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
   REAL* Hvmax;
   REAL* Hbmin;
   REAL* Hbmax;
-  int* Jcounter;
-  int* Jconstr_index;
-  int* Hcounter;
+  int* J_nnz;
+  int* J_row;
+  int* H_nnz;
   char* bus_counted;
   int bus_index_t[2];
   int k;
@@ -602,7 +602,7 @@ void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
   REAL bmax;
   REAL bmin;
   REAL y;
-  REAL z;  
+  REAL z;
   REAL sqrtermVmin;
   REAL sqrtermVmax;
   REAL sqrtermBmax;
@@ -617,14 +617,14 @@ void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
   f = VEC_get_data(CONSTR_get_f(c));
   J = MAT_get_data_array(CONSTR_get_J(c));
   H_array = CONSTR_get_H_array(c);
-  Jcounter = CONSTR_get_Jcounter_ptr(c);
-  Jconstr_index = CONSTR_get_Jconstr_index_ptr(c);
-  Hcounter = CONSTR_get_Hcounter(c);
+  J_nnz = CONSTR_get_J_nnz_ptr(c);
+  J_row = CONSTR_get_J_row_ptr(c);
+  H_nnz = CONSTR_get_H_nnz(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!f || !J || !Jcounter || !Jconstr_index || 
-      !Hcounter || !bus_counted)
+  if (!f || !J || !J_nnz || !J_row ||
+      !H_nnz || !bus_counted)
     return;
 
   // Check outage
@@ -632,8 +632,8 @@ void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
     return;
 
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
@@ -642,45 +642,45 @@ void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 
   // Buses
   //******
-  
+
   for (k = 0; k < 2; k++) {
-    
+
     bus = buses[k];
-    
+
     if (!bus_counted[bus_index_t[k]]) { // not counted yet
-      
+
       // Shunts
       //*******
-      
+
       for (shunt = BUS_get_reg_shunt(bus); shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
-    
+
 	// v values
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG))
-	  v = VEC_get(var_values,BUS_get_index_v_mag(bus,t));
+	  v = VEC_get(values,BUS_get_index_v_mag(bus,t));
 	else
 	  v = BUS_get_v_mag(bus,t);
 	vmax = BUS_get_v_max(bus);
 	vmin = BUS_get_v_min(bus);
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
-	  vl = VEC_get(var_values,BUS_get_index_vl(bus,t));
-	  vh = VEC_get(var_values,BUS_get_index_vh(bus,t));
+	  vl = VEC_get(values,BUS_get_index_vl(bus,t));
+	  vh = VEC_get(values,BUS_get_index_vh(bus,t));
 	}
 	else {
 	  vl = 0;
 	  vh = 0;
 	}
-    
+
 	// b values
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
-	  b = VEC_get(var_values,SHUNT_get_index_b(shunt,t));
+	  b = VEC_get(values,SHUNT_get_index_b(shunt,t));
 	}
 	else
 	  b = SHUNT_get_b(shunt,t);
 	bmax = SHUNT_get_b_max(shunt);
 	bmin = SHUNT_get_b_min(shunt);
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC_DEV)) {
-	  y = VEC_get(var_values,SHUNT_get_index_y(shunt,t));
-	  z = VEC_get(var_values,SHUNT_get_index_z(shunt,t));
+	  y = VEC_get(values,SHUNT_get_index_y(shunt,t));
+	  z = VEC_get(values,SHUNT_get_index_z(shunt,t));
 	}
 	else {
 	  if (b > SHUNT_get_b(shunt,t)) {
@@ -698,149 +698,149 @@ void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 	sqrtermVmax = sqrt( (vmax-v+vh)*(vmax-v+vh) + z*z + 2*CONSTR_REG_SHUNT_PARAM );
 	sqrtermBmax = sqrt( (bmax-b)*(bmax-b) + vl*vl + 2*CONSTR_REG_SHUNT_PARAM );
 	sqrtermBmin = sqrt( (b-bmin)*(b-bmin) + vh*vh + 2*CONSTR_REG_SHUNT_PARAM );
-    
+
 	// Hessians (NOTE ORDER!!!)
-	Hvmin = MAT_get_data_array(MAT_array_get(H_array,*Jconstr_index));
-	Hvmax = MAT_get_data_array(MAT_array_get(H_array,*Jconstr_index+1));
-	Hbmax = MAT_get_data_array(MAT_array_get(H_array,*Jconstr_index+2));
-	Hbmin = MAT_get_data_array(MAT_array_get(H_array,*Jconstr_index+3));
+	Hvmin = MAT_get_data_array(MAT_array_get(H_array,*J_row));
+	Hvmax = MAT_get_data_array(MAT_array_get(H_array,*J_row+1));
+	Hbmax = MAT_get_data_array(MAT_array_get(H_array,*J_row+2));
+	Hbmin = MAT_get_data_array(MAT_array_get(H_array,*J_row+3));
 
 	// f
-	f[*Jconstr_index] = ((v+vl-vmin) + y - sqrtermVmin)*norm;   // vmin
-	f[*Jconstr_index+1] = ((vmax-v+vh) + z - sqrtermVmax)*norm; // vmax
-	f[*Jconstr_index+2] = ((bmax-b) + vl - sqrtermBmax)*norm;   // bmax
-	f[*Jconstr_index+3] = ((b-bmin) + vh - sqrtermBmin)*norm;   // bmin
-        
+	f[*J_row] = ((v+vl-vmin) + y - sqrtermVmin)*norm;   // vmin
+	f[*J_row+1] = ((vmax-v+vh) + z - sqrtermVmax)*norm; // vmax
+	f[*J_row+2] = ((bmax-b) + vl - sqrtermBmax)*norm;   // bmax
+	f[*J_row+3] = ((b-bmin) + vh - sqrtermBmin)*norm;   // bmin
+
 	// Nonlinear constraints 1 (vmin,vmax)
 	//************************************
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC_DEV)) { // yz var
-      
+
 	  // J
-	  J[*Jcounter] = (1.-y/sqrtermVmin)*norm;
-	  (*Jcounter)++; // dcompVmin/dy
-      
-	  J[*Jcounter] = (1.-z/sqrtermVmax)*norm;
-	  (*Jcounter)++; // dcompVmax/dz
-      
-	  // H	
-	  Hvmin[Hcounter[*Jconstr_index]] = -(((v+vl-vmin)*(v+vl-vmin)+2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmin,3.))*norm;
-	  Hcounter[*Jconstr_index]++;   // y and y (vmin)
-      
-	  Hvmax[Hcounter[*Jconstr_index+1]] = -(((vmax-v+vh)*(vmax-v+vh)+2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmax,3.))*norm;
-	  Hcounter[*Jconstr_index+1]++; // z and z (vmax)
+	  J[*J_nnz] = (1.-y/sqrtermVmin)*norm;
+	  (*J_nnz)++; // dcompVmin/dy
+
+	  J[*J_nnz] = (1.-z/sqrtermVmax)*norm;
+	  (*J_nnz)++; // dcompVmax/dz
+
+	  // H
+	  Hvmin[H_nnz[*J_row]] = -(((v+vl-vmin)*(v+vl-vmin)+2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmin,3.))*norm;
+	  H_nnz[*J_row]++;   // y and y (vmin)
+
+	  Hvmax[H_nnz[*J_row+1]] = -(((vmax-v+vh)*(vmax-v+vh)+2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmax,3.))*norm;
+	  H_nnz[*J_row+1]++; // z and z (vmax)
 
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
-	
-	    Hvmin[Hcounter[*Jconstr_index]] = ((v+vl-vmin)*y/pow(sqrtermVmin,3.))*norm;
-	    Hcounter[*Jconstr_index]++;   // y and v (vmin)
 
-	    Hvmax[Hcounter[*Jconstr_index+1]] = -((vmax-v+vh)*z/pow(sqrtermVmax,3.))*norm;
-	    Hcounter[*Jconstr_index+1]++; // z and v (vmax)
+	    Hvmin[H_nnz[*J_row]] = ((v+vl-vmin)*y/pow(sqrtermVmin,3.))*norm;
+	    H_nnz[*J_row]++;   // y and v (vmin)
+
+	    Hvmax[H_nnz[*J_row+1]] = -((vmax-v+vh)*z/pow(sqrtermVmax,3.))*norm;
+	    H_nnz[*J_row+1]++; // z and v (vmax)
 	  }
 
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
-	
-	    Hvmin[Hcounter[*Jconstr_index]] = ((v+vl-vmin)*y/pow(sqrtermVmin,3.))*norm;
-	    Hcounter[*Jconstr_index]++;   // y and vl (vmin)
-	
-	    Hvmax[Hcounter[*Jconstr_index+1]] = ((vmax-v+vh)*z/pow(sqrtermVmax,3.))*norm;
-	    Hcounter[*Jconstr_index+1]++; // z and vh (vmax)
+
+	    Hvmin[H_nnz[*J_row]] = ((v+vl-vmin)*y/pow(sqrtermVmin,3.))*norm;
+	    H_nnz[*J_row]++;   // y and vl (vmin)
+
+	    Hvmax[H_nnz[*J_row+1]] = ((vmax-v+vh)*z/pow(sqrtermVmax,3.))*norm;
+	    H_nnz[*J_row+1]++; // z and vh (vmax)
 	  }
 	}
 
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
-      
+
 	  // J
-	  J[*Jcounter] = (1.-(v+vl-vmin)/sqrtermVmin)*norm;
-	  (*Jcounter)++; // dcompVmin/dv
+	  J[*J_nnz] = (1.-(v+vl-vmin)/sqrtermVmin)*norm;
+	  (*J_nnz)++; // dcompVmin/dv
 
-	  J[*Jcounter] = -((1.-(vmax-v+vh)/sqrtermVmax))*norm;
-	  (*Jcounter)++; // dcompVmax/dv
-	  
+	  J[*J_nnz] = -((1.-(vmax-v+vh)/sqrtermVmax))*norm;
+	  (*J_nnz)++; // dcompVmax/dv
+
 	  // H
-	  Hvmin[Hcounter[*Jconstr_index]] = -((y*y + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmin,3.))*norm;
-	  Hcounter[*Jconstr_index]++;   // v and v (vmin)
-	  
-	  Hvmax[Hcounter[*Jconstr_index+1]] = -((z*z + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmax,3.))*norm;
-	  Hcounter[*Jconstr_index+1]++; // v and v (vmax)
-	  
-	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
-	
-	    Hvmin[Hcounter[*Jconstr_index]] = -((y*y + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmin,3.))*norm;
-	    Hcounter[*Jconstr_index]++;   // v and vl (vmin)
+	  Hvmin[H_nnz[*J_row]] = -((y*y + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmin,3.))*norm;
+	  H_nnz[*J_row]++;   // v and v (vmin)
 
-	    Hvmax[Hcounter[*Jconstr_index+1]] = ((z*z + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmax,3.))*norm;
-	    Hcounter[*Jconstr_index+1]++; // v and vh (vmax)
+	  Hvmax[H_nnz[*J_row+1]] = -((z*z + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmax,3.))*norm;
+	  H_nnz[*J_row+1]++; // v and v (vmax)
+
+	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
+
+	    Hvmin[H_nnz[*J_row]] = -((y*y + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmin,3.))*norm;
+	    H_nnz[*J_row]++;   // v and vl (vmin)
+
+	    Hvmax[H_nnz[*J_row+1]] = ((z*z + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmax,3.))*norm;
+	    H_nnz[*J_row+1]++; // v and vh (vmax)
 	  }
 	}
-	
+
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var
 
 	  // J
-	  J[*Jcounter] = (1.-(v+vl-vmin)/sqrtermVmin)*norm;
-	  (*Jcounter)++; // dcompVmin/dvl
+	  J[*J_nnz] = (1.-(v+vl-vmin)/sqrtermVmin)*norm;
+	  (*J_nnz)++; // dcompVmin/dvl
 
-	  J[*Jcounter] = (1.-(vmax-v+vh)/sqrtermVmax)*norm;
-	  (*Jcounter)++; // dcompVmax/dvh
+	  J[*J_nnz] = (1.-(vmax-v+vh)/sqrtermVmax)*norm;
+	  (*J_nnz)++; // dcompVmax/dvh
 
-	  // H 
-	  Hvmin[Hcounter[*Jconstr_index]] = -((y*y + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmin,3.))*norm;
-	  Hcounter[*Jconstr_index]++;   // vl and vl (vmin)
-	  
-	  Hvmax[Hcounter[*Jconstr_index+1]] = -((z*z + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmax,3.))*norm;
-	  Hcounter[*Jconstr_index+1]++; // vh and vh (vmax)
+	  // H
+	  Hvmin[H_nnz[*J_row]] = -((y*y + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmin,3.))*norm;
+	  H_nnz[*J_row]++;   // vl and vl (vmin)
+
+	  Hvmax[H_nnz[*J_row+1]] = -((z*z + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermVmax,3.))*norm;
+	  H_nnz[*J_row+1]++; // vh and vh (vmax)
 	}
 
 	// Nonlinear constraints 2 (bmax,bmin)
 	//************************************
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) { // t var
-      
+
 	  // J
-	  J[*Jcounter] = -(1.-(bmax-b)/sqrtermBmax)*norm;
-	  (*Jcounter)++; // dcompBmax/db
-	  
-	  J[*Jcounter] = (1.-(b-bmin)/sqrtermBmin)*norm;
-	  (*Jcounter)++; // dcompBmin/db
-	  
+	  J[*J_nnz] = -(1.-(bmax-b)/sqrtermBmax)*norm;
+	  (*J_nnz)++; // dcompBmax/db
+
+	  J[*J_nnz] = (1.-(b-bmin)/sqrtermBmin)*norm;
+	  (*J_nnz)++; // dcompBmin/db
+
 	  // H
-	  Hbmax[Hcounter[*Jconstr_index+2]] = -((vl*vl + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermBmax,3.))*norm;
-	  Hcounter[*Jconstr_index+2]++; // b and b (bmax)
-	  
-	  Hbmin[Hcounter[*Jconstr_index+3]] = -((vh*vh + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermBmin,3.))*norm;
-	  Hcounter[*Jconstr_index+3]++; // b and b (bmin)
-	  
+	  Hbmax[H_nnz[*J_row+2]] = -((vl*vl + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermBmax,3.))*norm;
+	  H_nnz[*J_row+2]++; // b and b (bmax)
+
+	  Hbmin[H_nnz[*J_row+3]] = -((vh*vh + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermBmin,3.))*norm;
+	  H_nnz[*J_row+3]++; // b and b (bmin)
+
 	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
 
-	    Hbmax[Hcounter[*Jconstr_index+2]] = -(vl*(bmax-b)/pow(sqrtermBmax,3.))*norm;
-	    Hcounter[*Jconstr_index+2]++; // b and vl (bmax)
+	    Hbmax[H_nnz[*J_row+2]] = -(vl*(bmax-b)/pow(sqrtermBmax,3.))*norm;
+	    H_nnz[*J_row+2]++; // b and vl (bmax)
 
-	    Hbmin[Hcounter[*Jconstr_index+3]] = (vh*(b-bmin)/pow(sqrtermBmin,3.))*norm;
-	    Hcounter[*Jconstr_index+3]++; // b and vh (bmin)
+	    Hbmin[H_nnz[*J_row+3]] = (vh*(b-bmin)/pow(sqrtermBmin,3.))*norm;
+	    H_nnz[*J_row+3]++; // b and vh (bmin)
 	  }
 	}
-	
+
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var
 
 	  // J
-	  J[*Jcounter] = (1.-vl/sqrtermBmax)*norm;
-	  (*Jcounter)++; // dcompBmax/dvl
+	  J[*J_nnz] = (1.-vl/sqrtermBmax)*norm;
+	  (*J_nnz)++; // dcompBmax/dvl
 
-	  J[*Jcounter] = (1.-vh/sqrtermBmin)*norm;
-	  (*Jcounter)++; // dcompBmin/dvh
+	  J[*J_nnz] = (1.-vh/sqrtermBmin)*norm;
+	  (*J_nnz)++; // dcompBmin/dvh
 
-	  // H 
-	  Hbmax[Hcounter[*Jconstr_index+2]] = -(((bmax-b)*(bmax-b) + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermBmax,3.))*norm;
-	  Hcounter[*Jconstr_index+2]++; // vl and vl (bmax)
+	  // H
+	  Hbmax[H_nnz[*J_row+2]] = -(((bmax-b)*(bmax-b) + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermBmax,3.))*norm;
+	  H_nnz[*J_row+2]++; // vl and vl (bmax)
 
-	  Hbmin[Hcounter[*Jconstr_index+3]] = -(((b-bmin)*(b-bmin) + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermBmin,3.))*norm;
-	  Hcounter[*Jconstr_index+3]++; // vh and vh (bmin)
+	  Hbmin[H_nnz[*J_row+3]] = -(((b-bmin)*(b-bmin) + 2*CONSTR_REG_SHUNT_PARAM)/pow(sqrtermBmin,3.))*norm;
+	  H_nnz[*J_row+3]++; // vh and vh (bmin)
 	}
 
 	// Inc J constr index
-	(*Jconstr_index)++; // compVmin
-	(*Jconstr_index)++; // compVmax
-	(*Jconstr_index)++; // compBmax
-	(*Jconstr_index)++; // compBmin
+	(*J_row)++; // compVmin
+	(*J_row)++; // compVmax
+	(*J_row)++; // compBmax
+	(*J_row)++; // compBmin
       }
     }
 
@@ -850,12 +850,12 @@ void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
 }
 
 void CONSTR_REG_SHUNT_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
-  
+
   // Local variables
   Bus* buses[2];
   Bus* bus;
   Shunt* shunt;
-  int* Jconstr_index;
+  int* J_row;
   char* bus_counted;
   int bus_index_t[2];
   REAL lamCompVmin;
@@ -867,13 +867,13 @@ void CONSTR_REG_SHUNT_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec
 
   // Number of periods
   T = BRANCH_get_num_periods(br);
-  
+
   // Constr data
-  Jconstr_index = CONSTR_get_Jconstr_index_ptr(c);
+  J_row = CONSTR_get_J_row_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!Jconstr_index || !bus_counted)
+  if (!J_row || !bus_counted)
     return;
 
   // Check outage
@@ -881,14 +881,14 @@ void CONSTR_REG_SHUNT_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec
     return;
 
   // Bus data
-  buses[0] = BRANCH_get_bus_from(br);
-  buses[1] = BRANCH_get_bus_to(br);
+  buses[0] = BRANCH_get_bus_k(br);
+  buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
     bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Buses
   //******
-  
+
   for (k = 0; k < 2; k++) {
 
     bus = buses[k];
@@ -897,17 +897,17 @@ void CONSTR_REG_SHUNT_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec
 
       // Shunts
       //*******
-      
+
       for (shunt = BUS_get_reg_shunt(bus); shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
 
-	lamCompVmin = VEC_get(sf,*Jconstr_index);
-	(*Jconstr_index)++; // compVmin
-	lamCompVmax = VEC_get(sf,*Jconstr_index);
-	(*Jconstr_index)++; // compVmax
-	lamCompBmax = VEC_get(sf,*Jconstr_index);
-	(*Jconstr_index)++; // compBmax
-	lamCompBmin = VEC_get(sf,*Jconstr_index);
-	(*Jconstr_index)++; // compBmin
+	lamCompVmin = VEC_get(sf,*J_row);
+	(*J_row)++; // compVmin
+	lamCompVmax = VEC_get(sf,*J_row);
+	(*J_row)++; // compVmax
+	lamCompBmax = VEC_get(sf,*J_row);
+	(*J_row)++; // compBmax
+	lamCompBmin = VEC_get(sf,*J_row);
+	(*J_row)++; // compBmin
 
 	if (fabs(lamCompVmin) > fabs(BUS_get_sens_v_reg_by_shunt(bus,t)))
 	  BUS_set_sens_v_reg_by_shunt(bus,lamCompVmin,t);
@@ -922,7 +922,7 @@ void CONSTR_REG_SHUNT_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec
 
     // Update counted flag
     bus_counted[bus_index_t[k]] = TRUE;
-  }  
+  }
 }
 
 void CONSTR_REG_SHUNT_free(Constr* c) {

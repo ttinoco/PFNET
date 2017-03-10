@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -22,23 +22,23 @@ struct Branch {
   int num_periods;   /**< @brief Number of time periods. */
 
   // Buses
-  Bus* bus_from;     /**< @brief Bus connected to the "from" side */
-  Bus* bus_to;       /**< @brief Bus connected to the "to" side */
+  Bus* bus_k;        /**< @brief Bus connected to the "k" side */
+  Bus* bus_m;        /**< @brief Bus connected to the "m" side */
   Bus* reg_bus;      /**< @brief Bus regulated by this transformer */
 
   // Conductance
   REAL g;            /**< @brief Series conductance (p.u.) */
-  REAL g_from;       /**< @brief %Shunt conductance on "from" side (p.u.) */
-  REAL g_to;         /**< @brief %Shunt conductance on "to" side (p.u.) */
+  REAL g_k;          /**< @brief %Shunt conductance on "k" side (p.u.) */
+  REAL g_m;          /**< @brief %Shunt conductance on "m" side (p.u.) */
 
   // Susceptance
   REAL b;            /**< @brief Series susceptance (p.u.) */
-  REAL b_from;       /**< @brief %Shunt susceptance on "from" side (p.u.) */
-  REAL b_to;         /**< @brief %Shunt shunt susceptance "to" side (p.u.) */
-  
+  REAL b_k;          /**< @brief %Shunt susceptance on "k" side (p.u.) */
+  REAL b_m;          /**< @brief %Shunt shunt susceptance "m" side (p.u.) */
+
   // Tap ratio
   REAL* ratio;       /**< @brief Transformer taps ratio (p.u.) */
-  REAL ratio_max;    /**< @brief Maximum transformer taps ratio (p.u.) */ 
+  REAL ratio_max;    /**< @brief Maximum transformer taps ratio (p.u.) */
   REAL ratio_min;    /**< @brief Minimum transformer taps ratio (p.u.) */
   char num_ratios;   /**< @brief Number of tap positions */
 
@@ -46,7 +46,7 @@ struct Branch {
   REAL* phase;       /**< @brief Transformer phase shift (radians) */
   REAL phase_max;    /**< @brief Maximum transformer phase shift (radians) */
   REAL phase_min;    /**< @brief Minimum transformer phase shift (radians) */
-  
+
   // Flow bounds
   REAL P_max;        /**< @brief Maximum active power flow (p.u.) */
   REAL P_min;        /**< @brief Minimum active power flow (p.u.) */
@@ -56,8 +56,8 @@ struct Branch {
   // Power ratings
   REAL ratingA;      /**< @brief Power rating A (p.u. system base MVA) */
   REAL ratingB;      /**< @brief Power rating B (p.u. system base MVA) */
-  REAL ratingC;      /**< @brief Power rating C (p.u. system base MVA) */  
-   
+  REAL ratingC;      /**< @brief Power rating C (p.u. system base MVA) */
+
   // Flags
   BOOL outage;           /**< @brief Flag for indicating that branch in on outage */
   BOOL pos_ratio_v_sens; /**< @brief Flag for positive ratio-voltage sensitivity */
@@ -78,9 +78,9 @@ struct Branch {
   REAL* sens_P_l_bound;  /**< @brief Sensitivity of active power flow lower bound */
 
   // List
-  Branch* reg_next;  /**< @brief List of branches regulating a bus voltage magnitude */
-  Branch* from_next; /**< @brief List of branches connected to a bus on the "from" side */
-  Branch* to_next;   /**< @brief List of branches connected to a bus in the "to" side */
+  Branch* reg_next;   /**< @brief List of branches regulating a bus voltage magnitude */
+  Branch* next_k;     /**< @brief List of branches connected to a bus on the "k" side */
+  Branch* next_m;     /**< @brief List of branches connected to a bus in the "m" side */
 };
 
 void* BRANCH_array_get(void* br_array, int index) {
@@ -252,16 +252,16 @@ REAL BRANCH_get_b(Branch* br) {
     return 0;
 }
 
-REAL BRANCH_get_b_from(Branch* br) {
+REAL BRANCH_get_b_k(Branch* br) {
   if (br)
-    return br->b_from;
+    return br->b_k;
   else
     return 0;
 }
 
-REAL BRANCH_get_b_to(Branch* br) {
+REAL BRANCH_get_b_m(Branch* br) {
   if (br)
-    return br->b_to;
+    return br->b_m;
   else
     return 0;
 }
@@ -273,30 +273,30 @@ REAL BRANCH_get_g(Branch* br) {
     return 0;
 }
 
-REAL BRANCH_get_g_from(Branch* br) {
+REAL BRANCH_get_g_k(Branch* br) {
   if (br)
-    return br->g_from;
+    return br->g_k;
   else
     return 0;
 }
 
-REAL BRANCH_get_g_to(Branch* br) {
+REAL BRANCH_get_g_m(Branch* br) {
   if (br)
-    return br->g_to;
+    return br->g_m;
   else
     return 0;
 }
 
-Bus* BRANCH_get_bus_from(Branch* br) {
+Bus* BRANCH_get_bus_k(Branch* br) {
   if (br)
-    return br->bus_from;
+    return br->bus_k;
   else
     return NULL;
 }
 
-Bus* BRANCH_get_bus_to(Branch* br) {
+Bus* BRANCH_get_bus_m(Branch* br) {
   if (br)
-    return br->bus_to;
+    return br->bus_m;
   else
     return NULL;
 }
@@ -315,16 +315,16 @@ Branch* BRANCH_get_reg_next(Branch* br) {
     return NULL;
 }
 
-Branch* BRANCH_get_from_next(Branch* br) {
+Branch* BRANCH_get_next_k(Branch* br) {
   if (br)
-    return br->from_next;
+    return br->next_k;
   else
     return NULL;
 }
 
-Branch* BRANCH_get_to_next(Branch* br) {
+Branch* BRANCH_get_next_m(Branch* br) {
   if (br)
-    return br->to_next;
+    return br->next_m;
   else
     return NULL;
 }
@@ -350,6 +350,267 @@ REAL BRANCH_get_phase_min(Branch* br) {
     return 0;
 }
 
+void BRANCH_compute_flows(Branch* br, Vec* var_values, int t, REAL* flows) {
+  /** Compute the flows in this branch's pi model equivalent
+   *  including the flow from the bus, the flow in the shunt elements,
+   *  and the flow in the series element. These values are returned in 
+   *  the 'flows' argument.
+   */
+
+  int i;
+  
+  // Buses
+  Bus* bus_k;
+  Bus* bus_m;
+  
+  // Voltages
+  REAL v_k;
+  REAL v_m;
+  
+  // Angles
+  REAL w_k;
+  REAL w_m;
+  
+  // Phase shift
+  REAL phi;
+  
+  // Tap ratios
+  REAL a_km;
+  REAL a_mk = 1.;
+  
+  // Series conductance and susceptance
+  REAL g_km;
+  REAL b_km;
+  REAL g_mk;
+  REAL b_mk;
+  
+  // Shunt conductance and susceptance
+  REAL g_k_sh;
+  REAL b_k_sh;
+  REAL g_m_sh;
+  REAL b_m_sh;
+
+  // Intermediate values
+  REAL v_k_tap_squared;
+  REAL v_m_tap_squared;
+  REAL v_k_v_m_tap;
+  REAL theta_km;
+  REAL theta_mk;
+
+  // Check inputs
+  if (!flows)
+    return;
+  else if (!br || t < 0) {
+    for (i=0; i < BRANCH_FLOW_SIZE; i++)
+      flows[i] = 0;
+    return;
+  }
+
+  // Populate the local variables
+  bus_k = BRANCH_get_bus_k(br);
+  bus_m = BRANCH_get_bus_m(br);
+
+  // Get voltage angles
+  if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VANG) && var_values)
+    w_k = VEC_get(var_values,BUS_get_index_v_ang(bus_k,t));
+  else
+    w_k = BUS_get_v_ang(bus_k,t);
+  if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VANG) && var_values)
+    w_m = VEC_get(var_values,BUS_get_index_v_ang(bus_m,t));
+  else
+    w_m = BUS_get_v_ang(bus_m,t);
+
+  // Get voltage magnitudes
+  if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VMAG) && var_values)
+    v_k = VEC_get(var_values,BUS_get_index_v_mag(bus_k,t));
+  else
+    v_k = BUS_get_v_mag(bus_k,t);
+  if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VMAG) && var_values)
+    v_m = VEC_get(var_values,BUS_get_index_v_mag(bus_m,t));
+  else
+    v_m = BUS_get_v_mag(bus_m,t);
+
+  // Get series conductance and susceptance
+  g_km = BRANCH_get_g(br);
+  b_km = BRANCH_get_b(br);
+  g_mk = g_km;
+  b_mk = b_km;
+  g_k_sh = BRANCH_get_g_k(br);
+  b_k_sh = BRANCH_get_b_k(br);
+  g_m_sh = BRANCH_get_g_m(br);
+  b_m_sh = BRANCH_get_b_m(br);
+
+  // Get tap ratio from k, a_mk = 1 always
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
+    a_km = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
+  else
+    a_km = BRANCH_get_ratio(br,t);
+
+  // Get phase shift angle, this should be subtracted on side "m" (to)
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) && var_values)
+    phi = VEC_get(var_values,BRANCH_get_index_phase(br,t));
+  else
+    phi = BRANCH_get_phase(br,t);
+
+  // Repeated calculations
+  v_k_tap_squared = a_km*a_km*v_k*v_k;
+  v_m_tap_squared = a_mk*a_mk*v_m*v_m;
+  v_k_v_m_tap = a_km*a_mk*v_k*v_m;
+  theta_km = w_k-w_m-phi;
+  theta_mk = w_m-w_k+phi;
+
+  // Calculate series elements
+  // P_km_series = a_km^2*v_k^2*g_km - a_km*a_mk*v_k*v_m*( g_km*cos(w_k-w_m-phi) + b_km*sin(w_k-w_m-phi))
+  flows[BRANCH_P_KM_SERIES] = (v_k_tap_squared*g_km -
+			       v_k_v_m_tap*( g_km*cos(theta_km) + b_km*sin(theta_km)));
+  
+  // Q_km_series = -a_km^2*v_k^2*b_km - a_km*a_mk*v_k*v_m*( g_km*sin(w_k-w_m-phi) - b_km*cos(w_k-w_m-phi))
+  flows[BRANCH_Q_KM_SERIES] = (-v_k_tap_squared*b_km -
+			       v_k_v_m_tap*( g_km*sin(theta_km) - b_km*cos(theta_km)));
+  
+  // P_mk_series = a_mk^2*v_m^2*g_mk - a_mk*a_km*v_k*v_m*( g_mk*cos(w_k-w_m+phi) + b_mk*sin(w_k-w_m+phi))
+  flows[BRANCH_P_MK_SERIES] = (v_m_tap_squared*g_mk -
+			       v_k_v_m_tap*( g_mk*cos(theta_mk) + b_mk*sin(theta_mk)));
+  
+  // Q_mk_series = -a_mk^2*v_m^2*b_mk - a_mk*a_km*v_k*v_m*( g_mk*sin(w_k-w_m+phi) - b_mk*cos(w_k-w_m+phi))
+  flows[BRANCH_Q_MK_SERIES] = (-v_m_tap_squared*b_mk -
+			       v_k_v_m_tap*( g_mk*sin(theta_mk) - b_mk*cos(theta_mk)));
+
+  // Calculate shunt elements
+  // P_k_shunt = v_k^2*a_km^2*g_k_sh
+  flows[BRANCH_P_K_SHUNT] = v_k_tap_squared*g_k_sh;
+
+  // Q_k_shunt = -v_k^2*a_km^2*b_k_sh
+  flows[BRANCH_Q_K_SHUNT] = -v_k_tap_squared*b_k_sh;
+
+  // P_m_shunt = v_m^2*a_mk^2*g_m_sh
+  flows[BRANCH_P_M_SHUNT] = v_m_tap_squared*g_m_sh;
+
+  // Q_m_shunt = -v_m^2*a_mk^2*b_m_sh
+  flows[BRANCH_Q_M_SHUNT] = -v_m_tap_squared*b_m_sh;
+
+  // Total flows from the given bus
+  // P_km = P_km_series + P_k_shunt
+  flows[BRANCH_P_KM] = flows[BRANCH_P_KM_SERIES] + flows[BRANCH_P_K_SHUNT];
+  
+  // Q_km = Q_km_series + Q_k_shunt
+  flows[BRANCH_Q_KM] = flows[BRANCH_Q_KM_SERIES] + flows[BRANCH_Q_K_SHUNT];
+  
+  // P_mk = P_mk_series + P_m_shunt
+  flows[BRANCH_P_MK] = flows[BRANCH_P_MK_SERIES] + flows[BRANCH_P_M_SHUNT];
+  
+  // Q_mk = Q_mk_series + Q_m_shunt
+  flows[BRANCH_Q_MK] = flows[BRANCH_Q_MK_SERIES] + flows[BRANCH_Q_M_SHUNT];
+}
+
+REAL BRANCH_get_P_km(Branch* br, Vec* var_values, int t) {
+  /** Get the real power flow measured at bus "k" towards bus "m".
+   *  P_km = P_km_series + P_k_shunt
+   */
+  REAL flows[BRANCH_FLOW_SIZE];
+  BRANCH_compute_flows(br,var_values,t,flows);
+  return flows[BRANCH_P_KM];
+}
+
+REAL BRANCH_get_Q_km(Branch* br, Vec* var_values, int t) {
+  /** Get the reactive power flow measured at bus "k" towards bus "m".
+   *  Q_km = Q_km_series + Q_k_shunt
+   */
+  REAL flows[BRANCH_FLOW_SIZE];
+  BRANCH_compute_flows(br,var_values,t,flows);
+  return flows[BRANCH_Q_KM];
+}
+
+REAL BRANCH_get_P_mk(Branch* br, Vec* var_values, int t) {
+  /** Get the real power flow measured at bus "m" towards bus "k".
+   *  P_mk = P_mk_series + P_m_shunt
+   */
+  REAL flows[BRANCH_FLOW_SIZE];
+  BRANCH_compute_flows(br,var_values,t,flows);
+  return flows[BRANCH_P_MK];
+}
+
+REAL BRANCH_get_Q_mk(Branch* br, Vec* var_values, int t) {
+  /** Get the reactive power flow measured at bus "m" towards bus "k".
+   *  Q_mk = Q_mk_series + Q_m_shunt
+   */
+  REAL flows[BRANCH_FLOW_SIZE];
+  BRANCH_compute_flows(br,var_values,t,flows);
+  return flows[BRANCH_Q_MK];
+}
+
+REAL BRANCH_get_P_km_series(Branch* br, Vec* var_values, int t) {
+  /** Get the real power flow across the series element from bus "k" to bus "m".
+   *  P_km_series = a_km^2*v_k^2*g_km - a_km*a_mk*v_k*v_m*( g_km*cos(w_k-w_m-phi) + b_km*sin(w_k-w_m-phi))
+   */
+  REAL flows[BRANCH_FLOW_SIZE];
+  BRANCH_compute_flows(br,var_values,t,flows);
+  return flows[BRANCH_P_KM_SERIES];
+}
+
+REAL BRANCH_get_Q_km_series(Branch* br, Vec* var_values, int t) {
+  /** Get the reactive power flow across the series element from bus "k" to bus "m".
+   *  Q_km_series = -a_km^2*v_k^2*b_km - a_km*a_mk*v_k*v_m*( g_km*sin(w_k-w_m-phi) - b_km*cos(w_k-w_m-phi))
+   */
+  REAL flows[BRANCH_FLOW_SIZE];
+  BRANCH_compute_flows(br,var_values,t,flows);
+  return flows[BRANCH_Q_KM_SERIES];
+}
+
+REAL BRANCH_get_P_mk_series(Branch* br, Vec* var_values, int t) {
+  /** Get the real power flow across the series element from bus "m" to bus "k".
+   *  P_mk_series = -a_mk^2*v_m^2*g_mk - a_mk*a_km*v_k*v_m*( g_mk*cos(w_k-w_m+phi) + b_mk*sin(w_k-w_m+phi))
+   */
+  REAL flows[BRANCH_FLOW_SIZE];
+  BRANCH_compute_flows(br,var_values,t,flows);
+  return flows[BRANCH_P_MK_SERIES];
+}
+
+REAL BRANCH_get_Q_mk_series(Branch* br, Vec* var_values, int t) {
+   /** Get the real power flow across the series element from bus "m" to bus "k".
+    *  Q_mk_series = -a_mk^2*v_m^2*b_mk - a_mk*a_km*v_k*v_m*( g_mk*sin(w_k-w_m+phi) - b_mk*cos(w_k-w_m+phi))
+    */
+   REAL flows[BRANCH_FLOW_SIZE];
+   BRANCH_compute_flows(br,var_values,t,flows);
+   return flows[BRANCH_Q_MK_SERIES];
+}
+
+REAL BRANCH_get_P_k_shunt(Branch* br, Vec* var_values, int t) {
+   /** Get the real power flow to the shunt element from bus "k".
+    *  P_k_shunt = v_k^2*a_km^2*g_k_sh
+    */
+   REAL flows[BRANCH_FLOW_SIZE];
+   BRANCH_compute_flows(br,var_values,t,flows);
+   return flows[BRANCH_P_K_SHUNT];
+}
+
+REAL BRANCH_get_Q_k_shunt(Branch* br, Vec* var_values, int t) {
+   /** Get the reactive power flow to the shunt element from bus "k".
+    *  Q_k_shunt = v_k^2*a_km^2*b_k_sh
+    */
+   REAL flows[BRANCH_FLOW_SIZE];
+   BRANCH_compute_flows(br,var_values,t,flows);
+   return flows[BRANCH_Q_K_SHUNT];
+}
+
+REAL BRANCH_get_P_m_shunt(Branch* br, Vec* var_values, int t) {
+   /** Get the real power flow to the shunt element from bus "m".
+    *  P_m_shunt = v_m^2*a_mk^2*g_m_sh
+    */
+   REAL flows[BRANCH_FLOW_SIZE];
+   BRANCH_compute_flows(br,var_values,t,flows);
+   return flows[BRANCH_P_M_SHUNT];
+}
+
+REAL BRANCH_get_Q_m_shunt(Branch* br, Vec* var_values, int t) {
+   /** Get the reactive power flow to the shunt element from bus "m".
+    *  Q_m_shunt = v_m^2*a_mk^2*b_m_sh
+    */
+   REAL flows[BRANCH_FLOW_SIZE];
+   BRANCH_compute_flows(br,var_values,t,flows);
+   return flows[BRANCH_Q_M_SHUNT];
+}
+
 REAL BRANCH_get_ratingA(Branch* br) {
   if (br)
     return br->ratingA;
@@ -371,13 +632,29 @@ REAL BRANCH_get_ratingC(Branch* br) {
     return 0;
 }
 
-REAL BRANCH_get_P_flow_DC(Branch* br, int t) {
-  /* Active power flow (DC approx) from bus
-     "from" to bus "to". */
+REAL BRANCH_get_P_km_DC(Branch* br, int t) {
+  /** Active power flow (DC approx) from bus "k" to bus "m". 
+   *  P_km_DC = -b (w_k - w_m - Phi_km) 
+   */
 
   if (br && t >= 0 && t < br->num_periods) {
-    return -(br->b)*(BUS_get_v_ang(br->bus_from,t)-
-		     BUS_get_v_ang(br->bus_to,t)-
+    return -(br->b)*(BUS_get_v_ang(br->bus_k,t)-
+		     BUS_get_v_ang(br->bus_m,t)-
+		     br->phase[t]);
+  }
+  else
+    return 0;
+}
+
+// 
+REAL BRANCH_get_P_mk_DC(Branch* br, int t) {
+  /** Active power flow (DC approx) from bus "m" to bus "k". 
+   *  P_mk_DC = -b (w_m - w_m - Phi_km)
+   */
+
+  if (br && t >= 0 && t < br->num_periods) {
+    return -(br->b)*(BUS_get_v_ang(br->bus_m,t)-
+		     BUS_get_v_ang(br->bus_k,t)+
 		     br->phase[t]);
   }
   else
@@ -435,7 +712,7 @@ void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
 	VEC_set(values,br->index_ratio_z[t],0.);
       }
     }
-  }   
+  }
 }
 
 int BRANCH_get_num_vars(void* vbr, unsigned char var, int t_start, int t_end) {
@@ -465,7 +742,7 @@ int BRANCH_get_num_vars(void* vbr, unsigned char var, int t_start, int t_end) {
 }
 
 Vec* BRANCH_get_var_indices(void* vbr, unsigned char var, int t_start, int t_end) {
-  
+
   // Local vars
   Branch* br = (Branch*)vbr;
   Vec* indices;
@@ -495,7 +772,7 @@ Vec* BRANCH_get_var_indices(void* vbr, unsigned char var, int t_start, int t_end
     }
   }
   if ((var & BRANCH_VAR_RATIO_DEV) && (br->vars & BRANCH_VAR_RATIO_DEV)) {
-    for (t = t_start; t <= t_end; t++) { 
+    for (t = t_start; t <= t_end; t++) {
       VEC_set(indices,offset,br->index_ratio_y[t]);
       VEC_set(indices,offset+1,br->index_ratio_z[t]);
       offset += 2;
@@ -545,7 +822,7 @@ BOOL BRANCH_has_properties(void* vbr, char prop) {
   return TRUE;
 }
 
-void BRANCH_init(Branch* br, int num_periods) {  
+void BRANCH_init(Branch* br, int num_periods) {
 
   // Local vars
   int T;
@@ -560,16 +837,16 @@ void BRANCH_init(Branch* br, int num_periods) {
 
   br->type = BRANCH_TYPE_LINE;
 
-  br->bus_from = NULL;
-  br->bus_to = NULL;
+  br->bus_k = NULL;
+  br->bus_m = NULL;
   br->reg_bus = NULL;
 
   br->g = 0;
-  br->g_from = 0;
-  br->g_to = 0;
+  br->g_k = 0;
+  br->g_m = 0;
   br->b = 0;
-  br->b_from = 0;
-  br->b_to = 0;
+  br->b_k = 0;
+  br->b_m = 0;
 
   br->ratio_max = 1;
   br->ratio_min = 1;
@@ -596,7 +873,7 @@ void BRANCH_init(Branch* br, int num_periods) {
 
   br->index = 0;
 
-  ARRAY_zalloc(br->ratio,REAL,T); 
+  ARRAY_zalloc(br->ratio,REAL,T);
   ARRAY_zalloc(br->phase,REAL,T);
 
   ARRAY_zalloc(br->index_ratio,int,T);
@@ -611,9 +888,9 @@ void BRANCH_init(Branch* br, int num_periods) {
     br->ratio[t] = 1.;
 
   br->reg_next = NULL;
-  br->from_next = NULL;
-  br->to_next = NULL;
-}
+  br->next_k = NULL;
+  br->next_m = NULL;
+};
 
 BOOL BRANCH_is_equal(Branch* br, Branch* other) {
   return br == other;
@@ -684,35 +961,35 @@ int BRANCH_list_reg_len(Branch* reg_br_list) {
   return len;
 }
 
-Branch* BRANCH_list_from_add(Branch* from_br_list, Branch* br) {
-  LIST_add(Branch,from_br_list,br,from_next);
-  return from_br_list;
+Branch* BRANCH_list_k_add(Branch* k_br_list, Branch* br) {
+  LIST_add(Branch,k_br_list,br,next_k);
+  return k_br_list;
 }
 
-Branch* BRANCH_list_from_del(Branch* from_br_list, Branch* br) {
-  LIST_del(Branch,from_br_list,br,from_next);
-  return from_br_list;
+Branch* BRANCH_list_k_del(Branch* k_br_list, Branch* br) {
+  LIST_del(Branch,k_br_list,br,next_k);
+  return k_br_list;
 }
 
-int BRANCH_list_from_len(Branch* from_br_list) {
+int BRANCH_list_k_len(Branch* k_br_list) {
   int len;
-  LIST_len(Branch,from_br_list,from_next,len);
+  LIST_len(Branch,k_br_list,next_k,len);
   return len;
 }
 
-Branch* BRANCH_list_to_add(Branch* to_br_list, Branch* br) {
-  LIST_add(Branch,to_br_list,br,to_next);
-  return to_br_list;
+Branch* BRANCH_list_m_add(Branch* m_br_list, Branch* br) {
+  LIST_add(Branch,m_br_list,br,next_m);
+  return m_br_list;
 }
 
-Branch* BRANCH_list_to_del(Branch* to_br_list, Branch* br) {
-  LIST_del(Branch,to_br_list,br,to_next);
-  return to_br_list;
+Branch* BRANCH_list_m_del(Branch* m_br_list, Branch* br) {
+  LIST_del(Branch,m_br_list,br,next_m);
+  return m_br_list;
 }
 
-int BRANCH_list_to_len(Branch* to_br_list) {
+int BRANCH_list_m_len(Branch* m_br_list) {
   int len;
-  LIST_len(Branch,to_br_list,to_next,len);
+  LIST_len(Branch,m_br_list,next_m,len);
   return len;
 }
 
@@ -737,7 +1014,7 @@ void BRANCH_set_sens_P_l_bound(Branch* br, REAL value, int t) {
 }
 
 void BRANCH_set_index(Branch* br, int index) {
-  if (br) 
+  if (br)
     br->index = index;
 }
 
@@ -746,34 +1023,34 @@ void BRANCH_set_type(Branch* br, int type) {
     br->type = type;
 }
 
-void BRANCH_set_bus_from(Branch* br, Bus* bus_from) {
+void BRANCH_set_bus_k(Branch* br, Bus* bus_k) {
   if (br)
-    br->bus_from = bus_from;
+    br->bus_k = bus_k;
 }
 
-void BRANCH_set_bus_to(Branch* br, Bus* bus_to) {
+void BRANCH_set_bus_m(Branch* br, Bus* bus_m) {
   if (br)
-    br->bus_to = bus_to;
+    br->bus_m = bus_m;
 }
 
 void BRANCH_set_reg_bus(Branch* br, Bus* reg_bus) {
-  if (br)  
+  if (br)
     br->reg_bus = reg_bus;
 }
 
 void BRANCH_set_g(Branch* br, REAL g) {
-  if (br)  
+  if (br)
     br->g = g;
 }
 
-void BRANCH_set_g_from(Branch* br, REAL g_from) {
+void BRANCH_set_g_k(Branch* br, REAL g_k) {
   if (br)
-    br->g_from = g_from;
+    br->g_k = g_k;
 }
 
-void BRANCH_set_g_to(Branch* br, REAL g_to) {
+void BRANCH_set_g_m(Branch* br, REAL g_m) {
   if (br)
-    br->g_to = g_to;
+    br->g_m = g_m;
 }
 
 void BRANCH_set_b(Branch* br, REAL b) {
@@ -781,14 +1058,14 @@ void BRANCH_set_b(Branch* br, REAL b) {
     br->b = b;
 }
 
-void BRANCH_set_b_from(Branch* br, REAL b_from) {
-  if (br)  
-    br->b_from = b_from;
+void BRANCH_set_b_k(Branch* br, REAL b_k) {
+  if (br)
+    br->b_k = b_k;
 }
 
-void BRANCH_set_b_to(Branch* br, REAL b_to) {
+void BRANCH_set_b_m(Branch* br, REAL b_m) {
   if (br)
-    br->b_to = b_to;
+    br->b_m = b_m;
 }
 
 void BRANCH_set_ratio(Branch* br, REAL ratio, int t) {
@@ -877,10 +1154,10 @@ void BRANCH_set_var_values(Branch* br, Vec* values) {
 
   // Time loop
   for (t = 0; t < br->num_periods; t++) {
-    
+
     // Ratio and phase
     if (br->vars & BRANCH_VAR_RATIO)    // taps ratio
-      br->ratio[t] = VEC_get(values,br->index_ratio[t]); 
+      br->ratio[t] = VEC_get(values,br->index_ratio[t]);
     if (br->vars & BRANCH_VAR_PHASE)    // phase shift
       br->phase[t] = VEC_get(values,br->index_phase[t]);
   }
@@ -941,8 +1218,8 @@ int BRANCH_set_flags(void* vbr, char flag_type, unsigned char mask, int index) {
 
 void BRANCH_show(Branch* br, int t) {
   printf("branch %d\t%d\t%d\n",
-	 BUS_get_number(br->bus_from),
-	 BUS_get_number(br->bus_to),
+	 BUS_get_number(br->bus_k),
+	 BUS_get_number(br->bus_m),
 	 br->type);
 }
 

@@ -65,6 +65,7 @@ problem_hdr = 	$(inc_path)/constr.h \
 
 problem_constr_src = 	problem/constr/constr_BOUND.c  \
 			problem/constr/constr_DC_FLOW_LIM.c \
+			problem/constr/constr_AC_FLOW_LIM.c \
 			problem/constr/constr_DCPF.c \
 			problem/constr/constr_FIX.c \
 			problem/constr/constr_GEN_RAMP.c \
@@ -79,6 +80,7 @@ problem_constr_src = 	problem/constr/constr_BOUND.c  \
 
 problem_constr_hdr = 	$(inc_path)/constr_BOUND.h \
 			$(inc_path)/constr_DC_FLOW_LIM.h \
+			$(inc_path)/constr_AC_FLOW_LIM.h \
 			$(inc_path)/constr_DCPF.h \
 			$(inc_path)/constr_FIX.h \
 			$(inc_path)/constr_GEN_RAMP.h \

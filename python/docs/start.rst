@@ -15,16 +15,17 @@ PFNET for Python has the following dependencies:
 
 * `Numpy <http://www.numpy.org>`_ (>=1.8.2): the fundamental package for scientific computing in Python.
 * `Scipy <http://www.scipy.org>`_ (>=0.13.3): a collection of mathematical algorithms and functions built on top of Numpy.
-* `PFNET <https://github.com/ttinoco/PFNET>`_ (== 1.2.5): underlying C routines wrapped by this package (``libpfnet``).
+* `Cython <http://cython.org>`_ (>=0.20.1): an optimising static compiler for both Python and the extended Cython programming language.
+* `PFNET <https://github.com/ttinoco/PFNET>`_ (== 1.2.6): underlying C routines wrapped by this package (``libpfnet``).
 * `Graphviz <http://www.graphviz.org/>`_ (>= 2.38): graph visualization library (``libgvc``) (Optional).
-* `Raw parser <some_URL>`_ (>=1.2): library for parsing power flow files in PSSE raw format version 32 (``libraw_parser``) (Optional).
+* `Raw parser <some_URL>`_ (>=1.2.1): library for parsing power flow files in PSSE raw format version 32 (``libraw_parser``) (Optional).
 
 .. _start_download:
 
 Download
 ========
 
-The latest version of PFNET can be downloaded from `<https://github.com/ttinoco/PFNET>`_.
+The latest version of PFNET can be obtained from `<https://github.com/ttinoco/PFNET>`_.
 
 .. _start_installation:
 
@@ -41,7 +42,7 @@ If ``libpfnet`` was built without visualization capabilities, the argument ``--n
 
 The installation can be tested using `nose <https://nose.readthedocs.org/en/latest/>`_ as follows::
 
-  > sudo python setup.py build_ext --inplace
+  > python setup.py build_ext --inplace
   > nosetests -v --exe
 
 .. _start_example:
@@ -67,12 +68,8 @@ Requirements to build the PFNET Python documentation:
 
 * `Sphinx <http://www.sphinx-doc.org/>`_ (>=1.4).
 
-To build the documentation the environment variable ``PFNET_DOCS`` must be set. The generated files will be placed in the directory ``PFNET_DOCS/python``. To generate the files, run `make` from the ``python/docs`` directory of the PFNET package.
+To build the documentation, the environment variable ``PFNET_DOCS`` must be set. The generated files will be placed in the directory ``PFNET_DOCS/python``. To generate the files, run ``make html`` from the ``python/docs`` directory of the PFNET package.
 
-For example, to build the html documentation files run::
-
-  > make html
-
-It may also be necessary to pass the environment variable with the path to the dynamic shared libraries using ``LD_LIBRARY_PATH`` on Linux or ``DYLD_FALLBACK_LIBRARY_PATH`` on Mac OSX. This command would then be::
+It may also be necessary to pass the environment variable with the path to the dynamic shared libraries using ``LD_LIBRARY_PATH`` on Linux or ``DYLD_FALLBACK_LIBRARY_PATH`` on Mac OSX. The command would then be::
 
   > make html DYLD_FALLBACK_LIBRARY_PATH=$PFNET/lib

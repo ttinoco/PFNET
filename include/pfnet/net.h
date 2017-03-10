@@ -22,6 +22,7 @@
 #include "bat.h"
 #include "vector.h"
 #include "matrix.h"
+#include "utils.h"
 
 // Controls
 #define NET_CONTROL_EPS 1e-4      /**< @brief Safeguard for small control ranges (p.u.). */
@@ -62,7 +63,7 @@ void NET_init(Net* net, int num_periods);
 REAL NET_get_base_power(Net* net);
 Branch* NET_get_branch(Net* net, int index);
 Bus* NET_get_bus(Net* net, int index);
-Bus* NET_get_bus_hash_number(Net* net); 
+Bus* NET_get_bus_hash_number(Net* net);
 Bus* NET_get_bus_hash_name(Net* net);
 Vargen* NET_get_vargen_hash_name(Net* net);
 char* NET_get_error_string(Net* net);

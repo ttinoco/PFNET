@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -26,6 +26,7 @@ cdef extern from "pfnet/constr.h":
     cdef char CONSTR_TYPE_REG_TRAN
     cdef char CONSTR_TYPE_REG_SHUNT
     cdef char CONSTR_TYPE_DC_FLOW_LIM
+    cdef char CONSTR_TYPE_AC_FLOW_LIM
     cdef char CONSTR_TYPE_LBOUND
     cdef char CONSTR_TYPE_GEN_RAMP
     
@@ -33,19 +34,21 @@ cdef extern from "pfnet/constr.h":
     void CONSTR_del(Constr* c)
     void CONSTR_del_matvec(Constr* constr)
     Constr* CONSTR_new(int type, Net* net)
-    int CONSTR_get_Acounter(Constr* c)
-    int CONSTR_get_Gcounter(Constr* c)
-    int CONSTR_get_Jcounter(Constr* c)
-    int CONSTR_get_Aconstr_index(Constr* c)
-    int CONSTR_get_Gconstr_index(Constr* c)
-    int CONSTR_get_Jconstr_index(Constr* c)
+    int CONSTR_get_A_nnz(Constr* c)
+    int CONSTR_get_G_nnz(Constr* c)
+    int CONSTR_get_J_nnz(Constr* c)
+    int CONSTR_get_A_row(Constr* c)
+    int CONSTR_get_G_row(Constr* c)
+    int CONSTR_get_J_row(Constr* c)
     Vec* CONSTR_get_f(Constr* c)
     Mat* CONSTR_get_J(Constr* c)
+    Mat* CONSTR_get_Jbar(Constr* c)
     Vec* CONSTR_get_b(Constr* c)
     Mat* CONSTR_get_A(Constr* c)
     Vec* CONSTR_get_l(Constr* c)
     Vec* CONSTR_get_u(Constr* c)
     Mat* CONSTR_get_G(Constr* c)
+    Mat* CONSTR_get_Gbar(Constr* c)
     Mat* CONSTR_get_H_single(Constr* c, int i)
     Mat* CONSTR_get_H_combined(Constr* c)
     int CONSTR_get_type(Constr* c)
@@ -59,4 +62,4 @@ cdef extern from "pfnet/constr.h":
     void CONSTR_clear_error(Constr * c)
     char* CONSTR_get_error_string(Constr* c)
     void CONSTR_update_network(Constr* c)
-    
+    int CONSTR_get_num_extra_vars(Constr* c)

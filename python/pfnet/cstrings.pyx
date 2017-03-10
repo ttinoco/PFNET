@@ -152,6 +152,7 @@ str2constr = {'AC power balance' : cconstr.CONSTR_TYPE_PF,
               'voltage regulation by transformers' : cconstr.CONSTR_TYPE_REG_TRAN,
               'voltage regulation by shunts' : cconstr.CONSTR_TYPE_REG_SHUNT,
               'DC branch flow limits' : cconstr.CONSTR_TYPE_DC_FLOW_LIM,
+              'AC branch flow limits' : cconstr.CONSTR_TYPE_AC_FLOW_LIM,
               'variable bounds' : cconstr.CONSTR_TYPE_LBOUND,
               'generator ramp limits' : cconstr.CONSTR_TYPE_GEN_RAMP}
 

@@ -49,11 +49,11 @@
 /** @} */
 
 // Sensitivities
-/** \defgroup bus_sens Bus Sensitivities 
+/** \defgroup bus_sens Bus Sensitivities
  *  @{
  */
 #define BUS_SENS_LARGEST 0
-#define BUS_SENS_P_BALANCE 1      /**< @brief Sensitivity: active power balance */ 
+#define BUS_SENS_P_BALANCE 1      /**< @brief Sensitivity: active power balance */
 #define BUS_SENS_Q_BALANCE 2      /**< @brief Sensitivity: reactive power balance */
 #define BUS_SENS_V_MAG_U_BOUND 3  /**< @brief Sensitivity: voltage magnitude upper bound */
 #define BUS_SENS_V_MAG_L_BOUND 4  /**< @brief Sensitivity: voltage magnitude lower bound */
@@ -120,11 +120,15 @@ void BUS_add_vargen(Bus* bus, Vargen* gen);
 /** @brief Adds battery to list of batteries connected to bus. */
 void BUS_add_bat(Bus* bus, Bat* bat);
 
-void BUS_add_branch_from(Bus* bus, Branch* branch);
-void BUS_del_branch_from(Bus* bus, Branch* branch);
+/** @brief Adds branch to list of branches connected at "k" bus. */
+void BUS_add_branch_k(Bus* bus, Branch* branch);
+/** @brief Deletes branch from list of branches connected at "k" bus. */
+void BUS_del_branch_k(Bus* bus, Branch* branch);
 
-void BUS_add_branch_to(Bus* bus, Branch* branch);
-void BUS_del_branch_to(Bus* bus, Branch* branch);
+/** @brief Adds branch to list of branches connected at "m" bus. */
+void BUS_add_branch_m(Bus* bus, Branch* branch);
+/** @brief Deletes branch from list of branches connected at "m" bus. */
+void BUS_del_branch_m(Bus* bus, Branch* branch);
 
 void BUS_array_del(Bus* bus_array, int size);
 BOOL BUS_array_check(Bus* bus_array, int size, BOOL verbose);
@@ -168,8 +172,8 @@ Gen* BUS_get_reg_gen(Bus* bus);
 Branch* BUS_get_reg_tran(Bus* bus);
 Shunt* BUS_get_reg_shunt(Bus* bus);
 Shunt* BUS_get_shunt(Bus* bus);
-Branch* BUS_get_branch_from(Bus* bus);
-Branch* BUS_get_branch_to(Bus* bus);
+Branch* BUS_get_branch_k(Bus* bus);
+Branch* BUS_get_branch_m(Bus* bus);
 Vargen* BUS_get_vargen(Bus* bus);
 Bat* BUS_get_bat(Bus* bus);
 REAL BUS_get_P_mis(Bus* bus, int t);

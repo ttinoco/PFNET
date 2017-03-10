@@ -4,7 +4,6 @@ Targets
 * MAT or ART data writer.
 * CIM parser in python.
 * Rich object comparisons for all network components.
-* Need AC branch flow limits.
 * Instructions for adding new functions and constraints.
 * Use Autotools.
 
@@ -13,9 +12,24 @@ Unreleased
 * Python-based parsers.
 * info dictionary in Python wrapper that indictes availability of graphviz, python-based parser, raw parser.
 * Area/zone projections.
-* Branch bus name changes.
-* Branch AC flow getters.
 * Battery initial and final energy levels.
+
+Version 1.2.7
+-------------
+* Added constraint that enforces AC branch flow limits using current magnitudes (ignores branches with 0 ratingA).
+* Added support for extra variables in constraints (Jbar, Gbar matrices) and in problem.
+* Changed constraint nnz counters (Acounter,Jcounter,Gcounter) to (A_nnz,J_nnz,G_nnz).
+* Changed constraint row counters (Aconstr_index,Jcounstr_index,Gconstr_index) to (A_row,J_row,G_row).
+* Made constraint that enforces DC branch flow limits ignore branches with 0 ratingA.
+
+Version 1.2.6
+-------------
+* Branch bus name changes (from/to to k/m).
+* Branch AC flow getters.
+* Improved error handling in Problem Python class (has_error, clear_error, error checks in combine_H).
+* Separated python wrapper pyx into multiple files.
+* Bug fix: voltage magnitude limits in MAT parser.
+* Sphinx C docs.
 
 Version 1.2.5
 -------------

@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -23,7 +23,7 @@ void CONSTR_PF_count_step(Constr* c, Branch* br, int t);
 void CONSTR_PF_allocate(Constr* c);
 void CONSTR_PF_clear(Constr* c);
 void CONSTR_PF_analyze_step(Constr* c, Branch* br, int t);
-void CONSTR_PF_eval_step(Constr* c, Branch* br, int t, Vec* var_values);
+void CONSTR_PF_eval_step(Constr* c, Branch* br, int t, Vec* v);
 void CONSTR_PF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void CONSTR_PF_free(Constr* c);
 

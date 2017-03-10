@@ -1,14 +1,29 @@
-function mpc2mat(mpc,mat_file,random_cost)
+function mpc2mat(mpc,mat_file)
 %MPC2MAT Converts an "mpc" MATPOWER structure to a CSV file.
 %   MPC2MAT(MPT, MAT_FILE)
 %   Converts an "mpc" MATPOWER structure to a CSV file.
 %
 %   Input:
-%      MPC : MATPOWER case structure.
+%      MPC : MATPOWER case structure (version 2).
 %      MAT_FILE: name of output CSV file.
-%      random_cost: flag for random generator cost coefficients.
+% 
+%   Note: 
+%      It only supports quadratic costs. If costs are not
+%      quadratic, then random quadratic costs are assigned.
 
 disp('Executing mpc2mat');
+
+%% version
+if mpc.version ~= '2'
+  error('mpc2mat: Only MPC version 2 is supported')
+end
+
+%% gen length
+sgen = size(mpc.gen);
+scost = size(mpc.gencost);  
+if scost(1) > 0 && scost(1) ~= sgen(1)
+  error('mpc2mat: Bad generator cost data')
+end
 
 %% file parts
 [path name ext] = fileparts(mat_file);
@@ -33,7 +48,8 @@ fprintf(fid,'%.0f\n',mpc.baseMVA);
 fprintf(fid,'BUS\n');
 fprintf(fid,'number,type,Pd (MW),Qd (MVAr),Gs (MW),Bs (MVAr),area,Vm (p.u.),Va (degress),');
 fprintf(fid,'basekV (kV),zone,maxVm (p.u.),minVm (p.u.)\n');
-for i=1:size(mpc.bus)(1)
+sbus = size(mpc.bus);
+for i=1:sbus(1)
     fprintf(fid,'%d,',mpc.bus(i,1));
     fprintf(fid,'%d,',mpc.bus(i,2));
     fprintf(fid,'%.5f,',mpc.bus(i,3));
@@ -54,7 +70,7 @@ fprintf(fid,'END\n');
 fprintf(fid,'GEN\n');
 fprintf(fid,'bus,Pg (MW),Qg (MVAr),Qmax (MVAr),Qmin (MVAr),Vg (p.u.),mBase (MVA),status,');
 fprintf(fid,'Pmax (MW),Pmin (MW)\n')
-for i=1:size(mpc.gen)(1)
+for i=1:sgen(1)
     fprintf(fid,'%d,',mpc.gen(i,1));
     fprintf(fid,'%.5f,',mpc.gen(i,2));
     fprintf(fid,'%.5f,',mpc.gen(i,3));
@@ -72,7 +88,8 @@ fprintf(fid,'END\n');
 fprintf(fid,'BRANCH\n');
 fprintf(fid,'bus from,bus to,r (p.u.),x (p.u.),b (p.u.),rateA (MVA),rateB (MVA),rateC (MVA),');
 fprintf(fid,'ratio,angle (degrees),status,min angle diff (degrees),max angle diff (degrees)\n')
-for i=1:size(mpc.branch)(1)
+sbranch = size(mpc.branch);
+for i=1:sbranch(1)
     fprintf(fid,'%d,',mpc.branch(i,1));
     fprintf(fid,'%d,',mpc.branch(i,2));
     fprintf(fid,'%.5f,',mpc.branch(i,3));
@@ -92,13 +109,14 @@ fprintf(fid,'END\n');
 %% cost
 fprintf(fid,'COST\n');
 fprintf(fid,'gen index,Q2 ($/hr MW2),Q1 ($/hr MW),Q0 ($/hr)\n');
-for i=1:size(mpc.gencost)(1)
-    if ~random_cost && mpc.gencost(i,1) == 2 && mpc.gencost(i,4) == 3
+for i=1:scost(1)
+    if mpc.gencost(i,1) == 2 && mpc.gencost(i,4) == 3
        fprintf(fid,'%d,',i-1);
        fprintf(fid,'%.8f,',mpc.gencost(i,5));
        fprintf(fid,'%.8f,',mpc.gencost(i,6));
        fprintf(fid,'%.8f\n',mpc.gencost(i,7));
     else
+       warning('unsupported cost function; using random quadratic costs')
        fprintf(fid,'%d,',i-1);
        fprintf(fid,'%.8f,',0.04*rand()+0.01);
        fprintf(fid,'%.8f,',40.*rand()+10.);

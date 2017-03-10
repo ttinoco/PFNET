@@ -12,7 +12,7 @@
 
 char* trim(char* s) {
   /* Trims string inplace. */
-  
+
   char* ptr;
   if (!s)
     return NULL;   // handle NULL string
@@ -28,6 +28,16 @@ char* strtoupper(char s[]) {
   int i = 0;
   while(s[i]) {
     s[i] = toupper(s[i]);
+    i = i + 1;
+  }
+  return s;
+}
+
+char* strtolower(char s[]) {
+  /* Replaces uppercase string chars with lowercase values. */
+  int i = 0;
+  while(s[i]) {
+    s[i] = tolower(s[i]);
     i = i + 1;
   }
   return s;

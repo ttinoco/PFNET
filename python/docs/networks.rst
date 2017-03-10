@@ -72,7 +72,7 @@ Buses
 -----
 
 Buses in a power network are objects of type :class:`Bus <pfnet.Bus>`. Each bus has an :data:`index <pfnet.Bus.index>`, a :data:`number <pfnet.Bus.number>`, and a :data:`name <pfnet.Bus.name>` attribute that can be used to identify this bus in a network. The :data:`index <pfnet.Bus.index>` is associated with the location of the bus in the underlying C array of bus structures, while the :data:`number <pfnet.Bus.number>` and :data:`name <pfnet.Bus.name>` attributes are specified in the input data. An :data:`index <pfnet.Bus.index>`, a :data:`number <pfnet.Bus.number>`, or a :data:`name <pfnet.Bus.name>` can be used to extract a specific bus from a network using the :class:`Network <pfnet.Network>` class methods :func:`get_bus() <pfnet.Network.get_bus>`, :func:`get_bus_by_number() <pfnet.Network.get_bus_by_number>`, and :func:`get_bus_by_name() <pfnet.Network.get_bus_by_name>`, respectively::
-  
+
   >>> bus = net.get_bus(10)
 
   >>> print bus.index == 10
@@ -100,7 +100,7 @@ Branches
 --------
 
 Branches in a power network are objects of type :class:`Branch <pfnet.Branch>` and are represented mathematically by the model described in Section 2.1.2 of [TTR2015]_. Each branch has an :data:`index <pfnet.Branch.index>` attribute that can be used to identify this branch in a network. The :class:`Network <pfnet.Network>` class method :func:`get_branch() <pfnet.Network.get_branch>` can be used to extract a branch of a given :data:`index <pfnet.Branch.index>`::
-  
+
   >>> branch = net.get_branch(5)
 
   >>> print branch.index == 5
@@ -123,7 +123,7 @@ Generators
 ----------
 
 Generators in a power network are objects of type :class:`Generator <pfnet.Generator>`. Each generator has an :data:`index <pfnet.Generator.index>` attribute that can be used to identify this generator in a network. The :class:`Network <pfnet.Network>` class method :func:`get_gen() <pfnet.Network.get_gen>` can be used to extract a generator of a given :data:`index <pfnet.Generator.index>`::
-  
+
   >>> gen = net.get_gen(2)
 
   >>> print gen.index == 2
@@ -142,14 +142,14 @@ The active and reactive powers that a generator injects into the bus to which it
 
   >>> print sum([g.P for g in net.generators])*net.base_power
   272.4
-  
+
 .. _net_shunt:
 
 Shunt Devices
 -------------
 
 Shunt devices in a power network are objects of type :class:`Shunt <pfnet.Shunt>`. Each shunt has an :data:`index <pfnet.Shunt.index>` attribute that can be used to identify this shunt in a network. The :class:`Network <pfnet.Network>` class method :func:`get_shunt() <pfnet.Network.get_shunt>` can be used to extract a shunt of a given :data:`index <pfnet.Shunt.index>`::
-  
+
   >>> shunt = net.get_shunt(0)
 
   >>> print shunt.index == 0
@@ -164,7 +164,7 @@ As with other network components, shunt devices can have different properties. S
 Loads
 -----
 
-Loads in a power network are objects of type :class:`Load <pfnet.Load>`. As with other components, the :data:`index <pfnet.Load.index>` attribute is used to identify a load in the network. A list of all the loads in the network is contained in the :data:`loads <pfnet.Network.loads>` attribute of the :class:`Network <pfnet.Network>` class. 
+Loads in a power network are objects of type :class:`Load <pfnet.Load>`. As with other components, the :data:`index <pfnet.Load.index>` attribute is used to identify a load in the network. A list of all the loads in the network is contained in the :data:`loads <pfnet.Network.loads>` attribute of the :class:`Network <pfnet.Network>` class.
 
 Similar to generators, the active and reactive powers that a load consumes from the bus to which it is connected are obtained from the :data:`P <pfnet.Load.P>` and :data:`Q <pfnet.Load.Q>` attributes of the :class:`Load <pfnet.Load>` class. They are also given in units of per unit :data:`system base power <pfnet.Network.base_power>`.
 
@@ -173,9 +173,9 @@ Similar to generators, the active and reactive powers that a load consumes from 
 Variable Generators
 -------------------
 
-Variable generators in a power network are objects of type :class:`VarGenerator <pfnet.VarGenerator>`. They represent non-dispatchable energy sources such as wind generators or farms and photovoltaic power plants. As with other components, the :data:`index <pfnet.VarGenerator.index>` attribute is used to identify a variable generator in the network. In addition to the :data:`index <pfnet.VarGenerator.index>` attribute, a :data:`name <pfnet.VarGenerator.name>` attribute is also available, which can be used to extract a specific variable generator from the network using the :class:`Network <pfnet.Network>` class method :func:`get_vargen_by_name() <pfnet.Network.get_vargen_by_name>`. A list of all the variable generators in the network is also contained in the :data:`var_generators <pfnet.Network.var_generators>` attribute of the :class:`Network <pfnet.Network>` class. 
+Variable generators in a power network are objects of type :class:`VarGenerator <pfnet.VarGenerator>`. They represent non-dispatchable energy sources such as wind generators or farms and photovoltaic power plants. As with other components, the :data:`index <pfnet.VarGenerator.index>` attribute is used to identify a variable generator in the network. In addition to the :data:`index <pfnet.VarGenerator.index>` attribute, a :data:`name <pfnet.VarGenerator.name>` attribute is also available, which can be used to extract a specific variable generator from the network using the :class:`Network <pfnet.Network>` class method :func:`get_vargen_by_name() <pfnet.Network.get_vargen_by_name>`. A list of all the variable generators in the network is also contained in the :data:`var_generators <pfnet.Network.var_generators>` attribute of the :class:`Network <pfnet.Network>` class.
 
-Similar to generators, the active and reactive powers produced by a variable generator are obtained from the :data:`P <pfnet.VarGenerator.P>` and :data:`Q <pfnet.VarGenerator.Q>` attributes of the :class:`VarGenerator <pfnet.VarGenerator>` class in units of per unit :data:`system base power <pfnet.Network.base_power>`. This is the output of the device in the absence of uncertainty. When there is uncertainty, the output of the device is subject to variations about :data:`P <pfnet.VarGenerator.P>` that have a standard deviation given by the attribute :data:`P_std <pfnet.VarGenerator.P_std>`. Output limits of a variable generator are given by the :data:`P_min <pfnet.VarGenerator.P_min>`, :data:`P_max <pfnet.VarGenerator.P_max>`, :data:`Q_min <pfnet.VarGenerator.Q_min>`, and :data:`Q_max <pfnet.VarGenerator.Q_max>` attributes. 
+Similar to generators, the active and reactive powers produced by a variable generator are obtained from the :data:`P <pfnet.VarGenerator.P>` and :data:`Q <pfnet.VarGenerator.Q>` attributes of the :class:`VarGenerator <pfnet.VarGenerator>` class in units of per unit :data:`system base power <pfnet.Network.base_power>`. This is the output of the device in the absence of uncertainty. When there is uncertainty, the output of the device is subject to variations about :data:`P <pfnet.VarGenerator.P>` that have a standard deviation given by the attribute :data:`P_std <pfnet.VarGenerator.P_std>`. Output limits of a variable generator are given by the :data:`P_min <pfnet.VarGenerator.P_min>`, :data:`P_max <pfnet.VarGenerator.P_max>`, :data:`Q_min <pfnet.VarGenerator.Q_min>`, and :data:`Q_max <pfnet.VarGenerator.Q_max>` attributes.
 
 The output of variable generators in a network is subject to random variations that can be correlated, especially for devices that are "nearby". The method :func:`create_vargen_P_sigma() <pfnet.Network.create_vargen_P_sigma>` of the :class:`Network <pfnet.Network>` class allows constructing a covariance matrix for these variations based on a "correlation distance" ``N`` and a given correlation coefficient. The cross-covariance between the variation of two devices that are connected to buses that are less than ``N`` branches away from each other is set such that it is consistent with the given correlation coefficient.
 
@@ -224,7 +224,7 @@ All of these properties are attributes of the :class:`Network <pfnet.Network>` c
 
   >>> for bus in net.buses:
   ...     bus.v_mag = bus.v_mag + 0.1
-  ... 
+  ...
 
   >>> print net.bus_v_max
   1.09
@@ -237,7 +237,7 @@ All of these properties are attributes of the :class:`Network <pfnet.Network>` c
 For convenience, all the network properties can be extracted at once in a dictionary using the :func:`get_properties() <pfnet.Network.get_properties>` class method::
 
   >>> properties = net.get_properties()
-  
+
   >>> print properties['bus_v_max']
   1.19
 
@@ -246,7 +246,7 @@ For convenience, all the network properties can be extracted at once in a dictio
 Variables
 =========
 
-Network quantities can be specified to be ``variables``. This is useful to represent network quantities with vectors and turn the network properties described above as functions of these vectors. 
+Network quantities can be specified to be ``variables``. This is useful to represent network quantities with vectors and turn the network properties described above as functions of these vectors.
 
 To set network quantities as variables, the :class:`Network <pfnet.Network>` class method :func:`set_flags() <pfnet.Network.set_flags>` is used. This method takes as arguments a :ref:`component type <ref_net_obj>`, one or more :ref:`flag types <ref_net_flag>`, one or more ``component properties``, and one or more ``component quantities``.
 
@@ -291,7 +291,7 @@ Network components have a :func:`has_flags() <pfnet.Bus.has_flags>` method that 
 Once variables have been set, the :ref:`vector <ref_vec>` containing all the current variable values can be extracted using :func:`get_var_values() <pfnet.Network.get_var_values>`::
 
   >>> values = net.get_var_values()
-  
+
   >>> print type(values)
   <type 'numpy.ndarray'>
 
@@ -414,14 +414,15 @@ Once a contingency has been constructed, it can be applied and later cleared. Th
   True True
 
   >>> gen_bus = gen.bus
-  >>> branch_bus = branch.bus_from
+  >>> branch_bus = branch.bus_k
+  >>> branch_bus = branch.bus_from # deprecated
 
   >>> # generator and branch connected to buses
   >>> print gen in gen_bus.gens, branch in branch_bus.branches
   True True
-  
+
   >>> c1.apply()
-   
+
   >>> print gen.is_on_outage(), branch.is_on_outage()
   True True
 

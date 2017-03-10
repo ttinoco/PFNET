@@ -12,9 +12,9 @@ from . import test_cases
 import numpy as np
 
 class TestParser(unittest.TestCase):
-    
+
     def setUp(self):
-        
+
         # Network
         self.net = pf.Network()
 
@@ -39,20 +39,20 @@ class TestParser(unittest.TestCase):
                 net.load(case)
 
                 self.assertEqual(net.base_power,100.)
-                
+
                 self.assertEqual(net.num_buses,3)
                 self.assertEqual(net.num_generators,4)
                 self.assertEqual(net.num_loads,3)
                 self.assertEqual(net.num_branches,3)
-                
+
                 bus1 = net.get_bus_by_number(1)
                 bus2 = net.get_bus_by_number(2)
                 bus3 = net.get_bus_by_number(3)
-                
+
                 self.assertEqual(bus1.number,1)
                 self.assertEqual(bus2.number,2)
                 self.assertEqual(bus3.number,3)
-                
+
                 branch13 = net.get_branch(0)
                 branch23 = net.get_branch(1)
                 branch12 = net.get_branch(2)
@@ -60,24 +60,24 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(len(bus1.generators),2)
                 self.assertEqual(len(bus2.generators),1)
                 self.assertEqual(len(bus3.generators),1)
-                
+
                 self.assertEqual(len(bus1.loads),1)
                 self.assertEqual(len(bus2.loads),1)
                 self.assertEqual(len(bus3.loads),1)
-                
+
                 gen1a = bus1.generators[0]
                 gen1b = bus1.generators[1]
                 gen2 = bus2.generators[0]
                 gen3 = bus3.generators[0]
-                
+
                 load1 = bus1.loads[0]
                 load2 = bus2.loads[0]
                 load3 = bus3.loads[0]
-                
+
                 self.assertEqual(load1.bus,bus1)
                 self.assertEqual(load2.bus,bus2)
                 self.assertEqual(load3.bus,bus3)
-                
+
                 self.assertEqual(gen1a.P_max,50)
                 self.assertEqual(gen1b.P_max,50)
                 self.assertEqual(gen2.P_max,25)
@@ -88,66 +88,66 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(gen3.bus,bus3)
                 for gen in net.generators:
                     self.assertEqual(gen.P_min,0.)
-                    
-                self.assertEqual(branch13.bus_from.number,bus1.number)
-                self.assertEqual(branch13.bus_to.number,bus3.number)
 
-                self.assertEqual(branch23.bus_from.number,bus2.number)
-                self.assertEqual(branch23.bus_to.number,bus3.number)
-                
-                self.assertEqual(branch12.bus_from.number,bus1.number)
-                self.assertEqual(branch12.bus_to.number,bus2.number)
-                
+                self.assertEqual(branch13.bus_k.number,bus1.number)
+                self.assertEqual(branch13.bus_m.number,bus3.number)
+
+                self.assertEqual(branch23.bus_k.number,bus2.number)
+                self.assertEqual(branch23.bus_m.number,bus3.number)
+
+                self.assertEqual(branch12.bus_k.number,bus1.number)
+                self.assertEqual(branch12.bus_m.number,bus2.number)
+
                 self.assertEqual(branch13.g,0)
                 self.assertLess(abs(branch13.b + 1./0.1),1e-10)
                 self.assertEqual(branch13.ratingA,30.95)
                 self.assertEqual(branch13.ratingB,30.95)
                 self.assertEqual(branch13.ratingC,30.95)
-                
+
                 self.assertEqual(branch23.g,0)
                 self.assertLess(abs(branch23.b + 1./0.2),1e-10)
                 self.assertEqual(branch23.ratingA,13)
                 self.assertEqual(branch23.ratingB,13)
                 self.assertEqual(branch23.ratingC,13)
-                
+
                 self.assertEqual(branch12.g,0)
                 self.assertLess(abs(branch12.b + 1./0.2),1e-10)
                 self.assertEqual(branch12.ratingA,15)
                 self.assertEqual(branch12.ratingB,15)
                 self.assertEqual(branch12.ratingC,15)
-                
+
                 self.assertEqual(gen1a.cost_coeff_Q0,0)
                 self.assertEqual(gen1a.cost_coeff_Q1,5.*net.base_power)
                 self.assertEqual(gen1a.cost_coeff_Q2,0.02*(net.base_power**2.))
-                
+
                 self.assertEqual(gen1b.cost_coeff_Q0,0)
                 self.assertEqual(gen1b.cost_coeff_Q1,6.*net.base_power)
                 self.assertEqual(gen1b.cost_coeff_Q2,0.03*(net.base_power**2.))
-                
+
                 self.assertEqual(gen2.cost_coeff_Q0,0)
                 self.assertEqual(gen2.cost_coeff_Q1,12.*net.base_power)
                 self.assertEqual(gen2.cost_coeff_Q2,0.06*(net.base_power**2.))
-                
+
                 self.assertEqual(gen3.cost_coeff_Q0,0)
                 self.assertEqual(gen3.cost_coeff_Q1,10.*net.base_power)
                 self.assertEqual(gen3.cost_coeff_Q2,0.08*(net.base_power**2.))
-                
+
                 # Load utility
                 self.assertEqual(load1.util_coeff_Q0,0)
                 self.assertEqual(load1.util_coeff_Q1,400.*net.base_power)
                 self.assertEqual(load1.util_coeff_Q2,-0.03*(net.base_power**2.))
-                
+
                 self.assertEqual(load2.util_coeff_Q0,0)
                 self.assertEqual(load2.util_coeff_Q1,450.*net.base_power)
                 self.assertEqual(load2.util_coeff_Q2,-0.02*(net.base_power**2.))
-                
+
                 self.assertEqual(load3.util_coeff_Q0,0)
                 self.assertEqual(load3.util_coeff_Q1,300.*net.base_power)
                 self.assertEqual(load3.util_coeff_Q2,-0.03*(net.base_power**2.))
-                
+
     def test_sys_problem3(self):
 
-        for case in test_cases.CASES:            
+        for case in test_cases.CASES:
             if case == '../data/sys_problem3.mat':
 
                 net = self.net
@@ -163,7 +163,7 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(net.num_shunts,0)
                 self.assertEqual(net.num_var_generators,0)
                 self.assertEqual(net.num_branches,13)
-                
+
                 # buses
                 bus1 = net.get_bus_by_number(1)
                 bus2 = net.get_bus_by_number(2)
@@ -173,9 +173,9 @@ class TestParser(unittest.TestCase):
                 bus6 = net.get_bus_by_number(6)
                 bus7 = net.get_bus_by_number(7)
                 bus8 = net.get_bus_by_number(8)
-                bus9 = net.get_bus_by_number(9)    
+                bus9 = net.get_bus_by_number(9)
                 bus10 = net.get_bus_by_number(10)
-                
+
                 # loads
                 for bus in net.buses:
                     self.assertEqual(len(bus.loads),1)
@@ -189,7 +189,7 @@ class TestParser(unittest.TestCase):
                 load8 = bus8.loads[0]
                 load9 = bus9.loads[0]
                 load10 = bus10.loads[0]
-                
+
                 self.assertEqual(load1.bus,bus1)
                 self.assertEqual(load2.bus,bus2)
                 self.assertEqual(load3.bus,bus3)
@@ -200,17 +200,17 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(load8.bus,bus8)
                 self.assertEqual(load9.bus,bus9)
                 self.assertEqual(load10.bus,bus10)
-            
-                self.assertEqual(load1.P,55./100.) 
-                self.assertEqual(load2.P,55/100.) 
-                self.assertEqual(load3.P,1300/100.) 
-                self.assertEqual(load4.P,650/100.) 
-                self.assertEqual(load5.P,650/100.) 
-                self.assertEqual(load6.P,200/100.) 
-                self.assertEqual(load7.P,2600/100.) 
-                self.assertEqual(load8.P,3600/100.) 
-                self.assertEqual(load9.P,1100/100.) 
-                self.assertEqual(load10.P,1900/100.) 
+
+                self.assertEqual(load1.P,55./100.)
+                self.assertEqual(load2.P,55/100.)
+                self.assertEqual(load3.P,1300/100.)
+                self.assertEqual(load4.P,650/100.)
+                self.assertEqual(load5.P,650/100.)
+                self.assertEqual(load6.P,200/100.)
+                self.assertEqual(load7.P,2600/100.)
+                self.assertEqual(load8.P,3600/100.)
+                self.assertEqual(load9.P,1100/100.)
+                self.assertEqual(load10.P,1900/100.)
                 for load in net.loads:
                     self.assertEqual(load.P_max,load.P)
                     self.assertEqual(load.P_min,load.P)
@@ -231,43 +231,43 @@ class TestParser(unittest.TestCase):
                 gen3 = bus5.generators[0]
                 gen4 = bus7.generators[0]
                 gen5 = bus8.generators[0]
-                
+
                 self.assertEqual(gen1.bus,bus2)
                 self.assertEqual(gen2.bus,bus3)
                 self.assertEqual(gen3.bus,bus5)
                 self.assertEqual(gen4.bus,bus7)
                 self.assertEqual(gen5.bus,bus8)
-                
+
                 self.assertEqual(gen1.P_min,0)
                 self.assertEqual(gen1.P_max,1200./100.)
                 self.assertEqual(gen1.cost_coeff_Q0,0)
                 self.assertEqual(gen1.cost_coeff_Q1,6.9*100)
-                self.assertEqual(gen1.cost_coeff_Q2,0.00067*(100**2.))    
-                
+                self.assertEqual(gen1.cost_coeff_Q2,0.00067*(100**2.))
+
                 self.assertEqual(gen2.P_min,0)
                 self.assertEqual(gen2.P_max,8000./100.)
                 self.assertEqual(gen2.cost_coeff_Q0,0)
                 self.assertEqual(gen2.cost_coeff_Q1,24.3*100)
-                self.assertEqual(gen2.cost_coeff_Q2,0.00040*(100**2.))    
-                
+                self.assertEqual(gen2.cost_coeff_Q2,0.00040*(100**2.))
+
                 self.assertEqual(gen3.P_min,0)
                 self.assertEqual(gen3.P_max,3000./100.)
                 self.assertEqual(gen3.cost_coeff_Q0,0)
                 self.assertEqual(gen3.cost_coeff_Q1,29.1*100)
-                self.assertEqual(gen3.cost_coeff_Q2,0.00006*(100**2.))    
-                
+                self.assertEqual(gen3.cost_coeff_Q2,0.00006*(100**2.))
+
                 self.assertEqual(gen4.P_min,0)
                 self.assertEqual(gen4.P_max,800./100.)
                 self.assertEqual(gen4.cost_coeff_Q0,0)
                 self.assertEqual(gen4.cost_coeff_Q1,6.9*100)
-                self.assertEqual(gen4.cost_coeff_Q2,0.00026*(100**2.))    
-                
+                self.assertEqual(gen4.cost_coeff_Q2,0.00026*(100**2.))
+
                 self.assertEqual(gen5.P_min,0)
                 self.assertEqual(gen5.P_max,2000./100.)
                 self.assertEqual(gen5.cost_coeff_Q0,0)
                 self.assertEqual(gen5.cost_coeff_Q1,50.*100)
-                self.assertEqual(gen5.cost_coeff_Q2,0.0015*(100**2.))    
-                
+                self.assertEqual(gen5.cost_coeff_Q2,0.0015*(100**2.))
+
                 # branches
                 branch1 = net.get_branch(12)
                 branch2 = net.get_branch(11)
@@ -282,93 +282,93 @@ class TestParser(unittest.TestCase):
                 branch11 = net.get_branch(2)
                 branch12 = net.get_branch(1)
                 branch13 = net.get_branch(0)
-                
-                self.assertEqual(branch1.bus_from,bus1)
-                self.assertEqual(branch1.bus_to,bus3)
+
+                self.assertEqual(branch1.bus_k,bus1)
+                self.assertEqual(branch1.bus_m,bus3)
                 self.assertLess(abs(branch1.b + 1./0.1),1e-10)
                 self.assertEqual(branch1.ratingA,3000./100.)
                 self.assertEqual(branch1.ratingB,3000./100.)
                 self.assertEqual(branch1.ratingC,3000./100.)
-            
-                self.assertEqual(branch2.bus_from,bus1)
-                self.assertEqual(branch2.bus_to,bus10)
+
+                self.assertEqual(branch2.bus_k,bus1)
+                self.assertEqual(branch2.bus_m,bus10)
                 self.assertLess(abs(branch2.b + 1./0.27),1e-10)
                 self.assertEqual(branch2.ratingA,2000./100.)
                 self.assertEqual(branch2.ratingB,2000./100.)
                 self.assertEqual(branch2.ratingC,2000./100.)
-                
-                self.assertEqual(branch3.bus_from,bus2)
-                self.assertEqual(branch3.bus_to,bus3)
+
+                self.assertEqual(branch3.bus_k,bus2)
+                self.assertEqual(branch3.bus_m,bus3)
                 self.assertLess(abs(branch3.b + 1./0.12),1e-10)
                 self.assertEqual(branch3.ratingA,6500./100.)
                 self.assertEqual(branch3.ratingB,6500./100.)
                 self.assertEqual(branch3.ratingC,6500./100.)
-                
-                self.assertEqual(branch4.bus_from,bus2)
-                self.assertEqual(branch4.bus_to,bus9)
+
+                self.assertEqual(branch4.bus_k,bus2)
+                self.assertEqual(branch4.bus_m,bus9)
                 self.assertLess(abs(branch4.b + 1./0.07),1e-10)
                 self.assertEqual(branch4.ratingA,5500./100.)
                 self.assertEqual(branch4.ratingB,5500./100.)
                 self.assertEqual(branch4.ratingC,5500./100.)
-                
-                self.assertEqual(branch5.bus_from,bus2)
-                self.assertEqual(branch5.bus_to,bus10)
+
+                self.assertEqual(branch5.bus_k,bus2)
+                self.assertEqual(branch5.bus_m,bus10)
                 self.assertLess(abs(branch5.b + 1./0.14),1e-10)
                 self.assertEqual(branch5.ratingA,5500./100.)
                 self.assertEqual(branch5.ratingB,5500./100.)
                 self.assertEqual(branch5.ratingC,5500./100.)
-                
-                self.assertEqual(branch6.bus_from,bus3)
-                self.assertEqual(branch6.bus_to,bus4)
+
+                self.assertEqual(branch6.bus_k,bus3)
+                self.assertEqual(branch6.bus_m,bus4)
                 self.assertLess(abs(branch6.b + 1./0.1),1e-10)
                 self.assertEqual(branch6.ratingA,3000./100.)
                 self.assertEqual(branch6.ratingB,3000./100.)
                 self.assertEqual(branch6.ratingC,3000./100.)
-                
-                self.assertEqual(branch7.bus_from,bus3)
-                self.assertEqual(branch7.bus_to,bus5)
+
+                self.assertEqual(branch7.bus_k,bus3)
+                self.assertEqual(branch7.bus_m,bus5)
                 self.assertLess(abs(branch7.b + 1./0.17),1e-10)
                 self.assertEqual(branch7.ratingA,4000./100.)
                 self.assertEqual(branch7.ratingB,4000./100.)
                 self.assertEqual(branch7.ratingC,4000./100.)
-                
-                self.assertEqual(branch8.bus_from,bus4)
-                self.assertEqual(branch8.bus_to,bus5)
+
+                self.assertEqual(branch8.bus_k,bus4)
+                self.assertEqual(branch8.bus_m,bus5)
                 self.assertLess(abs(branch8.b + 1./0.17),1e-10)
                 self.assertEqual(branch8.ratingA,4000./100.)
                 self.assertEqual(branch8.ratingB,4000./100.)
                 self.assertEqual(branch8.ratingC,4000./100.)
-                
-                self.assertEqual(branch9.bus_from,bus5)
-                self.assertEqual(branch9.bus_to,bus6)
+
+                self.assertEqual(branch9.bus_k,bus5)
+                self.assertEqual(branch9.bus_m,bus6)
                 self.assertLess(abs(branch9.b + 1./0.17),1e-10)
                 self.assertEqual(branch9.ratingA,5000./100.)
                 self.assertEqual(branch9.ratingB,5000./100.)
                 self.assertEqual(branch9.ratingC,5000./100.)
-                
-                self.assertEqual(branch10.bus_from,bus6)
-                self.assertEqual(branch10.bus_to,bus7)
+
+                self.assertEqual(branch10.bus_k,bus6)
+                self.assertEqual(branch10.bus_m,bus7)
                 self.assertLess(abs(branch10.b + 1./0.16),1e-10)
                 self.assertEqual(branch10.ratingA,2000./100.)
                 self.assertEqual(branch10.ratingB,2000./100.)
                 self.assertEqual(branch10.ratingC,2000./100.)
-                
-                self.assertEqual(branch11.bus_from,bus7)
-                self.assertEqual(branch11.bus_to,bus8)
+
+                self.assertEqual(branch11.bus_k,bus7)
+                self.assertEqual(branch11.bus_m,bus8)
                 self.assertLess(abs(branch11.b + 1./0.25),1e-10)
                 self.assertEqual(branch11.ratingA,3000./100.)
                 self.assertEqual(branch11.ratingB,3000./100.)
                 self.assertEqual(branch11.ratingC,3000./100.)
-                
-                self.assertEqual(branch12.bus_from,bus8)
-                self.assertEqual(branch12.bus_to,bus9)
+
+                self.assertEqual(branch12.bus_k,bus8)
+                self.assertEqual(branch12.bus_m,bus9)
                 self.assertLess(abs(branch12.b + 1./0.25),1e-10)
                 self.assertEqual(branch12.ratingA,2500./100.)
                 self.assertEqual(branch12.ratingB,2500./100.)
                 self.assertEqual(branch12.ratingC,2500./100.)
-                
-                self.assertEqual(branch13.bus_from,bus8)
-                self.assertEqual(branch13.bus_to,bus10)
+
+                self.assertEqual(branch13.bus_k,bus8)
+                self.assertEqual(branch13.bus_m,bus10)
                 self.assertLess(abs(branch13.b + 1./0.07),1e-10)
                 self.assertEqual(branch13.ratingA,4000./100.)
                 self.assertEqual(branch13.ratingB,4000./100.)

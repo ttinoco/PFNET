@@ -11,9 +11,9 @@ import sys
 import numpy as np
 from Cython.Build import cythonize
 from distutils.core import setup, Extension
-    
+
 setup(name='PFNET',
-      version='1.2.5',
+      version='1.2.7',
       license='BSD 2-clause license',
       description='Power Flow Network Library',
       author='Tomas Tinoco De Rubira',
