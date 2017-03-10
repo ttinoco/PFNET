@@ -1,11 +1,15 @@
 # Makefile for Sphinx documentation
 #
 
+ifndef PFNET_DOCS
+	$(error 'PFNET_DOCS' must be set to the location to put documentation files)
+endif
+
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
-BUILDDIR      = ../../../pfnet-docs/matlab
+BUILDDIR      = $(PFNET_DOCS)/matlab
 PDFBUILDDIR   = /tmp
 PDF           = ../manual.pdf
 
