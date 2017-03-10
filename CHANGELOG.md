@@ -2,17 +2,17 @@ Targets
 -------
 * Mechanism for changing constraint parameters.
 * MAT or ART data writer.
-* CIM parser in python.
+* CIM parser written in python.
 * Rich object comparisons for all network components.
 * Instructions for adding new functions and constraints.
-* Use Autotools.
+* Area/zone projections.
+* Battery initial and final energy levels.
 
 Unreleased
 ----------
 * Python-based parsers.
-* info dictionary in Python wrapper that indictes availability of graphviz, python-based parser, raw parser.
-* Area/zone projections.
-* Battery initial and final energy levels.
+* Info dictionary in Python wrapper that indictes availability of graphviz, python-based parser, raw parser.
+* Autotools build system (automatic detection of raw_parser, graphviz, python-based parser).
 
 Version 1.2.7
 -------------
