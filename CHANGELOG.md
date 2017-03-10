@@ -11,6 +11,9 @@ Unreleased
 ----------
 * Area/zone projections.
 * Battery initial and final energy levels.
+
+Version 1.2.7
+-------------
 * Added constraint that enforces AC branch flow limits using current magnitudes (ignores branches with 0 ratingA).
 * Added support for extra variables in constraints (Jbar, Gbar matrices) and in problem.
 * Changed constraint nnz counters (Acounter,Jcounter,Gcounter) to (A_nnz,J_nnz,G_nnz).
