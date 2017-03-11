@@ -4,6 +4,7 @@ install:
 - sudo apt-get update
 - sudo apt-get -y purge libgraphviz-dev
 - sudo apt-get -y install m4
+- sudo pip install nose
 
 script: 
 - mkdir m4
@@ -12,3 +13,6 @@ script:
 - make
 - make check
 - sudo make install
+- cd python
+- python setup.py build_ext --inplace
+- nosetests -s -v
