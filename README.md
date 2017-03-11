@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/ttinoco/PFNET.svg?branch=master)](https://travis-ci.org/ttinoco/PFNET)
+
 # PFNET: Power Flow Network Library
 
 ## Overview
