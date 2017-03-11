@@ -4,7 +4,8 @@ install:
 - sudo apt-get -y install m4
 
 script: 
-- autoreconf --force
+- mkdir m4
+- autoreconf -fvi
 - ./configure
 - make
 - make check
