@@ -1,6 +1,7 @@
 language: c
 
 script: 
+- autoreconf --force
 - ./configure
 - make
 - make check
