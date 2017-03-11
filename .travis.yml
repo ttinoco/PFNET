@@ -13,6 +13,7 @@ script:
 - make
 - make check
 - sudo make install
+- export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
 - cd python
 - python setup.py build_ext --inplace
 - nosetests -s -v
