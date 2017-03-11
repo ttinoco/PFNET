@@ -1,5 +1,8 @@
 language: c
 
+install:
+- sudo apt-get -y install m4
+
 script: 
 - autoreconf --force
 - ./configure
