@@ -2,7 +2,7 @@ language: c
 
 install:
 - sudo apt-get update
-- sudo apt-get -y purge libgraphviz-dev libgraphviz graphviz
+- sudo apt-get -y purge libgraphviz-dev
 - sudo apt-get -y install m4
 
 script: 
