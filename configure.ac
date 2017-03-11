@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.69])
+#AC_PREREQ([2.69])
 AC_INIT([PFNET], [1.2.7], [ttinoco5687@gmail.com])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_SRCDIR([src/net/net.c])
