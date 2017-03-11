@@ -13,7 +13,7 @@ import numpy as np
 from scipy.sparse import coo_matrix,triu,tril
 
 NUM_TRIALS = 25
-EPS = 3e0 # %
+EPS = 5. # %
 TOL = 1e-3
 
 class TestFunctions(unittest.TestCase):

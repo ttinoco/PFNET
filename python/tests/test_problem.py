@@ -14,7 +14,7 @@ from numpy.linalg import norm
 from scipy.sparse import coo_matrix,triu,bmat
 
 NUM_TRIALS = 25
-EPS = 2e0 # %
+EPS = 3. # %
 TOL = 1e-4
 
 class TestProblem(unittest.TestCase):
