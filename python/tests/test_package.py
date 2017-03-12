@@ -20,8 +20,8 @@ class TestPackage(unittest.TestCase):
     def test_info(self):
 
         self.assertTrue(isinstance(pf.info,dict))
-        self.assertTrue(pf.info.has_key('graphviz'))
-        self.assertTrue(pf.info.has_key('python parsers'))
-        self.assertTrue(pf.info.has_key('raw parser'))
+        self.assertTrue('graphviz' in pf.info)
+        self.assertTrue('python parsers' in pf.info)
+        self.assertTrue('raw parser' in pf.info)
         
         

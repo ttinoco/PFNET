@@ -7,7 +7,7 @@
 #***************************************************#
 
 from __future__ import print_function
-from parser import BaseParser
+from .parser import BaseParser
 
 class DummyParser(BaseParser):
 

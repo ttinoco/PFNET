@@ -1,1 +1,1 @@
-from dummy_parser import DummyParser
+from .dummy_parser import DummyParser
