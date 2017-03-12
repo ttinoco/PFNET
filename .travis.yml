@@ -1,9 +1,14 @@
-language: c
+language: python
 
-install:
+python:
+- "2.7"
+
+before_install:
 - sudo apt-get update
 - sudo apt-get -y purge libgraphviz-dev
-- sudo pip install nose numpy scipy cython
+
+install:
+- pip install -r ./python/requirements.txt
 
 script: 
 - make NO_GRAPHVIZ=1 NO_RAW_PARSER=1
