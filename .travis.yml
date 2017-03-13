@@ -12,7 +12,7 @@ before_install:
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install m4                         ; fi
 
 install:
-- pip install -r ./python/requirements.txt
+- sudo pip install -r ./python/requirements.txt
 
 script: 
 - mkdir m4
