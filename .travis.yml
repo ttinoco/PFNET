@@ -1,13 +1,19 @@
 language: python
 
+os:
+- linux
+- osx
+
 python:
 - "2.7"
 - "3.4"
 
 before_install:
-- sudo apt-get update
-- sudo apt-get -y purge libgraphviz-dev
-- sudo apt-get -y install m4
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update                   ; fi
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get -y purge libgraphviz-dev ; fi
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get -y install m4            ; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update                             ; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install m4                         ; fi
 
 install:
 - pip install -r ./python/requirements.txt
@@ -19,7 +25,8 @@ script:
 - make
 - make check
 - sudo make install
-- export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib                     ; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export DYLD_FALLBACK_LIBRARY_PATH=${DYLD_FALLBACK_LIBRARY_PATH}:/usr/local/lib ; fi
 - cd python
 - python setup.py build_ext --inplace
 - nosetests -s -v
