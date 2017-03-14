@@ -22,8 +22,9 @@ setup(name='PFNET',
       packages=['pfnet',
                 'pfnet.parser'],
       ext_modules=cythonize([Extension("pfnet.cpfnet", 
-                                       [os.path.join("pfnet",'cpfnet.pyx')],
-                                       library_dirs=[],
-                                       libraries=['pfnet'],
+                                       [os.path.join("pfnet","cpfnet.pyx")],
+                                       library_dirs=["/usr/local/lib"],
+                                       libraries=["pfnet"],
                                        extra_compile_args=[],
+                                       #extra_link_args=["-Wl,-rpath -Wl,/usr/local/lib"]
                                        include_dirs=["../include",np.get_include()])]))
