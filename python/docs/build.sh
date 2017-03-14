@@ -11,5 +11,5 @@ make
 make install
 ls $PFNET/build/lib
 cd ../../../
-python setup.py build_ext --inplace --rpath=$PFNET/build/lib
+python setup.py build_ext --inplace --libdirs=$PFNET/build/lib
 cd docs
