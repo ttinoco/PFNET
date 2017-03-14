@@ -9,7 +9,6 @@ before_install:
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get -y purge libgraphviz-dev ; fi
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get -y install m4            ; fi
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update                             ; fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install m4                         ; fi
 
 install:
 - sudo pip install -r ./python/requirements.txt
