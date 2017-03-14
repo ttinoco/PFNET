@@ -5,8 +5,11 @@ gunzip pfnet*
 tar -xvf pfnet*
 cd pfnet*
 export PFNET=$PWD
-./configure
+echo $PFNET
+./configure --prefix=$PWD/build
 make
+make install
+ls $PFNET/build/lib
 cd ../../../
-python setup.py build_ext --inplace --rpath=$PFNET/src
+python setup.py build_ext --inplace --rpath=$PFNET/build/lib
 cd docs
