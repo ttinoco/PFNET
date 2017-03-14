@@ -1,12 +1,8 @@
 #! /bin/sh
 
 cd ../../
-apt-get install autoconf
-apt-get install automake
-./autogen.sh
 ./configure
 make
-make install
 cd python
-python setup.py build_ext --inplace
+python setup.py build_ext --inplace --rpath=../src
 cd docs
