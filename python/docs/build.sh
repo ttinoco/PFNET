@@ -1,8 +1,11 @@
 #! /bin/sh
 
-cd ../../
+cd _static
+gunzip pfnet*
+tar -xvf pfnet*
+cd pfnet*
 ./configure
 make
-cd python
-python setup.py build_ext --inplace --rpath=../src
+cd ../../
+python setup.py build_ext --inplace --rpath=./docs/_static
 cd docs
