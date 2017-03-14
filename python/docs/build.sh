@@ -1,9 +1,9 @@
 #! /bin/sh
 
 cd ../../
-./autogen.sh
 ./configure
 make
 make install
-cd python/docs
+cd python
 python setup.py build_ext --inplace
+cd docs
