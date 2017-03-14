@@ -7,10 +7,15 @@
 #***************************************************#
 
 import os
-import sys
+import platform
 import numpy as np
 from Cython.Build import cythonize
 from distutils.core import setup, Extension
+
+if platform.system() == 'Linux':
+    extra_link_args=["-Wl,-rpath,/usr/local/lib"]
+if platform.system() == 'Darwin':
+    extra_link_args=["-Wl,-rpath,/usr/local/lib"]
 
 setup(name='PFNET',
       version='1.2.7',
@@ -26,5 +31,5 @@ setup(name='PFNET',
                                        library_dirs=[],
                                        libraries=["pfnet"],
                                        extra_compile_args=[],
-                                       extra_link_args=["-Wl,-rpath=/usr/local/lib"],
+                                       extra_link_args=extra_link_args,
                                        include_dirs=["../include",np.get_include()])]))
