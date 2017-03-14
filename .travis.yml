@@ -19,8 +19,7 @@ install:
 - sudo pip install nose
 
 script: 
-- mkdir m4
-- autoreconf -fvi
+- ./autogen.sh
 - ./configure
 - make
 - make check
