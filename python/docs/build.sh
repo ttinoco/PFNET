@@ -1,6 +1,10 @@
 #! /bin/sh
 
 cd ../../
+aclocal
+autoconf
+autoheader
+automake --add-missing
 ./configure
 make
 cd python
