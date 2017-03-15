@@ -130,7 +130,7 @@ libpfnet_la_SOURCES = 	$(graph_src) $(math_src) $(net_src) $(parser_src) \
 
 # have to move back a directory $PFNET/include/pfnet/*.h
 libpfnet_la_CFLAGS = -I$(inc_path)/..
-#libpfnet_la_LDFLAGS = -shared # want both static and shared
+libpfnet_la_LDFLAGS = -shared # want both static and shared
 libpfnet_la_LIBADD = -lm
 
 pkginclude_HEADERS = 	$(graph_hdr) $(math_hdr) $(net_hdr) $(parser_hdr) \
