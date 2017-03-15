@@ -22,7 +22,7 @@ import os
 
 # Build
 if os.environ.get('READTHEDOCS'):
-    os.system("export PFNET_DOCS=./_build/html/c; doxygen Doxygen")
+    os.system("export PFNET_DOCS=./_build/html/c; doxygen Doxyfile")
 
 # -- General configuration ------------------------------------------------
 
