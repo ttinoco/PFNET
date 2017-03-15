@@ -34,7 +34,7 @@ PFNET is released under the BSD 2-clause license.
 
    Getting Started<start>
    Extensions<extensions>
-   Source Code Reference (Doxygen) <http://pfnet-c-api.readthedocs.io/>
+   Source Code Reference (Doxygen) <http://pfnet.readthedocs.io/en/latest/c/>
 
 Indices and tables
 ==================
