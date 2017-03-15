@@ -18,8 +18,8 @@ PFNET is released under the BSD 2-clause license.
 
 **Wrappers**
 
-* `Python <http://ttinoco.github.io/PFNET/python>`_
-* `Matlab <http://ttinoco.github.io/PFNET/matlab>`_ (getting started)
+* `Python <http://pfnet-python.readthedocs.io/>`_
+* Matlab (getting started)
 
 **Contributors (alphabetical)**
 
@@ -34,7 +34,7 @@ PFNET is released under the BSD 2-clause license.
 
    Getting Started<start>
    Extensions<extensions>
-   Source Code Reference (Doxygen) <http://ttinoco.github.io/PFNET/c>
+   Source Code Reference (Doxygen) <http://pfnet-c-api.readthedocs.io/>
 
 Indices and tables
 ==================
