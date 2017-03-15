@@ -19,7 +19,7 @@ args,unknown = parser.parse_known_args()
 sys.argv = [sys.argv[0]] + unknown
 
 setup(name='PFNET',
-      version='1.2.7',
+      version='1.2.8',
       license='BSD 2-clause license',
       description='Power Flow Network Library',
       author='Tomas Tinoco De Rubira',
