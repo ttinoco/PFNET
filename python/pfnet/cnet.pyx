@@ -1169,7 +1169,7 @@ cdef class Network:
         """ Correlation value (coefficient) of variable generators. """
         def __get__(self): return cnet.NET_get_vargen_corr_value(self._c_net)
 
-cdef new_Network(cnet.Net* n):
+cdef public new_Network(cnet.Net* n):
     if n is not NULL:
         net = Network(alloc=False)
         net._c_net = n

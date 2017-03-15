@@ -13,6 +13,7 @@
 #include <pfnet/parser_RAW.h>
 #include <pfnet/parser_MAT.h>
 #include <pfnet/parser_ART.h>
+#include <pfnet/parser_PYTHON.h>
 
 struct Net {
 
@@ -1724,9 +1725,9 @@ void NET_load(Net* net, char* filename, int output_level) {
     sprintf(net->error_string,"unable to find extension in %s",filename);
     net->error_flag = TRUE;
   }
-  else if (strcmp(ext+1,"raw") == 0) {
 
-    // PSSE RAW
+  // PSSE RAW
+  else if (strcmp(ext+1,"raw") == 0) {
     RAW_Parser* parser = RAW_PARSER_new();
     RAW_PARSER_set(parser,"output_level",output_level);
     RAW_PARSER_read(parser,filename);
@@ -1739,9 +1740,9 @@ void NET_load(Net* net, char* filename, int output_level) {
     }
     RAW_PARSER_del(parser);
   }
-  else if (strcmp(ext+1,"mat") == 0) {
 
-    // MATPOWER MAT
+  // MATPOWER MAT
+  else if (strcmp(ext+1,"mat") == 0) {
     MAT_Parser* parser = MAT_PARSER_new();
     MAT_PARSER_set(parser,"output_level",output_level);
     MAT_PARSER_read(parser,filename);
@@ -1754,9 +1755,9 @@ void NET_load(Net* net, char* filename, int output_level) {
     }
     MAT_PARSER_del(parser);
   }
-  else if (strcmp(ext+1,"art") == 0) {
 
-    // ARTERE ART
+  // ARTERE ART  
+  else if (strcmp(ext+1,"art") == 0) {
     ART_Parser* parser = ART_PARSER_new();
     ART_PARSER_set(parser,"output_level",output_level);
     ART_PARSER_read(parser,filename);
@@ -1769,6 +1770,25 @@ void NET_load(Net* net, char* filename, int output_level) {
     }
     ART_PARSER_del(parser);
   }
+
+  // DUMMY PYTHON
+  #if HAVE_PYTHON_PARSER
+  else if (strcmp(ext+1,"dummy") == 0) {
+    PYTHON_Parser* parser = PYTHON_PARSER_new("DummyParser");
+    PYTHON_PARSER_set(parser,"output_level",output_level);
+    PYTHON_PARSER_read(parser,filename);
+    PYTHON_PARSER_show(parser);
+    if (!PYTHON_PARSER_has_error(parser))
+      PYTHON_PARSER_load(parser,net);
+    if (PYTHON_PARSER_has_error(parser)) {
+      strcpy(net->error_string,PYTHON_PARSER_get_error_string(parser));
+      net->error_flag = TRUE;
+    }
+    PYTHON_PARSER_del(parser);
+  }
+  #endif
+
+  // UNKNOWN
   else {
     sprintf(net->error_string,"invalid file type (%s)",ext+1);
     net->error_flag = TRUE;

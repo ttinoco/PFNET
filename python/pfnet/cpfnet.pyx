@@ -16,6 +16,9 @@ from functools import reduce
 cimport cconstants
 cimport cvec
 cimport cmat
+cimport cparser_python
+cimport cparser_raw
+cimport cgraph
 
 from scipy import misc
 import tempfile
@@ -23,6 +26,13 @@ import tempfile
 from scipy.sparse import coo_matrix
 
 np.import_array()
+
+# Information
+#############
+
+info = {'graphviz': bool(cgraph.HAVE_GRAPHVIZ),
+        'python parsers': bool(cparser_python.HAVE_PYTHON_PARSER),
+        'raw parser': bool(cparser_raw.HAVE_RAW_PARSER)}
 
 # Constants
 ###########

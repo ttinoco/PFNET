@@ -433,6 +433,7 @@ Constraint Types
 .. data:: 'voltage regulation by transformers'
 .. data:: 'voltage regulation by shunts'
 .. data:: 'DC branch flow limits'
+.. data:: 'AC branch flow limits'
 .. data:: 'variable bounds'
 .. data:: 'generator ramp limits'
 

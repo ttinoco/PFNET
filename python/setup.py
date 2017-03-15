@@ -8,26 +8,15 @@
 
 import os
 import sys
+import argparse
 import numpy as np
 from Cython.Build import cythonize
 from distutils.core import setup, Extension
 
-libraries = ['pfnet']
-extra_compile_args = []
-
-# raw parser
-if '--no_raw_parser' in sys.argv:
-    sys.argv.remove('--no_raw_parser')
-    extra_compile_args.append('-DNO_RAW_PARSER')
-else:
-    libraries.append('raw_parser')
-
-# graphviz
-if '--no_graphviz' in sys.argv:
-    sys.argv.remove('--no_graphviz')
-    extra_compile_args.append('-DNO_GRAPHVIZ')
-else:
-    libraries.append('gvc')
+parser = argparse.ArgumentParser()
+parser.add_argument('--libdirs', dest='libdirs', action='store',nargs='*',default=[])
+args,unknown = parser.parse_known_args()
+sys.argv = [sys.argv[0]] + unknown
 
 setup(name='PFNET',
       version='1.2.7',
@@ -35,11 +24,13 @@ setup(name='PFNET',
       description='Power Flow Network Library',
       author='Tomas Tinoco De Rubira',
       author_email='ttinoco5687@gmail.com',
-      url='https://github.com/ttinoco/PFNET',
-      packages=['pfnet'],
-      ext_modules=cythonize([Extension("pfnet.cpfnet",
-                                       [os.path.join("pfnet",'cpfnet.pyx')],
-                                       libraries=libraries,
-                                       extra_compile_args=extra_compile_args,
-                                       library_dirs=["../lib"],
+      url='https://github.com/ttinoco/PFNET/python',
+      packages=['pfnet',
+                'pfnet.parser'],
+      ext_modules=cythonize([Extension("pfnet.cpfnet", 
+                                       [os.path.join("pfnet","cpfnet.pyx")],
+                                       library_dirs=args.libdirs,
+                                       libraries=["pfnet"],
+                                       extra_compile_args=[],
+                                       extra_link_args=['-Wl,-rpath,%s' %s for s in args.libdirs]+["-Wl,-rpath,/usr/local/lib"],
                                        include_dirs=["../include",np.get_include()])]))

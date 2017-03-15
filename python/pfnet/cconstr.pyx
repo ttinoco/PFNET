@@ -238,7 +238,7 @@ cdef class Constraint:
         def __get__(self): return Matrix(cconstr.CONSTR_get_H_combined(self._c_constr))
 
     property num_extra_vars:
-            """ Number of extra variables for constraints (set during count) (int). """
+            """ Number of extra variables (set during count) (int). """
             def __get__(self): return cconstr.CONSTR_get_num_extra_vars(self._c_constr)
 
 cdef new_Constraint(cconstr.Constr* c, cnet.Net* n):

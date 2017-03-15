@@ -383,5 +383,5 @@ cdef class Problem:
         def __get__(self): return cprob.PROB_get_num_nonlinear_equality_constraints(self._c_prob)
 
     property num_extra_vars:
-        """ Number of extra varaibles (int). """
+        """ Number of extra varaibles (set during analyze) (int). """
         def __get__(self): return cprob.PROB_get_num_extra_vars(self._c_prob)

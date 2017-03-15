@@ -1,9 +1,15 @@
 #! /bin/sh
 
-cd ../../
-./autogen.sh
-./configure
+cd _static
+gunzip pfnet*
+tar -xvf pfnet*
+cd pfnet*
+export PFNET=$PWD
+echo $PFNET
+./configure --prefix=$PWD/build
 make
 make install
-cd python/docs
-python setup.py build_ext --inplace
+ls $PFNET/build/lib
+cd ../../../
+python setup.py build_ext --inplace --libdirs=$PFNET/build/lib
+cd docs
