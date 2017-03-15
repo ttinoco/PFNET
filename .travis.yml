@@ -16,7 +16,6 @@ before_install:
 
 install:
 - sudo pip install -r ./python/requirements.txt
-- sudo pip install nose
 
 script: 
 - ./autogen.sh
