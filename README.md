@@ -1,6 +1,7 @@
-[![Build Status](https://travis-ci.org/ttinoco/PFNET.svg?branch=autotools-tomas)](https://travis-ci.org/ttinoco/PFNET)
-
 # PFNET: Power Flow Network Library
+
+[![Build Status](https://travis-ci.org/ttinoco/PFNET.svg?branch=master)](https://travis-ci.org/ttinoco/PFNET)
+[![Documentation Status](https://readthedocs.org/projects/pfnet/badge/?version=latest)](http://pfnet.readthedocs.io/en/latest/?badge=latest)
 
 ## Overview
 
@@ -12,4 +13,4 @@ BSD 2-clause license.
 
 ## Documentation
 
-The documentation for this library can be found in <http://ttinoco.github.io/PFNET>.
+The documentation for this library can be found in <http://pfnet.readthedocs.io/>.
