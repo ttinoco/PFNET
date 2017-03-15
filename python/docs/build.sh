@@ -11,8 +11,8 @@ make
 make install
 ls $PFNET/build/lib
 cd ../../../
-python setup.py build_ext --inplace --libdirs=$PFNET/build/lib > log.txt
-cat log.txt
+./clean.sh
+python setup.py build_ext --inplace --libdirs=$PFNET/build/lib
 ls pfnet
 python -c "import pfnet; assert True"
 cd docs
