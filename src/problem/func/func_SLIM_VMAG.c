@@ -3,12 +3,25 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
 
 #include <pfnet/func_SLIM_VMAG.h>
+
+Func* FUNC_SLIM_VMAG_new(REAL weight, Net* net) {
+  Func* f = FUNC_new(weight,net);
+  FUNC_set_name(f,"soft voltage magnitude limits");
+  FUNC_set_func_init(f, &FUNC_SLIM_VMAG_init);
+  FUNC_set_func_count_step(f, &FUNC_SLIM_VMAG_count_step);
+  FUNC_set_func_allocate(f, &FUNC_SLIM_VMAG_allocate);
+  FUNC_set_func_clear(f, &FUNC_SLIM_VMAG_clear);
+  FUNC_set_func_analyze_step(f, &FUNC_SLIM_VMAG_analyze_step);
+  FUNC_set_func_eval_setp(f, &FUNC_SLIM_VMAG_eval_step);
+  FUNC_set_func_free(f, &FUNC_SLIM_VMAG_free);
+  return f;
+}
 
 void FUNC_SLIM_VMAG_init(Func* f) {
   // Nothing

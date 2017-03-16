@@ -3,12 +3,25 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
 
 #include <pfnet/func_NETCON_COST.h>
+
+Func* FUNC_NETCON_COST_new(REAL weight, Net* net) {
+  Func* f = FUNC_new(weight,net);
+  FUNC_set_name(f,"net consumption cost");
+  FUNC_set_func_init(f, &FUNC_NETCON_COST_init);
+  FUNC_set_func_count_step(f, &FUNC_NETCON_COST_count_step);
+  FUNC_set_func_allocate(f, &FUNC_NETCON_COST_allocate);
+  FUNC_set_func_clear(f, &FUNC_NETCON_COST_clear);
+  FUNC_set_func_analyze_step(f, &FUNC_NETCON_COST_analyze_step);
+  FUNC_set_func_eval_setp(f, &FUNC_NETCON_COST_eval_step);
+  FUNC_set_func_free(f, &FUNC_NETCON_COST_free);
+  return f;
+}
 
 void FUNC_NETCON_COST_init(Func* f) {
   // Nothing

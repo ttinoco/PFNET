@@ -3,24 +3,13 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
 
 #include <pfnet/array.h>
 #include <pfnet/func.h>
-#include <pfnet/func_REG_VMAG.h>
-#include <pfnet/func_REG_VANG.h>
-#include <pfnet/func_REG_PQ.h>
-#include <pfnet/func_REG_RATIO.h>
-#include <pfnet/func_REG_PHASE.h>
-#include <pfnet/func_REG_SUSC.h>
-#include <pfnet/func_GEN_COST.h>
-#include <pfnet/func_SP_CONTROLS.h>
-#include <pfnet/func_SLIM_VMAG.h>
-#include <pfnet/func_LOAD_UTIL.h>
-#include <pfnet/func_NETCON_COST.h>
 
 struct Func {
   
@@ -28,12 +17,12 @@ struct Func {
   BOOL error_flag;                     /**< @brief Error flag */
   char error_string[FUNC_BUFFER_SIZE]; /**< @brief Error string */
 
+  // Name
+  char name[FUNC_BUFFER_SIZE]; /**< @brief Name string */
+
   // Network
   Net* net;    /**< @brief Power network */
   
-  // Type
-  int type;    /**< @brief Function type */
-
   // Weight
   REAL weight; /**< @brief Function weight for forming an objective function */
 
@@ -50,14 +39,14 @@ struct Func {
   char* bus_counted;    /**< @brief Flags for processing buses */
   int bus_counted_size; /**< @brief Size of array of flags for processing buses */
   int Hcounter;         /**< @brief Counter of number of nonzero elements of the Hessian */
-
+  
   // Functions
   void (*func_init)(Func* f);                                    /**< @brief Initialization function */
   void (*func_count_step)(Func* f, Branch* br, int t);           /**< @brief Function for countinng nonzero entries */
   void (*func_allocate)(Func* f);                                /**< @brief Function for allocating required arrays */
   void (*func_clear)(Func* f);                                   /**< @brief Function for clearing flags, counters, and function values */
   void (*func_analyze_step)(Func* f, Branch* br, int t);         /**< @brief Function for analyzing sparsity pattern */
-  void (*func_eval_step)(Func* f, Branch* br, int t, Vec* vals); /**< @brief Function for evaluating function */
+  void (*func_eval_step)(Func* f, Branch* br, int t, Vec* v);    /**< @brief Function for evaluating function */
   void (*func_free)(Func* f);                                    /**< @brief Function for de-allocating any data used */
 
   // List
@@ -96,45 +85,6 @@ void FUNC_del(Func* f) {
 
     free(f);
   }
-}
-
-int FUNC_get_type(Func* f) {
-  if (f)
-    return f->type;
-  else
-    return FUNC_TYPE_UNKNOWN;
-}
-
-char* FUNC_get_type_str(Func* f) {
-  if (f)
-    switch (f->type) {
-    case FUNC_TYPE_REG_VMAG:
-      return FUNC_TYPE_REG_VMAG_STR;
-    case FUNC_TYPE_REG_VANG:
-      return FUNC_TYPE_REG_VANG_STR;
-    case FUNC_TYPE_REG_PQ:
-      return FUNC_TYPE_REG_PQ_STR;
-    case FUNC_TYPE_REG_RATIO:
-      return FUNC_TYPE_REG_RATIO_STR;
-    case FUNC_TYPE_REG_PHASE:
-      return FUNC_TYPE_REG_PHASE_STR;
-    case FUNC_TYPE_REG_SUSC:
-      return FUNC_TYPE_REG_SUSC_STR;
-    case FUNC_TYPE_GEN_COST:
-      return FUNC_TYPE_GEN_COST_STR;
-    case FUNC_TYPE_SP_CONTROLS:
-      return FUNC_TYPE_SP_CONTROLS_STR;
-    case FUNC_TYPE_SLIM_VMAG:
-      return FUNC_TYPE_SLIM_VMAG_STR;
-    case FUNC_TYPE_LOAD_UTIL:
-      return FUNC_TYPE_LOAD_UTIL_STR;
-    case FUNC_TYPE_NETCON_COST:
-      return FUNC_TYPE_NETCON_COST_STR;
-    default:
-      return FUNC_TYPE_UNKNOWN_STR;
-    }
-  else
-    return FUNC_TYPE_UNKNOWN_STR;
 }
 
 REAL FUNC_get_weight(Func* f) {
@@ -252,7 +202,7 @@ void FUNC_list_eval_step(Func* f, Branch* br, int t, Vec* values) {
     FUNC_eval_step(ff,br,t,values);
 }
 
-Func* FUNC_new(int type, REAL weight, Net* net) {
+Func* FUNC_new(REAL weight, Net* net) {
 
   Func* f = (Func*)malloc(sizeof(Func));
 
@@ -263,8 +213,10 @@ Func* FUNC_new(int type, REAL weight, Net* net) {
   // Network
   f->net = net;
 
+  // Name
+  strcpy(f->name,"unknown");
+
   // Fields
-  f->type = type;
   f->weight = weight;
   f->phi = 0;
   f->gphi = NULL;
@@ -276,134 +228,23 @@ Func* FUNC_new(int type, REAL weight, Net* net) {
   f->bus_counted_size = 0;
   f->bus_counted = NULL;
   
-  // Functions
-  switch (type) {
-
-  case FUNC_TYPE_REG_VMAG: // Volage magnitude regularization
-    f->func_init = FUNC_REG_VMAG_init;
-    f->func_count_step = FUNC_REG_VMAG_count_step;
-    f->func_allocate = FUNC_REG_VMAG_allocate;
-    f->func_clear = FUNC_REG_VMAG_clear;
-    f->func_analyze_step = FUNC_REG_VMAG_analyze_step;
-    f->func_eval_step = FUNC_REG_VMAG_eval_step;
-    f->func_free = FUNC_REG_VMAG_free;
-    break;
-
-  case FUNC_TYPE_REG_VANG: // Volage angle regularization
-    f->func_init = FUNC_REG_VANG_init;
-    f->func_count_step = FUNC_REG_VANG_count_step;
-    f->func_allocate = FUNC_REG_VANG_allocate;
-    f->func_clear = FUNC_REG_VANG_clear;
-    f->func_analyze_step = FUNC_REG_VANG_analyze_step;
-    f->func_eval_step = FUNC_REG_VANG_eval_step;
-    f->func_free = FUNC_REG_VANG_free;
-    break;
-    
-  case FUNC_TYPE_REG_PQ: // Generator reactive power regularization
-    f->func_init = FUNC_REG_PQ_init;
-    f->func_count_step = FUNC_REG_PQ_count_step;
-    f->func_allocate = FUNC_REG_PQ_allocate;
-    f->func_clear = FUNC_REG_PQ_clear;
-    f->func_analyze_step = FUNC_REG_PQ_analyze_step;
-    f->func_eval_step = FUNC_REG_PQ_eval_step;
-    f->func_free = FUNC_REG_PQ_free;
-    break;
-
-  case FUNC_TYPE_REG_RATIO: // Transformer tap ratio regularization
-    f->func_init = FUNC_REG_RATIO_init;
-    f->func_count_step = FUNC_REG_RATIO_count_step;
-    f->func_allocate = FUNC_REG_RATIO_allocate;
-    f->func_clear = FUNC_REG_RATIO_clear;
-    f->func_analyze_step = FUNC_REG_RATIO_analyze_step;
-    f->func_eval_step = FUNC_REG_RATIO_eval_step;
-    f->func_free = FUNC_REG_RATIO_free;
-    break;
-
-  case FUNC_TYPE_REG_PHASE: // Transformer phase shift regularization
-    f->func_init = FUNC_REG_PHASE_init;
-    f->func_count_step = FUNC_REG_PHASE_count_step;
-    f->func_allocate = FUNC_REG_PHASE_allocate;
-    f->func_clear = FUNC_REG_PHASE_clear;
-    f->func_analyze_step = FUNC_REG_PHASE_analyze_step;
-    f->func_eval_step = FUNC_REG_PHASE_eval_step;
-    f->func_free = FUNC_REG_PHASE_free;
-    break;
-
-  case FUNC_TYPE_REG_SUSC: // Transformer tap ratio regularization
-    f->func_init = FUNC_REG_SUSC_init;
-    f->func_count_step = FUNC_REG_SUSC_count_step;
-    f->func_allocate = FUNC_REG_SUSC_allocate;
-    f->func_clear = FUNC_REG_SUSC_clear;
-    f->func_analyze_step = FUNC_REG_SUSC_analyze_step;
-    f->func_eval_step = FUNC_REG_SUSC_eval_step;
-    f->func_free = FUNC_REG_SUSC_free;
-    break;
-
-  case FUNC_TYPE_GEN_COST: // Generator power production cost
-    f->func_init = FUNC_GEN_COST_init;
-    f->func_count_step = FUNC_GEN_COST_count_step;
-    f->func_allocate = FUNC_GEN_COST_allocate;
-    f->func_clear = FUNC_GEN_COST_clear;
-    f->func_analyze_step = FUNC_GEN_COST_analyze_step;
-    f->func_eval_step = FUNC_GEN_COST_eval_step;
-    f->func_free = FUNC_GEN_COST_free;
-    break;
-
-  case FUNC_TYPE_SP_CONTROLS: // Sparse controls
-    f->func_init = FUNC_SP_CONTROLS_init;
-    f->func_count_step = FUNC_SP_CONTROLS_count_step;
-    f->func_allocate = FUNC_SP_CONTROLS_allocate;
-    f->func_clear = FUNC_SP_CONTROLS_clear;
-    f->func_analyze_step = FUNC_SP_CONTROLS_analyze_step;
-    f->func_eval_step = FUNC_SP_CONTROLS_eval_step;
-    f->func_free = FUNC_SP_CONTROLS_free;
-    break;
-
-  case FUNC_TYPE_SLIM_VMAG: // Voltage magnitude soft limits
-    f->func_init = FUNC_SLIM_VMAG_init;
-    f->func_count_step = FUNC_SLIM_VMAG_count_step;
-    f->func_allocate = FUNC_SLIM_VMAG_allocate;
-    f->func_clear = FUNC_SLIM_VMAG_clear;
-    f->func_analyze_step = FUNC_SLIM_VMAG_analyze_step;
-    f->func_eval_step = FUNC_SLIM_VMAG_eval_step;
-    f->func_free = FUNC_SLIM_VMAG_free;
-    break;
-
-  case FUNC_TYPE_LOAD_UTIL: // Load power consumption utility
-    f->func_init = FUNC_LOAD_UTIL_init;
-    f->func_count_step = FUNC_LOAD_UTIL_count_step;
-    f->func_allocate = FUNC_LOAD_UTIL_allocate;
-    f->func_clear = FUNC_LOAD_UTIL_clear;
-    f->func_analyze_step = FUNC_LOAD_UTIL_analyze_step;
-    f->func_eval_step = FUNC_LOAD_UTIL_eval_step;
-    f->func_free = FUNC_LOAD_UTIL_free;
-    break;
-
-  case FUNC_TYPE_NETCON_COST: // Net bust power consumption cost
-    f->func_init = FUNC_NETCON_COST_init;
-    f->func_count_step = FUNC_NETCON_COST_count_step;
-    f->func_allocate = FUNC_NETCON_COST_allocate;
-    f->func_clear = FUNC_NETCON_COST_clear;
-    f->func_analyze_step = FUNC_NETCON_COST_analyze_step;
-    f->func_eval_step = FUNC_NETCON_COST_eval_step;
-    f->func_free = FUNC_NETCON_COST_free;
-    break;
- 
-  default:
-    f->func_init = NULL;
-    f->func_count_step = NULL;
-    f->func_allocate = NULL;
-    f->func_clear = NULL;
-    f->func_analyze_step = NULL;
-    f->func_eval_step = NULL;
-    f->func_free = NULL;
-    break;
-  }
+  // Methods
+  f->func_count_step = NULL;
+  f->func_allocate = NULL;
+  f->func_clear = NULL;
+  f->func_analyze_step = NULL;
+  f->func_eval_step = NULL;
+  f->func_free = NULL;
 
   // Update network
   FUNC_update_network(f);
   
   return f;
+}
+
+void FUNC_set_name(Func* f, char* name) {
+  if (f)
+    strcpy(f->name,name);
 }
 
 void FUNC_set_phi(Func* f, REAL phi) {
@@ -549,10 +390,17 @@ void FUNC_clear_error(Func * f) {
 }
 
 char* FUNC_get_error_string(Func* f) {
-  if (!f)
-    return NULL;
-  else
+  if (f)
     return f->error_string;
+  else
+    return NULL;
+}
+
+char* FUNC_get_name(Func* f) {
+  if (f)
+    return f->name;
+  else
+    return NULL;
 }
 
 void FUNC_update_network(Func* f) {
@@ -579,4 +427,39 @@ Net* FUNC_get_network(Func* f) {
     return f->net;
   else
     return NULL;
+}
+
+void FUNC_set_func_init(Func* f, void (*func_init)(Func* f)) {
+  if (f)
+    f->func_init = func_init;
+}
+
+void FUNC_set_func_count_step(Func* f, void (*func_count_step)(Func* f, Branch* br, int t)) {
+  if (f)
+    f->func_count_step = func_count_step;
+}
+
+void FUNC_set_func_allocate(Func* f, void (*func_allocate)(Func* f)) {
+  if (f)
+    f->func_allocate = func_allocate;
+}
+
+void FUNC_set_func_clear(Func* f, void (*func_clear)(Func* f)) {
+  if (f)
+    f->func_clear = func_clear;
+}
+
+void FUNC_set_func_analyze_step(Func* f, void (*func_analyze_step)(Func* f, Branch* br, int t)) {
+  if (f)
+    f->func_analyze_step = func_analyze_step;
+}
+
+void FUNC_set_func_eval_setp(Func* f, void (*func_eval_step)(Func* f, Branch* br, int t, Vec* v)) {
+  if (f)
+    f->func_eval_step = func_eval_step;
+}
+
+void FUNC_set_func_free(Func* f, void (*func_free)(Func* f)) {
+  if (f)
+    f->func_free = func_free;
 }

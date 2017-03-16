@@ -16,6 +16,19 @@
 #include "func.h"
 #include "heur.h"
 
+// Functions
+#include "func_GEN_COST.h"
+#include "func_LOAD_UTIL.h"
+#include "func_NETCON_COST.h"
+#include "func_REG_PHASE.h"
+#include "func_REG_PQ.h"
+#include "func_REG_RATIO.h"
+#include "func_REG_SUSC.h"
+#include "func_REG_VANG.h"
+#include "func_REG_VMAG.h"
+#include "func_SLIM_VMAG.h"
+#include "func_SP_CONTROLS.h"
+
 // Buffer
 #define PROB_BUFFER_SIZE 1024 /**< @brief Default problem buffer size for strings */
 
@@ -27,7 +40,7 @@ typedef struct Prob Prob;
 
 // Function prototypes
 void PROB_add_constr(Prob* p, int type);
-void PROB_add_func(Prob* p, int type, REAL weight);
+void PROB_add_func(Prob* p, Func* f);
 void PROB_add_heur(Prob* p, int type);
 void PROB_analyze(Prob* p);
 void PROB_apply_heuristics(Prob* p, Vec* point);

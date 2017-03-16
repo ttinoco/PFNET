@@ -28,13 +28,12 @@ cdef class Function:
     cdef cfunc.Func* _c_func
     cdef bint alloc
 
-    def __init__(self,ftype,weight,Network net,alloc=True):
+    def __init__(self,weight,Network net,alloc=True):
         """
         Function class.
 
         Parameters
         ----------
-        ftype : string (:ref:`ref_func_type`)
         weight : float
         net : :class:`Network <pfnet.Network>`
         alloc : {``True``, ``False``}
@@ -42,10 +41,10 @@ cdef class Function:
 
         pass
 
-    def __cinit__(self,ftype,weight,Network net,alloc=True):
+    def __cinit__(self,weight,Network net,alloc=True):
 
         if alloc:
-            self._c_func = cfunc.FUNC_new(str2func[ftype],weight,net._c_net)
+            self._c_func = cfunc.FUNC_new(weight,net._c_net)
         else:
             self._c_func = NULL
         self.alloc = alloc
@@ -110,9 +109,9 @@ cdef class Function:
         if cfunc.FUNC_has_error(self._c_func):
             raise FunctionError(cfunc.FUNC_get_error_string(self._c_func))
 
-    property type:
-        """ Function type (string) (:ref:`ref_func_type`). """
-        def __get__(self): return func2str[cfunc.FUNC_get_type(self._c_func)]
+    property name:
+        """ Function name (string). """
+        def __get__(self): return cfunc.FUNC_get_name(self._c_func).decode('UTF-8')
 
     property Hcounter:
         """ Number of nonzero entries in Hessian matrix (int). """
@@ -136,7 +135,7 @@ cdef class Function:
 
 cdef new_Function(cfunc.Func* f, cnet.Net* n):
     if f is not NULL and n is not NULL:
-        func = Function(0,0,new_Network(n),alloc=False)
+        func = Function(0,new_Network(n),alloc=False)
         func._c_func = f
         return func
     else:

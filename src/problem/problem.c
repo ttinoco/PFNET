@@ -62,9 +62,9 @@ void PROB_add_constr(Prob* p, int type) {
   }
 }
 
-void PROB_add_func(Prob* p, int type, REAL weight) {
+void PROB_add_func(Prob* p, Func* f) {
   if (p)
-    p->func = FUNC_list_add(p->func,FUNC_new(type,weight,p->net));
+    p->func = FUNC_list_add(p->func,f);
 }
 
 void PROB_add_heur(Prob* p, int type) {
@@ -623,7 +623,7 @@ char* PROB_get_show_str(Prob* p) {
   sprintf(out+strlen(out),"\nProblem\n");
   sprintf(out+strlen(out),"functions  : %d\n",FUNC_list_len(p->func));
   for (f = p->func; f != NULL; f = FUNC_get_next(f))
-    sprintf(out+strlen(out),"  type: %s\n",FUNC_get_type_str(f));
+    sprintf(out+strlen(out),"  name: %s\n",FUNC_get_name(f));
   sprintf(out+strlen(out),"constraints: %d\n",CONSTR_list_len(p->constr));  
   for (c = p->constr; c != NULL; c = CONSTR_get_next(c))
     sprintf(out+strlen(out),"  type: %s\n",CONSTR_get_type_str(c));

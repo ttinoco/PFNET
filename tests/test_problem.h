@@ -2,7 +2,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -61,7 +61,7 @@ static char* test_problem_basic() {
   PROB_add_constr(p,CONSTR_TYPE_PAR_GEN_P);
   PROB_add_constr(p,CONSTR_TYPE_PAR_GEN_Q);
 
-  PROB_add_func(p,FUNC_TYPE_REG_VMAG,3.4);
+  PROB_add_func(p,FUNC_REG_VMAG_new(3.4,net));
 
   Assert("error - cannot find constraint",PROB_find_constr(p,CONSTR_TYPE_PF));
   Assert("error - cannot find constraint",PROB_find_constr(p,CONSTR_TYPE_PAR_GEN_P));
