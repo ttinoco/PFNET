@@ -125,21 +125,6 @@ str2prop = {'bus' : str2prop_bus,
             'variable generator' : str2prop_vargen,
             'battery' : str2prop_bat}
 
-# Functions
-str2func = {'voltage magnitude regularization' : cfunc.FUNC_TYPE_REG_VMAG,
-            'voltage angle regularization' : cfunc.FUNC_TYPE_REG_VANG,
-            'generator powers regularization' : cfunc.FUNC_TYPE_REG_PQ,
-            'tap ratio regularization' : cfunc.FUNC_TYPE_REG_RATIO,
-            'phase shift regularization' : cfunc.FUNC_TYPE_REG_PHASE,
-            'susceptance regularization' : cfunc.FUNC_TYPE_REG_SUSC,
-            'generation cost' : cfunc.FUNC_TYPE_GEN_COST,
-            'sparse controls penalty' : cfunc.FUNC_TYPE_SP_CONTROLS,
-            'soft voltage magnitude limits' : cfunc.FUNC_TYPE_SLIM_VMAG,
-            'consumption utility' : cfunc.FUNC_TYPE_LOAD_UTIL,
-            'net consumption cost' : cfunc.FUNC_TYPE_NETCON_COST}
-
-func2str = dict([(v,k) for k,v in str2func.items()])
-
 # Constraints
 str2constr = {'AC power balance' : cconstr.CONSTR_TYPE_PF,
               'DC power balance' : cconstr.CONSTR_TYPE_DCPF,

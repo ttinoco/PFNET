@@ -76,5 +76,7 @@ void FUNC_set_func_clear(Func* f, void (*func_clear)(Func* f));
 void FUNC_set_func_analyze_step(Func* f, void (*func_analyze_step)(Func* f, Branch* br, int t));
 void FUNC_set_func_eval_setp(Func* f, void (*func_eval_step)(Func* f, Branch* br, int t, Vec* v));
 void FUNC_set_func_free(Func* f, void (*func_free)(Func* f));
+void* FUNC_get_data(Func* f);
+void FUNC_set_data(Func* f, void* data);
 
 #endif

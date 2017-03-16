@@ -17,7 +17,7 @@ cdef extern from "pfnet/problem.h":
     ctypedef double REAL
         
     void PROB_add_constr(Prob* p, int ctype)
-    void PROB_add_func(Prob* p, int ftype, REAL weight)
+    void PROB_add_func(Prob* p, Func* f)
     void PROB_add_heur(Prob* p, int htype)
     void PROB_analyze(Prob* p)
     void PROB_apply_heuristics(Prob* p, Vec* point)

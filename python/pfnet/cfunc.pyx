@@ -8,6 +8,8 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
+cimport cvec
+cimport cbranch
 cimport cfunc
 
 class FunctionError(Exception):
@@ -140,3 +142,52 @@ cdef new_Function(cfunc.Func* f, cnet.Net* n):
         return func
     else:
         raise FunctionError('invalid function data')
+
+cdef class CustomFunction(Function):
+    
+    def count_step(self,branch,t):
+        pass
+        
+    def allocate(self):
+        pass
+
+    def clear(self):
+        pass
+
+    def analyze_step(self,branch,t):
+        pass
+
+cdef void func_init(cfunc.Func* f):
+    pass # nothing
+
+cdef void func_count_step(cfunc.Func* f, cbranch.Branch* br, int t):
+    cdef CustomFunction fc = <CustomFunction>cfunc.FUNC_get_data(f)
+    fc.count_step(new_Branch(br),t)
+    # HERE: update fc._c_func
+
+cdef void func_allocate(cfunc.Func* f):
+    cdef CustomFunction fc = <CustomFunction>cfunc.FUNC_get_data(f)
+    fc.allocate()
+    # HERE: update fc._c_func
+        
+cdef void func_clear(cfunc.Func* f):
+    cdef CustomFunction fc = <CustomFunction>cfunc.FUNC_get_data(f)
+    fc.clear()
+    # HERE: update fc._c_func
+
+cdef void func_analyze_step(cfunc.Func* f, cbranch.Branch* br, int t):
+    cdef CustomFunction fc = <CustomFunction>cfunc.FUNC_get_data(f)
+    fc.analyze_step(new_Branch(br),t)
+    # HERE: update fc._c_func
+
+cdef void func_eval_step(cfunc.Func* f, cbranch.Branch* br, int t, cvec.Vec* v):
+    cdef CustomFunction fc = <CustomFunction>cfunc.FUNC_get_data(f)
+    fc.eval_step(new_Branch(br),t,Vector(v))
+    # HERE: update fc._c_func
+
+cdef void func_free(cfunc.Func* f):
+    cdef CustomFunction fc = <CustomFunction>cfunc.FUNC_get_data(f)
+    fc.free()
+    # HERE: update fc._c_func
+
+

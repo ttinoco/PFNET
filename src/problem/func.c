@@ -49,6 +49,9 @@ struct Func {
   void (*func_eval_step)(Func* f, Branch* br, int t, Vec* v);    /**< @brief Function for evaluating function */
   void (*func_free)(Func* f);                                    /**< @brief Function for de-allocating any data used */
 
+  // Custom data
+  void* data;  /**< @brief Type-dependent function data */
+
   // List
   Func* next; /**< @brief List of functions for forming objective function */
 };
@@ -235,6 +238,9 @@ Func* FUNC_new(REAL weight, Net* net) {
   f->func_analyze_step = NULL;
   f->func_eval_step = NULL;
   f->func_free = NULL;
+
+  // Data
+  f->data = NULL;
 
   // Update network
   FUNC_update_network(f);
@@ -462,4 +468,16 @@ void FUNC_set_func_eval_setp(Func* f, void (*func_eval_step)(Func* f, Branch* br
 void FUNC_set_func_free(Func* f, void (*func_free)(Func* f)) {
   if (f)
     f->func_free = func_free;
+}
+
+void* FUNC_get_data(Func* f) {
+  if (f)
+    return f->data;
+  else
+    return NULL;
+}
+
+void FUNC_set_data(Func* f, void* data) {
+  if (f)
+    f->data = data;
 }

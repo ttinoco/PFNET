@@ -6,7 +6,7 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
-cdef extern from "pfnet/func.h":
+cdef extern from "pfnet/pfnet.h":
 
     ctypedef struct Func
     ctypedef struct Net
@@ -32,3 +32,19 @@ cdef extern from "pfnet/func.h":
     char* FUNC_get_name(Func* f)
     char* FUNC_get_error_string(Func* f)
     void FUNC_update_network(Func* f)
+
+    Func* FUNC_GEN_COST_new(REAL w, Net* net)
+    Func* FUNC_LOAD_UTIL_new(REAL w, Net* net)
+    Func* FUNC_NETCON_COST_new(REAL w, Net* net)
+    Func* FUNC_REG_PHASE_new(REAL w, Net* net)
+    Func* FUNC_REG_PQ_new(REAL w, Net* net)
+    Func* FUNC_REG_RATIO_new(REAL w, Net* net)
+    Func* FUNC_REG_SUSC_new(REAL w, Net* net)
+    Func* FUNC_REG_VANG_new(REAL w, Net* net)
+    Func* FUNC_REG_VMAG_new(REAL w, Net* net)
+    Func* FUNC_SLIM_VMAG_new(REAL w, Net* net)
+    Func* FUNC_SP_CONTROLS_new(REAL w, Net* net)
+
+    void* FUNC_get_data(Func* f)
+    void FUNC_set_data(Func* f, void* data)
+    
