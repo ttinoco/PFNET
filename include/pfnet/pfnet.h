@@ -15,4 +15,17 @@
 #include "problem.h"
 #include "graph.h"
 
+// Functions
+#include "func_GEN_COST.h"
+#include "func_LOAD_UTIL.h"
+#include "func_NETCON_COST.h"
+#include "func_REG_PHASE.h"
+#include "func_REG_PQ.h"
+#include "func_REG_RATIO.h"
+#include "func_REG_SUSC.h"
+#include "func_REG_VANG.h"
+#include "func_REG_VMAG.h"
+#include "func_SLIM_VMAG.h"
+#include "func_SP_CONTROLS.h"
+
 #endif
