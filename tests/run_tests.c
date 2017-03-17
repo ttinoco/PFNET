@@ -11,6 +11,7 @@
 #include "test_network.h"
 #include "test_graph.h"
 #include "test_constraints.h"
+#include "test_functions.h"
 #include "test_problem.h"
 
 int tests_run = 0;
@@ -41,7 +42,7 @@ static char * all_tests() {
   run_test(test_constr_REG_SHUNT);
 
   // Functions
-  
+  run_test(test_func_GEN_COST);
 
   // Problem
   run_test(test_problem_basic);

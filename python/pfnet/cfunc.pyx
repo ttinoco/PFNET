@@ -22,44 +22,41 @@ class FunctionError(Exception):
     def __str__(self):
         return repr(self.value)
 
-cdef class Function:
+cdef class FunctionBase:
     """
     Function class.
     """
 
     cdef cfunc.Func* _c_func
-    cdef bint alloc
+    cdef bint _alloc
 
-    def __init__(self,weight,Network net,alloc=True):
+    def __init__(self,name,weight,Network net):
         """
         Function class.
 
         Parameters
         ----------
+        name : string
         weight : float
         net : :class:`Network <pfnet.Network>`
-        alloc : {``True``, ``False``}
         """
 
         pass
 
-    def __cinit__(self,weight,Network net,alloc=True):
+    def __cinit__(self,name,weight,Network net):
 
-        if alloc:
-            self._c_func = cfunc.FUNC_new(weight,net._c_net)
-        else:
-            self._c_func = NULL
-        self.alloc = alloc
+        self._c_func = NULL
+        self._alloc = False
 
     def __dealloc__(self):
         """
         Frees function C data structure.
         """
 
-        if self.alloc:
+        if self._alloc:
             cfunc.FUNC_del(self._c_func)
             self._c_func = NULL
-
+            
     def del_matvec(self):
         """
         Deletes matrices and vectors associated with
@@ -115,9 +112,9 @@ cdef class Function:
         """ Function name (string). """
         def __get__(self): return cfunc.FUNC_get_name(self._c_func).decode('UTF-8')
 
-    property Hcounter:
-        """ Number of nonzero entries in Hessian matrix (int). """
-        def __get__(self): return cfunc.FUNC_get_Hcounter(self._c_func)
+    property Hphi_nnz:
+        """ Counter of nonzero entries in Hessian matrix (int). """
+        def __get__(self): return cfunc.FUNC_get_Hphi_nnz(self._c_func)
 
     property phi:
         """ Function value (float). """
@@ -137,14 +134,54 @@ cdef class Function:
 
 cdef new_Function(cfunc.Func* f, cnet.Net* n):
     if f is not NULL and n is not NULL:
-        func = Function(0,new_Network(n),alloc=False)
+        func = FunctionBase('',0,new_Network(n))
         func._c_func = f
         return func
     else:
         raise FunctionError('invalid function data')
 
-cdef class CustomFunction(Function):
+cdef class Function(FunctionBase):
     
+    def __cinit__(self,name,weight,Network net):
+                
+        if name == "generation cost":
+            self._c_func = cfunc.FUNC_GEN_COST_new(weight,net._c_net)
+        elif name == "consumption utility":
+            self._c_func = cfunc.FUNC_LOAD_UTIL_new(weight,net._c_net)
+        elif name == "net consumption cost":
+            self._c_func = cfunc.FUNC_NETCON_COST_new(weight,net._c_net)
+        elif name == "phase shift regularization":
+            self._c_func = cfunc.FUNC_REG_PHASE_new(weight,net._c_net)
+        elif name == "generator powers regularization":
+            self._c_func = cfunc.FUNC_REG_PQ_new(weight,net._c_net)
+        elif name == "tap ratio regularization":
+            self._c_func = cfunc.FUNC_REG_RATIO_new(weight,net._c_net)
+        elif name == "susceptance regularization":
+            self._c_func = cfunc.FUNC_REG_SUSC_new(weight,net._c_net)
+        elif name == "voltage angle regularization":
+            self._c_func = cfunc.FUNC_REG_VANG_new(weight,net._c_net)
+        elif name == "voltage magnitude regularization":
+            self._c_func = cfunc.FUNC_REG_VMAG_new(weight,net._c_net)
+        elif name == "soft voltage magnitude limits":
+            self._c_func = cfunc.FUNC_SLIM_VMAG_new(weight,net._c_net)
+        elif name == "sparse controls penalty":
+            self._c_func = cfunc.FUNC_SP_CONTROLS_new(weight,net._c_net)
+        else:
+            FunctionError('invalid function name')
+            
+        self._alloc = True
+    
+cdef class CustomFunction(FunctionBase):
+
+    def __cinit__(self,weight,Network net):
+        
+        cfunc.FUNC_set_data(self._c_func,<void*>self)
+        cfunc.FUNC_set_func_count_step(self._c_func,func_count_step)
+        cfunc.FUNC_set_func_allocate(self._c_func,func_allocate)
+        cfunc.FUNC_set_func_clear(self._c_func,func_clear)
+        cfunc.FUNC_set_func_analyze_step(self._c_func,func_analyze_step)
+        cfunc.FUNC_set_func_eval_step(self._c_func,func_eval_step)
+        
     def count_step(self,branch,t):
         pass
         
@@ -157,37 +194,24 @@ cdef class CustomFunction(Function):
     def analyze_step(self,branch,t):
         pass
 
-cdef void func_init(cfunc.Func* f):
-    pass # nothing
-
 cdef void func_count_step(cfunc.Func* f, cbranch.Branch* br, int t):
     cdef CustomFunction fc = <CustomFunction>cfunc.FUNC_get_data(f)
     fc.count_step(new_Branch(br),t)
-    # HERE: update fc._c_func
 
 cdef void func_allocate(cfunc.Func* f):
     cdef CustomFunction fc = <CustomFunction>cfunc.FUNC_get_data(f)
     fc.allocate()
-    # HERE: update fc._c_func
         
 cdef void func_clear(cfunc.Func* f):
     cdef CustomFunction fc = <CustomFunction>cfunc.FUNC_get_data(f)
     fc.clear()
-    # HERE: update fc._c_func
 
 cdef void func_analyze_step(cfunc.Func* f, cbranch.Branch* br, int t):
     cdef CustomFunction fc = <CustomFunction>cfunc.FUNC_get_data(f)
     fc.analyze_step(new_Branch(br),t)
-    # HERE: update fc._c_func
 
 cdef void func_eval_step(cfunc.Func* f, cbranch.Branch* br, int t, cvec.Vec* v):
     cdef CustomFunction fc = <CustomFunction>cfunc.FUNC_get_data(f)
     fc.eval_step(new_Branch(br),t,Vector(v))
-    # HERE: update fc._c_func
-
-cdef void func_free(cfunc.Func* f):
-    cdef CustomFunction fc = <CustomFunction>cfunc.FUNC_get_data(f)
-    fc.free()
-    # HERE: update fc._c_func
 
 

@@ -10,6 +10,10 @@ Targets
 
 Unreleased
 ----------
+* Changed function Hessian nnz counter (Hcounter to Hphi_nnz).
+* Problem add_function takes Function object/struct and not function name.
+* Function class constructor takes function name for convenience.
+* CustomFunction class for creating function written in python that work with the C library.
 
 Version 1.2.8 (pre-release)
 ---------------------------

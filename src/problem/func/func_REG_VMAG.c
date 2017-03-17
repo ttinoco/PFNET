@@ -18,7 +18,7 @@ Func* FUNC_REG_VMAG_new(REAL weight, Net* net) {
   FUNC_set_func_allocate(f, &FUNC_REG_VMAG_allocate);
   FUNC_set_func_clear(f, &FUNC_REG_VMAG_clear);
   FUNC_set_func_analyze_step(f, &FUNC_REG_VMAG_analyze_step);
-  FUNC_set_func_eval_setp(f, &FUNC_REG_VMAG_eval_step);
+  FUNC_set_func_eval_step(f, &FUNC_REG_VMAG_eval_step);
   FUNC_set_func_free(f, &FUNC_REG_VMAG_free);
   return f;
 }
@@ -39,7 +39,7 @@ void FUNC_REG_VMAG_clear(Func* f) {
   // Constant so not clear it
 
   // Counter
-  FUNC_set_Hcounter(f,0);
+  FUNC_set_Hphi_nnz(f,0);
 
   // Flags
   FUNC_clear_bus_counted(f);
@@ -51,7 +51,7 @@ void FUNC_REG_VMAG_count_step(Func* f, Branch* br, int t) {
   Bus* buses[2];
   Bus* bus;
   int bus_index_t[2];
-  int* Hcounter;
+  int* Hphi_nnz;
   char* bus_counted;
   int k;
   int T;
@@ -60,11 +60,11 @@ void FUNC_REG_VMAG_count_step(Func* f, Branch* br, int t) {
   T = BRANCH_get_num_periods(br);
 
   // Constr data
-  Hcounter = FUNC_get_Hcounter_ptr(f);
+  Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
   bus_counted = FUNC_get_bus_counted(f);
 
   // Check pointers
-  if (!Hcounter || !bus_counted)
+  if (!Hphi_nnz || !bus_counted)
     return;
 
   // Check outage
@@ -85,16 +85,16 @@ void FUNC_REG_VMAG_count_step(Func* f, Branch* br, int t) {
     if (!bus_counted[bus_index_t[k]]) {
 
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) // v var
-	(*Hcounter)++;
+	(*Hphi_nnz)++;
 
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) { // yv var
-	(*Hcounter)++; // y var
-	(*Hcounter)++; // z var
+	(*Hphi_nnz)++; // y var
+	(*Hphi_nnz)++; // z var
       }
 
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var
-	(*Hcounter)++; // vl
-	(*Hcounter)++; // vh
+	(*Hphi_nnz)++; // vl
+	(*Hphi_nnz)++; // vh
       }
     }
 
@@ -107,10 +107,10 @@ void FUNC_REG_VMAG_allocate(Func* f) {
 
   // Local variables
   int num_vars;
-  int Hcounter;
+  int Hphi_nnz;
 
   num_vars = NET_get_num_vars(FUNC_get_network(f));
-  Hcounter = FUNC_get_Hcounter(f);
+  Hphi_nnz = FUNC_get_Hphi_nnz(f);
 
   // gphi
   FUNC_set_gphi(f,VEC_new(num_vars));
@@ -118,7 +118,7 @@ void FUNC_REG_VMAG_allocate(Func* f) {
   // Hphi
   FUNC_set_Hphi(f,MAT_new(num_vars,
 			  num_vars,
-			  Hcounter));
+			  Hphi_nnz));
 }
 
 void FUNC_REG_VMAG_analyze_step(Func* f, Branch* br, int t) {
@@ -127,7 +127,7 @@ void FUNC_REG_VMAG_analyze_step(Func* f, Branch* br, int t) {
   Bus* buses[2];
   Bus* bus;
   int bus_index_t[2];
-  int* Hcounter;
+  int* Hphi_nnz;
   char* bus_counted;
   Mat* H;
   int k;
@@ -139,11 +139,11 @@ void FUNC_REG_VMAG_analyze_step(Func* f, Branch* br, int t) {
 
   // Constr data
   H = FUNC_get_Hphi(f);
-  Hcounter = FUNC_get_Hcounter_ptr(f);
+  Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
   bus_counted = FUNC_get_bus_counted(f);
 
   // Check pointers
-  if (!Hcounter || !bus_counted)
+  if (!Hphi_nnz || !bus_counted)
     return;
 
   // Check outage
@@ -164,34 +164,34 @@ void FUNC_REG_VMAG_analyze_step(Func* f, Branch* br, int t) {
     if (!bus_counted[bus_index_t[k]]) {
 
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
-	MAT_set_i(H,*Hcounter,BUS_get_index_v_mag(bus,t));
-	MAT_set_j(H,*Hcounter,BUS_get_index_v_mag(bus,t));
-	MAT_set_d(H,*Hcounter,1./(dv*dv));
-	(*Hcounter)++;
+	MAT_set_i(H,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
+	MAT_set_j(H,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
+	MAT_set_d(H,*Hphi_nnz,1./(dv*dv));
+	(*Hphi_nnz)++;
       }
 
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) { // yz var
-	MAT_set_i(H,*Hcounter,BUS_get_index_y(bus,t));
-	MAT_set_j(H,*Hcounter,BUS_get_index_y(bus,t));
-	MAT_set_d(H,*Hcounter,1./(dv*dv));
-	(*Hcounter)++; // y var
+	MAT_set_i(H,*Hphi_nnz,BUS_get_index_y(bus,t));
+	MAT_set_j(H,*Hphi_nnz,BUS_get_index_y(bus,t));
+	MAT_set_d(H,*Hphi_nnz,1./(dv*dv));
+	(*Hphi_nnz)++; // y var
 
-	MAT_set_i(H,*Hcounter,BUS_get_index_z(bus,t));
-	MAT_set_j(H,*Hcounter,BUS_get_index_z(bus,t));
-	MAT_set_d(H,*Hcounter,1./(dv*dv));
-	(*Hcounter)++; // z var
+	MAT_set_i(H,*Hphi_nnz,BUS_get_index_z(bus,t));
+	MAT_set_j(H,*Hphi_nnz,BUS_get_index_z(bus,t));
+	MAT_set_d(H,*Hphi_nnz,1./(dv*dv));
+	(*Hphi_nnz)++; // z var
       }
 
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var
-	MAT_set_i(H,*Hcounter,BUS_get_index_vl(bus,t));
-	MAT_set_j(H,*Hcounter,BUS_get_index_vl(bus,t));
-	MAT_set_d(H,*Hcounter,1./(dv*dv));
-	(*Hcounter)++; // vl var
+	MAT_set_i(H,*Hphi_nnz,BUS_get_index_vl(bus,t));
+	MAT_set_j(H,*Hphi_nnz,BUS_get_index_vl(bus,t));
+	MAT_set_d(H,*Hphi_nnz,1./(dv*dv));
+	(*Hphi_nnz)++; // vl var
 
-	MAT_set_i(H,*Hcounter,BUS_get_index_vh(bus,t));
-	MAT_set_j(H,*Hcounter,BUS_get_index_vh(bus,t));
-	MAT_set_d(H,*Hcounter,1./(dv*dv));
-	(*Hcounter)++; // vz var
+	MAT_set_i(H,*Hphi_nnz,BUS_get_index_vh(bus,t));
+	MAT_set_j(H,*Hphi_nnz,BUS_get_index_vh(bus,t));
+	MAT_set_d(H,*Hphi_nnz,1./(dv*dv));
+	(*Hphi_nnz)++; // vz var
       }
     }
 

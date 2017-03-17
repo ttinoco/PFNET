@@ -18,7 +18,7 @@ Func* FUNC_NETCON_COST_new(REAL weight, Net* net) {
   FUNC_set_func_allocate(f, &FUNC_NETCON_COST_allocate);
   FUNC_set_func_clear(f, &FUNC_NETCON_COST_clear);
   FUNC_set_func_analyze_step(f, &FUNC_NETCON_COST_analyze_step);
-  FUNC_set_func_eval_setp(f, &FUNC_NETCON_COST_eval_step);
+  FUNC_set_func_eval_step(f, &FUNC_NETCON_COST_eval_step);
   FUNC_set_func_free(f, &FUNC_NETCON_COST_free);
   return f;
 }

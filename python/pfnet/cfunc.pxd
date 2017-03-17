@@ -13,6 +13,7 @@ cdef extern from "pfnet/pfnet.h":
     ctypedef struct Vec
     ctypedef struct Mat
     ctypedef double REAL
+    ctypedef struct Branch
         
     void FUNC_del(Func* f)
     void FUNC_del_matvec(Func* f)
@@ -20,7 +21,7 @@ cdef extern from "pfnet/pfnet.h":
     REAL FUNC_get_phi(Func* f)
     Vec* FUNC_get_gphi(Func* f)
     Mat* FUNC_get_Hphi(Func* f)
-    int FUNC_get_Hcounter(Func* f)
+    int FUNC_get_Hphi_nnz(Func* f)
     Func* FUNC_get_next(Func* f)
     Func* FUNC_new(REAL weight, Net* net)
     void FUNC_count(Func* f)
@@ -32,6 +33,12 @@ cdef extern from "pfnet/pfnet.h":
     char* FUNC_get_name(Func* f)
     char* FUNC_get_error_string(Func* f)
     void FUNC_update_network(Func* f)
+
+    void FUNC_set_func_count_step(Func* f, void (*func)(Func* f, Branch* br, int t))
+    void FUNC_set_func_allocate(Func* f, void (*func)(Func* f))
+    void FUNC_set_func_clear(Func* f, void (*func)(Func* f))
+    void FUNC_set_func_analyze_step(Func* f, void (*func)(Func* f, Branch* br, int t))
+    void FUNC_set_func_eval_step(Func* f, void (*func)(Func* f, Branch* br, int t, Vec* v))
 
     Func* FUNC_GEN_COST_new(REAL w, Net* net)
     Func* FUNC_LOAD_UTIL_new(REAL w, Net* net)

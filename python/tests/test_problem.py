@@ -354,11 +354,11 @@ class TestProblem(unittest.TestCase):
             self.assertEqual(len(p.constraints),6)
             
             # Functions
-            p.add_function('voltage magnitude regularization',1.)
-            p.add_function('voltage angle regularization',5.)
-            p.add_function('generator powers regularization',8.)
-            p.add_function('tap ratio regularization',3.)            
-            p.add_function('susceptance regularization',1.)
+            p.add_function(pf.Function('voltage magnitude regularization',1.,net))
+            p.add_function(pf.Function('voltage angle regularization',5.,net))
+            p.add_function(pf.Function('generator powers regularization',8.,net))
+            p.add_function(pf.Function('tap ratio regularization',3.,net))
+            p.add_function(pf.Function('susceptance regularization',1.,net))
             self.assertEqual(len(p.functions),5)
                 
             # Init point
@@ -713,7 +713,7 @@ class TestProblem(unittest.TestCase):
             p.add_constraint('AC power balance')
             p.add_constraint('AC branch flow limits')
             p.add_constraint('variable bounds') 
-            p.add_function('generation cost',1.)
+            p.add_function(pf.Function('generation cost',1.,net))
             p.analyze()
 
             # Extra vars

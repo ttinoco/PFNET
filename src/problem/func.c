@@ -35,10 +35,10 @@ struct Func {
   // Hessian
   Mat* Hphi;   /**< @brief Function Hessian matrix (only lower triangular part stored) */
 
-  // Utils
+  // Counters and flags
+  int Hphi_nnz;         /**< @brief Counter of number of nonzero elements of the Hessian matrix */
   char* bus_counted;    /**< @brief Flags for processing buses */
   int bus_counted_size; /**< @brief Size of array of flags for processing buses */
-  int Hcounter;         /**< @brief Counter of number of nonzero elements of the Hessian */
   
   // Functions
   void (*func_init)(Func* f);                                    /**< @brief Initialization function */
@@ -125,16 +125,16 @@ Mat* FUNC_get_Hphi(Func* f) {
     return NULL;
 }
 
-int FUNC_get_Hcounter(Func* f) {
+int FUNC_get_Hphi_nnz(Func* f) {
   if (f)
-    return f->Hcounter;
+    return f->Hphi_nnz;
   else
     return 0;
 }
 
-int* FUNC_get_Hcounter_ptr(Func* f) {
+int* FUNC_get_Hphi_nnz_ptr(Func* f) {
   if (f)
-    return &(f->Hcounter);
+    return &(f->Hphi_nnz);
   else
     return NULL;
 }
@@ -224,7 +224,7 @@ Func* FUNC_new(REAL weight, Net* net) {
   f->phi = 0;
   f->gphi = NULL;
   f->Hphi = NULL;
-  f->Hcounter = 0;
+  f->Hphi_nnz = 0;
   f->next = NULL;
 
   // Bus counted
@@ -232,6 +232,7 @@ Func* FUNC_new(REAL weight, Net* net) {
   f->bus_counted = NULL;
   
   // Methods
+  f->func_init = NULL;
   f->func_count_step = NULL;
   f->func_allocate = NULL;
   f->func_clear = NULL;
@@ -268,9 +269,9 @@ void FUNC_set_Hphi(Func* f, Mat* Hphi) {
     f->Hphi = Hphi;
 }
 
-void FUNC_set_Hcounter(Func* f, int counter) {
+void FUNC_set_Hphi_nnz(Func* f, int nnz) {
   if (f)
-    f->Hcounter = counter;
+    f->Hphi_nnz = nnz;
 }
 
 void FUNC_set_bus_counted(Func* f, char* bus_counted, int size) {
@@ -435,39 +436,39 @@ Net* FUNC_get_network(Func* f) {
     return NULL;
 }
 
-void FUNC_set_func_init(Func* f, void (*func_init)(Func* f)) {
+void FUNC_set_func_init(Func* f, void (*func)(Func* f)) {
   if (f)
-    f->func_init = func_init;
+    f->func_init = func;
 }
 
-void FUNC_set_func_count_step(Func* f, void (*func_count_step)(Func* f, Branch* br, int t)) {
+void FUNC_set_func_count_step(Func* f, void (*func)(Func* f, Branch* br, int t)) {
   if (f)
-    f->func_count_step = func_count_step;
+    f->func_count_step = func;
 }
 
-void FUNC_set_func_allocate(Func* f, void (*func_allocate)(Func* f)) {
+void FUNC_set_func_allocate(Func* f, void (*func)(Func* f)) {
   if (f)
-    f->func_allocate = func_allocate;
+    f->func_allocate = func;
 }
 
-void FUNC_set_func_clear(Func* f, void (*func_clear)(Func* f)) {
+void FUNC_set_func_clear(Func* f, void (*func)(Func* f)) {
   if (f)
-    f->func_clear = func_clear;
+    f->func_clear = func;
 }
 
-void FUNC_set_func_analyze_step(Func* f, void (*func_analyze_step)(Func* f, Branch* br, int t)) {
+void FUNC_set_func_analyze_step(Func* f, void (*func)(Func* f, Branch* br, int t)) {
   if (f)
-    f->func_analyze_step = func_analyze_step;
+    f->func_analyze_step = func;
 }
 
-void FUNC_set_func_eval_setp(Func* f, void (*func_eval_step)(Func* f, Branch* br, int t, Vec* v)) {
+void FUNC_set_func_eval_step(Func* f, void (*func)(Func* f, Branch* br, int t, Vec* v)) {
   if (f)
-    f->func_eval_step = func_eval_step;
+    f->func_eval_step = func;
 }
 
-void FUNC_set_func_free(Func* f, void (*func_free)(Func* f)) {
+void FUNC_set_func_free(Func* f, void (*func)(Func* f)) {
   if (f)
-    f->func_free = func_free;
+    f->func_free = func;
 }
 
 void* FUNC_get_data(Func* f) {

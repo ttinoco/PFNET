@@ -70,7 +70,7 @@ class TestFunctions(unittest.TestCase):
             # Function
             func = pf.Function('voltage magnitude regularization',1.,net)
 
-            self.assertEqual(func.type,'voltage magnitude regularization')
+            self.assertEqual(func.name,'voltage magnitude regularization')
 
             f = func.phi
             g = func.gphi
@@ -85,12 +85,12 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(H.shape,(0,0))
             self.assertEqual(H.nnz,0)
 
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             func.analyze()
-            self.assertEqual(func.Hcounter,(nb+2*(nrg-ns)+2*nrt)*net.num_periods)
+            self.assertEqual(func.Hphi_nnz,(nb+2*(nrg-ns)+2*nrt)*net.num_periods)
             func.eval(x0)
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             f = func.phi
             g = func.gphi
@@ -205,7 +205,7 @@ class TestFunctions(unittest.TestCase):
             # Function
             func = pf.Function('generator powers regularization',1.,net)
 
-            self.assertEqual(func.type,'generator powers regularization')
+            self.assertEqual(func.name,'generator powers regularization')
 
             f = func.phi
             g = func.gphi
@@ -220,12 +220,12 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(H.shape,(0,0))
             self.assertEqual(H.nnz,0)
 
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             func.analyze()
-            self.assertEqual(func.Hcounter,(nrg+ns)*self.T)
+            self.assertEqual(func.Hphi_nnz,(nrg+ns)*self.T)
             func.eval(x0)
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             f = func.phi
             g = func.gphi
@@ -333,7 +333,7 @@ class TestFunctions(unittest.TestCase):
             # Function
             func = pf.Function('voltage angle regularization',1.,net)
 
-            self.assertEqual(func.type,'voltage angle regularization')
+            self.assertEqual(func.name,'voltage angle regularization')
 
             f = func.phi
             g = func.gphi
@@ -348,26 +348,26 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(H.shape,(0,0))
             self.assertEqual(H.nnz,0)
 
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             # Manual count
-            man_Hcounter = 0
+            man_Hphi_nnz = 0
             for i in range(net.num_branches):
                 br = net.get_branch(i)
                 bk = br.bus_k
                 bm = br.bus_m
                 if not bk.is_slack():
-                    man_Hcounter +=1
+                    man_Hphi_nnz +=1
                 if not bm.is_slack():
-                    man_Hcounter +=1
+                    man_Hphi_nnz +=1
                 if not bk.is_slack() and not bm.is_slack():
-                    man_Hcounter += 1
-            man_Hcounter += nb-ns
+                    man_Hphi_nnz += 1
+            man_Hphi_nnz += nb-ns
 
             func.analyze()
-            self.assertEqual(func.Hcounter,man_Hcounter*self.T)
+            self.assertEqual(func.Hphi_nnz,man_Hphi_nnz*self.T)
             func.eval(x0)
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             f = func.phi
             g = func.gphi
@@ -380,7 +380,7 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(g.shape,(net.num_vars,))
             self.assertTrue(type(H) is coo_matrix)
             self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
-            self.assertEqual(H.nnz,man_Hcounter*self.T)
+            self.assertEqual(H.nnz,man_Hphi_nnz*self.T)
             self.assertTrue(np.all(H.row >= H.col))
 
             self.assertTrue(not np.any(np.isinf(g)))
@@ -467,7 +467,7 @@ class TestFunctions(unittest.TestCase):
             # Function
             func = pf.Function('tap ratio regularization',1.,net)
 
-            self.assertEqual(func.type,'tap ratio regularization')
+            self.assertEqual(func.name,'tap ratio regularization')
 
             f = func.phi
             g = func.gphi
@@ -482,12 +482,12 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(H.shape,(0,0))
             self.assertEqual(H.nnz,0)
 
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             func.analyze()
-            self.assertEqual(func.Hcounter,3*net.get_num_tap_changers_v()*self.T)
+            self.assertEqual(func.Hphi_nnz,3*net.get_num_tap_changers_v()*self.T)
             func.eval(x0)
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             f = func.phi
             g = func.gphi
@@ -588,7 +588,7 @@ class TestFunctions(unittest.TestCase):
             # Function
             func = pf.Function('susceptance regularization',1.,net)
 
-            self.assertEqual(func.type,'susceptance regularization')
+            self.assertEqual(func.name,'susceptance regularization')
 
             f = func.phi
             g = func.gphi
@@ -603,12 +603,12 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(H.shape,(0,0))
             self.assertEqual(H.nnz,0)
 
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             func.analyze()
-            self.assertEqual(func.Hcounter,3*net.get_num_switched_shunts()*self.T)
+            self.assertEqual(func.Hphi_nnz,3*net.get_num_switched_shunts()*self.T)
             func.eval(x0)
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             f = func.phi
             g = func.gphi
@@ -708,8 +708,8 @@ class TestFunctions(unittest.TestCase):
 
             # Function
             func = pf.Function('generation cost',1.,net)
-
-            self.assertEqual(func.type,'generation cost')
+            
+            self.assertEqual(func.name,'generation cost')
 
             f = func.phi
             g = func.gphi
@@ -724,12 +724,12 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(H.shape,(0,0))
             self.assertEqual(H.nnz,0)
 
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             func.analyze()
-            self.assertEqual(func.Hcounter,net.get_num_generators())
+            self.assertEqual(func.Hphi_nnz,net.get_num_generators())
             func.eval(x0)
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             f = func.phi
             g = func.gphi
@@ -840,7 +840,7 @@ class TestFunctions(unittest.TestCase):
             # Function
             func = pf.Function('generation cost',1.,net)
 
-            self.assertEqual(func.type,'generation cost')
+            self.assertEqual(func.name,'generation cost')
 
             f = func.phi
             g = func.gphi
@@ -855,12 +855,12 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(H.shape,(0,0))
             self.assertEqual(H.nnz,0)
 
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             func.analyze()
-            self.assertEqual(func.Hcounter,net.get_num_generators()*self.T)
+            self.assertEqual(func.Hphi_nnz,net.get_num_generators()*self.T)
             func.eval(x0)
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             f = func.phi
             g = func.gphi
@@ -1015,7 +1015,7 @@ class TestFunctions(unittest.TestCase):
             # Function
             func = pf.Function('sparse controls penalty',1.,net)
 
-            self.assertEqual(func.type,'sparse controls penalty')
+            self.assertEqual(func.name,'sparse controls penalty')
 
             f = func.phi
             g = func.gphi
@@ -1030,18 +1030,18 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(H.shape,(0,0))
             self.assertEqual(H.nnz,0)
 
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
-            Hcounter_manual = (net.get_num_buses_reg_by_gen() +
+            Hphi_nnz_manual = (net.get_num_buses_reg_by_gen() +
                                net.get_num_generators() +
                                net.get_num_tap_changers() +
                                net.get_num_phase_shifters() +
                                net.get_num_switched_shunts())
 
             func.analyze()
-            self.assertEqual(func.Hcounter,Hcounter_manual)
+            self.assertEqual(func.Hphi_nnz,Hphi_nnz_manual)
             func.eval(x0)
-            self.assertEqual(func.Hcounter,Hcounter_manual)
+            self.assertEqual(func.Hphi_nnz,Hphi_nnz_manual)
 
             f = func.phi
             g = func.gphi
@@ -1054,7 +1054,7 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(g.shape,(net.num_vars,))
             self.assertTrue(type(H) is coo_matrix)
             self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
-            self.assertEqual(H.nnz,Hcounter_manual)
+            self.assertEqual(H.nnz,Hphi_nnz_manual)
             self.assertTrue(np.all(H.row == H.col))
 
             self.assertTrue(not np.any(np.isinf(g)))
@@ -1164,7 +1164,7 @@ class TestFunctions(unittest.TestCase):
             # Function
             func = pf.Function('soft voltage magnitude limits',1.,net)
 
-            self.assertEqual(func.type,'soft voltage magnitude limits')
+            self.assertEqual(func.name,'soft voltage magnitude limits')
 
             f = func.phi
             g = func.gphi
@@ -1179,12 +1179,12 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(H.shape,(0,0))
             self.assertEqual(H.nnz,0)
 
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             func.analyze()
-            self.assertEqual(func.Hcounter,net.num_buses*self.T)
+            self.assertEqual(func.Hphi_nnz,net.num_buses*self.T)
             func.eval(x0)
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             f = func.phi
             g = func.gphi
@@ -1294,7 +1294,7 @@ class TestFunctions(unittest.TestCase):
             # Function
             func = pf.Function('phase shift regularization',1.,net)
 
-            self.assertEqual(func.type,'phase shift regularization')
+            self.assertEqual(func.name,'phase shift regularization')
 
             f = func.phi
             g = func.gphi
@@ -1309,12 +1309,12 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(H.shape,(0,0))
             self.assertEqual(H.nnz,0)
 
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             func.analyze()
-            self.assertEqual(func.Hcounter,net.get_num_phase_shifters()*self.T)
+            self.assertEqual(func.Hphi_nnz,net.get_num_phase_shifters()*self.T)
             func.eval(x0)
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             f = func.phi
             g = func.gphi
@@ -1413,7 +1413,7 @@ class TestFunctions(unittest.TestCase):
             # Function
             func = pf.Function('consumption utility',1.,net)
 
-            self.assertEqual(func.type,'consumption utility')
+            self.assertEqual(func.name,'consumption utility')
 
             f = func.phi
             g = func.gphi
@@ -1428,12 +1428,12 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(H.shape,(0,0))
             self.assertEqual(H.nnz,0)
 
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             func.analyze()
-            self.assertEqual(func.Hcounter,net.num_loads)
+            self.assertEqual(func.Hphi_nnz,net.num_loads)
             func.eval(x0)
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             f = func.phi
             g = func.gphi
@@ -1544,7 +1544,7 @@ class TestFunctions(unittest.TestCase):
             # Function
             func = pf.Function('consumption utility',1.,net)
 
-            self.assertEqual(func.type,'consumption utility')
+            self.assertEqual(func.name,'consumption utility')
 
             f = func.phi
             g = func.gphi
@@ -1559,12 +1559,12 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(H.shape,(0,0))
             self.assertEqual(H.nnz,0)
 
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             func.analyze()
-            self.assertEqual(func.Hcounter,net.num_loads*self.T)
+            self.assertEqual(func.Hphi_nnz,net.num_loads*self.T)
             func.eval(x0)
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             f = func.phi
             g = func.gphi
@@ -1701,7 +1701,7 @@ class TestFunctions(unittest.TestCase):
             # Function
             func = pf.Function('net consumption cost',1.,net)
 
-            self.assertEqual(func.type,'net consumption cost')
+            self.assertEqual(func.name,'net consumption cost')
 
             f = func.phi
             g = func.gphi
@@ -1716,12 +1716,12 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(H.shape,(0,0))
             self.assertEqual(H.nnz,0)
 
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             func.analyze()
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
             func.eval(x0)
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             f = func.phi
             g = func.gphi
@@ -1778,7 +1778,7 @@ class TestFunctions(unittest.TestCase):
             self.assertEqual(net.num_vars,0)
 
             func = pf.Function('net consumption cost',1.,net)
-            self.assertEqual(func.type,'net consumption cost')
+            self.assertEqual(func.name,'net consumption cost')
 
             x0 = net.get_var_values()
 
@@ -1873,7 +1873,7 @@ class TestFunctions(unittest.TestCase):
             # Function
             func = pf.Function('net consumption cost',1.,net)
 
-            self.assertEqual(func.type,'net consumption cost')
+            self.assertEqual(func.name,'net consumption cost')
 
             f = func.phi
             g = func.gphi
@@ -1888,12 +1888,12 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(H.shape,(0,0))
             self.assertEqual(H.nnz,0)
 
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             func.analyze()
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
             func.eval(x0)
-            self.assertEqual(func.Hcounter,0)
+            self.assertEqual(func.Hphi_nnz,0)
 
             f = func.phi
             g = func.gphi
@@ -1960,7 +1960,7 @@ class TestFunctions(unittest.TestCase):
             self.assertEqual(net.num_vars,0)
 
             func = pf.Function('net consumption cost',1.,net)
-            self.assertEqual(func.type,'net consumption cost')
+            self.assertEqual(func.name,'net consumption cost')
 
             x0 = net.get_var_values()
 

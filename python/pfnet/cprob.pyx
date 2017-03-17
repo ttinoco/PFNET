@@ -60,16 +60,19 @@ cdef class Problem:
 
         cprob.PROB_add_constr(self._c_prob,str2constr[ctype])
 
-    def add_function(self,Function func,weight):
+    def add_function(self,Function func):
         """
         Adds function to optimization problem objective.
 
         Parameters
         ----------
         func : Function
-        weight : float
         """
         
+        # Prevent __dealloc__ of function
+        func._alloc = False
+        
+        # Add function
         cprob.PROB_add_func(self._c_prob,func._c_func)
 
     def add_heuristic(self,htype):

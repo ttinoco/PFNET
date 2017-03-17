@@ -5,7 +5,7 @@ check_PROGRAMS = run_tests
 
 # sources for the program(s)
 ## run_tests
-run_tests_headers = unit.h test_network.h test_problem.h test_constraints.h test_graph.h
+run_tests_headers = unit.h test_network.h test_problem.h test_constraints.h test_functions.h test_graph.h
 
 run_tests_SOURCES = run_tests.c $(run_tests_headers)
 
