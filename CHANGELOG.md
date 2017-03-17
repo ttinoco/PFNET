@@ -11,13 +11,14 @@ Targets
 Unreleased
 ----------
 
-Version 1.2.8 (pre-release)
----------------------------
+Version 1.2.8
+-------------
 * Python-based parsers.
 * Info dictionary in Python wrapper that indictes availability of graphviz, python-based parser, raw parser.
 * Autotools build system (automatic detection of raw_parser, graphviz, python-based parser).
 * Travis continuous integration.
 * Readthedocs-based documentation.
+* Fixed mpc2mat and parser_MAT gen cost ordering. 
 
 Version 1.2.7
 -------------
