@@ -74,6 +74,8 @@ cdef class Problem:
         
         # Add function
         cprob.PROB_add_func(self._c_prob,func._c_func)
+        if cprob.PROB_has_error(self._c_prob):
+            raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 
     def add_heuristic(self,htype):
 
@@ -311,9 +313,8 @@ cdef class Problem:
         def __get__(self):
             flist = []
             cdef cfunc.Func* f = cprob.PROB_get_func(self._c_prob)
-            cdef cnet.Net* n = cprob.PROB_get_network(self._c_prob)
             while f is not NULL:
-                flist.append(new_Function(f,n))
+                flist.append(new_Function(f))
                 f = cfunc.FUNC_get_next(f)
             return flist
 

@@ -24,26 +24,17 @@ class FunctionError(Exception):
 
 cdef class FunctionBase:
     """
-    Function class.
+    Base function class.
     """
 
     cdef cfunc.Func* _c_func
     cdef bint _alloc
 
-    def __init__(self,name,weight,Network net):
-        """
-        Function class.
-
-        Parameters
-        ----------
-        name : string
-        weight : float
-        net : :class:`Network <pfnet.Network>`
-        """
+    def __init__(self):
 
         pass
 
-    def __cinit__(self,name,weight,Network net):
+    def __cinit__(self):
 
         self._c_func = NULL
         self._alloc = False
@@ -132,15 +123,28 @@ cdef class FunctionBase:
         """ Function weight (float). """
         def __get__(self): return cfunc.FUNC_get_weight(self._c_func)
 
-cdef new_Function(cfunc.Func* f, cnet.Net* n):
-    if f is not NULL and n is not NULL:
-        func = FunctionBase('',0,new_Network(n))
+cdef new_Function(cfunc.Func* f):
+    if f is not NULL:
+        func = FunctionBase()
         func._c_func = f
         return func
     else:
         raise FunctionError('invalid function data')
 
 cdef class Function(FunctionBase):
+    
+    def __init__(self,name,weight,Network net):
+        """
+        Function class.
+        
+        Parameters
+        ----------
+        name : string
+        weight : float
+        net : :class:`Network <pfnet.Network>`
+        """
+        
+        pass
     
     def __cinit__(self,name,weight,Network net):
                 
@@ -173,8 +177,21 @@ cdef class Function(FunctionBase):
     
 cdef class CustomFunction(FunctionBase):
 
+    def __init__(self,weight,Network net):
+        """
+        Custom function class.
+        
+        Parameters
+        ----------
+        weight : float
+        net : :class:`Network <pfnet.Network>`
+        """
+        
+        pass
+
     def __cinit__(self,weight,Network net):
         
+        self._c_func = cfunc.FUNC_new(weight,net._c_net)
         cfunc.FUNC_set_data(self._c_func,<void*>self)
         cfunc.FUNC_set_func_count_step(self._c_func,func_count_step)
         cfunc.FUNC_set_func_allocate(self._c_func,func_allocate)
@@ -183,15 +200,52 @@ cdef class CustomFunction(FunctionBase):
         cfunc.FUNC_set_func_eval_step(self._c_func,func_eval_step)
         
     def count_step(self,branch,t):
+        """
+        Performs count step.
+
+        Parameters
+        ----------
+        branch : Branch
+        t : time period (int)
+        """
+        
         pass
         
     def allocate(self):
+        """
+        Allocates matrices and vectors.
+        """
+
         pass
 
     def clear(self):
+        """
+        Clears counters and values.
+        """
+
         pass
 
     def analyze_step(self,branch,t):
+        """
+        Performs analyze step.
+       
+        Parameters
+        ----------
+        branch : Branch
+        t : time period (int)
+        """
+
+    def eval_step(self,branch,t,x):
+        """
+        Performs eval step.
+       
+        Parameters
+        ----------
+        branch : Branch
+        t : time period (int)
+        x : ndarray
+        """
+ 
         pass
 
 cdef void func_count_step(cfunc.Func* f, cbranch.Branch* br, int t):

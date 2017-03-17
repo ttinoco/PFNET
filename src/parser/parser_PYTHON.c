@@ -42,7 +42,7 @@ PYTHON_Parser* PYTHON_PARSER_new(char* classname) {
   Py_Initialize();
 
   // Module
-  module = PyImport_ImportModule("pfnet.parser");
+  module = PyImport_ImportModule("pfnet.parsers");
   if (!module) {
     parser->error_flag = TRUE;
     strcpy(parser->error_string,"unable to import Python parser module");

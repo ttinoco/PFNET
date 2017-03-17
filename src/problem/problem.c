@@ -63,8 +63,14 @@ void PROB_add_constr(Prob* p, int type) {
 }
 
 void PROB_add_func(Prob* p, Func* f) {
-  if (p)
+  if (p) {
+    if (PROB_get_network(p) != FUNC_get_network(f)) {
+      sprintf(p->error_string,"function is associated with different network");
+      p->error_flag = TRUE;
+      return;
+    }
     p->func = FUNC_list_add(p->func,f);
+  }
 }
 
 void PROB_add_heur(Prob* p, int type) {

@@ -357,6 +357,7 @@ BOOL FUNC_is_safe_to_count(Func* f) {
 BOOL FUNC_is_safe_to_analyze(Func* f) {
   Net* net = FUNC_get_network(f);
   if (FUNC_get_bus_counted_size(f) == NET_get_num_buses(net)*NET_get_num_periods(net) &&
+      VEC_get_size(f->gphi) == NET_get_num_vars(net) && 
       MAT_get_size1(f->Hphi) == NET_get_num_vars(net) &&
       MAT_get_size2(f->Hphi) == NET_get_num_vars(net))
     return TRUE;
