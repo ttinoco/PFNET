@@ -931,6 +931,9 @@ void CONSTR_update_network(Constr* c) {
     free(c->bus_counted);
   c->bus_counted_size = NET_get_num_buses(c->net)*NET_get_num_periods(c->net);
   ARRAY_zalloc(c->bus_counted,char,c->bus_counted_size);
+
+  // Init
+  CONSTR_init(c);
 }
 
 char* CONSTR_get_name(Constr* c) {

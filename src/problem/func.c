@@ -429,6 +429,9 @@ void FUNC_update_network(Func* f) {
     free(f->bus_counted);
   f->bus_counted_size = NET_get_num_buses(f->net)*NET_get_num_periods(f->net);
   ARRAY_zalloc(f->bus_counted,char,f->bus_counted_size);
+
+  // Init
+  FUNC_init(f);
 }
 
 Net* FUNC_get_network(Func* f) {
