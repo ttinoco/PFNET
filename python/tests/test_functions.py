@@ -72,6 +72,9 @@ class TestFunctions(unittest.TestCase):
 
             self.assertEqual(func.name,'voltage magnitude regularization')
 
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
+
             f = func.phi
             g = func.gphi
             H = func.Hphi
@@ -207,6 +210,9 @@ class TestFunctions(unittest.TestCase):
 
             self.assertEqual(func.name,'generator powers regularization')
 
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
+
             f = func.phi
             g = func.gphi
             H = func.Hphi
@@ -334,6 +340,9 @@ class TestFunctions(unittest.TestCase):
             func = pf.Function('voltage angle regularization',1.,net)
 
             self.assertEqual(func.name,'voltage angle regularization')
+
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
 
             f = func.phi
             g = func.gphi
@@ -469,6 +478,9 @@ class TestFunctions(unittest.TestCase):
 
             self.assertEqual(func.name,'tap ratio regularization')
 
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
+
             f = func.phi
             g = func.gphi
             H = func.Hphi
@@ -590,6 +602,9 @@ class TestFunctions(unittest.TestCase):
 
             self.assertEqual(func.name,'susceptance regularization')
 
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
+
             f = func.phi
             g = func.gphi
             H = func.Hphi
@@ -710,6 +725,9 @@ class TestFunctions(unittest.TestCase):
             func = pf.Function('generation cost',1.,net)
             
             self.assertEqual(func.name,'generation cost')
+
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
 
             f = func.phi
             g = func.gphi
@@ -841,6 +859,9 @@ class TestFunctions(unittest.TestCase):
             func = pf.Function('generation cost',1.,net)
 
             self.assertEqual(func.name,'generation cost')
+
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
 
             f = func.phi
             g = func.gphi
@@ -1017,6 +1038,9 @@ class TestFunctions(unittest.TestCase):
 
             self.assertEqual(func.name,'sparse controls penalty')
 
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
+
             f = func.phi
             g = func.gphi
             H = func.Hphi
@@ -1166,6 +1190,9 @@ class TestFunctions(unittest.TestCase):
 
             self.assertEqual(func.name,'soft voltage magnitude limits')
 
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
+
             f = func.phi
             g = func.gphi
             H = func.Hphi
@@ -1296,6 +1323,9 @@ class TestFunctions(unittest.TestCase):
 
             self.assertEqual(func.name,'phase shift regularization')
 
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
+
             f = func.phi
             g = func.gphi
             H = func.Hphi
@@ -1414,6 +1444,9 @@ class TestFunctions(unittest.TestCase):
             func = pf.Function('consumption utility',1.,net)
 
             self.assertEqual(func.name,'consumption utility')
+
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
 
             f = func.phi
             g = func.gphi
@@ -1545,6 +1578,9 @@ class TestFunctions(unittest.TestCase):
             func = pf.Function('consumption utility',1.,net)
 
             self.assertEqual(func.name,'consumption utility')
+
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
 
             f = func.phi
             g = func.gphi
@@ -1703,6 +1739,9 @@ class TestFunctions(unittest.TestCase):
 
             self.assertEqual(func.name,'net consumption cost')
 
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
+
             f = func.phi
             g = func.gphi
             H = func.Hphi
@@ -1779,6 +1818,9 @@ class TestFunctions(unittest.TestCase):
 
             func = pf.Function('net consumption cost',1.,net)
             self.assertEqual(func.name,'net consumption cost')
+
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
 
             x0 = net.get_var_values()
 
@@ -1875,6 +1917,9 @@ class TestFunctions(unittest.TestCase):
 
             self.assertEqual(func.name,'net consumption cost')
 
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
+
             f = func.phi
             g = func.gphi
             H = func.Hphi
@@ -1961,6 +2006,9 @@ class TestFunctions(unittest.TestCase):
 
             func = pf.Function('net consumption cost',1.,net)
             self.assertEqual(func.name,'net consumption cost')
+
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
 
             x0 = net.get_var_values()
 
@@ -2147,6 +2195,11 @@ class TestFunctions(unittest.TestCase):
             self.assertEqual(funcREF.name,'generation cost')
             self.assertEqual(func.name,'dummy generation cost')
 
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
+            self.assertTupleEqual(funcREF.gphi.shape,(0,))
+            self.assertTupleEqual(funcREF.Hphi.shape,(0,0))
+
             self.assertTrue(np.all(func.bus_counted == np.zeros(net.num_buses*net.num_periods,np.dtype('bool'))))
             func.bus_counted[2] = True
             self.assertTrue(func.bus_counted[2])
@@ -2180,7 +2233,7 @@ class TestFunctions(unittest.TestCase):
                     P = x0[gen.index_P[t]]
                     phi += gen.cost_coeff_Q0+gen.cost_coeff_Q1*P+gen.cost_coeff_Q2*P*P
             self.assertLess(abs(func.phi-phi),1e-8)
-            
+
     def tearDown(self):
 
         pass

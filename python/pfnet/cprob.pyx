@@ -27,6 +27,7 @@ cdef class Problem:
 
     cdef cprob.Prob* _c_prob
     cdef bint alloc
+    cdef list _functions
 
     def __init__(self):
         """
@@ -39,6 +40,7 @@ cdef class Problem:
 
         self._c_prob = cprob.PROB_new()
         self.alloc = True
+        self._functions = []
 
     def __dealloc__(self):
         """
@@ -60,19 +62,24 @@ cdef class Problem:
 
         cprob.PROB_add_constr(self._c_prob,str2constr[ctype])
 
-    def add_function(self,Function func):
+    def add_function(self,FunctionBase func):
         """
         Adds function to optimization problem objective.
 
         Parameters
         ----------
-        func : Function
+        func : FunctionBase
         """
         
         # Prevent __dealloc__ of function
         func._alloc = False
         
-        # Add function
+        # Add function to list
+        # Prevents python object from being garbage collected
+        # This is needed for CustomFunctions
+        self._functions.append(func)
+
+        # Add function to problem
         cprob.PROB_add_func(self._c_prob,func._c_func)
         if cprob.PROB_has_error(self._c_prob):
             raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
@@ -99,6 +106,7 @@ cdef class Problem:
         Resets optimization problem data.
         """
 
+        self._functions = []
         cprob.PROB_clear(self._c_prob)
 
     def clear_error(self):

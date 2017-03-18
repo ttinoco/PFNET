@@ -13,7 +13,7 @@ from pfnet import CustomFunction
 class DummyGenCost(CustomFunction):
 
     def init(self):
-
+        
         self.name = "dummy generation cost"
     
     def count_step(self,branch,t):
@@ -41,7 +41,7 @@ class DummyGenCost(CustomFunction):
                                  shape=(num_vars,num_vars)))
 
     def clear(self):
-
+        
         self.phi = 0
         self.gphi[:] = 0
         self.Hphi_nnz = 0
@@ -87,4 +87,4 @@ class DummyGenCost(CustomFunction):
                     else:
                         P = gen.P[t]
                     self.phi = self.phi + Q0+Q1*P+Q2*(P**2.)
-            self.bus_counted[index] = True       
+            self.bus_counted[index] = True

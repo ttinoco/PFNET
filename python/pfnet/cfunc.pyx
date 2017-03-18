@@ -47,6 +47,7 @@ cdef class FunctionBase:
         if self._alloc:
             cfunc.FUNC_del(self._c_func)
             self._c_func = NULL
+            self._alloc = False
             
     def del_matvec(self):
         """
@@ -111,7 +112,7 @@ cdef class FunctionBase:
         cdef np.ndarray[double,mode='c'] g = gphi
         PyArray_CLEARFLAGS(g,np.NPY_OWNDATA)
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cfunc.REAL*>(g.data),g.size)
-        cfunc.FUNC_set_gphi(self._c_func,v)        
+        cfunc.FUNC_set_gphi(self._c_func,v)  
 
     def set_Hphi(self,Hphi):
         """
@@ -248,6 +249,7 @@ cdef class CustomFunction(FunctionBase):
         cfunc.FUNC_set_func_clear(self._c_func,func_clear)
         cfunc.FUNC_set_func_analyze_step(self._c_func,func_analyze_step)
         cfunc.FUNC_set_func_eval_step(self._c_func,func_eval_step)
+        self._alloc = True
         self.init()
 
     def init(self):

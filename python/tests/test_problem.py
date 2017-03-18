@@ -917,6 +917,64 @@ class TestProblem(unittest.TestCase):
                 error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
+    def test_problem_with_DUMMY_func(self):
+
+        net = self.net
+        
+        for case in test_cases.CASES:
+            
+            p1 = pf.Problem()
+            p2 = pf.Problem()
+
+            net.load(case)
+            p1.network = net
+            p2.network = net
+            
+            # Variables
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          'active power')
+
+            self.assertEqual(net.num_vars,net.num_generators)
+            self.assertEqual(p1.get_num_primal_variables(),net.num_generators)
+            self.assertEqual(p2.get_num_primal_variables(),net.num_generators)
+
+            p1.add_function(pf.Function('generation cost',1.,net))
+            p2.add_function(pf.functions.DummyGenCost(1,net))
+
+            self.assertEqual(len(p1.functions),1)
+            self.assertEqual(len(p2.functions),1)
+
+            self.assertEqual(p1.functions[0].name,"generation cost")
+            self.assertEqual(p2.functions[0].name,"dummy generation cost")
+
+            self.assertTupleEqual(p1.functions[0].Hphi.shape,(0,0))
+            self.assertTupleEqual(p2.functions[0].Hphi.shape,(0,0))
+ 
+            p1.analyze()
+            p2.analyze()
+
+            self.assertEqual(p1.phi,0.)
+            self.assertEqual(p2.phi,0.)
+            self.assertEqual(p1.gphi.size,p2.gphi.size)
+            self.assertTrue(np.all(p1.gphi == p2.gphi))
+            self.assertEqual(p1.Hphi.nnz,p2.Hphi.nnz)
+            self.assertTrue(np.all(p1.Hphi.row == p2.Hphi.row))
+            self.assertTrue(np.all(p1.Hphi.col == p2.Hphi.col))
+            self.assertTrue(np.all(p1.Hphi.data == p2.Hphi.data))
+                        
+            p1.eval(net.get_var_values())
+            p2.eval(net.get_var_values())
+            
+            self.assertGreaterEqual(p1.phi,0)
+            self.assertLess(abs(p1.phi-p2.phi),1e-8)
+            self.assertTrue(np.all(p1.gphi == p2.gphi))
+            self.assertEqual(p1.Hphi.nnz,p2.Hphi.nnz)
+            self.assertTrue(np.all(p1.Hphi.row == p2.Hphi.row))
+            self.assertTrue(np.all(p1.Hphi.col == p2.Hphi.col))
+            self.assertTrue(np.all(p1.Hphi.data == p2.Hphi.data))
+
     def tearDown(self):
         
         pass
