@@ -52,17 +52,17 @@ sbus = size(mpc.bus);
 for i=1:sbus(1)
     fprintf(fid,'%d,',mpc.bus(i,1));
     fprintf(fid,'%d,',mpc.bus(i,2));
-    fprintf(fid,'%.5f,',mpc.bus(i,3));
-    fprintf(fid,'%.5f,',mpc.bus(i,4));
-    fprintf(fid,'%.5f,',mpc.bus(i,5));
-    fprintf(fid,'%.5f,',mpc.bus(i,6));
+    fprintf(fid,'%.10e,',mpc.bus(i,3));
+    fprintf(fid,'%.10e,',mpc.bus(i,4));
+    fprintf(fid,'%.10e,',mpc.bus(i,5));
+    fprintf(fid,'%.10e,',mpc.bus(i,6));
     fprintf(fid,'%d,',mpc.bus(i,7));
-    fprintf(fid,'%.5f,',mpc.bus(i,8));
-    fprintf(fid,'%.5f,',mpc.bus(i,9));
-    fprintf(fid,'%.5f,',mpc.bus(i,10));
+    fprintf(fid,'%.10e,',mpc.bus(i,8));
+    fprintf(fid,'%.10e,',mpc.bus(i,9));
+    fprintf(fid,'%.10e,',mpc.bus(i,10));
     fprintf(fid,'%d,',mpc.bus(i,11));
-    fprintf(fid,'%.5f,',mpc.bus(i,12));
-    fprintf(fid,'%.5f\n',mpc.bus(i,13));
+    fprintf(fid,'%.10e,',mpc.bus(i,12));
+    fprintf(fid,'%.10e\n',mpc.bus(i,13));
 end
 fprintf(fid,'END\n');
 
@@ -72,15 +72,15 @@ fprintf(fid,'bus,Pg (MW),Qg (MVAr),Qmax (MVAr),Qmin (MVAr),Vg (p.u.),mBase (MVA)
 fprintf(fid,'Pmax (MW),Pmin (MW)\n')
 for i=1:sgen(1)
     fprintf(fid,'%d,',mpc.gen(i,1));
-    fprintf(fid,'%.5f,',mpc.gen(i,2));
-    fprintf(fid,'%.5f,',mpc.gen(i,3));
-    fprintf(fid,'%.5f,',mpc.gen(i,4));
-    fprintf(fid,'%.5f,',mpc.gen(i,5));
-    fprintf(fid,'%.5f,',mpc.gen(i,6));
-    fprintf(fid,'%.5f,',mpc.gen(i,7));
+    fprintf(fid,'%.10e,',mpc.gen(i,2));
+    fprintf(fid,'%.10e,',mpc.gen(i,3));
+    fprintf(fid,'%.10e,',mpc.gen(i,4));
+    fprintf(fid,'%.10e,',mpc.gen(i,5));
+    fprintf(fid,'%.10e,',mpc.gen(i,6));
+    fprintf(fid,'%.10e,',mpc.gen(i,7));
     fprintf(fid,'%d,',mpc.gen(i,8));
-    fprintf(fid,'%.5f,',mpc.gen(i,9));
-    fprintf(fid,'%.5f\n',mpc.gen(i,10));
+    fprintf(fid,'%.10e,',mpc.gen(i,9));
+    fprintf(fid,'%.10e\n',mpc.gen(i,10));
 end
 fprintf(fid,'END\n');
 
@@ -92,17 +92,17 @@ sbranch = size(mpc.branch);
 for i=1:sbranch(1)
     fprintf(fid,'%d,',mpc.branch(i,1));
     fprintf(fid,'%d,',mpc.branch(i,2));
-    fprintf(fid,'%.5f,',mpc.branch(i,3));
-    fprintf(fid,'%.5f,',mpc.branch(i,4));
-    fprintf(fid,'%.5f,',mpc.branch(i,5));
-    fprintf(fid,'%.5f,',mpc.branch(i,6));
-    fprintf(fid,'%.5f,',mpc.branch(i,7));
-    fprintf(fid,'%.5f,',mpc.branch(i,8));
-    fprintf(fid,'%.5f,',mpc.branch(i,9));
-    fprintf(fid,'%.5f,',mpc.branch(i,10));
+    fprintf(fid,'%.10e,',mpc.branch(i,3));
+    fprintf(fid,'%.10e,',mpc.branch(i,4));
+    fprintf(fid,'%.10e,',mpc.branch(i,5));
+    fprintf(fid,'%.10e,',mpc.branch(i,6));
+    fprintf(fid,'%.10e,',mpc.branch(i,7));
+    fprintf(fid,'%.10e,',mpc.branch(i,8));
+    fprintf(fid,'%.10e,',mpc.branch(i,9));
+    fprintf(fid,'%.10e,',mpc.branch(i,10));
     fprintf(fid,'%d,',mpc.branch(i,11));
-    fprintf(fid,'%.5f,',mpc.branch(i,12));
-    fprintf(fid,'%.5f\n',mpc.branch(i,13));
+    fprintf(fid,'%.10e,',mpc.branch(i,12));
+    fprintf(fid,'%.10e\n',mpc.branch(i,13));
 end
 fprintf(fid,'END\n');
 
@@ -111,14 +111,14 @@ fprintf(fid,'COST\n');
 fprintf(fid,'Q2 ($/hr MW2),Q1 ($/hr MW),Q0 ($/hr)\n');
 for i=1:scost(1)
     if mpc.gencost(i,1) == 2 && mpc.gencost(i,4) == 3
-       fprintf(fid,'%.8f,',mpc.gencost(i,5));
-       fprintf(fid,'%.8f,',mpc.gencost(i,6));
-       fprintf(fid,'%.8f\n',mpc.gencost(i,7));
+       fprintf(fid,'%.10e,',mpc.gencost(i,5));
+       fprintf(fid,'%.10e,',mpc.gencost(i,6));
+       fprintf(fid,'%.10e\n',mpc.gencost(i,7));
     else
        warning('unsupported cost function; using random quadratic costs')
-       fprintf(fid,'%.8f,',0.04*rand()+0.01);
-       fprintf(fid,'%.8f,',40.*rand()+10.);
-       fprintf(fid,'%.8f\n',0.);
+       fprintf(fid,'%.10e,',0.04*rand()+0.01);
+       fprintf(fid,'%.10e,',40.*rand()+10.);
+       fprintf(fid,'%.10e\n',0.);
     end
 end
 fprintf(fid,'END\n');
