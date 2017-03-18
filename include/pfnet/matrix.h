@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -37,6 +37,7 @@ int* MAT_get_col_array(Mat* m);
 REAL* MAT_get_data_array(Mat* m);
 void MAT_init(Mat* m);
 Mat* MAT_new(int size1, int size2, int nnz);
+Mat* MAT_new_from_arrays(int size1, int size2, int nnz, int* row, int* col, REAL* data);
 Vec* MAT_rmul_by_vec(Mat* m, Vec* v);
 void MAT_set_i(Mat* m, int index, int value);
 void MAT_set_j(Mat* m, int index, int value);

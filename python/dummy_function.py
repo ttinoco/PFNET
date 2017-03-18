@@ -1,6 +1,9 @@
 import pfnet
+import numpy as np
+from scipy.sparse import coo_matrix
+
 net = pfnet.Network()
-net.load('../data/ieee14.mat')
+net.load('../data/aesoSL2014.raw')
 
 f = pfnet.functions.DummyGenCost(1.,net)
 

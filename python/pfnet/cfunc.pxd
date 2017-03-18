@@ -22,6 +22,7 @@ cdef extern from "pfnet/pfnet.h":
     Vec* FUNC_get_gphi(Func* f)
     Mat* FUNC_get_Hphi(Func* f)
     int FUNC_get_Hphi_nnz(Func* f)
+    Net* FUNC_get_network(Func* f)
     Func* FUNC_get_next(Func* f)
     Func* FUNC_new(REAL weight, Net* net)
     void FUNC_count(Func* f)
@@ -33,7 +34,13 @@ cdef extern from "pfnet/pfnet.h":
     char* FUNC_get_name(Func* f)
     char* FUNC_get_error_string(Func* f)
     void FUNC_update_network(Func* f)
+    void FUNC_set_name(Func* f, char*)
+    void FUNC_set_phi(Func* f, REAL phi)
+    void FUNC_set_gphi(Func* f, Vec* gphi)
+    void FUNC_set_Hphi(Func* f, Mat* Hphi)
+    void FUNC_set_Hphi_nnz(Func* f, int nnz)
 
+    void FUNC_set_func_init(Func* f, void (*func)(Func* f))
     void FUNC_set_func_count_step(Func* f, void (*func)(Func* f, Branch* br, int t))
     void FUNC_set_func_allocate(Func* f, void (*func)(Func* f))
     void FUNC_set_func_clear(Func* f, void (*func)(Func* f))
@@ -55,3 +62,5 @@ cdef extern from "pfnet/pfnet.h":
     void* FUNC_get_data(Func* f)
     void FUNC_set_data(Func* f, void* data)
     
+    char* FUNC_get_bus_counted(Func* f)
+    int FUNC_get_bus_counted_size(Func* f)

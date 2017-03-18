@@ -12,7 +12,6 @@
 
 Func* FUNC_SLIM_VMAG_new(REAL weight, Net* net) {
   Func* f = FUNC_new(weight,net);
-  FUNC_set_name(f,"soft voltage magnitude limits");
   FUNC_set_func_init(f, &FUNC_SLIM_VMAG_init);
   FUNC_set_func_count_step(f, &FUNC_SLIM_VMAG_count_step);
   FUNC_set_func_allocate(f, &FUNC_SLIM_VMAG_allocate);
@@ -20,11 +19,13 @@ Func* FUNC_SLIM_VMAG_new(REAL weight, Net* net) {
   FUNC_set_func_analyze_step(f, &FUNC_SLIM_VMAG_analyze_step);
   FUNC_set_func_eval_step(f, &FUNC_SLIM_VMAG_eval_step);
   FUNC_set_func_free(f, &FUNC_SLIM_VMAG_free);
+  FUNC_init(f);
   return f;
 }
 
 void FUNC_SLIM_VMAG_init(Func* f) {
-  // Nothing
+  
+  FUNC_set_name(f,"soft voltage magnitude limits");
 }
 
 void FUNC_SLIM_VMAG_clear(Func* f) {

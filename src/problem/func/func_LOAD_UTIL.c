@@ -12,7 +12,6 @@
 
 Func* FUNC_LOAD_UTIL_new(REAL weight, Net* net) {
   Func* f = FUNC_new(weight,net);
-  FUNC_set_name(f,"consumption utility");
   FUNC_set_func_init(f, &FUNC_LOAD_UTIL_init);
   FUNC_set_func_count_step(f, &FUNC_LOAD_UTIL_count_step);
   FUNC_set_func_allocate(f, &FUNC_LOAD_UTIL_allocate);
@@ -20,11 +19,13 @@ Func* FUNC_LOAD_UTIL_new(REAL weight, Net* net) {
   FUNC_set_func_analyze_step(f, &FUNC_LOAD_UTIL_analyze_step);
   FUNC_set_func_eval_step(f, &FUNC_LOAD_UTIL_eval_step);
   FUNC_set_func_free(f, &FUNC_LOAD_UTIL_free);
+  FUNC_init(f);
   return f;
 }
 
 void FUNC_LOAD_UTIL_init(Func* f) {
-  // Nothing
+  
+  FUNC_set_name(f,"consumption utility");
 }
 
 void FUNC_LOAD_UTIL_clear(Func* f) {

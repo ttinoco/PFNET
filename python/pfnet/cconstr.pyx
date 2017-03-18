@@ -106,7 +106,7 @@ cdef class Constraint:
         """
 
         cdef np.ndarray[double,mode='c'] x = coeff
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if coeff.size else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(x.data),x.size)
         cconstr.CONSTR_combine_H(self._c_constr,v,ensure_psd)
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
@@ -121,7 +121,7 @@ cdef class Constraint:
         """
 
         cdef np.ndarray[double,mode='c'] x = values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),x.size) if values.size else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(x.data),x.size)
         cconstr.CONSTR_eval(self._c_constr,v)
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
@@ -147,10 +147,10 @@ cdef class Constraint:
         cdef np.ndarray[double,mode='c'] xf = sf
         cdef np.ndarray[double,mode='c'] xGu = sGu
         cdef np.ndarray[double,mode='c'] xGl = sGl
-        cdef cvec.Vec* vA = cvec.VEC_new_from_array(&(xA[0]),len(xA)) if (sA is not None and sA.size) else NULL
-        cdef cvec.Vec* vf = cvec.VEC_new_from_array(&(xf[0]),len(xf)) if (sf is not None and sf.size) else NULL
-        cdef cvec.Vec* vGu = cvec.VEC_new_from_array(&(xGu[0]),len(xGu)) if (sGu is not None and sGu.size) else NULL
-        cdef cvec.Vec* vGl = cvec.VEC_new_from_array(&(xGl[0]),len(xGl)) if (sGl is not None and sGl.size) else NULL
+        cdef cvec.Vec* vA = cvec.VEC_new_from_array(<cconstr.REAL*>(xA.data),xA.size) if sA is not None else NULL
+        cdef cvec.Vec* vf = cvec.VEC_new_from_array(<cconstr.REAL*>(xf.data),xf.size) if sf is not None else NULL
+        cdef cvec.Vec* vGu = cvec.VEC_new_from_array(<cconstr.REAL*>(xGu.data),xGu.size) if sGu is not None else NULL
+        cdef cvec.Vec* vGl = cvec.VEC_new_from_array(<cconstr.REAL*>(xGl.data),xGl.size) if sGl is not None else NULL
         cconstr.CONSTR_store_sens(self._c_constr,vA,vf,vGu,vGl)
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))

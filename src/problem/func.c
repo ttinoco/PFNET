@@ -306,6 +306,13 @@ void FUNC_allocate(Func* f) {
   }
 }
 
+void FUNC_init(Func* f) {
+  if (f && f->func_free)
+    (*(f->func_free))(f);
+  if (f && f->func_init)
+    (*(f->func_init))(f);
+}
+
 void FUNC_clear(Func* f) {
   if (f && f->func_clear)
     (*(f->func_clear))(f);
@@ -422,12 +429,6 @@ void FUNC_update_network(Func* f) {
     free(f->bus_counted);
   f->bus_counted_size = NET_get_num_buses(f->net)*NET_get_num_periods(f->net);
   ARRAY_zalloc(f->bus_counted,char,f->bus_counted_size);
-
-  // Type-specific data
-  if (f->func_free)
-    (*(f->func_free))(f);
-  if (f->func_init)
-    (*(f->func_init))(f);
 }
 
 Net* FUNC_get_network(Func* f) {

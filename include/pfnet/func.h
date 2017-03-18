@@ -53,6 +53,7 @@ void FUNC_set_gphi(Func* f, Vec* gphi);
 void FUNC_set_Hphi(Func* f, Mat* Hphi);
 void FUNC_set_Hphi_nnz(Func* f, int nnz);
 void FUNC_set_bus_counted(Func* f, char* counted, int size);
+void FUNC_init(Func* f);
 void FUNC_count(Func* f);
 void FUNC_count_step(Func* f, Branch* br, int t);
 void FUNC_allocate(Func* f);

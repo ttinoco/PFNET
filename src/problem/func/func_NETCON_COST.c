@@ -12,7 +12,6 @@
 
 Func* FUNC_NETCON_COST_new(REAL weight, Net* net) {
   Func* f = FUNC_new(weight,net);
-  FUNC_set_name(f,"net consumption cost");
   FUNC_set_func_init(f, &FUNC_NETCON_COST_init);
   FUNC_set_func_count_step(f, &FUNC_NETCON_COST_count_step);
   FUNC_set_func_allocate(f, &FUNC_NETCON_COST_allocate);
@@ -20,11 +19,13 @@ Func* FUNC_NETCON_COST_new(REAL weight, Net* net) {
   FUNC_set_func_analyze_step(f, &FUNC_NETCON_COST_analyze_step);
   FUNC_set_func_eval_step(f, &FUNC_NETCON_COST_eval_step);
   FUNC_set_func_free(f, &FUNC_NETCON_COST_free);
+  FUNC_init(f);
   return f;
 }
 
 void FUNC_NETCON_COST_init(Func* f) {
-  // Nothing
+  
+  FUNC_set_name(f,"net consumption cost");
 }
 
 void FUNC_NETCON_COST_clear(Func* f) {

@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -2113,7 +2113,74 @@ class TestFunctions(unittest.TestCase):
                 self.assertGreaterEqual(f.Hphi.nnz,0)
             self.assertTrue(any([f.phi > 0 for f in functions]))
             self.assertTrue(any([f.Hphi.nnz > 0 for f in functions]))
+            
+    def test_func_DUMMY(self):
 
+        net = self.netMP
+
+        for case in test_cases.CASES:
+
+            net.load(case)
+            
+            # Vars
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          ['active power','reactive power'])
+            
+            self.assertEqual(net.num_vars,2*net.get_num_generators()*net.num_periods)
+            self.assertGreater(net.num_vars,0)
+
+            x0 = net.get_var_values()+np.random.randn(net.num_vars)*1e-2
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+
+            # Regular function
+            funcREF = pf.Function('generation cost',1.2,net)
+
+            # Custom function written in Python
+            func = pf.functions.DummyGenCost(0.3,net) 
+            
+            self.assertEqual(funcREF.weight,1.2)
+            self.assertEqual(func.weight,0.3)
+
+            self.assertEqual(funcREF.name,'generation cost')
+            self.assertEqual(func.name,'dummy generation cost')
+
+            self.assertTrue(np.all(func.bus_counted == np.zeros(net.num_buses*net.num_periods,np.dtype('bool'))))
+            func.bus_counted[2] = True
+            self.assertTrue(func.bus_counted[2])
+
+            self.assertEqual(func.phi,0.)
+            self.assertEqual(func.gphi.size,0)
+            self.assertEqual(func.Hphi.nnz,0)
+           
+            funcREF.analyze()
+            func.analyze()
+            
+            self.assertEqual(func.phi,funcREF.phi)
+            self.assertEqual(func.phi,0.)
+            self.assertTrue(np.all(func.gphi == funcREF.gphi))
+            self.assertEqual(func.gphi.size,net.num_vars)
+            self.assertEqual(func.Hphi.nnz,net.get_num_generators()*net.num_periods)
+            self.assertTrue(np.all(func.Hphi.row == funcREF.Hphi.row))
+            self.assertTrue(np.all(func.Hphi.col == funcREF.Hphi.col))
+            self.assertTrue(np.all(func.Hphi.data == funcREF.Hphi.data))
+            
+            funcREF.eval(x0)
+            func.eval(x0)
+            
+            self.assertNotEqual(func.phi,0.)
+            self.assertLess(abs(func.phi-funcREF.phi),1e-8)
+            self.assertTrue(np.all(func.gphi == funcREF.gphi))
+
+            phi = 0
+            for t in range(net.num_periods):
+                for gen in net.generators:
+                    P = x0[gen.index_P[t]]
+                    phi += gen.cost_coeff_Q0+gen.cost_coeff_Q1*P+gen.cost_coeff_Q2*P*P
+            self.assertLess(abs(func.phi-phi),1e-8)
+            
     def tearDown(self):
 
         pass

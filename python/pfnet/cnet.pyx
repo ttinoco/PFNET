@@ -840,7 +840,7 @@ cdef class Network:
         """
 
         cdef np.ndarray[double,mode='c'] x = values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if values.size else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size)
         cnet.NET_set_var_values(self._c_net,v)
 
     def show_components(self):
@@ -886,7 +886,7 @@ cdef class Network:
         """
 
         cdef np.ndarray[double,mode='c'] x = values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (values is not None and values.size) else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if values is not None else NULL
         cnet.NET_update_properties(self._c_net,v)
 
     def update_set_points(self):

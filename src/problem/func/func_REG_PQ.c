@@ -12,7 +12,6 @@
 
 Func* FUNC_REG_PQ_new(REAL weight, Net* net) {
   Func* f = FUNC_new(weight,net);
-  FUNC_set_name(f,"generator powers regularization");
   FUNC_set_func_init(f, &FUNC_REG_PQ_init);
   FUNC_set_func_count_step(f, &FUNC_REG_PQ_count_step);
   FUNC_set_func_allocate(f, &FUNC_REG_PQ_allocate);
@@ -20,11 +19,13 @@ Func* FUNC_REG_PQ_new(REAL weight, Net* net) {
   FUNC_set_func_analyze_step(f, &FUNC_REG_PQ_analyze_step);
   FUNC_set_func_eval_step(f, &FUNC_REG_PQ_eval_step);
   FUNC_set_func_free(f, &FUNC_REG_PQ_free);
+  FUNC_init(f);
   return f;
 }
 
 void FUNC_REG_PQ_init(Func* f) {
-  // Nothing
+  
+  FUNC_set_name(f,"generator powers regularization");
 }
 
 void FUNC_REG_PQ_clear(Func* f) {
