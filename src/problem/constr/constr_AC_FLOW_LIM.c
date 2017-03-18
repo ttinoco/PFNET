@@ -13,6 +13,20 @@
 
 #define HESSIAN_VAL() -(R*dRdx + I*dIdx)*(R*dRdy + I*dIdy)/sqrterm3+(dRdy*dRdx+dIdy*dIdx+R*d2Rdydx+I*d2Idydx)/sqrterm
 
+Constr* CONSTR_AC_FLOW_LIM_new(Net* net) {
+  Constr* c = CONSTR_new(net);
+  CONSTR_set_func_init(c, &CONSTR_AC_FLOW_LIM_init);
+  CONSTR_set_func_count_step(c, &CONSTR_AC_FLOW_LIM_count_step);
+  CONSTR_set_func_allocate(c, &CONSTR_AC_FLOW_LIM_allocate);
+  CONSTR_set_func_clear(c, &CONSTR_AC_FLOW_LIM_clear);
+  CONSTR_set_func_analyze_step(c, &CONSTR_AC_FLOW_LIM_analyze_step);
+  CONSTR_set_func_eval_step(c, &CONSTR_AC_FLOW_LIM_eval_step);
+  CONSTR_set_func_store_sens_step(c, &CONSTR_AC_FLOW_LIM_store_sens_step);
+  CONSTR_set_func_free(c, &CONSTR_AC_FLOW_LIM_free);
+  CONSTR_init(c);
+  return c;
+}
+
 void CONSTR_AC_FLOW_LIM_init(Constr* c) {
   
   // Local variables
@@ -27,6 +41,7 @@ void CONSTR_AC_FLOW_LIM_init(Constr* c) {
   num_periods = NET_get_num_periods(net);
   max_num_constr = 2*num_branches*num_periods;
   CONSTR_set_H_nnz(c,(int*)calloc(max_num_constr,sizeof(int)),max_num_constr);
+  CONSTR_set_name(c,"AC branch flow limits");
   CONSTR_set_data(c,NULL);
 }
 

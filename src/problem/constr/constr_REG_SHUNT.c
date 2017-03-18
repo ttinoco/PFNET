@@ -10,6 +10,20 @@
 
 #include <pfnet/constr_REG_SHUNT.h>
 
+Constr* CONSTR_REG_SHUNT_new(Net* net) {
+  Constr* c = CONSTR_new(net);
+  CONSTR_set_func_init(c, &CONSTR_REG_SHUNT_init);
+  CONSTR_set_func_count_step(c, &CONSTR_REG_SHUNT_count_step);
+  CONSTR_set_func_allocate(c, &CONSTR_REG_SHUNT_allocate);
+  CONSTR_set_func_clear(c, &CONSTR_REG_SHUNT_clear);
+  CONSTR_set_func_analyze_step(c, &CONSTR_REG_SHUNT_analyze_step);
+  CONSTR_set_func_eval_step(c, &CONSTR_REG_SHUNT_eval_step);
+  CONSTR_set_func_store_sens_step(c, &CONSTR_REG_SHUNT_store_sens_step);
+  CONSTR_set_func_free(c, &CONSTR_REG_SHUNT_free);
+  CONSTR_init(c);
+  return c;
+}
+
 void CONSTR_REG_SHUNT_init(Constr* c) {
 
   // Local variables
@@ -20,6 +34,7 @@ void CONSTR_REG_SHUNT_init(Constr* c) {
   net = CONSTR_get_network(c);
   num_Jconstr = 4*NET_get_num_switched_shunts(CONSTR_get_network(c))*NET_get_num_periods(net);
   CONSTR_set_H_nnz(c,(int*)calloc(num_Jconstr,sizeof(int)),num_Jconstr);
+  CONSTR_set_name(c,"voltage regulation by shunts");
   CONSTR_set_data(c,NULL);
 }
 

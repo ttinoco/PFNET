@@ -19,6 +19,7 @@
 #define CONSTR_REG_TRAN_NORM 1e0
 
 // Function prototypes
+Constr* CONSTR_REG_TRAN_new(Net* net);
 void CONSTR_REG_TRAN_init(Constr* c);
 void CONSTR_REG_TRAN_count_step(Constr* c, Branch* br, int t);
 void CONSTR_REG_TRAN_allocate(Constr* c);

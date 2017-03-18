@@ -12,8 +12,8 @@ cdef extern from "pfnet/pfnet.h":
     ctypedef struct Net
     ctypedef struct Vec
     ctypedef struct Mat
-    ctypedef double REAL
     ctypedef struct Branch
+    ctypedef double REAL
         
     void FUNC_del(Func* f)
     void FUNC_del_matvec(Func* f)

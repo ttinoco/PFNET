@@ -17,6 +17,7 @@
 #define CONSTR_PAR_GEN_Q_PARAM 1e-4
 
 // Function prototypes
+Constr* CONSTR_PAR_GEN_Q_new(Net* net);
 void CONSTR_PAR_GEN_Q_init(Constr* c);
 void CONSTR_PAR_GEN_Q_count_step(Constr* c, Branch* br, int t);
 void CONSTR_PAR_GEN_Q_allocate(Constr* c);

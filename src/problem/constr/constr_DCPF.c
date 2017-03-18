@@ -10,9 +10,24 @@
 
 #include <pfnet/constr_DCPF.h>
 
+Constr* CONSTR_DCPF_new(Net* net) {
+  Constr* c = CONSTR_new(net);
+  CONSTR_set_func_init(c, &CONSTR_DCPF_init);
+  CONSTR_set_func_count_step(c, &CONSTR_DCPF_count_step);
+  CONSTR_set_func_allocate(c, &CONSTR_DCPF_allocate);
+  CONSTR_set_func_clear(c, &CONSTR_DCPF_clear);
+  CONSTR_set_func_analyze_step(c, &CONSTR_DCPF_analyze_step);
+  CONSTR_set_func_eval_step(c, &CONSTR_DCPF_eval_step);
+  CONSTR_set_func_store_sens_step(c, &CONSTR_DCPF_store_sens_step);
+  CONSTR_set_func_free(c, &CONSTR_DCPF_free);
+  CONSTR_init(c);
+  return c;
+}
+
 void CONSTR_DCPF_init(Constr* c) {
 
   // Init
+  CONSTR_set_name(c,"DC power balance");
   CONSTR_set_data(c,NULL);
 }
 

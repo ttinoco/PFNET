@@ -1,5 +1,5 @@
-/** @file constr_PF.c
- *  @brief This file defines the data structure and routines associated with the constraint of type PF.
+/** @file constr_ACPF.c
+ *  @brief This file defines the data structure and routines associated with the constraint of type ACPF.
  *
  * This file is part of PFNET.
  *
@@ -9,9 +9,9 @@
  */
 
 #include <pfnet/array.h>
-#include <pfnet/constr_PF.h>
+#include <pfnet/constr_ACPF.h>
 
-struct Constr_PF_Data {
+struct Constr_ACPF_Data {
 
   int size;
 
@@ -27,20 +27,34 @@ struct Constr_PF_Data {
   int* dvdv_indices;
 };
 
-void CONSTR_PF_init(Constr* c) {
+Constr* CONSTR_ACPF_new(Net* net) {
+  Constr* c = CONSTR_new(net);
+  CONSTR_set_func_init(c, &CONSTR_ACPF_init);
+  CONSTR_set_func_count_step(c, &CONSTR_ACPF_count_step);
+  CONSTR_set_func_allocate(c, &CONSTR_ACPF_allocate);
+  CONSTR_set_func_clear(c, &CONSTR_ACPF_clear);
+  CONSTR_set_func_analyze_step(c, &CONSTR_ACPF_analyze_step);
+  CONSTR_set_func_eval_step(c, &CONSTR_ACPF_eval_step);
+  CONSTR_set_func_store_sens_step(c, &CONSTR_ACPF_store_sens_step);
+  CONSTR_set_func_free(c, &CONSTR_ACPF_free);
+  CONSTR_init(c);
+  return c;
+}
+
+void CONSTR_ACPF_init(Constr* c) {
 
   // Local variables
   Net* net;
   int num_buses;
   int num_periods;
-  Constr_PF_Data* data;
+  Constr_ACPF_Data* data;
 
   // Init
   net = CONSTR_get_network(c);
   num_buses = NET_get_num_buses(net);
   num_periods = NET_get_num_periods(net);
   CONSTR_set_H_nnz(c,(int*)calloc(num_buses*num_periods,sizeof(int)),num_buses*num_periods);
-  data = (Constr_PF_Data*)malloc(sizeof(Constr_PF_Data));
+  data = (Constr_ACPF_Data*)malloc(sizeof(Constr_ACPF_Data));
   data->size = num_buses*num_periods;
   ARRAY_zalloc(data->dPdw_indices,int,num_buses*num_periods);
   ARRAY_zalloc(data->dQdw_indices,int,num_buses*num_periods);
@@ -49,10 +63,11 @@ void CONSTR_PF_init(Constr* c) {
   ARRAY_zalloc(data->dwdw_indices,int,num_buses*num_periods);
   ARRAY_zalloc(data->dwdv_indices,int,num_buses*num_periods);
   ARRAY_zalloc(data->dvdv_indices,int,num_buses*num_periods);
+  CONSTR_set_name(c,"AC power balance");
   CONSTR_set_data(c,(void*)data);
 }
 
-void CONSTR_PF_clear(Constr* c) {
+void CONSTR_ACPF_clear(Constr* c) {
 
   // f
   VEC_set_zero(CONSTR_get_f(c));
@@ -71,7 +86,7 @@ void CONSTR_PF_clear(Constr* c) {
   CONSTR_clear_bus_counted(c);
 }
 
-void CONSTR_PF_count_step(Constr* c, Branch* br, int t) {
+void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
 
   // Local variables
   Bus* bus[2];
@@ -94,7 +109,7 @@ void CONSTR_PF_count_step(Constr* c, Branch* br, int t) {
   BOOL var_w[2];
   BOOL var_a;
   BOOL var_phi;
-  Constr_PF_Data* data;
+  Constr_ACPF_Data* data;
   int k;
   int m;
   int num_buses;
@@ -106,7 +121,7 @@ void CONSTR_PF_count_step(Constr* c, Branch* br, int t) {
   J_nnz = CONSTR_get_J_nnz_ptr(c);
   H_nnz = CONSTR_get_H_nnz(c);
   bus_counted = CONSTR_get_bus_counted(c);
-  data = (Constr_PF_Data*)CONSTR_get_data(c);
+  data = (Constr_ACPF_Data*)CONSTR_get_data(c);
 
   // Check pointers
   if (!J_nnz || !H_nnz || !bus_counted)
@@ -345,7 +360,7 @@ void CONSTR_PF_count_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_PF_allocate(Constr* c) {
+void CONSTR_ACPF_allocate(Constr* c) {
 
   // Local variables
   Net* net;
@@ -435,7 +450,7 @@ void CONSTR_PF_allocate(Constr* c) {
 				  H_comb_nnz)); // nnz
 }
 
-void CONSTR_PF_analyze_step(Constr* c, Branch* br, int t) {
+void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
 
   // Local variables
   Bus* bus[2];
@@ -841,7 +856,7 @@ void CONSTR_PF_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_PF_eval_step(Constr* c, Branch* br, int t, Vec* values) {
+void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values) {
 
   // Local variables
   Bus* bus[2];
@@ -894,7 +909,7 @@ void CONSTR_PF_eval_step(Constr* c, Branch* br, int t, Vec* values) {
   REAL shunt_b;
   REAL shunt_g;
 
-  Constr_PF_Data* data;
+  Constr_ACPF_Data* data;
 
   int k;
   int m;
@@ -914,7 +929,7 @@ void CONSTR_PF_eval_step(Constr* c, Branch* br, int t, Vec* values) {
   J_nnz = CONSTR_get_J_nnz_ptr(c);
   H_nnz = CONSTR_get_H_nnz(c);
   bus_counted = CONSTR_get_bus_counted(c);
-  data = (Constr_PF_Data*)CONSTR_get_data(c);
+  data = (Constr_ACPF_Data*)CONSTR_get_data(c);
 
   // Check pointers
   if (!f || !J || !J_nnz || !H_nnz || !bus_counted || !data)
@@ -1362,7 +1377,7 @@ void CONSTR_PF_eval_step(Constr* c, Branch* br, int t, Vec* values) {
   }
 }
 
-void CONSTR_PF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_ACPF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Local variables
   Bus* bus[2];
@@ -1396,13 +1411,13 @@ void CONSTR_PF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, V
   }
 }
 
-void CONSTR_PF_free(Constr* c) {
+void CONSTR_ACPF_free(Constr* c) {
 
   // Local variables
-  Constr_PF_Data* data;
+  Constr_ACPF_Data* data;
 
   // Get data
-  data = (Constr_PF_Data*)CONSTR_get_data(c);
+  data = (Constr_ACPF_Data*)CONSTR_get_data(c);
 
   // Free
   if (data) {

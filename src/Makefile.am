@@ -63,7 +63,7 @@ problem_hdr = 	$(inc_path)/constr.h \
 		$(inc_path)/heur_PVPQ.h \
 		$(inc_path)/problem.h
 
-problem_constr_src = 	problem/constr/constr_BOUND.c  \
+problem_constr_src = 	problem/constr/constr_NBOUND.c  \
 			problem/constr/constr_DC_FLOW_LIM.c \
 			problem/constr/constr_AC_FLOW_LIM.c \
 			problem/constr/constr_DCPF.c \
@@ -73,12 +73,12 @@ problem_constr_src = 	problem/constr/constr_BOUND.c  \
 			problem/constr/constr_LINPF.c \
 			problem/constr/constr_PAR_GEN_P.c \
 			problem/constr/constr_PAR_GEN_Q.c \
-			problem/constr/constr_PF.c \
+			problem/constr/constr_ACPF.c \
 			problem/constr/constr_REG_GEN.c \
 			problem/constr/constr_REG_SHUNT.c \
 			problem/constr/constr_REG_TRAN.c
 
-problem_constr_hdr = 	$(inc_path)/constr_BOUND.h \
+problem_constr_hdr = 	$(inc_path)/constr_NBOUND.h \
 			$(inc_path)/constr_DC_FLOW_LIM.h \
 			$(inc_path)/constr_AC_FLOW_LIM.h \
 			$(inc_path)/constr_DCPF.h \
@@ -88,7 +88,7 @@ problem_constr_hdr = 	$(inc_path)/constr_BOUND.h \
 			$(inc_path)/constr_LINPF.h \
 			$(inc_path)/constr_PAR_GEN_P.h \
 			$(inc_path)/constr_PAR_GEN_Q.h \
-			$(inc_path)/constr_PF.h \
+			$(inc_path)/constr_ACPF.h \
 			$(inc_path)/constr_REG_GEN.h \
 			$(inc_path)/constr_REG_SHUNT.h \
 			$(inc_path)/constr_REG_TRAN.h

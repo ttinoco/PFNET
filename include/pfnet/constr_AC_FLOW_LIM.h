@@ -18,6 +18,7 @@
 #define CONSTR_AC_FLOW_LIM_PARAM 1e-10
 
 // Function prototypes
+Constr* CONSTR_AC_FLOW_LIM_new(Net* net);
 void CONSTR_AC_FLOW_LIM_init(Constr* c);
 void CONSTR_AC_FLOW_LIM_count_step(Constr* c, Branch* br, int t);
 void CONSTR_AC_FLOW_LIM_allocate(Constr* c);

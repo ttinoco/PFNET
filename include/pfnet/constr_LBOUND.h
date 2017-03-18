@@ -15,6 +15,7 @@
 #include "constr.h"
 
 // Function prototypes
+Constr* CONSTR_LBOUND_new(Net* net);
 void CONSTR_LBOUND_init(Constr* c);
 void CONSTR_LBOUND_count_step(Constr* c, Branch* br, int t);
 void CONSTR_LBOUND_allocate(Constr* c);

@@ -28,6 +28,7 @@ cdef class Problem:
     cdef cprob.Prob* _c_prob
     cdef bint alloc
     cdef list _functions
+    cdef list _constraints
 
     def __init__(self):
         """
@@ -41,6 +42,7 @@ cdef class Problem:
         self._c_prob = cprob.PROB_new()
         self.alloc = True
         self._functions = []
+        self._constraints = []
 
     def __dealloc__(self):
         """
@@ -51,16 +53,27 @@ cdef class Problem:
             cprob.PROB_del(self._c_prob)
             self._c_prob = NULL
 
-    def add_constraint(self,ctype):
+    def add_constraint(self,ConstraintBase constr):
         """
         Adds constraint to optimization problem.
 
         Parameters
         ----------
-        ctype : string (:ref:`ref_constr_type`)
+        constr : ConstraintBase
         """
 
-        cprob.PROB_add_constr(self._c_prob,str2constr[ctype])
+        # Prevent __dealloc__ of function
+        constr._alloc = False
+        
+        # Add constraint to list
+        # Prevents python object from being garbage collected
+        # This is needed for CustomConstraints
+        self._constraints.append(constr)
+        
+        # Add constraint to problem    
+        cprob.PROB_add_constr(self._c_prob,constr._c_constr)
+        if cprob.PROB_has_error(self._c_prob):
+            raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 
     def add_function(self,FunctionBase func):
         """
@@ -187,19 +200,23 @@ cdef class Problem:
         if cprob.PROB_has_error(self._c_prob):
             raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 
-    def find_constraint(self,ctype):
+    def find_constraint(self,name):
         """
         Finds constraint of give type among the constraints of this optimization problem.
 
         Parameters
         ----------
-        type : string (:ref:`ref_constr_type`)
+        name : string
+
+        Returns
+        -------
+        constr : Constraint
         """
 
-        cdef cnet.Net* n = cprob.PROB_get_network(self._c_prob)
-        c = cprob.PROB_find_constr(self._c_prob,str2constr[ctype])
+        name = name.encode('UTF-8')
+        c = cprob.PROB_find_constr(self._c_prob,name)
         if c is not NULL:
-            return new_Constraint(c,n)
+            return new_Constraint(c)
         else:
             raise ProblemError('constraint not found')
 
@@ -310,9 +327,8 @@ cdef class Problem:
         def __get__(self):
             clist = []
             cdef cconstr.Constr* c = cprob.PROB_get_constr(self._c_prob)
-            cdef cnet.Net* n = cprob.PROB_get_network(self._c_prob)
             while c is not NULL:
-                clist.append(new_Constraint(c,n))
+                clist.append(new_Constraint(c))
                 c = cconstr.CONSTR_get_next(c)
             return clist
 

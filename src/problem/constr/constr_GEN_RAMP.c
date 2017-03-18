@@ -9,11 +9,25 @@
  */
 
 #include <pfnet/constr_GEN_RAMP.h>
-#include <assert.h>
+
+Constr* CONSTR_GEN_RAMP_new(Net* net) {
+  Constr* c = CONSTR_new(net);
+  CONSTR_set_func_init(c, &CONSTR_GEN_RAMP_init);
+  CONSTR_set_func_count_step(c, &CONSTR_GEN_RAMP_count_step);
+  CONSTR_set_func_allocate(c, &CONSTR_GEN_RAMP_allocate);
+  CONSTR_set_func_clear(c, &CONSTR_GEN_RAMP_clear);
+  CONSTR_set_func_analyze_step(c, &CONSTR_GEN_RAMP_analyze_step);
+  CONSTR_set_func_eval_step(c, &CONSTR_GEN_RAMP_eval_step);
+  CONSTR_set_func_store_sens_step(c, &CONSTR_GEN_RAMP_store_sens_step);
+  CONSTR_set_func_free(c, &CONSTR_GEN_RAMP_free);
+  CONSTR_init(c);
+  return c;
+}
 
 void CONSTR_GEN_RAMP_init(Constr* c) {
 
   // Init
+  CONSTR_set_name(c,"generator ramp limits");
   CONSTR_set_data(c,NULL);
 }
 

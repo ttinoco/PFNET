@@ -31,6 +31,9 @@ cdef class FunctionBase:
     cdef bint _alloc
 
     def __init__(self):
+        """
+        Base function class.
+        """
 
         pass
 

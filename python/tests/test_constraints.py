@@ -152,6 +152,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
 
             constr = pf.Constraint('variable fixing',net)
+            self.assertEqual(constr.name,'variable fixing')
 
             f = constr.f
             J = constr.J
@@ -334,6 +335,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
 
             constr = pf.Constraint('variable fixing',net)
+            self.assertEqual(constr.name,'variable fixing')
 
             f = constr.f
             J = constr.J
@@ -573,6 +575,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
 
             constr = pf.Constraint('variable bounds',net)
+            self.assertEqual(constr.name,'variable bounds')
 
             f = constr.f
             J = constr.J
@@ -796,6 +799,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(x0.shape,(net.num_vars,))
 
             constr = pf.Constraint('variable bounds',net)
+            self.assertEqual(constr.name,'variable bounds')
 
             constr.analyze()
 
@@ -1044,6 +1048,7 @@ class TestConstraints(unittest.TestCase):
 
             x0 = net.get_var_values()
             constr = pf.Constraint('variable bounds',net)
+            self.assertEqual(constr.name,'variable bounds')
             constr.analyze()
             constr.eval(x0)
 
@@ -1131,6 +1136,7 @@ class TestConstraints(unittest.TestCase):
 
             x0 = net.get_var_values()
             constr = pf.Constraint('variable bounds',net)
+            self.assertEqual(constr.name,'variable bounds')
             constr.analyze()
             constr.eval(x0)
 
@@ -1196,6 +1202,7 @@ class TestConstraints(unittest.TestCase):
 
             # Constraint
             constr = pf.Constraint('generator active power participation',net)
+            self.assertEqual(constr.name,'generator active power participation')
 
             f = constr.f
             J = constr.J
@@ -1325,6 +1332,7 @@ class TestConstraints(unittest.TestCase):
 
             # Constraint
             constr = pf.Constraint('generator reactive power participation',net)
+            self.assertEqual(constr.name,'generator reactive power participation')
 
             f = constr.f
             J = constr.J
@@ -1499,6 +1507,7 @@ class TestConstraints(unittest.TestCase):
 
             # Constraint
             constr = pf.Constraint('AC power balance',net)
+            self.assertEqual(constr.name,'AC power balance')
 
             f = constr.f
             J = constr.J
@@ -1775,6 +1784,7 @@ class TestConstraints(unittest.TestCase):
 
             # Constraint
             constr = pf.Constraint('voltage regulation by generators',net)
+            self.assertEqual(constr.name,'voltage regulation by generators')
 
             f = constr.f
             J = constr.J
@@ -2026,6 +2036,7 @@ class TestConstraints(unittest.TestCase):
 
             # Constraint
             constr = pf.Constraint('variable nonlinear bounds',net)
+            self.assertEqual(constr.name,'variable nonlinear bounds')
 
             f = constr.f
             J = constr.J
@@ -2212,6 +2223,7 @@ class TestConstraints(unittest.TestCase):
 
             # Constraint
             constr = pf.Constraint('voltage regulation by transformers',net)
+            self.assertEqual(constr.name,'voltage regulation by transformers')
 
             f = constr.f
             J = constr.J
@@ -2445,6 +2457,7 @@ class TestConstraints(unittest.TestCase):
 
             # Constraint
             constr = pf.Constraint('voltage regulation by shunts',net)
+            self.assertEqual(constr.name,'voltage regulation by shunts')
 
             f = constr.f
             J = constr.J
@@ -2854,6 +2867,7 @@ class TestConstraints(unittest.TestCase):
 
             # Constraint
             constr = pf.Constraint('DC power balance',net)
+            self.assertEqual(constr.name,'DC power balance')
 
             f = constr.f
             J = constr.J
@@ -3067,6 +3081,7 @@ class TestConstraints(unittest.TestCase):
 
             # Constraint
             constr = pf.Constraint('DC power balance',net)
+            self.assertEqual(constr.name,'DC power balance')
 
             # Analyze
             constr.analyze()
@@ -3167,6 +3182,7 @@ class TestConstraints(unittest.TestCase):
 
             # Constraint
             constr = pf.Constraint('DC branch flow limits',net)
+            self.assertEqual(constr.name,'DC branch flow limits')
 
             # Num constr
             num_constr = len([br for br in net.branches if br.ratingA != 0.])
@@ -3338,6 +3354,7 @@ class TestConstraints(unittest.TestCase):
 
             # Constraint
             constr = pf.Constraint('DC branch flow limits',net)
+            self.assertEqual(constr.name,'DC branch flow limits')
             constr.analyze()
             G = constr.G
             l = constr.l
@@ -3426,6 +3443,7 @@ class TestConstraints(unittest.TestCase):
 
             # Constraint
             constr = pf.Constraint('linearized AC power balance',net)
+            self.assertEqual(constr.name,'linearized AC power balance')
 
             f = constr.f
             J = constr.J
@@ -3491,6 +3509,7 @@ class TestConstraints(unittest.TestCase):
 
             # Check with ACPF
             constrPF = pf.Constraint('AC power balance',net)
+            self.assertEqual(constrPF.name,'AC power balance')
             constrPF.analyze()
             constrPF.eval(x0)
             self.assertEqual(A.nnz,constrPF.J.nnz)
@@ -3545,6 +3564,7 @@ class TestConstraints(unittest.TestCase):
 
             # Constraint
             constr = pf.Constraint('generator ramp limits',net)
+            self.assertEqual(constr.name,'generator ramp limits')
 
             f = constr.f
             J = constr.J
@@ -3706,6 +3726,7 @@ class TestConstraints(unittest.TestCase):
 
             # Constr
             constr = pf.Constraint('AC branch flow limits',net)
+            self.assertEqual(constr.name,'AC branch flow limits')
             constr.analyze()
             num_constr = len([br for br in net.branches if br.ratingA != 0.])*2*net.num_periods
             self.assertTupleEqual(constr.f.shape,(num_constr,))
@@ -3718,6 +3739,7 @@ class TestConstraints(unittest.TestCase):
 
             # Constraint
             constr = pf.Constraint('AC branch flow limits',net)
+            self.assertEqual(constr.name,'AC branch flow limits')
 
             f = constr.f
             J = constr.J

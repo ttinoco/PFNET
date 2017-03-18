@@ -15,6 +15,7 @@
 #include "constr.h"
 
 // Function prototypes
+Constr* CONSTR_DCPF_new(Net* net);
 void CONSTR_DCPF_init(Constr* c);
 void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t);
 void CONSTR_DCPF_allocate(Constr* c);

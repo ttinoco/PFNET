@@ -8,6 +8,8 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
+cimport cvec
+cimport cbranch
 cimport cconstr
 
 class ConstraintError(Exception):
@@ -20,45 +22,35 @@ class ConstraintError(Exception):
     def __str__(self):
         return repr(self.value)
 
-cdef class Constraint:
+cdef class ConstraintBase:
     """
-    Constraint class.
+    Base constraint class.
     """
 
     cdef cconstr.Constr* _c_constr
-    cdef cnet.Net* _c_net
-    cdef bint alloc
+    cdef bint _alloc
 
-    def __init__(self,ctype,Network net,alloc=True):
+    def __init__(self):
         """
-        Contraint class.
-
-        Parameters
-        ----------
-        ctype : string (:ref:`ref_constr_type`)
-        net : :class:`Network <pfnet.Network>`
-        alloc : {``True``, ``False``}
+        Base constraint class.
         """
 
         pass
 
-    def __cinit__(self,ctype,Network net,alloc=True):
+    def __cinit__(self):
 
-        self._c_net = net._c_net
-        if alloc:
-            self._c_constr = cconstr.CONSTR_new(str2constr[ctype],net._c_net)
-        else:
-            self._c_constr = NULL
-        self.alloc = alloc
+        self._c_constr = NULL
+        self._alloc = False
 
     def __dealloc__(self):
         """
         Frees constraint C data structure.
         """
 
-        if self.alloc:
+        if self._alloc:
             cconstr.CONSTR_del(self._c_constr)
             self._c_constr = NULL
+            self._alloc = False
 
     def del_matvec(self):
         """
@@ -169,9 +161,12 @@ cdef class Constraint:
         """
         return Matrix(cconstr.CONSTR_get_H_single(self._c_constr,i))
 
-    property type:
-        """ Constraint type (string) (:ref:`ref_constr_type`). """
-        def __get__(self): return constr2str[cconstr.CONSTR_get_type(self._c_constr)]
+    property name:
+        """ Constraint name (string). """
+        def __get__(self): return cconstr.CONSTR_get_name(self._c_constr)
+        def __set__(self,name): 
+            name = name.encode('UTF-8')
+            cconstr.CONSTR_set_name(self._c_constr,name)
 
     property A_nnz:
         """ Number of nonzero entries in the matrix of linear equality constraints (int). """
@@ -241,10 +236,60 @@ cdef class Constraint:
             """ Number of extra variables (set during count) (int). """
             def __get__(self): return cconstr.CONSTR_get_num_extra_vars(self._c_constr)
 
-cdef new_Constraint(cconstr.Constr* c, cnet.Net* n):
-    if c is not NULL and n is not NULL:
-        constr = Constraint(0,new_Network(n),alloc=False)
+cdef new_Constraint(cconstr.Constr* c):
+    if c is not NULL:
+        constr = ConstraintBase()
         constr._c_constr = c
         return constr
     else:
         raise ConstraintError('invalid constraint data')
+
+cdef class Constraint(ConstraintBase):
+    
+    def __init__(self,name,Network net):
+        """
+        Function class.
+        
+        Parameters
+        ----------
+        name : string
+        net : :class:`Network <pfnet.Network>`
+        """
+        
+        pass
+    
+    def __cinit__(self,name,Network net):
+
+        if name == "AC power balance":
+            self._c_constr = cconstr.CONSTR_ACPF_new(net._c_net)
+        elif name == "DC power balance":
+            self._c_constr = cconstr.CONSTR_DCPF_new(net._c_net)
+        elif name == "linearized AC power balance":
+            self._c_constr = cconstr.CONSTR_LINPF_new(net._c_net)
+        elif name == "variable fixing":
+            self._c_constr = cconstr.CONSTR_FIX_new(net._c_net)
+        elif name == "variable nonlinear bounds":
+            self._c_constr = cconstr.CONSTR_NBOUND_new(net._c_net)
+        elif name == "variable bounds":
+            self._c_constr = cconstr.CONSTR_LBOUND_new(net._c_net)
+        elif name == "generator active power participation":
+            self._c_constr = cconstr.CONSTR_PAR_GEN_P_new(net._c_net)
+        elif name == "generator reactive power participation":
+            self._c_constr = cconstr.CONSTR_PAR_GEN_Q_new(net._c_net)
+        elif name == "voltage regulation by generators":
+            self._c_constr = cconstr.CONSTR_REG_GEN_new(net._c_net)
+        elif name == "voltage regulation by transformers":
+            self._c_constr = cconstr.CONSTR_REG_TRAN_new(net._c_net)
+        elif name == "voltage regulation by shunts":
+            self._c_constr = cconstr.CONSTR_REG_SHUNT_new(net._c_net)
+        elif name == "DC branch flow limits":
+            self._c_constr = cconstr.CONSTR_DC_FLOW_LIM_new(net._c_net)
+        elif name == "AC branch flow limits":
+            self._c_constr = cconstr.CONSTR_AC_FLOW_LIM_new(net._c_net)
+        elif name == "generator ramp limits":
+            self._c_constr = cconstr.CONSTR_GEN_RAMP_new(net._c_net)
+        else:
+            ConstraintError('invalid constraint name')
+            
+        self._alloc = True
+            

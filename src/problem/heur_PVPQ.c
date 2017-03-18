@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -104,7 +104,7 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 
   // Power flow constraints
   for (pf = clist; pf != NULL; pf = CONSTR_get_next(pf)) {
-    if (CONSTR_get_type(pf) == CONSTR_TYPE_PF)
+    if (strcmp(CONSTR_get_name(pf),"AC power balance") == 0)
       break;
   }
   if (!pf)
@@ -112,7 +112,7 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 
   // Fix constraints
   for (fix = clist; fix != NULL; fix = CONSTR_get_next(fix)) {
-    if (CONSTR_get_type(fix) == CONSTR_TYPE_FIX)
+    if (strcmp(CONSTR_get_name(fix),"variable fixing") == 0)
       break;
   }
   if (!fix)

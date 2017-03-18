@@ -12,24 +12,9 @@ cdef extern from "pfnet/constr.h":
     ctypedef struct Net
     ctypedef struct Vec
     ctypedef struct Mat
-
+    ctypedef struct Branch
     ctypedef double REAL
-    
-    cdef char CONSTR_TYPE_PF
-    cdef char CONSTR_TYPE_DCPF
-    cdef char CONSTR_TYPE_LINPF
-    cdef char CONSTR_TYPE_FIX
-    cdef char CONSTR_TYPE_BOUND
-    cdef char CONSTR_TYPE_PAR_GEN_P
-    cdef char CONSTR_TYPE_PAR_GEN_Q
-    cdef char CONSTR_TYPE_REG_GEN
-    cdef char CONSTR_TYPE_REG_TRAN
-    cdef char CONSTR_TYPE_REG_SHUNT
-    cdef char CONSTR_TYPE_DC_FLOW_LIM
-    cdef char CONSTR_TYPE_AC_FLOW_LIM
-    cdef char CONSTR_TYPE_LBOUND
-    cdef char CONSTR_TYPE_GEN_RAMP
-    
+        
     void CONSTR_combine_H(Constr* c, Vec* coeff, bint ensure_psd)
     void CONSTR_del(Constr* c)
     void CONSTR_del_matvec(Constr* constr)
@@ -40,6 +25,7 @@ cdef extern from "pfnet/constr.h":
     int CONSTR_get_A_row(Constr* c)
     int CONSTR_get_G_row(Constr* c)
     int CONSTR_get_J_row(Constr* c)
+    char* CONSTR_get_name(Constr* c)
     Vec* CONSTR_get_f(Constr* c)
     Mat* CONSTR_get_J(Constr* c)
     Mat* CONSTR_get_Jbar(Constr* c)
@@ -53,6 +39,7 @@ cdef extern from "pfnet/constr.h":
     Mat* CONSTR_get_H_combined(Constr* c)
     int CONSTR_get_type(Constr* c)
     Constr* CONSTR_get_next(Constr* c)
+    void CONSTR_set_name(Constr* f, char*)
     void CONSTR_count(Constr* c)
     void CONSTR_allocate(Constr* c)
     void CONSTR_analyze(Constr* c)
@@ -63,3 +50,32 @@ cdef extern from "pfnet/constr.h":
     char* CONSTR_get_error_string(Constr* c)
     void CONSTR_update_network(Constr* c)
     int CONSTR_get_num_extra_vars(Constr* c)
+
+    void CONSTR_set_func_init(Constr* c, void (*func)(Constr* c))
+    void CONSTR_set_func_count_step(Constr* c, void (*func)(Constr* c, Branch* br, int t))
+    void CONSTR_set_func_allocate(Constr* c, void (*func)(Constr* c))
+    void CONSTR_set_func_clear(Constr* c, void (*func)(Constr* c))
+    void CONSTR_set_func_analyze_step(Constr* c, void (*func)(Constr* c, Branch* br, int t))
+    void CONSTR_set_func_eval_step(Constr* c, void (*func)(Constr* c, Branch* br, int t, Vec* v))
+    void CONSTR_set_func_store_sens_step(Constr* c, void (*func)(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl))
+
+    Constr* CONSTR_ACPF_new(Net* net)
+    Constr* CONSTR_DCPF_new(Net* net)
+    Constr* CONSTR_LINPF_new(Net* net)
+    Constr* CONSTR_FIX_new(Net* net)
+    Constr* CONSTR_LBOUND_new(Net* net)
+    Constr* CONSTR_NBOUND_new(Net* net)
+    Constr* CONSTR_PAR_GEN_P_new(Net* net)
+    Constr* CONSTR_PAR_GEN_Q_new(Net* net)
+    Constr* CONSTR_REG_GEN_new(Net* net)
+    Constr* CONSTR_REG_TRAN_new(Net* net)
+    Constr* CONSTR_REG_SHUNT_new(Net* net)
+    Constr* CONSTR_DC_FLOW_LIM_new(Net* net)
+    Constr* CONSTR_AC_FLOW_LIM_new(Net* net)
+    Constr* CONSTR_GEN_RAMP_new(Net* net)
+
+    void* CONSTR_get_data(Constr* c)
+    void CONSTR_set_data(Constr* c, void* data)
+    
+    char* CONSTR_get_bus_counted(Constr* c)
+    int CONSTR_get_bus_counted_size(Constr* c)

@@ -1,5 +1,5 @@
-/** @file constr_BOUND.c
- *  @brief This file defines the data structure and routines associated with the constraint of type BOUND.
+/** @file constr_NBOUND.c
+ *  @brief This file defines the data structure and routines associated with the constraint of type NBOUND.
  *
  * This file is part of PFNET.
  *
@@ -8,16 +8,31 @@
  * PFNET is released under the BSD 2-clause license.
  */
 
-#include <pfnet/constr_BOUND.h>
+#include <pfnet/constr_NBOUND.h>
 
-void CONSTR_BOUND_init(Constr* c) {
+Constr* CONSTR_NBOUND_new(Net* net) {
+  Constr* c = CONSTR_new(net);
+  CONSTR_set_func_init(c, &CONSTR_NBOUND_init);
+  CONSTR_set_func_count_step(c, &CONSTR_NBOUND_count_step);
+  CONSTR_set_func_allocate(c, &CONSTR_NBOUND_allocate);
+  CONSTR_set_func_clear(c, &CONSTR_NBOUND_clear);
+  CONSTR_set_func_analyze_step(c, &CONSTR_NBOUND_analyze_step);
+  CONSTR_set_func_eval_step(c, &CONSTR_NBOUND_eval_step);
+  CONSTR_set_func_store_sens_step(c, &CONSTR_NBOUND_store_sens_step);
+  CONSTR_set_func_free(c, &CONSTR_NBOUND_free);
+  CONSTR_init(c);
+  return c;
+}
+
+void CONSTR_NBOUND_init(Constr* c) {
 
   // Init
   CONSTR_set_H_nnz(c,NULL,0);
+  CONSTR_set_name(c,"variable nonlinear bounds");
   CONSTR_set_data(c,NULL);
 }
 
-void CONSTR_BOUND_clear(Constr* c) {
+void CONSTR_NBOUND_clear(Constr* c) {
 
   // f
   VEC_set_zero(CONSTR_get_f(c));
@@ -35,7 +50,7 @@ void CONSTR_BOUND_clear(Constr* c) {
   CONSTR_clear_bus_counted(c);
 }
 
-void CONSTR_BOUND_count_step(Constr* c, Branch* br, int t) {
+void CONSTR_NBOUND_count_step(Constr* c, Branch* br, int t) {
 
   // Local variables
   Bus* buses[2];
@@ -137,7 +152,7 @@ void CONSTR_BOUND_count_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_BOUND_allocate(Constr* c) {
+void CONSTR_NBOUND_allocate(Constr* c) {
 
   // Local variables
   int J_nnz;
@@ -180,7 +195,7 @@ void CONSTR_BOUND_allocate(Constr* c) {
 				  J_nnz)); // nnz
 }
 
-void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
+void CONSTR_NBOUND_analyze_step(Constr* c, Branch* br, int t) {
 
   // Local variables
   Bus* buses[2];
@@ -444,7 +459,7 @@ void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* values) {
+void CONSTR_NBOUND_eval_step(Constr* c, Branch* br, int t, Vec* values) {
 
   // Local variables
   Bus* buses[2];
@@ -490,7 +505,7 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* values) {
     return;
 
   // Param
-  eps = CONSTR_BOUND_PARAM;
+  eps = CONSTR_NBOUND_PARAM;
 
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
@@ -762,7 +777,7 @@ void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* values) {
   }
 }
 
-void CONSTR_BOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_NBOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Local variables
   Bus* buses[2];
@@ -868,6 +883,6 @@ void CONSTR_BOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf
   }
 }
 
-void CONSTR_BOUND_free(Constr* c) {
+void CONSTR_NBOUND_free(Constr* c) {
   // Nothing
 }

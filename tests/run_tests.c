@@ -32,11 +32,11 @@ static char * all_tests() {
   run_test(test_graph_basic);
 
   // Constraints
-  run_test(test_constr_BOUND);
+  run_test(test_constr_NBOUND);
   run_test(test_constr_FIX);
   run_test(test_constr_PAR_GEN_P);
   run_test(test_constr_PAR_GEN_Q);
-  run_test(test_constr_PF);
+  run_test(test_constr_ACPF);
   run_test(test_constr_REG_GEN);
   run_test(test_constr_REG_TRAN);
   run_test(test_constr_REG_SHUNT);

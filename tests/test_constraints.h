@@ -10,7 +10,7 @@
 #include "unit.h"
 #include <pfnet/pfnet.h>
 
-static char* test_constr_BOUND() {
+static char* test_constr_NBOUND() {
   
   // Local variables
   Net* net;
@@ -20,7 +20,7 @@ static char* test_constr_BOUND() {
   Vec* f;
   Mat* J;
 
-  printf("test_constr_BOUND ...");
+  printf("test_constr_NBOUND ...");
 
   // Load
   net = NET_new(1);
@@ -62,7 +62,7 @@ static char* test_constr_BOUND() {
   Assert("error - NULL vector of var values",x != NULL);
   Assert("error - vector of var values has wrong shape",VEC_get_size(x) == NET_get_num_vars(net));
 
-  c = CONSTR_new(CONSTR_TYPE_BOUND,net);
+  c = CONSTR_NBOUND_new(net);
   Assert("error - unable to create new constraint",c != NULL);
   Assert("error - bad constraint initialization",CONSTR_get_b(c) == NULL);
   Assert("error - bad constraint initialization",CONSTR_get_A(c) == NULL);
@@ -157,7 +157,7 @@ static char* test_constr_FIX() {
   Assert("error - NULL vector of var values",x != NULL);
   Assert("error - vector of var values has wrong shape",VEC_get_size(x) == NET_get_num_vars(net));
 
-  c = CONSTR_new(CONSTR_TYPE_FIX,net);
+  c = CONSTR_FIX_new(net);
   Assert("error - unable to create new constraint",c != NULL);
   Assert("error - bad constraint initialization",CONSTR_get_b(c) == NULL);
   Assert("error - bad constraint initialization",CONSTR_get_A(c) == NULL);
@@ -262,7 +262,7 @@ static char* test_constr_PAR_GEN_P() {
     }
   }
 
-  c = CONSTR_new(CONSTR_TYPE_PAR_GEN_P,net);
+  c = CONSTR_PAR_GEN_P_new(net);
   Assert("error - unable to create new constraint",c != NULL);
   Assert("error - bad constraint initialization",CONSTR_get_b(c) == NULL);
   Assert("error - bad constraint initialization",CONSTR_get_A(c) == NULL);
@@ -380,7 +380,7 @@ static char* test_constr_PAR_GEN_Q() {
     }       
   }
 
-  c = CONSTR_new(CONSTR_TYPE_PAR_GEN_Q,net);
+  c = CONSTR_PAR_GEN_Q_new(net);
   Assert("error - unable to create new constraint",c != NULL);
   Assert("error - bad constraint initialization",CONSTR_get_b(c) == NULL);
   Assert("error - bad constraint initialization",CONSTR_get_A(c) == NULL);
@@ -435,7 +435,7 @@ static char* test_constr_PAR_GEN_Q() {
   return 0;
 }
 
-static char* test_constr_PF() {
+static char* test_constr_ACPF() {
   
   // Local variables
   Net* net;
@@ -451,7 +451,7 @@ static char* test_constr_PF() {
   int size;
   int i;
 
-  printf("test_constr_PF ...");
+  printf("test_constr_ACPF ...");
 
   // Load
   net = NET_new(1);
@@ -508,7 +508,7 @@ static char* test_constr_PF() {
   Assert("error - NULL vector of var values",x != NULL);
   Assert("error - vector of var values has wrong shape",VEC_get_size(x) == NET_get_num_vars(net));
 
-  c = CONSTR_new(CONSTR_TYPE_PF,net);
+  c = CONSTR_ACPF_new(net);
   
   Jnnz_computed = (NET_get_num_buses(net)*4 +
 		   NET_get_num_branches(net)*8 +
@@ -641,7 +641,7 @@ static char* test_constr_REG_GEN() {
   Assert("error - NULL vector of var values",x != NULL);
   Assert("error - vector of var values has wrong shape",VEC_get_size(x) == NET_get_num_vars(net));
 
-  c = CONSTR_new(CONSTR_TYPE_REG_GEN,net);
+  c = CONSTR_REG_GEN_new(net);
 
   num = NET_get_num_buses_reg_by_gen(net)-NET_get_num_slack_buses(net);
   num_Annz = 3*num;
@@ -752,7 +752,7 @@ static char* test_constr_REG_TRAN() {
   Assert("error - NULL vector of var values",x != NULL);
   Assert("error - vector of var values has wrong shape",VEC_get_size(x) == NET_get_num_vars(net));
   
-  c = CONSTR_new(CONSTR_TYPE_REG_TRAN,net);
+  c = CONSTR_REG_TRAN_new(net);
 
   num = NET_get_num_tap_changers_v(net);
   num_Annz = 3*num;
@@ -862,7 +862,7 @@ static char* test_constr_REG_SHUNT() {
   Assert("error - NULL vector of var values",x != NULL);
   Assert("error - vector of var values has wrong shape",VEC_get_size(x) == NET_get_num_vars(net));
   
-  c = CONSTR_new(CONSTR_TYPE_REG_SHUNT,net);
+  c = CONSTR_REG_SHUNT_new(net);
 
   num = NET_get_num_switched_shunts(net);
   num_Annz = 3*num;

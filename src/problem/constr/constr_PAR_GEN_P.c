@@ -9,11 +9,25 @@
  */
 
 #include <pfnet/constr_PAR_GEN_P.h>
-#include <assert.h>
+
+Constr* CONSTR_PAR_GEN_P_new(Net* net) {
+  Constr* c = CONSTR_new(net);
+  CONSTR_set_func_init(c, &CONSTR_PAR_GEN_P_init);
+  CONSTR_set_func_count_step(c, &CONSTR_PAR_GEN_P_count_step);
+  CONSTR_set_func_allocate(c, &CONSTR_PAR_GEN_P_allocate);
+  CONSTR_set_func_clear(c, &CONSTR_PAR_GEN_P_clear);
+  CONSTR_set_func_analyze_step(c, &CONSTR_PAR_GEN_P_analyze_step);
+  CONSTR_set_func_eval_step(c, &CONSTR_PAR_GEN_P_eval_step);
+  CONSTR_set_func_store_sens_step(c, &CONSTR_PAR_GEN_P_store_sens_step);
+  CONSTR_set_func_free(c, &CONSTR_PAR_GEN_P_free);
+  CONSTR_init(c);
+  return c;
+}
 
 void CONSTR_PAR_GEN_P_init(Constr* c) {
 
   // Init
+  CONSTR_set_name(c,"generator active power participation");
   CONSTR_set_data(c,NULL);
 }
 

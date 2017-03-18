@@ -55,10 +55,15 @@ struct Prob {
   int num_extra_vars;          /** @brief Number of extra variables */
 };
 
-void PROB_add_constr(Prob* p, int type) {
+void PROB_add_constr(Prob* p, Constr* c) {
   if (p) {
-    if (!PROB_find_constr(p,type))
-      p->constr = CONSTR_list_add(p->constr,CONSTR_new(type,p->net));
+    if (PROB_get_network(p) != CONSTR_get_network(c)) {
+      sprintf(p->error_string,"constraint is associated with different network");
+      p->error_flag = TRUE;
+      return;
+    }
+    if (!PROB_find_constr(p,CONSTR_get_name(c)))
+      p->constr = CONSTR_list_add(p->constr,c);
   }
 }
 
@@ -75,8 +80,7 @@ void PROB_add_func(Prob* p, Func* f) {
 
 void PROB_add_heur(Prob* p, int type) {
   if (p)
-    p->heur = HEUR_list_add(p->heur,
-			    HEUR_new(type,p->net));
+    p->heur = HEUR_list_add(p->heur,HEUR_new(type,p->net));
 }
 
 void PROB_analyze(Prob* p) {
@@ -382,12 +386,12 @@ void PROB_combine_H(Prob* p, Vec* coeff, BOOL ensure_psd) {
   }
 }
 
-Constr* PROB_find_constr(Prob* p, int constr_type) {
-  Constr* c;
+Constr* PROB_find_constr(Prob* p, char* name) {
+  Constr* cc;
   if (p) {
-    for (c = p->constr; c != NULL; c = CONSTR_get_next(c)) {
-      if (CONSTR_get_type(c) == constr_type)
-	return c;
+    for (cc = p->constr; cc != NULL; cc = CONSTR_get_next(cc)) {
+      if (strcmp(name,CONSTR_get_name(cc)) == 0)
+	return cc;
     }
     return NULL;
   }
@@ -629,10 +633,10 @@ char* PROB_get_show_str(Prob* p) {
   sprintf(out+strlen(out),"\nProblem\n");
   sprintf(out+strlen(out),"functions  : %d\n",FUNC_list_len(p->func));
   for (f = p->func; f != NULL; f = FUNC_get_next(f))
-    sprintf(out+strlen(out),"  name: %s\n",FUNC_get_name(f));
+    sprintf(out+strlen(out),"%s\n",FUNC_get_name(f));
   sprintf(out+strlen(out),"constraints: %d\n",CONSTR_list_len(p->constr));  
   for (c = p->constr; c != NULL; c = CONSTR_get_next(c))
-    sprintf(out+strlen(out),"  type: %s\n",CONSTR_get_type_str(c));
+    sprintf(out+strlen(out),"%s\n",CONSTR_get_name(c));
 
   return out;
 }

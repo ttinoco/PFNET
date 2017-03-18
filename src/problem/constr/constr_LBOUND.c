@@ -10,9 +10,24 @@
 
 #include <pfnet/constr_LBOUND.h>
 
+Constr* CONSTR_LBOUND_new(Net* net) {
+  Constr* c = CONSTR_new(net);
+  CONSTR_set_func_init(c, &CONSTR_LBOUND_init);
+  CONSTR_set_func_count_step(c, &CONSTR_LBOUND_count_step);
+  CONSTR_set_func_allocate(c, &CONSTR_LBOUND_allocate);
+  CONSTR_set_func_clear(c, &CONSTR_LBOUND_clear);
+  CONSTR_set_func_analyze_step(c, &CONSTR_LBOUND_analyze_step);
+  CONSTR_set_func_eval_step(c, &CONSTR_LBOUND_eval_step);
+  CONSTR_set_func_store_sens_step(c, &CONSTR_LBOUND_store_sens_step);
+  CONSTR_set_func_free(c, &CONSTR_LBOUND_free);
+  CONSTR_init(c);
+  return c;
+}
+
 void CONSTR_LBOUND_init(Constr* c) {
 
   // Init
+  CONSTR_set_name(c,"variable bounds");
   CONSTR_set_data(c,NULL);
 }
 

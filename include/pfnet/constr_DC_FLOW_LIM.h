@@ -15,6 +15,7 @@
 #include "constr.h"
 
 // Function prototypes
+Constr* CONSTR_DC_FLOW_LIM_new(Net* net);
 void CONSTR_DC_FLOW_LIM_init(Constr* c);
 void CONSTR_DC_FLOW_LIM_count_step(Constr* c, Branch* br, int t);
 void CONSTR_DC_FLOW_LIM_allocate(Constr* c);

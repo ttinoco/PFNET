@@ -100,14 +100,14 @@ class TestProblem(unittest.TestCase):
                              net.get_num_switched_shunts())
                              
             # Constraints
-            p.add_constraint('AC power balance')
-            p.add_constraint('generator active power participation')
-            p.add_constraint('generator reactive power participation')
-            p.add_constraint('variable fixing')
+            p.add_constraint(pf.Constraint('AC power balance',net))
+            p.add_constraint(pf.Constraint('generator active power participation',net))
+            p.add_constraint(pf.Constraint('generator reactive power participation',net))
+            p.add_constraint(pf.Constraint('variable fixing',net))
             self.assertEqual(len(p.constraints),4)
 
             # Check adding redundant constraints
-            p.add_constraint('generator active power participation')
+            p.add_constraint(pf.Constraint('generator active power participation',net))
             self.assertEqual(len(p.constraints),4)
             
             # Functions
@@ -261,7 +261,7 @@ class TestProblem(unittest.TestCase):
             sens = np.random.randn(p.f.size)
             offset = 0
             for c in p.constraints:
-                if c.type == 'AC power balance':
+                if c.name == 'AC power balance':
                     break
                 else:
                     offset += c.f.size
@@ -341,16 +341,16 @@ class TestProblem(unittest.TestCase):
                              3*net.get_num_switched_shunts())
                              
             # Constraints
-            p.add_constraint('AC power balance')
-            p.add_constraint('generator active power participation')
-            p.add_constraint('generator reactive power participation')
-            p.add_constraint('voltage regulation by generators')
-            p.add_constraint('voltage regulation by transformers')
-            p.add_constraint('voltage regulation by shunts')
+            p.add_constraint(pf.Constraint('AC power balance',net))
+            p.add_constraint(pf.Constraint('generator active power participation',net))
+            p.add_constraint(pf.Constraint('generator reactive power participation',net))
+            p.add_constraint(pf.Constraint('voltage regulation by generators',net))
+            p.add_constraint(pf.Constraint('voltage regulation by transformers',net))
+            p.add_constraint(pf.Constraint('voltage regulation by shunts',net))
             self.assertEqual(len(p.constraints),6)
 
             # Check adding redundant constraints
-            p.add_constraint('AC power balance')
+            p.add_constraint(pf.Constraint('AC power balance',net))
             self.assertEqual(len(p.constraints),6)
             
             # Functions
@@ -546,7 +546,7 @@ class TestProblem(unittest.TestCase):
             sens = np.random.randn(p.f.size)
             offset = 0
             for c in p.constraints:
-                if c.type == 'AC power balance':
+                if c.name == 'AC power balance':
                     break
                 else:
                     offset += c.f.size
@@ -615,8 +615,8 @@ class TestProblem(unittest.TestCase):
             
             self.assertEqual(len(p.constraints),0)
 
-            p.add_constraint('variable bounds')
-            p.add_constraint('DC branch flow limits')
+            p.add_constraint(pf.Constraint('variable bounds',net))
+            p.add_constraint(pf.Constraint('DC branch flow limits',net))
 
             self.assertEqual(len(p.constraints),2)
 
@@ -710,9 +710,9 @@ class TestProblem(unittest.TestCase):
                                               net.get_num_tap_changers()+
                                               net.get_num_phase_shifters()))
 
-            p.add_constraint('AC power balance')
-            p.add_constraint('AC branch flow limits')
-            p.add_constraint('variable bounds') 
+            p.add_constraint(pf.Constraint('AC power balance',net))
+            p.add_constraint(pf.Constraint('AC branch flow limits',net))
+            p.add_constraint(pf.Constraint('variable bounds',net))
             p.add_function(pf.Function('generation cost',1.,net))
             p.analyze()
 

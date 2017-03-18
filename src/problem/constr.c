@@ -10,33 +10,18 @@
 
 #include <pfnet/array.h>
 #include <pfnet/constr.h>
-#include <pfnet/constr_PF.h>
-#include <pfnet/constr_DCPF.h>
-#include <pfnet/constr_LINPF.h>
-#include <pfnet/constr_FIX.h>
-#include <pfnet/constr_BOUND.h>
-#include <pfnet/constr_PAR_GEN_P.h>
-#include <pfnet/constr_PAR_GEN_Q.h>
-#include <pfnet/constr_REG_GEN.h>
-#include <pfnet/constr_REG_TRAN.h>
-#include <pfnet/constr_REG_SHUNT.h>
-#include <pfnet/constr_DC_FLOW_LIM.h>
-#include <pfnet/constr_AC_FLOW_LIM.h>
-#include <pfnet/constr_LBOUND.h>
-#include <pfnet/constr_GEN_RAMP.h>
 
 struct Constr {
 
   // Error
   BOOL error_flag;                       /**< @brief Error flag */
   char error_string[CONSTR_BUFFER_SIZE]; /**< @brief Error string */
+
+  // Name
+  char name[CONSTR_BUFFER_SIZE]; /**< @brief Name string */
   
   // Network
   Net* net;    /**< @brief Power network */
-
-  // Type
-  int type;                           /**< @brief Constraint type */
-  char type_str[CONSTR_BUFFER_SIZE];  /**< @brief Constraint type string */
   
   // Nonlinear (f(x) + Jbar y = 0)
   Vec* f;           /**< @brief Vector of nonlinear constraint violations */
@@ -123,7 +108,7 @@ void CONSTR_combine_H(Constr* c, Vec* coeff, BOOL ensure_psd) {
   int H_nnz_comb;
   int k;
   int m;
-
+  
   // No c
   if (!c)
     return;
@@ -200,20 +185,6 @@ void CONSTR_del(Constr* c) {
 
     free(c);
   }
-}
-
-int CONSTR_get_type(Constr* c) {
-  if (c)
-    return c->type;
-  else
-    return CONSTR_TYPE_UNKNOWN;
-}
-
-char* CONSTR_get_type_str(Constr* c) {
-  if (c)
-    return c->type_str;
-  else
-    return "unknown";
 }
 
 Vec* CONSTR_get_b(Constr* c) {
@@ -588,13 +559,16 @@ void CONSTR_list_store_sens_step(Constr* clist, Branch* br, int t, Vec* sA, Vec*
   }
 }
 
-Constr* CONSTR_new(int type, Net* net) {
+Constr* CONSTR_new(Net* net) {
 
   Constr* c = (Constr*)malloc(sizeof(Constr));
 
   // Error
   c->error_flag = FALSE;
   strcpy(c->error_string,"");
+
+  // Name
+  strcpy(c->name,"unknown");
 
   // Network
   c->net = net;
@@ -603,8 +577,6 @@ Constr* CONSTR_new(int type, Net* net) {
   c->num_extra_vars = 0;
 
   // Fields
-  c->type = type;
-  strcpy(c->type_str,"");
   c->f = NULL;
   c->J = NULL;
   c->Jbar = NULL;
@@ -627,200 +599,34 @@ Constr* CONSTR_new(int type, Net* net) {
   c->A_row = 0;
   c->J_row = 0;
   c->G_row = 0;
-  c->data = NULL;
   c->next = NULL;
 
   // Bus counted flags
   c->bus_counted_size = 0;
   c->bus_counted = NULL;
 
-  // Constraint functions
-  switch (type) {
-
-    // AC power flow
-  case CONSTR_TYPE_PF: 
-    c->func_init = &CONSTR_PF_init;
-    c->func_count_step = &CONSTR_PF_count_step;
-    c->func_allocate = &CONSTR_PF_allocate;
-    c->func_clear = &CONSTR_PF_clear;
-    c->func_analyze_step = &CONSTR_PF_analyze_step;
-    c->func_eval_step = &CONSTR_PF_eval_step;
-    c->func_store_sens_step = &CONSTR_PF_store_sens_step;
-    c->func_free = &CONSTR_PF_free;
-    break;
+  // Methods
+  c->func_init = NULL;
+  c->func_count_step = NULL;
+  c->func_allocate = NULL;
+  c->func_clear = NULL;
+  c->func_analyze_step = NULL;
+  c->func_eval_step = NULL;
+  c->func_store_sens_step = NULL;
+  c->func_free = NULL;
   
-    // DC power flow
-  case CONSTR_TYPE_DCPF:
-    c->func_init = &CONSTR_DCPF_init;
-    c->func_count_step = &CONSTR_DCPF_count_step;
-    c->func_allocate = &CONSTR_DCPF_allocate;
-    c->func_clear = &CONSTR_DCPF_clear;
-    c->func_analyze_step = &CONSTR_DCPF_analyze_step;
-    c->func_eval_step = &CONSTR_DCPF_eval_step;
-    c->func_store_sens_step = &CONSTR_DCPF_store_sens_step;
-    c->func_free = &CONSTR_DCPF_free;
-    break;
-  
-    // linearized power flow
-  case CONSTR_TYPE_LINPF:
-    c->func_init = &CONSTR_LINPF_init;
-    c->func_count_step = &CONSTR_LINPF_count_step;
-    c->func_allocate = &CONSTR_LINPF_allocate;
-    c->func_clear = &CONSTR_LINPF_clear;
-    c->func_analyze_step = &CONSTR_LINPF_analyze_step;
-    c->func_eval_step = &CONSTR_LINPF_eval_step;
-    c->func_store_sens_step = &CONSTR_LINPF_store_sens_step;
-    c->func_free = &CONSTR_LINPF_free;
-    break;
-  
-    // generator participation (active power)
-  case CONSTR_TYPE_PAR_GEN_P:
-    c->func_init = &CONSTR_PAR_GEN_P_init;
-    c->func_count_step = &CONSTR_PAR_GEN_P_count_step;
-    c->func_allocate = &CONSTR_PAR_GEN_P_allocate;
-    c->func_clear = &CONSTR_PAR_GEN_P_clear;
-    c->func_analyze_step = &CONSTR_PAR_GEN_P_analyze_step;
-    c->func_eval_step = &CONSTR_PAR_GEN_P_eval_step;
-    c->func_store_sens_step = &CONSTR_PAR_GEN_P_store_sens_step;
-    c->func_free = &CONSTR_PAR_GEN_P_free;
-    break;
-
-    // generator participation (reactive power)
-  case CONSTR_TYPE_PAR_GEN_Q:
-    c->func_init = &CONSTR_PAR_GEN_Q_init;
-    c->func_count_step = &CONSTR_PAR_GEN_Q_count_step;
-    c->func_allocate = &CONSTR_PAR_GEN_Q_allocate;
-    c->func_clear = &CONSTR_PAR_GEN_Q_clear;
-    c->func_analyze_step = &CONSTR_PAR_GEN_Q_analyze_step;
-    c->func_eval_step = &CONSTR_PAR_GEN_Q_eval_step;
-    c->func_store_sens_step = &CONSTR_PAR_GEN_Q_store_sens_step;
-    c->func_free = &CONSTR_PAR_GEN_Q_free;
-    break;
-
-    // variable fixing
-  case CONSTR_TYPE_FIX:
-    c->func_init = &CONSTR_FIX_init;
-    c->func_count_step = &CONSTR_FIX_count_step;
-    c->func_allocate = &CONSTR_FIX_allocate;
-    c->func_clear = &CONSTR_FIX_clear;
-    c->func_analyze_step = &CONSTR_FIX_analyze_step;
-    c->func_eval_step = &CONSTR_FIX_eval_step;
-    c->func_store_sens_step = &CONSTR_FIX_store_sens_step;
-    c->func_free = &CONSTR_FIX_free;
-    break;
-    
-    // voltage regulation by generator
-  case CONSTR_TYPE_REG_GEN:
-    c->func_init = &CONSTR_REG_GEN_init;
-    c->func_count_step = &CONSTR_REG_GEN_count_step;
-    c->func_allocate = &CONSTR_REG_GEN_allocate;
-    c->func_clear = &CONSTR_REG_GEN_clear;
-    c->func_analyze_step = &CONSTR_REG_GEN_analyze_step;
-    c->func_eval_step = &CONSTR_REG_GEN_eval_step;
-    c->func_store_sens_step = &CONSTR_REG_GEN_store_sens_step;
-    c->func_free = &CONSTR_REG_GEN_free;
-    break;
-    
-    // voltage regulation by transformer
-  case CONSTR_TYPE_REG_TRAN:
-    c->func_init = &CONSTR_REG_TRAN_init;
-    c->func_count_step = &CONSTR_REG_TRAN_count_step;
-    c->func_allocate = &CONSTR_REG_TRAN_allocate;
-    c->func_clear = &CONSTR_REG_TRAN_clear;
-    c->func_analyze_step = &CONSTR_REG_TRAN_analyze_step;
-    c->func_eval_step = &CONSTR_REG_TRAN_eval_step;
-    c->func_store_sens_step = &CONSTR_REG_TRAN_store_sens_step;
-    c->func_free = &CONSTR_REG_TRAN_free;
-    break;
-
-    // voltage regulation by shunt device
-  case CONSTR_TYPE_REG_SHUNT:
-    c->func_init = &CONSTR_REG_SHUNT_init;
-    c->func_count_step = &CONSTR_REG_SHUNT_count_step;
-    c->func_allocate = &CONSTR_REG_SHUNT_allocate;
-    c->func_clear = &CONSTR_REG_SHUNT_clear;
-    c->func_analyze_step = &CONSTR_REG_SHUNT_analyze_step;
-    c->func_eval_step = &CONSTR_REG_SHUNT_eval_step;
-    c->func_store_sens_step = &CONSTR_REG_SHUNT_store_sens_step;
-    c->func_free = &CONSTR_REG_SHUNT_free;
-    break;
-  
-    // variable bounds (nonlin eq)
-  case CONSTR_TYPE_BOUND:
-    c->func_init = &CONSTR_BOUND_init;
-    c->func_count_step = &CONSTR_BOUND_count_step;
-    c->func_allocate = &CONSTR_BOUND_allocate;
-    c->func_clear = &CONSTR_BOUND_clear;
-    c->func_analyze_step = &CONSTR_BOUND_analyze_step;
-    c->func_eval_step = &CONSTR_BOUND_eval_step;
-    c->func_store_sens_step = &CONSTR_BOUND_store_sens_step;
-    c->func_free = &CONSTR_BOUND_free;
-    break;
-
-    // DC branch flow limits
-  case CONSTR_TYPE_DC_FLOW_LIM:
-    c->func_init = &CONSTR_DC_FLOW_LIM_init;
-    c->func_count_step = &CONSTR_DC_FLOW_LIM_count_step;
-    c->func_allocate = &CONSTR_DC_FLOW_LIM_allocate;
-    c->func_clear = &CONSTR_DC_FLOW_LIM_clear;
-    c->func_analyze_step = &CONSTR_DC_FLOW_LIM_analyze_step;
-    c->func_eval_step = &CONSTR_DC_FLOW_LIM_eval_step;
-    c->func_store_sens_step = &CONSTR_DC_FLOW_LIM_store_sens_step;
-    c->func_free = &CONSTR_DC_FLOW_LIM_free;
-    break;
-
-    // AC branch flow limits
-  case CONSTR_TYPE_AC_FLOW_LIM:
-    c->func_init = &CONSTR_AC_FLOW_LIM_init;
-    c->func_count_step = &CONSTR_AC_FLOW_LIM_count_step;
-    c->func_allocate = &CONSTR_AC_FLOW_LIM_allocate;
-    c->func_clear = &CONSTR_AC_FLOW_LIM_clear;
-    c->func_analyze_step = &CONSTR_AC_FLOW_LIM_analyze_step;
-    c->func_eval_step = &CONSTR_AC_FLOW_LIM_eval_step;
-    c->func_store_sens_step = &CONSTR_AC_FLOW_LIM_store_sens_step;
-    c->func_free = &CONSTR_AC_FLOW_LIM_free;
-    break;
-
-    // variable bounds (lin ineq)
-  case CONSTR_TYPE_LBOUND:
-    c->func_init = &CONSTR_LBOUND_init;
-    c->func_count_step = &CONSTR_LBOUND_count_step;
-    c->func_allocate = &CONSTR_LBOUND_allocate;
-    c->func_clear = &CONSTR_LBOUND_clear;
-    c->func_analyze_step = &CONSTR_LBOUND_analyze_step;
-    c->func_eval_step = &CONSTR_LBOUND_eval_step;
-    c->func_store_sens_step = &CONSTR_LBOUND_store_sens_step;
-    c->func_free = &CONSTR_LBOUND_free;
-    break;
-
-    // generator ramp constraints (lin ineq)
-  case CONSTR_TYPE_GEN_RAMP:
-    c->func_init = &CONSTR_GEN_RAMP_init;
-    c->func_count_step = &CONSTR_GEN_RAMP_count_step;
-    c->func_allocate = &CONSTR_GEN_RAMP_allocate;
-    c->func_clear = &CONSTR_GEN_RAMP_clear;
-    c->func_analyze_step = &CONSTR_GEN_RAMP_analyze_step;
-    c->func_eval_step = &CONSTR_GEN_RAMP_eval_step;
-    c->func_store_sens_step = &CONSTR_GEN_RAMP_store_sens_step;
-    c->func_free = &CONSTR_GEN_RAMP_free;
-    break;
-    
-    // unknown
-  default: 
-    c->func_init = NULL;
-    c->func_count_step = NULL;
-    c->func_allocate = NULL;
-    c->func_clear = NULL;
-    c->func_analyze_step = NULL;
-    c->func_eval_step = NULL;
-    c->func_store_sens_step = NULL;
-    c->func_free = NULL;
-  }
+  // Data
+  c->data = NULL;
 
   // Update network
   CONSTR_update_network(c);
   
   return c;
+}
+
+void CONSTR_set_name(Constr* c, char* name) {
+  if (c)
+    strcpy(c->name,name);
 }
 
 void CONSTR_set_b(Constr* c, Vec* b) {
@@ -941,6 +747,13 @@ void CONSTR_set_bus_counted(Constr* c, char* counted, int size) {
 void CONSTR_set_data(Constr* c, void* data) {
   if (c)
     c->data = data;
+}
+
+void CONSTR_init(Constr* c) {
+  if (c && c->func_free)
+    (*(c->func_free))(c);
+  if (c && c->func_init)
+    (*(c->func_init))(c);
 }
 
 void CONSTR_count(Constr* c) {
@@ -1118,12 +931,13 @@ void CONSTR_update_network(Constr* c) {
     free(c->bus_counted);
   c->bus_counted_size = NET_get_num_buses(c->net)*NET_get_num_periods(c->net);
   ARRAY_zalloc(c->bus_counted,char,c->bus_counted_size);
+}
 
-  // Type-specific data
-  if (c->func_free)
-    (*(c->func_free))(c);
-  if (c->func_init)
-    (*(c->func_init))(c);
+char* CONSTR_get_name(Constr* c) {
+  if (c)
+    return c->name;
+  else
+    return NULL;
 }
 
 Net* CONSTR_get_network(Constr* c) {
@@ -1133,3 +947,42 @@ Net* CONSTR_get_network(Constr* c) {
     return NULL;
 }
 
+void CONSTR_set_func_init(Constr* c, void (*func)(Constr* c)) {
+  if (c)
+    c->func_init = func;
+}
+
+void CONSTR_set_func_count_step(Constr* c, void (*func)(Constr* c, Branch* br, int t)) {
+  if (c)
+    c->func_count_step = func;
+}
+
+void CONSTR_set_func_allocate(Constr* c, void (*func)(Constr* c)) {
+  if (c)
+    c->func_allocate = func;
+}
+
+void CONSTR_set_func_clear(Constr* c, void (*func)(Constr* c)) {
+  if (c)
+    c->func_clear = func;
+}
+
+void CONSTR_set_func_analyze_step(Constr* c, void (*func)(Constr* c, Branch* br, int t)) {
+  if (c)
+    c->func_analyze_step = func;
+}
+
+void CONSTR_set_func_eval_step(Constr* c, void (*func)(Constr* c, Branch* br, int t, Vec* v)) {
+  if (c)
+    c->func_eval_step = func;
+}
+
+void CONSTR_set_func_store_sens_step(Constr* c, void (*func)(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl)) {
+  if (c)
+    c->func_store_sens_step = func;
+}
+
+void CONSTR_set_func_free(Constr* c, void (*func)(Constr* c)) {
+  if (c)
+    c->func_free = func;
+}

@@ -26,7 +26,7 @@
 typedef struct Prob Prob;
 
 // Function prototypes
-void PROB_add_constr(Prob* p, int type);
+void PROB_add_constr(Prob* p, Constr* c);
 void PROB_add_func(Prob* p, Func* f);
 void PROB_add_heur(Prob* p, int type);
 void PROB_analyze(Prob* p);
@@ -38,7 +38,7 @@ void PROB_del_matvec(Prob* p);
 void PROB_clear(Prob* p);
 void PROB_clear_error(Prob* p);
 void PROB_combine_H(Prob* p, Vec* coeff, BOOL ensure_psd);
-Constr* PROB_find_constr(Prob* p, int constr_type);
+Constr* PROB_find_constr(Prob* p, char* name);
 Constr* PROB_get_constr(Prob* p);
 char* PROB_get_error_string(Prob* p);
 Func* PROB_get_func(Prob* p);

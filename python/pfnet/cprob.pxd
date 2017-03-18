@@ -16,7 +16,7 @@ cdef extern from "pfnet/problem.h":
     ctypedef struct Mat
     ctypedef double REAL
         
-    void PROB_add_constr(Prob* p, int ctype)
+    void PROB_add_constr(Prob* p, Constr* c)
     void PROB_add_func(Prob* p, Func* f)
     void PROB_add_heur(Prob* p, int htype)
     void PROB_analyze(Prob* p)
@@ -27,7 +27,7 @@ cdef extern from "pfnet/problem.h":
     void PROB_clear(Prob* p)
     void PROB_clear_error(Prob* p)
     void PROB_combine_H(Prob* p, Vec* coeff, bint ensure_psd)
-    Constr* PROB_find_constr(Prob* p, int constr_type)
+    Constr* PROB_find_constr(Prob* p, char* name)
     Constr* PROB_get_constr(Prob* p)
     char* PROB_get_error_string(Prob* p)
     Func* PROB_get_func(Prob* p)

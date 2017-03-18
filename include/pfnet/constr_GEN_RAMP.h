@@ -15,6 +15,7 @@
 #include "constr.h"
 
 // Function prototypes
+Constr* CONSTR_GEN_RAMP_new(Net* net);
 void CONSTR_GEN_RAMP_init(Constr* c);
 void CONSTR_GEN_RAMP_count_step(Constr* c, Branch* br, int t);
 void CONSTR_GEN_RAMP_allocate(Constr* c);

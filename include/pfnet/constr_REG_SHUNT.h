@@ -19,6 +19,7 @@
 #define CONSTR_REG_SHUNT_NORM 1e0
 
 // Function prototypes
+Constr* CONSTR_REG_SHUNT_new(Net* net);
 void CONSTR_REG_SHUNT_init(Constr* c);
 void CONSTR_REG_SHUNT_count_step(Constr* c, Branch* br, int t);
 void CONSTR_REG_SHUNT_allocate(Constr* c);

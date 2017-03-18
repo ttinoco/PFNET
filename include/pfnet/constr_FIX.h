@@ -15,6 +15,7 @@
 #include "constr.h"
 
 // Function prototypes
+Constr* CONSTR_FIX_new(Net* net);
 void CONSTR_FIX_init(Constr* c);
 void CONSTR_FIX_count_step(Constr* c, Branch* br, int t);
 void CONSTR_FIX_allocate(Constr* c);

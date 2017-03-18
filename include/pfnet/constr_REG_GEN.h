@@ -18,6 +18,7 @@
 #define CONSTR_REG_GEN_PARAM 1e-8
 
 // Function prototypes
+Constr* CONSTR_REG_GEN_new(Net* net);
 void CONSTR_REG_GEN_init(Constr* c);
 void CONSTR_REG_GEN_count_step(Constr* c, Branch* br, int t);
 void CONSTR_REG_GEN_allocate(Constr* c);

@@ -15,6 +15,7 @@
 #include "constr.h"
 
 // Function prototypes
+Constr* CONSTR_LINPF_new(Net* net);
 void CONSTR_LINPF_init(Constr* c);
 void CONSTR_LINPF_count_step(Constr* c, Branch* br, int t);
 void CONSTR_LINPF_allocate(Constr* c);

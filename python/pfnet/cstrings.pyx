@@ -124,21 +124,3 @@ str2prop = {'bus' : str2prop_bus,
             'load' : str2prop_load,
             'variable generator' : str2prop_vargen,
             'battery' : str2prop_bat}
-
-# Constraints
-str2constr = {'AC power balance' : cconstr.CONSTR_TYPE_PF,
-              'DC power balance' : cconstr.CONSTR_TYPE_DCPF,
-              'linearized AC power balance' : cconstr.CONSTR_TYPE_LINPF,
-              'variable fixing' : cconstr.CONSTR_TYPE_FIX,
-              'variable nonlinear bounds' : cconstr.CONSTR_TYPE_BOUND,
-              'generator active power participation' : cconstr.CONSTR_TYPE_PAR_GEN_P,
-              'generator reactive power participation' : cconstr.CONSTR_TYPE_PAR_GEN_Q,
-              'voltage regulation by generators' : cconstr.CONSTR_TYPE_REG_GEN,
-              'voltage regulation by transformers' : cconstr.CONSTR_TYPE_REG_TRAN,
-              'voltage regulation by shunts' : cconstr.CONSTR_TYPE_REG_SHUNT,
-              'DC branch flow limits' : cconstr.CONSTR_TYPE_DC_FLOW_LIM,
-              'AC branch flow limits' : cconstr.CONSTR_TYPE_AC_FLOW_LIM,
-              'variable bounds' : cconstr.CONSTR_TYPE_LBOUND,
-              'generator ramp limits' : cconstr.CONSTR_TYPE_GEN_RAMP}
-
-constr2str = dict([(v,k) for k,v in str2constr.items()])
