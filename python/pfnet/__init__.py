@@ -7,5 +7,6 @@
 #***************************************************#
 
 from .cpfnet import *
-import functions
 import parsers
+import functions
+import constraints

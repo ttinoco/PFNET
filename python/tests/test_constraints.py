@@ -22,7 +22,7 @@ class TestConstraints(unittest.TestCase):
     def setUp(self):
 
         # Network
-        self.T = 3
+        self.T = 2
         self.net = pf.Network()
         self.netMP = pf.Network(self.T)
 
@@ -2868,7 +2868,7 @@ class TestConstraints(unittest.TestCase):
             # Constraint
             constr = pf.Constraint('DC power balance',net)
             self.assertEqual(constr.name,'DC power balance')
-
+            
             f = constr.f
             J = constr.J
             A = constr.A
@@ -3955,7 +3955,99 @@ class TestConstraints(unittest.TestCase):
                 Hd_approx = (g1-g0)/h
                 error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
+            
+    def test_constr_DUMMY(self):
 
+        net = self.netMP
+
+        for case in test_cases.CASES:
+
+            net.load(case)
+
+            # Add vargens
+            load_buses = net.get_load_buses()
+            net.add_vargens(load_buses,50.,30.,5,0.05)
+            self.assertGreater(net.num_var_generators,0)
+            self.assertEqual(net.num_var_generators,len([b for b in net.buses if b.loads]))
+            for b in net.buses:
+                if b.loads:
+                    self.assertGreater(len(b.var_generators),0)
+                    for vargen in b.var_generators:
+                        self.assertEqual(vargen.bus,b)
+
+            # batteries
+            for bat in net.batteries:
+                if bat.index % 2 == 0:
+                    bat.P *= -1.
+
+            # Variables
+            net.set_flags('bus',
+                          'variable',
+                          'not slack',
+                          'voltage angle')
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          'active power')
+            net.set_flags('load',
+                          'variable',
+                          'any',
+                          'active power')
+            net.set_flags('variable generator',
+                          'variable',
+                          'any',
+                          'active power')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+            net.set_flags('battery',
+                          'variable',
+                          'any',
+                          'charging power')
+            self.assertEqual(net.num_vars,
+                             (net.num_buses-net.get_num_slack_buses() +
+                              net.num_generators +
+                              net.num_loads +
+                              net.num_var_generators +
+                              net.get_num_phase_shifters()+
+                              2*net.num_batteries)*net.num_periods)
+
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+
+            # Ref constraint
+            constrREF = pf.Constraint('DC power balance',net)
+            self.assertEqual(constrREF.name,'DC power balance')
+
+            # Dummy constraint
+            constr = pf.constraints.DummyDCPF(net)
+            self.assertEqual(constr.name,'dummy DC power balance')
+            
+            self.assertEqual(constr.A_row,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.A_row,constrREF.A_row)
+            self.assertEqual(constr.A_nnz,constrREF.A_nnz)
+            
+            self.assertEqual(constr.b.size,0)
+            self.assertEqual(constr.A.shape[0],0)
+            self.assertEqual(constr.A.shape[1],0)
+            self.assertEqual(constr.A.nnz,0)
+           
+            constrREF.analyze()
+            constr.analyze()
+
+            self.assertEqual(constr.A_row,0)
+            self.assertGreater(constr.A_nnz,0)
+            self.assertEqual(constr.A_row,constrREF.A_row)
+            self.assertEqual(constr.A_nnz,constrREF.A_nnz)
+            
+            self.assertTrue(np.all(constr.b == constrREF.b))
+            self.assertTrue(np.all(constr.A.row == constrREF.A.row))
+            self.assertTrue(np.all(constr.A.col == constrREF.A.col))
+            self.assertTrue(np.all(constr.A.data == constrREF.A.data))
+            
     def tearDown(self):
 
         pass

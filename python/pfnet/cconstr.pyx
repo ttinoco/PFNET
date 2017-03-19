@@ -172,7 +172,7 @@ cdef class ConstraintBase:
         
         cdef np.ndarray[double,mode='c'] bb = b
         PyArray_CLEARFLAGS(bb,np.NPY_OWNDATA)
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cfunc.REAL*>(bb.data),bb.size)
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(bb.data),bb.size)
         cconstr.CONSTR_set_b(self._c_constr,v)  
 
     def set_A(self,A):
@@ -193,8 +193,43 @@ cdef class ConstraintBase:
         cdef cmat.Mat* m = cmat.MAT_new_from_arrays(A.shape[0],A.shape[1],A.nnz, 
                                                     <int*>(row.data),
                                                     <int*>(col.data), 
-                                                    <cfunc.REAL*>(data.data))
+                                                    <cconstr.REAL*>(data.data))
         cconstr.CONSTR_set_A(self._c_constr,m)
+
+    def set_f(self,f):
+        """
+        Sets f vector.
+
+        Parameters
+        ----------
+        f : :class:`ndarray <numpy.ndarray>`
+        """
+        
+        cdef np.ndarray[double,mode='c'] ff = f
+        PyArray_CLEARFLAGS(ff,np.NPY_OWNDATA)
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(ff.data),ff.size)
+        cconstr.CONSTR_set_f(self._c_constr,v)  
+
+    def set_J(self,J):
+        """
+        Sets J matrix.
+
+        Parameters
+        ----------
+        J : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        """
+        
+        cdef np.ndarray[int,mode='c'] row = J.row
+        cdef np.ndarray[int,mode='c'] col = J.col
+        cdef np.ndarray[double,mode='c'] data = J.data
+        PyArray_CLEARFLAGS(row,np.NPY_OWNDATA)
+        PyArray_CLEARFLAGS(col,np.NPY_OWNDATA)
+        PyArray_CLEARFLAGS(data,np.NPY_OWNDATA)
+        cdef cmat.Mat* m = cmat.MAT_new_from_arrays(J.shape[0],J.shape[1],J.nnz, 
+                                                    <int*>(row.data),
+                                                    <int*>(col.data), 
+                                                    <cconstr.REAL*>(data.data))
+        cconstr.CONSTR_set_J(self._c_constr,m)
 
     property name:
         """ Constraint name (string). """
@@ -276,6 +311,15 @@ cdef class ConstraintBase:
     property num_extra_vars:
             """ Number of extra variables (set during count) (int). """
             def __get__(self): return cconstr.CONSTR_get_num_extra_vars(self._c_constr)
+
+    property network:
+        """ Network associated with constraint. """
+        def __get__(self): return new_Network(cconstr.CONSTR_get_network(self._c_constr))
+
+    property bus_counted:
+        """ Boolean array of flags for processing buses during count/analyze/eval, etc. """
+        def __get__(self): return BoolArray(cconstr.CONSTR_get_bus_counted(self._c_constr),
+                                            cconstr.CONSTR_get_bus_counted_size(self._c_constr))
 
 cdef new_Constraint(cconstr.Constr* c):
     if c is not NULL:

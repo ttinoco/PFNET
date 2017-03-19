@@ -49,6 +49,7 @@ cdef extern from "pfnet/constr.h":
     char* CONSTR_get_error_string(Constr* c)
     void CONSTR_update_network(Constr* c)
     int CONSTR_get_num_extra_vars(Constr* c)
+    Net* CONSTR_get_network(Constr* c)
 
     void CONSTR_set_name(Constr* f, char*)
     void CONSTR_set_A_nnz(Constr* c, int nnz)
@@ -65,6 +66,8 @@ cdef extern from "pfnet/constr.h":
     void CONSTR_set_l(Constr* c, Vec* l)
     void CONSTR_set_u(Constr* c, Vec* u)
     void CONSTR_set_G(Constr* c, Mat* G)
+    void CONSTR_set_f(Constr* c, Vec* f)
+    void CONSTR_set_J(Constr* c, Mat* J)
 
     void CONSTR_set_func_init(Constr* c, void (*func)(Constr* c))
     void CONSTR_set_func_count_step(Constr* c, void (*func)(Constr* c, Branch* br, int t))
