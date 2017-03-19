@@ -14,7 +14,7 @@ from numpy.linalg import norm
 from scipy.sparse import coo_matrix,triu,tril,eye
 
 NUM_TRIALS = 25
-EPS = 2.2 # %
+EPS = 2.5 # %
 TOL = 1e-4
 
 class TestConstraints(unittest.TestCase):
@@ -4048,6 +4048,20 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(np.all(constr.A.col == constrREF.A.col))
             self.assertTrue(np.all(constr.A.data == constrREF.A.data))
             
+            self.assertTupleEqual(constr.l.shape,(0,))
+            self.assertTupleEqual(constr.u.shape,(0,))
+            self.assertTupleEqual(constr.f.shape,(0,))
+            self.assertTupleEqual(constr.G.shape,(0,net.num_vars))
+            self.assertTupleEqual(constr.J.shape,(0,net.num_vars))
+
+            constrREF.eval(net.get_var_values())
+            constr.eval(net.get_var_values())
+
+            self.assertTrue(np.all(constr.b == constrREF.b))
+            self.assertTrue(np.all(constr.A.row == constrREF.A.row))
+            self.assertTrue(np.all(constr.A.col == constrREF.A.col))
+            self.assertTrue(np.all(constr.A.data == constrREF.A.data))
+
     def tearDown(self):
 
         pass

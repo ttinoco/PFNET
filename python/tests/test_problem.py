@@ -975,6 +975,84 @@ class TestProblem(unittest.TestCase):
             self.assertTrue(np.all(p1.Hphi.col == p2.Hphi.col))
             self.assertTrue(np.all(p1.Hphi.data == p2.Hphi.data))
 
+    def test_problem_with_DUMMY_constr(self):
+
+        net = self.net
+        
+        for case in test_cases.CASES:
+            
+            p1 = pf.Problem()
+            p2 = pf.Problem()
+
+            net.load(case)
+            p1.network = net
+            p2.network = net
+
+            # Variables
+            net.set_flags('bus',
+                          'variable',
+                          'not slack',
+                          'voltage angle')
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          'active power')
+            net.set_flags('load',
+                          'variable',
+                          'any',
+                          'active power')
+            net.set_flags('variable generator',
+                          'variable',
+                          'any',
+                          'active power')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+            net.set_flags('battery',
+                          'variable',
+                          'any',
+                          'charging power')
+            self.assertEqual(net.num_vars,
+                             (net.num_buses-net.get_num_slack_buses() +
+                              net.num_generators +
+                              net.num_loads +
+                              net.num_var_generators +
+                              net.get_num_phase_shifters()+
+                              2*net.num_batteries)*net.num_periods)
+
+            self.assertEqual(p1.get_num_primal_variables(),net.num_vars)
+            self.assertEqual(p2.get_num_primal_variables(),net.num_vars)
+            
+            p1.add_constraint(pf.Constraint('DC power balance',net))
+            p2.add_constraint(pf.constraints.DummyDCPF(net))
+
+            self.assertEqual(len(p1.constraints),1)
+            self.assertEqual(len(p2.constraints),1)
+
+            self.assertEqual(p1.constraints[0].name,"DC power balance")
+            self.assertEqual(p2.constraints[0].name,"dummy DC power balance")
+
+            self.assertEqual(p1.find_constraint("DC power balance").name,"DC power balance")
+            self.assertEqual(p2.find_constraint("dummy DC power balance").name,"dummy DC power balance")
+            self.assertRaises(pf.ProblemError,p2.find_constraint,"DC power balance")
+            
+            p1.analyze()
+            p2.analyze()
+
+            self.assertTrue(np.all(p1.b == p2.b))
+            self.assertTrue(np.all(p1.A.row == p2.A.row))
+            self.assertTrue(np.all(p1.A.col == p2.A.col))
+            self.assertTrue(np.all(p1.A.data == p2.A.data))
+
+            p1.eval(net.get_var_values())
+            p2.eval(net.get_var_values())
+
+            self.assertTrue(np.all(p1.b == p2.b))
+            self.assertTrue(np.all(p1.A.row == p2.A.row))
+            self.assertTrue(np.all(p1.A.col == p2.A.col))
+            self.assertTrue(np.all(p1.A.data == p2.A.data))
+
     def tearDown(self):
         
         pass

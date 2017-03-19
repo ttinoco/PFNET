@@ -61,6 +61,10 @@ class DummyDCPF(CustomConstraint):
         self.set_f(np.zeros(0))
         self.set_J(coo_matrix((0,self.network.num_vars)))
 
+        self.set_l(np.zeros(0))
+        self.set_u(np.zeros(0))
+        self.set_G(coo_matrix((0,self.network.num_vars)))
+
     def clear(self):
 
         self.A_nnz = 0

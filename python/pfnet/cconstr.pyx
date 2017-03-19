@@ -173,7 +173,7 @@ cdef class ConstraintBase:
         cdef np.ndarray[double,mode='c'] bb = b
         PyArray_CLEARFLAGS(bb,np.NPY_OWNDATA)
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(bb.data),bb.size)
-        cconstr.CONSTR_set_b(self._c_constr,v)  
+        cconstr.CONSTR_set_b(self._c_constr,v)
 
     def set_A(self,A):
         """
@@ -195,6 +195,55 @@ cdef class ConstraintBase:
                                                     <int*>(col.data), 
                                                     <cconstr.REAL*>(data.data))
         cconstr.CONSTR_set_A(self._c_constr,m)
+
+    def set_l(self,l):
+        """
+        Sets l vector.
+
+        Parameters
+        ----------
+        l : :class:`ndarray <numpy.ndarray>`
+        """
+        
+        cdef np.ndarray[double,mode='c'] ll = l
+        PyArray_CLEARFLAGS(ll,np.NPY_OWNDATA)
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(ll.data),ll.size)
+        cconstr.CONSTR_set_l(self._c_constr,v)  
+
+    def set_u(self,u):
+        """
+        Sets u vector.
+
+        Parameters
+        ----------
+        u : :class:`ndarray <numpy.ndarray>`
+        """
+        
+        cdef np.ndarray[double,mode='c'] uu = u
+        PyArray_CLEARFLAGS(uu,np.NPY_OWNDATA)
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(uu.data),uu.size)
+        cconstr.CONSTR_set_u(self._c_constr,v)  
+
+    def set_G(self,G):
+        """
+        Sets G matrix.
+
+        Parameters
+        ----------
+        G : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        """
+        
+        cdef np.ndarray[int,mode='c'] row = G.row
+        cdef np.ndarray[int,mode='c'] col = G.col
+        cdef np.ndarray[double,mode='c'] data = G.data
+        PyArray_CLEARFLAGS(row,np.NPY_OWNDATA)
+        PyArray_CLEARFLAGS(col,np.NPY_OWNDATA)
+        PyArray_CLEARFLAGS(data,np.NPY_OWNDATA)
+        cdef cmat.Mat* m = cmat.MAT_new_from_arrays(G.shape[0],G.shape[1],G.nnz, 
+                                                    <int*>(row.data),
+                                                    <int*>(col.data), 
+                                                    <cconstr.REAL*>(data.data))
+        cconstr.CONSTR_set_G(self._c_constr,m)
 
     def set_f(self,f):
         """
