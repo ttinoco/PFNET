@@ -5,3 +5,5 @@
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
+
+from .dummy_constraint import DummyDCPF

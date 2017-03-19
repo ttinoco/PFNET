@@ -115,7 +115,7 @@ cdef class FunctionBase:
         cdef np.ndarray[double,mode='c'] g = gphi
         PyArray_CLEARFLAGS(g,np.NPY_OWNDATA)
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cfunc.REAL*>(g.data),g.size)
-        cfunc.FUNC_set_gphi(self._c_func,v)  
+        cfunc.FUNC_set_gphi(self._c_func,v)
 
     def set_Hphi(self,Hphi):
         """
@@ -123,12 +123,12 @@ cdef class FunctionBase:
 
         Parameters
         ----------
-        Hphi : coo_matrix (lower triangular)
+        Hphi : :class:`coo_matrix <scipy.sparse.coo_matrix>` (lower triangular)
         """
         
-        cdef np.ndarray[int,mode='c'] row = Hphi.row.copy()
-        cdef np.ndarray[int,mode='c'] col = Hphi.col.copy()
-        cdef np.ndarray[double,mode='c'] data = Hphi.data.copy()
+        cdef np.ndarray[int,mode='c'] row = Hphi.row
+        cdef np.ndarray[int,mode='c'] col = Hphi.col
+        cdef np.ndarray[double,mode='c'] data = Hphi.data
         PyArray_CLEARFLAGS(row,np.NPY_OWNDATA)
         PyArray_CLEARFLAGS(col,np.NPY_OWNDATA)
         PyArray_CLEARFLAGS(data,np.NPY_OWNDATA)

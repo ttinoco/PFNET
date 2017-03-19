@@ -1436,7 +1436,7 @@ class TestConstraints(unittest.TestCase):
                             x[g.index_Q[t]] = (g.Q_max+g.Q_min)/2.
             self.assertTrue(norm(A*x-b) < 1e-10)
 
-    def test_constr_PF(self):
+    def test_constr_ACPF(self):
 
         # Constants
         h = 1e-10
@@ -1963,7 +1963,7 @@ class TestConstraints(unittest.TestCase):
                         else:
                             self.assertEqual(bus.sens_v_reg_by_gen[t],-bus.index-10)
 
-    def test_constr_BOUND(self):
+    def test_constr_NBOUND(self):
 
         # Constants
         h = 1e-8

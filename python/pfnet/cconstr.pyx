@@ -161,6 +161,41 @@ cdef class ConstraintBase:
         """
         return Matrix(cconstr.CONSTR_get_H_single(self._c_constr,i))
 
+    def set_b(self,b):
+        """
+        Sets b vector.
+
+        Parameters
+        ----------
+        b : :class:`ndarray <numpy.ndarray>`
+        """
+        
+        cdef np.ndarray[double,mode='c'] bb = b
+        PyArray_CLEARFLAGS(bb,np.NPY_OWNDATA)
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cfunc.REAL*>(bb.data),bb.size)
+        cconstr.CONSTR_set_b(self._c_constr,v)  
+
+    def set_A(self,A):
+        """
+        Sets A matrix.
+
+        Parameters
+        ----------
+        A : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        """
+        
+        cdef np.ndarray[int,mode='c'] row = A.row
+        cdef np.ndarray[int,mode='c'] col = A.col
+        cdef np.ndarray[double,mode='c'] data = A.data
+        PyArray_CLEARFLAGS(row,np.NPY_OWNDATA)
+        PyArray_CLEARFLAGS(col,np.NPY_OWNDATA)
+        PyArray_CLEARFLAGS(data,np.NPY_OWNDATA)
+        cdef cmat.Mat* m = cmat.MAT_new_from_arrays(A.shape[0],A.shape[1],A.nnz, 
+                                                    <int*>(row.data),
+                                                    <int*>(col.data), 
+                                                    <cfunc.REAL*>(data.data))
+        cconstr.CONSTR_set_A(self._c_constr,m)
+
     property name:
         """ Constraint name (string). """
         def __get__(self): return cconstr.CONSTR_get_name(self._c_constr)
@@ -171,26 +206,32 @@ cdef class ConstraintBase:
     property A_nnz:
         """ Number of nonzero entries in the matrix of linear equality constraints (int). """
         def __get__(self): return cconstr.CONSTR_get_A_nnz(self._c_constr)
-
+        def __set__(self,nnz): cconstr.CONSTR_set_A_nnz(self._c_constr,nnz)
+        
     property G_nnz:
         """ Number of nonzero entries in the matrix of linear inequality constraints (int). """
         def __get__(self): return cconstr.CONSTR_get_G_nnz(self._c_constr)
+        def __set__(self,nnz): cconstr.CONSTR_set_G_nnz(self._c_constr,nnz)
 
     property J_nnz:
         """ Number of nonzero entries in the Jacobian matrix of the nonlinear equality constraints (int). """
         def __get__(self): return cconstr.CONSTR_get_J_nnz(self._c_constr)
+        def __set__(self,nnz): cconstr.CONSTR_set_J_nnz(self._c_constr,nnz)
 
     property A_row:
         """ Number of linear equality constraints (int). """
         def __get__(self): return cconstr.CONSTR_get_A_row(self._c_constr)
+        def __set__(self,row): cconstr.CONSTR_set_A_row(self._c_constr,row)
 
     property G_row:
         """ Number of linear ineqquality constraint (int). """
         def __get__(self): return cconstr.CONSTR_get_G_row(self._c_constr)
+        def __set__(self,row): cconstr.CONSTR_set_G_row(self._c_constr,row)
 
     property J_row:
         """ Number of nonlinear equality constraint (int). """
         def __get__(self): return cconstr.CONSTR_get_J_row(self._c_constr)
+        def __set__(self,row): cconstr.CONSTR_set_J_row(self._c_constr,row)
 
     property f:
         """ Vector of nonlinear equality constraint violations (:class:`ndarray <numpy.ndarray>`). """
