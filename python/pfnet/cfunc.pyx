@@ -297,6 +297,8 @@ cdef class CustomFunction(FunctionBase):
         branch : Branch
         t : time period (int)
         """
+        
+        pass
 
     def eval_step(self,branch,t,x):
         """

@@ -292,4 +292,132 @@ cdef class Constraint(ConstraintBase):
             ConstraintError('invalid constraint name')
             
         self._alloc = True
-            
+
+cdef class CustomConstraint(ConstraintBase):
+
+    def __init__(self,Network net):
+        """
+        Custom constraint class.
+        
+        Parameters
+        ----------
+        net : :class:`Network <pfnet.Network>`
+        """
+
+        pass
+
+    def __cinit__(self,Network net):
+
+        self._c_constr = cconstr.CONSTR_new(net._c_net)
+        cconstr.CONSTR_set_data(self._c_constr,<void*>self)
+        cconstr.CONSTR_set_func_init(self._c_constr,constr_init)
+        cconstr.CONSTR_set_func_count_step(self._c_constr,constr_count_step)
+        cconstr.CONSTR_set_func_allocate(self._c_constr,constr_allocate)
+        cconstr.CONSTR_set_func_clear(self._c_constr,constr_clear)
+        cconstr.CONSTR_set_func_analyze_step(self._c_constr,constr_analyze_step)
+        cconstr.CONSTR_set_func_eval_step(self._c_constr,constr_eval_step)
+        cconstr.CONSTR_set_func_store_sens_step(self._c_constr,constr_store_sens_step)
+        self._alloc = True
+        self.init()
+    
+    def init(self):
+        """"
+        Performs constraint initialization.
+        """
+
+        pass
+        
+    def count_step(self,branch,t):
+        """
+        Performs count step.
+
+        Parameters
+        ----------
+        branch : Branch
+        t : time period (int)
+        """
+        
+        pass
+        
+    def allocate(self):
+        """
+        Allocates matrices and vectors.
+        """
+
+        pass
+
+    def clear(self):
+        """
+        Clears counters and values.
+        """
+
+        pass
+
+    def analyze_step(self,branch,t):
+        """
+        Performs analyze step.
+       
+        Parameters
+        ----------
+        branch : Branch
+        t : time period (int)
+        """
+        
+        pass
+
+    def eval_step(self,branch,t,x):
+        """
+        Performs eval step.
+       
+        Parameters
+        ----------
+        branch : Branch
+        t : time period (int)
+        x : ndarray
+        """
+ 
+        pass
+
+    def store_sens_step(self,branch,t,sA,sf,sGu,sGl):
+        """
+        Performs step for storing sensitivities.
+       
+        Parameters
+        ----------
+        branch : Branch
+        t : time period (int)
+        sA : ndarray
+        sf : ndarray
+        sGu : ndarray
+        sGl : ndarray
+        """
+ 
+        pass
+
+cdef void constr_init(cconstr.Constr* c):
+    cdef CustomConstraint cc = <CustomConstraint>cconstr.CONSTR_get_data(c)
+    cc.init()
+
+cdef void constr_count_step(cconstr.Constr* c, cbranch.Branch* br, int t):
+    cdef CustomConstraint cc = <CustomConstraint>cconstr.CONSTR_get_data(c)
+    cc.count_step(new_Branch(br),t)
+
+cdef void constr_allocate(cconstr.Constr* c):
+    cdef CustomConstraint cc = <CustomConstraint>cconstr.CONSTR_get_data(c)
+    cc.allocate()
+        
+cdef void constr_clear(cconstr.Constr* c):
+    cdef CustomConstraint cc = <CustomConstraint>cconstr.CONSTR_get_data(c)
+    cc.clear()
+
+cdef void constr_analyze_step(cconstr.Constr* c, cbranch.Branch* br, int t):
+    cdef CustomConstraint cc = <CustomConstraint>cconstr.CONSTR_get_data(c)
+    cc.analyze_step(new_Branch(br),t)
+
+cdef void constr_eval_step(cconstr.Constr* c, cbranch.Branch* br, int t, cvec.Vec* v):
+    cdef CustomConstraint cc = <CustomConstraint>cconstr.CONSTR_get_data(c)
+    cc.eval_step(new_Branch(br),t,Vector(v))
+
+cdef void constr_store_sens_step(cconstr.Constr* c, cbranch.Branch* br, int t, cvec.Vec* sA, cvec.Vec* sf, cvec.Vec* sGu, cvec.Vec* sGl):
+    cdef CustomConstraint cc = <CustomConstraint>cconstr.CONSTR_get_data(c)
+    cc.eval_step(new_Branch(br),t,Vector(sA),Vector(sf),Vector(sGu),Vector(sGl))
