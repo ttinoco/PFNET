@@ -455,7 +455,7 @@ class TestParser(unittest.TestCase):
                 gen1 = net.get_gen(net.num_generators-2)
 
                 self.assertEqual(gen0.P,232.4/100.)
-                self.assertEqual(gen0.cost_coeff_Q2,0.04302926*(net.base_power**2.))
+                self.assertEqual(gen0.cost_coeff_Q2,(4.3029259900e-02)*(net.base_power**2.))
                 self.assertEqual(gen0.cost_coeff_Q1,20.*net.base_power)
 
                 self.assertEqual(gen1.P,40./100.)
