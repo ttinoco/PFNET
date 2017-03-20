@@ -127,43 +127,9 @@ Parser* MAT_PARSER_new(void) {
   PARSER_set_func_write(p,&MAT_PARSER_write);
   PARSER_set_func_free(p,&MAT_PARSER_free);
   
-  // Error
-  parser->error_flag = FALSE;
-  strcpy(parser->error_string,"");
-
-  // State
-  parser->state = MAT_PARSER_STATE_TITLE;
-  parser->field = 0;
-  parser->record = 0;
-  MAT_PARSER_clear_token(parser);
-
-  // Options
-  parser->output_level = 0;
-
-  // Base
-  parser->base_power = MAT_PARSER_BASE_POWER;
-
-  // Buses
-  parser->bus = NULL;
-  parser->bus_list = NULL;
-  parser->bus_hash = NULL;
-
-  // Generators
-  parser->gen = NULL;
-  parser->gen_list = NULL;
-
-  // Branches
-  parser->branch = NULL;
-  parser->branch_list = NULL;
-
-  // Cost
-  parser->cost = NULL;
-  parser->cost_list = NULL;
-
-  // Util
-  parser->util = NULL;
-  parser->util_list = NULL;
-
+  // Init
+  MAT_PARSER_init(parser);
+  
   // Return
   return p;
 }
@@ -172,6 +138,7 @@ Net* MAT_PARSER_parse(Parser* p, char* filename, int num_periods) {
 
   // Local variables
   Net* net;
+  char* ext;
   FILE* file;
   CSV_Parser* csv;
   size_t bytes_read;
@@ -182,9 +149,21 @@ Net* MAT_PARSER_parse(Parser* p, char* filename, int num_periods) {
   if (!parser)
     return NULL;
 
+  // Clean up
+  MAT_PARSER_free(p);
+  MAT_PARSER_init(parser);
+
   // Clear error
   PARSER_clear_error(p);
-  
+
+  // Check extension
+  ext = strrchr(filename,'.');
+  ext = strtolower(ext);
+  if (!ext || strcmp(ext+1,"mat") != 0) {
+    PARSER_set_error(p,"invalid file extension");
+    return NULL;
+  }
+
   // CSV parser
   csv = CSV_PARSER_new();
 
@@ -314,9 +293,50 @@ void MAT_PARSER_free(Parser* p) {
 
   // Utils
   LIST_map(MAT_Util,parser->util_list,util,next,{free(util);});
+}
 
-  // Parser
-  free(parser);
+void MAT_PARSER_init(MAT_Parser* parser) {
+  
+  // No parser
+  if (!parser)
+    return;
+  
+  // Error
+  parser->error_flag = FALSE;
+  strcpy(parser->error_string,"");
+
+  // State
+  parser->state = MAT_PARSER_STATE_TITLE;
+  parser->field = 0;
+  parser->record = 0;
+  MAT_PARSER_clear_token(parser);
+
+  // Options
+  parser->output_level = 0;
+
+  // Base
+  parser->base_power = MAT_PARSER_BASE_POWER;
+
+  // Buses
+  parser->bus = NULL;
+  parser->bus_list = NULL;
+  parser->bus_hash = NULL;
+
+  // Generators
+  parser->gen = NULL;
+  parser->gen_list = NULL;
+
+  // Branches
+  parser->branch = NULL;
+  parser->branch_list = NULL;
+
+  // Cost
+  parser->cost = NULL;
+  parser->cost_list = NULL;
+
+  // Util
+  parser->util = NULL;
+  parser->util_list = NULL;
 }
 
 void MAT_PARSER_load(MAT_Parser* parser, Net* net) {

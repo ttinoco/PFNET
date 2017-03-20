@@ -63,6 +63,7 @@ void MAT_PARSER_write(Parser* p, Net* net, char* f);
 void MAT_PARSER_free(Parser* p);
 
 // MAT-specific
+void MAT_PARSER_init(MAT_Parser* p);
 void MAT_PARSER_load(MAT_Parser* p, Net* net);
 void MAT_PARSER_clear_token(MAT_Parser* p);
 BOOL MAT_PARSER_has_error(MAT_Parser* p);

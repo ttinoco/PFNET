@@ -211,62 +211,8 @@ Parser* ART_PARSER_new(void) {
   PARSER_set_func_write(p,&ART_PARSER_write);
   PARSER_set_func_free(p,&ART_PARSER_free);
 
-  // Error
-  parser->error_flag = FALSE;
-  strcpy(parser->error_string,"");
-
-  // State
-  parser->state = ART_PARSER_STATE_INIT;
-  parser->field = 0;
-  parser->record = 0;
-
-  // Options
-  parser->output_level = 0;
-
-  // Base
-  parser->base_power = ART_PARSER_BASE_POWER;
-
-  // Buses
-  parser->bus = NULL;
-  parser->bus_list = NULL;
-  parser->bus_hash = NULL;
-
-  // Lines
-  parser->line = NULL;
-  parser->line_list = NULL;
-
-  // Transformers
-  parser->transfo = NULL;
-  parser->transfo_list = NULL;
-  parser->transfo_hash = NULL;
-
-  // LTC-Vs
-  parser->ltcv = NULL;
-  parser->ltcv_list = NULL;
-
-  // TRFOs
-  parser->trfo = NULL;
-  parser->trfo_list = NULL;
-
-  // Phase shifters
-  parser->pshiftp = NULL;
-  parser->pshiftp_list = NULL;
-
-  // Generators
-  parser->gener = NULL;
-  parser->gener_list = NULL;
-
-  // Slacks
-  parser->slack = NULL;
-  parser->slack_list = NULL;
-
-  // Vargen
-  parser->vargen = NULL;
-  parser->vargen_list = NULL;
-
-  // Bats
-  parser->bat = NULL;
-  parser->bat_list = NULL;
+  // Init
+  ART_PARSER_init(parser);
 
   // Return
   return p;
@@ -276,6 +222,7 @@ Net* ART_PARSER_parse(Parser* p, char* filename, int num_periods) {
 
   // Local variables
   Net* net;
+  char* ext;
   FILE* file;
   CSV_Parser* csv;
   size_t bytes_read;
@@ -286,8 +233,20 @@ Net* ART_PARSER_parse(Parser* p, char* filename, int num_periods) {
   if (!parser)
     return NULL;
 
+  // Clean up
+  ART_PARSER_free(p);
+  ART_PARSER_init(parser);
+
   // Clear error
   PARSER_clear_error(p);
+
+  // Check extension
+  ext = strrchr(filename,'.');
+  ext = strtolower(ext);
+  if (!ext || strcmp(ext+1,"art") != 0) {
+    PARSER_set_error(p,"invalid file extension");
+    return NULL;
+  }
   
   // CSV parser
   csv = CSV_PARSER_new();
@@ -595,9 +554,70 @@ void ART_PARSER_free(Parser* p) {
 
   // Bats
   LIST_map(ART_Bat,parser->bat_list,bat,next,{free(bat);});
+}
 
-  // Parser
-  free(parser);
+void ART_PARSER_init(ART_Parser* parser) {
+  
+  // No parser
+  if (!parser)
+    return;
+
+  // Error
+  parser->error_flag = FALSE;
+  strcpy(parser->error_string,"");
+
+  // State
+  parser->state = ART_PARSER_STATE_INIT;
+  parser->field = 0;
+  parser->record = 0;
+
+  // Options
+  parser->output_level = 0;
+
+  // Base
+  parser->base_power = ART_PARSER_BASE_POWER;
+
+  // Buses
+  parser->bus = NULL;
+  parser->bus_list = NULL;
+  parser->bus_hash = NULL;
+
+  // Lines
+  parser->line = NULL;
+  parser->line_list = NULL;
+
+  // Transformers
+  parser->transfo = NULL;
+  parser->transfo_list = NULL;
+  parser->transfo_hash = NULL;
+
+  // LTC-Vs
+  parser->ltcv = NULL;
+  parser->ltcv_list = NULL;
+
+  // TRFOs
+  parser->trfo = NULL;
+  parser->trfo_list = NULL;
+
+  // Phase shifters
+  parser->pshiftp = NULL;
+  parser->pshiftp_list = NULL;
+
+  // Generators
+  parser->gener = NULL;
+  parser->gener_list = NULL;
+
+  // Slacks
+  parser->slack = NULL;
+  parser->slack_list = NULL;
+
+  // Vargen
+  parser->vargen = NULL;
+  parser->vargen_list = NULL;
+
+  // Bats
+  parser->bat = NULL;
+  parser->bat_list = NULL;
 }
 
 void ART_PARSER_load(ART_Parser* parser, Net* net) {

@@ -64,7 +64,7 @@ Parser* PARSER_new_for_file(char* f) {
 Net* PARSER_parse(Parser* p, char* f, int n) {
   if (p && p->func_parse)
     return (*(p->func_parse))(p,f,n);
-  else
+  else 
     return NULL;
 }
 
@@ -86,7 +86,9 @@ void PARSER_write(Parser* p, Net* net, char* f) {
 void PARSER_del(Parser* p) {
   if (p) {
     if (p->func_free)
-      (*(p->func_free))(p);    
+      (*(p->func_free))(p);
+    if(p->data)
+      free(p->data);
     free(p);
   }
 }

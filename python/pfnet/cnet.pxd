@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -98,7 +98,6 @@ cdef extern from "pfnet/net.h":
     cvec.Vec* NET_get_var_values(Net* net, int code)
     cmat.Mat* NET_get_var_projection(Net* net, char obj_type, char var, int t_start, int t_end)
     bint NET_has_error(Net* net)
-    void NET_load(Net* net, char* filename, int output_level)
     Net* NET_new(int num_periods)
     void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, char val_mask)
     void NET_set_flags_of_component(Net* net, void* obj, char obj_type, char flag_mask, char val_mask)

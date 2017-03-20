@@ -71,6 +71,7 @@ void ART_PARSER_write(Parser* p, Net* net, char* f);
 void ART_PARSER_free(Parser* p);
 
 // ART-specific
+void ART_PARSER_init(ART_Parser* p);
 void ART_PARSER_load(ART_Parser* p, Net* net);
 void ART_PARSER_clear_token(ART_Parser* p);
 BOOL ART_PARSER_has_error(ART_Parser* p);
