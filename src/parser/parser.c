@@ -9,6 +9,9 @@
  */
 
 #include <pfnet/parser.h>
+#include <pfnet/parser_MAT.h>
+#include <pfnet/parser_ART.h>
+#include <pfnet/parser_RAW.h>
 
 struct Parser {
 
@@ -41,6 +44,21 @@ Parser* PARSER_new(void) {
   p->func_show = NULL;
   p->func_write = NULL;
   p->func_free = NULL;
+}
+
+Parser* PARSER_new_for_file(char* f) {
+  char* ext;
+  ext = strrchr(f,'.');
+  ext = strtolower(ext);
+  if (!ext)
+    return NULL;
+  if (strcmp(ext+1,"raw") == 0)
+    return RAW_PARSER_new();
+  if (strcmp(ext+1,"mat") == 0)
+    return MAT_PARSER_new();
+  if (strcmp(ext+1,"art") == 0)
+    return ART_PARSER_new();
+  return NULL;
 }
 
 Net* PARSER_parse(Parser* p, char* f, int n) {

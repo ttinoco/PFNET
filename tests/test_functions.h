@@ -13,6 +13,7 @@
 static char* test_func_GEN_COST() {
 
   // Local variables
+  Parser* parser;
   Net* net;
   Vec* x;
   Func* f;
@@ -20,8 +21,8 @@ static char* test_func_GEN_COST() {
   printf("test_func_GEN_COST ...");
   
   // Load
-  net = NET_new(1);
-  NET_load(net,test_case,0);
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
   
   // Set flags
   NET_set_flags(net,OBJ_GEN,
@@ -43,6 +44,7 @@ static char* test_func_GEN_COST() {
   VEC_del(x);
   FUNC_del(f);
   NET_del(net);
+  PARSER_del(parser);
   printf("ok\n");
   return 0;
 }

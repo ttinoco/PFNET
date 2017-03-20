@@ -11,9 +11,15 @@
 #ifndef __PFNET_HEADER__
 #define __PFNET_HEADER__
 
+#include "parser.h"
 #include "net.h"
 #include "problem.h"
 #include "graph.h"
+
+// Parsers
+#include "parser_MAT.h"
+#include "parser_ART.h"
+#include "parser_RAW.h"
 
 // Functions
 #include "func_GEN_COST.h"

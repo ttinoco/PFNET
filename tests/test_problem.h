@@ -12,6 +12,7 @@
 
 static char* test_problem_basic() {
 
+  Parser* parser;
   Net* net;
   Prob* p;
   Vec* x;
@@ -19,15 +20,16 @@ static char* test_problem_basic() {
 
   printf("test_problem_basic ...");
 
-  net  = NET_new(1);
-  p = PROB_new();
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
 
+  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
+
+  p = PROB_new();
+  
   Assert("error - bad prob net initialization",PROB_get_network(p) == NULL);
 
   PROB_set_network(p,net);
-
-  // Load
-  NET_load(net,test_case,0);
 
   // Set variables
   NET_set_flags(net,
@@ -97,6 +99,7 @@ static char* test_problem_basic() {
   VEC_del(x);
   PROB_del(p);
   NET_del(net);
+  PARSER_del(parser);
   printf("ok\n");
   return 0;
 }

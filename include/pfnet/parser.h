@@ -22,6 +22,7 @@ typedef struct Parser Parser;
 
 // Prototypes
 Parser* PARSER_new(void);
+Parser* PARSER_new_for_file(char* f);
 Net* PARSER_parse(Parser* p, char* f, int num_periods);
 void PARSER_set(Parser* p, char* key, REAL value);
 void PARSER_show(Parser* p);

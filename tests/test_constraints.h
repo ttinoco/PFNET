@@ -13,6 +13,7 @@
 static char* test_constr_NBOUND() {
   
   // Local variables
+  Parser* parser;
   Net* net;
   Vec* x;
   Constr* c;
@@ -23,8 +24,10 @@ static char* test_constr_NBOUND() {
   printf("test_constr_NBOUND ...");
 
   // Load
-  net = NET_new(1);
-  NET_load(net,test_case,0);
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
+  Assert("error - unable to get parser",parser != NULL);
+  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
 
   // Set flags
   NET_set_flags(net,OBJ_BUS,
@@ -100,6 +103,7 @@ static char* test_constr_NBOUND() {
   VEC_del(x);
   CONSTR_del(c);
   NET_del(net);
+  PARSER_del(parser);
   printf("ok\n");
   return 0;
 }
@@ -107,6 +111,7 @@ static char* test_constr_NBOUND() {
 static char* test_constr_FIX() {
   
   // Local variables
+  Parser* parser;
   Net* net;
   Vec* x;
   Constr* c;
@@ -117,8 +122,10 @@ static char* test_constr_FIX() {
   printf("test_constr_FIX ...");
 
   // Load
-  net = NET_new(1);
-  NET_load(net,test_case,0);
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
+  Assert("error - unable to get parser",parser != NULL);
+  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
 
   // Set flags
   NET_set_flags(net,OBJ_BUS,
@@ -195,6 +202,7 @@ static char* test_constr_FIX() {
   VEC_del(x);
   CONSTR_del(c);
   NET_del(net);
+  PARSER_del(parser);
   printf("ok\n");
   return 0;
 }
@@ -203,6 +211,7 @@ static char* test_constr_PAR_GEN_P() {
   
   // Local variables
   Net* net;
+  Parser* parser;
   Vec* x;
   Constr* c;
   int num;
@@ -215,8 +224,10 @@ static char* test_constr_PAR_GEN_P() {
   printf("test_constr_PAR_GEN_P ...");
 
   // Load
-  net = NET_new(1);
-  NET_load(net,test_case,0);
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
+  Assert("error - unable to get parser",parser != NULL);
+  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
 
   // Set flags
   NET_set_flags(net,
@@ -313,6 +324,7 @@ static char* test_constr_PAR_GEN_P() {
   VEC_del(x);
   CONSTR_del(c);
   NET_del(net);
+  PARSER_del(parser);
   printf("ok\n");
   return 0;
 }
@@ -321,6 +333,7 @@ static char* test_constr_PAR_GEN_Q() {
   
   // Local variables
   Net* net;
+  Parser* parser;
   Vec* x;
   Constr* c;
   int num;
@@ -333,8 +346,10 @@ static char* test_constr_PAR_GEN_Q() {
   printf("test_constr_PAR_GEN_Q ...");
 
   // Load
-  net = NET_new(1);
-  NET_load(net,test_case,0);
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
+  Assert("error - unable to get parser",parser != NULL);
+  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
 
   // Set flags
   NET_set_flags(net,
@@ -431,6 +446,7 @@ static char* test_constr_PAR_GEN_Q() {
   VEC_del(x);
   CONSTR_del(c);
   NET_del(net);
+  PARSER_del(parser);
   printf("ok\n");
   return 0;
 }
@@ -439,6 +455,7 @@ static char* test_constr_ACPF() {
   
   // Local variables
   Net* net;
+  Parser* parser;
   Vec* x;
   Constr* c;
   Vec* f;
@@ -454,8 +471,10 @@ static char* test_constr_ACPF() {
   printf("test_constr_ACPF ...");
 
   // Load
-  net = NET_new(1);
-  NET_load(net,test_case,0);
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
+  Assert("error - unable to get parser",parser != NULL);
+  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
 
   // Set variables
   NET_set_flags(net,
@@ -576,6 +595,7 @@ static char* test_constr_ACPF() {
   VEC_del(x);
   CONSTR_del(c);
   NET_del(net);
+  PARSER_del(parser);
   printf("ok\n");
   return 0;
 }
@@ -584,6 +604,7 @@ static char* test_constr_REG_GEN() {
   
   // Local variables
   Net* net;
+  Parser* parser;
   Vec* x;
   Constr* c;
   Vec* b;
@@ -600,8 +621,10 @@ static char* test_constr_REG_GEN() {
   printf("test_constr_REG_GEN ...");
 
   // Load
-  net = NET_new(1);
-  NET_load(net,test_case,0);
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
+  Assert("error - unable to get parser",parser != NULL);
+  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
 
   // Set variables
   NET_set_flags(net,
@@ -696,6 +719,7 @@ static char* test_constr_REG_GEN() {
   VEC_del(x);
   CONSTR_del(c);
   NET_del(net);
+  PARSER_del(parser);
   printf("ok\n");
   return 0;
 }
@@ -704,6 +728,7 @@ static char* test_constr_REG_TRAN() {
   
   // Local variables
   Net* net;
+  Parser* parser;
   Vec* x;
   Constr* c;
   Vec* b;
@@ -718,8 +743,10 @@ static char* test_constr_REG_TRAN() {
   printf("test_constr_REG_TRAN ...");
 
   // Load
-  net = NET_new(1);
-  NET_load(net,test_case,0);
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
+  Assert("error - unable to get parser",parser != NULL);
+  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
 
   // Set variables
   NET_set_flags(net,
@@ -806,6 +833,7 @@ static char* test_constr_REG_TRAN() {
   VEC_del(x);
   CONSTR_del(c);
   NET_del(net);
+  PARSER_del(parser);
   printf("ok\n");
   return 0;
 }
@@ -814,6 +842,7 @@ static char* test_constr_REG_SHUNT() {
   
   // Local variables
   Net* net;
+  Parser* parser;
   Vec* x;
   Constr* c;
   Vec* b;
@@ -828,8 +857,10 @@ static char* test_constr_REG_SHUNT() {
   printf("test_constr_REG_SHUNT ...");
 
   // Load
-  net = NET_new(1);
-  NET_load(net,test_case,0);
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
+  Assert("error - unable to get parser",parser != NULL);
+  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
 
   // Set variables
   NET_set_flags(net,
@@ -916,6 +947,7 @@ static char* test_constr_REG_SHUNT() {
   VEC_del(x);
   CONSTR_del(c);
   NET_del(net);
+  PARSER_del(parser);
   printf("ok\n");
   return 0;
 }
