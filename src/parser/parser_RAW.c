@@ -12,38 +12,28 @@
 
 #if !HAVE_RAW_PARSER
 
-struct RAW_Parser;
-
-RAW_Parser* RAW_PARSER_new(void) {
+Parser* RAW_PARSER_new(void) {
   return NULL;
 }
 
-void RAW_PARSER_read(RAW_Parser* parser, char* filename) {
+Net* RAW_PARSER_parse(Parser* p, char* filename, int num_periods) {
+  return NULL;
+}
+
+void RAW_PARSER_set(Parser* p, char* key, REAL value) {
   // pass
 }
 
-void RAW_PARSER_show(RAW_Parser* parser) {
+void RAW_PARSER_show(Parser* p) {
   // pass
 }
 
-void RAW_PARSER_load(RAW_Parser* parser, Net* net) {
+void RAW_PARSER_write(Parser* p, Net* net, char* f) {
+  // nothing
+}
+
+void RAW_PARSER_free(Parser* p) {
   // pass
-}
-
-void RAW_PARSER_del(RAW_Parser* parser) {
-  // pass
-}
-
-void RAW_PARSER_set(RAW_Parser* parser, char* key, REAL value) {
-  // pass
-}
-
-BOOL RAW_PARSER_has_error(RAW_Parser* parser) {
-  return TRUE;
-}
-
-char* RAW_PARSER_get_error_string(RAW_Parser* parser) {
-  return "this RAW parser does not do anything";
 }
 
 #endif

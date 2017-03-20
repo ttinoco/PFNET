@@ -1,5 +1,5 @@
 /** @file parser_RAW.h
- *  @brief This file list the constants and (dummy) routines associated with the RAW_Parser data structure.
+ *  @brief This file list the constants and routines associated with the RAW_Parser data structure.
  *
  * This file is part of PFNET.
  *
@@ -11,20 +11,15 @@
 #ifndef __PARSER_RAW_HEADER__
 #define __PARSER_RAW_HEADER__
 
-#include "net.h"
+#include "parser.h"
 #include "config.h"
 
-// Struct
-typedef struct RAW_Parser RAW_Parser;
-
-// Prototypes
-RAW_Parser* RAW_PARSER_new(void);
-void RAW_PARSER_read(RAW_Parser* parser, char* filename);
-void RAW_PARSER_show(RAW_Parser* parser);
-void RAW_PARSER_load(RAW_Parser* parser, Net* net);
-void RAW_PARSER_del(RAW_Parser* parser);
-void RAW_PARSER_set(RAW_Parser* parser, char* key, REAL value);
-BOOL RAW_PARSER_has_error(RAW_Parser* parser);
-char* RAW_PARSER_get_error_string(RAW_Parser* parser);
+// Interface
+Parser* RAW_PARSER_new(void);
+Net* RAW_PARSER_parse(Parser* p, char* f, int num_periods);
+void RAW_PARSER_set(Parser* p, char* key, REAL value);
+void RAW_PARSER_show(Parser* p);
+void RAW_PARSER_write(Parser* p, Net* net, char* f);
+void RAW_PARSER_free(Parser* p);
 
 #endif

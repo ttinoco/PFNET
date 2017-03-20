@@ -10,10 +10,6 @@
 
 #include <pfnet/net.h>
 #include <pfnet/array.h>
-#include <pfnet/parser_RAW.h>
-#include <pfnet/parser_MAT.h>
-#include <pfnet/parser_ART.h>
-#include <pfnet/parser_PYTHON.h>
 
 struct Net {
 
@@ -1704,106 +1700,6 @@ BOOL NET_has_error(Net* net) {
     return FALSE;
 }
 
-void NET_load(Net* net, char* filename, int output_level) {
-
-  // Local variables
-  char* ext;
-
-  // No network
-  if (!net)
-    return;
-
-  // Free data
-  NET_clear_data(net);
-
-  // Extension
-  ext = strrchr(filename,'.');
-  ext = strtolower(ext);
-
-  // Parse
-  if (!ext) {
-    sprintf(net->error_string,"unable to find extension in %s",filename);
-    net->error_flag = TRUE;
-  }
-
-  // PSSE RAW
-  else if (strcmp(ext+1,"raw") == 0) {
-    RAW_Parser* parser = RAW_PARSER_new();
-    RAW_PARSER_set(parser,"output_level",output_level);
-    RAW_PARSER_read(parser,filename);
-    RAW_PARSER_show(parser);
-    if (!RAW_PARSER_has_error(parser))
-      RAW_PARSER_load(parser,net);
-    if (RAW_PARSER_has_error(parser)) {
-      strcpy(net->error_string,RAW_PARSER_get_error_string(parser));
-      net->error_flag = TRUE;
-    }
-    RAW_PARSER_del(parser);
-  }
-
-  // MATPOWER MAT
-  else if (strcmp(ext+1,"mat") == 0) {
-    MAT_Parser* parser = MAT_PARSER_new();
-    MAT_PARSER_set(parser,"output_level",output_level);
-    MAT_PARSER_read(parser,filename);
-    MAT_PARSER_show(parser);
-    if (!MAT_PARSER_has_error(parser))
-      MAT_PARSER_load(parser,net);
-    if (MAT_PARSER_has_error(parser)) {
-      strcpy(net->error_string,MAT_PARSER_get_error_string(parser));
-      net->error_flag = TRUE;
-    }
-    MAT_PARSER_del(parser);
-  }
-
-  // ARTERE ART  
-  else if (strcmp(ext+1,"art") == 0) {
-    ART_Parser* parser = ART_PARSER_new();
-    ART_PARSER_set(parser,"output_level",output_level);
-    ART_PARSER_read(parser,filename);
-    ART_PARSER_show(parser);
-    if (!ART_PARSER_has_error(parser))
-      ART_PARSER_load(parser,net);
-    if (ART_PARSER_has_error(parser)) {
-      strcpy(net->error_string,ART_PARSER_get_error_string(parser));
-      net->error_flag = TRUE;
-    }
-    ART_PARSER_del(parser);
-  }
-
-  // DUMMY PYTHON
-  #if HAVE_PYTHON_PARSER
-  else if (strcmp(ext+1,"dummy") == 0) {
-    PYTHON_Parser* parser = PYTHON_PARSER_new("DummyParser");
-    PYTHON_PARSER_set(parser,"output_level",output_level);
-    PYTHON_PARSER_read(parser,filename);
-    PYTHON_PARSER_show(parser);
-    if (!PYTHON_PARSER_has_error(parser))
-      PYTHON_PARSER_load(parser,net);
-    if (PYTHON_PARSER_has_error(parser)) {
-      strcpy(net->error_string,PYTHON_PARSER_get_error_string(parser));
-      net->error_flag = TRUE;
-    }
-    PYTHON_PARSER_del(parser);
-  }
-  #endif
-
-  // UNKNOWN
-  else {
-    sprintf(net->error_string,"invalid file type (%s)",ext+1);
-    net->error_flag = TRUE;
-  }
-
-  // Propagate data
-  NET_propagate_data_in_time(net);
-
-  // Set up utilities
-  ARRAY_zalloc(net->bus_counted,char,net->num_buses*net->num_periods);
-
-  // Update properties
-  NET_update_properties(net,NULL);
-}
-
 Net* NET_new(int num_periods) {
   if (num_periods > 0) {
     Net* net = (Net*)malloc(sizeof(Net));
@@ -1844,6 +1740,7 @@ void NET_set_bus_array(Net* net, Bus* bus, int num) {
   if (net) {
     net->bus = bus;
     net->num_buses = num;
+    ARRAY_zalloc(net->bus_counted,char,net->num_buses*net->num_periods);
   }
 }
 

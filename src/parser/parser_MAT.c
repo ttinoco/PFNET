@@ -78,7 +78,7 @@ struct MAT_Parser {
   // Error
   BOOL error_flag;
   char error_string[MAT_PARSER_BUFFER_SIZE];
-
+  
   // State
   int state;
   int field;
@@ -113,17 +113,20 @@ struct MAT_Parser {
   MAT_Util* util_list;
 };
 
-void MAT_PARSER_clear_token(MAT_Parser* parser) {
-  int i;
-  for (i = 0; i < MAT_PARSER_BUFFER_SIZE; i++)
-    parser->token[i] = 0;
-}
-
-MAT_Parser* MAT_PARSER_new(void) {
-
+Parser* MAT_PARSER_new(void) {
+  
   // Allocate
+  Parser* p = PARSER_new();
   MAT_Parser* parser = (MAT_Parser*)malloc(sizeof(MAT_Parser));
 
+  // Set attributes
+  PARSER_set_data(p,(void*)parser);
+  PARSER_set_func_parse(p,&MAT_PARSER_parse);
+  PARSER_set_func_set(p,&MAT_PARSER_set);
+  PARSER_set_func_show(p,&MAT_PARSER_show);
+  PARSER_set_func_write(p,&MAT_PARSER_write);
+  PARSER_set_func_free(p,&MAT_PARSER_free);
+  
   // Error
   parser->error_flag = FALSE;
   strcpy(parser->error_string,"");
@@ -162,28 +165,35 @@ MAT_Parser* MAT_PARSER_new(void) {
   parser->util_list = NULL;
 
   // Return
-  return parser;
+  return p;
 }
 
-void MAT_PARSER_read(MAT_Parser* parser, char* filename) {
+Net* MAT_PARSER_parse(Parser* p, char* filename, int num_periods) {
 
   // Local variables
+  Net* net;
   FILE* file;
-  CSV_Parser* csv = CSV_PARSER_new();
-  char buffer[MAT_PARSER_BUFFER_SIZE];
+  CSV_Parser* csv;
   size_t bytes_read;
-
+  char buffer[MAT_PARSER_BUFFER_SIZE];
+  MAT_Parser* parser = (MAT_Parser*)PARSER_get_data(p);
+  
   // No parser
   if (!parser)
-    return;
+    return NULL;
+
+  // Clear error
+  PARSER_clear_error(p);
+  
+  // CSV parser
+  csv = CSV_PARSER_new();
 
   // Open file
   file = fopen(filename,"rb");
   if (!file) {
-    sprintf(parser->error_string,"unable to open file %s",filename);
-    parser->error_flag = TRUE;
+    PARSER_set_error(p,"unable to open file");
     CSV_PARSER_del(csv);
-    return;
+    return NULL;
   }
 
   // Parse
@@ -198,8 +208,7 @@ void MAT_PARSER_read(MAT_Parser* parser, char* filename) {
 			 MAT_PARSER_callback_field,
 			 MAT_PARSER_callback_row,
 			 parser) != bytes_read) {
-      strcpy(parser->error_string,"error parsing buffer");
-      parser->error_flag = TRUE;
+      PARSER_set_error(p,"error parsing buffer");
       break;
     }
   }
@@ -207,17 +216,50 @@ void MAT_PARSER_read(MAT_Parser* parser, char* filename) {
   // Free and close
   CSV_PARSER_del(csv);
   fclose(file);
+
+  // Check error
+  if (PARSER_has_error(p))
+    return NULL;
+  
+  // Network
+  net = NET_new(num_periods);
+  MAT_PARSER_load(parser,net);
+  NET_propagate_data_in_time(net);
+  NET_update_properties(net,NULL);
+  
+  // Check error
+  if (parser->error_flag)
+    PARSER_set_error(p,parser->error_string);
+ 
+  // Return
+  return net;
 }
 
-void MAT_PARSER_show(MAT_Parser* parser) {
+void MAT_PARSER_set(Parser* p, char* key, REAL value) {
 
   // Local variables
+  MAT_Parser* parser = (MAT_Parser*)PARSER_get_data(p);
+
+  // No parser
+  if (!parser)
+    return;
+
+  // Output level
+  if (strcmp(key,"output_level") == 0)
+    parser->output_level = (int)value;
+}
+
+void MAT_PARSER_show(Parser* p) {
+
+  // Local variables
+  MAT_Parser* parser = (MAT_Parser*)PARSER_get_data(p);
   int len_bus_list;
   int len_branch_list;
   int len_gen_list;
   int len_cost_list;
   int len_util_list;
 
+  // No parser
   if (!parser)
     return;
 
@@ -241,6 +283,40 @@ void MAT_PARSER_show(MAT_Parser* parser) {
   printf("branch list: %d\n",len_branch_list);
   printf("cost list  : %d\n",len_cost_list);
   printf("util list  : %d\n",len_util_list);
+}
+
+void MAT_PARSER_write(Parser* p, Net* net, char* f) {
+  // nothing
+}
+
+void MAT_PARSER_free(Parser* p) {
+
+  // Local variables
+  MAT_Parser* parser = (MAT_Parser*)PARSER_get_data(p);
+  
+  // No parser
+  if (!parser)
+    return;
+
+  // Buses
+  while (parser->bus_hash)
+    HASH_DEL(parser->bus_hash,parser->bus_hash);
+  LIST_map(MAT_Bus,parser->bus_list,bus,next,{free(bus);});
+
+  // Gens
+  LIST_map(MAT_Gen,parser->gen_list,gen,next,{free(gen);});
+
+  // Branches
+  LIST_map(MAT_Branch,parser->branch_list,branch,next,{free(branch);});
+
+  // Costs
+  LIST_map(MAT_Cost,parser->cost_list,cost,next,{free(cost);});
+
+  // Utils
+  LIST_map(MAT_Util,parser->util_list,util,next,{free(util);});
+
+  // Parser
+  free(parser);
 }
 
 void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
@@ -475,30 +551,10 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
   }
 }
 
-void MAT_PARSER_del(MAT_Parser* parser) {
-
-  if (!parser)
-    return;
-
-  // Buses
-  while (parser->bus_hash)
-    HASH_DEL(parser->bus_hash,parser->bus_hash);
-  LIST_map(MAT_Bus,parser->bus_list,bus,next,{free(bus);});
-
-  // Gens
-  LIST_map(MAT_Gen,parser->gen_list,gen,next,{free(gen);});
-
-  // Branches
-  LIST_map(MAT_Branch,parser->branch_list,branch,next,{free(branch);});
-
-  // Costs
-  LIST_map(MAT_Cost,parser->cost_list,cost,next,{free(cost);});
-
-  // Utils
-  LIST_map(MAT_Util,parser->util_list,util,next,{free(util);});
-
-  // Parser
-  free(parser);
+void MAT_PARSER_clear_token(MAT_Parser* parser) {
+  int i;
+  for (i = 0; i < MAT_PARSER_BUFFER_SIZE; i++)
+    parser->token[i] = 0;
 }
 
 BOOL MAT_PARSER_has_error(MAT_Parser* parser) {
@@ -509,10 +565,10 @@ BOOL MAT_PARSER_has_error(MAT_Parser* parser) {
 }
 
 char* MAT_PARSER_get_error_string(MAT_Parser* parser) {
-  if (!parser)
-    return "empty parser";
-  else
+  if (parser)
     return parser->error_string;
+  else
+    return "empty parser";
 }
 
 void MAT_PARSER_callback_field(char* s, void* data) {
@@ -969,14 +1025,4 @@ void MAT_PARSER_parse_util_row(MAT_Parser* parser) {
   parser->util = NULL;
   parser->field = 0;
   parser->record++;
-}
-
-void MAT_PARSER_set(MAT_Parser* parser, char* key, REAL value) {
-
-  if (!parser)
-    return;
-
-  // Output level
-  if (strcmp(key,"output_level") == 0)
-    parser->output_level = (int)value;
 }

@@ -39,17 +39,17 @@ net_hdr = 	$(inc_path)/bat.h \
 		$(inc_path)/shunt.h \
 		$(inc_path)/vargen.h
 
-parser_src = 	parser/parser_ART.c \
+parser_src = 	parser/parser.c \
+		parser/parser_ART.c \
 		parser/parser_CSV.c \
 		parser/parser_MAT.c \
-		parser/parser_RAW.c \
-		parser/parser_PYTHON.c
+		parser/parser_RAW.c
 
-parser_hdr = 	$(inc_path)/parser_ART.h \
+parser_hdr = 	$(inc_path)/parser.h \
+		$(inc_path)/parser_ART.h \
 		$(inc_path)/parser_CSV.h \
 		$(inc_path)/parser_MAT.h \
-		$(inc_path)/parser_RAW.h \
-		$(inc_path)/parser_PYTHON.h
+		$(inc_path)/parser_RAW.h
 
 problem_src = 	problem/constr.c \
 		problem/func.c \

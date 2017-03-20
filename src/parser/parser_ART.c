@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -197,10 +197,19 @@ struct ART_Parser {
   ART_Bat* bat_list;
 };
 
-ART_Parser* ART_PARSER_new(void) {
+Parser* ART_PARSER_new(void) {
 
   // Allocate
+  Parser* p = PARSER_new();
   ART_Parser* parser = (ART_Parser*)malloc(sizeof(ART_Parser));
+
+  // Set attributes
+  PARSER_set_data(p,(void*)parser);
+  PARSER_set_func_parse(p,&ART_PARSER_parse);
+  PARSER_set_func_set(p,&ART_PARSER_set);
+  PARSER_set_func_show(p,&ART_PARSER_show);
+  PARSER_set_func_write(p,&ART_PARSER_write);
+  PARSER_set_func_free(p,&ART_PARSER_free);
 
   // Error
   parser->error_flag = FALSE;
@@ -260,28 +269,35 @@ ART_Parser* ART_PARSER_new(void) {
   parser->bat_list = NULL;
 
   // Return
-  return parser;
+  return p;
 }
 
-void ART_PARSER_read(ART_Parser* parser, char* filename) {
+Net* ART_PARSER_parse(Parser* p, char* filename, int num_periods) {
 
   // Local variables
+  Net* net;
   FILE* file;
-  CSV_Parser* csv = CSV_PARSER_new();
-  char buffer[ART_PARSER_BUFFER_SIZE];
+  CSV_Parser* csv;
   size_t bytes_read;
+  char buffer[ART_PARSER_BUFFER_SIZE];
+  ART_Parser* parser = (ART_Parser*)PARSER_get_data(p);
 
   // No parser
   if (!parser)
-    return;
+    return NULL;
+
+  // Clear error
+  PARSER_clear_error(p);
+  
+  // CSV parser
+  csv = CSV_PARSER_new();
 
   // Open file
   file = fopen(filename,"rb");
   if (!file) {
-    sprintf(parser->error_string,"unable to open file %s",filename);
-    parser->error_flag = TRUE;
+    PARSER_set_error(p,"unable to open file");
     CSV_PARSER_del(csv);
-    return;
+    return NULL;
   }
 
   // Parse
@@ -296,8 +312,7 @@ void ART_PARSER_read(ART_Parser* parser, char* filename) {
 			 ART_PARSER_callback_field,
 			 ART_PARSER_callback_record,
 			 parser) != bytes_read) {
-      strcpy(parser->error_string,"error parsing buffer");
-      parser->error_flag = TRUE;
+      PARSER_set_error(p,"error parsing buffer");
       break;
     }
   }
@@ -305,11 +320,43 @@ void ART_PARSER_read(ART_Parser* parser, char* filename) {
   // Free and close
   CSV_PARSER_del(csv);
   fclose(file);
+
+  // Check error
+  if (PARSER_has_error(p))
+    return NULL;
+
+  // Network
+  net = NET_new(num_periods);
+  ART_PARSER_load(parser,net);
+  NET_propagate_data_in_time(net);
+  NET_update_properties(net,NULL);
+  
+  // Check error
+  if (parser->error_flag)
+    PARSER_set_error(p,parser->error_string);
+ 
+  // Return
+  return net;
 }
 
-void ART_PARSER_show(ART_Parser* parser) {
+void ART_PARSER_set(Parser* p, char* key, REAL value) {
 
   // Local variables
+  ART_Parser* parser = (ART_Parser*)PARSER_get_data(p);
+
+  // No parser
+  if (!parser)
+    return;
+
+  // Output level
+  if (strcmp(key,"output_level") == 0)
+    parser->output_level = (int)value;
+}
+
+void ART_PARSER_show(Parser* p) {
+
+  // Local variables
+  ART_Parser* parser = (ART_Parser*)PARSER_get_data(p);
   int len_bus_list;
   int len_line_list;
   int len_transfo_list;
@@ -321,6 +368,7 @@ void ART_PARSER_show(ART_Parser* parser) {
   int len_vargen_list;
   int len_bat_list;
 
+  // No parser
   if (!parser)
     return;
 
@@ -499,6 +547,57 @@ void ART_PARSER_show(ART_Parser* parser) {
 	   bat->eta_c,
 	   bat->eta_d);
   }
+}
+
+void ART_PARSER_write(Parser* p, Net* net, char* f) {
+  // nothing
+}
+
+void ART_PARSER_free(Parser* p) {
+
+  // Local variables
+  ART_Parser* parser = (ART_Parser*)PARSER_get_data(p);
+
+  // No parser
+  if (!parser)
+    return;
+
+  // Buses
+  while (parser->bus_hash)
+    HASH_DEL(parser->bus_hash,parser->bus_hash);
+  LIST_map(ART_Bus,parser->bus_list,bus,next,{free(bus);});
+
+  // Line
+  LIST_map(ART_Line,parser->line_list,line,next,{free(line);});
+
+  // Transformers
+  while (parser->transfo_hash)
+    HASH_DEL(parser->transfo_hash,parser->transfo_hash);
+  LIST_map(ART_Transfo,parser->transfo_list,transfo,next,{free(transfo);});
+
+  // LTC-Vs
+  LIST_map(ART_Ltcv,parser->ltcv_list,ltcv,next,{free(ltcv);});
+
+  // TRFOs
+  LIST_map(ART_Trfo,parser->trfo_list,trfo,next,{free(trfo);});
+
+  // Phase shifters
+  LIST_map(ART_Pshiftp,parser->pshiftp_list,pshiftp,next,{free(pshiftp);});
+
+  // Generators
+  LIST_map(ART_Gener,parser->gener_list,gener,next,{free(gener);});
+
+  // Slacks
+  LIST_map(ART_Slack,parser->slack_list,slack,next,{free(slack);});
+
+  // Vargens
+  LIST_map(ART_Vargen,parser->vargen_list,vargen,next,{free(vargen);});
+
+  // Bats
+  LIST_map(ART_Bat,parser->bat_list,bat,next,{free(bat);});
+
+  // Parser
+  free(parser);
 }
 
 void ART_PARSER_load(ART_Parser* parser, Net* net) {
@@ -889,50 +988,6 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
     }
     index++;
   }
-}
-
-void ART_PARSER_del(ART_Parser* parser) {
-
-  // Check
-  if (!parser)
-    return;
-
-  // Buses
-  while (parser->bus_hash)
-    HASH_DEL(parser->bus_hash,parser->bus_hash);
-  LIST_map(ART_Bus,parser->bus_list,bus,next,{free(bus);});
-
-  // Line
-  LIST_map(ART_Line,parser->line_list,line,next,{free(line);});
-
-  // Transformers
-  while (parser->transfo_hash)
-    HASH_DEL(parser->transfo_hash,parser->transfo_hash);
-  LIST_map(ART_Transfo,parser->transfo_list,transfo,next,{free(transfo);});
-
-  // LTC-Vs
-  LIST_map(ART_Ltcv,parser->ltcv_list,ltcv,next,{free(ltcv);});
-
-  // TRFOs
-  LIST_map(ART_Trfo,parser->trfo_list,trfo,next,{free(trfo);});
-
-  // Phase shifters
-  LIST_map(ART_Pshiftp,parser->pshiftp_list,pshiftp,next,{free(pshiftp);});
-
-  // Generators
-  LIST_map(ART_Gener,parser->gener_list,gener,next,{free(gener);});
-
-  // Slacks
-  LIST_map(ART_Slack,parser->slack_list,slack,next,{free(slack);});
-
-  // Vargens
-  LIST_map(ART_Vargen,parser->vargen_list,vargen,next,{free(vargen);});
-
-  // Bats
-  LIST_map(ART_Bat,parser->bat_list,bat,next,{free(bat);});
-
-  // Parser
-  free(parser);
 }
 
 BOOL ART_PARSER_has_error(ART_Parser* parser) {
@@ -1686,12 +1741,3 @@ void ART_PARSER_parse_base_record(ART_Parser* parser) {
   parser->state = ART_PARSER_STATE_INIT;
 }
 
-void ART_PARSER_set(ART_Parser* parser, char* key, REAL value) {
-
-  if (!parser)
-    return;
-
-  // Output level
-  if (strcmp(key,"output_level") == 0)
-    parser->output_level = (int)value;
-}
