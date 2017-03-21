@@ -22,6 +22,7 @@ Unreleased
 * (Generic) Parser class constructor takes file extension for convenience.
 * Format-specific parsers for mat,raw,art files (ParserMAT,ParserRAW,ParserART).
 * CustomParser class for creating parsers writting in python that work with the C library.
+* Raw parser availability is detected when library is placed in pfnet/lib library (no environment variable needed).
 
 Version 1.2.8
 -------------
