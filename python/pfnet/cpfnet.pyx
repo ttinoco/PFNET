@@ -146,6 +146,7 @@ class AttributeFloat(float):
 ########
 
 include "cstrings.pyx" 
+include "cparser.pyx"
 include "cbus.pyx"
 include "cbranch.pyx"
 include "cgen.pyx"

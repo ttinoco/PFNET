@@ -21,9 +21,7 @@ class TestFunctions(unittest.TestCase):
     def setUp(self):
 
         # Network
-        self.T = 5
-        self.net = pf.Network()
-        self.netMP = pf.Network(self.T)
+        self.T = 4
 
         # Random
         np.random.seed(1)
@@ -33,11 +31,11 @@ class TestFunctions(unittest.TestCase):
         # Constants
         h = 1e-9
 
-        net = self.netMP # multi period
-
+        # Multiperiod
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             nb = net.num_buses
             nrg = net.get_num_buses_reg_by_gen()
@@ -178,11 +176,11 @@ class TestFunctions(unittest.TestCase):
         # Constants
         h = 1e-9
 
-        net = self.netMP # multi period
-
+        # Multiperiod
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             ng = net.num_generators
             nrg = net.get_num_reg_gens()
@@ -315,11 +313,11 @@ class TestFunctions(unittest.TestCase):
         # Constants
         h = 1e-8
 
-        net = self.netMP # multi period
-
+        # Multiperiod
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             nb = net.num_buses
             ns = net.get_num_slack_buses()
@@ -455,11 +453,11 @@ class TestFunctions(unittest.TestCase):
         # Constants
         h = 1e-8
 
-        net = self.netMP # multiperiod
-
+        # Multiperiod
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             # Vars
             net.set_flags('branch',
@@ -579,11 +577,11 @@ class TestFunctions(unittest.TestCase):
         # Constants
         h = 1e-8
 
-        net = self.netMP # multistage
-
+        # Multiperiod
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             # Vars
             net.set_flags('shunt',
@@ -702,12 +700,10 @@ class TestFunctions(unittest.TestCase):
 
         # Single period
         h = 1e-9
-
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # Vars
             net.set_flags('generator',
@@ -826,14 +822,10 @@ class TestFunctions(unittest.TestCase):
 
         # Multi period
         h = 1e-9
-
-        net = self.netMP
-
-        self.assertEqual(net.num_periods,self.T)
-
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             # Gen curves
             data = {}
@@ -967,11 +959,11 @@ class TestFunctions(unittest.TestCase):
         # Constants
         h = 1e-9
 
-        net = self.net
-
+        # Single period
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # Vars
             net.set_flags('bus',
@@ -1167,11 +1159,11 @@ class TestFunctions(unittest.TestCase):
         # Constants
         h = 1e-8
 
-        net = self.netMP # multiperiod
-
+        # Multiperiod
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             # Vars
             net.set_flags('bus',
@@ -1298,11 +1290,11 @@ class TestFunctions(unittest.TestCase):
         # Constants
         h = 1e-8
 
-        net = self.netMP # multiperiod
-
+        # Multiperiod
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             # Vars
             net.set_flags('branch',
@@ -1421,12 +1413,10 @@ class TestFunctions(unittest.TestCase):
 
         # Single period
         h = 1e-9
-
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # Vars
             net.set_flags('load',
@@ -1545,14 +1535,10 @@ class TestFunctions(unittest.TestCase):
 
         # Multi period
         h = 1e-9
-
-        net = self.netMP
-
-        self.assertEqual(net.num_periods,self.T)
-
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             # Vars
             net.set_flags('load',
@@ -1685,12 +1671,10 @@ class TestFunctions(unittest.TestCase):
 
         # Single period
         h = 1e-7
-
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # prices
             for bus in net.buses:
@@ -1849,14 +1833,10 @@ class TestFunctions(unittest.TestCase):
 
         # Multi period
         h = 1e-7
-
-        net = self.netMP
-
-        self.assertEqual(net.num_periods,self.T)
-
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             # gens
             for gen in net.generators:
@@ -2041,7 +2021,7 @@ class TestFunctions(unittest.TestCase):
         for case in test_cases.CASES:
 
             net = pf.Network(self.T) # multiperiod
-
+            
             functions = [pf.Function('generation cost',1.,net),
                          pf.Function('phase shift regularization',1.,net),
                          pf.Function('generator powers regularization',1.,net),
@@ -2075,26 +2055,24 @@ class TestFunctions(unittest.TestCase):
                 self.assertEqual(f.Hphi.nnz,0)
 
             # Network changes
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             # Gen powers
             for gen in net.generators:
                 gen.P = gen.P + 0.01
 
-            # Before updating network
-            list(map(lambda f: f.clear_error(),functions))
-            for f in functions:
-                self.assertRaises(pf.FunctionError,f.eval,x0)
-            list(map(lambda f: f.clear_error(),functions))
-            for f in functions:
-                self.assertRaises(pf.FunctionError,f.eval,x0)
-            list(map(lambda f: f.clear_error(),functions))
-            for f in functions:
-                self.assertRaises(pf.FunctionError,f.analyze)
-            list(map(lambda f: f.clear_error(),functions))
-            for f in functions:
-                self.assertRaises(pf.FunctionError,f.eval,x0)
-            list(map(lambda f: f.clear_error(),functions))
+            functions = [pf.Function('generation cost',1.,net),
+                         pf.Function('phase shift regularization',1.,net),
+                         pf.Function('generator powers regularization',1.,net),
+                         pf.Function('tap ratio regularization',1.,net),
+                         pf.Function('susceptance regularization',1.,net),
+                         pf.Function('voltage angle regularization',1.,net),
+                         pf.Function('voltage magnitude regularization',1.,net),
+                         pf.Function('soft voltage magnitude limits',1.,net),
+                         pf.Function('sparse controls penalty',1.,net),
+                         pf.Function('consumption utility',1.,net),
+                         pf.Function('net consumption cost',1.,net)]
 
             # Update network
             list(map(lambda f: f.update_network(),functions))
@@ -2164,11 +2142,11 @@ class TestFunctions(unittest.TestCase):
             
     def test_func_DUMMY(self):
 
-        net = self.netMP
-
+        # Multiperiod
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
             
             # Vars
             net.set_flags('generator',

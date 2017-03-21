@@ -39,6 +39,7 @@ cdef extern from "pfnet/constr.h":
     Mat* CONSTR_get_H_combined(Constr* c)
     int CONSTR_get_type(Constr* c)
     Constr* CONSTR_get_next(Constr* c)
+    void CONSTR_init(Constr* c)
     void CONSTR_count(Constr* c)
     void CONSTR_allocate(Constr* c)
     void CONSTR_analyze(Constr* c)

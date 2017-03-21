@@ -23,20 +23,17 @@ class TestConstraints(unittest.TestCase):
 
         # Network
         self.T = 2
-        self.net = pf.Network()
-        self.netMP = pf.Network(self.T)
 
         # Random
         np.random.seed(0)
 
     def test_constr_FIX(self):
-
+        
         # Single period
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # add vargens
             net.add_vargens(net.get_load_buses(),50.,30.,5,0.05)
@@ -261,14 +258,12 @@ class TestConstraints(unittest.TestCase):
                 self.assertEqual(A.col[ar[0]],load.index_P)
                 self.assertEqual(b[A.row[ar[0]]],load.P)
 
-        # Multi period
-        net = self.netMP
-
-        self.assertEqual(net.num_periods,self.T)
-
+        
+        # Multiperiods
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             # add vargens
             net.add_vargens(net.get_load_buses(),50.,30.,5,0.05)
@@ -502,11 +497,10 @@ class TestConstraints(unittest.TestCase):
     def test_constr_LBOUND(self):
 
         # Single period
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # add vargens
             net.add_vargens(net.get_load_buses(),50.,30.,5,0.05)
@@ -979,11 +973,10 @@ class TestConstraints(unittest.TestCase):
                 self.assertEqual(load.sens_P_l_bound,pi[load.index_P])
 
         # Multi period
-        net = self.netMP
-
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             # add vargens
             net.add_vargens(net.get_load_buses(),50.,30.,5,0.05)
@@ -1177,11 +1170,11 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_PAR_GEN_P(self):
 
-        net = self.netMP # multi period
-
+        # Multiperiod
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
             self.assertEqual(net.num_vars,0)
 
             # Vars
@@ -1307,11 +1300,11 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_PAR_GEN_Q(self):
 
-        net = self.netMP # multi period
-
+        # Multiperiod
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
             self.assertEqual(net.num_vars,0)
 
             # Vars
@@ -1441,11 +1434,11 @@ class TestConstraints(unittest.TestCase):
         # Constants
         h = 1e-10
 
-        net = self.netMP # multi period
-
+        # Multiperiods
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             # load
             if sum([l.P[0] for l in net.loads]) < 0:
@@ -1749,11 +1742,11 @@ class TestConstraints(unittest.TestCase):
         # Constants
         h = 1e-8
 
-        net = self.netMP # multi period
-
+        # Multiperiod
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             # Vars
             net.set_flags('bus',
@@ -1968,11 +1961,11 @@ class TestConstraints(unittest.TestCase):
         # Constants
         h = 1e-8
 
-        net = self.netMP # multi period
-
+        # Multiperiod
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             # Vars
             net.set_flags('bus',
@@ -2190,11 +2183,11 @@ class TestConstraints(unittest.TestCase):
         normal = 1e0
         eta = 1e-8
 
-        net = self.netMP # multi stage
-
+        # Multiperiod
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             # Vars
             net.set_flags('bus',
@@ -2424,11 +2417,11 @@ class TestConstraints(unittest.TestCase):
         normal = 1e0
         eta = 1e-8
 
-        net = self.netMP # multi period
-
+        # Multiperiod
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             # Vars
             net.set_flags('bus',
@@ -2669,7 +2662,7 @@ class TestConstraints(unittest.TestCase):
 
         for case in test_cases.CASES:
 
-            net = pf.Network(self.T) # multi period
+            net = pf.Network(self.T)
 
             constraints = [pf.Constraint('variable nonlinear bounds',net),
                            pf.Constraint('variable fixing',net),
@@ -2713,22 +2706,19 @@ class TestConstraints(unittest.TestCase):
                 self.assertTupleEqual(c.J.shape,(0,0))
 
             # Network changes
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
-            # Before updating network
-            list(map(lambda c: c.clear_error(),constraints))
-            for c in constraints:
-                self.assertRaises(pf.ConstraintError,c.eval,x0)
-            list(map(lambda c: c.clear_error(),constraints))
-            for c in constraints:
-                self.assertRaises(pf.ConstraintError,c.eval,x0)
-            list(map(lambda c: c.clear_error(),constraints))
-            for c in constraints:
-                self.assertRaises(pf.ConstraintError,c.analyze)
-            list(map(lambda c: c.clear_error(),constraints))
-            for c in constraints:
-                self.assertRaises(pf.ConstraintError,c.eval,x0)
-            list(map(lambda c: c.clear_error(),constraints))
+            constraints = [pf.Constraint('variable nonlinear bounds',net),
+                           pf.Constraint('variable fixing',net),
+                           pf.Constraint('generator active power participation',net),
+                           pf.Constraint('generator reactive power participation',net),
+                           pf.Constraint('AC power balance',net),
+                           pf.Constraint('DC power balance',net),
+                           pf.Constraint('voltage regulation by generators',net),
+                           pf.Constraint('voltage regulation by transformers',net),
+                           pf.Constraint('voltage regulation by shunts',net),
+                           pf.Constraint('AC branch flow limits',net)]
 
             # Update network
             list(map(lambda c: c.update_network(),constraints))
@@ -2804,11 +2794,10 @@ class TestConstraints(unittest.TestCase):
     def test_constr_DCPF(self):
 
         # Single period
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             self.assertEqual(net.num_vars,0)
 
@@ -3021,13 +3010,10 @@ class TestConstraints(unittest.TestCase):
                 self.assertLess(np.abs(mismatches1[bus.index]-mis),1e-8)
 
         # Multi period
-        net = self.netMP
-
-        self.assertEqual(net.num_periods,self.T)
-
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             self.assertEqual(net.num_vars,0)
 
@@ -3161,11 +3147,10 @@ class TestConstraints(unittest.TestCase):
     def test_constr_DC_FLOW_LIM(self):
 
         # Single period
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             self.assertEqual(net.num_vars,0)
 
@@ -3324,13 +3309,10 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.G_row,num_constr)
 
         # Multi period
-        net = self.netMP
-
-        self.assertEqual(net.num_periods,self.T)
-
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             self.assertEqual(net.num_vars,0)
 
@@ -3377,11 +3359,11 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_LINPF(self):
 
-        net = self.netMP # mult period
-
+        # Multiperiod
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             # load
             if sum([l.P[0] for l in net.loads]) < 0:
@@ -3537,11 +3519,10 @@ class TestConstraints(unittest.TestCase):
     def test_constr_GEN_RAMP(self):
 
         # Multi period
-        net = self.netMP
-
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
             self.assertEqual(net.num_vars,0)
 
             # Gens
@@ -3695,12 +3676,11 @@ class TestConstraints(unittest.TestCase):
         tol = 1e-3
         eps = 1.1 # %
 
-        net = self.netMP # multi period
-        self.assertGreater(net.num_periods,1)
-
+        # Multiperiod
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             # Vars
             net.set_flags('bus',
@@ -3958,11 +3938,11 @@ class TestConstraints(unittest.TestCase):
             
     def test_constr_DUMMY(self):
 
-        net = self.netMP
-
+        # Multiperiod
         for case in test_cases.CASES:
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
 
             # Add vargens
             load_buses = net.get_load_buses()

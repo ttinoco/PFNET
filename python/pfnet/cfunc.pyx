@@ -224,11 +224,14 @@ cdef class Function(FunctionBase):
         elif name == "sparse controls penalty":
             self._c_func = cfunc.FUNC_SP_CONTROLS_new(weight,net._c_net)
         else:
-            FunctionError('invalid function name')
+            raise FunctionError('invalid function name')
             
         self._alloc = True
     
 cdef class CustomFunction(FunctionBase):
+    """
+    Custom function class.
+    """
 
     def __init__(self,weight,Network net):
         """
@@ -252,8 +255,8 @@ cdef class CustomFunction(FunctionBase):
         cfunc.FUNC_set_func_clear(self._c_func,func_clear)
         cfunc.FUNC_set_func_analyze_step(self._c_func,func_analyze_step)
         cfunc.FUNC_set_func_eval_step(self._c_func,func_eval_step)
+        cfunc.FUNC_init(self._c_func)
         self._alloc = True
-        self.init()
 
     def init(self):
         """"

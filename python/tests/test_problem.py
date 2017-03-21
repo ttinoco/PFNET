@@ -22,7 +22,6 @@ class TestProblem(unittest.TestCase):
     def setUp(self):
         
         # Network
-        self.net = pf.Network()
         self.p = pf.Problem()
 
         # Random
@@ -34,12 +33,12 @@ class TestProblem(unittest.TestCase):
         h = 1e-9
         
         p = self.p
-        net = self.net
 
         for case in test_cases.CASES:
             
             p.clear()
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
             p.network = net
             
             # Variables
@@ -283,12 +282,12 @@ class TestProblem(unittest.TestCase):
         h = 1e-9
 
         p = self.p
-        net = self.net
 
         for case in test_cases.CASES:
             
             p.clear()
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
             p.network = net
             
             # Variables
@@ -565,12 +564,12 @@ class TestProblem(unittest.TestCase):
     def test_problem_limits(self):
 
         p = self.p
-        net = self.net
 
         for case in test_cases.CASES:
             
             p.clear()
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
             p.network = net
 
             net.set_flags('bus',
@@ -592,12 +591,12 @@ class TestProblem(unittest.TestCase):
     def test_problem_Glu_construction(self):
 
         p = self.p
-        net = self.net
 
         for case in test_cases.CASES:
             
             p.clear()
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
             p.network = net
 
             self.assertEqual(net.num_vars,0)
@@ -661,12 +660,12 @@ class TestProblem(unittest.TestCase):
     def test_problem_ACOPF_with_thermal(self):
 
         p = self.p
-        net = self.net
 
         for case in test_cases.CASES:
             
             p.clear()
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
             p.network = net
 
             for branch in net.branches:
@@ -918,15 +917,15 @@ class TestProblem(unittest.TestCase):
                 self.assertLessEqual(error,EPS)
 
     def test_problem_with_DUMMY_func(self):
-
-        net = self.net
         
         for case in test_cases.CASES:
             
             p1 = pf.Problem()
             p2 = pf.Problem()
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
+
             p1.network = net
             p2.network = net
             
@@ -976,15 +975,15 @@ class TestProblem(unittest.TestCase):
             self.assertTrue(np.all(p1.Hphi.data == p2.Hphi.data))
 
     def test_problem_with_DUMMY_constr(self):
-
-        net = self.net
         
         for case in test_cases.CASES:
             
             p1 = pf.Problem()
             p2 = pf.Problem()
 
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
+
             p1.network = net
             p2.network = net
 

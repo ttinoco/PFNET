@@ -423,8 +423,7 @@ cdef class Constraint(ConstraintBase):
         elif name == "generator ramp limits":
             self._c_constr = cconstr.CONSTR_GEN_RAMP_new(net._c_net)
         else:
-            ConstraintError('invalid constraint name')
-            
+            raise ConstraintError('invalid constraint name')            
         self._alloc = True
 
 cdef class CustomConstraint(ConstraintBase):
@@ -451,8 +450,8 @@ cdef class CustomConstraint(ConstraintBase):
         cconstr.CONSTR_set_func_analyze_step(self._c_constr,constr_analyze_step)
         cconstr.CONSTR_set_func_eval_step(self._c_constr,constr_eval_step)
         cconstr.CONSTR_set_func_store_sens_step(self._c_constr,constr_store_sens_step)
+        cconstr.CONSTR_init(self._c_constr)
         self._alloc = True
-        self.init()
     
     def init(self):
         """"

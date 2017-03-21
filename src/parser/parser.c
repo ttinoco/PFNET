@@ -23,6 +23,7 @@ struct Parser {
   void * data; /**< @brief Parser data */
 
   // Functions
+  void (*func_init)(Parser* p);                     /**< @brief Initialization function */
   Net* (*func_parse)(Parser* p, char* f, int n);    /**< @brief Parsing function */
   void (*func_set)(Parser* p, char* key, REAL v);   /**< @brief Configuring function */
   void (*func_show)(Parser* p);                     /**< @brief Showing function */
@@ -33,17 +34,20 @@ struct Parser {
 Parser* PARSER_new(void) {
   
   Parser* p = (Parser*)malloc(sizeof(Parser));
-
+  
   p->error_flag = FALSE;
   strcpy(p->error_string,"");
-
+  
   p->data = NULL;
-
+  
+  p->func_init = NULL;
   p->func_parse = NULL;
   p->func_set = NULL;
   p->func_show = NULL;
   p->func_write = NULL;
   p->func_free = NULL;
+
+  return p;
 }
 
 Parser* PARSER_new_for_file(char* f) {
@@ -61,11 +65,22 @@ Parser* PARSER_new_for_file(char* f) {
   return NULL;
 }
 
+void PARSER_init(Parser* p) {
+  if (p && p->func_free)
+    (*(p->func_free))(p);    
+  if (p && p->func_init)
+    (*(p->func_init))(p);
+}
+
 Net* PARSER_parse(Parser* p, char* f, int n) {
+  Net* net = NULL;
+  PARSER_init(p);
+  PARSER_clear_error(p);
   if (p && p->func_parse)
-    return (*(p->func_parse))(p,f,n);
-  else 
-    return NULL;
+    net = (*(p->func_parse))(p,f,n);
+  NET_propagate_data_in_time(net);
+  NET_update_properties(net,NULL);
+  return net;
 }
 
 void PARSER_set(Parser* p, char* key, REAL value) {
@@ -86,9 +101,7 @@ void PARSER_write(Parser* p, Net* net, char* f) {
 void PARSER_del(Parser* p) {
   if (p) {
     if (p->func_free)
-      (*(p->func_free))(p);
-    if(p->data)
-      free(p->data);
+      (*(p->func_free))(p);    
     free(p);
   }
 }
@@ -131,6 +144,11 @@ void PARSER_set_error(Parser* p, char* string) {
     p->error_flag = TRUE;
     strcpy(p->error_string,string);
   }
+}
+
+void PARSER_set_func_init(Parser* p, void (*func)(Parser* p)) {
+  if (p)
+    p->func_init = func;
 }
 
 void PARSER_set_func_parse(Parser* p, Net* (*func)(Parser* p, char* f, int n)) {

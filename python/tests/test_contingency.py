@@ -20,18 +20,14 @@ class TestContingency(unittest.TestCase):
 
     def setUp(self):
 
-        # Network
-        self.net = pf.Network()
+        pass
 
     def test_construction(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.clear_properties()
-            net.load(case)
-            net.clear_flags()
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # outage init
             for gen in net.generators:
@@ -240,9 +236,8 @@ class TestContingency(unittest.TestCase):
                         self.assertTrue(b.index in [y.index for y in bus_m3.branches_m])
 
             # do it again
-            net.clear_properties()
-            net.load(case)
-            net.clear_flags()
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # generator single contingencies
             for gen in net.generators:
@@ -420,13 +415,10 @@ class TestContingency(unittest.TestCase):
 
     def test_gen_cost(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.clear_properties()
-            net.load(case)
-            net.clear_flags()
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # variables
             net.set_flags('generator',
@@ -517,13 +509,10 @@ class TestContingency(unittest.TestCase):
 
     def test_pf(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.clear_properties()
-            net.load(case)
-            net.clear_flags()
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # variables
             net.set_flags('generator',
@@ -631,13 +620,10 @@ class TestContingency(unittest.TestCase):
 
     def test_dcpf(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.clear_properties()
-            net.load(case)
-            net.clear_flags()
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # variables
             net.set_flags('generator',
@@ -731,13 +717,10 @@ class TestContingency(unittest.TestCase):
 
     def test_dc_flow_lim(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.clear_properties()
-            net.load(case)
-            net.clear_flags()
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             for branch in net.branches:
                 if branch.ratingA == 0.:
@@ -826,13 +809,10 @@ class TestContingency(unittest.TestCase):
 
     def test_variables(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.clear_properties()
-            net.load(case)
-            net.clear_flags()
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             cont = pf.Contingency()
             cont.add_gen_outage(net.get_gen(0))

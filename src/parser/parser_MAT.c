@@ -114,24 +114,65 @@ struct MAT_Parser {
 };
 
 Parser* MAT_PARSER_new(void) {
-  
-  // Allocate
   Parser* p = PARSER_new();
-  MAT_Parser* parser = (MAT_Parser*)malloc(sizeof(MAT_Parser));
-
-  // Set attributes
-  PARSER_set_data(p,(void*)parser);
+  PARSER_set_func_init(p,&MAT_PARSER_init);
   PARSER_set_func_parse(p,&MAT_PARSER_parse);
   PARSER_set_func_set(p,&MAT_PARSER_set);
   PARSER_set_func_show(p,&MAT_PARSER_show);
   PARSER_set_func_write(p,&MAT_PARSER_write);
   PARSER_set_func_free(p,&MAT_PARSER_free);
-  
-  // Init
-  MAT_PARSER_init(parser);
-  
-  // Return
+  PARSER_init(p);
   return p;
+}
+
+void MAT_PARSER_init(Parser* p) {
+
+  // No parser
+  if (!p)
+    return;
+
+  // Allocate
+  MAT_Parser* parser = (MAT_Parser*)malloc(sizeof(MAT_Parser));
+  
+  // Error
+  parser->error_flag = FALSE;
+  strcpy(parser->error_string,"");
+
+  // State
+  parser->state = MAT_PARSER_STATE_TITLE;
+  parser->field = 0;
+  parser->record = 0;
+  MAT_PARSER_clear_token(parser);
+  
+  // Options
+  parser->output_level = 0;
+
+  // Base
+  parser->base_power = MAT_PARSER_BASE_POWER;
+
+  // Buses
+  parser->bus = NULL;
+  parser->bus_list = NULL;
+  parser->bus_hash = NULL;
+
+  // Generators
+  parser->gen = NULL;
+  parser->gen_list = NULL;
+
+  // Branches
+  parser->branch = NULL;
+  parser->branch_list = NULL;
+
+  // Cost
+  parser->cost = NULL;
+  parser->cost_list = NULL;
+
+  // Util
+  parser->util = NULL;
+  parser->util_list = NULL;
+  
+  // Set parser
+  PARSER_set_data(p,(void*)parser);
 }
 
 Net* MAT_PARSER_parse(Parser* p, char* filename, int num_periods) {
@@ -142,19 +183,13 @@ Net* MAT_PARSER_parse(Parser* p, char* filename, int num_periods) {
   FILE* file;
   CSV_Parser* csv;
   size_t bytes_read;
+  MAT_Parser* parser;
   char buffer[MAT_PARSER_BUFFER_SIZE];
-  MAT_Parser* parser = (MAT_Parser*)PARSER_get_data(p);
   
-  // No parser
+  // Parser
+  parser = (MAT_Parser*)PARSER_get_data(p);
   if (!parser)
     return NULL;
-
-  // Clean up
-  MAT_PARSER_free(p);
-  MAT_PARSER_init(parser);
-
-  // Clear error
-  PARSER_clear_error(p);
 
   // Check extension
   ext = strrchr(filename,'.');
@@ -203,8 +238,6 @@ Net* MAT_PARSER_parse(Parser* p, char* filename, int num_periods) {
   // Network
   net = NET_new(num_periods);
   MAT_PARSER_load(parser,net);
-  NET_propagate_data_in_time(net);
-  NET_update_properties(net,NULL);
   
   // Check error
   if (parser->error_flag)
@@ -240,10 +273,6 @@ void MAT_PARSER_show(Parser* p) {
 
   // No parser
   if (!parser)
-    return;
-
-  // LEVEL 0
-  if (parser->output_level <= 0)
     return;
 
   // List lengths
@@ -284,7 +313,7 @@ void MAT_PARSER_free(Parser* p) {
 
   // Gens
   LIST_map(MAT_Gen,parser->gen_list,gen,next,{free(gen);});
-
+  
   // Branches
   LIST_map(MAT_Branch,parser->branch_list,branch,next,{free(branch);});
 
@@ -293,50 +322,9 @@ void MAT_PARSER_free(Parser* p) {
 
   // Utils
   LIST_map(MAT_Util,parser->util_list,util,next,{free(util);});
-}
 
-void MAT_PARSER_init(MAT_Parser* parser) {
-  
-  // No parser
-  if (!parser)
-    return;
-  
-  // Error
-  parser->error_flag = FALSE;
-  strcpy(parser->error_string,"");
-
-  // State
-  parser->state = MAT_PARSER_STATE_TITLE;
-  parser->field = 0;
-  parser->record = 0;
-  MAT_PARSER_clear_token(parser);
-
-  // Options
-  parser->output_level = 0;
-
-  // Base
-  parser->base_power = MAT_PARSER_BASE_POWER;
-
-  // Buses
-  parser->bus = NULL;
-  parser->bus_list = NULL;
-  parser->bus_hash = NULL;
-
-  // Generators
-  parser->gen = NULL;
-  parser->gen_list = NULL;
-
-  // Branches
-  parser->branch = NULL;
-  parser->branch_list = NULL;
-
-  // Cost
-  parser->cost = NULL;
-  parser->cost_list = NULL;
-
-  // Util
-  parser->util = NULL;
-  parser->util_list = NULL;
+  // Free parser
+  free(parser);
 }
 
 void MAT_PARSER_load(MAT_Parser* parser, Net* net) {

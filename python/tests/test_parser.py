@@ -15,28 +15,26 @@ class TestParser(unittest.TestCase):
 
     def setUp(self):
 
-        # Network
-        self.net = pf.Network()
+        pass
 
-    def test_dummy(self):
+    def test_dummy_parser(self):
 
-        if pf.info['python parsers']:
-            net = pf.Network()
-            net.load('foo.dummy')
-            self.assertEqual(net.num_buses,0)
-        else:
-            net = pf.Network()
-            self.assertRaises(pf.NetworkError,net.load,'foo.dummy')
-            self.assertTrue(net.has_error())
+        p = pf.parsers.DummyParser()
+        
+        self.assertEqual(p.some_init_data,3)
+        
+        self.assertRaises(pf.ParserError,p.parse,"foo.mat")
+        
+        net = p.parse("foo.dummy")
+        self.assertTrue(isinstance(net,pf.Network))
+        self.assertEqual(net.num_buses,0)
 
     def test_sys_problem2(self):
 
         for case in test_cases.CASES:
             if case == '../data/sys_problem2.mat':
 
-                net = self.net
-
-                net.load(case)
+                net = pf.ParserMAT().parse(case)
 
                 self.assertEqual(net.base_power,100.)
 
@@ -154,9 +152,7 @@ class TestParser(unittest.TestCase):
         for case in test_cases.CASES:
             if case == '../data/sys_problem3.mat':
 
-                net = self.net
-
-                net.load(case)
+                net = pf.ParserMAT().parse(case)
 
                 self.assertEqual(net.base_power,100.)
 
@@ -388,9 +384,7 @@ class TestParser(unittest.TestCase):
         for case in test_cases.CASES:
             if case == '../data/case32.art':
 
-                net = self.net
-
-                net.load(case)
+                net = pf.ParserART().parse(case)
 
                 self.assertEqual(net.num_buses,31)
                 self.assertEqual(net.num_batteries,3)
@@ -443,9 +437,7 @@ class TestParser(unittest.TestCase):
         for case in test_cases.CASES:
             if case == '../data/ieee14.mat':
 
-                net = self.net
-
-                net.load(case)
+                net = pf.ParserMAT().parse(case)
 
                 self.assertEqual(net.base_power,100.)
                 self.assertEqual(net.num_buses,14)
@@ -461,3 +453,26 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(gen1.P,40./100.)
                 self.assertEqual(gen1.cost_coeff_Q2,0.25*(net.base_power**2.))
                 self.assertEqual(gen1.cost_coeff_Q1,20.*net.base_power)
+            
+    def test_type_parsers(self):
+
+        for case in test_cases.CASES:
+
+            if case.split('.')[-1] == 'mat':
+                self.assertRaises(pf.ParserError,pf.ParserART().parse,case)
+                if pf.info['raw parser']:
+                    self.assertRaises(pf.ParserError,pf.ParserRAW().parse,case)
+                net = pf.ParserMAT().parse(case)
+                self.assertGreater(net.num_buses,0)
+            elif case.split('.')[-1] == 'art':
+                self.assertRaises(pf.ParserError,pf.ParserMAT().parse,case)
+                if pf.info['raw parser']:
+                    self.assertRaises(pf.ParserError,pf.ParserRAW().parse,case)
+                net = pf.ParserART().parse(case)
+                self.assertGreater(net.num_buses,0)
+            elif case.split('.')[-1] == 'raw':
+                self.assertRaises(pf.ParserError,pf.ParserMAT().parse,case)
+                self.assertRaises(pf.ParserError,pf.ParserART().parse,case)
+                if pf.info['raw parser']:
+                    net = pf.ParserRAW().parse(case)
+                    self.assertGreater(net.num_buses,0)

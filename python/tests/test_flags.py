@@ -15,16 +15,14 @@ class TestFlags(unittest.TestCase):
     
     def setUp(self):
         
-        # Network
-        self.net = pf.Network()
-        
-    def test_variables(self):
+        pass
 
-        net = self.net
+    def test_variables(self):
 
         for case in test_cases.CASES:
             
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # add vargens
             net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
@@ -203,11 +201,10 @@ class TestFlags(unittest.TestCase):
             
     def test_init_point(self):
         
-        net = self.net
-        
         for case in test_cases.CASES:
             
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # add vargens
             net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
@@ -311,11 +308,10 @@ class TestFlags(unittest.TestCase):
 
     def test_tap_changer_v(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
             
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             num_vars = 0
 
@@ -339,11 +335,10 @@ class TestFlags(unittest.TestCase):
             
     def test_bounded(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
             
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             self.assertEqual(net.num_bounded,0)
 
@@ -391,11 +386,10 @@ class TestFlags(unittest.TestCase):
 
     def test_fixed(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
             
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
 
@@ -462,11 +456,10 @@ class TestFlags(unittest.TestCase):
 
     def test_multiple_flags(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
-            
-            net.load(case)            
+
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             self.assertEqual(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
@@ -502,11 +495,10 @@ class TestFlags(unittest.TestCase):
 
     def test_custom_flags(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
             
-            net.load(case)            
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # add vargens
             net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
@@ -651,11 +643,10 @@ class TestFlags(unittest.TestCase):
 
     def test_errors(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
             
-            net.load(case)
+            net = pf.Parser(case.split('.')[-1]).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             self.assertRaises(KeyError,
                               net.set_flags,

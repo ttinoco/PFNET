@@ -7,41 +7,30 @@
 #***************************************************#
 
 from __future__ import print_function
-from .parser import BaseParser
+from pfnet import CustomParser, Network, ParserError
 
-class DummyParser(BaseParser):
+class DummyParser(CustomParser):
 
-    def __init__(self):
-        
-        BaseParser.__init__(self)
-        
-    def __del__(self):
+    def init(self):
 
-        pass
+        self.some_init_data = 3
 
-    def read(self,filename):
+    def parse(self,filename,num_periods=1):
         
-        pass
-        
+        if filename.split('.')[-1] != 'dummy':
+            raise ParserError('invalid extension')
+        return Network(num_periods)
+
     def set(self,key,value):
 
-        if key == 'output_level':
-            self.output_level = value
+        pass
 
     def show(self):
 
-        pass
+        print('this is a dummy parser')
 
-    def load(self,network):
+    def write(self,net,filename):
         
         pass
         
-    def has_error(self):
-
-        return self.error_flag
-
-    def get_error_string(self):
-
-        return self.error_string
-
     

@@ -25,6 +25,7 @@ cdef extern from "pfnet/pfnet.h":
     Net* FUNC_get_network(Func* f)
     Func* FUNC_get_next(Func* f)
     Func* FUNC_new(REAL weight, Net* net)
+    void FUNC_init(Func* f)
     void FUNC_count(Func* f)
     void FUNC_allocate(Func* f)
     void FUNC_analyze(Func* f)
