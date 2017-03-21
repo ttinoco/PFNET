@@ -37,7 +37,7 @@ class TestProblem(unittest.TestCase):
         for case in test_cases.CASES:
             
             p.clear()
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
             p.network = net
             
@@ -286,7 +286,7 @@ class TestProblem(unittest.TestCase):
         for case in test_cases.CASES:
             
             p.clear()
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
             p.network = net
             
@@ -568,7 +568,7 @@ class TestProblem(unittest.TestCase):
         for case in test_cases.CASES:
             
             p.clear()
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
             p.network = net
 
@@ -595,7 +595,7 @@ class TestProblem(unittest.TestCase):
         for case in test_cases.CASES:
             
             p.clear()
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
             p.network = net
 
@@ -664,7 +664,7 @@ class TestProblem(unittest.TestCase):
         for case in test_cases.CASES:
             
             p.clear()
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
             p.network = net
 
@@ -923,7 +923,7 @@ class TestProblem(unittest.TestCase):
             p1 = pf.Problem()
             p2 = pf.Problem()
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             p1.network = net
@@ -981,7 +981,7 @@ class TestProblem(unittest.TestCase):
             p1 = pf.Problem()
             p2 = pf.Problem()
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             p1.network = net

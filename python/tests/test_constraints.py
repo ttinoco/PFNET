@@ -32,7 +32,7 @@ class TestConstraints(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             # add vargens
@@ -262,7 +262,7 @@ class TestConstraints(unittest.TestCase):
         # Multiperiods
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # add vargens
@@ -499,7 +499,7 @@ class TestConstraints(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             # add vargens
@@ -975,7 +975,7 @@ class TestConstraints(unittest.TestCase):
         # Multi period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # add vargens
@@ -1173,7 +1173,7 @@ class TestConstraints(unittest.TestCase):
         # Multiperiod
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
             self.assertEqual(net.num_vars,0)
 
@@ -1303,7 +1303,7 @@ class TestConstraints(unittest.TestCase):
         # Multiperiod
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
             self.assertEqual(net.num_vars,0)
 
@@ -1437,7 +1437,7 @@ class TestConstraints(unittest.TestCase):
         # Multiperiods
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # load
@@ -1745,7 +1745,7 @@ class TestConstraints(unittest.TestCase):
         # Multiperiod
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # Vars
@@ -1964,7 +1964,7 @@ class TestConstraints(unittest.TestCase):
         # Multiperiod
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # Vars
@@ -2186,7 +2186,7 @@ class TestConstraints(unittest.TestCase):
         # Multiperiod
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # Vars
@@ -2420,7 +2420,7 @@ class TestConstraints(unittest.TestCase):
         # Multiperiod
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # Vars
@@ -2706,7 +2706,7 @@ class TestConstraints(unittest.TestCase):
                 self.assertTupleEqual(c.J.shape,(0,0))
 
             # Network changes
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             constraints = [pf.Constraint('variable nonlinear bounds',net),
@@ -2796,7 +2796,7 @@ class TestConstraints(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             self.assertEqual(net.num_vars,0)
@@ -3012,7 +3012,7 @@ class TestConstraints(unittest.TestCase):
         # Multi period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             self.assertEqual(net.num_vars,0)
@@ -3149,7 +3149,7 @@ class TestConstraints(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             self.assertEqual(net.num_vars,0)
@@ -3311,7 +3311,7 @@ class TestConstraints(unittest.TestCase):
         # Multi period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             self.assertEqual(net.num_vars,0)
@@ -3362,7 +3362,7 @@ class TestConstraints(unittest.TestCase):
         # Multiperiod
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # load
@@ -3521,7 +3521,7 @@ class TestConstraints(unittest.TestCase):
         # Multi period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
             self.assertEqual(net.num_vars,0)
 
@@ -3679,7 +3679,7 @@ class TestConstraints(unittest.TestCase):
         # Multiperiod
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # Vars
@@ -3941,7 +3941,7 @@ class TestConstraints(unittest.TestCase):
         # Multiperiod
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # Add vargens

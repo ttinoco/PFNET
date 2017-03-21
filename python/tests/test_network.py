@@ -49,7 +49,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.load_P_util,0.)
             self.assertEqual(net.load_P_vio,0.)
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             self.assertGreater(net.num_buses,0)
@@ -150,7 +150,7 @@ class TestNetwork(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             num_so_far = 0
@@ -233,7 +233,7 @@ class TestNetwork(unittest.TestCase):
         # Multi period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # add vargens
@@ -297,7 +297,7 @@ class TestNetwork(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             self.assertGreater(net.num_buses,0)
@@ -485,7 +485,7 @@ class TestNetwork(unittest.TestCase):
         # Multi period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             for bus in net.buses:
@@ -559,7 +559,7 @@ class TestNetwork(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             self.assertTrue(net.num_generators > 0)
@@ -658,7 +658,7 @@ class TestNetwork(unittest.TestCase):
         # Multi period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             for gen in net.generators:
@@ -709,7 +709,7 @@ class TestNetwork(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             self.assertTrue(net.num_branches > 0)
@@ -777,7 +777,7 @@ class TestNetwork(unittest.TestCase):
         # Multi period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             for branch in net.branches:
@@ -813,7 +813,7 @@ class TestNetwork(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             # set some variables
@@ -921,7 +921,7 @@ class TestNetwork(unittest.TestCase):
         # Multi-period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             for branch in net.branches:
@@ -940,7 +940,7 @@ class TestNetwork(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             self.assertGreaterEqual(net.num_shunts,0)
@@ -976,7 +976,7 @@ class TestNetwork(unittest.TestCase):
         # Multi period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             for shunt in net.shunts:
@@ -1007,7 +1007,7 @@ class TestNetwork(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             self.assertTrue(net.num_loads > 0)
@@ -1080,7 +1080,7 @@ class TestNetwork(unittest.TestCase):
         # Multi period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             for load in net.loads:
@@ -1127,7 +1127,7 @@ class TestNetwork(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             self.assertEqual(len(net.var_generators),net.num_var_generators)
@@ -1218,7 +1218,7 @@ class TestNetwork(unittest.TestCase):
 
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             self.assertEqual(len(net.var_generators),net.num_var_generators)
@@ -1278,7 +1278,7 @@ class TestNetwork(unittest.TestCase):
         # Multi period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
@@ -1338,7 +1338,7 @@ class TestNetwork(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             self.assertGreaterEqual(net.num_batteries,0)
@@ -1392,7 +1392,7 @@ class TestNetwork(unittest.TestCase):
         # Multi period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             for bat in net.batteries:
@@ -1443,7 +1443,7 @@ class TestNetwork(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             self.assertEqual(net.num_vars,0)
@@ -1648,10 +1648,10 @@ class TestNetwork(unittest.TestCase):
             self.assertTrue(np.all(netMP.load_P_vio == 0))
             self.assertTrue(np.all(netMP.num_actions == 0))
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
-            netMP = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            netMP = pf.Parser(case).parse(case,self.T)
             self.assertEqual(netMP.num_periods,self.T)
 
             # add vargens
@@ -1990,7 +1990,7 @@ class TestNetwork(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             self.assertEqual(net.num_vars,0)
@@ -2147,7 +2147,7 @@ class TestNetwork(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             net.update_set_points()
@@ -2159,7 +2159,7 @@ class TestNetwork(unittest.TestCase):
         # Multi period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             for bus in net.buses:
@@ -2178,7 +2178,7 @@ class TestNetwork(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             self.assertEqual(net.num_vars,0)
@@ -2472,7 +2472,7 @@ class TestNetwork(unittest.TestCase):
         # Multi period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             self.assertEqual(net.num_vars,0)
@@ -2776,7 +2776,7 @@ class TestNetwork(unittest.TestCase):
         # Multi period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             self.assertEqual(net.num_vars,0)
@@ -2989,7 +2989,7 @@ class TestNetwork(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             self.assertGreater(net.num_buses,0)
@@ -3175,7 +3175,7 @@ class TestNetwork(unittest.TestCase):
         # Multi period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             self.assertGreater(net.num_buses,0)
@@ -3369,7 +3369,7 @@ class TestNetwork(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             lmin = np.min([l.P for l in net.loads])
@@ -3435,7 +3435,7 @@ class TestNetwork(unittest.TestCase):
         # Multi period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             lmin = np.min([l.P[0] for l in net.loads])

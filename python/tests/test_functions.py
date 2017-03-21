@@ -34,7 +34,7 @@ class TestFunctions(unittest.TestCase):
         # Multiperiod
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             nb = net.num_buses
@@ -179,7 +179,7 @@ class TestFunctions(unittest.TestCase):
         # Multiperiod
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             ng = net.num_generators
@@ -316,7 +316,7 @@ class TestFunctions(unittest.TestCase):
         # Multiperiod
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             nb = net.num_buses
@@ -456,7 +456,7 @@ class TestFunctions(unittest.TestCase):
         # Multiperiod
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # Vars
@@ -580,7 +580,7 @@ class TestFunctions(unittest.TestCase):
         # Multiperiod
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # Vars
@@ -702,7 +702,7 @@ class TestFunctions(unittest.TestCase):
         h = 1e-9
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             # Vars
@@ -824,7 +824,7 @@ class TestFunctions(unittest.TestCase):
         h = 1e-9
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # Gen curves
@@ -962,7 +962,7 @@ class TestFunctions(unittest.TestCase):
         # Single period
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             # Vars
@@ -1162,7 +1162,7 @@ class TestFunctions(unittest.TestCase):
         # Multiperiod
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # Vars
@@ -1293,7 +1293,7 @@ class TestFunctions(unittest.TestCase):
         # Multiperiod
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # Vars
@@ -1415,7 +1415,7 @@ class TestFunctions(unittest.TestCase):
         h = 1e-9
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             # Vars
@@ -1537,7 +1537,7 @@ class TestFunctions(unittest.TestCase):
         h = 1e-9
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # Vars
@@ -1673,7 +1673,7 @@ class TestFunctions(unittest.TestCase):
         h = 1e-7
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             # prices
@@ -1835,7 +1835,7 @@ class TestFunctions(unittest.TestCase):
         h = 1e-7
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # gens
@@ -2055,7 +2055,7 @@ class TestFunctions(unittest.TestCase):
                 self.assertEqual(f.Hphi.nnz,0)
 
             # Network changes
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
             # Gen powers
@@ -2145,7 +2145,7 @@ class TestFunctions(unittest.TestCase):
         # Multiperiod
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case,self.T)
+            net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
             
             # Vars

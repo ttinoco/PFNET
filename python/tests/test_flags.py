@@ -21,7 +21,7 @@ class TestFlags(unittest.TestCase):
 
         for case in test_cases.CASES:
             
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             # add vargens
@@ -203,7 +203,7 @@ class TestFlags(unittest.TestCase):
         
         for case in test_cases.CASES:
             
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             # add vargens
@@ -310,7 +310,7 @@ class TestFlags(unittest.TestCase):
 
         for case in test_cases.CASES:
             
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             num_vars = 0
@@ -337,7 +337,7 @@ class TestFlags(unittest.TestCase):
 
         for case in test_cases.CASES:
             
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             self.assertEqual(net.num_bounded,0)
@@ -388,7 +388,7 @@ class TestFlags(unittest.TestCase):
 
         for case in test_cases.CASES:
             
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
@@ -458,7 +458,7 @@ class TestFlags(unittest.TestCase):
 
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             self.assertEqual(net.num_vars,0)
@@ -497,7 +497,7 @@ class TestFlags(unittest.TestCase):
 
         for case in test_cases.CASES:
             
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             # add vargens
@@ -645,7 +645,7 @@ class TestFlags(unittest.TestCase):
 
         for case in test_cases.CASES:
             
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             self.assertRaises(KeyError,

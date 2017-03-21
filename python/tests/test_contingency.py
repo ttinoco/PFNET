@@ -26,7 +26,7 @@ class TestContingency(unittest.TestCase):
 
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             # outage init
@@ -236,7 +236,7 @@ class TestContingency(unittest.TestCase):
                         self.assertTrue(b.index in [y.index for y in bus_m3.branches_m])
 
             # do it again
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             # generator single contingencies
@@ -417,7 +417,7 @@ class TestContingency(unittest.TestCase):
 
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             # variables
@@ -511,7 +511,7 @@ class TestContingency(unittest.TestCase):
 
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             # variables
@@ -622,7 +622,7 @@ class TestContingency(unittest.TestCase):
 
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             # variables
@@ -719,7 +719,7 @@ class TestContingency(unittest.TestCase):
 
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             for branch in net.branches:
@@ -811,7 +811,7 @@ class TestContingency(unittest.TestCase):
 
         for case in test_cases.CASES:
 
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
             cont = pf.Contingency()

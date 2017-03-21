@@ -117,13 +117,14 @@ cdef class Parser(ParserBase):
         
         Parameters
         ----------
-        ext : string
+        ext : string (extension of sample filename)
         """
 
         pass
 
     def __cinit__(self,ext):
 
+        ext = ext.split('.')[-1]
         if ext == 'mat':
             self._c_parser = cparser.MAT_PARSER_new()
         elif ext == 'art':

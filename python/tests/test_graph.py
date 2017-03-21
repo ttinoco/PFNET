@@ -21,7 +21,7 @@ class TestGraph(unittest.TestCase):
 
         for case in test_cases.CASES:
             
-            net = pf.Parser(case.split('.')[-1]).parse(case)
+            net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
             
             g = pf.Graph(net)
