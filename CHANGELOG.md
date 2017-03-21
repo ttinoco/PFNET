@@ -18,6 +18,10 @@ Unreleased
 * CustomFunction class for creating functions written in python that work with the C library.
 * CustomConstraint class for creating constraints written in python that work with the C library.
 * Changed constraint (file) names PF and BOUND to ACPF and NBOUND.
+* Separated netowrk and parser.
+* (Generic) Parser class constructor takes file extension for convenience.
+* Format-specific parsers for mat,raw,art files (ParserMAT,ParserRAW,ParserART).
+* CustomParser class for creating parsers writting in python that work with the C library.
 
 Version 1.2.8
 -------------
@@ -26,7 +30,7 @@ Version 1.2.8
 * Autotools build system (automatic detection of raw_parser, graphviz, python-based parser).
 * Travis continuous integration.
 * Readthedocs-based documentation.
-* Fixed mpc2mat and parser_MAT gen cost ordering. 
+* Fixed mpc2mat and parser_MAT gen cost ordering.
 
 Version 1.2.7
 -------------
