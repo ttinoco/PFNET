@@ -4,22 +4,18 @@
 Extensions
 **********
 
+.. _extend_parser:
+
+Adding a Parser
+===============
+
 .. _extend_func:
 
-Adding Function
-===============
+Adding a Function
+=================
 
 .. _extend_constr:
 
-Adding Constraint
-=================
+Adding a Constraint
+===================
 
-.. _extend_parser:
-
-Adding Parser
-=============
-
-.. _extend_pyparser:
-
-Adding Parser Written in Python
-===============================

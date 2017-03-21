@@ -12,7 +12,7 @@ Dependencies
 The PFNET C library has the following optional dependencies:
 
 * `Graphviz`_ (libgvc >= 2.38)
-* Raw parser (libraw_parser >= 1.2.2)
+* Raw parser (libraw_parser >= 1.2.3)
 
 .. _start_download:
 
@@ -34,7 +34,7 @@ Installing PFNET requires typing the following commands in the root directory of
   make check
   sudo make install
 
-If raw parser is available, the environment variable ``RAW_PARSER`` should point to the root directory of that library. 
+If raw parser is available, the library should be placed in the ``lib`` directory. 
 
 .. _start_docs:
 
