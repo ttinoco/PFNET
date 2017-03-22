@@ -23,7 +23,7 @@ other_bus = net.get_bus_by_number(bus.number)
 
 print(bus == other_bus)
 
-reg_buses = [b for b in net.buses if b.is_regulated_by_gen()]
+reg_buses = [bus for bus in net.buses if bus.is_regulated_by_gen()]
 
 print(len(reg_buses), net.get_num_buses_reg_by_gen())
 
@@ -59,7 +59,7 @@ print(shunt.index == 0)
 
 net.add_vargens(net.get_gen_buses(), 50., 50., 5, 0.05)
 
-print(net.num_var_generators == len([b for b in net.buses if b.generators]))
+print(net.num_var_generators == len([bus for bus in net.buses if bus.generators]))
 
 vargen = net.get_vargen(3)
 

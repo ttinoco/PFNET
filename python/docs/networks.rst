@@ -75,12 +75,12 @@ For convenience, a list of all the buses in the network is contained in the :dat
 
 Buses in a network can have different properties. For example, some buses can be slack buses and others can have their voltage magnitudes regulated by generators, tap-changing transformers, or switched shunt devices. The :class:`Bus <pfnet.Bus>` class provides methods for checking whether a bus has specific properties. The following example shows how to get a list of all the buses whose voltage magnitudes are regulated by generators::
 
-  >>> reg_buses = [b for b in net.buses if b.is_regulated_by_gen()]
+  >>> reg_buses = [bus for bus in net.buses if bus.is_regulated_by_gen()]
 
   >>> print len(reg_buses), net.get_num_buses_reg_by_gen()
   5 5
 
-A bus also has information about the devices that are connected to it or that are regulating its voltage magnitude. For example, the attributes :data:`gens <pfnet.Bus.gens>` and :data:`reg_trans <pfnet.Bus.reg_trans>` contain a list of generators connected to the bus and a list of tap-changing transformers regulating its voltage magnitude, respectively.
+A bus also has information about the devices that are connected to it or that are regulating its voltage magnitude. For example, the attributes :data:`generators <pfnet.Bus.generators>` and :data:`reg_trans <pfnet.Bus.reg_trans>` contain a list of generators connected to the bus and a list of tap-changing transformers regulating its voltage magnitude, respectively.
 
 .. _net_branch:
 
@@ -154,7 +154,7 @@ Loads
 
 Loads in a power network are objects of type :class:`Load <pfnet.Load>`. As with other components, the :data:`index <pfnet.Load.index>` attribute is used to identify a load in the network. A list of all the loads in the network is contained in the :data:`loads <pfnet.Network.loads>` attribute of the :class:`Network <pfnet.Network>` class.
 
-Similar to generators, the active and reactive powers that a load consumes from the bus to which it is connected are obtained from the :data:`P <pfnet.Load.P>` and :data:`Q <pfnet.Load.Q>` attributes of the :class:`Load <pfnet.Load>` class. They are also given in units of per unit :data:`system base power <pfnet.Network.base_power>`.
+As with generators, the active and reactive powers that a load consumes from the bus to which it is connected are obtained from the :data:`P <pfnet.Load.P>` and :data:`Q <pfnet.Load.Q>` attributes of the :class:`Load <pfnet.Load>` class. They are also given in units of per unit :data:`system base power <pfnet.Network.base_power>`.
 
 .. _net_vargen:
 
@@ -163,18 +163,18 @@ Variable Generators
 
 Variable generators in a power network are objects of type :class:`VarGenerator <pfnet.VarGenerator>`. They represent non-dispatchable energy sources such as wind generators or farms and photovoltaic power plants. As with other components, the :data:`index <pfnet.VarGenerator.index>` attribute is used to identify a variable generator in the network. In addition to the :data:`index <pfnet.VarGenerator.index>` attribute, a :data:`name <pfnet.VarGenerator.name>` attribute is also available, which can be used to extract a specific variable generator from the network using the :class:`Network <pfnet.Network>` class method :func:`get_vargen_by_name() <pfnet.Network.get_vargen_by_name>`. A list of all the variable generators in the network is also contained in the :data:`var_generators <pfnet.Network.var_generators>` attribute of the :class:`Network <pfnet.Network>` class.
 
-Similar to generators, the active and reactive powers produced by a variable generator are obtained from the :data:`P <pfnet.VarGenerator.P>` and :data:`Q <pfnet.VarGenerator.Q>` attributes of the :class:`VarGenerator <pfnet.VarGenerator>` class in units of per unit :data:`system base power <pfnet.Network.base_power>`. This is the output of the device in the absence of uncertainty. When there is uncertainty, the output of the device is subject to variations about :data:`P <pfnet.VarGenerator.P>` that have a standard deviation given by the attribute :data:`P_std <pfnet.VarGenerator.P_std>`. Output limits of a variable generator are given by the :data:`P_min <pfnet.VarGenerator.P_min>`, :data:`P_max <pfnet.VarGenerator.P_max>`, :data:`Q_min <pfnet.VarGenerator.Q_min>`, and :data:`Q_max <pfnet.VarGenerator.Q_max>` attributes.
+As with generators and loads, the active and reactive powers produced by a variable generator are obtained from the :data:`P <pfnet.VarGenerator.P>` and :data:`Q <pfnet.VarGenerator.Q>` attributes of the :class:`VarGenerator <pfnet.VarGenerator>` class in units of per unit :data:`system base power <pfnet.Network.base_power>`. This is the output of the device in the absence of uncertainty. When there is uncertainty, the output of the device is subject to variations about these values. Output limits of a variable generator are given by the attributes :data:`P_min <pfnet.VarGenerator.P_min>`, :data:`P_max <pfnet.VarGenerator.P_max>`, :data:`Q_min <pfnet.VarGenerator.Q_min>`, and :data:`Q_max <pfnet.VarGenerator.Q_max>`.
 
 The output of variable generators in a network is subject to random variations that can be correlated, especially for devices that are "nearby". The method :func:`create_vargen_P_sigma() <pfnet.Network.create_vargen_P_sigma>` of the :class:`Network <pfnet.Network>` class allows constructing a covariance matrix for these variations based on a "correlation distance" ``N`` and a given correlation coefficient. The cross-covariance between the variation of two devices that are connected to buses that are less than ``N`` branches away from each other is set such that it is consistent with the given correlation coefficient.
 
-Lastly, since many power network input files do not have variable generator information, these devices can be added to the network by using the :func:`add_vargens() <pfnet.Network.add_vargens>` method of the :class:`Network <pfnet.Network>` class.
+Lastly, since many power network input files do not have variable generator information, these devices can be manually added to a network using the :func:`add_vargens() <pfnet.Network.add_vargens>` method of the :class:`Network <pfnet.Network>` class.
 
 .. _net_bat:
 
 Batteries
 ---------
 
-Batteries are objects of type :class:`Battery <pfnet.Battery>`. In addition to an :data:`index <pfnet.Battery.index>` field, these objects contain information such as energy level :data:`E <pfnet.Battery.E>`, charging power :data:`P <pfnet.Battery.P>`, and more.  
+Batteries are objects of type :class:`Battery <pfnet.Battery>` and have an :data:`index <pfnet.Battery.index>` attribute like all the other network components. Other important attributes of these objects are energy level :data:`E <pfnet.Battery.E>` and charging power :data:`P <pfnet.Battery.P>`.  
 
 .. _net_properties:
 
@@ -205,7 +205,7 @@ Names           Description                                                     
 ``num_actions`` Number of control adjustments (greater than 2% of control range)  unitless
 =============== ================================================================= ========
 
-All of these properties are attributes of the :class:`Network <pfnet.Network>` class. If there is a change in the network, the class method :func:`update_properties() <pfnet.Network.update_properties>` needs to be called in order for the network properties to reflect the change. The following example shows how to update and extract properties::
+All of these properties are attributes of the :class:`Network <pfnet.Network>` class. If there is a change in the network, *e.g.*, the voltage magnitude of a bus changes, the class method :func:`update_properties() <pfnet.Network.update_properties>` needs to be called in order for the network properties to reflect the change. The following example shows how to update and extract properties::
 
   >>> print net.bus_v_max
   1.09
