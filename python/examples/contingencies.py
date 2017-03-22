@@ -9,7 +9,6 @@
 # Power Networks - Contingencies
 
 import pfnet
-import numpy as np
 
 net = pfnet.ParserMAT().parse('../../data/ieee14.mat')
 

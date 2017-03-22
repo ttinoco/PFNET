@@ -236,7 +236,7 @@ Variables
 
 Network quantities can be specified to be ``variables``. This is useful to represent network quantities with vectors and turn the network properties described above as functions of these vectors.
 
-To set network quantities as variables, the :class:`Network <pfnet.Network>` class method :func:`set_flags() <pfnet.Network.set_flags>` is used. This method takes as arguments a :ref:`component type <ref_net_obj>`, one or more :ref:`flag types <ref_net_flag>`, one or more ``component properties``, and one or more ``component quantities``.
+To set network quantities as variables, the :class:`Network <pfnet.Network>` class method :func:`set_flags() <pfnet.Network.set_flags>` is used. This method takes as arguments a :ref:`component name <ref_net_obj>`, one or more :ref:`flag names <ref_net_flag>`, one or more ``component properties``, and one or more ``component quantities``.
 
 **Component properties** are component-specific. They can be combined into a list to make properties more complex and target a specific subset of components of a given type. More information can be found in the following sections:
 
@@ -258,10 +258,9 @@ To set network quantities as variables, the :class:`Network <pfnet.Network>` cla
 
 The following example shows how to set as variables all the voltage magnitudes and angles of buses regulated by generators::
 
-  >>> import pfnet as pf
+  >>> import pfnet
 
-  >>> net = pf.Network()
-  >>> net.load('ieee14.mat')
+  >>> net = pfnet.ParserMAT().parse('ieee14.mat')
 
   >>> print net.num_vars
   0
@@ -288,7 +287,7 @@ Once variables have been set, the :ref:`vector <ref_vec>` containing all the cur
 
 The network components that have quantities set as variables have indices that can be used to locate these quantities in the vector of all variable values::
 
-  >>> bus = [b for b in net.buses if b.is_reg_by_gen()][0]
+  >>> bus = [bus for bus in net.buses if bus.is_reg_by_gen()][0]
 
   >>> print bus.has_flags('variable','voltage magnitude')
   True
@@ -318,7 +317,7 @@ A vector of variable values can be used to update the corresponding network quan
   >>> print bus.v_mag
   1.20
 
-As we will seen in later, variables are also useful for constructing network optimization problems.
+As will be seen later, variables are also useful for constructing network optimization problems.
 
 The class method :func:`get_var_values() <pfnet.Network.get_var_values>` can also be used to get upper or lower limits of the variables. To do this, a valid :ref:`variable value option <ref_var_values>` must be passed to this method.
 
@@ -330,7 +329,7 @@ In addition to the class method :func:`set_flags() <pfnet.Network.set_flags>`, w
   ...     if bus.index % 3 == 0:
   ...         net.set_flags_of_component(bus,'variable','voltage magnitude')
 
-  >>> print net.num_vars, len([b for b in net.buses if b.index % 3 == 0]), net.num_buses
+  >>> print net.num_vars, len([bus for bus in net.buses if bus.index % 3 == 0]), net.num_buses
   5 5 14
 
 .. _net_var_projections:
@@ -338,13 +337,12 @@ In addition to the class method :func:`set_flags() <pfnet.Network.set_flags>`, w
 Projections
 ===========
 
-As explained above, once the network variables have been set, a vector with the current values of the selected variables is obtained with the class method :func:`get_var_values() <pfnet.Network.get_var_values>`. To extract subvectors that contain values of specific variables, projection matrices can be used. These :ref:`matrices <ref_mat>` can be obtained using the class method :func:`get_var_projection() <pfnet.Network.get_var_projection>`, which take as arguments a :ref:`component type <ref_net_obj>` and one or more ``component quantities``, *e.g.*, :ref:`bus quantities <ref_bus_q>`. The next example sets the variables of the network to be the bus voltage magnitudes and angles of all the buses, extracts the vector of values of all variables, and then extracts two subvectors having only voltage magnitudes and only voltage angles, respectively::
+As explained above, once the network variables have been set, a vector with the current values of the selected variables is obtained with the class method :func:`get_var_values() <pfnet.Network.get_var_values>`. To extract subvectors that contain values of specific variables, projection matrices can be used. These :ref:`matrices <ref_mat>` can be obtained using the class method :func:`get_var_projection() <pfnet.Network.get_var_projection>`, which takes as arguments a :ref:`component name <ref_net_obj>` and one or more ``component quantities``, *e.g.*, :ref:`bus quantities <ref_bus_q>`. The next example sets the variables of the network to be the bus voltage magnitudes and angles of all the buses, extracts the vector of values of all variables, and then extracts two subvectors having only voltage magnitudes and only voltage angles, respectively::
 
+  >>> import pfnet
   >>> import numpy as np
-  >>> import pfnet as pf
 
-  >>> net = pf.Network()
-  >>> net.load('ieee14.mat')
+  >>> net = pfnet.ParserMAT().parse('ieee14.mat')
 
   >>> net.set_flags('bus',
   ...               'variable',
@@ -383,10 +381,9 @@ Contingencies
 
 PFNET provides a convenient way to specify and analyze network contingencies. A contingency is represented by an object of type :class:`Contingency <pfnet.Contingency>`, and is characterized by one or more :class:`generator <pfnet.Generator>` or :class:`branch <pfnet.Branch>` outages. The lists of generator and branch outages of a contingency can be specified at construction, or by using the class methods :func:`add_gen_outage() <pfnet.Contingency.add_gen_outage>` and :func:`add_branch_outage() <pfnet.Contingency.add_branch_outage>`, respectively. The following example shows how to construct a contingency::
 
-  >>> import pfnet as pf
+  >>> import pfnet
 
-  >>> net = pf.Network()
-  >>> net.load('ieee14.mat')
+  >>> pfnet.ParserMAT().parse('ieee14.mat')
 
   >>> gen = net.get_gen(3)
   >>> branch = net.get_branch(2)
@@ -396,16 +393,15 @@ PFNET provides a convenient way to specify and analyze network contingencies. A 
   >>> print c1.num_gen_outages, c1.num_branch_outages
   1 1
 
-Once a contingency has been constructed, it can be applied and later cleared. This is done using the class methods :func:`apply() <pfnet.Contingency.apply>` and :func:`clear() <pfnet.Contingency.clear>`. The :func:`apply() <pfnet.Contingency.apply>` function sets the specified generator and branches on outage and disconnects them from the network. Voltage regulation and other controls provided by generator or transformers on outage are lost. The :func:`clear() <pfnet.Contingency.clear>` function undoes the changes made by the :func:`apply() <pfnet.Contingency.apply>` function. The following example shows how to apply and clear contingencies, and illustrates some of the side effects::
+Once a contingency has been constructed, it can be applied and later cleared. This is done using the class methods :func:`apply() <pfnet.Contingency.apply>` and :func:`clear() <pfnet.Contingency.clear>`. The :func:`apply() <pfnet.Contingency.apply>` method sets the specified generator and branches on outage and disconnects them from the network. Voltage regulation and other controls provided by generators or transformers on outage are lost. The :func:`clear() <pfnet.Contingency.clear>` method undoes the changes made by the :func:`apply() <pfnet.Contingency.apply>` method. The following example shows how to apply and clear contingencies, and illustrates some of the side effects::
 
   >>> print c1.has_gen_outage(gen), c1.has_branch_outage(branch)
   True True
 
   >>> gen_bus = gen.bus
   >>> branch_bus = branch.bus_k
-  >>> branch_bus = branch.bus_from # deprecated
 
-  >>> # generator and branch connected to buses
+  >>> # generator and branch are connected to buses
   >>> print gen in gen_bus.gens, branch in branch_bus.branches
   True True
 
@@ -414,7 +410,7 @@ Once a contingency has been constructed, it can be applied and later cleared. Th
   >>> print gen.is_on_outage(), branch.is_on_outage()
   True True
 
-  >>> # generator and branch disconnected from buses
+  >>> # generator and branch are disconnected from buses
   >>> print gen in gen_bus.gens, branch in branch_bus.branches
   False False
 
@@ -423,7 +419,7 @@ Once a contingency has been constructed, it can be applied and later cleared. Th
   >>> print gen.is_on_outage(), branch.is_on_outage()
   False False
 
-  >>> # generator and branch connected to buses again
+  >>> # generator and branch are connected to buses again
   >>> print gen in gen_bus.gens, branch in branch_bus.branches
   True True
 
@@ -432,14 +428,16 @@ Once a contingency has been constructed, it can be applied and later cleared. Th
 Multiple Time Periods
 =====================
 
-PFNET can also be used to represent and analyze power networks over multiple time periods. By default, the networks created using :class:`Network() <pfnet.Network>`, as in all the examples above, are static. To consider multiple time periods, an argument needs to be passed to the class constructor::
+PFNET can also be used to represent and analyze power networks over multiple time periods. By default, the networks created using the :ref:`parsers <parsers>`, as in all the examples above, are static. To consider multiple time periods, an argument needs to be passed to the :func:`parse <pfnet.Parser>` method of a :class:`Parser <pfnet.ParserBase>`::
 
-  >>> net = pf.Network(5)
+  >>> net = pfnet.ParserMAT().parse('ieee14.mat',5)
 
   >>> print net.num_periods
   5
 
-In "multi-period" networks, certain quantities vary over time and hence are represented by vectors. Examples of such quantities are the :ref:`network properties <net_properties>`, generators powers, load powers, battery energy levels, bus voltages, etc. The example below shows how to set the load profile over the time periods and extract the maximum active power mismatches in the network at each time::
+In "multi-period" networks, certain quantities vary over time and hence are represented by vectors. Examples of such quantities are the :ref:`network properties <net_properties>`, generators powers, load powers, battery energy levels, bus voltage magnitudes, etc. The example below shows how to set the load profile over the time periods and extract the maximum active power mismatches in the network at each time::
+
+  >>> import numpy as np
 
   >>> for load in net.loads:
   ...     load.P = np.random.rand(5)

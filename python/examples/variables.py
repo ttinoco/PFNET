@@ -27,7 +27,7 @@ print(type(values))
 
 print(values.shape)
 
-bus = [b for b in net.buses if b.is_regulated_by_gen()][0]
+bus = [bus for bus in net.buses if bus.is_regulated_by_gen()][0]
 
 print(bus.has_flags('variable','voltage magnitude'))
 
@@ -54,4 +54,4 @@ for bus in net.buses:
     if bus.index % 3 == 0:
         net.set_flags_of_component(bus,'variable','voltage magnitude')
 
-print(net.num_vars, len([b for b in net.buses if b.index % 3 == 0]), net.num_buses)
+print(net.num_vars, len([bus for bus in net.buses if bus.index % 3 == 0]), net.num_buses)
