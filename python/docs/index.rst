@@ -24,6 +24,7 @@ PFNET is released under the BSD 2-clause license.
    Power Networks<networks>
    Visualization<graph>
    Optimization Problems<problems>
+   Extensions<extensions>
    API Reference<reference>
 
 **Contributors (alphabetical)**
