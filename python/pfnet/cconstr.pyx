@@ -282,7 +282,7 @@ cdef class ConstraintBase:
 
     property name:
         """ Constraint name (string). """
-        def __get__(self): return cconstr.CONSTR_get_name(self._c_constr)
+        def __get__(self): return cconstr.CONSTR_get_name(self._c_constr).decode('UTF-8')
         def __set__(self,name): 
             name = name.encode('UTF-8')
             cconstr.CONSTR_set_name(self._c_constr,name)

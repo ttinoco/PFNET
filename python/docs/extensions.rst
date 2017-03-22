@@ -4,7 +4,7 @@
 Extensions
 **********
 
-This section describes how to extend PFNET using Python.
+This section describes how to add custom parsers, functions, and constraints to PFNET.
 
 .. _ext_parser:
 
