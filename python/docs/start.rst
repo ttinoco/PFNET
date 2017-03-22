@@ -56,7 +56,7 @@ As a simple example of how to use the PFNET Python module, consider the task of 
   >>> import pfnet
   >>> import numpy as np
 
-  >>> net = pfnet.ParserMAT().parse('../../data/ieee14.mat')
+  >>> net = pfnet.ParserMAT().parse('ieee14.mat')
 
   >>> print np.average([bus.degree for bus in net.buses])
   2.86
