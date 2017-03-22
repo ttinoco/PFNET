@@ -13,7 +13,7 @@
 
 #include <stdlib.h>
 #include "net.h"
-#include "config.h"
+#include "pfnet_config.h"
 
 #if defined(HAVE_GRAPHVIZ_GVC_H) && defined(HAVE_LIBGVC) && defined(HAVE_LIBCGRAPH)
 #define HAVE_GRAPHVIZ 1

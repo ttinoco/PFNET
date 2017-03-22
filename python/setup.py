@@ -15,11 +15,23 @@ from distutils.core import setup, Extension
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--libdirs', dest='libdirs', action='store',nargs='*',default=[])
+parser.add_argument('--incdirs', dest='incdirs', action='store',nargs='*',default=[])
 args,unknown = parser.parse_known_args()
 sys.argv = [sys.argv[0]] + unknown
 
+if args.libdirs:
+    library_dirs=args.libdirs
+    extra_link_args=["-Wl,-rpath,%s" %s for s in args.libdirs]
+else:
+    library_dirs=[]
+    extra_link_args=["-Wl,-rpath,/usr/local/lib"]
+if args.incdirs:
+    include_dirs=[np.get_include()]+args.incdirs
+else:
+    include_dirs=[np.get_include(),"../include"]
+
 setup(name='PFNET',
-      version='1.2.8',
+      version='1.2.9',
       license='BSD 2-clause license',
       description='Power Flow Network Library',
       author='Tomas Tinoco De Rubira',
@@ -31,8 +43,9 @@ setup(name='PFNET',
                 'pfnet.constraints'],
       ext_modules=cythonize([Extension("pfnet.cpfnet", 
                                        [os.path.join("pfnet","cpfnet.pyx")],
-                                       library_dirs=args.libdirs,
+                                       include_dirs=include_dirs,
+                                       library_dirs=library_dirs,
                                        libraries=["pfnet"],
                                        extra_compile_args=[],
-                                       extra_link_args=['-Wl,-rpath,%s' %s for s in args.libdirs]+["-Wl,-rpath,/usr/local/lib"],
-                                       include_dirs=["../include",np.get_include()])]))
+                                       extra_link_args=extra_link_args)]))
+

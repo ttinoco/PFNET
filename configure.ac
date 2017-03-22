@@ -5,7 +5,7 @@
 AC_INIT([PFNET], [1.2.9], [ttinoco5687@gmail.com])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_SRCDIR([src/net/net.c])
-AC_CONFIG_HEADERS([include/pfnet/config.h])
+AC_CONFIG_HEADERS([include/pfnet/pfnet_config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 # Add libtools

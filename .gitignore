@@ -36,6 +36,8 @@ config.sub
 depcomp
 include/pfnet/config.h
 include/pfnet/config.h.in
+include/pfnet/pfnet_config.h
+include/pfnet/pfnet_config.h.in
 include/pfnet/stamp-h1
 install-sh
 libtool

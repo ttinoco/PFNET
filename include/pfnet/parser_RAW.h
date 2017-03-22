@@ -12,7 +12,7 @@
 #define __PARSER_RAW_HEADER__
 
 #include "parser.h"
-#include "config.h"
+#include "pfnet_config.h"
 
 // Interface
 Parser* RAW_PARSER_new(void);

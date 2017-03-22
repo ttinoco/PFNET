@@ -5,6 +5,8 @@ ACLOCAL_AMFLAGS = -I m4
 # local paths for includes
 inc_path = $(top_srcdir)/include/pfnet
 
+nobase_nodist_include_HEADERS = $(inc_path)/pfnet_config.h
+
 # libraries
 lib_LTLIBRARIES = libpfnet.la
 

@@ -15,10 +15,10 @@ make
 make check
 make install
 ls $PFNET/build/lib
+ls $PFNET/build/include/pfnet
 cd ../../../
 ./clean.sh
-ls $PFNET/build/lib
-python setup.py build_ext --inplace --libdirs=$PFNET/build/lib
+python setup.py build_ext --inplace --libdirs=$PFNET/build/lib --incdirs=$PFNET/build/include
 ls pfnet
 python -c "import pfnet; assert True"
 cd docs
