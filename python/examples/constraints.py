@@ -1,16 +1,16 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
-import sys
-import pfnet as pf
+# Optimization Problems - Constraints
 
-net = pf.Network()
-net.load(sys.argv[1])
+import pfnet
+
+net = pfnet.ParserMAT().parse('../../data/ieee14.mat')
 
 net.set_flags('bus',
               'variable',
@@ -19,9 +19,9 @@ net.set_flags('bus',
 
 print(net.num_vars == 2*net.num_buses)
 
-constr = pf.Constraint('AC power balance',net)
+constr = pfnet.Constraint('AC power balance',net)
 
-print(constr.type == 'AC power balance')
+print(constr.name == 'AC power balance')
 
 x = net.get_var_values()
 

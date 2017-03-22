@@ -1,20 +1,19 @@
-# ***************************************************#
+# **************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
-# ***************************************************#
+# **************************************************#
 
-import sys
-import pfnet as pf
+# Power Networks - Multiperiod
+
+import pfnet
 import numpy as np
 
-net = pf.Network(5)
+net = pfnet.ParserMAT().parse('../../data/ieee14.mat',5)
 
 print(net.num_periods)
-
-net.load(sys.argv[1])
 
 net.show_components()
 

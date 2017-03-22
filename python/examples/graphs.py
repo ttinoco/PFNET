@@ -1,24 +1,23 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
-import sys
-import pfnet as pf
+# Visualization - Overview
 
-net = pf.Network()
+import pfnet
 
-net.load(sys.argv[1])
+net = pfnet.ParserMAT().parse('../../data/ieee14.mat')
 
-g = pf.Graph(net)
+g = pfnet.Graph(net)
 
 for bus in net.buses:
     g.set_node_property(bus,"label",str(bus.number))
 
-g.color_nodes_by_mismatch(pf.BUS_MIS_REACTIVE)
+g.color_nodes_by_mismatch(pfnet.BUS_MIS_REACTIVE)
 
 g.set_layout()
 

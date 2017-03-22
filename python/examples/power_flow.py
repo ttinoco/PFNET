@@ -1,4 +1,4 @@
-import pfnet as pf
+import pfnet
 from numpy import hstack
 from numpy.linalg import norm
 from scipy.sparse import bmat
@@ -32,11 +32,11 @@ def NRsolve(net):
                   'regulator',
                   'reactive power')
 
-    p = pf.Problem()
+    p = pfnet.Problem()
     p.set_network(net)
-    p.add_constraint('AC power balance')  
-    p.add_constraint('generator active power participation')  
-    p.add_constraint('generator reactive power participation')
+    p.add_constraint(pfnet.Constraint('AC power balance',net))  
+    p.add_constraint(pfnet.Constraint('generator active power participation',net))
+    p.add_constraint(pfnet.Constraint('generator reactive power participation',net))
     p.analyze()
     
     x = p.get_init_point()

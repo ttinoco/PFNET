@@ -1,16 +1,16 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
-import sys
-import pfnet as pf
+# Optimization Problems - Functions
 
-net = pf.Network()
-net.load(sys.argv[1])
+import pfnet
+
+net = pfnet.ParserMAT().parse('../../data/ieee14.mat')
 
 net.set_flags('bus',
               'variable',
@@ -19,9 +19,9 @@ net.set_flags('bus',
 
 print(net.num_vars == net.num_buses)
 
-func = pf.Function('voltage magnitude regularization',0.3,net)
+func = pfnet.Function('voltage magnitude regularization',0.3,net)
 
-print(func.type == 'voltage magnitude regularization')
+print(func.name == 'voltage magnitude regularization')
 
 print(func.weight)
 

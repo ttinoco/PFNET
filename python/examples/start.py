@@ -1,20 +1,21 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
-import sys
-from pfnet import Network
-from ex6 import NRsolve
+# Getting started - Installation
 
-net = Network()
-net.load(sys.argv[1])
+import pfnet
+print(pfnet.info)
 
-print('%.2e %.2e' %(net.bus_P_mis, net.bus_Q_mis))
+# Getting Started - Example
 
-NRsolve(net)
+import pfnet
+import numpy as np
 
-print('%.2e %.2e' %(net.bus_P_mis, net.bus_Q_mis))
+net = pfnet.ParserMAT().parse('../../data/ieee14.mat')
+
+print(np.average([bus.degree for bus in net.buses]))

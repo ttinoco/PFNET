@@ -1,21 +1,23 @@
 # ***************************************************#
-# This file is part of PFNET.                       #
-#                                                   #
-# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
-#                                                   #
-# PFNET is released under the BSD 2-clause license. #
+# This file is part of PFNET.                        #
+#                                                    #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.   #
+#                                                    #
+# PFNET is released under the BSD 2-clause license.  #
 # ***************************************************#
 
-import sys
-from pfnet import Network
+# Power Networks - Loading Data
 
-net = Network()
+import pfnet
+
+net = pfnet.ParserMAT().parse('../../data/ieee14.mat')
 print(net.num_buses)
 
-net.load(sys.argv[1])
-print(net.num_buses)
+# Power Networks - Components
 
 net.show_components()
+
+# Power Networks - Buses 
 
 bus = net.get_bus(10)
 
@@ -29,6 +31,8 @@ reg_buses = [b for b in net.buses if b.is_regulated_by_gen()]
 
 print(len(reg_buses), net.get_num_buses_reg_by_gen())
 
+# Power Networks - Branches
+
 branch = net.get_branch(5)
 
 print(branch.index == 5)
@@ -36,6 +40,8 @@ print(branch.index == 5)
 lines = [br for br in net.branches if br.is_line()]
 
 print(len(lines), net.get_num_lines())
+
+# Power Networks - Generators
 
 gen = net.get_gen(2)
 
@@ -47,9 +53,13 @@ print(len(slack_gens), net.get_num_slack_gens())
 
 print(sum([g.P for g in net.generators]) * net.base_power)
 
+# Power Networks - Shunt Devices
+
 shunt = net.get_shunt(0)
 
 print(shunt.index == 0)
+
+# Power Networks - Variable Generators
 
 net.add_vargens(net.get_gen_buses(), 50., 50., 5, 0.05)
 
@@ -60,6 +70,8 @@ vargen = net.get_vargen(3)
 print(vargen.index == 3)
 
 print(vargen.P, vargen.P_std, vargen.P_max)
+
+# Power Networks - Properties
 
 print(net.bus_v_max)
 

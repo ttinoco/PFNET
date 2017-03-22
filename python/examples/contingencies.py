@@ -1,22 +1,22 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
-import sys
-import numpy as np
-import pfnet as pf
+# Power Networks - Contingencies
 
-net = pf.Network()
-net.load(sys.argv[1])
+import pfnet
+import numpy as np
+
+net = pfnet.ParserMAT().parse('../../data/ieee14.mat')
 
 gen = net.get_gen(3)
 branch = net.get_branch(2)
 
-c1 = pf.Contingency(gens=[gen],branches=[branch])
+c1 = pfnet.Contingency(gens=[gen],branches=[branch])
 
 print(c1.num_gen_outages, c1.num_branch_outages)
 
