@@ -6,15 +6,11 @@
 # PFNET is released under the BSD 2-clause license.  #
 # ***************************************************#
 
-# Power Networks - Loading Data
+# Power Networks - Components
 
 import pfnet
 
 net = pfnet.ParserMAT().parse('../../data/ieee14.mat')
-print(net.num_buses)
-
-# Power Networks - Components
-
 net.show_components()
 
 # Power Networks - Buses 

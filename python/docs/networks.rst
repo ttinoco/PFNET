@@ -4,41 +4,27 @@
 Power Networks
 **************
 
-This section describes how to create and analyze power networks using PFNET.
+This section describes how to use and analyze power networks in PFNET.
 
 .. _net_overview:
 
 Overview
 ========
 
-Power networks in PFNET are represented by objects of type :class:`Network <pfnet.Network>`. These objects are initially empty and need to be loaded with data contained in specific types of files. Once the data is loaded, the network and its components can be analyzed, visualized, and used to construct network optimization problems. After a network optimization problem is solved, the network object can be updated with the solution to perform further analysis.
+Power networks in PFNET are represented by objects of type :class:`Network <pfnet.Network>`. These objects are created from power network data files using a :ref:`Parser <parsers>`, as described in the previous section. Once the network is created, it can be analyzed, visualized, and used to construct network optimization problems. 
 
 An important attribute of the :class:`Network <pfnet.Network>` class is :data:`base_power <pfnet.Network.base_power>`. This quantity, which has units of MVA, is useful for converting power quantities in per unit system base power to MW or MVAr.
-
-.. _net_loading:
-
-Loading Data
-============
-
-Power networks can be loaded with data using the :func:`load() <pfnet.Network.load>` class method. This method takes as input the filename of a supported power flow file. Information about the data parsers available in PFNET and the supported file formats can be found in Section :ref:`parsers`. The following simple example shows how to load data from a power flow ``mat`` file::
-
-  >>> from pfnet import Network
-
-  >>> net = Network()
-  >>> print net.num_buses
-  0
-
-  >>> net.load('ieee14.mat')
-  >>> print net.num_buses
-  14
 
 .. _net_components:
 
 Components
 ==========
 
-Power networks have several components. These are :ref:`buses <net_bus>`, :ref:`branches <net_branch>`, :ref:`generators <net_gen>`, :ref:`shunt devices <net_shunt>`, :ref:`loads <net_load>`, :ref:`variable generators <net_vargen>` (*i.e.*, non-dispatchable), and :ref:`batteries <net_bat>`. For obtaining an overview of the components that form a network, the class method :func:`show_components() <pfnet.Network.show_components>` can be used::
+Power networks have several components. These are :ref:`buses <net_bus>`, :ref:`branches <net_branch>`, :ref:`generators <net_gen>`, :ref:`shunt devices <net_shunt>`, :ref:`loads <net_load>`, :ref:`variable generators <net_vargen>` (*i.e.*, non-dispatchable), and :ref:`batteries <net_bat>`. For obtaining an overview of the components that form a network, the class method :func:`show_components() <pfnet.Network.show_components>` can be used, as illustrated in the following example::
 
+  >>> import pfnet
+
+  >>> net = pfnet.ParserMAT().parse('ieee14.mat')
   >>> net.show_components()
 
   Network Components
@@ -65,6 +51,8 @@ Power networks have several components. These are :ref:`buses <net_bus>`, :ref:`
     P adjust       : 0
   vargens          : 0
   batteries        : 0
+
+Again, this example assumes that the Python interpreter was started from the ``data`` directory of the PFNET library, where the sample case ``ieee14.mat`` is located. This will be assumed for the rest of this tutorial.
 
 .. _net_bus:
 
