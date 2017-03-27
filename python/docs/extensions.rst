@@ -46,7 +46,7 @@ To add a new function to PFNET, one should create a subclass of the :class:`Cust
 
 * :func:`init(self) <pfnet.CustomFunction.init>`
 
-  * This method initializes any function data. 
+  * This method initializes any custom function data. 
 
 * :func:`count_step(self,branch,t) <pfnet.CustomFunction.count_step>`
 
@@ -64,7 +64,7 @@ To add a new function to PFNET, one should create a subclass of the :class:`Cust
 
   * This method is called for every :class:`network branch <pfnet.Branch>` and time period combination, and is responsible for storing the structural or constant information of the Hessian matrix :data:`Hphi <pfnet.FunctionBase.Hphi>` (lower triangular part). 
 
-* :func:`eval_step(self,branch,t,values) <pfnet.CustomFunction.eval_step>`
+* :func:`eval_step(self,branch,t,x) <pfnet.CustomFunction.eval_step>`
 
   * This method is called for every :class:`network branch <pfnet.Branch>` and time period combination, and is responsible for updating the values of :data:`phi <pfnet.FunctionBase.phi>`, :data:`gphi <pfnet.FunctionBase.gphi>`, and :data:`Hphi <pfnet.FunctionBase.Hphi>` using the given vector of variable values. 
 
@@ -72,9 +72,45 @@ A template for creating a custom function is provided below:
 
 .. literalinclude:: ../examples/custom_function_template.py
 
-An example of a function that computes the quadratic active power generation cost can be found in `here <https://github.com/ttinoco/PFNET/blob/master/python/pfnet/functions/dummy_function.py>`_. 
+An example of a custom function that computes the quadratic active power generation cost can be found in `here <https://github.com/ttinoco/PFNET/blob/master/python/pfnet/functions/dummy_function.py>`_. 
 
 .. _ext_constr:
 
 Adding a Constraint
 ===================
+
+Similarly, to add a new constraint to PFNET, one should create a subclass of the :class:`CustomConstraint <pfnet.CustomConstraint>` class. Currently, this documentation covers linear constraints only. Adding nonlinear constraints and constraints that use auxiliary variables will be documented in the near future. The subclass needs to define the following seven methods:
+
+* :func:`init(self) <pfnet.CustomConstraint.init>`
+
+  * This method initializes any custom constraint data. 
+
+* :func:`count_step(self,branch,t) <pfnet.CustomConstraint.count_step>`
+
+  * This method is called for every :class:`network branch <pfnet.Branch>` and time period combination, and is responsible for updating the counters :data:`A_row <pfnet.ConstraintBase.A_row>`, :data:`A_nnz <pfnet.ConstraintBase.A_nnz>`, :data:`G_row <pfnet.ConstraintBase.G_row>`, and :data:`G_nnz <pfnet.ConstraintBase.G_nnz>`, which count the number of rows and nonzero elements of the matrices :data:`A <pfnet.ConstraintBase.A>` and :data:`G <pfnet.ConstraintBase.G>`, respectively. 
+
+* :func:`clear(self) <pfnet.CustomConstraint.clear>`
+
+  * This method resets the value of any attribute that is updated by the other methods, such as the counters :data:`A_row <pfnet.ConstraintBase.A_row>`, :data:`A_nnz <pfnet.ConstraintBase.A_nnz>`, :data:`G_row <pfnet.ConstraintBase.G_row>`, and :data:`G_nnz <pfnet.ConstraintBase.G_nnz>`. If used, the array of flags :class:`bus_counted <pfnet.ConstraintBase.bus_counted>`, which has size equal to the number of buses times the number of time periods and can be used to keep track of which buses have already being processed, should also be reset here. 
+
+* :func:`allocate(self) <pfnet.CustomConstraint.allocate>`
+
+  * This method allocates the vectors :data:`b <pfnet.ConstraintBase.b>`, :data:`l <pfnet.ConstraintBase.l>`, and :data:`u <pfnet.ConstraintBase.u>`, and matrices :data:`A <pfnet.ConstraintBase.A>` and :data:`G <pfnet.ConstraintBase.G>` using the methods :func:`set_b() <pfnet.ConstraintBase.set_b>`, :func:`set_l() <pfnet.ConstraintBase.set_l>`, :func:`set_u() <pfnet.ConstraintBase.set_u>`, :func:`set_A() <pfnet.ConstraintBase.set_A>`, and :func:`set_G() <pfnet.ConstraintBase.set_G>`, respectively.
+
+* :func:`analyze_step(self,branch,t) <pfnet.CustomConstraint.analyze_step>`
+
+  * This method is called for every :class:`network branch <pfnet.Branch>` and time period combination, and is responsible for storing the structural or constant information of the matrices :data:`A <pfnet.ConstraintBase.A>` and :data:`G <pfnet.ConstraintBase.G>`. 
+
+* :func:`eval_step(self,branch,t,x) <pfnet.CustomConstraint.eval_step>`
+
+  * This method is used for evaluating nonlinear constraints and will be documented in the near future.
+
+* :func:`store_sens_step(self,branch,t,sA,sf,sGu,sGl) <pfnet.CustomConstraint.store_sens_step>`
+
+  * This method is used for storing constraint sensitivity information in the :ref:`network components <net_components>` and will be documented in the near future.
+
+A template for creating a custom constraint is provided below:
+
+.. literalinclude:: ../examples/custom_constraint_template.py
+
+An example of a custom constraint that constructs the DC power balance equations can be found in `here <https://github.com/ttinoco/PFNET/blob/master/python/pfnet/constraints/dummy_constraint.py>`_. 

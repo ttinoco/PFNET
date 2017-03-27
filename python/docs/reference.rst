@@ -510,6 +510,7 @@ Constraint Classes
 
 .. autoclass:: pfnet.Constraint
 .. autoclass:: pfnet.CustomConstraint
+   :members:
 
 .. _ref_problem:
 

@@ -66,7 +66,7 @@ class DummyGenCost(CustomFunction):
                         self.Hphi_nnz = self.Hphi_nnz+1
             self.bus_counted[index] = True
 
-    def eval_step(self,branch,t,values):
+    def eval_step(self,branch,t,x):
 
         T = self.network.num_periods
         buses = [branch.bus_k,branch.bus_m]
@@ -82,7 +82,7 @@ class DummyGenCost(CustomFunction):
                     Q1 = gen.cost_coeff_Q1
                     Q2 = gen.cost_coeff_Q2
                     if gen.has_flags('variable','active power'):
-                        P = values[gen.index_P[t]]
+                        P = x[gen.index_P[t]]
                         self.gphi[gen.index_P[t]] = Q1+2.*Q2*P
                     else:
                         P = gen.P[t]
