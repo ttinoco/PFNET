@@ -49,7 +49,14 @@ cdef class ParserBase:
             cparser.PARSER_del(self._c_parser)
             self._c_parser = NULL
             self._alloc = False
-    
+
+    def init(self):
+        """
+        Initializes parser data.
+        """
+        
+        pass
+
     def parse(self,filename,num_periods=1):
         """
         Parsers data file.

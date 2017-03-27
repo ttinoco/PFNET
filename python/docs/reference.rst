@@ -28,7 +28,7 @@ Parser
 ======
 
 .. autoclass:: pfnet.ParserBase
-   :members:
+   :members: 
 
 .. autoclass:: pfnet.Parser
 .. autoclass:: pfnet.ParserMAT
