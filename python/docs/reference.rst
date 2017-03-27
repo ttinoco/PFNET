@@ -470,6 +470,7 @@ Function Classes
 
 .. autoclass:: pfnet.Function
 .. autoclass:: pfnet.CustomFunction
+   :members:
 
 .. _ref_constr:
 
