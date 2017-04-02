@@ -78,7 +78,7 @@ struct MAT_Parser {
   // Error
   BOOL error_flag;
   char error_string[MAT_PARSER_BUFFER_SIZE];
-  
+
   // State
   int state;
   int field;
@@ -133,7 +133,7 @@ void MAT_PARSER_init(Parser* p) {
 
   // Allocate
   MAT_Parser* parser = (MAT_Parser*)malloc(sizeof(MAT_Parser));
-  
+
   // Error
   parser->error_flag = FALSE;
   strcpy(parser->error_string,"");
@@ -143,7 +143,7 @@ void MAT_PARSER_init(Parser* p) {
   parser->field = 0;
   parser->record = 0;
   MAT_PARSER_clear_token(parser);
-  
+
   // Options
   parser->output_level = 0;
 
@@ -170,7 +170,7 @@ void MAT_PARSER_init(Parser* p) {
   // Util
   parser->util = NULL;
   parser->util_list = NULL;
-  
+
   // Set parser
   PARSER_set_data(p,(void*)parser);
 }
@@ -185,7 +185,7 @@ Net* MAT_PARSER_parse(Parser* p, char* filename, int num_periods) {
   size_t bytes_read;
   MAT_Parser* parser;
   char buffer[MAT_PARSER_BUFFER_SIZE];
-  
+
   // Parser
   parser = (MAT_Parser*)PARSER_get_data(p);
   if (!parser)
@@ -234,15 +234,15 @@ Net* MAT_PARSER_parse(Parser* p, char* filename, int num_periods) {
   // Check error
   if (PARSER_has_error(p))
     return NULL;
-  
+
   // Network
   net = NET_new(num_periods);
   MAT_PARSER_load(parser,net);
-  
+
   // Check error
   if (parser->error_flag)
     PARSER_set_error(p,parser->error_string);
- 
+
   // Return
   return net;
 }
@@ -301,7 +301,7 @@ void MAT_PARSER_free(Parser* p) {
 
   // Local variables
   MAT_Parser* parser = (MAT_Parser*)PARSER_get_data(p);
-  
+
   // No parser
   if (!parser)
     return;
@@ -313,7 +313,7 @@ void MAT_PARSER_free(Parser* p) {
 
   // Gens
   LIST_map(MAT_Gen,parser->gen_list,gen,next,{free(gen);});
-  
+
   // Branches
   LIST_map(MAT_Branch,parser->branch_list,branch,next,{free(branch);});
 
@@ -358,7 +358,7 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
   int num_periods;
   int len_gen_list;
   int len_cost_list;
-  
+
   // Check inputs
   if (!parser || !net)
     return;
@@ -371,7 +371,7 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
     parser->error_flag = TRUE;
     return;
   }
-  
+
   // Base
   NET_set_base_power(net,parser->base_power);
 
@@ -394,6 +394,8 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
     BUS_set_v_ang(bus,mat_bus->Va*PI/180.,0); // radians
     BUS_set_v_max(bus,mat_bus->maxVm);        // per unit
     BUS_set_v_min(bus,mat_bus->minVm);        // per unit
+    BUS_set_v_norm_hi_limit(bus,mat_bus->maxVm);        // per unit
+    BUS_set_v_norm_lo_limit(bus,mat_bus->minVm);        // per unit
     if (mat_bus->type == MAT_BUS_TYPE_SL)
       BUS_set_slack(bus,TRUE);
     NET_bus_hash_number_add(net,bus);
