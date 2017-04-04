@@ -11,8 +11,12 @@ classdef Bus < handle
     v_mag = 0;
     v_ang = 0;
     v_set = 0;
-    v_max = 0;
-    v_min = 0;
+    v_max_reg = 0;
+    v_min_reg = 0;
+    v_max_norm = 0;
+    v_min_norm = 0;
+    v_max_emer = 0;
+    v_min_emer = 0;
     gens = {};
 
   end
@@ -69,7 +73,7 @@ classdef Bus < handle
     function idx = get.index_v_ang(bus)
       idx = calllib('libpfnet','BUS_get_index_v_ang',bus.c_bus);
     end
-    
+
     function num = get.number(bus)
       num = calllib('libpfnet','BUS_get_number',bus.c_bus);
     end
@@ -90,12 +94,28 @@ classdef Bus < handle
       v = calllib('libpfnet','BUS_get_v_set',bus.c_bus);
     end
 
-    function v = get.v_max(bus)
-      v = calllib('libpfnet','BUS_get_v_max',bus.c_bus);
+    function v = get.v_max_reg(bus)
+      v = calllib('libpfnet','BUS_get_v_max_reg',bus.c_bus);
     end
 
-    function v = get.v_min(bus)
-      v = calllib('libpfnet','BUS_get_v_min',bus.c_bus);
+    function v = get.v_min_reg(bus)
+      v = calllib('libpfnet','BUS_get_v_min_reg',bus.c_bus);
+    end
+
+    function v = get.v_max_norm(bus)
+      v = calllib('libpfnet','BUS_get_v_max_norm',bus.c_bus);
+    end
+
+    function v = get.v_min_norm(bus)
+      v = calllib('libpfnet','BUS_get_v_min_norm',bus.c_bus);
+    end
+
+    function v = get.v_max_emer(bus)
+      v = calllib('libpfnet','BUS_get_v_max_emer',bus.c_bus);
+    end
+
+    function v = get.v_min_emer(bus)
+      v = calllib('libpfnet','BUS_get_v_min_emer',bus.c_bus);
     end
 
     function gens = get.gens(bus)
@@ -108,9 +128,8 @@ classdef Bus < handle
         g = calllib('libpfnet','GEN_get_next',g);
         i = i + 1;
       end
-    end      
-    
+    end
+
   end
 
 end
-

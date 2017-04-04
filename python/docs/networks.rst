@@ -11,7 +11,7 @@ This section describes how to use and analyze power networks in PFNET.
 Overview
 ========
 
-Power networks in PFNET are represented by objects of type :class:`Network <pfnet.Network>`. These objects are created from power network data files using a :ref:`Parser <parsers>`, as described in the previous section. Once the network is created, it can be analyzed, visualized, and used to construct network optimization problems. 
+Power networks in PFNET are represented by objects of type :class:`Network <pfnet.Network>`. These objects are created from power network data files using a :ref:`Parser <parsers>`, as described in the previous section. Once the network is created, it can be analyzed, visualized, and used to construct network optimization problems.
 
 An important attribute of the :class:`Network <pfnet.Network>` class is :data:`base_power <pfnet.Network.base_power>`. This quantity, which has units of MVA, is useful for converting power quantities in per unit system base power to MW or MVAr.
 
@@ -174,7 +174,7 @@ Lastly, since many power network input files do not have variable generator info
 Batteries
 ---------
 
-Batteries are objects of type :class:`Battery <pfnet.Battery>` and have an :data:`index <pfnet.Battery.index>` attribute like all the other network components. Other important attributes of these objects are energy level :data:`E <pfnet.Battery.E>` and charging power :data:`P <pfnet.Battery.P>`.  
+Batteries are objects of type :class:`Battery <pfnet.Battery>` and have an :data:`index <pfnet.Battery.index>` attribute like all the other network components. Other important attributes of these objects are energy level :data:`E <pfnet.Battery.E>` and charging power :data:`P <pfnet.Battery.P>`.
 
 .. _net_properties:
 
@@ -183,27 +183,27 @@ Properties
 
 A :class:`Network <pfnet.Network>` object has several quantities or ``properties`` that provide important information about the state of the network. The following table provides a description of each of these properties.
 
-=============== ================================================================= ========
-Names           Description                                                       Units
-=============== ================================================================= ========
-``bus_v_max``   Maximum bus voltage magnitude                                     per unit
-``bus_v_min``   Minimum bus voltage magnitude                                     per unit
-``bus_v_vio``   Maximum bus voltage magnitude limit violation                     per unit
-``bus_P_mis``   Maximum absolute bus active power mismatch                        MW
-``bus_Q_mis``   Maximum absolute bus reactive power mismatch                      MVAr
-``gen_P_cost``  Total active power generation cost                                $/hour
-``gen_v_dev``   Maximum set point deviation of generator-regulated voltage        per unit
-``gen_Q_vio``   Maximum generator reactive power limit violation                  MVAr
-``gen_P_vio``   Maximum generator active power limit violation                    MW
-``tran_v_vio``  Maximum band violation of transformer-regulated voltage           per unit
-``tran_r_vio``  Maximum tap ratio limit violation of tap-changing transformer     unitless
-``tran_p_vio``  Maximum phase shift limit violation of phase-shifting transformer radians
-``shunt_v_vio`` Maximum band violation of shunt-regulated voltage                 per unit
-``shunt_b_vio`` Maximum susceptance limit violation of switched shunt device      per unit
-``load_P_util`` Total active power consumption utility                            $/hour
-``load_P_vio``  Maximum load active power limit violation                         MW
-``num_actions`` Number of control adjustments (greater than 2% of control range)  unitless
-=============== ================================================================= ========
+================== ================================================================= ========
+Names              Description                                                       Units
+================== ================================================================= ========
+``bus_v_max``      Maximum bus voltage magnitude                                     per unit
+``bus_v_min``      Minimum bus voltage magnitude                                     per unit
+``bus_v_reg_vio``  Maximum bus regulated voltage magnitude limit violation           per unit
+``bus_P_mis``      Maximum absolute bus active power mismatch                        MW
+``bus_Q_mis``      Maximum absolute bus reactive power mismatch                      MVAr
+``gen_P_cost``     Total active power generation cost                                $/hour
+``gen_v_dev``      Maximum set point deviation of generator-regulated voltage        per unit
+``gen_Q_vio``      Maximum generator reactive power limit violation                  MVAr
+``gen_P_vio``      Maximum generator active power limit violation                    MW
+``tran_v_vio``     Maximum band violation of transformer-regulated voltage           per unit
+``tran_r_vio``     Maximum tap ratio limit violation of tap-changing transformer     unitless
+``tran_p_vio``     Maximum phase shift limit violation of phase-shifting transformer radians
+``shunt_v_vio``    Maximum band violation of shunt-regulated voltage                 per unit
+``shunt_b_vio``    Maximum susceptance limit violation of switched shunt device      per unit
+``load_P_util``    Total active power consumption utility                            $/hour
+``load_P_vio``     Maximum load active power limit violation                         MW
+``num_actions``    Number of control adjustments (greater than 2% of control range)  unitless
+================== ================================================================= ========
 
 All of these properties are attributes of the :class:`Network <pfnet.Network>` class. If there is a change in the network, *e.g.*, the voltage magnitude of a bus changes, the class method :func:`update_properties() <pfnet.Network.update_properties>` needs to be called in order for the network properties to reflect the change. The following example shows how to update and extract properties::
 

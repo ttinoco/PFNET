@@ -110,7 +110,7 @@ class TestNetwork(unittest.TestCase):
             # prop type
             self.assertTrue(isinstance(net.bus_v_max,np.ndarray))
             self.assertTrue(isinstance(net.bus_v_min,np.ndarray))
-            self.assertTrue(isinstance(net.bus_v_vio,np.ndarray))
+            self.assertTrue(isinstance(net.bus_v_reg_vio,np.ndarray))
             self.assertTrue(isinstance(net.bus_P_mis,np.ndarray))
             self.assertTrue(isinstance(net.bus_Q_mis,np.ndarray))
             self.assertTrue(isinstance(net.gen_P_cost,np.ndarray))
@@ -129,7 +129,7 @@ class TestNetwork(unittest.TestCase):
             # prop shape
             self.assertTupleEqual(net.bus_v_max.shape,(self.T,))
             self.assertTupleEqual(net.bus_v_min.shape,(self.T,))
-            self.assertTupleEqual(net.bus_v_vio.shape,(self.T,))
+            self.assertTupleEqual(net.bus_v_reg_vio.shape,(self.T,))
             self.assertTupleEqual(net.bus_P_mis.shape,(self.T,))
             self.assertTupleEqual(net.bus_Q_mis.shape,(self.T,))
             self.assertTupleEqual(net.gen_P_cost.shape,(self.T,))
@@ -426,13 +426,13 @@ class TestNetwork(unittest.TestCase):
                 if bus.is_regulated_by_tran():
                     self.assertGreater(len(bus.reg_trans),0)
                     self.assertTrue(any([t.is_tap_changer_v() for t in bus.reg_trans]))
-                    self.assertGreaterEqual(bus.v_max,bus.v_min)
+                    self.assertGreaterEqual(bus.v_max_reg,bus.v_min_reg)
                     for tran in bus.reg_trans:
                         self.assertTrue(tran.is_tap_changer_v())
                         self.assertEqual(tran.reg_bus.number,bus.number)
                         if bus.is_regulated_by_gen():
-                            self.assertGreaterEqual(bus.v_set,bus.v_min) # gen control set point
-                            self.assertLessEqual(bus.v_set,bus.v_max)    # is inside tran control range
+                            self.assertGreaterEqual(bus.v_set,bus.v_min_reg) # gen control set point
+                            self.assertLessEqual(bus.v_set,bus.v_max_reg)    # is inside tran control range
                     for tran in bus.reg_trans:
                         self.assertEqual(bus.number,tran.reg_bus.number)
                         if bus.number == tran.bus_k.number: # reg bus in "k"/ from side -> neg sensitivity
@@ -443,13 +443,13 @@ class TestNetwork(unittest.TestCase):
                 # regulated by shunt
                 if bus.is_regulated_by_shunt():
                     self.assertGreater(len(bus.reg_shunts),0)
-                    self.assertGreaterEqual(bus.v_max,bus.v_min)
+                    self.assertGreaterEqual(bus.v_max_reg,bus.v_min_reg)
                     for shunt in bus.reg_shunts:
                         self.assertTrue(shunt.is_switched_v())
                         self.assertEqual(shunt.reg_bus.number,bus.number)
                         if bus.is_regulated_by_gen():
-                            self.assertGreaterEqual(bus.v_set,bus.v_min) # gen control set point
-                            self.assertLessEqual(bus.v_set,bus.v_max)    # is inside tran control range
+                            self.assertGreaterEqual(bus.v_set,bus.v_min_reg) # gen control set point
+                            self.assertLessEqual(bus.v_set,bus.v_max_reg)    # is inside tran control range
 
                 # branches
                 self.assertTrue(isinstance(bus.branches_k,list))
@@ -839,7 +839,7 @@ class TestNetwork(unittest.TestCase):
 
             x0 = net.get_var_values()
             xR = x0 + np.random.random(x0.size)/10.
-            
+
             for branch in net.branches:
 
                 # compute branch flows
@@ -1596,7 +1596,7 @@ class TestNetwork(unittest.TestCase):
 
             self.assertEqual(net.bus_v_max,0.)
             self.assertEqual(net.bus_v_min,0.)
-            self.assertEqual(net.bus_v_vio,0.)
+            self.assertEqual(net.bus_v_reg_vio,0.)
             self.assertEqual(net.bus_P_mis,0.)
             self.assertEqual(net.bus_Q_mis,0.)
             self.assertEqual(net.gen_P_cost,0.)
@@ -1614,7 +1614,7 @@ class TestNetwork(unittest.TestCase):
 
             self.assertEqual(netMP.bus_v_max.shape[0],self.T)
             self.assertEqual(netMP.bus_v_min.shape[0],self.T)
-            self.assertEqual(netMP.bus_v_vio.shape[0],self.T)
+            self.assertEqual(netMP.bus_v_reg_vio.shape[0],self.T)
             self.assertEqual(netMP.bus_P_mis.shape[0],self.T)
             self.assertEqual(netMP.bus_Q_mis.shape[0],self.T)
             self.assertEqual(netMP.gen_P_cost.shape[0],self.T)
@@ -1632,7 +1632,7 @@ class TestNetwork(unittest.TestCase):
 
             self.assertTrue(np.all(netMP.bus_v_max == 0))
             self.assertTrue(np.all(netMP.bus_v_min == 0))
-            self.assertTrue(np.all(netMP.bus_v_vio == 0))
+            self.assertTrue(np.all(netMP.bus_v_reg_vio == 0))
             self.assertTrue(np.all(netMP.bus_P_mis == 0))
             self.assertTrue(np.all(netMP.bus_Q_mis == 0))
             self.assertTrue(np.all(netMP.gen_P_cost == 0))
@@ -1698,7 +1698,7 @@ class TestNetwork(unittest.TestCase):
 
             self.assertGreater(net.bus_v_max,0.)
             self.assertGreater(net.bus_v_min,0.)
-            self.assertGreaterEqual(net.bus_v_vio,0.)
+            self.assertGreaterEqual(net.bus_v_reg_vio,0.)
             self.assertGreater(net.bus_P_mis,0.)
             self.assertGreater(net.bus_Q_mis,0.)
             self.assertGreaterEqual(net.gen_P_cost,0.)
@@ -1716,7 +1716,7 @@ class TestNetwork(unittest.TestCase):
 
             self.assertEqual(net.bus_v_max,net.get_properties()['bus_v_max'])
             self.assertEqual(net.bus_v_min,net.get_properties()['bus_v_min'])
-            self.assertEqual(net.bus_v_vio,net.get_properties()['bus_v_vio'])
+            self.assertEqual(net.bus_v_reg_vio,net.get_properties()['bus_v_reg_vio'])
             self.assertEqual(net.bus_P_mis,net.get_properties()['bus_P_mis'])
             self.assertEqual(net.bus_Q_mis,net.get_properties()['bus_Q_mis'])
 
@@ -1749,7 +1749,7 @@ class TestNetwork(unittest.TestCase):
                 bus = net.get_bus(i)
                 vmax = np.maximum(bus.v_mag,vmax)
                 vmin = np.minimum(bus.v_mag,vmin)
-                dv = np.max([bus.v_mag-bus.v_max,bus.v_min-bus.v_mag,0.])
+                dv = np.max([bus.v_mag-bus.v_max_reg,bus.v_min_reg-bus.v_mag,0.])
                 if dv > vvio:
                     vvio = dv
                 if bus.is_regulated_by_tran():
@@ -1763,14 +1763,14 @@ class TestNetwork(unittest.TestCase):
                         vdev = np.abs(bus.v_mag-bus.v_set)
             self.assertLess(abs(net.bus_v_max-vmax),1e-10)
             self.assertLess(abs(net.bus_v_min-vmin),1e-10)
-            self.assertLess(abs(net.bus_v_vio-vvio),1e-10)
+            self.assertLess(abs(net.bus_v_reg_vio-vvio),1e-10)
             self.assertLess(abs(net.tran_v_vio-tvvio),1e-10)
             self.assertLess(abs(net.shunt_v_vio-svvio),1e-10)
             self.assertLess(abs(net.gen_v_dev-vdev),1e-10)
 
             self.assertTrue(np.all(np.abs(netMP.bus_v_max-vmax) < 1e-10))
             self.assertTrue(np.all(np.abs(netMP.bus_v_min-vmin) < 1e-10))
-            self.assertTrue(np.all(np.abs(netMP.bus_v_vio-vvio) < 1e-10))
+            self.assertTrue(np.all(np.abs(netMP.bus_v_reg_vio-vvio) < 1e-10))
             self.assertTrue(np.all(np.abs(netMP.tran_v_vio-tvvio) < 1e-10))
             self.assertTrue(np.all(np.abs(netMP.shunt_v_vio-svvio) < 1e-10))
             self.assertTrue(np.all(np.abs(netMP.gen_v_dev-vdev) < 1e-10))
@@ -1952,7 +1952,7 @@ class TestNetwork(unittest.TestCase):
 
             self.assertEqual(net.bus_v_max,0.)
             self.assertEqual(net.bus_v_min,0.)
-            self.assertEqual(net.bus_v_vio,0.)
+            self.assertEqual(net.bus_v_reg_vio,0.)
             self.assertEqual(net.bus_P_mis,0.)
             self.assertEqual(net.bus_Q_mis,0.)
             self.assertEqual(net.gen_P_cost,0.)
@@ -1969,7 +1969,7 @@ class TestNetwork(unittest.TestCase):
 
             self.assertTrue(np.all(netMP.bus_v_max == 0))
             self.assertTrue(np.all(netMP.bus_v_min == 0))
-            self.assertTrue(np.all(netMP.bus_v_vio == 0))
+            self.assertTrue(np.all(netMP.bus_v_reg_vio == 0))
             self.assertTrue(np.all(netMP.bus_P_mis == 0))
             self.assertTrue(np.all(netMP.bus_Q_mis == 0))
             self.assertTrue(np.all(netMP.gen_P_cost == 0))
@@ -3107,7 +3107,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(pf.BRANCH_INF_RATIO,100.)
             self.assertEqual(pf.SHUNT_INF_SUSC,1000.)
             for bus in net.buses:
-                self.assertEqual(x[bus.index_v_mag],bus.v_max)
+                self.assertEqual(x[bus.index_v_mag],bus.v_max_reg)
                 self.assertEqual(x[bus.index_v_ang],pf.BUS_INF_V_ANG)
                 self.assertEqual(x[bus.index_y],pf.BUS_INF_V_MAG)
                 self.assertEqual(x[bus.index_z],pf.BUS_INF_V_MAG)
@@ -3142,7 +3142,7 @@ class TestNetwork(unittest.TestCase):
             x = net.get_var_values('lower limits')
             self.assertEqual(x.size,net.num_vars)
             for bus in net.buses:
-                self.assertEqual(x[bus.index_v_mag],bus.v_min)
+                self.assertEqual(x[bus.index_v_mag],bus.v_min_reg)
                 self.assertEqual(x[bus.index_v_ang],-pf.BUS_INF_V_ANG)
                 self.assertEqual(x[bus.index_y],0.)
                 self.assertEqual(x[bus.index_z],0.)
@@ -3298,7 +3298,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(pf.SHUNT_INF_SUSC,1000.)
             for t in range(self.T):
                 for bus in net.buses:
-                    self.assertEqual(x[bus.index_v_mag[t]],bus.v_max)
+                    self.assertEqual(x[bus.index_v_mag[t]],bus.v_max_reg)
                     self.assertEqual(x[bus.index_v_ang[t]],pf.BUS_INF_V_ANG)
                     self.assertEqual(x[bus.index_y[t]],pf.BUS_INF_V_MAG)
                     self.assertEqual(x[bus.index_z[t]],pf.BUS_INF_V_MAG)
@@ -3334,7 +3334,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(x.size,net.num_vars)
             for t in range(self.T):
                 for bus in net.buses:
-                    self.assertEqual(x[bus.index_v_mag[t]],bus.v_min)
+                    self.assertEqual(x[bus.index_v_mag[t]],bus.v_min_reg)
                     self.assertEqual(x[bus.index_v_ang[t]],-pf.BUS_INF_V_ANG)
                     self.assertEqual(x[bus.index_y[t]],0.)
                     self.assertEqual(x[bus.index_z[t]],0.)
@@ -3507,26 +3507,26 @@ def compute_branch_flows(parameters):
     -------
     flows : dict
     """
-    
+
     # Transformer tap ratios
     a_km = parameters['ratio']
     a_mk = 1.
-    
+
     # Transformer phase shift
     phi = parameters['phase']
-    
+
     # Voltage magnitude and angles
     v_k = parameters['bus_k.v_mag']
     w_k = parameters['bus_k.v_ang']
     v_m = parameters['bus_m.v_mag']
     w_m = parameters['bus_m.v_ang']
-    
+
     # Conductances
     g_km = parameters['g']
     g_k_sh = parameters['g_k']
     g_mk = parameters['g']
     g_m_sh = parameters['g_m']
-    
+
     # Susceptances
     b_km = parameters['b']
     b_k_sh = parameters['b_k']
@@ -3543,32 +3543,32 @@ def compute_branch_flows(parameters):
     sin_mk = math.sin(w_m-w_k+phi)
 
     flows = {}
-    
+
     # Flows in shunt elements of pi model
-    
+
     # P_k_sh = v_k^2*a_km^2*g_k_sh
     flows['P_k_sh'] = v_k_tap_squared * g_k_sh
-    
+
     # Q_k_sh = -v_k^2*a_km^2*b_k_sh
     flows['Q_k_sh'] = -v_k_tap_squared * b_k_sh
-    
+
     # P_m_sh = v_m^2*a_mk^2*g_m_sh
     flows['P_m_sh'] = v_m_tap_squared * g_m_sh
-    
+
     # Q_m_sh = -v_m^2*a_mk^2*b_m_sh
     flows['Q_m_sh'] = -v_m_tap_squared * b_m_sh
 
     # Flows in series elements of pi model
-    
+
     # P_km_ser = a_km^2*v_k^2*g_km - a_km*a_mk*v_k*v_m*( g_km*cos(w_k-w_m-phi) + b_km*sin(w_k-w_m-phi))
     flows['P_km_ser'] = v_k_tap_squared * g_km - v_k_v_m_tap * (g_km*cos_km + b_km*sin_km)
-    
+
     # Q_km_ser = -a_km^2*v_k^2*b_km - a_km*a_mk*v_k*v_m*( g_km*sin(w_k-w_m-phi) - b_km*cos(w_k-w_m-phi))
     flows['Q_km_ser'] = -v_k_tap_squared * b_km - v_k_v_m_tap * (g_km*sin_km - b_km*cos_km)
-    
+
     # P_mk_ser = a_mk^2*v_m^2*g_mk - a_mk*a_km*v_k*v_m*( g_mk*cos(w_k-w_m+phi) + b_mk*sin(w_k-w_m+phi))
     flows['P_mk_ser'] = v_m_tap_squared * g_mk - v_k_v_m_tap * (g_mk*cos_mk + b_mk*sin_mk)
-    
+
     # Q_mk_ser = -a_mk^2*v_m^2*b_mk - a_mk*a_km*v_k*v_m*( g_mk*sin(w_k-w_m+phi) - b_mk*cos(w_k-w_m+phi))
     flows['Q_mk_ser'] = -v_m_tap_squared * b_mk - v_k_v_m_tap * (g_mk*sin_mk - b_mk*cos_mk)
 

@@ -30,12 +30,12 @@ struct Bus {
   REAL* v_mag;        /**< @brief Voltage magnitude (p.u.) */
   REAL* v_ang;        /**< @brief Voltage angle (radians) */
   REAL* v_set;        /**< @brief Voltage magnitude set point (p.u.) */
-  REAL v_max;         /**< @brief Maximum regulated voltage magnitude (p.u.) */
-  REAL v_min;         /**< @brief Minimum regulated voltage magnitude (p.u.) */
-  REAL v_norm_hi_limit;     /**< @brief Normal voltage magnitude upper violation limit (p.u.) */
-  REAL v_norm_lo_limit;     /**< @brief Normal voltage magnitude lower violation limit (p.u.) */
-  REAL v_emer_hi_limit;     /**< @brief Emergency voltage magnitude upper violation limit (p.u.) */
-  REAL v_emer_lo_limit;     /**< @brief Emergency voltage magnitude lower violation limit (p.u.) */
+  REAL v_max_reg;     /**< @brief Maximum regulated voltage magnitude (p.u.) */
+  REAL v_min_reg;     /**< @brief Minimum regulated voltage magnitude (p.u.) */
+  REAL v_max_norm;    /**< @brief Normal maximum voltage magnitude violation limit (p.u.) */
+  REAL v_min_norm;    /**< @brief Normal minimum voltage magnitude violation limit (p.u.) */
+  REAL v_max_emer;    /**< @brief Emergency maximum voltage magnitude violation limit (p.u.) */
+  REAL v_min_emer;    /**< @brief Emergency minimum voltage magnitude violation limit (p.u.) */
 
   // Flags
   BOOL slack;        /**< @brief Flag for indicating the the bus is a slack bus */
@@ -65,8 +65,8 @@ struct Bus {
   int* index_v_ang;   /**< @brief Voltage angle index */
   int* index_y;       /**< @brief Voltage magnitude positive-deviation index */
   int* index_z;       /**< @brief Voltage magnitude negative-deviation index */
-  int* index_vl;      /**< @brief Voltage magnitude violation of v_min */
-  int* index_vh;      /**< @brief Voltage magnitude violation of v_max */
+  int* index_vl;      /**< @brief Voltage magnitude violation of v_min_reg */
+  int* index_vh;      /**< @brief Voltage magnitude violation of v_max_reg */
 
   // Sensitivities
   REAL* sens_P_balance;      /**< @brief Sensitivity of active power balance */
@@ -262,11 +262,25 @@ BOOL BUS_check(Bus* bus, BOOL verbose) {
   }
 
   // regulated voltage limits
-  if (bus->v_min > bus->v_max) {
+  if (bus->v_min_reg > bus->v_max_reg) {
     bus_ok = FALSE;
     if (verbose)
       fprintf(stderr,"bad bus regulated voltage limits\n");
   }
+
+   // normal voltage violation limits
+   if (bus->v_min_norm > bus->v_max_norm) {
+     bus_ok = FALSE;
+     if (verbose)
+       fprintf(stderr,"bad bus normal voltage violation limits\n");
+   }
+
+    // emergency voltage violation limits
+    if (bus->v_min_emer > bus->v_max_emer) {
+    bus_ok = FALSE;
+    if (verbose)
+      fprintf(stderr,"bad bus emergency voltage violation limits\n");
+    }
 
   // Reg gen number
   if (BUS_is_regulated_by_gen(bus) && BUS_get_num_reg_gens(bus) < 1) {
@@ -707,46 +721,46 @@ REAL BUS_get_v_set(Bus* bus, int t) {
     return bus->v_set[t];
 }
 
-REAL BUS_get_v_max(Bus* bus) {
+REAL BUS_get_v_max_reg(Bus* bus) {
   if (!bus)
     return 0;
   else
-    return bus->v_max;
+    return bus->v_max_reg;
 }
 
-REAL BUS_get_v_min(Bus* bus) {
+REAL BUS_get_v_min_reg(Bus* bus) {
   if (!bus)
     return 0;
   else
-    return bus->v_min;
+    return bus->v_min_reg;
 }
 
-REAL BUS_get_v_norm_hi_limit(Bus* bus) {
+REAL BUS_get_v_max_norm(Bus* bus) {
   if (!bus)
     return 0;
   else
-    return bus->v_norm_hi_limit;
+    return bus->v_max_norm;
 }
 
-REAL BUS_get_v_norm_lo_limit(Bus* bus) {
+REAL BUS_get_v_min_norm(Bus* bus) {
   if (!bus)
     return 0;
   else
-    return bus->v_norm_lo_limit;
+    return bus->v_min_norm;
 }
 
-REAL BUS_get_v_emer_hi_limit(Bus* bus) {
+REAL BUS_get_v_max_emer(Bus* bus) {
   if (!bus)
     return 0;
   else
-    return bus->v_emer_hi_limit;
+    return bus->v_max_emer;
 }
 
-REAL BUS_get_v_emer_lo_limit(Bus* bus) {
+REAL BUS_get_v_min_emer(Bus* bus) {
   if (!bus)
     return 0;
   else
-    return bus->v_emer_lo_limit;
+    return bus->v_min_emer;
 }
 
 void BUS_get_var_values(Bus* bus, Vec* values, int code) {
@@ -764,10 +778,10 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
     if (bus->vars & BUS_VAR_VMAG) {
       switch (code) {
       case UPPER_LIMITS:
-	VEC_set(values,bus->index_v_mag[t],bus->v_max);
+	VEC_set(values,bus->index_v_mag[t],bus->v_max_reg_reg);
 	break;
       case LOWER_LIMITS:
-	VEC_set(values,bus->index_v_mag[t],bus->v_min);
+	VEC_set(values,bus->index_v_mag[t],bus->v_min_reg);
 	break;
       default:
 	VEC_set(values,bus->index_v_mag[t],bus->v_mag[t]);
@@ -1226,12 +1240,12 @@ void BUS_init(Bus* bus, int num_periods) {
 
   bus->index = 0;
 
-  bus->v_max = BUS_DEFAULT_V_MAX;
-  bus->v_min = BUS_DEFAULT_V_MIN;
-  bus->v_norm_hi_limit = 0;
-  bus->v_norm_lo_limit = 0;
-  bus->v_norm_hi_limit = 0;
-  bus->v_norm_lo_limit = 0;
+  bus->v_max_reg = BUS_DEFAULT_V_MAX_REG;
+  bus->v_min_reg = BUS_DEFAULT_V_MIN_REG;
+  bus->v_max_norm = 0.0;
+  bus->v_min_norm = 0.0;
+  bus->v_max_emer = 0.0;
+  bus->v_min_emer = 0.0;
 
   bus->slack = FALSE;
   bus->fixed = 0x00;
@@ -1411,34 +1425,34 @@ void BUS_set_v_set(Bus* bus, REAL v_set, int t) {
     bus->v_set[t] = v_set;
 }
 
-void BUS_set_v_max(Bus* bus, REAL v_max) {
+void BUS_set_v_max_reg(Bus* bus, REAL v_max_reg) {
   if (bus)
-    bus->v_max = v_max;
+    bus->v_max_reg = v_max_reg;
 }
 
-void BUS_set_v_min(Bus* bus, REAL v_min) {
+void BUS_set_v_min_reg(Bus* bus, REAL v_min_reg) {
   if (bus)
-    bus->v_min = v_min;
+    bus->v_min_reg = v_min_reg;
 }
 
-void BUS_set_v_norm_hi_limit(Bus* bus, REAL v_norm_hi_limit) {
+void BUS_set_v_max_norm(Bus* bus, REAL v_max_norm) {
   if (bus)
-    bus->v_norm_hi_limit = v_norm_hi_limit;
+    bus->v_max_norm = v_max_norm;
 }
 
-void BUS_set_v_norm_lo_limit(Bus* bus, REAL v_norm_lo_limit) {
+void BUS_set_v_min_norm(Bus* bus, REAL v_min_norm) {
   if (bus)
-    bus->v_norm_lo_limit = v_norm_lo_limit;
+    bus->v_min_norm = v_min_norm;
 }
 
-void BUS_set_v_emer_hi_limit(Bus* bus, REAL v_emer_hi_limit) {
+void BUS_set_v_max_emer(Bus* bus, REAL v_max_emer) {
   if (bus)
-    bus->v_emer_hi_limit = v_emer_hi_limit;
+    bus->v_max_emer = v_max_emer;
 }
 
-void BUS_set_v_emer_lo_limit(Bus* bus, REAL v_emer_lo_limit) {
+void BUS_set_v_min_emer(Bus* bus, REAL v_min_emer) {
   if (bus)
-    bus->v_emer_lo_limit = v_emer_lo_limit;
+    bus->v_min_emer = v_min_emer;
 }
 
 void BUS_set_slack(Bus* bus, BOOL slack) {

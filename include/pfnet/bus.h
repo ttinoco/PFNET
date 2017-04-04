@@ -18,8 +18,8 @@
 #include "uthash.h"
 
 // Limits
-#define BUS_DEFAULT_V_MAX 1.1 /**< @brief Default maximum voltage magnitude. */
-#define BUS_DEFAULT_V_MIN 0.9 /**< @brief Default minimum voltage magnitude. */
+#define BUS_DEFAULT_V_MAX_REG 1.1 /**< @brief Default maximum regulated voltage magnitude. */
+#define BUS_DEFAULT_V_MIN_REG 0.9 /**< @brief Default minimum regulated voltage magnitude. */
 
 // Infinity
 #define BUS_INF_V_MAG 100. /**< @brief Infinite voltage magnitude (p.u.) */
@@ -191,12 +191,12 @@ REAL BUS_get_total_shunt_b(Bus* bus, int t);
 REAL BUS_get_v_mag(Bus* bus, int t);
 REAL BUS_get_v_ang(Bus* bus, int t);
 REAL BUS_get_v_set(Bus* bus, int t);
-REAL BUS_get_v_max(Bus* bus);
-REAL BUS_get_v_min(Bus* bus);
-REAL BUS_get_v_norm_hi_limit(Bus* bus);
-REAL BUS_get_v_norm_lo_limit(Bus* bus);
-REAL BUS_get_v_emer_hi_limit(Bus* bus);
-REAL BUS_get_v_emer_lo_limit(Bus* bus);
+REAL BUS_get_v_max_reg(Bus* bus);
+REAL BUS_get_v_min_reg(Bus* bus);
+REAL BUS_get_v_max_norm(Bus* bus);
+REAL BUS_get_v_min_norm(Bus* bus);
+REAL BUS_get_v_max_emer(Bus* bus);
+REAL BUS_get_v_min_emer(Bus* bus);
 void BUS_get_var_values(Bus* bus, Vec* values, int code);
 int BUS_get_num_vars(void* bus, unsigned char var, int t_start, int t_end);
 Vec* BUS_get_var_indices(void* bus, unsigned char var, int t_start, int t_end);
@@ -243,12 +243,12 @@ void BUS_set_price(Bus* bus, REAL price, int t);
 void BUS_set_v_mag(Bus* bus, REAL v_mag, int t);
 void BUS_set_v_ang(Bus* bus, REAL v_ang, int t);
 void BUS_set_v_set(Bus* bus, REAL v_set, int t);
-void BUS_set_v_max(Bus* bus, REAL v_max);
-void BUS_set_v_min(Bus* bus, REAL v_min);
-void BUS_set_v_norm_hi_limit(Bus* bus, REAL v_norm_hi_limit);
-void BUS_set_v_norm_lo_limit(Bus* bus, REAL v_norm_lo_limit);
-void BUS_set_v_emer_hi_limit(Bus* bus, REAL v_emer_hi_limit);
-void BUS_set_v_emer_lo_limit(Bus* bus, REAL v_emer_lo_limit);
+void BUS_set_v_max_reg(Bus* bus, REAL v_max_reg);
+void BUS_set_v_min_reg(Bus* bus, REAL v_min_reg);
+void BUS_set_v_max_norm(Bus* bus, REAL v_max_norm);
+void BUS_set_v_min_norm(Bus* bus, REAL v_min_norm);
+void BUS_set_v_max_emer(Bus* bus, REAL v_max_emer);
+void BUS_set_v_min_emer(Bus* bus, REAL v_min_emer);
 void BUS_set_slack(Bus* bus, BOOL slack);
 void BUS_set_index(Bus* bus, int index);
 int BUS_set_flags(void* bus, char flag_type, unsigned char mask, int index);

@@ -28,7 +28,7 @@ class TestConstraints(unittest.TestCase):
         np.random.seed(0)
 
     def test_constr_FIX(self):
-        
+
         # Single period
         for case in test_cases.CASES:
 
@@ -258,7 +258,7 @@ class TestConstraints(unittest.TestCase):
                 self.assertEqual(A.col[ar[0]],load.index_P)
                 self.assertEqual(b[A.row[ar[0]]],load.P)
 
-        
+
         # Multiperiods
         for case in test_cases.CASES:
 
@@ -830,13 +830,13 @@ class TestConstraints(unittest.TestCase):
                                                    'voltage angle',
                                                    'voltage magnitude deviation',
                                                    'voltage magnitude violation']))
-                    self.assertEqual(u[bus.index_v_mag],bus.v_max)
+                    self.assertEqual(u[bus.index_v_mag],bus.v_max_reg)
                     self.assertEqual(u[bus.index_v_ang],pf.BUS_INF_V_ANG)
                     self.assertEqual(u[bus.index_y],pf.BUS_INF_V_MAG)
                     self.assertEqual(u[bus.index_z],pf.BUS_INF_V_MAG)
                     self.assertEqual(u[bus.index_vl],pf.BUS_INF_V_MAG)
                     self.assertEqual(u[bus.index_vh],pf.BUS_INF_V_MAG)
-                    self.assertEqual(l[bus.index_v_mag],bus.v_min)
+                    self.assertEqual(l[bus.index_v_mag],bus.v_min_reg)
                     self.assertEqual(l[bus.index_v_ang],-pf.BUS_INF_V_ANG)
                     self.assertEqual(l[bus.index_y],0.)
                     self.assertEqual(l[bus.index_z],0.)
@@ -1139,9 +1139,9 @@ class TestConstraints(unittest.TestCase):
 
             for t in range(self.T):
                 for bus in net.buses:
-                    self.assertEqual(u[bus.index_v_mag[t]],bus.v_max)
+                    self.assertEqual(u[bus.index_v_mag[t]],bus.v_max_reg)
                     self.assertEqual(u[bus.index_v_ang[t]],pf.BUS_INF_V_ANG)
-                    self.assertEqual(l[bus.index_v_mag[t]],bus.v_min)
+                    self.assertEqual(l[bus.index_v_mag[t]],bus.v_min_reg)
                     self.assertEqual(l[bus.index_v_ang[t]],-pf.BUS_INF_V_ANG)
                 for gen in net.generators:
                     self.assertEqual(u[gen.index_P[t]],gen.P_max)
@@ -2301,8 +2301,8 @@ class TestConstraints(unittest.TestCase):
                         self.assertTrue(br.has_flags('variable','tap ratio'))
                         self.assertTrue(br.has_flags('variable','tap ratio deviation'))
                         bus = br.reg_bus
-                        fvmin = ((bus.v_mag[t]-bus.v_min) - np.sqrt((bus.v_mag[t]-bus.v_min)**2. + 2*eta))*normal
-                        fvmax = ((bus.v_max-bus.v_mag[t]) - np.sqrt((bus.v_max-bus.v_mag[t])**2. + 2*eta))*normal
+                        fvmin = ((bus.v_mag[t]-bus.v_min_reg) - np.sqrt((bus.v_mag[t]-bus.v_min_reg)**2. + 2*eta))*normal
+                        fvmax = ((bus.v_max_reg-bus.v_mag[t]) - np.sqrt((bus.v_max_reg-bus.v_mag[t])**2. + 2*eta))*normal
                         ftmax = ((br.ratio_max-br.ratio[t]) - np.sqrt((br.ratio_max-br.ratio[t])**2. + 2*eta))*normal
                         ftmin = ((br.ratio[t]-br.ratio_min) - np.sqrt((br.ratio[t]-br.ratio_min)**2. + 2*eta))*normal
                         self.assertLess(np.abs(fvmin-f[index]),1e-10*(1+np.abs(fvmin)))
@@ -2548,8 +2548,8 @@ class TestConstraints(unittest.TestCase):
                                 self.assertEqual(x0[s.index_z[t]],0.)
                                 self.assertEqual(x0[bus.index_vl[t]],0.)
                                 self.assertEqual(x0[bus.index_vh[t]],0.)
-                                fvmin = ((bus.v_mag[t]-bus.v_min) - np.sqrt((bus.v_mag[t]-bus.v_min)**2. + 2.*eta))*normal
-                                fvmax = ((bus.v_max-bus.v_mag[t]) - np.sqrt((bus.v_max-bus.v_mag[t])**2. + 2.*eta))*normal
+                                fvmin = ((bus.v_mag[t]-bus.v_min_reg) - np.sqrt((bus.v_mag[t]-bus.v_min_reg)**2. + 2.*eta))*normal
+                                fvmax = ((bus.v_max_reg-bus.v_mag[t]) - np.sqrt((bus.v_max_reg-bus.v_mag[t])**2. + 2.*eta))*normal
                                 fbmax = ((s.b_max-s.b[t]) - np.sqrt((s.b_max-s.b[t])**2. + 2*eta))*normal
                                 fbmin = ((s.b[t]-s.b_min) - np.sqrt((s.b[t]-s.b_min)**2. + 2*eta))*normal
                                 self.assertLess(np.abs(fvmin-f[index]),1e-10*(1+np.abs(fvmin)))
@@ -2857,7 +2857,7 @@ class TestConstraints(unittest.TestCase):
             # Constraint
             constr = pf.Constraint('DC power balance',net)
             self.assertEqual(constr.name,'DC power balance')
-            
+
             f = constr.f
             J = constr.J
             A = constr.A
@@ -3768,7 +3768,7 @@ class TestConstraints(unittest.TestCase):
 
             constr.analyze()
             self.assertEqual(num_Jnnz,constr.J_nnz)
-           
+
             f = constr.f
             J = constr.J
             Jbar = constr.Jbar
@@ -3778,7 +3778,7 @@ class TestConstraints(unittest.TestCase):
             Gbar = constr.Gbar
             l = constr.l
             u = constr.u
-            
+
             # After analyze
             self.assertEqual(constr.num_extra_vars,num_constr)
             self.assertTrue(type(f) is np.ndarray)
@@ -3831,7 +3831,7 @@ class TestConstraints(unittest.TestCase):
             constr.eval(x0)
             self.assertEqual(num_constr,constr.J_row)
             self.assertEqual(num_Jnnz,constr.J_nnz)
-            
+
             f = constr.f
             J = constr.J
             A = constr.A
@@ -3847,7 +3847,7 @@ class TestConstraints(unittest.TestCase):
             # After eval
             self.assertTrue(not np.any(np.isinf(f)))
             self.assertTrue(not np.any(np.isnan(f)))
-            
+
             # Cross check current magnitudes
             for t in range(net.num_periods):
                 for branch in net.branches:
@@ -3894,7 +3894,7 @@ class TestConstraints(unittest.TestCase):
                 H0 = constr.get_H_single(j)
 
                 self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
-                
+
                 H0 = (H0 + H0.T) - triu(H0)
 
                 d = np.random.randn(net.num_vars)
@@ -3902,7 +3902,7 @@ class TestConstraints(unittest.TestCase):
                 x = x0 + h*d
 
                 constr.eval(x)
-                
+
                 g1 = constr.J.tocsr()[j,:].toarray().flatten()
 
                 Hd_exact = H0*d
@@ -3935,7 +3935,7 @@ class TestConstraints(unittest.TestCase):
                 Hd_approx = (g1-g0)/h
                 error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
-            
+
     def test_constr_DUMMY(self):
 
         # Multiperiod
@@ -4004,17 +4004,17 @@ class TestConstraints(unittest.TestCase):
             # Dummy constraint
             constr = pf.constraints.DummyDCPF(net)
             self.assertEqual(constr.name,'dummy DC power balance')
-            
+
             self.assertEqual(constr.A_row,0)
             self.assertEqual(constr.A_nnz,0)
             self.assertEqual(constr.A_row,constrREF.A_row)
             self.assertEqual(constr.A_nnz,constrREF.A_nnz)
-            
+
             self.assertEqual(constr.b.size,0)
             self.assertEqual(constr.A.shape[0],0)
             self.assertEqual(constr.A.shape[1],0)
             self.assertEqual(constr.A.nnz,0)
-           
+
             constrREF.analyze()
             constr.analyze()
 
@@ -4022,12 +4022,12 @@ class TestConstraints(unittest.TestCase):
             self.assertGreater(constr.A_nnz,0)
             self.assertEqual(constr.A_row,constrREF.A_row)
             self.assertEqual(constr.A_nnz,constrREF.A_nnz)
-            
+
             self.assertTrue(np.all(constr.b == constrREF.b))
             self.assertTrue(np.all(constr.A.row == constrREF.A.row))
             self.assertTrue(np.all(constr.A.col == constrREF.A.col))
             self.assertTrue(np.all(constr.A.data == constrREF.A.data))
-            
+
             self.assertTupleEqual(constr.l.shape,(0,))
             self.assertTupleEqual(constr.u.shape,(0,))
             self.assertTupleEqual(constr.f.shape,(0,))
