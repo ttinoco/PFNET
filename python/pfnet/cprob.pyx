@@ -170,6 +170,8 @@ cdef class Problem:
         cdef np.ndarray[double,mode='c'] x = var_values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if var_values.size else NULL
         cprob.PROB_eval(self._c_prob,v)
+        if cprob.PROB_has_error(self._c_prob):
+            raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 
     def store_sensitivities(self,sA,sf,sGu,sGl):
         """
