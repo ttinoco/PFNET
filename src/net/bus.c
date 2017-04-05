@@ -778,7 +778,7 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
     if (bus->vars & BUS_VAR_VMAG) {
       switch (code) {
       case UPPER_LIMITS:
-	VEC_set(values,bus->index_v_mag[t],bus->v_max_reg_reg);
+	VEC_set(values,bus->index_v_mag[t],bus->v_max_reg);
 	break;
       case LOWER_LIMITS:
 	VEC_set(values,bus->index_v_mag[t],bus->v_min_reg);
