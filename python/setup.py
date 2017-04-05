@@ -6,8 +6,6 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
-from Cython.Build import cythonize
-from setuptools import setup, Extension
 import numpy
 import os
 import sys
@@ -33,28 +31,6 @@ if args.incdirs:
     include_dirs=[np.get_include()]+args.incdirs
 else:
     include_dirs=[np.get_include(),"../include"]
-
-if pfnet_args:
-    # static link
-    pfnet_lib = pfnet_args[-1]
-    extra_objects.append(pfnet_lib)
-else:
-    # dynamic link
-    libraries.append("pfnet")
-
-    # raw-parser (not needed if static link)
-    if no_raw_parser:
-        extra_compile_args.append("-DNO_RAW_PARSER")
-    else:
-        libraries.append('raw_parser')
-
-ext = Extension("pfnet.cpfnet",
-                [os.path.join("pfnet", 'cpfnet.pyx')],
-                libraries=libraries,
-                include_dirs=include_dirs,
-                library_dirs=library_dirs,
-                extra_objects=extra_objects,
-                extra_compile_args=extra_compile_args)
 
 setup(name='PFNET',
       version='1.2.9',

@@ -331,6 +331,16 @@ class TestNetwork(unittest.TestCase):
                 bus.v_ang = 0.123456
                 self.assertEqual(bus.v_ang,0.123456)
 
+                # v max/min norm/emer violation limits set get
+                bus.v_max_norm = 1.234567
+                self.assertEqual(bus.v_max_norm,1.234567)
+                bus.v_min_norm = 0.901234
+                self.assertEqual(bus.v_min_norm,0.901234)
+                bus.v_max_emer = 1.234567
+                self.assertEqual(bus.v_max_emer,1.234567)
+                bus.v_min_emer = 0.901234
+                self.assertEqual(bus.v_min_emer,0.901234)
+
                 # Comparisons
                 self.assertFalse(bus is same_bus)
                 self.assertTrue(bus == same_bus)
