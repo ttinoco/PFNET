@@ -1242,10 +1242,10 @@ void BUS_init(Bus* bus, int num_periods) {
 
   bus->v_max_reg = BUS_DEFAULT_V_MAX_REG;
   bus->v_min_reg = BUS_DEFAULT_V_MIN_REG;
-  bus->v_max_norm = 0.0;
-  bus->v_min_norm = 0.0;
-  bus->v_max_emer = 0.0;
-  bus->v_min_emer = 0.0;
+  bus->v_max_norm = BUS_DEFAULT_V_MAX_LIMIT;
+  bus->v_min_norm = BUS_DEFAULT_V_MIN_LIMIT;
+  bus->v_max_emer = BUS_DEFAULT_V_MAX_LIMIT;
+  bus->v_min_emer = BUS_DEFAULT_V_MIN_LIMIT;
 
   bus->slack = FALSE;
   bus->fixed = 0x00;
