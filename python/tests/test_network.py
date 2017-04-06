@@ -3517,26 +3517,26 @@ def compute_branch_flows(parameters):
     -------
     flows : dict
     """
-
+    
     # Transformer tap ratios
     a_km = parameters['ratio']
     a_mk = 1.
-
+    
     # Transformer phase shift
     phi = parameters['phase']
-
+    
     # Voltage magnitude and angles
     v_k = parameters['bus_k.v_mag']
     w_k = parameters['bus_k.v_ang']
     v_m = parameters['bus_m.v_mag']
     w_m = parameters['bus_m.v_ang']
-
+    
     # Conductances
     g_km = parameters['g']
     g_k_sh = parameters['g_k']
     g_mk = parameters['g']
     g_m_sh = parameters['g_m']
-
+    
     # Susceptances
     b_km = parameters['b']
     b_k_sh = parameters['b_k']
@@ -3553,32 +3553,32 @@ def compute_branch_flows(parameters):
     sin_mk = math.sin(w_m-w_k+phi)
 
     flows = {}
-
+    
     # Flows in shunt elements of pi model
-
+    
     # P_k_sh = v_k^2*a_km^2*g_k_sh
     flows['P_k_sh'] = v_k_tap_squared * g_k_sh
-
+    
     # Q_k_sh = -v_k^2*a_km^2*b_k_sh
     flows['Q_k_sh'] = -v_k_tap_squared * b_k_sh
-
+    
     # P_m_sh = v_m^2*a_mk^2*g_m_sh
     flows['P_m_sh'] = v_m_tap_squared * g_m_sh
-
+    
     # Q_m_sh = -v_m^2*a_mk^2*b_m_sh
     flows['Q_m_sh'] = -v_m_tap_squared * b_m_sh
 
     # Flows in series elements of pi model
-
+    
     # P_km_ser = a_km^2*v_k^2*g_km - a_km*a_mk*v_k*v_m*( g_km*cos(w_k-w_m-phi) + b_km*sin(w_k-w_m-phi))
     flows['P_km_ser'] = v_k_tap_squared * g_km - v_k_v_m_tap * (g_km*cos_km + b_km*sin_km)
-
+    
     # Q_km_ser = -a_km^2*v_k^2*b_km - a_km*a_mk*v_k*v_m*( g_km*sin(w_k-w_m-phi) - b_km*cos(w_k-w_m-phi))
     flows['Q_km_ser'] = -v_k_tap_squared * b_km - v_k_v_m_tap * (g_km*sin_km - b_km*cos_km)
-
+    
     # P_mk_ser = a_mk^2*v_m^2*g_mk - a_mk*a_km*v_k*v_m*( g_mk*cos(w_k-w_m+phi) + b_mk*sin(w_k-w_m+phi))
     flows['P_mk_ser'] = v_m_tap_squared * g_mk - v_k_v_m_tap * (g_mk*cos_mk + b_mk*sin_mk)
-
+    
     # Q_mk_ser = -a_mk^2*v_m^2*b_mk - a_mk*a_km*v_k*v_m*( g_mk*sin(w_k-w_m+phi) - b_mk*cos(w_k-w_m+phi))
     flows['Q_mk_ser'] = -v_m_tap_squared * b_mk - v_k_v_m_tap * (g_mk*sin_mk - b_mk*cos_mk)
 

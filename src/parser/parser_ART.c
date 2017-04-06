@@ -301,7 +301,7 @@ Net* ART_PARSER_parse(Parser* p, char* filename, int num_periods) {
     PARSER_set_error(p,"invalid file extension");
     return NULL;
   }
-
+  
   // CSV parser
   csv = CSV_PARSER_new();
 
@@ -341,11 +341,11 @@ Net* ART_PARSER_parse(Parser* p, char* filename, int num_periods) {
   // Network
   net = NET_new(num_periods);
   ART_PARSER_load(parser,net);
-
+  
   // Check error
   if (parser->error_flag)
     PARSER_set_error(p,parser->error_string);
-
+ 
   // Return
   return net;
 }

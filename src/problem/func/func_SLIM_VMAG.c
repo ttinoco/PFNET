@@ -24,7 +24,7 @@ Func* FUNC_SLIM_VMAG_new(REAL weight, Net* net) {
 }
 
 void FUNC_SLIM_VMAG_init(Func* f) {
-
+  
   FUNC_set_name(f,"soft voltage magnitude limits");
 }
 
@@ -151,7 +151,7 @@ void FUNC_SLIM_VMAG_analyze_step(Func* f, Branch* br, int t) {
   for (k = 0; k < 2; k++) {
 
     bus = buses[k];
-
+    
     if (!bus_counted[bus_index_t[k]]) {
 
       dv = BUS_get_v_max_reg(bus)-BUS_get_v_min_reg(bus);

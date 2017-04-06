@@ -20,7 +20,7 @@ cdef extern from "pfnet/net.h":
 
     ctypedef struct Net
     ctypedef double REAL
-
+ 
     void NET_add_vargens(Net* net, cbus.Bus* bus_list, REAL penetration, REAL uncertainty, REAL corr_radius, REAL corr_value)
     void NET_adjust_generators(Net* net)
     cbus.Bus* NET_bus_hash_number_find(Net* net, int number)
@@ -109,3 +109,5 @@ cdef extern from "pfnet/net.h":
     void NET_show_buses(Net* net, int number, int sort_by, int t)
     void NET_update_properties(Net* net, cvec.Vec* values)
     void NET_update_set_points(Net* net)
+    
+     

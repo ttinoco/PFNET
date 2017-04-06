@@ -128,8 +128,8 @@ classdef Bus < handle
         g = calllib('libpfnet','GEN_get_next',g);
         i = i + 1;
       end
-    end
-
+    end      
+    
   end
 
 end

@@ -24,7 +24,7 @@ Func* FUNC_SP_CONTROLS_new(REAL weight, Net* net) {
 }
 
 void FUNC_SP_CONTROLS_init(Func* f) {
-
+  
   FUNC_set_name(f,"sparse controls penalty");
 }
 
@@ -206,7 +206,7 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
   for (k = 0; k < 2; k++) {
 
     bus = buses[k];
-
+    
     if (!bus_counted[bus_index_t[k]]) {
 
       // Voltage mag of gen-regulated bus

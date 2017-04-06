@@ -719,7 +719,7 @@ class TestFunctions(unittest.TestCase):
 
             # Function
             func = pf.Function('generation cost',1.,net)
-
+            
             self.assertEqual(func.name,'generation cost')
 
             self.assertTupleEqual(func.gphi.shape,(0,))
@@ -2139,7 +2139,7 @@ class TestFunctions(unittest.TestCase):
                 self.assertGreaterEqual(f.Hphi.nnz,0)
             self.assertTrue(any([f.phi > 0 for f in functions]))
             self.assertTrue(any([f.Hphi.nnz > 0 for f in functions]))
-
+            
     def test_func_DUMMY(self):
 
         # Multiperiod
@@ -2147,13 +2147,13 @@ class TestFunctions(unittest.TestCase):
 
             net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
-
+            
             # Vars
             net.set_flags('generator',
                           'variable',
                           'any',
                           ['active power','reactive power'])
-
+            
             self.assertEqual(net.num_vars,2*net.get_num_generators()*net.num_periods)
             self.assertGreater(net.num_vars,0)
 
@@ -2185,10 +2185,10 @@ class TestFunctions(unittest.TestCase):
             self.assertEqual(func.phi,0.)
             self.assertEqual(func.gphi.size,0)
             self.assertEqual(func.Hphi.nnz,0)
-
+           
             funcREF.analyze()
             func.analyze()
-
+            
             self.assertEqual(func.phi,funcREF.phi)
             self.assertEqual(func.phi,0.)
             self.assertTrue(np.all(func.gphi == funcREF.gphi))
@@ -2197,10 +2197,10 @@ class TestFunctions(unittest.TestCase):
             self.assertTrue(np.all(func.Hphi.row == funcREF.Hphi.row))
             self.assertTrue(np.all(func.Hphi.col == funcREF.Hphi.col))
             self.assertTrue(np.all(func.Hphi.data == funcREF.Hphi.data))
-
+            
             funcREF.eval(x0)
             func.eval(x0)
-
+            
             self.assertNotEqual(func.phi,0.)
             self.assertLess(abs(func.phi-funcREF.phi),1e-8)
             self.assertTrue(np.all(func.gphi == funcREF.gphi))
