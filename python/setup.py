@@ -12,12 +12,13 @@ import sys
 import argparse
 import numpy as np
 from Cython.Build import cythonize
-from distutils.core import setup, Extension
-# from setuptools import setup, Extension
+#from distutils.core import setup, Extension
+from setuptools import setup, Extension
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--libdirs', dest='libdirs', action='store',nargs='*',default=[])
 parser.add_argument('--incdirs', dest='incdirs', action='store',nargs='*',default=[])
+parser.add_argument('--libpfnet', dest='libpfnet', action='store',nargs='*',default=[])
 args,unknown = parser.parse_known_args()
 sys.argv = [sys.argv[0]] + unknown
 
@@ -31,6 +32,12 @@ if args.incdirs:
     include_dirs=[np.get_include()]+args.incdirs
 else:
     include_dirs=[np.get_include(),"../include"]
+if args.libpfnet:
+    extra_objects=args.libpfnet
+    libraries=[]
+else:
+    extra_objects=[]
+    libraries=["pfnet"]
 
 setup(name='PFNET',
       version='1.2.9',
@@ -48,6 +55,7 @@ setup(name='PFNET',
                                        [os.path.join("pfnet","cpfnet.pyx")],
                                        include_dirs=include_dirs,
                                        library_dirs=library_dirs,
-                                       libraries=["pfnet"],
+                                       libraries=libraries,
                                        extra_compile_args=[],
+                                       extra_objects=extra_objects,
                                        extra_link_args=extra_link_args)]))
