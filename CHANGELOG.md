@@ -4,12 +4,17 @@ Targets
 * MAT or ART data writer.
 * CIM parser written in python.
 * Rich object comparisons for all network components.
-* Instructions for adding new functions and constraints.
+* Instructions for adding new functions and constraints in C.
 * Area/zone projections.
-* Battery initial and final energy levels.
 
 Unreleased
 ----------
+* Load Q variables.
+* Support for variable generator curtailments.
+* Variable generator curtailment cost.
+* Battery boundary conditions (initial and final).
+* Load constant power factor.
+* User-friendly way to add batteries and variable generators.
 
 Version 1.2.9 (pre-release)
 ---------------------------

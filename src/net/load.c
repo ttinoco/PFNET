@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -41,7 +41,8 @@ struct Load {
 
   // Indices
   int index;           /**< @brief Load index */
-  int* index_P;         /**< @brief Active power index */
+  int* index_P;        /**< @brief Active power index */
+  int* index_Q;        /**< @brief Reactive power index */
 
   // Sensitivities
   REAL* sens_P_u_bound;  /**< @brief Sensitivity of active power upper bound */
@@ -67,6 +68,7 @@ void LOAD_array_del(Load* load_array, int size) {
       free(load->P);
       free(load->Q);
       free(load->index_P);
+      free(load->index_Q);
       free(load->sens_P_u_bound);
       free(load->sens_P_l_bound);
     }
@@ -205,6 +207,13 @@ int LOAD_get_index_P(Load* load, int t) {
     return 0;
 }
 
+int LOAD_get_index_Q(Load* load, int t) {
+  if (load && t >= 0 && t < load->num_periods)
+    return load->index_Q[t];
+  else
+    return 0;
+}
+
 Load* LOAD_get_next(Load* load) {
   if (load)
     return load->next;
@@ -264,6 +273,19 @@ void LOAD_get_var_values(Load* load, Vec* values, int code) {
 	VEC_set(values,load->index_P[t],load->P[t]);
       }
     }
+
+    if (load->vars & LOAD_VAR_Q) { // reactive power
+      switch(code) {
+      case UPPER_LIMITS:
+	VEC_set(values,load->index_Q[t],LOAD_INF_Q);
+	break;
+      case LOWER_LIMITS:
+	VEC_set(values,load->index_Q[t],-LOAD_INF_Q);
+	break;
+      default:
+	VEC_set(values,load->index_Q[t],load->Q[t]);
+      }
+    }
   }
 }
 
@@ -284,7 +306,9 @@ int LOAD_get_num_vars(void* vload, unsigned char var, int t_start, int t_end) {
 
   // Num vars
   dt = t_end-t_start+1;
-  if ((var & LOAD_VAR_P) && (load->vars & LOAD_VAR_P))
+  if ((var & LOAD_VAR_P) && (load->vars & LOAD_VAR_P)) // active power
+    num_vars += dt;
+  if ((var & LOAD_VAR_Q) && (load->vars & LOAD_VAR_Q)) // reactive power
     num_vars += dt;
   return num_vars;
 }
@@ -307,9 +331,15 @@ Vec* LOAD_get_var_indices(void* vload, unsigned char var, int t_start, int t_end
 
   // Indices
   indices = VEC_new(LOAD_get_num_vars(vload,var,t_start,t_end));
-  if ((var & LOAD_VAR_P) && (load->vars & LOAD_VAR_P)) {
+  if ((var & LOAD_VAR_P) && (load->vars & LOAD_VAR_P)) { // active power
     for (t = t_start; t <= t_end; t++) {
       VEC_set(indices,offset,load->index_P[t]);
+      offset++;
+    }
+  }
+  if ((var & LOAD_VAR_Q) && (load->vars & LOAD_VAR_Q)) { // reactive power
+    for (t = t_start; t <= t_end; t++) {
+      VEC_set(indices,offset,load->index_Q[t]);
       offset++;
     }
   }
@@ -373,6 +403,7 @@ void LOAD_init(Load* load, int num_periods) {
   ARRAY_zalloc(load->P,REAL,T);
   ARRAY_zalloc(load->Q,REAL,T);
   ARRAY_zalloc(load->index_P,int,T);
+  ARRAY_zalloc(load->index_Q,int,T);
   ARRAY_zalloc(load->sens_P_u_bound,REAL,T);
   ARRAY_zalloc(load->sens_P_l_bound,REAL,T);
   
@@ -486,7 +517,7 @@ int LOAD_set_flags(void* vload, char flag_type, unsigned char mask, int index) {
     return index;
 
   // Set flags
-  if (!((*flags_ptr) & LOAD_VAR_P) && (mask & LOAD_VAR_P)) {
+  if (!((*flags_ptr) & LOAD_VAR_P) && (mask & LOAD_VAR_P)) { // active power
     if (flag_type == FLAG_VARS) {
       for (t = 0; t < load->num_periods; t++)
 	load->index_P[t] = index+t;
@@ -494,7 +525,15 @@ int LOAD_set_flags(void* vload, char flag_type, unsigned char mask, int index) {
     (*flags_ptr) |= LOAD_VAR_P;
     index += load->num_periods;
   }
-  return index;  
+  if (!((*flags_ptr) & LOAD_VAR_Q) && (mask & LOAD_VAR_Q)) { // reactive power
+    if (flag_type == FLAG_VARS) {
+      for (t = 0; t < load->num_periods; t++)
+	load->index_Q[t] = index+t;
+    }
+    (*flags_ptr) |= LOAD_VAR_Q;
+    index += load->num_periods;
+  }
+  return index;
 }
 
 void LOAD_set_var_values(Load* load, Vec* values) {
@@ -511,6 +550,9 @@ void LOAD_set_var_values(Load* load, Vec* values) {
 
     if (load->vars & LOAD_VAR_P) // active power (p.u.)
       load->P[t] = VEC_get(values,load->index_P[t]);
+
+    if (load->vars & LOAD_VAR_Q) // reactive power (p.u.)
+      load->Q[t] = VEC_get(values,load->index_Q[t]);
   }
 }
 

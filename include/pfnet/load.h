@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -21,10 +21,12 @@
  *  @{
  */
 #define LOAD_VAR_P 0x01    /**< @brief Variable: load active power */
+#define LOAD_VAR_Q 0x02    /**< @brief Variable: load reactive power */
 /** @} */
 
 // Infinity
-#define LOAD_INF_P 1000. /**< @brief Infinite active power */
+#define LOAD_INF_P 1e6 /**< @brief Infinite active power */
+#define LOAD_INF_Q 1e6 /**< @brief Infinite reactive power */
 
 // Properties
 /** \defgroup load_props Load Property Masks 
@@ -59,6 +61,7 @@ REAL LOAD_get_util_coeff_Q1(Load* load);
 REAL LOAD_get_util_coeff_Q2(Load* load);
 int LOAD_get_index(Load* load);
 int LOAD_get_index_P(Load* load, int t);
+int LOAD_get_index_Q(Load* load, int t);
 Load* LOAD_get_next(Load* load);
 REAL LOAD_get_P(Load* load, int t);
 REAL LOAD_get_P_max(Load* load);
