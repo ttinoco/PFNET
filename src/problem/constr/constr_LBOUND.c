@@ -276,6 +276,16 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	    VEC_set(l,index,-LOAD_INF_P);
 	  }
 	}
+
+	// Rective power (Q)
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) {
+	  index = LOAD_get_index_Q(load,t);
+	  MAT_set_i(G,index,index);
+	  MAT_set_j(G,index,index);
+	  MAT_set_d(G,index,1.);
+	  VEC_set(u,index,LOAD_INF_Q);
+	  VEC_set(l,index,-LOAD_INF_Q);
+	}
       }
 
       // Variable generators
