@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -13,8 +13,10 @@ cdef extern from "pfnet/load.h":
     ctypedef double REAL
 
     cdef char LOAD_VAR_P
+    cdef char LOAD_VAR_Q
 
     cdef double LOAD_INF_P
+    cdef double LOAD_INF_Q
        
     cdef char LOAD_PROP_ANY
     cdef char LOAD_PROP_P_ADJUST
@@ -29,6 +31,7 @@ cdef extern from "pfnet/load.h":
     int LOAD_get_num_periods(Load* load)
     int LOAD_get_index(Load* load)
     int LOAD_get_index_P(Load* load, int t)
+    int LOAD_get_index_Q(Load* load, int t)
     Bus* LOAD_get_bus(Load* load)
     REAL LOAD_get_P(Load* load, int t)
     REAL LOAD_get_P_max(Load* load)

@@ -64,7 +64,8 @@ str2q_shunt = {'all' : cflags.ALL_VARS,
                'susceptance deviation' : cshunt.SHUNT_VAR_SUSC_DEV}
 
 str2q_load = {'all' : cflags.ALL_VARS,
-              'active power' : cload.LOAD_VAR_P}
+              'active power' : cload.LOAD_VAR_P,
+              'reactive power' : cload.LOAD_VAR_Q}
 
 str2q_vargen = {'all' : cflags.ALL_VARS,
                 'active power' : cvargen.VARGEN_VAR_P,

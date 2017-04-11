@@ -517,7 +517,8 @@ class TestConstraints(unittest.TestCase):
             for load in net.loads:
                 load.P_min = -2.4*(load.index+1)
                 load.P_max = 3.3*(load.index+1)
-
+                load.Q = 3.5*load.index
+                
             # Vars
             net.set_flags('bus',
                           'variable',
@@ -530,7 +531,7 @@ class TestConstraints(unittest.TestCase):
             net.set_flags('load',
                           'variable',
                           'adjustable active power',
-                          'active power')
+                          ['active power','reactive power'])
             net.set_flags('branch',
                           'variable',
                           'tap changer',
@@ -557,7 +558,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_vars,
                              net.get_num_buses_reg_by_gen()*6 +
                              net.get_num_reg_gens()*2 +
-                             net.get_num_P_adjust_loads() +
+                             2*net.get_num_P_adjust_loads() +
                              net.get_num_tap_changers()*3 +
                              net.get_num_phase_shifters()*1 +
                              net.get_num_switched_shunts()*3 +
@@ -716,8 +717,12 @@ class TestConstraints(unittest.TestCase):
 
             for load in net.loads:
                 self.assertTrue(load.has_flags('variable','active power'))
+                self.assertTrue(load.has_flags('variable','reactive power'))
+                self.assertTrue(load.has_flags('variable',['active power','reactive power']))
                 self.assertEqual(u[load.index_P],pf.LOAD_INF_P)
                 self.assertEqual(l[load.index_P],-pf.LOAD_INF_P)
+                self.assertEqual(u[load.index_Q],pf.LOAD_INF_Q)
+                self.assertEqual(l[load.index_Q],-pf.LOAD_INF_Q)
 
             for vargen in net.var_generators:
                 self.assertTrue(vargen.has_flags('variable',
@@ -763,7 +768,7 @@ class TestConstraints(unittest.TestCase):
             net.set_flags('load',
                           'bounded',
                           'adjustable active power',
-                          'active power')
+                          ['active power','reactive power'])
             net.set_flags('branch',
                           'bounded',
                           'tap changer',
@@ -885,8 +890,12 @@ class TestConstraints(unittest.TestCase):
 
             for load in net.loads:
                 self.assertTrue(load.has_flags('bounded','active power'))
+                self.assertTrue(load.has_flags('bounded','reactive power'))
+                self.assertTrue(load.has_flags('bounded',['active power','reactive power']))
                 self.assertEqual(u[load.index_P],load.P_max)
                 self.assertEqual(l[load.index_P],load.P_min)
+                self.assertEqual(u[load.index_Q],pf.LOAD_INF_Q)
+                self.assertEqual(l[load.index_Q],-pf.LOAD_INF_Q)
 
             for vargen in net.var_generators:
                 self.assertTrue(vargen.has_flags('bounded',
@@ -993,6 +1002,7 @@ class TestConstraints(unittest.TestCase):
             for load in net.loads:
                 load.P_min = -2.4*(load.index+1)
                 load.P_max = 3.3*(load.index+1)
+                load.Q = 3.5*load.index*np.array(range(net.num_periods))
 
             # Vars
             net.set_flags('bus',
@@ -1006,7 +1016,7 @@ class TestConstraints(unittest.TestCase):
             net.set_flags('load',
                           'variable',
                           'any',
-                          'active power')
+                          ['active power','reactive power'])
             net.set_flags('branch',
                           'variable',
                           'tap changer',
@@ -1032,7 +1042,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_vars,
                              (net.num_buses*2 +
                               net.num_generators*2 +
-                              net.num_loads +
+                              2*net.num_loads +
                               net.get_num_tap_changers() +
                               net.get_num_phase_shifters() +
                               net.get_num_switched_shunts() +
@@ -1086,6 +1096,8 @@ class TestConstraints(unittest.TestCase):
                 for load in net.loads:
                     self.assertEqual(u[load.index_P[t]],pf.LOAD_INF_P)
                     self.assertEqual(l[load.index_P[t]],-pf.LOAD_INF_P)
+                    self.assertEqual(u[load.index_Q[t]],pf.LOAD_INF_Q)
+                    self.assertEqual(l[load.index_Q[t]],-pf.LOAD_INF_Q)
                 for shunt in net.shunts:
                     if shunt.is_switched_v():
                         self.assertEqual(u[shunt.index_b[t]],pf.SHUNT_INF_SUSC)
@@ -1103,7 +1115,7 @@ class TestConstraints(unittest.TestCase):
             net.set_flags('load',
                           'bounded',
                           'any',
-                          'active power')
+                          ['active power','reactive power'])
             net.set_flags('branch',
                           'bounded',
                           'tap changer',
@@ -1163,6 +1175,8 @@ class TestConstraints(unittest.TestCase):
                 for load in net.loads:
                     self.assertEqual(u[load.index_P[t]],load.P_max)
                     self.assertEqual(l[load.index_P[t]],load.P_min)
+                    self.assertEqual(u[load.index_Q[t]],pf.LOAD_INF_Q)
+                    self.assertEqual(l[load.index_Q[t]],-pf.LOAD_INF_Q)
                 for shunt in net.shunts:
                     if shunt.is_switched_v():
                         self.assertEqual(u[shunt.index_b[t]],shunt.b_max)
