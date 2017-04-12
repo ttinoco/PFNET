@@ -954,10 +954,11 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       BUS_add_vargen(bus,vargen);                                   // connect vargen to bus
       VARGEN_set_bus(vargen,bus);                                   // connect bus to vargen
       VARGEN_set_name(vargen,art_vargen->name);
-      VARGEN_set_P(vargen,art_vargen->p/parser->base_power,0);        // per unit
+      VARGEN_set_P(vargen,art_vargen->p/parser->base_power,0);      // per unit
+      VARGEN_set_P_ava(vargen,art_vargen->p/parser->base_power,0);  // per unit
       VARGEN_set_P_max(vargen,art_vargen->pmax/parser->base_power); // per unit
       VARGEN_set_P_min(vargen,art_vargen->pmin/parser->base_power); // per unit
-      VARGEN_set_Q(vargen,art_vargen->q/parser->base_power,0);        // per unit
+      VARGEN_set_Q(vargen,art_vargen->q/parser->base_power,0);      // per unit
       VARGEN_set_Q_max(vargen,art_vargen->qmax/parser->base_power); // per unit
       VARGEN_set_Q_min(vargen,art_vargen->qmin/parser->base_power); // per unit
       NET_vargen_hash_name_add(net,vargen);

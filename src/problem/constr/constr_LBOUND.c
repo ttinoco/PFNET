@@ -298,7 +298,7 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  MAT_set_j(G,index,index);
 	  MAT_set_d(G,index,1.);
 	  if (VARGEN_has_flags(vargen,FLAG_BOUNDED,VARGEN_VAR_P)) {
-	    VEC_set(u,index,VARGEN_get_P_max(vargen));
+	    VEC_set(u,index,VARGEN_get_P_ava(vargen,t));
 	    VEC_set(l,index,VARGEN_get_P_min(vargen));
 	  }
 	  else {

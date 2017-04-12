@@ -457,8 +457,6 @@ class TestConstraints(unittest.TestCase):
                         self.assertEqual(A.col[ar[0]],branch.index_phase[t])
                         self.assertEqual(b[A.row[ar[0]]],branch.phase[t])
 
-
-
                 # Vargen
                 for vargen in net.var_generators:
                     ar = np.where(A.col == vargen.index_P[t])[0]
@@ -507,6 +505,11 @@ class TestConstraints(unittest.TestCase):
             for vargen in net.var_generators:
                 vargen.P = vargen.index*1.5
                 vargen.Q = vargen.index*2.5
+                vargen.P_ava = vargen.index*3.
+                vargen.P_max = 100.
+                vargen.P_min = 0.
+                vargen.Q_max = 50.
+                vargen.Q_min = -50.
             self.assertGreater(net.num_var_generators,0)
 
             self.assertEqual(net.num_bounded,0)
@@ -900,7 +903,7 @@ class TestConstraints(unittest.TestCase):
             for vargen in net.var_generators:
                 self.assertTrue(vargen.has_flags('bounded',
                                                  ['active power','reactive power']))
-                self.assertEqual(u[vargen.index_P],vargen.P_max)
+                self.assertEqual(u[vargen.index_P],vargen.P_ava)
                 self.assertEqual(u[vargen.index_Q],vargen.Q_max)
                 self.assertEqual(l[vargen.index_P],vargen.P_min)
                 self.assertEqual(l[vargen.index_Q],vargen.Q_min)
@@ -992,7 +995,14 @@ class TestConstraints(unittest.TestCase):
             for vargen in net.var_generators:
                 vargen.P = np.random.rand(self.T)
                 vargen.Q = np.random.rand(self.T)
+                vargen.P_ava = vargen.P*3.4
+                vargen.P_max = 100.
+                vargen.P_min = 0.
+                vargen.Q_max = 50.
+                vargen.Q_min = -50.
                 self.assertEqual(vargen.num_periods,self.T)
+                for t in range(self.T):
+                    self.assertEqual(vargen.P_ava[t],vargen.P[t]*3.4)
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_bounded,0)
             self.assertEqual(net.num_vars,0)
@@ -1168,7 +1178,7 @@ class TestConstraints(unittest.TestCase):
                         self.assertEqual(u[branch.index_phase[t]],branch.phase_max)
                         self.assertEqual(l[branch.index_phase[t]],branch.phase_min)
                 for vargen in net.var_generators:
-                    self.assertEqual(u[vargen.index_P[t]],vargen.P_max)
+                    self.assertEqual(u[vargen.index_P[t]],vargen.P_ava[t])
                     self.assertEqual(u[vargen.index_Q[t]],vargen.Q_max)
                     self.assertEqual(l[vargen.index_P[t]],vargen.P_min)
                     self.assertEqual(l[vargen.index_Q[t]],vargen.Q_min)

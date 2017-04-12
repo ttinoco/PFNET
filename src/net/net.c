@@ -155,6 +155,7 @@ void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty
     VARGEN_set_P_max(vargen,max_total_load_P/net->num_vargens);
     for (t = 0; t < net->num_periods; t++) {
       VARGEN_set_P_std(vargen,(uncertainty/100.)*VARGEN_get_P_max(vargen),t);
+      VARGEN_set_P_ava(vargen,(penetration/100.)*VARGEN_get_P_max(vargen),t);
       VARGEN_set_P(vargen,(penetration/100.)*VARGEN_get_P_max(vargen),t);
     }
   }

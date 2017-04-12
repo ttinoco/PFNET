@@ -1168,6 +1168,7 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(vargen.name,"VARGEN %d" %(vargen.index+1))
                 self.assertEqual(net.get_vargen_by_name(vargen.name).name,vargen.name)
                 self.assertEqual(vargen.P,0.5*vargen.P_max)
+                self.assertEqual(vargen.P_ava,0.5*vargen.P_max)
                 self.assertEqual(vargen.P_max,total_load/net.num_var_generators)
                 self.assertEqual(vargen.P_min,0.)
                 self.assertEqual(vargen.P_std,0.3*vargen.P_max)
@@ -1179,6 +1180,8 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(vargen.bus.var_generators[0].index,vargen.index)
                 vargen.P = np.pi
                 self.assertEqual(vargen.P,np.pi)
+                vargen.P_ava = 142.2123
+                self.assertEqual(vargen.P_ava,142.2123)
                 vargen.Q = (i+1)*12.5
                 self.assertEqual(vargen.Q,(i+1)*12.5)
                 vargen.Q_max = (i+1)*13.5
@@ -1198,12 +1201,13 @@ class TestNetwork(unittest.TestCase):
                 self.assertTrue(vargen.bus)
                 self.assertEqual(vargen.bus,load_buses[i])
                 self.assertTrue(vargen.index in [vg.index for vg in load_buses[i].var_generators])
-
-            # Set P,P_max,P_min,P_std,Q,Q_max,Q_min
+                
+            # Set P,P_ava,P_max,P_min,P_std,Q,Q_max,Q_min
             self.assertGreater(net.num_var_generators,0)
             self.assertGreater(len(net.var_generators),0)
             for vg in net.var_generators:
                 self.assertEqual(vg.P,np.pi)
+                self.assertEqual(vg.P_ava,142.2123)
                 self.assertEqual(vg.P_max,total_load/net.num_var_generators)
                 self.assertEqual(vg.P_std,0.3*vg.P_max)
                 self.assertEqual(vg.P_min,0.)
@@ -1211,6 +1215,7 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(vg.Q_max,0.)
                 self.assertEqual(vg.Q_min,0.)
                 vg.P = 1.
+                vg.P_ava = 1.234
                 vg.P_min = 2.3
                 vg.P_max = 2.
                 vg.P_std = 3.
@@ -1221,6 +1226,7 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(vg.P_min,2.3)
                 self.assertEqual(vg.P_std,3)
                 self.assertEqual(vg.P,1.)
+                self.assertEqual(vg.P_ava,1.234)
                 self.assertEqual(vg.Q,4.)
                 self.assertEqual(vg.Q_max,5.)
                 self.assertEqual(vg.Q_min,6.)
@@ -1282,6 +1288,7 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(vg.P_min,0.)
                 self.assertEqual(vg.P_max,total_load/net.num_var_generators)
                 self.assertEqual(vg.P,(penetration/100.)*vg.P_max)
+                self.assertEqual(vg.P_ava,(penetration/100.)*vg.P_max)
                 self.assertEqual(vg.P_std,(uncertainty/100.)*vg.P_max)
 
         # Multi period
@@ -1300,14 +1307,19 @@ class TestNetwork(unittest.TestCase):
                 # Propagation
                 for t in range(1,self.T):
                     self.assertEqual(vargen.P[t],vargen.P[0])
-                    self.assertEqual(vargen.Q[t],vargen.Q[0])
                     self.assertEqual(vargen.P_std[t],vargen.P_std[0])
+                    self.assertEqual(vargen.P_ava[t],vargen.P_ava[0])
+                    self.assertEqual(vargen.Q[t],vargen.Q[0])
 
                 # Set
                 x = np.random.randn(self.T)
                 vargen.P = x
                 for t in range(self.T):
                     self.assertEqual(vargen.P[t],x[t])
+                x = np.random.randn(self.T)
+                vargen.P_ava = x
+                for t in range(self.T):
+                    self.assertEqual(vargen.P_ava[t],x[t])
                 x = np.random.randn(self.T)
                 vargen.Q = x
                 for t in range(self.T):
@@ -1321,6 +1333,9 @@ class TestNetwork(unittest.TestCase):
                     p = np.random.randn()
                     vargen.P[t] = p
                     self.assertEqual(vargen.P[t],p)
+                    pava = np.random.randn()
+                    vargen.P_ava[t] = pava
+                    self.assertEqual(vargen.P_ava[t],pava)
                     pstd = np.random.randn()
                     vargen.P_std[t] = pstd
                     self.assertEqual(vargen.P_std[t],pstd)
@@ -3112,6 +3127,7 @@ class TestNetwork(unittest.TestCase):
             # Add some interesting vargen values
             for vargen in net.var_generators:
                 vargen.P = 2*vargen.index
+                vargen.P_ava = 2.5*vargen.index
                 vargen.P_max = 3*vargen.index
                 vargen.P_min = 9*vargen.index
                 vargen.Q = 4*vargen.index
@@ -3184,8 +3200,8 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(x[load.index_P],3.3*(load.index+1))
                 self.assertEqual(x[load.index_Q],pf.LOAD_INF_Q)
             for vargen in net.var_generators:
-                self.assertEqual(x[vargen.index_P],3*vargen.index)
-                self.assertEqual(x[vargen.index_P],vargen.P_max)
+                self.assertEqual(x[vargen.index_P],2.5*vargen.index)
+                self.assertEqual(x[vargen.index_P],vargen.P_ava)
                 self.assertEqual(x[vargen.index_Q],5*vargen.index)
                 self.assertEqual(x[vargen.index_Q],vargen.Q_max)
             for shunt in net.shunts:
@@ -3221,6 +3237,7 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(x[load.index_Q],-pf.LOAD_INF_Q)
             for vargen in net.var_generators:
                 self.assertEqual(x[vargen.index_P],9.*vargen.index)
+                self.assertEqual(x[vargen.index_P],vargen.P_min)
                 self.assertEqual(x[vargen.index_Q],1.*vargen.index)
                 self.assertEqual(x[vargen.index_Q],vargen.Q_min)
             for shunt in net.shunts:
@@ -3307,7 +3324,8 @@ class TestNetwork(unittest.TestCase):
 
             # Add some interesting vargen values
             for vargen in net.var_generators:
-                vargen.P = np.ones(self.T)*2*vargen.index
+                vargen.P = 2.*vargen.index*np.array(range(self.T))
+                vargen.P_ava = 2.5*vargen.index*np.array(range(self.T))
                 vargen.P_max = 3*vargen.index
                 vargen.P_min = 9*vargen.index
                 vargen.Q = np.ones(self.T)*4*vargen.index
@@ -3338,7 +3356,7 @@ class TestNetwork(unittest.TestCase):
                     self.assertEqual(x[load.index_Q[t]],load.Q[t])
                     self.assertEqual(x[load.index_Q[t]],load.index*3.5*t)
                 for vargen in net.var_generators:
-                    self.assertEqual(x[vargen.index_P[t]],vargen.index*2)
+                    self.assertEqual(x[vargen.index_P[t]],vargen.index*2.*t)
                     self.assertEqual(x[vargen.index_P[t]],vargen.P[t])
                     self.assertEqual(x[vargen.index_Q[t]],vargen.index*4)
                     self.assertEqual(x[vargen.index_Q[t]],vargen.Q[t])
@@ -3382,8 +3400,8 @@ class TestNetwork(unittest.TestCase):
                     self.assertEqual(x[load.index_P[t]],3.3*(load.index+1))
                     self.assertEqual(x[load.index_Q[t]],pf.LOAD_INF_Q)
                 for vargen in net.var_generators:
-                    self.assertEqual(x[vargen.index_P[t]],3*vargen.index)
-                    self.assertEqual(x[vargen.index_P[t]],vargen.P_max)
+                    self.assertEqual(x[vargen.index_P[t]],2.5*vargen.index*t)
+                    self.assertEqual(x[vargen.index_P[t]],vargen.P_ava[t])
                     self.assertEqual(x[vargen.index_Q[t]],5*vargen.index)
                     self.assertEqual(x[vargen.index_Q[t]],vargen.Q_max)
                 for shunt in net.shunts:
@@ -3420,6 +3438,7 @@ class TestNetwork(unittest.TestCase):
                     self.assertEqual(x[load.index_Q[t]],-pf.LOAD_INF_Q)
                 for vargen in net.var_generators:
                     self.assertEqual(x[vargen.index_P[t]],9.*vargen.index)
+                    self.assertEqual(x[vargen.index_P[t]],vargen.P_min)
                     self.assertEqual(x[vargen.index_Q[t]],1.*vargen.index)
                     self.assertEqual(x[vargen.index_Q[t]],vargen.Q_min)
                 for shunt in net.shunts:
@@ -3457,6 +3476,7 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(vg.name,"VARGEN %d" %(vg.index+1))
                 self.assertEqual(net.get_vargen_by_name(vg.name).name,vg.name)
                 self.assertEqual(vg.P,0.5*vg.P_max)
+                self.assertEqual(vg.P_ava,0.5*vg.P_max)
                 self.assertEqual(vg.P_min,0)
                 self.assertEqual(vg.P_max,total_load/net.num_var_generators)
                 self.assertEqual(vg.P_std,0.3*vg.P_max)
@@ -3526,6 +3546,7 @@ class TestNetwork(unittest.TestCase):
                 self.assertNotEqual(vg.P_max,0)
                 for t in range(self.T):
                     self.assertEqual(vg.P[t],0.5*vg.P_max)
+                    self.assertEqual(vg.P_ava[t],0.5*vg.P_max)
                     self.assertEqual(vg.P_std[t],0.3*vg.P_max)
                     self.assertNotEqual(vg.P_std[t],0)
             self.assertLess(np.abs(sum([vg.P_max for vg in net.var_generators])-total_load),1e-10)
@@ -3601,9 +3622,9 @@ def compute_branch_flows(parameters):
     b_m_sh = parameters['b_m']
 
     # Intermediate calculations
-    v_k_tap_squared = math.pow(v_k,2) * math.pow(a_km,2)
-    v_m_tap_squared = math.pow(v_m,2) * math.pow(a_mk,2)
-    v_k_v_m_tap = v_k * v_m * a_km * a_mk
+    v_k_tap_squared = math.pow(v_k,2)*math.pow(a_km,2)
+    v_m_tap_squared = math.pow(v_m,2)*math.pow(a_mk,2)
+    v_k_v_m_tap = v_k*v_m*a_km*a_mk
     cos_km = math.cos(w_k-w_m-phi)
     sin_km = math.sin(w_k-w_m-phi)
     cos_mk = math.cos(w_m-w_k+phi)
@@ -3614,30 +3635,22 @@ def compute_branch_flows(parameters):
     # Flows in shunt elements of pi model
     
     # P_k_sh = v_k^2*a_km^2*g_k_sh
-    flows['P_k_sh'] = v_k_tap_squared * g_k_sh
+    flows['P_k_sh'] = v_k_tap_squared*g_k_sh
     
     # Q_k_sh = -v_k^2*a_km^2*b_k_sh
-    flows['Q_k_sh'] = -v_k_tap_squared * b_k_sh
+    flows['Q_k_sh'] = -v_k_tap_squared*b_k_sh
     
     # P_m_sh = v_m^2*a_mk^2*g_m_sh
-    flows['P_m_sh'] = v_m_tap_squared * g_m_sh
+    flows['P_m_sh'] = v_m_tap_squared*g_m_sh
     
     # Q_m_sh = -v_m^2*a_mk^2*b_m_sh
-    flows['Q_m_sh'] = -v_m_tap_squared * b_m_sh
+    flows['Q_m_sh'] = -v_m_tap_squared*b_m_sh
 
     # Flows in series elements of pi model
-    
-    # P_km_ser = a_km^2*v_k^2*g_km - a_km*a_mk*v_k*v_m*( g_km*cos(w_k-w_m-phi) + b_km*sin(w_k-w_m-phi))
-    flows['P_km_ser'] = v_k_tap_squared * g_km - v_k_v_m_tap * (g_km*cos_km + b_km*sin_km)
-    
-    # Q_km_ser = -a_km^2*v_k^2*b_km - a_km*a_mk*v_k*v_m*( g_km*sin(w_k-w_m-phi) - b_km*cos(w_k-w_m-phi))
-    flows['Q_km_ser'] = -v_k_tap_squared * b_km - v_k_v_m_tap * (g_km*sin_km - b_km*cos_km)
-    
-    # P_mk_ser = a_mk^2*v_m^2*g_mk - a_mk*a_km*v_k*v_m*( g_mk*cos(w_k-w_m+phi) + b_mk*sin(w_k-w_m+phi))
-    flows['P_mk_ser'] = v_m_tap_squared * g_mk - v_k_v_m_tap * (g_mk*cos_mk + b_mk*sin_mk)
-    
-    # Q_mk_ser = -a_mk^2*v_m^2*b_mk - a_mk*a_km*v_k*v_m*( g_mk*sin(w_k-w_m+phi) - b_mk*cos(w_k-w_m+phi))
-    flows['Q_mk_ser'] = -v_m_tap_squared * b_mk - v_k_v_m_tap * (g_mk*sin_mk - b_mk*cos_mk)
+    flows['P_km_ser'] = v_k_tap_squared*g_km - v_k_v_m_tap*(g_km*cos_km + b_km*sin_km)
+    flows['Q_km_ser'] = -v_k_tap_squared*b_km - v_k_v_m_tap*(g_km*sin_km - b_km*cos_km)
+    flows['P_mk_ser'] = v_m_tap_squared*g_mk - v_k_v_m_tap*(g_mk*cos_mk + b_mk*sin_mk)
+    flows['Q_mk_ser'] = -v_m_tap_squared*b_mk - v_k_v_m_tap*(g_mk*sin_mk - b_mk*cos_mk)
 
     # Flows as measured from the bus
     flows['P_km'] = flows['P_km_ser'] + flows['P_k_sh']
