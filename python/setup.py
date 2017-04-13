@@ -22,22 +22,34 @@ parser.add_argument('--libpfnet', dest='libpfnet', action='store',nargs='*',defa
 args,unknown = parser.parse_known_args()
 sys.argv = [sys.argv[0]] + unknown
 
+extra_link_args = []
+libraries = []
+package_data = []
+
 if args.libdirs:
     library_dirs=args.libdirs
-    extra_link_args=["-Wl,-rpath,%s" %s for s in args.libdirs]
+    if sys.platform != 'win32':
+        # need to change if using msvc
+        extra_link_args=["-Wl,-rpath,%s" %s for s in args.libdirs]
 else:
     library_dirs=[]
-    extra_link_args=["-Wl,-rpath,/usr/local/lib"]
+    if sys.platform != 'win32':
+        # need to change if using msvc
+        extra_link_args=["-Wl,-rpath,/usr/local/lib"]
+
 if args.incdirs:
     include_dirs=[np.get_include()]+args.incdirs
 else:
     include_dirs=[np.get_include(),"../include"]
+
 if args.libpfnet:
     extra_objects=args.libpfnet
-    libraries=[]
 else:
     extra_objects=[]
-    libraries=["pfnet"]
+    libraries.append("pfnet")
+    if sys.platform != 'win32':
+        extra_link_args=["-Wl,-rpath,%s" %s for s in args.libpfnet] # not sure if this works
+    #package_data.append("")
 
 setup(name='PFNET',
       version='1.2.9',
@@ -59,3 +71,4 @@ setup(name='PFNET',
                                        extra_compile_args=[],
                                        extra_objects=extra_objects,
                                        extra_link_args=extra_link_args)]))
+

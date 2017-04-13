@@ -9,6 +9,9 @@ enable_testing()
 # $ make
 # $ ls # see libpfnet.{so,dylib} depending on configuration
 
+
+#set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 option(PFNET_DEBUG "set to ON to enable PFNET debug definition" OFF)
 option(PFNET_GRAPHVIZ "set to OFF to disable search for graphviz" ON)
 
@@ -33,12 +36,14 @@ file(GLOB_RECURSE pfnet_test_source tests/*.c)
 # test dynamic library
 add_executable(pfnet_tests ${pfnet_test_source})
 add_test(run_pfnet_tests pfnet_tests ${PFNET_SOURCE_DIR}/data/ieee14.mat)
-target_link_libraries(pfnet_tests pfnet m)
+#target_link_libraries(pfnet_tests pfnet m)
+target_link_libraries(pfnet_tests pfnet)
 
 # test static library
 add_executable(pfnet_static_tests ${pfnet_test_source})
 add_test(run_pfnet_static_tests pfnet_static_tests ${PFNET_SOURCE_DIR}/data/ieee14.mat)
-target_link_libraries(pfnet_static_tests pfnet_static m)
+#target_link_libraries(pfnet_static_tests pfnet_static m)
+target_link_libraries(pfnet_static_tests pfnet_static)
 
 # set the debug flag
 if(PFNET_DEBUG)
@@ -132,7 +137,8 @@ include_directories(${PFNET_SOURCE_DIR}/include)
 # install library to <prefix>/lib
 install(TARGETS pfnet pfnet_static
         LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin)
 # install header files
 install(DIRECTORY include/
         DESTINATION include
