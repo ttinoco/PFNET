@@ -388,10 +388,10 @@ class TestParser(unittest.TestCase):
 
                 self.assertEqual(net.num_buses,31)
                 self.assertEqual(net.num_batteries,3)
-                b1 = net.get_bat(0)
-                b2 = net.get_bat(1)
-                b3 = net.get_bat(2)
-                self.assertRaises(pf.NetworkError,net.get_bat,3)
+                b1 = net.get_battery(0)
+                b2 = net.get_battery(1)
+                b3 = net.get_battery(2)
+                self.assertRaises(pf.NetworkError,net.get_battery,3)
 
                 self.assertEqual(b1.bus.name,"N18")
                 self.assertEqual(b1.index,0)
@@ -441,7 +441,7 @@ class TestParser(unittest.TestCase):
 
                 self.assertEqual(net.base_power,100.)
                 self.assertEqual(net.num_buses,14)
-                self.assertEqual(net.num_gens,5)
+                self.assertEqual(net.num_generators,5)
 
                 gen0 = net.get_gen(net.num_generators-1)
                 gen1 = net.get_gen(net.num_generators-2)

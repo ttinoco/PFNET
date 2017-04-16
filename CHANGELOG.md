@@ -9,12 +9,13 @@ Targets
 
 Unreleased
 ----------
-* Load Q variables.
-* Support for variable generator curtailments.
+* Load Q variables (done).
+* Support for variable generator curtailments (done).
 * Variable generator curtailment cost.
 * Battery boundary conditions (initial and final).
 * Load constant power factor.
 * User-friendly way to add batteries and variable generators.
+* Removed aliases for variable generators and others in Python network class.
 
 Version 1.2.9 (pre-release)
 ---------------------------

@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -25,7 +25,7 @@ class TestFlags(unittest.TestCase):
             self.assertEqual(net.num_periods,1)
 
             # add vargens
-            net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_gen_buses(),50.,30.,5,0.05)
 
             # loads
             lcount = 0
@@ -207,7 +207,7 @@ class TestFlags(unittest.TestCase):
             self.assertEqual(net.num_periods,1)
 
             # add vargens
-            net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_gen_buses(),50.,30.,5,0.05)
             for vargen in net.var_generators:
                 vargen.P = np.random.rand()
                 vargen.Q = np.random.rand()
@@ -295,7 +295,7 @@ class TestFlags(unittest.TestCase):
 
             # check bats
             for i in range(net.num_batteries):
-                b = net.get_bat(i)
+                b = net.get_battery(i)
                 self.assertTrue(b.has_flags('variable','charging power'))
                 self.assertTrue(b.has_flags('variable','energy level'))
                 if (b.P >= 0.):
@@ -391,7 +391,7 @@ class TestFlags(unittest.TestCase):
             net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
-            net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_gen_buses(),50.,30.,5,0.05)
 
             self.assertEqual(net.num_fixed,0)
 
@@ -501,7 +501,7 @@ class TestFlags(unittest.TestCase):
             self.assertEqual(net.num_periods,1)
 
             # add vargens
-            net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_gen_buses(),50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
 
             self.assertEqual(net.num_vars,0)

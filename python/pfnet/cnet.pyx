@@ -57,22 +57,19 @@ cdef class Network:
             cnet.NET_del(self._c_net)
             self._c_net = NULL
 
-    def add_vargens(self,buses,penetration,uncertainty,corr_radius,corr_value):
+    def add_var_generators(self,buses,penetration,uncertainty,corr_radius,corr_value):
         """
-        Adds variable generators to the network.
-
+        Adds variable generators to the network. The capacitiy of the variable generators are set to
+        the maximum total load divided by the number of variable generators. 
+        
         Parameters
         ----------
 
         buses : list of :class:`Buses <pfnet.Bus>`
-        penetration : float
-                      percentage
-        uncertainty : float
-                      percentage
-        corr_radius : int
-                      number of branches
-        corr_value : float
-                     correlation coefficient
+        penetration : float (percentage of total load)
+        uncertainty : float (percentage of capacity)
+        corr_radius : int (number of branches for correlation radius)
+        corr_value : float (correlation coefficient for correlated generators)
         """
 
         cdef Bus head = buses[0] if buses else None
@@ -149,17 +146,15 @@ cdef class Network:
             b = cbus.BUS_get_next(b)
         return buses
 
-    def create_vargen_P_sigma(self,spread,corr):
+    def create_var_generators_P_sigma(self,spread,corr):
         """
         Creates covariance matrix (lower triangular part) for
-        variable vargen active powers.
+        active powers of variable generators.
 
         Parameters
         ----------
-        spead : int
-                Determines correlation neighborhood in terms of number of edges.
-        corr : float
-               Desired correlation coefficient for neighboring vargens.
+        spead : int (correlation neighborhood in terms of number of edges)
+        corr : float (correlation coefficient for neighboring generators)
 
         Returns
         -------
@@ -212,9 +207,9 @@ cdef class Network:
         else:
             raise NetworkError('bus not found')
 
-    def get_vargen_by_name(self,name):
+    def get_var_generator_by_name(self,name):
         """
-        Gets vargen with the given name.
+        Gets variable generator with the given name.
 
         Parameters
         ----------
@@ -327,7 +322,7 @@ cdef class Network:
         else:
             raise NetworkError('invalid load index')
 
-    def get_vargen(self,index):
+    def get_var_generator(self,index):
         """
         Gets variable generator with the given index.
 
@@ -346,7 +341,7 @@ cdef class Network:
         else:
             raise NetworkError('invalid vargen index')
 
-    def get_bat(self,index):
+    def get_battery(self,index):
         """
         Gets battery with the given index.
 
@@ -598,10 +593,6 @@ cdef class Network:
 
         return cnet.NET_get_num_gens(self._c_net)
 
-    def get_num_gens(self):
-        """ Same as :attr:`get_num_generators <pfnet.Network.get_num_generators>`. """
-        return self.get_num_generators()
-
     def get_num_gens_not_on_outage(self):
         """
         Gets number of generators in the network that are not on outage.
@@ -712,10 +703,6 @@ cdef class Network:
 
         return cnet.NET_get_num_vargens(self._c_net)
 
-    def get_num_var_gens(self):
-        """ Same as :attr:`get_num_var_generators <pfnet.Network.get_num_var_generators>`. """
-        return self.get_num_var_generators()
-
     def get_num_batteries(self):
         """
         Gets number of batteries in the network.
@@ -726,10 +713,6 @@ cdef class Network:
         """
 
         return cnet.NET_get_num_bats(self._c_net)
-
-    def get_num_bats(self):
-        """ Same as :attr:`get_num_batteries <pfnet.Network.get_num_batteries>`. """
-        return self.get_num_bats()
 
     def get_properties(self):
         """
@@ -905,10 +888,6 @@ cdef class Network:
         def __get__(self):
             return [self.get_gen(i) for i in range(self.num_generators)]
 
-    property gens:
-        """ Same as :attr:`generators <pfnet.Network.generators>` """
-        def __get__(self): return self.generators
-
     property shunts:
         """ List of network :class:`shunts <pfnet.Shunt>` (list). """
         def __get__(self):
@@ -922,20 +901,12 @@ cdef class Network:
     property var_generators:
         """ List of network :class:`variable generators <pfnet.VarGenerator>` (list). """
         def __get__(self):
-            return [self.get_vargen(i) for i in range(self.num_var_generators)]
-
-    property var_gens:
-        """ Same as :attr:`var_generators <pfnet.Network.var_generators>`. """
-        def __get__(self): return self.var_generators
+            return [self.get_var_generator(i) for i in range(self.num_var_generators)]
 
     property batteries:
         """ List of network :class:`batteries <pfnet.Battery>` (list). """
         def __get__(self):
-            return [self.get_bat(i) for i in range(self.num_batteries)]
-
-    property bats:
-        """ Same as :attr:`batteries <pfnet.Network.batteries>`. """
-        def __get__(self): return self.batteries
+            return [self.get_battery(i) for i in range(self.num_batteries)]
 
     property num_buses:
         """ Number of buses in the network (int). """
@@ -949,10 +920,6 @@ cdef class Network:
         """ Number of generators in the network (int). """
         def __get__(self): return cnet.NET_get_num_gens(self._c_net)
 
-    property num_gens:
-        """ Same as :attr:`num_generators <pfnet.Network.num_generators>`. """
-        def __get__(self): return self.num_generators
-
     property num_loads:
         """ Number of loads in the network (int). """
         def __get__(self): return cnet.NET_get_num_loads(self._c_net)
@@ -965,17 +932,9 @@ cdef class Network:
         """ Number of variable generators in the network (int). """
         def __get__(self): return cnet.NET_get_num_vargens(self._c_net)
 
-    property num_vargens:
-        """ Same as :attr:`num_var_generators <pfnet.Network.num_var_generators>`. """
-        def __get__(self): return self.num_var_generators
-
     property num_batteries:
         """ Number of batteries in the network (int). """
         def __get__(self): return cnet.NET_get_num_bats(self._c_net)
-
-    property num_bats:
-        """ Same as :attr:`num_batteries <pfnet.Network.num_batteries>`. """
-        def __get__(self): return self.num_batteries
 
     property num_vars:
         """ Number of network quantities that have been set to variable (int). """
@@ -1146,11 +1105,11 @@ cdef class Network:
             else:
                 return np.array(r)
 
-    property vargen_corr_radius:
+    property var_generators_corr_radius:
         """ Correlation radius of variable generators (number of edges). """
         def __get__(self): return cnet.NET_get_vargen_corr_radius(self._c_net)
 
-    property vargen_corr_value:
+    property var_generators_corr_value:
         """ Correlation value (coefficient) of variable generators. """
         def __get__(self): return cnet.NET_get_vargen_corr_value(self._c_net)
 
