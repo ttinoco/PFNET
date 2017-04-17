@@ -122,8 +122,8 @@ void CONSTR_GEN_RAMP_allocate(Constr* c) {
   CONSTR_set_l(c,VEC_new(num_constr));
   CONSTR_set_u(c,VEC_new(num_constr));
   CONSTR_set_G(c,MAT_new(num_constr, // size1 (rows)
-			 num_vars,   // size2 (rows)
-			 G_nnz)); // nnz
+			 num_vars,   // size2 (cols)
+			 G_nnz));    // nnz
 }
 
 void CONSTR_GEN_RAMP_analyze_step(Constr* c, Branch* br, int t) {
