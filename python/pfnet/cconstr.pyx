@@ -125,14 +125,10 @@ cdef class ConstraintBase:
 
         Parameters
         ----------
-        sA : :class:`ndarray <numpy.ndarray>`
-             sensitivities for linear equality constraints (:math:`Ax = b`)
-        sf : :class:`ndarray <numpy.ndarray>`
-             sensitivities for nonlinear equality constraints (:math:`f(x) = 0`)
-        sGu : :class:`ndarray <numpy.ndarray>`
-             sensitivities for linear inequality constraints (:math:`Gx \le u`)
-        sGl : :class:`ndarray <numpy.ndarray>`
-             sensitivities for linear inequality constraints (:math:`l \le Gx`)
+        sA : :class:`ndarray <numpy.ndarray>` (sensitivities for linear equality constraints (:math:`Ax = b`))
+        sf : :class:`ndarray <numpy.ndarray>` (sensitivities for nonlinear equality constraints (:math:`f(x) = 0`))
+        sGu : :class:`ndarray <numpy.ndarray>` (sensitivities for linear inequality constraints (:math:`Gx \le u`))
+        sGl : :class:`ndarray <numpy.ndarray>` (sensitivities for linear inequality constraints (:math:`l \le Gx`))
         """
 
         cdef np.ndarray[double,mode='c'] xA = sA
@@ -410,6 +406,8 @@ cdef class Constraint(ConstraintBase):
             self._c_constr = cconstr.CONSTR_PAR_GEN_P_new(net._c_net)
         elif name == "generator reactive power participation":
             self._c_constr = cconstr.CONSTR_PAR_GEN_Q_new(net._c_net)
+        elif name == "generator ramp limits":
+            self._c_constr = cconstr.CONSTR_GEN_RAMP_new(net._c_net)
         elif name == "voltage regulation by generators":
             self._c_constr = cconstr.CONSTR_REG_GEN_new(net._c_net)
         elif name == "voltage regulation by transformers":
@@ -420,8 +418,8 @@ cdef class Constraint(ConstraintBase):
             self._c_constr = cconstr.CONSTR_DC_FLOW_LIM_new(net._c_net)
         elif name == "AC branch flow limits":
             self._c_constr = cconstr.CONSTR_AC_FLOW_LIM_new(net._c_net)
-        elif name == "generator ramp limits":
-            self._c_constr = cconstr.CONSTR_GEN_RAMP_new(net._c_net)
+        elif name == "battery dynamics":
+            self._c_constr = cconstr.CONSTR_BAT_DYN_new(net._c_net)
         else:
             raise ConstraintError('invalid constraint name')            
         self._alloc = True

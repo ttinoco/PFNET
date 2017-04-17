@@ -4147,6 +4147,175 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(np.all(constr.A.col == constrREF.A.col))
             self.assertTrue(np.all(constr.A.data == constrREF.A.data))
 
+    def test_constr_BAT_DYN(self):
+
+        # Multi period
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,5)
+            self.assertEqual(net.num_periods,5)
+            self.assertEqual(net.num_vars,0)
+
+            # Add battries
+            gen_buses = net.get_generator_buses()
+            net.add_batteries(gen_buses,20.,40.,0.8,0.7)
+            self.assertEqual(net.num_batteries,len(gen_buses))
+            self.assertGreater(net.num_batteries,0)
+
+            # Vars
+            net.set_flags('battery',
+                          'variable',
+                          'any',
+                          ['charging power','energy level'])
+            self.assertEqual(net.num_vars,5*3*net.num_batteries)
+
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+
+            # Constraint
+            constr = pf.Constraint('battery dynamics',net)
+            self.assertEqual(constr.name,'battery dynamics')
+
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            l = constr.l
+            G = constr.G
+            u = constr.u
+
+            # Before
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(0,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,0))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(0,0))
+            self.assertEqual(A.nnz,0)
+            self.assertTrue(type(l) is np.ndarray)
+            self.assertTupleEqual(l.shape,(0,))
+            self.assertTrue(type(u) is np.ndarray)
+            self.assertTupleEqual(u.shape,(0,))
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(0,0))
+            self.assertEqual(G.nnz,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
+
+            constr.analyze()
+            self.assertEqual(constr.A_row,(5+1)*net.num_batteries)
+            self.assertEqual(constr.A_nnz,5*4*net.num_batteries)
+            self.assertEqual(constr.G_nnz,0)
+            constr.eval(x0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
+
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            l = constr.l
+            G = constr.G
+            u = constr.u
+
+            # After
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(6*net.num_batteries,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,net.num_vars))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(6*net.num_batteries,net.num_vars))
+            self.assertEqual(A.nnz,5*4*net.num_batteries)
+            self.assertTrue(type(l) is np.ndarray)
+            self.assertTupleEqual(l.shape,(0,))
+            self.assertTrue(type(u) is np.ndarray)
+            self.assertTupleEqual(u.shape,(0,))
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(0,net.num_vars))
+            self.assertEqual(G.nnz,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
+            
+            for t in range(5):
+                for bat in net.batteries:
+                    self.assertTrue(bat.has_flags('variable',['charging power','energy level']))
+                    
+                    aPc = np.where(A.col == bat.index_Pc[t])[0]
+                    aPd = np.where(A.col == bat.index_Pd[t])[0]
+                    aE = np.where(A.col == bat.index_E[t])[0]
+                    if t < 5-1:
+                        aEE = np.where(A.col == bat.index_E[t+1])[0]
+                    
+                    self.assertEqual(aPc.size,1)
+                    self.assertEqual(aPd.size,1)
+                   
+                    eq_row = A.row[aPc[0]]
+                    self.assertEqual(eq_row,A.row[aPd[0]])
+                    self.assertEqual(A.data[aPc[0]],-bat.eta_c)
+                    self.assertEqual(A.data[aPd[0]],1./bat.eta_d)
+ 
+                    if t == 0:
+                        self.assertEqual(aE.size,2)
+                        
+                        # init eq
+                        j = aE[0] 
+                        self.assertEqual(A.data[j],1.)
+                        self.assertEqual(b[A.row[j]],bat.E_init)
+                        self.assertEqual(np.where(A.row == A.row[j])[0].size,1)
+                        
+                        # update eq E_{t+1} - E_t - eta_c Pc_t + (1/eta_d) Pd_t = 0
+                        j = aE[1]
+                        self.assertEqual(A.data[j],-1.)
+                        self.assertEqual(b[A.row[j]],0.)
+                        self.assertEqual(np.where(A.row == A.row[j])[0].size,4)
+                        self.assertEqual(A.row[j],eq_row)
+                        self.assertEqual(A.row[j],A.row[aEE[0]])
+                        
+                    elif t < 5-1:
+                        self.assertEqual(aE.size,2)
+
+                        # update eq E_t - E_{t-1} - eta_c Pc_{t-1} + (1/eta_d) Pd_{t-1} = 0
+                        j = aE[0]
+                        self.assertEqual(A.data[j],1.)
+                        self.assertEqual(b[A.row[j]],0.)
+                        self.assertEqual(np.where(A.row == A.row[j])[0].size,4)
+                        self.assertNotEqual(A.row[j],eq_row)
+                        self.assertNotEqual(A.row[j],A.row[aEE[0]])
+
+                        # update eq E_{t+1} - E_t - eta_c Pc_t + (1/eta_d) Pd_t = 0
+                        j = aE[1]
+                        self.assertEqual(A.data[j],-1.)
+                        self.assertEqual(b[A.row[j]],0.)
+                        self.assertEqual(np.where(A.row == A.row[j])[0].size,4)
+                        self.assertEqual(A.row[j],eq_row)
+                        self.assertEqual(A.row[j],A.row[aEE[0]])
+
+                    else:
+                        self.assertEqual(aE.size,2)
+
+                        # update eq E_t - E_{t-1} - eta_c Pc_{t-1} + (1/eta_d) Pd_{t-1} = 0
+                        j = aE[0]
+                        self.assertEqual(A.data[j],1.)
+                        self.assertEqual(b[A.row[j]],0.)
+                        self.assertEqual(np.where(A.row == A.row[j])[0].size,4)
+                        self.assertNotEqual(A.row[j],eq_row)
+
+                        # update eq - E_t - eta_c Pc_t + (1/eta_d) Pd_t = -E_final
+                        j = aE[1]
+                        self.assertEqual(A.data[j],-1.)
+                        self.assertEqual(b[A.row[j]],-bat.E_final)
+                        self.assertEqual(np.where(A.row == A.row[j])[0].size,3)
+                        self.assertEqual(A.row[j],eq_row)
+
     def tearDown(self):
 
         pass
