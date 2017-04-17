@@ -585,8 +585,8 @@ class TestProblem(unittest.TestCase):
             self.assertTupleEqual(l.shape,(net.num_buses,))
             self.assertTupleEqual(u.shape,(net.num_buses,))
             for bus in net.buses:
-                self.assertEqual(bus.v_max,u[bus.index_v_mag])
-                self.assertEqual(bus.v_min,l[bus.index_v_mag])
+                self.assertEqual(bus.v_max_reg,u[bus.index_v_mag])
+                self.assertEqual(bus.v_min_reg,l[bus.index_v_mag])
 
     def test_problem_Glu_construction(self):
 

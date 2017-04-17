@@ -371,7 +371,7 @@ void CONSTR_REG_TRAN_analyze_step(Constr* c, Branch* br, int tau) {
       MAT_set_j(J,*J_nnz,index_yz_vmax);
       (*J_nnz)++; // dcompVmax/dz
       
-      // H	
+      // H
       MAT_set_i(Hvmin,H_nnz[*J_row],index_yz_vmin);
       MAT_set_j(Hvmin,H_nnz[*J_row],index_yz_vmin);
       H_nnz[*J_row]++;   // y and y (vmin)
@@ -602,8 +602,8 @@ void CONSTR_REG_TRAN_eval_step(Constr* c, Branch* br, int tau, Vec* values) {
       v = VEC_get(values,BUS_get_index_v_mag(reg_bus,tau));
     else
       v = BUS_get_v_mag(reg_bus,tau);
-    vmax = BUS_get_v_max(reg_bus);
-    vmin = BUS_get_v_min(reg_bus);
+    vmax = BUS_get_v_max_reg(reg_bus);
+    vmin = BUS_get_v_min_reg(reg_bus);
     if (BUS_has_flags(reg_bus,FLAG_VARS,BUS_VAR_VVIO)) {
       vl = VEC_get(values,BUS_get_index_vl(reg_bus,tau));
       vh = VEC_get(values,BUS_get_index_vh(reg_bus,tau));
@@ -679,7 +679,7 @@ void CONSTR_REG_TRAN_eval_step(Constr* c, Branch* br, int tau, Vec* values) {
       J[*J_nnz] = (1.-yz_vmax/sqrtermVmax)*norm;
       (*J_nnz)++; // dcompVmax/dz
       
-      // H	
+      // H
       Hvmin[H_nnz[*J_row]] = -(((v+vl-vmin)*(v+vl-vmin)+2*CONSTR_REG_TRAN_PARAM)/pow(sqrtermVmin,3.))*norm;
       H_nnz[*J_row]++;   // y and y (vmin)
       
@@ -785,7 +785,7 @@ void CONSTR_REG_TRAN_eval_step(Constr* c, Branch* br, int tau, Vec* values) {
       J[*J_nnz] = (1.-vvio_tmin/sqrtermTmin)*norm;
       (*J_nnz)++; // dcompTmin/dvh
 
-      // H 
+      // H
       Htmax[H_nnz[*J_row+2]] = -(((tmax-t)*(tmax-t) + 2*CONSTR_REG_TRAN_PARAM)/pow(sqrtermTmax,3.))*norm;
       H_nnz[*J_row+2]++; // vl and vl (tmax)
 

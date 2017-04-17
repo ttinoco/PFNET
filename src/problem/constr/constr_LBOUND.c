@@ -171,8 +171,8 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	MAT_set_j(G,index,index);
 	MAT_set_d(G,index,1.);
 	if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VMAG)) {
-	  VEC_set(u,index,BUS_get_v_max(bus));
-	  VEC_set(l,index,BUS_get_v_min(bus));
+	  VEC_set(u,index,BUS_get_v_max_reg(bus));
+	  VEC_set(l,index,BUS_get_v_min_reg(bus));
 	}
 	else {
 	  VEC_set(u,index,BUS_INF_V_MAG);

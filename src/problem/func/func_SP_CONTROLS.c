@@ -363,7 +363,7 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 	index_val = BUS_get_index_v_mag(bus,t);
 	val = VEC_get(var_values,index_val);
 	val0 = BUS_get_v_set(bus,t);
-	dval = BUS_get_v_max(bus)-BUS_get_v_min(bus);
+	dval = BUS_get_v_max_reg(bus)-BUS_get_v_min_reg(bus);
 	if (dval < FUNC_SP_CONTROLS_CEPS)
 	  dval = FUNC_SP_CONTROLS_CEPS;
 	sqrt_term = sqrt( (val-val0)*(val-val0)/(dval*dval) + FUNC_SP_CONTROLS_EPS );

@@ -674,8 +674,8 @@ void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* values) {
 	  v = VEC_get(values,BUS_get_index_v_mag(bus,t));
 	else
 	  v = BUS_get_v_mag(bus,t);
-	vmax = BUS_get_v_max(bus);
-	vmin = BUS_get_v_min(bus);
+	vmax = BUS_get_v_max_reg(bus);
+	vmin = BUS_get_v_min_reg(bus);
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
 	  vl = VEC_get(values,BUS_get_index_vl(bus,t));
 	  vh = VEC_get(values,BUS_get_index_vh(bus,t));

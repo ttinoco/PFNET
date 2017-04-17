@@ -830,13 +830,13 @@ class TestConstraints(unittest.TestCase):
                                                    'voltage angle',
                                                    'voltage magnitude deviation',
                                                    'voltage magnitude violation']))
-                    self.assertEqual(u[bus.index_v_mag],bus.v_max)
+                    self.assertEqual(u[bus.index_v_mag],bus.v_max_reg)
                     self.assertEqual(u[bus.index_v_ang],pf.BUS_INF_V_ANG)
                     self.assertEqual(u[bus.index_y],pf.BUS_INF_V_MAG)
                     self.assertEqual(u[bus.index_z],pf.BUS_INF_V_MAG)
                     self.assertEqual(u[bus.index_vl],pf.BUS_INF_V_MAG)
                     self.assertEqual(u[bus.index_vh],pf.BUS_INF_V_MAG)
-                    self.assertEqual(l[bus.index_v_mag],bus.v_min)
+                    self.assertEqual(l[bus.index_v_mag],bus.v_min_reg)
                     self.assertEqual(l[bus.index_v_ang],-pf.BUS_INF_V_ANG)
                     self.assertEqual(l[bus.index_y],0.)
                     self.assertEqual(l[bus.index_z],0.)
@@ -1139,9 +1139,9 @@ class TestConstraints(unittest.TestCase):
 
             for t in range(self.T):
                 for bus in net.buses:
-                    self.assertEqual(u[bus.index_v_mag[t]],bus.v_max)
+                    self.assertEqual(u[bus.index_v_mag[t]],bus.v_max_reg)
                     self.assertEqual(u[bus.index_v_ang[t]],pf.BUS_INF_V_ANG)
-                    self.assertEqual(l[bus.index_v_mag[t]],bus.v_min)
+                    self.assertEqual(l[bus.index_v_mag[t]],bus.v_min_reg)
                     self.assertEqual(l[bus.index_v_ang[t]],-pf.BUS_INF_V_ANG)
                 for gen in net.generators:
                     self.assertEqual(u[gen.index_P[t]],gen.P_max)
@@ -2301,8 +2301,8 @@ class TestConstraints(unittest.TestCase):
                         self.assertTrue(br.has_flags('variable','tap ratio'))
                         self.assertTrue(br.has_flags('variable','tap ratio deviation'))
                         bus = br.reg_bus
-                        fvmin = ((bus.v_mag[t]-bus.v_min) - np.sqrt((bus.v_mag[t]-bus.v_min)**2. + 2*eta))*normal
-                        fvmax = ((bus.v_max-bus.v_mag[t]) - np.sqrt((bus.v_max-bus.v_mag[t])**2. + 2*eta))*normal
+                        fvmin = ((bus.v_mag[t]-bus.v_min_reg) - np.sqrt((bus.v_mag[t]-bus.v_min_reg)**2. + 2*eta))*normal
+                        fvmax = ((bus.v_max_reg-bus.v_mag[t]) - np.sqrt((bus.v_max_reg-bus.v_mag[t])**2. + 2*eta))*normal
                         ftmax = ((br.ratio_max-br.ratio[t]) - np.sqrt((br.ratio_max-br.ratio[t])**2. + 2*eta))*normal
                         ftmin = ((br.ratio[t]-br.ratio_min) - np.sqrt((br.ratio[t]-br.ratio_min)**2. + 2*eta))*normal
                         self.assertLess(np.abs(fvmin-f[index]),1e-10*(1+np.abs(fvmin)))
@@ -2548,8 +2548,8 @@ class TestConstraints(unittest.TestCase):
                                 self.assertEqual(x0[s.index_z[t]],0.)
                                 self.assertEqual(x0[bus.index_vl[t]],0.)
                                 self.assertEqual(x0[bus.index_vh[t]],0.)
-                                fvmin = ((bus.v_mag[t]-bus.v_min) - np.sqrt((bus.v_mag[t]-bus.v_min)**2. + 2.*eta))*normal
-                                fvmax = ((bus.v_max-bus.v_mag[t]) - np.sqrt((bus.v_max-bus.v_mag[t])**2. + 2.*eta))*normal
+                                fvmin = ((bus.v_mag[t]-bus.v_min_reg) - np.sqrt((bus.v_mag[t]-bus.v_min_reg)**2. + 2.*eta))*normal
+                                fvmax = ((bus.v_max_reg-bus.v_mag[t]) - np.sqrt((bus.v_max_reg-bus.v_mag[t])**2. + 2.*eta))*normal
                                 fbmax = ((s.b_max-s.b[t]) - np.sqrt((s.b_max-s.b[t])**2. + 2*eta))*normal
                                 fbmin = ((s.b[t]-s.b_min) - np.sqrt((s.b[t]-s.b_min)**2. + 2*eta))*normal
                                 self.assertLess(np.abs(fvmin-f[index]),1e-10*(1+np.abs(fvmin)))

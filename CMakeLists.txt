@@ -20,9 +20,6 @@ set(RAW_PARSER_SOURCE_DIR ""
 # find PFNET source files
 file(GLOB_RECURSE pfnet_source src/*.c)
 
-# add include directory
-include_directories(${PFNET_SOURCE_DIR}/include)
-
 # add shared library target
 add_library(pfnet SHARED ${pfnet_source})
 
@@ -77,10 +74,60 @@ if(NOT ${RAW_PARSER_SOURCE_DIR} STREQUAL "")
   install(DIRECTORY ${RAW_PARSER_SOURCE_DIR}/include/
           DESTINATION include
           FILES_MATCHING PATTERN "*.h")
+  set(HAVE_RAW_PARSER 1)  # need to set it to 1 so that the dummy parser in pfnet does not conflict
 else()
   message("raw-parser not enabled.")
   add_definitions(-DNO_RAW_PARSER)
 endif()
+
+# add checks needed to produce pfnet_config.h
+INCLUDE (CheckIncludeFiles)
+INCLUDE (CheckTypeSize)
+INCLUDE (CheckFunctionExists)
+INCLUDE (CheckLibraryExists)
+
+# Check for include files
+# Checks for graphviz
+CHECK_LIBRARY_EXISTS(gvc gvContext "" HAVE_LIBGVC)
+CHECK_LIBRARY_EXISTS(cgraph agopen "" HAVE_LIBCGRAPH)
+CHECK_INCLUDE_FILES("graphviz/gvc.h"  HAVE_GRAPHVIZ_GVC_H)
+
+# Checks std header files.
+CHECK_INCLUDE_FILES("stddef.h"  HAVE_STDDEF_H)
+CHECK_INCLUDE_FILES("stdint.h"  HAVE_STDINT_H)
+CHECK_INCLUDE_FILES("stdlib.h"  HAVE_STDLIB_H)
+
+# Checks other header files
+CHECK_INCLUDE_FILES("string.h"  HAVE_STRING_H)
+CHECK_INCLUDE_FILES("strings.h"  HAVE_STRING_H)
+CHECK_INCLUDE_FILES("memory.h"  HAVE_MEMORY_H)
+CHECK_INCLUDE_FILES("sys/stat.h"  HAVE_SYS_STAT_H)
+CHECK_INCLUDE_FILES("sys/types.h"  HAVE_SYS_TYPES_H)
+CHECK_INCLUDE_FILES("unistd.h"  HAVE_UNISTD_H)
+
+# Checks for raw parser, not needed since adding files directly to package above
+# Option "-Wl,-rpath,$PWD/lib" needed for "make check" without LD_LIBRARY_PATH
+#CHECK_LIBRARY_EXISTS(raw_parser RAW_PARSER_new ${PFNET_SOURCE_DIR}/lib/ HAVE_RAW_PARSER)
+
+# Checks for typedefs, structures, and compiler characteristics.
+CHECK_INCLUDE_FILES("inttypes.h" HAVE_INTTYPES_H)
+CHECK_TYPE_SIZE(ptrdiff_t HAVE_PTRDIFF_T)
+
+# Checks for library functions.
+CHECK_FUNCTION_EXISTS(malloc HAVE_MALLOC)
+CHECK_FUNCTION_EXISTS(memset HAVE_MEMSET)
+CHECK_FUNCTION_EXISTS(pow HAVE_POW)
+CHECK_FUNCTION_EXISTS(sqrt HAVE_SQRT)
+CHECK_FUNCTION_EXISTS(strchr HAVE_STRCHR)
+CHECK_FUNCTION_EXISTS(strdup HAVE_STRDUP)
+CHECK_FUNCTION_EXISTS(strstr HAVE_STRSTR)
+
+# create pfnet_config.h file
+configure_file(${PFNET_SOURCE_DIR}/include/pfnet/pfnet_config.cmake.in ${PFNET_SOURCE_DIR}/include/pfnet/pfnet_config.h)
+
+# add include directory
+include_directories(${PFNET_SOURCE_DIR}/include)
+
 
 # install library to <prefix>/lib
 install(TARGETS pfnet pfnet_static

@@ -598,8 +598,8 @@ void CONSTR_NBOUND_eval_step(Constr* c, Branch* br, int t, Vec* values) {
 	  BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
 
 	u = VEC_get(values,BUS_get_index_v_mag(bus,t));
-	umax = BUS_get_v_max(bus);
-	umin = BUS_get_v_min(bus);
+	umax = BUS_get_v_max_reg(bus);
+	umin = BUS_get_v_min_reg(bus);
 	du = (umax-umin > eps) ? umax-umin : eps;
 
 	a1 = umax-u;
