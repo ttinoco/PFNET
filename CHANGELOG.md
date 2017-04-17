@@ -14,6 +14,7 @@ Unreleased
 * Support for variable generator curtailments (done).
 * User-friendly way to add batteries and variable generators (done).
 * Improved naming consistency in Python network class (done).
+* Support for all battery and load variables in ACPF and network properties (done).
 * Battery boundary conditions.
 * Load constant power factor.
 * Updated documentation and examples.

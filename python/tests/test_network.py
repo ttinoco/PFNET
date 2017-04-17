@@ -1734,7 +1734,7 @@ class TestNetwork(unittest.TestCase):
             netMP = pf.Parser(case).parse(case,self.T)
             self.assertEqual(netMP.num_periods,self.T)
 
-            # add vargens
+            # Add vargens
             net.add_var_generators(net.get_load_buses(),80.,50.,30.,5,0.05)
             netMP.add_var_generators(netMP.get_load_buses(),80.,50.,30.,5,0.05)
             for vargen in net.var_generators:
@@ -1854,7 +1854,7 @@ class TestNetwork(unittest.TestCase):
             self.assertTrue(np.all(np.abs(netMP.tran_v_vio-tvvio) < 1e-10))
             self.assertTrue(np.all(np.abs(netMP.shunt_v_vio-svvio) < 1e-10))
             self.assertTrue(np.all(np.abs(netMP.gen_v_dev-vdev) < 1e-10))
-
+            
             # Generators
             Pvio = 0
             Qvio = 0

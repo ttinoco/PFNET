@@ -72,6 +72,7 @@ cdef extern from "pfnet/bus.h":
     Load* BUS_get_load(Bus* bus)
     Vargen* BUS_get_vargen(Bus* bus)
     Bat* BUS_get_bat(Bus* bus)
+    Shunt* BUS_get_shunt(Bus* bus)
     int BUS_get_degree(Bus* bus)
     REAL BUS_get_total_gen_P(Bus* bus, int t)
     REAL BUS_get_total_gen_Q(Bus* bus, int t)

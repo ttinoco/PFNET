@@ -1463,22 +1463,82 @@ class TestConstraints(unittest.TestCase):
 
             net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
-
-            # load
-            if sum([l.P[0] for l in net.loads]) < 0:
-                lmin = np.min([l.P for l in net.loads])
-                for l in net.loads:
-                    l.P = l.P + np.abs(lmin)
-
-            # add vargens
+            
+            # Add vargens
             load_buses = net.get_load_buses()
             net.add_var_generators(load_buses,80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len(load_buses))
             for vargen in net.var_generators:
-                vargen.Q = np.abs(vargen.P)
-                for t in range(self.T):
-                    self.assertGreater(vargen.Q[t],0.)
+                vargen.P = np.random.rand(net.num_periods)
+                vargen.Q = np.random.randn(net.num_periods)
+
+            # Add batteries
+            gen_buses = net.get_generator_buses()
+            net.add_batteries(gen_buses,20.,40.,0.8,0.9)
+            self.assertGreater(net.num_batteries,0)
+            self.assertEqual(net.num_batteries,len(gen_buses))
+            for bat in net.batteries:
+                bat.P = np.random.randn(net.num_periods)
+
+            # No vars
+            self.assertEqual(net.num_vars,0)
+            
+            # Constraint
+            constr = pf.Constraint('AC power balance',net)
+            self.assertEqual(constr.name,'AC power balance')
+
+            x0 = net.get_var_values()
+            self.assertEqual(x0.size,0)
+            constr.analyze()
+            constr.eval(x0)
+            
+            f = constr.f
+            self.assertEqual(f.size,2*net.num_buses*net.num_periods)
+
+            # Check mismatches (no vars)
+            for t in range(net.num_periods):
+                for bus in net.buses:
+                    P_mis = 0.
+                    Q_mis = 0.
+                    for branch in bus.branches_k:
+                        P_mis -= branch.get_P_km()[t]
+                        Q_mis -= branch.get_Q_km()[t]
+                    for branch in bus.branches_m:
+                        P_mis -= branch.get_P_mk()[t]
+                        Q_mis -= branch.get_Q_mk()[t]
+                    for gen in bus.generators:
+                        P_mis += gen.P[t]
+                        Q_mis += gen.Q[t]
+                    for vargen in bus.var_generators:
+                        P_mis += vargen.P[t]
+                        Q_mis += vargen.Q[t]
+                    for load in bus.loads:
+                        P_mis -= load.P[t]
+                        Q_mis -= load.Q[t]
+                    for bat in bus.batteries:
+                        P_mis -= bat.P[t]
+                    for shunt in bus.shunts:
+                        P_mis -= shunt.g*(bus.v_mag[t]**2.)
+                        Q_mis -= -shunt.b[t]*(bus.v_mag[t]**2.)
+                    self.assertAlmostEqual(P_mis,f[bus.index_P+t*2*net.num_buses])
+                    self.assertAlmostEqual(Q_mis,f[bus.index_Q+t*2*net.num_buses])
+
+            # Cross check mismatches with net properties (no vars)
+            net.update_properties()
+            dP_list = dict([(t,list()) for t in range(self.T)])
+            dQ_list = dict([(t,list()) for t in range(self.T)])
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    dP = f[bus.index_P+t*2*net.num_buses]
+                    dQ = f[bus.index_Q+t*2*net.num_buses]
+                    dP_list[t].append(dP)
+                    dQ_list[t].append(dQ)
+                    self.assertAlmostEqual(dP,bus.P_mis[t])
+                    self.assertAlmostEqual(dQ,bus.Q_mis[t])
+            self.assertAlmostEqual(net.bus_P_mis[t],np.max(np.abs(dP_list[t]))*net.base_power)
+            self.assertAlmostEqual(net.bus_Q_mis[t],np.max(np.abs(dQ_list[t]))*net.base_power)
 
             # Vars
             net.set_flags('bus',
@@ -1487,12 +1547,12 @@ class TestConstraints(unittest.TestCase):
                           ['voltage magnitude','voltage angle'])
             net.set_flags('generator',
                           'variable',
-                          'slack',
-                          'active power')
-            net.set_flags('generator',
+                          'any',
+                          ['active power','reactive power'])
+            net.set_flags('load',
                           'variable',
-                          'regulator',
-                          'reactive power')
+                          'any',
+                          ['active power','reactive power'])
             net.set_flags('branch',
                           'variable',
                           'tap changer',
@@ -1509,19 +1569,24 @@ class TestConstraints(unittest.TestCase):
                           'variable',
                           'any',
                           ['active power','reactive power'])
+            net.set_flags('battery',
+                          'variable',
+                          'any',
+                          ['charging power','energy level'])
             self.assertEqual(net.num_vars,
-                             (2*net.get_num_buses() +
-                              net.get_num_slack_gens() +
-                              net.get_num_reg_gens() +
+                             (2*net.num_buses +
+                              2*net.num_generators +
+                              2*net.num_loads +
                               net.get_num_tap_changers() +
                               net.get_num_phase_shifters() +
                               net.get_num_switched_shunts() +
+                              3*net.num_batteries +
                               net.num_var_generators*2)*self.T)
 
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
-
+            
             # Constraint
             constr = pf.Constraint('AC power balance',net)
             self.assertEqual(constr.name,'AC power balance')
@@ -1551,13 +1616,14 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.A_nnz,0)
             self.assertEqual(constr.G_nnz,0)
 
-            num_Jnnz = (net.get_num_buses()*4 +
-                        net.get_num_branches()*8 +
+            num_Jnnz = (net.num_buses*4 +
+                        net.num_branches*8 +
                         net.get_num_tap_changers()*4 +
                         net.get_num_phase_shifters()*4 +
                         net.get_num_switched_shunts() +
-                        net.get_num_slack_gens() +
-                        net.get_num_reg_gens()+
+                        net.num_generators*2 +
+                        net.num_loads*2 +
+                        net.num_batteries*2 +
                         net.num_var_generators*2)*self.T
 
             constr.analyze()
@@ -1597,8 +1663,47 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(not np.any(np.isinf(f)))
             self.assertTrue(not np.any(np.isnan(f)))
 
-            # Cross check mismatches
-            net.update_properties(x0)
+            # Check mismatches
+            x1 = x0+np.random.randn(net.num_vars)
+            constr.eval(x1)
+            for t in range(net.num_periods):
+                for bus in net.buses:
+                    P_mis = 0.
+                    Q_mis = 0.
+                    for branch in bus.branches_k:
+                        P_mis -= branch.get_P_km(x1)[t]
+                        Q_mis -= branch.get_Q_km(x1)[t]
+                    for branch in bus.branches_m:
+                        P_mis -= branch.get_P_mk(x1)[t]
+                        Q_mis -= branch.get_Q_mk(x1)[t]
+                    for gen in bus.generators:
+                        P_mis += x1[gen.index_P[t]]
+                        Q_mis += x1[gen.index_Q[t]]
+                    for vargen in bus.var_generators:
+                        P_mis += x1[vargen.index_P[t]]
+                        Q_mis += x1[vargen.index_Q[t]]
+                    for load in bus.loads:
+                        P_mis -= x1[load.index_P[t]]
+                        Q_mis -= x1[load.index_Q[t]]
+                    for bat in bus.batteries:
+                        P_mis -= x1[bat.index_Pc[t]]-x1[bat.index_Pd[t]]
+                    for shunt in bus.shunts:
+                        if shunt.has_flags('variable','susceptance'):
+                            b = x1[shunt.index_b[t]]
+                        else:
+                            b = shunt.b[t]
+                        if bus.has_flags('variable','voltage magnitude'):
+                            v = x1[bus.index_v_mag[t]]
+                        else:
+                            v = bus.v_mag[t]
+                        P_mis -= shunt.g*v*v
+                        Q_mis -= -b*v*v
+                    self.assertAlmostEqual(P_mis,f[bus.index_P+t*2*net.num_buses])
+                    self.assertAlmostEqual(Q_mis,f[bus.index_Q+t*2*net.num_buses])
+
+            # Cross check mismatches with net properties
+            constr.eval(x1)
+            net.update_properties(x1)
             dP_list = dict([(t,list()) for t in range(self.T)])
             dQ_list = dict([(t,list()) for t in range(self.T)])
             for t in range(self.T):
@@ -1608,43 +1713,43 @@ class TestConstraints(unittest.TestCase):
                     dQ = f[bus.index_Q+t*2*net.num_buses]
                     dP_list[t].append(dP)
                     dQ_list[t].append(dQ)
-                    self.assertLess(np.abs(dP-bus.P_mis[t]),1e-10)
-                    self.assertLess(np.abs(dQ-bus.Q_mis[t]),1e-10)
-            self.assertLess(np.abs(net.bus_P_mis[t]-np.max(np.abs(dP_list[t]))*net.base_power),1e-10)
-            self.assertLess(np.abs(net.bus_Q_mis[t]-np.max(np.abs(dQ_list[t]))*net.base_power),1e-10)
+                    self.assertAlmostEqual(dP,bus.P_mis[t])
+                    self.assertAlmostEqual(dQ,bus.Q_mis[t])
+            self.assertAlmostEqual(net.bus_P_mis[t],np.max(np.abs(dP_list[t]))*net.base_power)
+            self.assertAlmostEqual(net.bus_Q_mis[t],np.max(np.abs(dQ_list[t]))*net.base_power)
 
-            # Remove vargen injections
-            fsaved = f.copy()
-            x0saved = x0.copy()
-            for t in range(self.T):
-                for vargen in net.var_generators:
-                    x0[vargen.index_P[t]] = 0.
-                    x0[vargen.index_Q[t]] = 0.
+            # Check mismatches across time
+            for vargen in net.var_generators:
+                vargen.P = np.ones(net.num_periods)*0.2 # static
+                vargen.Q = np.ones(net.num_periods)*0.1 # static
+            for bat in net.batteries:
+                bat.P = np.ones(net.num_periods)*0.1    # static
+            x0 = net.get_var_values()
             constr.eval(x0)
+            f = constr.f
+            J = constr.J
+            P_list = []
             for t in range(self.T):
-                for vargen in net.var_generators:
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*net.num_buses]-
-                                           constr.f[vargen.bus.index_P+t*2*net.num_buses]-vargen.P[t]),1e-10)
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*net.num_buses]-
-                                           constr.f[vargen.bus.index_Q+t*2*net.num_buses]-vargen.Q[t]),1e-10)
-            for t in range(self.T):
-                for vargen in net.var_generators:
-                    p = vargen.bus.loads[0].P[t]-vargen.P[t]
-                    vargen.bus.loads[0].P[t] = p
-                    self.assertEqual(vargen.bus.loads[0].P[t],p)
-                    q = vargen.bus.loads[0].Q[t]-vargen.Q[t]
-                    vargen.bus.loads[0].Q[t] = q
-                    self.assertEqual(vargen.bus.loads[0].Q[t],q)
-            constr.eval(x0)
-            for t in range(self.T):
-                for vargen in net.var_generators:
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*net.num_buses]-
-                                           constr.f[vargen.bus.index_P+t*2*net.num_buses]),1e-10)
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*net.num_buses]-
-                                           constr.f[vargen.bus.index_Q+t*2*net.num_buses]),1e-10)
+                P_list.append(net.get_var_projection('all','all',t_start=t,t_end=t))
+            f_list = [f[t*2*net.num_buses:(t+1)*2*net.num_buses] for t in range(self.T)]
+            for t in range(self.T-1):
+                self.assertLess(norm(f_list[t]-f_list[t+1]),1e-12*norm(f_list[t]))
+            Jx = J*x0
+            Jx_list = [Jx[t*2*net.num_buses:(t+1)*2*net.num_buses] for t in range(self.T)]
+            for t in range(self.T-1):
+                self.assertLess(norm(Jx_list[t]-Jx_list[t+1]),1e-12*norm(Jx_list[t]))
+            for i in range(10):
+                H_list = []
+                j = np.random.randint(0,2*net.num_buses)
+                for t in range(self.T):
+                    H_list.append(coo_matrix(P_list[t]*constr.get_H_single(t*2*net.num_buses+j)*P_list[t].T))
+                for t in range(self.T-1):
+                    self.assertTrue(np.all(H_list[t].row == H_list[t+1].row))
+                    self.assertTrue(np.all(H_list[t].col == H_list[t+1].col))
+                    self.assertLess(norm(H_list[t].data-H_list[t+1].data),1e-12*norm(H_list[t].data))
 
             # Jacobian check
-            x0 = x0saved.copy()
+            x0 = x0.copy()
             constr.eval(x0)
             f0 = constr.f.copy()
             J0 = constr.J.copy()
@@ -1736,30 +1841,6 @@ class TestConstraints(unittest.TestCase):
                     bus = net.get_bus(i)
                     self.assertEqual(bus.sens_P_balance[t],3.5*bus.index_P+0.33+t*2*net.num_buses)
                     self.assertEqual(bus.sens_Q_balance[t],3.4*bus.index_Q+0.32+t*2*net.num_buses)
-
-            # Mismatches
-            constr.eval(x0saved)
-            f = constr.f
-            J = constr.J
-            P_list = []
-            for t in range(self.T):
-                P_list.append(net.get_var_projection('all','all',t_start=t,t_end=t))
-            f_list = [f[t*2*net.num_buses:(t+1)*2*net.num_buses] for t in range(self.T)]
-            for t in range(self.T-1):
-                self.assertLess(norm(f_list[t]-f_list[t+1]),1e-12*norm(f_list[t]))
-            Jx = J*x0saved
-            Jx_list = [Jx[t*2*net.num_buses:(t+1)*2*net.num_buses] for t in range(self.T)]
-            for t in range(self.T-1):
-                self.assertLess(norm(Jx_list[t]-Jx_list[t+1]),1e-12*norm(Jx_list[t]))
-            for i in range(10):
-                H_list = []
-                j = np.random.randint(0,2*net.num_buses)
-                for t in range(self.T):
-                    H_list.append(coo_matrix(P_list[t]*constr.get_H_single(t*2*net.num_buses+j)*P_list[t].T))
-                for t in range(self.T-1):
-                    self.assertTrue(np.all(H_list[t].row == H_list[t+1].row))
-                    self.assertTrue(np.all(H_list[t].col == H_list[t+1].col))
-                    self.assertLess(norm(H_list[t].data-H_list[t+1].data),1e-12*norm(H_list[t].data))
 
     def test_constr_REG_GEN(self):
 

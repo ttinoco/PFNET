@@ -81,7 +81,7 @@ void CONSTR_ACPF_clear(Constr* c) {
   // Counters
   CONSTR_set_J_nnz(c,0);
   CONSTR_clear_H_nnz(c);
-
+  
   // Flags
   CONSTR_clear_bus_counted(c);
 }
@@ -93,6 +93,8 @@ void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
   Gen* gen;
   Vargen* vargen;
   Shunt* shunt;
+  Load* load;
+  Bat* bat;
   int* J_nnz;
   int* H_nnz;
   int H_nnz_val;
@@ -130,7 +132,7 @@ void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
   // Check outage
   if (BRANCH_is_on_outage(br))
     return;
-
+  
   // Key J indices
   dPdw_indices = data->dPdw_indices;
   dQdw_indices = data->dQdw_indices;
@@ -353,6 +355,36 @@ void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
 	    H_nnz[bus_index_t[k]]++; // b an vk
 	}
       }
+      
+      // Loads
+      for (load = BUS_get_load(bus[k]); load != NULL; load = LOAD_get_next(load)) {
+
+	//*****************************
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) { // Pl var
+
+	  // J
+	  (*J_nnz)++; // dPk/dPl
+	}
+
+	//*****************************
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) { // Ql var
+
+	  // J
+	  (*J_nnz)++; // dQk/dQl
+	}
+      }
+
+      // Batteries
+      for (bat = BUS_get_bat(bus[k]); bat != NULL; bat = BAT_get_next(bat)) {
+
+	//*****************************
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) { // Pc and Pd var
+
+	  // J
+	  (*J_nnz)++; // Pc
+	  (*J_nnz)++; // Pd
+	}
+      }  
     }
 
     // Update counted flag
@@ -457,6 +489,8 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
   Gen* gen;
   Vargen* vargen;
   Shunt* shunt;
+  Load* load;
+  Bat* bat;
   Mat* J;
   int* J_nnz;
   int* H_nnz;
@@ -814,7 +848,7 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
 	  // J
 	  MAT_set_i(J,*J_nnz,Q_index[k]);         // dQk/db
 	  MAT_set_j(J,*J_nnz,SHUNT_get_index_b(shunt,t));
-	  (*J_nnz)++; // dQk/db
+	  (*J_nnz)++;
 
 	  // H
 	  if (var_v[k]) {
@@ -824,6 +858,45 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
 	    H_nnz_val++;
 	    H_nnz[bus_index_t[k]] = H_nnz_val;
 	  }
+	}
+      }
+      
+      // Loads
+      for (load = BUS_get_load(bus[k]); load != NULL; load = LOAD_get_next(load)) {
+
+	//*****************************
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) { // Pl var
+
+	  // J
+	  MAT_set_i(J,*J_nnz,P_index[k]);                // dPk/dPl
+	  MAT_set_j(J,*J_nnz,LOAD_get_index_P(load,t));
+	  (*J_nnz)++;
+	}
+
+	//*****************************
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) { // Ql var
+
+	  // J
+	  MAT_set_i(J,*J_nnz,Q_index[k]);                // dQk/dQl
+	  MAT_set_j(J,*J_nnz,LOAD_get_index_Q(load,t));
+	  (*J_nnz)++;
+	}
+      }
+
+      // Batteries
+      for (bat = BUS_get_bat(bus[k]); bat != NULL; bat = BAT_get_next(bat)) {
+
+	//*****************************
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {  // Pc and Pd var
+
+	  // J
+	  MAT_set_i(J,*J_nnz,P_index[k]);              // Pc
+	  MAT_set_j(J,*J_nnz,BAT_get_index_Pc(bat,t));
+	  (*J_nnz)++;
+
+	  MAT_set_i(J,*J_nnz,P_index[k]);              // Pd
+	  MAT_set_j(J,*J_nnz,BAT_get_index_Pd(bat,t));
+	  (*J_nnz)++;
 	}
       }
     }
@@ -903,8 +976,8 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values) {
   REAL Q_km[2];
   REAL Q_kk[2];
 
-  REAL Pg;
-  REAL Qg;
+  REAL P;
+  REAL Q;
 
   REAL shunt_b;
   REAL shunt_g;
@@ -963,12 +1036,12 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values) {
   // Branch data
   var_a = BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO);
   var_phi = BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE);
-  b = BRANCH_get_b(br);           // series susceptance
-  b_sh[0] = BRANCH_get_b_k(br);   //  total shunt susceptance on bus from (i)
-  b_sh[1] = BRANCH_get_b_m(br);   //  total shunt susceptance on bus to (j)
-  g = BRANCH_get_g(br);           // series conductance
-  g_sh[0] = BRANCH_get_g_k(br);   //  total shunt conductance on bus from (i)
-  g_sh[1] = BRANCH_get_g_m(br);   //  total shunt conductance on bus to (j)
+  b = BRANCH_get_b(br);
+  b_sh[0] = BRANCH_get_b_k(br);
+  b_sh[1] = BRANCH_get_b_m(br);
+  g = BRANCH_get_g(br);
+  g_sh[0] = BRANCH_get_g_k(br);
+  g_sh[1] = BRANCH_get_g_m(br);
   if (var_a)
     a = VEC_get(values,BRANCH_get_index_ratio(br,t));
   else
@@ -992,18 +1065,18 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values) {
       phi_temp = -phi;
     }
 
-    /* Branch flow equations for refernce:
-    *  theta = w_k-w_m-theta_km+theta_mk
-    *  P_km =  a_km^2*v_k^2*(g_km + gsh_km) - a_km*a_mk*v_k*v_m*( g_km*cos(theta) + b_km*sin(theta) )
-    *  Q_km = -a_km^2*v_k^2*(b_km + bsh_km) - a_km*a_mk*v_k*v_m*( g_km*sin(theta) - b_km*cos(theta) )
-    */
+    /** Branch flow equations for refernce:
+     *  theta = w_k-w_m-theta_km+theta_mk
+     *  P_km =  a_km^2*v_k^2*(g_km + gsh_km) - a_km*a_mk*v_k*v_m*( g_km*cos(theta) + b_km*sin(theta) )
+     *  Q_km = -a_km^2*v_k^2*(b_km + bsh_km) - a_km*a_mk*v_k*v_m*( g_km*sin(theta) - b_km*cos(theta) )
+     */
 
-    // parts of the branch flow dependent on both vk, vm and the angles
+    // Parts of the branch flow dependent on both vk, vm and the angles
     // (note that a == a_mk*a_km regardless of the direction since the other direction will always will always be 1)
     P_km[k] = -a*v[k]*v[m]*(g*cos(w[k]-w[m]-phi_temp)+b*sin(w[k]-w[m]-phi_temp));
     Q_km[k] = -a*v[k]*v[m]*(g*sin(w[k]-w[m]-phi_temp)-b*cos(w[k]-w[m]-phi_temp));
 
-    // parts of the branch flow dependent on only vk^2
+    // Parts of the branch flow dependent on only vk^2
     P_kk[k] =  a_temp*a_temp*(g_sh[k]+g)*v[k]*v[k];
     Q_kk[k] = -a_temp*a_temp*(b_sh[k]+b)*v[k]*v[k];
   }
@@ -1249,17 +1322,17 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values) {
 
 	// Var values
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
-	  Pg = VEC_get(values,GEN_get_index_P(gen,t)); // p.u.
+	  P = VEC_get(values,GEN_get_index_P(gen,t)); // p.u.
 	else
-	  Pg = GEN_get_P(gen,t);                           // p.u.
+	  P = GEN_get_P(gen,t);                       // p.u.
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
-	  Qg = VEC_get(values,GEN_get_index_Q(gen,t)); // p.u.
+	  Q = VEC_get(values,GEN_get_index_Q(gen,t)); // p.u.
 	else
-	  Qg = GEN_get_Q(gen,t);                           // p.u.
+	  Q = GEN_get_Q(gen,t);                       // p.u.
 
 	// f
-	f[P_index[k]] += Pg;
-	f[Q_index[k]] += Qg;
+	f[P_index[k]] += P;
+	f[Q_index[k]] += Q;
 
 	//*****************************
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // Pg var
@@ -1283,17 +1356,17 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values) {
 
 	// Var values
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P))
-	  Pg = VEC_get(values,VARGEN_get_index_P(vargen,t)); // p.u.
+	  P = VEC_get(values,VARGEN_get_index_P(vargen,t)); // p.u.
 	else
-	  Pg = VARGEN_get_P(vargen,t);                           // p.u.
+	  P = VARGEN_get_P(vargen,t);                       // p.u.
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q))
-	  Qg = VEC_get(values,VARGEN_get_index_Q(vargen,t)); // p.u.
+	  Q = VEC_get(values,VARGEN_get_index_Q(vargen,t)); // p.u.
 	else
-	  Qg = VARGEN_get_Q(vargen,t);                           // p.u.
+	  Q = VARGEN_get_Q(vargen,t);                       // p.u.
 
 	// f
-	f[P_index[k]] += Pg;
-	f[Q_index[k]] += Qg;
+	f[P_index[k]] += P;
+	f[Q_index[k]] += Q;
 
 	//*****************************
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) { // Pg var
@@ -1310,21 +1383,6 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values) {
 	  J[*J_nnz] = 1.; // dQk/dQg
 	  (*J_nnz)++;
 	}
-      }
-
-      // Loads
-      for (load = BUS_get_load(bus[k]); load != NULL; load = LOAD_get_next(load)) {
-
-	// f
-	f[P_index[k]] -= LOAD_get_P(load,t); // p.u.
-	f[Q_index[k]] -= LOAD_get_Q(load,t); // p.u.
-      }
-
-      // Batteries
-      for (bat = BUS_get_bat(bus[k]); bat != NULL; bat = BAT_get_next(bat)) {
-
-	// f
-	f[P_index[k]] -= BAT_get_P(bat,t); // p.u.
       }
 
       // Shunts
@@ -1368,6 +1426,64 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values) {
 	    H_nnz_val++; // b and vk
 	    H_nnz[bus_index_t[k]] = H_nnz_val;
 	  }
+	}
+      }
+
+      // Loads
+      for (load = BUS_get_load(bus[k]); load != NULL; load = LOAD_get_next(load)) {
+
+	// Var values
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P))
+	  P = VEC_get(values,LOAD_get_index_P(load,t)); // p.u.
+	else
+	  P = LOAD_get_P(load,t);                       // p.u.
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q))
+	  Q = VEC_get(values,LOAD_get_index_Q(load,t)); // p.u.
+	else
+	  Q = LOAD_get_Q(load,t);                       // p.u.
+
+	// f
+	f[P_index[k]] -= P; // p.u.
+	f[Q_index[k]] -= Q; // p.u.
+
+	//*****************************
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) { // Pl var
+
+	  // J
+	  J[*J_nnz] = -1.; // dPk/dPl
+	  (*J_nnz)++;
+	}
+
+	//*****************************
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) { // Ql var
+
+	  // J
+	  J[*J_nnz] = -1.; // dQk/dQl
+	  (*J_nnz)++;
+	}
+      }
+
+      // Batteries
+      for (bat = BUS_get_bat(bus[k]); bat != NULL; bat = BAT_get_next(bat)) {
+
+	// var values
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P))
+	  P = VEC_get(values,BAT_get_index_Pc(bat,t))-VEC_get(values,BAT_get_index_Pd(bat,t)); // p.u.
+	else
+	  P = BAT_get_P(bat,t);                                                                // p.u.
+	
+	// f
+	f[P_index[k]] -= P; // p.u.
+
+	//*****************************
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {  // Pc and Pd var
+
+	  // J
+	  J[*J_nnz] = -1.; // Pc
+	  (*J_nnz)++;
+
+	  J[*J_nnz] = 1.; // Pd
+	  (*J_nnz)++;
 	}
       }
     }

@@ -2550,10 +2550,14 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
 	P = VEC_get(var_values,LOAD_get_index_P(load,t));
       else
 	P = LOAD_get_P(load,t);
+      if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q) && var_values)
+	Q = VEC_get(var_values,LOAD_get_index_Q(load,t));
+      else
+	Q = LOAD_get_Q(load,t);
 
       // Injections
       BUS_inject_P(bus,-P,t);
-      BUS_inject_Q(bus,-LOAD_get_Q(load,t),t);
+      BUS_inject_Q(bus,-Q,t);
 
       // Active power consumption utility
       //*********************************
@@ -2582,8 +2586,7 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
     for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
 
       if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P) && var_values)
-	P = (VEC_get(var_values,BAT_get_index_Pc(bat,t))-
-	     VEC_get(var_values,BAT_get_index_Pd(bat,t)));
+	P = VEC_get(var_values,BAT_get_index_Pc(bat,t))-VEC_get(var_values,BAT_get_index_Pd(bat,t));
       else
 	P = BAT_get_P(bat,t);
 
@@ -2694,7 +2697,7 @@ void NET_propagate_data_in_time(Net* net) {
   // Branches
   for (i = 0; i < net->num_branches; i++)
     BRANCH_propagate_data_in_time(BRANCH_array_get(net->branch,i));
-
+  
   // Generators
   for (i = 0; i < net->num_gens; i++)
     GEN_propagate_data_in_time(GEN_array_get(net->gen,i));
