@@ -27,6 +27,8 @@ class TestNetwork(unittest.TestCase):
 
             net = pf.Network()
 
+            self.assertAlmostEqual(net.total_load_P/net.base_power,sum([l.P for l in net.loads]))
+
             net.clear_properties()
 
             self.assertEqual(net.bus_v_max,0.)
@@ -67,9 +69,9 @@ class TestNetwork(unittest.TestCase):
             net.clear_error()
             self.assertRaises(pf.NetworkError,net.get_bus,net.num_buses)
             net.clear_error()
-            self.assertRaises(pf.NetworkError,net.get_gen,-1)
+            self.assertRaises(pf.NetworkError,net.get_generator,-1)
             net.clear_error()
-            self.assertRaises(pf.NetworkError,net.get_gen,net.num_generators)
+            self.assertRaises(pf.NetworkError,net.get_generator,net.num_generators)
             net.clear_error()
             self.assertRaises(pf.NetworkError,net.get_branch,-1)
             net.clear_error()
@@ -102,6 +104,9 @@ class TestNetwork(unittest.TestCase):
         for case in test_cases.CASES:
 
             net = pf.Network(self.T)
+
+            for t in range(net.num_periods):
+                self.assertAlmostEqual(net.total_load_P[t]/net.base_power,sum([l.P[t] for l in net.loads]))
 
             net.clear_properties()
 
@@ -246,7 +251,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.num_periods,self.T)
 
             # add vargens
-            net.add_var_generators(net.get_load_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_load_buses(),100.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
 
             net.set_flags('bus',
@@ -577,8 +582,8 @@ class TestNetwork(unittest.TestCase):
 
             for i in range(net.num_generators):
 
-                gen = net.get_gen(i)
-                same_gen = net.get_gen(i)
+                gen = net.get_generator(i)
+                same_gen = net.get_generator(i)
 
                 self.assertEqual(gen.index,i)
 
@@ -596,7 +601,7 @@ class TestNetwork(unittest.TestCase):
                 else:
                     j = net.num_generators-1
                 if i != j:
-                    other_gen = net.get_gen(j)
+                    other_gen = net.get_generator(j)
                     self.assertFalse(gen is other_gen)
                     self.assertFalse(gen == other_gen)
                     self.assertTrue(gen != other_gen)
@@ -1153,9 +1158,9 @@ class TestNetwork(unittest.TestCase):
             load_buses = net.get_load_buses()
             self.assertEqual(len(load_buses),
                              len([b for b in net.buses if b.loads]))
-            total_load = max([sum([l.P for l in net.loads]),0])
+            total_load = abs(sum([l.P for l in net.loads]))
 
-            net.add_var_generators(load_buses,50.,30.,5,0.05)
+            net.add_var_generators(load_buses,80.,50.,30.,5,0.05)
 
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len(load_buses))
@@ -1169,7 +1174,7 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(net.get_var_generator_by_name(vargen.name).name,vargen.name)
                 self.assertEqual(vargen.P,0.5*vargen.P_max)
                 self.assertEqual(vargen.P_ava,0.5*vargen.P_max)
-                self.assertEqual(vargen.P_max,total_load/net.num_var_generators)
+                self.assertEqual(vargen.P_max,0.8*total_load/net.num_var_generators)
                 self.assertEqual(vargen.P_min,0.)
                 self.assertEqual(vargen.P_std,0.3*vargen.P_max)
                 self.assertEqual(vargen.index,i)
@@ -1208,7 +1213,7 @@ class TestNetwork(unittest.TestCase):
             for vg in net.var_generators:
                 self.assertEqual(vg.P,np.pi)
                 self.assertEqual(vg.P_ava,142.2123)
-                self.assertEqual(vg.P_max,total_load/net.num_var_generators)
+                self.assertEqual(vg.P_max,0.8*total_load/net.num_var_generators)
                 self.assertEqual(vg.P_std,0.3*vg.P_max)
                 self.assertEqual(vg.P_min,0.)
                 self.assertEqual(vg.Q,0.)
@@ -1242,7 +1247,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.var_generators_corr_value,0.)
 
             # gen buses
-            gen_buses = net.get_gen_buses()
+            gen_buses = net.get_generator_buses()
             self.assertGreater(len(gen_buses),0)
             for b in gen_buses:
                 self.assertTrue(b.generators is not None)
@@ -1250,46 +1255,58 @@ class TestNetwork(unittest.TestCase):
                              len([b for b in net.buses if b.generators]))
 
             # add vargens
-            penetration = 50.
-            uncertainty = 30.
+            power_capacity = 80.
+            power_base = 50.
+            power_std = 30.
             corr_radius = 5
             corr_value = 0.05
-            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,-10,50.,5,0.05)
+            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,-80.,50.,50.,5,0.05)
+            self.assertTrue(net.has_error())
+            net.clear_error()
+            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,80.,120.,50.,5,0.05)
+            self.assertTrue(net.has_error())
+            net.clear_error()
+            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,80.,-10,50.,5,0.05)
             self.assertTrue(net.has_error())
             net.clear_error()
             self.assertFalse(net.has_error())
-            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,50,-10.,5,0.05)
+            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,80.,50,-10.,5,0.05)
             net.clear_error()
-            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,50,50.,-1,0.05)
+            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,80.,50,50.,-1,0.05)
             net.clear_error()
-            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,50,50.,5,1.05)
+            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,80.,50,50.,5,1.05)
             net.clear_error()
-            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,50,50.,5,-1.05)
+            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,80.,50,50.,5,-1.05)
             net.clear_error()
-            net.add_var_generators([],penetration,uncertainty,corr_radius,corr_value)
+            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,80.,-10,50.,5,0.05)
+            self.assertTrue(net.has_error())
+            net.clear_error()
+            net.add_var_generators(gen_buses,80.,50,50.,5,0.05)
+            self.assertFalse(net.has_error())
+            self.assertEqual(net.num_var_generators,len(gen_buses))
+            net.add_var_generators([],power_capacity,power_base,power_std,corr_radius,corr_value)
             self.assertEqual(net.num_var_generators,0)
             self.assertEqual(net.var_generators,[])
 
-            net.add_var_generators(gen_buses,penetration,uncertainty,corr_radius,corr_value)
+            net.add_var_generators(gen_buses,power_capacity,power_base,power_std,corr_radius,corr_value)
             self.assertEqual(net.num_var_generators,len(gen_buses))
             self.assertEqual(len(net.var_generators),len(gen_buses))
 
             self.assertEqual(net.var_generators_corr_radius,corr_radius)
             self.assertEqual(net.var_generators_corr_value,corr_value)
 
-            total_load = np.max([sum([l.P for l in net.loads]),0])
+            total_load = abs(sum([l.P for l in net.loads]))
             total_cap = sum([vg.P_max for vg in net.var_generators])
 
-            self.assertLess(np.abs(total_load-total_cap),1e-10)
-            if total_load > 0:
-                self.assertLess(np.abs(penetration-100*sum([vg.P for vg in net.var_generators])/total_load),1e-10)
+            self.assertLess(np.abs(0.8*total_load-total_cap),1e-10)
+            self.assertLess(np.abs((power_base/100.)*power_capacity-100*sum([vg.P for vg in net.var_generators])/total_load),1e-10)
 
             for vg in net.var_generators:
                 self.assertEqual(vg.P_min,0.)
-                self.assertEqual(vg.P_max,total_load/net.num_var_generators)
-                self.assertEqual(vg.P,(penetration/100.)*vg.P_max)
-                self.assertEqual(vg.P_ava,(penetration/100.)*vg.P_max)
-                self.assertEqual(vg.P_std,(uncertainty/100.)*vg.P_max)
+                self.assertEqual(vg.P_max,(power_capacity/100.)*total_load/net.num_var_generators)
+                self.assertEqual(vg.P,(power_base/100.)*vg.P_max)
+                self.assertEqual(vg.P_ava,(power_base/100.)*vg.P_max)
+                self.assertEqual(vg.P_std,(power_std/100.)*vg.P_max)
 
         # Multi period
         for case in test_cases.CASES:
@@ -1297,7 +1314,7 @@ class TestNetwork(unittest.TestCase):
             net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
-            net.add_var_generators(net.get_gen_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_generator_buses(),80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
 
             for vargen in net.var_generators:
@@ -1364,13 +1381,16 @@ class TestNetwork(unittest.TestCase):
 
             net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
+            
+            # Add batteries
+            gen_buses = net.get_generator_buses()
+            self.assertGreater(len(gen_buses),0)
+            net.add_batteries(gen_buses,20.,50.,0.9,0.8)
 
-            self.assertGreaterEqual(net.num_batteries,0)
-
+            self.assertEqual(net.num_batteries,len(gen_buses))
             self.assertEqual(net.num_batteries,len(net.batteries))
-
             self.assertEqual(net.num_batteries,sum([len(b.batteries) for b in net.buses]))
-
+            
             for i in range(net.num_batteries):
 
                 bat = net.get_battery(i)
@@ -1382,12 +1402,21 @@ class TestNetwork(unittest.TestCase):
                 self.assertNotEqual(bat.obj_type,'unknown')
 
                 self.assertEqual(bat.index,i)
-
                 self.assertEqual(bat.index,net.batteries[i].index)
-
                 self.assertTrue(bat.bus)
-
                 self.assertTrue(bat.index in map(lambda x: x.index,bat.bus.batteries))
+
+                # Properties
+                max_total_load = abs(net.total_load_P)/net.base_power
+                self.assertAlmostEqual(bat.P_max,0.2*max_total_load/net.num_batteries)
+                self.assertAlmostEqual(bat.P_min,-0.2*max_total_load/net.num_batteries)
+                self.assertAlmostEqual(bat.E_max,0.5*max_total_load/net.num_batteries)
+                self.assertEqual(bat.eta_c,0.9)
+                self.assertEqual(bat.eta_d,0.8)
+                self.assertEqual(bat.P,0.)
+                self.assertEqual(bat.E_init,0.5*bat.E_max)
+                self.assertEqual(bat.E_final,bat.E_init)
+                self.assertEqual(bat.E,bat.E_init)
 
                 # P
                 bat.P_min = -1.23
@@ -1413,11 +1442,25 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(bat.eta_c,0.91)
                 self.assertEqual(bat.eta_d,0.95)
 
+            # Add zero batteries
+            self.assertEqual(net.num_batteries,len(gen_buses))
+            net.add_batteries([],20.,50.,0.9,0.8)
+            self.assertEqual(net.num_batteries,0)
+
         # Multi period
         for case in test_cases.CASES:
 
             net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
+
+            # Add batteries
+            gen_buses = net.get_generator_buses()
+            self.assertGreater(len(gen_buses),0)
+            net.add_batteries(gen_buses,40.,80.,0.7,0.85)
+
+            self.assertEqual(net.num_batteries,len(gen_buses))
+            self.assertEqual(net.num_batteries,len(net.batteries))
+            self.assertEqual(net.num_batteries,sum([len(b.batteries) for b in net.buses]))            
 
             for bat in net.batteries:
 
@@ -1427,6 +1470,19 @@ class TestNetwork(unittest.TestCase):
                 for t in range(1,self.T):
                     self.assertEqual(bat.P[t],bat.P[0])
                     self.assertEqual(bat.E[t],bat.E[0])
+
+                # Properties
+                max_total_load = np.max(np.abs(net.total_load_P)/net.base_power)
+                self.assertAlmostEqual(bat.P_max,0.4*max_total_load/net.num_batteries)
+                self.assertAlmostEqual(bat.P_min,-0.4*max_total_load/net.num_batteries)
+                self.assertAlmostEqual(bat.E_max,0.8*max_total_load/net.num_batteries)
+                self.assertEqual(bat.eta_c,0.7)
+                self.assertEqual(bat.eta_d,0.85)
+                self.assertEqual(bat.E_init,0.5*bat.E_max)
+                self.assertEqual(bat.E_final,bat.E_init)
+                for t in range(net.num_periods):
+                    self.assertEqual(bat.P[t],0.)
+                    self.assertEqual(bat.E[t],bat.E_init)
 
                 # Set
                 x = np.random.randn(self.T)
@@ -1679,8 +1735,8 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(netMP.num_periods,self.T)
 
             # add vargens
-            net.add_var_generators(net.get_load_buses(),50.,30.,5,0.05)
-            netMP.add_var_generators(netMP.get_load_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_load_buses(),80.,50.,30.,5,0.05)
+            netMP.add_var_generators(netMP.get_load_buses(),80.,50.,30.,5,0.05)
             for vargen in net.var_generators:
                 self.assertTrue(isinstance(vargen.name,str) or isinstance(vargen.name,unicode))
                 self.assertEqual(vargen.name,"VARGEN %d" %(vargen.index+1))
@@ -2209,7 +2265,7 @@ class TestNetwork(unittest.TestCase):
 
             # Add vargens
             load_buses = net.get_load_buses()
-            net.add_var_generators(load_buses,50.,30.,5,0.05)
+            net.add_var_generators(load_buses,80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len(load_buses))
 
@@ -2328,7 +2384,7 @@ class TestNetwork(unittest.TestCase):
             gP = P*x
             index = 0
             for i in range(net.num_generators):
-                gen = net.get_gen(i)
+                gen = net.get_generator(i)
                 if gen.has_flags('variable','active power'):
                     self.assertEqual(gP[index],gen.P)
                     index += 1
@@ -2342,7 +2398,7 @@ class TestNetwork(unittest.TestCase):
             gQ = P*x
             index = 0
             for i in range(net.num_generators):
-                gen = net.get_gen(i)
+                gen = net.get_generator(i)
                 if gen.has_flags('variable','reactive power'):
                     self.assertEqual(gQ[index],gen.Q)
                     index += 1
@@ -2523,7 +2579,7 @@ class TestNetwork(unittest.TestCase):
 
             # Add vargens
             load_buses = net.get_load_buses()
-            net.add_var_generators(load_buses,50.,30.,5,0.05)
+            net.add_var_generators(load_buses,80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len(load_buses))
 
@@ -2644,7 +2700,7 @@ class TestNetwork(unittest.TestCase):
             gP = P*x
             index = 0
             for i in range(net.num_generators):
-                gen = net.get_gen(i)
+                gen = net.get_generator(i)
                 if gen.has_flags('variable','active power'):
                     for t in range(self.T):
                         self.assertEqual(gP[index],gen.P[t])
@@ -2659,7 +2715,7 @@ class TestNetwork(unittest.TestCase):
             gQ = P*x
             index = 0
             for i in range(net.num_generators):
-                gen = net.get_gen(i)
+                gen = net.get_generator(i)
                 if gen.has_flags('variable','reactive power'):
                     for t in range(self.T):
                         self.assertEqual(gQ[index],gen.Q[t])
@@ -2848,7 +2904,7 @@ class TestNetwork(unittest.TestCase):
 
             # Add vargens
             load_buses = net.get_load_buses()
-            net.add_var_generators(load_buses,50.,30.,5,0.05)
+            net.add_var_generators(load_buses,80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len(load_buses))
 
@@ -3065,16 +3121,25 @@ class TestNetwork(unittest.TestCase):
             self.assertGreater(net.num_buses,0)
             self.assertEqual(net.num_vars,0)
 
-            # vargens
+            # Add vargens
             load_buses = net.get_load_buses()
-            net.add_var_generators(load_buses,50.,30.,5,0.05)
+            net.add_var_generators(load_buses,80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len(load_buses))
 
-            # set batteries
+            # Add batteries
+            gen_buses = net.get_generator_buses()
+            net.add_batteries(gen_buses,20.,30.,0.7,0.8)
+            self.assertGreater(net.num_batteries,0)
+            self.assertEqual(net.num_batteries,len(gen_buses))
+
+            # Set batteries
             for bat in net.batteries:
+                self.assertEqual(bat.P,0.)
                 if bat.index % 2 == 0:
-                    bat.P *= -1.
+                    bat.P = 1.*(bat.index+1)
+                else:
+                    bat.P = -1.*(bat.index+1)
 
             # loads
             for load in net.loads:
@@ -3166,12 +3231,16 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(x[shunt.index_y],0.)
                 self.assertEqual(x[shunt.index_z],0.)
             for bat in net.batteries:
-                if bat.P >= 0:
+                if bat.index % 2 == 0:
+                    self.assertGreater(bat.P,0)
                     self.assertEqual(x[bat.index_Pc],bat.P)
+                    self.assertEqual(x[bat.index_Pc],1.*(bat.index+1))
                     self.assertEqual(x[bat.index_Pd],0.)
                 else:
+                    self.assertLess(bat.P,0.)
                     self.assertEqual(x[bat.index_Pc],0.)
                     self.assertEqual(x[bat.index_Pd],-bat.P)
+                    self.assertEqual(x[bat.index_Pd],1.*(bat.index+1))
                 self.assertEqual(x[bat.index_E],bat.E)
 
             # upper limits
@@ -3258,16 +3327,32 @@ class TestNetwork(unittest.TestCase):
             self.assertGreater(net.num_buses,0)
             self.assertEqual(net.num_vars,0)
 
-            # vargens
+            # Add vargens
             load_buses = net.get_load_buses()
-            net.add_var_generators(load_buses,50.,30.,5,0.05)
+            net.add_var_generators(load_buses,80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len(load_buses))
 
-            # set batteries
+            # Add batteries
+            gen_buses = net.get_generator_buses()
+            net.add_batteries(gen_buses,20.,40.,0.7,0.8)
+            self.assertGreater(net.num_batteries,0)
+            self.assertEqual(net.num_batteries,len(gen_buses))
+
+            # Set batteries
             for bat in net.batteries:
-                if bat.index % 2 == 0:
-                    bat.P = -1*bat.P
+                self.assertTrue(np.all(bat.P == 0.))
+                x = np.random.rand(net.num_periods)
+                for t in range(net.num_periods):
+                    if t % 2 == 0:
+                        x[t] *= -1.
+                self.assertTrue(np.any(x < 0))
+                self.assertTrue(np.any(x > 0))
+                bat.P = x
+                for t in range(net.num_periods):
+                    self.assertEqual(x[t],bat.P[t])
+                self.assertTrue(np.any(bat.P < 0))
+                self.assertTrue(np.any(bat.P > 0))
 
             # loads
             for load in net.loads:
@@ -3466,10 +3551,10 @@ class TestNetwork(unittest.TestCase):
             corr = 0.1
             P_MIN = 1e-5
 
-            # Add renewable sources (at load buses)
-            gen_buses = net.get_gen_buses()
-            total_load = sum([l.P for l in net.loads])
-            net.add_var_generators(gen_buses,50.,30.,5,0.05)
+            # Add renewable sources
+            gen_buses = net.get_generator_buses()
+            total_load = abs(sum([l.P for l in net.loads]))
+            net.add_var_generators(gen_buses,80.,50.,30.,5,0.05)
             self.assertEqual(net.num_var_generators,len([b for b in net.buses if b.generators]))
             for vg in net.var_generators:
                 self.assertTrue(isinstance(vg.name,str) or isinstance(vg.name,unicode))
@@ -3478,12 +3563,12 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(vg.P,0.5*vg.P_max)
                 self.assertEqual(vg.P_ava,0.5*vg.P_max)
                 self.assertEqual(vg.P_min,0)
-                self.assertEqual(vg.P_max,total_load/net.num_var_generators)
+                self.assertEqual(vg.P_max,0.8*total_load/net.num_var_generators)
                 self.assertEqual(vg.P_std,0.3*vg.P_max)
                 self.assertGreater(len(vg.bus.generators),0)
                 self.assertNotEqual(vg.P_max,0)
                 self.assertNotEqual(vg.P_std,0)
-            self.assertLess(np.abs(sum([vg.P_max for vg in net.var_generators])-total_load),1e-10)
+            self.assertLess(np.abs(sum([vg.P_max for vg in net.var_generators])-0.8*total_load),1e-10)
 
             # Variables
             net.set_flags('variable generator',
@@ -3533,15 +3618,15 @@ class TestNetwork(unittest.TestCase):
             corr = 0.1
             P_MIN = 1e-5
 
-            # Add renewable sources (at load buses)
-            gen_buses = net.get_gen_buses()
-            total_load = sum([l.P[0] for l in net.loads])
-            net.add_var_generators(gen_buses,50.,30.,5,0.05)
+            # Add renewable sources
+            gen_buses = net.get_generator_buses()
+            total_load = abs(sum([l.P[0] for l in net.loads]))
+            net.add_var_generators(gen_buses,80.,50.,30.,5,0.05)
             self.assertEqual(net.num_var_generators,len([b for b in net.buses if b.generators]))
             for vg in net.var_generators:
                 self.assertEqual(net.get_var_generator_by_name(vg.name).name,vg.name)
                 self.assertEqual(vg.P_min,0)
-                self.assertEqual(vg.P_max,total_load/net.num_var_generators)
+                self.assertEqual(vg.P_max,0.8*total_load/net.num_var_generators)
                 self.assertGreater(len(vg.bus.generators),0)
                 self.assertNotEqual(vg.P_max,0)
                 for t in range(self.T):
@@ -3549,7 +3634,7 @@ class TestNetwork(unittest.TestCase):
                     self.assertEqual(vg.P_ava[t],0.5*vg.P_max)
                     self.assertEqual(vg.P_std[t],0.3*vg.P_max)
                     self.assertNotEqual(vg.P_std[t],0)
-            self.assertLess(np.abs(sum([vg.P_max for vg in net.var_generators])-total_load),1e-10)
+            self.assertLess(np.abs(sum([vg.P_max for vg in net.var_generators])-0.8*total_load),1e-10)
 
             # Variables
             net.set_flags('variable generator',

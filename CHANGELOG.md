@@ -6,16 +6,17 @@ Targets
 * Rich object comparisons for all network components.
 * Instructions for adding new functions and constraints in C.
 * Area/zone projections.
+* Variable generator curtailment cost.
 
 Unreleased
 ----------
 * Load Q variables (done).
 * Support for variable generator curtailments (done).
-* Variable generator curtailment cost.
-* Battery boundary conditions (initial and final).
+* User-friendly way to add batteries and variable generators (done).
+* Improved naming consistency in Python network class (done).
+* Battery boundary conditions.
 * Load constant power factor.
-* User-friendly way to add batteries and variable generators.
-* Removed aliases for variable generators and others in Python network class.
+* Updated documentation and examples.
 
 Version 1.2.9 (pre-release)
 ---------------------------

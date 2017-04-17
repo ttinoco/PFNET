@@ -57,17 +57,17 @@ cdef class Network:
             cnet.NET_del(self._c_net)
             self._c_net = NULL
 
-    def add_var_generators(self,buses,penetration,uncertainty,corr_radius,corr_value):
+    def add_var_generators(self,buses,power_capacity,power_base,power_std,corr_radius,corr_value):
         """
-        Adds variable generators to the network. The capacitiy of the variable generators are set to
-        the maximum total load divided by the number of variable generators. 
+        Adds variable generators to the network. The capacities of the generators are divided
+        evenly. 
         
         Parameters
         ----------
-
         buses : list of :class:`Buses <pfnet.Bus>`
-        penetration : float (percentage of total load)
-        uncertainty : float (percentage of capacity)
+        power_capacity : float (percentage of max total load power)
+        power_base : float (percentage of power capacity)
+        power_std : float (percentage of power capacity)
         corr_radius : int (number of branches for correlation radius)
         corr_value : float (correlation coefficient for correlated generators)
         """
@@ -83,9 +83,40 @@ cdef class Network:
             cbus.BUS_set_next(prev._c_ptr,NULL)
 
         if head:
-            cnet.NET_add_vargens(self._c_net,head._c_ptr,penetration,uncertainty,corr_radius,corr_value)
+            cnet.NET_add_vargens(self._c_net,head._c_ptr,power_capacity,power_base,power_std,corr_radius,corr_value)
         else:
-            cnet.NET_add_vargens(self._c_net,NULL,penetration,uncertainty,corr_radius,corr_value)
+            cnet.NET_add_vargens(self._c_net,NULL,power_capacity,power_base,power_std,corr_radius,corr_value)
+        if cnet.NET_has_error(self._c_net):
+            raise NetworkError(cnet.NET_get_error_string(self._c_net))
+
+    def add_batteries(self,buses,power_capacity,energy_capacity,eta_c,etc_d):
+        """
+        Adds batteries to the network. The power and energy capacities of the batteries are divided
+        evenly. 
+        
+        Parameters
+        ----------
+        buses : list of :class:`Buses <pfnet.Bus>`
+        power_capacity : float (percentage of max total load power)
+        energy_capacity : float (percentage of max total load energy during one time period)
+        eta_c : float (charging efficiency in (0,1])
+        eta_d : float (discharging efficiency in (0,1])
+        """
+
+        cdef Bus head = buses[0] if buses else None
+        cdef Bus prev = head
+        cdef Bus curr
+        for b in buses[1:]:
+            curr = b
+            cbus.BUS_set_next(prev._c_ptr,curr._c_ptr)
+            prev = curr
+        if prev is not None:
+            cbus.BUS_set_next(prev._c_ptr,NULL)
+
+        if head:
+            cnet.NET_add_batteries(self._c_net,head._c_ptr,power_capacity,energy_capacity,eta_c,etc_d)
+        else:
+            cnet.NET_add_batteries(self._c_net,NULL,power_capacity,energy_capacity,eta_c,etc_d)
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
 
@@ -265,7 +296,7 @@ cdef class Network:
         else:
             raise NetworkError('invalid branch index')
 
-    def get_gen(self,index):
+    def get_generator(self,index):
         """
         Gets generator with the given index.
 
@@ -360,7 +391,7 @@ cdef class Network:
         else:
             raise NetworkError('invalid battery index')
 
-    def get_gen_buses(self):
+    def get_generator_buses(self):
         """
         Gets list of buses where generators are connected.
 
@@ -886,7 +917,7 @@ cdef class Network:
     property generators:
         """ List of network :class:`generators <pfnet.Generator>` (list). """
         def __get__(self):
-            return [self.get_gen(i) for i in range(self.num_generators)]
+            return [self.get_generator(i) for i in range(self.num_generators)]
 
     property shunts:
         """ List of network :class:`shunts <pfnet.Shunt>` (list). """
@@ -951,6 +982,15 @@ cdef class Network:
     property num_sparse:
         """ Number of network control quantities that have been set to sparse (int). """
         def __get__(self): return cnet.NET_get_num_sparse(self._c_net)
+
+    property total_load_P:
+        """ Total load active power (MW) (float or array). """
+        def __get__(self):
+            r = [cnet.NET_get_total_load_P(self._c_net,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return np.array(r)
 
     property bus_v_max:
         """ Maximum bus voltage magnitude (p.u.) (float or array). """

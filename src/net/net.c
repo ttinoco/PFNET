@@ -87,8 +87,8 @@ struct Net {
   char* bus_counted;  /**< @brief Flags for processing buses */
 };
 
-void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty, REAL corr_radius, REAL corr_value) {
-
+void NET_add_vargens(Net* net, Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value) {
+  
   // Local variables
   REAL total_load_P;
   REAL max_total_load_P;
@@ -102,11 +102,11 @@ void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty
     return;
 
   // Check
-  if (penetration < 0 || // percentage of capacity
-      uncertainty < 0 || // percentage of capacity
-      corr_radius < 0 || // correlation radius
-      corr_value < -1 || // correlation coefficient
-      corr_value > 1) {
+  if (power_capacity < 0 ||                 // percentage of max total load power
+      power_base < 0 || power_base > 100 || // percentage of power capacity
+      power_std < 0 ||                      // percentage of power capacity
+      corr_radius < 0 ||                    // correlation radius
+      corr_value < -1 || corr_value > 1) {  // correlation coefficient
     sprintf(net->error_string,"invalid arguments for adding variable generators");
     net->error_flag = TRUE;
     return;
@@ -123,14 +123,14 @@ void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty
   net->vargen_corr_radius = corr_radius;
   net->vargen_corr_value = corr_value;
 
-  // Max total load
+  // Max total load power
   max_total_load_P = 0;
   for (t = 0; t < net->num_periods; t++) {
     total_load_P = 0;
     for (i = 0; i < net->num_loads; i++)
-      total_load_P += LOAD_get_P(NET_get_load(net,i),t);
-    if (total_load_P > max_total_load_P)
-      max_total_load_P = total_load_P;
+      total_load_P += LOAD_get_P(NET_get_load(net,i),t); // p.u.
+    if (fabs(total_load_P) > max_total_load_P)
+      max_total_load_P = fabs(total_load_P);
   }
 
   // Number
@@ -152,11 +152,11 @@ void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty
   for (i = 0; i < net->num_vargens; i++) {
     vargen = NET_get_vargen(net,i);
     VARGEN_set_P_min(vargen,0.);
-    VARGEN_set_P_max(vargen,max_total_load_P/net->num_vargens);
+    VARGEN_set_P_max(vargen,(power_capacity/100.)*max_total_load_P/net->num_vargens);
     for (t = 0; t < net->num_periods; t++) {
-      VARGEN_set_P_std(vargen,(uncertainty/100.)*VARGEN_get_P_max(vargen),t);
-      VARGEN_set_P_ava(vargen,(penetration/100.)*VARGEN_get_P_max(vargen),t);
-      VARGEN_set_P(vargen,(penetration/100.)*VARGEN_get_P_max(vargen),t);
+      VARGEN_set_P_ava(vargen,(power_base/100.)*VARGEN_get_P_max(vargen),t);
+      VARGEN_set_P(vargen,(power_base/100.)*VARGEN_get_P_max(vargen),t);
+      VARGEN_set_P_std(vargen,(power_std/100.)*VARGEN_get_P_max(vargen),t);
     }
   }
 
@@ -165,6 +165,71 @@ void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty
     sprintf(net->error_string,"unable to create vargen hash table");
     net->error_flag = TRUE;
     return;
+  }
+}
+
+void NET_add_batteries(Net* net, Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d) {
+  
+  // Local variables
+  REAL total_load_P;
+  REAL max_total_load_P;
+  Bat* bat;
+  int num;
+  int i;
+  int t;
+
+  // Check
+  if (!net)
+    return;
+
+  // Check
+  if (power_capacity < 0 ||     // percentage of max total load power
+      energy_capacity < 0 ||    // percentage of max total load energy during one interval
+      eta_c <= 0 || eta_c > 1 || // charging efficiency in (0,1]
+      eta_d <= 0 || eta_d > 1) { // discharging efficiency in (0,1]
+    sprintf(net->error_string,"invalid arguments for adding batteries");
+    net->error_flag = TRUE;
+    return;
+  }
+  
+  // Clear
+  BAT_array_del(net->bat,net->num_bats);
+  net->bat = NULL;
+  net->num_bats = 0;
+
+  // Max total load power
+  max_total_load_P = 0;
+  for (t = 0; t < net->num_periods; t++) {
+    total_load_P = 0;
+    for (i = 0; i < net->num_loads; i++)
+      total_load_P += LOAD_get_P(NET_get_load(net,i),t); // p.u.
+    if (fabs(total_load_P) > max_total_load_P)
+      max_total_load_P = fabs(total_load_P);
+  }
+
+  // Number
+  num = BUS_list_len(bus_list);
+
+  // Allocate
+  NET_set_bat_array(net,BAT_array_new(num,net->num_periods),num);
+
+  // Set buses
+  NET_set_bat_buses(net,bus_list);
+
+  // Set properties
+  for (i = 0; i < net->num_bats; i++) {
+    bat = NET_get_bat(net,i);
+    BAT_set_P_min(bat,-(power_capacity/100.)*max_total_load_P/net->num_bats);
+    BAT_set_P_max(bat,(power_capacity/100.)*max_total_load_P/net->num_bats);
+    BAT_set_eta_c(bat,eta_c);
+    BAT_set_eta_d(bat,eta_d);
+    BAT_set_E_max(bat,(energy_capacity/100.)*max_total_load_P/net->num_bats);
+    BAT_set_E_init(bat,0.5*BAT_get_E_max(bat));
+    BAT_set_E_final(bat,0.5*BAT_get_E_max(bat));
+    for (t = 0; t < net->num_periods; t++) {
+      BAT_set_P(bat,0,t);
+      BAT_set_E(bat,BAT_get_E_init(bat),t);
+    }
   }
 }
 
@@ -1813,6 +1878,32 @@ void NET_set_vargen_buses(Net* net, Bus* bus_list) {
     gen = VARGEN_array_get(net->vargen,i);
     VARGEN_set_bus(gen,bus);
     BUS_add_vargen(bus,gen);
+    bus = BUS_get_next(bus);
+    i++;
+  }
+}
+
+void NET_set_bat_buses(Net* net, Bus* bus_list) {
+
+  // Local vars
+  int i;
+  Bus* bus;
+  Bat* bat;
+
+  // No net
+  if (!net)
+    return;
+
+  // Clear connections
+  for (i = 0; i < net->num_buses; i++)
+    BUS_clear_bat(NET_get_bus(net,i));
+
+  i = 0;
+  bus = bus_list;
+  while (i < net->num_bats && bus) {
+    bat = BAT_array_get(net->bat,i);
+    BAT_set_bus(bat,bus);
+    BUS_add_bat(bus,bat);
     bus = BUS_get_next(bus);
     i++;
   }

@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -141,6 +141,7 @@ void BUS_clear_flags(Bus* bus, char flag_type);
 void BUS_clear_sensitivities(Bus* bus);
 void BUS_clear_mismatches(Bus* bus);
 void BUS_clear_vargen(Bus* bus);
+void BUS_clear_bat(Bus* bus);
 void BUS_propagate_data_in_time(Bus* bus);
 char BUS_get_obj_type(void* bus);
 int BUS_get_degree(Bus* bus);

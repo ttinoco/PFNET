@@ -25,7 +25,7 @@ class TestFlags(unittest.TestCase):
             self.assertEqual(net.num_periods,1)
 
             # add vargens
-            net.add_var_generators(net.get_gen_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_generator_buses(),80.,50.,30.,5,0.05)
 
             # loads
             lcount = 0
@@ -207,7 +207,7 @@ class TestFlags(unittest.TestCase):
             self.assertEqual(net.num_periods,1)
 
             # add vargens
-            net.add_var_generators(net.get_gen_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_generator_buses(),80.,50.,30.,5,0.05)
             for vargen in net.var_generators:
                 vargen.P = np.random.rand()
                 vargen.Q = np.random.rand()
@@ -391,7 +391,7 @@ class TestFlags(unittest.TestCase):
             net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
-            net.add_var_generators(net.get_gen_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_generator_buses(),80.,50.,30.,5,0.05)
 
             self.assertEqual(net.num_fixed,0)
 
@@ -501,7 +501,7 @@ class TestFlags(unittest.TestCase):
             self.assertEqual(net.num_periods,1)
 
             # add vargens
-            net.add_var_generators(net.get_gen_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_generator_buses(),80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
 
             self.assertEqual(net.num_vars,0)

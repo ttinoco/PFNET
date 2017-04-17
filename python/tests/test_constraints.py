@@ -36,7 +36,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_periods,1)
 
             # add vargens
-            net.add_var_generators(net.get_load_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_load_buses(),80.,50.,30.,5,0.05)
             for vargen in net.var_generators:
                 vargen.P = vargen.index*1.5
                 vargen.Q = vargen.index*2.5
@@ -266,7 +266,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_periods,self.T)
 
             # add vargens
-            net.add_var_generators(net.get_load_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_load_buses(),80.,50.,30.,5,0.05)
             for vargen in net.var_generators:
                 vargen.P = np.random.rand(self.T)*10
                 vargen.Q = np.random.rand(self.T)*10
@@ -501,7 +501,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_periods,1)
 
             # add vargens
-            net.add_var_generators(net.get_load_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_load_buses(),80.,50.,30.,5,0.05)
             for vargen in net.var_generators:
                 vargen.P = vargen.index*1.5
                 vargen.Q = vargen.index*2.5
@@ -991,7 +991,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_periods,self.T)
 
             # add vargens
-            net.add_var_generators(net.get_load_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_load_buses(),80.,50.,30.,5,0.05)
             for vargen in net.var_generators:
                 vargen.P = np.random.rand(self.T)
                 vargen.Q = np.random.rand(self.T)
@@ -1472,7 +1472,7 @@ class TestConstraints(unittest.TestCase):
 
             # add vargens
             load_buses = net.get_load_buses()
-            net.add_var_generators(load_buses,50.,30.,5,0.05)
+            net.add_var_generators(load_buses,80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len(load_buses))
             for vargen in net.var_generators:
@@ -2827,7 +2827,7 @@ class TestConstraints(unittest.TestCase):
 
             # Add vargens
             load_buses = net.get_load_buses()
-            net.add_var_generators(load_buses,50.,30.,5,0.05)
+            net.add_var_generators(load_buses,80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len([b for b in net.buses if b.loads]))
             for b in net.buses:
@@ -3043,7 +3043,7 @@ class TestConstraints(unittest.TestCase):
 
             # Add vargens
             load_buses = net.get_load_buses()
-            net.add_var_generators(load_buses,50.,30.,5,0.05)
+            net.add_var_generators(load_buses,80.,50.,30.,5,0.05)
 
             # batteries
             for bat in net.batteries:
@@ -3397,7 +3397,7 @@ class TestConstraints(unittest.TestCase):
 
             # add vargens
             load_buses = net.get_load_buses()
-            net.add_var_generators(load_buses,50.,30.,5,0.05)
+            net.add_var_generators(load_buses,80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len(load_buses))
             for vargen in net.var_generators:
@@ -3970,7 +3970,7 @@ class TestConstraints(unittest.TestCase):
 
             # Add vargens
             load_buses = net.get_load_buses()
-            net.add_var_generators(load_buses,50.,30.,5,0.05)
+            net.add_var_generators(load_buses,80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len([b for b in net.buses if b.loads]))
             for b in net.buses:
