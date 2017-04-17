@@ -119,6 +119,8 @@ cdef extern from "pfnet/bus.h":
     void BUS_set_price(Bus* bus, REAL price, int t)
     void BUS_set_v_mag(Bus* bus, REAL v_mag, int t)
     void BUS_set_v_ang(Bus* bus, REAL v_ang, int t)
+    void BUS_set_v_max_reg(Bus* bus, REAL v_max_reg)
+    void BUS_set_v_min_reg(Bus* bus, REAL v_min_reg)
     void BUS_set_v_max_norm(Bus* bus, REAL v_max_norm)
     void BUS_set_v_min_norm(Bus* bus, REAL v_min_norm)
     void BUS_set_v_max_emer(Bus* bus, REAL v_max_emer)

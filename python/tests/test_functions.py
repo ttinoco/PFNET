@@ -1230,8 +1230,8 @@ class TestFunctions(unittest.TestCase):
             for t in range(self.T):
                 for bus in net.buses:
                     self.assertTrue(bus.has_flags('variable','voltage magnitude'))
-                    dv = np.maximum(bus.v_max_reg-bus.v_min_reg,eps)
-                    vmid = 0.5*(bus.v_max_reg+bus.v_min_reg)
+                    dv = np.maximum(bus.v_max-bus.v_min,eps)
+                    vmid = 0.5*(bus.v_max+bus.v_min)
                     f_manual += 0.5*(((x0[bus.index_v_mag[t]]-vmid)/dv)**2.)
             self.assertLess(np.abs(f-f_manual),1e-10*(f_manual+1.))
 
@@ -1241,8 +1241,8 @@ class TestFunctions(unittest.TestCase):
             for t in range(self.T):
                 for bus in net.buses:
                     self.assertTrue(bus.has_flags('variable','voltage magnitude'))
-                    dv = np.maximum(bus.v_max_reg-bus.v_min_reg,eps)
-                    vmid = 0.5*(bus.v_max_reg+bus.v_min_reg)
+                    dv = np.maximum(bus.v_max-bus.v_min,eps)
+                    vmid = 0.5*(bus.v_max+bus.v_min)
                     f_manual += 0.5*(((bus.v_mag[t]-vmid)/dv)**2.)
             self.assertLess(np.abs(f-f_manual),1e-10*(f_manual+1.))
 

@@ -578,36 +578,56 @@ cdef class Bus:
                 return np.array(r)
 
     property v_max_reg:
-        """ Bus maximum regulated voltage magnitude (p.u. bus base kv) (float). """
-        def __get__(self): return cbus.BUS_get_v_max_reg(self._c_ptr)
+        """ Bus regulated maximum voltage magnitude (p.u. bus base kv) (float). """
+        def __get__(self):
+            return cbus.BUS_get_v_max_reg(self._c_ptr)
+        def __set__(self,value):
+            cbus.BUS_set_v_max_reg(self._c_ptr,value)
 
     property v_min_reg:
-        """ Bus minimum regulated voltage magnitude (p.u. bus base kv) (float). """
-        def __get__(self): return cbus.BUS_get_v_min_reg(self._c_ptr)
+        """ Bus regulated minimum voltage magnitude (p.u. bus base kv) (float). """
+        def __get__(self):
+            return cbus.BUS_get_v_min_reg(self._c_ptr)
+        def __set__(self,value):
+            cbus.BUS_set_v_min_reg(self._c_ptr,value)
 
     property v_max_norm:
-        """ Bus normal maximum voltage magnitude violation limit (p.u. bus base kv) (float). """
+        """ Bus normal maximum voltage magnitude (p.u. bus base kv) (float). """
         def __get__(self):
             return cbus.BUS_get_v_max_norm(self._c_ptr)
         def __set__(self,value):
             cbus.BUS_set_v_max_norm(self._c_ptr,value)
 
     property v_min_norm:
-        """ Bus normal minimum voltage magnitude violation limit (p.u. bus base kv) (float). """
+        """ Bus normal minimum voltage magnitude (p.u. bus base kv) (float). """
         def __get__(self):
             return cbus.BUS_get_v_min_norm(self._c_ptr)
         def __set__(self,value):
             cbus.BUS_set_v_min_norm(self._c_ptr,value)
+            
+    property v_max:
+        """ Same as :attr:`v_max_norm <pfnet.Bus.v_max_norm>`."""
+        def __get__(self):
+            return self.v_max_norm
+        def __set__(self,value):
+            self.v_max_norm = value
+            
+    property v_min:
+        """ Same as :attr:`v_max_norm <pfnet.Bus.v_min_norm>`."""
+        def __get__(self):
+            return self.v_min_norm
+        def __set__(self,value):
+            self.v_min_norm = value
 
     property v_max_emer:
-        """ Bus emergency maximum voltage magnitude violation limit (p.u. bus base kv) (float). """
+        """ Bus emergency maximum voltage magnitude (p.u. bus base kv) (float). """
         def __get__(self):
             return cbus.BUS_get_v_max_emer(self._c_ptr)
         def __set__(self,value):
             cbus.BUS_set_v_max_emer(self._c_ptr,value)
 
     property v_min_emer:
-        """ Bus emergency minimum voltage magnitude violation limit (p.u. bus base kv) (float). """
+        """ Bus emergency minimum voltage magnitude (p.u. bus base kv) (float). """
         def __get__(self):
             return cbus.BUS_get_v_min_emer(self._c_ptr)
         def __set__(self,value):

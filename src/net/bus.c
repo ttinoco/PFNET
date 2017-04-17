@@ -30,12 +30,12 @@ struct Bus {
   REAL* v_mag;        /**< @brief Voltage magnitude (p.u.) */
   REAL* v_ang;        /**< @brief Voltage angle (radians) */
   REAL* v_set;        /**< @brief Voltage magnitude set point (p.u.) */
-  REAL v_max_reg;     /**< @brief Maximum regulated voltage magnitude (p.u.) */
-  REAL v_min_reg;     /**< @brief Minimum regulated voltage magnitude (p.u.) */
-  REAL v_max_norm;    /**< @brief Normal maximum voltage magnitude violation limit (p.u.) */
-  REAL v_min_norm;    /**< @brief Normal minimum voltage magnitude violation limit (p.u.) */
-  REAL v_max_emer;    /**< @brief Emergency maximum voltage magnitude violation limit (p.u.) */
-  REAL v_min_emer;    /**< @brief Emergency minimum voltage magnitude violation limit (p.u.) */
+  REAL v_max_reg;     /**< @brief Regulation maximum voltage magnitude (p.u.) */
+  REAL v_min_reg;     /**< @brief Regulation minimum voltage magnitude (p.u.) */
+  REAL v_max_norm;    /**< @brief Normal maximum voltage magnitude (p.u.) */
+  REAL v_min_norm;    /**< @brief Normal minimum voltage magnitude (p.u.) */
+  REAL v_max_emer;    /**< @brief Emergency maximum voltage magnitude (p.u.) */
+  REAL v_min_emer;    /**< @brief Emergency minimum voltage magnitude (p.u.) */
 
   // Flags
   BOOL slack;        /**< @brief Flag for indicating the the bus is a slack bus */
@@ -268,19 +268,19 @@ BOOL BUS_check(Bus* bus, BOOL verbose) {
       fprintf(stderr,"bad bus regulated voltage limits\n");
   }
 
-   // normal voltage violation limits
-   if (bus->v_min_norm > bus->v_max_norm) {
-     bus_ok = FALSE;
-     if (verbose)
-       fprintf(stderr,"bad bus normal voltage violation limits\n");
-   }
-
-    // emergency voltage violation limits
-    if (bus->v_min_emer > bus->v_max_emer) {
+  // normal voltage violation limits
+  if (bus->v_min_norm > bus->v_max_norm) {
     bus_ok = FALSE;
     if (verbose)
-      fprintf(stderr,"bad bus emergency voltage violation limits\n");
-    }
+      fprintf(stderr,"bad bus normal voltage violation limits\n");
+  }
+
+  // emergency voltage violation limits
+  if (bus->v_min_emer > bus->v_max_emer) {
+  bus_ok = FALSE;
+  if (verbose)
+    fprintf(stderr,"bad bus emergency voltage violation limits\n");
+  }
 
   // Reg gen number
   if (BUS_is_regulated_by_gen(bus) && BUS_get_num_reg_gens(bus) < 1) {
@@ -778,10 +778,10 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
     if (bus->vars & BUS_VAR_VMAG) {
       switch (code) {
       case UPPER_LIMITS:
-	VEC_set(values,bus->index_v_mag[t],bus->v_max_reg);
+	VEC_set(values,bus->index_v_mag[t],bus->v_max_norm);
 	break;
       case LOWER_LIMITS:
-	VEC_set(values,bus->index_v_mag[t],bus->v_min_reg);
+	VEC_set(values,bus->index_v_mag[t],bus->v_min_norm);
 	break;
       default:
 	VEC_set(values,bus->index_v_mag[t],bus->v_mag[t]);
@@ -1240,12 +1240,12 @@ void BUS_init(Bus* bus, int num_periods) {
 
   bus->index = 0;
 
-  bus->v_max_reg = BUS_DEFAULT_V_MAX_REG;
-  bus->v_min_reg = BUS_DEFAULT_V_MIN_REG;
-  bus->v_max_norm = BUS_DEFAULT_V_MAX_LIMIT;
-  bus->v_min_norm = BUS_DEFAULT_V_MIN_LIMIT;
-  bus->v_max_emer = BUS_DEFAULT_V_MAX_LIMIT;
-  bus->v_min_emer = BUS_DEFAULT_V_MIN_LIMIT;
+  bus->v_max_reg = BUS_DEFAULT_V_MAX;
+  bus->v_min_reg = BUS_DEFAULT_V_MIN;
+  bus->v_max_norm = BUS_DEFAULT_V_MAX;
+  bus->v_min_norm = BUS_DEFAULT_V_MIN;
+  bus->v_max_emer = BUS_DEFAULT_V_MAX;
+  bus->v_min_emer = BUS_DEFAULT_V_MIN;
 
   bus->slack = FALSE;
   bus->fixed = 0x00;

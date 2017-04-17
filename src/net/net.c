@@ -2361,13 +2361,17 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
 
     // Regulation voltage limit violations
     //************************************
-    dv = 0;
-    if (v[k] > BUS_get_v_max_reg(bus))
-      dv = v[k]-BUS_get_v_max_reg(bus);
-    if (v[k] < BUS_get_v_min_reg(bus))
-      dv = BUS_get_v_min_reg(bus)-v[k];
-    if (dv > net->bus_v_reg_vio[t])
-      net->bus_v_reg_vio[t] = dv;
+    if (BUS_is_regulated_by_gen(bus) ||
+        BUS_is_regulated_by_tran(bus) ||
+        BUS_is_regulated_by_shunt(bus)) {
+        dv = 0;
+        if (v[k] > BUS_get_v_max_reg(bus))
+          dv = v[k]-BUS_get_v_max_reg(bus);
+        if (v[k] < BUS_get_v_min_reg(bus))
+          dv = BUS_get_v_min_reg(bus)-v[k];
+        if (dv > net->bus_v_reg_vio[t])
+          net->bus_v_reg_vio[t] = dv;
+    }
 
     // Tran-controlled
     if (BUS_is_regulated_by_tran(bus)) {

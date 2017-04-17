@@ -154,7 +154,7 @@ void FUNC_SLIM_VMAG_analyze_step(Func* f, Branch* br, int t) {
     
     if (!bus_counted[bus_index_t[k]]) {
 
-      dv = BUS_get_v_max_reg(bus)-BUS_get_v_min_reg(bus);
+      dv = BUS_get_v_max_norm(bus)-BUS_get_v_min_norm(bus);
       if (dv < FUNC_SLIM_VMAG_PARAM)
 	dv = FUNC_SLIM_VMAG_PARAM;
 
@@ -216,11 +216,11 @@ void FUNC_SLIM_VMAG_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
     if (!bus_counted[bus_index_t[k]]) {
 
-      dv = BUS_get_v_max_reg(bus)-BUS_get_v_min_reg(bus);
+      dv = BUS_get_v_max_norm(bus)-BUS_get_v_min_norm(bus);
       if (dv < FUNC_SLIM_VMAG_PARAM)
 	dv = FUNC_SLIM_VMAG_PARAM;
 
-      vmid = 0.5*(BUS_get_v_max_reg(bus)+BUS_get_v_min_reg(bus));
+      vmid = 0.5*(BUS_get_v_max_norm(bus)+BUS_get_v_min_norm(bus));
 
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
 

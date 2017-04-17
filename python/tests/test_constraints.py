@@ -830,13 +830,13 @@ class TestConstraints(unittest.TestCase):
                                                    'voltage angle',
                                                    'voltage magnitude deviation',
                                                    'voltage magnitude violation']))
-                    self.assertEqual(u[bus.index_v_mag],bus.v_max_reg)
+                    self.assertEqual(u[bus.index_v_mag],bus.v_max)
                     self.assertEqual(u[bus.index_v_ang],pf.BUS_INF_V_ANG)
                     self.assertEqual(u[bus.index_y],pf.BUS_INF_V_MAG)
                     self.assertEqual(u[bus.index_z],pf.BUS_INF_V_MAG)
                     self.assertEqual(u[bus.index_vl],pf.BUS_INF_V_MAG)
                     self.assertEqual(u[bus.index_vh],pf.BUS_INF_V_MAG)
-                    self.assertEqual(l[bus.index_v_mag],bus.v_min_reg)
+                    self.assertEqual(l[bus.index_v_mag],bus.v_min)
                     self.assertEqual(l[bus.index_v_ang],-pf.BUS_INF_V_ANG)
                     self.assertEqual(l[bus.index_y],0.)
                     self.assertEqual(l[bus.index_z],0.)
@@ -1139,9 +1139,9 @@ class TestConstraints(unittest.TestCase):
 
             for t in range(self.T):
                 for bus in net.buses:
-                    self.assertEqual(u[bus.index_v_mag[t]],bus.v_max_reg)
+                    self.assertEqual(u[bus.index_v_mag[t]],bus.v_max)
                     self.assertEqual(u[bus.index_v_ang[t]],pf.BUS_INF_V_ANG)
-                    self.assertEqual(l[bus.index_v_mag[t]],bus.v_min_reg)
+                    self.assertEqual(l[bus.index_v_mag[t]],bus.v_min)
                     self.assertEqual(l[bus.index_v_ang[t]],-pf.BUS_INF_V_ANG)
                 for gen in net.generators:
                     self.assertEqual(u[gen.index_P[t]],gen.P_max)

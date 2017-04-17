@@ -324,22 +324,38 @@ class TestNetwork(unittest.TestCase):
                 # obj type
                 self.assertEqual(bus.obj_type,'bus')
                 self.assertNotEqual(bus.obj_type,'unknown')
-
+                
                 # vmag vang set get
                 bus.v_mag = 1.234567
                 self.assertEqual(bus.v_mag,1.234567)
                 bus.v_ang = 0.123456
                 self.assertEqual(bus.v_ang,0.123456)
-
-                # v max/min norm/emer violation limits set get
-                bus.v_max_norm = 1.234567
-                self.assertEqual(bus.v_max_norm,1.234567)
-                bus.v_min_norm = 0.901234
-                self.assertEqual(bus.v_min_norm,0.901234)
+                
+                # v max/min reg/norm/emer violation limits set get
+                if ( bus.is_regulated_by_gen() or
+                     bus.is_regulated_by_tran() or
+                     bus.is_regulated_by_shunt() ):
+                    bus.v_max_reg = 1.123456
+                    self.assertEqual(bus.v_max_reg,1.123456)
+                    bus.v_min_reg = 0.912345
+                    self.assertEqual(bus.v_min_reg,0.912345)
+                
+                bus.v_max_norm = 1.210987
+                self.assertEqual(bus.v_max_norm,1.210987)
+                bus.v_min_norm = 0.905432
+                self.assertEqual(bus.v_min_norm,0.905432)
                 bus.v_max_emer = 1.234567
                 self.assertEqual(bus.v_max_emer,1.234567)
                 bus.v_min_emer = 0.901234
                 self.assertEqual(bus.v_min_emer,0.901234)
+                
+                # alias v_max, v_min for v_max_norm, v_min_norm set and get
+                self.assertEqual(bus.v_max_norm,bus.v_max)
+                bus.v_max = 1.100001
+                self.assertEqual(bus.v_max,1.100001)
+                self.assertEqual(bus.v_min_norm,bus.v_min)
+                bus.v_min = 0.900001
+                self.assertEqual(bus.v_min,0.900001)
 
                 # Comparisons
                 self.assertFalse(bus is same_bus)
@@ -3117,7 +3133,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(pf.BRANCH_INF_RATIO,100.)
             self.assertEqual(pf.SHUNT_INF_SUSC,1000.)
             for bus in net.buses:
-                self.assertEqual(x[bus.index_v_mag],bus.v_max_reg)
+                self.assertEqual(x[bus.index_v_mag],bus.v_max)
                 self.assertEqual(x[bus.index_v_ang],pf.BUS_INF_V_ANG)
                 self.assertEqual(x[bus.index_y],pf.BUS_INF_V_MAG)
                 self.assertEqual(x[bus.index_z],pf.BUS_INF_V_MAG)
@@ -3152,7 +3168,7 @@ class TestNetwork(unittest.TestCase):
             x = net.get_var_values('lower limits')
             self.assertEqual(x.size,net.num_vars)
             for bus in net.buses:
-                self.assertEqual(x[bus.index_v_mag],bus.v_min_reg)
+                self.assertEqual(x[bus.index_v_mag],bus.v_min)
                 self.assertEqual(x[bus.index_v_ang],-pf.BUS_INF_V_ANG)
                 self.assertEqual(x[bus.index_y],0.)
                 self.assertEqual(x[bus.index_z],0.)
@@ -3308,7 +3324,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(pf.SHUNT_INF_SUSC,1000.)
             for t in range(self.T):
                 for bus in net.buses:
-                    self.assertEqual(x[bus.index_v_mag[t]],bus.v_max_reg)
+                    self.assertEqual(x[bus.index_v_mag[t]],bus.v_max)
                     self.assertEqual(x[bus.index_v_ang[t]],pf.BUS_INF_V_ANG)
                     self.assertEqual(x[bus.index_y[t]],pf.BUS_INF_V_MAG)
                     self.assertEqual(x[bus.index_z[t]],pf.BUS_INF_V_MAG)
@@ -3344,7 +3360,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(x.size,net.num_vars)
             for t in range(self.T):
                 for bus in net.buses:
-                    self.assertEqual(x[bus.index_v_mag[t]],bus.v_min_reg)
+                    self.assertEqual(x[bus.index_v_mag[t]],bus.v_min)
                     self.assertEqual(x[bus.index_v_ang[t]],-pf.BUS_INF_V_ANG)
                     self.assertEqual(x[bus.index_y[t]],0.)
                     self.assertEqual(x[bus.index_z[t]],0.)

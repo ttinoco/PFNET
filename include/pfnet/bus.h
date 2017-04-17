@@ -18,10 +18,8 @@
 #include "uthash.h"
 
 // Limits
-#define BUS_DEFAULT_V_MAX_REG 1.1 /**< @brief Default maximum regulated voltage magnitude. */
-#define BUS_DEFAULT_V_MIN_REG 0.9 /**< @brief Default minimum regulated voltage magnitude. */
-#define BUS_DEFAULT_V_MAX_LIMIT 1.1 /**< @brief Default maximum voltage violation limit magnitude. */
-#define BUS_DEFAULT_V_MIN_LIMIT 0.9 /**< @brief Default minimum voltage violation limit magnitude. */
+#define BUS_DEFAULT_V_MAX 1.1 /**< @brief Default maximum voltage magnitude. */
+#define BUS_DEFAULT_V_MIN 0.9 /**< @brief Default minimum voltage magnitude. */
 
 // Infinity
 #define BUS_INF_V_MAG 100. /**< @brief Infinite voltage magnitude (p.u.) */

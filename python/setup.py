@@ -13,7 +13,6 @@ import argparse
 import numpy as np
 from Cython.Build import cythonize
 from distutils.core import setup, Extension
-# from setuptools import setup, Extension
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--libdirs', dest='libdirs', action='store',nargs='*',default=[])
@@ -43,7 +42,6 @@ setup(name='PFNET',
                 'pfnet.parsers',
                 'pfnet.functions',
                 'pfnet.constraints'],
-#      install_requires=['numpy', 'scipy'],
       ext_modules=cythonize([Extension("pfnet.cpfnet",
                                        [os.path.join("pfnet","cpfnet.pyx")],
                                        include_dirs=include_dirs,
