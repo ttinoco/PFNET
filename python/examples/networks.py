@@ -39,7 +39,7 @@ print(len(lines), net.get_num_lines())
 
 # Power Networks - Generators
 
-gen = net.get_gen(2)
+gen = net.get_generator(2)
 
 print(gen.index == 2)
 
@@ -57,11 +57,11 @@ print(shunt.index == 0)
 
 # Power Networks - Variable Generators
 
-net.add_vargens(net.get_gen_buses(), 50., 50., 5, 0.05)
+net.add_var_generators(net.get_generator_buses(), 80., 50., 50., 5, 0.05)
 
 print(net.num_var_generators == len([bus for bus in net.buses if bus.generators]))
 
-vargen = net.get_vargen(3)
+vargen = net.get_var_generator(3)
 
 print(vargen.index == 3)
 

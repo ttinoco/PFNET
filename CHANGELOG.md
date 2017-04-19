@@ -16,8 +16,8 @@ Unreleased
 * Improved naming consistency in Python network class (done).
 * Support for all battery and load variables in ACPF and network properties (done).
 * Battery dynamics and boundary conditions (done).
+* Updated documentation and examples (done).
 * Load constant power factor.
-* Updated documentation and examples.
 
 Version 1.2.9 (pre-release)
 ---------------------------

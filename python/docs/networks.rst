@@ -110,9 +110,9 @@ For branches that are transformers, the :class:`Branch <pfnet.Branch>` class att
 Generators
 ----------
 
-Generators in a power network are objects of type :class:`Generator <pfnet.Generator>`. Each generator has an :data:`index <pfnet.Generator.index>` attribute that can be used to identify this generator in a network. The :class:`Network <pfnet.Network>` class method :func:`get_gen() <pfnet.Network.get_gen>` can be used to extract a generator of a given :data:`index <pfnet.Generator.index>`::
+Generators in a power network are objects of type :class:`Generator <pfnet.Generator>`. Each generator has an :data:`index <pfnet.Generator.index>` attribute that can be used to identify this generator in a network. The :class:`Network <pfnet.Network>` class method :func:`get_generator() <pfnet.Network.get_generator>` can be used to extract a generator of a given :data:`index <pfnet.Generator.index>`::
 
-  >>> gen = net.get_gen(2)
+  >>> gen = net.get_generator(2)
 
   >>> print gen.index == 2
   True
@@ -161,20 +161,20 @@ As with generators, the active and reactive powers that a load consumes from the
 Variable Generators
 -------------------
 
-Variable generators in a power network are objects of type :class:`VarGenerator <pfnet.VarGenerator>`. They represent non-dispatchable energy sources such as wind generators or farms and photovoltaic power plants. As with other components, the :data:`index <pfnet.VarGenerator.index>` attribute is used to identify a variable generator in the network. In addition to the :data:`index <pfnet.VarGenerator.index>` attribute, a :data:`name <pfnet.VarGenerator.name>` attribute is also available, which can be used to extract a specific variable generator from the network using the :class:`Network <pfnet.Network>` class method :func:`get_vargen_by_name() <pfnet.Network.get_vargen_by_name>`. A list of all the variable generators in the network is also contained in the :data:`var_generators <pfnet.Network.var_generators>` attribute of the :class:`Network <pfnet.Network>` class.
+Variable generators in a power network are objects of type :class:`VarGenerator <pfnet.VarGenerator>`. They represent non-dispatchable energy sources such as wind generators or farms and photovoltaic power plants. As with other components, the :data:`index <pfnet.VarGenerator.index>` attribute is used to identify a variable generator in the network. In addition to the :data:`index <pfnet.VarGenerator.index>` attribute, a :data:`name <pfnet.VarGenerator.name>` attribute is also available, which can be used to extract a specific variable generator from the network using the :class:`Network <pfnet.Network>` class method :func:`get_var_generator_by_name() <pfnet.Network.get_var_generator_by_name>`. A list of all the variable generators in the network is also contained in the :data:`var_generators <pfnet.Network.var_generators>` attribute of the :class:`Network <pfnet.Network>` class.
 
 As with generators and loads, the active and reactive powers produced by a variable generator are obtained from the :data:`P <pfnet.VarGenerator.P>` and :data:`Q <pfnet.VarGenerator.Q>` attributes of the :class:`VarGenerator <pfnet.VarGenerator>` class in units of per unit :data:`system base power <pfnet.Network.base_power>`. This is the output of the device in the absence of uncertainty. When there is uncertainty, the output of the device is subject to variations about these values. Output limits of a variable generator are given by the attributes :data:`P_min <pfnet.VarGenerator.P_min>`, :data:`P_max <pfnet.VarGenerator.P_max>`, :data:`Q_min <pfnet.VarGenerator.Q_min>`, and :data:`Q_max <pfnet.VarGenerator.Q_max>`.
 
-The output of variable generators in a network is subject to random variations that can be correlated, especially for devices that are "nearby". The method :func:`create_vargen_P_sigma() <pfnet.Network.create_vargen_P_sigma>` of the :class:`Network <pfnet.Network>` class allows constructing a covariance matrix for these variations based on a "correlation distance" ``N`` and a given correlation coefficient. The cross-covariance between the variation of two devices that are connected to buses that are less than ``N`` branches away from each other is set such that it is consistent with the given correlation coefficient.
+The output of variable generators in a network is subject to random variations that can be correlated, especially for devices that are "nearby". The method :func:`create_var_generators_P_sigma() <pfnet.Network.create_var_generators_P_sigma>` of the :class:`Network <pfnet.Network>` class allows constructing a covariance matrix for these variations based on a "correlation distance" ``N`` and a given correlation coefficient. The cross-covariance between the variation of two devices that are connected to buses that are less than ``N`` branches away from each other is set such that it is consistent with the given correlation coefficient.
 
-Lastly, since many power network input files do not have variable generator information, these devices can be manually added to a network using the :func:`add_vargens() <pfnet.Network.add_vargens>` method of the :class:`Network <pfnet.Network>` class.
+Lastly, since many power network input files do not have variable generator information, these devices can be manually added to a network using the :func:`add_var_generators() <pfnet.Network.add_var_generators>` method of the :class:`Network <pfnet.Network>` class.
 
 .. _net_bat:
 
 Batteries
 ---------
 
-Batteries are objects of type :class:`Battery <pfnet.Battery>` and have an :data:`index <pfnet.Battery.index>` attribute like all the other network components. Other important attributes of these objects are energy level :data:`E <pfnet.Battery.E>` and charging power :data:`P <pfnet.Battery.P>`.  
+Batteries are objects of type :class:`Battery <pfnet.Battery>` and have an :data:`index <pfnet.Battery.index>` attribute like all the other network components. Other important attributes of these objects are energy level :data:`E <pfnet.Battery.E>` and charging power :data:`P <pfnet.Battery.P>`.  Since power network input files do not have variable generator information, these devices can be manually added to a network using the :func:`add_batteries() <pfnet.Network.add_batteries>` method of the :class:`Network <pfnet.Network>` class.
 
 .. _net_properties:
 
@@ -385,7 +385,7 @@ PFNET provides a convenient way to specify and analyze network contingencies. A 
 
   >>> pfnet.ParserMAT().parse('ieee14.mat')
 
-  >>> gen = net.get_gen(3)
+  >>> gen = net.get_generator(3)
   >>> branch = net.get_branch(2)
 
   >>> c1 = pf.Contingency(gens=[gen],branches=[branch])

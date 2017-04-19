@@ -192,16 +192,16 @@ Generator
 Generator Properties
 --------------------
 
-============================= =======
-============================= =======
+============================= ===========================
+============================= ===========================
 ``"any"``
 ``"slack"``
 ``"regulator"``
 ``"not slack"``
 ``"not regulator"``
 ``"not on outage"``
-``"adjustable active power"``
-============================= =======
+``"adjustable active power"`` :math:`P_{\min} < P_{\max}`
+============================= ===========================
 
 .. _ref_gen_q:
 
@@ -269,22 +269,23 @@ Load
 Load Properties
 ---------------
 
-============================= =======
-============================= =======
+============================= ===========================
+============================= ===========================
 ``"any"``
-``"adjustable active power"``
-============================= =======
+``"adjustable active power"`` :math:`P_{\min} < P_{\max}`
+============================= ===========================
 
 .. _ref_load_q:
 
 Load Quantities
 ---------------
 
-================== =======
-================== =======
+==================== =======
+==================== =======
 ``"all"``
 ``"active power"``
-================== =======
+``"reactive power"``
+==================== =======
 
 .. _ref_load_class:
 
@@ -492,12 +493,13 @@ Constraint Names
 ``"variable nonlinear bounds"``
 ``"generator active power participation"``
 ``"generator reactive power participation"``
+``"generator ramp limits"``
 ``"voltage regulation by generators"``
 ``"voltage regulation by transformers"``
 ``"voltage regulation by shunts"``
-``"DC branch flow limits"``
 ``"AC branch flow limits"``
-``"generator ramp limits"``
+``"DC branch flow limits"``
+``"battery dynamics"``
 ============================================ =======
 
 .. _ref_constr_class:

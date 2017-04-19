@@ -4,9 +4,9 @@
 Getting Started
 ***************
 
-This section describes how to get started with PFNET in Python. In particular, it covers required packages, installation, and provides a simple example showing how to use this package.
+This section describes how to get started with PFNET in Python. In particular, it covers dependencies, installation, and provides a simple example showing how to use this package.
 
-.. _start_requirements:
+.. _start_dependencies:
 
 Dependencies
 ============

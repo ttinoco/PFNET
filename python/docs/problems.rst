@@ -439,9 +439,27 @@ This constraint is associated with the string ``"generator ramp limits"``. It en
 
 .. math:: 
    
-    -\delta P^{\max}_k \le P_k(t) - P_k(t-1) \le \delta P^{\max}
+    -\delta P^{\max} \le P(t) - P(t-1) \le \delta P^{\max}
 
-for each generator :math:`k` and time period :math:`t`, where :math:`P_k(t)` are generator active powers, and :math:`\delta P^{\max}_k` are generator ramping limits. The ramping limits are defined by the :data:`dP_max <pfnet.Generator.dP_max>` attribute of each :class:`Generator <pfnet.Generator>` object. For :math:`t = 0`, :math:`P_k(t-1)` is the :data:`P_prev <pfnet.Generator.P_prev>` attribute of a :class:`Generator <pfnet.Generator>`.
+for each generator and time period :math:`t \in \{1,\ldots,T\}`, where :math:`P(t)` are generator active powers, and :math:`\delta P^{\max}` are generator ramping limits. The ramping limits are defined by the :data:`dP_max <pfnet.Generator.dP_max>` attribute of each :class:`Generator <pfnet.Generator>` object. For :math:`t = 1`, :math:`P(t-1)` is the :data:`P_prev <pfnet.Generator.P_prev>` attribute of a :class:`Generator <pfnet.Generator>`.
+
+.. _prob_constr_BAT_DYN:
+
+Battery dynamics
+----------------
+
+This constraint is associated with the string ``"battery dynamics"``. It enforces the dynamic equations of the batteries' energy levels. It is given by
+
+.. math::
+   :nowrap:
+
+   \begin{align*}
+   E(1) &= E_i \\
+   E(T+1) &= E_f \\
+   E(t+1) &= E(t) + \eta_c P_c(t) - \eta_d^{-1} P_d(t), \ \forall t \in \{1,\ldots,T\}
+   \end{align*}
+
+for each battery, where :math:`E_i`, :math:`E_f`, :math:`\eta_c`, and :math:`\eta_d` correspond to the attributes :data:`E_init <pfnet.Battery.E_init>` , :data:`E_final <pfnet.Battery.E_final>`, :data:`eta_c <pfnet.Battery.eta_c>`, and :data:`eta_d <pfnet.Battery.eta_d>` of a :class:`Battery <pfnet.Battery>`, respectively. It is noted here that the units of the charging/discharging powers are p.u. system base power, and the units of the energy levels are p.u. system base power times the duration of a time period.
 
 .. _prob_prob:
 
