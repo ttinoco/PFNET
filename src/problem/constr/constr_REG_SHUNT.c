@@ -589,7 +589,7 @@ void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* values) {
+void CONSTR_REG_SHUNT_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
 
   // Local variables
   Bus* buses[2];

@@ -231,7 +231,7 @@ void CONSTR_BAT_DYN_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_BAT_DYN_eval_step(Constr* c, Branch* br, int t, Vec* values) {
+void CONSTR_BAT_DYN_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
   // Nothing to do
 }
 

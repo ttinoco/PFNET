@@ -21,7 +21,7 @@ void CONSTR_BAT_DYN_count_step(Constr* c, Branch* br, int t);
 void CONSTR_BAT_DYN_allocate(Constr* c);
 void CONSTR_BAT_DYN_clear(Constr* c);
 void CONSTR_BAT_DYN_analyze_step(Constr* c, Branch* br, int t);
-void CONSTR_BAT_DYN_eval_step(Constr* c, Branch* br, int t, Vec* v);
+void CONSTR_BAT_DYN_eval_step(Constr* c, Branch* br, int t, Vec* v, Vec* ve);
 void CONSTR_BAT_DYN_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void CONSTR_BAT_DYN_free(Constr* c);
 

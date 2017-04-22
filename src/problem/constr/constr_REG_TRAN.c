@@ -542,7 +542,7 @@ void CONSTR_REG_TRAN_analyze_step(Constr* c, Branch* br, int tau) {
   }
 }
 
-void CONSTR_REG_TRAN_eval_step(Constr* c, Branch* br, int tau, Vec* values) {
+void CONSTR_REG_TRAN_eval_step(Constr* c, Branch* br, int tau, Vec* values, Vec* values_extra) {
   
   // Local variables
   Bus* reg_bus;

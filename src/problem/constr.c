@@ -23,21 +23,19 @@ struct Constr {
   // Network
   Net* net;    /**< @brief Power network */
   
-  // Nonlinear (f(x) + Jbar y = 0)
+  // Nonlinear (f(x,y) = 0)
   Vec* f;           /**< @brief Vector of nonlinear constraint violations */
-  Mat* J;           /**< @brief Jacobian matrix of nonlinear constraints wrt. variables */
-  Mat* Jbar;        /**< @brief Jacobian matrix of nonlinear constraints wrt. extra variables */
+  Mat* J;           /**< @brief Jacobian matrix of nonlinear constraints */
   Mat* H_array;     /**< @brief Array of Hessian matrices of nonlinear constraints */
   int H_array_size; /**< @brief Size of Hessian array */
   Mat* H_combined;  /**< @brief Linear combination of Hessians of the nonlinear constraints */
   
-  // Linear equality (Ax = b)
+  // Linear equality (A (x,y) = b)
   Mat* A;           /**< @brief Matrix of constraint normals of linear equality constraints */
   Vec* b;           /**< @brief Right-hand side vector of linear equality constraints */
 
-  // Linear inequalities (l <= Gx + Gbar y <= h)
+  // Linear inequalities (l <= G (x,y) <= h)
   Mat* G;           /** @brief Matrix of constraint normals of linear inequality constraints wrt. variables */
-  Mat* Gbar;        /** @brief Matrix of constraint normals of linear inequality constraints wrt. extra variables */
   Vec* l;           /** @brief Lower bound for linear inequality contraints */
   Vec* u;           /** @brief Upper bound for linear inequality contraints */
   
@@ -47,9 +45,7 @@ struct Constr {
   // Counters and flags
   int A_nnz;             /**< @brief Counter for nonzeros of matrix A */
   int J_nnz;             /**< @brief Counter for nonzeros of matrix J */
-  int Jbar_nnz;          /**< @brief Counter for nonzeros of matrix Jbar */
   int G_nnz;             /**< @brief Counter for nonzeros of matrix G */
-  int Gbar_nnz;          /**< @brief Counter for nonzeros of matrix Gbar */
   int* H_nnz;            /**< @brief Array of counters of nonzeros of nonlinear constraint Hessians */
   int H_nnz_size;        /**< @brief Size of array of counter of Hessian nonzeros */
   int A_row;             /**< @brief Counter for linear equality constraints */
@@ -59,15 +55,15 @@ struct Constr {
   int bus_counted_size;  /**< @brief Size of array of flags for processing buses */
   
   // Type functions
-  void (*func_init)(Constr* c);                                       /**< @brief Initialization function */
-  void (*func_count_step)(Constr* c, Branch* br, int t);              /**< @brief Function for counting nonzero entries */
-  void (*func_allocate)(Constr* c);                                   /**< @brief Function for allocating required arrays */
-  void (*func_clear)(Constr* c);                                      /**< @brief Function for clearing flags, counters, and function values */
-  void (*func_analyze_step)(Constr* c, Branch* br, int t);            /**< @brief Function for analyzing sparsity pattern */
-  void (*func_eval_step)(Constr* c, Branch* br, int t, Vec* v);       /**< @brief Function for evaluating constraint */
+  void (*func_init)(Constr* c);                                          /**< @brief Initialization function */
+  void (*func_count_step)(Constr* c, Branch* br, int t);                 /**< @brief Function for counting nonzero entries */
+  void (*func_allocate)(Constr* c);                                      /**< @brief Function for allocating required arrays */
+  void (*func_clear)(Constr* c);                                         /**< @brief Function for clearing flags, counters, and function values */
+  void (*func_analyze_step)(Constr* c, Branch* br, int t);               /**< @brief Function for analyzing sparsity pattern */
+  void (*func_eval_step)(Constr* c, Branch* br, int t, Vec* v, Vec* ve); /**< @brief Function for evaluating constraint */
   void (*func_store_sens_step)(Constr* c, Branch* br, int t,
-			       Vec* sA, Vec* sf, Vec* sGu, Vec* sGl); /**< @brief Func. for storing sensitivities */
-  void (*func_free)(Constr* c);                                       /**< @brief Function for de-allocating any data used */
+			       Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);    /**< @brief Func. for storing sensitivities */
+  void (*func_free)(Constr* c);                                          /**< @brief Function for de-allocating any data used */
 
   // Type data
   void* data; /**< @brief Type-dependent constraint data structure */
@@ -145,9 +141,7 @@ void CONSTR_del_matvec(Constr* c) {
     MAT_del(c->A);
     VEC_del(c->f);
     MAT_del(c->J);
-    MAT_del(c->Jbar);
     MAT_del(c->G);
-    MAT_del(c->Gbar);
     VEC_del(c->l);
     VEC_del(c->u);
     MAT_array_del(c->H_array,c->H_array_size);
@@ -156,9 +150,7 @@ void CONSTR_del_matvec(Constr* c) {
     c->A = NULL;
     c->f = NULL;
     c->J = NULL;
-    c->Jbar = NULL;
     c->G = NULL;
-    c->Gbar = NULL;
     c->l = NULL;
     c->u = NULL;
     c->H_array = NULL;
@@ -222,13 +214,6 @@ Mat* CONSTR_get_G(Constr* c) {
     return NULL;
 }
 
-Mat* CONSTR_get_Gbar(Constr* c) {
-  if (c)
-    return c->Gbar;
-  else
-    return NULL;
-}
-
 Vec* CONSTR_get_f(Constr* c) {
   if (c)
     return c->f;
@@ -239,13 +224,6 @@ Vec* CONSTR_get_f(Constr* c) {
 Mat* CONSTR_get_J(Constr* c) {
   if (c)
     return c->J;
-  else
-    return NULL;
-}
-
-Mat* CONSTR_get_Jbar(Constr* c) {
-  if (c)
-    return c->Jbar;
   else
     return NULL;
 }
@@ -299,23 +277,9 @@ int CONSTR_get_G_nnz(Constr* c) {
     return 0;
 }
 
-int CONSTR_get_Gbar_nnz(Constr* c) {
-  if (c)
-    return c->Gbar_nnz;
-  else
-    return 0;
-}
-
 int* CONSTR_get_G_nnz_ptr(Constr* c) {
   if (c)
     return &(c->G_nnz);
-  else
-    return NULL;
-}
-
-int* CONSTR_get_Gbar_nnz_ptr(Constr* c) {
-  if (c)
-    return &(c->Gbar_nnz);
   else
     return NULL;
 }
@@ -327,23 +291,9 @@ int CONSTR_get_J_nnz(Constr* c) {
     return 0;
 }
 
-int CONSTR_get_Jbar_nnz(Constr* c) {
-  if (c)
-    return c->Jbar_nnz;
-  else
-    return 0;
-}
-
 int* CONSTR_get_J_nnz_ptr(Constr* c) {
   if (c)
     return &(c->J_nnz);
-  else
-    return 0;
-}
-
-int* CONSTR_get_Jbar_nnz_ptr(Constr* c) {
-  if (c)
-    return &(c->Jbar_nnz);
   else
     return 0;
 }
@@ -451,15 +401,8 @@ void CONSTR_list_del(Constr* clist) {
 void CONSTR_list_combine_H(Constr* clist, Vec* coeff, BOOL ensure_psd) {
   Constr* cc;
   Vec* v;
-  int size = 0;
   int offset = 0;
   REAL* coeffd = VEC_get_data(coeff);
-
-  // Size
-  for (cc = clist; cc != NULL; cc = CONSTR_get_next(cc))
-    size += VEC_get_size(CONSTR_get_f(cc));
-    
-  // Map
   for (cc = clist; cc != NULL; cc = CONSTR_get_next(cc)) {
     if (offset + VEC_get_size(CONSTR_get_f(cc)) <= VEC_get_size(coeff))
       v = VEC_new_from_array(&(coeffd[offset]),VEC_get_size(CONSTR_get_f(cc)));
@@ -494,10 +437,19 @@ void CONSTR_list_analyze_step(Constr* clist, Branch* br, int t) {
     CONSTR_analyze_step(cc,br,t);
 }
 
-void CONSTR_list_eval_step(Constr* clist, Branch* br, int t, Vec* values) {
+void CONSTR_list_eval_step(Constr* clist, Branch* br, int t, Vec* v, Vec* ve) {
   Constr* cc;
-  for (cc = clist; cc != NULL; cc = CONSTR_get_next(cc))
-    CONSTR_eval_step(cc,br,t,values);
+  Vec* ve_c;
+  int offset = 0;
+  REAL* ve_data = VEC_get_data(ve);
+  for (cc = clist; cc != NULL; cc = CONSTR_get_next(cc)) {
+    if (offset + CONSTR_get_num_extra_vars(cc) <= VEC_get_size(ve))
+      ve_c = VEC_new_from_array(&(ve_data[offset]),CONSTR_get_num_extra_vars(cc));
+    else
+      ve_c = NULL;
+    CONSTR_eval_step(cc,br,t,v,ve_c);
+    offset += CONSTR_get_num_extra_vars(cc);
+  }
 }
 
 void CONSTR_list_store_sens_step(Constr* clist, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
@@ -579,21 +531,17 @@ Constr* CONSTR_new(Net* net) {
   // Fields
   c->f = NULL;
   c->J = NULL;
-  c->Jbar = NULL;
   c->H_array = NULL;  
   c->H_array_size = 0;
   c->H_combined = NULL;
   c->A = NULL;
   c->b = NULL;
   c->G = NULL;
-  c->Gbar = NULL;
   c->l = NULL;
   c->u = NULL;
   c->A_nnz = 0;
   c->J_nnz = 0;
-  c->Jbar_nnz = 0;
   c->G_nnz = 0;
-  c->Gbar_nnz = 0;
   c->H_nnz = NULL;
   c->H_nnz_size = 0;
   c->A_row = 0;
@@ -654,11 +602,6 @@ void CONSTR_set_G(Constr* c, Mat* G) {
     c->G = G;
 }
 
-void CONSTR_set_Gbar(Constr* c, Mat* Gbar) {
-  if (c)
-    c->Gbar = Gbar;
-}
-
 void CONSTR_set_f(Constr* c, Vec* f) {
   if (c)
     c->f = f;
@@ -667,11 +610,6 @@ void CONSTR_set_f(Constr* c, Vec* f) {
 void CONSTR_set_J(Constr* c, Mat* J) {
   if (c)
     c->J = J;
-}
-
-void CONSTR_set_Jbar(Constr* c, Mat* Jbar) {
-  if (c)
-    c->Jbar = Jbar;
 }
 
 void CONSTR_set_H_array(Constr* c, Mat* array, int size) {
@@ -696,19 +634,9 @@ void CONSTR_set_G_nnz(Constr* c, int nnz) {
     c->G_nnz = nnz;
 }
 
-void CONSTR_set_Gbar_nnz(Constr* c, int nnz) {
-  if (c)
-    c->Gbar_nnz = nnz;
-}
-
 void CONSTR_set_J_nnz(Constr* c, int nnz) {
   if (c)
     c->J_nnz = nnz;
-}
-
-void CONSTR_set_Jbar_nnz(Constr* c, int nnz) {
-  if (c)
-    c->Jbar_nnz = nnz;
 }
 
 void CONSTR_set_H_nnz(Constr* c, int* nnz, int size) {
@@ -800,20 +728,20 @@ void CONSTR_analyze_step(Constr* c, Branch* br, int t) {
     (*(c->func_analyze_step))(c,br,t);
 }
 
-void CONSTR_eval(Constr* c, Vec* values) {
+void CONSTR_eval(Constr* c, Vec* v, Vec* ve) {
   int i;
   int t;
   Net* net = CONSTR_get_network(c);
   CONSTR_clear(c);
   for (t = 0; t < NET_get_num_periods(net); t++) {
     for (i = 0; i < NET_get_num_branches(net); i++)
-      CONSTR_eval_step(c,NET_get_branch(net,i),t,values);
+      CONSTR_eval_step(c,NET_get_branch(net,i),t,v,ve);
   }
 }
 
-void CONSTR_eval_step(Constr* c, Branch* br, int t, Vec* values) {
-  if (c && c->func_eval_step && CONSTR_is_safe_to_eval(c,values))
-    (*(c->func_eval_step))(c,br,t,values);
+void CONSTR_eval_step(Constr* c, Branch* br, int t, Vec* v, Vec* ve) {
+  if (c && c->func_eval_step && CONSTR_is_safe_to_eval(c,v,ve))
+    (*(c->func_eval_step))(c,br,t,v,ve);
 }
 
 void CONSTR_store_sens(Constr* c, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
@@ -865,10 +793,11 @@ BOOL CONSTR_is_safe_to_count(Constr* c) {
 
 BOOL CONSTR_is_safe_to_analyze(Constr* c) {
   Net* net = CONSTR_get_network(c);
+  int num_vars = NET_get_num_vars(net)+CONSTR_get_num_extra_vars(c);
   if (CONSTR_get_bus_counted_size(c) == NET_get_num_buses(net)*NET_get_num_periods(net) &&
-      MAT_get_size2(c->A) == NET_get_num_vars(net) &&
-      MAT_get_size2(c->J) == NET_get_num_vars(net) &&
-      MAT_get_size2(c->Jbar) == CONSTR_get_num_extra_vars(c))
+      MAT_get_size2(CONSTR_get_A(c)) == num_vars &&
+      MAT_get_size2(CONSTR_get_G(c)) == num_vars &&
+      MAT_get_size2(CONSTR_get_J(c)) == num_vars)
     return TRUE;
   else {
     sprintf(c->error_string,"constraint is not safe to analyze");
@@ -877,13 +806,16 @@ BOOL CONSTR_is_safe_to_analyze(Constr* c) {
   }
 }
 
-BOOL CONSTR_is_safe_to_eval(Constr* c, Vec* values) {
+BOOL CONSTR_is_safe_to_eval(Constr* c, Vec* v, Vec* ve) {
   Net* net = CONSTR_get_network(c);
+  int num_vars = NET_get_num_vars(net)+CONSTR_get_num_extra_vars(c);
   if (CONSTR_get_bus_counted_size(c) == NET_get_num_buses(net)*NET_get_num_periods(net) &&
-      MAT_get_size2(c->A) == NET_get_num_vars(net) &&
-      MAT_get_size2(c->J) == NET_get_num_vars(net) &&
-      MAT_get_size2(c->Jbar) == CONSTR_get_num_extra_vars(c) &&
-      VEC_get_size(values) == NET_get_num_vars(net))
+      MAT_get_size2(CONSTR_get_A(c)) == num_vars &&
+      MAT_get_size2(CONSTR_get_G(c)) == num_vars &&
+      MAT_get_size2(CONSTR_get_J(c)) == num_vars &&
+      VEC_get_size(v) == NET_get_num_vars(net) &&
+      (VEC_get_size(ve) == CONSTR_get_num_extra_vars(c) || 
+       VEC_get_size(ve) == 0))
     return TRUE;
   else {
     sprintf(c->error_string,"constraint is not safe to eval");
@@ -975,7 +907,7 @@ void CONSTR_set_func_analyze_step(Constr* c, void (*func)(Constr* c, Branch* br,
     c->func_analyze_step = func;
 }
 
-void CONSTR_set_func_eval_step(Constr* c, void (*func)(Constr* c, Branch* br, int t, Vec* v)) {
+void CONSTR_set_func_eval_step(Constr* c, void (*func)(Constr* c, Branch* br, int t, Vec* v, Vec* ve)) {
   if (c)
     c->func_eval_step = func;
 }

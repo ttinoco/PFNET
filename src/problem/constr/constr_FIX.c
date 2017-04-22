@@ -469,7 +469,7 @@ void CONSTR_FIX_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_FIX_eval_step(Constr* c, Branch* br, int t, Vec* values) {
+void CONSTR_FIX_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
   // Nothing to do
 }
 

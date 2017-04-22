@@ -210,7 +210,7 @@ void CONSTR_PAR_GEN_Q_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_PAR_GEN_Q_eval_step(Constr* c, Branch* br, int t, Vec* values) {
+void CONSTR_PAR_GEN_Q_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
   // Nothing to do
 }
 
