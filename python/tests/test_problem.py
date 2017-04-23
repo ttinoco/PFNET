@@ -297,10 +297,6 @@ class TestProblem(unittest.TestCase):
                           ['voltage magnitude','voltage angle'])
             net.set_flags('bus',
                           'variable',
-                          ['not slack','regulated by generator'],
-                          'voltage magnitude deviation')
-            net.set_flags('bus',
-                          'variable',
                           'regulated by transformer',
                           'voltage magnitude violation')
             net.set_flags('bus',
@@ -332,7 +328,6 @@ class TestProblem(unittest.TestCase):
             
             self.assertEqual(net.num_vars,
                              2*(net.num_buses-net.get_num_slack_buses()) + 
-                             2*(net.get_num_buses_reg_by_gen()-net.get_num_slack_buses()) +
                              2*(reg_by_tran_or_shunt) + 
                              net.get_num_slack_gens() + 
                              net.get_num_reg_gens() + 
@@ -360,13 +355,6 @@ class TestProblem(unittest.TestCase):
             p.add_function(pf.Function('susceptance regularization',1.,net))
             self.assertEqual(len(p.functions),5)
                 
-            # Init point
-            r = np.random.randn(net.num_vars)
-            x0 = p.get_init_point()+r
-            self.assertTrue(type(x0) is np.ndarray)
-            self.assertTupleEqual(x0.shape,(net.num_vars,))
-            self.assertTrue(np.all(x0 == p.x+r))
-            
             # Before
             phi = p.phi
             gphi = p.gphi
@@ -397,6 +385,14 @@ class TestProblem(unittest.TestCase):
             self.assertTrue(np.all(Hphi.row >= Hphi.col))
             
             p.analyze()
+
+            # Init point
+            r = np.random.randn(p.get_num_primal_variables())
+            x0 = p.get_init_point()+r
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars+p.num_extra_vars,))
+            self.assertTrue(np.all(x0 == p.x+r))
+
             p.eval(x0)
             
             # After
@@ -422,13 +418,14 @@ class TestProblem(unittest.TestCase):
 
             # gphi
             self.assertTrue(type(gphi) is np.ndarray)
-            self.assertTupleEqual(gphi.shape,(net.num_vars,))
+            self.assertTupleEqual(gphi.shape,(net.num_vars+p.num_extra_vars,))
             man_gphi = sum(f.weight*f.gphi for f in p.functions)
-            self.assertLess(norm(man_gphi-gphi),1e-10)
+            self.assertLess(norm(np.hstack((man_gphi,np.zeros(p.num_extra_vars)))-gphi),1e-10)
 
             # Hphi
             self.assertTrue(type(Hphi) is coo_matrix)
-            self.assertTupleEqual(Hphi.shape,(net.num_vars,net.num_vars))
+            self.assertTupleEqual(Hphi.shape,(net.num_vars+p.num_extra_vars,
+                                              net.num_vars+p.num_extra_vars))
             self.assertGreater(Hphi.nnz,0)
     
             # f
@@ -444,13 +441,13 @@ class TestProblem(unittest.TestCase):
             # J
             self.assertTrue(type(J) is coo_matrix)
             J_size = sum(c.J.shape[0] for c in p.constraints)
-            self.assertTupleEqual(J.shape,(J_size,net.num_vars))
+            self.assertTupleEqual(J.shape,(J_size,net.num_vars+p.num_extra_vars))
             self.assertGreater(J.nnz,0)
             
             # A
             self.assertTrue(type(A) is coo_matrix)
             A_size = sum(c.A.shape[0] for c in p.constraints)
-            self.assertTupleEqual(A.shape,(A_size,net.num_vars))
+            self.assertTupleEqual(A.shape,(A_size,net.num_vars+p.num_extra_vars))
             self.assertGreater(A.nnz,0)
             
             # Check gphi
@@ -458,7 +455,7 @@ class TestProblem(unittest.TestCase):
             gphi0 = gphi.copy()
             for i in range(NUM_TRIALS):
                 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+p.num_extra_vars)
     
                 x = x0 + h*d
                 
@@ -475,7 +472,7 @@ class TestProblem(unittest.TestCase):
             J0 = J.copy()
             for i in range(NUM_TRIALS):
                 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+p.num_extra_vars)
     
                 x = x0 + h*d
                 
@@ -493,7 +490,7 @@ class TestProblem(unittest.TestCase):
             Hphi0 = Hphi0 + Hphi0.T - triu(Hphi0)
             for i in range(NUM_TRIALS):
                 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+p.num_extra_vars)
     
                 x = x0 + h*d
                 
@@ -518,12 +515,12 @@ class TestProblem(unittest.TestCase):
             g0 = J0.T*coeff
             H0 = p.H_combined.copy()
             self.assertTrue(type(H0) is coo_matrix)
-            self.assertTupleEqual(H0.shape,(net.num_vars,net.num_vars))
+            self.assertTupleEqual(H0.shape,(net.num_vars+p.num_extra_vars,net.num_vars+p.num_extra_vars))
             self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
             H0 = (H0 + H0.T) - triu(H0)
             for i in range(NUM_TRIALS):
                 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+p.num_extra_vars)
                 
                 x = x0 + h*d
                 

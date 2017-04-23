@@ -524,7 +524,6 @@ class TestFlags(unittest.TestCase):
                     self.assertFalse(bus.has_flags('variable','voltage magnitude violation'))
                     self.assertTrue(bus.has_flags('bounded','voltage angle'))
                     self.assertTrue(bus.has_flags('bounded','voltage magnitude'))
-                    self.assertFalse(bus.has_flags('bounded','voltage magnitude deviation'))
                     self.assertFalse(bus.has_flags('fixed','voltage angle'))
                     self.assertFalse(bus.has_flags('fixed','voltage magnitude'))
                     num_vars += 2

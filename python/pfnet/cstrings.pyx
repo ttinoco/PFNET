@@ -47,7 +47,6 @@ str2const = {'current' : cconstants.CURRENT,
 str2q_bus = {'all' : cflags.ALL_VARS, 
              'voltage magnitude' : cbus.BUS_VAR_VMAG, 
              'voltage angle' : cbus.BUS_VAR_VANG,
-             'voltage magnitude deviation' : cbus.BUS_VAR_VDEV,
              'voltage magnitude violation' : cbus.BUS_VAR_VVIO}
 
 str2q_branch = {'all' : cflags.ALL_VARS,

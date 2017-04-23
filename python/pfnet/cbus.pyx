@@ -467,24 +467,6 @@ cdef class Bus:
             else:
                 return np.array(r)
 
-    property index_y:
-        """ Index of voltage magnitude positive deviation variable (int or array). """
-        def __get__(self):
-            r = [cbus.BUS_get_index_y(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeInt(r[0])
-            else:
-                return np.array(r)
-
-    property index_z:
-        """ Index of voltage magnitude negative deviation variable (int or array). """
-        def __get__(self):
-            r = [cbus.BUS_get_index_z(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeInt(r[0])
-            else:
-                return np.array(r)
-
     property index_vl:
         """ Index of voltage low limit violation variable (int or array). """
         def __get__(self):

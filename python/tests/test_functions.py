@@ -49,13 +49,9 @@ class TestFunctions(unittest.TestCase):
                           ['voltage magnitude','voltage angle'])
             net.set_flags('bus',
                           'variable',
-                          ['regulated by generator','not slack'],
-                          'voltage magnitude deviation')
-            net.set_flags('bus',
-                          'variable',
                           'regulated by transformer',
                           'voltage magnitude violation')
-            self.assertEqual(net.num_vars,(2*nb+2*(nrg-ns)+2*nrt)*net.num_periods)
+            self.assertEqual(net.num_vars,(2*nb+2*nrt)*net.num_periods)
 
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -89,7 +85,7 @@ class TestFunctions(unittest.TestCase):
             self.assertEqual(func.Hphi_nnz,0)
 
             func.analyze()
-            self.assertEqual(func.Hphi_nnz,(nb+2*(nrg-ns)+2*nrt)*net.num_periods)
+            self.assertEqual(func.Hphi_nnz,(nb+2*nrt)*net.num_periods)
             func.eval(x0)
             self.assertEqual(func.Hphi_nnz,0)
 
@@ -104,7 +100,7 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(g.shape,(net.num_vars,))
             self.assertTrue(type(H) is coo_matrix)
             self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
-            self.assertEqual(H.nnz,(nb+2*(nrg-ns)+2*nrt)*net.num_periods)
+            self.assertEqual(H.nnz,(nb+2*nrt)*net.num_periods)
             self.assertTrue(np.all(H.row == H.col))
 
             self.assertTrue(not np.any(np.isinf(g)))
@@ -158,8 +154,6 @@ class TestFunctions(unittest.TestCase):
             for t in range(net.num_periods):
                 for bus in net.buses:
                     phi += 0.5*(((bus.v_mag[t]-bus.v_set[t])/dv)**2.)
-                    if bus.has_flags('variable','voltage magnitude deviation'):
-                        phi += 0.5*((np.abs(bus.v_mag[t]-bus.v_set[t])/dv)**2.)
             self.assertLess(np.abs(func.phi-phi),1e-10*(func.phi+1))
             net.clear_flags()
             self.assertEqual(net.num_vars,0)

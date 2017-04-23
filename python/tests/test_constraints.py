@@ -526,7 +526,7 @@ class TestConstraints(unittest.TestCase):
             net.set_flags('bus',
                           'variable',
                           'regulated by generator',
-                          ['voltage magnitude','voltage angle','voltage magnitude deviation','voltage magnitude violation'])
+                          ['voltage magnitude','voltage angle','voltage magnitude violation'])
             net.set_flags('generator',
                           'variable',
                           'regulator',
@@ -559,7 +559,7 @@ class TestConstraints(unittest.TestCase):
             self.assertGreater(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
             self.assertEqual(net.num_vars,
-                             net.get_num_buses_reg_by_gen()*6 +
+                             net.get_num_buses_reg_by_gen()*4 +
                              net.get_num_reg_gens()*2 +
                              2*net.get_num_P_adjust_loads() +
                              net.get_num_tap_changers()*3 +
@@ -663,25 +663,19 @@ class TestConstraints(unittest.TestCase):
                     self.assertTrue(bus.has_flags('variable',
                                                   ['voltage magnitude',
                                                    'voltage angle',
-                                                   'voltage magnitude deviation',
                                                    'voltage magnitude violation']))
                     self.assertEqual(u[bus.index_v_mag],pf.BUS_INF_V_MAG)
                     self.assertEqual(u[bus.index_v_ang],pf.BUS_INF_V_ANG)
-                    self.assertEqual(u[bus.index_y],pf.BUS_INF_V_MAG)
-                    self.assertEqual(u[bus.index_z],pf.BUS_INF_V_MAG)
                     self.assertEqual(u[bus.index_vl],pf.BUS_INF_V_MAG)
                     self.assertEqual(u[bus.index_vh],pf.BUS_INF_V_MAG)
                     self.assertEqual(l[bus.index_v_mag],0.)
                     self.assertEqual(l[bus.index_v_ang],-pf.BUS_INF_V_ANG)
-                    self.assertEqual(l[bus.index_y],0.)
-                    self.assertEqual(l[bus.index_z],0.)
                     self.assertEqual(l[bus.index_vl],0.)
                     self.assertEqual(l[bus.index_vh],0.)
                 else:
                     self.assertFalse(bus.has_flags('variable',
                                                    ['voltage magnitude',
                                                     'voltage angle',
-                                                    'voltage magnitude deviation',
                                                     'voltage magnitude violation']))
 
             for branch in net.branches:
@@ -763,7 +757,7 @@ class TestConstraints(unittest.TestCase):
             net.set_flags('bus',
                           'bounded',
                           'regulated by generator',
-                          ['voltage magnitude','voltage angle','voltage magnitude deviation','voltage magnitude violation'])
+                          ['voltage magnitude','voltage angle','voltage magnitude violation'])
             net.set_flags('generator',
                           'bounded',
                           'regulator',
@@ -831,30 +825,23 @@ class TestConstraints(unittest.TestCase):
                     self.assertTrue(bus.has_flags('bounded',
                                                   ['voltage magnitude',
                                                    'voltage angle',
-                                                   'voltage magnitude deviation',
                                                    'voltage magnitude violation']))
                     self.assertTrue(bus.has_flags('variable',
                                                   ['voltage magnitude',
                                                    'voltage angle',
-                                                   'voltage magnitude deviation',
                                                    'voltage magnitude violation']))
                     self.assertEqual(u[bus.index_v_mag],bus.v_max)
                     self.assertEqual(u[bus.index_v_ang],pf.BUS_INF_V_ANG)
-                    self.assertEqual(u[bus.index_y],pf.BUS_INF_V_MAG)
-                    self.assertEqual(u[bus.index_z],pf.BUS_INF_V_MAG)
                     self.assertEqual(u[bus.index_vl],pf.BUS_INF_V_MAG)
                     self.assertEqual(u[bus.index_vh],pf.BUS_INF_V_MAG)
                     self.assertEqual(l[bus.index_v_mag],bus.v_min)
                     self.assertEqual(l[bus.index_v_ang],-pf.BUS_INF_V_ANG)
-                    self.assertEqual(l[bus.index_y],0.)
-                    self.assertEqual(l[bus.index_z],0.)
                     self.assertEqual(l[bus.index_vl],0.)
                     self.assertEqual(l[bus.index_vh],0.)
                 else:
                     self.assertFalse(bus.has_flags('bounded',
                                                    ['voltage magnitude',
                                                     'voltage angle',
-                                                    'voltage magnitude deviation',
                                                     'voltage magnitude violation']))
 
             for branch in net.branches:
@@ -1858,10 +1845,6 @@ class TestConstraints(unittest.TestCase):
                           'variable',
                           'not slack',
                           ['voltage magnitude','voltage angle'])
-            net.set_flags('bus',
-                          'variable',
-                          ['not slack','regulated by generator'],
-                          'voltage magnitude deviation')
             net.set_flags('generator',
                           'variable',
                           'slack',
@@ -1872,7 +1855,6 @@ class TestConstraints(unittest.TestCase):
                           'reactive power')
             self.assertEqual(net.num_vars,
                              (2*(net.num_buses-net.get_num_slack_buses()) +
-                              2*(net.get_num_buses_reg_by_gen()-net.get_num_slack_buses()) +
                               net.get_num_slack_gens() +
                               net.get_num_reg_gens())*self.T)
 
@@ -1905,6 +1887,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.A_nnz,0)
             self.assertEqual(constr.J_row,0)
             self.assertEqual(constr.A_row,0)
+            self.assertEqual(constr.num_extra_vars,0)
 
             Jnnz = 0
             for i in range(net.num_buses):
@@ -1922,7 +1905,10 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.A_nnz,Annz*self.T)
             self.assertEqual(constr.J_row,rowsJ*self.T)
             self.assertEqual(constr.A_row,rowsA*self.T)
-            constr.eval(x0)
+            self.assertEqual(constr.num_extra_vars,rowsJ*self.T)
+            
+            y0 = np.random.randn(constr.num_extra_vars)
+            constr.eval(x0,y0)
             self.assertEqual(constr.J_nnz,Jnnz*self.T)
             self.assertEqual(constr.A_nnz,0)
             self.assertEqual(constr.J_row,rowsJ*self.T)
@@ -1939,10 +1925,10 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(b) is np.ndarray)
             self.assertTupleEqual(b.shape,(rowsA*self.T,))
             self.assertTrue(type(J) is coo_matrix)
-            self.assertTupleEqual(J.shape,(rowsJ*self.T,net.num_vars))
+            self.assertTupleEqual(J.shape,(rowsJ*self.T,net.num_vars+constr.num_extra_vars))
             self.assertEqual(J.nnz,Jnnz*self.T)
             self.assertTrue(type(A) is coo_matrix)
-            self.assertTupleEqual(A.shape,(rowsA*self.T,net.num_vars))
+            self.assertTupleEqual(A.shape,(rowsA*self.T,net.num_vars+constr.num_extra_vars))
             self.assertEqual(A.nnz,Annz*self.T)
 
             self.assertTrue(not np.any(np.isinf(b)))
@@ -1957,18 +1943,57 @@ class TestConstraints(unittest.TestCase):
             # Ax=b check
             self.assertEqual(norm(A.data,1),rowsA*3*self.T)
             self.assertEqual(np.sum(A.data),(net.get_num_buses_reg_by_gen()-net.get_num_slack_buses())*self.T)
-            self.assertLess(norm(A*x0-b),1e-10*(norm(A.data)+1))
+            for k in range(J.shape[0]//2):
+                index1 = np.where(A.col == net.num_vars+2*k)[0]
+                index2 = np.where(A.col == net.num_vars+2*k+1)[0]
+                self.assertEqual(index1.size,1)
+                self.assertEqual(index2.size,1)
+                self.assertEqual(A.row[index1[0]],A.row[index2[0]])
+                index3 = np.where(A.row == A.row[index1[0]])[0]
+                self.assertEqual(index3.size,3)
+                for i in index3:
+                    if A.col[i] == net.num_vars+2*k: # y
+                        self.assertEqual(A.data[i],-1.)
+                    elif A.col[i] == net.num_vars+2*k+1:
+                        self.assertEqual(A.data[i],1.) # z
+                    else:
+                        self.assertEqual(A.data[i],1.) # v
+
+            # f check
+            flags = {}
+            eps = 1e-8
+            for t in range(self.T):
+                for bus in net.buses:
+                    flags[(t,bus.index)] = False
+            J_row = 0
+            for t in range(self.T):
+                for branch in net.branches:
+                    for bus in [branch.bus_k,branch.bus_m]:
+                        if not flags[(t,bus.index)]:
+                            if bus.is_regulated_by_gen() and not bus.is_slack():
+                                y = y0[J_row]
+                                z = y0[J_row+1]
+                                Q = sum([g.Q[t] for g in bus.reg_generators])
+                                Qmax = sum([g.Q_max for g in bus.reg_generators])
+                                Qmin = sum([g.Q_min for g in bus.reg_generators])
+                                CompY = (Q-Qmin)+y-np.sqrt((Q-Qmin)**2.+y**2.+2*eps)
+                                CompZ = (Qmax-Q)+z-np.sqrt((Qmax-Q)**2.+z**2.+2*eps)
+                                self.assertAlmostEqual(CompY,f[J_row])
+                                self.assertAlmostEqual(CompZ,f[J_row+1])
+                                J_row += 2
+                        flags[(t,bus.index)] = True            
 
             # Jacobian check
             f0 = f.copy()
             J0 = J.copy()
             for i in range(NUM_TRIALS):
 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+constr.num_extra_vars)
 
-                x = x0 + h*d
+                x = x0 + h*d[:net.num_vars]
+                y = y0 + h*d[net.num_vars:]
 
-                constr.eval(x)
+                constr.eval(x,y)
                 f1 = constr.f
 
                 Jd_exact = J0*d
@@ -1984,7 +2009,7 @@ class TestConstraints(unittest.TestCase):
 
                 j = np.random.randint(0,f.shape[0])
 
-                constr.eval(x0)
+                constr.eval(x0,y0)
 
                 g0 = constr.J.tocsr()[j,:].toarray().flatten()
                 H0 = constr.get_H_single(j)
@@ -1993,11 +2018,12 @@ class TestConstraints(unittest.TestCase):
 
                 H0 = (H0 + H0.T) - triu(H0)
 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+constr.num_extra_vars)
 
-                x = x0 + h*d
+                x = x0 + h*d[:net.num_vars]
+                y = y0 + h*d[net.num_vars:]
 
-                constr.eval(x)
+                constr.eval(x,y)
 
                 g1 = constr.J.tocsr()[j,:].toarray().flatten()
 
@@ -2008,23 +2034,26 @@ class TestConstraints(unittest.TestCase):
 
             # Combined Hessian check
             coeff = np.random.randn(f0.shape[0])
-            constr.eval(x0)
+            constr.eval(x0,y0)
             constr.combine_H(coeff,False)
             J0 = constr.J
             g0 = J0.T*coeff
             H0 = constr.H_combined.copy()
             self.assertTrue(type(H0) is coo_matrix)
-            self.assertTupleEqual(H0.shape,(net.num_vars,net.num_vars))
+            self.assertTupleEqual(H0.shape,
+                                  (net.num_vars+constr.num_extra_vars,
+                                   net.num_vars+constr.num_extra_vars))
             self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
             H0 = (H0 + H0.T) - triu(H0)
             for i in range(NUM_TRIALS):
 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+constr.num_extra_vars)
 
-                x = x0 + h*d
+                x = x0 + h*d[:net.num_vars]
+                y = y0 + h*d[net.num_vars:]
 
-                constr.eval(x)
-
+                constr.eval(x,y)
+                
                 g1 = constr.J.T*coeff
 
                 Hd_exact = H0*d
@@ -2042,12 +2071,12 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(sens.size,rowsJ*self.T)
             Ji = constr.J.row
             Jj = constr.J.col
+            
             for t in range(self.T):
                 for i in range(net.num_buses):
                     bus = net.get_bus(i)
                     if bus.is_regulated_by_gen() and not bus.is_slack():
-                        indices = Ji[np.where(np.logical_or(Jj == bus.index_y[t],
-                                                            Jj == bus.index_z[t]))[0]]
+                        indices = Ji[np.where(Jj == bus.reg_generators[0].index_Q[t])[0]]
                         self.assertEqual(indices.size,2)
                         sens[indices[0]] = -bus.index-10
                         sens[indices[1]] = bus.index+11*(bus.index % 2)
