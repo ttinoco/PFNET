@@ -88,11 +88,6 @@ void FUNC_REG_VMAG_count_step(Func* f, Branch* br, int t) {
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) // v var
 	(*Hphi_nnz)++;
 
-      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) { // yv var
-	(*Hphi_nnz)++; // y var
-	(*Hphi_nnz)++; // z var
-      }
-
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var
 	(*Hphi_nnz)++; // vl
 	(*Hphi_nnz)++; // vh
@@ -169,18 +164,6 @@ void FUNC_REG_VMAG_analyze_step(Func* f, Branch* br, int t) {
 	MAT_set_j(H,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
 	MAT_set_d(H,*Hphi_nnz,1./(dv*dv));
 	(*Hphi_nnz)++;
-      }
-
-      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) { // yz var
-	MAT_set_i(H,*Hphi_nnz,BUS_get_index_y(bus,t));
-	MAT_set_j(H,*Hphi_nnz,BUS_get_index_y(bus,t));
-	MAT_set_d(H,*Hphi_nnz,1./(dv*dv));
-	(*Hphi_nnz)++; // y var
-
-	MAT_set_i(H,*Hphi_nnz,BUS_get_index_z(bus,t));
-	MAT_set_j(H,*Hphi_nnz,BUS_get_index_z(bus,t));
-	MAT_set_d(H,*Hphi_nnz,1./(dv*dv));
-	(*Hphi_nnz)++; // z var
       }
 
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var
@@ -278,28 +261,6 @@ void FUNC_REG_VMAG_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
 	// phi
 	(*phi) += 0.5*pow((v-vt)/dv,2.);
-      }
-
-      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) { // yz var
-
-	// Indices
-	index_y = BUS_get_index_y(bus,t);
-	index_z = BUS_get_index_z(bus,t);
-
-	// y z
-	y = VEC_get(var_values,index_y);
-	z = VEC_get(var_values,index_z);
-
-	// phi
-	(*phi) += 0.5*pow(y/dv,2.); // y
-	(*phi) += 0.5*pow(z/dv,2.); // z
-
-	// gphi
-	gphi[index_y] = y/(dv*dv);
-	gphi[index_z] = z/(dv*dv);
-      }
-      else {
-	// nothing
       }
 
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) { // vl and vh var

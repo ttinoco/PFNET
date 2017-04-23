@@ -31,7 +31,6 @@
  */
 #define BUS_VAR_VMAG 0x01 /**< @brief Variable: voltage magnitude. */
 #define BUS_VAR_VANG 0x02 /**< @brief Variable: volatge angle. */
-#define BUS_VAR_VDEV 0x04 /**< @brief Variable: positive and negative volatge magnitude deviations from set point. */
 #define BUS_VAR_VVIO 0x08 /**< @brief Variable: volatge magnitude max and min bound violations. */
 /** @} */
 
@@ -104,7 +103,7 @@ void BUS_add_load(Bus* bus, Load* load);
 void BUS_add_reg_gen(Bus* bus, Gen* reg_gen);
 void BUS_del_reg_gen(Bus* bus, Gen* reg_gen);
 
-/** @brief Adds transformer to list of transformer regulating bus voltage. */
+/** @brief Adds transformer to list of transformers regulating bus voltage. */
 void BUS_add_reg_tran(Bus* bus, Branch* reg_tran);
 void BUS_del_reg_tran(Bus* bus, Branch* reg_tran);
 
@@ -122,11 +121,13 @@ void BUS_add_bat(Bus* bus, Bat* bat);
 
 /** @brief Adds branch to list of branches connected at "k" bus. */
 void BUS_add_branch_k(Bus* bus, Branch* branch);
+
 /** @brief Deletes branch from list of branches connected at "k" bus. */
 void BUS_del_branch_k(Bus* bus, Branch* branch);
 
 /** @brief Adds branch to list of branches connected at "m" bus. */
 void BUS_add_branch_m(Bus* bus, Branch* branch);
+
 /** @brief Deletes branch from list of branches connected at "m" bus. */
 void BUS_del_branch_m(Bus* bus, Branch* branch);
 
@@ -149,8 +150,6 @@ REAL BUS_get_price(Bus* bus, int t);
 int BUS_get_index(Bus* bus);
 int BUS_get_index_v_mag(Bus* bus, int t);
 int BUS_get_index_v_ang(Bus* bus, int t);
-int BUS_get_index_y(Bus* bus, int t);
-int BUS_get_index_z(Bus* bus, int t);
 int BUS_get_index_vl(Bus* bus, int t);
 int BUS_get_index_vh(Bus* bus, int t);
 int BUS_get_index_P(Bus* bus);

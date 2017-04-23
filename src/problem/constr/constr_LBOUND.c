@@ -180,22 +180,6 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	}
       }
 
-      // Voltage magnitude dev (V_DEV)
-      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) {
-	index1 = BUS_get_index_y(bus,t);
-	index2 = BUS_get_index_z(bus,t);
-	MAT_set_i(G,index1,index1);
-	MAT_set_j(G,index1,index1);
-	MAT_set_d(G,index1,1.);
-	MAT_set_i(G,index2,index2);
-	MAT_set_j(G,index2,index2);
-	MAT_set_d(G,index2,1.);
-	VEC_set(u,index1,BUS_INF_V_MAG);
-	VEC_set(u,index2,BUS_INF_V_MAG);
-	VEC_set(l,index1,0.);
-	VEC_set(l,index2,0.);
-      }
-
       // Voltage magnitude vio (V_VIO)
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
 	index1 = BUS_get_index_vl(bus,t);

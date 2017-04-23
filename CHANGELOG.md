@@ -17,10 +17,13 @@ Unreleased
 * Support for all battery and load variables in ACPF and network properties (done).
 * Battery dynamics and boundary conditions (done).
 * Updated documentation and examples (done).
+* Full support for constraint auxiliary variables (lin eq, nonlin eq, line ineq) (done).
+* Elimination of obscure variables "voltage magnitude deviation".
+* Elimination of obscure variabes "voltage magnitude violation", "tap ratio deviation", "susceptance deviation".
 * Load constant power factor.
 
-Version 1.2.9 (pre-release)
----------------------------
+Version 1.2.9
+-------------
 * Changed function Hessian nnz counter (Hcounter to Hphi_nnz).
 * Problem add_function takes Function object/struct and not function name.
 * Problem add_constraint takes Constraint object/struct and not function name.

@@ -59,8 +59,6 @@ struct Bus {
   int index;          /**< @brief Bus index */
   int* index_v_mag;   /**< @brief Voltage magnitude index */
   int* index_v_ang;   /**< @brief Voltage angle index */
-  int* index_y;       /**< @brief Voltage magnitude positive-deviation index */
-  int* index_z;       /**< @brief Voltage magnitude negative-deviation index */
   int* index_vl;      /**< @brief Voltage magnitude violation of v_min */
   int* index_vh;      /**< @brief Voltage magnitude violation of v_max */
 
@@ -184,8 +182,6 @@ void BUS_array_del(Bus* bus_array, int size) {
       free(bus->price);
       free(bus->index_v_mag);
       free(bus->index_v_ang);
-      free(bus->index_y);
-      free(bus->index_z);
       free(bus->index_vl);
       free(bus->index_vh);
       free(bus->sens_P_balance);
@@ -341,10 +337,8 @@ char BUS_get_obj_type(void* bus) {
 }
 
 int BUS_get_degree(Bus* bus) {
-  if (bus) {
-    return (BRANCH_list_k_len(bus->branch_k) +
-	    BRANCH_list_m_len(bus->branch_m));
-  }
+  if (bus)
+    return BRANCH_list_k_len(bus->branch_k)+BRANCH_list_m_len(bus->branch_m);
   else
     return 0;
 }
@@ -373,20 +367,6 @@ int BUS_get_index_v_mag(Bus* bus, int t) {
 int BUS_get_index_v_ang(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     return bus->index_v_ang[t];
-  else
-    return 0;
-}
-
-int BUS_get_index_y(Bus* bus, int t) {
-  if (bus && t >= 0 && t < bus->num_periods)
-    return bus->index_y[t];
-  else
-    return 0;
-}
-
-int BUS_get_index_z(Bus* bus, int t) {
-  if (bus && t >= 0 && t < bus->num_periods)
-    return bus->index_z[t];
   else
     return 0;
 }
@@ -732,7 +712,7 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
     return;
 
   for (t = 0; t < bus->num_periods; t++) {
-
+    
     // Voltage magnitude
     if (bus->vars & BUS_VAR_VMAG) {
       switch (code) {
@@ -758,29 +738,6 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
 	break;
       default:
 	VEC_set(values,bus->index_v_ang[t],bus->v_ang[t]);
-      }
-    }
-
-    // Voltage magnitude deviations
-    if (bus->vars & BUS_VAR_VDEV) {
-      switch(code) {
-      case UPPER_LIMITS:
-	VEC_set(values,bus->index_y[t],BUS_INF_V_MAG);
-	VEC_set(values,bus->index_z[t],BUS_INF_V_MAG);
-	break;
-      case LOWER_LIMITS:
-	VEC_set(values,bus->index_y[t],0.);
-	VEC_set(values,bus->index_z[t],0.);
-	break;
-      default:
-	if (bus->v_mag[t] > bus->v_set[t]) { // pos voltage mag deviation
-	  VEC_set(values,bus->index_y[t],bus->v_mag[t]-bus->v_set[t]);
-	  VEC_set(values,bus->index_z[t],0.);
-	}
-	else {                         // neg voltage mag deviation
-	  VEC_set(values,bus->index_y[t],0.);
-	  VEC_set(values,bus->index_z[t],bus->v_set[t]-bus->v_mag[t]);
-	}
       }
     }
 
@@ -824,8 +781,6 @@ int BUS_get_num_vars(void* vbus, unsigned char var, int t_start, int t_end) {
     num_vars += dt;
   if ((var & BUS_VAR_VANG) && (bus->vars & BUS_VAR_VANG))
     num_vars += dt;
-  if ((var & BUS_VAR_VDEV) && (bus->vars & BUS_VAR_VDEV))
-    num_vars += 2*dt;
   if ((var & BUS_VAR_VVIO) && (bus->vars & BUS_VAR_VVIO))
     num_vars += 2*dt;
   return num_vars;
@@ -859,13 +814,6 @@ Vec* BUS_get_var_indices(void* vbus, unsigned char var, int t_start, int t_end) 
     for (t = t_start; t <= t_end; t++) {
       VEC_set(indices,offset,bus->index_v_ang[t]);
       offset++;
-    }
-  }
-  if ((var & BUS_VAR_VDEV) && (bus->vars & BUS_VAR_VDEV)) {
-    for (t = t_start; t <= t_end; t++) {
-      VEC_set(indices,offset,bus->index_y[t]);
-      VEC_set(indices,offset+1,bus->index_z[t]);
-      offset += 2;
     }
   }
   if ((var & BUS_VAR_VVIO) && (bus->vars & BUS_VAR_VVIO)) {
@@ -1227,8 +1175,6 @@ void BUS_init(Bus* bus, int num_periods) {
 
   ARRAY_zalloc(bus->index_v_mag,int,T);
   ARRAY_zalloc(bus->index_v_ang,int,T);
-  ARRAY_zalloc(bus->index_y,int,T);
-  ARRAY_zalloc(bus->index_z,int,T);
   ARRAY_zalloc(bus->index_vl,int,T);
   ARRAY_zalloc(bus->index_vh,int,T);
 
@@ -1439,16 +1385,6 @@ int BUS_set_flags(void* vbus, char flag_type, unsigned char mask, int index) {
     }
     (*flags_ptr) |= BUS_VAR_VANG;
     index += bus->num_periods;
-  }
-  if (!((*flags_ptr) & BUS_VAR_VDEV) && (mask & BUS_VAR_VDEV)) { // voltage mag deviation
-    if (flag_type == FLAG_VARS) {
-      for (t = 0; t < bus->num_periods; t++) {
-	bus->index_y[t] = index+2*t;
-	bus->index_z[t] = index+2*t+1;
-      }
-    }
-    (*flags_ptr) |= BUS_VAR_VDEV;
-    index += 2*bus->num_periods;
   }
   if (!((*flags_ptr) & BUS_VAR_VVIO) && (mask & BUS_VAR_VVIO)) { // voltage mag max min bound violations
     if (flag_type == FLAG_VARS) {
