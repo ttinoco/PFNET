@@ -727,9 +727,8 @@ class TestProblem(unittest.TestCase):
             x0_check = np.hstack((x,np.zeros(p.num_extra_vars)))
             self.assertTrue(np.all(x0 == x0_check))
             
-            p.analyze()
-            r = np.random.randn(p.num_extra_vars)
-            x0[net.num_vars:] = r
+            y0 = np.random.randn(p.num_extra_vars)
+            x0[net.num_vars:] = y0
             p.eval(x0)
             
             phi = p.phi
@@ -771,13 +770,8 @@ class TestProblem(unittest.TestCase):
             self.assertTrue(type(f) is np.ndarray)
             f_size = sum(c.f.shape[0] for c in p.constraints)
             f_man = np.zeros(0)
-            offset = 0
             for c in p.constraints:
-                if c.Jbar.shape[0]:
-                    f_man = np.hstack((f_man,c.f+c.Jbar*r[offset:offset+c.num_extra_vars]))
-                else:
-                    f_man = np.hstack((f_man,c.f))
-                offset += c.num_extra_vars
+                f_man = np.hstack((f_man,c.f))
             self.assertTupleEqual(f.shape,(f_size,))
             self.assertEqual(f.size,f_man.size)
             self.assertTrue(np.all(f_man == f))
@@ -789,14 +783,14 @@ class TestProblem(unittest.TestCase):
 
             # J
             self.assertTrue(type(J) is coo_matrix)
-            J_size = sum(c.J.shape[0] for c in p.constraints)
-            J_nnz = sum(c.J.nnz+c.Jbar.nnz for c in p.constraints)
+            J_size = sum([c.J.shape[0] for c in p.constraints])
+            J_nnz = sum([c.J.nnz for c in p.constraints])
             J_man = []
             for c in p.constraints:
-                if c.num_extra_vars > 0:
-                    J_man.append([c.J,c.Jbar])
+                if c.num_extra_vars == 0:
+                    J_man.append([bmat([[c.J,coo_matrix((c.J.shape[0],p.num_extra_vars))]])])
                 else:
-                    J_man.append([c.J,None])
+                    J_man.append([c.J])
             J_man = bmat(J_man,format='coo')
             self.assertTupleEqual(J.shape,(J_size,net.num_vars+p.num_extra_vars))
             self.assertEqual(J.nnz,J_nnz)
@@ -805,14 +799,14 @@ class TestProblem(unittest.TestCase):
 
             # G, l, u
             self.assertTrue(type(G) is coo_matrix)
-            G_size = sum(c.G.shape[0] for c in p.constraints)
-            G_nnz = sum(c.G.nnz+c.Gbar.nnz for c in p.constraints)
+            G_size = sum([c.G.shape[0] for c in p.constraints])
+            G_nnz = sum([c.G.nnz for c in p.constraints])
             G_man = []
             for c in p.constraints:
-                if c.num_extra_vars > 0:
-                    G_man.append([c.G,c.Gbar])
+                if c.num_extra_vars == 0:
+                    G_man.append([bmat([[c.G,coo_matrix((c.G.shape[0],p.num_extra_vars))]])])
                 else:
-                    G_man.append([c.G,None])
+                    G_man.append([c.G])
             G_man = bmat(G_man,format='coo')
             self.assertTupleEqual(G.shape,(G_size,net.num_vars+p.num_extra_vars))
             self.assertEqual(G.nnz,G_nnz)

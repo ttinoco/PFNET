@@ -49,7 +49,7 @@ void CONSTR_AC_FLOW_LIM_clear(Constr* c) {
 
   // f
   VEC_set_zero(CONSTR_get_f(c));
-
+  
   // J
   MAT_set_zero_d(CONSTR_get_J(c));
 
@@ -335,6 +335,7 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
 
   // Constr data
   J = CONSTR_get_J(c);
+  G = CONSTR_get_G(c);
   l = CONSTR_get_l(c);
   u = CONSTR_get_u(c);
   H_array = CONSTR_get_H_array(c);

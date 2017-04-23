@@ -81,7 +81,7 @@ static char* test_constr_NBOUND() {
   Assert("error - wrong Jnnz counter",CONSTR_get_J_nnz(c) == 2*num);
   CONSTR_analyze(c);
   Assert("error - wrong Jnnz counter",CONSTR_get_J_nnz(c) == 2*num);
-  CONSTR_eval(c,x);
+  CONSTR_eval(c,x,NULL);
   Assert("error - wrong Jnnz counter",CONSTR_get_J_nnz(c) == 2*num);
   CONSTR_store_sens(c,NULL,NULL,NULL,NULL);
   Assert("error - wrong Jnnz counter",CONSTR_get_J_nnz(c) == 2*num);
@@ -180,7 +180,7 @@ static char* test_constr_FIX() {
   Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == num+NET_get_num_buses_reg_by_gen(net));
   CONSTR_analyze(c);
   Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == num+NET_get_num_buses_reg_by_gen(net));
-  CONSTR_eval(c,x);
+  CONSTR_eval(c,x,NULL);
   Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == 0);
   CONSTR_store_sens(c,NULL,NULL,NULL,NULL);
   Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == 0);
@@ -300,7 +300,7 @@ static char* test_constr_PAR_GEN_P() {
   CONSTR_analyze(c);
   Assert("error - wrong A counter",CONSTR_get_A_nnz(c) == nnz);
   Assert("error - wrong A counter",CONSTR_get_A_row(c) == num);  
-  CONSTR_eval(c,x);
+  CONSTR_eval(c,x,NULL);
   Assert("error - wrong A counter",CONSTR_get_A_nnz(c) == 0);
   Assert("error - wrong A counter",CONSTR_get_A_row(c) == 0);  
   CONSTR_store_sens(c,NULL,NULL,NULL,NULL);
@@ -422,7 +422,7 @@ static char* test_constr_PAR_GEN_Q() {
   CONSTR_analyze(c);
   Assert("error - wrong A counter",CONSTR_get_A_nnz(c) == nnz);
   Assert("error - wrong A counter",CONSTR_get_A_row(c) == num);  
-  CONSTR_eval(c,x);
+  CONSTR_eval(c,x,NULL);
   Assert("error - wrong A counter",CONSTR_get_A_nnz(c) == 0);
   Assert("error - wrong A counter",CONSTR_get_A_row(c) == 0);  
   CONSTR_store_sens(c,NULL,NULL,NULL,NULL);
@@ -567,7 +567,7 @@ static char* test_constr_ACPF() {
   Assert("error - bad Jnnz counter",Jnnz_computed == CONSTR_get_J_nnz(c));
   Assert("error - bad Hnnz counter",Hnnz_computed == Hnnz);
 
-  CONSTR_eval(c,x);
+  CONSTR_eval(c,x,NULL);
   Hnnz = 0;
   for (i = 0; i < size; i++)
     Hnnz += H_nnz[i];
@@ -694,7 +694,7 @@ static char* test_constr_REG_GEN() {
   Assert("error - bad Aindex counter",CONSTR_get_A_row(c) == num);
   Assert("error - bad Jindex counter",CONSTR_get_J_row(c) == 2*num);
 
-  CONSTR_eval(c,x);
+  CONSTR_eval(c,x,NULL);
 
   Assert("error - bad Annz counter",CONSTR_get_A_nnz(c) == 0);
   Assert("error - bad Jnnz counter",CONSTR_get_J_nnz(c) == num_Jnnz);
@@ -806,7 +806,7 @@ static char* test_constr_REG_TRAN() {
   Assert("error - bad Aindex counter",CONSTR_get_A_row(c) == num);
   Assert("error - bad Jindex counter",CONSTR_get_J_row(c) == 4*num);
 
-  CONSTR_eval(c,x);
+  CONSTR_eval(c,x,NULL);
 
   Assert("error - bad Annz counter",CONSTR_get_A_nnz(c) == 0);
   Assert("error - bad Jnnz counter",CONSTR_get_J_nnz(c) == num_Jnnz);
@@ -920,7 +920,7 @@ static char* test_constr_REG_SHUNT() {
   Assert("error - bad Aindex counter",CONSTR_get_A_row(c) == num);
   Assert("error - bad Jindex counter",CONSTR_get_J_row(c) == 4*num);
 
-  CONSTR_eval(c,x);
+  CONSTR_eval(c,x,NULL);
 
   Assert("error - bad Annz counter",CONSTR_get_A_nnz(c) == 0);
   Assert("error - bad Jnnz counter",CONSTR_get_J_nnz(c) == num_Jnnz);

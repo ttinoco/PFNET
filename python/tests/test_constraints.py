@@ -2837,8 +2837,6 @@ class TestConstraints(unittest.TestCase):
                 self.assertTrue(isinstance(c.A,coo_matrix))
                 self.assertTrue(isinstance(c.f,np.ndarray))
                 self.assertTrue(isinstance(c.J,coo_matrix))
-                self.assertEqual(c.A.nnz,0)
-                self.assertEqual(c.J.nnz,0)
 
             # Add variables
             net.set_flags('bus',
@@ -2889,10 +2887,11 @@ class TestConstraints(unittest.TestCase):
                 self.assertTrue(isinstance(c.A,coo_matrix))
                 self.assertTrue(isinstance(c.f,np.ndarray))
                 self.assertTrue(isinstance(c.J,coo_matrix))
-                self.assertEqual(c.A.shape[1],net.num_vars)
-                self.assertEqual(c.J.shape[1],net.num_vars)
+                self.assertEqual(c.A.shape[1],net.num_vars+c.num_extra_vars)
+                self.assertEqual(c.J.shape[1],net.num_vars+c.num_extra_vars)
                 if c.f.size:
-                    self.assertTupleEqual(c.get_H_single(0).shape,(net.num_vars,net.num_vars))
+                    self.assertTupleEqual(c.get_H_single(0).shape,
+                                          (net.num_vars+c.num_extra_vars,net.num_vars+c.num_extra_vars))
                 else:
                     self.assertTupleEqual(c.get_H_single(0).shape,(0,0))
 
@@ -3828,11 +3827,9 @@ class TestConstraints(unittest.TestCase):
 
             f = constr.f
             J = constr.J
-            Jbar = constr.Jbar
             A = constr.A
             b = constr.b
             G = constr.G
-            Gbar = constr.Gbar
             l = constr.l
             u = constr.u
 
@@ -3845,42 +3842,39 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(J) is coo_matrix)
             self.assertTupleEqual(J.shape,(0,0))
             self.assertEqual(J.nnz,0)
-            self.assertTrue(type(Jbar) is coo_matrix)
-            self.assertTupleEqual(Jbar.shape,(0,0))
-            self.assertEqual(Jbar.nnz,0)
             self.assertTrue(type(A) is coo_matrix)
             self.assertTupleEqual(A.shape,(0,0))
             self.assertEqual(A.nnz,0)
             self.assertTrue(type(G) is coo_matrix)
             self.assertTupleEqual(G.shape,(0,0))
             self.assertEqual(G.nnz,0)
-            self.assertTrue(type(Gbar) is coo_matrix)
-            self.assertTupleEqual(Gbar.shape,(0,0))
-            self.assertEqual(Gbar.nnz,0)
             self.assertTrue(type(u) is np.ndarray)
             self.assertTupleEqual(u.shape,(0,))
             self.assertTrue(type(l) is np.ndarray)
             self.assertTupleEqual(l.shape,(0,))
-
+            self.assertEqual(constr.J_row,0)
+            self.assertEqual(constr.A_row,0)
+            self.assertEqual(constr.G_row,0)
             self.assertEqual(constr.J_nnz,0)
             self.assertEqual(constr.A_nnz,0)
             self.assertEqual(constr.G_nnz,0)
+            self.assertEqual(constr.num_extra_vars,0)
 
             num_constr = net.get_num_branches()*2*self.T
             num_Jnnz = (net.get_num_branches()*8 +
                         net.get_num_tap_changers()*2 +
-                        net.get_num_phase_shifters()*2)*self.T
+                        net.get_num_phase_shifters()*2)*self.T+num_constr
 
             constr.analyze()
             self.assertEqual(num_Jnnz,constr.J_nnz)
+            self.assertEqual(0,constr.G_nnz)
+            self.assertEqual(num_constr,constr.J_row)
            
             f = constr.f
             J = constr.J
-            Jbar = constr.Jbar
             A = constr.A
             b = constr.b
             G = constr.G
-            Gbar = constr.Gbar
             l = constr.l
             u = constr.u
             
@@ -3891,24 +3885,18 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(b) is np.ndarray)
             self.assertTupleEqual(b.shape,(0,))
             self.assertTrue(type(J) is coo_matrix)
-            self.assertTupleEqual(J.shape,(num_constr,net.num_vars))
+            self.assertTupleEqual(J.shape,(num_constr,net.num_vars+num_constr))
             self.assertEqual(J.nnz,num_Jnnz)
-            self.assertTrue(type(Jbar) is coo_matrix)
-            self.assertTupleEqual(Jbar.shape,(num_constr,num_constr))
-            self.assertEqual(Jbar.nnz,num_constr)
-            self.assertTrue(np.all(Jbar.row == Jbar.col))
-            self.assertTrue(np.all(Jbar.data == -1.))
             self.assertTrue(type(A) is coo_matrix)
-            self.assertTupleEqual(A.shape,(0,net.num_vars))
+            self.assertTupleEqual(A.shape,(0,net.num_vars+num_constr))
             self.assertEqual(A.nnz,0)
             self.assertTrue(type(G) is coo_matrix)
-            self.assertTupleEqual(G.shape,(num_constr,net.num_vars))
-            self.assertEqual(G.nnz,0)
-            self.assertTrue(type(Gbar) is coo_matrix)
-            self.assertTupleEqual(Gbar.shape,(num_constr,num_constr))
-            self.assertEqual(Gbar.nnz,num_constr)
-            self.assertTrue(np.all(Gbar.row == Jbar.col))
-            self.assertTrue(np.all(Gbar.data == 1.))
+            self.assertTupleEqual(G.shape,(num_constr,net.num_vars+num_constr))
+            self.assertEqual(G.nnz,num_constr)
+            self.assertTrue(np.all(G.row == np.array(range(num_constr))))
+            self.assertTrue(np.all(G.col == np.array(range(net.num_vars,net.num_vars+num_constr))))
+            self.assertTrue(np.all(G.row == G.col-net.num_vars))
+            self.assertTrue(np.all(G.data == 1.))
             self.assertTrue(type(u) is np.ndarray)
             self.assertTupleEqual(u.shape,(num_constr,))
             self.assertTrue(type(l) is np.ndarray)
@@ -3923,18 +3911,21 @@ class TestConstraints(unittest.TestCase):
             # Hessian structure
             for i in range(constr.J.shape[0]):
                 H = constr.get_H_single(i)
-                self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
+                self.assertTupleEqual(H.shape,(net.num_vars+num_constr,net.num_vars+num_constr))
                 self.assertTrue(np.all(H.row >= H.col))
             Hcomb = constr.H_combined
             H_comb_nnz = 2*(net.num_branches*10 +
                             net.get_num_tap_changers()*5+
                             net.get_num_phase_shifters()*5)*self.T
-            self.assertTupleEqual(Hcomb.shape,(net.num_vars,net.num_vars))
+            self.assertTupleEqual(Hcomb.shape,(net.num_vars+num_constr,net.num_vars+num_constr))
             self.assertTrue(np.all(Hcomb.row >= Hcomb.col))
             self.assertEqual(Hcomb.nnz,H_comb_nnz)
 
-            constr.eval(x0)
+            y0 = np.random.randn(num_constr)
+
+            constr.eval(x0,y0)
             self.assertEqual(num_constr,constr.J_row)
+            self.assertEqual(0,constr.G_nnz)
             self.assertEqual(num_Jnnz,constr.J_nnz)
             
             f = constr.f
@@ -3942,8 +3933,6 @@ class TestConstraints(unittest.TestCase):
             A = constr.A
             b = constr.b
             G = constr.G
-            Jbar = constr.Jbar
-            Gbar = constr.Gbar
             l = constr.l
             u = constr.u
             constr.combine_H(np.ones(f.size),False)
@@ -3954,6 +3943,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(f)))
             
             # Cross check current magnitudes
+            J_row = 0
             for t in range(net.num_periods):
                 for branch in net.branches:
                     i = t*net.num_branches*2+2*branch.index
@@ -3965,22 +3955,24 @@ class TestConstraints(unittest.TestCase):
                     vm = branch.bus_m.v_mag[t]
                     ikmmag = np.abs((Pkm/vk) + 1j*(Qkm/vk))
                     imkmag = np.abs((Pmk/vm) + 1j*(Qmk/vm))
-                    error_km = 100.*np.abs(ikmmag-f[i])/max([ikmmag,tol])
-                    error_mk = 100.*np.abs(imkmag-f[i+1])/max([imkmag,tol])
+                    error_km = 100.*np.abs(ikmmag-f[i]-y0[J_row])/max([ikmmag,tol])
+                    error_mk = 100.*np.abs(imkmag-f[i+1]-y0[J_row+1])/max([imkmag,tol])
                     self.assertLess(error_km,eps)
                     self.assertLess(error_mk,eps)
+                    J_row += 2
 
             # Jacobian check
-            constr.eval(x0)
+            constr.eval(x0,y0)
             f0 = constr.f.copy()
             J0 = constr.J.copy()
             for i in range(NUM_TRIALS):
 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+num_constr)
 
-                x = x0 + h*d
+                x = x0 + h*d[:net.num_vars]
+                y = y0 + h*d[net.num_vars:]
 
-                constr.eval(x)
+                constr.eval(x,y)
                 f1 = constr.f
 
                 Jd_exact = J0*d
@@ -3993,7 +3985,7 @@ class TestConstraints(unittest.TestCase):
 
                 j = np.random.randint(0,f.shape[0])
 
-                constr.eval(x0)
+                constr.eval(x0,y0)
 
                 g0 = constr.J.tocsr()[j,:].toarray().flatten()
                 H0 = constr.get_H_single(j)
@@ -4002,11 +3994,12 @@ class TestConstraints(unittest.TestCase):
                 
                 H0 = (H0 + H0.T) - triu(H0)
 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+num_constr)
 
-                x = x0 + h*d
+                x = x0 + h*d[:net.num_vars]
+                y = y0 + h*d[net.num_vars:]
 
-                constr.eval(x)
+                constr.eval(x,y)
                 
                 g1 = constr.J.tocsr()[j,:].toarray().flatten()
 
@@ -4016,23 +4009,25 @@ class TestConstraints(unittest.TestCase):
                 self.assertLessEqual(error,EPS)
 
             # Combined Hessian check
+            h = 1e-12
             coeff = np.random.randn(f0.shape[0])
-            constr.eval(x0)
+            constr.eval(x0,y0)
             constr.combine_H(coeff,False)
             J0 = constr.J
             g0 = J0.T*coeff
             H0 = constr.H_combined.copy()
             self.assertTrue(type(H0) is coo_matrix)
-            self.assertTupleEqual(H0.shape,(net.num_vars,net.num_vars))
+            self.assertTupleEqual(H0.shape,(net.num_vars+num_constr,net.num_vars+num_constr))
             self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
             H0 = (H0 + H0.T) - triu(H0)
             for i in range(NUM_TRIALS):
 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+num_constr)
 
-                x = x0 + h*d
+                x = x0 + h*d[:net.num_vars]
+                y = y0 + h*d[net.num_vars:]
 
-                constr.eval(x)
+                constr.eval(x,y)
 
                 g1 = constr.J.T*coeff
 
@@ -4040,7 +4035,7 @@ class TestConstraints(unittest.TestCase):
                 Hd_approx = (g1-g0)/h
                 error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
-            
+
     def test_constr_DUMMY(self):
 
         # Multiperiod

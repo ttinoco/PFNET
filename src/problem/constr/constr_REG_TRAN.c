@@ -203,6 +203,11 @@ void CONSTR_REG_TRAN_allocate(Constr* c) {
   J_row = CONSTR_get_J_row(c);
   H_nnz = CONSTR_get_H_nnz(c);
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
+
+  // G u l
+  CONSTR_set_G(c,MAT_new(0,num_vars,0));
+  CONSTR_set_u(c,VEC_new(0));
+  CONSTR_set_l(c,VEC_new(0));
   
   // b
   CONSTR_set_b(c,VEC_new(A_row));

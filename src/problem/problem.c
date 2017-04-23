@@ -710,9 +710,9 @@ void PROB_update_nonlin_struc(Prob* p) {
     for (k = 0; k < MAT_get_nnz(CONSTR_get_J(c)); k++) {
       Ji[Jnnz] = Jrow+Ji_constr[k];
       if (Jj_constr[k] < num_vars)
-	Jj[Jnnz] = Jj_constr[k];        // x var
+	Jj[Jnnz] = Jj_constr[k];                 // x var
       else
-	Jj[Jnnz] = offset+Jj_constr[k]; // y var
+	Jj[Jnnz] = offset+Jj_constr[k]-num_vars; // y var
       Jnnz++;
     }
     Jrow += MAT_get_size1(CONSTR_get_J(c));
@@ -722,13 +722,13 @@ void PROB_update_nonlin_struc(Prob* p) {
     Hcomb_j_constr = MAT_get_col_array(CONSTR_get_H_combined(c));
     for (k = 0; k < MAT_get_nnz(CONSTR_get_H_combined(c)); k++) {
       if (Hcomb_i_constr[k] < num_vars)
-	Hcomb_i[Hcombnnz] = Hcomb_i_constr[k];        // x var
+	Hcomb_i[Hcombnnz] = Hcomb_i_constr[k];                 // x var
       else
-	Hcomb_i[Hcombnnz] = offset+Hcomb_i_constr[k]; // y var
+	Hcomb_i[Hcombnnz] = offset+Hcomb_i_constr[k]-num_vars; // y var
       if (Hcomb_j_constr[k] < num_vars)
-	Hcomb_j[Hcombnnz] = Hcomb_j_constr[k];        // x var
+	Hcomb_j[Hcombnnz] = Hcomb_j_constr[k];                 // x var
       else
-	Hcomb_j[Hcombnnz] = offset+Hcomb_j_constr[k]; // y var
+	Hcomb_j[Hcombnnz] = offset+Hcomb_j_constr[k]-num_vars; // y var
       Hcombnnz++;
     }
 
@@ -896,9 +896,9 @@ void PROB_update_lin(Prob* p) {
     for (k = 0; k < MAT_get_nnz(CONSTR_get_A(c)); k++) {
       Ai[Annz] = Arow+Ai_constr[k];
       if (Aj_constr[k] < num_vars)
-	Aj[Annz] = Aj_constr[k];        // x var
+	Aj[Annz] = Aj_constr[k];                 // x var
       else
-	Aj[Annz] = offset+Aj_constr[k]; // y var
+	Aj[Annz] = offset+Aj_constr[k]-num_vars; // y var
       Ad[Annz] = Ad_constr[k];
       Annz++;
     }
@@ -913,9 +913,9 @@ void PROB_update_lin(Prob* p) {
     for (k = 0; k < MAT_get_nnz(CONSTR_get_G(c)); k++) {
       Gi[Gnnz] = Grow+Gi_constr[k];
       if (Gj_constr[k] < num_vars)
-	Gj[Gnnz] = Gj_constr[k];        // x var
+	Gj[Gnnz] = Gj_constr[k];                 // x var
       else
-	Gj[Gnnz] = offset+Gj_constr[k]; // y var
+	Gj[Gnnz] = offset+Gj_constr[k]-num_vars; // y var
       Gd[Gnnz] = Gd_constr[k];
       Gnnz++;
     }
