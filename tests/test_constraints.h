@@ -638,11 +638,6 @@ static char* test_constr_REG_GEN() {
 		BUS_PROP_NOT_SLACK,
 		BUS_VAR_VANG);
   NET_set_flags(net,
-		OBJ_BUS,
-		FLAG_VARS,
-		BUS_PROP_NOT_SLACK|BUS_PROP_REG_BY_GEN,
-		BUS_VAR_VDEV);
-  NET_set_flags(net,
 		OBJ_GEN,
 		FLAG_VARS,
 		GEN_PROP_SLACK,
@@ -654,7 +649,6 @@ static char* test_constr_REG_GEN() {
 		GEN_VAR_Q);
   
   num_vars = (2*(NET_get_num_buses(net)-NET_get_num_slack_buses(net))+
-	      2*(NET_get_num_buses_reg_by_gen(net)-NET_get_num_slack_buses(net))+
 	      NET_get_num_slack_gens(net)+
 	      NET_get_num_reg_gens(net));
   Assert("error - invalid number of varibles",num_vars == NET_get_num_vars(net));
@@ -682,8 +676,9 @@ static char* test_constr_REG_GEN() {
   
   Assert("error - bad Annz counter",CONSTR_get_A_nnz(c) == num_Annz);
   Assert("error - bad Jnnz counter",CONSTR_get_J_nnz(c) == num_Jnnz);
-  Assert("error - bad Aindex counter",CONSTR_get_A_row(c) == num);
-  Assert("error - bad Jindex counter",CONSTR_get_J_row(c) == 2*num);
+  Assert("error - bad Arow counter",CONSTR_get_A_row(c) == num);
+  Assert("error - bad Jrow counter",CONSTR_get_J_row(c) == 2*num);
+  Assert("error - bad number of extra variables",CONSTR_get_num_extra_vars(c) == 2*num);
 
   CONSTR_allocate(c);
 
@@ -691,15 +686,15 @@ static char* test_constr_REG_GEN() {
 
   Assert("error - bad Annz counter",CONSTR_get_A_nnz(c) == num_Annz);
   Assert("error - bad Jnnz counter",CONSTR_get_J_nnz(c) == num_Jnnz);
-  Assert("error - bad Aindex counter",CONSTR_get_A_row(c) == num);
-  Assert("error - bad Jindex counter",CONSTR_get_J_row(c) == 2*num);
+  Assert("error - bad Arow counter",CONSTR_get_A_row(c) == num);
+  Assert("error - bad Jrow counter",CONSTR_get_J_row(c) == 2*num);
 
   CONSTR_eval(c,x,NULL);
 
   Assert("error - bad Annz counter",CONSTR_get_A_nnz(c) == 0);
   Assert("error - bad Jnnz counter",CONSTR_get_J_nnz(c) == num_Jnnz);
-  Assert("error - bad Aindex counter",CONSTR_get_A_row(c) == 0);
-  Assert("error - bad Jindex counter",CONSTR_get_J_row(c) == 2*num);
+  Assert("error - bad Arow counter",CONSTR_get_A_row(c) == 0);
+  Assert("error - bad Jrow counter",CONSTR_get_J_row(c) == 2*num);
 
   A = CONSTR_get_A(c);
   b = CONSTR_get_b(c);
@@ -713,8 +708,8 @@ static char* test_constr_REG_GEN() {
 
   Assert("error - bad f size", VEC_get_size(f) == 2*num);
   Assert("error - bad b size", VEC_get_size(b) == num);
-  Assert("error - bad A size", MAT_get_size2(A) == NET_get_num_vars(net));
-  Assert("error - bad J size", MAT_get_size2(J) == NET_get_num_vars(net));
+  Assert("error - bad A size", MAT_get_size2(A) == NET_get_num_vars(net)+2*num);
+  Assert("error - bad J size", MAT_get_size2(J) == NET_get_num_vars(net)+2*num);
 
   VEC_del(x);
   CONSTR_del(c);
