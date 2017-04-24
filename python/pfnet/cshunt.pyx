@@ -118,24 +118,6 @@ cdef class Shunt:
             else:
                 return np.array(r)
 
-    property index_y:
-        """ Index of shunt susceptance positive deviation variable (int or array). """
-        def __get__(self):
-            r = [cshunt.SHUNT_get_index_y(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeInt(r[0])
-            else:
-                return np.array(r)
-
-    property index_z:
-        """ Index of shunt susceptance negative deviation variable (int or array). """
-        def __get__(self):
-            r = [cshunt.SHUNT_get_index_z(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeInt(r[0])
-            else:
-                return np.array(r)
-
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which the shunt devices is connected. """
         def __get__(self): return new_Bus(cshunt.SHUNT_get_bus(self._c_ptr))

@@ -295,14 +295,6 @@ class TestProblem(unittest.TestCase):
                           'variable',
                           'not slack',
                           ['voltage magnitude','voltage angle'])
-            net.set_flags('bus',
-                          'variable',
-                          'regulated by transformer',
-                          'voltage magnitude violation')
-            net.set_flags('bus',
-                          'variable',
-                          'regulated by shunt',
-                          'voltage magnitude violation')
             net.set_flags('generator',
                           'variable',
                           'slack',
@@ -314,11 +306,11 @@ class TestProblem(unittest.TestCase):
             net.set_flags('branch',
                           'variable',
                           'tap changer - v',
-                          ['tap ratio','tap ratio deviation'])
+                          ['tap ratio'])
             net.set_flags('shunt',
                           'variable',
                           'switching - v',
-                          ['susceptance','susceptance deviation'])                          
+                          ['susceptance'])                          
 
             reg_by_tran_or_shunt = 0
             for i in range(net.num_buses):
@@ -328,11 +320,10 @@ class TestProblem(unittest.TestCase):
             
             self.assertEqual(net.num_vars,
                              2*(net.num_buses-net.get_num_slack_buses()) + 
-                             2*(reg_by_tran_or_shunt) + 
                              net.get_num_slack_gens() + 
                              net.get_num_reg_gens() + 
-                             3*net.get_num_tap_changers_v()+
-                             3*net.get_num_switched_shunts())
+                             net.get_num_tap_changers_v()+
+                             net.get_num_switched_shunts())
                              
             # Constraints
             p.add_constraint(pf.Constraint('AC power balance',net))

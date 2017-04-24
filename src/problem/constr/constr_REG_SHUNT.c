@@ -435,7 +435,7 @@ void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t) {
 	H_nnz[*J_row]++;   // y and vl (vmin)
 	
 	MAT_set_i(Hvmax,H_nnz[*J_row+1],index_z);
-	MAT_set_j(Hvmax,H_nnz[*J_row+1],index_vl);
+	MAT_set_j(Hvmax,H_nnz[*J_row+1],index_vh);
 	H_nnz[*J_row+1]++; // z and vh (vmax)
 
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
@@ -866,7 +866,7 @@ void CONSTR_REG_SHUNT_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec
     bus = buses[k];
 
     if (!bus_counted[bus_index_t[k]]) { // not counted yet
-
+      
       // Shunts
       //*******
 

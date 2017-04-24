@@ -393,7 +393,7 @@ void CONSTR_REG_TRAN_analyze_step(Constr* c, Branch* br, int tau) {
     H_nnz[*J_row]++;   // y and vl (vmin)
     
     MAT_set_i(Hvmax,H_nnz[*J_row+1],index_yz_vmax);
-    MAT_set_j(Hvmax,H_nnz[*J_row+1],index_vl);
+    MAT_set_j(Hvmax,H_nnz[*J_row+1],index_vh);
     H_nnz[*J_row+1]++; // z and vh (vmax)
 
     if (BUS_has_flags(reg_bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var

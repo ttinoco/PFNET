@@ -195,8 +195,8 @@ class TestFlags(unittest.TestCase):
             net.set_flags('bus',
                           'variable',
                           'regulated by shunt',
-                          ['voltage magnitude','voltage magnitude violation'])
-            num_vars += 3*net.get_num_buses_reg_by_shunt()
+                          ['voltage magnitude'])
+            num_vars += net.get_num_buses_reg_by_shunt()
             self.assertEqual(net.num_vars,num_vars)
             
     def test_init_point(self):
@@ -521,7 +521,6 @@ class TestFlags(unittest.TestCase):
                                                ['voltage angle','voltage magnitude'])
                     self.assertTrue(bus.has_flags('variable','voltage angle'))
                     self.assertTrue(bus.has_flags('variable','voltage magnitude'))
-                    self.assertFalse(bus.has_flags('variable','voltage magnitude violation'))
                     self.assertTrue(bus.has_flags('bounded','voltage angle'))
                     self.assertTrue(bus.has_flags('bounded','voltage magnitude'))
                     self.assertFalse(bus.has_flags('fixed','voltage angle'))

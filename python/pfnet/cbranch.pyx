@@ -476,24 +476,6 @@ cdef class Branch:
             else:
                 return np.array(r)
 
-    property index_ratio_y:
-        """ Index of transformer tap ratio positive deviation variable (int or array). """
-        def __get__(self):
-            r = [cbranch.BRANCH_get_index_ratio_y(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeInt(r[0])
-            else:
-                return np.array(r)
-
-    property index_ratio_z:
-        """ Index of transformer tap ratio negative deviation variable (int or array). """
-        def __get__(self):
-            r = [cbranch.BRANCH_get_index_ratio_z(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeInt(r[0])
-            else:
-                return np.array(r)
-
     property index_phase:
         """ Index of transformer phase shift variable (int or array). """
         def __get__(self):

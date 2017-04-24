@@ -18,8 +18,8 @@ Unreleased
 * Battery dynamics and boundary conditions (done).
 * Updated documentation and examples (done).
 * Full support for constraint auxiliary variables (lin eq, nonlin eq, line ineq) (done).
-* Elimination of obscure variables "voltage magnitude deviation".
-* Elimination of obscure variabes "voltage magnitude violation", "tap ratio deviation", "susceptance deviation".
+* Elimination of obscure variables "voltage magnitude deviation" (done).
+* Elimination of obscure variabes "voltage magnitude violation", "tap ratio deviation", "susceptance deviation" (done).
 * Load constant power factor.
 
 Version 1.2.9

@@ -46,12 +46,10 @@ str2const = {'current' : cconstants.CURRENT,
 # Quantities
 str2q_bus = {'all' : cflags.ALL_VARS, 
              'voltage magnitude' : cbus.BUS_VAR_VMAG, 
-             'voltage angle' : cbus.BUS_VAR_VANG,
-             'voltage magnitude violation' : cbus.BUS_VAR_VVIO}
+             'voltage angle' : cbus.BUS_VAR_VANG}
 
 str2q_branch = {'all' : cflags.ALL_VARS,
                 'tap ratio' : cbranch.BRANCH_VAR_RATIO,
-                'tap ratio deviation' : cbranch.BRANCH_VAR_RATIO_DEV,
                 'phase shift' : cbranch.BRANCH_VAR_PHASE}
 
 str2q_gen = {'all' : cflags.ALL_VARS,
@@ -59,8 +57,7 @@ str2q_gen = {'all' : cflags.ALL_VARS,
              'reactive power' : cgen.GEN_VAR_Q}
 
 str2q_shunt = {'all' : cflags.ALL_VARS,
-               'susceptance' : cshunt.SHUNT_VAR_SUSC,
-               'susceptance deviation' : cshunt.SHUNT_VAR_SUSC_DEV}
+               'susceptance' : cshunt.SHUNT_VAR_SUSC}
 
 str2q_load = {'all' : cflags.ALL_VARS,
               'active power' : cload.LOAD_VAR_P,

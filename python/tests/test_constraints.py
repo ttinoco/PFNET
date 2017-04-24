@@ -526,7 +526,7 @@ class TestConstraints(unittest.TestCase):
             net.set_flags('bus',
                           'variable',
                           'regulated by generator',
-                          ['voltage magnitude','voltage angle','voltage magnitude violation'])
+                          ['voltage magnitude','voltage angle'])
             net.set_flags('generator',
                           'variable',
                           'regulator',
@@ -538,7 +538,7 @@ class TestConstraints(unittest.TestCase):
             net.set_flags('branch',
                           'variable',
                           'tap changer',
-                          ['tap ratio','tap ratio deviation'])
+                          'tap ratio')
             net.set_flags('branch',
                           'variable',
                           'phase shifter',
@@ -546,7 +546,7 @@ class TestConstraints(unittest.TestCase):
             net.set_flags('shunt',
                           'variable',
                           'switching - v',
-                          ['susceptance','susceptance deviation'])
+                          'susceptance')
             net.set_flags('variable generator',
                           'variable',
                           'any',
@@ -559,12 +559,12 @@ class TestConstraints(unittest.TestCase):
             self.assertGreater(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
             self.assertEqual(net.num_vars,
-                             net.get_num_buses_reg_by_gen()*4 +
+                             net.get_num_buses_reg_by_gen()*2 +
                              net.get_num_reg_gens()*2 +
                              2*net.get_num_P_adjust_loads() +
-                             net.get_num_tap_changers()*3 +
+                             net.get_num_tap_changers() +
                              net.get_num_phase_shifters()*1 +
-                             net.get_num_switched_shunts()*3 +
+                             net.get_num_switched_shunts() +
                              net.num_var_generators*2+
                              3*net.num_batteries)
 
@@ -662,48 +662,33 @@ class TestConstraints(unittest.TestCase):
                 if bus.is_regulated_by_gen():
                     self.assertTrue(bus.has_flags('variable',
                                                   ['voltage magnitude',
-                                                   'voltage angle',
-                                                   'voltage magnitude violation']))
+                                                   'voltage angle']))
                     self.assertEqual(u[bus.index_v_mag],pf.BUS_INF_V_MAG)
                     self.assertEqual(u[bus.index_v_ang],pf.BUS_INF_V_ANG)
-                    self.assertEqual(u[bus.index_vl],pf.BUS_INF_V_MAG)
-                    self.assertEqual(u[bus.index_vh],pf.BUS_INF_V_MAG)
                     self.assertEqual(l[bus.index_v_mag],0.)
                     self.assertEqual(l[bus.index_v_ang],-pf.BUS_INF_V_ANG)
-                    self.assertEqual(l[bus.index_vl],0.)
-                    self.assertEqual(l[bus.index_vh],0.)
                 else:
                     self.assertFalse(bus.has_flags('variable',
                                                    ['voltage magnitude',
-                                                    'voltage angle',
-                                                    'voltage magnitude violation']))
+                                                    'voltage angle']))
 
             for branch in net.branches:
                 if branch.is_tap_changer():
-                    self.assertTrue(branch.has_flags('variable',
-                                                     ['tap ratio','tap ratio deviation']))
+                    self.assertTrue(branch.has_flags('variable','tap ratio'))
                     self.assertEqual(u[branch.index_ratio],pf.BRANCH_INF_RATIO)
-                    self.assertEqual(u[branch.index_ratio_y],pf.BRANCH_INF_RATIO)
-                    self.assertEqual(u[branch.index_ratio_z],pf.BRANCH_INF_RATIO)
                     self.assertEqual(l[branch.index_ratio],0.)
-                    self.assertEqual(l[branch.index_ratio_y],0.)
-                    self.assertEqual(l[branch.index_ratio_z],0.)
                 else:
-                    self.assertFalse(branch.has_flags('variable',
-                                                      ['tap ratio','tap ratio deviation']))
+                    self.assertFalse(branch.has_flags('variable','tap ratio'))
                 if branch.is_phase_shifter():
-                    self.assertTrue(branch.has_flags('variable',
-                                                     'phase shift'))
+                    self.assertTrue(branch.has_flags('variable','phase shift'))
                     self.assertLess(np.abs(u[branch.index_phase]-np.pi*2.),1e-10)
                     self.assertLess(np.abs(l[branch.index_phase]+np.pi*2.),1e-10)
                 else:
-                    self.assertFalse(branch.has_flags('variable',
-                                                      'phase shift'))
+                    self.assertFalse(branch.has_flags('variable','phase shift'))
 
             for gen in net.generators:
                 if gen.is_regulator():
-                    self.assertTrue(gen.has_flags('variable',
-                                                  ['active power','reactive power']))
+                    self.assertTrue(gen.has_flags('variable',['active power','reactive power']))
                     self.assertEqual(u[gen.index_P],pf.GEN_INF_P)
                     self.assertEqual(u[gen.index_Q],pf.GEN_INF_Q)
                     self.assertEqual(l[gen.index_P],-pf.GEN_INF_P)
@@ -731,17 +716,11 @@ class TestConstraints(unittest.TestCase):
 
             for shunt in net.shunts:
                 if shunt.is_switched_v():
-                    self.assertTrue(shunt.has_flags('variable',
-                                                    ['susceptance','susceptance deviation']))
+                    self.assertTrue(shunt.has_flags('variable','susceptance'))
                     self.assertEqual(u[shunt.index_b],pf.SHUNT_INF_SUSC)
-                    self.assertEqual(u[shunt.index_y],pf.SHUNT_INF_SUSC)
-                    self.assertEqual(u[shunt.index_z],pf.SHUNT_INF_SUSC)
                     self.assertEqual(l[shunt.index_b],-pf.SHUNT_INF_SUSC)
-                    self.assertEqual(l[shunt.index_y],0.)
-                    self.assertEqual(l[shunt.index_z],0.)
                 else:
-                    self.assertFalse(shunt.has_flags('variable',
-                                                     ['susceptance','susceptance deviation']))
+                    self.assertFalse(shunt.has_flags('variable','susceptance'))
 
             for bat in net.batteries:
                 self.assertTrue(bat.has_flags('variable','charging power'))
@@ -757,7 +736,7 @@ class TestConstraints(unittest.TestCase):
             net.set_flags('bus',
                           'bounded',
                           'regulated by generator',
-                          ['voltage magnitude','voltage angle','voltage magnitude violation'])
+                          ['voltage magnitude','voltage angle'])
             net.set_flags('generator',
                           'bounded',
                           'regulator',
@@ -769,7 +748,7 @@ class TestConstraints(unittest.TestCase):
             net.set_flags('branch',
                           'bounded',
                           'tap changer',
-                          ['tap ratio','tap ratio deviation'])
+                          'tap ratio')
             net.set_flags('branch',
                           'bounded',
                           'phase shifter',
@@ -777,7 +756,7 @@ class TestConstraints(unittest.TestCase):
             net.set_flags('shunt',
                           'bounded',
                           'switching - v',
-                          ['susceptance','susceptance deviation'])
+                          'susceptance')
             net.set_flags('variable generator',
                           'bounded',
                           'any',
@@ -824,59 +803,42 @@ class TestConstraints(unittest.TestCase):
                 if bus.is_regulated_by_gen():
                     self.assertTrue(bus.has_flags('bounded',
                                                   ['voltage magnitude',
-                                                   'voltage angle',
-                                                   'voltage magnitude violation']))
+                                                   'voltage angle']))
                     self.assertTrue(bus.has_flags('variable',
                                                   ['voltage magnitude',
-                                                   'voltage angle',
-                                                   'voltage magnitude violation']))
+                                                   'voltage angle']))
                     self.assertEqual(u[bus.index_v_mag],bus.v_max)
                     self.assertEqual(u[bus.index_v_ang],pf.BUS_INF_V_ANG)
-                    self.assertEqual(u[bus.index_vl],pf.BUS_INF_V_MAG)
-                    self.assertEqual(u[bus.index_vh],pf.BUS_INF_V_MAG)
                     self.assertEqual(l[bus.index_v_mag],bus.v_min)
                     self.assertEqual(l[bus.index_v_ang],-pf.BUS_INF_V_ANG)
-                    self.assertEqual(l[bus.index_vl],0.)
-                    self.assertEqual(l[bus.index_vh],0.)
                 else:
                     self.assertFalse(bus.has_flags('bounded',
                                                    ['voltage magnitude',
-                                                    'voltage angle',
-                                                    'voltage magnitude violation']))
+                                                    'voltage angle']))
 
             for branch in net.branches:
                 if branch.is_tap_changer():
-                    self.assertTrue(branch.has_flags('bounded',
-                                                     ['tap ratio','tap ratio deviation']))
+                    self.assertTrue(branch.has_flags('bounded','tap ratio'))
                     self.assertEqual(u[branch.index_ratio],branch.ratio_max)
-                    self.assertEqual(u[branch.index_ratio_y],pf.BRANCH_INF_RATIO)
-                    self.assertEqual(u[branch.index_ratio_z],pf.BRANCH_INF_RATIO)
                     self.assertEqual(l[branch.index_ratio],branch.ratio_min)
-                    self.assertEqual(l[branch.index_ratio_y],0.)
-                    self.assertEqual(l[branch.index_ratio_z],0.)
                 else:
-                    self.assertFalse(branch.has_flags('bounded',
-                                                      ['tap ratio','tap ratio deviation']))
+                    self.assertFalse(branch.has_flags('bounded','tap ratio'))
                 if branch.is_phase_shifter():
-                    self.assertTrue(branch.has_flags('bounded',
-                                                     'phase shift'))
+                    self.assertTrue(branch.has_flags('bounded','phase shift'))
                     self.assertEqual(u[branch.index_phase],branch.phase_max)
                     self.assertEqual(l[branch.index_phase],branch.phase_min)
                 else:
-                    self.assertFalse(branch.has_flags('bounded',
-                                                      'phase shift'))
+                    self.assertFalse(branch.has_flags('bounded','phase shift'))
 
             for gen in net.generators:
                 if gen.is_regulator():
-                    self.assertTrue(gen.has_flags('bounded',
-                                                  ['active power','reactive power']))
+                    self.assertTrue(gen.has_flags('bounded',['active power','reactive power']))
                     self.assertEqual(u[gen.index_P],gen.P_max)
                     self.assertEqual(u[gen.index_Q],gen.Q_max)
                     self.assertEqual(l[gen.index_P],gen.P_min)
                     self.assertEqual(l[gen.index_Q],gen.Q_min)
                 else:
-                    self.assertFalse(gen.has_flags('bounded',
-                                                   ['active power','reactive power']))
+                    self.assertFalse(gen.has_flags('bounded',['active power','reactive power']))
 
             for load in net.loads:
                 self.assertTrue(load.has_flags('bounded','active power'))
@@ -888,8 +850,7 @@ class TestConstraints(unittest.TestCase):
                 self.assertEqual(l[load.index_Q],-pf.LOAD_INF_Q)
 
             for vargen in net.var_generators:
-                self.assertTrue(vargen.has_flags('bounded',
-                                                 ['active power','reactive power']))
+                self.assertTrue(vargen.has_flags('bounded',['active power','reactive power']))
                 self.assertEqual(u[vargen.index_P],vargen.P_ava)
                 self.assertEqual(u[vargen.index_Q],vargen.Q_max)
                 self.assertEqual(l[vargen.index_P],vargen.P_min)
@@ -897,17 +858,11 @@ class TestConstraints(unittest.TestCase):
 
             for shunt in net.shunts:
                 if shunt.is_switched_v():
-                    self.assertTrue(shunt.has_flags('bounded',
-                                                     ['susceptance','susceptance deviation']))
+                    self.assertTrue(shunt.has_flags('bounded','susceptance'))
                     self.assertEqual(u[shunt.index_b],shunt.b_max)
-                    self.assertEqual(u[shunt.index_y],pf.SHUNT_INF_SUSC)
-                    self.assertEqual(u[shunt.index_z],pf.SHUNT_INF_SUSC)
                     self.assertEqual(l[shunt.index_b],shunt.b_min)
-                    self.assertEqual(l[shunt.index_y],0.)
-                    self.assertEqual(l[shunt.index_z],0.)
                 else:
-                    self.assertFalse(shunt.has_flags('bounded',
-                                                     ['susceptance','susceptance deviation']))
+                    self.assertFalse(shunt.has_flags('bounded','susceptance'))
 
             for bat in net.batteries:
                 self.assertTrue(bat.has_flags('bounded','charging power'))
@@ -1907,7 +1862,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.A_row,rowsA*self.T)
             self.assertEqual(constr.num_extra_vars,rowsJ*self.T)
             
-            y0 = np.random.randn(constr.num_extra_vars)
+            y0 = np.random.rand(constr.num_extra_vars)
             constr.eval(x0,y0)
             self.assertEqual(constr.J_nnz,Jnnz*self.T)
             self.assertEqual(constr.A_nnz,0)
@@ -2328,21 +2283,13 @@ class TestConstraints(unittest.TestCase):
                           'variable',
                           'regulated by transformer',
                           'voltage magnitude')
-            net.set_flags('bus',
-                          'variable',
-                          'regulated by transformer',
-                          'voltage magnitude violation')
             net.set_flags('branch',
                           'variable',
                           'tap changer - v',
                           'tap ratio')
-            net.set_flags('branch',
-                          'variable',
-                          'tap changer - v',
-                          'tap ratio deviation')
             self.assertEqual(net.num_vars,
-                             (3*net.get_num_buses_reg_by_tran() +
-                              3*net.get_num_tap_changers_v())*self.T)
+                             (net.get_num_buses_reg_by_tran() +
+                              net.get_num_tap_changers_v())*self.T)
 
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -2399,18 +2346,19 @@ class TestConstraints(unittest.TestCase):
             J = constr.J
             A = constr.A
             b = constr.b
-
+            
             # After
             self.assertTrue(type(f) is np.ndarray)
             self.assertTupleEqual(f.shape,(rowsJ*self.T,))
             self.assertTrue(type(b) is np.ndarray)
             self.assertTupleEqual(b.shape,(rowsA*self.T,))
             self.assertTrue(type(J) is coo_matrix)
-            self.assertTupleEqual(J.shape,(rowsJ*self.T,net.num_vars))
+            self.assertTupleEqual(J.shape,(rowsJ*self.T,net.num_vars+constr.num_extra_vars))
             self.assertEqual(J.nnz,Jnnz*self.T)
             self.assertTrue(type(A) is coo_matrix)
-            self.assertTupleEqual(A.shape,(rowsA*self.T,net.num_vars))
+            self.assertTupleEqual(A.shape,(rowsA*self.T,net.num_vars+constr.num_extra_vars))
             self.assertEqual(A.nnz,Annz*self.T)
+            self.assertEqual(constr.num_extra_vars,rowsJ*self.T)
 
             self.assertTrue(not np.any(np.isinf(b)))
             self.assertTrue(not np.any(np.isnan(b)))
@@ -2421,10 +2369,11 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(not np.any(np.isinf(A.data)))
             self.assertTrue(not np.any(np.isnan(A.data)))
 
+            y0 = np.random.rand(constr.num_extra_vars)
+
             # Ax=b check
             self.assertEqual(norm(A.data,1),rowsA*3*self.T)
             self.assertEqual(np.sum(A.data),net.get_num_tap_changers_v()*self.T)
-            self.assertLess(norm(A*x0-b),1e-10*(1+norm(A.data)))
 
             # f check
             index = 0
@@ -2433,7 +2382,6 @@ class TestConstraints(unittest.TestCase):
                     br = net.get_branch(i)
                     if br.is_tap_changer_v():
                         self.assertTrue(br.has_flags('variable','tap ratio'))
-                        self.assertTrue(br.has_flags('variable','tap ratio deviation'))
                         bus = br.reg_bus
                         fvmin = ((bus.v_mag[t]-bus.v_min) - np.sqrt((bus.v_mag[t]-bus.v_min)**2. + 2*eta))*normal
                         fvmax = ((bus.v_max-bus.v_mag[t]) - np.sqrt((bus.v_max-bus.v_mag[t])**2. + 2*eta))*normal
@@ -2446,16 +2394,17 @@ class TestConstraints(unittest.TestCase):
                         index += 4
 
             # Jacobian check
-            f0 = f.copy()
-            J0 = J.copy()
-
+            constr.eval(x0,y0)
+            f0 = constr.f.copy()
+            J0 = constr.J.copy()            
             for i in range(NUM_TRIALS):
 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+constr.num_extra_vars)
 
-                x = x0 + h*d
+                x = x0 + h*d[:net.num_vars]
+                y = y0 + h*d[net.num_vars:]
 
-                constr.eval(x)
+                constr.eval(x,y)
                 f1 = constr.f
 
                 Jd_exact = J0*d
@@ -2471,7 +2420,7 @@ class TestConstraints(unittest.TestCase):
 
                 j = np.random.randint(0,f.shape[0])
 
-                constr.eval(x0)
+                constr.eval(x0,y0)
 
                 g0 = constr.J.tocsr()[j,:].toarray().flatten()
                 H0 = constr.get_H_single(j)
@@ -2480,11 +2429,12 @@ class TestConstraints(unittest.TestCase):
 
                 H0 = (H0 + H0.T) - triu(H0)
 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+constr.num_extra_vars)
 
-                x = x0 + h*d
+                x = x0 + h*d[:net.num_vars]
+                y = y0 + h*d[net.num_vars:]
 
-                constr.eval(x)
+                constr.eval(x,y)
 
                 g1 = constr.J.tocsr()[j,:].toarray().flatten()
 
@@ -2495,22 +2445,25 @@ class TestConstraints(unittest.TestCase):
 
             # Combined Hessian check
             coeff = np.random.randn(f0.shape[0])
-            constr.eval(x0)
+            constr.eval(x0,y0)
             constr.combine_H(coeff,False)
             J0 = constr.J
             g0 = J0.T*coeff
             H0 = constr.H_combined.copy()
             self.assertTrue(type(H0) is coo_matrix)
-            self.assertTupleEqual(H0.shape,(net.num_vars,net.num_vars))
+            self.assertTupleEqual(H0.shape,
+                                  (net.num_vars+constr.num_extra_vars,
+                                   net.num_vars+constr.num_extra_vars))
             self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
             H0 = (H0 + H0.T) - triu(H0)
             for i in range(NUM_TRIALS):
 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+constr.num_extra_vars)
 
-                x = x0 + h*d
+                x = x0 + h*d[:net.num_vars]
+                y = y0 + h*d[net.num_vars:]
 
-                constr.eval(x)
+                constr.eval(x,y)
 
                 g1 = constr.J.T*coeff
 
@@ -2526,23 +2479,18 @@ class TestConstraints(unittest.TestCase):
                     bus = net.get_bus(i)
                     self.assertEqual(bus.sens_v_reg_by_tran[t],0.)
             sens = np.zeros(constr.f.size)
-            Ji = constr.J.row
-            Jj = constr.J.col
+            counter = 0
             for t in range(self.T):
-                for i in range(net.num_buses):
-                    bus = net.get_bus(i)
-                    if bus.is_regulated_by_tran():
-                        indices = Ji[np.where(np.logical_or(Jj == bus.index_vh[t],
-                                                            Jj == bus.index_vl[t]))[0]]
-                        self.assertEqual(indices.size,4*len(bus.reg_trans))
-                        j = np.random.randint(0,indices.size)
-                        sens[indices[j]] = -bus.index - max([tran.index for tran in bus.reg_trans])
+                for branch in net.branches:
+                    if branch.is_tap_changer():
+                        sens[counter:counter+4] = branch.reg_bus.index*t
+                        counter += 4
+            self.assertEqual(counter,constr.f.size)
             constr.store_sensitivities(np.zeros(constr.A.shape[0]),sens,None,None)
             for t in range(self.T):
-                for i in range(net.num_buses):
-                    bus = net.get_bus(i)
-                    if bus.is_regulated_by_tran():
-                        self.assertEqual(bus.sens_v_reg_by_tran[t],-bus.index-max([tran.index for tran in bus.reg_trans]))
+                for branch in net.branches:
+                    if branch.is_tap_changer():
+                        self.assertEqual(branch.reg_bus.sens_v_reg_by_tran[t],branch.reg_bus.index*t)
 
     def test_constr_REG_SHUNT(self):
 
@@ -2562,21 +2510,13 @@ class TestConstraints(unittest.TestCase):
                           'variable',
                           'regulated by shunt',
                           'voltage magnitude')
-            net.set_flags('bus',
-                          'variable',
-                          'regulated by shunt',
-                          'voltage magnitude violation')
             net.set_flags('shunt',
                           'variable',
                           'switching - v',
                           'susceptance')
-            net.set_flags('shunt',
-                          'variable',
-                          'switching - v',
-                          'susceptance deviation')
             self.assertEqual(net.num_vars,
-                             (3*net.get_num_buses_reg_by_shunt() +
-                              3*net.get_num_switched_shunts())*self.T)
+                             (net.get_num_buses_reg_by_shunt() +
+                              net.get_num_switched_shunts())*self.T)
 
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -2640,15 +2580,16 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(b) is np.ndarray)
             self.assertTupleEqual(b.shape,(rowsA*self.T,))
             self.assertTrue(type(J) is coo_matrix)
-            self.assertTupleEqual(J.shape,(rowsJ*self.T,net.num_vars))
+            self.assertTupleEqual(J.shape,(rowsJ*self.T,net.num_vars+constr.num_extra_vars))
             self.assertEqual(J.nnz,Jnnz*self.T)
             self.assertTrue(np.all(J.row <= rowsJ*self.T-1))
-            self.assertTrue(np.all(J.col <= net.num_vars-1))
+            self.assertTrue(np.all(J.col <= net.num_vars+constr.num_extra_vars-1))
             self.assertTrue(type(A) is coo_matrix)
-            self.assertTupleEqual(A.shape,(rowsA*self.T,net.num_vars))
+            self.assertTupleEqual(A.shape,(rowsA*self.T,net.num_vars+constr.num_extra_vars))
             self.assertEqual(A.nnz,Annz*self.T)
             self.assertTrue(np.all(A.row <= rowsA*self.T-1))
-            self.assertTrue(np.all(A.col <= net.num_vars-1))
+            self.assertTrue(np.all(A.col <= net.num_vars+constr.num_extra_vars-1))
+            self.assertEqual(constr.num_extra_vars,rowsJ*self.T)
 
             self.assertTrue(not np.any(np.isinf(b)))
             self.assertTrue(not np.any(np.isnan(b)))
@@ -2659,10 +2600,11 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(not np.any(np.isinf(A.data)))
             self.assertTrue(not np.any(np.isnan(A.data)))
 
+            y0 = np.random.rand(constr.num_extra_vars)
+
             # Ax=b check
             self.assertEqual(norm(A.data,1),rowsA*3*self.T)
             self.assertEqual(np.sum(A.data),net.get_num_switched_shunts()*self.T)
-            self.assertLess(norm(A*x0-b),1e-10*(1+norm(A.data)))
 
             # f check
             index = 0
@@ -2675,13 +2617,7 @@ class TestConstraints(unittest.TestCase):
                             for s in bus.reg_shunts:
                                 self.assertEqual(bus.number,s.reg_bus.number)
                                 self.assertTrue(bus.has_flags('variable','voltage magnitude'))
-                                self.assertTrue(bus.has_flags('variable','voltage magnitude violation'))
                                 self.assertTrue(s.has_flags('variable','susceptance'))
-                                self.assertTrue(s.has_flags('variable','susceptance deviation'))
-                                self.assertEqual(x0[s.index_y[t]],0.)
-                                self.assertEqual(x0[s.index_z[t]],0.)
-                                self.assertEqual(x0[bus.index_vl[t]],0.)
-                                self.assertEqual(x0[bus.index_vh[t]],0.)
                                 fvmin = ((bus.v_mag[t]-bus.v_min) - np.sqrt((bus.v_mag[t]-bus.v_min)**2. + 2.*eta))*normal
                                 fvmax = ((bus.v_max-bus.v_mag[t]) - np.sqrt((bus.v_max-bus.v_mag[t])**2. + 2.*eta))*normal
                                 fbmax = ((s.b_max-s.b[t]) - np.sqrt((s.b_max-s.b[t])**2. + 2*eta))*normal
@@ -2694,16 +2630,17 @@ class TestConstraints(unittest.TestCase):
                         counted[(bus.index,t)] = True
 
             # Jacobian check
-            f0 = f.copy()
-            J0 = J.copy()
-
+            constr.eval(x0,y0)
+            f0 = constr.f.copy()
+            J0 = constr.J.copy()
             for i in range(NUM_TRIALS):
 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+constr.num_extra_vars)
 
-                x = x0 + h*d
+                x = x0 + h*d[:net.num_vars]
+                y = y0 + h*d[net.num_vars:]
 
-                constr.eval(x)
+                constr.eval(x,y)
                 f1 = constr.f
 
                 Jd_exact = J0*d
@@ -2719,7 +2656,7 @@ class TestConstraints(unittest.TestCase):
 
                 j = np.random.randint(0,f.shape[0])
 
-                constr.eval(x0)
+                constr.eval(x0,y0)
 
                 g0 = constr.J.tocsr()[j,:].toarray().flatten()
                 H0 = constr.get_H_single(j)
@@ -2728,11 +2665,12 @@ class TestConstraints(unittest.TestCase):
 
                 H0 = (H0 + H0.T) - triu(H0)
 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+constr.num_extra_vars)
 
-                x = x0 + h*d
+                x = x0 + h*d[:net.num_vars]
+                y = y0 + h*d[net.num_vars:]
 
-                constr.eval(x)
+                constr.eval(x,y)
 
                 g1 = constr.J.tocsr()[j,:].toarray().flatten()
 
@@ -2743,22 +2681,25 @@ class TestConstraints(unittest.TestCase):
 
             # Combined Hessian check
             coeff = np.random.randn(f0.shape[0])
-            constr.eval(x0)
+            constr.eval(x0,y0)
             constr.combine_H(coeff,False)
             J0 = constr.J
             g0 = J0.T*coeff
             H0 = constr.H_combined.copy()
             self.assertTrue(type(H0) is coo_matrix)
-            self.assertTupleEqual(H0.shape,(net.num_vars,net.num_vars))
+            self.assertTupleEqual(H0.shape,
+                                  (net.num_vars+constr.num_extra_vars,
+                                   net.num_vars+constr.num_extra_vars))
             self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
             H0 = (H0 + H0.T) - triu(H0)
             for i in range(NUM_TRIALS):
 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+constr.num_extra_vars)
 
-                x = x0 + h*d
+                x = x0 + h*d[:net.num_vars]
+                y = y0 + h*d[net.num_vars:]
 
-                constr.eval(x)
+                constr.eval(x,y)
 
                 g1 = constr.J.T*coeff
 
@@ -2774,23 +2715,26 @@ class TestConstraints(unittest.TestCase):
                     bus = net.get_bus(i)
                     self.assertEqual(bus.sens_v_reg_by_shunt[t],0.)
             sens = np.zeros(constr.f.size)
-            Ji = constr.J.row
-            Jj = constr.J.col
+            counter = 0
+            flags = dict([((t,b.index),False) for t in range(self.T) for b in net.buses])
             for t in range(self.T):
-                for i in range(net.num_buses):
-                    bus = net.get_bus(i)
-                    if bus.is_regulated_by_shunt():
-                        indices = Ji[np.where(np.logical_or(Jj == bus.index_vh[t],
-                                                            Jj == bus.index_vl[t]))[0]]
-                        self.assertEqual(indices.size,4*len(bus.reg_shunts))
-                        j = np.random.randint(0,indices.size)
-                        sens[indices[j]] = -bus.index - max([s.index for s in bus.reg_shunts])
+                for branch in net.branches:
+                    for bus in [branch.bus_k,branch.bus_m]:
+                        if not flags[(t,bus.index)]:
+                            for shunt in bus.reg_shunts:
+                                sens[counter:counter+4] = bus.index*t
+                                counter += 4
+                        flags[(t,bus.index)] = True
+            self.assertEqual(counter,constr.f.size)
             constr.store_sensitivities(np.zeros(constr.A.shape[0]),sens,None,None)
+            flags = dict([((t,b.index),False) for t in range(self.T) for b in net.buses])
             for t in range(self.T):
-                for i in range(net.num_buses):
-                    bus = net.get_bus(i)
-                    if bus.is_regulated_by_shunt():
-                        self.assertEqual(bus.sens_v_reg_by_shunt[t],-bus.index-max([s.index for s in bus.reg_shunts]))
+                for branch in net.branches:
+                    for bus in [branch.bus_k,branch.bus_m]:
+                        if not flags[(t,bus.index)]:
+                            for shunt in bus.reg_shunts:
+                                self.assertEqual(bus.sens_v_reg_by_shunt[t],bus.index*t)
+                        flags[(t,bus.index)] = True
 
     def test_robustness(self):
 
