@@ -67,8 +67,6 @@ Bus Quantities
 ``"all"``
 ``"voltage angle"``
 ``"voltage magnitude"``
-``"voltage magnitude deviation"`` 
-``"voltage magnitude violation"``
 ================================= ========
 
 .. _ref_bus_sens:
@@ -171,7 +169,6 @@ Branch Quantities
 ``"all"``
 ``"phase shift"``
 ``"tap ratio"``
-``"tap ratio deviation"``
 ========================= =======
 
 .. _ref_branch_class:
@@ -248,7 +245,6 @@ Shunt Quantities
 =========================== =======
 ``"all"``
 ``"susceptance"``
-``"susceptance deviation"``
 =========================== =======
 
 .. _ref_shunt_class:
