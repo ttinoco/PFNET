@@ -750,23 +750,12 @@ static char* test_constr_REG_TRAN() {
 		BUS_PROP_REG_BY_TRAN,
 		BUS_VAR_VMAG);
   NET_set_flags(net,
-		OBJ_BUS,
-		FLAG_VARS,
-		BUS_PROP_REG_BY_TRAN,
-		BUS_VAR_VVIO);
-  NET_set_flags(net,
 		OBJ_BRANCH,
 		FLAG_VARS,
 		BRANCH_PROP_TAP_CHANGER_V,
 		BRANCH_VAR_RATIO);
-  NET_set_flags(net,
-		OBJ_BRANCH,
-		FLAG_VARS,
-		BRANCH_PROP_TAP_CHANGER_V,
-		BRANCH_VAR_RATIO_DEV);
   
-  num_vars = (3*NET_get_num_buses_reg_by_tran(net)+
-	      3*NET_get_num_tap_changers_v(net));
+  num_vars = (NET_get_num_buses_reg_by_tran(net)+NET_get_num_tap_changers_v(net));
   Assert("error - invalid number of varibles",num_vars == NET_get_num_vars(net));
 
   x = NET_get_var_values(net,CURRENT);
@@ -864,23 +853,12 @@ static char* test_constr_REG_SHUNT() {
 		BUS_PROP_REG_BY_SHUNT,
 		BUS_VAR_VMAG);
   NET_set_flags(net,
-		OBJ_BUS,
-		FLAG_VARS,
-		BUS_PROP_REG_BY_SHUNT,
-		BUS_VAR_VVIO);
-  NET_set_flags(net,
 		OBJ_SHUNT,
 		FLAG_VARS,
 		SHUNT_PROP_SWITCHED_V,
 		SHUNT_VAR_SUSC);
-  NET_set_flags(net,
-		OBJ_SHUNT,
-		FLAG_VARS,
-		SHUNT_PROP_SWITCHED_V,
-		SHUNT_VAR_SUSC_DEV);
   
-  num_vars = (3*NET_get_num_buses_reg_by_shunt(net)+
-	      3*NET_get_num_switched_shunts(net));
+  num_vars = (NET_get_num_buses_reg_by_shunt(net)+NET_get_num_switched_shunts(net));
   Assert("error - invalid number of varibles",num_vars == NET_get_num_vars(net));
 
   x = NET_get_var_values(net,CURRENT);

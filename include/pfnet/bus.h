@@ -31,7 +31,6 @@
  */
 #define BUS_VAR_VMAG 0x01 /**< @brief Variable: voltage magnitude. */
 #define BUS_VAR_VANG 0x02 /**< @brief Variable: volatge angle. */
-#define BUS_VAR_VVIO 0x08 /**< @brief Variable: volatge magnitude max and min bound violations. */
 /** @} */
 
 // Properties
@@ -150,8 +149,6 @@ REAL BUS_get_price(Bus* bus, int t);
 int BUS_get_index(Bus* bus);
 int BUS_get_index_v_mag(Bus* bus, int t);
 int BUS_get_index_v_ang(Bus* bus, int t);
-int BUS_get_index_vl(Bus* bus, int t);
-int BUS_get_index_vh(Bus* bus, int t);
 int BUS_get_index_P(Bus* bus);
 int BUS_get_index_Q(Bus* bus);
 Bus* BUS_get_next(Bus* bus);

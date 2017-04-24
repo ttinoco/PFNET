@@ -12,14 +12,14 @@
 
 Constr* CONSTR_REG_GEN_new(Net* net) {
   Constr* c = CONSTR_new(net);
-  CONSTR_set_func_init(c, &CONSTR_REG_GEN_init);
-  CONSTR_set_func_count_step(c, &CONSTR_REG_GEN_count_step);
-  CONSTR_set_func_allocate(c, &CONSTR_REG_GEN_allocate);
-  CONSTR_set_func_clear(c, &CONSTR_REG_GEN_clear);
-  CONSTR_set_func_analyze_step(c, &CONSTR_REG_GEN_analyze_step);
-  CONSTR_set_func_eval_step(c, &CONSTR_REG_GEN_eval_step);
-  CONSTR_set_func_store_sens_step(c, &CONSTR_REG_GEN_store_sens_step);
-  CONSTR_set_func_free(c, &CONSTR_REG_GEN_free);
+  CONSTR_set_func_init(c,&CONSTR_REG_GEN_init);
+  CONSTR_set_func_count_step(c,&CONSTR_REG_GEN_count_step);
+  CONSTR_set_func_allocate(c,&CONSTR_REG_GEN_allocate);
+  CONSTR_set_func_clear(c,&CONSTR_REG_GEN_clear);
+  CONSTR_set_func_analyze_step(c,&CONSTR_REG_GEN_analyze_step);
+  CONSTR_set_func_eval_step(c,&CONSTR_REG_GEN_eval_step);
+  CONSTR_set_func_store_sens_step(c,&CONSTR_REG_GEN_store_sens_step);
+  CONSTR_set_func_free(c,&CONSTR_REG_GEN_free);
   CONSTR_init(c);
   return c;
 }

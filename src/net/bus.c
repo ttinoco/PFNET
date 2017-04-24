@@ -32,7 +32,7 @@ struct Bus {
   REAL* v_set;        /**< @brief Voltage magnitude set point (p.u.) */
   REAL v_max;         /**< @brief Maximum voltage magnitude (p.u.) */
   REAL v_min;         /**< @brief Minimum voltage magnitude (p.u.) */
-
+  
   // Flags
   BOOL slack;        /**< @brief Flag for indicating the the bus is a slack bus */
   char fixed;        /**< @brief Flags for indicating which quantities should be fixed to their current value */
@@ -59,9 +59,7 @@ struct Bus {
   int index;          /**< @brief Bus index */
   int* index_v_mag;   /**< @brief Voltage magnitude index */
   int* index_v_ang;   /**< @brief Voltage angle index */
-  int* index_vl;      /**< @brief Voltage magnitude violation of v_min */
-  int* index_vh;      /**< @brief Voltage magnitude violation of v_max */
-
+  
   // Sensitivities
   REAL* sens_P_balance;      /**< @brief Sensitivity of active power balance */
   REAL* sens_Q_balance;      /**< @brief Sensitivity of reactive power balance */
@@ -182,8 +180,6 @@ void BUS_array_del(Bus* bus_array, int size) {
       free(bus->price);
       free(bus->index_v_mag);
       free(bus->index_v_ang);
-      free(bus->index_vl);
-      free(bus->index_vh);
       free(bus->sens_P_balance);
       free(bus->sens_Q_balance);
       free(bus->sens_v_mag_u_bound);
@@ -367,20 +363,6 @@ int BUS_get_index_v_mag(Bus* bus, int t) {
 int BUS_get_index_v_ang(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     return bus->index_v_ang[t];
-  else
-    return 0;
-}
-
-int BUS_get_index_vl(Bus* bus, int t) {
-  if (bus && t >= 0 && t < bus->num_periods)
-    return bus->index_vl[t];
-  else
-    return 0;
-}
-
-int BUS_get_index_vh(Bus* bus, int t) {
-  if (bus && t >= 0 && t < bus->num_periods)
-    return bus->index_vh[t];
   else
     return 0;
 }
@@ -740,23 +722,6 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
 	VEC_set(values,bus->index_v_ang[t],bus->v_ang[t]);
       }
     }
-
-    // Voltage magnitude bound violations
-    if (bus->vars & BUS_VAR_VVIO) {
-      switch(code) {
-      case UPPER_LIMITS:
-	VEC_set(values,bus->index_vl[t],BUS_INF_V_MAG);
-	VEC_set(values,bus->index_vh[t],BUS_INF_V_MAG);
-	break;
-      case LOWER_LIMITS:
-	VEC_set(values,bus->index_vl[t],0.);
-	VEC_set(values,bus->index_vh[t],0.);
-	break;
-      default:
-	VEC_set(values,bus->index_vl[t],0.);
-	VEC_set(values,bus->index_vh[t],0.);
-      }
-    }
   }
 }
 
@@ -781,8 +746,6 @@ int BUS_get_num_vars(void* vbus, unsigned char var, int t_start, int t_end) {
     num_vars += dt;
   if ((var & BUS_VAR_VANG) && (bus->vars & BUS_VAR_VANG))
     num_vars += dt;
-  if ((var & BUS_VAR_VVIO) && (bus->vars & BUS_VAR_VVIO))
-    num_vars += 2*dt;
   return num_vars;
 }
 
@@ -804,23 +767,16 @@ Vec* BUS_get_var_indices(void* vbus, unsigned char var, int t_start, int t_end) 
 
   // Indices
   indices = VEC_new(BUS_get_num_vars(vbus,var,t_start,t_end));
-  if ((var & BUS_VAR_VMAG) && (bus->vars & BUS_VAR_VMAG)) {
+  if ((var & BUS_VAR_VMAG) && (bus->vars & BUS_VAR_VMAG)) { // v mag
     for (t = t_start; t <= t_end; t++) {
       VEC_set(indices,offset,bus->index_v_mag[t]);
       offset++;
     }
   }
-  if ((var & BUS_VAR_VANG) && (bus->vars & BUS_VAR_VANG)) {
+  if ((var & BUS_VAR_VANG) && (bus->vars & BUS_VAR_VANG)) { // v ang
     for (t = t_start; t <= t_end; t++) {
       VEC_set(indices,offset,bus->index_v_ang[t]);
       offset++;
-    }
-  }
-  if ((var & BUS_VAR_VVIO) && (bus->vars & BUS_VAR_VVIO)) {
-    for (t = t_start; t <= t_end; t++) {
-      VEC_set(indices,offset,bus->index_vl[t]);
-      VEC_set(indices,offset+1,bus->index_vh[t]);
-      offset += 2;
     }
   }
   return indices;
@@ -1175,8 +1131,6 @@ void BUS_init(Bus* bus, int num_periods) {
 
   ARRAY_zalloc(bus->index_v_mag,int,T);
   ARRAY_zalloc(bus->index_v_ang,int,T);
-  ARRAY_zalloc(bus->index_vl,int,T);
-  ARRAY_zalloc(bus->index_vh,int,T);
 
   ARRAY_zalloc(bus->sens_P_balance,REAL,T);
   ARRAY_zalloc(bus->sens_Q_balance,REAL,T);
@@ -1385,16 +1339,6 @@ int BUS_set_flags(void* vbus, char flag_type, unsigned char mask, int index) {
     }
     (*flags_ptr) |= BUS_VAR_VANG;
     index += bus->num_periods;
-  }
-  if (!((*flags_ptr) & BUS_VAR_VVIO) && (mask & BUS_VAR_VVIO)) { // voltage mag max min bound violations
-    if (flag_type == FLAG_VARS) {
-      for (t = 0; t < bus->num_periods; t++) {
-	bus->index_vl[t] = index+2*t;
-	bus->index_vh[t] = index+2*t+1;
-      }
-    }
-    (*flags_ptr) |= BUS_VAR_VVIO;
-    index += 2*bus->num_periods;
   }
   return index;
 }
