@@ -12,13 +12,13 @@
 
 Func* FUNC_REG_SUSC_new(REAL weight, Net* net) {
   Func* f = FUNC_new(weight,net);
-  FUNC_set_func_init(f, &FUNC_REG_SUSC_init);
-  FUNC_set_func_count_step(f, &FUNC_REG_SUSC_count_step);
-  FUNC_set_func_allocate(f, &FUNC_REG_SUSC_allocate);
-  FUNC_set_func_clear(f, &FUNC_REG_SUSC_clear);
-  FUNC_set_func_analyze_step(f, &FUNC_REG_SUSC_analyze_step);
-  FUNC_set_func_eval_step(f, &FUNC_REG_SUSC_eval_step);
-  FUNC_set_func_free(f, &FUNC_REG_SUSC_free);
+  FUNC_set_func_init(f,&FUNC_REG_SUSC_init);
+  FUNC_set_func_count_step(f,&FUNC_REG_SUSC_count_step);
+  FUNC_set_func_allocate(f,&FUNC_REG_SUSC_allocate);
+  FUNC_set_func_clear(f,&FUNC_REG_SUSC_clear);
+  FUNC_set_func_analyze_step(f,&FUNC_REG_SUSC_analyze_step);
+  FUNC_set_func_eval_step(f,&FUNC_REG_SUSC_eval_step);
+  FUNC_set_func_free(f,&FUNC_REG_SUSC_free);
   FUNC_init(f);
   return f;
 }
@@ -88,11 +88,6 @@ void FUNC_REG_SUSC_count_step(Func* f, Branch* br, int t) {
 
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) // b var
 	  (*Hphi_nnz)++;
-
-	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC_DEV)) { // yz var
-	  (*Hphi_nnz)++;
-	  (*Hphi_nnz)++;
-	}
       }
     }
 
@@ -173,19 +168,6 @@ void FUNC_REG_SUSC_analyze_step(Func* f, Branch* br, int t) {
 	  MAT_set_d(H,*Hphi_nnz,1./(db*db));
 	  (*Hphi_nnz)++;
 	}
-
-	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC_DEV)) { // yz var
-
-	  MAT_set_i(H,*Hphi_nnz,SHUNT_get_index_y(shunt,t));
-	  MAT_set_j(H,*Hphi_nnz,SHUNT_get_index_y(shunt,t));
-	  MAT_set_d(H,*Hphi_nnz,1./(db*db));
-	  (*Hphi_nnz)++;
-
-	  MAT_set_i(H,*Hphi_nnz,SHUNT_get_index_z(shunt,t));
-	  MAT_set_j(H,*Hphi_nnz,SHUNT_get_index_z(shunt,t));
-	  MAT_set_d(H,*Hphi_nnz,1./(db*db));
-	  (*Hphi_nnz)++;
-	}
       }
     }
 
@@ -243,27 +225,13 @@ void FUNC_REG_SUSC_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 	db = SHUNT_get_b_max(shunt)-SHUNT_get_b_min(shunt); // p.u.
 	if (db < FUNC_REG_SUSC_PARAM)
 	  db = FUNC_REG_SUSC_PARAM;
-
+	
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) { // b var
 
 	  b0 = SHUNT_get_b(shunt,t);
 	  b = VEC_get(var_values,SHUNT_get_index_b(shunt,t));
 	  (*phi) += 0.5*pow((b-b0)/db,2.);
 	  gphi[SHUNT_get_index_b(shunt,t)] = (b-b0)/(db*db);
-	}
-	else {
-	  // nothing because b0 - b0 = 0
-	}
-
-	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC_DEV)) { // yz var
-
-	  b = VEC_get(var_values,SHUNT_get_index_y(shunt,t));
-	  (*phi) += 0.5*pow(b/db,2.);
-	  gphi[SHUNT_get_index_y(shunt,t)] = b/(db*db);
-
-	  b = VEC_get(var_values,SHUNT_get_index_z(shunt,t));
-	  (*phi) += 0.5*pow(b/db,2.);
-	  gphi[SHUNT_get_index_z(shunt,t)] = b/(db*db);
 	}
 	else {
 	  // nothing because b0 - b0 = 0

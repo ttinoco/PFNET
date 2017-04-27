@@ -99,7 +99,7 @@ void PROB_analyze(Prob* p) {
   int Hcombnnz;
   int num_vars;
   int num_extra_vars;
-  int i;
+  int k;
   int t;
   
   // No p
@@ -112,8 +112,8 @@ void PROB_analyze(Prob* p) {
   
   // Count
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
-    for (i = 0; i < NET_get_num_branches(p->net); i++) {
-      br = NET_get_branch(p->net,i);
+    for (k = 0; k < NET_get_num_branches(p->net); k++) {
+      br = NET_get_branch(p->net,k);
       CONSTR_list_count_step(p->constr,br,t);
       FUNC_list_count_step(p->func,br,t);
     }
@@ -135,8 +135,8 @@ void PROB_analyze(Prob* p) {
 
   // Analyze
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
-    for (i = 0; i < NET_get_num_branches(p->net); i++) {
-      br = NET_get_branch(p->net,i);
+    for (k = 0; k < NET_get_num_branches(p->net); k++) {
+      br = NET_get_branch(p->net,k);
       CONSTR_list_analyze_step(p->constr,br,t);
       FUNC_list_analyze_step(p->func,br,t);
     }
@@ -145,7 +145,7 @@ void PROB_analyze(Prob* p) {
   // Delete matvec
   PROB_del_matvec(p);
 
-  // Allocate problem matvec
+  // Allocate matvec
   Arow = 0;
   Annz = 0;
   Grow = 0;
@@ -161,10 +161,10 @@ void PROB_analyze(Prob* p) {
     Annz += MAT_get_nnz(CONSTR_get_A(c));
 
     Grow += MAT_get_size1(CONSTR_get_G(c));
-    Gnnz += MAT_get_nnz(CONSTR_get_G(c))+MAT_get_nnz(CONSTR_get_Gbar(c)); 
+    Gnnz += MAT_get_nnz(CONSTR_get_G(c)); 
 
     Jrow += MAT_get_size1(CONSTR_get_J(c));
-    Jnnz += MAT_get_nnz(CONSTR_get_J(c))+MAT_get_nnz(CONSTR_get_Jbar(c));
+    Jnnz += MAT_get_nnz(CONSTR_get_J(c));
     Hcombnnz += MAT_get_nnz(CONSTR_get_H_combined(c));
   }
   for (f = p->func; f != NULL; f = FUNC_get_next(f))
@@ -185,7 +185,7 @@ void PROB_analyze(Prob* p) {
   p->J = MAT_new(Jrow,num_vars+num_extra_vars,Jnnz);
   p->H_combined = MAT_new(num_vars+num_extra_vars,num_vars+num_extra_vars,Hcombnnz);
 
-  // Update 
+  // Update
   PROB_update_lin(p);
   PROB_update_nonlin_struc(p);
 }
@@ -228,8 +228,10 @@ void PROB_eval(Prob* p, Vec* point) {
   // Local variables
   REAL* point_data;
   Branch* br;
+  int num_vars;
   Vec* x;
-  int i;
+  Vec* y;
+  int k;
   int t;
   
   // No p
@@ -243,10 +245,12 @@ void PROB_eval(Prob* p, Vec* point) {
     return;
   }
 
-  // Extract x (network variables)
-  point_data = VEC_get_data(point); 
-  x = VEC_new_from_array(&(point_data[0]),NET_get_num_vars(p->net));
-
+  // Extract x (network) and y (extra)
+  point_data = VEC_get_data(point);
+  num_vars = NET_get_num_vars(p->net);
+  x = VEC_new_from_array(&(point_data[0]),num_vars);
+  y = VEC_new_from_array(&(point_data[num_vars]),VEC_get_size(point)-num_vars);
+ 
   // Clear
   CONSTR_list_clear(p->constr);
   FUNC_list_clear(p->func);
@@ -254,11 +258,11 @@ void PROB_eval(Prob* p, Vec* point) {
 
   // Eval
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
-    for (i = 0; i < NET_get_num_branches(p->net); i++) {
-      br = NET_get_branch(p->net,i);
-      CONSTR_list_eval_step(p->constr,br,t,x);   // use network variables
-      FUNC_list_eval_step(p->func,br,t,x);       // use network variables
-      NET_update_properties_step(p->net,br,t,x); // use network variables
+    for (k = 0; k < NET_get_num_branches(p->net); k++) {
+      br = NET_get_branch(p->net,k);
+      CONSTR_list_eval_step(p->constr,br,t,x,y);
+      FUNC_list_eval_step(p->func,br,t,x);
+      NET_update_properties_step(p->net,br,t,x);
     }
   }
 
@@ -358,7 +362,7 @@ void PROB_combine_H(Prob* p, Vec* coeff, BOOL ensure_psd) {
   int Hcombnnz;
   REAL* Hcomb;
   REAL* Hcomb_constr;
-  int i;
+  int k;
   
   // Check inputs
   if (!p || !coeff)
@@ -379,8 +383,8 @@ void PROB_combine_H(Prob* p, Vec* coeff, BOOL ensure_psd) {
   Hcomb = MAT_get_data_array(p->H_combined);
   for (c = p->constr; c != NULL; c = CONSTR_get_next(c)) {
     Hcomb_constr = MAT_get_data_array(CONSTR_get_H_combined(c));
-    for (i = 0; i < MAT_get_nnz(CONSTR_get_H_combined(c)); i++) {
-      Hcomb[Hcombnnz] = Hcomb_constr[i];
+    for (k = 0; k < MAT_get_nnz(CONSTR_get_H_combined(c)); k++) {
+      Hcomb[Hcombnnz] = Hcomb_constr[k];
       Hcombnnz++;
     }
   }
@@ -662,8 +666,6 @@ void PROB_update_nonlin_struc(Prob* p) {
   int* Jj;
   int* Ji_constr;
   int* Jj_constr;
-  int* Jbari_constr;
-  int* Jbarj_constr;
   int Jrow;
   int Jnnz;
   int* Hcomb_i;
@@ -673,8 +675,8 @@ void PROB_update_nonlin_struc(Prob* p) {
   int Hcombnnz;
 
   int num_vars;
-  int num_extra_vars;
-  int i;
+  int offset;
+  int k;
 
   // Hphi
   Hphinnz = 0;
@@ -683,9 +685,9 @@ void PROB_update_nonlin_struc(Prob* p) {
   for (f = p->func; f != NULL; f = FUNC_get_next(f)) {
     Hphi_i_func = MAT_get_row_array(FUNC_get_Hphi(f));
     Hphi_j_func = MAT_get_col_array(FUNC_get_Hphi(f));
-    for (i = 0; i < MAT_get_nnz(FUNC_get_Hphi(f)); i++) {
-      Hphi_i[Hphinnz] = Hphi_i_func[i];
-      Hphi_j[Hphinnz] = Hphi_j_func[i];
+    for (k = 0; k < MAT_get_nnz(FUNC_get_Hphi(f)); k++) {
+      Hphi_i[Hphinnz] = Hphi_i_func[k];
+      Hphi_j[Hphinnz] = Hphi_j_func[k];
       Hphinnz++;
     }     
   }
@@ -699,22 +701,18 @@ void PROB_update_nonlin_struc(Prob* p) {
   Hcomb_i = MAT_get_row_array(p->H_combined);
   Hcomb_j = MAT_get_col_array(p->H_combined);
   num_vars = NET_get_num_vars(p->net);
-  num_extra_vars = 0;
+  offset = num_vars;
   for (c = p->constr; c != NULL; c = CONSTR_get_next(c)) {
 
     // J
     Ji_constr = MAT_get_row_array(CONSTR_get_J(c));
     Jj_constr = MAT_get_col_array(CONSTR_get_J(c));
-    for (i = 0; i < MAT_get_nnz(CONSTR_get_J(c)); i++) {
-      Ji[Jnnz] = Jrow+Ji_constr[i];
-      Jj[Jnnz] = Jj_constr[i];
-      Jnnz++;
-    }
-    Jbari_constr = MAT_get_row_array(CONSTR_get_Jbar(c));
-    Jbarj_constr = MAT_get_col_array(CONSTR_get_Jbar(c));
-    for (i = 0; i < MAT_get_nnz(CONSTR_get_Jbar(c)); i++) {
-      Ji[Jnnz] = Jrow+Jbari_constr[i];
-      Jj[Jnnz] = num_vars+num_extra_vars+Jbarj_constr[i];
+    for (k = 0; k < MAT_get_nnz(CONSTR_get_J(c)); k++) {
+      Ji[Jnnz] = Jrow+Ji_constr[k];
+      if (Jj_constr[k] < num_vars)
+	Jj[Jnnz] = Jj_constr[k];                 // x var
+      else
+	Jj[Jnnz] = offset+Jj_constr[k]-num_vars; // y var
       Jnnz++;
     }
     Jrow += MAT_get_size1(CONSTR_get_J(c));
@@ -722,14 +720,20 @@ void PROB_update_nonlin_struc(Prob* p) {
     // H comb
     Hcomb_i_constr = MAT_get_row_array(CONSTR_get_H_combined(c));
     Hcomb_j_constr = MAT_get_col_array(CONSTR_get_H_combined(c));
-    for (i = 0; i < MAT_get_nnz(CONSTR_get_H_combined(c)); i++) {
-      Hcomb_i[Hcombnnz] = Hcomb_i_constr[i];
-      Hcomb_j[Hcombnnz] = Hcomb_j_constr[i];
+    for (k = 0; k < MAT_get_nnz(CONSTR_get_H_combined(c)); k++) {
+      if (Hcomb_i_constr[k] < num_vars)
+	Hcomb_i[Hcombnnz] = Hcomb_i_constr[k];                 // x var
+      else
+	Hcomb_i[Hcombnnz] = offset+Hcomb_i_constr[k]-num_vars; // y var
+      if (Hcomb_j_constr[k] < num_vars)
+	Hcomb_j[Hcombnnz] = Hcomb_j_constr[k];                 // x var
+      else
+	Hcomb_j[Hcombnnz] = offset+Hcomb_j_constr[k]-num_vars; // y var
       Hcombnnz++;
     }
 
-    // Update extra vars
-    num_extra_vars += CONSTR_get_num_extra_vars(c);
+    // Update offset
+    offset += CONSTR_get_num_extra_vars(c);
   }
 }
 
@@ -752,17 +756,7 @@ void PROB_update_nonlin_data(Prob* p, Vec* point) {
   REAL* J_constr;
   int Jnnz;
   int Jrow;
-
-  int* Jbari_constr;
-  int* Jbarj_constr;
-  REAL* Jbard_constr;
-
-  REAL* point_data;
-  REAL* y;
-
-  int num_vars;
-  int num_extra_vars;
-  int i;
+  int k;
 
   // Check sizes
   if (PROB_get_num_primal_variables(p) != VEC_get_size(point)) {
@@ -787,13 +781,13 @@ void PROB_update_nonlin_data(Prob* p, Vec* point) {
 
     //gphi
     gphi_func = VEC_get_data(FUNC_get_gphi(func));
-    for (i = 0; i < VEC_get_size(FUNC_get_gphi(func)); i++)
-      gphi[i] += weight*gphi_func[i];
+    for (k = 0; k < VEC_get_size(FUNC_get_gphi(func)); k++)
+      gphi[k] += weight*gphi_func[k];
 
     // Hphi
     Hphi_func = MAT_get_data_array(FUNC_get_Hphi(func));
-    for (i = 0; i < MAT_get_nnz(FUNC_get_Hphi(func)); i++) {
-      Hphi[Hphinnz] = weight*Hphi_func[i];
+    for (k = 0; k < MAT_get_nnz(FUNC_get_Hphi(func)); k++) {
+      Hphi[Hphinnz] = weight*Hphi_func[k];
       Hphinnz++;
     }     
   }
@@ -803,48 +797,31 @@ void PROB_update_nonlin_data(Prob* p, Vec* point) {
   Jrow = 0;
   f = VEC_get_data(p->f);
   J = MAT_get_data_array(p->J);
-  num_vars = NET_get_num_vars(p->net);
-  num_extra_vars = 0;
-  point_data = VEC_get_data(point);
   for (c = p->constr; c != NULL; c = CONSTR_get_next(c)) {
     
-    // J, Jbar, f of constraint
+    // J, f of constraint
     f_constr = VEC_get_data(CONSTR_get_f(c));
     J_constr = MAT_get_data_array(CONSTR_get_J(c));
-    Jbari_constr = MAT_get_row_array(CONSTR_get_Jbar(c));
-    Jbarj_constr = MAT_get_col_array(CONSTR_get_Jbar(c));
-    Jbard_constr = MAT_get_data_array(CONSTR_get_Jbar(c));
-
-    // Local extra vars
-    y = &(point_data[num_vars+num_extra_vars]);
 
     // Update f
-    for (i = 0; i < VEC_get_size(CONSTR_get_f(c)); i++) {
-      f[Jrow+i] = f_constr[i];
+    for (k = 0; k < VEC_get_size(CONSTR_get_f(c)); k++) {
+      f[Jrow+k] = f_constr[k];
     }
 
-    // Update J and f
-    for (i = 0; i < MAT_get_nnz(CONSTR_get_J(c)); i++) {
-      J[Jnnz] = J_constr[i];
-      Jnnz++;
-    }
-    for (i = 0; i < MAT_get_nnz(CONSTR_get_Jbar(c)); i++) {
-      f[Jrow+Jbari_constr[i]] += Jbard_constr[i]*y[Jbarj_constr[i]];
-      J[Jnnz] = Jbard_constr[i];
+    // Update J 
+    for (k = 0; k < MAT_get_nnz(CONSTR_get_J(c)); k++) {
+      J[Jnnz] = J_constr[k];
       Jnnz++;
     }
 
     // Update row
     Jrow += MAT_get_size1(CONSTR_get_J(c));
-
-    // Update extra vars
-    num_extra_vars += CONSTR_get_num_extra_vars(c);
   }
 }
 
 void PROB_update_lin(Prob* p) {
   /* This function updates problem A,b,G,l,u with 
-     constraint A,b,G,Gbar,l,u. */
+     constraint A,b,G,l,u. */
   
   // Local variables
   Constr* c;
@@ -870,16 +847,14 @@ void PROB_update_lin(Prob* p) {
   int* Gi_constr;
   int* Gj_constr;
   REAL* Gd_constr;
-  int* Gbari_constr;
-  int* Gbarj_constr;
-  REAL* Gbard_constr;
   int Gnnz;
   int Grow;
 
   int num_vars;
-  int num_extra_vars;
-  int i;
+  int offset;
+  int k;
   
+  // Check
   if (!p)
     return;
 
@@ -898,10 +873,10 @@ void PROB_update_lin(Prob* p) {
   Gi = MAT_get_row_array(p->G);
   Gj = MAT_get_col_array(p->G);
   Gd = MAT_get_data_array(p->G);
-
+  
   // Process constraints
-  num_extra_vars = 0;
   num_vars = NET_get_num_vars(p->net);
+  offset = num_vars;
   for (c = p->constr; c != NULL; c = CONSTR_get_next(c)) {
 
     // A and b of constraint
@@ -910,53 +885,50 @@ void PROB_update_lin(Prob* p) {
     Aj_constr = MAT_get_col_array(CONSTR_get_A(c));
     Ad_constr = MAT_get_data_array(CONSTR_get_A(c));
 
-    // G, Gbar, l, u of constraint
+    // G, l, u of constraint
     l_constr = VEC_get_data(CONSTR_get_l(c));
     u_constr = VEC_get_data(CONSTR_get_u(c));
     Gi_constr = MAT_get_row_array(CONSTR_get_G(c));
     Gj_constr = MAT_get_col_array(CONSTR_get_G(c));
     Gd_constr = MAT_get_data_array(CONSTR_get_G(c));
-    Gbari_constr = MAT_get_row_array(CONSTR_get_Gbar(c));
-    Gbarj_constr = MAT_get_col_array(CONSTR_get_Gbar(c));
-    Gbard_constr = MAT_get_data_array(CONSTR_get_Gbar(c));
 
     // Update A
-    for (i = 0; i < MAT_get_nnz(CONSTR_get_A(c)); i++) {
-      Ai[Annz] = Arow+Ai_constr[i];
-      Aj[Annz] = Aj_constr[i];
-      Ad[Annz] = Ad_constr[i];
+    for (k = 0; k < MAT_get_nnz(CONSTR_get_A(c)); k++) {
+      Ai[Annz] = Arow+Ai_constr[k];
+      if (Aj_constr[k] < num_vars)
+	Aj[Annz] = Aj_constr[k];                 // x var
+      else
+	Aj[Annz] = offset+Aj_constr[k]-num_vars; // y var
+      Ad[Annz] = Ad_constr[k];
       Annz++;
     }
 
     // Update b
-    for (i = 0; i < MAT_get_size1(CONSTR_get_A(c)); i++) {
-      b[Arow] = b_constr[i];
+    for (k = 0; k < MAT_get_size1(CONSTR_get_A(c)); k++) {
+      b[Arow] = b_constr[k];
       Arow++;
     }
     
     // Update G
-    for (i = 0; i < MAT_get_nnz(CONSTR_get_G(c)); i++) {
-      Gi[Gnnz] = Grow+Gi_constr[i];
-      Gj[Gnnz] = Gj_constr[i];
-      Gd[Gnnz] = Gd_constr[i];
-      Gnnz++;
-    }
-    for (i = 0; i < MAT_get_nnz(CONSTR_get_Gbar(c)); i++) {
-      Gi[Gnnz] = Grow+Gbari_constr[i];
-      Gj[Gnnz] = num_vars+num_extra_vars+Gbarj_constr[i];
-      Gd[Gnnz] = Gbard_constr[i];
+    for (k = 0; k < MAT_get_nnz(CONSTR_get_G(c)); k++) {
+      Gi[Gnnz] = Grow+Gi_constr[k];
+      if (Gj_constr[k] < num_vars)
+	Gj[Gnnz] = Gj_constr[k];                 // x var
+      else
+	Gj[Gnnz] = offset+Gj_constr[k]-num_vars; // y var
+      Gd[Gnnz] = Gd_constr[k];
       Gnnz++;
     }
 
     // Update l,u
-    for (i = 0; i < MAT_get_size1(CONSTR_get_G(c)); i++) {
-      l[Grow] = l_constr[i];
-      u[Grow] = u_constr[i];
+    for (k = 0; k < MAT_get_size1(CONSTR_get_G(c)); k++) {
+      l[Grow] = l_constr[k];
+      u[Grow] = u_constr[k];
       Grow++;
     }
 
-    // Update extra vars
-    num_extra_vars += CONSTR_get_num_extra_vars(c);
+    // Update offset
+    offset += CONSTR_get_num_extra_vars(c);
   }
 }
 

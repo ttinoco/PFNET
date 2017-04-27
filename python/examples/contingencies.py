@@ -12,7 +12,7 @@ import pfnet
 
 net = pfnet.ParserMAT().parse('../../data/ieee14.mat')
 
-gen = net.get_gen(3)
+gen = net.get_generator(3)
 branch = net.get_branch(2)
 
 c1 = pfnet.Contingency(gens=[gen],branches=[branch])

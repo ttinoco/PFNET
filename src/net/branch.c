@@ -69,8 +69,6 @@ struct Branch {
   // Indices
   int index;          /**< @brief Branch index */
   int* index_ratio;   /**< @brief Taps ratio index */
-  int* index_ratio_y; /**< @brief Taps ratio positive deviation index */
-  int* index_ratio_z; /**< @brief Taps ratio negative deviation index */
   int* index_phase;   /**< @brief Phase shift index */
 
   // Sensitivities
@@ -99,8 +97,6 @@ void BRANCH_array_del(Branch* br_array, int size) {
       free(br->ratio);
       free(br->phase);
       free(br->index_ratio);
-      free(br->index_ratio_y);
-      free(br->index_ratio_z);
       free(br->index_phase);
       free(br->sens_P_u_bound);
       free(br->sens_P_l_bound);
@@ -199,20 +195,6 @@ int BRANCH_get_index(Branch* br) {
 int BRANCH_get_index_ratio(Branch* br, int t) {
   if (br && t >= 0 && t < br->num_periods)
     return br->index_ratio[t];
-  else
-    return 0;
-}
-
-int BRANCH_get_index_ratio_y(Branch* br, int t) {
-  if (br && t >= 0 && t < br->num_periods)
-    return br->index_ratio_y[t];
-  else
-    return 0;
-}
-
-int BRANCH_get_index_ratio_z(Branch* br, int t) {
-  if (br && t >= 0 && t < br->num_periods)
-    return br->index_ratio_z[t];
   else
     return 0;
 }
@@ -697,21 +679,6 @@ void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
 	VEC_set(values,br->index_phase[t],br->phase[t]);
       }
     }
-    if (br->vars & BRANCH_VAR_RATIO_DEV) { // tap ratio deviations
-      switch(code) {
-      case UPPER_LIMITS:
-	VEC_set(values,br->index_ratio_y[t],BRANCH_INF_RATIO);
-	VEC_set(values,br->index_ratio_z[t],BRANCH_INF_RATIO);
-	break;
-      case LOWER_LIMITS:
-	VEC_set(values,br->index_ratio_y[t],0.);
-	VEC_set(values,br->index_ratio_z[t],0.);
-	break;
-      default:
-	VEC_set(values,br->index_ratio_y[t],0.);
-	VEC_set(values,br->index_ratio_z[t],0.);
-      }
-    }
   }
 }
 
@@ -732,12 +699,10 @@ int BRANCH_get_num_vars(void* vbr, unsigned char var, int t_start, int t_end) {
 
   // Num vars
   dt = t_end-t_start+1;
-  if ((var & BRANCH_VAR_RATIO) && (br->vars & BRANCH_VAR_RATIO))
+  if ((var & BRANCH_VAR_RATIO) && (br->vars & BRANCH_VAR_RATIO)) // taps ratio
     num_vars += dt;
-  if ((var & BRANCH_VAR_PHASE) && (br->vars & BRANCH_VAR_PHASE))
+  if ((var & BRANCH_VAR_PHASE) && (br->vars & BRANCH_VAR_PHASE)) // phase shifts
     num_vars += dt;
-  if ((var & BRANCH_VAR_RATIO_DEV) && (br->vars & BRANCH_VAR_RATIO_DEV))
-    num_vars += 2*dt;
   return num_vars;
 }
 
@@ -759,23 +724,16 @@ Vec* BRANCH_get_var_indices(void* vbr, unsigned char var, int t_start, int t_end
 
   // Indices
   indices = VEC_new(BRANCH_get_num_vars(vbr,var,t_start,t_end));
-  if ((var & BRANCH_VAR_RATIO) && (br->vars & BRANCH_VAR_RATIO)) {
+  if ((var & BRANCH_VAR_RATIO) && (br->vars & BRANCH_VAR_RATIO)) { // taps ratio
     for (t = t_start; t <= t_end; t++) {
       VEC_set(indices,offset,br->index_ratio[t]);
       offset++;
     }
   }
-  if ((var & BRANCH_VAR_PHASE) && (br->vars & BRANCH_VAR_PHASE)) {
+  if ((var & BRANCH_VAR_PHASE) && (br->vars & BRANCH_VAR_PHASE)) { // phase shift
     for (t = t_start; t <= t_end; t++) {
       VEC_set(indices,offset,br->index_phase[t]);
       offset++;
-    }
-  }
-  if ((var & BRANCH_VAR_RATIO_DEV) && (br->vars & BRANCH_VAR_RATIO_DEV)) {
-    for (t = t_start; t <= t_end; t++) {
-      VEC_set(indices,offset,br->index_ratio_y[t]);
-      VEC_set(indices,offset+1,br->index_ratio_z[t]);
-      offset += 2;
     }
   }
   return indices;
@@ -877,8 +835,6 @@ void BRANCH_init(Branch* br, int num_periods) {
   ARRAY_zalloc(br->phase,REAL,T);
 
   ARRAY_zalloc(br->index_ratio,int,T);
-  ARRAY_zalloc(br->index_ratio_y,int,T);
-  ARRAY_zalloc(br->index_ratio_z,int,T);
   ARRAY_zalloc(br->index_phase,int,T);
 
   ARRAY_zalloc(br->sens_P_u_bound,REAL,T);
@@ -1202,16 +1158,6 @@ int BRANCH_set_flags(void* vbr, char flag_type, unsigned char mask, int index) {
     }
     (*flags_ptr) |= BRANCH_VAR_PHASE;
     index += br->num_periods;
-  }
-  if (!((*flags_ptr) & BRANCH_VAR_RATIO_DEV) && (mask & BRANCH_VAR_RATIO_DEV)) { // taps ratio deviations
-    if (flag_type == FLAG_VARS) {
-      for (t = 0; t < br->num_periods; t++) {
-	br->index_ratio_y[t] = index+2*t;
-	br->index_ratio_z[t] = index+2*t+1;
-      }
-    }
-    (*flags_ptr) |= BRANCH_VAR_RATIO_DEV;
-    index += 2*br->num_periods;
   }
   return index;
 }

@@ -19,8 +19,6 @@ cdef extern from "pfnet/bus.h":
 
     cdef char BUS_VAR_VMAG
     cdef char BUS_VAR_VANG
-    cdef char BUS_VAR_VDEV
-    cdef char BUS_VAR_VVIO
 
     cdef double BUS_INF_V_MAG
     cdef double BUS_INF_V_ANG
@@ -53,10 +51,6 @@ cdef extern from "pfnet/bus.h":
     int BUS_get_index(Bus* bus)
     int BUS_get_index_v_mag(Bus* bus, int t)
     int BUS_get_index_v_ang(Bus* bus, int t)
-    int BUS_get_index_y(Bus* bus, int t)
-    int BUS_get_index_z(Bus* bus, int t)
-    int BUS_get_index_vl(Bus* bus, int t)
-    int BUS_get_index_vh(Bus* bus, int t)
     int BUS_get_index_P(Bus* bus)
     int BUS_get_index_Q(Bus* bus)
     int BUS_get_number(Bus* bus)
@@ -72,6 +66,7 @@ cdef extern from "pfnet/bus.h":
     Load* BUS_get_load(Bus* bus)
     Vargen* BUS_get_vargen(Bus* bus)
     Bat* BUS_get_bat(Bus* bus)
+    Shunt* BUS_get_shunt(Bus* bus)
     int BUS_get_degree(Bus* bus)
     REAL BUS_get_total_gen_P(Bus* bus, int t)
     REAL BUS_get_total_gen_Q(Bus* bus, int t)

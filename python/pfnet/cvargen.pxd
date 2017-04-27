@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -28,6 +28,7 @@ cdef extern from "pfnet/vargen.h":
     int VARGEN_get_index_Q(Vargen* gen, int t)
     Bus* VARGEN_get_bus(Vargen* gen)
     REAL VARGEN_get_P(Vargen* gen, int t)
+    REAL VARGEN_get_P_ava(Vargen* gen, int t)
     REAL VARGEN_get_P_max(Vargen* gen)
     REAL VARGEN_get_P_min(Vargen* gen)
     REAL VARGEN_get_P_std(Vargen* gen, int t)
@@ -39,6 +40,7 @@ cdef extern from "pfnet/vargen.h":
     Vargen* VARGEN_new(int num_periods)
     void VARGEN_set_name(Vargen* gen, char* name)
     void VARGEN_set_P(Vargen* gen, REAL P, int t)
+    void VARGEN_set_P_ava(Vargen* gen, REAL P, int t)
     void VARGEN_set_P_max(Vargen* gen, REAL P_max)
     void VARGEN_set_P_min(Vargen* gen, REAL P_min)
     void VARGEN_set_P_std(Vargen* gen, REAL P_std, int t)

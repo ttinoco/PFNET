@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -69,6 +69,7 @@ int VARGEN_get_index_P(Vargen* gen, int t);
 int VARGEN_get_index_Q(Vargen* gen, int t);
 Vargen* VARGEN_get_next(Vargen* gen);
 REAL VARGEN_get_P(Vargen* gen, int t);
+REAL VARGEN_get_P_ava(Vargen* gen, int t);
 REAL VARGEN_get_P_max(Vargen* gen);
 REAL VARGEN_get_P_min(Vargen* gen);
 REAL VARGEN_get_P_std(Vargen* gen, int t);
@@ -95,6 +96,7 @@ void VARGEN_set_type(Vargen* gen, int type);
 void VARGEN_set_bus(Vargen* gen, Bus* bus);
 void VARGEN_set_index(Vargen* gen, int index);
 void VARGEN_set_P(Vargen* gen, REAL P, int t);
+void VARGEN_set_P_ava(Vargen* gen, REAL P, int t);
 void VARGEN_set_P_max(Vargen* gen, REAL P);
 void VARGEN_set_P_min(Vargen* gen, REAL P);
 void VARGEN_set_P_std(Vargen* gen, REAL P, int t);

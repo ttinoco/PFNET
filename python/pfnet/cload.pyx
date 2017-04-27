@@ -12,6 +12,7 @@ cimport cload
 
 # Infinity
 LOAD_INF_P = cload.LOAD_INF_P
+LOAD_INF_Q = cload.LOAD_INF_Q
 
 class LoadError(Exception):
     """
@@ -125,6 +126,15 @@ cdef class Load:
         """ Index of load active power variable (int or array). """
         def __get__(self):
             r = [cload.LOAD_get_index_P(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
+            else:
+                return np.array(r)
+
+    property index_Q:
+        """ Index of load reactive power variable (int or array). """
+        def __get__(self):
+            r = [cload.LOAD_get_index_Q(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
                 return AttributeInt(r[0])
             else:

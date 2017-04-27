@@ -24,7 +24,7 @@ void CONSTR_REG_GEN_count_step(Constr* c, Branch* br, int t);
 void CONSTR_REG_GEN_allocate(Constr* c);
 void CONSTR_REG_GEN_clear(Constr* c);
 void CONSTR_REG_GEN_analyze_step(Constr* c, Branch* br, int t);
-void CONSTR_REG_GEN_eval_step(Constr* c, Branch* br, int t, Vec* v);
+void CONSTR_REG_GEN_eval_step(Constr* c, Branch* br, int t, Vec* v, Vec* ve);
 void CONSTR_REG_GEN_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void CONSTR_REG_GEN_free(Constr* c);
 

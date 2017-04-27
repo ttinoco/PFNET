@@ -14,7 +14,7 @@ from numpy.linalg import norm
 from scipy.sparse import coo_matrix,triu,bmat
 
 NUM_TRIALS = 25
-EPS = 3. # %
+EPS = 3.5 # %
 TOL = 1e-4
 
 class TestProblem(unittest.TestCase):
@@ -295,18 +295,6 @@ class TestProblem(unittest.TestCase):
                           'variable',
                           'not slack',
                           ['voltage magnitude','voltage angle'])
-            net.set_flags('bus',
-                          'variable',
-                          ['not slack','regulated by generator'],
-                          'voltage magnitude deviation')
-            net.set_flags('bus',
-                          'variable',
-                          'regulated by transformer',
-                          'voltage magnitude violation')
-            net.set_flags('bus',
-                          'variable',
-                          'regulated by shunt',
-                          'voltage magnitude violation')
             net.set_flags('generator',
                           'variable',
                           'slack',
@@ -318,11 +306,11 @@ class TestProblem(unittest.TestCase):
             net.set_flags('branch',
                           'variable',
                           'tap changer - v',
-                          ['tap ratio','tap ratio deviation'])
+                          ['tap ratio'])
             net.set_flags('shunt',
                           'variable',
                           'switching - v',
-                          ['susceptance','susceptance deviation'])                          
+                          ['susceptance'])                          
 
             reg_by_tran_or_shunt = 0
             for i in range(net.num_buses):
@@ -332,12 +320,10 @@ class TestProblem(unittest.TestCase):
             
             self.assertEqual(net.num_vars,
                              2*(net.num_buses-net.get_num_slack_buses()) + 
-                             2*(net.get_num_buses_reg_by_gen()-net.get_num_slack_buses()) +
-                             2*(reg_by_tran_or_shunt) + 
                              net.get_num_slack_gens() + 
                              net.get_num_reg_gens() + 
-                             3*net.get_num_tap_changers_v()+
-                             3*net.get_num_switched_shunts())
+                             net.get_num_tap_changers_v()+
+                             net.get_num_switched_shunts())
                              
             # Constraints
             p.add_constraint(pf.Constraint('AC power balance',net))
@@ -360,13 +346,6 @@ class TestProblem(unittest.TestCase):
             p.add_function(pf.Function('susceptance regularization',1.,net))
             self.assertEqual(len(p.functions),5)
                 
-            # Init point
-            r = np.random.randn(net.num_vars)
-            x0 = p.get_init_point()+r
-            self.assertTrue(type(x0) is np.ndarray)
-            self.assertTupleEqual(x0.shape,(net.num_vars,))
-            self.assertTrue(np.all(x0 == p.x+r))
-            
             # Before
             phi = p.phi
             gphi = p.gphi
@@ -397,6 +376,14 @@ class TestProblem(unittest.TestCase):
             self.assertTrue(np.all(Hphi.row >= Hphi.col))
             
             p.analyze()
+
+            # Init point
+            r = np.random.randn(p.get_num_primal_variables())
+            x0 = p.get_init_point()+r
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars+p.num_extra_vars,))
+            self.assertTrue(np.all(x0 == p.x+r))
+
             p.eval(x0)
             
             # After
@@ -422,13 +409,14 @@ class TestProblem(unittest.TestCase):
 
             # gphi
             self.assertTrue(type(gphi) is np.ndarray)
-            self.assertTupleEqual(gphi.shape,(net.num_vars,))
+            self.assertTupleEqual(gphi.shape,(net.num_vars+p.num_extra_vars,))
             man_gphi = sum(f.weight*f.gphi for f in p.functions)
-            self.assertLess(norm(man_gphi-gphi),1e-10)
+            self.assertLess(norm(np.hstack((man_gphi,np.zeros(p.num_extra_vars)))-gphi),1e-10)
 
             # Hphi
             self.assertTrue(type(Hphi) is coo_matrix)
-            self.assertTupleEqual(Hphi.shape,(net.num_vars,net.num_vars))
+            self.assertTupleEqual(Hphi.shape,(net.num_vars+p.num_extra_vars,
+                                              net.num_vars+p.num_extra_vars))
             self.assertGreater(Hphi.nnz,0)
     
             # f
@@ -444,13 +432,13 @@ class TestProblem(unittest.TestCase):
             # J
             self.assertTrue(type(J) is coo_matrix)
             J_size = sum(c.J.shape[0] for c in p.constraints)
-            self.assertTupleEqual(J.shape,(J_size,net.num_vars))
+            self.assertTupleEqual(J.shape,(J_size,net.num_vars+p.num_extra_vars))
             self.assertGreater(J.nnz,0)
             
             # A
             self.assertTrue(type(A) is coo_matrix)
             A_size = sum(c.A.shape[0] for c in p.constraints)
-            self.assertTupleEqual(A.shape,(A_size,net.num_vars))
+            self.assertTupleEqual(A.shape,(A_size,net.num_vars+p.num_extra_vars))
             self.assertGreater(A.nnz,0)
             
             # Check gphi
@@ -458,7 +446,7 @@ class TestProblem(unittest.TestCase):
             gphi0 = gphi.copy()
             for i in range(NUM_TRIALS):
                 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+p.num_extra_vars)
     
                 x = x0 + h*d
                 
@@ -475,7 +463,7 @@ class TestProblem(unittest.TestCase):
             J0 = J.copy()
             for i in range(NUM_TRIALS):
                 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+p.num_extra_vars)
     
                 x = x0 + h*d
                 
@@ -493,7 +481,7 @@ class TestProblem(unittest.TestCase):
             Hphi0 = Hphi0 + Hphi0.T - triu(Hphi0)
             for i in range(NUM_TRIALS):
                 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+p.num_extra_vars)
     
                 x = x0 + h*d
                 
@@ -518,12 +506,12 @@ class TestProblem(unittest.TestCase):
             g0 = J0.T*coeff
             H0 = p.H_combined.copy()
             self.assertTrue(type(H0) is coo_matrix)
-            self.assertTupleEqual(H0.shape,(net.num_vars,net.num_vars))
+            self.assertTupleEqual(H0.shape,(net.num_vars+p.num_extra_vars,net.num_vars+p.num_extra_vars))
             self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
             H0 = (H0 + H0.T) - triu(H0)
             for i in range(NUM_TRIALS):
                 
-                d = np.random.randn(net.num_vars)
+                d = np.random.randn(net.num_vars+p.num_extra_vars)
                 
                 x = x0 + h*d
                 
@@ -727,9 +715,8 @@ class TestProblem(unittest.TestCase):
             x0_check = np.hstack((x,np.zeros(p.num_extra_vars)))
             self.assertTrue(np.all(x0 == x0_check))
             
-            p.analyze()
-            r = np.random.randn(p.num_extra_vars)
-            x0[net.num_vars:] = r
+            y0 = np.random.randn(p.num_extra_vars)
+            x0[net.num_vars:] = y0
             p.eval(x0)
             
             phi = p.phi
@@ -771,13 +758,8 @@ class TestProblem(unittest.TestCase):
             self.assertTrue(type(f) is np.ndarray)
             f_size = sum(c.f.shape[0] for c in p.constraints)
             f_man = np.zeros(0)
-            offset = 0
             for c in p.constraints:
-                if c.Jbar.shape[0]:
-                    f_man = np.hstack((f_man,c.f+c.Jbar*r[offset:offset+c.num_extra_vars]))
-                else:
-                    f_man = np.hstack((f_man,c.f))
-                offset += c.num_extra_vars
+                f_man = np.hstack((f_man,c.f))
             self.assertTupleEqual(f.shape,(f_size,))
             self.assertEqual(f.size,f_man.size)
             self.assertTrue(np.all(f_man == f))
@@ -789,14 +771,14 @@ class TestProblem(unittest.TestCase):
 
             # J
             self.assertTrue(type(J) is coo_matrix)
-            J_size = sum(c.J.shape[0] for c in p.constraints)
-            J_nnz = sum(c.J.nnz+c.Jbar.nnz for c in p.constraints)
+            J_size = sum([c.J.shape[0] for c in p.constraints])
+            J_nnz = sum([c.J.nnz for c in p.constraints])
             J_man = []
             for c in p.constraints:
-                if c.num_extra_vars > 0:
-                    J_man.append([c.J,c.Jbar])
+                if c.num_extra_vars == 0:
+                    J_man.append([bmat([[c.J,coo_matrix((c.J.shape[0],p.num_extra_vars))]])])
                 else:
-                    J_man.append([c.J,None])
+                    J_man.append([c.J])
             J_man = bmat(J_man,format='coo')
             self.assertTupleEqual(J.shape,(J_size,net.num_vars+p.num_extra_vars))
             self.assertEqual(J.nnz,J_nnz)
@@ -805,14 +787,14 @@ class TestProblem(unittest.TestCase):
 
             # G, l, u
             self.assertTrue(type(G) is coo_matrix)
-            G_size = sum(c.G.shape[0] for c in p.constraints)
-            G_nnz = sum(c.G.nnz+c.Gbar.nnz for c in p.constraints)
+            G_size = sum([c.G.shape[0] for c in p.constraints])
+            G_nnz = sum([c.G.nnz for c in p.constraints])
             G_man = []
             for c in p.constraints:
-                if c.num_extra_vars > 0:
-                    G_man.append([c.G,c.Gbar])
+                if c.num_extra_vars == 0:
+                    G_man.append([bmat([[c.G,coo_matrix((c.G.shape[0],p.num_extra_vars))]])])
                 else:
-                    G_man.append([c.G,None])
+                    G_man.append([c.G])
             G_man = bmat(G_man,format='coo')
             self.assertTupleEqual(G.shape,(G_size,net.num_vars+p.num_extra_vars))
             self.assertEqual(G.nnz,G_nnz)

@@ -24,7 +24,7 @@ void CONSTR_NBOUND_count_step(Constr* c, Branch* br, int t);
 void CONSTR_NBOUND_allocate(Constr* c);
 void CONSTR_NBOUND_clear(Constr* c);
 void CONSTR_NBOUND_analyze_step(Constr* c, Branch* br, int t);
-void CONSTR_NBOUND_eval_step(Constr* c, Branch* br, int t, Vec* v);
+void CONSTR_NBOUND_eval_step(Constr* c, Branch* br, int t, Vec* v, Vec* ve);
 void CONSTR_NBOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void CONSTR_NBOUND_free(Constr* c);
 

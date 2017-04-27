@@ -467,42 +467,6 @@ cdef class Bus:
             else:
                 return np.array(r)
 
-    property index_y:
-        """ Index of voltage magnitude positive deviation variable (int or array). """
-        def __get__(self):
-            r = [cbus.BUS_get_index_y(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeInt(r[0])
-            else:
-                return np.array(r)
-
-    property index_z:
-        """ Index of voltage magnitude negative deviation variable (int or array). """
-        def __get__(self):
-            r = [cbus.BUS_get_index_z(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeInt(r[0])
-            else:
-                return np.array(r)
-
-    property index_vl:
-        """ Index of voltage low limit violation variable (int or array). """
-        def __get__(self):
-            r = [cbus.BUS_get_index_vl(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeInt(r[0])
-            else:
-                return np.array(r)
-
-    property index_vh:
-        """ Index of voltage high limit violation variable (int or array). """
-        def __get__(self):
-            r = [cbus.BUS_get_index_vh(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeInt(r[0])
-            else:
-                return np.array(r)
-
     property index_P:
         """ Index of bus active power mismatch (int). """
         def __get__(self): return cbus.BUS_get_index_P(self._c_ptr)
@@ -742,10 +706,6 @@ cdef class Bus:
                 g = cgen.GEN_get_next(g)
             return gens
 
-    property gens:
-        """ Same as :attr:`generators <pfnet.Bus.generators>`. """
-        def __get__(self): return self.generators
-
     property reg_generators:
         """ List of :class:`generators <pfnet.Generator>` regulating the voltage magnitude of this bus (list). """
         def __get__(self):
@@ -769,6 +729,16 @@ cdef class Bus:
                 reg_trans.append(new_Branch(br))
                 br = cbranch.BRANCH_get_reg_next(br)
             return reg_trans
+
+    property shunts:
+        """ List of :class:`shunt devices <pfnet.Shunt>` connected to this bus (list). """
+        def __get__(self):
+            shunts = []
+            cdef cshunt.Shunt* s = cbus.BUS_get_shunt(self._c_ptr)
+            while s is not NULL:
+                shunts.append(new_Shunt(s))
+                s = cshunt.SHUNT_get_next(s)
+            return shunts
 
     property reg_shunts:
         """ List of :class:`switched shunt devices <pfnet.Shunt>` regulating the voltage magnitude of this bus (list). """

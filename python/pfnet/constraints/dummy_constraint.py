@@ -144,7 +144,7 @@ class DummyDCPF(CustomConstraint):
                         self.b[index] += bat.P[t]
             self.bus_counted[index] = True
 
-    def eval_step(self,branch,t,x):
+    def eval_step(self,branch,t,x,y=None):
  
         pass
         
