@@ -18,7 +18,7 @@ ls $PFNET/build/lib
 ls $PFNET/build/include/pfnet
 cd ../../../
 ./clean.sh
-python setup.py build_ext --inplace --libdirs=$PFNET/build/lib --incdirs=$PFNET/build/include
+python setup.py build_ext --inplace --include-dirs=$PFNET/build/include --library-dirs=$PFNET/build/lib --rpath=$PFNET/build/lib
 ls pfnet
 python -c "import pfnet; assert True"
 cd docs
