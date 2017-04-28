@@ -450,15 +450,24 @@ Vec* PROB_get_init_point(Prob* p) {
 Vec* PROB_get_upper_limits(Prob* p) {
   Vec* out;
   Vec* x;
+  Vec* u_extra;
+  Constr* c;
   int i;
+  int j;
   if (!p)
     return NULL;
   out = VEC_new(PROB_get_num_primal_variables(p));
   x = NET_get_var_values(p->net,UPPER_LIMITS);
   for (i = 0; i < VEC_get_size(x); i++)
     VEC_set(out,i,VEC_get(x,i));
-  for (i = VEC_get_size(x); i < PROB_get_num_primal_variables(p); i++)
-    VEC_set(out,i,PROB_EXTRA_VAR_INF); // extra vars to inf
+  i = VEC_get_size(x);
+  for (c = p->constr; c != NULL; c = CONSTR_get_next(c)) {
+    u_extra = CONSTR_get_u_extra_vars(c);
+    for (j = 0; j < VEC_get_size(u_extra); j++) {
+      VEC_set(out,i,VEC_get(u_extra,j));
+      i++;
+    }
+  }
   free(x);
   return out;
 }
@@ -466,15 +475,24 @@ Vec* PROB_get_upper_limits(Prob* p) {
 Vec* PROB_get_lower_limits(Prob* p) {
   Vec* out;
   Vec* x;
+  Vec* l_extra;
+  Constr* c;
   int i;
+  int j;
   if (!p)
     return NULL;
   out = VEC_new(PROB_get_num_primal_variables(p));
   x = NET_get_var_values(p->net,LOWER_LIMITS);
   for (i = 0; i < VEC_get_size(x); i++)
     VEC_set(out,i,VEC_get(x,i));
-  for (i = VEC_get_size(x); i < PROB_get_num_primal_variables(p); i++)
-    VEC_set(out,i,-PROB_EXTRA_VAR_INF); // extra vars to -inf
+  i = VEC_get_size(x);
+  for (c = p->constr; c != NULL; c = CONSTR_get_next(c)) {
+    l_extra = CONSTR_get_l_extra_vars(c);
+    for (j = 0; j < VEC_get_size(l_extra); j++) {
+      VEC_set(out,i,VEC_get(l_extra,j));
+      i++;
+    }
+  }
   free(x);
   return out;
 }

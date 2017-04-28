@@ -16,6 +16,7 @@
 
 // Parameters
 #define CONSTR_REG_GEN_PARAM 1e-8
+#define CONSTR_REG_GEN_MAX_YZ 1e1
 
 // Function prototypes
 Constr* CONSTR_REG_GEN_new(Net* net);

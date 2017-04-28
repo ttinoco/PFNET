@@ -228,6 +228,10 @@ void CONSTR_REG_SHUNT_allocate(Constr* c) {
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
   num_extra_vars = CONSTR_get_num_extra_vars(c);
 
+  // Extra var limits
+  CONSTR_set_l_extra_vars(c,VEC_new(num_extra_vars));
+  CONSTR_set_u_extra_vars(c,VEC_new(num_extra_vars));
+
   // G u l
   CONSTR_set_G(c,MAT_new(0,num_vars+num_extra_vars,0));
   CONSTR_set_u(c,VEC_new(0));
@@ -363,11 +367,11 @@ void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t) {
 
 	// Indices
 	index_v = BUS_get_index_v_mag(bus,t);
+	index_y = num_vars+(*J_row);
+	index_z = num_vars+(*J_row+1);
 	index_vl = num_vars+(*J_row+2);
 	index_vh = num_vars+(*J_row+3);
 	index_b = SHUNT_get_index_b(shunt,t);
-	index_y = num_vars+(*J_row);
-	index_z = num_vars+(*J_row+1);
 
 	// Linear (b = b_0 + y - z)
 	//*************************
@@ -533,6 +537,17 @@ void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t) {
 	MAT_set_i(Hbmin,H_nnz[*J_row+3],index_vh);
 	MAT_set_j(Hbmin,H_nnz[*J_row+3],index_vh);
 	H_nnz[*J_row+3]++; // vh and vh (bmin)
+
+	// Extra var limits
+	VEC_set(CONSTR_get_l_extra_vars(c),*J_row,0.);   // y
+	VEC_set(CONSTR_get_l_extra_vars(c),*J_row+1,0.); // z
+	VEC_set(CONSTR_get_l_extra_vars(c),*J_row+2,0.); // vl
+	VEC_set(CONSTR_get_l_extra_vars(c),*J_row+3,0.); // vh
+	
+	VEC_set(CONSTR_get_u_extra_vars(c),*J_row,CONSTR_REG_SHUNT_MAX_YZ);    // y
+	VEC_set(CONSTR_get_u_extra_vars(c),*J_row+1,CONSTR_REG_SHUNT_MAX_YZ);  // z
+	VEC_set(CONSTR_get_u_extra_vars(c),*J_row+2,CONSTR_REG_SHUNT_MAX_VLH); // vl
+	VEC_set(CONSTR_get_u_extra_vars(c),*J_row+3,CONSTR_REG_SHUNT_MAX_VLH); // vh
 
 	// Count
 	(*J_row)++; // compVmin

@@ -32,6 +32,8 @@ cdef extern from "pfnet/constr.h":
     Mat* CONSTR_get_A(Constr* c)
     Vec* CONSTR_get_l(Constr* c)
     Vec* CONSTR_get_u(Constr* c)
+    Vec* CONSTR_get_l_extra_vars(Constr* c)
+    Vec* CONSTR_get_u_extra_vars(Constr* c)
     Mat* CONSTR_get_G(Constr* c)
     Mat* CONSTR_get_H_single(Constr* c, int i)
     Mat* CONSTR_get_H_combined(Constr* c)
