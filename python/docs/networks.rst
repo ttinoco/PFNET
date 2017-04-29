@@ -188,7 +188,7 @@ Names              Description                                                  
 ================== ================================================================= ========
 ``bus_v_max``      Maximum bus voltage magnitude                                     per unit
 ``bus_v_min``      Minimum bus voltage magnitude                                     per unit
-``bus_v_reg_vio``  Maximum regulated bus voltage magnitude limit violation           per unit
+``bus_v_vio``      Maximum bus voltage magnitude limit violation                     per unit
 ``bus_P_mis``      Maximum absolute bus active power mismatch                        MW
 ``bus_Q_mis``      Maximum absolute bus reactive power mismatch                      MVAr
 ``gen_P_cost``     Total active power generation cost                                $/hour

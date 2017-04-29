@@ -58,7 +58,7 @@ struct Net {
   // Properties
   REAL* bus_v_max;    /**< @brief Maximum bus voltage magnitude (p.u.). */
   REAL* bus_v_min;    /**< @brief Minimum bus volatge magnitude (p.u.). */
-  REAL* bus_v_reg_vio;    /**< @brief Maximum bus regulated voltage limits violation (p.u.). */
+  REAL* bus_v_vio;    /**< @brief Maximum bus voltage magnitude limit violation (p.u.). */
   REAL* bus_P_mis;    /**< @brief Maximum bus active power mismatch (MW). */
   REAL* bus_Q_mis;    /**< @brief Maximum bus reactive power mismatch (MVAr). */
 
@@ -406,7 +406,7 @@ void NET_clear_data(Net* net) {
   // Free properties
   free(net->bus_v_max);
   free(net->bus_v_min);
-  free(net->bus_v_reg_vio);
+  free(net->bus_v_vio);
   free(net->bus_P_mis);
   free(net->bus_Q_mis);
   free(net->gen_P_cost);
@@ -554,7 +554,7 @@ void NET_clear_properties(Net* net) {
     // Bus
     net->bus_v_max[t] = 0;
     net->bus_v_min[t] = 0;
-    net->bus_v_reg_vio[t] = 0;
+    net->bus_v_vio[t] = 0;
     net->bus_P_mis[t] = 0;
     net->bus_Q_mis[t] = 0;
 
@@ -910,7 +910,7 @@ void NET_init(Net* net, int num_periods) {
   // Properties
   ARRAY_zalloc(net->bus_v_max,REAL,T);
   ARRAY_zalloc(net->bus_v_min,REAL,T);
-  ARRAY_zalloc(net->bus_v_reg_vio,REAL,T);
+  ARRAY_zalloc(net->bus_v_vio,REAL,T);
   ARRAY_zalloc(net->bus_P_mis,REAL,T);
   ARRAY_zalloc(net->bus_Q_mis,REAL,T);
 
@@ -1640,9 +1640,9 @@ REAL NET_get_bus_v_min(Net* net, int t) {
     return 0;
 }
 
-REAL NET_get_bus_v_reg_vio(Net* net, int t) {
+REAL NET_get_bus_v_vio(Net* net, int t) {
   if (net && t >= 0 && t < net->num_periods)
-    return net->bus_v_reg_vio[t];
+    return net->bus_v_vio[t];
   else
     return 0;
 }
@@ -2153,23 +2153,23 @@ char* NET_get_show_properties_str(Net* net, int t) {
 
   sprintf(out+strlen(out),"\nNetwork Properties (t = %d)\n",NET_get_num_periods(net));
   sprintf(out+strlen(out),"------------------\n");
-  sprintf(out+strlen(out),"bus v max     : %.2f     (p.u.)\n",NET_get_bus_v_max(net,t));
-  sprintf(out+strlen(out),"bus v min     : %.2f     (p.u.)\n",NET_get_bus_v_min(net,t));
-  sprintf(out+strlen(out),"bus v reg vio : %.2f     (p.u.)\n",NET_get_bus_v_reg_vio(net,t));
-  sprintf(out+strlen(out),"bus P mis     : %.2e (MW)\n",NET_get_bus_P_mis(net,t));
-  sprintf(out+strlen(out),"bus Q mis     : %.2e (MVAr)\n",NET_get_bus_Q_mis(net,t));
-  sprintf(out+strlen(out),"gen P cost    : %.2e ($/hr)\n",NET_get_gen_P_cost(net,t));
-  sprintf(out+strlen(out),"gen v dev     : %.2e (p.u.)\n",NET_get_gen_v_dev(net,t));
-  sprintf(out+strlen(out),"gen Q vio     : %.2e (MVAr)\n",NET_get_gen_Q_vio(net,t));
-  sprintf(out+strlen(out),"gen P vio     : %.2e (MW)\n",NET_get_gen_P_vio(net,t));
-  sprintf(out+strlen(out),"tran v vio    : %.2e (p.u.)\n",NET_get_tran_v_vio(net,t));
-  sprintf(out+strlen(out),"tran r vio    : %.2e       \n",NET_get_tran_r_vio(net,t));
-  sprintf(out+strlen(out),"tran p vio    : %.2e (rad)\n",NET_get_tran_p_vio(net,t));
-  sprintf(out+strlen(out),"shunt v vio   : %.2e (p.u.)\n",NET_get_shunt_v_vio(net,t));
-  sprintf(out+strlen(out),"shunt b vio   : %.2e (p.u.)\n",NET_get_shunt_b_vio(net,t));
-  sprintf(out+strlen(out),"load P util   : %.2e ($/hr)\n",NET_get_load_P_util(net,t));
-  sprintf(out+strlen(out),"load P vio    : %.2e (MW)\n",NET_get_load_P_vio(net,t));
-  sprintf(out+strlen(out),"num actions   : %d\n",NET_get_num_actions(net,t));
+  sprintf(out+strlen(out),"bus v max   : %.2f     (p.u.)\n",NET_get_bus_v_max(net,t));
+  sprintf(out+strlen(out),"bus v min   : %.2f     (p.u.)\n",NET_get_bus_v_min(net,t));
+  sprintf(out+strlen(out),"bus v vio   : %.2f     (p.u.)\n",NET_get_bus_v_vio(net,t));
+  sprintf(out+strlen(out),"bus P mis   : %.2e (MW)\n",NET_get_bus_P_mis(net,t));
+  sprintf(out+strlen(out),"bus Q mis   : %.2e (MVAr)\n",NET_get_bus_Q_mis(net,t));
+  sprintf(out+strlen(out),"gen P cost  : %.2e ($/hr)\n",NET_get_gen_P_cost(net,t));
+  sprintf(out+strlen(out),"gen v dev   : %.2e (p.u.)\n",NET_get_gen_v_dev(net,t));
+  sprintf(out+strlen(out),"gen Q vio   : %.2e (MVAr)\n",NET_get_gen_Q_vio(net,t));
+  sprintf(out+strlen(out),"gen P vio   : %.2e (MW)\n",NET_get_gen_P_vio(net,t));
+  sprintf(out+strlen(out),"tran v vio  : %.2e (p.u.)\n",NET_get_tran_v_vio(net,t));
+  sprintf(out+strlen(out),"tran r vio  : %.2e       \n",NET_get_tran_r_vio(net,t));
+  sprintf(out+strlen(out),"tran p vio  : %.2e (rad)\n",NET_get_tran_p_vio(net,t));
+  sprintf(out+strlen(out),"shunt v vio : %.2e (p.u.)\n",NET_get_shunt_v_vio(net,t));
+  sprintf(out+strlen(out),"shunt b vio : %.2e (p.u.)\n",NET_get_shunt_b_vio(net,t));
+  sprintf(out+strlen(out),"load P util : %.2e ($/hr)\n",NET_get_load_P_util(net,t));
+  sprintf(out+strlen(out),"load P vio  : %.2e (MW)\n",NET_get_load_P_vio(net,t));
+  sprintf(out+strlen(out),"num actions : %d\n",NET_get_num_actions(net,t));
 
   return out;
 }
@@ -2451,27 +2451,27 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
 	net->bus_v_min[t] = v[k];
     }
 
-    // Regulation voltage limit violations
+    // Normal voltage magnitude limit violations
     //************************************
-    if (BUS_is_regulated_by_gen(bus) ||
-        BUS_is_regulated_by_tran(bus) ||
-        BUS_is_regulated_by_shunt(bus)) {
-        dv = 0;
-        if (v[k] > BUS_get_v_max_reg(bus))
-          dv = v[k]-BUS_get_v_max_reg(bus);
-        if (v[k] < BUS_get_v_min_reg(bus))
-          dv = BUS_get_v_min_reg(bus)-v[k];
-        if (dv > net->bus_v_reg_vio[t])
-          net->bus_v_reg_vio[t] = dv;
-    }
+    dv = 0;
+    if (v[k] > BUS_get_v_max_norm(bus))
+      dv = v[k]-BUS_get_v_max_norm(bus);
+    if (v[k] < BUS_get_v_min_norm(bus))
+      dv = BUS_get_v_min_norm(bus)-v[k];
+    if (dv > net->bus_v_vio[t])
+      net->bus_v_vio[t] = dv;
 
-    // Tran-controlled
+    // Regulation voltage magntiude limit violations
+    //**********************************************
+    dv = 0;
+    if (v[k] > BUS_get_v_max_reg(bus))
+      dv = v[k]-BUS_get_v_max_reg(bus);
+    if (v[k] < BUS_get_v_min_reg(bus))
+      dv = BUS_get_v_min_reg(bus)-v[k];
     if (BUS_is_regulated_by_tran(bus)) {
       if (dv > net->tran_v_vio[t])
 	net->tran_v_vio[t] = dv;
     }
-
-    // Shunt-controlled
     if (BUS_is_regulated_by_shunt(bus)) {
       if (dv > net->shunt_v_vio[t])
 	net->shunt_v_vio[t] = dv;

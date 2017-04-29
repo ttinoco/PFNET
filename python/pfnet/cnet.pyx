@@ -756,7 +756,7 @@ cdef class Network:
 
         return {'bus_v_max': self.bus_v_max,
                 'bus_v_min': self.bus_v_min,
-                'bus_v_reg_vio': self.bus_v_reg_vio,
+                'bus_v_vio': self.bus_v_vio,
                 'bus_P_mis': self.bus_P_mis,
                 'bus_Q_mis': self.bus_Q_mis,
                 'gen_P_cost': self.gen_P_cost,
@@ -1010,10 +1010,10 @@ cdef class Network:
             else:
                 return np.array(r)
 
-    property bus_v_reg_vio:
-        """ Maximum bus regulated voltage magnitude limit violation (p.u.) (float or array). """
+    property bus_v_vio:
+        """ Maximum bus voltage magnitude limit violation (p.u.) (float or array). """
         def __get__(self):
-            r = [cnet.NET_get_bus_v_reg_vio(self._c_net,t) for t in range(self.num_periods)]
+            r = [cnet.NET_get_bus_v_vio(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
                 return AttributeFloat(r[0])
             else:

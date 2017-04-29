@@ -906,7 +906,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 
 	BRANCH_set_type(branch,BRANCH_TYPE_TRAN_TAP_V); // tap changer tap that regulates voltage
 	BRANCH_set_reg_bus(branch,bus);                 // branch regulates bus
-	BUS_add_reg_tran(bus,branch);               // add regulating transformer to bus
+	BUS_add_reg_tran(bus,branch);                   // add regulating transformer to bus
 
 	// Ratio limits
 	BRANCH_set_ratio_max(branch,100./art_ltcv->nfirst);

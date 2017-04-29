@@ -253,25 +253,25 @@ BOOL BUS_check(Bus* bus, BOOL verbose) {
     return FALSE;
   }
 
-  // Regulated voltage limits
+  // Regulation voltage limits
   if (bus->v_min_reg > bus->v_max_reg) {
     bus_ok = FALSE;
     if (verbose)
-      fprintf(stderr,"bad bus regulated voltage limits\n");
+      fprintf(stderr,"bad bus regulation voltage limits\n");
   }
 
   // Normal voltage violation limits
   if (bus->v_min_norm > bus->v_max_norm) {
     bus_ok = FALSE;
     if (verbose)
-      fprintf(stderr,"bad bus normal voltage violation limits\n");
+      fprintf(stderr,"bad bus normal voltage limits\n");
   }
 
   // Emergency voltage violation limits
   if (bus->v_min_emer > bus->v_max_emer) {
   bus_ok = FALSE;
   if (verbose)
-    fprintf(stderr,"bad bus emergency voltage violation limits\n");
+    fprintf(stderr,"bad bus emergency voltage limits\n");
   }
 
   // Reg gen number
