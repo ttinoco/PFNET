@@ -20,8 +20,9 @@ Unreleased
 * Full support for constraint auxiliary variables (lin eq, nonlin eq, line ineq) (done).
 * Elimination of obscure variables "voltage magnitude deviation" (done).
 * Elimination of obscure variabes "voltage magnitude violation", "tap ratio deviation", "susceptance deviation" (done).
-* Improved setup.py without argparse that relies of existing build_ext commands for custom builds (done).
+* Improved setup.py without argparse that relies on existing build_ext commands for custom builds (done).
 * Upper and lower bounds for constraint extra variables (done).
+* Three types of voltage magnitude limits (normal, regulation, emergency) (done).
 * Load constant power factor.
 
 Version 1.2.9
