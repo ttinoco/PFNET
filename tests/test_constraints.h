@@ -734,6 +734,7 @@ static char* test_constr_REG_TRAN() {
   int num_Annz;
   int num_Jnnz;
   int num;
+  int num_extra_vars;
 
   printf("test_constr_REG_TRAN ...");
 
@@ -768,6 +769,7 @@ static char* test_constr_REG_TRAN() {
   num = NET_get_num_tap_changers_v(net);
   num_Annz = 3*num;
   num_Jnnz = 10*num;
+  num_extra_vars = 4*num;
 
   Assert("error - bad Annz counter",CONSTR_get_A_nnz(c) == 0);
   Assert("error - bad Jnnz counter",CONSTR_get_J_nnz(c) == 0);
@@ -780,6 +782,7 @@ static char* test_constr_REG_TRAN() {
   Assert("error - bad Jnnz counter",CONSTR_get_J_nnz(c) == num_Jnnz);
   Assert("error - bad Aindex counter",CONSTR_get_A_row(c) == num);
   Assert("error - bad Jindex counter",CONSTR_get_J_row(c) == 4*num);
+  Assert("error - bad num extra vars",CONSTR_get_num_extra_vars(c) == num_extra_vars);
 
   CONSTR_allocate(c);
 
@@ -809,9 +812,9 @@ static char* test_constr_REG_TRAN() {
 
   Assert("error - bad f size", VEC_get_size(f) == 4*num);
   Assert("error - bad b size", VEC_get_size(b) == num);
-  Assert("error - bad A size", MAT_get_size2(A) == NET_get_num_vars(net));
+  Assert("error - bad A size", MAT_get_size2(A) == NET_get_num_vars(net)+num_extra_vars);
   Assert("error - bad A size", MAT_get_nnz(A) == num_Annz);
-  Assert("error - bad J size", MAT_get_size2(J) == NET_get_num_vars(net));
+  Assert("error - bad J size", MAT_get_size2(J) == NET_get_num_vars(net)+num_extra_vars);
   Assert("error - bad J size", MAT_get_nnz(J) == num_Jnnz);
 
   VEC_del(x);
@@ -837,6 +840,7 @@ static char* test_constr_REG_SHUNT() {
   int num_Annz;
   int num_Jnnz;
   int num;
+  int num_extra_vars;
 
   printf("test_constr_REG_SHUNT ...");
 
@@ -871,6 +875,7 @@ static char* test_constr_REG_SHUNT() {
   num = NET_get_num_switched_shunts(net);
   num_Annz = 3*num;
   num_Jnnz = 10*num;
+  num_extra_vars = 4*num;
 
   Assert("error - bad Annz counter",CONSTR_get_A_nnz(c) == 0);
   Assert("error - bad Jnnz counter",CONSTR_get_J_nnz(c) == 0);
@@ -883,6 +888,7 @@ static char* test_constr_REG_SHUNT() {
   Assert("error - bad Jnnz counter",CONSTR_get_J_nnz(c) == num_Jnnz);
   Assert("error - bad Aindex counter",CONSTR_get_A_row(c) == num);
   Assert("error - bad Jindex counter",CONSTR_get_J_row(c) == 4*num);
+  Assert("error - bad num extra vars",CONSTR_get_num_extra_vars(c) == num_extra_vars);
 
   CONSTR_allocate(c);
 
@@ -912,9 +918,9 @@ static char* test_constr_REG_SHUNT() {
 
   Assert("error - bad f size", VEC_get_size(f) == 4*num);
   Assert("error - bad b size", VEC_get_size(b) == num);
-  Assert("error - bad A size", MAT_get_size2(A) == NET_get_num_vars(net));
+  Assert("error - bad A size", MAT_get_size2(A) == NET_get_num_vars(net)+num_extra_vars);
   Assert("error - bad A size", MAT_get_nnz(A) == num_Annz);
-  Assert("error - bad J size", MAT_get_size2(J) == NET_get_num_vars(net));
+  Assert("error - bad J size", MAT_get_size2(J) == NET_get_num_vars(net)+num_extra_vars);
   Assert("error - bad J size", MAT_get_nnz(J) == num_Jnnz);
 
   VEC_del(x);

@@ -199,6 +199,10 @@ void CONSTR_REG_GEN_allocate(Constr* c) {
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
   num_extra_vars = CONSTR_get_num_extra_vars(c);
 
+  // Extra var limits
+  CONSTR_set_l_extra_vars(c,VEC_new(num_extra_vars));
+  CONSTR_set_u_extra_vars(c,VEC_new(num_extra_vars));
+
   // G u l
   CONSTR_set_G(c,MAT_new(0,num_vars+num_extra_vars,0));
   CONSTR_set_u(c,VEC_new(0));
@@ -421,7 +425,14 @@ void CONSTR_REG_GEN_analyze_step(Constr* c, Branch* br, int t) {
 	    }
 	  }
 	}
-	  
+	 
+	// Extra var limits
+	VEC_set(CONSTR_get_l_extra_vars(c),*J_row,0.);   // y
+	VEC_set(CONSTR_get_l_extra_vars(c),*J_row+1,0.); // z
+
+	VEC_set(CONSTR_get_u_extra_vars(c),*J_row,CONSTR_REG_GEN_MAX_YZ);   // y
+	VEC_set(CONSTR_get_u_extra_vars(c),*J_row+1,CONSTR_REG_GEN_MAX_YZ); // z
+ 
 	// Count
 	(*J_row)++; // dCompY
 	(*J_row)++; // dCompZ

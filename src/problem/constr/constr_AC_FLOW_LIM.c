@@ -253,6 +253,10 @@ void CONSTR_AC_FLOW_LIM_allocate(Constr* c) {
   H_nnz = CONSTR_get_H_nnz(c);
   J_row = CONSTR_get_J_row(c);
 
+  // Extra var limits
+  CONSTR_set_l_extra_vars(c,VEC_new(num_extra_vars));
+  CONSTR_set_u_extra_vars(c,VEC_new(num_extra_vars));
+
   // A b
   CONSTR_set_A(c,MAT_new(0,                       // rows
 			 num_vars+num_extra_vars, // columnes
@@ -555,6 +559,10 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
     }
 
     //**********
+
+    // Extra var limits
+    VEC_set(CONSTR_get_l_extra_vars(c),*J_row,0.);
+    VEC_set(CONSTR_get_u_extra_vars(c),*J_row,BRANCH_get_ratingA(br));
     
     // J
     MAT_set_i(J,*J_nnz,*J_row);

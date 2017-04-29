@@ -556,6 +556,7 @@ class TestProblem(unittest.TestCase):
         for case in test_cases.CASES:
             
             p.clear()
+            
             net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
             p.network = net
@@ -575,6 +576,143 @@ class TestProblem(unittest.TestCase):
             for bus in net.buses:
                 self.assertEqual(bus.v_max,u[bus.index_v_mag])
                 self.assertEqual(bus.v_min,l[bus.index_v_mag])
+
+            p.clear()
+            p.network = net
+            
+            # AC thermal limits
+            constr = pf.Constraint('AC branch flow limits',net)
+            p.add_constraint(constr)
+            p.analyze()
+            
+            l = p.get_lower_limits()
+            u = p.get_upper_limits()
+            
+            num_constr = 2*len([b for b in net.branches if b.ratingA != 0.])
+
+            self.assertEqual(p.num_extra_vars,num_constr)
+            self.assertEqual(l.size,net.num_vars+p.num_extra_vars)
+            self.assertEqual(u.size,net.num_vars+p.num_extra_vars)
+            self.assertTrue(np.all(l[:net.num_vars] == net.get_var_values('lower limits')))
+            self.assertTrue(np.all(u[:net.num_vars] == net.get_var_values('upper limits')))
+            self.assertTrue(np.all(l[net.num_vars:] == constr.l_extra_vars))
+            self.assertTrue(np.all(u[net.num_vars:] == constr.u_extra_vars))
+            offset = 0
+            for branch in net.branches:
+                if branch.ratingA != 0.:
+                    self.assertEqual(l[net.num_vars+offset],0.)
+                    self.assertEqual(l[net.num_vars+offset+1],0.)
+                    self.assertEqual(u[net.num_vars+offset],branch.ratingA)
+                    self.assertEqual(u[net.num_vars+offset+1],branch.ratingA)
+                    offset += 2
+            self.assertEqual(offset,p.num_extra_vars)
+
+            p.clear()
+            p.network = net
+            
+            # Voltage regulation by gen
+            constr = pf.Constraint('voltage regulation by generators',net)
+            p.add_constraint(constr)
+            p.analyze()
+
+            l = p.get_lower_limits()
+            u = p.get_upper_limits()
+            
+            num_constr = 2*len([b for b in net.buses if b.is_regulated_by_gen() and not b.is_slack()])
+
+            self.assertEqual(p.num_extra_vars,num_constr)
+            self.assertEqual(l.size,net.num_vars+p.num_extra_vars)
+            self.assertEqual(u.size,net.num_vars+p.num_extra_vars)
+            self.assertTrue(np.all(l[:net.num_vars] == net.get_var_values('lower limits')))
+            self.assertTrue(np.all(u[:net.num_vars] == net.get_var_values('upper limits')))
+            self.assertTrue(np.all(l[net.num_vars:] == constr.l_extra_vars))
+            self.assertTrue(np.all(u[net.num_vars:] == constr.u_extra_vars))
+            offset = 0
+            flags = net.num_buses*[False]
+            for branch in net.branches:
+                for bus in [branch.bus_k,branch.bus_m]:
+                    if not flags[bus.index]:
+                        if bus.is_regulated_by_gen() and not bus.is_slack():
+                            self.assertEqual(l[net.num_vars+offset],0.)
+                            self.assertEqual(l[net.num_vars+offset+1],0.)
+                            self.assertEqual(u[net.num_vars+offset],10.)
+                            self.assertEqual(u[net.num_vars+offset+1],10.)
+                            offset += 2
+                    flags[bus.index] = True
+            self.assertEqual(offset,p.num_extra_vars)
+
+            p.clear()
+            p.network = net
+
+            # Voltage regulation by tran
+            constr = pf.Constraint('voltage regulation by transformers',net)
+            p.add_constraint(constr)
+            p.analyze()
+
+            l = p.get_lower_limits()
+            u = p.get_upper_limits()
+            
+            num_constr = 4*len([b for b in net.branches if b.is_tap_changer_v()])
+
+            self.assertEqual(p.num_extra_vars,num_constr)
+            self.assertEqual(l.size,net.num_vars+p.num_extra_vars)
+            self.assertEqual(u.size,net.num_vars+p.num_extra_vars)
+            self.assertTrue(np.all(l[:net.num_vars] == net.get_var_values('lower limits')))
+            self.assertTrue(np.all(u[:net.num_vars] == net.get_var_values('upper limits')))
+            self.assertTrue(np.all(l[net.num_vars:] == constr.l_extra_vars))
+            self.assertTrue(np.all(u[net.num_vars:] == constr.u_extra_vars))
+            offset = 0
+            for branch in net.branches:
+                if branch.is_tap_changer_v():
+                    self.assertEqual(l[net.num_vars+offset],0.)
+                    self.assertEqual(l[net.num_vars+offset+1],0.)
+                    self.assertEqual(l[net.num_vars+offset+2],0.)
+                    self.assertEqual(l[net.num_vars+offset+3],0.)
+                    self.assertEqual(u[net.num_vars+offset],10.)
+                    self.assertEqual(u[net.num_vars+offset+1],10.)
+                    self.assertEqual(u[net.num_vars+offset+2],10.)
+                    self.assertEqual(u[net.num_vars+offset+3],10.)
+                    offset += 4
+            self.assertEqual(offset,p.num_extra_vars)
+
+            p.clear()
+            p.network = net
+
+            # Voltage regulation by shunt
+            constr = pf.Constraint('voltage regulation by shunts',net)
+            p.add_constraint(constr)
+            p.analyze()
+            
+            l = p.get_lower_limits()
+            u = p.get_upper_limits()
+            
+            num_constr = 4*len([s for s in net.shunts if s.is_switched_v()])
+
+            self.assertEqual(p.num_extra_vars,num_constr)
+            self.assertEqual(l.size,net.num_vars+p.num_extra_vars)
+            self.assertEqual(u.size,net.num_vars+p.num_extra_vars)
+            self.assertTrue(np.all(l[:net.num_vars] == net.get_var_values('lower limits')))
+            self.assertTrue(np.all(u[:net.num_vars] == net.get_var_values('upper limits')))
+            self.assertTrue(np.all(l[net.num_vars:] == constr.l_extra_vars))
+            self.assertTrue(np.all(u[net.num_vars:] == constr.u_extra_vars))
+            offset = 0
+            flags = net.num_buses*[False]
+            for branch in net.branches:
+                for bus in [branch.bus_k,branch.bus_m]:
+                    if not flags[bus.index]:
+                        for shunt in bus.reg_shunts:
+                            if shunt.is_switched_v():
+                                self.assertEqual(l[net.num_vars+offset],0.)
+                                self.assertEqual(l[net.num_vars+offset+1],0.)
+                                self.assertEqual(l[net.num_vars+offset+2],0.)
+                                self.assertEqual(l[net.num_vars+offset+3],0.)
+                                self.assertEqual(u[net.num_vars+offset],1000.)
+                                self.assertEqual(u[net.num_vars+offset+1],1000.)
+                                self.assertEqual(u[net.num_vars+offset+2],10.)
+                                self.assertEqual(u[net.num_vars+offset+3],10.)
+                                offset += 4
+                    flags[bus.index] = True
+            self.assertEqual(offset,p.num_extra_vars)
 
     def test_problem_Glu_construction(self):
 

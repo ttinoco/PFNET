@@ -40,7 +40,9 @@ struct Constr {
   Vec* u;           /** @brief Upper bound for linear inequality contraints */
   
   // Extra variables
-  int num_extra_vars;          /** @brief Number of extra variables (set during count) */
+  int num_extra_vars; /** @brief Number of extra variables (set during "count") */
+  Vec* l_extra_vars;  /** @brief Lower bounds for extra variables (set during "analyze") */
+  Vec* u_extra_vars;  /** @brief Upper bounds for extra varaibles (set during "analyze") */
   
   // Counters and flags
   int A_nnz;             /**< @brief Counter for nonzeros of matrix A */
@@ -144,6 +146,8 @@ void CONSTR_del_matvec(Constr* c) {
     MAT_del(c->G);
     VEC_del(c->l);
     VEC_del(c->u);
+    VEC_del(c->l_extra_vars);
+    VEC_del(c->u_extra_vars);
     MAT_array_del(c->H_array,c->H_array_size);
     MAT_del(c->H_combined);
     c->b = NULL;
@@ -153,6 +157,8 @@ void CONSTR_del_matvec(Constr* c) {
     c->G = NULL;
     c->l = NULL;
     c->u = NULL;
+    c->l_extra_vars = NULL;
+    c->u_extra_vars = NULL;
     c->H_array = NULL;
     c->H_array_size = 0;
     c->H_combined = NULL;
@@ -203,6 +209,20 @@ Vec* CONSTR_get_l(Constr* c) {
 Vec* CONSTR_get_u(Constr* c) {
   if (c)
     return c->u;
+  else
+    return NULL;
+}
+
+Vec* CONSTR_get_l_extra_vars(Constr* c) {
+  if (c)
+    return c->l_extra_vars;
+  else
+    return NULL;
+}
+
+Vec* CONSTR_get_u_extra_vars(Constr* c) {
+  if (c)
+    return c->u_extra_vars;
   else
     return NULL;
 }
@@ -539,6 +559,8 @@ Constr* CONSTR_new(Net* net) {
   c->G = NULL;
   c->l = NULL;
   c->u = NULL;
+  c->l_extra_vars = NULL;
+  c->u_extra_vars = NULL;
   c->A_nnz = 0;
   c->J_nnz = 0;
   c->G_nnz = 0;
@@ -595,6 +617,16 @@ void CONSTR_set_l(Constr* c, Vec* l) {
 void CONSTR_set_u(Constr* c, Vec* u) {
   if (c)
     c->u = u;
+}
+
+void CONSTR_set_l_extra_vars(Constr* c, Vec* l) {
+  if (c)
+    c->l_extra_vars = l;
+}
+
+void CONSTR_set_u_extra_vars(Constr* c, Vec* u) {
+  if (c)
+    c->u_extra_vars = u;
 }
 
 void CONSTR_set_G(Constr* c, Mat* G) {
@@ -797,7 +829,9 @@ BOOL CONSTR_is_safe_to_analyze(Constr* c) {
   if (CONSTR_get_bus_counted_size(c) == NET_get_num_buses(net)*NET_get_num_periods(net) &&
       MAT_get_size2(CONSTR_get_A(c)) == num_vars &&
       MAT_get_size2(CONSTR_get_G(c)) == num_vars &&
-      MAT_get_size2(CONSTR_get_J(c)) == num_vars)
+      MAT_get_size2(CONSTR_get_J(c)) == num_vars &&
+      VEC_get_size(CONSTR_get_l_extra_vars(c)) == CONSTR_get_num_extra_vars(c) &&
+      VEC_get_size(CONSTR_get_u_extra_vars(c)) == CONSTR_get_num_extra_vars(c))
     return TRUE;
   else {
     sprintf(c->error_string,"constraint is not safe to analyze");

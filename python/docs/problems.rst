@@ -104,13 +104,9 @@ This function is associated with the string ``"voltage magnitude regularization"
 
 .. math::
 
-   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{v_k - v^t_k}{\Delta v} \Bigg)^2 + 
-                 \frac{1}{2} \sum_k \Bigg( \frac{v^y_k}{\Delta v} \Bigg)^2 +
-	         \frac{1}{2} \sum_k \Bigg( \frac{v^z_k}{\Delta v} \Bigg)^2 + 
-                 \frac{1}{2} \sum_k \Bigg( \frac{v^h_k}{\Delta v} \Bigg)^2 +
-	         \frac{1}{2} \sum_k \Bigg( \frac{v^l_k}{\Delta v} \Bigg)^2,
+   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{v_k - v^t_k}{\Delta v} \Bigg)^2,
 
-where :math:`v` are bus voltage magnitudes, :math:`v^t` are voltage magnitude set points (one for buses not regulated by generators), :math:`v^y` and :math:`v^z` are positive and negative deviations of :math:`v` from :math:`v^t`, :math:`v^h` and :math:`v^l` are voltage band upper and lower limit violations, and :math:`\Delta v` is a normalization factor. Only terms that include optimization variables are included in the summation.
+where :math:`v` are bus voltage magnitudes, :math:`v^t` are voltage magnitude set points (one for buses not regulated by generators), and :math:`\Delta v` is a normalization factor. 
 
 .. _prob_func_REG_ANG:
 
@@ -145,15 +141,13 @@ where :math:`P^g` and :math:`Q^g` are generator active and reactive powers, :mat
 Transformer tap ratio regularization
 ------------------------------------
 
-This function is associated with the string ``"tap ratio regularization"``. It penalizes deviations of tap ratios of tap-changing transformers from their initial value. It is defined by the expression
+This function is associated with the string ``"tap ratio regularization"``. It penalizes deviations of tap ratios of tap-changing transformers from their initial values. It is defined by the expression
 
 .. math::
 
-   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{t_k - t^0_k}{\Delta t} \Bigg)^2 + 
-                 \frac{1}{2} \sum_k \Bigg( \frac{t^y_k}{\Delta t} \Bigg)^2 + 
-	         \frac{1}{2} \sum_k \Bigg( \frac{t^z_k}{\Delta t} \Bigg)^2,
+   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{t_k - t^0_k}{\Delta t} \Bigg)^2,
 
-where :math:`t` are tap ratios of tap-changing transformers, :math:`t^0` are their initial values, :math:`t^y` and :math:`t^z` are positive and negative deviations of :math:`t` from :math:`t^0`, and :math:`\Delta t` is a normalization factor. Only terms that include optimization variables are included in the summation.
+where :math:`t` are tap ratios of tap-changing transformers, :math:`t^0` are their initial values, and :math:`\Delta t` is a normalization factor.
 
 .. _prob_func_REG_PHASE:
 
@@ -173,15 +167,13 @@ where :math:`\phi` are phase shifts of phase-shifting transformers, :math:`\phi^
 Switched shunt susceptance regularization
 -----------------------------------------
 
-This function is associated with the string ``"susceptance regularization"``. It penalizes deviations of susceptances of switched shunt devices from their initial value. It is defined by the expression
+This function is associated with the string ``"susceptance regularization"``. It penalizes deviations of susceptances of switched shunt devices from their initial values. It is defined by the expression
 
 .. math::
 
-   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{b_k - b^0_k}{\Delta b} \Bigg)^2 + 
-                 \frac{1}{2} \sum_k \Bigg( \frac{b^y_k}{\Delta b} \Bigg)^2 + 
-	         \frac{1}{2} \sum_k \Bigg( \frac{b^z_k}{\Delta b} \Bigg)^2,
+   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{b_k - b^0_k}{\Delta b} \Bigg)^2,
 
-where :math:`b` are susceptances of switched shunt devices, :math:`b^0` are their initial values, :math:`b^y` and :math:`b^z` are positive and negative deviations of :math:`b` from :math:`b^0`, and :math:`\Delta b` is a normalization factor. Only terms that include optimization variables are included in the summation.
+where :math:`b` are susceptances of switched shunt devices, :math:`b^0` are their initial values, and :math:`\Delta b` is a normalization factor.
 
 .. _prob_func_SLIM_VMAG:
 
@@ -224,11 +216,11 @@ Constraints in PFNET are of the form
 
 .. math::
    
-   & A x = b \\
-   & f(x) = 0 \\
-   & l \le G x \le u,
+   & A \left[ \begin{array}{c} x \\ y \end{array} \right] = b, \quad
+   & f(x,y) = 0, \quad
+   & l \le G \left[ \begin{array}{c} x \\ y \end{array} \right] \le u,
 
-where :math:`A` and :math:`G`  are sparse matrices, :math:`b`, :math:`l` and :math:`u`  are vectors, :math:`f` is a vector-valued nonlinear function, and :math:`x` is a vector of variables. They are represented by objects of type :class:`ConstraintBase <pfnet.ConstraintBase>`. An instance of this type can be constructed from the class :class:`Constraint <pfnet.Constraint>`, which takes requires specifying the constraint name and the network to be associated with the constraint. The following example sets all bus voltage magnitudes and angles as variables and constructs the AC power balance constraints::
+where :math:`A` and :math:`G`  are sparse matrices, :math:`b`, :math:`l` and :math:`u`  are vectors, :math:`f` is a vector-valued nonlinear function, and :math:`x` and :math:`y` are vectors of network variables and extra or auxiliary constraint variables, respectively. They are represented by objects of type :class:`ConstraintBase <pfnet.ConstraintBase>`. An instance of this type can be constructed from the class :class:`Constraint <pfnet.Constraint>`, whose constructor requires specifying the constraint name and the network to be associated with the constraint. The following example sets all bus voltage magnitudes and angles as variables and constructs the AC power balance constraints::
 
   >>> import pfnet
 
@@ -247,11 +239,14 @@ where :math:`A` and :math:`G`  are sparse matrices, :math:`b`, :math:`l` and :ma
   >>> print constr.name == 'AC power balance'
   True
 
-Before a :class:`ConstraintBase <pfnet.ConstraintBase>` object can be used, it must be initialized using the :class:`ConstraintBase <pfnet.ConstraintBase>` class method :func:`analyze() <pfnet.ConstraintBase.analyze>`. This routine analyzes the constraint and allocates the required vectors and matrices. After this, the constraint can be evaluated using the method :func:`eval() <pfnet.ConstraintBase.eval>`::
+Before a :class:`ConstraintBase <pfnet.ConstraintBase>` object can be used, it must be initialized using the :class:`ConstraintBase <pfnet.ConstraintBase>` class method :func:`analyze() <pfnet.ConstraintBase.analyze>`. This routine analyzes the constraint and allocates the required vectors and matrices. After this, the number of extra variables can be obtained from the attribute :data:`num_extra_vars <pfnet.ConstraintBase.num_extra_vars>`, and the constraint can be evaluated using the method :func:`eval() <pfnet.ConstraintBase.eval>`::
 
   >>> x = net.get_var_values()
 
   >>> constr.analyze()
+
+  >>> print constr.num_extra_vars
+  0
 
   >>> constr.eval(x)
 

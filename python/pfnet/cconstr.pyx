@@ -340,6 +340,14 @@ cdef class ConstraintBase:
         """ Upper bound vector of linear inequality constraints (:class:`ndarray <numpy.ndarray>`). """
         def __get__(self): return Vector(cconstr.CONSTR_get_u(self._c_constr))
 
+    property l_extra_vars:
+        """ Lower bound vector of constraint extra variables (:class:`ndarray <numpy.ndarray>`). """
+        def __get__(self): return Vector(cconstr.CONSTR_get_l_extra_vars(self._c_constr))
+
+    property u_extra_vars:
+        """ Upper bound vector of constraitn extra variables (:class:`ndarray <numpy.ndarray>`). """
+        def __get__(self): return Vector(cconstr.CONSTR_get_u_extra_vars(self._c_constr))
+
     property G:
         """ Matrix for linear inequality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
         def __get__(self): return Matrix(cconstr.CONSTR_get_G(self._c_constr))

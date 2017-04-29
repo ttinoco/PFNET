@@ -17,6 +17,8 @@
 // Parameters
 #define CONSTR_REG_SHUNT_PARAM 1e-8
 #define CONSTR_REG_SHUNT_NORM 1e0
+#define CONSTR_REG_SHUNT_MAX_YZ 1e3
+#define CONSTR_REG_SHUNT_MAX_VLH 1e1
 
 // Function prototypes
 Constr* CONSTR_REG_SHUNT_new(Net* net);
