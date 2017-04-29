@@ -744,12 +744,21 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
     // Voltage magnitude
     if (bus->vars & BUS_VAR_VMAG) {
       switch (code) {
+
       case UPPER_LIMITS:
-	VEC_set(values,bus->index_v_mag[t],bus->v_max_norm);
+	if (bus->bounded & BUS_VAR_VMAG)
+	  VEC_set(values,bus->index_v_mag[t],bus->v_max_norm);
+	else
+	  VEC_set(values,bus->index_v_mag[t],BUS_INF_V_MAG);
 	break;
+
       case LOWER_LIMITS:
-	VEC_set(values,bus->index_v_mag[t],bus->v_min_norm);
+	if (bus->bounded & BUS_VAR_VMAG)
+	  VEC_set(values,bus->index_v_mag[t],bus->v_min_norm);
+	else
+	  VEC_set(values,bus->index_v_mag[t],0.);
 	break;
+
       default:
 	VEC_set(values,bus->index_v_mag[t],bus->v_mag[t]);
       }
@@ -758,12 +767,15 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
     // Voltage angle
     if (bus->vars & BUS_VAR_VANG) {
       switch(code) {
+	
       case UPPER_LIMITS:
 	VEC_set(values,bus->index_v_ang[t],BUS_INF_V_ANG);
 	break;
+
       case LOWER_LIMITS:
 	VEC_set(values,bus->index_v_ang[t],-BUS_INF_V_ANG);
 	break;
+
       default:
 	VEC_set(values,bus->index_v_ang[t],bus->v_ang[t]);
       }

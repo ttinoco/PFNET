@@ -241,12 +241,21 @@ void VARGEN_get_var_values(Vargen* gen, Vec* values, int code) {
     // active power
     if (gen->vars & VARGEN_VAR_P) {
       switch(code) {
+	
       case UPPER_LIMITS:
-	VEC_set(values,gen->index_P[t],gen->P_ava[t]);
+	if (gen->bounded & VARGEN_VAR_P)
+	  VEC_set(values,gen->index_P[t],gen->P_ava[t]);
+	else
+	  VEC_set(values,gen->index_P[t],VARGEN_INF_P);
 	break;
+
       case LOWER_LIMITS:
-	VEC_set(values,gen->index_P[t],gen->P_min);
+	if (gen->bounded & VARGEN_VAR_P)
+	  VEC_set(values,gen->index_P[t],gen->P_min);
+	else
+	  VEC_set(values,gen->index_P[t],-VARGEN_INF_P);
 	break;
+
       default:
 	VEC_set(values,gen->index_P[t],gen->P[t]);
       }
@@ -255,12 +264,21 @@ void VARGEN_get_var_values(Vargen* gen, Vec* values, int code) {
     // reactive power
     if (gen->vars & VARGEN_VAR_Q) {
       switch(code) {
+
       case UPPER_LIMITS:
-	VEC_set(values,gen->index_Q[t],gen->Q_max);
+	if (gen->bounded & VARGEN_VAR_Q)
+	  VEC_set(values,gen->index_Q[t],gen->Q_max);
+	else
+	  VEC_set(values,gen->index_Q[t],VARGEN_INF_Q);
 	break;
+
       case LOWER_LIMITS:
-	VEC_set(values,gen->index_Q[t],gen->Q_min);
+	if (gen->bounded & VARGEN_VAR_Q)
+	  VEC_set(values,gen->index_Q[t],gen->Q_min);
+	else
+	  VEC_set(values,gen->index_Q[t],-VARGEN_INF_Q);
 	break;
+
       default:
 	VEC_set(values,gen->index_Q[t],gen->Q[t]);
       }

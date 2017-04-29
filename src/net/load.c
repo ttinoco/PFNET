@@ -263,12 +263,21 @@ void LOAD_get_var_values(Load* load, Vec* values, int code) {
 
     if (load->vars & LOAD_VAR_P) { // active power
       switch(code) {
+ 
       case UPPER_LIMITS:
-	VEC_set(values,load->index_P[t],load->P_max);
+	if (load->bounded & LOAD_VAR_P)
+	  VEC_set(values,load->index_P[t],load->P_max);
+	else
+	  VEC_set(values,load->index_P[t],LOAD_INF_P);
 	break;
+
       case LOWER_LIMITS:
-	VEC_set(values,load->index_P[t],load->P_min);
+	if (load->bounded & LOAD_VAR_P)
+	  VEC_set(values,load->index_P[t],load->P_min);
+	else
+	  VEC_set(values,load->index_P[t],-LOAD_INF_P);
 	break;
+
       default:
 	VEC_set(values,load->index_P[t],load->P[t]);
       }
@@ -276,12 +285,15 @@ void LOAD_get_var_values(Load* load, Vec* values, int code) {
 
     if (load->vars & LOAD_VAR_Q) { // reactive power
       switch(code) {
+
       case UPPER_LIMITS:
 	VEC_set(values,load->index_Q[t],LOAD_INF_Q);
 	break;
+
       case LOWER_LIMITS:
 	VEC_set(values,load->index_Q[t],-LOAD_INF_Q);
 	break;
+
       default:
 	VEC_set(values,load->index_Q[t],load->Q[t]);
       }

@@ -562,7 +562,7 @@ class TestProblem(unittest.TestCase):
             p.network = net
 
             net.set_flags('bus',
-                          'variable',
+                          ['variable','bounded'],
                           'any',
                           'voltage magnitude')
             self.assertEqual(net.num_vars,net.num_buses)

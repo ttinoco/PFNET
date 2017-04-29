@@ -657,24 +657,42 @@ void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
 
     if (br->vars & BRANCH_VAR_RATIO) { // taps ratio
       switch(code) {
+	
       case UPPER_LIMITS:
-	VEC_set(values,br->index_ratio[t],br->ratio_max);
+	if (br->bounded & BRANCH_VAR_RATIO)
+	  VEC_set(values,br->index_ratio[t],br->ratio_max);
+	else
+	  VEC_set(values,br->index_ratio[t],BRANCH_INF_RATIO);
 	break;
+
       case LOWER_LIMITS:
-	VEC_set(values,br->index_ratio[t],br->ratio_min);
+	if (br->bounded & BRANCH_VAR_RATIO)
+	  VEC_set(values,br->index_ratio[t],br->ratio_min);
+	else
+	  VEC_set(values,br->index_ratio[t],0.);
 	break;
+
       default:
 	VEC_set(values,br->index_ratio[t],br->ratio[t]);
       }
     }
     if (br->vars & BRANCH_VAR_PHASE) { // phase shift
       switch(code) {
+
       case UPPER_LIMITS:
-	VEC_set(values,br->index_phase[t],br->phase_max);
+	if (br->bounded & BRANCH_VAR_PHASE)
+	  VEC_set(values,br->index_phase[t],br->phase_max);
+	else
+	  VEC_set(values,br->index_phase[t],2*PI);
 	break;
+
       case LOWER_LIMITS:
-	VEC_set(values,br->index_phase[t],br->phase_min);
+	if (br->bounded & BRANCH_VAR_PHASE)
+	  VEC_set(values,br->index_phase[t],br->phase_min);
+	else
+	  VEC_set(values,br->index_phase[t],-2*PI);
 	break;
+
       default:
 	VEC_set(values,br->index_phase[t],br->phase[t]);
       }
