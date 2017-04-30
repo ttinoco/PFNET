@@ -456,6 +456,19 @@ This constraint is associated with the string ``"battery dynamics"``. It enforce
 
 for each battery, where :math:`E_i`, :math:`E_f`, :math:`\eta_c`, and :math:`\eta_d` correspond to the attributes :data:`E_init <pfnet.Battery.E_init>` , :data:`E_final <pfnet.Battery.E_final>`, :data:`eta_c <pfnet.Battery.eta_c>`, and :data:`eta_d <pfnet.Battery.eta_d>` of a :class:`Battery <pfnet.Battery>`, respectively. It is noted here that the units of the charging/discharging powers are p.u. system base power, and the units of the energy levels are p.u. system base power times the duration of a time period.
 
+.. _prob_constr_LOAD_PF:
+
+Load Constant Power Factor
+--------------------------
+
+This constraint is associated with the string ``"load constant power factor"``. It forces loads to have a constant power factor at each time. It is given by
+
+.. math:: 
+   
+    Q(t) - P(t) \frac{\sqrt{1-\gamma^2}}{\gamma} = 0
+
+for each load and time period :math:`t \in \{1,\ldots,T\}`, where :math:`P(t)` is active power, :math:`Q(t)` is reactive power, and :math:`\gamma \in (0,1]` is the load's :data:`target_power_factor <pfnet.Load.target_power_factor>`.
+
 .. _prob_prob:
 
 Problems

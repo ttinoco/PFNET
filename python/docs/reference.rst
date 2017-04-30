@@ -496,6 +496,7 @@ Constraint Names
 ``"AC branch flow limits"``
 ``"DC branch flow limits"``
 ``"battery dynamics"``
+``"load constant power factor"``
 ============================================ =======
 
 .. _ref_constr_class:
