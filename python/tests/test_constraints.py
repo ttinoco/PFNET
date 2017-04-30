@@ -4284,6 +4284,129 @@ class TestConstraints(unittest.TestCase):
                         self.assertEqual(np.where(A.row == A.row[j])[0].size,3)
                         self.assertEqual(A.row[j],eq_row)
 
+    def test_constr_LOAD_PF(self):
+
+        # Multi period
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+            self.assertEqual(net.num_vars,0)
+
+            # Powers
+            for load in net.loads:
+                load.P = np.random.rand(net.num_periods)
+
+            # Target power factors
+            for load in net.loads:
+                load.target_power_factor = np.random.rand()
+                self.assertTrue(0 < load.target_power_factor < 1.)
+
+            # Vars
+            net.set_flags('load',
+                          'variable',
+                          'any',
+                          ['active power','reactive power'])
+            self.assertEqual(net.num_vars,2*net.num_loads*self.T)
+
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+
+            # Constraint
+            constr = pf.Constraint('load constant power factor',net)
+            self.assertEqual(constr.name,'load constant power factor')
+
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            l = constr.l
+            G = constr.G
+            u = constr.u
+
+            # Before
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(0,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,0))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(0,0))
+            self.assertEqual(A.nnz,0)
+            self.assertTrue(type(l) is np.ndarray)
+            self.assertTupleEqual(l.shape,(0,))
+            self.assertTrue(type(u) is np.ndarray)
+            self.assertTupleEqual(u.shape,(0,))
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(0,0))
+            self.assertEqual(G.nnz,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
+
+            constr.analyze()
+            self.assertEqual(constr.A_nnz,2*net.num_loads*self.T)
+            self.assertEqual(constr.A_row,net.num_loads*self.T)
+            constr.eval(x0)
+            self.assertEqual(constr.A_nnz,0)
+
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            l = constr.l
+            G = constr.G
+            u = constr.u
+
+            # After
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(net.num_loads*self.T,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,net.num_vars))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(net.num_loads*self.T,net.num_vars))
+            self.assertEqual(A.nnz,2*net.num_loads*self.T)
+            self.assertTrue(type(l) is np.ndarray)
+            self.assertTupleEqual(l.shape,(0,))
+            self.assertTrue(type(u) is np.ndarray)
+            self.assertTupleEqual(u.shape,(0,))
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(0,net.num_vars))
+            self.assertEqual(G.nnz,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
+
+            for load in net.loads:
+                for t in range(net.num_periods):
+                    indices = np.where(A.col == load.index_P[t])[0]
+                    self.assertEqual(indices.size,1)
+                    row = A.row[indices[0]]
+                    indices = np.where(A.row == row)[0]
+                    self.assertEqual(indices.size,2)
+                    for i in indices:
+                        if A.col[i] == load.index_P[t]:
+                            gamma = load.target_power_factor
+                            factor = np.sqrt(1.-gamma**2.)/gamma
+                            load.Q = load.P*factor
+                            self.assertAlmostEqual(A.data[i],-factor)
+                        else:
+                            self.assertEqual(A.col[i],load.index_Q[t])
+                            self.assertEqual(A.data[i],1.)
+            
+            x = net.get_var_values()
+            self.assertLess(np.linalg.norm(constr.A*x-constr.b),1e-10)
+            
+            for load in net.loads:
+                for t in range(net.num_periods):
+                    self.assertAlmostEqual(load.power_factor[t],load.target_power_factor)
+
     def tearDown(self):
 
         pass

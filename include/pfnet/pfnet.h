@@ -50,5 +50,6 @@
 #include <pfnet/constr_DC_FLOW_LIM.h>
 #include <pfnet/constr_AC_FLOW_LIM.h>
 #include <pfnet/constr_BAT_DYN.h>
+#include <pfnet/constr_LOAD_PF.h>
 
 #endif

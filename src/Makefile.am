@@ -69,33 +69,35 @@ problem_constr_src = 	problem/constr/constr_NBOUND.c  \
 			problem/constr/constr_DC_FLOW_LIM.c \
 			problem/constr/constr_AC_FLOW_LIM.c \
 			problem/constr/constr_DCPF.c \
+			problem/constr/constr_ACPF.c \
+			problem/constr/constr_LINPF.c \
 			problem/constr/constr_FIX.c \
 			problem/constr/constr_GEN_RAMP.c \
 			problem/constr/constr_BAT_DYN.c \
 			problem/constr/constr_LBOUND.c \
-			problem/constr/constr_LINPF.c \
 			problem/constr/constr_PAR_GEN_P.c \
 			problem/constr/constr_PAR_GEN_Q.c \
-			problem/constr/constr_ACPF.c \
 			problem/constr/constr_REG_GEN.c \
 			problem/constr/constr_REG_SHUNT.c \
-			problem/constr/constr_REG_TRAN.c
+			problem/constr/constr_REG_TRAN.c \
+			problem/constr/constr_LOAD_PF.c
 
 problem_constr_hdr = 	$(inc_path)/constr_NBOUND.h \
 			$(inc_path)/constr_DC_FLOW_LIM.h \
 			$(inc_path)/constr_AC_FLOW_LIM.h \
 			$(inc_path)/constr_DCPF.h \
+			$(inc_path)/constr_ACPF.h \
+			$(inc_path)/constr_LINPF.h \
 			$(inc_path)/constr_FIX.h \
 			$(inc_path)/constr_GEN_RAMP.h \
 			$(inc_path)/constr_BAT_DYN.h \
 			$(inc_path)/constr_LBOUND.h \
-			$(inc_path)/constr_LINPF.h \
 			$(inc_path)/constr_PAR_GEN_P.h \
 			$(inc_path)/constr_PAR_GEN_Q.h \
-			$(inc_path)/constr_ACPF.h \
 			$(inc_path)/constr_REG_GEN.h \
 			$(inc_path)/constr_REG_SHUNT.h \
-			$(inc_path)/constr_REG_TRAN.h
+			$(inc_path)/constr_REG_TRAN.h \
+			$(inc_path)/constr_LOAD_PF.h
 
 problem_func_src = 	problem/func/func_GEN_COST.c \
 			problem/func/func_LOAD_UTIL.c \

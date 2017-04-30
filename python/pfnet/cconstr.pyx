@@ -423,6 +423,8 @@ cdef class Constraint(ConstraintBase):
             self._c_constr = cconstr.CONSTR_AC_FLOW_LIM_new(net._c_net)
         elif name == "battery dynamics":
             self._c_constr = cconstr.CONSTR_BAT_DYN_new(net._c_net)
+        elif name == "load constant power factor":
+            self._c_constr = cconstr.CONSTR_LOAD_PF_new(net._c_net)
         else:
             raise ConstraintError('invalid constraint name')            
         self._alloc = True
