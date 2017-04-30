@@ -1044,7 +1044,16 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(load.P,0.3241)
                 self.assertEqual(load.Q,0.1212)
 
-                # adjustable
+                # Power factor
+                load.target_power_factor = 0.932
+                self.assertEqual(load.target_power_factor,0.932)
+                self.assertEqual(load.power_factor,load.P/np.sqrt(load.P**2.+load.Q**2.))
+                load.target_power_factor = 1.232
+                self.assertEqual(load.target_power_factor,1.)
+                load.target_power_factor = 0.
+                self.assertEqual(load.target_power_factor,pf.LOAD_MIN_TARGET_PF)
+
+                # Adjustable
                 self.assertTrue(load.is_P_adjustable())
                 load.P_min = 0.5
                 load.P_max = 0.5
@@ -1053,7 +1062,7 @@ class TestNetwork(unittest.TestCase):
                 load.P_max = -2.
                 self.assertFalse(load.is_P_adjustable())
 
-                # utiltiy
+                # Utiltiy
                 if case.split('.')[-1] == 'raw':
                     self.assertEqual(load.util_coeff_Q0,0.)
                     self.assertEqual(load.util_coeff_Q1,20000.)
@@ -1110,6 +1119,16 @@ class TestNetwork(unittest.TestCase):
                     q = np.random.randn()
                     load.Q[t] = q
                     self.assertEqual(load.Q[t],q)
+
+                # Power factor
+                load.target_power_factor = 0.932
+                self.assertEqual(load.target_power_factor,0.932)
+                load.target_power_factor = 1.232
+                self.assertEqual(load.target_power_factor,1.)
+                load.target_power_factor = 0.
+                self.assertEqual(load.target_power_factor,pf.LOAD_MIN_TARGET_PF)
+                for t in range(net.num_periods):
+                    self.assertEqual(load.power_factor[t],load.P[t]/np.sqrt(load.P[t]**2.+load.Q[t]**2.))
 
             # Indexing
             net.set_flags('load',

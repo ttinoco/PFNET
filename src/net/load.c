@@ -34,6 +34,9 @@ struct Load {
   // Reactive power
   REAL* Q;              /**< @brief Load reactive power (p.u. system base power) */
 
+  // Power factor
+  REAL target_power_factor; /**< @brief Target power factor in (0,1] */
+
   // Utility
   REAL util_coeff_Q0;  /**< @brief Load utility coefficient (constant term, units of $/hr ) */
   REAL util_coeff_Q1;  /**< @brief Load utility coefficient (linear term, units of $/(hr p.u.) ) */
@@ -126,6 +129,26 @@ int LOAD_get_num_periods(Load* load) {
     return load->num_periods;
   else
     return 0;
+}
+
+REAL LOAD_get_power_factor(Load* load, int t) {
+  REAL S;
+  if (load && t >= 0 && t < load->num_periods) {
+    S = sqrt((load->P[t])*(load->P[t]) + (load->Q[t])*(load->Q[t]));
+    if (S != 0.)
+      return load->P[t]/S;
+    else
+      return 1.;
+  }
+  else
+    return 1.;
+}
+
+REAL LOAD_get_target_power_factor(Load* load) {
+  if (load)
+    return load->target_power_factor;
+  else
+    return 1.;
 }
 
 REAL LOAD_get_sens_P_u_bound(Load* load, int t) {
@@ -418,6 +441,8 @@ void LOAD_init(Load* load, int num_periods) {
   ARRAY_zalloc(load->index_Q,int,T);
   ARRAY_zalloc(load->sens_P_u_bound,REAL,T);
   ARRAY_zalloc(load->sens_P_l_bound,REAL,T);
+
+  load->target_power_factor = 1.;
   
   load->next = NULL;
 }
@@ -448,6 +473,17 @@ Load* LOAD_new(int num_periods) {
   }
   else
     return NULL;
+}
+
+void LOAD_set_target_power_factor(Load* load, REAL pf) {
+  if (load) {
+    if (pf > 1.)
+      load->target_power_factor = 1.;
+    else if (pf < LOAD_MIN_TARGET_PF)
+      load->target_power_factor = LOAD_MIN_TARGET_PF;
+    else
+      load->target_power_factor = pf;	
+  }
 }
 
 void LOAD_set_sens_P_u_bound(Load* load, REAL value, int t) {

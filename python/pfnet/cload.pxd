@@ -17,10 +17,14 @@ cdef extern from "pfnet/load.h":
 
     cdef double LOAD_INF_P
     cdef double LOAD_INF_Q
+
+    cdef double LOAD_MIN_TARGET_PF
        
     cdef char LOAD_PROP_ANY
     cdef char LOAD_PROP_P_ADJUST
  
+    REAL LOAD_get_power_factor(Load* load, int t)
+    REAL LOAD_get_target_power_factor(Load* load)
     REAL LOAD_get_sens_P_u_bound(Load* load, int t)
     REAL LOAD_get_sens_P_l_bound(Load* load, int t)
     REAL LOAD_get_P_util(Load* load, int t)
@@ -48,4 +52,4 @@ cdef extern from "pfnet/load.h":
     void LOAD_set_util_coeff_Q0(Load* load, REAL c)
     void LOAD_set_util_coeff_Q1(Load* load, REAL c)
     void LOAD_set_util_coeff_Q2(Load* load, REAL c)
-
+    void LOAD_set_target_power_factor(Load* load, REAL pf)

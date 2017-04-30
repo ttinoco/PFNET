@@ -28,6 +28,9 @@
 #define LOAD_INF_P 1e8 /**< @brief Infinite active power */
 #define LOAD_INF_Q 1e8 /**< @brief Infinite reactive power */
 
+// Others
+#define LOAD_MIN_TARGET_PF 1e-4 /**< @brief Minimum target power factor */
+
 // Properties
 /** \defgroup load_props Load Property Masks 
  *  @{
@@ -59,6 +62,8 @@ REAL LOAD_get_P_util_for(Load* load, REAL P);
 REAL LOAD_get_util_coeff_Q0(Load* load);
 REAL LOAD_get_util_coeff_Q1(Load* load);
 REAL LOAD_get_util_coeff_Q2(Load* load);
+REAL LOAD_get_power_factor(Load* load, int t);
+REAL LOAD_get_target_power_factor(Load* load);
 int LOAD_get_index(Load* load);
 int LOAD_get_index_P(Load* load, int t);
 int LOAD_get_index_Q(Load* load, int t);
@@ -77,6 +82,7 @@ BOOL LOAD_is_P_adjustable(Load* load);
 Load* LOAD_list_add(Load *load_list, Load* load);
 int LOAD_list_len(Load* load_list);
 Load* LOAD_new(int num_periods);
+void LOAD_set_target_power_factor(Load* load, REAL pf);
 void LOAD_set_sens_P_u_bound(Load* load, REAL value, int t);
 void LOAD_set_sens_P_l_bound(Load* load, REAL value, int t);
 void LOAD_set_util_coeff_Q0(Load* load, REAL q);

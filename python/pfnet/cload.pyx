@@ -14,6 +14,9 @@ cimport cload
 LOAD_INF_P = cload.LOAD_INF_P
 LOAD_INF_Q = cload.LOAD_INF_Q
 
+# Others
+LOAD_MIN_TARGET_PF = cload.LOAD_MIN_TARGET_PF
+
 class LoadError(Exception):
     """
     Load error exception.
@@ -190,6 +193,20 @@ cdef class Load:
                 return AttributeFloat(r[0])
             else:
                 return np.array(r)
+
+    property power_factor:
+        """ Load power factor (float or array). """
+        def __get__(self):
+            r = [cload.LOAD_get_power_factor(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return np.array(r)
+
+    property target_power_factor:
+        """ Target load power factor in (0,1] (float). """
+        def __get__(self): return cload.LOAD_get_target_power_factor(self._c_ptr)
+        def __set__(self,pf): cload.LOAD_set_target_power_factor(self._c_ptr,pf)
 
     property util_coeff_Q0:
         """ Coefficient for consumption utility function (constant term, units of $/hr). """
