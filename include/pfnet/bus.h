@@ -23,7 +23,7 @@
 
 // Infinity
 #define BUS_INF_V_MAG 1e8 /**< @brief Infinite voltage magnitude (p.u.) */
-#define BUS_INF_V_ANG 1e3 /**< @brief Infinite voltage angle (radians) */
+#define BUS_INF_V_ANG 1e2 /**< @brief Infinite voltage angle (radians) */
 
 // Variables
 /** \defgroup bus_vars Bus Variable Masks
