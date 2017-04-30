@@ -23,7 +23,7 @@ Unreleased
 * Improved setup.py without argparse that relies on existing build_ext commands for custom builds (done).
 * Upper and lower bounds for constraint extra variables (done).
 * Three types of voltage magnitude limits (normal, regulation, emergency) (done).
-* Load constant power factor.
+* Load power factor, target power factor, and constraint for constant power factor.
 
 Version 1.2.9
 -------------
