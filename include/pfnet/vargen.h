@@ -26,8 +26,8 @@
 /** @} */
 
 // Infinity
-#define VARGEN_INF_P 1000. /**< @brief Infinite active power */
-#define VARGEN_INF_Q 1000. /**< @brief Infinite reactive power */
+#define VARGEN_INF_P 1e8 /**< @brief Infinite active power */
+#define VARGEN_INF_Q 1e8 /**< @brief Infinite reactive power */
 
 // Variable generator types
 #define VARGEN_TYPE_WIND 0       /**< @brief Type: wind farm */

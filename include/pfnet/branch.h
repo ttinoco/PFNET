@@ -46,7 +46,8 @@
 /** @} */
 
 // Infinity
-#define BRANCH_INF_RATIO 100. /**< @brief Infinite tap ratio */
+#define BRANCH_INF_RATIO 1e8 /**< @brief Infinite tap ratio */
+#define BRANCH_INF_PHASE 1e8 /**< @brief Infinite phase shift */
 
 // Properties
 /** \defgroup branch_props Branch Property Masks

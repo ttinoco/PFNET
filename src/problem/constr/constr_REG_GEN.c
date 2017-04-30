@@ -427,8 +427,8 @@ void CONSTR_REG_GEN_analyze_step(Constr* c, Branch* br, int t) {
 	}
 	 
 	// Extra var limits
-	VEC_set(CONSTR_get_l_extra_vars(c),*J_row,0.);   // y
-	VEC_set(CONSTR_get_l_extra_vars(c),*J_row+1,0.); // z
+	VEC_set(CONSTR_get_l_extra_vars(c),*J_row,-CONSTR_REG_GEN_MAX_YZ);   // y
+	VEC_set(CONSTR_get_l_extra_vars(c),*J_row+1,-CONSTR_REG_GEN_MAX_YZ); // z
 
 	VEC_set(CONSTR_get_u_extra_vars(c),*J_row,CONSTR_REG_GEN_MAX_YZ);   // y
 	VEC_set(CONSTR_get_u_extra_vars(c),*J_row+1,CONSTR_REG_GEN_MAX_YZ); // z

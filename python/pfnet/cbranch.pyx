@@ -12,6 +12,7 @@ cimport cbranch
 
 # Infinite
 BRANCH_INF_RATIO = cbranch.BRANCH_INF_RATIO
+BRANCH_INF_PHASE = cbranch.BRANCH_INF_PHASE
 
 class BranchError(Exception):
     """

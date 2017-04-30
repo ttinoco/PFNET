@@ -24,7 +24,7 @@
 /** @} */
 
 // Infinity
-#define SHUNT_INF_SUSC 1000. /**< @brief Infinite susceptance */
+#define SHUNT_INF_SUSC 1e8 /**< @brief Infinite susceptance */
 
 // Properties
 /** \defgroup shunt_props Shunt Property Masks

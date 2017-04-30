@@ -551,6 +551,8 @@ class TestProblem(unittest.TestCase):
 
     def test_problem_limits(self):
 
+        INF = 1e8
+
         p = self.p
 
         for case in test_cases.CASES:
@@ -633,10 +635,10 @@ class TestProblem(unittest.TestCase):
                 for bus in [branch.bus_k,branch.bus_m]:
                     if not flags[bus.index]:
                         if bus.is_regulated_by_gen() and not bus.is_slack():
-                            self.assertEqual(l[net.num_vars+offset],0.)
-                            self.assertEqual(l[net.num_vars+offset+1],0.)
-                            self.assertEqual(u[net.num_vars+offset],10.)
-                            self.assertEqual(u[net.num_vars+offset+1],10.)
+                            self.assertEqual(l[net.num_vars+offset],-INF)
+                            self.assertEqual(l[net.num_vars+offset+1],-INF)
+                            self.assertEqual(u[net.num_vars+offset],INF)
+                            self.assertEqual(u[net.num_vars+offset+1],INF)
                             offset += 2
                     flags[bus.index] = True
             self.assertEqual(offset,p.num_extra_vars)
@@ -664,14 +666,14 @@ class TestProblem(unittest.TestCase):
             offset = 0
             for branch in net.branches:
                 if branch.is_tap_changer_v():
-                    self.assertEqual(l[net.num_vars+offset],0.)
-                    self.assertEqual(l[net.num_vars+offset+1],0.)
-                    self.assertEqual(l[net.num_vars+offset+2],0.)
-                    self.assertEqual(l[net.num_vars+offset+3],0.)
-                    self.assertEqual(u[net.num_vars+offset],10.)
-                    self.assertEqual(u[net.num_vars+offset+1],10.)
-                    self.assertEqual(u[net.num_vars+offset+2],10.)
-                    self.assertEqual(u[net.num_vars+offset+3],10.)
+                    self.assertEqual(l[net.num_vars+offset],-INF)
+                    self.assertEqual(l[net.num_vars+offset+1],-INF)
+                    self.assertEqual(l[net.num_vars+offset+2],-INF)
+                    self.assertEqual(l[net.num_vars+offset+3],-INF)
+                    self.assertEqual(u[net.num_vars+offset],INF)
+                    self.assertEqual(u[net.num_vars+offset+1],INF)
+                    self.assertEqual(u[net.num_vars+offset+2],INF)
+                    self.assertEqual(u[net.num_vars+offset+3],INF)
                     offset += 4
             self.assertEqual(offset,p.num_extra_vars)
 
@@ -702,14 +704,14 @@ class TestProblem(unittest.TestCase):
                     if not flags[bus.index]:
                         for shunt in bus.reg_shunts:
                             if shunt.is_switched_v():
-                                self.assertEqual(l[net.num_vars+offset],0.)
-                                self.assertEqual(l[net.num_vars+offset+1],0.)
-                                self.assertEqual(l[net.num_vars+offset+2],0.)
-                                self.assertEqual(l[net.num_vars+offset+3],0.)
-                                self.assertEqual(u[net.num_vars+offset],1000.)
-                                self.assertEqual(u[net.num_vars+offset+1],1000.)
-                                self.assertEqual(u[net.num_vars+offset+2],10.)
-                                self.assertEqual(u[net.num_vars+offset+3],10.)
+                                self.assertEqual(l[net.num_vars+offset],-INF)
+                                self.assertEqual(l[net.num_vars+offset+1],-INF)
+                                self.assertEqual(l[net.num_vars+offset+2],-INF)
+                                self.assertEqual(l[net.num_vars+offset+3],-INF)
+                                self.assertEqual(u[net.num_vars+offset],INF)
+                                self.assertEqual(u[net.num_vars+offset+1],INF)
+                                self.assertEqual(u[net.num_vars+offset+2],INF)
+                                self.assertEqual(u[net.num_vars+offset+3],INF)
                                 offset += 4
                     flags[bus.index] = True
             self.assertEqual(offset,p.num_extra_vars)

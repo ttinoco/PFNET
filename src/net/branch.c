@@ -669,7 +669,7 @@ void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
 	if (br->bounded & BRANCH_VAR_RATIO)
 	  VEC_set(values,br->index_ratio[t],br->ratio_min);
 	else
-	  VEC_set(values,br->index_ratio[t],0.);
+	  VEC_set(values,br->index_ratio[t],-BRANCH_INF_RATIO);
 	break;
 
       default:
@@ -683,14 +683,14 @@ void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
 	if (br->bounded & BRANCH_VAR_PHASE)
 	  VEC_set(values,br->index_phase[t],br->phase_max);
 	else
-	  VEC_set(values,br->index_phase[t],2*PI);
+	  VEC_set(values,br->index_phase[t],BRANCH_INF_PHASE);
 	break;
 
       case LOWER_LIMITS:
 	if (br->bounded & BRANCH_VAR_PHASE)
 	  VEC_set(values,br->index_phase[t],br->phase_min);
 	else
-	  VEC_set(values,br->index_phase[t],-2*PI);
+	  VEC_set(values,br->index_phase[t],-BRANCH_INF_PHASE);
 	break;
 
       default:

@@ -256,8 +256,14 @@ void BAT_get_var_values(Bat* bat, Vec* values, int code) {
 	break;
 
       case LOWER_LIMITS:
-	VEC_set(values,bat->index_Pc[t],0.);
-	VEC_set(values,bat->index_Pd[t],0.);
+	if (bat->bounded & BAT_VAR_P) {
+	  VEC_set(values,bat->index_Pc[t],0.);
+	  VEC_set(values,bat->index_Pd[t],0.);
+	}
+	else {
+	  VEC_set(values,bat->index_Pc[t],-BAT_INF_P);
+	  VEC_set(values,bat->index_Pd[t],-BAT_INF_P);
+	}
 	break;
 
       default:
@@ -284,7 +290,10 @@ void BAT_get_var_values(Bat* bat, Vec* values, int code) {
 	break;
 
       case LOWER_LIMITS:
-	VEC_set(values,bat->index_E[t],0.);
+	if (bat->bounded & BAT_VAR_E)
+	  VEC_set(values,bat->index_E[t],0.);
+	else
+	  VEC_set(values,bat->index_E[t],-BAT_INF_E);
 	break;
 
       default:

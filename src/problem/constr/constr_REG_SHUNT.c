@@ -539,10 +539,10 @@ void CONSTR_REG_SHUNT_analyze_step(Constr* c, Branch* br, int t) {
 	H_nnz[*J_row+3]++; // vh and vh (bmin)
 
 	// Extra var limits
-	VEC_set(CONSTR_get_l_extra_vars(c),*J_row,0.);   // y
-	VEC_set(CONSTR_get_l_extra_vars(c),*J_row+1,0.); // z
-	VEC_set(CONSTR_get_l_extra_vars(c),*J_row+2,0.); // vl
-	VEC_set(CONSTR_get_l_extra_vars(c),*J_row+3,0.); // vh
+	VEC_set(CONSTR_get_l_extra_vars(c),*J_row,-CONSTR_REG_SHUNT_MAX_YZ);    // y
+	VEC_set(CONSTR_get_l_extra_vars(c),*J_row+1,-CONSTR_REG_SHUNT_MAX_YZ);  // z
+	VEC_set(CONSTR_get_l_extra_vars(c),*J_row+2,-CONSTR_REG_SHUNT_MAX_VLH); // vl
+	VEC_set(CONSTR_get_l_extra_vars(c),*J_row+3,-CONSTR_REG_SHUNT_MAX_VLH); // vh
 	
 	VEC_set(CONSTR_get_u_extra_vars(c),*J_row,CONSTR_REG_SHUNT_MAX_YZ);    // y
 	VEC_set(CONSTR_get_u_extra_vars(c),*J_row+1,CONSTR_REG_SHUNT_MAX_YZ);  // z

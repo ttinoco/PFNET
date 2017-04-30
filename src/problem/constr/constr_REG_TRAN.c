@@ -497,10 +497,10 @@ void CONSTR_REG_TRAN_analyze_step(Constr* c, Branch* br, int tau) {
     H_nnz[*J_row+3]++; // vh and vh (tmin)
 
     // Extra var limits
-    VEC_set(CONSTR_get_l_extra_vars(c),*J_row,0.);   // y
-    VEC_set(CONSTR_get_l_extra_vars(c),*J_row+1,0.); // z
-    VEC_set(CONSTR_get_l_extra_vars(c),*J_row+2,0.); // vl
-    VEC_set(CONSTR_get_l_extra_vars(c),*J_row+3,0.); // vh
+    VEC_set(CONSTR_get_l_extra_vars(c),*J_row,-CONSTR_REG_TRAN_MAX_YZ);      // y
+    VEC_set(CONSTR_get_l_extra_vars(c),*J_row+1,-CONSTR_REG_TRAN_MAX_YZ);    // z
+    VEC_set(CONSTR_get_l_extra_vars(c),*J_row+2,0.-CONSTR_REG_TRAN_MAX_VLH); // vl
+    VEC_set(CONSTR_get_l_extra_vars(c),*J_row+3,0.-CONSTR_REG_TRAN_MAX_VLH); // vh
     
     VEC_set(CONSTR_get_u_extra_vars(c),*J_row,CONSTR_REG_TRAN_MAX_YZ);    // y
     VEC_set(CONSTR_get_u_extra_vars(c),*J_row+1,CONSTR_REG_TRAN_MAX_YZ);  // z

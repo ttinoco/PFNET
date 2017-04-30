@@ -25,8 +25,8 @@
 /** @} */
 
 // Infinity
-#define LOAD_INF_P 1e6 /**< @brief Infinite active power */
-#define LOAD_INF_Q 1e6 /**< @brief Infinite reactive power */
+#define LOAD_INF_P 1e8 /**< @brief Infinite active power */
+#define LOAD_INF_Q 1e8 /**< @brief Infinite reactive power */
 
 // Properties
 /** \defgroup load_props Load Property Masks 

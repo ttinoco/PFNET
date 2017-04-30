@@ -17,8 +17,8 @@
 // Parameters
 #define CONSTR_REG_TRAN_PARAM 1e-8
 #define CONSTR_REG_TRAN_NORM 1e0
-#define CONSTR_REG_TRAN_MAX_YZ 1e1
-#define CONSTR_REG_TRAN_MAX_VLH 1e1
+#define CONSTR_REG_TRAN_MAX_YZ 1e8
+#define CONSTR_REG_TRAN_MAX_VLH 1e8
 
 // Function prototypes
 Constr* CONSTR_REG_TRAN_new(Net* net);

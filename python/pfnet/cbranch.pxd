@@ -18,6 +18,7 @@ cdef extern from "pfnet/branch.h":
     cdef char BRANCH_VAR_PHASE
 
     cdef double BRANCH_INF_RATIO
+    cdef double BRANCH_INF_PHASE
     cdef double BRANCH_INF_FLOW
 
     cdef char BRANCH_PROP_ANY
