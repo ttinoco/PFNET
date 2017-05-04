@@ -30,16 +30,20 @@ cdef class Problem:
     cdef list _functions
     cdef list _constraints
 
-    def __init__(self):
+    def __init__(self, Network net):
         """
         Optimization problem class.
+
+        Parameters
+        ----------
+        net : :class:`Network <pfnet.Network>'
         """
 
         pass
 
-    def __cinit__(self):
+    def __cinit__(self, Network net):
 
-        self._c_prob = cprob.PROB_new()
+        self._c_prob = cprob.PROB_new(net._c_net)
         self.alloc = True
         self._functions = []
         self._constraints = []
@@ -224,7 +228,7 @@ cdef class Problem:
 
     def get_init_point(self):
         """
-        Gets initial solution estimate from the current value of the network variables.
+        Gets initial solution estimate from the current values of the network variables.
 
         Returns
         -------
@@ -235,7 +239,7 @@ cdef class Problem:
 
     def get_upper_limits(self):
         """
-        Gets vector of upper limits for the network variables.
+        Gets vector of upper limits for the network and extra variables.
 
         Returns
         -------
@@ -246,7 +250,7 @@ cdef class Problem:
 
     def get_lower_limits(self):
         """
-        Gets vector of lower limits for the network variables.
+        Gets vector of lower limits for the network and extra variables.
 
         Returns
         -------
@@ -261,14 +265,6 @@ cdef class Problem:
         """
 
         return new_Network(cprob.PROB_get_network(self._c_prob))
-
-    def set_network(self,net):
-        """
-        Sets the power network associated with this optimization problem.
-        """
-
-        cdef Network n = net
-        cprob.PROB_set_network(self._c_prob,n._c_net)
 
     def show(self):
         """
@@ -320,9 +316,6 @@ cdef class Problem:
     property network:
         """ Power network associated with this optimization problem (:class:`Network <pfnet.Network>`). """
         def __get__(self): return new_Network(cprob.PROB_get_network(self._c_prob))
-        def __set__(self,net):
-            cdef Network n = net
-            cprob.PROB_set_network(self._c_prob,n._c_net)
 
     property constraints:
         """ List of :class:`constraints <pfnet.Constraint>` of this optimization problem (list). """

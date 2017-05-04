@@ -1151,7 +1151,7 @@ class TestNetwork(unittest.TestCase):
 
             self.assertEqual(len(net.var_generators),net.num_var_generators)
 
-            # existing vargens
+            # Existing vargens
             for vg in net.var_generators:
                 self.assertTrue(isinstance(vg.name,str) or isinstance(vg.name,unicode))
                 self.assertEqual(net.get_var_generator_by_name(vg.name).name,vg.name)
@@ -1159,7 +1159,15 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(vg.name,"some vargen")
                 self.assertRaises(pf.NetworkError,net.get_var_generator_by_name,vg.name)
 
-            # add vargens
+            # Add vargens (defaults)
+            net.add_var_generators(net.get_load_buses(),80.,50.)
+            self.assertEqual(net.var_generators_corr_radius,0)
+            self.assertEqual(net.var_generators_corr_value,0.)
+            self.assertEqual(net.num_var_generators,len(net.get_load_buses()))
+            for vargen in net.var_generators:
+                self.assertEqual(vargen.P_std,0.)
+
+            # Add vargens
             load_buses = net.get_load_buses()
             self.assertEqual(len(load_buses),
                              len([b for b in net.buses if b.loads]))
@@ -1204,7 +1212,7 @@ class TestNetwork(unittest.TestCase):
                 vargen.Q_max = 0.
                 vargen.Q_min = 0.
 
-            # check buses
+            # Check buses
             for i in range(net.num_var_generators):
                 vargen = net.get_var_generator(i)
                 self.assertEqual(vargen.index,net.var_generators[i].index)
@@ -1251,7 +1259,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.var_generators_corr_radius,1.)
             self.assertEqual(net.var_generators_corr_value,0.)
 
-            # gen buses
+            # Gen buses
             gen_buses = net.get_generator_buses()
             self.assertGreater(len(gen_buses),0)
             for b in gen_buses:
@@ -1259,7 +1267,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(len(gen_buses),
                              len([b for b in net.buses if b.generators]))
 
-            # add vargens
+            # Add vargens
             power_capacity = 80.
             power_base = 50.
             power_std = 30.
@@ -1386,7 +1394,14 @@ class TestNetwork(unittest.TestCase):
 
             net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
-            
+           
+            # Add batteries (defaults)
+            net.add_batteries(net.get_generator_buses(),20.,50.)
+            self.assertEqual(net.num_batteries,len(net.get_generator_buses()))
+            for bat in net.batteries:
+                self.assertEqual(bat.eta_c,1.)
+                self.assertEqual(bat.eta_d,1.)
+ 
             # Add batteries
             gen_buses = net.get_generator_buses()
             self.assertGreater(len(gen_buses),0)

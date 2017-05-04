@@ -488,7 +488,7 @@ Optimization problems constructed with PFNET are of the form
 
 As already noted, the objective function :math:`\varphi` is a weighted sum of functions :math:`\varphi_i`. The linear and nonlinear constraints :math:`Ax = b`, :math:`l \le Gx \le u`, and :math:`f(x) = 0` correspond to one or more of the constraints described above. An optimization problem in PFNET is represented by an object of type :class:`Problem <pfnet.Problem>`. 
 
-After instantiation, a :class:`Problem <pfnet.Problem>` is empty and one needs to specify the :class:`Network <pfnet.Network>` that is to be associated with the problem, the :class:`Constraints <pfnet.ConstraintBase>` to include, and the :class:`Functions <pfnet.FunctionBase>` that form the objective function. This can be done using the :class:`Problem <pfnet.Problem>` class methods :func:`set_network() <pfnet.Problem.set_network>`, :func:`add_constraint() <pfnet.Problem.add_constraint>`, and :func:`add_function() <pfnet.Problem.add_function>`. The following example shows how to construct a simple power flow problem and solve it using the Newton-Raphson method:
+After instantiation, a :class:`Problem <pfnet.Problem>` is empty and one needs to specify the :class:`Constraints <pfnet.ConstraintBase>` to include, and the :class:`Functions <pfnet.FunctionBase>` that form the objective function. This can be done using the :class:`Problem <pfnet.Problem>` class methods :func:`add_constraint() <pfnet.Problem.add_constraint>`, and :func:`add_function() <pfnet.Problem.add_function>`, respectively. The following example shows how to construct a simple power flow problem and solve it using the Newton-Raphson method:
 
 .. literalinclude:: ../examples/power_flow.py
 

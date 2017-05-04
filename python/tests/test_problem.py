@@ -21,9 +21,6 @@ class TestProblem(unittest.TestCase):
     
     def setUp(self):
         
-        # Network
-        self.p = pf.Problem()
-
         # Random
         np.random.seed(0)
 
@@ -32,14 +29,12 @@ class TestProblem(unittest.TestCase):
         # Constants
         h = 1e-9
         
-        p = self.p
-
         for case in test_cases.CASES:
             
-            p.clear()
             net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
-            p.network = net
+             
+            p = pf.Problem(net)
             
             # Variables
             net.set_flags('bus',
@@ -281,14 +276,12 @@ class TestProblem(unittest.TestCase):
         # Constants
         h = 1e-9
 
-        p = self.p
-
         for case in test_cases.CASES:
             
-            p.clear()
             net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
-            p.network = net
+            
+            p = pf.Problem(net)
             
             # Variables
             net.set_flags('bus',
@@ -553,15 +546,12 @@ class TestProblem(unittest.TestCase):
 
         INF = 1e8
 
-        p = self.p
-
         for case in test_cases.CASES:
-            
-            p.clear()
             
             net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
-            p.network = net
+            
+            p = pf.Problem(net)
 
             net.set_flags('bus',
                           ['variable','bounded'],
@@ -580,7 +570,6 @@ class TestProblem(unittest.TestCase):
                 self.assertEqual(bus.v_min,l[bus.index_v_mag])
 
             p.clear()
-            p.network = net
             
             # AC thermal limits
             constr = pf.Constraint('AC branch flow limits',net)
@@ -610,7 +599,6 @@ class TestProblem(unittest.TestCase):
             self.assertEqual(offset,p.num_extra_vars)
 
             p.clear()
-            p.network = net
             
             # Voltage regulation by gen
             constr = pf.Constraint('voltage regulation by generators',net)
@@ -644,7 +632,6 @@ class TestProblem(unittest.TestCase):
             self.assertEqual(offset,p.num_extra_vars)
 
             p.clear()
-            p.network = net
 
             # Voltage regulation by tran
             constr = pf.Constraint('voltage regulation by transformers',net)
@@ -678,7 +665,6 @@ class TestProblem(unittest.TestCase):
             self.assertEqual(offset,p.num_extra_vars)
 
             p.clear()
-            p.network = net
 
             # Voltage regulation by shunt
             constr = pf.Constraint('voltage regulation by shunts',net)
@@ -718,14 +704,12 @@ class TestProblem(unittest.TestCase):
 
     def test_problem_Glu_construction(self):
 
-        p = self.p
-
         for case in test_cases.CASES:
             
-            p.clear()
             net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
-            p.network = net
+            
+            p = pf.Problem(net)
 
             self.assertEqual(net.num_vars,0)
             self.assertEqual(net.num_bounded,0)
@@ -787,14 +771,12 @@ class TestProblem(unittest.TestCase):
 
     def test_problem_ACOPF_with_thermal(self):
 
-        p = self.p
-
         for case in test_cases.CASES:
             
-            p.clear()
             net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
-            p.network = net
+            
+            p = pf.Problem(net)
 
             for branch in net.branches:
                 if branch.ratingA == 0.:
@@ -1042,14 +1024,11 @@ class TestProblem(unittest.TestCase):
         
         for case in test_cases.CASES:
             
-            p1 = pf.Problem()
-            p2 = pf.Problem()
-
             net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
-            p1.network = net
-            p2.network = net
+            p1 = pf.Problem(net)
+            p2 = pf.Problem(net)
             
             # Variables
             net.set_flags('generator',
@@ -1100,14 +1079,11 @@ class TestProblem(unittest.TestCase):
         
         for case in test_cases.CASES:
             
-            p1 = pf.Problem()
-            p2 = pf.Problem()
-
             net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
-            p1.network = net
-            p2.network = net
+            p1 = pf.Problem(net)
+            p2 = pf.Problem(net)
 
             # Variables
             net.set_flags('bus',

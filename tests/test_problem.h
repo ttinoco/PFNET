@@ -25,11 +25,9 @@ static char* test_problem_basic() {
 
   Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
 
-  p = PROB_new();
+  p = PROB_new(net);
   
-  Assert("error - bad prob net initialization",PROB_get_network(p) == NULL);
-
-  PROB_set_network(p,net);
+  Assert("error - bad prob net initialization",PROB_get_network(p) != NULL);
 
   // Set variables
   NET_set_flags(net,

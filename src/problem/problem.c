@@ -608,7 +608,6 @@ void PROB_init(Prob* p) {
     p->constr = NULL;
     p->func = NULL;
     p->heur = NULL;
-    p->net = NULL;
     
     p->phi = 0;
     p->gphi = NULL;
@@ -629,15 +628,11 @@ void PROB_init(Prob* p) {
   }
 }
 
-Prob* PROB_new(void) {
+Prob* PROB_new(Net* net) {
   Prob* p = (Prob*)malloc(sizeof(Prob));
+  p->net = net;
   PROB_init(p);
   return p;
-}
-
-void PROB_set_network(Prob* p, Net* net) {
-  if (p)
-    p->net = net;
 }
 
 char* PROB_get_show_str(Prob* p) {
@@ -653,12 +648,12 @@ char* PROB_get_show_str(Prob* p) {
   strcpy(out,"");
 
   sprintf(out+strlen(out),"\nProblem\n");
-  sprintf(out+strlen(out),"functions  : %d\n",FUNC_list_len(p->func));
+  sprintf(out+strlen(out),"functions: %d\n",FUNC_list_len(p->func));
   for (f = p->func; f != NULL; f = FUNC_get_next(f))
-    sprintf(out+strlen(out),"%s\n",FUNC_get_name(f));
+    sprintf(out+strlen(out),"   %s\n",FUNC_get_name(f));
   sprintf(out+strlen(out),"constraints: %d\n",CONSTR_list_len(p->constr));  
   for (c = p->constr; c != NULL; c = CONSTR_get_next(c))
-    sprintf(out+strlen(out),"%s\n",CONSTR_get_name(c));
+    sprintf(out+strlen(out),"   %s\n",CONSTR_get_name(c));
 
   return out;
 }

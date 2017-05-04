@@ -57,7 +57,7 @@ cdef class Network:
             cnet.NET_del(self._c_net)
             self._c_net = NULL
 
-    def add_var_generators(self,buses,power_capacity,power_base,power_std,corr_radius,corr_value):
+    def add_var_generators(self,buses,power_capacity,power_base,power_std=0.,corr_radius=0,corr_value=0.):
         """
         Adds variable generators to the network. The capacities of the generators are divided
         evenly. 
@@ -89,7 +89,7 @@ cdef class Network:
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
 
-    def add_batteries(self,buses,power_capacity,energy_capacity,eta_c,etc_d):
+    def add_batteries(self,buses,power_capacity,energy_capacity,eta_c=1.,etc_d=1.):
         """
         Adds batteries to the network. The power and energy capacities of the batteries are divided
         evenly. 

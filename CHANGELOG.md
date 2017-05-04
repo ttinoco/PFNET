@@ -24,6 +24,9 @@ Unreleased
 * Upper and lower bounds for constraint extra variables (done).
 * Three types of voltage magnitude limits (normal, regulation, emergency) (done).
 * Load power factor, target power factor, and constraint for constant power factor (done).
+* Removed Problem "set_network" method and required that Problem constructor takes network as argument for consistency with functions and constraints (done).
+* Added default arguments to rougines "add_batteries" and "add_var_generators" (done).
+* Fixed indentation bug in problem.show() (done).
 
 Version 1.2.9
 -------------
