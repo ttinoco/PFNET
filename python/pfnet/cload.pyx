@@ -101,6 +101,30 @@ cdef class Load:
 
         cload.LOAD_set_P(self._c_ptr,P,t)
 
+    def set_P_max(self,P,t=0):
+        """"
+        Sets active power upper limit.
+
+        Parameters
+        ----------
+        P : float
+        t = int
+        """
+
+        cload.LOAD_set_P_max(self._c_ptr,P,t)
+
+    def set_P_min(self,P,t=0):
+        """"
+        Sets active power lower limit.
+
+        Parameters
+        ----------
+        P : float
+        t = int
+        """
+
+        cload.LOAD_set_P_min(self._c_ptr,P,t)
+
     def set_Q(self,Q,t=0):
         """"
         Sets reactive power.
@@ -162,14 +186,32 @@ cdef class Load:
                 cload.LOAD_set_P(self._c_ptr,Par[t],t)
 
     property P_max:
-        """ Load active power upper limit (p.u. system base MVA) (float). """
-        def __get__(self): return cload.LOAD_get_P_max(self._c_ptr)
-        def __set__(self,P): cload.LOAD_set_P_max(self._c_ptr,P)
+        """ Load active power upper limit (p.u. system base MVA) (float or array). """
+        def __get__(self):
+            r = [cload.LOAD_get_P_max(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return AttributeArray(r,self.set_P_max)
+        def __set__(self,P):
+            cdef int t
+            cdef np.ndarray Par = np.array(P).flatten()
+            for t in range(np.minimum(Par.size,self.num_periods)):
+                cload.LOAD_set_P_max(self._c_ptr,Par[t],t)
 
     property P_min:
-        """ Load active power lower limit (p.u. system base MVA) (float). """
-        def __get__(self): return cload.LOAD_get_P_min(self._c_ptr)
-        def __set__(self,P): cload.LOAD_set_P_min(self._c_ptr,P)
+        """ Load active power lower limit (p.u. system base MVA) (float or array). """
+        def __get__(self):
+            r = [cload.LOAD_get_P_min(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return AttributeArray(r,self.set_P_min)
+        def __set__(self,P):
+            cdef int t
+            cdef np.ndarray Par = np.array(P).flatten()
+            for t in range(np.minimum(Par.size,self.num_periods)):
+                cload.LOAD_set_P_min(self._c_ptr,Par[t],t)
 
     property Q:
         """ Load reactive power (p.u. system base MVA) (float or array). """

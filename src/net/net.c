@@ -2570,16 +2570,16 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
       // Active power limit violations
       //******************************
       dP = 0;
-      if (P > LOAD_get_P_max(load))
-	dP = (P-LOAD_get_P_max(load))*net->base_power; // MW
-      if (P < LOAD_get_P_min(load))
-	dP = (LOAD_get_P_min(load)-P)*net->base_power; // MW
+      if (P > LOAD_get_P_max(load,t))
+	dP = (P-LOAD_get_P_max(load,t))*net->base_power; // MW
+      if (P < LOAD_get_P_min(load,t))
+	dP = (LOAD_get_P_min(load,t)-P)*net->base_power; // MW
       if (dP > net->load_P_vio[t])
 	net->load_P_vio[t] = dP;
 
       // Active power actions
       //*********************
-      dP = LOAD_get_P_max(load)-LOAD_get_P_min(load);
+      dP = LOAD_get_P_max(load,t)-LOAD_get_P_min(load,t);
       if (dP < NET_CONTROL_EPS)
 	dP = NET_CONTROL_EPS;
       if (100.*fabs(P-LOAD_get_P(load,t))/dP > NET_CONTROL_ACTION_PCT)

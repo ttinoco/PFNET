@@ -952,8 +952,8 @@ class TestConstraints(unittest.TestCase):
 
             # loads
             for load in net.loads:
-                load.P_min = -2.4*(load.index+1)
-                load.P_max = 3.3*(load.index+1)
+                load.P_min = -2.4*(load.index+1)*np.array(range(net.num_periods))
+                load.P_max = 3.3*(load.index+1)*np.array(range(net.num_periods))
                 load.Q = 3.5*load.index*np.array(range(net.num_periods))
 
             # Vars
@@ -1125,8 +1125,10 @@ class TestConstraints(unittest.TestCase):
                     self.assertEqual(l[vargen.index_P[t]],vargen.P_min)
                     self.assertEqual(l[vargen.index_Q[t]],vargen.Q_min)
                 for load in net.loads:
-                    self.assertEqual(u[load.index_P[t]],load.P_max)
-                    self.assertEqual(l[load.index_P[t]],load.P_min)
+                    self.assertEqual(u[load.index_P[t]],load.P_max[t])
+                    self.assertEqual(l[load.index_P[t]],load.P_min[t])
+                    self.assertEqual(u[load.index_P[t]],3.3*(load.index+1)*t)
+                    self.assertEqual(l[load.index_P[t]],-2.4*(load.index+1)*t)
                     self.assertEqual(u[load.index_Q[t]],pf.LOAD_INF_Q)
                     self.assertEqual(l[load.index_Q[t]],-pf.LOAD_INF_Q)
                 for shunt in net.shunts:

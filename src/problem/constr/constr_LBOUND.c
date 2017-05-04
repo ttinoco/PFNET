@@ -220,8 +220,8 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  MAT_set_j(G,index,index);
 	  MAT_set_d(G,index,1.);
 	  if (LOAD_has_flags(load,FLAG_BOUNDED,LOAD_VAR_P)) {
-	    VEC_set(u,index,LOAD_get_P_max(load));
-	    VEC_set(l,index,LOAD_get_P_min(load));
+	    VEC_set(u,index,LOAD_get_P_max(load,t));
+	    VEC_set(l,index,LOAD_get_P_min(load,t));
 	  }
 	  else {
 	    VEC_set(u,index,LOAD_INF_P);

@@ -27,9 +27,9 @@ struct Load {
   char sparse;         /**< @brief Flags for indicating which control adjustments should be sparse */
 
   // Active power
-  REAL* P;              /**< @brief Load active power consumption (p.u. system base power) */
-  REAL P_max;          /**< @brief Maximum load active power consumption (p.u.) */
-  REAL P_min;          /**< @brief Minimum load active power consumption (p.u.) */
+  REAL* P;             /**< @brief Load active power consumption (p.u. system base power) */
+  REAL* P_max;         /**< @brief Maximum load active power consumption (p.u.) */
+  REAL* P_min;         /**< @brief Minimum load active power consumption (p.u.) */
 
   // Reactive power
   REAL* Q;              /**< @brief Load reactive power (p.u. system base power) */
@@ -69,6 +69,8 @@ void LOAD_array_del(Load* load_array, int size) {
     for (i = 0; i < size; i++) {
       load = &(load_array[i]);
       free(load->P);
+      free(load->P_max);
+      free(load->P_min);
       free(load->Q);
       free(load->index_P);
       free(load->index_Q);
@@ -251,16 +253,16 @@ REAL LOAD_get_P(Load* load, int t) {
     return 0;
 }
 
-REAL LOAD_get_P_max(Load* load) {
-  if (load)
-    return load->P_max;
+REAL LOAD_get_P_max(Load* load, int t) {
+  if (load && t >= 0 && t < load->num_periods)
+    return load->P_max[t];
   else 
     return 0;
 }
 
-REAL LOAD_get_P_min(Load* load) {
-  if (load)
-    return load->P_min;
+REAL LOAD_get_P_min(Load* load, int t) {
+  if (load && t >= 0 && t < load->num_periods)
+    return load->P_min[t];
   else 
     return 0;
 }
@@ -289,14 +291,14 @@ void LOAD_get_var_values(Load* load, Vec* values, int code) {
  
       case UPPER_LIMITS:
 	if (load->bounded & LOAD_VAR_P)
-	  VEC_set(values,load->index_P[t],load->P_max);
+	  VEC_set(values,load->index_P[t],load->P_max[t]);
 	else
 	  VEC_set(values,load->index_P[t],LOAD_INF_P);
 	break;
 
       case LOWER_LIMITS:
 	if (load->bounded & LOAD_VAR_P)
-	  VEC_set(values,load->index_P[t],load->P_min);
+	  VEC_set(values,load->index_P[t],load->P_min[t]);
 	else
 	  VEC_set(values,load->index_P[t],-LOAD_INF_P);
 	break;
@@ -425,10 +427,7 @@ void LOAD_init(Load* load, int num_periods) {
   load->bounded = 0x00;
   load->sparse = 0x00;
   load->vars = 0x00;
-  
-  load->P_max = 0;
-  load->P_min = 0;
-  
+    
   load->util_coeff_Q0 = 0;
   load->util_coeff_Q1 = 20000.;
   load->util_coeff_Q2 = -100.;
@@ -436,6 +435,8 @@ void LOAD_init(Load* load, int num_periods) {
   load->index = 0;
 
   ARRAY_zalloc(load->P,REAL,T);
+  ARRAY_zalloc(load->P_max,REAL,T);
+  ARRAY_zalloc(load->P_min,REAL,T);
   ARRAY_zalloc(load->Q,REAL,T);
   ARRAY_zalloc(load->index_P,int,T);
   ARRAY_zalloc(load->index_Q,int,T);
@@ -448,8 +449,14 @@ void LOAD_init(Load* load, int num_periods) {
 }
 
 BOOL LOAD_is_P_adjustable(Load* load) {
-  if (load)
-    return load->P_min < load->P_max;
+  int t;
+  if (load) {
+    for (t = 0; t < load->num_periods; t++) {
+      if (load->P_min[t] < load->P_max[t])
+	return TRUE;
+    }
+    return FALSE;
+  }    
   else
     return FALSE;
 }
@@ -526,14 +533,14 @@ void LOAD_set_P(Load* load, REAL P, int t) {
     load->P[t] = P;
 }
 
-void LOAD_set_P_max(Load* load, REAL P_max) {
-  if (load)
-    load->P_max = P_max;
+void LOAD_set_P_max(Load* load, REAL P_max, int t) {
+  if (load && t >= 0 && t < load->num_periods)
+    load->P_max[t] = P_max;
 }
 
-void LOAD_set_P_min(Load* load, REAL P_min) {
-  if (load)
-    load->P_min = P_min;
+void LOAD_set_P_min(Load* load, REAL P_min, int t) {
+  if (load && t >= 0 && t < load->num_periods)
+    load->P_min[t] = P_min;
 }
 
 void LOAD_set_Q(Load* load, REAL Q, int t) { 
@@ -616,6 +623,8 @@ void LOAD_propagate_data_in_time(Load* load) {
   if (load) {
     for (t = 1; t < load->num_periods; t++) {
       load->P[t] = load->P[0];
+      load->P_max[t] = load->P_max[0];
+      load->P_min[t] = load->P_min[0];
       load->Q[t] = load->Q[0];
     }
   }

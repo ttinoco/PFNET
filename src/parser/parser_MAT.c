@@ -417,8 +417,8 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
       LOAD_set_bus(load,bus);                              // connect bus to load
       LOAD_set_P(load,mat_bus->Pd/parser->base_power,0);   // per unit
       LOAD_set_Q(load,mat_bus->Qd/parser->base_power,0);   // per unit
-      LOAD_set_P_min(load,LOAD_get_P(load,0));             // Pmin = P = Pmax
-      LOAD_set_P_max(load,LOAD_get_P(load,0));             // Pmin = P = Pmax
+      LOAD_set_P_min(load,LOAD_get_P(load,0),0);           // Pmin = P = Pmax
+      LOAD_set_P_max(load,LOAD_get_P(load,0),0);           // Pmin = P = Pmax
       index++;
     }
   }
