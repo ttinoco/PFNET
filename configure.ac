@@ -28,6 +28,14 @@ AC_CHECK_FILES([$PWD/lib/libraw_parser.so],
 	 LDFLAGS="$LDFLAGS -L$PWD/lib -lraw_parser -Wl,-rpath,$PWD/lib"],
 	[AC_DEFINE([HAVE_RAW_PARSER],[0],[Define to 0 if you do not have the raw parser library.])])
 
+# Checks for line flow
+# Option "-Wl,-rpath,$PWD/lib" needed for "make check" without LD_LIBRARY_PATH
+AC_CHECK_FILES([$LINE_FLOW/lib/libline_flow.so],
+	[AC_DEFINE([HAVE_LINE_FLOW],[1],[Define to 1 if you have the line flow library.]),
+	 CFLAGS="-I$LINE_FLOW/include",
+	 LDFLAGS="$LDFLAGS -L$LINE_FLOW/lib -lline_flow -Wl,-rpath,$LINE_FLOW/lib"],
+	[AC_DEFINE([HAVE_LINE_FLOW],[0],[Define to 0 if you do not have the line flow library.])])
+
 # Checks for other header files.
 AC_CHECK_HEADERS([stddef.h stdint.h stdlib.h string.h])
 
