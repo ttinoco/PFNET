@@ -1395,7 +1395,7 @@ class TestFunctions(unittest.TestCase):
     def test_func_LOAD_UTIL(self):
 
         # Single period
-        h = 1e-9
+        h = 1e-8
         for case in test_cases.CASES:
 
             net = pf.Parser(case).parse(case)
@@ -1517,7 +1517,7 @@ class TestFunctions(unittest.TestCase):
             self.assertLess(np.abs(val-func.phi),1e-7)
 
         # Multi period
-        h = 1e-9
+        h = 1e-8
         for case in test_cases.CASES:
 
             net = pf.Parser(case).parse(case,self.T)
