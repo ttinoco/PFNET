@@ -168,6 +168,11 @@ void CONSTR_NBOUND_allocate(Constr* c) {
   CONSTR_set_A(c,MAT_new(0,num_vars,0));
   CONSTR_set_b(c,VEC_new(0));
 
+  // G u l
+  CONSTR_set_G(c,MAT_new(0,num_vars,0));
+  CONSTR_set_u(c,VEC_new(0));
+  CONSTR_set_l(c,VEC_new(0));
+
   // f
   CONSTR_set_f(c,VEC_new(J_nnz));
 
@@ -459,7 +464,7 @@ void CONSTR_NBOUND_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_NBOUND_eval_step(Constr* c, Branch* br, int t, Vec* values) {
+void CONSTR_NBOUND_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
 
   // Local variables
   Bus* buses[2];
@@ -598,8 +603,8 @@ void CONSTR_NBOUND_eval_step(Constr* c, Branch* br, int t, Vec* values) {
 	  BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
 
 	u = VEC_get(values,BUS_get_index_v_mag(bus,t));
-	umax = BUS_get_v_max_reg(bus);
-	umin = BUS_get_v_min_reg(bus);
+	umax = BUS_get_v_max_norm(bus);
+	umin = BUS_get_v_min_norm(bus);
 	du = (umax-umin > eps) ? umax-umin : eps;
 
 	a1 = umax-u;

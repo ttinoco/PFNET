@@ -1,55 +1,14 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
-import numpy
-import os
-import sys
-import argparse
 import numpy as np
 from Cython.Build import cythonize
-#from distutils.core import setup, Extension
 from setuptools import setup, Extension
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--libdirs', dest='libdirs', action='store',nargs='*',default=[])
-parser.add_argument('--incdirs', dest='incdirs', action='store',nargs='*',default=[])
-parser.add_argument('--libpfnet', dest='libpfnet', action='store',nargs='*',default=[])
-args,unknown = parser.parse_known_args()
-sys.argv = [sys.argv[0]] + unknown
-
-extra_link_args = []
-libraries = []
-package_data = []
-
-if args.libdirs:
-    library_dirs=args.libdirs
-    if sys.platform != 'win32':
-        # need to change if using msvc
-        extra_link_args=["-Wl,-rpath,%s" %s for s in args.libdirs]
-else:
-    library_dirs=[]
-    if sys.platform != 'win32':
-        # need to change if using msvc
-        extra_link_args=["-Wl,-rpath,/usr/local/lib"]
-
-if args.incdirs:
-    include_dirs=[np.get_include()]+args.incdirs
-else:
-    include_dirs=[np.get_include(),"../include"]
-
-if args.libpfnet:
-    extra_objects=args.libpfnet
-else:
-    extra_objects=[]
-    libraries.append("pfnet")
-    if sys.platform != 'win32':
-        extra_link_args=["-Wl,-rpath,%s" %s for s in args.libpfnet] # not sure if this works
-    #package_data.append("")
 
 setup(name='PFNET',
       version='1.2.9',
@@ -62,13 +21,6 @@ setup(name='PFNET',
                 'pfnet.parsers',
                 'pfnet.functions',
                 'pfnet.constraints'],
-#      install_requires=['numpy', 'scipy'],
-      ext_modules=cythonize([Extension("pfnet.cpfnet",
-                                       [os.path.join("pfnet","cpfnet.pyx")],
-                                       include_dirs=include_dirs,
-                                       library_dirs=library_dirs,
-                                       libraries=libraries,
-                                       extra_compile_args=[],
-                                       extra_objects=extra_objects,
-                                       extra_link_args=extra_link_args)]))
-
+      ext_modules=cythonize([Extension(name="pfnet.cpfnet", 
+                                       sources=["./pfnet/cpfnet.pyx"],
+                                       include_dirs=[np.get_include()])]))

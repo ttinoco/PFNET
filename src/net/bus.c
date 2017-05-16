@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -30,12 +30,12 @@ struct Bus {
   REAL* v_mag;        /**< @brief Voltage magnitude (p.u.) */
   REAL* v_ang;        /**< @brief Voltage angle (radians) */
   REAL* v_set;        /**< @brief Voltage magnitude set point (p.u.) */
-  REAL v_max_reg;     /**< @brief Maximum regulated voltage magnitude (p.u.) */
-  REAL v_min_reg;     /**< @brief Minimum regulated voltage magnitude (p.u.) */
-  REAL v_max_norm;    /**< @brief Normal maximum voltage magnitude violation limit (p.u.) */
-  REAL v_min_norm;    /**< @brief Normal minimum voltage magnitude violation limit (p.u.) */
-  REAL v_max_emer;    /**< @brief Emergency maximum voltage magnitude violation limit (p.u.) */
-  REAL v_min_emer;    /**< @brief Emergency minimum voltage magnitude violation limit (p.u.) */
+  REAL v_max_reg;     /**< @brief Regulation maximum voltage magnitude (p.u.) */
+  REAL v_min_reg;     /**< @brief Regulation minimum voltage magnitude (p.u.) */
+  REAL v_max_norm;    /**< @brief Normal maximum voltage magnitude (p.u.) */
+  REAL v_min_norm;    /**< @brief Normal minimum voltage magnitude (p.u.) */
+  REAL v_max_emer;    /**< @brief Emergency maximum voltage magnitude (p.u.) */
+  REAL v_min_emer;    /**< @brief Emergency minimum voltage magnitude (p.u.) */
 
   // Flags
   BOOL slack;        /**< @brief Flag for indicating the the bus is a slack bus */
@@ -63,10 +63,6 @@ struct Bus {
   int index;          /**< @brief Bus index */
   int* index_v_mag;   /**< @brief Voltage magnitude index */
   int* index_v_ang;   /**< @brief Voltage angle index */
-  int* index_y;       /**< @brief Voltage magnitude positive-deviation index */
-  int* index_z;       /**< @brief Voltage magnitude negative-deviation index */
-  int* index_vl;      /**< @brief Voltage magnitude violation of v_min_reg */
-  int* index_vh;      /**< @brief Voltage magnitude violation of v_max_reg */
 
   // Sensitivities
   REAL* sens_P_balance;      /**< @brief Sensitivity of active power balance */
@@ -188,10 +184,6 @@ void BUS_array_del(Bus* bus_array, int size) {
       free(bus->price);
       free(bus->index_v_mag);
       free(bus->index_v_ang);
-      free(bus->index_y);
-      free(bus->index_z);
-      free(bus->index_vl);
-      free(bus->index_vh);
       free(bus->sens_P_balance);
       free(bus->sens_Q_balance);
       free(bus->sens_v_mag_u_bound);
@@ -261,26 +253,26 @@ BOOL BUS_check(Bus* bus, BOOL verbose) {
     return FALSE;
   }
 
-  // regulated voltage limits
+  // Regulation voltage limits
   if (bus->v_min_reg > bus->v_max_reg) {
     bus_ok = FALSE;
     if (verbose)
-      fprintf(stderr,"bad bus regulated voltage limits\n");
+      fprintf(stderr,"bad bus regulation voltage limits\n");
   }
 
-   // normal voltage violation limits
-   if (bus->v_min_norm > bus->v_max_norm) {
-     bus_ok = FALSE;
-     if (verbose)
-       fprintf(stderr,"bad bus normal voltage violation limits\n");
-   }
-
-    // emergency voltage violation limits
-    if (bus->v_min_emer > bus->v_max_emer) {
+  // Normal voltage violation limits
+  if (bus->v_min_norm > bus->v_max_norm) {
     bus_ok = FALSE;
     if (verbose)
-      fprintf(stderr,"bad bus emergency voltage violation limits\n");
-    }
+      fprintf(stderr,"bad bus normal voltage limits\n");
+  }
+
+  // Emergency voltage violation limits
+  if (bus->v_min_emer > bus->v_max_emer) {
+  bus_ok = FALSE;
+  if (verbose)
+    fprintf(stderr,"bad bus emergency voltage limits\n");
+  }
 
   // Reg gen number
   if (BUS_is_regulated_by_gen(bus) && BUS_get_num_reg_gens(bus) < 1) {
@@ -346,6 +338,11 @@ void BUS_clear_vargen(Bus* bus) {
     bus->vargen = NULL;
 }
 
+void BUS_clear_bat(Bus* bus) {
+  if (bus)
+    bus->bat = NULL;
+}
+
 char BUS_get_obj_type(void* bus) {
   if (bus)
     return OBJ_BUS;
@@ -354,10 +351,8 @@ char BUS_get_obj_type(void* bus) {
 }
 
 int BUS_get_degree(Bus* bus) {
-  if (bus) {
-    return (BRANCH_list_k_len(bus->branch_k) +
-	    BRANCH_list_m_len(bus->branch_m));
-  }
+  if (bus)
+    return BRANCH_list_k_len(bus->branch_k)+BRANCH_list_m_len(bus->branch_m);
   else
     return 0;
 }
@@ -386,34 +381,6 @@ int BUS_get_index_v_mag(Bus* bus, int t) {
 int BUS_get_index_v_ang(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     return bus->index_v_ang[t];
-  else
-    return 0;
-}
-
-int BUS_get_index_y(Bus* bus, int t) {
-  if (bus && t >= 0 && t < bus->num_periods)
-    return bus->index_y[t];
-  else
-    return 0;
-}
-
-int BUS_get_index_z(Bus* bus, int t) {
-  if (bus && t >= 0 && t < bus->num_periods)
-    return bus->index_z[t];
-  else
-    return 0;
-}
-
-int BUS_get_index_vl(Bus* bus, int t) {
-  if (bus && t >= 0 && t < bus->num_periods)
-    return bus->index_vl[t];
-  else
-    return 0;
-}
-
-int BUS_get_index_vh(Bus* bus, int t) {
-  if (bus && t >= 0 && t < bus->num_periods)
-    return bus->index_vh[t];
   else
     return 0;
 }
@@ -773,16 +740,25 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
     return;
 
   for (t = 0; t < bus->num_periods; t++) {
-
+    
     // Voltage magnitude
     if (bus->vars & BUS_VAR_VMAG) {
       switch (code) {
+
       case UPPER_LIMITS:
-	VEC_set(values,bus->index_v_mag[t],bus->v_max_reg);
+	if (bus->bounded & BUS_VAR_VMAG)
+	  VEC_set(values,bus->index_v_mag[t],bus->v_max_norm);
+	else
+	  VEC_set(values,bus->index_v_mag[t],BUS_INF_V_MAG);
 	break;
+
       case LOWER_LIMITS:
-	VEC_set(values,bus->index_v_mag[t],bus->v_min_reg);
+	if (bus->bounded & BUS_VAR_VMAG)
+	  VEC_set(values,bus->index_v_mag[t],bus->v_min_norm);
+	else
+	  VEC_set(values,bus->index_v_mag[t],-BUS_INF_V_MAG);
 	break;
+
       default:
 	VEC_set(values,bus->index_v_mag[t],bus->v_mag[t]);
       }
@@ -791,54 +767,17 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
     // Voltage angle
     if (bus->vars & BUS_VAR_VANG) {
       switch(code) {
+	
       case UPPER_LIMITS:
 	VEC_set(values,bus->index_v_ang[t],BUS_INF_V_ANG);
 	break;
+
       case LOWER_LIMITS:
 	VEC_set(values,bus->index_v_ang[t],-BUS_INF_V_ANG);
 	break;
+
       default:
 	VEC_set(values,bus->index_v_ang[t],bus->v_ang[t]);
-      }
-    }
-
-    // Voltage magnitude deviations
-    if (bus->vars & BUS_VAR_VDEV) {
-      switch(code) {
-      case UPPER_LIMITS:
-	VEC_set(values,bus->index_y[t],BUS_INF_V_MAG);
-	VEC_set(values,bus->index_z[t],BUS_INF_V_MAG);
-	break;
-      case LOWER_LIMITS:
-	VEC_set(values,bus->index_y[t],0.);
-	VEC_set(values,bus->index_z[t],0.);
-	break;
-      default:
-	if (bus->v_mag[t] > bus->v_set[t]) { // pos voltage mag deviation
-	  VEC_set(values,bus->index_y[t],bus->v_mag[t]-bus->v_set[t]);
-	  VEC_set(values,bus->index_z[t],0.);
-	}
-	else {                         // neg voltage mag deviation
-	  VEC_set(values,bus->index_y[t],0.);
-	  VEC_set(values,bus->index_z[t],bus->v_set[t]-bus->v_mag[t]);
-	}
-      }
-    }
-
-    // Voltage magnitude bound violations
-    if (bus->vars & BUS_VAR_VVIO) {
-      switch(code) {
-      case UPPER_LIMITS:
-	VEC_set(values,bus->index_vl[t],BUS_INF_V_MAG);
-	VEC_set(values,bus->index_vh[t],BUS_INF_V_MAG);
-	break;
-      case LOWER_LIMITS:
-	VEC_set(values,bus->index_vl[t],0.);
-	VEC_set(values,bus->index_vh[t],0.);
-	break;
-      default:
-	VEC_set(values,bus->index_vl[t],0.);
-	VEC_set(values,bus->index_vh[t],0.);
       }
     }
   }
@@ -865,10 +804,6 @@ int BUS_get_num_vars(void* vbus, unsigned char var, int t_start, int t_end) {
     num_vars += dt;
   if ((var & BUS_VAR_VANG) && (bus->vars & BUS_VAR_VANG))
     num_vars += dt;
-  if ((var & BUS_VAR_VDEV) && (bus->vars & BUS_VAR_VDEV))
-    num_vars += 2*dt;
-  if ((var & BUS_VAR_VVIO) && (bus->vars & BUS_VAR_VVIO))
-    num_vars += 2*dt;
   return num_vars;
 }
 
@@ -890,30 +825,16 @@ Vec* BUS_get_var_indices(void* vbus, unsigned char var, int t_start, int t_end) 
 
   // Indices
   indices = VEC_new(BUS_get_num_vars(vbus,var,t_start,t_end));
-  if ((var & BUS_VAR_VMAG) && (bus->vars & BUS_VAR_VMAG)) {
+  if ((var & BUS_VAR_VMAG) && (bus->vars & BUS_VAR_VMAG)) { // v mag
     for (t = t_start; t <= t_end; t++) {
       VEC_set(indices,offset,bus->index_v_mag[t]);
       offset++;
     }
   }
-  if ((var & BUS_VAR_VANG) && (bus->vars & BUS_VAR_VANG)) {
+  if ((var & BUS_VAR_VANG) && (bus->vars & BUS_VAR_VANG)) { // v ang
     for (t = t_start; t <= t_end; t++) {
       VEC_set(indices,offset,bus->index_v_ang[t]);
       offset++;
-    }
-  }
-  if ((var & BUS_VAR_VDEV) && (bus->vars & BUS_VAR_VDEV)) {
-    for (t = t_start; t <= t_end; t++) {
-      VEC_set(indices,offset,bus->index_y[t]);
-      VEC_set(indices,offset+1,bus->index_z[t]);
-      offset += 2;
-    }
-  }
-  if ((var & BUS_VAR_VVIO) && (bus->vars & BUS_VAR_VVIO)) {
-    for (t = t_start; t <= t_end; t++) {
-      VEC_set(indices,offset,bus->index_vl[t]);
-      VEC_set(indices,offset+1,bus->index_vh[t]);
-      offset += 2;
     }
   }
   return indices;
@@ -1240,12 +1161,12 @@ void BUS_init(Bus* bus, int num_periods) {
 
   bus->index = 0;
 
-  bus->v_max_reg = BUS_DEFAULT_V_MAX_REG;
-  bus->v_min_reg = BUS_DEFAULT_V_MIN_REG;
-  bus->v_max_norm = BUS_DEFAULT_V_MAX_LIMIT;
-  bus->v_min_norm = BUS_DEFAULT_V_MIN_LIMIT;
-  bus->v_max_emer = BUS_DEFAULT_V_MAX_LIMIT;
-  bus->v_min_emer = BUS_DEFAULT_V_MIN_LIMIT;
+  bus->v_max_reg = BUS_DEFAULT_V_MAX;
+  bus->v_min_reg = BUS_DEFAULT_V_MIN;
+  bus->v_max_norm = BUS_DEFAULT_V_MAX;
+  bus->v_min_norm = BUS_DEFAULT_V_MIN;
+  bus->v_max_emer = BUS_DEFAULT_V_MAX;
+  bus->v_min_emer = BUS_DEFAULT_V_MIN;
 
   bus->slack = FALSE;
   bus->fixed = 0x00;
@@ -1272,10 +1193,6 @@ void BUS_init(Bus* bus, int num_periods) {
 
   ARRAY_zalloc(bus->index_v_mag,int,T);
   ARRAY_zalloc(bus->index_v_ang,int,T);
-  ARRAY_zalloc(bus->index_y,int,T);
-  ARRAY_zalloc(bus->index_z,int,T);
-  ARRAY_zalloc(bus->index_vl,int,T);
-  ARRAY_zalloc(bus->index_vh,int,T);
 
   ARRAY_zalloc(bus->sens_P_balance,REAL,T);
   ARRAY_zalloc(bus->sens_Q_balance,REAL,T);
@@ -1504,26 +1421,6 @@ int BUS_set_flags(void* vbus, char flag_type, unsigned char mask, int index) {
     }
     (*flags_ptr) |= BUS_VAR_VANG;
     index += bus->num_periods;
-  }
-  if (!((*flags_ptr) & BUS_VAR_VDEV) && (mask & BUS_VAR_VDEV)) { // voltage mag deviation
-    if (flag_type == FLAG_VARS) {
-      for (t = 0; t < bus->num_periods; t++) {
-	bus->index_y[t] = index+2*t;
-	bus->index_z[t] = index+2*t+1;
-      }
-    }
-    (*flags_ptr) |= BUS_VAR_VDEV;
-    index += 2*bus->num_periods;
-  }
-  if (!((*flags_ptr) & BUS_VAR_VVIO) && (mask & BUS_VAR_VVIO)) { // voltage mag max min bound violations
-    if (flag_type == FLAG_VARS) {
-      for (t = 0; t < bus->num_periods; t++) {
-	bus->index_vl[t] = index+2*t;
-	bus->index_vh[t] = index+2*t+1;
-      }
-    }
-    (*flags_ptr) |= BUS_VAR_VVIO;
-    index += 2*bus->num_periods;
   }
   return index;
 }

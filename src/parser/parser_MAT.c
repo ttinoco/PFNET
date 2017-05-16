@@ -392,12 +392,8 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
     BUS_set_name(bus,mat_bus->name);
     BUS_set_v_mag(bus,mat_bus->Vm,0);         // per unit
     BUS_set_v_ang(bus,mat_bus->Va*PI/180.,0); // radians
-    BUS_set_v_max_reg(bus,mat_bus->maxVm);    // per unit
-    BUS_set_v_min_reg(bus,mat_bus->minVm);    // per unit
     BUS_set_v_max_norm(bus,mat_bus->maxVm);   // per unit
     BUS_set_v_min_norm(bus,mat_bus->minVm);   // per unit
-    BUS_set_v_max_emer(bus,mat_bus->maxVm);   // per unit
-    BUS_set_v_min_emer(bus,mat_bus->minVm);   // per unit
     if (mat_bus->type == MAT_BUS_TYPE_SL)
       BUS_set_slack(bus,TRUE);
     NET_bus_hash_number_add(net,bus);
@@ -421,8 +417,8 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
       LOAD_set_bus(load,bus);                              // connect bus to load
       LOAD_set_P(load,mat_bus->Pd/parser->base_power,0);   // per unit
       LOAD_set_Q(load,mat_bus->Qd/parser->base_power,0);   // per unit
-      LOAD_set_P_min(load,LOAD_get_P(load,0));             // Pmin = P = Pmax
-      LOAD_set_P_max(load,LOAD_get_P(load,0));             // Pmin = P = Pmax
+      LOAD_set_P_min(load,LOAD_get_P(load,0),0);           // Pmin = P = Pmax
+      LOAD_set_P_max(load,LOAD_get_P(load,0),0);           // Pmin = P = Pmax
       index++;
     }
   }

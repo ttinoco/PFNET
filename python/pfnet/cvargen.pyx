@@ -77,7 +77,7 @@ cdef class VarGenerator:
 
     def set_P(self,P,t=0):
         """"
-        Sets active power.
+        Sets active power output.
 
         Parameters
         ----------
@@ -86,6 +86,18 @@ cdef class VarGenerator:
         """
 
         cvargen.VARGEN_set_P(self._c_ptr,P,t)
+
+    def set_P_ava(self,P,t=0):
+        """"
+        Sets available active power.
+
+        Parameters
+        ----------
+        P : float
+        t = int
+        """
+
+        cvargen.VARGEN_set_P_ava(self._c_ptr,P,t)
 
     def set_P_std(self,P,t=0):
         """"
@@ -101,7 +113,7 @@ cdef class VarGenerator:
 
     def set_Q(self,Q,t=0):
         """"
-        Sets reactive power.
+        Sets reactive power output.
 
         Parameters
         ----------
@@ -153,7 +165,7 @@ cdef class VarGenerator:
         def __get__(self): return new_Bus(cvargen.VARGEN_get_bus(self._c_ptr))
 
     property P:
-        """ Variable generator active power (p.u. system base MVA) (float or array). """
+        """ Variable generator active power after curtailments (p.u. system base MVA) (float or array). """
         def __get__(self):
             r = [cvargen.VARGEN_get_P(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -165,6 +177,20 @@ cdef class VarGenerator:
             cdef np.ndarray Par = np.array(P).flatten()
             for t in range(np.minimum(Par.size,self.num_periods)):
                 cvargen.VARGEN_set_P(self._c_ptr,Par[t],t)
+
+    property P_ava:
+        """ Variable generator available active power (p.u. system base MVA) (float or array). """
+        def __get__(self):
+            r = [cvargen.VARGEN_get_P_ava(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return AttributeArray(r,self.set_P_ava)
+        def __set__(self,P):
+            cdef int t
+            cdef np.ndarray Par = np.array(P).flatten()
+            for t in range(np.minimum(Par.size,self.num_periods)):
+                cvargen.VARGEN_set_P_ava(self._c_ptr,Par[t],t)
 
     property P_max:
         """ Variable generator active power upper limit (p.u. system base MVA) (float). """

@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -40,8 +40,6 @@ struct Shunt {
   // Indices
   int index;      /**< @brief Shunt index */
   int* index_b;    /**< @brief Susceptance index */
-  int* index_y;    /**< @brief Susceptance positive deviation index */
-  int* index_z;    /**< @brief Susceptance negative deviation index */
 
   // List
   Shunt* next;     /**< @brief List of shunts connceted to a bus */
@@ -64,8 +62,6 @@ void SHUNT_array_del(Shunt* shunt_array, int size) {
       free(shunt->b_values);
       free(shunt->b);
       free(shunt->index_b);
-      free(shunt->index_y);
-      free(shunt->index_z);
     }
     free(shunt_array);
   }
@@ -130,20 +126,6 @@ int SHUNT_get_index(Shunt* shunt) {
 int SHUNT_get_index_b(Shunt* shunt, int t) {
   if (shunt && t >= 0 && t < shunt->num_periods)
     return shunt->index_b[t];
-  else
-    return 0;
-}
-
-int SHUNT_get_index_y(Shunt* shunt, int t) {
-  if (shunt && t >= 0 && t < shunt->num_periods)
-    return shunt->index_y[t];
-  else
-    return 0;
-}
-
-int SHUNT_get_index_z(Shunt* shunt, int t) {
-  if (shunt && t >= 0 && t < shunt->num_periods)
-    return shunt->index_z[t];
   else
     return 0;
 }
@@ -217,31 +199,25 @@ void SHUNT_get_var_values(Shunt* shunt, Vec* values, int code) {
     
     if (shunt->vars & SHUNT_VAR_SUSC) { // susceptance
       switch(code) {
+
       case UPPER_LIMITS:
-	VEC_set(values,shunt->index_b[t],shunt->b_max);
+	if (shunt->bounded & SHUNT_VAR_SUSC)
+	  VEC_set(values,shunt->index_b[t],shunt->b_max);
+	else
+	  VEC_set(values,shunt->index_b[t],SHUNT_INF_SUSC);
 	break;
+
       case LOWER_LIMITS:
-	VEC_set(values,shunt->index_b[t],shunt->b_min);
+	if (shunt->bounded & SHUNT_VAR_SUSC)
+	  VEC_set(values,shunt->index_b[t],shunt->b_min);
+	else
+	  VEC_set(values,shunt->index_b[t],-SHUNT_INF_SUSC);
 	break;
+
       default:
 	VEC_set(values,shunt->index_b[t],shunt->b[t]);
       }
     }
-    if (shunt->vars & SHUNT_VAR_SUSC_DEV) { // susceptance deviations
-      switch(code) {
-      case UPPER_LIMITS:
-	VEC_set(values,shunt->index_y[t],SHUNT_INF_SUSC);
-	VEC_set(values,shunt->index_z[t],SHUNT_INF_SUSC);
-	break;
-      case LOWER_LIMITS:
-	VEC_set(values,shunt->index_y[t],0.);
-	VEC_set(values,shunt->index_z[t],0.);
-	break;
-      default:
-	VEC_set(values,shunt->index_y[t],0.);
-	VEC_set(values,shunt->index_z[t],0.);
-      }
-    }    
   }
 }
 
@@ -264,8 +240,6 @@ int SHUNT_get_num_vars(void* vshunt, unsigned char var, int t_start, int t_end) 
   dt = t_end-t_start+1;
   if ((var & SHUNT_VAR_SUSC) && (shunt->vars & SHUNT_VAR_SUSC))
     num_vars += dt;
-  if ((var & SHUNT_VAR_SUSC_DEV) && (shunt->vars & SHUNT_VAR_SUSC_DEV))
-    num_vars += 2*dt;
   return num_vars;
 }
 
@@ -291,13 +265,6 @@ Vec* SHUNT_get_var_indices(void* vshunt, unsigned char var, int t_start, int t_e
     for (t = t_start; t <= t_end; t++) {
       VEC_set(indices,offset,shunt->index_b[t]);
       offset++;
-    }
-  }
-  if ((var & SHUNT_VAR_SUSC_DEV) && (shunt->vars & SHUNT_VAR_SUSC_DEV)) {
-    for (t = t_start; t <= t_end; t++) {
-      VEC_set(indices,offset,shunt->index_y[t]);
-      VEC_set(indices,offset+1,shunt->index_z[t]);
-      offset += 2;
     }
   }
   return indices;
@@ -356,8 +323,6 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
 
   ARRAY_zalloc(shunt->b,REAL,T);
   ARRAY_zalloc(shunt->index_b,int,T);
-  ARRAY_zalloc(shunt->index_y,int,T);
-  ARRAY_zalloc(shunt->index_z,int,T);
 
   shunt->next = NULL;
   shunt->reg_next = NULL;
@@ -489,16 +454,6 @@ int SHUNT_set_flags(void* vshunt, char flag_type, unsigned char mask, int index)
     }
     (*flags_ptr) |= SHUNT_VAR_SUSC;
     index += shunt->num_periods;
-  }
-  if (!((*flags_ptr) & SHUNT_VAR_SUSC_DEV) && (mask & SHUNT_VAR_SUSC_DEV)) { // shunt susceptance deviations
-    if (flag_type == FLAG_VARS) {
-      for (t = 0; t < shunt->num_periods; t++) {
-	shunt->index_y[t] = index+2*t;
-	shunt->index_z[t] = index+2*t+1;
-      }
-    }
-    (*flags_ptr) |= SHUNT_VAR_SUSC_DEV;
-    index += 2*shunt->num_periods;
   }
   return index;
 }

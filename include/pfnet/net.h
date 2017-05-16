@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -40,7 +40,9 @@ typedef struct Net Net;
 // Prototypes
 /** @brief Adjust generator powers to obtain correct participations without affecting total injections. */
 void NET_adjust_generators(Net* net);
-void NET_add_vargens(Net* net, Bus* bus_list, REAL penetration, REAL uncertainty, REAL corr_radius, REAL corr_value);
+
+void NET_add_vargens(Net* net, Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value);
+void NET_add_batteries(Net* net, Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d);
 void NET_bus_hash_number_add(Net* net, Bus* bus);
 Bus* NET_bus_hash_number_find(Net* net, int number);
 void NET_bus_hash_name_add(Net* net, Bus* bus);
@@ -114,7 +116,7 @@ Vec* NET_get_var_values(Net* net, int code);
 Mat* NET_get_var_projection(Net* net, char obj_type, unsigned char var, int t_start, int t_end);
 REAL NET_get_bus_v_max(Net* net, int t);
 REAL NET_get_bus_v_min(Net* net, int t);
-REAL NET_get_bus_v_reg_vio(Net* net, int t);
+REAL NET_get_bus_v_vio(Net* net, int t);
 REAL NET_get_bus_P_mis(Net* net, int t);
 REAL NET_get_bus_Q_mis(Net* net, int t);
 REAL NET_get_gen_P_cost(Net* net, int t);
@@ -145,6 +147,7 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsi
 void NET_set_flags_of_component(Net* net, void* obj, char obj_type, char flag_mask, unsigned char val_mask);
 void NET_set_var_values(Net* net, Vec* values);
 void NET_set_vargen_buses(Net* net, Bus* bus_list);
+void NET_set_bat_buses(Net* net, Bus* bus_list);
 void NET_show_components(Net* net);
 char* NET_get_show_components_str(Net* net);
 void NET_show_properties(Net* net, int t);

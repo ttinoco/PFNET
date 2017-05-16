@@ -21,11 +21,10 @@
  *  @{
  */
 #define SHUNT_VAR_SUSC 0x01     /**< @brief Variable: susceptance **/
-#define SHUNT_VAR_SUSC_DEV 0x02 /**< @brief Variable: suscptance pos/neg deviation from current value */
 /** @} */
 
 // Infinity
-#define SHUNT_INF_SUSC 1000. /**< @brief Infinite susceptance */
+#define SHUNT_INF_SUSC 1e8 /**< @brief Infinite susceptance */
 
 // Properties
 /** \defgroup shunt_props Shunt Property Masks
@@ -52,8 +51,6 @@ int SHUNT_get_num_periods(Shunt* shunt);
 char SHUNT_get_obj_type(void* shunt);
 int SHUNT_get_index(Shunt* shunt);
 int SHUNT_get_index_b(Shunt* shunt, int t);
-int SHUNT_get_index_y(Shunt* shunt, int t);
-int SHUNT_get_index_z(Shunt* shunt, int t);
 Bus* SHUNT_get_bus(Shunt* shunt);
 Bus* SHUNT_get_reg_bus(Shunt* shunt);
 REAL SHUNT_get_g(Shunt* shunt);

@@ -4,15 +4,32 @@ Targets
 * MAT or ART data writer.
 * CIM parser written in python.
 * Rich object comparisons for all network components.
-* Instructions for adding new functions and constraints.
+* Instructions for adding new functions and constraints in C.
 * Area/zone projections.
-* Battery initial and final energy levels.
+* Variable generator curtailment cost.
 
 Unreleased
 ----------
+* Load Q variables (done).
+* Support for variable generator curtailments (done).
+* User-friendly way to add batteries and variable generators (done).
+* Improved naming consistency in Python network class (done).
+* Support for all battery and load variables in ACPF and network properties (done).
+* Battery dynamics and boundary conditions (done).
+* Updated documentation and examples (done).
+* Full support for constraint auxiliary variables (lin eq, nonlin eq, line ineq) (done).
+* Elimination of obscure variables "voltage magnitude deviation" (done).
+* Elimination of obscure variabes "voltage magnitude violation", "tap ratio deviation", "susceptance deviation" (done).
+* Improved setup.py without argparse that relies on existing build_ext commands for custom builds (done).
+* Upper and lower bounds for constraint extra variables (done).
+* Three types of voltage magnitude limits (normal, regulation, emergency) (done).
+* Load power factor, target power factor, and constraint for constant power factor (done).
+* Removed Problem "set_network" method and required that Problem constructor takes network as argument for consistency with functions and constraints (done).
+* Added default arguments to routines "add_batteries" and "add_var_generators" (done).
+* Fixed indentation bug in problem.show() (done).
 
-Version 1.2.9 (pre-release)
----------------------------
+Version 1.2.9
+-------------
 * Changed function Hessian nnz counter (Hcounter to Hphi_nnz).
 * Problem add_function takes Function object/struct and not function name.
 * Problem add_constraint takes Constraint object/struct and not function name.

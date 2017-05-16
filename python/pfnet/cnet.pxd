@@ -21,7 +21,8 @@ cdef extern from "pfnet/net.h":
     ctypedef struct Net
     ctypedef double REAL
  
-    void NET_add_vargens(Net* net, cbus.Bus* bus_list, REAL penetration, REAL uncertainty, REAL corr_radius, REAL corr_value)
+    void NET_add_vargens(Net* net, cbus.Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value)
+    void NET_add_batteries(Net* net, cbus.Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d)
     void NET_adjust_generators(Net* net)
     cbus.Bus* NET_bus_hash_number_find(Net* net, int number)
     cbus.Bus* NET_bus_hash_name_find(Net* net, char* name)
@@ -44,6 +45,7 @@ cdef extern from "pfnet/net.h":
     cbat.Bat* NET_get_bat(Net* net, int index)
     cbus.Bus* NET_get_load_buses(Net* net)
     cbus.Bus* NET_get_gen_buses(Net* net)
+    REAL NET_get_total_load_P(Net* net, int t)
     int NET_get_num_periods(Net* net)
     int NET_get_num_buses(Net* net)
     int NET_get_num_slack_buses(Net* net)
@@ -78,7 +80,7 @@ cdef extern from "pfnet/net.h":
     int NET_get_num_sparse(Net* net)
     REAL NET_get_bus_v_max(Net* net, int t)
     REAL NET_get_bus_v_min(Net* net, int t)
-    REAL NET_get_bus_v_reg_vio(Net* net, int t)
+    REAL NET_get_bus_v_vio(Net* net, int t)
     REAL NET_get_bus_P_mis(Net* net, int t)
     REAL NET_get_bus_Q_mis(Net* net, int t)
     REAL NET_get_gen_P_cost(Net* net, int t)

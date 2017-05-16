@@ -103,18 +103,21 @@ cdef class ConstraintBase:
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
 
-    def eval(self,values):
+    def eval(self,x,y=None):
         """
         Evaluates constraint violations, Jacobian, and individual Hessian matrices.
 
         Parameters
         ----------
-        values : :class:`ndarray <numpy.ndarray>`
+        x : :class:`ndarray <numpy.ndarray>` (values of variables)
+        y : :class:`ndarray <numpy.ndarray>` (values of constraint extra or auxiliary variables)
         """
 
-        cdef np.ndarray[double,mode='c'] x = values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(x.data),x.size)
-        cconstr.CONSTR_eval(self._c_constr,v)
+        cdef np.ndarray[double,mode='c'] xx = x
+        cdef np.ndarray[double,mode='c'] yy = y
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(xx.data),xx.size)
+        cdef cvec.Vec* ve = cvec.VEC_new_from_array(<cconstr.REAL*>(yy.data),yy.size) if y is not None else NULL
+        cconstr.CONSTR_eval(self._c_constr,v,ve)
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
 
@@ -125,14 +128,10 @@ cdef class ConstraintBase:
 
         Parameters
         ----------
-        sA : :class:`ndarray <numpy.ndarray>`
-             sensitivities for linear equality constraints (:math:`Ax = b`)
-        sf : :class:`ndarray <numpy.ndarray>`
-             sensitivities for nonlinear equality constraints (:math:`f(x) = 0`)
-        sGu : :class:`ndarray <numpy.ndarray>`
-             sensitivities for linear inequality constraints (:math:`Gx \le u`)
-        sGl : :class:`ndarray <numpy.ndarray>`
-             sensitivities for linear inequality constraints (:math:`l \le Gx`)
+        sA : :class:`ndarray <numpy.ndarray>` (sensitivities for linear equality constraints (:math:`Ax = b`))
+        sf : :class:`ndarray <numpy.ndarray>` (sensitivities for nonlinear equality constraints (:math:`f(x) = 0`))
+        sGu : :class:`ndarray <numpy.ndarray>` (sensitivities for linear inequality constraints (:math:`Gx \le u`))
+        sGl : :class:`ndarray <numpy.ndarray>` (sensitivities for linear inequality constraints (:math:`l \le Gx`))
         """
 
         cdef np.ndarray[double,mode='c'] xA = sA
@@ -325,10 +324,6 @@ cdef class ConstraintBase:
         """ Jacobian matrix of nonlinear equality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
         def __get__(self): return Matrix(cconstr.CONSTR_get_J(self._c_constr))
 
-    property Jbar:
-        """ Jacobian matrix of nonlinear equality constraints wrt. extra variables (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
-        def __get__(self): return Matrix(cconstr.CONSTR_get_Jbar(self._c_constr))
-
     property b:
         """ Right-hand side vector of linear equality constraints (:class:`ndarray <numpy.ndarray>`). """
         def __get__(self): return Vector(cconstr.CONSTR_get_b(self._c_constr))
@@ -345,13 +340,17 @@ cdef class ConstraintBase:
         """ Upper bound vector of linear inequality constraints (:class:`ndarray <numpy.ndarray>`). """
         def __get__(self): return Vector(cconstr.CONSTR_get_u(self._c_constr))
 
+    property l_extra_vars:
+        """ Lower bound vector of constraint extra variables (:class:`ndarray <numpy.ndarray>`). """
+        def __get__(self): return Vector(cconstr.CONSTR_get_l_extra_vars(self._c_constr))
+
+    property u_extra_vars:
+        """ Upper bound vector of constraitn extra variables (:class:`ndarray <numpy.ndarray>`). """
+        def __get__(self): return Vector(cconstr.CONSTR_get_u_extra_vars(self._c_constr))
+
     property G:
         """ Matrix for linear inequality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
         def __get__(self): return Matrix(cconstr.CONSTR_get_G(self._c_constr))
-
-    property Gbar:
-        """ Matrix for linear inequality constraints, for extra variables (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
-        def __get__(self): return Matrix(cconstr.CONSTR_get_Gbar(self._c_constr))
 
     property H_combined:
         """ Linear combination of Hessian matrices of individual nonlinear equality constraints (only the lower triangular part) (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
@@ -410,6 +409,8 @@ cdef class Constraint(ConstraintBase):
             self._c_constr = cconstr.CONSTR_PAR_GEN_P_new(net._c_net)
         elif name == "generator reactive power participation":
             self._c_constr = cconstr.CONSTR_PAR_GEN_Q_new(net._c_net)
+        elif name == "generator ramp limits":
+            self._c_constr = cconstr.CONSTR_GEN_RAMP_new(net._c_net)
         elif name == "voltage regulation by generators":
             self._c_constr = cconstr.CONSTR_REG_GEN_new(net._c_net)
         elif name == "voltage regulation by transformers":
@@ -420,8 +421,10 @@ cdef class Constraint(ConstraintBase):
             self._c_constr = cconstr.CONSTR_DC_FLOW_LIM_new(net._c_net)
         elif name == "AC branch flow limits":
             self._c_constr = cconstr.CONSTR_AC_FLOW_LIM_new(net._c_net)
-        elif name == "generator ramp limits":
-            self._c_constr = cconstr.CONSTR_GEN_RAMP_new(net._c_net)
+        elif name == "battery dynamics":
+            self._c_constr = cconstr.CONSTR_BAT_DYN_new(net._c_net)
+        elif name == "load constant power factor":
+            self._c_constr = cconstr.CONSTR_LOAD_PF_new(net._c_net)
         else:
             raise ConstraintError('invalid constraint name')            
         self._alloc = True
@@ -498,7 +501,7 @@ cdef class CustomConstraint(ConstraintBase):
         
         pass
 
-    def eval_step(self,branch,t,x):
+    def eval_step(self,branch,t,x,y=None):
         """
         Performs eval step.
        
@@ -507,6 +510,7 @@ cdef class CustomConstraint(ConstraintBase):
         branch : Branch
         t : time period (int)
         x : ndarray
+        y : ndarray
         """
  
         pass
@@ -547,9 +551,9 @@ cdef void constr_analyze_step(cconstr.Constr* c, cbranch.Branch* br, int t):
     cdef CustomConstraint cc = <CustomConstraint>cconstr.CONSTR_get_data(c)
     cc.analyze_step(new_Branch(br),t)
 
-cdef void constr_eval_step(cconstr.Constr* c, cbranch.Branch* br, int t, cvec.Vec* v):
+cdef void constr_eval_step(cconstr.Constr* c, cbranch.Branch* br, int t, cvec.Vec* v, cvec.Vec* ve):
     cdef CustomConstraint cc = <CustomConstraint>cconstr.CONSTR_get_data(c)
-    cc.eval_step(new_Branch(br),t,Vector(v))
+    cc.eval_step(new_Branch(br),t,Vector(v),Vector(ve))
 
 cdef void constr_store_sens_step(cconstr.Constr* c, cbranch.Branch* br, int t, cvec.Vec* sA, cvec.Vec* sf, cvec.Vec* sGu, cvec.Vec* sGl):
     cdef CustomConstraint cc = <CustomConstraint>cconstr.CONSTR_get_data(c)

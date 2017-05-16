@@ -107,14 +107,12 @@ void CONSTR_DC_FLOW_LIM_allocate(Constr* c) {
   CONSTR_set_A(c,MAT_new(0,num_vars,0));
   CONSTR_set_b(c,VEC_new(0));
 
-  // h
+  // G l u
+  CONSTR_set_G(c,MAT_new(G_row,    // size1 (rows)
+			 num_vars, // size2 (cols)
+			 G_nnz));  // nnz
   CONSTR_set_l(c,VEC_new(G_row));
   CONSTR_set_u(c,VEC_new(G_row));
-
-  // G
-  CONSTR_set_G(c,MAT_new(G_row, // size1 (rows)
-			 num_vars,      // size2 (cols)
-			 G_nnz));    // nnz
 }
 
 void CONSTR_DC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
@@ -207,7 +205,7 @@ void CONSTR_DC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
   (*G_row)++;
 }
 
-void CONSTR_DC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* values) {
+void CONSTR_DC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
   // Nothing
 }
 

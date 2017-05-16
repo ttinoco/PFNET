@@ -99,7 +99,7 @@ void CONSTR_LINPF_analyze_step(Constr* c, Branch* br, int t) {
   // Done 
   if ((t == T-1) && (BRANCH_get_index(br) == NET_get_num_branches(net)-1)) {
     x0 = NET_get_var_values(net,CURRENT);
-    CONSTR_eval(acpf,x0);
+    CONSTR_eval(acpf,x0,NULL);
     J = CONSTR_get_J(acpf);
     f = CONSTR_get_f(acpf);
     b = MAT_rmul_by_vec(J,x0);
@@ -109,7 +109,7 @@ void CONSTR_LINPF_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_LINPF_eval_step(Constr* c, Branch* br, int t, Vec* values) {
+void CONSTR_LINPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
   // Nothing
 }
 

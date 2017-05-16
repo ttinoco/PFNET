@@ -104,13 +104,9 @@ This function is associated with the string ``"voltage magnitude regularization"
 
 .. math::
 
-   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{v_k - v^t_k}{\Delta v} \Bigg)^2 + 
-                 \frac{1}{2} \sum_k \Bigg( \frac{v^y_k}{\Delta v} \Bigg)^2 +
-	         \frac{1}{2} \sum_k \Bigg( \frac{v^z_k}{\Delta v} \Bigg)^2 + 
-                 \frac{1}{2} \sum_k \Bigg( \frac{v^h_k}{\Delta v} \Bigg)^2 +
-	         \frac{1}{2} \sum_k \Bigg( \frac{v^l_k}{\Delta v} \Bigg)^2,
+   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{v_k - v^t_k}{\Delta v} \Bigg)^2,
 
-where :math:`v` are bus voltage magnitudes, :math:`v^t` are voltage magnitude set points (one for buses not regulated by generators), :math:`v^y` and :math:`v^z` are positive and negative deviations of :math:`v` from :math:`v^t`, :math:`v^h` and :math:`v^l` are voltage band upper and lower limit violations, and :math:`\Delta v` is a normalization factor. Only terms that include optimization variables are included in the summation.
+where :math:`v` are bus voltage magnitudes, :math:`v^t` are voltage magnitude set points (one for buses not regulated by generators), and :math:`\Delta v` is a normalization factor. 
 
 .. _prob_func_REG_ANG:
 
@@ -145,15 +141,13 @@ where :math:`P^g` and :math:`Q^g` are generator active and reactive powers, :mat
 Transformer tap ratio regularization
 ------------------------------------
 
-This function is associated with the string ``"tap ratio regularization"``. It penalizes deviations of tap ratios of tap-changing transformers from their initial value. It is defined by the expression
+This function is associated with the string ``"tap ratio regularization"``. It penalizes deviations of tap ratios of tap-changing transformers from their initial values. It is defined by the expression
 
 .. math::
 
-   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{t_k - t^0_k}{\Delta t} \Bigg)^2 + 
-                 \frac{1}{2} \sum_k \Bigg( \frac{t^y_k}{\Delta t} \Bigg)^2 + 
-	         \frac{1}{2} \sum_k \Bigg( \frac{t^z_k}{\Delta t} \Bigg)^2,
+   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{t_k - t^0_k}{\Delta t} \Bigg)^2,
 
-where :math:`t` are tap ratios of tap-changing transformers, :math:`t^0` are their initial values, :math:`t^y` and :math:`t^z` are positive and negative deviations of :math:`t` from :math:`t^0`, and :math:`\Delta t` is a normalization factor. Only terms that include optimization variables are included in the summation.
+where :math:`t` are tap ratios of tap-changing transformers, :math:`t^0` are their initial values, and :math:`\Delta t` is a normalization factor.
 
 .. _prob_func_REG_PHASE:
 
@@ -173,15 +167,13 @@ where :math:`\phi` are phase shifts of phase-shifting transformers, :math:`\phi^
 Switched shunt susceptance regularization
 -----------------------------------------
 
-This function is associated with the string ``"susceptance regularization"``. It penalizes deviations of susceptances of switched shunt devices from their initial value. It is defined by the expression
+This function is associated with the string ``"susceptance regularization"``. It penalizes deviations of susceptances of switched shunt devices from their initial values. It is defined by the expression
 
 .. math::
 
-   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{b_k - b^0_k}{\Delta b} \Bigg)^2 + 
-                 \frac{1}{2} \sum_k \Bigg( \frac{b^y_k}{\Delta b} \Bigg)^2 + 
-	         \frac{1}{2} \sum_k \Bigg( \frac{b^z_k}{\Delta b} \Bigg)^2,
+   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{b_k - b^0_k}{\Delta b} \Bigg)^2,
 
-where :math:`b` are susceptances of switched shunt devices, :math:`b^0` are their initial values, :math:`b^y` and :math:`b^z` are positive and negative deviations of :math:`b` from :math:`b^0`, and :math:`\Delta b` is a normalization factor. Only terms that include optimization variables are included in the summation.
+where :math:`b` are susceptances of switched shunt devices, :math:`b^0` are their initial values, and :math:`\Delta b` is a normalization factor.
 
 .. _prob_func_SLIM_VMAG:
 
@@ -224,11 +216,11 @@ Constraints in PFNET are of the form
 
 .. math::
    
-   & A x = b \\
-   & f(x) = 0 \\
-   & l \le G x \le u,
+   & A \left[ \begin{array}{c} x \\ y \end{array} \right] = b, \quad
+   & f(x,y) = 0, \quad
+   & l \le G \left[ \begin{array}{c} x \\ y \end{array} \right] \le u,
 
-where :math:`A` and :math:`G`  are sparse matrices, :math:`b`, :math:`l` and :math:`u`  are vectors, :math:`f` is a vector-valued nonlinear function, and :math:`x` is a vector of variables. They are represented by objects of type :class:`ConstraintBase <pfnet.ConstraintBase>`. An instance of this type can be constructed from the class :class:`Constraint <pfnet.Constraint>`, which takes requires specifying the constraint name and the network to be associated with the constraint. The following example sets all bus voltage magnitudes and angles as variables and constructs the AC power balance constraints::
+where :math:`A` and :math:`G`  are sparse matrices, :math:`b`, :math:`l` and :math:`u`  are vectors, :math:`f` is a vector-valued nonlinear function, and :math:`x` and :math:`y` are vectors of network variables and extra or auxiliary constraint variables, respectively. They are represented by objects of type :class:`ConstraintBase <pfnet.ConstraintBase>`. An instance of this type can be constructed from the class :class:`Constraint <pfnet.Constraint>`, whose constructor requires specifying the constraint name and the network to be associated with the constraint. The following example sets all bus voltage magnitudes and angles as variables and constructs the AC power balance constraints::
 
   >>> import pfnet
 
@@ -247,11 +239,14 @@ where :math:`A` and :math:`G`  are sparse matrices, :math:`b`, :math:`l` and :ma
   >>> print constr.name == 'AC power balance'
   True
 
-Before a :class:`ConstraintBase <pfnet.ConstraintBase>` object can be used, it must be initialized using the :class:`ConstraintBase <pfnet.ConstraintBase>` class method :func:`analyze() <pfnet.ConstraintBase.analyze>`. This routine analyzes the constraint and allocates the required vectors and matrices. After this, the constraint can be evaluated using the method :func:`eval() <pfnet.ConstraintBase.eval>`::
+Before a :class:`ConstraintBase <pfnet.ConstraintBase>` object can be used, it must be initialized using the :class:`ConstraintBase <pfnet.ConstraintBase>` class method :func:`analyze() <pfnet.ConstraintBase.analyze>`. This routine analyzes the constraint and allocates the required vectors and matrices. After this, the number of extra variables can be obtained from the attribute :data:`num_extra_vars <pfnet.ConstraintBase.num_extra_vars>`, and the constraint can be evaluated using the method :func:`eval() <pfnet.ConstraintBase.eval>`::
 
   >>> x = net.get_var_values()
 
   >>> constr.analyze()
+
+  >>> print constr.num_extra_vars
+  0
 
   >>> constr.eval(x)
 
@@ -439,9 +434,40 @@ This constraint is associated with the string ``"generator ramp limits"``. It en
 
 .. math:: 
    
-    -\delta P^{\max}_k \le P_k(t) - P_k(t-1) \le \delta P^{\max}
+    -\delta P^{\max} \le P(t) - P(t-1) \le \delta P^{\max}
 
-for each generator :math:`k` and time period :math:`t`, where :math:`P_k(t)` are generator active powers, and :math:`\delta P^{\max}_k` are generator ramping limits. The ramping limits are defined by the :data:`dP_max <pfnet.Generator.dP_max>` attribute of each :class:`Generator <pfnet.Generator>` object. For :math:`t = 0`, :math:`P_k(t-1)` is the :data:`P_prev <pfnet.Generator.P_prev>` attribute of a :class:`Generator <pfnet.Generator>`.
+for each generator and time period :math:`t \in \{1,\ldots,T\}`, where :math:`P(t)` are generator active powers, and :math:`\delta P^{\max}` are generator ramping limits. The ramping limits are defined by the :data:`dP_max <pfnet.Generator.dP_max>` attribute of each :class:`Generator <pfnet.Generator>` object. For :math:`t = 1`, :math:`P(t-1)` is the :data:`P_prev <pfnet.Generator.P_prev>` attribute of a :class:`Generator <pfnet.Generator>`.
+
+.. _prob_constr_BAT_DYN:
+
+Battery dynamics
+----------------
+
+This constraint is associated with the string ``"battery dynamics"``. It enforces the dynamic equations of the batteries' energy levels. It is given by
+
+.. math::
+   :nowrap:
+
+   \begin{align*}
+   E(1) &= E_i \\
+   E(T+1) &= E_f \\
+   E(t+1) &= E(t) + \eta_c P_c(t) - \eta_d^{-1} P_d(t), \ \forall t \in \{1,\ldots,T\}
+   \end{align*}
+
+for each battery, where :math:`E_i`, :math:`E_f`, :math:`\eta_c`, and :math:`\eta_d` correspond to the attributes :data:`E_init <pfnet.Battery.E_init>` , :data:`E_final <pfnet.Battery.E_final>`, :data:`eta_c <pfnet.Battery.eta_c>`, and :data:`eta_d <pfnet.Battery.eta_d>` of a :class:`Battery <pfnet.Battery>`, respectively. It is noted here that the units of the charging/discharging powers are p.u. system base power, and the units of the energy levels are p.u. system base power times the duration of a time period.
+
+.. _prob_constr_LOAD_PF:
+
+Load Constant Power Factor
+--------------------------
+
+This constraint is associated with the string ``"load constant power factor"``. It forces loads to have a constant power factor at each time. It is given by
+
+.. math:: 
+   
+    Q(t) - P(t) \frac{\sqrt{1-\gamma^2}}{\gamma} = 0
+
+for each load and time period :math:`t \in \{1,\ldots,T\}`, where :math:`P(t)` is active power, :math:`Q(t)` is reactive power, and :math:`\gamma \in (0,1]` is the load's :data:`target_power_factor <pfnet.Load.target_power_factor>`.
 
 .. _prob_prob:
 
@@ -462,7 +488,7 @@ Optimization problems constructed with PFNET are of the form
 
 As already noted, the objective function :math:`\varphi` is a weighted sum of functions :math:`\varphi_i`. The linear and nonlinear constraints :math:`Ax = b`, :math:`l \le Gx \le u`, and :math:`f(x) = 0` correspond to one or more of the constraints described above. An optimization problem in PFNET is represented by an object of type :class:`Problem <pfnet.Problem>`. 
 
-After instantiation, a :class:`Problem <pfnet.Problem>` is empty and one needs to specify the :class:`Network <pfnet.Network>` that is to be associated with the problem, the :class:`Constraints <pfnet.ConstraintBase>` to include, and the :class:`Functions <pfnet.FunctionBase>` that form the objective function. This can be done using the :class:`Problem <pfnet.Problem>` class methods :func:`set_network() <pfnet.Problem.set_network>`, :func:`add_constraint() <pfnet.Problem.add_constraint>`, and :func:`add_function() <pfnet.Problem.add_function>`. The following example shows how to construct a simple power flow problem and solve it using the Newton-Raphson method:
+After instantiation, a :class:`Problem <pfnet.Problem>` is empty and one needs to specify the :class:`Constraints <pfnet.ConstraintBase>` to include, and the :class:`Functions <pfnet.FunctionBase>` that form the objective function. This can be done using the :class:`Problem <pfnet.Problem>` class methods :func:`add_constraint() <pfnet.Problem.add_constraint>`, and :func:`add_function() <pfnet.Problem.add_function>`, respectively. The following example shows how to construct a simple power flow problem and solve it using the Newton-Raphson method:
 
 .. literalinclude:: ../examples/power_flow.py
 

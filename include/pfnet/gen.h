@@ -25,8 +25,8 @@
 /** @} */
 
 // Infinity
-#define GEN_INF_P 1000. /**< @brief Infinite active power */
-#define GEN_INF_Q 1000. /**< @brief Infinite reactive power */
+#define GEN_INF_P 1e8 /**< @brief Infinite active power */
+#define GEN_INF_Q 1e8 /**< @brief Infinite reactive power */
 
 // Properties
 /** \defgroup gen_props Generator Property Masks 

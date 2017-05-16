@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -20,7 +20,7 @@ struct Bat {
   // Times
   int num_periods;   /**< @brief Number of time periods. */ 
 
- // Flags
+  // Flags
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
   char vars;           /**< @brief Flags for indicating which quantities should be treated as variables */
@@ -243,14 +243,29 @@ void BAT_get_var_values(Bat* bat, Vec* values, int code) {
     // Charging power
     if (bat->vars & BAT_VAR_P) {
       switch(code) {
+
       case UPPER_LIMITS:
-	VEC_set(values,bat->index_Pc[t],bat->P_max);
-	VEC_set(values,bat->index_Pd[t],-bat->P_min);
+	if (bat->bounded & BAT_VAR_P) {
+	  VEC_set(values,bat->index_Pc[t],bat->P_max);
+	  VEC_set(values,bat->index_Pd[t],-bat->P_min);
+	}
+	else {
+	  VEC_set(values,bat->index_Pc[t],BAT_INF_P);
+	  VEC_set(values,bat->index_Pd[t],BAT_INF_P);
+	}
 	break;
+
       case LOWER_LIMITS:
-	VEC_set(values,bat->index_Pc[t],0.);
-	VEC_set(values,bat->index_Pd[t],0.);
+	if (bat->bounded & BAT_VAR_P) {
+	  VEC_set(values,bat->index_Pc[t],0.);
+	  VEC_set(values,bat->index_Pd[t],0.);
+	}
+	else {
+	  VEC_set(values,bat->index_Pc[t],-BAT_INF_P);
+	  VEC_set(values,bat->index_Pd[t],-BAT_INF_P);
+	}
 	break;
+
       default:
 	if (bat->P[t] >= 0) {
 	  VEC_set(values,bat->index_Pc[t],bat->P[t]);
@@ -266,12 +281,21 @@ void BAT_get_var_values(Bat* bat, Vec* values, int code) {
     // Energy level
     if (bat->vars & BAT_VAR_E) {
       switch(code) {
+
       case UPPER_LIMITS:
-	VEC_set(values,bat->index_E[t],bat->E_max);
+	if (bat->bounded & BAT_VAR_E)
+	  VEC_set(values,bat->index_E[t],bat->E_max);
+	else
+	  VEC_set(values,bat->index_E[t],BAT_INF_E);
 	break;
+
       case LOWER_LIMITS:
-	VEC_set(values,bat->index_E[t],0.);
+	if (bat->bounded & BAT_VAR_E)
+	  VEC_set(values,bat->index_E[t],0.);
+	else
+	  VEC_set(values,bat->index_E[t],-BAT_INF_E);
 	break;
+
       default:
 	VEC_set(values,bat->index_E[t],bat->E[t]);
       }

@@ -15,10 +15,10 @@ cdef extern from "pfnet/branch.h":
     ctypedef double REAL
 
     cdef char BRANCH_VAR_RATIO
-    cdef char BRANCH_VAR_RATIO_DEV
     cdef char BRANCH_VAR_PHASE
 
     cdef double BRANCH_INF_RATIO
+    cdef double BRANCH_INF_PHASE
     cdef double BRANCH_INF_FLOW
 
     cdef char BRANCH_PROP_ANY
@@ -34,8 +34,6 @@ cdef extern from "pfnet/branch.h":
     int BRANCH_get_num_periods(Branch* br)
     int BRANCH_get_index(Branch* br)
     int BRANCH_get_index_ratio(Branch* br, int t)
-    int BRANCH_get_index_ratio_y(Branch* br, int t)
-    int BRANCH_get_index_ratio_z(Branch* br, int t)
     int BRANCH_get_index_phase(Branch* br, int t)
     Bus* BRANCH_get_bus_k(Branch* br)
     Bus* BRANCH_get_bus_m(Branch* br)

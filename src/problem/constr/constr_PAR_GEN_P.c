@@ -114,6 +114,11 @@ void CONSTR_PAR_GEN_P_allocate(Constr* c) {
   CONSTR_set_J(c,MAT_new(0,num_vars,0));
   CONSTR_set_f(c,VEC_new(0));
 
+  // G u l
+  CONSTR_set_G(c,MAT_new(0,num_vars,0));
+  CONSTR_set_u(c,VEC_new(0));
+  CONSTR_set_l(c,VEC_new(0));
+
   // b
   CONSTR_set_b(c,VEC_new(num_constr));
 
@@ -198,7 +203,7 @@ void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_PAR_GEN_P_eval_step(Constr* c, Branch* br, int t, Vec* values) {
+void CONSTR_PAR_GEN_P_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
   // Nothing to do
 }
 

@@ -32,8 +32,7 @@ def NRsolve(net):
                   'regulator',
                   'reactive power')
 
-    p = pfnet.Problem()
-    p.set_network(net)
+    p = pfnet.Problem(net)
     p.add_constraint(pfnet.Constraint('AC power balance',net))  
     p.add_constraint(pfnet.Constraint('generator active power participation',net))
     p.add_constraint(pfnet.Constraint('generator reactive power participation',net))

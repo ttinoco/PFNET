@@ -42,14 +42,12 @@
  *  @{
  */
 #define BRANCH_VAR_RATIO 0x01     /**< @brief Variable: transformer taps ratio */
-#define BRANCH_VAR_RATIO_DEV 0x02 /**< @brief Variable: branch taps ratio pos/neg deviations from current value */
-#define BRANCH_VAR_PHASE 0x04     /**< @brief Variable: transformer phase shift */
-#define BRANCH_VAR_P 0x08         /**< @brief Variable: branch active flow */
-#define BRANCH_VAR_Q 0x10         /**< @brief Variable: branch ractive flow */
+#define BRANCH_VAR_PHASE 0x02     /**< @brief Variable: transformer phase shift */
 /** @} */
 
 // Infinity
-#define BRANCH_INF_RATIO 100. /**< @brief Infinite tap ratio */
+#define BRANCH_INF_RATIO 1e8 /**< @brief Infinite tap ratio */
+#define BRANCH_INF_PHASE 1e8 /**< @brief Infinite phase shift */
 
 // Properties
 /** \defgroup branch_props Branch Property Masks
@@ -85,8 +83,6 @@ REAL BRANCH_get_sens_P_u_bound(Branch* br, int t);
 REAL BRANCH_get_sens_P_l_bound(Branch* br, int t);
 int BRANCH_get_index(Branch* br);
 int BRANCH_get_index_ratio(Branch* br, int t);
-int BRANCH_get_index_ratio_y(Branch* br, int t);
-int BRANCH_get_index_ratio_z(Branch* br, int t);
 int BRANCH_get_index_phase(Branch* br, int t);
 REAL BRANCH_get_ratio(Branch* br, int t);
 REAL BRANCH_get_ratio_max(Branch* br);

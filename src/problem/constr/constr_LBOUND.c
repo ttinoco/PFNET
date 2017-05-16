@@ -12,14 +12,14 @@
 
 Constr* CONSTR_LBOUND_new(Net* net) {
   Constr* c = CONSTR_new(net);
-  CONSTR_set_func_init(c, &CONSTR_LBOUND_init);
-  CONSTR_set_func_count_step(c, &CONSTR_LBOUND_count_step);
-  CONSTR_set_func_allocate(c, &CONSTR_LBOUND_allocate);
-  CONSTR_set_func_clear(c, &CONSTR_LBOUND_clear);
-  CONSTR_set_func_analyze_step(c, &CONSTR_LBOUND_analyze_step);
-  CONSTR_set_func_eval_step(c, &CONSTR_LBOUND_eval_step);
-  CONSTR_set_func_store_sens_step(c, &CONSTR_LBOUND_store_sens_step);
-  CONSTR_set_func_free(c, &CONSTR_LBOUND_free);
+  CONSTR_set_func_init(c,&CONSTR_LBOUND_init);
+  CONSTR_set_func_count_step(c,&CONSTR_LBOUND_count_step);
+  CONSTR_set_func_allocate(c,&CONSTR_LBOUND_allocate);
+  CONSTR_set_func_clear(c,&CONSTR_LBOUND_clear);
+  CONSTR_set_func_analyze_step(c,&CONSTR_LBOUND_analyze_step);
+  CONSTR_set_func_eval_step(c,&CONSTR_LBOUND_eval_step);
+  CONSTR_set_func_store_sens_step(c,&CONSTR_LBOUND_store_sens_step);
+  CONSTR_set_func_free(c,&CONSTR_LBOUND_free);
   CONSTR_init(c);
   return c;
 }
@@ -125,22 +125,6 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
     }
   }
 
-  // Tap ratio dev
-  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO_DEV)) {
-    index1 = BRANCH_get_index_ratio_y(br,t);
-    index2 = BRANCH_get_index_ratio_z(br,t);
-    MAT_set_i(G,index1,index1);
-    MAT_set_j(G,index1,index1);
-    MAT_set_d(G,index1,1.);
-    MAT_set_i(G,index2,index2);
-    MAT_set_j(G,index2,index2);
-    MAT_set_d(G,index2,1.);
-    VEC_set(u,index1,BRANCH_INF_RATIO);
-    VEC_set(u,index2,BRANCH_INF_RATIO);
-    VEC_set(l,index1,0.);
-    VEC_set(l,index2,0.);
-  }
-
   // Phase shift
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
     index = BRANCH_get_index_phase(br,t);
@@ -171,45 +155,13 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	MAT_set_j(G,index,index);
 	MAT_set_d(G,index,1.);
 	if (BUS_has_flags(bus,FLAG_BOUNDED,BUS_VAR_VMAG)) {
-	  VEC_set(u,index,BUS_get_v_max_reg(bus));
-	  VEC_set(l,index,BUS_get_v_min_reg(bus));
+	  VEC_set(u,index,BUS_get_v_max_norm(bus));
+	  VEC_set(l,index,BUS_get_v_min_norm(bus));
 	}
 	else {
 	  VEC_set(u,index,BUS_INF_V_MAG);
 	  VEC_set(l,index,0.);
 	}
-      }
-
-      // Voltage magnitude dev (V_DEV)
-      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) {
-	index1 = BUS_get_index_y(bus,t);
-	index2 = BUS_get_index_z(bus,t);
-	MAT_set_i(G,index1,index1);
-	MAT_set_j(G,index1,index1);
-	MAT_set_d(G,index1,1.);
-	MAT_set_i(G,index2,index2);
-	MAT_set_j(G,index2,index2);
-	MAT_set_d(G,index2,1.);
-	VEC_set(u,index1,BUS_INF_V_MAG);
-	VEC_set(u,index2,BUS_INF_V_MAG);
-	VEC_set(l,index1,0.);
-	VEC_set(l,index2,0.);
-      }
-
-      // Voltage magnitude vio (V_VIO)
-      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VVIO)) {
-	index1 = BUS_get_index_vl(bus,t);
-	index2 = BUS_get_index_vh(bus,t);
-	MAT_set_i(G,index1,index1);
-	MAT_set_j(G,index1,index1);
-	MAT_set_d(G,index1,1.);
-	MAT_set_i(G,index2,index2);
-	MAT_set_j(G,index2,index2);
-	MAT_set_d(G,index2,1.);
-	VEC_set(u,index1,BUS_INF_V_MAG);
-	VEC_set(u,index2,BUS_INF_V_MAG);
-	VEC_set(l,index1,0.);
-	VEC_set(l,index2,0.);
       }
 
       // Voltage angle (V_ANG)
@@ -268,13 +220,23 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  MAT_set_j(G,index,index);
 	  MAT_set_d(G,index,1.);
 	  if (LOAD_has_flags(load,FLAG_BOUNDED,LOAD_VAR_P)) {
-	    VEC_set(u,index,LOAD_get_P_max(load));
-	    VEC_set(l,index,LOAD_get_P_min(load));
+	    VEC_set(u,index,LOAD_get_P_max(load,t));
+	    VEC_set(l,index,LOAD_get_P_min(load,t));
 	  }
 	  else {
 	    VEC_set(u,index,LOAD_INF_P);
 	    VEC_set(l,index,-LOAD_INF_P);
 	  }
+	}
+
+	// Rective power (Q)
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) {
+	  index = LOAD_get_index_Q(load,t);
+	  MAT_set_i(G,index,index);
+	  MAT_set_j(G,index,index);
+	  MAT_set_d(G,index,1.);
+	  VEC_set(u,index,LOAD_INF_Q);
+	  VEC_set(l,index,-LOAD_INF_Q);
 	}
       }
 
@@ -288,7 +250,7 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  MAT_set_j(G,index,index);
 	  MAT_set_d(G,index,1.);
 	  if (VARGEN_has_flags(vargen,FLAG_BOUNDED,VARGEN_VAR_P)) {
-	    VEC_set(u,index,VARGEN_get_P_max(vargen));
+	    VEC_set(u,index,VARGEN_get_P_ava(vargen,t));
 	    VEC_set(l,index,VARGEN_get_P_min(vargen));
 	  }
 	  else {
@@ -331,22 +293,6 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	    VEC_set(u,index,SHUNT_INF_SUSC);
 	    VEC_set(l,index,-SHUNT_INF_SUSC);
 	  }
-	}
-
-	// Susceptance dev
-	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC_DEV)) {
-	  index1 = SHUNT_get_index_y(shunt,t);
-	  index2 = SHUNT_get_index_z(shunt,t);
-	  MAT_set_i(G,index1,index1);
-	  MAT_set_j(G,index1,index1);
-	  MAT_set_d(G,index1,1.);
-	  MAT_set_i(G,index2,index2);
-	  MAT_set_j(G,index2,index2);
-	  MAT_set_d(G,index2,1.);
-	  VEC_set(u,index1,SHUNT_INF_SUSC);
-	  VEC_set(u,index2,SHUNT_INF_SUSC);
-	  VEC_set(l,index1,0.);
-	  VEC_set(l,index2,0.);
 	}
       }
 
@@ -408,7 +354,7 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_LBOUND_eval_step(Constr* c, Branch* br, int t, Vec* values) {
+void CONSTR_LBOUND_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
   // Nothing to do
 }
 

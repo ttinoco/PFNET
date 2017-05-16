@@ -40,22 +40,13 @@ class TestFunctions(unittest.TestCase):
             nb = net.num_buses
             nrg = net.get_num_buses_reg_by_gen()
             ns = net.get_num_slack_buses()
-            nrt = net.get_num_buses_reg_by_tran()
 
             # Vars
             net.set_flags('bus',
                           'variable',
                           'any',
                           ['voltage magnitude','voltage angle'])
-            net.set_flags('bus',
-                          'variable',
-                          ['regulated by generator','not slack'],
-                          'voltage magnitude deviation')
-            net.set_flags('bus',
-                          'variable',
-                          'regulated by transformer',
-                          'voltage magnitude violation')
-            self.assertEqual(net.num_vars,(2*nb+2*(nrg-ns)+2*nrt)*net.num_periods)
+            self.assertEqual(net.num_vars,2*nb*net.num_periods)
 
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
@@ -89,7 +80,7 @@ class TestFunctions(unittest.TestCase):
             self.assertEqual(func.Hphi_nnz,0)
 
             func.analyze()
-            self.assertEqual(func.Hphi_nnz,(nb+2*(nrg-ns)+2*nrt)*net.num_periods)
+            self.assertEqual(func.Hphi_nnz,nb*net.num_periods)
             func.eval(x0)
             self.assertEqual(func.Hphi_nnz,0)
 
@@ -104,7 +95,7 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(g.shape,(net.num_vars,))
             self.assertTrue(type(H) is coo_matrix)
             self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
-            self.assertEqual(H.nnz,(nb+2*(nrg-ns)+2*nrt)*net.num_periods)
+            self.assertEqual(H.nnz,nb*net.num_periods)
             self.assertTrue(np.all(H.row == H.col))
 
             self.assertTrue(not np.any(np.isinf(g)))
@@ -158,8 +149,6 @@ class TestFunctions(unittest.TestCase):
             for t in range(net.num_periods):
                 for bus in net.buses:
                     phi += 0.5*(((bus.v_mag[t]-bus.v_set[t])/dv)**2.)
-                    if bus.has_flags('variable','voltage magnitude deviation'):
-                        phi += 0.5*((np.abs(bus.v_mag[t]-bus.v_set[t])/dv)**2.)
             self.assertLess(np.abs(func.phi-phi),1e-10*(func.phi+1))
             net.clear_flags()
             self.assertEqual(net.num_vars,0)
@@ -463,11 +452,10 @@ class TestFunctions(unittest.TestCase):
             net.set_flags('branch',
                           'variable',
                           'tap changer - v',
-                          ['tap ratio','tap ratio deviation'])
-            self.assertEqual(net.num_vars,3*net.get_num_tap_changers_v()*self.T)
+                          ['tap ratio'])
+            self.assertEqual(net.num_vars,net.get_num_tap_changers_v()*self.T)
 
             x0 = net.get_var_values()+np.random.randn(net.num_vars)
-            net.set_var_values(x0)
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
 
@@ -495,7 +483,7 @@ class TestFunctions(unittest.TestCase):
             self.assertEqual(func.Hphi_nnz,0)
 
             func.analyze()
-            self.assertEqual(func.Hphi_nnz,3*net.get_num_tap_changers_v()*self.T)
+            self.assertEqual(func.Hphi_nnz,net.get_num_tap_changers_v()*self.T)
             func.eval(x0)
             self.assertEqual(func.Hphi_nnz,0)
 
@@ -510,7 +498,7 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(g.shape,(net.num_vars,))
             self.assertTrue(type(H) is coo_matrix)
             self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
-            self.assertEqual(H.nnz,3*net.get_num_tap_changers_v()*self.T)
+            self.assertEqual(H.nnz,net.get_num_tap_changers_v()*self.T)
             self.assertTrue(np.all(H.row == H.col))
 
             self.assertTrue(not np.any(np.isinf(g)))
@@ -531,8 +519,6 @@ class TestFunctions(unittest.TestCase):
                         t0 = br.ratio[tau]
                         dt = np.maximum(tmax-tmin,1e-4)
                         phi_manual += 0.5*((t-t0)/dt)**2.
-                        phi_manual += 0.5*(x0[br.index_ratio_y[tau]]/dt)**2.
-                        phi_manual += 0.5*(x0[br.index_ratio_z[tau]]/dt)**2.
             self.assertLess(np.abs(func.phi-phi_manual),1e-10*(phi_manual+1.))
 
             # Gradient check
@@ -587,11 +573,10 @@ class TestFunctions(unittest.TestCase):
             net.set_flags('shunt',
                           'variable',
                           'switching - v',
-                          ['susceptance','susceptance deviation'])
-            self.assertEqual(net.num_vars,3*net.get_num_switched_shunts()*self.T)
+                          ['susceptance'])
+            self.assertEqual(net.num_vars,net.get_num_switched_shunts()*self.T)
 
             x0 = net.get_var_values()+np.random.randn(net.num_vars)
-            net.set_var_values(x0)
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
 
@@ -619,7 +604,7 @@ class TestFunctions(unittest.TestCase):
             self.assertEqual(func.Hphi_nnz,0)
 
             func.analyze()
-            self.assertEqual(func.Hphi_nnz,3*net.get_num_switched_shunts()*self.T)
+            self.assertEqual(func.Hphi_nnz,net.get_num_switched_shunts()*self.T)
             func.eval(x0)
             self.assertEqual(func.Hphi_nnz,0)
 
@@ -634,7 +619,7 @@ class TestFunctions(unittest.TestCase):
             self.assertTupleEqual(g.shape,(net.num_vars,))
             self.assertTrue(type(H) is coo_matrix)
             self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
-            self.assertEqual(H.nnz,3*net.get_num_switched_shunts()*self.T)
+            self.assertEqual(H.nnz,net.get_num_switched_shunts()*self.T)
             self.assertTrue(np.all(H.row == H.col))
 
             self.assertTrue(not np.any(np.isinf(g)))
@@ -655,8 +640,6 @@ class TestFunctions(unittest.TestCase):
                         b0 = sh.b[t]
                         db = np.maximum(bmax-bmin,1e-4)
                         phi_manual += 0.5*((b-b0)/db)**2.
-                        phi_manual += 0.5*(x0[sh.index_y[t]]/db)**2.
-                        phi_manual += 0.5*(x0[sh.index_z[t]]/db)**2.
             self.assertLess(np.abs(func.phi-phi_manual),1e-10*(phi_manual+1.))
 
             # Gradient check
@@ -1230,8 +1213,8 @@ class TestFunctions(unittest.TestCase):
             for t in range(self.T):
                 for bus in net.buses:
                     self.assertTrue(bus.has_flags('variable','voltage magnitude'))
-                    dv = np.maximum(bus.v_max_reg-bus.v_min_reg,eps)
-                    vmid = 0.5*(bus.v_max_reg+bus.v_min_reg)
+                    dv = np.maximum(bus.v_max-bus.v_min,eps)
+                    vmid = 0.5*(bus.v_max+bus.v_min)
                     f_manual += 0.5*(((x0[bus.index_v_mag[t]]-vmid)/dv)**2.)
             self.assertLess(np.abs(f-f_manual),1e-10*(f_manual+1.))
 
@@ -1241,8 +1224,8 @@ class TestFunctions(unittest.TestCase):
             for t in range(self.T):
                 for bus in net.buses:
                     self.assertTrue(bus.has_flags('variable','voltage magnitude'))
-                    dv = np.maximum(bus.v_max_reg-bus.v_min_reg,eps)
-                    vmid = 0.5*(bus.v_max_reg+bus.v_min_reg)
+                    dv = np.maximum(bus.v_max-bus.v_min,eps)
+                    vmid = 0.5*(bus.v_max+bus.v_min)
                     f_manual += 0.5*(((bus.v_mag[t]-vmid)/dv)**2.)
             self.assertLess(np.abs(f-f_manual),1e-10*(f_manual+1.))
 
@@ -1412,7 +1395,7 @@ class TestFunctions(unittest.TestCase):
     def test_func_LOAD_UTIL(self):
 
         # Single period
-        h = 1e-9
+        h = 1e-8
         for case in test_cases.CASES:
 
             net = pf.Parser(case).parse(case)
@@ -1534,7 +1517,7 @@ class TestFunctions(unittest.TestCase):
             self.assertLess(np.abs(val-func.phi),1e-7)
 
         # Multi period
-        h = 1e-9
+        h = 1e-8
         for case in test_cases.CASES:
 
             net = pf.Parser(case).parse(case,self.T)
@@ -1681,7 +1664,7 @@ class TestFunctions(unittest.TestCase):
                 bus.price = (bus.index%10)*0.5123
 
             # vargens
-            net.add_vargens(net.get_load_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_load_buses(),80.,50.,30.,5,0.05)
             for vargen in net.var_generators:
                 vargen.P = (vargen.index%10)*0.3233+0.1
 
@@ -1854,7 +1837,7 @@ class TestFunctions(unittest.TestCase):
                 bus.price = np.random.rand(self.T)*10.
 
             # vargens
-            net.add_vargens(net.get_load_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_load_buses(),80.,50.,30.,5,0.05)
             for vargen in net.var_generators:
                 self.assertEqual(vargen.num_periods,self.T)
                 vargen.P = np.random.randn(self.T)*10.

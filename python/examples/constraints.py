@@ -27,6 +27,8 @@ x = net.get_var_values()
 
 constr.analyze()
 
+print(constr.num_extra_vars)
+
 constr.eval(x + 0.01)
 constr.eval(x)
 

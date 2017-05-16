@@ -12,6 +12,10 @@ cimport cload
 
 # Infinity
 LOAD_INF_P = cload.LOAD_INF_P
+LOAD_INF_Q = cload.LOAD_INF_Q
+
+# Others
+LOAD_MIN_TARGET_PF = cload.LOAD_MIN_TARGET_PF
 
 class LoadError(Exception):
     """
@@ -97,6 +101,30 @@ cdef class Load:
 
         cload.LOAD_set_P(self._c_ptr,P,t)
 
+    def set_P_max(self,P,t=0):
+        """"
+        Sets active power upper limit.
+
+        Parameters
+        ----------
+        P : float
+        t = int
+        """
+
+        cload.LOAD_set_P_max(self._c_ptr,P,t)
+
+    def set_P_min(self,P,t=0):
+        """"
+        Sets active power lower limit.
+
+        Parameters
+        ----------
+        P : float
+        t = int
+        """
+
+        cload.LOAD_set_P_min(self._c_ptr,P,t)
+
     def set_Q(self,Q,t=0):
         """"
         Sets reactive power.
@@ -130,6 +158,15 @@ cdef class Load:
             else:
                 return np.array(r)
 
+    property index_Q:
+        """ Index of load reactive power variable (int or array). """
+        def __get__(self):
+            r = [cload.LOAD_get_index_Q(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
+            else:
+                return np.array(r)
+
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which load is connected. """
         def __get__(self): return new_Bus(cload.LOAD_get_bus(self._c_ptr))
@@ -149,14 +186,32 @@ cdef class Load:
                 cload.LOAD_set_P(self._c_ptr,Par[t],t)
 
     property P_max:
-        """ Load active power upper limit (p.u. system base MVA) (float). """
-        def __get__(self): return cload.LOAD_get_P_max(self._c_ptr)
-        def __set__(self,P): cload.LOAD_set_P_max(self._c_ptr,P)
+        """ Load active power upper limit (p.u. system base MVA) (float or array). """
+        def __get__(self):
+            r = [cload.LOAD_get_P_max(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return AttributeArray(r,self.set_P_max)
+        def __set__(self,P):
+            cdef int t
+            cdef np.ndarray Par = np.array(P).flatten()
+            for t in range(np.minimum(Par.size,self.num_periods)):
+                cload.LOAD_set_P_max(self._c_ptr,Par[t],t)
 
     property P_min:
-        """ Load active power lower limit (p.u. system base MVA) (float). """
-        def __get__(self): return cload.LOAD_get_P_min(self._c_ptr)
-        def __set__(self,P): cload.LOAD_set_P_min(self._c_ptr,P)
+        """ Load active power lower limit (p.u. system base MVA) (float or array). """
+        def __get__(self):
+            r = [cload.LOAD_get_P_min(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return AttributeArray(r,self.set_P_min)
+        def __set__(self,P):
+            cdef int t
+            cdef np.ndarray Par = np.array(P).flatten()
+            for t in range(np.minimum(Par.size,self.num_periods)):
+                cload.LOAD_set_P_min(self._c_ptr,Par[t],t)
 
     property Q:
         """ Load reactive power (p.u. system base MVA) (float or array). """
@@ -180,6 +235,20 @@ cdef class Load:
                 return AttributeFloat(r[0])
             else:
                 return np.array(r)
+
+    property power_factor:
+        """ Load power factor (float or array). """
+        def __get__(self):
+            r = [cload.LOAD_get_power_factor(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return np.array(r)
+
+    property target_power_factor:
+        """ Target load power factor in (0,1] (float). """
+        def __get__(self): return cload.LOAD_get_target_power_factor(self._c_ptr)
+        def __set__(self,pf): cload.LOAD_set_target_power_factor(self._c_ptr,pf)
 
     property util_coeff_Q0:
         """ Coefficient for consumption utility function (constant term, units of $/hr). """

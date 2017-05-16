@@ -12,14 +12,14 @@
 
 Constr* CONSTR_REG_GEN_new(Net* net) {
   Constr* c = CONSTR_new(net);
-  CONSTR_set_func_init(c, &CONSTR_REG_GEN_init);
-  CONSTR_set_func_count_step(c, &CONSTR_REG_GEN_count_step);
-  CONSTR_set_func_allocate(c, &CONSTR_REG_GEN_allocate);
-  CONSTR_set_func_clear(c, &CONSTR_REG_GEN_clear);
-  CONSTR_set_func_analyze_step(c, &CONSTR_REG_GEN_analyze_step);
-  CONSTR_set_func_eval_step(c, &CONSTR_REG_GEN_eval_step);
-  CONSTR_set_func_store_sens_step(c, &CONSTR_REG_GEN_store_sens_step);
-  CONSTR_set_func_free(c, &CONSTR_REG_GEN_free);
+  CONSTR_set_func_init(c,&CONSTR_REG_GEN_init);
+  CONSTR_set_func_count_step(c,&CONSTR_REG_GEN_count_step);
+  CONSTR_set_func_allocate(c,&CONSTR_REG_GEN_allocate);
+  CONSTR_set_func_clear(c,&CONSTR_REG_GEN_clear);
+  CONSTR_set_func_analyze_step(c,&CONSTR_REG_GEN_analyze_step);
+  CONSTR_set_func_eval_step(c,&CONSTR_REG_GEN_eval_step);
+  CONSTR_set_func_store_sens_step(c,&CONSTR_REG_GEN_store_sens_step);
+  CONSTR_set_func_free(c,&CONSTR_REG_GEN_free);
   CONSTR_init(c);
   return c;
 }
@@ -89,8 +89,7 @@ void CONSTR_REG_GEN_count_step(Constr* c, Branch* br, int t) {
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!A_nnz || !J_nnz || !A_row ||
-      !J_row || !H_nnz || !bus_counted)
+  if (!A_nnz || !J_nnz || !A_row || !J_row || !H_nnz || !bus_counted)
     return;
 
   // Check outage
@@ -112,64 +111,63 @@ void CONSTR_REG_GEN_count_step(Constr* c, Branch* br, int t) {
 
     if (!bus_counted[bus_index_t[k]]) { // not counted yet
 
-      if (BUS_is_regulated_by_gen(bus) && // reg gen
-	  !BUS_is_slack(bus)) {           // not slack
-
+      if (BUS_is_regulated_by_gen(bus) && !BUS_is_slack(bus)) { // regulator and not slack
+	
 	// Linear
 	//*******
-	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) && // v var
-	    BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) { // yz var
+	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
 
 	  // A
 	  (*A_nnz)++; // v
-	  (*A_nnz)++; // y
-	  (*A_nnz)++; // z
-
-	  // Inc A cosntr index
-	  (*A_row)++;
 	}
+	  
+	// A
+	(*A_nnz)++; // y
+	(*A_nnz)++; // z
+
+	// Count
+	(*A_row)++;
 
 	// Nonlinear
 	//**********
-	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) { // yz var
 
-	  // J
-	  (*J_nnz)++; // dCompY/dy
-	  (*J_nnz)++; // dCompZ/dz
-
-	  // H
-	  H_nnz[*J_row]++;     // y and y
-	  H_nnz[*J_row+1]++;   // z and z
-	  for (rg = BUS_get_reg_gen(bus); rg != NULL; rg = GEN_get_reg_next(rg)) {
-	    if (GEN_has_flags(rg,FLAG_VARS,GEN_VAR_Q)) {
-	      H_nnz[*J_row]++;   // y and Q
-	      H_nnz[*J_row+1]++; // z and Q
-	    }
-	  }
-	}
-
+	// J
+	(*J_nnz)++; // dCompY/dy
+	(*J_nnz)++; // dCompZ/dz
+	
+	// H
+	H_nnz[*J_row]++;     // y and y (CompY)
+	H_nnz[*J_row+1]++;   // z and z (CompZ)
+	
 	for (rg = BUS_get_reg_gen(bus); rg != NULL; rg = GEN_get_reg_next(rg)) {
-	  if (GEN_has_flags(rg,FLAG_VARS,GEN_VAR_Q)) { // Qg var
-
+	  if (GEN_has_flags(rg,FLAG_VARS,GEN_VAR_Q)) { // Q var
+	    
 	    // J
-	    (*J_nnz)++; // dcompY/dQ
-	    (*J_nnz)++; // dcompZ/dQ
-
+	    (*J_nnz)++; // dCompY/dQ
+	    (*J_nnz)++; // dCompZ/dQ
+	    
 	    // H
-	    H_nnz[*J_row]++;   // Q and Q
-	    H_nnz[*J_row+1]++; // Q and Q
+	    H_nnz[*J_row]++;   // Q and Q (CompY)
+	    H_nnz[*J_row]++;   // y and Q (CompY)
+	    
+	    H_nnz[*J_row+1]++; // Q and Q (CompZ)
+	    H_nnz[*J_row+1]++; // z and Q (CompZ)
+
 	    for (rg1 = GEN_get_reg_next(rg); rg1 != NULL; rg1 = GEN_get_reg_next(rg1)) {
-	      if (GEN_has_flags(rg1,FLAG_VARS,GEN_VAR_Q)) {
-		H_nnz[*J_row]++;   // Q and Q1
-		H_nnz[*J_row+1]++; // Q and Q1
+	      if (GEN_has_flags(rg1,FLAG_VARS,GEN_VAR_Q)) { // Q1 var
+		H_nnz[*J_row]++;   // Q and Q1 (CompY)
+		H_nnz[*J_row+1]++; // Q and Q1 (CompZ)
 	      }
-	    }
+	    }	    
 	  }
 	}
 
-	// Inc J constr index
+	// Count
 	(*J_row)++; // dCompY
 	(*J_row)++; // dCompZ
+
+	// Num extra vars
+	CONSTR_set_num_extra_vars(c,*J_row);
       }
     }
 
@@ -190,6 +188,7 @@ void CONSTR_REG_GEN_allocate(Constr* c) {
   Mat* H;
   int H_comb_nnz;
   int num_vars;
+  int num_extra_vars;
   int i;
 
   A_nnz = CONSTR_get_A_nnz(c);
@@ -198,22 +197,32 @@ void CONSTR_REG_GEN_allocate(Constr* c) {
   J_row = CONSTR_get_J_row(c);
   H_nnz = CONSTR_get_H_nnz(c);
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
+  num_extra_vars = CONSTR_get_num_extra_vars(c);
 
+  // Extra var limits
+  CONSTR_set_l_extra_vars(c,VEC_new(num_extra_vars));
+  CONSTR_set_u_extra_vars(c,VEC_new(num_extra_vars));
+
+  // G u l
+  CONSTR_set_G(c,MAT_new(0,num_vars+num_extra_vars,0));
+  CONSTR_set_u(c,VEC_new(0));
+  CONSTR_set_l(c,VEC_new(0));
+  
   // b
   CONSTR_set_b(c,VEC_new(A_row));
 
   // A
-  CONSTR_set_A(c,MAT_new(A_row, // size1 (rows)
-			 num_vars,      // size2 (cols)
-			 A_nnz));    // nnz
+  CONSTR_set_A(c,MAT_new(A_row,                   // size1 (rows)
+			 num_vars+num_extra_vars, // size2 (cols)
+			 A_nnz));                 // nnz
 
   // f
   CONSTR_set_f(c,VEC_new(J_row));
 
   // J
-  CONSTR_set_J(c,MAT_new(J_row, // size1 (rows)
-			 num_vars,      // size2 (cols)
-			 J_nnz));    // nnz
+  CONSTR_set_J(c,MAT_new(J_row,                   // size1 (rows)
+			 num_vars+num_extra_vars, // size2 (cols)
+			 J_nnz));                 // nnz
 
   // H
   H_comb_nnz = 0;
@@ -222,8 +231,8 @@ void CONSTR_REG_GEN_allocate(Constr* c) {
   for (i = 0; i < J_row; i++) {
     H = MAT_array_get(H_array,i);
     MAT_set_nnz(H,H_nnz[i]);
-    MAT_set_size1(H,num_vars);
-    MAT_set_size2(H,num_vars);
+    MAT_set_size1(H,num_vars+num_extra_vars);
+    MAT_set_size2(H,num_vars+num_extra_vars);
     MAT_set_row_array(H,(int*)calloc(H_nnz[i],sizeof(int)));
     MAT_set_col_array(H,(int*)calloc(H_nnz[i],sizeof(int)));
     MAT_set_data_array(H,(REAL*)calloc(H_nnz[i],sizeof(REAL)));
@@ -231,9 +240,9 @@ void CONSTR_REG_GEN_allocate(Constr* c) {
   }
 
   // H combined
-  CONSTR_set_H_combined(c,MAT_new(num_vars,     // size1 (rows)
-				  num_vars,     // size2 (cols)
-				  H_comb_nnz)); // nnz
+  CONSTR_set_H_combined(c,MAT_new(num_vars+num_extra_vars, // size1 (rows)
+				  num_vars+num_extra_vars, // size2 (cols)
+				  H_comb_nnz));            // nnz
 }
 
 void CONSTR_REG_GEN_analyze_step(Constr* c, Branch* br, int t) {
@@ -261,13 +270,17 @@ void CONSTR_REG_GEN_analyze_step(Constr* c, Branch* br, int t) {
   int H_nnz_comb;
   char* bus_counted;
   int bus_index_t[2];
+  int index_y;
+  int index_z;
   int k;
   int m;
   int temp;
   int T;
+  int num_vars;
 
-  // Number of periods
+  // Number of periods and vars
   T = BRANCH_get_num_periods(br);
+  num_vars = NET_get_num_vars(CONSTR_get_network(c));
 
   // Constr data
   b = CONSTR_get_b(c);
@@ -282,8 +295,7 @@ void CONSTR_REG_GEN_analyze_step(Constr* c, Branch* br, int t) {
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!A_nnz || !J_nnz || !A_row ||
-      !J_row || !H_nnz || !bus_counted)
+  if (!A_nnz || !J_nnz || !A_row || !J_row || !H_nnz || !bus_counted)
     return;
 
   // Check outage
@@ -308,114 +320,120 @@ void CONSTR_REG_GEN_analyze_step(Constr* c, Branch* br, int t) {
 
     if (!bus_counted[bus_index_t[k]]) { // not counted yet
 
-      if (BUS_is_regulated_by_gen(bus) &&  // reg by gen
-	  !BUS_is_slack(bus)) {            // not slack
+      if (BUS_is_regulated_by_gen(bus) && !BUS_is_slack(bus)) { // regulator and not slack
 
 	// Hessians
 	Hy = MAT_array_get(H_array,*J_row);
 	Hz = MAT_array_get(H_array,*J_row+1);
 
+	// Indices
+	index_y = num_vars+(*J_row);
+	index_z = num_vars+(*J_row+1);
+
 	// Linear
 	//*******
-	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) && // v var
-	    BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) { // yz var
 
-	  // b
-	  VEC_set(b,*A_row,BUS_get_v_set(bus,t));
-
+	// b
+	VEC_set(b,*A_row,BUS_get_v_set(bus,t));
+	
+	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
+	  
 	  // A
 	  MAT_set_i(A,*A_nnz,*A_row);
 	  MAT_set_j(A,*A_nnz,BUS_get_index_v_mag(bus,t));
 	  MAT_set_d(A,*A_nnz,1.);
 	  (*A_nnz)++; // v
-
-	  MAT_set_i(A,*A_nnz,*A_row);
-	  MAT_set_j(A,*A_nnz,BUS_get_index_y(bus,t));
-	  MAT_set_d(A,*A_nnz,-1.);
-	  (*A_nnz)++; // y
-
-	  MAT_set_i(A,*A_nnz,*A_row);
-	  MAT_set_j(A,*A_nnz,BUS_get_index_z(bus,t));
-	  MAT_set_d(A,*A_nnz,1.);
-	  (*A_nnz)++; // z
-
-	  // Inc A constr index
-	  (*A_row)++;
 	}
+	else
+	  VEC_add_to_entry(b,*A_row,-BUS_get_v_mag(bus,t));
+
+	// A
+	MAT_set_i(A,*A_nnz,*A_row);
+	MAT_set_j(A,*A_nnz,index_y);
+	MAT_set_d(A,*A_nnz,-1.);
+	(*A_nnz)++; // y
+
+	MAT_set_i(A,*A_nnz,*A_row);
+	MAT_set_j(A,*A_nnz,index_z);
+	MAT_set_d(A,*A_nnz,1.);
+	(*A_nnz)++; // z
+	
+	// Count
+	(*A_row)++;
 
 	// Nonlinear
 	//**********
-	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) {
 
-	  // J
-	  MAT_set_i(J,*J_nnz,*J_row);
-	  MAT_set_j(J,*J_nnz,BUS_get_index_y(bus,t));
-	  (*J_nnz)++; // dCompY/dy
+	// J
+	MAT_set_i(J,*J_nnz,*J_row);
+	MAT_set_j(J,*J_nnz,index_y);
+	(*J_nnz)++; // dCompY/dy
 
-	  MAT_set_i(J,*J_nnz,*J_row+1);
-	  MAT_set_j(J,*J_nnz,BUS_get_index_z(bus,t));
-	  (*J_nnz)++; // dCompZ/dz
+	MAT_set_i(J,*J_nnz,*J_row+1);
+	MAT_set_j(J,*J_nnz,index_z);
+	(*J_nnz)++; // dCompZ/dz
 
-	  // H
-	  MAT_set_i(Hy,H_nnz[*J_row],BUS_get_index_y(bus,t));
-	  MAT_set_j(Hy,H_nnz[*J_row],BUS_get_index_y(bus,t));
-	  H_nnz[*J_row]++;     // y and y
+	// H
+	MAT_set_i(Hy,H_nnz[*J_row],index_y);
+	MAT_set_j(Hy,H_nnz[*J_row],index_y);
+	H_nnz[*J_row]++; // y and y (CompY)
 
-	  MAT_set_i(Hz,H_nnz[*J_row+1],BUS_get_index_z(bus,t));
-	  MAT_set_j(Hz,H_nnz[*J_row+1],BUS_get_index_z(bus,t));
-	  H_nnz[*J_row+1]++;   // z and z
-
-	  for (rg = BUS_get_reg_gen(bus); rg != NULL; rg = GEN_get_reg_next(rg)) {
-	    if (GEN_has_flags(rg,FLAG_VARS,GEN_VAR_Q)) {
-
-	      MAT_set_i(Hy,H_nnz[*J_row],BUS_get_index_y(bus,t));
-	      MAT_set_j(Hy,H_nnz[*J_row],GEN_get_index_Q(rg,t));
-	      H_nnz[*J_row]++;   // y and Q
-
-	      MAT_set_i(Hz,H_nnz[*J_row+1],BUS_get_index_z(bus,t));
-	      MAT_set_j(Hz,H_nnz[*J_row+1],GEN_get_index_Q(rg,t));
-	      H_nnz[*J_row+1]++; // z and Q
-	    }
-	  }
-	}
+	MAT_set_i(Hz,H_nnz[*J_row+1],index_z);
+	MAT_set_j(Hz,H_nnz[*J_row+1],index_z);
+	H_nnz[*J_row+1]++; // z and z (CompZ)
 
 	for (rg = BUS_get_reg_gen(bus); rg != NULL; rg = GEN_get_reg_next(rg)) {
-	  if (GEN_has_flags(rg,FLAG_VARS,GEN_VAR_Q)) { // Qg var
+	  if (GEN_has_flags(rg,FLAG_VARS,GEN_VAR_Q)) { // Q var
 
 	    // J
 	    MAT_set_i(J,*J_nnz,*J_row);
 	    MAT_set_j(J,*J_nnz,GEN_get_index_Q(rg,t));
-	    (*J_nnz)++; // dcompY/dQ
-
+	    (*J_nnz)++; // dCompY/dQ
+	    
 	    MAT_set_i(J,*J_nnz,*J_row+1);
 	    MAT_set_j(J,*J_nnz,GEN_get_index_Q(rg,t));
-	    (*J_nnz)++; // dcompZ/dQ
-
+	    (*J_nnz)++; // dCompZ/dQ
+	    
 	    // H
 	    MAT_set_i(Hy,H_nnz[*J_row],GEN_get_index_Q(rg,t));
 	    MAT_set_j(Hy,H_nnz[*J_row],GEN_get_index_Q(rg,t));
-	    H_nnz[*J_row]++;   // Q and Q
+	    H_nnz[*J_row]++; // Q and Q (CompY)
+	    
+	    MAT_set_i(Hy,H_nnz[*J_row],index_y);
+	    MAT_set_j(Hy,H_nnz[*J_row],GEN_get_index_Q(rg,t));
+	    H_nnz[*J_row]++; // y and Q (CompY)
 
 	    MAT_set_i(Hz,H_nnz[*J_row+1],GEN_get_index_Q(rg,t));
 	    MAT_set_j(Hz,H_nnz[*J_row+1],GEN_get_index_Q(rg,t));
-	    H_nnz[*J_row+1]++; // Q and Q
+	    H_nnz[*J_row+1]++; // Q and Q (CompZ)
+
+	    MAT_set_i(Hz,H_nnz[*J_row+1],index_z);
+	    MAT_set_j(Hz,H_nnz[*J_row+1],GEN_get_index_Q(rg,t));
+	    H_nnz[*J_row+1]++; // z and Q (CompZ)
 
 	    for (rg1 = GEN_get_reg_next(rg); rg1 != NULL; rg1 = GEN_get_reg_next(rg1)) {
 	      if (GEN_has_flags(rg1,FLAG_VARS,GEN_VAR_Q)) {
 
 		MAT_set_i(Hy,H_nnz[*J_row],GEN_get_index_Q(rg,t));
 		MAT_set_j(Hy,H_nnz[*J_row],GEN_get_index_Q(rg1,t));
-		H_nnz[*J_row]++;   // Q and Q1
-
+		H_nnz[*J_row]++; // Q and Q1 (CompY)
+		
 		MAT_set_i(Hz,H_nnz[*J_row+1],GEN_get_index_Q(rg,t));
 		MAT_set_j(Hz,H_nnz[*J_row+1],GEN_get_index_Q(rg1,t));
-		H_nnz[*J_row+1]++; // Q and Q1
+		H_nnz[*J_row+1]++; // Q and Q1 (CompZ)
 	      }
 	    }
 	  }
 	}
+	 
+	// Extra var limits
+	VEC_set(CONSTR_get_l_extra_vars(c),*J_row,-CONSTR_REG_GEN_MAX_YZ);   // y
+	VEC_set(CONSTR_get_l_extra_vars(c),*J_row+1,-CONSTR_REG_GEN_MAX_YZ); // z
 
-	// Inc J constr index
+	VEC_set(CONSTR_get_u_extra_vars(c),*J_row,CONSTR_REG_GEN_MAX_YZ);   // y
+	VEC_set(CONSTR_get_u_extra_vars(c),*J_row+1,CONSTR_REG_GEN_MAX_YZ); // z
+ 
+	// Count
 	(*J_row)++; // dCompY
 	(*J_row)++; // dCompZ
       }
@@ -449,7 +467,7 @@ void CONSTR_REG_GEN_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_REG_GEN_eval_step(Constr* c, Branch* br, int t, Vec* values) {
+void CONSTR_REG_GEN_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
 
   // Local variables
   Bus* buses[2];
@@ -493,8 +511,7 @@ void CONSTR_REG_GEN_eval_step(Constr* c, Branch* br, int t, Vec* values) {
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!f || !J || !J_nnz || !J_row ||
-      !H_nnz || !bus_counted)
+  if (!f || !J || !J_nnz || !J_row || !H_nnz || !bus_counted)
     return;
 
   // Check outage
@@ -519,13 +536,22 @@ void CONSTR_REG_GEN_eval_step(Constr* c, Branch* br, int t, Vec* values) {
 
     if (!bus_counted[bus_index_t[k]]) { // not counted yet
 
-      if (BUS_is_regulated_by_gen(bus) &&  // reg by gen
-	  !BUS_is_slack(bus)) {            // not slack
+      if (BUS_is_regulated_by_gen(bus) && !BUS_is_slack(bus)) { // regulator and not slack
 
 	// Hessians
 	Hy = MAT_get_data_array(MAT_array_get(H_array,*J_row));
 	Hz = MAT_get_data_array(MAT_array_get(H_array,*J_row+1));
 
+	// Extra vars
+	if (VEC_get_size(values_extra) > 0) {
+	  y = VEC_get(values_extra,*J_row);
+	  z = VEC_get(values_extra,*J_row+1);
+	}
+	else {
+	  y = 0.;
+	  z = 0.;
+	}
+	
 	// Q value
 	Qsum = 0;
 	Qmax = 0;
@@ -534,33 +560,12 @@ void CONSTR_REG_GEN_eval_step(Constr* c, Branch* br, int t, Vec* values) {
 	  if (GEN_has_flags(rg,FLAG_VARS,GEN_VAR_Q))
 	    Qsum += VEC_get(values,GEN_get_index_Q(rg,t)); // p.u.
 	  else
-	    Qsum += GEN_get_Q(rg,t);      // p.u.
+	    Qsum += GEN_get_Q(rg,t); // p.u.
 	  Qmax += GEN_get_Q_max(rg); // p.u.
 	  Qmin += GEN_get_Q_min(rg); // p.u.
 	}
 	Qy = (Qsum-Qmin);
 	Qz = (Qmax-Qsum);
-
-	// yz values
-	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) {
-	  y = VEC_get(values,BUS_get_index_y(bus,t)); // p.u.
-	  z = VEC_get(values,BUS_get_index_z(bus,t));	// p.u.
-	}
-	else {
-	  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG))
-	    v = VEC_get(values,BUS_get_index_v_mag(bus,t)); // p.u.
-	  else
-	    v = BUS_get_v_mag(bus,t);   // p.u.
-	  v_set = BUS_get_v_set(bus,t); // p.u.
-	  if (v > v_set) {
-	    y = v-v_set;
-	    z = 0;
-	  }
-	  else {
-	    y = 0;
-	    z = v_set-v;
-	  }
-	}
 
 	// Terms
 	sqrt_termY = sqrt( Qy*Qy + y*y + 2*CONSTR_REG_GEN_PARAM );
@@ -570,35 +575,22 @@ void CONSTR_REG_GEN_eval_step(Constr* c, Branch* br, int t, Vec* values) {
 	f[*J_row] = Qy + y - sqrt_termY;   // CompY
 	f[*J_row+1] = Qz + z - sqrt_termZ; // CompZ
 
-	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VDEV)) {
+	// J
+	J[*J_nnz] = 1. - y/sqrt_termY;
+	(*J_nnz)++; // dCompY/dy
 
-	  // J
-	  J[*J_nnz] = 1. - y/sqrt_termY;
-	  (*J_nnz)++; // dCompY/dy
+	J[*J_nnz] = 1. - z/sqrt_termZ;
+	(*J_nnz)++; // dCompZ/dz
 
-	  J[*J_nnz] = 1. - z/sqrt_termZ;
-	  (*J_nnz)++; // dCompZ/dz
+	// H
+	Hy[H_nnz[*J_row]] = -(Qy*Qy+2*CONSTR_REG_GEN_PARAM)/pow(sqrt_termY,3.);
+	H_nnz[*J_row]++; // y and y (CompY)
 
-	  // H
-	  Hy[H_nnz[*J_row]] = -(Qy*Qy+2*CONSTR_REG_GEN_PARAM)/pow(sqrt_termY,3.);
-	  H_nnz[*J_row]++;     // y and y
-
-	  Hz[H_nnz[*J_row+1]] = -(Qz*Qz+2*CONSTR_REG_GEN_PARAM)/pow(sqrt_termZ,3.);
-	  H_nnz[*J_row+1]++;   // z and z
-	  for (rg = BUS_get_reg_gen(bus); rg != NULL; rg = GEN_get_reg_next(rg)) {
-	    if (GEN_has_flags(rg,FLAG_VARS,GEN_VAR_Q)) {
-
-	      Hy[H_nnz[*J_row]] = Qy*y/pow(sqrt_termY,3.);
-	      H_nnz[*J_row]++;   // y and Q
-
-	      Hz[H_nnz[*J_row+1]] = -Qz*z/pow(sqrt_termZ,3.);
-	      H_nnz[*J_row+1]++; // z and Q
-	    }
-	  }
-	}
-
+	Hz[H_nnz[*J_row+1]] = -(Qz*Qz+2*CONSTR_REG_GEN_PARAM)/pow(sqrt_termZ,3.);
+	H_nnz[*J_row+1]++; // z and z (CompZ)
+	
 	for (rg = BUS_get_reg_gen(bus); rg != NULL; rg = GEN_get_reg_next(rg)) {
-	  if (GEN_has_flags(rg,FLAG_VARS,GEN_VAR_Q)) { // Qg var
+	  if (GEN_has_flags(rg,FLAG_VARS,GEN_VAR_Q)) { // Q var
 
 	    // J
 	    J[*J_nnz] = 1. - Qy/sqrt_termY;
@@ -609,25 +601,31 @@ void CONSTR_REG_GEN_eval_step(Constr* c, Branch* br, int t, Vec* values) {
 
 	    // H
 	    Hy[H_nnz[*J_row]] = -(y*y+2*CONSTR_REG_GEN_PARAM)/pow(sqrt_termY,3.);
-	    H_nnz[*J_row]++;   // Q and Q
+	    H_nnz[*J_row]++; // Q and Q (CompY)
+	    
+	    Hy[H_nnz[*J_row]] = Qy*y/pow(sqrt_termY,3.);
+	    H_nnz[*J_row]++; // y and Q (CompZ)
 
 	    Hz[H_nnz[*J_row+1]] = -(z*z+2*CONSTR_REG_GEN_PARAM)/pow(sqrt_termZ,3.);
-	    H_nnz[*J_row+1]++; // Q and Q
+	    H_nnz[*J_row+1]++; // Q and Q (CompZ)
+
+	    Hz[H_nnz[*J_row+1]] = -Qz*z/pow(sqrt_termZ,3.);
+	    H_nnz[*J_row+1]++; // z and Q (CompZ)
 
 	    for (rg1 = GEN_get_reg_next(rg); rg1 != NULL; rg1 = GEN_get_reg_next(rg1)) {
-	      if (GEN_has_flags(rg1,FLAG_VARS,GEN_VAR_Q)) {
+	      if (GEN_has_flags(rg1,FLAG_VARS,GEN_VAR_Q)) { // Q1 var
 
 		Hy[H_nnz[*J_row]] = -(y*y+2*CONSTR_REG_GEN_PARAM)/pow(sqrt_termY,3.);
-		H_nnz[*J_row]++;   // Q and Q1
+		H_nnz[*J_row]++; // Q and Q1 (CompY)
 
 		Hz[H_nnz[*J_row+1]] = -(z*z+2*CONSTR_REG_GEN_PARAM)/pow(sqrt_termZ,3.);
-		H_nnz[*J_row+1]++; // Q and Q1
+		H_nnz[*J_row+1]++; // Q and Q1 (CompZ)
 	      }
 	    }
 	  }
 	}
 
-	// Inc J constr index
+	// Count
 	(*J_row)++; // dCompY
 	(*J_row)++; // dCompZ
       }
@@ -681,8 +679,7 @@ void CONSTR_REG_GEN_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* 
 
     if (!bus_counted[bus_index_t[k]]) { // not counted yet
 
-      if (BUS_is_regulated_by_gen(bus) && // reg gen
-	  !BUS_is_slack(bus)) {           // not slack
+      if (BUS_is_regulated_by_gen(bus) && !BUS_is_slack(bus)) { // regulator and not slack
 
 	lamCompY = VEC_get(sf,*J_row);
 	(*J_row)++; // dCompY

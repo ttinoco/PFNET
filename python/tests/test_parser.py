@@ -63,10 +63,10 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(len(bus2.loads),1)
                 self.assertEqual(len(bus3.loads),1)
 
-                gen0 = net.get_gen(3)
-                gen1 = net.get_gen(2)
-                gen2 = net.get_gen(1) 
-                gen3 = net.get_gen(0)
+                gen0 = net.get_generator(3)
+                gen1 = net.get_generator(2)
+                gen2 = net.get_generator(1) 
+                gen3 = net.get_generator(0)
 
                 load0 = net.get_load(2)
                 load1 = net.get_load(1)
@@ -388,10 +388,10 @@ class TestParser(unittest.TestCase):
 
                 self.assertEqual(net.num_buses,31)
                 self.assertEqual(net.num_batteries,3)
-                b1 = net.get_bat(0)
-                b2 = net.get_bat(1)
-                b3 = net.get_bat(2)
-                self.assertRaises(pf.NetworkError,net.get_bat,3)
+                b1 = net.get_battery(0)
+                b2 = net.get_battery(1)
+                b3 = net.get_battery(2)
+                self.assertRaises(pf.NetworkError,net.get_battery,3)
 
                 self.assertEqual(b1.bus.name,"N18")
                 self.assertEqual(b1.index,0)
@@ -441,10 +441,10 @@ class TestParser(unittest.TestCase):
 
                 self.assertEqual(net.base_power,100.)
                 self.assertEqual(net.num_buses,14)
-                self.assertEqual(net.num_gens,5)
+                self.assertEqual(net.num_generators,5)
 
-                gen0 = net.get_gen(net.num_generators-1)
-                gen1 = net.get_gen(net.num_generators-2)
+                gen0 = net.get_generator(net.num_generators-1)
+                gen1 = net.get_generator(net.num_generators-2)
 
                 self.assertEqual(gen0.P,232.4/100.)
                 self.assertEqual(gen0.cost_coeff_Q2,(4.3029259900e-02)*(net.base_power**2.))

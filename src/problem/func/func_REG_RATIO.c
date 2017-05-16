@@ -12,13 +12,13 @@
 
 Func* FUNC_REG_RATIO_new(REAL weight, Net* net) {
   Func* f = FUNC_new(weight,net);
-  FUNC_set_func_init(f, &FUNC_REG_RATIO_init);
-  FUNC_set_func_count_step(f, &FUNC_REG_RATIO_count_step);
-  FUNC_set_func_allocate(f, &FUNC_REG_RATIO_allocate);
-  FUNC_set_func_clear(f, &FUNC_REG_RATIO_clear);
-  FUNC_set_func_analyze_step(f, &FUNC_REG_RATIO_analyze_step);
-  FUNC_set_func_eval_step(f, &FUNC_REG_RATIO_eval_step);
-  FUNC_set_func_free(f, &FUNC_REG_RATIO_free);
+  FUNC_set_func_init(f,&FUNC_REG_RATIO_init);
+  FUNC_set_func_count_step(f,&FUNC_REG_RATIO_count_step);
+  FUNC_set_func_allocate(f,&FUNC_REG_RATIO_allocate);
+  FUNC_set_func_clear(f,&FUNC_REG_RATIO_clear);
+  FUNC_set_func_analyze_step(f,&FUNC_REG_RATIO_analyze_step);
+  FUNC_set_func_eval_step(f,&FUNC_REG_RATIO_eval_step);
+  FUNC_set_func_free(f,&FUNC_REG_RATIO_free);
   FUNC_init(f);
   return f;
 }
@@ -61,11 +61,6 @@ void FUNC_REG_RATIO_count_step(Func* f, Branch* br, int t) {
   
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) // ratio var
     (*Hphi_nnz)++;
-
-  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO_DEV)) { // ratio dev var
-    (*Hphi_nnz)++;
-    (*Hphi_nnz)++;
-  }
 }
 
 void FUNC_REG_RATIO_allocate(Func* f) {
@@ -116,19 +111,6 @@ void FUNC_REG_RATIO_analyze_step(Func* f, Branch* br, int t) {
     MAT_set_d(H,*Hphi_nnz,1./(da*da));
     (*Hphi_nnz)++;
   }
-  
-  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO_DEV)) { // ratio dev var
-   
-    MAT_set_i(H,*Hphi_nnz,BRANCH_get_index_ratio_y(br,t));
-    MAT_set_j(H,*Hphi_nnz,BRANCH_get_index_ratio_y(br,t));
-    MAT_set_d(H,*Hphi_nnz,1./(da*da));
-    (*Hphi_nnz)++;
-
-    MAT_set_i(H,*Hphi_nnz,BRANCH_get_index_ratio_z(br,t));
-    MAT_set_j(H,*Hphi_nnz,BRANCH_get_index_ratio_z(br,t));
-    MAT_set_d(H,*Hphi_nnz,1./(da*da));
-    (*Hphi_nnz)++;
-  }
 }
 
 void FUNC_REG_RATIO_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
@@ -166,20 +148,6 @@ void FUNC_REG_RATIO_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   }
   else {
     // nothing because a0-a0 = 0
-  }
-  
-  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO_DEV)) { // ratio dev var
-    
-    a = VEC_get(var_values,BRANCH_get_index_ratio_y(br,t));
-    (*phi) += 0.5*pow(a/da,2.);
-    gphi[BRANCH_get_index_ratio_y(br,t)] = a/(da*da);
-
-    a = VEC_get(var_values,BRANCH_get_index_ratio_z(br,t));
-    (*phi) += 0.5*pow(a/da,2.);
-    gphi[BRANCH_get_index_ratio_z(br,t)] = a/(da*da);
-  }
-  else {
-    // nothing becuase a0-a0 = 0
   }
 }
     

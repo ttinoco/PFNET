@@ -183,6 +183,11 @@ void CONSTR_DCPF_allocate(Constr* c) {
   CONSTR_set_J(c,MAT_new(0,num_vars,0));
   CONSTR_set_f(c,VEC_new(0));
 
+  // G u l
+  CONSTR_set_G(c,MAT_new(0,num_vars,0));
+  CONSTR_set_u(c,VEC_new(0));
+  CONSTR_set_l(c,VEC_new(0));
+
   // b
   CONSTR_set_b(c,VEC_new(num_buses*NET_get_num_periods(net)));
 
@@ -393,7 +398,7 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_DCPF_eval_step(Constr* c, Branch* br, int t, Vec* values) {
+void CONSTR_DCPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
   // Nothing
 }
 

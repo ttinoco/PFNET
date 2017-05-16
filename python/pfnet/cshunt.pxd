@@ -13,7 +13,6 @@ cdef extern from "pfnet/shunt.h":
     ctypedef double REAL
     
     cdef char SHUNT_VAR_SUSC
-    cdef char SHUNT_VAR_SUSC_DEV
 
     cdef double SHUNT_INF_SUSC
 
@@ -24,8 +23,6 @@ cdef extern from "pfnet/shunt.h":
     char SHUNT_get_obj_type(void* shunt)
     int SHUNT_get_index(Shunt* shunt)
     int SHUNT_get_index_b(Shunt* shunt, int t)
-    int SHUNT_get_index_y(Shunt* shunt, int t)
-    int SHUNT_get_index_z(Shunt* shunt, int t)
     Bus* SHUNT_get_bus(Shunt* shunt)
     Bus* SHUNT_get_reg_bus(Shunt* shunt)
     REAL SHUNT_get_g(Shunt* shunt)

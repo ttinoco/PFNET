@@ -701,8 +701,8 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       LOAD_set_bus(load,bus);                             // connect bus to load
       LOAD_set_P(load,art_bus->pload/parser->base_power,0); // per unit
       LOAD_set_Q(load,(art_bus->qload-art_bus->qshunt)/parser->base_power,0); // per unit
-      LOAD_set_P_min(load,LOAD_get_P(load,0));              // Pmin = P = Pmax
-      LOAD_set_P_max(load,LOAD_get_P(load,0));              // Pmin = P = Pmax
+      LOAD_set_P_min(load,LOAD_get_P(load,0),0);              // Pmin = P = Pmax
+      LOAD_set_P_max(load,LOAD_get_P(load,0),0);              // Pmin = P = Pmax
       index++;
     }
   }
@@ -906,7 +906,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
 
 	BRANCH_set_type(branch,BRANCH_TYPE_TRAN_TAP_V); // tap changer tap that regulates voltage
 	BRANCH_set_reg_bus(branch,bus);                 // branch regulates bus
-	BUS_add_reg_tran(bus,branch);               // add regulating transformer to bus
+	BUS_add_reg_tran(bus,branch);                   // add regulating transformer to bus
 
 	// Ratio limits
 	BRANCH_set_ratio_max(branch,100./art_ltcv->nfirst);
@@ -954,10 +954,11 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       BUS_add_vargen(bus,vargen);                                   // connect vargen to bus
       VARGEN_set_bus(vargen,bus);                                   // connect bus to vargen
       VARGEN_set_name(vargen,art_vargen->name);
-      VARGEN_set_P(vargen,art_vargen->p/parser->base_power,0);        // per unit
+      VARGEN_set_P(vargen,art_vargen->p/parser->base_power,0);      // per unit
+      VARGEN_set_P_ava(vargen,art_vargen->p/parser->base_power,0);  // per unit
       VARGEN_set_P_max(vargen,art_vargen->pmax/parser->base_power); // per unit
       VARGEN_set_P_min(vargen,art_vargen->pmin/parser->base_power); // per unit
-      VARGEN_set_Q(vargen,art_vargen->q/parser->base_power,0);        // per unit
+      VARGEN_set_Q(vargen,art_vargen->q/parser->base_power,0);      // per unit
       VARGEN_set_Q_max(vargen,art_vargen->qmax/parser->base_power); // per unit
       VARGEN_set_Q_min(vargen,art_vargen->qmin/parser->base_power); // per unit
       NET_vargen_hash_name_add(net,vargen);
