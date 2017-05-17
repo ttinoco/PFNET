@@ -19,6 +19,9 @@
 #include "line_flow.h"
 #endif
 
+// Data
+typedef struct Constr_AC_LIN_FLOW_LIM_Data Constr_AC_LIN_FLOW_LIM_Data;
+
 // Function prototypes
 Constr* CONSTR_AC_LIN_FLOW_LIM_new(Net* net);
 void CONSTR_AC_LIN_FLOW_LIM_init(Constr* c);
