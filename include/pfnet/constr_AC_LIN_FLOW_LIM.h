@@ -19,6 +19,8 @@
 #include "line_flow.h"
 #endif
 
+#define CONSTR_AC_LIN_FLOW_LIM_INF 1e8
+
 // Data
 typedef struct Constr_AC_LIN_FLOW_LIM_Data Constr_AC_LIN_FLOW_LIM_Data;
 

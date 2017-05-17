@@ -15,7 +15,7 @@ struct Constr_AC_LIN_FLOW_LIM_Data {
   #if HAVE_LINE_FLOW
   LINE_FLOW_Results** results; // array of pointers to LINE_FLOW results (2 per branch and time)
   int size;
-  #endif  
+  #endif
 };
 
 Constr* CONSTR_AC_LIN_FLOW_LIM_new(Net* net) {
@@ -105,21 +105,21 @@ void CONSTR_AC_LIN_FLOW_LIM_count_step(Constr* c, Branch* br, int t) {
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
 
-  // Check tap ratio 
+  // Check tap ratio and phase shift
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) ||
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
     CONSTR_set_error(c,"AC_LIN_FLOW_LIM constraint does not support tap ratios or phase shifts as variables");
     return;
   }
 
-  // Check angles
+  // Check voltage angles
   if (!BUS_has_flags(bus[0],FLAG_VARS,BUS_VAR_VANG) &&
       !BUS_has_flags(bus[1],FLAG_VARS,BUS_VAR_VANG)) {
     CONSTR_set_error(c,"AC_LIN_FLOW_LIM constraint requires at least one voltage angle as variable accross branch");
     return;
   }
   
-  // Volage limits
+  // Voltage magnitude limits
   for (k = 0; k < 2; k++) {
     if (BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG)) {
       if (!BUS_has_flags(bus[k],FLAG_BOUNDED,BUS_VAR_VMAG)) {
@@ -142,7 +142,7 @@ void CONSTR_AC_LIN_FLOW_LIM_count_step(Constr* c, Branch* br, int t) {
                                  V_max[1],
                                  BRANCH_get_g(br), 
                                  BRANCH_get_b(br),
-                                 BRANCH_get_b_k(br),
+                                 BRANCH_get_b_k(br)+BRANCH_get_b_m(br), // total line charging
                                  1./BRANCH_get_ratio(br,t),
                                  BRANCH_get_phase(br,t)*180./PI, // degrees
                                  BRANCH_get_ratingA(br),
@@ -158,7 +158,7 @@ void CONSTR_AC_LIN_FLOW_LIM_count_step(Constr* c, Branch* br, int t) {
                                  V_max[1],
                                  BRANCH_get_g(br), 
                                  BRANCH_get_b(br),
-                                 BRANCH_get_b_k(br), // What about b shunt on the "m" side?
+				 BRANCH_get_b_k(br)+BRANCH_get_b_m(br), // total line charging
                                  1./BRANCH_get_ratio(br,t),
                                  BRANCH_get_phase(br,t)*180./PI, // degrees
                                  BRANCH_get_ratingA(br),
@@ -177,7 +177,7 @@ void CONSTR_AC_LIN_FLOW_LIM_count_step(Constr* c, Branch* br, int t) {
     return;
   }
   if (LINE_FLOW_get_flag(results2) != 2) {
-    CONSTR_set_error(c,LINE_FLOW_get_message(results2));    
+    CONSTR_set_error(c,LINE_FLOW_get_message(results2));
     return;
   }
  
@@ -185,30 +185,170 @@ void CONSTR_AC_LIN_FLOW_LIM_count_step(Constr* c, Branch* br, int t) {
   num_constr = LINE_FLOW_get_number_constraints(results1)+LINE_FLOW_get_number_constraints(results2);
   (*G_row) += num_constr;
   for (k = 0; k < 2; k++) {
-    if (BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG))
+    if (BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG)) // v_mag variable
       (*G_nnz) += num_constr;
-    if (BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG))
+    if (BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG)) // v_ang variable
       (*G_nnz) += num_constr;
   }
 
   #else
   CONSTR_set_error(c,"unable to construct AC_LIN_FLOW_LIM constraint - line_flow library not available");
-  #endif  
+  #endif
 }
 
 void CONSTR_AC_LIN_FLOW_LIM_allocate(Constr* c) {
-  
 
+  // Local variables
+  Net* net;
+  int num_vars;
+  int G_nnz;
+  int G_row;
+
+  net = CONSTR_get_network(c);
+  num_vars = NET_get_num_vars(net);
+  G_nnz = CONSTR_get_G_nnz(c);
+  G_row = CONSTR_get_G_row(c);
+
+  // J f
+  CONSTR_set_J(c,MAT_new(0,num_vars,0));
+  CONSTR_set_f(c,VEC_new(0));
+
+  // A b
+  CONSTR_set_A(c,MAT_new(0,num_vars,0));
+  CONSTR_set_b(c,VEC_new(0));
+
+  // G l u
+  CONSTR_set_G(c,MAT_new(G_row,    // size1 (rows)
+			 num_vars, // size2 (cols)
+			 G_nnz));  // nnz
+  CONSTR_set_l(c,VEC_new(G_row));
+  CONSTR_set_u(c,VEC_new(G_row));
 }
 
 void CONSTR_AC_LIN_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
 
+  #if HAVE_LINE_FLOW
 
+  // Local variables
+  Mat* G;
+  Vec* l;
+  Vec* u;
+  REAL* A;
+  REAL* b;
+  int i;
+  int j;
+  int k;
+  int* G_nnz;
+  int* G_row;
+  Net* net;
+  Bus* bus[2];
+  int offset;
+  int num_constr;
+  LINE_FLOW_Results* results[2];
+  Constr_AC_LIN_FLOW_LIM_Data* data;
+
+  // Constr data
+  net = CONSTR_get_network(c);
+  G_nnz = CONSTR_get_G_nnz_ptr(c);
+  G_row = CONSTR_get_G_row_ptr(c);
+  data = (Constr_AC_LIN_FLOW_LIM_Data*)CONSTR_get_data(c);
+
+  // Offset
+  offset = 2*NET_get_num_branches(net)*t;
+  
+  // Check pointer
+  if (!G_nnz || !G_row || !data) {
+    CONSTR_set_error(c,"AC_LIN_FLOW_LIM constraint has undefined pointers");  
+    return;
+  }
+
+  // Outage (skip)
+  if (BRANCH_is_on_outage(br))
+    return;
+
+  // Zero limits (skip)
+  if (BRANCH_get_ratingA(br) == 0.)
+    return;
+  
+  bus[0] = BRANCH_get_bus_k(br);
+  bus[1] = BRANCH_get_bus_m(br);
+
+  // Check tap ratio and phase shift
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) ||
+      BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
+    CONSTR_set_error(c,"AC_LIN_FLOW_LIM constraint does not support tap ratios or phase shifts as variables");
+    return;
+  }
+
+  // Check voltage angles
+  if (!BUS_has_flags(bus[0],FLAG_VARS,BUS_VAR_VANG) &&
+      !BUS_has_flags(bus[1],FLAG_VARS,BUS_VAR_VANG)) {
+    CONSTR_set_error(c,"AC_LIN_FLOW_LIM constraint requires at least one voltage angle as variable accross branch");
+    return;
+  }
+  
+  // Check voltage magnitudes
+  for (k = 0; k < 2; k++) {
+    if (BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG)) {
+      if (!BUS_has_flags(bus[k],FLAG_BOUNDED,BUS_VAR_VMAG)) {
+	CONSTR_set_error(c,"AC_LIN_FLOW_LIM constraint requires variable voltage magnitudes to be bounded");
+	return;
+      }
+    }
+  }
+
+
+  // Get results
+  results[0] = data->results[2*BRANCH_get_index(br)+0+offset];
+  results[1] = data->results[2*BRANCH_get_index(br)+1+offset];
+  
+  // Construct l <= Gx <= u
+  for (i = 0; i < 2; i++) {
+
+    num_constr = LINE_FLOW_get_number_constraints(results[i]);
+    A = LINE_FLOW_get_A_matrix(results[i]);
+    b = LINE_FLOW_get_b_vector(results[i]);
+    
+    for (j = 0; j < num_constr; j++) {
+  
+      // l and u
+      VEC_set(l,*G_row,-CONSTR_AC_LIN_FLOW_LIM_INF); // lower limit
+      VEC_set(u,*G_row,b[j]);                        // upper limit
+      
+      for (k = 0; k < 2; k++) {
+  
+        if (BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG)) { // v_mag variable
+
+	  // G
+          MAT_set_i(G,*G_nnz,*G_row);
+          MAT_set_j(G,*G_nnz,BUS_get_index_v_mag(bus[k],t)); // vk time t
+          MAT_set_d(G,*G_nnz,A[3*j+k]);
+          (*G_nnz)++;
+        }
+
+	if (BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG)) { // v_ang variable
+
+          // G
+          MAT_set_i(G,*G_nnz,*G_row);
+          MAT_set_j(G,*G_nnz,BUS_get_index_v_ang(bus[k],t)); // wk time t
+	  if (k == 0) 
+	    MAT_set_d(G,*G_nnz,A[3*j+2]);
+	  else
+	    MAT_set_d(G,*G_nnz,-A[3*j+2]);
+          (*G_nnz)++;
+        }
+      }
+      (*G_row)++;
+    }
+  }
+  
+  #else
+  CONSTR_set_error(c,"unable to construct AC_LIN_FLOW_LIM constraint - line_flow library not available");
+  #endif  
 }
 
 void CONSTR_AC_LIN_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
-  
-
+  // Nothing
 }
 
 void CONSTR_AC_LIN_FLOW_LIM_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
@@ -216,5 +356,26 @@ void CONSTR_AC_LIN_FLOW_LIM_store_sens_step(Constr* c, Branch* br, int t, Vec* s
 }
 
 void CONSTR_AC_LIN_FLOW_LIM_free(Constr* c) {
-  // Nothing
+
+  // Local variables
+  int i;
+  Constr_AC_LIN_FLOW_LIM_Data* data;
+
+  // Get data
+  data = (Constr_AC_LIN_FLOW_LIM_Data*)CONSTR_get_data(c);
+
+  // Free
+  if (data) {
+    #if HAVE_LINE_FLOW
+    for (i = 0; i < data->size; i++) {
+      if (data->results[i])
+	LINE_FLOW_free_results(data->results[i]);
+    }
+    free(data->results);
+    #endif
+    free(data);
+  }
+   
+  // Set data
+  CONSTR_set_data(c,NULL);
 }

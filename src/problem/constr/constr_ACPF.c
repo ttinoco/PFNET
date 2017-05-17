@@ -1544,8 +1544,8 @@ void CONSTR_ACPF_free(Constr* c) {
     free(data->dwdw_indices);
     free(data->dwdv_indices);
     free(data->dvdv_indices);
+    free(data);
   }
-  free(data);
 
   // Set data
   CONSTR_set_data(c,NULL);

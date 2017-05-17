@@ -27,7 +27,7 @@ Unreleased
 * Removed Problem "set_network" method and required that Problem constructor takes network as argument for consistency with functions and constraints (done).
 * Added default arguments to routines "add_batteries" and "add_var_generators" (done).
 * Fixed indentation bug in problem.show() (done).
-* (Conservative) linearized AC thermal limits via external and optional "line_flow" library.
+* (Conservative) linearized AC thermal limits via external and optional "line_flow" library (done).
 
 Version 1.2.9
 -------------
