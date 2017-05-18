@@ -1308,8 +1308,6 @@ class TestProblem(unittest.TestCase):
             self.assertTupleEqual(A.shape,(A_size,net.num_vars))
             self.assertEqual(A.nnz,A_nnz)
 
-            print("I am there")
-
     def tearDown(self):
         
         pass

@@ -4526,8 +4526,6 @@ class TestConstraints(unittest.TestCase):
             G = constr.G
             l = constr.l
             u = constr.u
-
-            print(u,G.data)
             
             # After analyze
             self.assertEqual(constr.num_extra_vars,0)
@@ -4550,8 +4548,6 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(l) is np.ndarray)
             self.assertTupleEqual(l.shape,(constr.G_row,))
             self.assertTrue(np.all(l == -1e8))
-
-            print('I am here')
 
     def tearDown(self):
 
