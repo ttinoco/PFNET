@@ -1204,11 +1204,13 @@ class TestProblem(unittest.TestCase):
             p.add_constraint(pf.Constraint('variable bounds',net))
             p.add_function(pf.Function('generation cost',1.,net))
             
+            # Tap ratios and phase shifts
             if net.get_num_tap_changers()+net.get_num_phase_shifters() > 0:
                 self.assertRaises(pf.ProblemError,p.analyze)
                 p.clear_error()
                 continue
                 
+            # No voltage magnitude bounds
             self.assertRaises(pf.ProblemError,p.analyze)
             self.assertRaisesRegexp(pf.ProblemError,
                                     "AC_LIN_FLOW_LIM constraint requires variable voltage magnitudes to be bounded",
@@ -1219,6 +1221,14 @@ class TestProblem(unittest.TestCase):
                           'bounded',
                           'any',
                           'voltage magnitude')
+
+            # Library unavailable
+            if not pf.info['line_flow']:
+                self.assertRaisesRegexp(pf.ProblemError,
+                                        "LINE_FLOW library not available",
+                                        p.analyze)
+                p.clear_error()
+                continue
 
             p.analyze()
 
