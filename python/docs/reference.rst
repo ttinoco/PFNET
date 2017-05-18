@@ -495,6 +495,7 @@ Constraint Names
 ``"voltage regulation by shunts"``
 ``"AC branch flow limits"``
 ``"DC branch flow limits"``
+``"linearized AC branch flow limits"``
 ``"battery dynamics"``
 ``"load constant power factor"``
 ============================================ =======
@@ -525,10 +526,11 @@ Problem Class
    :members:
    :exclude-members: add_heuristic, apply_heuristics
 
-.. _ref_references:
+.. _ref_papers:
 
-References
-==========
+Papers
+======
+
+.. [DS2017] D\. Shchetinin, T\. Tinoco De Rubira, G\. Hug, *Conservative Linear Line Flow Constraints for AC Optimal Power Flow*, IEEE PES Powertech Conference, June 2017.
 
 .. [TTR2015] T\. Tinoco De Rubira, *Numerical Optimization and Modeling Techniques for Power System Operations and Planning*. PhD thesis, Stanford University, March 2015.
-

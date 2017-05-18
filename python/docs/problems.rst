@@ -339,7 +339,14 @@ for each branch :math:`(k,m)`, where :math:`b_{km}` are branch susceptances, :ma
 AC branch flow limits
 ---------------------
 
-This constraint is associated with the string ``"AC branch flow limits"``. It enforces branch "AC" power flow limits due to thermal ratings using current magnitudes. This constraint utilizes auxiliary variables, which are also supported in PFNET and will be documented soon. 
+This constraint is associated with the string ``"AC branch flow limits"``. It enforces branch "AC" power flow limits due to thermal ratings based on current magnitudes. It utilizes auxiliary variables (slacks). 
+
+.. _prob_constr_AC_LIN_FLOW_LIM:
+
+Linearized AC branch flow limits
+--------------------------------
+
+This constraint is associated with the string ``"linearized AC branch flow limits"``. It enforces branch "AC" power flow limits due to thermal ratings based on current magnitudes using conservative linear constraints constructed with the external library ``Line Flow`` [DS2017]_. This external library is used with its default parameters.
 
 .. _prob_constr_FIX:
 

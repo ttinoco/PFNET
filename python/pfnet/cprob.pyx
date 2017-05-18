@@ -33,7 +33,7 @@ cdef class Problem:
 
         Parameters
         ----------
-        net : :class:`Network <pfnet.Network>'
+        net : :class:`Network <pfnet.Network>`
         """
 
         pass
