@@ -8,4 +8,4 @@
 
 cdef extern from "pfnet/pfnet_config.h":
 
-    cdef char HAVE_RAW_PARSER
+    cdef char HAVE_LINE_FLOW

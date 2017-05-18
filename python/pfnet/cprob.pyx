@@ -15,10 +15,7 @@ class ProblemError(Exception):
     Problem error exception.
     """
 
-    def __init__(self,value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 cdef class Problem:
     """
@@ -112,6 +109,8 @@ cdef class Problem:
         """
 
         cprob.PROB_analyze(self._c_prob)
+        if cprob.PROB_has_error(self._c_prob):
+            raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 
     def apply_heuristics(self,var_values):
         cdef np.ndarray[double,mode='c'] x = var_values

@@ -28,6 +28,8 @@ Unreleased
 * Added default arguments to routines "add_batteries" and "add_var_generators" (done).
 * Fixed indentation bug in problem.show() (done).
 * (Conservative) linearized AC thermal limits via external and optional "line_flow" library (done).
+* Changed key "raw parser" to "raw_parser" in "info" dictionary of pfnet python wrapper, and added "line_flow" (done).
+* Added constraint/function/network error checks in problem analyze and eval routines (done).
 
 Version 1.2.9
 -------------

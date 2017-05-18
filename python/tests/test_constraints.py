@@ -3049,7 +3049,7 @@ class TestConstraints(unittest.TestCase):
                     mis += br.P_km_DC
                 self.assertLess(np.abs(mismatches[bus.index]-mis),1e-8)
 
-            # no variables
+            # No variables
             net.clear_flags()
             self.assertEqual(net.num_vars,0)
             constr.del_matvec()
@@ -4408,6 +4408,140 @@ class TestConstraints(unittest.TestCase):
             for load in net.loads:
                 for t in range(net.num_periods):
                     self.assertAlmostEqual(load.power_factor[t],load.target_power_factor)
+
+    def test_constr_AC_LIN_FLOW_LIM(self):
+
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          'voltage magnitude')
+            net.set_flags('bus',
+                          'variable',
+                          'not slack',
+                          'voltage angle')
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+            self.assertEqual(net.num_vars,
+                             (2*net.get_num_buses()-net.get_num_slack_buses() +
+                              net.get_num_tap_changers() +
+                              net.get_num_phase_shifters())*self.T)
+
+            # Zero ratings
+            for br in net.branches:
+                if br.ratingA == 0.:
+                    br.ratingA = 100.
+
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+
+            # Constraint
+            constr = pf.Constraint('linearized AC branch flow limits',net)
+            self.assertEqual(constr.name,'linearized AC branch flow limits')
+
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            G = constr.G
+            l = constr.l
+            u = constr.u
+
+            # Before
+            self.assertEqual(constr.num_extra_vars,0)
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(0,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,0))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(0,0))
+            self.assertEqual(A.nnz,0)
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(0,0))
+            self.assertEqual(G.nnz,0)
+            self.assertTrue(type(u) is np.ndarray)
+            self.assertTupleEqual(u.shape,(0,))
+            self.assertTrue(type(l) is np.ndarray)
+            self.assertTupleEqual(l.shape,(0,))
+            self.assertEqual(constr.J_row,0)
+            self.assertEqual(constr.A_row,0)
+            self.assertEqual(constr.G_row,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
+            self.assertEqual(constr.num_extra_vars,0)
+      
+            if net.get_num_tap_changers()+net.get_num_phase_shifters() > 0:
+                self.assertRaises(pf.ConstraintError,constr.analyze)
+                constr.clear_error()
+                continue
+
+            self.assertRaises(pf.ConstraintError,constr.analyze)
+            self.assertRaisesRegexp(pf.ConstraintError,
+                                    "AC_LIN_FLOW_LIM constraint requires variable voltage magnitudes to be bounded",
+                                    constr.analyze)
+            constr.clear_error()
+
+            net.set_flags('bus',
+                          'bounded',
+                          'any',
+                          'voltage magnitude')
+
+            self.assertEqual(net.num_bounded,net.num_buses*self.T)
+        
+            constr.analyze()
+
+            self.assertGreaterEqual(constr.G_nnz,constr.G_row)
+           
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            G = constr.G
+            l = constr.l
+            u = constr.u
+
+            print(u,G.data)
+            
+            # After analyze
+            self.assertEqual(constr.num_extra_vars,0)
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(0,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,net.num_vars))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(0,net.num_vars))
+            self.assertEqual(A.nnz,0)
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(constr.G_row,net.num_vars))
+            self.assertFalse(np.any(np.isnan(G.data)))
+            self.assertTrue(type(u) is np.ndarray)
+            self.assertTupleEqual(u.shape,(constr.G_row,))
+            self.assertFalse(np.any(np.isnan(u)))
+            self.assertTrue(type(l) is np.ndarray)
+            self.assertTupleEqual(l.shape,(constr.G_row,))
+            self.assertTrue(np.all(l == -1e8))
+
+            print('I am here')
 
     def tearDown(self):
 
