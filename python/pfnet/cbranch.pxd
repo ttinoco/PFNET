@@ -81,6 +81,8 @@ cdef extern from "pfnet/branch.h":
     bint BRANCH_is_tap_changer_Q(Branch* br)
     bint BRANCH_has_flags(Branch* br, char flag_type, char mask)
     Branch* BRANCH_new(int num_periods)
+    void BRANCH_set_ratio(Branch* br, REAL ratio, int t)
+    void BRANCH_set_phase(Branch* br, REAL phase, int t)
     void BRANCH_set_ratio_max(Branch* br, REAL ratio)
     void BRANCH_set_ratio_min(Branch* br, REAL ratio)
     void BRANCH_set_ratingA(Branch* br, REAL r)

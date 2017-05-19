@@ -774,6 +774,12 @@ class TestNetwork(unittest.TestCase):
                 branch.ratingC = r
                 self.assertEqual(r,branch.ratingC)
 
+                # ratio and phase set
+                branch.phase = 1.234
+                self.assertEqual(branch.phase,1.234)
+                branch.ratio = 1.1102
+                self.assertEqual(branch.ratio,1.1102)
+
                 # tap changer v
                 if branch.is_tap_changer_v():
                     self.assertTrue(branch.is_tap_changer())
@@ -801,6 +807,32 @@ class TestNetwork(unittest.TestCase):
                 for t in range(1,self.T):
                     self.assertEqual(branch.ratio[t],branch.ratio[0])
                     self.assertEqual(branch.phase[t],branch.phase[0])
+
+                # Set
+                x = np.random.randn(self.T)
+                branch.phase = x
+                for t in range(self.T):
+                    self.assertEqual(branch.phase[t],x[t])
+                x = np.random.randn(self.T)
+                branch.ratio = x
+                for t in range(self.T):
+                    self.assertEqual(branch.ratio[t],x[t])
+
+                # Set (attribute array)
+                for t in range(self.T):
+                    phase = np.random.randn()
+                    branch.phase[t] = phase
+                    self.assertEqual(phase,branch.phase[t])
+                    ratio = np.random.randn()
+                    branch.ratio[t] = ratio
+                    self.assertEqual(ratio,branch.ratio[t])
+
+                    ratio = np.random.randn()
+                    ar = branch.ratio
+                    self.assertTupleEqual(ar.shape,(self.T,))
+                    ar[t] = ratio
+                    self.assertEqual(ar[t],ratio)
+                    self.assertEqual(branch.ratio[t],ratio)
 
             # Indexing
             net.set_flags('branch',

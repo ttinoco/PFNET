@@ -30,6 +30,7 @@ Unreleased
 * (Conservative) linearized AC thermal limits via external and optional "line_flow" library (done).
 * Changed key "raw parser" to "raw_parser" in "info" dictionary of pfnet python wrapper, and added "line_flow" (done).
 * Added constraint/function/network error checks in problem analyze and eval routines (done).
+* Added branch phase and ratio python setters (done).
 
 Version 1.2.9
 -------------
