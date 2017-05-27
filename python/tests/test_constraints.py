@@ -6,6 +6,7 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
+import os
 import pfnet as pf
 import unittest
 from . import test_cases
@@ -3752,8 +3753,9 @@ class TestConstraints(unittest.TestCase):
 
         # Constants
         h = 1e-11
-        tol = 1e-3
+        tol = 1e-2
         eps = 1.1 # %
+        param = 1e-6
 
         # Multiperiod
         for case in test_cases.CASES:
@@ -3928,15 +3930,15 @@ class TestConstraints(unittest.TestCase):
                     Qmk = branch.get_Q_mk()[t]
                     vk = branch.bus_k.v_mag[t]
                     vm = branch.bus_m.v_mag[t]
-                    ikmmag = np.abs((Pkm/vk) + 1j*(Qkm/vk))
-                    imkmag = np.abs((Pmk/vm) + 1j*(Qmk/vm))
+                    ikmmag = np.sqrt(np.abs((Pkm/vk) + 1j*(Qkm/vk))**2.+param)
+                    imkmag = np.sqrt(np.abs((Pmk/vm) + 1j*(Qmk/vm))**2.+param)
                     error_km = 100.*np.abs(ikmmag-f[i]-y0[J_row])/max([ikmmag,tol])
                     error_mk = 100.*np.abs(imkmag-f[i+1]-y0[J_row+1])/max([imkmag,tol])
                     self.assertLess(error_km,eps)
                     self.assertLess(error_mk,eps)
                     J_row += 2
 
-            # Jacobian check
+            # Jacobian check 1
             constr.eval(x0,y0)
             f0 = constr.f.copy()
             J0 = constr.J.copy()
@@ -3952,7 +3954,7 @@ class TestConstraints(unittest.TestCase):
 
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
-                error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),1.)
+                error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),tol)
                 self.assertLessEqual(error,EPS)
 
             # Sigle Hessian check
@@ -3980,7 +3982,7 @@ class TestConstraints(unittest.TestCase):
 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
+                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),tol)
                 self.assertLessEqual(error,EPS)
 
             # Combined Hessian check
@@ -4008,8 +4010,51 @@ class TestConstraints(unittest.TestCase):
 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
+                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),tol)
                 self.assertLessEqual(error,EPS)
+
+            # Jacobian check 2
+            if os.environ.get('TEST_SLOW'):
+                h = 1e-12
+                tol = 1e0
+                eps = 5.0 # %
+                constr.eval(x0,y0)
+                f0 = constr.f.copy()
+                J0 = constr.J.copy()
+                self.assertEqual(constr.num_extra_vars,num_constr)
+                def check_J(index,nnz=None):
+                    e = np.zeros(net.num_vars+constr.num_extra_vars)
+                    e[index] = 1.
+                    x = x0 + h*e[:net.num_vars]
+                    y = y0 + h*e[net.num_vars:]
+                    constr.eval(x,y)
+                    f1 = constr.f
+                    Je_exact = J0*e
+                    Je_approx = (f1-f0)/h
+                    error = 100.*norm(Je_exact-Je_approx)/np.maximum(norm(Je_exact),tol)
+                    self.assertLessEqual(np.sum((f1-f0) != 0.),nnz)
+                    try:
+                        self.assertLessEqual(error,eps)
+                        return True
+                    except AssertionError:
+                        return False
+                for t in range(net.num_periods):
+                    for branch in net.branches:
+                        if branch.is_tap_changer():
+                            self.assertTrue(check_J(branch.index_ratio[t],2))
+                    for branch in net.branches:
+                        if branch.is_phase_shifter():
+                            self.assertTrue(check_J(branch.index_phase[t],2))
+                    num_bad = 0
+                    for bus in net.buses:
+                        if not check_J(bus.index_v_mag[t],2*bus.degree):
+                            num_bad += 1
+                    self.assertLess((100.*num_bad)/net.num_buses,1.) # less then 1 %
+                    num_bad = 0
+                    for bus in net.buses:
+                        if not check_J(bus.index_v_ang[t],2*bus.degree):
+                            num_bad += 1
+                    self.assertLess((100.*num_bad)/net.num_buses,1.) # less then 1 %
 
     def test_constr_DUMMY(self):
 
