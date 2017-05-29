@@ -1001,8 +1001,8 @@ void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec
 
       dRdy = dRdx;
       dIdy = dIdx;
-      d2Rdydx = -indicator_phi*a*v[m]*(-g*costheta+b*sintheta);
-      d2Idydx = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
+      d2Rdydx = -a*v[m]*(-g*costheta+b*sintheta);
+      d2Idydx = -a*v[m]*(-g*sintheta-b*costheta);
       H[H_nnz_val] = HESSIAN_VAL();
       H_nnz_val++;   // phi and phi
       H_nnz[(*J_row)] = H_nnz_val;
