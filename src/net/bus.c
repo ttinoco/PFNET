@@ -20,8 +20,8 @@
 struct Bus {
 
   // Properties
-  int number;                      /**< @brief Bus number */
-  char name[BUS_NAME_BUFFER_SIZE]; /**< @brief Bus name */
+  int number;                 /**< @brief Bus number */
+  char name[BUS_BUFFER_SIZE]; /**< @brief Bus name */
 
   // Times
   int num_periods;   /**< @brief Number of time periods. */
@@ -1065,6 +1065,50 @@ REAL BUS_get_quantity(Bus* bus, int qtype, int t) {
   }
 }
 
+char* BUS_get_json_string(Bus* bus) {
+  
+  // Local variables
+  char* temp;
+  char* output;
+
+  // No bus
+  if (!bus)
+    return NULL;
+
+  // Alloc
+  temp = (char*)malloc(sizeof(char)*BUS_BUFFER_SIZE);
+  output = (char*)malloc(sizeof(char)*BUS_BUFFER_SIZE*25*bus->num_periods);
+
+  // Start
+  strcpy(output,"{ ");
+ 
+  // Number
+  sprintf(temp,"\"number\" : %d", bus->number);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Name
+  sprintf(temp,"\"name\" : %s", bus->name);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Num periods
+  sprintf(temp,"\"num_periods\" : %d", bus->num_periods);
+  strcat(output,temp);
+  //strcat(output,", ");
+
+  
+  
+  // End
+  strcat(output," }");
+  
+  // Free 
+  free(temp);
+  output = (char*)realloc(output,sizeof(char)*strlen(output));
+
+  return output;
+}
+
 BOOL BUS_has_flags(void* vbus, char flag_type, unsigned char mask) {
   Bus* bus = (Bus*)vbus;
   if (bus) {
@@ -1156,7 +1200,7 @@ void BUS_init(Bus* bus, int num_periods) {
   bus->num_periods = num_periods;
 
   bus->number = 0;
-  for (i = 0; i < BUS_NAME_BUFFER_SIZE; i++)
+  for (i = 0; i < BUS_BUFFER_SIZE; i++)
     bus->name[i] = 0;
 
   bus->index = 0;
@@ -1319,7 +1363,7 @@ void BUS_set_number(Bus* bus, int number) {
 
 void BUS_set_name(Bus* bus, char* name) {
   if (bus)
-    strncpy(bus->name,name,(size_t)(BUS_NAME_BUFFER_SIZE-1));
+    strncpy(bus->name,name,(size_t)(BUS_BUFFER_SIZE-1));
 }
 
 void BUS_set_price(Bus* bus, REAL price, int t) {

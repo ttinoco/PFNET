@@ -13,6 +13,7 @@ cpfnet.h
 build/
 lib/
 __pycache__/
+*foo*
 
 # PyCharm Project Files
 .idea/*

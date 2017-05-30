@@ -498,6 +498,14 @@ cdef class Bus:
             name = name.encode('UTF-8')
             cbus.BUS_set_name(self._c_ptr,name)
 
+    property json_string:
+        """ JSON string (sting). """
+        def __get__(self): 
+            cdef char* json_string = cbus.BUS_get_json_string(self._c_ptr)
+            s = json_string.decode('UTF-8')
+            free(json_string)
+            return s
+
     property degree:
         """ Bus degree (number of incident branches) (float). """
         def __get__(self): return cbus.BUS_get_degree(self._c_ptr)

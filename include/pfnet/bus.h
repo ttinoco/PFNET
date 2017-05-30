@@ -75,7 +75,7 @@
 /** \defgroup bus_const Bus Constants
  *  @{
  */
-#define BUS_NAME_BUFFER_SIZE 25  /**< @brief Constant: buffer size for name */
+#define BUS_BUFFER_SIZE 100  /**< @brief Constant: buffer size for strings */
 /** @} */
 
 // Bus
@@ -211,6 +211,7 @@ int BUS_get_largest_sens_type(Bus* bus, int t);
 REAL BUS_get_largest_mis(Bus* bus, int t);
 int BUS_get_largest_mis_type(Bus* bus, int t);
 REAL BUS_get_quantity(Bus* bus, int qtype, int t);
+char* BUS_get_json_string(Bus* bus);
 BOOL BUS_has_flags(void* bus, char flag_type, unsigned char mask);
 BOOL BUS_has_properties(void* bus, char prop);
 Bus* BUS_hash_number_add(Bus* bus_hash, Bus* bus);

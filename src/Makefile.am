@@ -45,13 +45,15 @@ parser_src = 	parser/parser.c \
 		parser/parser_ART.c \
 		parser/parser_CSV.c \
 		parser/parser_MAT.c \
-		parser/parser_RAW.c
+		parser/parser_RAW.c \
+		parser/parser_JSON.c
 
 parser_hdr = 	$(inc_path)/parser.h \
 		$(inc_path)/parser_ART.h \
 		$(inc_path)/parser_CSV.h \
 		$(inc_path)/parser_MAT.h \
-		$(inc_path)/parser_RAW.h
+		$(inc_path)/parser_RAW.h \
+		$(inc_path)/parser_JSON.h
 
 problem_src = 	problem/constr.c \
 		problem/func.c \
