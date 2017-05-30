@@ -10,6 +10,7 @@ Targets
 
 Unreleased
 ----------
+* Support for init values for constraint extra variables.
 
 Version 1.3.0
 -------------

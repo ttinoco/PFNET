@@ -194,9 +194,10 @@ void CONSTR_REG_TRAN_allocate(Constr* c) {
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
   num_extra_vars = CONSTR_get_num_extra_vars(c);
 
-  // Extra var limits
+  // Extra vars
   CONSTR_set_l_extra_vars(c,VEC_new(num_extra_vars));
   CONSTR_set_u_extra_vars(c,VEC_new(num_extra_vars));
+  CONSTR_set_init_extra_vars(c,VEC_new(num_extra_vars));
 
   // G u l
   CONSTR_set_G(c,MAT_new(0,num_vars+num_extra_vars,0));

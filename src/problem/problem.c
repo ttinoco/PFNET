@@ -505,16 +505,25 @@ Heur* PROB_get_heur(Prob* p) {
 Vec* PROB_get_init_point(Prob* p) {
   Vec* out;
   Vec* x;
+  Vec* init_extra;
+  Constr* c;
   int i;
+  int j;
   if (!p)
     return NULL;
   out = VEC_new(PROB_get_num_primal_variables(p));
   x = NET_get_var_values(p->net,CURRENT);
   for (i = 0; i < VEC_get_size(x); i++)
     VEC_set(out,i,VEC_get(x,i));
-  for (i = VEC_get_size(x); i < PROB_get_num_primal_variables(p); i++)
-    VEC_set(out,i,0.); // extra vars to zero
-  free(x);
+  i = VEC_get_size(x);
+  for (c = p->constr; c != NULL; c = CONSTR_get_next(c)) {
+    init_extra = CONSTR_get_init_extra_vars(c);
+    for (j = 0; j < VEC_get_size(init_extra); j++) {
+      VEC_set(out,i,VEC_get(init_extra,j));
+      i++;
+    }
+  }
+  free(x);  
   return out;
 }
 

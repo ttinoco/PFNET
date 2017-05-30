@@ -1864,6 +1864,10 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.J_row,rowsJ*self.T)
             self.assertEqual(constr.A_row,rowsA*self.T)
             self.assertEqual(constr.num_extra_vars,rowsJ*self.T)
+
+            y_init = constr.init_extra_vars
+            self.assertEqual(y_init.size,constr.num_extra_vars)
+            self.assertTrue(np.all(y_init == 0.))
             
             y0 = np.random.rand(constr.num_extra_vars)
             constr.eval(x0,y0)
@@ -2339,6 +2343,11 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.A_nnz,Annz*self.T)
             self.assertEqual(constr.J_row,rowsJ*self.T)
             self.assertEqual(constr.A_row,rowsA*self.T)
+
+            y_init = constr.init_extra_vars
+            self.assertEqual(y_init.size,constr.num_extra_vars)
+            self.assertTrue(np.all(y_init == 0.))
+
             constr.eval(x0)
             self.assertEqual(constr.J_nnz,Jnnz*self.T)
             self.assertEqual(constr.A_nnz,0)
@@ -2566,6 +2575,11 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.A_nnz,Annz*self.T)
             self.assertEqual(constr.J_row,rowsJ*self.T)
             self.assertEqual(constr.A_row,rowsA*self.T)
+
+            y_init = constr.init_extra_vars
+            self.assertEqual(y_init.size,constr.num_extra_vars)
+            self.assertTrue(np.all(y_init == 0.))
+
             constr.eval(x0)
             self.assertEqual(constr.J_nnz,Jnnz*self.T)
             self.assertEqual(constr.A_nnz,0)
@@ -3897,6 +3911,12 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(Hcomb.shape,(net.num_vars+num_constr,net.num_vars+num_constr))
             self.assertTrue(np.all(Hcomb.row >= Hcomb.col))
             self.assertEqual(Hcomb.nnz,H_comb_nnz)
+
+            y_init = constr.init_extra_vars
+            self.assertEqual(y_init.size,constr.num_extra_vars)
+            self.assertEqual(y_init.size,constr.f.size)
+            self.assertTrue(np.all(y_init == 0.))
+            constr.eval(x0)
 
             y0 = np.random.randn(num_constr)
 

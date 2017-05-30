@@ -834,7 +834,8 @@ class TestProblem(unittest.TestCase):
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars+p.num_extra_vars,))
             x = net.get_var_values()
-            x0_check = np.hstack((x,np.zeros(p.num_extra_vars)))
+            c = p.find_constraint('AC branch flow limits')
+            x0_check = np.hstack((x,c.init_extra_vars))
             self.assertTrue(np.all(x0 == x0_check))
             
             y0 = np.random.randn(p.num_extra_vars)
