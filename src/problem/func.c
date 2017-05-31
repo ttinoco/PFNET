@@ -160,6 +160,30 @@ Func* FUNC_get_next(Func* f) {
     return NULL;
 }
 
+void FUNC_list_clear_error(Func* flist) {
+  Func* ff;
+  for (ff = flist; ff != NULL; ff = FUNC_get_next(ff))
+    FUNC_clear_error(ff);
+}
+
+BOOL FUNC_list_has_error(Func* flist) {
+  Func* ff;
+  for (ff = flist; ff != NULL; ff = FUNC_get_next(ff)) {
+    if (FUNC_has_error(ff))
+      return TRUE;
+  }
+  return FALSE;
+}
+
+char* FUNC_list_get_error_string(Func* flist) {
+  Func* ff;
+  for (ff = flist; ff != NULL; ff = FUNC_get_next(ff)) {
+    if (FUNC_has_error(ff))
+      return FUNC_get_error_string(ff);
+  }
+  return "";
+}
+
 Func* FUNC_list_add(Func* flist, Func* nf) {
   LIST_add(Func,flist,nf,next);
   return flist;
@@ -391,10 +415,10 @@ BOOL FUNC_is_safe_to_eval(Func* f, Vec* values) {
 }
 
 BOOL FUNC_has_error(Func* f) {
-  if (!f)
-    return FALSE;
-  else
+  if (f)
     return f->error_flag;
+  else
+    return FALSE;
 }
 
 void FUNC_clear_error(Func * f) {

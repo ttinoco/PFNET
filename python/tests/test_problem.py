@@ -1150,6 +1150,164 @@ class TestProblem(unittest.TestCase):
             self.assertTrue(np.all(p1.A.col == p2.A.col))
             self.assertTrue(np.all(p1.A.data == p2.A.data))
 
+    def test_problem_ACOPF_with_linearized_thermal(self):
+
+        for case in test_cases.CASES:
+            
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
+            
+            p = pf.Problem(net)
+
+            for branch in net.branches:
+                if branch.ratingA == 0.:
+                    branch.ratingA = 100.
+            
+            # Variables
+            net.set_flags('bus',
+                          ['variable'],
+                          'any',
+                          'voltage magnitude')
+            net.set_flags('bus',
+                          'variable',
+                          'not slack',
+                          'voltage angle')
+            net.set_flags('generator',
+                          ['variable','bounded'],
+                          'adjustable active power',
+                          'active power')
+            net.set_flags('generator',
+                          ['variable','bounded'],
+                          'regulator',
+                          'reactive power')
+            net.set_flags('branch',
+                          ['variable','bounded'],
+                          'tap changer',
+                          'tap ratio')
+            net.set_flags('branch',
+                          ['variable','bounded'],
+                          'phase shifter',
+                          'phase shift')
+           
+            self.assertEqual(net.num_vars,(2*net.num_buses-net.get_num_slack_buses() +
+                                           net.get_num_P_adjust_gens() + 
+                                           net.get_num_reg_gens()+
+                                           net.get_num_tap_changers()+
+                                           net.get_num_phase_shifters()))
+            self.assertEqual(net.num_bounded,(net.get_num_P_adjust_gens() + 
+                                              net.get_num_reg_gens()+
+                                              net.get_num_tap_changers()+
+                                              net.get_num_phase_shifters()))
+
+            p.add_constraint(pf.Constraint('AC power balance',net))
+            p.add_constraint(pf.Constraint('linearized AC branch flow limits',net))
+            p.add_constraint(pf.Constraint('variable bounds',net))
+            p.add_function(pf.Function('generation cost',1.,net))
+            
+            # Tap ratios and phase shifts
+            if net.get_num_tap_changers()+net.get_num_phase_shifters() > 0:
+                self.assertRaises(pf.ProblemError,p.analyze)
+                p.clear_error()
+                continue
+                
+            # No voltage magnitude bounds
+            self.assertRaises(pf.ProblemError,p.analyze)
+            self.assertRaisesRegexp(pf.ProblemError,
+                                    "AC_LIN_FLOW_LIM constraint requires variable voltage magnitudes to be bounded",
+                                    p.analyze)
+            p.clear_error()
+
+            net.set_flags('bus',
+                          'bounded',
+                          'any',
+                          'voltage magnitude')
+
+            # Library unavailable
+            if not pf.info['line_flow']:
+                self.assertRaisesRegexp(pf.ProblemError,
+                                        "LINE_FLOW library not available",
+                                        p.analyze)
+                p.clear_error()
+                continue
+
+            p.analyze()
+
+            # Extra vars
+            self.assertEqual(p.num_extra_vars,0)
+            
+            # Init point
+            x0 = p.get_init_point()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+            
+            p.eval(x0)
+            
+            phi = p.phi
+            gphi = p.gphi.copy()
+            Hphi = p.Hphi.copy()
+
+            f = p.f.copy()
+            b = p.b.copy()
+            A = p.A.copy()
+            J = p.J.copy()
+            G = p.G.copy()
+            l = p.l.copy()
+            u = p.u.copy()
+
+            # Numbers
+            self.assertEqual(x0.size,p.num_primal_variables)
+            self.assertEqual(A.shape[0],p.num_linear_equality_constraints)
+            self.assertEqual(f.size,p.num_nonlinear_equality_constraints)
+                        
+            # phi
+            self.assertTrue(type(phi) is float)
+            self.assertGreaterEqual(phi,0.)
+
+            # gphi
+            self.assertTrue(type(gphi) is np.ndarray)
+            self.assertTupleEqual(gphi.shape,(net.num_vars,))
+
+            # Hphi
+            self.assertTrue(type(Hphi) is coo_matrix)
+            self.assertTupleEqual(Hphi.shape,(net.num_vars,net.num_vars))
+            self.assertGreater(Hphi.nnz,0)
+    
+            # f
+            self.assertTrue(type(f) is np.ndarray)
+            f_size = sum(c.f.shape[0] for c in p.constraints)
+            self.assertTupleEqual(f.shape,(f_size,))
+            
+            # b
+            self.assertTrue(type(b) is np.ndarray)
+            b_size = sum(c.b.shape[0] for c in p.constraints)
+            self.assertTupleEqual(b.shape,(b_size,))
+
+            # J
+            self.assertTrue(type(J) is coo_matrix)
+            J_size = sum([c.J.shape[0] for c in p.constraints])
+            J_nnz = sum([c.J.nnz for c in p.constraints])
+            self.assertTupleEqual(J.shape,(J_size,net.num_vars))
+            self.assertEqual(J.nnz,J_nnz)
+
+            # G, l, u
+            self.assertTrue(type(G) is coo_matrix)
+            G_size = sum([c.G.shape[0] for c in p.constraints])
+            G_nnz = sum([c.G.nnz for c in p.constraints])
+            self.assertTupleEqual(G.shape,(G_size,net.num_vars))
+            self.assertEqual(G.nnz,G_nnz)
+            self.assertEqual(l.size,G_size)
+            self.assertEqual(u.size,G_size)
+            self.assertFalse(np.any(np.isnan(l)))
+            self.assertFalse(np.any(np.isnan(u)))
+            self.assertFalse(np.any(np.isnan(G.data)))
+
+            # A
+            self.assertTrue(type(A) is coo_matrix)
+            A_size = sum(c.A.shape[0] for c in p.constraints)
+            A_nnz = sum(c.A.nnz for c in p.constraints)
+            self.assertTupleEqual(A.shape,(A_size,net.num_vars))
+            self.assertEqual(A.nnz,A_nnz)
+
     def tearDown(self):
         
         pass

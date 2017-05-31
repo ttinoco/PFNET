@@ -17,6 +17,7 @@ cimport cconstants
 cimport cvec
 cimport cmat
 cimport cparser_raw
+cimport cline_flow
 cimport cgraph
 
 from scipy import misc
@@ -30,7 +31,8 @@ np.import_array()
 #############
 
 info = {'graphviz': bool(cgraph.HAVE_GRAPHVIZ),
-        'raw parser': bool(cparser_raw.HAVE_RAW_PARSER)}
+        'raw_parser': bool(cparser_raw.HAVE_RAW_PARSER),
+        'line_flow': bool(cline_flow.HAVE_LINE_FLOW)}
 
 # Constants
 ###########

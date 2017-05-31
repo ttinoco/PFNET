@@ -403,6 +403,30 @@ Constr* CONSTR_get_next(Constr* c) {
     return NULL;
 }
 
+void CONSTR_list_clear_error(Constr* clist) {
+  Constr* cc;
+  for (cc = clist; cc != NULL; cc = CONSTR_get_next(cc))
+    CONSTR_clear_error(cc);
+}
+
+BOOL CONSTR_list_has_error(Constr* clist) {
+  Constr* cc;
+  for (cc = clist; cc != NULL; cc = CONSTR_get_next(cc)) {
+    if (CONSTR_has_error(cc))
+      return TRUE;
+  }
+  return FALSE;
+}
+
+char* CONSTR_list_get_error_string(Constr* clist) {
+  Constr* cc;
+  for (cc = clist; cc != NULL; cc = CONSTR_get_next(cc)) {
+    if (CONSTR_has_error(cc))
+      return CONSTR_get_error_string(cc);
+  }
+  return "";
+}
+
 Constr* CONSTR_list_add(Constr* clist, Constr* nc) {
   LIST_add(Constr,clist,nc,next);
   return clist;
@@ -859,10 +883,10 @@ BOOL CONSTR_is_safe_to_eval(Constr* c, Vec* v, Vec* ve) {
 }
 
 BOOL CONSTR_has_error(Constr* c) {
-  if (!c)
-    return FALSE;
-  else
+  if (c)
     return c->error_flag;
+  else
+    return FALSE;
 }
 
 void CONSTR_set_error(Constr* c, char* string) {
@@ -880,10 +904,10 @@ void CONSTR_clear_error(Constr * c) {
 }
 
 char* CONSTR_get_error_string(Constr* c) {
-  if (!c)
-    return NULL;
-  else
+  if (c)
     return c->error_string;
+  else
+    return NULL;
 }
 
 void CONSTR_update_network(Constr* c) {

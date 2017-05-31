@@ -6,6 +6,7 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
+import os
 import pfnet as pf
 import unittest
 from . import test_cases
@@ -3049,7 +3050,7 @@ class TestConstraints(unittest.TestCase):
                     mis += br.P_km_DC
                 self.assertLess(np.abs(mismatches[bus.index]-mis),1e-8)
 
-            # no variables
+            # No variables
             net.clear_flags()
             self.assertEqual(net.num_vars,0)
             constr.del_matvec()
@@ -3752,8 +3753,9 @@ class TestConstraints(unittest.TestCase):
 
         # Constants
         h = 1e-11
-        tol = 1e-3
+        tol = 1e-2
         eps = 1.1 # %
+        param = 1e-6
 
         # Multiperiod
         for case in test_cases.CASES:
@@ -3928,8 +3930,8 @@ class TestConstraints(unittest.TestCase):
                     Qmk = branch.get_Q_mk()[t]
                     vk = branch.bus_k.v_mag[t]
                     vm = branch.bus_m.v_mag[t]
-                    ikmmag = np.abs((Pkm/vk) + 1j*(Qkm/vk))
-                    imkmag = np.abs((Pmk/vm) + 1j*(Qmk/vm))
+                    ikmmag = np.sqrt(np.abs((Pkm/vk) + 1j*(Qkm/vk))**2.+param)
+                    imkmag = np.sqrt(np.abs((Pmk/vm) + 1j*(Qmk/vm))**2.+param)
                     error_km = 100.*np.abs(ikmmag-f[i]-y0[J_row])/max([ikmmag,tol])
                     error_mk = 100.*np.abs(imkmag-f[i+1]-y0[J_row+1])/max([imkmag,tol])
                     self.assertLess(error_km,eps)
@@ -3952,7 +3954,7 @@ class TestConstraints(unittest.TestCase):
 
                 Jd_exact = J0*d
                 Jd_approx = (f1-f0)/h
-                error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),1.)
+                error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),tol)
                 self.assertLessEqual(error,EPS)
 
             # Sigle Hessian check
@@ -3980,7 +3982,7 @@ class TestConstraints(unittest.TestCase):
 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
+                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),tol)
                 self.assertLessEqual(error,EPS)
 
             # Combined Hessian check
@@ -4008,9 +4010,144 @@ class TestConstraints(unittest.TestCase):
 
                 Hd_exact = H0*d
                 Hd_approx = (g1-g0)/h
-                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
+                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),tol)
                 self.assertLessEqual(error,EPS)
 
+            # Combined Hessian check
+            coeff = np.random.randn(f0.shape[0])
+            constr.eval(x0,y0)
+            constr.combine_H(coeff,False)
+            H = constr.H_combined.copy()
+            H_manual = 0
+            for i in range(constr.f.size):
+                Hi = constr.get_H_single(i)
+                H_manual = H_manual + coeff[i]*Hi
+            diff = coo_matrix(H_manual-H)
+            self.assertLess(norm(diff.data)/norm(H.data),1e-12)
+
+            # Slow tests
+            if os.environ.get('TEST_SLOW') == '1':
+
+                # Jacobian check
+                h = 1e-12
+                tol = 1e0
+                eps = 3.0 # %
+                constr.eval(x0,y0)
+                f0 = constr.f.copy()
+                J0 = constr.J.copy()
+                self.assertEqual(constr.num_extra_vars,num_constr)
+                def check_J(index,nnz=None):
+                    e = np.zeros(net.num_vars+constr.num_extra_vars)
+                    e[index] = 1.
+                    x = x0 + h*e[:net.num_vars]
+                    y = y0 + h*e[net.num_vars:]
+                    constr.eval(x,y)
+                    f1 = constr.f
+                    Je_exact = J0*e
+                    Je_approx = (f1-f0)/h
+                    error = 100.*norm(Je_exact-Je_approx)/np.maximum(norm(Je_exact),tol)
+                    self.assertLessEqual(np.sum((f1-f0) != 0.),nnz)
+                    try:
+                        self.assertLessEqual(error,eps)
+                        return True
+                    except AssertionError:
+                        return False
+                for t in range(net.num_periods):
+                    for branch in net.branches:
+                        if branch.is_tap_changer():
+                            self.assertTrue(check_J(branch.index_ratio[t],2))
+                    for branch in net.branches:
+                        if branch.is_phase_shifter():
+                            self.assertTrue(check_J(branch.index_phase[t],2))
+                    num_bad = 0
+                    for bus in net.buses:
+                        if not check_J(bus.index_v_mag[t],2*bus.degree):
+                            num_bad += 1
+                    self.assertLess((100.*num_bad)/net.num_buses,1.) # less then 1 %
+                    num_bad = 0
+                    for bus in net.buses:
+                        if not check_J(bus.index_v_ang[t],2*bus.degree):
+                            num_bad += 1
+                    self.assertLess((100.*num_bad)/net.num_buses,1.) # less then 1 %
+
+                # Sigle Hessian check
+                h = 1e-12
+                tol = 1e0
+                eps = 2.0 # %
+                num_max = 50
+                num_trials = 4
+                counters = [0,0,0]
+                constr_indices = []
+                for t in range(net.num_periods):
+                    for branch in net.branches:
+                        if branch.is_tap_changer() and counters[0] < num_trials:
+                            i = t*net.num_branches*2+2*branch.index
+                            constr_indices += [i,i+1]
+                            counters[0] += 1
+                        elif branch.is_phase_shifter() and counters[1] < num_trials:
+                            i = t*net.num_branches*2+2*branch.index
+                            constr_indices += [i,i+1]
+                            counters[1] += 1
+                        elif counters[2] < num_trials:
+                            i = t*net.num_branches*2+2*branch.index
+                            constr_indices += [i,i+1]
+                            counters[2] += 1
+                self.assertLessEqual(len(constr_indices),24)
+                self.assertEqual(len(constr_indices),len(list(set(constr_indices))))
+                for i in constr_indices:
+                    constr.eval(x0,y0)
+                    g0 = constr.J.tocsr()[i,:].toarray().flatten()
+                    H0 = constr.get_H_single(i)
+                    H0 = (H0 + H0.T) - triu(H0)
+                    def check_H(index):
+                        e = np.zeros(net.num_vars+constr.num_extra_vars)
+                        e[index] = 1.
+                        x = x0 + h*e[:net.num_vars]
+                        y = y0 + h*e[net.num_vars:]
+                        constr.eval(x,y)
+                        g1 = constr.J.tocsr()[i,:].toarray().flatten()
+                        He_exact = H0*e
+                        He_approx = (g1-g0)/h
+                        error = 100.*norm(He_exact-He_approx)/np.maximum(norm(He_exact),tol)
+                        try:
+                            self.assertLessEqual(error,eps)
+                            return True
+                        except AssertionError:
+                            return False
+                    for t in range(net.num_periods):
+                        counter = 0
+                        for branch in net.branches:
+                            if branch.is_tap_changer():
+                                self.assertTrue(check_H(branch.index_ratio[t]))
+                                counter += 1
+                                if counter >= num_max:
+                                    break
+                        counter = 0
+                        for branch in net.branches:
+                            if branch.is_phase_shifter():
+                                self.assertTrue(check_H(branch.index_phase[t]))
+                                counter += 1
+                                if counter >= num_max:
+                                    break
+                        num_bad = 0
+                        counter = 0
+                        for bus in net.buses:
+                            if not check_H(bus.index_v_mag[t]):
+                                num_bad += 1
+                            counter += 1
+                            if counter >= num_max:
+                                break
+                        self.assertLess((100.*num_bad)/min([net.num_buses,num_max]),1.) # less then 1 %
+                        num_bad = 0
+                        counter = 0
+                        for bus in net.buses:
+                            if not check_H(bus.index_v_ang[t]):
+                                num_bad += 1
+                            counter += 1
+                            if counter >= num_max:
+                                break
+                        self.assertLess((100.*num_bad)/min([net.num_buses,num_max]),1.) # less then 1 %
+                    
     def test_constr_DUMMY(self):
 
         # Multiperiod
@@ -4408,6 +4545,146 @@ class TestConstraints(unittest.TestCase):
             for load in net.loads:
                 for t in range(net.num_periods):
                     self.assertAlmostEqual(load.power_factor[t],load.target_power_factor)
+
+    def test_constr_AC_LIN_FLOW_LIM(self):
+
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          'voltage magnitude')
+            net.set_flags('bus',
+                          'variable',
+                          'not slack',
+                          'voltage angle')
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+            self.assertEqual(net.num_vars,
+                             (2*net.get_num_buses()-net.get_num_slack_buses() +
+                              net.get_num_tap_changers() +
+                              net.get_num_phase_shifters())*self.T)
+
+            # Zero ratings
+            for br in net.branches:
+                if br.ratingA == 0.:
+                    br.ratingA = 100.
+
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+
+            # Constraint
+            constr = pf.Constraint('linearized AC branch flow limits',net)
+            self.assertEqual(constr.name,'linearized AC branch flow limits')
+
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            G = constr.G
+            l = constr.l
+            u = constr.u
+
+            # Before
+            self.assertEqual(constr.num_extra_vars,0)
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(0,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,0))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(0,0))
+            self.assertEqual(A.nnz,0)
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(0,0))
+            self.assertEqual(G.nnz,0)
+            self.assertTrue(type(u) is np.ndarray)
+            self.assertTupleEqual(u.shape,(0,))
+            self.assertTrue(type(l) is np.ndarray)
+            self.assertTupleEqual(l.shape,(0,))
+            self.assertEqual(constr.J_row,0)
+            self.assertEqual(constr.A_row,0)
+            self.assertEqual(constr.G_row,0)
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            self.assertEqual(constr.G_nnz,0)
+            self.assertEqual(constr.num_extra_vars,0)
+      
+            # Tap ratios and phase shifts
+            if net.get_num_tap_changers()+net.get_num_phase_shifters() > 0:
+                self.assertRaises(pf.ConstraintError,constr.analyze)
+                constr.clear_error()
+                continue
+
+            # No voltage magnitude bounds
+            self.assertRaises(pf.ConstraintError,constr.analyze)
+            self.assertRaisesRegexp(pf.ConstraintError,
+                                    "AC_LIN_FLOW_LIM constraint requires variable voltage magnitudes to be bounded",
+                                    constr.analyze)
+            constr.clear_error()
+
+            net.set_flags('bus',
+                          'bounded',
+                          'any',
+                          'voltage magnitude')
+
+            self.assertEqual(net.num_bounded,net.num_buses*self.T)
+
+            # Library unavailable
+            if not pf.info['line_flow']:
+                self.assertRaisesRegexp(pf.ConstraintError,
+                                        "LINE_FLOW library not available",
+                                        constr.analyze)
+                constr.clear_error()
+                continue
+        
+            constr.analyze()
+
+            self.assertGreaterEqual(constr.G_nnz,constr.G_row)
+           
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            G = constr.G
+            l = constr.l
+            u = constr.u
+            
+            # After analyze
+            self.assertEqual(constr.num_extra_vars,0)
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(0,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,net.num_vars))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(0,net.num_vars))
+            self.assertEqual(A.nnz,0)
+            self.assertTrue(type(G) is coo_matrix)
+            self.assertTupleEqual(G.shape,(constr.G_row,net.num_vars))
+            self.assertFalse(np.any(np.isnan(G.data)))
+            self.assertTrue(type(u) is np.ndarray)
+            self.assertTupleEqual(u.shape,(constr.G_row,))
+            self.assertFalse(np.any(np.isnan(u)))
+            self.assertTrue(type(l) is np.ndarray)
+            self.assertTupleEqual(l.shape,(constr.G_row,))
+            self.assertTrue(np.all(l == -1e8))
 
     def tearDown(self):
 

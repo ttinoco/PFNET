@@ -21,6 +21,7 @@ class TestPackage(unittest.TestCase):
 
         self.assertTrue(isinstance(pf.info,dict))
         self.assertTrue('graphviz' in pf.info)
-        self.assertTrue('raw parser' in pf.info)
+        self.assertTrue('raw_parser' in pf.info)
+        self.assertTrue('line_flow' in pf.info)
         
         

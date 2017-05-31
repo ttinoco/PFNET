@@ -17,10 +17,7 @@ class ConstraintError(Exception):
     Constraint error exception.
     """
 
-    def __init__(self,value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 cdef class ConstraintBase:
     """
@@ -421,6 +418,8 @@ cdef class Constraint(ConstraintBase):
             self._c_constr = cconstr.CONSTR_DC_FLOW_LIM_new(net._c_net)
         elif name == "AC branch flow limits":
             self._c_constr = cconstr.CONSTR_AC_FLOW_LIM_new(net._c_net)
+        elif name == "linearized AC branch flow limits":
+            self._c_constr = cconstr.CONSTR_AC_LIN_FLOW_LIM_new(net._c_net)
         elif name == "battery dynamics":
             self._c_constr = cconstr.CONSTR_BAT_DYN_new(net._c_net)
         elif name == "load constant power factor":

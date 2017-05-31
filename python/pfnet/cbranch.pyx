@@ -18,10 +18,8 @@ class BranchError(Exception):
     """
     Branch error exception.
     """
-    def __init__(self,value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+
+    pass
 
 cdef class Branch:
     """
@@ -82,6 +80,30 @@ cdef class Branch:
         b_other = other
 
         return cbranch.BRANCH_is_equal(self._c_ptr,b_other._c_ptr)
+
+    def set_ratio(self,r,t=0):
+        """
+        Sets branch taps ratio.
+        
+        Parameters
+        ----------
+        r : float
+        t : int
+        """
+        
+        cbranch.BRANCH_set_ratio(self._c_ptr,r,t)
+
+    def set_phase(self,p,t=0):
+        """
+        Sets branch phase shift.
+
+        Parameters
+        ----------
+        p : float
+        t : int
+        """
+
+        cbranch.BRANCH_set_phase(self._c_ptr,p,t)
 
     def __richcmp__(self,other,op):
         """
@@ -493,7 +515,12 @@ cdef class Branch:
             if self.num_periods == 1:
                 return AttributeFloat(r[0])
             else:
-                return np.array(r)
+                return AttributeArray(r,self.set_ratio)
+        def __set__(self,r):
+            cdef int t
+            cdef np.ndarray rar = np.array(r).flatten()
+            for t in range(np.minimum(rar.size,self.num_periods)):
+                cbranch.BRANCH_set_ratio(self._c_ptr,rar[t],t)
 
     property ratio_max:
         """ Transformer tap ratio upper limit (float). """
@@ -572,7 +599,12 @@ cdef class Branch:
             if self.num_periods == 1:
                 return AttributeFloat(r[0])
             else:
-                return np.array(r)
+                return AttributeArray(r,self.set_phase)
+        def __set__(self,p):
+            cdef int t
+            cdef np.ndarray par = np.array(p).flatten()
+            for t in range(np.minimum(par.size,self.num_periods)):
+                cbranch.BRANCH_set_phase(self._c_ptr,par[t],t)
 
     property phase_max:
         """ Transformer phase shift upper limit (radians) (float). """

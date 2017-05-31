@@ -11,8 +11,9 @@ Dependencies
 
 The PFNET C library has the following optional dependencies:
 
-* `Graphviz`_ (libgvc >= 2.38)
-* Raw parser (libraw_parser >= 1.2.3)
+* `Graphviz`_ (libgvc >= 2.38): for creating network layouts and visualizing networks.
+* Raw Parser (libraw_parser >= 1.2.3) : for parsing PSSE raw files.
+* Line Flow (libline_flow): for constructing linear conservative AC branch flow limits.
 
 .. _start_download:
 
@@ -34,7 +35,7 @@ Installing PFNET requires typing the following commands in the root directory of
   make check
   sudo make install
 
-If raw parser is available, the library should be placed in the ``lib`` directory. 
+If ``Raw Parser`` is available, the library should be placed in the ``lib`` directory of PFNET. If ``Line Flow`` is available, the environment variable ``LINE_FLOW`` should be defined so that the library can be located in the directory ``$LINE_FLOW/lib``.
 
 .. _start_docs:
 

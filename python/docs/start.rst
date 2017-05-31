@@ -44,7 +44,7 @@ The availability of optional features of PFNET can be checked using::
 
   >>> import pfnet
   >>> pfnet.info
-  {'raw parser': False, 'graphviz': True}
+  {'line_flow': True, 'raw_parser': True, 'graphviz': True}
 
 .. _start_example:
 

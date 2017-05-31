@@ -15,7 +15,7 @@
 #include "constr.h"
 
 // Parameters
-#define CONSTR_AC_FLOW_LIM_PARAM 1e-10
+#define CONSTR_AC_FLOW_LIM_PARAM 1e-6
 
 // Function prototypes
 Constr* CONSTR_AC_FLOW_LIM_new(Net* net);

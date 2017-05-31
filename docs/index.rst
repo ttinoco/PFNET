@@ -18,8 +18,13 @@ PFNET is released under the BSD 2-clause license.
 
 **Wrappers**
 
-* `Python <http://pfnet-python.readthedocs.io/>`_
-* Matlab (getting started)
+* `Python <https://github.com/ttinoco/PFNET/tree/line_flow_lib/python>`_
+
+  * `Tutorial and Documentation <http://pfnet-python.readthedocs.io/>`_
+
+* `Matlab <https://github.com/ttinoco/PFNET/tree/line_flow_lib/matlab>`_ 
+
+  * just started, help needed
 
 **Documentation Contents**
 

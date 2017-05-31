@@ -10,23 +10,31 @@ Targets
 
 Unreleased
 ----------
-* Load Q variables (done).
-* Support for variable generator curtailments (done).
-* User-friendly way to add batteries and variable generators (done).
-* Improved naming consistency in Python network class (done).
-* Support for all battery and load variables in ACPF and network properties (done).
-* Battery dynamics and boundary conditions (done).
-* Updated documentation and examples (done).
-* Full support for constraint auxiliary variables (lin eq, nonlin eq, line ineq) (done).
-* Elimination of obscure variables "voltage magnitude deviation" (done).
-* Elimination of obscure variabes "voltage magnitude violation", "tap ratio deviation", "susceptance deviation" (done).
-* Improved setup.py without argparse that relies on existing build_ext commands for custom builds (done).
-* Upper and lower bounds for constraint extra variables (done).
-* Three types of voltage magnitude limits (normal, regulation, emergency) (done).
-* Load power factor, target power factor, and constraint for constant power factor (done).
-* Removed Problem "set_network" method and required that Problem constructor takes network as argument for consistency with functions and constraints (done).
-* Added default arguments to routines "add_batteries" and "add_var_generators" (done).
-* Fixed indentation bug in problem.show() (done).
+
+Version 1.3.0
+-------------
+* Load Q variables.
+* Support for variable generator curtailments.
+* User-friendly way to add batteries and variable generators.
+* Improved naming consistency in Python network class.
+* Support for all battery and load variables in ACPF and network properties.
+* Battery dynamics and boundary conditions.
+* Updated documentation and examples.
+* Full support for constraint auxiliary variables (lin eq, nonlin eq, line ineq).
+* Elimination of obscure variables "voltage magnitude deviation".
+* Elimination of obscure variables "voltage magnitude violation", "tap ratio deviation", "susceptance deviation".
+* Improved setup.py without argparse that relies on existing build_ext commands for custom builds.
+* Upper and lower bounds for constraint extra variables.
+* Three types of voltage magnitude limits (normal, regulation, emergency).
+* Load power factor, target power factor, and constraint for constant power factor.
+* Removed Problem "set_network" method and required that Problem constructor takes network as argument for consistency with functions and constraints.
+* Added default arguments to routines "add_batteries" and "add_var_generators".
+* Fixed indentation bug in problem.show().
+* (Conservative) linearized AC thermal limits via external and optional "line_flow" library.
+* Changed key "raw parser" to "raw_parser" in "info" dictionary of pfnet python wrapper, and added "line_flow".
+* Added constraint/function/network error checks in problem analyze and eval routines.
+* Added branch phase and ratio python setters.
+* Fixed sign error with second derivative of current mag with respect to phase shift in AC_FLOW_LIM constraints.
 
 Version 1.2.9
 -------------

@@ -1,3 +1,19 @@
+# General
+*.[oa]
+*.pyc
+*.raw
+*~
+*.out
+*.so
+*.art
+*.dot
+*.prof
+cpfnet.c
+cpfnet.h
+build/
+lib/
+__pycache__/
+
 # PyCharm Project Files
 .idea/*
 
