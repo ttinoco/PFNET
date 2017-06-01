@@ -15,7 +15,7 @@ from numpy.linalg import norm
 from scipy.sparse import coo_matrix,triu,tril,eye
 
 NUM_TRIALS = 25
-EPS = 2.5 # %
+EPS = 5.0 # %
 TOL = 1e-4
 
 class TestConstraints(unittest.TestCase):
