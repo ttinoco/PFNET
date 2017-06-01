@@ -10,7 +10,8 @@ Targets
 
 Unreleased
 ----------
-* Support for init values for constraint extra variables.
+* Support for init values for constraint extra variables (done).
+* Improved post processing of structures of constraint Hessians (now constr.c ensures lower triangular and fills H_combined ij, fixing bug in ac_flow_lim) (done).
 
 Version 1.3.0
 -------------

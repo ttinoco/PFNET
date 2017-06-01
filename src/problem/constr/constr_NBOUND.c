@@ -210,10 +210,6 @@ void CONSTR_NBOUND_analyze_step(Constr* c, Branch* br, int t) {
   Mat* J;
   Mat* H_array;
   Mat* H;
-  int* Hi;
-  int* Hj;
-  int* Hi_comb;
-  int* Hj_comb;
   int* J_nnz;
   char* bus_counted;
   int bus_index_t[2];
@@ -447,20 +443,6 @@ void CONSTR_NBOUND_analyze_step(Constr* c, Branch* br, int t) {
 
     // Update counted flag
     bus_counted[bus_index_t[k]] = TRUE;
-  }
-
-  // Done (last branch and period)
-  if ((t == T-1) && (BRANCH_get_index(br) == NET_get_num_branches(CONSTR_get_network(c))-1)) {
-
-    // Ensure lower triangular and save struct of H comb
-    Hi_comb = MAT_get_row_array(CONSTR_get_H_combined(c));
-    Hj_comb = MAT_get_col_array(CONSTR_get_H_combined(c));
-    for (k = 0; k < CONSTR_get_H_array_size(c); k++) {
-      Hi = MAT_get_row_array(MAT_array_get(H_array,k));
-      Hj = MAT_get_col_array(MAT_array_get(H_array,k));
-      Hi_comb[k] = Hi[0];
-      Hj_comb[k] = Hj[0];
-    }
   }
 }
 

@@ -62,6 +62,8 @@ char* CONSTR_get_bus_counted(Constr *c);
 int CONSTR_get_bus_counted_size(Constr* c);
 void* CONSTR_get_data(Constr* c);
 Constr* CONSTR_get_next(Constr* c);
+void CONSTR_finalize_structure_of_Hessians(Constr* c);
+void CONSTR_list_finalize_structure_of_Hessians(Constr* clist);
 void CONSTR_list_clear_error(Constr* clist);
 BOOL CONSTR_list_has_error(Constr* clist);
 char* CONSTR_list_get_error_string(Constr* clist);

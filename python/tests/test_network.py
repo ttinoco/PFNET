@@ -640,11 +640,11 @@ class TestNetwork(unittest.TestCase):
 
                 # set/get P,Q
                 self.assertNotEqual(gen.P,0.333)
-                self.assertNotEqual(gen.Q,0.222)
+                self.assertNotEqual(gen.Q,0.221)
                 gen.P = 0.333
-                gen.Q = 0.222
+                gen.Q = 0.221
                 self.assertEqual(gen.P,0.333)
-                self.assertEqual(gen.Q,0.222)
+                self.assertEqual(gen.Q,0.221)
 
                 # set/get cost coeffs
                 if case.split('.')[-1] == 'raw':
