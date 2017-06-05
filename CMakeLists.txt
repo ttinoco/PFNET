@@ -10,7 +10,9 @@ enable_testing()
 # $ ls # see libpfnet.{so,dylib} depending on configuration
 
 
-#set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS YES CACHE BOOL "Export all symbols")
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)  # so that cmake builds with rpath already added
+set(CMAKE_INSTALL_RPATH "@loader_path")  # for relocatable libraries
 
 option(PFNET_DEBUG "set to ON to enable PFNET debug definition" OFF)
 option(PFNET_GRAPHVIZ "set to OFF to disable search for graphviz" ON)
