@@ -4791,6 +4791,47 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(l.shape,(constr.G_row,))
             self.assertTrue(np.all(l == -1e8))
 
+    def test_nonlinear_constr_creation(self):
+        
+        # Single period
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
+
+            constr = pf.Constraint("variable fixing",net)
+
+            # H array
+            self.assertEqual(constr.H_array_size,0)
+            constr.allocate_H_array(100)
+            self.assertEqual(constr.H_array_size,100)
+
+            # H single
+            H = constr.get_H_single(5)
+            self.assertTrue(isinstance(H,coo_matrix))
+            self.assertEqual(H.nnz,0)
+            self.assertTupleEqual(H.shape,(0,0))
+            A = coo_matrix(np.random.randn(5,4))
+            constr.set_H_single(A,5)
+            H = constr.get_H_single(5)
+            self.assertTrue(isinstance(H,coo_matrix))
+            self.assertTupleEqual(A.shape,H.shape)
+            self.assertTrue(np.all(A.row == H.row))
+            self.assertEqual(A.nnz,H.nnz)
+            self.assertTrue(np.all(A.col == H.col))
+            self.assertTrue(np.all(A.data == H.data))
+
+            # H_nnz
+            constr.set_H_nnz(np.zeros(50,dtype='int32'))
+            H_nnz = constr.H_nnz
+            self.assertTrue(isinstance(H_nnz,np.ndarray))
+            self.assertEqual(H_nnz.dtype,np.dtype('int32'))
+            self.assertEqual(H_nnz.size,50)
+            for i in range(50):
+                self.assertEqual(H_nnz[i],0)
+            constr.H_nnz[10] = 2
+            self.assertEqual(H_nnz[10],2)
+            
     def tearDown(self):
 
         pass

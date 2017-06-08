@@ -421,6 +421,10 @@ cdef class ConstraintBase:
         def __get__(self): return BoolArray(cconstr.CONSTR_get_bus_counted(self._c_constr),
                                             cconstr.CONSTR_get_bus_counted_size(self._c_constr))
 
+    property H_array_size:
+        """ Size of array of constraint Hessians (int). """
+        def __get__(self): return cconstr.CONSTR_get_H_array_size(self._c_constr)
+
 cdef new_Constraint(cconstr.Constr* c):
     if c is not NULL:
         constr = ConstraintBase()

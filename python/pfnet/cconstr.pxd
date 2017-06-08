@@ -41,6 +41,7 @@ cdef extern from "pfnet/constr.h":
     Mat* CONSTR_get_G(Constr* c)
     Mat* CONSTR_get_H_single(Constr* c, int i)
     Mat* CONSTR_get_H_combined(Constr* c)
+    int CONSTR_get_H_array_size(Constr* c)
     int CONSTR_get_type(Constr* c)
     Constr* CONSTR_get_next(Constr* c)
     void CONSTR_init(Constr* c)
