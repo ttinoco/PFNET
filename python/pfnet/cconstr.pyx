@@ -49,6 +49,17 @@ cdef class ConstraintBase:
             self._c_constr = NULL
             self._alloc = False
 
+    def allocate_H_array(self,size):
+        """
+        Allocates internal array of constraint Hessians.
+
+        Parameters
+        ----------
+        size : int
+        """
+        
+        cconstr.CONSTR_allocate_H_array(self._c_constr,size)
+
     def del_matvec(self):
         """
         Deletes matrices and vectors associated with
@@ -157,6 +168,19 @@ cdef class ConstraintBase:
         """
         return Matrix(cconstr.CONSTR_get_H_single(self._c_constr,i))
 
+    def set_H_nnz(self,H_nnz):
+        """
+        Sets H_nnz array.
+
+        Parameters
+        ----------
+        H_nnz : :class:`int ndarray <numpy.ndarray>`
+        """
+        
+        cdef np.ndarray[int,mode='c'] ar = H_nnz
+        PyArray_CLEARFLAGS(ar,np.NPY_OWNDATA)
+        cconstr.CONSTR_set_H_nnz(self._c_constr,<int*>(ar.data),H_nnz.size)
+
     def set_b(self,b):
         """
         Sets b vector.
@@ -191,6 +215,28 @@ cdef class ConstraintBase:
                                                     <int*>(col.data), 
                                                     <cconstr.REAL*>(data.data))
         cconstr.CONSTR_set_A(self._c_constr,m)
+
+    def set_H_single(self,H,i):
+        """
+        Sets Hessian matrix of an individual cosntraint.
+
+        Parameters
+        ----------
+        H : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        i : int
+        """
+        
+        cdef np.ndarray[int,mode='c'] row = H.row
+        cdef np.ndarray[int,mode='c'] col = H.col
+        cdef np.ndarray[double,mode='c'] data = H.data
+        PyArray_CLEARFLAGS(row,np.NPY_OWNDATA)
+        PyArray_CLEARFLAGS(col,np.NPY_OWNDATA)
+        PyArray_CLEARFLAGS(data,np.NPY_OWNDATA)
+        cdef cmat.Mat* m = cmat.MAT_new_from_arrays(H.shape[0],H.shape[1],H.nnz, 
+                                                    <int*>(row.data),
+                                                    <int*>(col.data), 
+                                                    <cconstr.REAL*>(data.data))
+        cconstr.CONSTR_set_H_single(self._c_constr,i,m)
 
     def set_l(self,l):
         """
@@ -297,6 +343,11 @@ cdef class ConstraintBase:
         """ Number of nonzero entries in the Jacobian matrix of the nonlinear equality constraints (int). """
         def __get__(self): return cconstr.CONSTR_get_J_nnz(self._c_constr)
         def __set__(self,nnz): cconstr.CONSTR_set_J_nnz(self._c_constr,nnz)
+
+    property H_nnz:
+        """ Int array of counters of nnz of constraint Hessians. """
+        def __get__(self): return IntArray(cconstr.CONSTR_get_H_nnz(self._c_constr),
+                                           cconstr.CONSTR_get_H_nnz_size(self._c_constr))
 
     property A_row:
         """ Number of linear equality constraints (int). """

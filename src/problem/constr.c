@@ -75,6 +75,31 @@ struct Constr {
   Constr* next; /**< @brief List of constraints */
 };
 
+void CONSTR_allocate_H_array(Constr* c, int size) {
+  if (c) {
+    if (c->H_array)
+      MAT_array_del(c->H_array,c->H_array_size);
+    c->H_array = MAT_array_new(size);
+    c->H_array_size = size;
+  }
+}
+
+void CONSTR_allocate_H_combined(Constr* c) {
+  int i;
+  int H_comb_nnz = 0;
+  int num_vars = NET_get_num_vars(CONSTR_get_network(c));
+  int num_extra_vars = CONSTR_get_num_extra_vars(c);
+  if (c) {
+    for (i = 0; i < c->H_array_size; i++)
+      H_comb_nnz += MAT_get_nnz(MAT_array_get(c->H_array,i));
+    if (c->H_combined)
+      MAT_del(c->H_combined);
+    CONSTR_set_H_combined(c,MAT_new(num_vars+num_extra_vars, // size1 (rows)
+				    num_vars+num_extra_vars, // size2 (cols)
+				    H_comb_nnz));
+  }
+}
+
 void CONSTR_finalize_structure_of_Hessians(Constr* c) {
 
   // Local variables
@@ -730,10 +755,26 @@ void CONSTR_set_J(Constr* c, Mat* J) {
 
 void CONSTR_set_H_array(Constr* c, Mat* array, int size) {
   if (c) {
+    if (c->H_array)
+      MAT_array_del(c->H_array,c->H_array_size);
     c->H_array = array;
     c->H_array_size = size;
   }  
 }
+
+void CONSTR_set_H_single(Constr* c, int i, Mat* m) {
+  Mat* H;
+  if (c && 0 <= i && i < c->H_array_size) {
+    H = MAT_array_get(c->H_array,i);
+    MAT_set_size1(H,MAT_get_size1(m));
+    MAT_set_size2(H,MAT_get_size2(m));
+    MAT_set_row_array(H,MAT_get_row_array(m));
+    MAT_set_col_array(H,MAT_get_col_array(m));
+    MAT_set_data_array(H,MAT_get_data_array(m));
+    MAT_set_nnz(H,MAT_get_nnz(m));
+    MAT_set_owns_rowcol(H,MAT_get_owns_rowcol(m));
+  }
+}   
 
 void CONSTR_set_H_combined(Constr* c, Mat* H_combined) {
   if (c)
@@ -820,6 +861,7 @@ void CONSTR_allocate(Constr* c) {
   if (c && c->func_allocate && CONSTR_is_safe_to_count(c)) {
     CONSTR_del_matvec(c);
     (*(c->func_allocate))(c);
+    CONSTR_allocate_H_combined(c);
   }
 }
 

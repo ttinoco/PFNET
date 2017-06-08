@@ -177,16 +177,8 @@ void FUNC_REG_VMAG_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   REAL* phi;
   REAL* gphi;
   int index_v_mag;
-  int index_y;
-  int index_z;
-  int index_vl;
-  int index_vh;
   REAL v;
   REAL vt;
-  REAL y;
-  REAL z;
-  REAL vl;
-  REAL vh;
   REAL dv = FUNC_REG_VMAG_PARAM;
   int k;
   int T;

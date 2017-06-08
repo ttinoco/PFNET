@@ -156,7 +156,6 @@ void CONSTR_NBOUND_allocate(Constr* c) {
 
   // Local variables
   int J_nnz;
-  Mat* H_array;
   Mat* H;
   int num_vars;
   int i;
@@ -182,10 +181,9 @@ void CONSTR_NBOUND_allocate(Constr* c) {
 			 J_nnz));  // nnz
 
   // H
-  H_array = MAT_array_new(J_nnz);
-  CONSTR_set_H_array(c,H_array,J_nnz);
+  CONSTR_allocate_H_array(c,J_nnz);
   for (i = 0; i < J_nnz; i++) {
-    H = MAT_array_get(H_array,i);
+    H = CONSTR_get_H_single(c,i);
     MAT_set_nnz(H,1);
     MAT_set_size1(H,num_vars);
     MAT_set_size2(H,num_vars);
@@ -193,11 +191,6 @@ void CONSTR_NBOUND_allocate(Constr* c) {
     MAT_set_col_array(H,(int*)calloc(1,sizeof(int)));
     MAT_set_data_array(H,(REAL*)malloc(1*sizeof(REAL)));
   }
-
-  // H combined
-  CONSTR_set_H_combined(c,MAT_new(num_vars,   // size1 (rows)
-				  num_vars,   // size2 (cols)
-				  J_nnz)); // nnz
 }
 
 void CONSTR_NBOUND_analyze_step(Constr* c, Branch* br, int t) {

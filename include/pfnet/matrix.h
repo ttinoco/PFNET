@@ -35,6 +35,7 @@ int MAT_get_size2(Mat* m);
 int* MAT_get_row_array(Mat* m);
 int* MAT_get_col_array(Mat* m);
 REAL* MAT_get_data_array(Mat* m);
+BOOL MAT_get_owns_rowcol(Mat* m);
 void MAT_init(Mat* m);
 Mat* MAT_new(int size1, int size2, int nnz);
 Mat* MAT_new_from_arrays(int size1, int size2, int nnz, int* row, int* col, REAL* data);

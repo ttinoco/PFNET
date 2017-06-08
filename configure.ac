@@ -16,6 +16,10 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
+# Chew flags
+AX_CHECK_COMPILE_FLAG([-Wall], [CFLAGS="$CFLAGS -Wall"], [], [])
+AX_CHECK_COMPILE_FLAG([-Werror], [CFLAGS="$CFLAGS -Werror"], [], [])
+
 # Checks for graphviz
 AC_CHECK_LIB(gvc, gvContext)
 AC_CHECK_LIB(cgraph, agopen)

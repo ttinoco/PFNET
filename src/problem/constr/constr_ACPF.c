@@ -404,14 +404,12 @@ void CONSTR_ACPF_allocate(Constr* c) {
   int* H_nnz;
   int P_index;
   int Q_index;
-  Mat* H_array;
   Mat* HP;
   Mat* HQ;
   int* row;
   int* col;
   int i;
   int t;
-  int H_comb_nnz;
   int bus_index_t;
 
   net = CONSTR_get_network(c);
@@ -440,16 +438,14 @@ void CONSTR_ACPF_allocate(Constr* c) {
 			 J_nnz));  // nnz
 
   // H array
-  H_comb_nnz = 0;
-  H_array = MAT_array_new(num_constr);
-  CONSTR_set_H_array(c,H_array,num_constr);
+  CONSTR_allocate_H_array(c,num_constr);
   for (t = 0; t < num_periods; t++) {
     for (i = 0; i < num_buses; i++) {
       bus_index_t = i+t*num_buses;
       P_index = BUS_get_index_P(NET_get_bus(net,i))+t*2*num_buses;
       Q_index = BUS_get_index_Q(NET_get_bus(net,i))+t*2*num_buses;
-      HP = MAT_array_get(H_array,P_index);
-      HQ = MAT_array_get(H_array,Q_index);
+      HP = CONSTR_get_H_single(c,P_index);
+      HQ = CONSTR_get_H_single(c,Q_index);
       MAT_set_nnz(HP,H_nnz[bus_index_t]);
       MAT_set_nnz(HQ,H_nnz[bus_index_t]);
       MAT_set_size1(HP,num_vars);
@@ -471,15 +467,8 @@ void CONSTR_ACPF_allocate(Constr* c) {
 
       MAT_set_data_array(HP,(REAL*)malloc(H_nnz[bus_index_t]*sizeof(REAL))); // different data array
       MAT_set_data_array(HQ,(REAL*)malloc(H_nnz[bus_index_t]*sizeof(REAL)));
-
-      H_comb_nnz += 2*H_nnz[bus_index_t];
     }
   }
-
-  // H combined
-  CONSTR_set_H_combined(c,MAT_new(num_vars,     // size1 (rows)
-				  num_vars,     // size2 (cols)
-				  H_comb_nnz)); // nnz
 }
 
 void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {

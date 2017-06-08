@@ -11,8 +11,11 @@ Targets
 Unreleased
 ----------
 * Support for init values for constraint extra variables (done).
-* Improved post processing of structures of constraint Hessians (now constr.c ensures lower triangular and fills H_combined ij, fixing bug in ac_flow_lim) (done).
-* Mat parser detection of branch out of service (done).
+* Improved post processing of structures of constraint Hessians (now constr.c ensures lower triangular and fills H_combined ij, fixing bug in AC_FLOW_LIM) (done).
+* Mat parser detection of branches out of service (done).
+* H_combined is now completely handled by "base" constraint in constr.c. Custom constraints no longer need to allocate this matrix (done).
+* -Wall -Werror had no effect in Makefile.am and were moved to configure.ac. Now they work (done).
+* Support for adding nonlinear constraints in Python and documentation. 
 
 Version 1.3.0
 -------------

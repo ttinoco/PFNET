@@ -24,6 +24,9 @@
 typedef struct Constr Constr;
 
 // Function prototypes
+void CONSTR_allocate_H_array(Constr* c, int size);
+void CONSTR_allocate_H_combined(Constr* c);
+void CONSTR_finalize_structure_of_Hessians(Constr* c);
 void CONSTR_clear_H_nnz(Constr* c);
 void CONSTR_clear_bus_counted(Constr* c);
 void CONSTR_combine_H(Constr* c, Vec* coeff, BOOL ensure_psd);
@@ -62,7 +65,6 @@ char* CONSTR_get_bus_counted(Constr *c);
 int CONSTR_get_bus_counted_size(Constr* c);
 void* CONSTR_get_data(Constr* c);
 Constr* CONSTR_get_next(Constr* c);
-void CONSTR_finalize_structure_of_Hessians(Constr* c);
 void CONSTR_list_finalize_structure_of_Hessians(Constr* clist);
 void CONSTR_list_clear_error(Constr* clist);
 BOOL CONSTR_list_has_error(Constr* clist);
@@ -91,6 +93,7 @@ void CONSTR_set_f(Constr* c, Vec* f);
 void CONSTR_set_J(Constr* c, Mat* J);
 void CONSTR_set_H_array(Constr* c, Mat* H_array, int size);
 void CONSTR_set_H_combined(Constr* c, Mat* H_combined);
+void CONSTR_set_H_single(Constr* c, int i, Mat* m);
 void CONSTR_set_A_nnz(Constr* c, int nnz);
 void CONSTR_set_G_nnz(Constr* c, int nnz);
 void CONSTR_set_J_nnz(Constr* c, int nnz);

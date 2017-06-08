@@ -179,9 +179,7 @@ void CONSTR_REG_TRAN_allocate(Constr* c) {
   int A_row;
   int J_row; 
   int* H_nnz;
-  Mat* H_array;
   Mat* H;
-  int H_comb_nnz;
   int num_vars;
   int num_extra_vars;
   int i;
@@ -221,24 +219,16 @@ void CONSTR_REG_TRAN_allocate(Constr* c) {
 			 J_nnz));                 // nnz
   
   // H
-  H_comb_nnz = 0;
-  H_array = MAT_array_new(J_row);
-  CONSTR_set_H_array(c,H_array,J_row);
+  CONSTR_allocate_H_array(c,J_row);
   for (i = 0; i < J_row; i++) {
-    H = MAT_array_get(H_array,i);
+    H = CONSTR_get_H_single(c,i);
     MAT_set_nnz(H,H_nnz[i]);
     MAT_set_size1(H,num_vars+num_extra_vars);
     MAT_set_size2(H,num_vars+num_extra_vars);
     MAT_set_row_array(H,(int*)calloc(H_nnz[i],sizeof(int)));
     MAT_set_col_array(H,(int*)calloc(H_nnz[i],sizeof(int)));
     MAT_set_data_array(H,(REAL*)malloc(H_nnz[i]*sizeof(REAL)));
-    H_comb_nnz += H_nnz[i];
   }
-
-  // H combined
-  CONSTR_set_H_combined(c,MAT_new(num_vars+num_extra_vars, // size1 (rows)
-				  num_vars+num_extra_vars, // size2 (cols)
-				  H_comb_nnz));            // nnz
 }
 
 void CONSTR_REG_TRAN_analyze_step(Constr* c, Branch* br, int tau) {
@@ -258,8 +248,6 @@ void CONSTR_REG_TRAN_analyze_step(Constr* c, Branch* br, int tau) {
   int* A_row;
   int* J_row;
   int* H_nnz;
-  int k;
-  int m;
   int index_yz_vmin;
   int index_yz_vmax;
   int index_vvio_tmax;
@@ -270,11 +258,9 @@ void CONSTR_REG_TRAN_analyze_step(Constr* c, Branch* br, int tau) {
   int index_t;
   int index_y;
   int index_z;
-  int T;
   int num_vars;
 
-  // Number of periods and vars
-  T = BRANCH_get_num_periods(br);
+  // Number of vars
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
 
   // Constr data

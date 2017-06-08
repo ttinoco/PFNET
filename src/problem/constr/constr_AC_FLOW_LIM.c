@@ -238,9 +238,7 @@ void CONSTR_AC_FLOW_LIM_allocate(Constr* c) {
   int J_nnz;
   int* H_nnz;
   int J_row;
-  Mat* H_array;
   Mat* Hi;
-  int H_comb_nnz;
   int* row;
   int* col;
   int i;
@@ -278,11 +276,9 @@ void CONSTR_AC_FLOW_LIM_allocate(Constr* c) {
 			 J_nnz));                 // nnz
 
   // H
-  H_comb_nnz = 0;
-  H_array = MAT_array_new(J_row);
-  CONSTR_set_H_array(c,H_array,J_row);
+  CONSTR_allocate_H_array(c,J_row);
   for (i = 0; i < J_row; i++) {
-    Hi = MAT_array_get(H_array,i);
+    Hi = CONSTR_get_H_single(c,i);
     MAT_set_nnz(Hi,H_nnz[i]);
     MAT_set_size1(Hi,num_vars+num_extra_vars);
     MAT_set_size2(Hi,num_vars+num_extra_vars);
@@ -292,13 +288,7 @@ void CONSTR_AC_FLOW_LIM_allocate(Constr* c) {
     MAT_set_row_array(Hi,row);
     MAT_set_col_array(Hi,col);
     MAT_set_data_array(Hi,(REAL*)malloc(H_nnz[i]*sizeof(REAL)));
-    H_comb_nnz += H_nnz[i];
   }
-
-  // H combined
-  CONSTR_set_H_combined(c,MAT_new(num_vars+num_extra_vars, // rows
-				  num_vars+num_extra_vars, // cols
-				  H_comb_nnz));            // nnz
 }
 
 void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
