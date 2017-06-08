@@ -216,14 +216,14 @@ cdef class ConstraintBase:
                                                     <cconstr.REAL*>(data.data))
         cconstr.CONSTR_set_A(self._c_constr,m)
 
-    def set_H_single(self,H,i):
+    def set_H_single(self,i,H):
         """
         Sets Hessian matrix of an individual cosntraint.
 
         Parameters
         ----------
-        H : :class:`coo_matrix <scipy.sparse.coo_matrix>`
         i : int
+        H : :class:`coo_matrix <scipy.sparse.coo_matrix>`
         """
         
         cdef np.ndarray[int,mode='c'] row = H.row
@@ -345,7 +345,7 @@ cdef class ConstraintBase:
         def __set__(self,nnz): cconstr.CONSTR_set_J_nnz(self._c_constr,nnz)
 
     property H_nnz:
-        """ Int array of counters of nnz of constraint Hessians. """
+        """ Integer array of counters of nonzero elements of constraint Hessians. """
         def __get__(self): return IntArray(cconstr.CONSTR_get_H_nnz(self._c_constr),
                                            cconstr.CONSTR_get_H_nnz_size(self._c_constr))
 

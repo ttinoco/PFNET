@@ -4801,6 +4801,37 @@ class TestConstraints(unittest.TestCase):
 
             constr = pf.Constraint("variable fixing",net)
 
+            # J row
+            self.assertEqual(constr.J_row,0)
+            constr.J_row = 19
+            self.assertEqual(constr.J_row,19)
+
+            # J_nnz
+            self.assertEqual(constr.J_nnz,0)
+            constr.J_nnz = 17
+            self.assertEqual(constr.J_nnz,17)
+
+            # f
+            f = constr.f
+            self.assertEqual(f.size,0)
+            a = np.random.randn(15)
+            constr.set_f(a)
+            self.assertEqual(constr.f.size,15)
+            self.assertTrue(np.all(constr.f == a))
+
+            # J
+            J = constr.J
+            self.assertTupleEqual(J.shape,(0,0))
+            self.assertEqual(J.nnz,0)
+            Jm = coo_matrix(np.random.randn(4,3))
+            constr.set_J(Jm)
+            self.assertTrue(isinstance(constr.J,coo_matrix))
+            self.assertTupleEqual(constr.J.shape,Jm.shape)
+            self.assertTrue(np.all(constr.J.row == Jm.row))
+            self.assertEqual(constr.J.nnz,Jm.nnz)
+            self.assertTrue(np.all(constr.J.col == Jm.col))
+            self.assertTrue(np.all(constr.J.data == Jm.data))
+
             # H array
             self.assertEqual(constr.H_array_size,0)
             constr.allocate_H_array(100)
@@ -4812,7 +4843,7 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(H.nnz,0)
             self.assertTupleEqual(H.shape,(0,0))
             A = coo_matrix(np.random.randn(5,4))
-            constr.set_H_single(A,5)
+            constr.set_H_single(5,A)
             H = constr.get_H_single(5)
             self.assertTrue(isinstance(H,coo_matrix))
             self.assertTupleEqual(A.shape,H.shape)

@@ -744,13 +744,19 @@ void CONSTR_set_G(Constr* c, Mat* G) {
 }
 
 void CONSTR_set_f(Constr* c, Vec* f) {
-  if (c)
+  if (c) {
+    if (c->f)
+      VEC_del(c->f);
     c->f = f;
+  }
 }
 
 void CONSTR_set_J(Constr* c, Mat* J) {
-  if (c)
+  if (c) {
+    if (c->J)
+      MAT_del(c->J);
     c->J = J;
+  }
 }
 
 void CONSTR_set_H_array(Constr* c, Mat* array, int size) {

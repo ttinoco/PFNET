@@ -15,7 +15,7 @@ Unreleased
 * Mat parser detection of branches out of service (done).
 * H_combined is now completely handled by "base" constraint in constr.c. Custom constraints no longer need to allocate this matrix (done).
 * -Wall -Werror had no effect in Makefile.am and were moved to configure.ac. Now they work (requires autoconf-archive) (done).
-* Support for adding nonlinear constraints in Python and documentation. 
+* Support for adding nonlinear constraints in Python and documentation (done).
 
 Version 1.3.0
 -------------
