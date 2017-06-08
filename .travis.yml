@@ -9,9 +9,11 @@ before_install:
     sudo apt-get update;
     sudo apt-get -y purge libgraphviz-dev; 
     sudo apt-get -y install m4;
+    sudo apt-get install autoconf-archive;
   fi
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then 
     brew update;
+    bre install autoconf-archive;
   fi
 
 install:
