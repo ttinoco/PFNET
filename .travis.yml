@@ -13,7 +13,7 @@ before_install:
   fi
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then 
     brew update;
-    bre install autoconf-archive;
+    brew install autoconf-archive;
   fi
 
 install:
