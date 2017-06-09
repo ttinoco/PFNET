@@ -114,3 +114,5 @@ A template for creating a custom constraint is provided below:
 .. literalinclude:: ../examples/custom_constraint_template.py
 
 An example of a custom constraint that constructs the DC power balance equations can be found in `here <https://github.com/ttinoco/PFNET/blob/master/python/pfnet/constraints/dummy_constraint.py>`_.
+
+.. note:: Nonlinear constraints implemented in Python will likely be very slow. Therefore, it is recommended to write such constraints directly in C. The procedure of adding constraints in C is similar to the one outlined above. In particular, the same seven methods need to be provided. Examples of constraints written in C can be found `in this folder <https://github.com/ttinoco/PFNET/tree/master/src/problem/constr>`_.
