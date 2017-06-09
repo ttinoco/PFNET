@@ -19,7 +19,7 @@ if 'bdist_wheel' in sys.argv:
     package_data={'pfnet': ["libpfnet.*"]}
     # if on OSX add loader_path to rpath, so libpfnet.* is located
     if sys.platform.lower() == 'darwin':
-        extra_link_args.append("-Wl,-path,@loader_path/")
+        extra_link_args.append("-Wl,-rpath,@loader_path/")
 
 setup(name='PFNET',
       version='1.3.0',
