@@ -730,34 +730,6 @@ REAL BUS_get_v_min_emer(Bus* bus) {
     return bus->v_min_emer;
 }
 
-REAL BUS_get_v_norm_hi_limit(Bus* bus) {
-  if (!bus)
-    return 0;
-  else
-    return bus->v_norm_hi_limit;
-}
-
-REAL BUS_get_v_norm_lo_limit(Bus* bus) {
-  if (!bus)
-    return 0;
-  else
-    return bus->v_norm_lo_limit;
-}
-
-REAL BUS_get_v_emer_hi_limit(Bus* bus) {
-  if (!bus)
-    return 0;
-  else
-    return bus->v_emer_hi_limit;
-}
-
-REAL BUS_get_v_emer_lo_limit(Bus* bus) {
-  if (!bus)
-    return 0;
-  else
-    return bus->v_emer_lo_limit;
-}
-
 void BUS_get_var_values(Bus* bus, Vec* values, int code) {
 
   // Local vars
@@ -1398,26 +1370,6 @@ void BUS_set_v_max_emer(Bus* bus, REAL v_max_emer) {
 void BUS_set_v_min_emer(Bus* bus, REAL v_min_emer) {
   if (bus)
     bus->v_min_emer = v_min_emer;
-}
-
-void BUS_set_v_norm_hi_limit(Bus* bus, REAL v_norm_hi_limit) {
-  if (bus)
-    bus->v_norm_hi_limit = v_norm_hi_limit;
-}
-
-void BUS_set_v_norm_lo_limit(Bus* bus, REAL v_norm_lo_limit) {
-  if (bus)
-    bus->v_norm_lo_limit = v_norm_lo_limit;
-}
-
-void BUS_set_v_emer_hi_limit(Bus* bus, REAL v_emer_hi_limit) {
-  if (bus)
-    bus->v_emer_hi_limit = v_emer_hi_limit;
-}
-
-void BUS_set_v_emer_lo_limit(Bus* bus, REAL v_emer_lo_limit) {
-  if (bus)
-    bus->v_emer_lo_limit = v_emer_lo_limit;
 }
 
 void BUS_set_slack(Bus* bus, BOOL slack) {
