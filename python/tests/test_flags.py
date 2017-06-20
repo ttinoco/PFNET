@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -15,19 +15,17 @@ class TestFlags(unittest.TestCase):
     
     def setUp(self):
         
-        # Network
-        self.net = pf.Network()
-        
-    def test_variables(self):
+        pass
 
-        net = self.net
+    def test_variables(self):
 
         for case in test_cases.CASES:
             
-            net.load(case)
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # add vargens
-            net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_generator_buses(),80.,50.,30.,5,0.05)
 
             # loads
             lcount = 0
@@ -197,20 +195,19 @@ class TestFlags(unittest.TestCase):
             net.set_flags('bus',
                           'variable',
                           'regulated by shunt',
-                          ['voltage magnitude','voltage magnitude violation'])
-            num_vars += 3*net.get_num_buses_reg_by_shunt()
+                          ['voltage magnitude'])
+            num_vars += net.get_num_buses_reg_by_shunt()
             self.assertEqual(net.num_vars,num_vars)
             
     def test_init_point(self):
         
-        net = self.net
-        
         for case in test_cases.CASES:
             
-            net.load(case)
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # add vargens
-            net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_generator_buses(),80.,50.,30.,5,0.05)
             for vargen in net.var_generators:
                 vargen.P = np.random.rand()
                 vargen.Q = np.random.rand()
@@ -298,7 +295,7 @@ class TestFlags(unittest.TestCase):
 
             # check bats
             for i in range(net.num_batteries):
-                b = net.get_bat(i)
+                b = net.get_battery(i)
                 self.assertTrue(b.has_flags('variable','charging power'))
                 self.assertTrue(b.has_flags('variable','energy level'))
                 if (b.P >= 0.):
@@ -311,11 +308,10 @@ class TestFlags(unittest.TestCase):
 
     def test_tap_changer_v(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
             
-            net.load(case)
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             num_vars = 0
 
@@ -339,11 +335,10 @@ class TestFlags(unittest.TestCase):
             
     def test_bounded(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
             
-            net.load(case)
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             self.assertEqual(net.num_bounded,0)
 
@@ -391,13 +386,12 @@ class TestFlags(unittest.TestCase):
 
     def test_fixed(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
             
-            net.load(case)
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
 
-            net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_generator_buses(),80.,50.,30.,5,0.05)
 
             self.assertEqual(net.num_fixed,0)
 
@@ -462,11 +456,10 @@ class TestFlags(unittest.TestCase):
 
     def test_multiple_flags(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
-            
-            net.load(case)            
+
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             self.assertEqual(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
@@ -502,14 +495,13 @@ class TestFlags(unittest.TestCase):
 
     def test_custom_flags(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
             
-            net.load(case)            
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # add vargens
-            net.add_vargens(net.get_gen_buses(),50.,30.,5,0.05)
+            net.add_var_generators(net.get_generator_buses(),80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
 
             self.assertEqual(net.num_vars,0)
@@ -529,10 +521,8 @@ class TestFlags(unittest.TestCase):
                                                ['voltage angle','voltage magnitude'])
                     self.assertTrue(bus.has_flags('variable','voltage angle'))
                     self.assertTrue(bus.has_flags('variable','voltage magnitude'))
-                    self.assertFalse(bus.has_flags('variable','voltage magnitude violation'))
                     self.assertTrue(bus.has_flags('bounded','voltage angle'))
                     self.assertTrue(bus.has_flags('bounded','voltage magnitude'))
-                    self.assertFalse(bus.has_flags('bounded','voltage magnitude deviation'))
                     self.assertFalse(bus.has_flags('fixed','voltage angle'))
                     self.assertFalse(bus.has_flags('fixed','voltage magnitude'))
                     num_vars += 2
@@ -651,11 +641,10 @@ class TestFlags(unittest.TestCase):
 
     def test_errors(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
             
-            net.load(case)
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             self.assertRaises(KeyError,
                               net.set_flags,

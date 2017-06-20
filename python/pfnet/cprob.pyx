@@ -15,10 +15,7 @@ class ProblemError(Exception):
     Problem error exception.
     """
 
-    def __init__(self,value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 cdef class Problem:
     """
@@ -27,18 +24,26 @@ cdef class Problem:
 
     cdef cprob.Prob* _c_prob
     cdef bint alloc
+    cdef list _functions
+    cdef list _constraints
 
-    def __init__(self):
+    def __init__(self, Network net):
         """
         Optimization problem class.
+
+        Parameters
+        ----------
+        net : :class:`Network <pfnet.Network>`
         """
 
         pass
 
-    def __cinit__(self):
+    def __cinit__(self, Network net):
 
-        self._c_prob = cprob.PROB_new()
+        self._c_prob = cprob.PROB_new(net._c_net)
         self.alloc = True
+        self._functions = []
+        self._constraints = []
 
     def __dealloc__(self):
         """
@@ -49,28 +54,49 @@ cdef class Problem:
             cprob.PROB_del(self._c_prob)
             self._c_prob = NULL
 
-    def add_constraint(self,ctype):
+    def add_constraint(self,ConstraintBase constr):
         """
         Adds constraint to optimization problem.
 
         Parameters
         ----------
-        ctype : string (:ref:`ref_constr_type`)
+        constr : ConstraintBase
         """
 
-        cprob.PROB_add_constr(self._c_prob,str2constr[ctype])
+        # Prevent __dealloc__ of function
+        constr._alloc = False
+        
+        # Add constraint to list
+        # Prevents python object from being garbage collected
+        # This is needed for CustomConstraints
+        self._constraints.append(constr)
+        
+        # Add constraint to problem    
+        cprob.PROB_add_constr(self._c_prob,constr._c_constr)
+        if cprob.PROB_has_error(self._c_prob):
+            raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 
-    def add_function(self,ftype,weight):
+    def add_function(self,FunctionBase func):
         """
         Adds function to optimization problem objective.
 
         Parameters
         ----------
-        ftype : string (:ref:`ref_func_type`)
-        weight : float
+        func : FunctionBase
         """
+        
+        # Prevent __dealloc__ of function
+        func._alloc = False
+        
+        # Add function to list
+        # Prevents python object from being garbage collected
+        # This is needed for CustomFunctions
+        self._functions.append(func)
 
-        cprob.PROB_add_func(self._c_prob,str2func[ftype],weight)
+        # Add function to problem
+        cprob.PROB_add_func(self._c_prob,func._c_func)
+        if cprob.PROB_has_error(self._c_prob):
+            raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 
     def add_heuristic(self,htype):
 
@@ -83,6 +109,8 @@ cdef class Problem:
         """
 
         cprob.PROB_analyze(self._c_prob)
+        if cprob.PROB_has_error(self._c_prob):
+            raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 
     def apply_heuristics(self,var_values):
         cdef np.ndarray[double,mode='c'] x = var_values
@@ -94,6 +122,7 @@ cdef class Problem:
         Resets optimization problem data.
         """
 
+        self._functions = []
         cprob.PROB_clear(self._c_prob)
 
     def clear_error(self):
@@ -144,6 +173,8 @@ cdef class Problem:
         cdef np.ndarray[double,mode='c'] x = var_values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if var_values.size else NULL
         cprob.PROB_eval(self._c_prob,v)
+        if cprob.PROB_has_error(self._c_prob):
+            raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 
     def store_sensitivities(self,sA,sf,sGu,sGl):
         """
@@ -174,25 +205,29 @@ cdef class Problem:
         if cprob.PROB_has_error(self._c_prob):
             raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 
-    def find_constraint(self,ctype):
+    def find_constraint(self,name):
         """
         Finds constraint of give type among the constraints of this optimization problem.
 
         Parameters
         ----------
-        type : string (:ref:`ref_constr_type`)
+        name : string
+
+        Returns
+        -------
+        constr : Constraint
         """
 
-        cdef cnet.Net* n = cprob.PROB_get_network(self._c_prob)
-        c = cprob.PROB_find_constr(self._c_prob,str2constr[ctype])
+        name = name.encode('UTF-8')
+        c = cprob.PROB_find_constr(self._c_prob,name)
         if c is not NULL:
-            return new_Constraint(c,n)
+            return new_Constraint(c)
         else:
             raise ProblemError('constraint not found')
 
     def get_init_point(self):
         """
-        Gets initial solution estimate from the current value of the network variables.
+        Gets initial solution estimate from the current values of the network variables.
 
         Returns
         -------
@@ -203,7 +238,7 @@ cdef class Problem:
 
     def get_upper_limits(self):
         """
-        Gets vector of upper limits for the network variables.
+        Gets vector of upper limits for the network and extra variables.
 
         Returns
         -------
@@ -214,7 +249,7 @@ cdef class Problem:
 
     def get_lower_limits(self):
         """
-        Gets vector of lower limits for the network variables.
+        Gets vector of lower limits for the network and extra variables.
 
         Returns
         -------
@@ -229,14 +264,6 @@ cdef class Problem:
         """
 
         return new_Network(cprob.PROB_get_network(self._c_prob))
-
-    def set_network(self,net):
-        """
-        Sets the power network associated with this optimization problem.
-        """
-
-        cdef Network n = net
-        cprob.PROB_set_network(self._c_prob,n._c_net)
 
     def show(self):
         """
@@ -288,18 +315,14 @@ cdef class Problem:
     property network:
         """ Power network associated with this optimization problem (:class:`Network <pfnet.Network>`). """
         def __get__(self): return new_Network(cprob.PROB_get_network(self._c_prob))
-        def __set__(self,net):
-            cdef Network n = net
-            cprob.PROB_set_network(self._c_prob,n._c_net)
 
     property constraints:
         """ List of :class:`constraints <pfnet.Constraint>` of this optimization problem (list). """
         def __get__(self):
             clist = []
             cdef cconstr.Constr* c = cprob.PROB_get_constr(self._c_prob)
-            cdef cnet.Net* n = cprob.PROB_get_network(self._c_prob)
             while c is not NULL:
-                clist.append(new_Constraint(c,n))
+                clist.append(new_Constraint(c))
                 c = cconstr.CONSTR_get_next(c)
             return clist
 
@@ -308,9 +331,8 @@ cdef class Problem:
         def __get__(self):
             flist = []
             cdef cfunc.Func* f = cprob.PROB_get_func(self._c_prob)
-            cdef cnet.Net* n = cprob.PROB_get_network(self._c_prob)
             while f is not NULL:
-                flist.append(new_Function(f,n))
+                flist.append(new_Function(f))
                 f = cfunc.FUNC_get_next(f)
             return flist
 
@@ -381,3 +403,7 @@ cdef class Problem:
     property num_nonlinear_equality_constraints:
         """ Number of nonlinear equality constraints (int). """
         def __get__(self): return cprob.PROB_get_num_nonlinear_equality_constraints(self._c_prob)
+
+    property num_extra_vars:
+        """ Number of extra varaibles (set during analyze) (int). """
+        def __get__(self): return cprob.PROB_get_num_extra_vars(self._c_prob)

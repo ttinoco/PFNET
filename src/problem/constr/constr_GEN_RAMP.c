@@ -3,25 +3,39 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
 
 #include <pfnet/constr_GEN_RAMP.h>
-#include <assert.h>
+
+Constr* CONSTR_GEN_RAMP_new(Net* net) {
+  Constr* c = CONSTR_new(net);
+  CONSTR_set_func_init(c, &CONSTR_GEN_RAMP_init);
+  CONSTR_set_func_count_step(c, &CONSTR_GEN_RAMP_count_step);
+  CONSTR_set_func_allocate(c, &CONSTR_GEN_RAMP_allocate);
+  CONSTR_set_func_clear(c, &CONSTR_GEN_RAMP_clear);
+  CONSTR_set_func_analyze_step(c, &CONSTR_GEN_RAMP_analyze_step);
+  CONSTR_set_func_eval_step(c, &CONSTR_GEN_RAMP_eval_step);
+  CONSTR_set_func_store_sens_step(c, &CONSTR_GEN_RAMP_store_sens_step);
+  CONSTR_set_func_free(c, &CONSTR_GEN_RAMP_free);
+  CONSTR_init(c);
+  return c;
+}
 
 void CONSTR_GEN_RAMP_init(Constr* c) {
 
   // Init
+  CONSTR_set_name(c,"generator ramp limits");
   CONSTR_set_data(c,NULL);
 }
 
 void CONSTR_GEN_RAMP_clear(Constr* c) {
 
   // Counters
-  CONSTR_set_Gcounter(c,0);
-  CONSTR_set_Gconstr_index(c,0);
+  CONSTR_set_G_nnz(c,0);
+  CONSTR_set_G_row(c,0);
 
   // Flags
   CONSTR_clear_bus_counted(c);
@@ -33,8 +47,8 @@ void CONSTR_GEN_RAMP_count_step(Constr* c, Branch* br, int t) {
   Bus* buses[2];
   Bus* bus;
   Gen* gen;
-  int* Gcounter;
-  int* Gconstr_index;
+  int* G_nnz;
+  int* G_row;
   char* bus_counted;
   int i;
   int T;
@@ -43,12 +57,12 @@ void CONSTR_GEN_RAMP_count_step(Constr* c, Branch* br, int t) {
   T = BRANCH_get_num_periods(br);
 
   // Constr data
-  Gcounter = CONSTR_get_Gcounter_ptr(c);
-  Gconstr_index = CONSTR_get_Gconstr_index_ptr(c);
+  G_nnz = CONSTR_get_G_nnz_ptr(c);
+  G_row = CONSTR_get_G_row_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointer
-  if (!Gcounter || !Gconstr_index || !bus_counted)
+  if (!G_nnz || !G_row || !bus_counted)
     return;
 
   // Check outage
@@ -72,10 +86,10 @@ void CONSTR_GEN_RAMP_count_step(Constr* c, Branch* br, int t) {
 	// Variable
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // -dP_max <= P_t - P_{t-1} <= dP_max
 	  if (t == 0)
-	    (*Gcounter) += 1;
+	    (*G_nnz) += 1;
 	  else
-	    (*Gcounter) += 2;
-	  (*Gconstr_index)++;
+	    (*G_nnz) += 2;
+	  (*G_row)++;
 	}
       }
     }
@@ -90,11 +104,11 @@ void CONSTR_GEN_RAMP_allocate(Constr* c) {
   // Local variables
   int num_constr;
   int num_vars;
-  int Gcounter;
+  int G_nnz;
 
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
-  num_constr = CONSTR_get_Gconstr_index(c);
-  Gcounter = CONSTR_get_Gcounter(c);
+  num_constr = CONSTR_get_G_row(c);
+  G_nnz = CONSTR_get_G_nnz(c);
 
   // J f
   CONSTR_set_J(c,MAT_new(0,num_vars,0));
@@ -108,8 +122,8 @@ void CONSTR_GEN_RAMP_allocate(Constr* c) {
   CONSTR_set_l(c,VEC_new(num_constr));
   CONSTR_set_u(c,VEC_new(num_constr));
   CONSTR_set_G(c,MAT_new(num_constr, // size1 (rows)
-			 num_vars,   // size2 (rows)
-			 Gcounter)); // nnz
+			 num_vars,   // size2 (cols)
+			 G_nnz));    // nnz
 }
 
 void CONSTR_GEN_RAMP_analyze_step(Constr* c, Branch* br, int t) {
@@ -118,8 +132,8 @@ void CONSTR_GEN_RAMP_analyze_step(Constr* c, Branch* br, int t) {
   Bus* buses[2];
   Bus* bus;
   Gen* gen;
-  int* Gcounter;
-  int* Gconstr_index;
+  int* G_nnz;
+  int* G_row;
   char* bus_counted;
   Vec* u;
   Vec* l;
@@ -134,12 +148,12 @@ void CONSTR_GEN_RAMP_analyze_step(Constr* c, Branch* br, int t) {
   l = CONSTR_get_l(c);
   u = CONSTR_get_u(c);
   G = CONSTR_get_G(c);
-  Gcounter = CONSTR_get_Gcounter_ptr(c);
-  Gconstr_index = CONSTR_get_Gconstr_index_ptr(c);
+  G_nnz = CONSTR_get_G_nnz_ptr(c);
+  G_row = CONSTR_get_G_row_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!Gcounter || !Gconstr_index || !bus_counted)
+  if (!G_nnz || !G_row || !bus_counted)
     return;
 
   // Check outage
@@ -164,33 +178,33 @@ void CONSTR_GEN_RAMP_analyze_step(Constr* c, Branch* br, int t) {
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // -dP_max <= P_t - P_{t-1} <= dP_max
 
 	  // G
-	  MAT_set_i(G,*Gcounter,*Gconstr_index);
-	  MAT_set_j(G,*Gcounter,GEN_get_index_P(gen,t));
-	  MAT_set_d(G,*Gcounter,1.);
+	  MAT_set_i(G,*G_nnz,*G_row);
+	  MAT_set_j(G,*G_nnz,GEN_get_index_P(gen,t));
+	  MAT_set_d(G,*G_nnz,1.);
 
 	  if (t == 0) {
 
 	    // l u
-	    VEC_set(l,*Gconstr_index,-GEN_get_dP_max(gen)+GEN_get_P_prev(gen));
-	    VEC_set(u,*Gconstr_index,GEN_get_dP_max(gen)+GEN_get_P_prev(gen));
+	    VEC_set(l,*G_row,-GEN_get_dP_max(gen)+GEN_get_P_prev(gen));
+	    VEC_set(u,*G_row,GEN_get_dP_max(gen)+GEN_get_P_prev(gen));
 
-	    (*Gcounter) += 1;
+	    (*G_nnz) += 1;
 	  }
 	  else {
 
 	    // l u
-	    VEC_set(l,*Gconstr_index,-GEN_get_dP_max(gen));
-	    VEC_set(u,*Gconstr_index,GEN_get_dP_max(gen));
+	    VEC_set(l,*G_row,-GEN_get_dP_max(gen));
+	    VEC_set(u,*G_row,GEN_get_dP_max(gen));
 
 	    // G
-	    MAT_set_i(G,*Gcounter+1,*Gconstr_index);
-	    MAT_set_j(G,*Gcounter+1,GEN_get_index_P(gen,t-1));
-	    MAT_set_d(G,*Gcounter+1,-1.);
+	    MAT_set_i(G,*G_nnz+1,*G_row);
+	    MAT_set_j(G,*G_nnz+1,GEN_get_index_P(gen,t-1));
+	    MAT_set_d(G,*G_nnz+1,-1.);
 
-	    (*Gcounter) += 2;
+	    (*G_nnz) += 2;
 	  }
 
-	  (*Gconstr_index)++;
+	  (*G_row)++;
 	}
       }
     }
@@ -200,7 +214,7 @@ void CONSTR_GEN_RAMP_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_GEN_RAMP_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
+void CONSTR_GEN_RAMP_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
   // Nothing to do
 }
 

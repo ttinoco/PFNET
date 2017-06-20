@@ -3,15 +3,29 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
 
 #include <pfnet/func_SP_CONTROLS.h>
 
+Func* FUNC_SP_CONTROLS_new(REAL weight, Net* net) {
+  Func* f = FUNC_new(weight,net);
+  FUNC_set_func_init(f, &FUNC_SP_CONTROLS_init);
+  FUNC_set_func_count_step(f, &FUNC_SP_CONTROLS_count_step);
+  FUNC_set_func_allocate(f, &FUNC_SP_CONTROLS_allocate);
+  FUNC_set_func_clear(f, &FUNC_SP_CONTROLS_clear);
+  FUNC_set_func_analyze_step(f, &FUNC_SP_CONTROLS_analyze_step);
+  FUNC_set_func_eval_step(f, &FUNC_SP_CONTROLS_eval_step);
+  FUNC_set_func_free(f, &FUNC_SP_CONTROLS_free);
+  FUNC_init(f);
+  return f;
+}
+
 void FUNC_SP_CONTROLS_init(Func* f) {
-  // Nothing
+  
+  FUNC_set_name(f,"sparse controls penalty");
 }
 
 void FUNC_SP_CONTROLS_clear(Func* f) {
@@ -26,7 +40,7 @@ void FUNC_SP_CONTROLS_clear(Func* f) {
   MAT_set_zero_d(FUNC_get_Hphi(f));
 
   // Counter
-  FUNC_set_Hcounter(f,0);
+  FUNC_set_Hphi_nnz(f,0);
 
   // Flags
   FUNC_clear_bus_counted(f);
@@ -40,7 +54,7 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Branch* br, int t) {
   Gen* gen;
   Shunt* shunt;
   int bus_index_t[2];
-  int* Hcounter;
+  int* Hphi_nnz;
   char* bus_counted;
   int k;
   int T;
@@ -49,11 +63,11 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Branch* br, int t) {
   T = BRANCH_get_num_periods(br);
 
   // Constr data
-  Hcounter = FUNC_get_Hcounter_ptr(f);
+  Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
   bus_counted = FUNC_get_bus_counted(f);
 
   // Check pointers
-  if (!Hcounter || !bus_counted)
+  if (!Hphi_nnz || !bus_counted)
     return;
 
   // Check outage
@@ -70,13 +84,13 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Branch* br, int t) {
   if (BRANCH_is_tap_changer(br) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) &&
       BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_RATIO))
-    (*Hcounter)++;
+    (*Hphi_nnz)++;
 
   // Phase shift of phase-shifting transformer
   if (BRANCH_is_phase_shifter(br) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) &&
       BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_PHASE))
-    (*Hcounter)++;
+    (*Hphi_nnz)++;
 
   // Buses
   for (k = 0; k < 2; k++) {
@@ -89,7 +103,7 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Branch* br, int t) {
       if (BUS_is_regulated_by_gen(bus) &&
 	  BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) &&
 	  BUS_has_flags(bus,FLAG_SPARSE,BUS_VAR_VMAG))
-	(*Hcounter)++;
+	(*Hphi_nnz)++;
 
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
@@ -97,7 +111,7 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Branch* br, int t) {
 	// Active power
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) &&
 	    GEN_has_flags(gen,FLAG_SPARSE,GEN_VAR_P))
-	  (*Hcounter)++;
+	  (*Hphi_nnz)++;
       }
 
       // Shunts
@@ -107,7 +121,7 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Branch* br, int t) {
 	if (SHUNT_is_switched(shunt) &&
 	    SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) &&
 	    SHUNT_has_flags(shunt,FLAG_SPARSE,SHUNT_VAR_SUSC))
-	  (*Hcounter)++;
+	  (*Hphi_nnz)++;
       }
     }
 
@@ -120,10 +134,10 @@ void FUNC_SP_CONTROLS_allocate(Func* f) {
 
   // Local variables
   int num_vars;
-  int Hcounter;
+  int Hphi_nnz;
 
   num_vars = NET_get_num_vars(FUNC_get_network(f));
-  Hcounter = FUNC_get_Hcounter(f);
+  Hphi_nnz = FUNC_get_Hphi_nnz(f);
 
   // gphi
   FUNC_set_gphi(f,VEC_new(num_vars));
@@ -131,7 +145,7 @@ void FUNC_SP_CONTROLS_allocate(Func* f) {
   // Hphi
   FUNC_set_Hphi(f,MAT_new(num_vars,
 			  num_vars,
-			  Hcounter));
+			  Hphi_nnz));
 }
 
 void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
@@ -142,7 +156,7 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
   Gen* gen;
   Shunt* shunt;
   int bus_index_t[2];
-  int* Hcounter;
+  int* Hphi_nnz;
   char* bus_counted;
   Mat* H;
   int k;
@@ -153,11 +167,11 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
 
   // Constr data
   H = FUNC_get_Hphi(f);
-  Hcounter = FUNC_get_Hcounter_ptr(f);
+  Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
   bus_counted = FUNC_get_bus_counted(f);
 
   // Check pointers
-  if (!Hcounter || !bus_counted)
+  if (!Hphi_nnz || !bus_counted)
     return;
 
   // Check outage
@@ -174,18 +188,18 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
   if (BRANCH_is_tap_changer(br) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) &&
       BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_RATIO)) {
-    MAT_set_i(H,*Hcounter,BRANCH_get_index_ratio(br,t));
-    MAT_set_j(H,*Hcounter,BRANCH_get_index_ratio(br,t));
-    (*Hcounter)++;
+    MAT_set_i(H,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
+    MAT_set_j(H,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
+    (*Hphi_nnz)++;
   }
 
   // Phase shift of phase-shifting transformer
   if (BRANCH_is_phase_shifter(br) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) &&
       BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_PHASE)) {
-    MAT_set_i(H,*Hcounter,BRANCH_get_index_phase(br,t));
-    MAT_set_j(H,*Hcounter,BRANCH_get_index_phase(br,t));
-    (*Hcounter)++;
+    MAT_set_i(H,*Hphi_nnz,BRANCH_get_index_phase(br,t));
+    MAT_set_j(H,*Hphi_nnz,BRANCH_get_index_phase(br,t));
+    (*Hphi_nnz)++;
   }
 
   // Buses
@@ -199,9 +213,9 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
       if (BUS_is_regulated_by_gen(bus) &&
 	  BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) &&
 	  BUS_has_flags(bus,FLAG_SPARSE,BUS_VAR_VMAG)) {
-	MAT_set_i(H,*Hcounter,BUS_get_index_v_mag(bus,t));
-	MAT_set_j(H,*Hcounter,BUS_get_index_v_mag(bus,t));
-	(*Hcounter)++;
+	MAT_set_i(H,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
+	MAT_set_j(H,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
+	(*Hphi_nnz)++;
       }
 
       // Generators
@@ -210,9 +224,9 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
 	// Active power
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) &&
 	    GEN_has_flags(gen,FLAG_SPARSE,GEN_VAR_P)) {
-	  MAT_set_i(H,*Hcounter,GEN_get_index_P(gen,t));
-	  MAT_set_j(H,*Hcounter,GEN_get_index_P(gen,t));
-	  (*Hcounter)++;
+	  MAT_set_i(H,*Hphi_nnz,GEN_get_index_P(gen,t));
+	  MAT_set_j(H,*Hphi_nnz,GEN_get_index_P(gen,t));
+	  (*Hphi_nnz)++;
 	}
       }
 
@@ -223,9 +237,9 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
 	if (SHUNT_is_switched(shunt) &&
 	    SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) &&
 	    SHUNT_has_flags(shunt,FLAG_SPARSE,SHUNT_VAR_SUSC)) {
-	  MAT_set_i(H,*Hcounter,SHUNT_get_index_b(shunt,t));
-	  MAT_set_j(H,*Hcounter,SHUNT_get_index_b(shunt,t));
-	  (*Hcounter)++;
+	  MAT_set_i(H,*Hphi_nnz,SHUNT_get_index_b(shunt,t));
+	  MAT_set_j(H,*Hphi_nnz,SHUNT_get_index_b(shunt,t));
+	  (*Hphi_nnz)++;
 	}
       }
     }
@@ -243,7 +257,7 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   Gen* gen;
   Shunt* shunt;
   int bus_index_t[2];
-  int* Hcounter;
+  int* Hphi_nnz;
   char* bus_counted;
   REAL* phi;
   REAL* gphi;
@@ -263,11 +277,11 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   phi = FUNC_get_phi_ptr(f);
   gphi = VEC_get_data(FUNC_get_gphi(f));
   Hd = MAT_get_data_array(FUNC_get_Hphi(f));
-  Hcounter = FUNC_get_Hcounter_ptr(f);
+  Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
   bus_counted = FUNC_get_bus_counted(f);
 
   // Check pointers
-  if (!phi || !gphi || !Hd || !Hcounter || !bus_counted)
+  if (!phi || !gphi || !Hd || !Hphi_nnz || !bus_counted)
     return;
 
   // Check outage
@@ -300,8 +314,8 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
     gphi[index_val] = (1./sqrt_term)*((val-val0)/(dval*dval));
 
     // Hphi
-    Hd[*Hcounter] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
-    (*Hcounter)++;
+    Hd[*Hphi_nnz] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
+    (*Hphi_nnz)++;
   }
   else {
     // nothing because val0-val0 = 0 for constant val
@@ -327,8 +341,8 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
     gphi[index_val] = (1./sqrt_term)*((val-val0)/(dval*dval));
 
     // Hphi
-    Hd[*Hcounter] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
-    (*Hcounter)++;
+    Hd[*Hphi_nnz] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
+    (*Hphi_nnz)++;
   }
   else {
     // nothing because val0-val0 = 0 for constant val
@@ -349,7 +363,7 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 	index_val = BUS_get_index_v_mag(bus,t);
 	val = VEC_get(var_values,index_val);
 	val0 = BUS_get_v_set(bus,t);
-	dval = BUS_get_v_max(bus)-BUS_get_v_min(bus);
+	dval = BUS_get_v_max_reg(bus)-BUS_get_v_min_reg(bus);
 	if (dval < FUNC_SP_CONTROLS_CEPS)
 	  dval = FUNC_SP_CONTROLS_CEPS;
 	sqrt_term = sqrt( (val-val0)*(val-val0)/(dval*dval) + FUNC_SP_CONTROLS_EPS );
@@ -361,8 +375,8 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 	gphi[index_val] = (1./sqrt_term)*((val-val0)/(dval*dval));
 
 	// Hphi
-	Hd[*Hcounter] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
-	(*Hcounter)++;
+	Hd[*Hphi_nnz] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
+	(*Hphi_nnz)++;
       }
       else {
 	// nothing because val0-val0 = 0 for constant val
@@ -390,8 +404,8 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 	  gphi[index_val] = (1./sqrt_term)*((val-val0)/(dval*dval));
 
 	  // Hphi
-	  Hd[*Hcounter] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
-	  (*Hcounter)++;
+	  Hd[*Hphi_nnz] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
+	  (*Hphi_nnz)++;
 	}
 	else {
 	  // nothing because val0-val0 = 0 for constant val
@@ -421,8 +435,8 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 	  gphi[index_val] = (1./sqrt_term)*((val-val0)/(dval*dval));
 
 	  // Hphi
-	  Hd[*Hcounter] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
-	  (*Hcounter)++;
+	  Hd[*Hphi_nnz] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
+	  (*Hphi_nnz)++;
 	}
 	else {
 	  // nothing because val0-val0 = 0 for constant val

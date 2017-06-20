@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -18,6 +18,7 @@
 #define FUNC_SP_CONTROLS_CEPS 1e-4  /**< @brief Parameter for avoiding small control ranges. */
 
 // Function prototypes
+Func* FUNC_SP_CONTROLS_new(REAL weight, Net* net);
 void FUNC_SP_CONTROLS_init(Func* f);
 void FUNC_SP_CONTROLS_count_step(Func* f, Branch* br, int t);
 void FUNC_SP_CONTROLS_allocate(Func* f);

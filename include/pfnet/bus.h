@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -22,8 +22,8 @@
 #define BUS_DEFAULT_V_MIN 0.9 /**< @brief Default minimum voltage magnitude. */
 
 // Infinity
-#define BUS_INF_V_MAG 100. /**< @brief Infinite voltage magnitude (p.u.) */
-#define BUS_INF_V_ANG 100. /**< @brief Infinite voltage angle (radians) */
+#define BUS_INF_V_MAG 1e8 /**< @brief Infinite voltage magnitude (p.u.) */
+#define BUS_INF_V_ANG 1e2 /**< @brief Infinite voltage angle (radians) */
 
 // Variables
 /** \defgroup bus_vars Bus Variable Masks
@@ -31,8 +31,6 @@
  */
 #define BUS_VAR_VMAG 0x01 /**< @brief Variable: voltage magnitude. */
 #define BUS_VAR_VANG 0x02 /**< @brief Variable: volatge angle. */
-#define BUS_VAR_VDEV 0x04 /**< @brief Variable: positive and negative volatge magnitude deviations from set point. */
-#define BUS_VAR_VVIO 0x08 /**< @brief Variable: volatge magnitude max and min bound violations. */
 /** @} */
 
 // Properties
@@ -104,7 +102,7 @@ void BUS_add_load(Bus* bus, Load* load);
 void BUS_add_reg_gen(Bus* bus, Gen* reg_gen);
 void BUS_del_reg_gen(Bus* bus, Gen* reg_gen);
 
-/** @brief Adds transformer to list of transformer regulating bus voltage. */
+/** @brief Adds transformer to list of transformers regulating bus voltage. */
 void BUS_add_reg_tran(Bus* bus, Branch* reg_tran);
 void BUS_del_reg_tran(Bus* bus, Branch* reg_tran);
 
@@ -122,11 +120,13 @@ void BUS_add_bat(Bus* bus, Bat* bat);
 
 /** @brief Adds branch to list of branches connected at "k" bus. */
 void BUS_add_branch_k(Bus* bus, Branch* branch);
+
 /** @brief Deletes branch from list of branches connected at "k" bus. */
 void BUS_del_branch_k(Bus* bus, Branch* branch);
 
 /** @brief Adds branch to list of branches connected at "m" bus. */
 void BUS_add_branch_m(Bus* bus, Branch* branch);
+
 /** @brief Deletes branch from list of branches connected at "m" bus. */
 void BUS_del_branch_m(Bus* bus, Branch* branch);
 
@@ -141,6 +141,7 @@ void BUS_clear_flags(Bus* bus, char flag_type);
 void BUS_clear_sensitivities(Bus* bus);
 void BUS_clear_mismatches(Bus* bus);
 void BUS_clear_vargen(Bus* bus);
+void BUS_clear_bat(Bus* bus);
 void BUS_propagate_data_in_time(Bus* bus);
 char BUS_get_obj_type(void* bus);
 int BUS_get_degree(Bus* bus);
@@ -148,10 +149,6 @@ REAL BUS_get_price(Bus* bus, int t);
 int BUS_get_index(Bus* bus);
 int BUS_get_index_v_mag(Bus* bus, int t);
 int BUS_get_index_v_ang(Bus* bus, int t);
-int BUS_get_index_y(Bus* bus, int t);
-int BUS_get_index_z(Bus* bus, int t);
-int BUS_get_index_vl(Bus* bus, int t);
-int BUS_get_index_vh(Bus* bus, int t);
 int BUS_get_index_P(Bus* bus);
 int BUS_get_index_Q(Bus* bus);
 Bus* BUS_get_next(Bus* bus);
@@ -191,12 +188,12 @@ REAL BUS_get_total_shunt_b(Bus* bus, int t);
 REAL BUS_get_v_mag(Bus* bus, int t);
 REAL BUS_get_v_ang(Bus* bus, int t);
 REAL BUS_get_v_set(Bus* bus, int t);
-REAL BUS_get_v_max(Bus* bus);
-REAL BUS_get_v_min(Bus* bus);
-REAL BUS_get_v_norm_hi_limit(Bus* bus);
-REAL BUS_get_v_norm_lo_limit(Bus* bus);
-REAL BUS_get_v_emer_hi_limit(Bus* bus);
-REAL BUS_get_v_emer_lo_limit(Bus* bus);
+REAL BUS_get_v_max_reg(Bus* bus);
+REAL BUS_get_v_min_reg(Bus* bus);
+REAL BUS_get_v_max_norm(Bus* bus);
+REAL BUS_get_v_min_norm(Bus* bus);
+REAL BUS_get_v_max_emer(Bus* bus);
+REAL BUS_get_v_min_emer(Bus* bus);
 void BUS_get_var_values(Bus* bus, Vec* values, int code);
 int BUS_get_num_vars(void* bus, unsigned char var, int t_start, int t_end);
 Vec* BUS_get_var_indices(void* bus, unsigned char var, int t_start, int t_end);
@@ -243,12 +240,12 @@ void BUS_set_price(Bus* bus, REAL price, int t);
 void BUS_set_v_mag(Bus* bus, REAL v_mag, int t);
 void BUS_set_v_ang(Bus* bus, REAL v_ang, int t);
 void BUS_set_v_set(Bus* bus, REAL v_set, int t);
-void BUS_set_v_max(Bus* bus, REAL v_max);
-void BUS_set_v_min(Bus* bus, REAL v_min);
-void BUS_set_v_norm_hi_limit(Bus* bus, REAL v_norm_hi_limit);
-void BUS_set_v_norm_lo_limit(Bus* bus, REAL v_norm_lo_limit);
-void BUS_set_v_emer_hi_limit(Bus* bus, REAL v_emer_hi_limit);
-void BUS_set_v_emer_lo_limit(Bus* bus, REAL v_emer_lo_limit);
+void BUS_set_v_max_reg(Bus* bus, REAL v_max_reg);
+void BUS_set_v_min_reg(Bus* bus, REAL v_min_reg);
+void BUS_set_v_max_norm(Bus* bus, REAL v_max_norm);
+void BUS_set_v_min_norm(Bus* bus, REAL v_min_norm);
+void BUS_set_v_max_emer(Bus* bus, REAL v_max_emer);
+void BUS_set_v_min_emer(Bus* bus, REAL v_min_emer);
 void BUS_set_slack(Bus* bus, BOOL slack);
 void BUS_set_index(Bus* bus, int index);
 int BUS_set_flags(void* bus, char flag_type, unsigned char mask, int index);

@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -21,7 +21,8 @@ cdef extern from "pfnet/net.h":
     ctypedef struct Net
     ctypedef double REAL
  
-    void NET_add_vargens(Net* net, cbus.Bus* bus_list, REAL penetration, REAL uncertainty, REAL corr_radius, REAL corr_value)
+    void NET_add_vargens(Net* net, cbus.Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value)
+    void NET_add_batteries(Net* net, cbus.Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d)
     void NET_adjust_generators(Net* net)
     cbus.Bus* NET_bus_hash_number_find(Net* net, int number)
     cbus.Bus* NET_bus_hash_name_find(Net* net, char* name)
@@ -44,6 +45,7 @@ cdef extern from "pfnet/net.h":
     cbat.Bat* NET_get_bat(Net* net, int index)
     cbus.Bus* NET_get_load_buses(Net* net)
     cbus.Bus* NET_get_gen_buses(Net* net)
+    REAL NET_get_total_load_P(Net* net, int t)
     int NET_get_num_periods(Net* net)
     int NET_get_num_buses(Net* net)
     int NET_get_num_slack_buses(Net* net)
@@ -98,7 +100,6 @@ cdef extern from "pfnet/net.h":
     cvec.Vec* NET_get_var_values(Net* net, int code)
     cmat.Mat* NET_get_var_projection(Net* net, char obj_type, char var, int t_start, int t_end)
     bint NET_has_error(Net* net)
-    void NET_load(Net* net, char* filename, int output_level)
     Net* NET_new(int num_periods)
     void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, char val_mask)
     void NET_set_flags_of_component(Net* net, void* obj, char obj_type, char flag_mask, char val_mask)
@@ -112,4 +113,3 @@ cdef extern from "pfnet/net.h":
     void NET_update_set_points(Net* net)
     
      
-          

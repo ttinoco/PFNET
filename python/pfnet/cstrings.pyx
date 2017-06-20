@@ -46,13 +46,10 @@ str2const = {'current' : cconstants.CURRENT,
 # Quantities
 str2q_bus = {'all' : cflags.ALL_VARS, 
              'voltage magnitude' : cbus.BUS_VAR_VMAG, 
-             'voltage angle' : cbus.BUS_VAR_VANG,
-             'voltage magnitude deviation' : cbus.BUS_VAR_VDEV,
-             'voltage magnitude violation' : cbus.BUS_VAR_VVIO}
+             'voltage angle' : cbus.BUS_VAR_VANG}
 
 str2q_branch = {'all' : cflags.ALL_VARS,
                 'tap ratio' : cbranch.BRANCH_VAR_RATIO,
-                'tap ratio deviation' : cbranch.BRANCH_VAR_RATIO_DEV,
                 'phase shift' : cbranch.BRANCH_VAR_PHASE}
 
 str2q_gen = {'all' : cflags.ALL_VARS,
@@ -60,11 +57,11 @@ str2q_gen = {'all' : cflags.ALL_VARS,
              'reactive power' : cgen.GEN_VAR_Q}
 
 str2q_shunt = {'all' : cflags.ALL_VARS,
-               'susceptance' : cshunt.SHUNT_VAR_SUSC,
-               'susceptance deviation' : cshunt.SHUNT_VAR_SUSC_DEV}
+               'susceptance' : cshunt.SHUNT_VAR_SUSC}
 
 str2q_load = {'all' : cflags.ALL_VARS,
-              'active power' : cload.LOAD_VAR_P}
+              'active power' : cload.LOAD_VAR_P,
+              'reactive power' : cload.LOAD_VAR_Q}
 
 str2q_vargen = {'all' : cflags.ALL_VARS,
                 'active power' : cvargen.VARGEN_VAR_P,
@@ -124,35 +121,3 @@ str2prop = {'bus' : str2prop_bus,
             'load' : str2prop_load,
             'variable generator' : str2prop_vargen,
             'battery' : str2prop_bat}
-
-# Functions
-str2func = {'voltage magnitude regularization' : cfunc.FUNC_TYPE_REG_VMAG,
-            'voltage angle regularization' : cfunc.FUNC_TYPE_REG_VANG,
-            'generator powers regularization' : cfunc.FUNC_TYPE_REG_PQ,
-            'tap ratio regularization' : cfunc.FUNC_TYPE_REG_RATIO,
-            'phase shift regularization' : cfunc.FUNC_TYPE_REG_PHASE,
-            'susceptance regularization' : cfunc.FUNC_TYPE_REG_SUSC,
-            'generation cost' : cfunc.FUNC_TYPE_GEN_COST,
-            'sparse controls penalty' : cfunc.FUNC_TYPE_SP_CONTROLS,
-            'soft voltage magnitude limits' : cfunc.FUNC_TYPE_SLIM_VMAG,
-            'consumption utility' : cfunc.FUNC_TYPE_LOAD_UTIL,
-            'net consumption cost' : cfunc.FUNC_TYPE_NETCON_COST}
-
-func2str = dict([(v,k) for k,v in str2func.items()])
-
-# Constraints
-str2constr = {'AC power balance' : cconstr.CONSTR_TYPE_PF,
-              'DC power balance' : cconstr.CONSTR_TYPE_DCPF,
-              'linearized AC power balance' : cconstr.CONSTR_TYPE_LINPF,
-              'variable fixing' : cconstr.CONSTR_TYPE_FIX,
-              'variable nonlinear bounds' : cconstr.CONSTR_TYPE_BOUND,
-              'generator active power participation' : cconstr.CONSTR_TYPE_PAR_GEN_P,
-              'generator reactive power participation' : cconstr.CONSTR_TYPE_PAR_GEN_Q,
-              'voltage regulation by generators' : cconstr.CONSTR_TYPE_REG_GEN,
-              'voltage regulation by transformers' : cconstr.CONSTR_TYPE_REG_TRAN,
-              'voltage regulation by shunts' : cconstr.CONSTR_TYPE_REG_SHUNT,
-              'DC branch flow limits' : cconstr.CONSTR_TYPE_DC_FLOW_LIM,
-              'variable bounds' : cconstr.CONSTR_TYPE_LBOUND,
-              'generator ramp limits' : cconstr.CONSTR_TYPE_GEN_RAMP}
-
-constr2str = dict([(v,k) for k,v in str2constr.items()])

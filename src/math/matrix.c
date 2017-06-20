@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -170,6 +170,18 @@ Mat* MAT_new(int size1, int size2, int nnz) {
   ARRAY_zalloc(m->row,int,nnz);
   ARRAY_zalloc(m->col,int,nnz);
   ARRAY_zalloc(m->data,REAL,nnz);
+  m->nnz = nnz;
+  return m;
+}
+
+Mat* MAT_new_from_arrays(int size1, int size2, int nnz, int* row, int* col, REAL* data) {
+  Mat* m = (Mat*)malloc(sizeof(Mat));
+  MAT_init(m);
+  m->size1 = size1;
+  m->size2 = size2;
+  m->row = row;
+  m->col = col;
+  m->data = data;
   m->nnz = nnz;
   return m;
 }

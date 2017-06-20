@@ -2,12 +2,13 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
 
 #include "unit.h"
+#include <pfnet/parser.h>
 #include <pfnet/net.h>
 
 static char* test_net_new() {
@@ -26,32 +27,37 @@ static char* test_net_new() {
 }
 
 static char* test_net_load() {
-
+  
+  Parser* parser;
   Net* net;
 
   printf("test_net_load ... ");
 
-  net = NET_new(1);
-  Assert("error - invalid number of buses",NET_get_num_buses(net) == 0);
-  NET_load(net,test_case,0);
-  Assert("error - failed to parse case",!NET_has_error(net));
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
+  Assert("error - unable to get parser",parser != NULL);
+  Assert(PARSER_get_error_string(parser),!PARSER_has_error(parser));
+  Assert("error - failed to parse case",!PARSER_has_error(parser));
   Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
 
   NET_del(net);
+  PARSER_del(parser);
   printf("ok\n");
   return 0;
 }
 
 static char* test_net_check() {
   
+  Parser* parser;
   Net* net;
 
   printf("test_net_check ... ");
 
-  net = NET_new(1);				
-  NET_load(net,test_case,0);
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
   Assert("error - net check failed",NET_check(net,0));
   NET_del(net);
+  PARSER_del(parser);
   printf("ok\n");
   return 0;
 }
@@ -59,13 +65,15 @@ static char* test_net_check() {
 static char* test_net_variables() {
   
   int num = 0;
+  Parser* parser;
   Net* net;
 
   printf("test_net_variables ... ");
   
-  net = NET_new(1);				
-
-  NET_load(net,test_case,0);
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
+  
+  Assert("error - bad number of buses",NET_get_num_buses(net) > 0);
 
   Assert("error - wrong number of variables",NET_get_num_vars(net) == num);
   
@@ -98,6 +106,7 @@ static char* test_net_variables() {
   Assert("error - wrong number of variables",NET_get_num_vars(net) == num);
 
   NET_del(net);
+  PARSER_del(parser);
   printf("ok\n");
   return 0;
 }
@@ -105,14 +114,15 @@ static char* test_net_variables() {
 static char* test_net_fixed() {
 
   int num = 0;
+  Parser* parser;
   Net* net;
 
   printf("test_net_fixed ... ");
 
-  net = NET_new(1);	
-			
-  NET_load(net,test_case,0);
-  
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
+
+  Assert("error - bad number of buses",NET_get_num_buses(net) > 0);
   Assert("error - wrong number of variables",NET_get_num_fixed(net) == num);
 
   NET_set_flags(net,OBJ_BUS,FLAG_FIXED,BUS_PROP_REG_BY_GEN,BUS_VAR_VMAG);
@@ -148,6 +158,7 @@ static char* test_net_fixed() {
   Assert("error - wrong number of variables",NET_get_num_fixed(net) == num);
 
   NET_del(net);
+  PARSER_del(parser);
   printf("ok\n");
   return 0;
 }
@@ -159,14 +170,16 @@ static char* test_net_properties() {
   REAL busvmax = 0;
   REAL genQvio = 0;
   REAL dQ;
+  Parser* parser;
   Net* net;
   int i;
 
   printf("test_net_properties ... ");
+  
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
 
-  net = NET_new(1);
-
-  NET_load(net,test_case,0);
+  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
 
   for (i = 0; i < NET_get_num_buses(net); i++) {
     
@@ -197,6 +210,7 @@ static char* test_net_properties() {
   Assert("error - bad network property (gen_Q_vio)",genQvio*NET_get_base_power(net) == NET_get_gen_Q_vio(net,0));
 
   NET_del(net);
+  PARSER_del(parser);
   printf("ok\n");
   return 0;
 }
@@ -205,16 +219,18 @@ static char* test_net_init_point() {
 
   Bus* bus;
   Gen* gen;
+  Parser* parser;
   Net* net;
   Vec* point;
   int i;
 
   printf("test_net_init_point ... ");
 
-  net = NET_new(1);
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
 
-  NET_load(net,test_case,0);
-  
+  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0); 
+
   // Set variables
   NET_set_flags(net,
 		OBJ_BUS,
@@ -256,6 +272,7 @@ static char* test_net_init_point() {
   }
 
   VEC_del(point);
+  PARSER_del(parser);
   NET_del(net);
   printf("ok\n");
   return 0;

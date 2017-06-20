@@ -35,10 +35,8 @@ class BusError(Exception):
     """
     Bus error exception.
     """
-    def __init__(self,value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+
+    pass
 
 cdef class Bus:
     """
@@ -467,42 +465,6 @@ cdef class Bus:
             else:
                 return np.array(r)
 
-    property index_y:
-        """ Index of voltage magnitude positive deviation variable (int or array). """
-        def __get__(self):
-            r = [cbus.BUS_get_index_y(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeInt(r[0])
-            else:
-                return np.array(r)
-
-    property index_z:
-        """ Index of voltage magnitude negative deviation variable (int or array). """
-        def __get__(self):
-            r = [cbus.BUS_get_index_z(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeInt(r[0])
-            else:
-                return np.array(r)
-
-    property index_vl:
-        """ Index of voltage low limit violation variable (int or array). """
-        def __get__(self):
-            r = [cbus.BUS_get_index_vl(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeInt(r[0])
-            else:
-                return np.array(r)
-
-    property index_vh:
-        """ Index of voltage high limit violation variable (int or array). """
-        def __get__(self):
-            r = [cbus.BUS_get_index_vh(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeInt(r[0])
-            else:
-                return np.array(r)
-
     property index_P:
         """ Index of bus active power mismatch (int). """
         def __get__(self): return cbus.BUS_get_index_P(self._c_ptr)
@@ -577,13 +539,61 @@ cdef class Bus:
             else:
                 return np.array(r)
 
-    property v_max:
-        """ Bus volatge upper bound (p.u. bus base kv) (float). """
-        def __get__(self): return cbus.BUS_get_v_max(self._c_ptr)
+    property v_max_reg:
+        """ Bus regulation maximum voltage magnitude (p.u. bus base kv) (float). """
+        def __get__(self):
+            return cbus.BUS_get_v_max_reg(self._c_ptr)
+        def __set__(self,value):
+            cbus.BUS_set_v_max_reg(self._c_ptr,value)
 
+    property v_min_reg:
+        """ Bus regulation minimum voltage magnitude (p.u. bus base kv) (float). """
+        def __get__(self):
+            return cbus.BUS_get_v_min_reg(self._c_ptr)
+        def __set__(self,value):
+            cbus.BUS_set_v_min_reg(self._c_ptr,value)
+
+    property v_max_norm:
+        """ Bus normal maximum voltage magnitude (p.u. bus base kv) (float). """
+        def __get__(self):
+            return cbus.BUS_get_v_max_norm(self._c_ptr)
+        def __set__(self,value):
+            cbus.BUS_set_v_max_norm(self._c_ptr,value)
+
+    property v_min_norm:
+        """ Bus normal minimum voltage magnitude (p.u. bus base kv) (float). """
+        def __get__(self):
+            return cbus.BUS_get_v_min_norm(self._c_ptr)
+        def __set__(self,value):
+            cbus.BUS_set_v_min_norm(self._c_ptr,value)
+            
+    property v_max:
+        """ Same as :attr:`v_max_norm <pfnet.Bus.v_max_norm>`."""
+        def __get__(self):
+            return self.v_max_norm
+        def __set__(self,value):
+            self.v_max_norm = value
+            
     property v_min:
-        """ Bus voltage lower bound (p.u. bus base kv) (float). """
-        def __get__(self): return cbus.BUS_get_v_min(self._c_ptr)
+        """ Same as :attr:`v_min_norm <pfnet.Bus.v_min_norm>`."""
+        def __get__(self):
+            return self.v_min_norm
+        def __set__(self,value):
+            self.v_min_norm = value
+
+    property v_max_emer:
+        """ Bus emergency maximum voltage magnitude (p.u. bus base kv) (float). """
+        def __get__(self):
+            return cbus.BUS_get_v_max_emer(self._c_ptr)
+        def __set__(self,value):
+            cbus.BUS_set_v_max_emer(self._c_ptr,value)
+
+    property v_min_emer:
+        """ Bus emergency minimum voltage magnitude (p.u. bus base kv) (float). """
+        def __get__(self):
+            return cbus.BUS_get_v_min_emer(self._c_ptr)
+        def __set__(self,value):
+            cbus.BUS_set_v_min_emer(self._c_ptr,value)
 
     property v_norm_hi_limit:
         """ Bus normal voltage violation upper limit (p.u. bus base kv) (float). """
@@ -722,10 +732,6 @@ cdef class Bus:
                 g = cgen.GEN_get_next(g)
             return gens
 
-    property gens:
-        """ Same as :attr:`generators <pfnet.Bus.generators>`. """
-        def __get__(self): return self.generators
-
     property reg_generators:
         """ List of :class:`generators <pfnet.Generator>` regulating the voltage magnitude of this bus (list). """
         def __get__(self):
@@ -749,6 +755,16 @@ cdef class Bus:
                 reg_trans.append(new_Branch(br))
                 br = cbranch.BRANCH_get_reg_next(br)
             return reg_trans
+
+    property shunts:
+        """ List of :class:`shunt devices <pfnet.Shunt>` connected to this bus (list). """
+        def __get__(self):
+            shunts = []
+            cdef cshunt.Shunt* s = cbus.BUS_get_shunt(self._c_ptr)
+            while s is not NULL:
+                shunts.append(new_Shunt(s))
+                s = cshunt.SHUNT_get_next(s)
+            return shunts
 
     property reg_shunts:
         """ List of :class:`switched shunt devices <pfnet.Shunt>` regulating the voltage magnitude of this bus (list). """

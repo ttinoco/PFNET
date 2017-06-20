@@ -9,8 +9,14 @@ enable_testing()
 # $ make
 # $ ls # see libpfnet.{so,dylib} depending on configuration
 
+
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS YES CACHE BOOL "Export all symbols")
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)  # so that cmake builds with rpath already added
+set(CMAKE_INSTALL_RPATH "@loader_path")  # for relocatable libraries
+
 option(PFNET_DEBUG "set to ON to enable PFNET debug definition" OFF)
 option(PFNET_GRAPHVIZ "set to OFF to disable search for graphviz" ON)
+option(PFNET_LINE_FLOW "set to ON to enable LINE_FLOW addon" OFF)
 
 # RAW_PARSER_INSTALL_PREFIX
 set(RAW_PARSER_SOURCE_DIR ""
@@ -19,9 +25,6 @@ set(RAW_PARSER_SOURCE_DIR ""
 
 # find PFNET source files
 file(GLOB_RECURSE pfnet_source src/*.c)
-
-# add include directory
-include_directories(${PFNET_SOURCE_DIR}/include)
 
 # add shared library target
 add_library(pfnet SHARED ${pfnet_source})
@@ -36,12 +39,14 @@ file(GLOB_RECURSE pfnet_test_source tests/*.c)
 # test dynamic library
 add_executable(pfnet_tests ${pfnet_test_source})
 add_test(run_pfnet_tests pfnet_tests ${PFNET_SOURCE_DIR}/data/ieee14.mat)
-target_link_libraries(pfnet_tests pfnet m)
+#target_link_libraries(pfnet_tests pfnet m)
+target_link_libraries(pfnet_tests pfnet)
 
 # test static library
 add_executable(pfnet_static_tests ${pfnet_test_source})
 add_test(run_pfnet_static_tests pfnet_static_tests ${PFNET_SOURCE_DIR}/data/ieee14.mat)
-target_link_libraries(pfnet_static_tests pfnet_static m)
+#target_link_libraries(pfnet_static_tests pfnet_static m)
+target_link_libraries(pfnet_static_tests pfnet_static)
 
 # set the debug flag
 if(PFNET_DEBUG)
@@ -77,15 +82,78 @@ if(NOT ${RAW_PARSER_SOURCE_DIR} STREQUAL "")
   install(DIRECTORY ${RAW_PARSER_SOURCE_DIR}/include/
           DESTINATION include
           FILES_MATCHING PATTERN "*.h")
+  set(HAVE_RAW_PARSER 1)  # need to set it to 1 so that the dummy parser in pfnet does not conflict
 else()
   message("raw-parser not enabled.")
   add_definitions(-DNO_RAW_PARSER)
 endif()
 
+# add line-flow if specified
+# if(PFNET_LINE_FLOW)
+#   message("line-flow enabled.")
+#   set(HAVE_LINE_FLOW 1 CACHE INTERNAL "")
+#   # find_library(LINE_FLOW_LIB ?)  # TODO check with tomas
+# else()
+#   message("line-flow not enabled.")
+#   set(HAVE_LINE_FLOW 0 CACHE INTERNAL "")
+# endif()
+
+# add checks needed to produce pfnet_config.h
+INCLUDE (CheckIncludeFiles)
+INCLUDE (CheckTypeSize)
+INCLUDE (CheckFunctionExists)
+INCLUDE (CheckLibraryExists)
+
+# Check for include files
+# Checks for graphviz
+CHECK_LIBRARY_EXISTS(gvc gvContext "" HAVE_LIBGVC)
+CHECK_LIBRARY_EXISTS(cgraph agopen "" HAVE_LIBCGRAPH)
+CHECK_INCLUDE_FILES("graphviz/gvc.h"  HAVE_GRAPHVIZ_GVC_H)
+
+# check for line-flow
+CHECK_LIBRARY_EXISTS(line_flow LINE_FLOW_new "${PFNET_SOURCE_DIR}/lib/" HAVE_LINE_FLOW)
+
+# Checks std header files.
+CHECK_INCLUDE_FILES("stddef.h"  HAVE_STDDEF_H)
+CHECK_INCLUDE_FILES("stdint.h"  HAVE_STDINT_H)
+CHECK_INCLUDE_FILES("stdlib.h"  HAVE_STDLIB_H)
+
+# Checks other header files
+CHECK_INCLUDE_FILES("string.h"  HAVE_STRING_H)
+CHECK_INCLUDE_FILES("strings.h"  HAVE_STRING_H)
+CHECK_INCLUDE_FILES("memory.h"  HAVE_MEMORY_H)
+CHECK_INCLUDE_FILES("sys/stat.h"  HAVE_SYS_STAT_H)
+CHECK_INCLUDE_FILES("sys/types.h"  HAVE_SYS_TYPES_H)
+CHECK_INCLUDE_FILES("unistd.h"  HAVE_UNISTD_H)
+
+# Checks for raw parser, not needed since adding files directly to package above
+# Option "-Wl,-rpath,$PWD/lib" needed for "make check" without LD_LIBRARY_PATH
+#CHECK_LIBRARY_EXISTS(raw_parser RAW_PARSER_new ${PFNET_SOURCE_DIR}/lib/ HAVE_RAW_PARSER)
+
+# Checks for typedefs, structures, and compiler characteristics.
+CHECK_INCLUDE_FILES("inttypes.h" HAVE_INTTYPES_H)
+CHECK_TYPE_SIZE(ptrdiff_t HAVE_PTRDIFF_T)
+
+# Checks for library functions.
+CHECK_FUNCTION_EXISTS(malloc HAVE_MALLOC)
+CHECK_FUNCTION_EXISTS(memset HAVE_MEMSET)
+CHECK_FUNCTION_EXISTS(pow HAVE_POW)
+CHECK_FUNCTION_EXISTS(sqrt HAVE_SQRT)
+CHECK_FUNCTION_EXISTS(strchr HAVE_STRCHR)
+CHECK_FUNCTION_EXISTS(strdup HAVE_STRDUP)
+CHECK_FUNCTION_EXISTS(strstr HAVE_STRSTR)
+
+# create pfnet_config.h file
+configure_file(${PFNET_SOURCE_DIR}/include/pfnet/pfnet_config.cmake.in ${PFNET_SOURCE_DIR}/include/pfnet/pfnet_config.h)
+
+# add include directory
+include_directories(${PFNET_SOURCE_DIR}/include)
+
 # install library to <prefix>/lib
 install(TARGETS pfnet pfnet_static
         LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin)
 # install header files
 install(DIRECTORY include/
         DESTINATION include

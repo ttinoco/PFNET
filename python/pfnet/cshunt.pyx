@@ -18,10 +18,7 @@ class ShuntError(Exception):
     Shunt error exception.
     """
 
-    def __init__(self,value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 cdef class Shunt:
     """
@@ -113,24 +110,6 @@ cdef class Shunt:
         """ Index of shunt susceptance variable (int or array). """
         def __get__(self):
             r = [cshunt.SHUNT_get_index_b(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeInt(r[0])
-            else:
-                return np.array(r)
-
-    property index_y:
-        """ Index of shunt susceptance positive deviation variable (int or array). """
-        def __get__(self):
-            r = [cshunt.SHUNT_get_index_y(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeInt(r[0])
-            else:
-                return np.array(r)
-
-    property index_z:
-        """ Index of shunt susceptance negative deviation variable (int or array). """
-        def __get__(self):
-            r = [cshunt.SHUNT_get_index_z(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
                 return AttributeInt(r[0])
             else:

@@ -15,16 +15,14 @@ class TestGraph(unittest.TestCase):
     
     def setUp(self):
         
-        # Network
-        self.net = pf.Network()
+        pass
 
     def test_construction(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
             
-            net.load(case)
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
             
             g = pf.Graph(net)
             

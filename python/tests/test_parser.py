@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -15,17 +15,26 @@ class TestParser(unittest.TestCase):
 
     def setUp(self):
 
-        # Network
-        self.net = pf.Network()
+        pass
+
+    def test_dummy_parser(self):
+
+        p = pf.parsers.DummyParser()
+        
+        self.assertEqual(p.some_init_data,3)
+        
+        self.assertRaises(pf.ParserError,p.parse,"foo.mat")
+        
+        net = p.parse("foo.dummy")
+        self.assertTrue(isinstance(net,pf.Network))
+        self.assertEqual(net.num_buses,0)
 
     def test_sys_problem2(self):
 
         for case in test_cases.CASES:
             if case == '../data/sys_problem2.mat':
 
-                net = self.net
-
-                net.load(case)
+                net = pf.ParserMAT().parse(case)
 
                 self.assertEqual(net.base_power,100.)
 
@@ -54,25 +63,29 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(len(bus2.loads),1)
                 self.assertEqual(len(bus3.loads),1)
 
-                gen1a = bus1.generators[0]
-                gen1b = bus1.generators[1]
-                gen2 = bus2.generators[0]
-                gen3 = bus3.generators[0]
+                gen0 = net.get_generator(3)
+                gen1 = net.get_generator(2)
+                gen2 = net.get_generator(1) 
+                gen3 = net.get_generator(0)
 
-                load1 = bus1.loads[0]
-                load2 = bus2.loads[0]
-                load3 = bus3.loads[0]
+                load0 = net.get_load(2)
+                load1 = net.get_load(1)
+                load2 = net.get_load(0)
 
-                self.assertEqual(load1.bus,bus1)
-                self.assertEqual(load2.bus,bus2)
-                self.assertEqual(load3.bus,bus3)
-
-                self.assertEqual(gen1a.P_max,50)
-                self.assertEqual(gen1b.P_max,50)
+                self.assertEqual(load0.bus,bus1)
+                self.assertEqual(load1.bus,bus2)
+                self.assertEqual(load2.bus,bus3)
+                
+                self.assertEqual(gen0.P,50/100.)
+                self.assertEqual(gen1.P,40/100.)
+                self.assertEqual(gen2.P,30/100.)
+                self.assertEqual(gen3.P,20/100.)
+                self.assertEqual(gen0.P_max,50)
+                self.assertEqual(gen1.P_max,50)
                 self.assertEqual(gen2.P_max,25)
                 self.assertEqual(gen3.P_max,19)
-                self.assertEqual(gen1a.bus,bus1)
-                self.assertEqual(gen1b.bus,bus1)
+                self.assertEqual(gen0.bus,bus1)
+                self.assertEqual(gen1.bus,bus1)
                 self.assertEqual(gen2.bus,bus2)
                 self.assertEqual(gen3.bus,bus3)
                 for gen in net.generators:
@@ -105,13 +118,13 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(branch12.ratingB,15)
                 self.assertEqual(branch12.ratingC,15)
 
-                self.assertEqual(gen1a.cost_coeff_Q0,0)
-                self.assertEqual(gen1a.cost_coeff_Q1,5.*net.base_power)
-                self.assertEqual(gen1a.cost_coeff_Q2,0.02*(net.base_power**2.))
+                self.assertEqual(gen0.cost_coeff_Q0,0)
+                self.assertEqual(gen0.cost_coeff_Q1,6.*net.base_power)
+                self.assertEqual(gen0.cost_coeff_Q2,0.03*(net.base_power**2.))
 
-                self.assertEqual(gen1b.cost_coeff_Q0,0)
-                self.assertEqual(gen1b.cost_coeff_Q1,6.*net.base_power)
-                self.assertEqual(gen1b.cost_coeff_Q2,0.03*(net.base_power**2.))
+                self.assertEqual(gen1.cost_coeff_Q0,0)
+                self.assertEqual(gen1.cost_coeff_Q1,5.*net.base_power)
+                self.assertEqual(gen1.cost_coeff_Q2,0.02*(net.base_power**2.))
 
                 self.assertEqual(gen2.cost_coeff_Q0,0)
                 self.assertEqual(gen2.cost_coeff_Q1,12.*net.base_power)
@@ -122,26 +135,24 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(gen3.cost_coeff_Q2,0.08*(net.base_power**2.))
 
                 # Load utility
+                self.assertEqual(load0.util_coeff_Q0,0)
+                self.assertEqual(load0.util_coeff_Q1,400.*net.base_power)
+                self.assertEqual(load0.util_coeff_Q2,-0.03*(net.base_power**2.))
+
                 self.assertEqual(load1.util_coeff_Q0,0)
-                self.assertEqual(load1.util_coeff_Q1,400.*net.base_power)
-                self.assertEqual(load1.util_coeff_Q2,-0.03*(net.base_power**2.))
+                self.assertEqual(load1.util_coeff_Q1,450.*net.base_power)
+                self.assertEqual(load1.util_coeff_Q2,-0.02*(net.base_power**2.))
 
                 self.assertEqual(load2.util_coeff_Q0,0)
-                self.assertEqual(load2.util_coeff_Q1,450.*net.base_power)
-                self.assertEqual(load2.util_coeff_Q2,-0.02*(net.base_power**2.))
-
-                self.assertEqual(load3.util_coeff_Q0,0)
-                self.assertEqual(load3.util_coeff_Q1,300.*net.base_power)
-                self.assertEqual(load3.util_coeff_Q2,-0.03*(net.base_power**2.))
+                self.assertEqual(load2.util_coeff_Q1,300.*net.base_power)
+                self.assertEqual(load2.util_coeff_Q2,-0.03*(net.base_power**2.))
 
     def test_sys_problem3(self):
 
         for case in test_cases.CASES:
             if case == '../data/sys_problem3.mat':
 
-                net = self.net
-
-                net.load(case)
+                net = pf.ParserMAT().parse(case)
 
                 self.assertEqual(net.base_power,100.)
 
@@ -227,30 +238,35 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(gen4.bus,bus7)
                 self.assertEqual(gen5.bus,bus8)
 
+                self.assertEqual(gen1.P,50./100.)
                 self.assertEqual(gen1.P_min,0)
                 self.assertEqual(gen1.P_max,1200./100.)
                 self.assertEqual(gen1.cost_coeff_Q0,0)
                 self.assertEqual(gen1.cost_coeff_Q1,6.9*100)
                 self.assertEqual(gen1.cost_coeff_Q2,0.00067*(100**2.))
 
+                self.assertEqual(gen2.P,40./100.)
                 self.assertEqual(gen2.P_min,0)
                 self.assertEqual(gen2.P_max,8000./100.)
                 self.assertEqual(gen2.cost_coeff_Q0,0)
                 self.assertEqual(gen2.cost_coeff_Q1,24.3*100)
                 self.assertEqual(gen2.cost_coeff_Q2,0.00040*(100**2.))
 
+                self.assertEqual(gen3.P,30./100.)
                 self.assertEqual(gen3.P_min,0)
                 self.assertEqual(gen3.P_max,3000./100.)
                 self.assertEqual(gen3.cost_coeff_Q0,0)
                 self.assertEqual(gen3.cost_coeff_Q1,29.1*100)
                 self.assertEqual(gen3.cost_coeff_Q2,0.00006*(100**2.))
 
+                self.assertEqual(gen4.P,20./100.)
                 self.assertEqual(gen4.P_min,0)
                 self.assertEqual(gen4.P_max,800./100.)
                 self.assertEqual(gen4.cost_coeff_Q0,0)
                 self.assertEqual(gen4.cost_coeff_Q1,6.9*100)
                 self.assertEqual(gen4.cost_coeff_Q2,0.00026*(100**2.))
 
+                self.assertEqual(gen5.P,10./100.)
                 self.assertEqual(gen5.P_min,0)
                 self.assertEqual(gen5.P_max,2000./100.)
                 self.assertEqual(gen5.cost_coeff_Q0,0)
@@ -368,16 +384,14 @@ class TestParser(unittest.TestCase):
         for case in test_cases.CASES:
             if case == '../data/case32.art':
 
-                net = self.net
-
-                net.load(case)
+                net = pf.ParserART().parse(case)
 
                 self.assertEqual(net.num_buses,31)
                 self.assertEqual(net.num_batteries,3)
-                b1 = net.get_bat(0)
-                b2 = net.get_bat(1)
-                b3 = net.get_bat(2)
-                self.assertRaises(pf.NetworkError,net.get_bat,3)
+                b1 = net.get_battery(0)
+                b2 = net.get_battery(1)
+                b3 = net.get_battery(2)
+                self.assertRaises(pf.NetworkError,net.get_battery,3)
 
                 self.assertEqual(b1.bus.name,"N18")
                 self.assertEqual(b1.index,0)
@@ -417,3 +431,48 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(b3.E_max,20./net.base_power)
                 self.assertEqual(b3.eta_c,0.95)
                 self.assertEqual(b3.eta_d,0.93)
+
+    def test_ieee14_gen_cost(self):
+
+        for case in test_cases.CASES:
+            if case == '../data/ieee14.mat':
+
+                net = pf.ParserMAT().parse(case)
+
+                self.assertEqual(net.base_power,100.)
+                self.assertEqual(net.num_buses,14)
+                self.assertEqual(net.num_generators,5)
+
+                gen0 = net.get_generator(net.num_generators-1)
+                gen1 = net.get_generator(net.num_generators-2)
+
+                self.assertEqual(gen0.P,232.4/100.)
+                self.assertEqual(gen0.cost_coeff_Q2,(4.3029259900e-02)*(net.base_power**2.))
+                self.assertEqual(gen0.cost_coeff_Q1,20.*net.base_power)
+
+                self.assertEqual(gen1.P,40./100.)
+                self.assertEqual(gen1.cost_coeff_Q2,0.25*(net.base_power**2.))
+                self.assertEqual(gen1.cost_coeff_Q1,20.*net.base_power)
+            
+    def test_type_parsers(self):
+
+        for case in test_cases.CASES:
+
+            if case.split('.')[-1] == 'mat':
+                self.assertRaises(pf.ParserError,pf.ParserART().parse,case)
+                if pf.info['raw_parser']:
+                    self.assertRaises(pf.ParserError,pf.ParserRAW().parse,case)
+                net = pf.ParserMAT().parse(case)
+                self.assertGreater(net.num_buses,0)
+            elif case.split('.')[-1] == 'art':
+                self.assertRaises(pf.ParserError,pf.ParserMAT().parse,case)
+                if pf.info['raw_parser']:
+                    self.assertRaises(pf.ParserError,pf.ParserRAW().parse,case)
+                net = pf.ParserART().parse(case)
+                self.assertGreater(net.num_buses,0)
+            elif case.split('.')[-1] == 'raw':
+                self.assertRaises(pf.ParserError,pf.ParserMAT().parse,case)
+                self.assertRaises(pf.ParserError,pf.ParserART().parse,case)
+                if pf.info['raw_parser']:
+                    net = pf.ParserRAW().parse(case)
+                    self.assertGreater(net.num_buses,0)

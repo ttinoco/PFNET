@@ -4,75 +4,66 @@
 Getting Started
 ***************
 
-This section describes how to get started with PFNET in Python. In particular, it covers required packages, installation, and provides a quick example showing how to use this package.
+This section describes how to get started with PFNET in Python. In particular, it covers dependencies, installation, and provides a simple example showing how to use this package.
 
-.. _start_requirements:
+.. _start_dependencies:
 
 Dependencies
 ============
 
 PFNET for Python has the following dependencies:
 
-* `Numpy <http://www.numpy.org>`_ (>=1.8.2): the fundamental package for scientific computing in Python.
-* `Scipy <http://www.scipy.org>`_ (>=0.13.3): a collection of mathematical algorithms and functions built on top of Numpy.
-* `PFNET <https://github.com/ttinoco/PFNET>`_ (== 1.2.6): underlying C routines wrapped by this package (``libpfnet``).
-* `Graphviz <http://www.graphviz.org/>`_ (>= 2.38): graph visualization library (``libgvc``) (Optional).
-* `Raw parser <some_URL>`_ (>=1.2.1): library for parsing power flow files in PSSE raw format version 32 (``libraw_parser``) (Optional).
+* `Numpy <http://www.numpy.org>`_ (>=1.11.2): the fundamental package for scientific computing in Python.
+* `Scipy <http://www.scipy.org>`_ (>=0.18.1): a collection of mathematical algorithms and functions built on top of Numpy.
+* `Cython <http://cython.org>`_ (>=0.20.1): an optimizing static compiler for both Python and the extended Cython programming language.
+* `PFNET <https://github.com/ttinoco/PFNET>`_ (== 1.2.9): underlying C routines wrapped by this package.
 
 .. _start_download:
 
 Download
 ========
 
-The latest version of PFNET can be downloaded from `<https://github.com/ttinoco/PFNET>`_.
+The latest version of PFNET can be obtained from `<https://github.com/ttinoco/PFNET>`_.
 
 .. _start_installation:
 
 Installation
 ============
 
-After building the C library ``libpfnet``, the PFNET Python module can be installed using::
+After building the C library, the PFNET Python module can be installed using::
 
-  > sudo python setup.py install
+  sudo pip install -r requirements.txt
+  sudo python setup.py install
 
-from the ``python`` directory of the PFNET package.
+from the ``python`` directory of the PFNET library. The module can be tested using::
 
-If ``libpfnet`` was built without visualization capabilities, the argument ``--no_graphviz`` should be passed to ``setup.py``. Similarly, if ``libpfnet`` was build without raw parsing capabilities, the argument ``--no_raw_parser`` should be passed to ``setup.py``.
+  python setup.py build_ext --inplace
+  nosetests -s -v
 
-The installation can be tested using `nose <https://nose.readthedocs.org/en/latest/>`_ as follows::
+The availability of optional features of PFNET can be checked using::
 
-  > sudo python setup.py build_ext --inplace
-  > nosetests -v --exe
+  >>> import pfnet
+  >>> pfnet.info
+  {'line_flow': True, 'raw_parser': True, 'graphviz': True}
 
 .. _start_example:
 
 Example
 =======
 
-As a quick example of how to use the PFNET Python module, consider the task of constructing a power network from a `MATPOWER <http://www.pserc.cornell.edu//matpower/>`_-converted power flow file and computing the average bus degree. This can be done as follows::
+As a simple example of how to use the PFNET Python module, consider the task of constructing a power network from a `MATPOWER <http://www.pserc.cornell.edu//matpower/>`_-converted power flow file and computing the average bus degree. This can be done as follows::
 
+  >>> import pfnet
   >>> import numpy as np
-  >>> from pfnet import Network
 
-  >>> net = Network()
-  >>> net.load('ieee14.mat')
+  >>> net = pfnet.ParserMAT().parse('ieee14.mat')
 
-  >>> print np.average([b.degree for b in net.buses])
+  >>> print np.average([bus.degree for bus in net.buses])
   2.86
+
+In this example, is it assumed that the Python interpreter was started from the ``data`` directory of the PFNET library, where the sample case ``ieee14.mat`` is located.
 
 Documentation
 =============
 
-Requirements to build the PFNET Python documentation:
-
-* `Sphinx <http://www.sphinx-doc.org/>`_ (>=1.4).
-
-To build the documentation the environment variable ``PFNET_DOCS`` must be set. The generated files will be placed in the directory ``PFNET_DOCS/python``. To generate the files, run `make` from the ``python/docs`` directory of the PFNET package.
-
-For example, to build the html documentation files run::
-
-  > make html
-
-It may also be necessary to pass the environment variable with the path to the dynamic shared libraries using ``LD_LIBRARY_PATH`` on Linux or ``DYLD_FALLBACK_LIBRARY_PATH`` on Mac OSX. This command would then be::
-
-  > make html DYLD_FALLBACK_LIBRARY_PATH=$PFNET/lib
+Building this documentation locally requires `Sphinx <http://www.sphinx-doc.org/>`_ , defining the environment variable ``PFNET_DOCS``, and executing the command ``make html`` from the ``python/docs`` directory of the PFNET library. The generated files will be placed in the directory ``PFNET_DOCS/python``.

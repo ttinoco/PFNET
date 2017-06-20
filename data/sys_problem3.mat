@@ -15,11 +15,11 @@ number,type,Pd (MW),Qd (MVAr),Gs (MW),Bs (MVAr),area,Vm (p.u.),Va (degress),base
 END
 GEN
 bus,Pg (MW),Qg (MVAr),Qmax (MVAr),Qmin (MVAr),Vg (p.u.),mBase (MVA),status,Pmax (MW),Pmin (MW)
-2,0,0,1000,-1000,1,100,1,1200,0
-3,0,0,1000,-1000,1,100,1,8000,0
-5,0,0,1000,-1000,1,100,1,3000,0
-7,0,0,1000,-1000,1,100,1,800,0
-8,0,0,1000,-1000,1,100,1,2000,0
+2,50,0,1000,-1000,1,100,1,1200,0
+3,40,0,1000,-1000,1,100,1,8000,0
+5,30,0,1000,-1000,1,100,1,3000,0
+7,20,0,1000,-1000,1,100,1,800,0
+8,10,0,1000,-1000,1,100,1,2000,0
 END
 BRANCH
 bus from,bus to,r (p.u.),x (p.u.),b (p.u.),rateA (MVA),rateB (MVA),rateC (MVA),ratio,angle (degrees),status,min angle diff (degrees),max angle diff (degrees)
@@ -38,11 +38,11 @@ bus from,bus to,r (p.u.),x (p.u.),b (p.u.),rateA (MVA),rateB (MVA),rateC (MVA),r
 8,10,0,0.07,0,4000,4000,4000,1,0,1,-360,360
 END
 COST
-gen index,Q2 ($/hr MW2),Q1 ($/hr MW),Q0 ($/hr)
-0,0.0015,50,0
-1,0.00026,6.9,0
-2,0.00006,29.1,0
-3,0.00040,24.3,0
-4,0.00067,6.9,0
+Q2 ($/hr MW2),Q1 ($/hr MW),Q0 ($/hr)
+0.00067,6.9,0
+0.00040,24.3,0
+0.00006,29.1,0
+0.00026,6.9,0
+0.0015,50,0
 END
 

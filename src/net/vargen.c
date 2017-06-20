@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -31,11 +31,12 @@ struct Vargen {
   char sparse;         /**< @brief Flags for indicating which control adjustments should be sparse */
   
   // Active power
-  REAL* P;             /**< @brief Variable generator active power (p.u. system base power) */
+  REAL* P;             /**< @brief Variable generator active power after curtailments (p.u. system base power) */
+  REAL* P_ava;         /**< @brief Variable generator available active power (p.u. system base power) */
   REAL P_max;          /**< @brief Maximum variable generator active power (p.u.) */
   REAL P_min;          /**< @brief Minimum variable generator active power (p.u.) */
   REAL* P_std;         /**< @brief Standard deviation of active power (p.u. system base power) */
-
+  
   // Reactive power
   REAL* Q;             /**< @brief Variable generator reactive power (p.u. system base power) */
   REAL Q_max;          /**< @brief Maximum variable generator reactive power (p.u.) */
@@ -67,6 +68,7 @@ void VARGEN_array_del(Vargen* gen_array, int size) {
     for (i = 0; i < size; i++) {
       gen = &(gen_array[i]);
       free(gen->P);
+      free(gen->P_ava);
       free(gen->P_std);
       free(gen->Q);
       free(gen->index_P);
@@ -175,6 +177,13 @@ REAL VARGEN_get_P(Vargen* gen, int t) {
     return 0;
 }
 
+REAL VARGEN_get_P_ava(Vargen* gen, int t) {
+  if (gen && t >= 0 && t < gen->num_periods)
+    return gen->P_ava[t];
+  else 
+    return 0;
+}
+
 REAL VARGEN_get_P_max(Vargen* gen) {
   if (gen)
     return gen->P_max;
@@ -232,12 +241,21 @@ void VARGEN_get_var_values(Vargen* gen, Vec* values, int code) {
     // active power
     if (gen->vars & VARGEN_VAR_P) {
       switch(code) {
+	
       case UPPER_LIMITS:
-	VEC_set(values,gen->index_P[t],gen->P_max);
+	if (gen->bounded & VARGEN_VAR_P)
+	  VEC_set(values,gen->index_P[t],gen->P_ava[t]);
+	else
+	  VEC_set(values,gen->index_P[t],VARGEN_INF_P);
 	break;
+
       case LOWER_LIMITS:
-	VEC_set(values,gen->index_P[t],gen->P_min);
+	if (gen->bounded & VARGEN_VAR_P)
+	  VEC_set(values,gen->index_P[t],gen->P_min);
+	else
+	  VEC_set(values,gen->index_P[t],-VARGEN_INF_P);
 	break;
+
       default:
 	VEC_set(values,gen->index_P[t],gen->P[t]);
       }
@@ -246,12 +264,21 @@ void VARGEN_get_var_values(Vargen* gen, Vec* values, int code) {
     // reactive power
     if (gen->vars & VARGEN_VAR_Q) {
       switch(code) {
+
       case UPPER_LIMITS:
-	VEC_set(values,gen->index_Q[t],gen->Q_max);
+	if (gen->bounded & VARGEN_VAR_Q)
+	  VEC_set(values,gen->index_Q[t],gen->Q_max);
+	else
+	  VEC_set(values,gen->index_Q[t],VARGEN_INF_Q);
 	break;
+
       case LOWER_LIMITS:
-	VEC_set(values,gen->index_Q[t],gen->Q_min);
+	if (gen->bounded & VARGEN_VAR_Q)
+	  VEC_set(values,gen->index_Q[t],gen->Q_min);
+	else
+	  VEC_set(values,gen->index_Q[t],-VARGEN_INF_Q);
 	break;
+
       default:
 	VEC_set(values,gen->index_Q[t],gen->Q[t]);
       }
@@ -386,12 +413,14 @@ void VARGEN_init(Vargen* gen, int num_periods) {
   gen->index = 0;
 
   gen->P = NULL;
+  gen->P_ava = NULL;
   gen->P_std = NULL;
   gen->Q = NULL;
   gen->index_P = NULL;
   gen->index_Q = NULL;
 
   ARRAY_zalloc(gen->P,REAL,T);
+  ARRAY_zalloc(gen->P_ava,REAL,T);
   ARRAY_zalloc(gen->P_std,REAL,T);
   ARRAY_zalloc(gen->Q,REAL,T);
   ARRAY_zalloc(gen->index_P,int,T);
@@ -453,6 +482,11 @@ void VARGEN_set_index(Vargen* gen, int index) {
 void VARGEN_set_P(Vargen* gen, REAL P, int t) {
   if (gen && t >= 0 && t < gen->num_periods)
     gen->P[t] = P;
+}
+
+void VARGEN_set_P_ava(Vargen* gen, REAL P, int t) {
+  if (gen && t >= 0 && t < gen->num_periods)
+    gen->P_ava[t] = P;
 }
 
 void VARGEN_set_P_max(Vargen* gen, REAL P_max) {
@@ -558,6 +592,8 @@ void VARGEN_propagate_data_in_time(Vargen* gen) {
   if (gen) {
     for (t = 1; t < gen->num_periods; t++) {
       gen->P[t] = gen->P[0];
+      gen->P_ava[t] = gen->P_ava[0];
+      gen->P_std[t] = gen->P_std[0];
       gen->Q[t] = gen->Q[0];
     }
   }

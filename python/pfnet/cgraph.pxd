@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -11,6 +11,8 @@ cdef extern from "pfnet/graph.h":
     ctypedef struct Graph
     ctypedef struct Bus
     ctypedef struct Net
+
+    cdef char HAVE_GRAPHVIZ
 
     void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type, int t)
     void GRAPH_color_nodes_by_sensitivity(Graph* g, int sens_type, int t)

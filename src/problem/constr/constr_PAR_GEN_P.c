@@ -3,25 +3,39 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
 
 #include <pfnet/constr_PAR_GEN_P.h>
-#include <assert.h>
+
+Constr* CONSTR_PAR_GEN_P_new(Net* net) {
+  Constr* c = CONSTR_new(net);
+  CONSTR_set_func_init(c, &CONSTR_PAR_GEN_P_init);
+  CONSTR_set_func_count_step(c, &CONSTR_PAR_GEN_P_count_step);
+  CONSTR_set_func_allocate(c, &CONSTR_PAR_GEN_P_allocate);
+  CONSTR_set_func_clear(c, &CONSTR_PAR_GEN_P_clear);
+  CONSTR_set_func_analyze_step(c, &CONSTR_PAR_GEN_P_analyze_step);
+  CONSTR_set_func_eval_step(c, &CONSTR_PAR_GEN_P_eval_step);
+  CONSTR_set_func_store_sens_step(c, &CONSTR_PAR_GEN_P_store_sens_step);
+  CONSTR_set_func_free(c, &CONSTR_PAR_GEN_P_free);
+  CONSTR_init(c);
+  return c;
+}
 
 void CONSTR_PAR_GEN_P_init(Constr* c) {
 
   // Init
+  CONSTR_set_name(c,"generator active power participation");
   CONSTR_set_data(c,NULL);
 }
 
 void CONSTR_PAR_GEN_P_clear(Constr* c) {
 
   // Counters
-  CONSTR_set_Acounter(c,0);
-  CONSTR_set_Aconstr_index(c,0);
+  CONSTR_set_A_nnz(c,0);
+  CONSTR_set_A_row(c,0);
 
   // Flags
   CONSTR_clear_bus_counted(c);
@@ -34,8 +48,8 @@ void CONSTR_PAR_GEN_P_count_step(Constr* c, Branch* br, int t) {
   Bus* bus;
   Gen* gen1;
   Gen* gen2;
-  int* Acounter;
-  int* Aconstr_index;
+  int* A_nnz;
+  int* A_row;
   char* bus_counted;
   int i;
   int T;
@@ -44,12 +58,12 @@ void CONSTR_PAR_GEN_P_count_step(Constr* c, Branch* br, int t) {
   T = BRANCH_get_num_periods(br);
 
   // Constr data
-  Acounter = CONSTR_get_Acounter_ptr(c);
-  Aconstr_index = CONSTR_get_Aconstr_index_ptr(c);
+  A_nnz = CONSTR_get_A_nnz_ptr(c);
+  A_row = CONSTR_get_A_row_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointer
-  if (!Acounter || !Aconstr_index || !bus_counted)
+  if (!A_nnz || !A_row || !bus_counted)
     return;
 
   // Check outage
@@ -72,10 +86,10 @@ void CONSTR_PAR_GEN_P_count_step(Constr* c, Branch* br, int t) {
 	gen1 = BUS_get_gen(bus);
 	for (gen2 = GEN_get_next(gen1); gen2 != NULL; gen2 = GEN_get_next(gen2)) {
 	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_P))
-	    (*Acounter)++;
+	    (*A_nnz)++;
 	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_P))
-	    (*Acounter)++;
-	  (*Aconstr_index)++;
+	    (*A_nnz)++;
+	  (*A_row)++;
 	}
       }
     }
@@ -90,15 +104,20 @@ void CONSTR_PAR_GEN_P_allocate(Constr* c) {
   // Local variables
   int num_constr;
   int num_vars;
-  int Acounter;
+  int A_nnz;
 
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
-  num_constr = CONSTR_get_Aconstr_index(c);
-  Acounter = CONSTR_get_Acounter(c);
+  num_constr = CONSTR_get_A_row(c);
+  A_nnz = CONSTR_get_A_nnz(c);
 
   // J f
   CONSTR_set_J(c,MAT_new(0,num_vars,0));
   CONSTR_set_f(c,VEC_new(0));
+
+  // G u l
+  CONSTR_set_G(c,MAT_new(0,num_vars,0));
+  CONSTR_set_u(c,VEC_new(0));
+  CONSTR_set_l(c,VEC_new(0));
 
   // b
   CONSTR_set_b(c,VEC_new(num_constr));
@@ -106,7 +125,7 @@ void CONSTR_PAR_GEN_P_allocate(Constr* c) {
   // A
   CONSTR_set_A(c,MAT_new(num_constr, // size1 (rows)
 			 num_vars,   // size2 (rows)
-			 Acounter)); // nnz
+			 A_nnz)); // nnz
 }
 
 void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t) {
@@ -116,8 +135,8 @@ void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t) {
   Bus* bus;
   Gen* gen1;
   Gen* gen2;
-  int* Acounter;
-  int* Aconstr_index;
+  int* A_nnz;
+  int* A_row;
   char* bus_counted;
   Vec* b;
   Mat* A;
@@ -130,12 +149,12 @@ void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t) {
   // Cosntr data
   b = CONSTR_get_b(c);
   A = CONSTR_get_A(c);
-  Acounter = CONSTR_get_Acounter_ptr(c);
-  Aconstr_index = CONSTR_get_Aconstr_index_ptr(c);
+  A_nnz = CONSTR_get_A_nnz_ptr(c);
+  A_row = CONSTR_get_A_row_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!Acounter || !Aconstr_index || !bus_counted)
+  if (!A_nnz || !A_row || !bus_counted)
     return;
 
   // Check outage
@@ -157,24 +176,24 @@ void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t) {
       if (BUS_is_slack(bus)) {
 	gen1 = BUS_get_gen(bus);
 	for (gen2 = GEN_get_next(gen1); gen2 != NULL; gen2 = GEN_get_next(gen2)) {
-	  VEC_set(b,*Aconstr_index,0.);
+	  VEC_set(b,*A_row,0.);
 	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_P)) {
-	    MAT_set_i(A,*Acounter,*Aconstr_index);
-	    MAT_set_j(A,*Acounter,GEN_get_index_P(gen1,t));
-	    MAT_set_d(A,*Acounter,1.);
-	    (*Acounter)++;
+	    MAT_set_i(A,*A_nnz,*A_row);
+	    MAT_set_j(A,*A_nnz,GEN_get_index_P(gen1,t));
+	    MAT_set_d(A,*A_nnz,1.);
+	    (*A_nnz)++;
 	  }
 	  else
-	    VEC_add_to_entry(b,*Aconstr_index,-GEN_get_P(gen1,t));
+	    VEC_add_to_entry(b,*A_row,-GEN_get_P(gen1,t));
 	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_P)) {
-	    MAT_set_i(A,*Acounter,*Aconstr_index);
-	    MAT_set_j(A,*Acounter,GEN_get_index_P(gen2,t));
-	    MAT_set_d(A,*Acounter,-1.);
-	    (*Acounter)++;
+	    MAT_set_i(A,*A_nnz,*A_row);
+	    MAT_set_j(A,*A_nnz,GEN_get_index_P(gen2,t));
+	    MAT_set_d(A,*A_nnz,-1.);
+	    (*A_nnz)++;
 	  }
 	  else
-	    VEC_add_to_entry(b,*Aconstr_index,GEN_get_P(gen2,t));
-	  (*Aconstr_index)++;
+	    VEC_add_to_entry(b,*A_row,GEN_get_P(gen2,t));
+	  (*A_row)++;
 	}
       }
     }
@@ -184,7 +203,7 @@ void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_PAR_GEN_P_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
+void CONSTR_PAR_GEN_P_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
   // Nothing to do
 }
 

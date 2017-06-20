@@ -2,25 +2,28 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
 
 #include "unit.h"
+#include <pfnet/parser.h>
 #include <pfnet/net.h>
 #include <pfnet/graph.h>
 
 static char* test_graph_basic() {
-  
+
+  Parser* parser;
   Graph* g;
   Net* net;
 
   printf("test_graph_basic ...");
 
-  net = NET_new(1);
-
-  NET_load(net,test_case,0);
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
+  
+  Assert("error - bad number of buses",NET_get_num_buses(net) > 0);
 
   g = GRAPH_new(net);
   Assert("error - unable to create graph",g != NULL);
@@ -31,6 +34,7 @@ static char* test_graph_basic() {
 
   GRAPH_del(g);
   NET_del(net);
+  PARSER_del(parser);
   printf("ok\n");
   return 0;
 }

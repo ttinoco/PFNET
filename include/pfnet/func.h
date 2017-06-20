@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -20,38 +20,6 @@
 // Buffer
 #define FUNC_BUFFER_SIZE 1024 /**< @brief Default function buffer size for strings */
 
-// Function types
-/** \defgroup func_types Function Types
- *  @{
- */
-#define FUNC_TYPE_UNKNOWN -1     /**< @brief Function type: unknown */
-#define FUNC_TYPE_REG_VMAG 0     /**< @brief Function type: voltage magnitude regulation. */
-#define FUNC_TYPE_REG_VANG 1     /**< @brief Function type: vooltage angle regulation. */
-#define FUNC_TYPE_REG_PQ 2       /**< @brief Function type: generator power regulation. */
-#define FUNC_TYPE_REG_RATIO 3    /**< @brief Function type: transformer tap ratio regularization. */
-#define FUNC_TYPE_REG_PHASE 4    /**< @brief Function type: transformer phase shift regularization. */
-#define FUNC_TYPE_REG_SUSC 5     /**< @brief Function type: shunt susceptance regularization. */
-#define FUNC_TYPE_GEN_COST 6     /**< @brief Function type: power generation cost. */
-#define FUNC_TYPE_SP_CONTROLS 7  /**< @brief Function type: sparse controls. */
-#define FUNC_TYPE_SLIM_VMAG 8    /**< @brief Function type: soft limits of bus voltage magnitudes. */
-#define FUNC_TYPE_LOAD_UTIL 9    /**< @brief Function type: power consumption utility. */
-#define FUNC_TYPE_NETCON_COST 10 /**< @brief Function type: net power consumption cost. */
-/** @} */
-
-// Function type strings
-#define FUNC_TYPE_UNKNOWN_STR "UNKNOWN"
-#define FUNC_TYPE_REG_VMAG_STR "REG_VMAG" 
-#define FUNC_TYPE_REG_VANG_STR "REG_VANG"
-#define FUNC_TYPE_REG_PQ_STR "REG_PQ"
-#define FUNC_TYPE_REG_RATIO_STR "REG_RATIO" 
-#define FUNC_TYPE_REG_PHASE_STR "REG_PHASE"
-#define FUNC_TYPE_REG_SUSC_STR "REG_SUSC"
-#define FUNC_TYPE_GEN_COST_STR "GEN_COST" 
-#define FUNC_TYPE_SP_CONTROLS_STR "SP_CONTROLS" 
-#define FUNC_TYPE_SLIM_VMAG_STR "SLIM_VMAG" 
-#define FUNC_TYPE_LOAD_UTIL_STR "LOAD_UTIL"
-#define FUNC_TYPE_NETCON_COST_STR "NETCON_COST"
-
 // Function
 typedef struct Func Func;
 
@@ -59,18 +27,20 @@ typedef struct Func Func;
 void FUNC_clear_bus_counted(Func* f);
 void FUNC_del(Func* f);
 void FUNC_del_matvec(Func* f);
-int FUNC_get_type(Func* f);
-char* FUNC_get_type_str(Func* f);
+char* FUNC_get_name(Func* f);
 REAL FUNC_get_weight(Func* f);
 REAL FUNC_get_phi(Func* f);
 REAL* FUNC_get_phi_ptr(Func* f);
 Vec* FUNC_get_gphi(Func* f);
 Mat* FUNC_get_Hphi(Func* f);
-int FUNC_get_Hcounter(Func* f);
-int* FUNC_get_Hcounter_ptr(Func* f);
+int FUNC_get_Hphi_nnz(Func* f);
+int* FUNC_get_Hphi_nnz_ptr(Func* f);
 char* FUNC_get_bus_counted(Func* f);
 int FUNC_get_bus_counted_size(Func* f);
 Func* FUNC_get_next(Func* f);
+void FUNC_list_clear_error(Func * flist);
+BOOL FUNC_list_has_error(Func* flist);
+char* FUNC_list_get_error_string(Func* flist);
 Func* FUNC_list_add(Func* flist, Func* nf);
 int FUNC_list_len(Func* flist);
 void FUNC_list_del(Func* flist);
@@ -79,12 +49,14 @@ void FUNC_list_allocate(Func* f);
 void FUNC_list_clear(Func* f);
 void FUNC_list_analyze_step(Func* f, Branch* br, int t);
 void FUNC_list_eval_step(Func* f, Branch* br, int t, Vec* var_values);
-Func* FUNC_new(int type, REAL weight, Net* net);
+Func* FUNC_new(REAL weight, Net* net);
+void FUNC_set_name(Func* f, char* name);
 void FUNC_set_phi(Func* f, REAL phi);
 void FUNC_set_gphi(Func* f, Vec* gphi);
 void FUNC_set_Hphi(Func* f, Mat* Hphi);
-void FUNC_set_Hcounter(Func* f, int counter);
+void FUNC_set_Hphi_nnz(Func* f, int nnz);
 void FUNC_set_bus_counted(Func* f, char* counted, int size);
+void FUNC_init(Func* f);
 void FUNC_count(Func* f);
 void FUNC_count_step(Func* f, Branch* br, int t);
 void FUNC_allocate(Func* f);
@@ -96,10 +68,19 @@ void FUNC_eval_step(Func* f, Branch* br, int t, Vec* var_values);
 BOOL FUNC_is_safe_to_count(Func* f);
 BOOL FUNC_is_safe_to_analyze(Func* f);
 BOOL FUNC_is_safe_to_eval(Func* f, Vec* values);
-BOOL FUNC_has_error(Func* f);
 void FUNC_clear_error(Func * f);
+BOOL FUNC_has_error(Func* f);
 char* FUNC_get_error_string(Func* f);
 void FUNC_update_network(Func* f);
 Net* FUNC_get_network(Func* f);
+void FUNC_set_func_init(Func* f, void (*func)(Func* f));
+void FUNC_set_func_count_step(Func* f, void (*func)(Func* f, Branch* br, int t));
+void FUNC_set_func_allocate(Func* f, void (*func)(Func* f));
+void FUNC_set_func_clear(Func* f, void (*func)(Func* f));
+void FUNC_set_func_analyze_step(Func* f, void (*func)(Func* f, Branch* br, int t));
+void FUNC_set_func_eval_step(Func* f, void (*func)(Func* f, Branch* br, int t, Vec* v));
+void FUNC_set_func_free(Func* f, void (*func)(Func* f));
+void* FUNC_get_data(Func* f);
+void FUNC_set_data(Func* f, void* data);
 
 #endif

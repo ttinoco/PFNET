@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -21,10 +21,15 @@
  *  @{
  */
 #define LOAD_VAR_P 0x01    /**< @brief Variable: load active power */
+#define LOAD_VAR_Q 0x02    /**< @brief Variable: load reactive power */
 /** @} */
 
 // Infinity
-#define LOAD_INF_P 1000. /**< @brief Infinite active power */
+#define LOAD_INF_P 1e8 /**< @brief Infinite active power */
+#define LOAD_INF_Q 1e8 /**< @brief Infinite reactive power */
+
+// Others
+#define LOAD_MIN_TARGET_PF 1e-4 /**< @brief Minimum target power factor */
 
 // Properties
 /** \defgroup load_props Load Property Masks 
@@ -57,12 +62,15 @@ REAL LOAD_get_P_util_for(Load* load, REAL P);
 REAL LOAD_get_util_coeff_Q0(Load* load);
 REAL LOAD_get_util_coeff_Q1(Load* load);
 REAL LOAD_get_util_coeff_Q2(Load* load);
+REAL LOAD_get_power_factor(Load* load, int t);
+REAL LOAD_get_target_power_factor(Load* load);
 int LOAD_get_index(Load* load);
 int LOAD_get_index_P(Load* load, int t);
+int LOAD_get_index_Q(Load* load, int t);
 Load* LOAD_get_next(Load* load);
 REAL LOAD_get_P(Load* load, int t);
-REAL LOAD_get_P_max(Load* load);
-REAL LOAD_get_P_min(Load* load);
+REAL LOAD_get_P_max(Load* load, int t);
+REAL LOAD_get_P_min(Load* load, int t);
 REAL LOAD_get_Q(Load* load, int t);
 void LOAD_get_var_values(Load* load, Vec* values, int code);
 int LOAD_get_num_vars(void* load, unsigned char var, int t_start, int t_end);
@@ -74,6 +82,7 @@ BOOL LOAD_is_P_adjustable(Load* load);
 Load* LOAD_list_add(Load *load_list, Load* load);
 int LOAD_list_len(Load* load_list);
 Load* LOAD_new(int num_periods);
+void LOAD_set_target_power_factor(Load* load, REAL pf);
 void LOAD_set_sens_P_u_bound(Load* load, REAL value, int t);
 void LOAD_set_sens_P_l_bound(Load* load, REAL value, int t);
 void LOAD_set_util_coeff_Q0(Load* load, REAL q);
@@ -82,8 +91,8 @@ void LOAD_set_util_coeff_Q2(Load* load, REAL q);
 void LOAD_set_bus(Load* load, Bus* bus);
 void LOAD_set_index(Load* load, int index);
 void LOAD_set_P(Load* load, REAL P, int t);
-void LOAD_set_P_max(Load* load, REAL P);
-void LOAD_set_P_min(Load* load, REAL P);
+void LOAD_set_P_max(Load* load, REAL P, int t);
+void LOAD_set_P_min(Load* load, REAL P, int t);
 void LOAD_set_Q(Load* load, REAL Q, int t);
 int LOAD_set_flags(void* load, char flag_type, unsigned char mask, int index);
 void LOAD_set_var_values(Load* load, Vec* values);

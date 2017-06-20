@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -27,12 +27,15 @@ struct Load {
   char sparse;         /**< @brief Flags for indicating which control adjustments should be sparse */
 
   // Active power
-  REAL* P;              /**< @brief Load active power consumption (p.u. system base power) */
-  REAL P_max;          /**< @brief Maximum load active power consumption (p.u.) */
-  REAL P_min;          /**< @brief Minimum load active power consumption (p.u.) */
+  REAL* P;             /**< @brief Load active power consumption (p.u. system base power) */
+  REAL* P_max;         /**< @brief Maximum load active power consumption (p.u.) */
+  REAL* P_min;         /**< @brief Minimum load active power consumption (p.u.) */
 
   // Reactive power
   REAL* Q;              /**< @brief Load reactive power (p.u. system base power) */
+
+  // Power factor
+  REAL target_power_factor; /**< @brief Target power factor in (0,1] */
 
   // Utility
   REAL util_coeff_Q0;  /**< @brief Load utility coefficient (constant term, units of $/hr ) */
@@ -41,7 +44,8 @@ struct Load {
 
   // Indices
   int index;           /**< @brief Load index */
-  int* index_P;         /**< @brief Active power index */
+  int* index_P;        /**< @brief Active power index */
+  int* index_Q;        /**< @brief Reactive power index */
 
   // Sensitivities
   REAL* sens_P_u_bound;  /**< @brief Sensitivity of active power upper bound */
@@ -65,8 +69,11 @@ void LOAD_array_del(Load* load_array, int size) {
     for (i = 0; i < size; i++) {
       load = &(load_array[i]);
       free(load->P);
+      free(load->P_max);
+      free(load->P_min);
       free(load->Q);
       free(load->index_P);
+      free(load->index_Q);
       free(load->sens_P_u_bound);
       free(load->sens_P_l_bound);
     }
@@ -124,6 +131,26 @@ int LOAD_get_num_periods(Load* load) {
     return load->num_periods;
   else
     return 0;
+}
+
+REAL LOAD_get_power_factor(Load* load, int t) {
+  REAL S;
+  if (load && t >= 0 && t < load->num_periods) {
+    S = sqrt((load->P[t])*(load->P[t]) + (load->Q[t])*(load->Q[t]));
+    if (S != 0.)
+      return load->P[t]/S;
+    else
+      return 1.;
+  }
+  else
+    return 1.;
+}
+
+REAL LOAD_get_target_power_factor(Load* load) {
+  if (load)
+    return load->target_power_factor;
+  else
+    return 1.;
 }
 
 REAL LOAD_get_sens_P_u_bound(Load* load, int t) {
@@ -205,6 +232,13 @@ int LOAD_get_index_P(Load* load, int t) {
     return 0;
 }
 
+int LOAD_get_index_Q(Load* load, int t) {
+  if (load && t >= 0 && t < load->num_periods)
+    return load->index_Q[t];
+  else
+    return 0;
+}
+
 Load* LOAD_get_next(Load* load) {
   if (load)
     return load->next;
@@ -219,16 +253,16 @@ REAL LOAD_get_P(Load* load, int t) {
     return 0;
 }
 
-REAL LOAD_get_P_max(Load* load) {
-  if (load)
-    return load->P_max;
+REAL LOAD_get_P_max(Load* load, int t) {
+  if (load && t >= 0 && t < load->num_periods)
+    return load->P_max[t];
   else 
     return 0;
 }
 
-REAL LOAD_get_P_min(Load* load) {
-  if (load)
-    return load->P_min;
+REAL LOAD_get_P_min(Load* load, int t) {
+  if (load && t >= 0 && t < load->num_periods)
+    return load->P_min[t];
   else 
     return 0;
 }
@@ -254,14 +288,39 @@ void LOAD_get_var_values(Load* load, Vec* values, int code) {
 
     if (load->vars & LOAD_VAR_P) { // active power
       switch(code) {
+ 
       case UPPER_LIMITS:
-	VEC_set(values,load->index_P[t],load->P_max);
+	if (load->bounded & LOAD_VAR_P)
+	  VEC_set(values,load->index_P[t],load->P_max[t]);
+	else
+	  VEC_set(values,load->index_P[t],LOAD_INF_P);
 	break;
+
       case LOWER_LIMITS:
-	VEC_set(values,load->index_P[t],load->P_min);
+	if (load->bounded & LOAD_VAR_P)
+	  VEC_set(values,load->index_P[t],load->P_min[t]);
+	else
+	  VEC_set(values,load->index_P[t],-LOAD_INF_P);
 	break;
+
       default:
 	VEC_set(values,load->index_P[t],load->P[t]);
+      }
+    }
+
+    if (load->vars & LOAD_VAR_Q) { // reactive power
+      switch(code) {
+
+      case UPPER_LIMITS:
+	VEC_set(values,load->index_Q[t],LOAD_INF_Q);
+	break;
+
+      case LOWER_LIMITS:
+	VEC_set(values,load->index_Q[t],-LOAD_INF_Q);
+	break;
+
+      default:
+	VEC_set(values,load->index_Q[t],load->Q[t]);
       }
     }
   }
@@ -284,7 +343,9 @@ int LOAD_get_num_vars(void* vload, unsigned char var, int t_start, int t_end) {
 
   // Num vars
   dt = t_end-t_start+1;
-  if ((var & LOAD_VAR_P) && (load->vars & LOAD_VAR_P))
+  if ((var & LOAD_VAR_P) && (load->vars & LOAD_VAR_P)) // active power
+    num_vars += dt;
+  if ((var & LOAD_VAR_Q) && (load->vars & LOAD_VAR_Q)) // reactive power
     num_vars += dt;
   return num_vars;
 }
@@ -307,9 +368,15 @@ Vec* LOAD_get_var_indices(void* vload, unsigned char var, int t_start, int t_end
 
   // Indices
   indices = VEC_new(LOAD_get_num_vars(vload,var,t_start,t_end));
-  if ((var & LOAD_VAR_P) && (load->vars & LOAD_VAR_P)) {
+  if ((var & LOAD_VAR_P) && (load->vars & LOAD_VAR_P)) { // active power
     for (t = t_start; t <= t_end; t++) {
       VEC_set(indices,offset,load->index_P[t]);
+      offset++;
+    }
+  }
+  if ((var & LOAD_VAR_Q) && (load->vars & LOAD_VAR_Q)) { // reactive power
+    for (t = t_start; t <= t_end; t++) {
+      VEC_set(indices,offset,load->index_Q[t]);
       offset++;
     }
   }
@@ -360,10 +427,7 @@ void LOAD_init(Load* load, int num_periods) {
   load->bounded = 0x00;
   load->sparse = 0x00;
   load->vars = 0x00;
-  
-  load->P_max = 0;
-  load->P_min = 0;
-  
+    
   load->util_coeff_Q0 = 0;
   load->util_coeff_Q1 = 20000.;
   load->util_coeff_Q2 = -100.;
@@ -371,17 +435,28 @@ void LOAD_init(Load* load, int num_periods) {
   load->index = 0;
 
   ARRAY_zalloc(load->P,REAL,T);
+  ARRAY_zalloc(load->P_max,REAL,T);
+  ARRAY_zalloc(load->P_min,REAL,T);
   ARRAY_zalloc(load->Q,REAL,T);
   ARRAY_zalloc(load->index_P,int,T);
+  ARRAY_zalloc(load->index_Q,int,T);
   ARRAY_zalloc(load->sens_P_u_bound,REAL,T);
   ARRAY_zalloc(load->sens_P_l_bound,REAL,T);
+
+  load->target_power_factor = 1.;
   
   load->next = NULL;
 }
 
 BOOL LOAD_is_P_adjustable(Load* load) {
-  if (load)
-    return load->P_min < load->P_max;
+  int t;
+  if (load) {
+    for (t = 0; t < load->num_periods; t++) {
+      if (load->P_min[t] < load->P_max[t])
+	return TRUE;
+    }
+    return FALSE;
+  }    
   else
     return FALSE;
 }
@@ -405,6 +480,17 @@ Load* LOAD_new(int num_periods) {
   }
   else
     return NULL;
+}
+
+void LOAD_set_target_power_factor(Load* load, REAL pf) {
+  if (load) {
+    if (pf > 1.)
+      load->target_power_factor = 1.;
+    else if (pf < LOAD_MIN_TARGET_PF)
+      load->target_power_factor = LOAD_MIN_TARGET_PF;
+    else
+      load->target_power_factor = pf;	
+  }
 }
 
 void LOAD_set_sens_P_u_bound(Load* load, REAL value, int t) {
@@ -447,14 +533,14 @@ void LOAD_set_P(Load* load, REAL P, int t) {
     load->P[t] = P;
 }
 
-void LOAD_set_P_max(Load* load, REAL P_max) {
-  if (load)
-    load->P_max = P_max;
+void LOAD_set_P_max(Load* load, REAL P_max, int t) {
+  if (load && t >= 0 && t < load->num_periods)
+    load->P_max[t] = P_max;
 }
 
-void LOAD_set_P_min(Load* load, REAL P_min) {
-  if (load)
-    load->P_min = P_min;
+void LOAD_set_P_min(Load* load, REAL P_min, int t) {
+  if (load && t >= 0 && t < load->num_periods)
+    load->P_min[t] = P_min;
 }
 
 void LOAD_set_Q(Load* load, REAL Q, int t) { 
@@ -486,7 +572,7 @@ int LOAD_set_flags(void* vload, char flag_type, unsigned char mask, int index) {
     return index;
 
   // Set flags
-  if (!((*flags_ptr) & LOAD_VAR_P) && (mask & LOAD_VAR_P)) {
+  if (!((*flags_ptr) & LOAD_VAR_P) && (mask & LOAD_VAR_P)) { // active power
     if (flag_type == FLAG_VARS) {
       for (t = 0; t < load->num_periods; t++)
 	load->index_P[t] = index+t;
@@ -494,7 +580,15 @@ int LOAD_set_flags(void* vload, char flag_type, unsigned char mask, int index) {
     (*flags_ptr) |= LOAD_VAR_P;
     index += load->num_periods;
   }
-  return index;  
+  if (!((*flags_ptr) & LOAD_VAR_Q) && (mask & LOAD_VAR_Q)) { // reactive power
+    if (flag_type == FLAG_VARS) {
+      for (t = 0; t < load->num_periods; t++)
+	load->index_Q[t] = index+t;
+    }
+    (*flags_ptr) |= LOAD_VAR_Q;
+    index += load->num_periods;
+  }
+  return index;
 }
 
 void LOAD_set_var_values(Load* load, Vec* values) {
@@ -511,6 +605,9 @@ void LOAD_set_var_values(Load* load, Vec* values) {
 
     if (load->vars & LOAD_VAR_P) // active power (p.u.)
       load->P[t] = VEC_get(values,load->index_P[t]);
+
+    if (load->vars & LOAD_VAR_Q) // reactive power (p.u.)
+      load->Q[t] = VEC_get(values,load->index_Q[t]);
   }
 }
 
@@ -526,6 +623,8 @@ void LOAD_propagate_data_in_time(Load* load) {
   if (load) {
     for (t = 1; t < load->num_periods; t++) {
       load->P[t] = load->P[0];
+      load->P_max[t] = load->P_max[0];
+      load->P_min[t] = load->P_min[0];
       load->Q[t] = load->Q[0];
     }
   }

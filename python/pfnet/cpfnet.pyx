@@ -16,6 +16,9 @@ from functools import reduce
 cimport cconstants
 cimport cvec
 cimport cmat
+cimport cparser_raw
+cimport cline_flow
+cimport cgraph
 
 from scipy import misc
 import tempfile
@@ -23,6 +26,13 @@ import tempfile
 from scipy.sparse import coo_matrix
 
 np.import_array()
+
+# Information
+#############
+
+info = {'graphviz': bool(cgraph.HAVE_GRAPHVIZ),
+        'raw_parser': bool(cparser_raw.HAVE_RAW_PARSER),
+        'line_flow': bool(cline_flow.HAVE_LINE_FLOW)}
 
 # Constants
 ###########
@@ -48,38 +58,53 @@ cdef new_CPtr(void* ptr):
 ########
 
 cdef extern from "numpy/arrayobject.h":
-     void PyArray_ENABLEFLAGS(np.ndarray arr, int flags)
+    void PyArray_ENABLEFLAGS(np.ndarray arr, int flags)
+    void PyArray_CLEARFLAGS(np.ndarray arr, int flags)
 
 cdef Vector(cvec.Vec* v, owndata=False):
-     cdef np.npy_intp shape[1]
-     if v is not NULL:
-         shape[0] = <np.npy_intp> cvec.VEC_get_size(v)
-         arr = np.PyArray_SimpleNewFromData(1,shape,np.NPY_DOUBLE,cvec.VEC_get_data(v))
-         if owndata:
-             PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
-         return arr
-     else:
-         return np.zeros(0)
+    cdef np.npy_intp shape[1]
+    if v is not NULL:
+        shape[0] = <np.npy_intp>cvec.VEC_get_size(v)
+        arr = np.PyArray_SimpleNewFromData(1,shape,np.NPY_DOUBLE,cvec.VEC_get_data(v))
+        if owndata:
+            PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
+        return arr
+    else:
+        return np.zeros(0)
+
+# Bool array
+############
+
+cdef BoolArray(char* a, int size, owndata=False):
+    cdef np.npy_intp shape[1]
+    if a is not NULL:
+        shape[0] = <np.npy_intp>size
+        arr = np.PyArray_SimpleNewFromData(1,shape,np.NPY_BOOL,a)
+        if owndata:
+            PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
+        return arr
+    else:
+        return np.zeros(0,dtype='bool')
 
 # Matrix
 ########
 
 cdef Matrix(cmat.Mat* m, owndata=False):
-     cdef np.npy_intp shape[1]
-     if m is not NULL:
-         shape[0] = <np.npy_intp> cmat.MAT_get_nnz(m)
-         size1 = cmat.MAT_get_size1(m)
-         size2 = cmat.MAT_get_size2(m)
-         row = np.PyArray_SimpleNewFromData(1,shape,np.NPY_INT,cmat.MAT_get_row_array(m))
-         col = np.PyArray_SimpleNewFromData(1,shape,np.NPY_INT,cmat.MAT_get_col_array(m))
-         data = np.PyArray_SimpleNewFromData(1,shape,np.NPY_DOUBLE,cmat.MAT_get_data_array(m))
-         if owndata:
-             PyArray_ENABLEFLAGS(row,np.NPY_OWNDATA)
-             PyArray_ENABLEFLAGS(col,np.NPY_OWNDATA)
-             PyArray_ENABLEFLAGS(data,np.NPY_OWNDATA)
-         return coo_matrix((data,(row,col)),shape=(size1,size2))
-     else:
-         return coo_matrix(([],([],[])),shape=(0,0))
+    cdef np.npy_intp shape[1]
+    if m is not NULL:
+        shape[0] = <np.npy_intp> cmat.MAT_get_nnz(m)
+        size1 = cmat.MAT_get_size1(m)
+        size2 = cmat.MAT_get_size2(m)
+        row = np.PyArray_SimpleNewFromData(1,shape,np.NPY_INT,cmat.MAT_get_row_array(m))
+        col = np.PyArray_SimpleNewFromData(1,shape,np.NPY_INT,cmat.MAT_get_col_array(m))
+        data = np.PyArray_SimpleNewFromData(1,shape,np.NPY_DOUBLE,cmat.MAT_get_data_array(m))
+        if owndata:
+            PyArray_ENABLEFLAGS(row,np.NPY_OWNDATA)
+            PyArray_ENABLEFLAGS(col,np.NPY_OWNDATA)
+            PyArray_ENABLEFLAGS(data,np.NPY_OWNDATA)
+        return coo_matrix((data,(row,col)),shape=(size1,size2))
+    else:
+        return coo_matrix(([],([],[])),shape=(0,0))
 
 # Attribute arrray
 ##################
@@ -122,7 +147,8 @@ class AttributeFloat(float):
 # Others
 ########
 
-include "cstrings.pyx"
+include "cstrings.pyx" 
+include "cparser.pyx"
 include "cbus.pyx"
 include "cbranch.pyx"
 include "cgen.pyx"

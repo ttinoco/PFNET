@@ -22,6 +22,20 @@ Matrix
 
 	   See `scipy documentation <http://docs.scipy.org/doc/scipy-0.15.1/reference/generated/scipy.sparse.coo_matrix.html>`_.
 
+.. _ref_parser:
+
+Parser
+======
+
+.. autoclass:: pfnet.ParserBase
+   :members: 
+
+.. autoclass:: pfnet.Parser
+.. autoclass:: pfnet.ParserMAT
+.. autoclass:: pfnet.ParserART
+.. autoclass:: pfnet.ParserRAW
+.. autoclass:: pfnet.CustomParser
+
 .. _ref_bus:
 
 Bus
@@ -32,24 +46,28 @@ Bus
 Bus Properties
 --------------
 
-.. data:: 'any'
-.. data:: 'slack'
-.. data:: 'regulated by generator'
-.. data:: 'regulated by transformer'
-.. data:: 'regulated by shunt'
-.. data:: 'not slack'
-.. data:: 'not regulated by generator'
+================================ ========
+================================ ========
+``"any"``
+``"slack"``
+``"regulated by generator"``
+``"regulated by transformer"``
+``"regulated by shunt"``
+``"not slack"``
+``"not regulated by generator"``
+================================ ========
 
 .. _ref_bus_q:
 
 Bus Quantities
 --------------
 
-.. data:: 'all'
-.. data:: 'voltage angle'
-.. data:: 'voltage magnitude'
-.. data:: 'voltage magnitude deviation' 
-.. data:: 'voltage magnitude violation'
+================================= ========
+================================= ========
+``"all"``
+``"voltage angle"``
+``"voltage magnitude"``
+================================= ========
 
 .. _ref_bus_sens:
 
@@ -131,22 +149,27 @@ Branch
 Branch Properties
 -----------------
 
-.. data:: 'any'
-.. data:: 'tap changer'
-.. data:: 'tap changer - v' (controls voltage magnitude)
-.. data:: 'tap changer - Q' (controls reactive flow)
-.. data:: 'phase shifter'
-.. data:: 'not on outage'
+===================== ============================
+===================== ============================
+``"any"``
+``"tap changer"``
+``"tap changer - v"`` Controls voltage magnitude
+``"tap changer - Q"`` Controls reactive flow
+``"phase shifter"``
+``"not on outage"``
+===================== ============================
 
 .. _ref_branch_q:
 
 Branch Quantities
 -----------------
 
-.. data:: 'all'
-.. data:: 'phase shift'
-.. data:: 'tap ratio'
-.. data:: 'tap ratio deviation'
+========================= =======
+========================= =======
+``"all"``
+``"phase shift"``
+``"tap ratio"``
+========================= =======
 
 .. _ref_branch_class:
 
@@ -166,22 +189,28 @@ Generator
 Generator Properties
 --------------------
 
-.. data:: 'any'
-.. data:: 'slack'
-.. data:: 'regulator'
-.. data:: 'not slack' 
-.. data:: 'not regulator'
-.. data:: 'not on outage'
-.. data:: 'adjustable active power'
+============================= ===========================
+============================= ===========================
+``"any"``
+``"slack"``
+``"regulator"``
+``"not slack"``
+``"not regulator"``
+``"not on outage"``
+``"adjustable active power"`` :math:`P_{\min} < P_{\max}`
+============================= ===========================
 
 .. _ref_gen_q:
 
 Generator Quantities
 --------------------
 
-.. data:: 'all'
-.. data:: 'active power'
-.. data:: 'reactive power' 
+==================== =======
+==================== =======
+``"all"``
+``"active power"``
+``"reactive power"``
+==================== =======
 
 .. _ref_gen_class:
 
@@ -201,17 +230,22 @@ Shunt
 Shunt Properties
 ----------------
 
-.. data:: 'any'
-.. data:: 'switching - v' (controls voltage magnitude)
-
+=================== ============================
+=================== ============================
+``"any"``
+``"switching - v"`` Controls voltage magnitude
+=================== ============================	
+  
 .. _ref_shunt_q:
 
 Shunt Quantities
 ----------------
 
-.. data:: 'all'
-.. data:: 'susceptance'
-.. data:: 'susceptance deviation'
+=========================== =======
+=========================== =======
+``"all"``
+``"susceptance"``
+=========================== =======
 
 .. _ref_shunt_class:
 
@@ -231,16 +265,23 @@ Load
 Load Properties
 ---------------
 
-.. data:: 'any'
-.. data:: 'adjustable active power'
+============================= ===========================
+============================= ===========================
+``"any"``
+``"adjustable active power"`` :math:`P_{\min} < P_{\max}`
+============================= ===========================
 
 .. _ref_load_q:
 
 Load Quantities
 ---------------
 
-.. data:: 'all'
-.. data:: 'active power'
+==================== =======
+==================== =======
+``"all"``
+``"active power"``
+``"reactive power"``
+==================== =======
 
 .. _ref_load_class:
 
@@ -260,16 +301,22 @@ Variable Generator
 Variable Generator Properties
 -----------------------------
 
-.. data:: 'any' 
+========= =======
+========= =======
+``"any"``
+========= =======
 
 .. _ref_vargen_q:
 
 Variable Generator Quantities
 -----------------------------
 
-.. data:: 'all' 
-.. data:: 'active power'
-.. data:: 'reactive power'
+==================== =======
+==================== =======
+``"all"``
+``"active power"``
+``"reactive power"``
+==================== =======
 
 .. _ref_vargen_class:
 
@@ -289,16 +336,22 @@ Battery
 Battery Properties
 ------------------
 
-.. data:: 'any'
+========= =======
+========= =======
+``"any"``
+========= =======
 
 .. _ref_bat_q:
 
 Battery Quantities
 ------------------
 
-.. data:: 'all' 
-.. data:: 'charging power'
-.. data:: 'energy level'
+==================== =======
+==================== =======
+``"all"``
+``"charging power"``
+``"energy level"``
+==================== =======
 
 .. _ref_bat_class:
 
@@ -315,48 +368,45 @@ Network
 
 .. _ref_net_obj:
 
-Component Types
+Component Names
 ---------------
 
-.. data:: 'all'
-.. data:: 'bus'
-.. data:: 'generator'
-.. data:: 'branch'
-.. data:: 'shunt' 
-.. data:: 'load'
-.. data:: 'variable generator'
-.. data:: 'battery'
-.. data:: 'unknown' 
+======================== =======
+======================== =======
+``"all"``
+``"bus"``
+``"battery"``
+``"branch"``
+``"generator"``
+``"load"``
+``"shunt"``
+``"variable generator"``
+======================== =======
 
 .. _ref_net_flag:
 
-Flag Types
-----------
+Flags
+-----
 
-.. data:: 'variable'
-
-	  For selecting quantities to be variables.
-
-.. data:: 'fixed'
-
-	  For selecting variables to be fixed.
-
-.. data:: 'bounded'
-
-	  For selecting variables to be bounded.
-
-.. data:: 'sparse'
-
-	  For selecting control adjustments to be sparse.
+============== ==============================================
+============== ==============================================
+``"variable"`` For selecting quantities to be variables
+``"fixed"``    For selecting variables to be fixed
+``"bounded"``  For selecting variables to be bounded.
+``"sparse"``   For selecting control adjustments to be sparse
+============== ==============================================
 
 .. _ref_var_values:
 
 Variable Value Options
 ----------------------
 
-.. data:: 'current'
-.. data:: 'upper limits'
-.. data:: 'lower limits'
+================== =======
+================== =======
+``"current"``
+``"upper limits"``
+``"lower limits"``
+================== =======
 
 .. _ref_net_class:
 
@@ -387,29 +437,36 @@ Graph
 Function
 ========
 
-.. _ref_func_type:
+.. _ref_func_names:
 
-Function Types
+Function Names
 --------------
 
-.. data:: 'voltage magnitude regularization' 
-.. data:: 'voltage angle regularization'
-.. data:: 'generator powers regularization'
-.. data:: 'tap ratio regularization'
-.. data:: 'phase shift regularization'
-.. data:: 'susceptance regularization'
-.. data:: 'generation cost'
-.. data:: 'sparse controls penalty'
-.. data:: 'soft voltage magnitude limits'
-.. data:: 'consumption utility' 
-.. data:: 'net consumption cost'
+====================================== =======
+====================================== =======
+``"consumption utility"`` 
+``"generation cost"``
+``"generator powers regularization"``
+``"net consumption cost"``
+``"phase shift regularization"``
+``"susceptance regularization"``
+``"tap ratio regularization"``
+``"soft voltage magnitude limits"``
+``"sparse controls penalty"``
+``"voltage magnitude regularization"`` 
+``"voltage angle regularization"``
+====================================== =======
  
 .. _ref_func_class:
 
-Function Class
---------------
+Function Classes
+----------------
+
+.. autoclass:: pfnet.FunctionBase
+   :members:
 
 .. autoclass:: pfnet.Function
+.. autoclass:: pfnet.CustomFunction
    :members:
 
 .. _ref_constr:
@@ -417,31 +474,42 @@ Function Class
 Constraint
 ==========
 
-.. _ref_constr_type:
+.. _ref_constr_names:
 
-Constraint Types
+Constraint Names
 ----------------
 
-.. data:: 'AC power balance'
-.. data:: 'DC power balance'
-.. data:: 'linearized AC power balance'
-.. data:: 'variable fixing' 
-.. data:: 'variable nonlinear bounds'
-.. data:: 'generator active power participation'
-.. data:: 'generator reactive power participation'
-.. data:: 'voltage regulation by generators'
-.. data:: 'voltage regulation by transformers'
-.. data:: 'voltage regulation by shunts'
-.. data:: 'DC branch flow limits'
-.. data:: 'variable bounds'
-.. data:: 'generator ramp limits'
+============================================ =======
+============================================ =======
+``"AC power balance"``
+``"DC power balance"``
+``"linearized AC power balance"``
+``"variable fixing"``
+``"variable bounds"``
+``"variable nonlinear bounds"``
+``"generator active power participation"``
+``"generator reactive power participation"``
+``"generator ramp limits"``
+``"voltage regulation by generators"``
+``"voltage regulation by transformers"``
+``"voltage regulation by shunts"``
+``"AC branch flow limits"``
+``"DC branch flow limits"``
+``"linearized AC branch flow limits"``
+``"battery dynamics"``
+``"load constant power factor"``
+============================================ =======
 
 .. _ref_constr_class:
 
-Constraint Class
-----------------
+Constraint Classes
+------------------
+
+.. autoclass:: pfnet.ConstraintBase
+   :members:
 
 .. autoclass:: pfnet.Constraint
+.. autoclass:: pfnet.CustomConstraint
    :members:
 
 .. _ref_problem:
@@ -458,10 +526,11 @@ Problem Class
    :members:
    :exclude-members: add_heuristic, apply_heuristics
 
-.. _ref_references:
+.. _ref_papers:
 
-References
-==========
+Papers
+======
+
+.. [DS2017] D\. Shchetinin, T\. Tinoco De Rubira, G\. Hug, *Conservative Linear Line Flow Constraints for AC Optimal Power Flow*, IEEE PES Powertech Conference, June 2017.
 
 .. [TTR2015] T\. Tinoco De Rubira, *Numerical Optimization and Modeling Techniques for Power System Operations and Planning*. PhD thesis, Stanford University, March 2015.
-

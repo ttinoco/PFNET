@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -13,8 +13,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "net.h"
-#include "types.h"
+#include "parser.h"
 #include "parser_CSV.h"
 
 // Buffer
@@ -63,39 +62,43 @@ typedef struct ART_Vargen ART_Vargen;
 typedef struct ART_Bat ART_Bat;
 typedef struct ART_Parser ART_Parser;
 
-// Prototypes
-ART_Parser* ART_PARSER_new(void);
-void ART_PARSER_clear_token(ART_Parser* parser);
-void ART_PARSER_read(ART_Parser* parser, char* filename);
-void ART_PARSER_show(ART_Parser* parser);
-void ART_PARSER_load(ART_Parser* parser, Net* net);
-void ART_PARSER_del(ART_Parser* parser);
-void ART_PARSER_set(ART_Parser* parser, char* key, REAL value);
-BOOL ART_PARSER_has_error(ART_Parser* parser);
-char* ART_PARSER_get_error_string(ART_Parser* parser);
+// Interface
+Parser* ART_PARSER_new(void);
+void ART_PARSER_init(Parser* p);
+Net* ART_PARSER_parse(Parser* p, char* filename, int num_periods);
+void ART_PARSER_set(Parser* p, char* key, REAL value);
+void ART_PARSER_show(Parser* p);
+void ART_PARSER_write(Parser* p, Net* net, char* f);
+void ART_PARSER_free(Parser* p);
+
+// ART-specific
+void ART_PARSER_load(ART_Parser* p, Net* net);
+void ART_PARSER_clear_token(ART_Parser* p);
+BOOL ART_PARSER_has_error(ART_Parser* p);
+char* ART_PARSER_get_error_string(ART_Parser* p);
 void ART_PARSER_callback_field(char* s, void* data);
 void ART_PARSER_callback_record(void* data);
-void ART_PARSER_parse_bus_field(char* s, ART_Parser* parser);
-void ART_PARSER_parse_bus_record(ART_Parser* parser);
-void ART_PARSER_parse_line_field(char* s, ART_Parser* parser);
-void ART_PARSER_parse_line_record(ART_Parser* parser);
-void ART_PARSER_parse_transfo_field(char* s, ART_Parser* parser);
-void ART_PARSER_parse_transfo_record(ART_Parser* parser);
-void ART_PARSER_parse_ltcv_field(char* s, ART_Parser* parser);
-void ART_PARSER_parse_ltcv_record(ART_Parser* parser);
-void ART_PARSER_parse_trfo_field(char* s, ART_Parser* parser);
-void ART_PARSER_parse_trfo_record(ART_Parser* parser);
-void ART_PARSER_parse_pshiftp_field(char* s, ART_Parser* parser);
-void ART_PARSER_parse_pshiftp_record(ART_Parser* parser);
-void ART_PARSER_parse_gener_field(char* s, ART_Parser* parser);
-void ART_PARSER_parse_gener_record(ART_Parser* parser);
-void ART_PARSER_parse_slack_field(char* s, ART_Parser* parser);
-void ART_PARSER_parse_slack_record(ART_Parser* parser);
-void ART_PARSER_parse_vargen_field(char* s, ART_Parser* parser);
-void ART_PARSER_parse_vargen_record(ART_Parser* parser);
-void ART_PARSER_parse_bat_field(char* s, ART_Parser* parser);
-void ART_PARSER_parse_bat_record(ART_Parser* parser);
-void ART_PARSER_parse_base_field(char* s, ART_Parser* parser);
-void ART_PARSER_parse_base_record(ART_Parser* parser);
+void ART_PARSER_parse_bus_field(char* s, ART_Parser* p);
+void ART_PARSER_parse_bus_record(ART_Parser* p);
+void ART_PARSER_parse_line_field(char* s, ART_Parser* p);
+void ART_PARSER_parse_line_record(ART_Parser* p);
+void ART_PARSER_parse_transfo_field(char* s, ART_Parser* p);
+void ART_PARSER_parse_transfo_record(ART_Parser* p);
+void ART_PARSER_parse_ltcv_field(char* s, ART_Parser* p);
+void ART_PARSER_parse_ltcv_record(ART_Parser* p);
+void ART_PARSER_parse_trfo_field(char* s, ART_Parser* p);
+void ART_PARSER_parse_trfo_record(ART_Parser* p);
+void ART_PARSER_parse_pshiftp_field(char* s, ART_Parser* p);
+void ART_PARSER_parse_pshiftp_record(ART_Parser* p);
+void ART_PARSER_parse_gener_field(char* s, ART_Parser* p);
+void ART_PARSER_parse_gener_record(ART_Parser* p);
+void ART_PARSER_parse_slack_field(char* s, ART_Parser* p);
+void ART_PARSER_parse_slack_record(ART_Parser* p);
+void ART_PARSER_parse_vargen_field(char* s, ART_Parser* p);
+void ART_PARSER_parse_vargen_record(ART_Parser* p);
+void ART_PARSER_parse_bat_field(char* s, ART_Parser* p);
+void ART_PARSER_parse_bat_record(ART_Parser* p);
+void ART_PARSER_parse_base_field(char* s, ART_Parser* p);
+void ART_PARSER_parse_base_record(ART_Parser* p);
 
 #endif

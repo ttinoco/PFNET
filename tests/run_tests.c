@@ -2,7 +2,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -11,6 +11,7 @@
 #include "test_network.h"
 #include "test_graph.h"
 #include "test_constraints.h"
+#include "test_functions.h"
 #include "test_problem.h"
 
 int tests_run = 0;
@@ -31,17 +32,17 @@ static char * all_tests() {
   run_test(test_graph_basic);
 
   // Constraints
-  run_test(test_constr_BOUND);
+  run_test(test_constr_NBOUND);
   run_test(test_constr_FIX);
   run_test(test_constr_PAR_GEN_P);
   run_test(test_constr_PAR_GEN_Q);
-  run_test(test_constr_PF);
+  run_test(test_constr_ACPF);
   run_test(test_constr_REG_GEN);
   run_test(test_constr_REG_TRAN);
   run_test(test_constr_REG_SHUNT);
 
   // Functions
-  
+  run_test(test_func_GEN_COST);
 
   // Problem
   run_test(test_problem_basic);

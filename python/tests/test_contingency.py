@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -20,18 +20,14 @@ class TestContingency(unittest.TestCase):
 
     def setUp(self):
 
-        # Network
-        self.net = pf.Network()
+        pass
 
     def test_construction(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.clear_properties()
-            net.load(case)
-            net.clear_flags()
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # outage init
             for gen in net.generators:
@@ -42,7 +38,7 @@ class TestContingency(unittest.TestCase):
                 self.assertFalse(branch.outage)
 
             # outage set
-            gen = net.get_gen(0)
+            gen = net.get_generator(0)
             branch = net.get_branch(0)
             def s1():
                 gen.outage = True
@@ -52,17 +48,17 @@ class TestContingency(unittest.TestCase):
             self.assertRaises(AttributeError,s2)
 
             # outages at construction
-            c0 = pf.Contingency([net.get_gen(0)],
+            c0 = pf.Contingency([net.get_generator(0)],
                                 [net.get_branch(1)])
-            self.assertTrue(c0.has_gen_outage(net.get_gen(0)))
+            self.assertTrue(c0.has_gen_outage(net.get_generator(0)))
             self.assertTrue(c0.has_branch_outage(net.get_branch(1)))
-            c1 = pf.Contingency(gens=[net.get_gen(0)],
+            c1 = pf.Contingency(gens=[net.get_generator(0)],
                                 branches=[net.get_branch(2)])
-            self.assertTrue(c1.has_gen_outage(net.get_gen(0)))
+            self.assertTrue(c1.has_gen_outage(net.get_generator(0)))
             self.assertTrue(c1.has_branch_outage(net.get_branch(2)))
 
             # contingency
-            g0 = net.get_gen(0)
+            g0 = net.get_generator(0)
             bus0 = g0.bus
             reg_bus0 = g0.reg_bus
             br7 = net.get_branch(0)
@@ -76,7 +72,7 @@ class TestContingency(unittest.TestCase):
             bus_k3_degree = br3.bus_k.degree
             bus_m3_degree = br3.bus_m.degree
             if net.num_generators > 5:
-                g5 = net.get_gen(5)
+                g5 = net.get_generator(5)
                 bus5 = g5.bus
                 reg_bus5 = g5.reg_bus
             cont = pf.Contingency()
@@ -178,9 +174,9 @@ class TestContingency(unittest.TestCase):
             self.assertTrue(net.get_branch(2).outage)
             self.assertTrue(net.get_branch(0).outage)
             self.assertTrue(net.get_branch(1).outage)
-            self.assertTrue(net.get_gen(0).outage)
+            self.assertTrue(net.get_generator(0).outage)
             if net.num_generators > 5:
-                self.assertTrue(net.get_gen(5).outage)
+                self.assertTrue(net.get_generator(5).outage)
             self.assertEqual(cont2.num_branch_outages,1)
             self.assertEqual(cont2.num_gen_outages,0)
 
@@ -189,9 +185,9 @@ class TestContingency(unittest.TestCase):
             self.assertTrue(net.get_branch(2).outage)
             self.assertFalse(net.get_branch(1).outage)
             self.assertFalse(net.get_branch(0).outage)
-            self.assertFalse(net.get_gen(0).outage)
+            self.assertFalse(net.get_generator(0).outage)
             if net.num_generators > 5:
-                self.assertFalse(net.get_gen(5).outage)
+                self.assertFalse(net.get_generator(5).outage)
             self.assertEqual(len([b for b in net.branches if b.outage]),1)
             cont2.clear()
             self.assertEqual(len([b for b in net.branches if b.outage]),0)
@@ -240,9 +236,8 @@ class TestContingency(unittest.TestCase):
                         self.assertTrue(b.index in [y.index for y in bus_m3.branches_m])
 
             # do it again
-            net.clear_properties()
-            net.load(case)
-            net.clear_flags()
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # generator single contingencies
             for gen in net.generators:
@@ -420,13 +415,10 @@ class TestContingency(unittest.TestCase):
 
     def test_gen_cost(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.clear_properties()
-            net.load(case)
-            net.clear_flags()
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # variables
             net.set_flags('generator',
@@ -517,13 +509,10 @@ class TestContingency(unittest.TestCase):
 
     def test_pf(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.clear_properties()
-            net.load(case)
-            net.clear_flags()
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # variables
             net.set_flags('generator',
@@ -631,13 +620,10 @@ class TestContingency(unittest.TestCase):
 
     def test_dcpf(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.clear_properties()
-            net.load(case)
-            net.clear_flags()
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             # variables
             net.set_flags('generator',
@@ -731,13 +717,14 @@ class TestContingency(unittest.TestCase):
 
     def test_dc_flow_lim(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.clear_properties()
-            net.load(case)
-            net.clear_flags()
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
+
+            for branch in net.branches:
+                if branch.ratingA == 0.:
+                    branch.ratingA = 100.
 
             # variables
             net.set_flags('bus',
@@ -822,16 +809,13 @@ class TestContingency(unittest.TestCase):
 
     def test_variables(self):
 
-        net = self.net
-
         for case in test_cases.CASES:
 
-            net.clear_properties()
-            net.load(case)
-            net.clear_flags()
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
 
             cont = pf.Contingency()
-            cont.add_gen_outage(net.get_gen(0))
+            cont.add_gen_outage(net.get_generator(0))
             cont.add_branch_outage(net.get_branch(0))
             cont.add_branch_outage(net.get_branch(1))
 

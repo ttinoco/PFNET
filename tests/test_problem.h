@@ -2,7 +2,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -12,6 +12,7 @@
 
 static char* test_problem_basic() {
 
+  Parser* parser;
   Net* net;
   Prob* p;
   Vec* x;
@@ -19,15 +20,14 @@ static char* test_problem_basic() {
 
   printf("test_problem_basic ...");
 
-  net  = NET_new(1);
-  p = PROB_new();
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
 
-  Assert("error - bad prob net initialization",PROB_get_network(p) == NULL);
+  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
 
-  PROB_set_network(p,net);
-
-  // Load
-  NET_load(net,test_case,0);
+  p = PROB_new(net);
+  
+  Assert("error - bad prob net initialization",PROB_get_network(p) != NULL);
 
   // Set variables
   NET_set_flags(net,
@@ -57,16 +57,16 @@ static char* test_problem_basic() {
 				   NET_get_num_slack_gens(net)+
 				   NET_get_num_reg_gens(net)));
 
-  PROB_add_constr(p,CONSTR_TYPE_PF);
-  PROB_add_constr(p,CONSTR_TYPE_PAR_GEN_P);
-  PROB_add_constr(p,CONSTR_TYPE_PAR_GEN_Q);
+  PROB_add_constr(p,CONSTR_ACPF_new(net));
+  PROB_add_constr(p,CONSTR_PAR_GEN_P_new(net));
+  PROB_add_constr(p,CONSTR_PAR_GEN_Q_new(net));
 
-  PROB_add_func(p,FUNC_TYPE_REG_VMAG,3.4);
+  PROB_add_func(p,FUNC_REG_VMAG_new(3.4,net));
 
-  Assert("error - cannot find constraint",PROB_find_constr(p,CONSTR_TYPE_PF));
-  Assert("error - cannot find constraint",PROB_find_constr(p,CONSTR_TYPE_PAR_GEN_P));
-  Assert("error - cannot find constraint",PROB_find_constr(p,CONSTR_TYPE_PAR_GEN_Q));
-  Assert("error - finds nonexisting constraint",!PROB_find_constr(p,CONSTR_TYPE_REG_GEN));
+  Assert("error - cannot find constraint",PROB_find_constr(p,"AC power balance"));
+  Assert("error - cannot find constraint",PROB_find_constr(p,"generator active power participation"));
+  Assert("error - cannot find constraint",PROB_find_constr(p,"generator reactive power participation"));
+  Assert("error - finds nonexisting constraint",!PROB_find_constr(p,"voltage regulation by generators"));
   
   x = PROB_get_init_point(p);
 
@@ -97,6 +97,7 @@ static char* test_problem_basic() {
   VEC_del(x);
   PROB_del(p);
   NET_del(net);
+  PARSER_del(parser);
   printf("ok\n");
   return 0;
 }

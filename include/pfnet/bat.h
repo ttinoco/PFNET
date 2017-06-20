@@ -25,8 +25,8 @@
 /** @} */
 
 // Infinity
-#define BAT_INF_P 1000. /**< @brief Infinite charging/discharging power */
-#define BAT_INF_E 1000. /**< @brief Infinite energy level */
+#define BAT_INF_P 1e8 /**< @brief Infinite charging/discharging power */
+#define BAT_INF_E 1e8 /**< @brief Infinite energy level */
 
 // Properties
 /** \defgroup bat_props Battery Property Masks 

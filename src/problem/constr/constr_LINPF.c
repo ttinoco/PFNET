@@ -3,17 +3,33 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
 
 #include <pfnet/constr_LINPF.h>
+#include <pfnet/constr_ACPF.h>
+
+Constr* CONSTR_LINPF_new(Net* net) {
+  Constr* c = CONSTR_new(net);
+  CONSTR_set_func_init(c, &CONSTR_LINPF_init);
+  CONSTR_set_func_count_step(c, &CONSTR_LINPF_count_step);
+  CONSTR_set_func_allocate(c, &CONSTR_LINPF_allocate);
+  CONSTR_set_func_clear(c, &CONSTR_LINPF_clear);
+  CONSTR_set_func_analyze_step(c, &CONSTR_LINPF_analyze_step);
+  CONSTR_set_func_eval_step(c, &CONSTR_LINPF_eval_step);
+  CONSTR_set_func_store_sens_step(c, &CONSTR_LINPF_store_sens_step);
+  CONSTR_set_func_free(c, &CONSTR_LINPF_free);
+  CONSTR_init(c);
+  return c;
+}
 
 void CONSTR_LINPF_init(Constr* c) {
 
   // Init
-  Constr* acpf = CONSTR_new(CONSTR_TYPE_PF,CONSTR_get_network(c));
+  Constr* acpf = CONSTR_ACPF_new(CONSTR_get_network(c));
+  CONSTR_set_name(c,"linearized AC power balance");
   CONSTR_set_data(c,(void*)acpf);
 }
 
@@ -83,7 +99,7 @@ void CONSTR_LINPF_analyze_step(Constr* c, Branch* br, int t) {
   // Done 
   if ((t == T-1) && (BRANCH_get_index(br) == NET_get_num_branches(net)-1)) {
     x0 = NET_get_var_values(net,CURRENT);
-    CONSTR_eval(acpf,x0);
+    CONSTR_eval(acpf,x0,NULL);
     J = CONSTR_get_J(acpf);
     f = CONSTR_get_f(acpf);
     b = MAT_rmul_by_vec(J,x0);
@@ -93,7 +109,7 @@ void CONSTR_LINPF_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_LINPF_eval_step(Constr* c, Branch* br, int t, Vec* var_values) {
+void CONSTR_LINPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
   // Nothing
 }
 
