@@ -18,6 +18,14 @@ option(PFNET_DEBUG "set to ON to enable PFNET debug definition" OFF)
 option(PFNET_GRAPHVIZ "set to OFF to disable search for graphviz" ON)
 option(PFNET_LINE_FLOW "set to ON to enable LINE_FLOW addon" OFF)
 
+# REQUIRE MATH LIBRARY (NOT SURE IF OS SPECIFIC)
+if (UNIX)
+  find_library(M_LIB m)
+  set(CMAKE_REQUIRED_INCLUDES math.h)
+  set(CMAKE_REQUIRED_LIBRARIES m)
+endif (UNIX)
+# CHECK_INCLUDE_FILES("math.h" HAVE_MATH_H)
+
 # RAW_PARSER_INSTALL_PREFIX
 set(RAW_PARSER_SOURCE_DIR ""
     CACHE FILEPATH
@@ -40,13 +48,13 @@ file(GLOB_RECURSE pfnet_test_source tests/*.c)
 add_executable(pfnet_tests ${pfnet_test_source})
 add_test(run_pfnet_tests pfnet_tests ${PFNET_SOURCE_DIR}/data/ieee14.mat)
 #target_link_libraries(pfnet_tests pfnet m)
-target_link_libraries(pfnet_tests pfnet)
+target_link_libraries(pfnet_tests pfnet ${M_LIB})
 
 # test static library
 add_executable(pfnet_static_tests ${pfnet_test_source})
 add_test(run_pfnet_static_tests pfnet_static_tests ${PFNET_SOURCE_DIR}/data/ieee14.mat)
 #target_link_libraries(pfnet_static_tests pfnet_static m)
-target_link_libraries(pfnet_static_tests pfnet_static)
+target_link_libraries(pfnet_static_tests pfnet_static ${M_LIB})
 
 # set the debug flag
 if(PFNET_DEBUG)
@@ -134,7 +142,7 @@ CHECK_INCLUDE_FILES("unistd.h"  HAVE_UNISTD_H)
 CHECK_INCLUDE_FILES("inttypes.h" HAVE_INTTYPES_H)
 CHECK_TYPE_SIZE(ptrdiff_t HAVE_PTRDIFF_T)
 
-# Checks for library functions.
+# Checks for library functions.v
 CHECK_FUNCTION_EXISTS(malloc HAVE_MALLOC)
 CHECK_FUNCTION_EXISTS(memset HAVE_MEMSET)
 CHECK_FUNCTION_EXISTS(pow HAVE_POW)
