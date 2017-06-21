@@ -18,6 +18,7 @@ option(PFNET_DEBUG "set to ON to enable PFNET debug definition" OFF)
 option(PFNET_GRAPHVIZ "set to OFF to disable search for graphviz" ON)
 option(PFNET_LINE_FLOW "set to ON to enable LINE_FLOW addon" OFF)
 
+set(M_LIB,"")
 # REQUIRE MATH LIBRARY (NOT SURE IF OS SPECIFIC)
 if (UNIX)
   find_library(M_LIB m)
