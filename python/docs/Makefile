@@ -2,7 +2,7 @@
 #
 
 ifndef PFNET_DOCS
-	$(error 'PFNET_DOCS' must be set to the location to put documentation files)
+  $(error 'PFNET_DOCS' must be set to the location to put documentation files)
 endif
 
 # You can set these variables from the command line.
