@@ -87,7 +87,7 @@ A bus also has information about the devices that are connected to it or that ar
 Branches
 --------
 
-Branches in a power network are objects of type :class:`Branch <pfnet.Branch>` and are represented mathematically by the model described in Section 2.1.2 of [TTR2015]_. Each branch has an :data:`index <pfnet.Branch.index>` attribute that can be used to identify this branch in a network. The :class:`Network <pfnet.Network>` class method :func:`get_branch() <pfnet.Network.get_branch>` can be used to extract a branch of a given :data:`index <pfnet.Branch.index>`::
+Branches in a power network are objects of type :class:`Branch <pfnet.Branch>` and are represented mathematically by the model described in Section 2.1.2 of [TT2015]_. Each branch has an :data:`index <pfnet.Branch.index>` attribute that can be used to identify this branch in a network. The :class:`Network <pfnet.Network>` class method :func:`get_branch() <pfnet.Network.get_branch>` can be used to extract a branch of a given :data:`index <pfnet.Branch.index>`::
 
   >>> branch = net.get_branch(5)
 
@@ -103,7 +103,7 @@ Branches in a power network can have different properties. For example, some bra
   >>> print len(lines), net.get_num_lines()
   17 17
 
-For branches that are transformers, the :class:`Branch <pfnet.Branch>` class attributes :data:`ratio <pfnet.Branch.ratio>` and :data:`phase <pfnet.Branch.phase>` correspond to the transformer's tap ratio and phase shift, respectively. These attributes correspond to the quantities :math:`a_{km}` and :math:`\phi_{km}` of the branch model described in Section 2.1.2 of [TTR2015]_. The quantity :math:`a_{mk}` in this model is always one.
+For branches that are transformers, the :class:`Branch <pfnet.Branch>` class attributes :data:`ratio <pfnet.Branch.ratio>` and :data:`phase <pfnet.Branch.phase>` correspond to the transformer's tap ratio and phase shift, respectively. These attributes correspond to the quantities :math:`a_{km}` and :math:`\phi_{km}` of the branch model described in Section 2.1.2 of [TT2015]_. The quantity :math:`a_{mk}` in this model is always one.
 
 .. _net_gen:
 
