@@ -4223,7 +4223,7 @@ class TestConstraints(unittest.TestCase):
             constr.eval(x0,y0)
             constr.combine_H(lam)
             
-            h = 1e-10
+            h = 1e-11
             F0 = np.dot(constr.f,lam)
             GradF0 = constr.J.T*lam
             HessF0lt = constr.H_combined.copy()
@@ -4260,6 +4260,10 @@ class TestConstraints(unittest.TestCase):
 
             net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
+
+            # Too big
+            if net.num_buses > 1000:
+                continue
 
             # Add vargens
             load_buses = net.get_load_buses()

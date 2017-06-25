@@ -1142,6 +1142,9 @@ class TestProblem(unittest.TestCase):
             net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
+            if net.num_buses > 1000:
+                continue
+
             p1 = pf.Problem(net)
             p2 = pf.Problem(net)
 
