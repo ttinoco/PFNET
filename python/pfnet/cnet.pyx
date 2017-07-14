@@ -9,6 +9,7 @@
 #***************************************************#
 
 cimport cnet
+from libc.stdlib cimport malloc, free
 
 class NetworkError(Exception):
     """
@@ -49,6 +50,8 @@ cdef class Network:
         """
         Frees network C data structure.
         """
+        
+        # TODO: call _free_branches, or will NET_del handle it? I think it already does
 
         if self.alloc:
             cnet.NET_del(self._c_net)
@@ -826,6 +829,30 @@ cdef class Network:
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
 
+    def set_branch_array(self,size):
+        """
+        Allocates and sets branch array.
+
+        Parameters
+        ----------
+        size : int
+        """
+
+        cdef cbranch.Branch* array = cbranch.BRANCH_array_new(size,self.num_periods)
+        cnet.NET_set_branch_array(self._c_net,array,size)
+        
+    def set_bus_array(self,size):
+        """
+        Allocates and sets bus array.
+
+        Parameters
+        ----------
+        size : int
+        """
+
+        cdef cbus.Bus* array = cbranch.BUS_array_new(size,self.num_periods)
+        cnet.NET_set_bus_array(self._c_net,array,size)
+
     def set_var_values(self,values):
         """
         Sets network variable values.
@@ -900,6 +927,7 @@ cdef class Network:
     property base_power:
         """ System base power (MVA) (float). """
         def __get__(self): return cnet.NET_get_base_power(self._c_net)
+        def __set__(self,v): cnet.NET_set_base_power(self._c_net, v)
 
     property buses:
         """ List of network :class:`buses <pfnet.Bus>` (list). """
@@ -1157,3 +1185,5 @@ cdef public new_Network(cnet.Net* n):
         return net
     else:
         raise NetworkError('no network data')
+
+# cdef private allocate_Branches()

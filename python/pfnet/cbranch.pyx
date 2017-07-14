@@ -477,6 +477,23 @@ cdef class Branch:
             return AttributeFloat(r[0])
         else:
             return np.array(r)
+            
+    # TBD
+    # def copy_branch_info(self,copy_branch):
+    #     """
+    #     Copies all the information from one branch into this branch.
+    #     
+    #     Parameters
+    #     ----------
+    #     copy_branch : :class:`Branch <pfnet.Branch>`
+    #     """
+    #     
+    #     #TODO maybe? call all set functions for this with get functions from copy_branch
+    #     # self.bus_k = copy_branch.bus_k
+    #     # self.bus_m = copy_branch.bus_m
+    #     # self.reg_bus = copy_branch.reg_bus
+    #     
+    #     pass
 
     property num_periods:
         """ Number of time periods (int). """
@@ -535,62 +552,98 @@ cdef class Branch:
     property bus_from:
         """ .. deprecated:: 1.2.5  Same as :attr:`bus_k <pfnet.Branch.bus_k>`. """
         def __get__(self): return self.bus_k
+        def __set__(self,bus): self.bus_k = bus
 
     property bus_k:
         """ :class:`Bus <pfnet.Bus>` connected to the "k" (aka "from" or "i") side. """
         def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_k(self._c_ptr))
+        def __set__(self,bus): 
+            cdef Bus cbus
+            
+            if not isinstance(bus,Bus):
+                raise BranchError('Not a Bus type object')
+            
+            cbus = bus
+            cbranch.BRANCH_set_bus_k(self._c_ptr,cbus._c_ptr)
 
     property bus_to:
         """ .. deprecated:: 1.2.5  Same as :attr:`bus_m <pfnet.Branch.bus_m>`. """
         def __get__(self): return self.bus_m
+        def __set__(self,bus): self.bus_m = bus
 
     property bus_m:
         """ :class:`Bus <pfnet.Bus>` connected to the "m" (aka "to" or "j") side. """
         def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_m(self._c_ptr))
+        def __set__(self,bus): 
+            cdef Bus cbus
+            
+            if not isinstance(bus,Bus):
+                raise BranchError('Not a Bus type object')
+            
+            cbus = bus
+            cbranch.BRANCH_set_bus_m(self._c_ptr,cbus._c_ptr)
 
     property reg_bus:
         """ :class:`Bus <pfnet.Bus>` whose voltage is regulated by this tap-changing transformer. """
         def __get__(self): return new_Bus(cbranch.BRANCH_get_reg_bus(self._c_ptr))
+        def __set__(self,bus): 
+            cdef Bus cbus
+            
+            if not isinstance(bus,Bus):
+                raise BranchError('Not a Bus type object')
+            
+            cbus = bus
+            cbranch.BRANCH_set_reg_bus(self._c_ptr,cbus._c_ptr)
 
     property b:
         """ Branch series susceptance (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_b(self._c_ptr)
+        def __set__(self,value): cbranch.BRANCH_set_b(self._c_ptr,value)
 
     property b_from:
         """ .. deprecated:: 1.2.5  Same as :attr:`b_k <pfnet.Branch.b_k>`. """
         def __get__(self): return self.b_k
+        def __set__(self,value): self.b_k = value
 
     property b_k:
         """ Branch shunt susceptance at the "k" (aka "from" or "i") side (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_b_k(self._c_ptr)
+        def __set__(self,value): cbranch.BRANCH_set_b_k(self._c_ptr,value)
 
     property b_to:
         """ .. deprecated:: 1.2.5  Same as :attr:`b_m <pfnet.Branch.b_m>`. """
         def __get__(self): return self.b_m
+        def __set__(self,value): self.b_m = value
 
     property b_m:
         """ Branch shunt susceptance at the "m" (aka "to" or "j") side (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_b_m(self._c_ptr)
+        def __set__(self,value): cbranch.BRANCH_set_b_m(self._c_ptr,value)
 
     property g:
         """ Branch series conductance (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_g(self._c_ptr)
+        def __set__(self,value): cbranch.BRANCH_set_g(self._c_ptr,value)
 
     property g_from:
         """ .. deprecated:: 1.2.5  Same as :attr:`g_k <pfnet.Branch.g_k>`. """
         def __get__(self): return self.g_k
+        def __set__(self,value): self.g_k = value
 
     property g_k:
         """ Branch shunt conductance at the "k" (aka "from" or "i") side (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_g_k(self._c_ptr)
+        def __set__(self,value): cbranch.BRANCH_set_g_k(self._c_ptr,value)
 
     property g_to:
         """ .. deprecated:: 1.2.5  Same as :attr:`g_m <pfnet.Branch.g_m>`. """
         def __get__(self): return self.g_m
+        def __set__(self,value): self.g_m = value
 
     property g_m:
         """ Branch shunt conductance at the "m" (aka "to" or "j") side (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_g_m(self._c_ptr)
+        def __set__(self,value): cbranch.BRANCH_set_g_m(self._c_ptr,value)
 
     property phase:
         """ Transformer phase shift (radians) (float or array). """
@@ -609,10 +662,12 @@ cdef class Branch:
     property phase_max:
         """ Transformer phase shift upper limit (radians) (float). """
         def __get__(self): return cbranch.BRANCH_get_phase_max(self._c_ptr)
+        def __set__(self,value): cbranch.BRANCH_set_phase_max(self._c_ptr,value)
 
     property phase_min:
         """ Transformer phase shift lower limit (radians) (float). """
         def __get__(self): return cbranch.BRANCH_get_phase_min(self._c_ptr)
+        def __set__(self,value): cbranch.BRANCH_set_phase_min(self._c_ptr,value)
 
     property P_km:
         """ Real power flow at bus "k" towards bus "m" (from -> to) (p.u.) (float or array). """
@@ -775,7 +830,7 @@ cdef class Branch:
                 return np.array(r)
 
     property outage:
-        """ Flag that indicates whehter branch is on outage. """
+        """ Flag that indicates whether branch is on outage. """
         def __get__(self): return cbranch.BRANCH_is_on_outage(self._c_ptr)
 
 cdef new_Branch(cbranch.Branch* b):
@@ -785,3 +840,4 @@ cdef new_Branch(cbranch.Branch* b):
         return branch
     else:
         raise BranchError('no branch data')
+        
