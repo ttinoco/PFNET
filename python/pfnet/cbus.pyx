@@ -489,18 +489,23 @@ cdef class Bus:
 
     property number:
         """ Bus number (int). """
-        def __get__(self): return cbus.BUS_get_number(self._c_ptr)
+        def __get__(self):
+            return cbus.BUS_get_number(self._c_ptr)
+        def __set__(self,num):
+            cbus.BUS_set_number(self._c_ptr,num)
 
     property name:
         """ Bus name (sting). """
-        def __get__(self): return cbus.BUS_get_name(self._c_ptr).decode('UTF-8')
+        def __get__(self):
+            return cbus.BUS_get_name(self._c_ptr).decode('UTF-8')
         def __set__(self,name):
             name = name.encode('UTF-8')
             cbus.BUS_set_name(self._c_ptr,name)
 
     property degree:
         """ Bus degree (number of incident branches) (float). """
-        def __get__(self): return cbus.BUS_get_degree(self._c_ptr)
+        def __get__(self):
+            return cbus.BUS_get_degree(self._c_ptr)
 
     property v_mag:
         """ Bus volatge magnitude (p.u. bus base kv) (float or array). """
@@ -538,6 +543,11 @@ cdef class Bus:
                 return AttributeFloat(r[0])
             else:
                 return np.array(r)
+        def __set__(self,v):
+            cdef int t
+            cdef np.ndarray var = np.array(v).flatten()
+            for t in range(np.minimum(var.size,self.num_periods)):
+                cbus.BUS_set_v_set(self._c_ptr,var[t],t)
 
     property v_max_reg:
         """ Bus regulation maximum voltage magnitude (p.u. bus base kv) (float). """

@@ -9,7 +9,6 @@
 #***************************************************#
 
 cimport cnet
-from libc.stdlib cimport malloc, free
 
 class NetworkError(Exception):
     """
@@ -850,7 +849,7 @@ cdef class Network:
         size : int
         """
 
-        cdef cbus.Bus* array = cbranch.BUS_array_new(size,self.num_periods)
+        cdef cbus.Bus* array = cbus.BUS_array_new(size,self.num_periods)
         cnet.NET_set_bus_array(self._c_net,array,size)
 
     def set_var_values(self,values):

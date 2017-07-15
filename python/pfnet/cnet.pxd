@@ -25,11 +25,11 @@ cdef extern from "pfnet/net.h":
     void NET_add_batteries(Net* net, cbus.Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d)
     
     # TODO adding arrays of components to the network that would overwrite everything
-    void NET_set_branch_array(Net* net, cbranch.Branch* branch_list, int num_branches)
     void NET_set_bus_array(Net* net, cbus.Bus* bus_list, int num_buses)
-    void NET_set_generator_array(Net* net, cgen.Generator* gen_list, int num_generators)
-    void NET_set_load_array(Net* net, cload.Load* load_list, int num_loads)
-    void NET_set_shunt_array(Net* net, cshunt.Shunt* shunt_list, int num_shunts)
+    void NET_set_branch_array(Net* net, cbranch.Branch* branch_list, int num_branches)
+    #void NET_set_generator_array(Net* net, cgen.Generator* gen_list, int num_generators)
+    #void NET_set_load_array(Net* net, cload.Load* load_list, int num_loads)
+    #void NET_set_shunt_array(Net* net, cshunt.Shunt* shunt_list, int num_shunts)
     
     # TODO new methods needed for adding components to the network
     # void NET_add_new_generator(Net* net, cgen.Generator generator)

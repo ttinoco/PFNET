@@ -85,28 +85,28 @@ cdef extern from "pfnet/branch.h":
     Branch* BRANCH_new(int num_periods)
     Branch* BRANCH_array_new(int size, int num_periods)
     void BRANCH_array_show(Branch* br_array, int size, int t)
-    void BRANCH_set_type(Branch* br, int type) #new
-    void BRANCH_set_bus_k(Branch* br, Bus* bus_k) #new
-    void BRANCH_set_bus_m(Branch* br, Bus* bus_m) #new
-    void BRANCH_set_reg_bus(Branch* br, Bus* reg_bus) #new
-    void BRANCH_set_g(Branch* br, REAL g) #new
-    void BRANCH_set_g_k(Branch* br, REAL g_k) #new
-    void BRANCH_set_g_m(Branch* br, REAL g_m) #new
-    void BRANCH_set_b(Branch* br, REAL b) #new
-    void BRANCH_set_b_k(Branch* br, REAL b_k) #new
-    void BRANCH_set_b_m(Branch* br, REAL b_m) #new
+    void BRANCH_set_type(Branch* br, int type)
+    void BRANCH_set_bus_k(Branch* br, Bus* bus_k)
+    void BRANCH_set_bus_m(Branch* br, Bus* bus_m)
+    void BRANCH_set_reg_bus(Branch* br, Bus* reg_bus)
+    void BRANCH_set_g(Branch* br, REAL g)
+    void BRANCH_set_g_k(Branch* br, REAL g_k)
+    void BRANCH_set_g_m(Branch* br, REAL g_m)
+    void BRANCH_set_b(Branch* br, REAL b)
+    void BRANCH_set_b_k(Branch* br, REAL b_k)
+    void BRANCH_set_b_m(Branch* br, REAL b_m)
     void BRANCH_set_outage(Branch* br, BOOL outage)
     void BRANCH_set_ratio(Branch* br, REAL ratio, int t)
-    void BRANCH_set_ratio_max(Branch* br, REAL ratio) #new
-    void BRANCH_set_ratio_min(Branch* br, REAL ratio) #new
+    void BRANCH_set_ratio_max(Branch* br, REAL ratio)
+    void BRANCH_set_ratio_min(Branch* br, REAL ratio)
     void BRANCH_set_phase(Branch* br, REAL phase, int t)
-    void BRANCH_set_phase_max(Branch* br, REAL phase)  #new
-    void BRANCH_set_phase_min(Branch* br, REAL phase)  #new
-    void BRANCH_set_P_max(Branch* br, REAL P_max) #new
-    void BRANCH_set_P_min(Branch* br, REAL P_min) #new
-    void BRANCH_set_Q_max(Branch* br, REAL Q_max) #new
-    void BRANCH_set_Q_min(Branch* br, REAL Q_min) #new
+    void BRANCH_set_phase_max(Branch* br, REAL phase) 
+    void BRANCH_set_phase_min(Branch* br, REAL phase) 
+    void BRANCH_set_P_max(Branch* br, REAL P_max)
+    void BRANCH_set_P_min(Branch* br, REAL P_min)
+    void BRANCH_set_Q_max(Branch* br, REAL Q_max)
+    void BRANCH_set_Q_min(Branch* br, REAL Q_min)
     void BRANCH_set_ratingA(Branch* br, REAL r)
     void BRANCH_set_ratingB(Branch* br, REAL r)
     void BRANCH_set_ratingC(Branch* br, REAL r)
-    void BRANCH_show(Branch* br, int t) #new
+    void BRANCH_show(Branch* br, int t)
