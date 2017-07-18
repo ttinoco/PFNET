@@ -57,6 +57,8 @@ REAL SHUNT_get_g(Shunt* shunt);
 REAL SHUNT_get_b(Shunt* shunt, int t);
 REAL SHUNT_get_b_max(Shunt* shunt);
 REAL SHUNT_get_b_min(Shunt* shunt);
+REAL* SHUNT_get_b_values(Shunt* shunt);
+int SHUNT_get_num_b_values(Shunt* shunt);
 Shunt* SHUNT_get_next(Shunt* shunt);
 Shunt* SHUNT_get_reg_next(Shunt* shunt);
 void SHUNT_get_var_values(Shunt* shunt, Vec* values, int code);

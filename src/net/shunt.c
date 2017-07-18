@@ -171,6 +171,21 @@ REAL SHUNT_get_b_min(Shunt* shunt) {
     return 0;
 }
 
+REAL* SHUNT_get_b_values(Shunt* shunt) {
+  if (shunt)
+    return shunt->b_values;
+  else
+    return NULL;
+}
+
+int SHUNT_get_num_b_values(Shunt* shunt) {
+  if (shunt)
+    return shunt->num_b;
+  else
+    return 0;
+}
+
+
 Shunt* SHUNT_get_next(Shunt* shunt) {
   if (shunt)
     return shunt->next;
