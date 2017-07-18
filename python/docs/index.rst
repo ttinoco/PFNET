@@ -26,6 +26,7 @@ PFNET is released under the BSD 2-clause license.
    Optimization Problems<problems>
    Extensions<extensions>
    API Reference<reference>
+   Related Papers<papers>
 
 **Contributors (alphabetical)**
 

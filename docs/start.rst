@@ -35,6 +35,8 @@ Installing PFNET requires typing the following commands in the root directory of
   make check
   sudo make install
 
+For executing the command ``./autogen.sh`` you need Autotools (m4, automake, autoconf, autoconf-archive, etc). 
+
 If ``Raw Parser`` is available, the library should be placed in the ``lib`` directory of PFNET. If ``Line Flow`` is available, the environment variable ``LINE_FLOW`` should be defined so that the library can be located in the directory ``$LINE_FLOW/lib``.
 
 .. _start_docs:

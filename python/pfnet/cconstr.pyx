@@ -49,6 +49,17 @@ cdef class ConstraintBase:
             self._c_constr = NULL
             self._alloc = False
 
+    def allocate_H_array(self,size):
+        """
+        Allocates internal array of constraint Hessians.
+
+        Parameters
+        ----------
+        size : int
+        """
+        
+        cconstr.CONSTR_allocate_H_array(self._c_constr,size)
+
     def del_matvec(self):
         """
         Deletes matrices and vectors associated with
@@ -157,6 +168,19 @@ cdef class ConstraintBase:
         """
         return Matrix(cconstr.CONSTR_get_H_single(self._c_constr,i))
 
+    def set_H_nnz(self,H_nnz):
+        """
+        Sets H_nnz array.
+
+        Parameters
+        ----------
+        H_nnz : :class:`int ndarray <numpy.ndarray>`
+        """
+        
+        cdef np.ndarray[int,mode='c'] ar = H_nnz
+        PyArray_CLEARFLAGS(ar,np.NPY_OWNDATA)
+        cconstr.CONSTR_set_H_nnz(self._c_constr,<int*>(ar.data),H_nnz.size)
+
     def set_b(self,b):
         """
         Sets b vector.
@@ -191,6 +215,28 @@ cdef class ConstraintBase:
                                                     <int*>(col.data), 
                                                     <cconstr.REAL*>(data.data))
         cconstr.CONSTR_set_A(self._c_constr,m)
+
+    def set_H_single(self,i,H):
+        """
+        Sets Hessian matrix of an individual cosntraint.
+
+        Parameters
+        ----------
+        i : int
+        H : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        """
+        
+        cdef np.ndarray[int,mode='c'] row = H.row
+        cdef np.ndarray[int,mode='c'] col = H.col
+        cdef np.ndarray[double,mode='c'] data = H.data
+        PyArray_CLEARFLAGS(row,np.NPY_OWNDATA)
+        PyArray_CLEARFLAGS(col,np.NPY_OWNDATA)
+        PyArray_CLEARFLAGS(data,np.NPY_OWNDATA)
+        cdef cmat.Mat* m = cmat.MAT_new_from_arrays(H.shape[0],H.shape[1],H.nnz, 
+                                                    <int*>(row.data),
+                                                    <int*>(col.data), 
+                                                    <cconstr.REAL*>(data.data))
+        cconstr.CONSTR_set_H_single(self._c_constr,i,m)
 
     def set_l(self,l):
         """
@@ -298,6 +344,11 @@ cdef class ConstraintBase:
         def __get__(self): return cconstr.CONSTR_get_J_nnz(self._c_constr)
         def __set__(self,nnz): cconstr.CONSTR_set_J_nnz(self._c_constr,nnz)
 
+    property H_nnz:
+        """ Integer array of counters of nonzero elements of constraint Hessians. """
+        def __get__(self): return IntArray(cconstr.CONSTR_get_H_nnz(self._c_constr),
+                                           cconstr.CONSTR_get_H_nnz_size(self._c_constr))
+
     property A_row:
         """ Number of linear equality constraints (int). """
         def __get__(self): return cconstr.CONSTR_get_A_row(self._c_constr)
@@ -342,8 +393,12 @@ cdef class ConstraintBase:
         def __get__(self): return Vector(cconstr.CONSTR_get_l_extra_vars(self._c_constr))
 
     property u_extra_vars:
-        """ Upper bound vector of constraitn extra variables (:class:`ndarray <numpy.ndarray>`). """
+        """ Upper bound vector of constraint extra variables (:class:`ndarray <numpy.ndarray>`). """
         def __get__(self): return Vector(cconstr.CONSTR_get_u_extra_vars(self._c_constr))
+
+    property init_extra_vars:
+        """ Vector of initial values for constraint extra variables (:class:`ndarray <numpy.ndarray>`). """
+        def __get__(self): return Vector(cconstr.CONSTR_get_init_extra_vars(self._c_constr))
 
     property G:
         """ Matrix for linear inequality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
@@ -365,6 +420,10 @@ cdef class ConstraintBase:
         """ Boolean array of flags for processing buses during count/analyze/eval, etc. """
         def __get__(self): return BoolArray(cconstr.CONSTR_get_bus_counted(self._c_constr),
                                             cconstr.CONSTR_get_bus_counted_size(self._c_constr))
+
+    property H_array_size:
+        """ Size of array of constraint Hessians (int). """
+        def __get__(self): return cconstr.CONSTR_get_H_array_size(self._c_constr)
 
 cdef new_Constraint(cconstr.Constr* c):
     if c is not NULL:

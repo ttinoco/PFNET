@@ -156,7 +156,6 @@ void CONSTR_NBOUND_allocate(Constr* c) {
 
   // Local variables
   int J_nnz;
-  Mat* H_array;
   Mat* H;
   int num_vars;
   int i;
@@ -182,10 +181,9 @@ void CONSTR_NBOUND_allocate(Constr* c) {
 			 J_nnz));  // nnz
 
   // H
-  H_array = MAT_array_new(J_nnz);
-  CONSTR_set_H_array(c,H_array,J_nnz);
+  CONSTR_allocate_H_array(c,J_nnz);
   for (i = 0; i < J_nnz; i++) {
-    H = MAT_array_get(H_array,i);
+    H = CONSTR_get_H_single(c,i);
     MAT_set_nnz(H,1);
     MAT_set_size1(H,num_vars);
     MAT_set_size2(H,num_vars);
@@ -193,11 +191,6 @@ void CONSTR_NBOUND_allocate(Constr* c) {
     MAT_set_col_array(H,(int*)calloc(1,sizeof(int)));
     MAT_set_data_array(H,(REAL*)malloc(1*sizeof(REAL)));
   }
-
-  // H combined
-  CONSTR_set_H_combined(c,MAT_new(num_vars,   // size1 (rows)
-				  num_vars,   // size2 (cols)
-				  J_nnz)); // nnz
 }
 
 void CONSTR_NBOUND_analyze_step(Constr* c, Branch* br, int t) {
@@ -210,10 +203,6 @@ void CONSTR_NBOUND_analyze_step(Constr* c, Branch* br, int t) {
   Mat* J;
   Mat* H_array;
   Mat* H;
-  int* Hi;
-  int* Hj;
-  int* Hi_comb;
-  int* Hj_comb;
   int* J_nnz;
   char* bus_counted;
   int bus_index_t[2];
@@ -447,20 +436,6 @@ void CONSTR_NBOUND_analyze_step(Constr* c, Branch* br, int t) {
 
     // Update counted flag
     bus_counted[bus_index_t[k]] = TRUE;
-  }
-
-  // Done (last branch and period)
-  if ((t == T-1) && (BRANCH_get_index(br) == NET_get_num_branches(CONSTR_get_network(c))-1)) {
-
-    // Ensure lower triangular and save struct of H comb
-    Hi_comb = MAT_get_row_array(CONSTR_get_H_combined(c));
-    Hj_comb = MAT_get_col_array(CONSTR_get_H_combined(c));
-    for (k = 0; k < CONSTR_get_H_array_size(c); k++) {
-      Hi = MAT_get_row_array(MAT_array_get(H_array,k));
-      Hj = MAT_get_col_array(MAT_array_get(H_array,k));
-      Hi_comb[k] = Hi[0];
-      Hj_comb[k] = Hj[0];
-    }
   }
 }
 

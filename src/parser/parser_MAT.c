@@ -486,44 +486,49 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
   // Branches
   index = 0;
   num_branches = 0;
-  LIST_len(MAT_Branch,parser->branch_list,next,num_branches);
+  for (mat_branch = parser->branch_list; mat_branch != NULL; mat_branch = mat_branch->next) {
+    if (mat_branch->status > 0)
+      num_branches++;
+  }  
   NET_set_branch_array(net,BRANCH_array_new(num_branches,num_periods),num_branches);
   for (mat_branch = parser->branch_list; mat_branch != NULL; mat_branch = mat_branch->next) {
-    busA = BUS_hash_number_find(NET_get_bus_hash_number(net),mat_branch->bus_k_number);
-    busB = BUS_hash_number_find(NET_get_bus_hash_number(net),mat_branch->bus_m_number);
-    branch = NET_get_branch(net,index);
-    r = mat_branch->r;
-    x = mat_branch->x;
-    den = pow(r,2.)+pow(x,2.);
-    g = r/den;
-    b = -x/den;
-    if (mat_branch->ratio > 0)
-      t = mat_branch->ratio;
-    else
-      t = 1.;
-    z = mat_branch->angle*PI/180.;
-    if (t == 1. && z == 0)
-      BRANCH_set_type(branch,BRANCH_TYPE_LINE);
-    else
-      BRANCH_set_type(branch,BRANCH_TYPE_TRAN_FIXED);
-    BRANCH_set_bus_k(branch,busA);
-    BRANCH_set_bus_m(branch,busB);
-    BUS_add_branch_k(busA,branch);
-    BUS_add_branch_m(busB,branch);
-    BRANCH_set_ratio(branch,1./t,0);                         // units of bus_k_base/bus_m_base
-    BRANCH_set_ratio_max(branch,BRANCH_get_ratio(branch,0));
-    BRANCH_set_ratio_min(branch,BRANCH_get_ratio(branch,0));
-    BRANCH_set_phase(branch,z,0);                            // radians
-    BRANCH_set_phase_max(branch,BRANCH_get_phase(branch,0));
-    BRANCH_set_phase_min(branch,BRANCH_get_phase(branch,0));
-    BRANCH_set_g(branch,g);                                // per unit
-    BRANCH_set_b(branch,b);                                // per unit
-    BRANCH_set_b_k(branch,mat_branch->b/2.);            // per unit
-    BRANCH_set_b_m(branch,mat_branch->b/2.);              // per unit
-    BRANCH_set_ratingA(branch,mat_branch->rateA/parser->base_power); // p.u.
-    BRANCH_set_ratingB(branch,mat_branch->rateB/parser->base_power); // p.u.
-    BRANCH_set_ratingC(branch,mat_branch->rateC/parser->base_power); // p.u.
-    index++;
+    if (mat_branch->status > 0) {
+      busA = BUS_hash_number_find(NET_get_bus_hash_number(net),mat_branch->bus_k_number);
+      busB = BUS_hash_number_find(NET_get_bus_hash_number(net),mat_branch->bus_m_number);
+      branch = NET_get_branch(net,index);
+      r = mat_branch->r;
+      x = mat_branch->x;
+      den = pow(r,2.)+pow(x,2.);
+      g = r/den;
+      b = -x/den;
+      if (mat_branch->ratio > 0)
+	t = mat_branch->ratio;
+      else
+	t = 1.;
+      z = mat_branch->angle*PI/180.;
+      if (t == 1. && z == 0)
+	BRANCH_set_type(branch,BRANCH_TYPE_LINE);
+      else
+	BRANCH_set_type(branch,BRANCH_TYPE_TRAN_FIXED);
+      BRANCH_set_bus_k(branch,busA);
+      BRANCH_set_bus_m(branch,busB);
+      BUS_add_branch_k(busA,branch);
+      BUS_add_branch_m(busB,branch);
+      BRANCH_set_ratio(branch,1./t,0);                         // units of bus_k_base/bus_m_base
+      BRANCH_set_ratio_max(branch,BRANCH_get_ratio(branch,0));
+      BRANCH_set_ratio_min(branch,BRANCH_get_ratio(branch,0));
+      BRANCH_set_phase(branch,z,0);                            // radians
+      BRANCH_set_phase_max(branch,BRANCH_get_phase(branch,0));
+      BRANCH_set_phase_min(branch,BRANCH_get_phase(branch,0));
+      BRANCH_set_g(branch,g);                                // per unit
+      BRANCH_set_b(branch,b);                                // per unit
+      BRANCH_set_b_k(branch,mat_branch->b/2.);            // per unit
+      BRANCH_set_b_m(branch,mat_branch->b/2.);              // per unit
+      BRANCH_set_ratingA(branch,mat_branch->rateA/parser->base_power); // p.u.
+      BRANCH_set_ratingB(branch,mat_branch->rateB/parser->base_power); // p.u.
+      BRANCH_set_ratingC(branch,mat_branch->rateC/parser->base_power); // p.u.
+      index++;
+    }
   }
 
   // Costs
@@ -918,6 +923,9 @@ void MAT_PARSER_parse_branch_field(char* s, MAT_Parser* parser) {
       break;
     case 9:
       parser->branch->angle = atof(s);
+      break;
+    case 10:
+      parser->branch->status = atoi(s);
       break;
     }
   }

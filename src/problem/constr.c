@@ -40,9 +40,10 @@ struct Constr {
   Vec* u;           /** @brief Upper bound for linear inequality contraints */
   
   // Extra variables
-  int num_extra_vars; /** @brief Number of extra variables (set during "count") */
-  Vec* l_extra_vars;  /** @brief Lower bounds for extra variables (set during "analyze") */
-  Vec* u_extra_vars;  /** @brief Upper bounds for extra varaibles (set during "analyze") */
+  int num_extra_vars;   /** @brief Number of extra variables (set during "count") */
+  Vec* l_extra_vars;    /** @brief Lower bounds for extra variables (set during "analyze") */
+  Vec* u_extra_vars;    /** @brief Upper bounds for extra varaibles (set during "analyze") */
+  Vec* init_extra_vars; /** @brief Extra variable initial values */
   
   // Counters and flags
   int A_nnz;             /**< @brief Counter for nonzeros of matrix A */
@@ -73,6 +74,69 @@ struct Constr {
   // List
   Constr* next; /**< @brief List of constraints */
 };
+
+void CONSTR_allocate_H_array(Constr* c, int size) {
+  if (c) {
+    if (c->H_array)
+      MAT_array_del(c->H_array,c->H_array_size);
+    c->H_array = MAT_array_new(size);
+    c->H_array_size = size;
+  }
+}
+
+void CONSTR_allocate_H_combined(Constr* c) {
+  int i;
+  int H_comb_nnz = 0;
+  int num_vars = NET_get_num_vars(CONSTR_get_network(c));
+  int num_extra_vars = CONSTR_get_num_extra_vars(c);
+  if (c) {
+    for (i = 0; i < c->H_array_size; i++)
+      H_comb_nnz += MAT_get_nnz(MAT_array_get(c->H_array,i));
+    if (c->H_combined)
+      MAT_del(c->H_combined);
+    CONSTR_set_H_combined(c,MAT_new(num_vars+num_extra_vars, // size1 (rows)
+				    num_vars+num_extra_vars, // size2 (cols)
+				    H_comb_nnz));
+  }
+}
+
+void CONSTR_finalize_structure_of_Hessians(Constr* c) {
+
+  // Local variables
+  int* Hi_comb;
+  int* Hj_comb;
+  int H_nnz_comb;
+  Mat* H_array;
+  int* Hi;
+  int* Hj;
+  int temp;
+  int k;
+  int m;
+  
+  // Check
+  if (!c)
+    return;
+
+  // Ensure lower triangular and save struct of H comb
+  H_nnz_comb = 0;
+  H_array = CONSTR_get_H_array(c);
+  Hi_comb = MAT_get_row_array(CONSTR_get_H_combined(c));
+  Hj_comb = MAT_get_col_array(CONSTR_get_H_combined(c));
+  for (k = 0; k < CONSTR_get_H_array_size(c); k++) {
+    Hi = MAT_get_row_array(MAT_array_get(H_array,k));
+    Hj = MAT_get_col_array(MAT_array_get(H_array,k));
+    for (m = 0; m < MAT_get_nnz(MAT_array_get(H_array,k)); m++) {
+      if (Hi[m] < Hj[m]) {
+	temp = Hi[m];
+	Hi[m] = Hj[m];
+	Hj[m] = temp;
+      }
+      Hi_comb[H_nnz_comb] = Hi[m];
+      Hj_comb[H_nnz_comb] = Hj[m];
+      H_nnz_comb++;
+    }
+  }
+}
 
 int CONSTR_get_num_extra_vars(Constr* c) {
   if (c)
@@ -148,6 +212,7 @@ void CONSTR_del_matvec(Constr* c) {
     VEC_del(c->u);
     VEC_del(c->l_extra_vars);
     VEC_del(c->u_extra_vars);
+    VEC_del(c->init_extra_vars);
     MAT_array_del(c->H_array,c->H_array_size);
     MAT_del(c->H_combined);
     c->b = NULL;
@@ -159,6 +224,7 @@ void CONSTR_del_matvec(Constr* c) {
     c->u = NULL;
     c->l_extra_vars = NULL;
     c->u_extra_vars = NULL;
+    c->init_extra_vars = NULL;
     c->H_array = NULL;
     c->H_array_size = 0;
     c->H_combined = NULL;
@@ -223,6 +289,13 @@ Vec* CONSTR_get_l_extra_vars(Constr* c) {
 Vec* CONSTR_get_u_extra_vars(Constr* c) {
   if (c)
     return c->u_extra_vars;
+  else
+    return NULL;
+}
+
+Vec* CONSTR_get_init_extra_vars(Constr* c) {
+  if (c)
+    return c->init_extra_vars;
   else
     return NULL;
 }
@@ -401,6 +474,12 @@ Constr* CONSTR_get_next(Constr* c) {
     return c->next;
   else
     return NULL;
+}
+
+void CONSTR_list_finalize_structure_of_Hessians(Constr* clist) {
+  Constr* cc;
+  for (cc = clist; cc != NULL; cc = CONSTR_get_next(cc))
+    CONSTR_finalize_structure_of_Hessians(cc);
 }
 
 void CONSTR_list_clear_error(Constr* clist) {
@@ -585,6 +664,7 @@ Constr* CONSTR_new(Net* net) {
   c->u = NULL;
   c->l_extra_vars = NULL;
   c->u_extra_vars = NULL;
+  c->init_extra_vars = NULL;
   c->A_nnz = 0;
   c->J_nnz = 0;
   c->G_nnz = 0;
@@ -653,27 +733,54 @@ void CONSTR_set_u_extra_vars(Constr* c, Vec* u) {
     c->u_extra_vars = u;
 }
 
+void CONSTR_set_init_extra_vars(Constr* c, Vec* init) {
+  if (c)
+    c->init_extra_vars = init;
+}
+
 void CONSTR_set_G(Constr* c, Mat* G) {
   if (c)
     c->G = G;
 }
 
 void CONSTR_set_f(Constr* c, Vec* f) {
-  if (c)
+  if (c) {
+    if (c->f)
+      VEC_del(c->f);
     c->f = f;
+  }
 }
 
 void CONSTR_set_J(Constr* c, Mat* J) {
-  if (c)
+  if (c) {
+    if (c->J)
+      MAT_del(c->J);
     c->J = J;
+  }
 }
 
 void CONSTR_set_H_array(Constr* c, Mat* array, int size) {
   if (c) {
+    if (c->H_array)
+      MAT_array_del(c->H_array,c->H_array_size);
     c->H_array = array;
     c->H_array_size = size;
   }  
 }
+
+void CONSTR_set_H_single(Constr* c, int i, Mat* m) {
+  Mat* H;
+  if (c && 0 <= i && i < c->H_array_size) {
+    H = MAT_array_get(c->H_array,i);
+    MAT_set_size1(H,MAT_get_size1(m));
+    MAT_set_size2(H,MAT_get_size2(m));
+    MAT_set_row_array(H,MAT_get_row_array(m));
+    MAT_set_col_array(H,MAT_get_col_array(m));
+    MAT_set_data_array(H,MAT_get_data_array(m));
+    MAT_set_nnz(H,MAT_get_nnz(m));
+    MAT_set_owns_rowcol(H,MAT_get_owns_rowcol(m));
+  }
+}   
 
 void CONSTR_set_H_combined(Constr* c, Mat* H_combined) {
   if (c)
@@ -760,6 +867,7 @@ void CONSTR_allocate(Constr* c) {
   if (c && c->func_allocate && CONSTR_is_safe_to_count(c)) {
     CONSTR_del_matvec(c);
     (*(c->func_allocate))(c);
+    CONSTR_allocate_H_combined(c);
   }
 }
 
@@ -777,6 +885,7 @@ void CONSTR_analyze(Constr* c) {
     for (i = 0; i < NET_get_num_branches(net); i++)
       CONSTR_analyze_step(c,NET_get_branch(net,i),t);
   }
+  CONSTR_finalize_structure_of_Hessians(c);
 }
 
 void CONSTR_analyze_step(Constr* c, Branch* br, int t) {
@@ -855,7 +964,8 @@ BOOL CONSTR_is_safe_to_analyze(Constr* c) {
       MAT_get_size2(CONSTR_get_G(c)) == num_vars &&
       MAT_get_size2(CONSTR_get_J(c)) == num_vars &&
       VEC_get_size(CONSTR_get_l_extra_vars(c)) == CONSTR_get_num_extra_vars(c) &&
-      VEC_get_size(CONSTR_get_u_extra_vars(c)) == CONSTR_get_num_extra_vars(c))
+      VEC_get_size(CONSTR_get_u_extra_vars(c)) == CONSTR_get_num_extra_vars(c) &&
+      VEC_get_size(CONSTR_get_init_extra_vars(c)) == CONSTR_get_num_extra_vars(c))
     return TRUE;
   else {
     sprintf(c->error_string,"constraint is not safe to analyze");

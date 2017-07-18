@@ -15,7 +15,7 @@ from numpy.linalg import norm
 from scipy.sparse import coo_matrix,triu,tril,eye
 
 NUM_TRIALS = 25
-EPS = 2.5 # %
+EPS = 5.0 # %
 TOL = 1e-4
 
 class TestConstraints(unittest.TestCase):
@@ -1864,6 +1864,10 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.J_row,rowsJ*self.T)
             self.assertEqual(constr.A_row,rowsA*self.T)
             self.assertEqual(constr.num_extra_vars,rowsJ*self.T)
+
+            y_init = constr.init_extra_vars
+            self.assertEqual(y_init.size,constr.num_extra_vars)
+            self.assertTrue(np.all(y_init == 0.))
             
             y0 = np.random.rand(constr.num_extra_vars)
             constr.eval(x0,y0)
@@ -2339,6 +2343,11 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.A_nnz,Annz*self.T)
             self.assertEqual(constr.J_row,rowsJ*self.T)
             self.assertEqual(constr.A_row,rowsA*self.T)
+
+            y_init = constr.init_extra_vars
+            self.assertEqual(y_init.size,constr.num_extra_vars)
+            self.assertTrue(np.all(y_init == 0.))
+
             constr.eval(x0)
             self.assertEqual(constr.J_nnz,Jnnz*self.T)
             self.assertEqual(constr.A_nnz,0)
@@ -2566,6 +2575,11 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constr.A_nnz,Annz*self.T)
             self.assertEqual(constr.J_row,rowsJ*self.T)
             self.assertEqual(constr.A_row,rowsA*self.T)
+
+            y_init = constr.init_extra_vars
+            self.assertEqual(y_init.size,constr.num_extra_vars)
+            self.assertTrue(np.all(y_init == 0.))
+
             constr.eval(x0)
             self.assertEqual(constr.J_nnz,Jnnz*self.T)
             self.assertEqual(constr.A_nnz,0)
@@ -3898,6 +3912,12 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(np.all(Hcomb.row >= Hcomb.col))
             self.assertEqual(Hcomb.nnz,H_comb_nnz)
 
+            y_init = constr.init_extra_vars
+            self.assertEqual(y_init.size,constr.num_extra_vars)
+            self.assertEqual(y_init.size,constr.f.size)
+            self.assertTrue(np.all(y_init == 0.))
+            constr.eval(x0)
+
             y0 = np.random.randn(num_constr)
 
             constr.eval(x0,y0)
@@ -3985,7 +4005,7 @@ class TestConstraints(unittest.TestCase):
                 error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),tol)
                 self.assertLessEqual(error,EPS)
 
-            # Combined Hessian check
+            # Combined Hessian check 1
             h = 1e-12
             coeff = np.random.randn(f0.shape[0])
             constr.eval(x0,y0)
@@ -4013,7 +4033,7 @@ class TestConstraints(unittest.TestCase):
                 error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),tol)
                 self.assertLessEqual(error,EPS)
 
-            # Combined Hessian check
+            # Combined Hessian check 2
             coeff = np.random.randn(f0.shape[0])
             constr.eval(x0,y0)
             constr.combine_H(coeff,False)
@@ -4147,6 +4167,91 @@ class TestConstraints(unittest.TestCase):
                             if counter >= num_max:
                                 break
                         self.assertLess((100.*num_bad)/min([net.num_buses,num_max]),1.) # less then 1 %
+
+        # Single period
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,1)
+            self.assertEqual(net.num_periods,1)
+            
+            net.set_flags('bus',['variable','bounded'],'any','voltage magnitude')
+            net.set_flags('bus','variable','not slack','voltage angle')
+            self.assertEqual(net.num_vars,2*net.num_buses-net.get_num_slack_buses())
+
+            if len([b for b in net.branches if b.ratingA != 0.]) == 0:
+                continue
+            
+            constr = pf.Constraint('AC branch flow limits',net)
+            constr.analyze()
+            self.assertGreater(constr.num_extra_vars,0)
+
+            # Single Hessian check
+            x0 = net.get_var_values()
+            y0 = np.zeros(constr.num_extra_vars)
+            lam = np.random.randn(constr.f.size)
+            constr.eval(x0,y0)
+            for i in range(10):
+                
+                j = np.random.randint(0,constr.f.size)
+
+                constr.eval(x0,y0)
+
+                g0 = constr.J.tocsr()[j,:].toarray().flatten()
+                H0lt = constr.get_H_single(j).copy()
+
+                self.assertTrue(np.all(H0lt.row >= H0lt.col)) # lower triangular
+                H0 = (H0lt + H0lt.T) - triu(H0lt)
+
+                d = np.random.randn(net.num_vars+constr.num_extra_vars)
+
+                x = x0 + h*d[:net.num_vars]
+                y = y0 + h*d[net.num_vars:]
+
+                constr.eval(x,y)
+                
+                g1 = constr.J.tocsr()[j,:].toarray().flatten()
+
+                Hd_exact = H0*d
+                Hd_approx = (g1-g0)/h
+                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),tol)
+                self.assertLessEqual(error,EPS)
+                
+            # Combined Hessian check
+            x0 = net.get_var_values()
+            y0 = np.zeros(constr.num_extra_vars)
+            lam = np.random.randn(constr.f.size)
+            constr.eval(x0,y0)
+            constr.combine_H(lam)
+            
+            h = 1e-11
+            F0 = np.dot(constr.f,lam)
+            GradF0 = constr.J.T*lam
+            HessF0lt = constr.H_combined.copy()
+            self.assertTrue(np.all(HessF0lt.row >= HessF0lt.col)) # lower triangular
+            HessF0 = (HessF0lt + HessF0lt.T - triu(HessF0lt))
+            for i in range(10):
+                
+                d = np.random.randn(x0.size+y0.size)
+                
+                x = x0 + h*d[:x0.size]
+                y = y0 + h*d[x0.size:]
+                
+                constr.eval(x,y)
+                
+                F1 = np.dot(constr.f,lam)
+                GradF1 = constr.J.T*lam
+                
+                Jd_exact = np.dot(GradF0,d)
+                Jd_approx = (F1-F0)/h
+                
+                Hd_exact = HessF0*d
+                Hd_approx = (GradF1-GradF0)/h
+                
+                errorJ = 100.*norm(Jd_exact-Jd_approx)/norm(Jd_exact) 
+                errorH = 100.*norm(Hd_exact-Hd_approx)/norm(Hd_exact) 
+        
+                self.assertLess(errorJ,EPS)
+                self.assertLess(errorH,EPS)
                     
     def test_constr_DUMMY(self):
 
@@ -4155,6 +4260,10 @@ class TestConstraints(unittest.TestCase):
 
             net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
+
+            # Too big
+            if net.num_buses > 1000:
+                continue
 
             # Add vargens
             load_buses = net.get_load_buses()
@@ -4686,6 +4795,78 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(l.shape,(constr.G_row,))
             self.assertTrue(np.all(l == -1e8))
 
+    def test_nonlinear_constr_creation(self):
+        
+        # Single period
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
+
+            constr = pf.Constraint("variable fixing",net)
+
+            # J row
+            self.assertEqual(constr.J_row,0)
+            constr.J_row = 19
+            self.assertEqual(constr.J_row,19)
+
+            # J_nnz
+            self.assertEqual(constr.J_nnz,0)
+            constr.J_nnz = 17
+            self.assertEqual(constr.J_nnz,17)
+
+            # f
+            f = constr.f
+            self.assertEqual(f.size,0)
+            a = np.random.randn(15)
+            constr.set_f(a)
+            self.assertEqual(constr.f.size,15)
+            self.assertTrue(np.all(constr.f == a))
+
+            # J
+            J = constr.J
+            self.assertTupleEqual(J.shape,(0,0))
+            self.assertEqual(J.nnz,0)
+            Jm = coo_matrix(np.random.randn(4,3))
+            constr.set_J(Jm)
+            self.assertTrue(isinstance(constr.J,coo_matrix))
+            self.assertTupleEqual(constr.J.shape,Jm.shape)
+            self.assertTrue(np.all(constr.J.row == Jm.row))
+            self.assertEqual(constr.J.nnz,Jm.nnz)
+            self.assertTrue(np.all(constr.J.col == Jm.col))
+            self.assertTrue(np.all(constr.J.data == Jm.data))
+
+            # H array
+            self.assertEqual(constr.H_array_size,0)
+            constr.allocate_H_array(100)
+            self.assertEqual(constr.H_array_size,100)
+
+            # H single
+            H = constr.get_H_single(5)
+            self.assertTrue(isinstance(H,coo_matrix))
+            self.assertEqual(H.nnz,0)
+            self.assertTupleEqual(H.shape,(0,0))
+            A = coo_matrix(np.random.randn(5,4))
+            constr.set_H_single(5,A)
+            H = constr.get_H_single(5)
+            self.assertTrue(isinstance(H,coo_matrix))
+            self.assertTupleEqual(A.shape,H.shape)
+            self.assertTrue(np.all(A.row == H.row))
+            self.assertEqual(A.nnz,H.nnz)
+            self.assertTrue(np.all(A.col == H.col))
+            self.assertTrue(np.all(A.data == H.data))
+
+            # H_nnz
+            constr.set_H_nnz(np.zeros(50,dtype='int32'))
+            H_nnz = constr.H_nnz
+            self.assertTrue(isinstance(H_nnz,np.ndarray))
+            self.assertEqual(H_nnz.dtype,np.dtype('int32'))
+            self.assertEqual(H_nnz.size,50)
+            for i in range(50):
+                self.assertEqual(H_nnz[i],0)
+            constr.H_nnz[10] = 2
+            self.assertEqual(H_nnz[10],2)
+            
     def tearDown(self):
 
         pass
