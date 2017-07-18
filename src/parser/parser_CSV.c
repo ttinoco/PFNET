@@ -49,6 +49,7 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
 
   // Local variables
   size_t buffer_index;
+  size_t lookahead_index;
 
   // Parse
   buffer_index = 0;
@@ -60,6 +61,18 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
         p->in_string_single = TRUE;
       else
         p->in_string_single = FALSE;
+        // account for quote within a quote
+        lookahead_index = buffer_index+1;
+        while (lookahead_index < len) {
+          if (buffer[lookahead_index] == delimeter)
+            break;
+          else if (buffer[lookahead_index] == '\'') {
+            p->in_string_single = TRUE;
+            break;
+          }
+          else
+            lookahead_index++;
+        }
     }
 
     // Double quote
@@ -68,6 +81,18 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
         p->in_string_double = TRUE;
       else
         p->in_string_double = FALSE;
+        // account for quote within a quote
+        lookahead_index = buffer_index+1;
+        while (lookahead_index < len) {
+          if (buffer[lookahead_index] == delimeter)
+            break;
+          else if (buffer[lookahead_index] == '"') {
+            p->in_string_double = TRUE;
+            break;
+          }
+          else
+            lookahead_index++;
+        }
     }
 
     // Comment
