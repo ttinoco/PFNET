@@ -16,6 +16,4 @@ cdef extern from "pfnet/vector.h":
     Vec* VEC_new_from_array(REAL* data, int size)
     int VEC_get_size(Vec* v)
     REAL* VEC_get_data(Vec* v)
-
-
-    
+    REAL VEC_get(Vec* v, int index)

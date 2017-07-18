@@ -45,6 +45,8 @@ cdef extern from "pfnet/load.h":
     bint LOAD_is_P_adjustable(Load* load)
     bint LOAD_has_flags(Load* load, char flag_type, char mask)
     Load* LOAD_new(int num_periods)
+    Load* LOAD_array_new(int size, int num_periods)
+    void LOAD_set_bus(Load* load, Bus* bus)
     void LOAD_set_P(Load* load, REAL P, int t)
     void LOAD_set_P_min(Load* load, REAL P_min, int t)
     void LOAD_set_P_max(Load* load, REAL P_max, int t)

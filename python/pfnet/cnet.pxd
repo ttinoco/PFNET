@@ -19,17 +19,18 @@ cimport cbat
 cdef extern from "pfnet/net.h":
 
     ctypedef struct Net
+    ctypedef struct Bus
     ctypedef double REAL
  
     void NET_add_vargens(Net* net, cbus.Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value)
     void NET_add_batteries(Net* net, cbus.Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d)
     
-    # TODO adding arrays of components to the network that would overwrite everything
+    # component arrays
     void NET_set_bus_array(Net* net, cbus.Bus* bus_list, int num_buses)
     void NET_set_branch_array(Net* net, cbranch.Branch* branch_list, int num_branches)
-    #void NET_set_generator_array(Net* net, cgen.Generator* gen_list, int num_generators)
-    #void NET_set_load_array(Net* net, cload.Load* load_list, int num_loads)
-    #void NET_set_shunt_array(Net* net, cshunt.Shunt* shunt_list, int num_shunts)
+    void NET_set_gen_array(Net* net, cgen.Gen* gen_list, int num_generators)
+    void NET_set_load_array(Net* net, cload.Load* load_list, int num_loads)
+    void NET_set_shunt_array(Net* net, cshunt.Shunt* shunt_list, int num_shunts)
     
     # TODO new methods needed for adding components to the network
     # void NET_add_new_generator(Net* net, cgen.Generator generator)
@@ -116,10 +117,7 @@ cdef extern from "pfnet/net.h":
     cmat.Mat* NET_get_var_projection(Net* net, char obj_type, char var, int t_start, int t_end)
     bint NET_has_error(Net* net)
     Net* NET_new(int num_periods)
-    
-    # TODO new methods needed for setting network settings
     void NET_set_base_power(Net* net, REAL base_power)
-    
     void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, char val_mask)
     void NET_set_flags_of_component(Net* net, void* obj, char obj_type, char flag_mask, char val_mask)
     void NET_set_var_values(Net* net, cvec.Vec* values)
@@ -129,6 +127,7 @@ cdef extern from "pfnet/net.h":
     char* NET_get_show_properties_str(Net* net, int t)
     void NET_show_buses(Net* net, int number, int sort_by, int t)
     void NET_update_properties(Net* net, cvec.Vec* values)
+    void NET_propagate_data_in_time(Net* net)
     void NET_update_set_points(Net* net)
-    
-     
+    void NET_bus_hash_number_add(Net* net, Bus* bus);
+    void NET_bus_hash_name_add(Net* net, Bus* bus);

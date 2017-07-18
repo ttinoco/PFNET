@@ -211,11 +211,29 @@ cdef class Generator:
 
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which generator is connected. """
-        def __get__(self): return new_Bus(cgen.GEN_get_bus(self._c_ptr))
+        def __get__(self):
+            return new_Bus(cgen.GEN_get_bus(self._c_ptr))
+        def __set__(self,bus):
+            cdef Bus cbus
+            
+            if not isinstance(bus,Bus):
+                raise GeneratorError('Not a Bus type object')
+            
+            cbus = bus
+            cgen.GEN_set_bus(self._c_ptr,cbus._c_ptr) 
 
     property reg_bus:
         """ :class:`Bus <pfnet.Bus>` whose voltage is regulated by this generator. """
-        def __get__(self): return new_Bus(cgen.GEN_get_reg_bus(self._c_ptr))
+        def __get__(self):
+            return new_Bus(cgen.GEN_get_reg_bus(self._c_ptr))
+        def __set__(self,reg_bus):
+            cdef Bus creg_bus
+            
+            if not isinstance(reg_bus,Bus):
+                raise GeneratorError('Not a Bus type object')
+            
+            creg_bus = reg_bus
+            cgen.GEN_set_reg_bus(self._c_ptr,creg_bus._c_ptr) 
 
     property P:
         """ Generator active power (p.u. system base MVA) (float or array). """
@@ -268,10 +286,12 @@ cdef class Generator:
     property Q_max:
         """ Generator reactive power upper limit (p.u. system base MVA) (float). """
         def __get__(self): return cgen.GEN_get_Q_max(self._c_ptr)
+        def __set__(self,q): cgen.GEN_set_Q_max(self._c_ptr,q)
 
     property Q_min:
         """ Generator reactive power lower limit (p.u. system base MVA) (float). """
         def __get__(self): return cgen.GEN_get_Q_min(self._c_ptr)
+        def __set__(self,q): cgen.GEN_set_Q_min(self._c_ptr,q)
 
     property P_cost:
         """ Active power generation cost ($/hr) (float or array). """
@@ -318,6 +338,7 @@ cdef class Generator:
     property outage:
         """ Flag that indicates whehter generator is on outage. """
         def __get__(self): return cgen.GEN_is_on_outage(self._c_ptr)
+        def __set__(self,b): cgen.GEN_set_outage(self._c_ptr,b)
 
 cdef new_Generator(cgen.Gen* g):
     if g is not NULL:

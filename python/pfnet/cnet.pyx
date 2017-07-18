@@ -852,6 +852,42 @@ cdef class Network:
         cdef cbus.Bus* array = cbus.BUS_array_new(size,self.num_periods)
         cnet.NET_set_bus_array(self._c_net,array,size)
 
+    def set_gen_array(self,size):
+        """
+        Allocates and sets generator array.
+
+        Parameters
+        ----------
+        size : int
+        """
+
+        cdef cgen.Gen* array = cgen.GEN_array_new(size,self.num_periods)
+        cnet.NET_set_gen_array(self._c_net,array,size)
+        
+    def set_load_array(self,size):
+        """
+        Allocates and sets load array.
+
+        Parameters
+        ----------
+        size : int
+        """
+
+        cdef cload.Load* array = cload.LOAD_array_new(size,self.num_periods)
+        cnet.NET_set_load_array(self._c_net,array,size)
+
+    def set_shunt_array(self,size):
+        """
+        Allocates and sets shunt array.
+
+        Parameters
+        ----------
+        size : int
+        """
+
+        cdef cshunt.Shunt* array = cshunt.SHUNT_array_new(size,self.num_periods)
+        cnet.NET_set_shunt_array(self._c_net,array,size)
+
     def set_var_values(self,values):
         """
         Sets network variable values.
@@ -910,6 +946,10 @@ cdef class Network:
         cdef np.ndarray[double,mode='c'] x = values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if values is not None else NULL
         cnet.NET_update_properties(self._c_net,v)
+        
+    def propogate_data_in_time(self):
+        """ Propogates data from the first period through time. """
+        cnet.NET_propagate_data_in_time(self._c_net)
 
     def update_set_points(self):
         """
@@ -918,6 +958,17 @@ cdef class Network:
         """
 
         cnet.NET_update_set_points(self._c_net)
+        
+    def update_hashes(self):
+        """
+        Update the bus name and number hash lists.
+        """
+        cdef Bus cbus
+        
+        for bus in self.buses:
+            cbus = bus
+            cnet.NET_bus_hash_number_add(self._c_net,cbus._c_ptr);
+            cnet.NET_bus_hash_name_add(self._c_net,cbus._c_ptr);
 
     property num_periods:
         """ Number of time periods (int). """

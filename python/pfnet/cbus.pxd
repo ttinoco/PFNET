@@ -6,6 +6,8 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
+cimport cnet
+
 cdef extern from "pfnet/bus.h":
 
     ctypedef struct Bus
@@ -111,6 +113,7 @@ cdef extern from "pfnet/bus.h":
     bint BUS_has_flags(Bus* bus, char flag_type, char mask)
     Bus* BUS_new(int num_periods)
     Bus* BUS_array_new(int size, int num_periods)
+    void BUS_set_slack(Bus* bus, bint slack);
     void BUS_set_next(Bus* bus, Bus* next_bus)
     void BUS_set_number(Bus* bus, REAL num)
     void BUS_set_name(Bus* bus, char* name)
@@ -124,4 +127,14 @@ cdef extern from "pfnet/bus.h":
     void BUS_set_v_min_norm(Bus* bus, REAL v_min_norm)
     void BUS_set_v_max_emer(Bus* bus, REAL v_max_emer)
     void BUS_set_v_min_emer(Bus* bus, REAL v_min_emer)
+    void BUS_add_gen(Bus* bus, Gen* gen)
+    void BUS_add_load(Bus* bus, Load* load)
+    void BUS_add_reg_gen(Bus* bus, Gen* reg_gen)
+    void BUS_add_reg_tran(Bus* bus, Branch* reg_tran)
+    void BUS_add_reg_shunt(Bus* bus, Shunt* reg_shunt)
+    void BUS_add_shunt(Bus* bus, Shunt* shunt)
+    void BUS_add_vargen(Bus* bus, Vargen* gen)
+    void BUS_add_bat(Bus* bus, Bat* bat)
+    void BUS_add_branch_k(Bus* bus, Branch* branch)
+    void BUS_add_branch_m(Bus* bus, Branch* branch)
     void BUS_show(Bus* bus, int t)

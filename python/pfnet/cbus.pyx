@@ -96,6 +96,17 @@ cdef class Bus:
         """
 
         return cbus.BUS_is_slack(self._c_ptr)
+        
+    def set_as_slack(self, b):
+        """
+        Set the bus to be a slack bus.
+        
+        Parameters
+        ----------
+        bool : {``True``, ``False``}
+        """
+
+        cbus.BUS_set_slack(self._c_ptr, b)
 
     def is_regulated_by_gen(self):
         """
@@ -403,6 +414,166 @@ cdef class Bus:
         """
 
         cbus.BUS_set_v_ang(self._c_ptr,v,t)
+        
+    def add_generator(self,gen):
+        """
+        Add a generator connection to this bus.
+        
+        Parameters
+        ----------
+        gen : :class:`Generator <pfnet.Generator>`
+        """
+        cdef Generator cgen
+        
+        if not isinstance(gen,Generator):
+            raise BusError('Not a Generator type object')
+        
+        cgen = gen
+        cbus.BUS_add_gen(self._c_ptr, cgen._c_ptr)
+    
+    def add_reg_generator(self,reg_gen):
+        """
+        Add a regulating generator connection to this bus.
+        
+        Parameters
+        ----------
+        reg_gen : :class:`Generator <pfnet.Generator>`
+        """
+        cdef Generator creg_gen
+        
+        if not isinstance(reg_gen,Generator):
+            raise BusError('Not a Generator type object')
+        
+        creg_gen = reg_gen
+        cbus.BUS_add_reg_gen(self._c_ptr, creg_gen._c_ptr)
+    
+    def add_load(self,load):
+        """
+        Add a load connection to this bus.
+        
+        Parameters
+        ----------
+        load : :class:`Load <pfnet.Load>`
+        """
+        cdef Load cload
+        
+        if not isinstance(load,Load):
+            raise BusError('Not a Load type object')
+        
+        cload = load
+        cbus.BUS_add_load(self._c_ptr, cload._c_ptr)
+    
+    def add_branch_k(self,branch):
+        """
+        Add a 'k' branch connection to this bus.
+        
+        Parameters
+        ----------
+        branch : :class:`Branch <pfnet.Branch>`
+        """
+        cdef Branch cbranch
+        
+        if not isinstance(branch,Branch):
+            raise BusError('Not a Branch type object')
+        
+        cbranch = branch
+        cbus.BUS_add_branch_k(self._c_ptr, cbranch._c_ptr)
+    
+    def add_branch_m(self,branch):
+        """
+        Add a 'm' branch connection to this bus.
+        
+        Parameters
+        ----------
+        branch : :class:`Branch <pfnet.Branch>`
+        """
+        cdef Branch cbranch
+        
+        if not isinstance(branch,Branch):
+            raise BusError('Not a Branch type object')
+        
+        cbranch = branch
+        cbus.BUS_add_branch_m(self._c_ptr, cbranch._c_ptr)
+    
+    def add_reg_tran(self,reg_tran_branch):
+        """
+        Add a regulating transformer connection to this bus.
+        
+        Parameters
+        ----------
+        reg_tran_branch : :class:`Branch <pfnet.Branch>`
+        """
+        cdef Branch cbranch
+        
+        if not isinstance(reg_tran_branch,Branch):
+            raise BusError('Not a Branch type object')
+        
+        cbranch = reg_tran_branch
+        cbus.BUS_add_reg_tran(self._c_ptr, cbranch._c_ptr)
+    
+    def add_shunt(self,shunt):
+        """
+        Add a shunt connection to this bus.
+        
+        Parameters
+        ----------
+        shunt : :class:`Shunt <pfnet.Shunt>`
+        """
+        cdef Shunt cshunt
+        
+        if not isinstance(shunt,Shunt):
+            raise BusError('Not a Shunt type object')
+        
+        cshunt = shunt
+        cbus.BUS_add_shunt(self._c_ptr, cshunt._c_ptr)
+    
+    def add_reg_shunt(self,reg_shunt):
+        """
+        Add a regulating shunt connection to this bus.
+        
+        Parameters
+        ----------
+        reg_shunt : :class:`Shunt <pfnet.Shunt>`
+        """
+        cdef Shunt cshunt
+        
+        if not isinstance(reg_shunt,Shunt):
+            raise BusError('Not a Shunt type object')
+        
+        cshunt = reg_shunt
+        cbus.BUS_add_reg_shunt(self._c_ptr, cshunt._c_ptr)
+    
+    def add_vargen(self,vargen):
+        """
+        Add a variable generator connection to this bus.
+        
+        Parameters
+        ----------
+        vargen : :class:`VarGenerator <pfnet.VarGenerator>`
+        """
+        cdef VarGenerator cvargen
+        
+        if not isinstance(vargen,VarGenerator):
+            raise BusError('Not a VarGenerator type object')
+        
+        cvargen = vargen
+        cbus.BUS_add_vargen(self._c_ptr, cvargen._c_ptr)
+    
+    def add_bat(self,bat):
+        """
+        Add a battery connection to this bus.
+        
+        Parameters
+        ----------
+        bat : :class:`Battery <pfnet.Battery>`
+        """
+        cdef Battery cbat
+        
+        if not isinstance(bat,Battery):
+            raise BusError('Not a Battery type object')
+        
+        cbat = bat
+        cbus.BUS_add_bat(self._c_ptr, cbat._c_ptr)
 
     def show(self,t=0):
         """

@@ -81,7 +81,7 @@ cdef class Shunt:
         Parameters
         ----------
         flag_type : string (:ref:`ref_net_flag`)
-        q : string or list of strings (:ref:`ref_bus_q`)
+        q : string or list of strings (:ref:`ref_shunt_q`)
 
         Returns
         -------
@@ -93,6 +93,21 @@ cdef class Shunt:
         return cshunt.SHUNT_has_flags(self._c_ptr,
                                       str2flag[flag_type],
                                       reduce(lambda x,y: x|y,[str2q[self.obj_type][qq] for qq in q],0))
+
+    def set_b_values(self,values,norm=1.0):
+        """
+        Sets the block susceptance values for :ref:`b_values` with normalization.
+        
+        Parameters
+        ----------
+        values : :class:`ndarray <numpy.ndarray>`
+        norm : float
+        """
+        
+        cdef int i
+        cdef np.ndarray[double,mode='c'] x = values
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (values is not None and values.size) else NULL
+        cshunt.SHUNT_set_b_values(self._c_ptr,cvec.VEC_get_data(v),len(values),norm)
 
     property num_periods:
         """ Number of time periods (int). """
@@ -117,15 +132,34 @@ cdef class Shunt:
 
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which the shunt devices is connected. """
-        def __get__(self): return new_Bus(cshunt.SHUNT_get_bus(self._c_ptr))
+        def __get__(self):
+            return new_Bus(cshunt.SHUNT_get_bus(self._c_ptr))
+        def __set__(self,bus):
+            cdef Bus cbus
+            
+            if not isinstance(bus,Bus):
+                raise ShuntError('Not a Bus type object')
+            
+            cbus = bus
+            cshunt.SHUNT_set_bus(self._c_ptr,cbus._c_ptr)
 
     property reg_bus:
         """ :class:`Bus <pfnet.Bus>` whose voltage magnitude is regulated by this shunt device. """
-        def __get__(self): return new_Bus(cshunt.SHUNT_get_reg_bus(self._c_ptr))
-
+        def __get__(self): 
+            return new_Bus(cshunt.SHUNT_get_reg_bus(self._c_ptr))
+        def __set__(self,bus):
+            cdef Bus creg_bus
+            
+            if not isinstance(bus,Bus):
+                raise ShuntError('Not a Bus type object')
+            
+            creg_bus = bus
+            cshunt.SHUNT_set_reg_bus(self._c_ptr,creg_bus._c_ptr)
+            
     property g:
         """ Shunt conductance (p.u.) (float). """
         def __get__(self): return cshunt.SHUNT_get_g(self._c_ptr)
+        def __set__(self,value): cshunt.SHUNT_set_g(self._c_ptr,value)
 
     property b:
         """ Shunt susceptance (p.u.) (float or array). """
@@ -135,6 +169,11 @@ cdef class Shunt:
                 return AttributeFloat(r[0])
             else:
                 return np.array(r)
+        def __set__(self,value):
+            cdef int t
+            cdef np.ndarray Sus = np.array(value).flatten()
+            for t in range(np.minimum(Sus.size,self.num_periods)):
+                cshunt.SHUNT_set_b(self._c_ptr,Sus[t],t)
 
     property b_max:
         """ Shunt susceptance upper limit (p.u.) (float). """
@@ -145,6 +184,12 @@ cdef class Shunt:
         """ Shunt susceptance lower limit (p.u.) (float). """
         def __get__(self): return cshunt.SHUNT_get_b_min(self._c_ptr)
         def __set__(self,value): cshunt.SHUNT_set_b_min(self._c_ptr,value)
+
+    property b_values:
+        """ Available shunt susceptance step block values (p.u.) (np.array). """
+        def __get__(self):
+            return  Vector(cvec.VEC_new_from_array(cshunt.SHUNT_get_b_values(self._c_ptr),cshunt.SHUNT_get_num_b_values(self._c_ptr)),
+                           owndata=True)
 
 cdef new_Shunt(cshunt.Shunt* s):
     if s is not NULL:

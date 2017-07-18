@@ -11,6 +11,7 @@ cdef extern from "pfnet/gen.h":
     ctypedef struct Gen
     ctypedef struct Bus
     ctypedef double REAL
+    ctypedef char BOOL
     
     cdef char GEN_VAR_P
     cdef char GEN_VAR_Q
@@ -56,12 +57,18 @@ cdef extern from "pfnet/gen.h":
     bint GEN_is_slack(Gen* gen)
     bint GEN_has_flags(Gen* gen, char flag_type, char mask)
     Gen* GEN_new(int num_periods)
+    Gen* GEN_array_new(int size, int num_periods)
+    void GEN_set_outage(Gen* gen, BOOL outage)
+    void GEN_set_bus(Gen* gen, Bus* bus)
+    void GEN_set_reg_bus(Gen* gen, Bus* reg_bus)
     void GEN_set_P(Gen* gen, REAL P, int t)
     void GEN_set_P_min(Gen* gen, REAL P)
     void GEN_set_P_prev(Gen* gen, REAL P)
     void GEN_set_P_max(Gen* gen, REAL P)
     void GEN_set_dP_max(Gen* gen, REAL P)
     void GEN_set_Q(Gen* gen, REAL Q, int t)
+    void GEN_set_Q_max(Gen* gen, REAL Q)
+    void GEN_set_Q_min(Gen* gen, REAL Q)
     void GEN_set_cost_coeff_Q0(Gen* gen, REAL c)
     void GEN_set_cost_coeff_Q1(Gen* gen, REAL c)
     void GEN_set_cost_coeff_Q2(Gen* gen, REAL c)

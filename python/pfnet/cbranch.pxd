@@ -28,8 +28,13 @@ cdef extern from "pfnet/branch.h":
     cdef char BRANCH_PROP_TAP_CHANGER_Q
     cdef char BRANCH_PROP_PHASE_SHIFTER
     cdef char BRANCH_PROP_NOT_OUT
+    
+    cdef int BRANCH_TYPE_LINE
+    cdef int BRANCH_TYPE_TRAN_FIXED
+    cdef int BRANCH_TYPE_TRAN_TAP_V
+    cdef int BRANCH_TYPE_TRAN_TAP_Q
+    cdef int BRANCH_TYPE_TRAN_PHASE
 
-    # TODO void BRANCH_array_del(Branch* br_array, int size)
     REAL BRANCH_get_sens_P_u_bound(Branch* br, int t)
     REAL BRANCH_get_sens_P_l_bound(Branch* br, int t)
     char BRANCH_get_obj_type(void* br)

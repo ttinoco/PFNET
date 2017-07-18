@@ -105,6 +105,26 @@ cdef class Branch:
 
         cbranch.BRANCH_set_phase(self._c_ptr,p,t)
 
+    def set_as_fixed_tran(self):
+        """ Set the branch as a fixed transformer. """
+        cbranch.BRANCH_set_type(self._c_ptr,cbranch.BRANCH_TYPE_TRAN_FIXED)
+
+    def set_as_line(self):
+        """ Set the branch as a line. """
+        cbranch.BRANCH_set_type(self._c_ptr,cbranch.BRANCH_TYPE_LINE)
+
+    def set_as_phase_shifter(self):
+        """ Set the branch as a phase shifter. """
+        cbranch.BRANCH_set_type(self._c_ptr,cbranch.BRANCH_TYPE_TRAN_PHASE)
+
+    def set_as_tap_changer_v(self):
+        """ Set the branch as a tap changer regulating voltage. """
+        cbranch.BRANCH_set_type(self._c_ptr,cbranch.BRANCH_TYPE_TRAN_TAP_V)
+
+    def set_as_tap_changer_Q(self):
+        """ Set the branch as a tap changer regulating reactive power. """
+        cbranch.BRANCH_set_type(self._c_ptr,cbranch.BRANCH_TYPE_TRAN_TAP_Q)
+
     def __richcmp__(self,other,op):
         """
         Compares two branches.
@@ -477,23 +497,6 @@ cdef class Branch:
             return AttributeFloat(r[0])
         else:
             return np.array(r)
-            
-    # TBD
-    # def copy_branch_info(self,copy_branch):
-    #     """
-    #     Copies all the information from one branch into this branch.
-    #     
-    #     Parameters
-    #     ----------
-    #     copy_branch : :class:`Branch <pfnet.Branch>`
-    #     """
-    #     
-    #     #TODO maybe? call all set functions for this with get functions from copy_branch
-    #     # self.bus_k = copy_branch.bus_k
-    #     # self.bus_m = copy_branch.bus_m
-    #     # self.reg_bus = copy_branch.reg_bus
-    #     
-    #     pass
 
     property num_periods:
         """ Number of time periods (int). """
@@ -556,7 +559,8 @@ cdef class Branch:
 
     property bus_k:
         """ :class:`Bus <pfnet.Bus>` connected to the "k" (aka "from" or "i") side. """
-        def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_k(self._c_ptr))
+        def __get__(self):
+            return new_Bus(cbranch.BRANCH_get_bus_k(self._c_ptr))
         def __set__(self,bus): 
             cdef Bus cbus
             
@@ -573,7 +577,8 @@ cdef class Branch:
 
     property bus_m:
         """ :class:`Bus <pfnet.Bus>` connected to the "m" (aka "to" or "j") side. """
-        def __get__(self): return new_Bus(cbranch.BRANCH_get_bus_m(self._c_ptr))
+        def __get__(self):
+            return new_Bus(cbranch.BRANCH_get_bus_m(self._c_ptr))
         def __set__(self,bus): 
             cdef Bus cbus
             
@@ -585,7 +590,8 @@ cdef class Branch:
 
     property reg_bus:
         """ :class:`Bus <pfnet.Bus>` whose voltage is regulated by this tap-changing transformer. """
-        def __get__(self): return new_Bus(cbranch.BRANCH_get_reg_bus(self._c_ptr))
+        def __get__(self):
+            return new_Bus(cbranch.BRANCH_get_reg_bus(self._c_ptr))
         def __set__(self,bus): 
             cdef Bus cbus
             
@@ -832,6 +838,7 @@ cdef class Branch:
     property outage:
         """ Flag that indicates whether branch is on outage. """
         def __get__(self): return cbranch.BRANCH_is_on_outage(self._c_ptr)
+        def __set__(self,b): cbranch.BRANCH_set_outage(self._c_ptr,b)
 
 cdef new_Branch(cbranch.Branch* b):
     if b is not NULL:
