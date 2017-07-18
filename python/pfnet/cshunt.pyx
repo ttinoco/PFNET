@@ -96,7 +96,7 @@ cdef class Shunt:
 
     def set_b_values(self,values,norm=1.0):
         """
-        Sets the block susceptance values for :ref:`b_values` with normalization.
+        Sets the block susceptance values for :attr:`b_values` with normalization.
         
         Parameters
         ----------
