@@ -1165,9 +1165,9 @@ char* BUS_get_json_string(Bus* bus) {
   strcat(output,", ");
 
   // Slack
-  //sprintf(temp,"\"slack\" : %s", bus->slack ? "true" : "false");
-  //strcat(output,temp);
-  //strcat(output,", ");
+  sprintf(temp,"\"slack\" : %s", bus->slack ? "true" : "false");
+  strcat(output,temp);
+  strcat(output,", ");
 
   // Price
   strcat(output,"\"price\" : [ ");

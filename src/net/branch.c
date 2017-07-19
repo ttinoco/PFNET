@@ -757,6 +757,197 @@ Vec* BRANCH_get_var_indices(void* vbr, unsigned char var, int t_start, int t_end
   return indices;
 }
 
+char* BRANCH_get_json_string(Branch* branch) {
+
+  // Local variables
+  char* temp;
+  char* output;
+  int i;
+
+  // No bus
+  if (!branch)
+    return NULL;
+
+  // Alloc
+  temp = (char*)malloc(sizeof(char)*BRANCH_BUFFER_SIZE);
+  output = (char*)malloc(sizeof(char)*BRANCH_BUFFER_SIZE*30*branch->num_periods);
+
+  // Start
+  strcpy(output,"{ ");
+
+  // Type
+  sprintf(temp,"\"type\" : %d", branch->type);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Num periods
+  sprintf(temp,"\"num_periods\" : %d", branch->num_periods);
+  strcat(output,temp);
+  strcat(output,", ");
+  
+  // Bus k
+  if (branch->bus_k)
+    sprintf(temp,"\"bus_k\" : %d", BUS_get_index(branch->bus_k));
+  else
+    sprintf(temp,"\"bus_k\" : %s", "null");
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Bus m
+  if (branch->bus_m)
+    sprintf(temp,"\"bus_m\" : %d", BUS_get_index(branch->bus_m));
+  else
+    sprintf(temp,"\"bus_m\" : %s", "null");
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Reg bus
+  if (branch->reg_bus)
+    sprintf(temp,"\"reg_bus\" : %d", BUS_get_index(branch->reg_bus));
+  else
+    sprintf(temp,"\"reg_bus\" : %s", "null");
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // g
+  sprintf(temp,"\"g\" : %.10e", branch->g);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // g k
+  sprintf(temp,"\"g_k\" : %.10e", branch->g_k);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // g m
+  sprintf(temp,"\"g_m\" : %.10e", branch->g_m);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // b
+  sprintf(temp,"\"b\" : %.10e", branch->b);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // b k
+  sprintf(temp,"\"b_k\" : %.10e", branch->b_k);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // b m
+  sprintf(temp,"\"b_m\" : %.10e", branch->b_m);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Ratio
+  strcat(output,"\"ratio\" : [ ");
+  for (i = 0; i < branch->num_periods; i++) {
+    sprintf(temp,"%.10e", branch->ratio[i]);
+    strcat(output,temp);
+    if (i < branch->num_periods-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+  
+  // Ratio max
+  sprintf(temp,"\"ratio_max\" : %.10e", branch->ratio_max);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Ratio min
+  sprintf(temp,"\"ratio_min\" : %.10e", branch->ratio_min);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Num ratios
+  sprintf(temp,"\"num_ratios\" : %d", branch->num_ratios);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Phase
+  strcat(output,"\"phase\" : [ ");
+  for (i = 0; i < branch->num_periods; i++) {
+    sprintf(temp,"%.10e", branch->phase[i]);
+    strcat(output,temp);
+    if (i < branch->num_periods-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+ 
+  // Phase max
+  sprintf(temp,"\"phase_max\" : %.10e", branch->phase_max);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Phase min
+  sprintf(temp,"\"phase_min\" : %.10e", branch->phase_min);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Rating A
+  sprintf(temp,"\"ratingA\" : %.10e", branch->ratingA);
+  strcat(output,temp);
+  strcat(output,", ");
+  
+  // Rating B
+  sprintf(temp,"\"ratingB\" : %.10e", branch->ratingB);
+  strcat(output,temp);
+  strcat(output,", ");
+  
+  // Rating C
+  sprintf(temp,"\"ratingC\" : %.10e", branch->ratingC);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Outage
+  sprintf(temp,"\"outage\" : %s", branch->outage ? "true" : "false");
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Pos ratio-voltage sensitivity
+  sprintf(temp,"\"pos_ratio_v_sens\" : %s", branch->pos_ratio_v_sens ? "true" : "false");
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Index
+  sprintf(temp,"\"index\" : %d", branch->index);
+  strcat(output,temp);
+  strcat(output,", ");
+  
+  // Reg next
+  if (branch->reg_next)
+    sprintf(temp,"\"reg_next\" : %d", BRANCH_get_index(branch->reg_next));
+  else
+    sprintf(temp,"\"reg_next\" : %s", "null");
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Next k
+  if (branch->next_k)
+    sprintf(temp,"\"next_k\" : %d", BRANCH_get_index(branch->next_k));
+  else
+    sprintf(temp,"\"next_k\" : %s", "null");
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Next m
+  if (branch->next_m)
+    sprintf(temp,"\"next_m\" : %d", BRANCH_get_index(branch->next_m));
+  else
+    sprintf(temp,"\"next_m\" : %s", "null");
+  strcat(output,temp);
+  strcat(output,"");
+
+  // End
+  strcat(output," }");
+  
+  // Free 
+  free(temp);
+  output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
+
+  return output;
+}
+
 BOOL BRANCH_has_pos_ratio_v_sens(Branch* branch) {
   if (branch)
     return branch->pos_ratio_v_sens;

@@ -34,6 +34,23 @@ class TestJSON(unittest.TestCase):
                 except ValueError:
                     valid_json = False
                 self.assertTrue(valid_json)
+
+    def test_branch_json_string(self):
+
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+
+            for branch in net.branches:
+                text = branch.json_string
+                try:
+                    json.loads(text)
+                    valid_json = True
+                except ValueError:
+                    valid_json = False
+                self.assertTrue(valid_json)
                 
     def tearDown(self):
 
