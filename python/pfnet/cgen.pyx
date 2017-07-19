@@ -297,6 +297,18 @@ cdef class Generator:
         def __get__(self): return cgen.GEN_get_cost_coeff_Q2(self._c_ptr)
         def __set__(self,c): cgen.GEN_set_cost_coeff_Q2(self._c_ptr,c)
 
+    property outage:
+        """ Flag that indicates whehter generator is on outage. """
+        def __get__(self): return cgen.GEN_is_on_outage(self._c_ptr)
+
+    property json_string:
+        """ JSON string (string). """
+        def __get__(self): 
+            cdef char* json_string = cgen.GEN_get_json_string(self._c_ptr)
+            s = json_string.decode('UTF-8')
+            free(json_string)
+            return s
+
     property sens_P_u_bound:
         """ Objective function sensitivity with respect to active power upper bound (float or array). """
         def __get__(self):
@@ -314,10 +326,6 @@ cdef class Generator:
                 return AttributeFloat(r[0])
             else:
                 return np.array(r)
-
-    property outage:
-        """ Flag that indicates whehter generator is on outage. """
-        def __get__(self): return cgen.GEN_is_on_outage(self._c_ptr)
 
 cdef new_Generator(cgen.Gen* g):
     if g is not NULL:

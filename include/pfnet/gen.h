@@ -89,6 +89,7 @@ REAL GEN_get_Q_min(Gen* gen);
 void GEN_get_var_values(Gen* gen, Vec* values, int code);
 int GEN_get_num_vars(void* gen, unsigned char var, int t_start, int t_end);
 Vec* GEN_get_var_indices(void* gen, unsigned char var, int t_start, int t_end);
+char* GEN_get_json_string(Gen* gen);
 BOOL GEN_has_flags(void* gen, char flag_type, unsigned char mask);
 BOOL GEN_has_properties(void* gen, char prop);
 void GEN_init(Gen* gen, int num_periods);
