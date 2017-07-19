@@ -16,6 +16,7 @@ Unreleased
 * H_combined is now completely handled by "base" constraint in constr.c. Custom constraints no longer need to allocate this matrix (done).
 * -Wall -Werror had no effect in Makefile.am and were moved to configure.ac. Now they work (requires autoconf-archive) (done).
 * Support for adding nonlinear constraints in Python and documentation (done).
+* JSON network representation and parser.
 
 Version 1.3.0
 -------------

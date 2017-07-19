@@ -21,8 +21,8 @@ struct Vargen {
   int num_periods;   /**< @brief Number of time periods. */
 
   // Properties
-  char name[VARGEN_NAME_BUFFER_SIZE]; /**< @brief Variable generator name */
-  char type;                          /**< @brief Variable generator type */
+  char name[VARGEN_BUFFER_SIZE]; /**< @brief Variable generator name */
+  char type;                     /**< @brief Variable generator type */
   
   // Flags
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
@@ -85,7 +85,7 @@ Vargen* VARGEN_array_new(int size, int num_periods) {
     for (i = 0; i < size; i++) {
       VARGEN_init(&(gen_array[i]),num_periods);
       VARGEN_set_index(&(gen_array[i]),i);
-      snprintf(gen_array[i].name,(size_t)(VARGEN_NAME_BUFFER_SIZE-1),"VARGEN %d",i+1);
+      snprintf(gen_array[i].name,(size_t)(VARGEN_BUFFER_SIZE-1),"VARGEN %d",i+1);
     }
     return gen_array;
   }
@@ -401,7 +401,7 @@ void VARGEN_init(Vargen* gen, int num_periods) {
 
   gen->bus = NULL;
   gen->type = VARGEN_TYPE_WIND;
-  ARRAY_clear(gen->name,char,VARGEN_NAME_BUFFER_SIZE);
+  ARRAY_clear(gen->name,char,VARGEN_BUFFER_SIZE);
   gen->fixed = 0x00;
   gen->bounded = 0x00;
   gen->sparse = 0x00;
@@ -466,7 +466,7 @@ Vargen* VARGEN_new(int num_periods) {
 
 void VARGEN_set_name(Vargen* gen, char* name) {
   if (gen)
-    strncpy(gen->name,name,(size_t)(VARGEN_NAME_BUFFER_SIZE-1));
+    strncpy(gen->name,name,(size_t)(VARGEN_BUFFER_SIZE-1));
 }
 
 void VARGEN_set_bus(Vargen* gen, Bus* bus) {

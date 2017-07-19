@@ -262,6 +262,14 @@ cdef class Load:
         def __get__(self): return cload.LOAD_get_util_coeff_Q2(self._c_ptr)
         def __set__(self,c): cload.LOAD_set_util_coeff_Q2(self._c_ptr,c)
 
+    property json_string:
+        """ JSON string (string). """
+        def __get__(self): 
+            cdef char* json_string = cload.LOAD_get_json_string(self._c_ptr)
+            s = json_string.decode('UTF-8')
+            free(json_string)
+            return s
+
     property sens_P_u_bound:
         """ Objective function sensitivity with respect to active power upper bound (float or array). """
         def __get__(self):

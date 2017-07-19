@@ -34,6 +34,13 @@
 #define SHUNT_PROP_SWITCHED_V 0x01 /**< @brief Property: switched that regulates bus voltage **/
 /** @} */
 
+// Constants
+/** \defgroup shunt_const Shunt Constants
+ *  @{
+ */
+#define SHUNT_BUFFER_SIZE 100  /**< @brief Constant: buffer size for strings */
+/** @} */
+
 // Struct
 typedef struct Shunt Shunt;
 

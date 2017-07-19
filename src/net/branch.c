@@ -764,7 +764,7 @@ char* BRANCH_get_json_string(Branch* branch) {
   char* output;
   int i;
 
-  // No bus
+  // No branch
   if (!branch)
     return NULL;
 

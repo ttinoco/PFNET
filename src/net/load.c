@@ -383,6 +383,120 @@ Vec* LOAD_get_var_indices(void* vload, unsigned char var, int t_start, int t_end
   return indices;
 }
 
+char* LOAD_get_json_string(Load* load) {
+
+  // Local variables
+  char* temp;
+  char* output;
+  int i;
+
+  // No load
+  if (!load)
+    return NULL;
+
+  // Alloc
+  temp = (char*)malloc(sizeof(char)*LOAD_BUFFER_SIZE);
+  output = (char*)malloc(sizeof(char)*LOAD_BUFFER_SIZE*15*load->num_periods);
+  
+  // Start
+  strcpy(output,"{ ");
+
+  // Bus
+  if (load->bus)
+    sprintf(temp,"\"bus\" : %d", BUS_get_index(load->bus));
+  else
+    sprintf(temp,"\"bus\" : %s", "null");
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Num periods
+  sprintf(temp,"\"num_periods\" : %d", load->num_periods);
+  strcat(output,temp);
+  strcat(output,", ");
+  
+  // P
+  strcat(output,"\"P\" : [ ");
+  for (i = 0; i < load->num_periods; i++) {
+    sprintf(temp,"%.10e", load->P[i]);
+    strcat(output,temp);
+    if (i < load->num_periods-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // P max
+  strcat(output,"\"P_max\" : [ ");
+  for (i = 0; i < load->num_periods; i++) {
+    sprintf(temp,"%.10e", load->P_max[i]);
+    strcat(output,temp);
+    if (i < load->num_periods-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // P min
+  strcat(output,"\"P_min\" : [ ");
+  for (i = 0; i < load->num_periods; i++) {
+    sprintf(temp,"%.10e", load->P_min[i]);
+    strcat(output,temp);
+    if (i < load->num_periods-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // Q
+  strcat(output,"\"Q\" : [ ");
+  for (i = 0; i < load->num_periods; i++) {
+    sprintf(temp,"%.10e", load->Q[i]);
+    strcat(output,temp);
+    if (i < load->num_periods-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // Target power factor
+  sprintf(temp,"\"target_power_factor\" : %.10e", load->target_power_factor);
+  strcat(output,temp);
+  strcat(output,", ");
+  
+  // Index
+  sprintf(temp,"\"index\" : %d", load->index);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Util coeff Q0
+  sprintf(temp,"\"util_coeff_Q0\" : %.10e", load->util_coeff_Q0);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Util coeff Q1
+  sprintf(temp,"\"util_coeff_Q1\" : %.10e", load->util_coeff_Q1);
+  strcat(output,temp);
+  strcat(output,", ");
+  
+  // Util coeff Q2
+  sprintf(temp,"\"util_coeff_Q2\" : %.10e", load->util_coeff_Q2);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Next
+  if (load->next)
+    sprintf(temp,"\"next\" : %d", LOAD_get_index(load->next));
+  else
+    sprintf(temp,"\"next\" : %s", "null");
+  strcat(output,temp);
+  strcat(output,"");
+  
+  // End
+  strcat(output," }");
+  
+  // Free 
+  free(temp);
+  output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
+
+  return output;
+}
+
 BOOL LOAD_has_flags(void* vload, char flag_type, unsigned char mask) {
   Load* load = (Load*)vload;
   if (load) {

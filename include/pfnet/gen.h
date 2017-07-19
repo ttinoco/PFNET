@@ -41,6 +41,13 @@
 #define GEN_PROP_P_ADJUST 0x20  /**< @brief Property: P adjustable (Pmin < Pmax) */
 /** @} */
 
+// Constants
+/** \defgroup gen_const Gen Constants
+ *  @{
+ */
+#define GEN_BUFFER_SIZE 100  /**< @brief Constant: buffer size for strings */
+/** @} */
+
 // Generator
 typedef struct Gen Gen;
 

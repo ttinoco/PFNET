@@ -35,6 +35,13 @@
 #define BAT_PROP_ANY 0x00     /**< @brief Property: any */
 /** @} */
 
+// Constants
+/** \defgroup bat_const Bat Constants
+ *  @{
+ */
+#define BAT_BUFFER_SIZE 100  /**< @brief Constant: buffer size for strings */
+/** @} */
+
 // Battery
 typedef struct Bat Bat;
 

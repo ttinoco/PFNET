@@ -44,7 +44,7 @@
 /** \defgroup vargen_const Variable Generator Constants
  *  @{
  */
-#define VARGEN_NAME_BUFFER_SIZE 25       /**< @brief Constant: buffer size for name */
+#define VARGEN_BUFFER_SIZE 100       /**< @brief Constant: buffer size for name */
 /** @} */
 
 // Variable generator

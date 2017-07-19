@@ -39,6 +39,13 @@
 #define LOAD_PROP_P_ADJUST 0x1 /**< @brief Property: P adjustable (Pmin < Pmax) */
 /** @} */
 
+// Constants
+/** \defgroup load_const Load Constants
+ *  @{
+ */
+#define LOAD_BUFFER_SIZE 100  /**< @brief Constant: buffer size for strings */
+/** @} */
+
 // Load
 typedef struct Load Load;
 
@@ -75,6 +82,7 @@ REAL LOAD_get_Q(Load* load, int t);
 void LOAD_get_var_values(Load* load, Vec* values, int code);
 int LOAD_get_num_vars(void* load, unsigned char var, int t_start, int t_end);
 Vec* LOAD_get_var_indices(void* load, unsigned char var, int t_start, int t_end);
+char* LOAD_get_json_string(Load* load);
 BOOL LOAD_has_flags(void* load, char flag_type, unsigned char mask);
 BOOL LOAD_has_properties(void* load, char prop);
 void LOAD_init(Load* load, int num_periods);
