@@ -987,17 +987,17 @@ cdef class Network:
         """
         Update the bus name and number hash lists.
         """
-        cdef Bus cbus
-        cdef Vargen cvg
+        cdef Bus cb
+        cdef VarGenerator cvg
         
         for bus in self.buses:
-            cbus = bus
-            cnet.NET_bus_hash_number_add(self._c_net,cbus._c_ptr)
-            cnet.NET_bus_hash_name_add(self._c_net,cbus._c_ptr)
+            cb = bus
+            cnet.NET_bus_hash_number_add(self._c_net,cb._c_ptr)
+            cnet.NET_bus_hash_name_add(self._c_net,cb._c_ptr)
             
-        for vg in self.vargen:
+        for vg in self.var_generators:
             cvg = vg
-            cnet.NET_vargen_hash_name_add(self._c_net, cvg._c_ptr)
+            cnet.NET_vargen_hash_name_add(self._c_net,cvg._c_ptr)
 
     property num_periods:
         """ Number of time periods (int). """

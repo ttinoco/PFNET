@@ -45,6 +45,9 @@ cdef extern from "pfnet/net.h":
     cbus.Bus* NET_bus_hash_number_find(Net* net, int number)
     cbus.Bus* NET_bus_hash_name_find(Net* net, char* name)
     cbus.Vargen* NET_vargen_hash_name_find(Net* net, char* name)
+    void NET_bus_hash_number_add(Net* net, cbus.Bus* bus)
+    void NET_bus_hash_name_add(Net* net, cbus.Bus* bus)
+    void NET_vargen_hash_name_add(Net* net, cvargen.Vargen* vargen)
     void NET_clear_error(Net* net)
     void NET_clear_flags(Net* net)
     void NET_clear_properties(Net* net)
@@ -131,5 +134,3 @@ cdef extern from "pfnet/net.h":
     void NET_update_properties(Net* net, cvec.Vec* values)
     void NET_propagate_data_in_time(Net* net)
     void NET_update_set_points(Net* net)
-    void NET_bus_hash_number_add(Net* net, Bus* bus);
-    void NET_bus_hash_name_add(Net* net, Bus* bus);
