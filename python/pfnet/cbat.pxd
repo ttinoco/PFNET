@@ -39,6 +39,7 @@ cdef extern from "pfnet/bat.h":
     Bat* BAT_get_next(Bat* bat)
     bint BAT_has_flags(Bat* bat, char flag_type, char mask)
     Bat* BAT_new(int num_periods)
+    Bat* BAT_array_new(int size, int num_periods)
     void BAT_set_P(Bat* bat, REAL P, int t)
     void BAT_set_P_min(Bat* bat, REAL P_min)
     void BAT_set_P_max(Bat* bat, REAL P_max)

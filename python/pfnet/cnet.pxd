@@ -31,6 +31,8 @@ cdef extern from "pfnet/net.h":
     void NET_set_gen_array(Net* net, cgen.Gen* gen_list, int num_generators)
     void NET_set_load_array(Net* net, cload.Load* load_list, int num_loads)
     void NET_set_shunt_array(Net* net, cshunt.Shunt* shunt_list, int num_shunts)
+    void NET_set_vargen_array(Net* net, cvargen.Vargen* vargen_list, int num_vargens)
+    void NET_set_bat_array(Net* net, cbat.Bat* bat_list, int num_batteries)
     
     # TODO new methods needed for adding components to the network
     # void NET_add_new_generator(Net* net, cgen.Generator generator)

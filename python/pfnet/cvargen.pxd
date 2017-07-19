@@ -38,6 +38,8 @@ cdef extern from "pfnet/vargen.h":
     Vargen* VARGEN_get_next(Vargen* gen)
     bint VARGEN_has_flags(Vargen* gen, char flag_type, char mask)
     Vargen* VARGEN_new(int num_periods)
+    Vargen* VARGEN_array_new(int size, int num_periods)
+    void NET_vargen_hash_name_add(Net* net, Vargen* vargen)
     void VARGEN_set_name(Vargen* gen, char* name)
     void VARGEN_set_P(Vargen* gen, REAL P, int t)
     void VARGEN_set_P_ava(Vargen* gen, REAL P, int t)

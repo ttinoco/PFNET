@@ -887,6 +887,30 @@ cdef class Network:
 
         cdef cshunt.Shunt* array = cshunt.SHUNT_array_new(size,self.num_periods)
         cnet.NET_set_shunt_array(self._c_net,array,size)
+        
+    def set_vargen_array(self,size):
+        """
+        Allocates and sets variable generator array.
+
+        Parameters
+        ----------
+        size : int
+        """
+
+        cdef cvargen.Vargen* array = cvargen.VARGEN_array_new(size,self.num_periods)
+        cnet.NET_set_vargen_array(self._c_net,array,size)
+        
+    def set_battery_array(self,size):
+        """
+        Allocates and sets battery array.
+
+        Parameters
+        ----------
+        size : int
+        """
+
+        cdef cbat.Bat* array = cbat.BAT_array_new(size,self.num_periods)
+        cnet.NET_set_bat_array(self._c_net,array,size)
 
     def set_var_values(self,values):
         """
@@ -964,11 +988,16 @@ cdef class Network:
         Update the bus name and number hash lists.
         """
         cdef Bus cbus
+        cdef Vargen cvg
         
         for bus in self.buses:
             cbus = bus
-            cnet.NET_bus_hash_number_add(self._c_net,cbus._c_ptr);
-            cnet.NET_bus_hash_name_add(self._c_net,cbus._c_ptr);
+            cnet.NET_bus_hash_number_add(self._c_net,cbus._c_ptr)
+            cnet.NET_bus_hash_name_add(self._c_net,cbus._c_ptr)
+            
+        for vg in self.vargen:
+            cvg = vg
+            cnet.NET_vargen_hash_name_add(self._c_net, cvg._c_ptr)
 
     property num_periods:
         """ Number of time periods (int). """
