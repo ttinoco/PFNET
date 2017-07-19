@@ -44,18 +44,6 @@ struct Bus {
   char sparse;       /**< @brief Flags for indicating which control adjustments should be sparse */
   char vars;         /**< @brief Flags for indicating which quantities should be treated as variables */
 
-  // Components
-  Gen* gen;            /**< @brief List of generators connected to bus */
-  Gen* reg_gen;        /**< @brief List of generators regulating the voltage magnitude of bus */
-  Branch* reg_tran;    /**< @brief List of transformers regulating the voltage magnitude of bus */
-  Load* load;          /**< @brief List of loads connected to bus */
-  Shunt* shunt;        /**< @brief List of shunt devices connected to bus */
-  Shunt* reg_shunt;    /**< @brief List of shunt devices regulating the voltage magnitude of bus */
-  Branch* branch_k;    /**< @brief List of branches having this bus on the "k" side */
-  Branch* branch_m;    /**< @brief List of branches having this bus on the "m" side */
-  Vargen* vargen;      /**< @brief List of variable generators connected to bus */
-  Bat* bat;            /**< @brief List of batteries connected to bus */
-
   // Price
   REAL* price;        /**< @brief Energy price at bus ($/ (hr p.u.)) */
 
@@ -63,6 +51,18 @@ struct Bus {
   int index;          /**< @brief Bus index */
   int* index_v_mag;   /**< @brief Voltage magnitude index */
   int* index_v_ang;   /**< @brief Voltage angle index */
+
+  // Components
+  Gen* gen;            /**< @brief List of generators connected to bus */
+  Gen* reg_gen;        /**< @brief List of generators regulating the voltage magnitude of bus */
+  Load* load;          /**< @brief List of loads connected to bus */
+  Shunt* shunt;        /**< @brief List of shunt devices connected to bus */
+  Shunt* reg_shunt;    /**< @brief List of shunt devices regulating the voltage magnitude of bus */
+  Branch* branch_k;    /**< @brief List of branches having this bus on the "k" side */
+  Branch* branch_m;    /**< @brief List of branches having this bus on the "m" side */
+  Branch* reg_tran;    /**< @brief List of transformers regulating the voltage magnitude of bus */
+  Vargen* vargen;      /**< @brief List of variable generators connected to bus */
+  Bat* bat;            /**< @brief List of batteries connected to bus */
 
   // Sensitivities
   REAL* sens_P_balance;      /**< @brief Sensitivity of active power balance */
@@ -1070,6 +1070,13 @@ char* BUS_get_json_string(Bus* bus) {
   // Local variables
   char* temp;
   char* output;
+  Gen* gen;
+  Load* load;
+  Shunt* shunt;
+  Branch* branch;
+  Vargen* vargen;
+  Bat* bat;
+  int i;
 
   // No bus
   if (!bus)
@@ -1081,30 +1088,208 @@ char* BUS_get_json_string(Bus* bus) {
 
   // Start
   strcpy(output,"{ ");
- 
+  
   // Number
   sprintf(temp,"\"number\" : %d", bus->number);
   strcat(output,temp);
   strcat(output,", ");
 
   // Name
-  sprintf(temp,"\"name\" : %s", bus->name);
+  sprintf(temp,"\"name\" : \"%s\"", bus->name);
   strcat(output,temp);
   strcat(output,", ");
 
   // Num periods
   sprintf(temp,"\"num_periods\" : %d", bus->num_periods);
   strcat(output,temp);
+  strcat(output,", ");
+
+  // Voltage mag
+  strcat(output,"\"v_mag\" : [ ");
+  for (i = 0; i < bus->num_periods; i++) {
+    sprintf(temp,"%.10e", bus->v_mag[i]);
+    strcat(output,temp);
+    if (i < bus->num_periods-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // Voltage ang
+  strcat(output,"\"v_ang\" : [ ");
+  for (i = 0; i < bus->num_periods; i++) {
+    sprintf(temp,"%.10e", bus->v_ang[i]);
+    strcat(output,temp);
+    if (i < bus->num_periods-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // Voltage setpoint
+  strcat(output,"\"v_set\" : [ ");
+  for (i = 0; i < bus->num_periods; i++) {
+    sprintf(temp,"%.10e", bus->v_set[i]);
+    strcat(output,temp);
+    if (i < bus->num_periods-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // Voltage max reg
+  sprintf(temp,"\"v_max_reg\" : %.10e", bus->v_max_reg);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Voltage min reg
+  sprintf(temp,"\"v_min_reg\" : %.10e", bus->v_min_reg);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Voltage max norm
+  sprintf(temp,"\"v_max_norm\" : %.10e", bus->v_max_norm);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Voltage min norm
+  sprintf(temp,"\"v_min_norm\" : %.10e", bus->v_min_norm);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Voltage max emer
+  sprintf(temp,"\"v_max_emer\" : %.10e", bus->v_max_emer);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Voltage min emer
+  sprintf(temp,"\"v_min_emer\" : %.10e", bus->v_min_emer);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Slack
+  //sprintf(temp,"\"slack\" : %s", bus->slack ? "true" : "false");
+  //strcat(output,temp);
   //strcat(output,", ");
 
-  
-  
+  // Price
+  strcat(output,"\"price\" : [ ");
+  for (i = 0; i < bus->num_periods; i++) {
+    sprintf(temp,"%.10e", bus->price[i]);
+    strcat(output,temp);
+    if (i < bus->num_periods-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // Index
+  sprintf(temp,"\"index\" : %d", bus->index);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Generators
+  strcat(output,"\"generators\" : [ ");
+  for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+    sprintf(temp,"%d", GEN_get_index(gen));
+    strcat(output,temp);
+    if (GEN_get_next(gen) != NULL)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // Reg generators
+  strcat(output,"\"reg_generators\" : [ ");
+  for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen)) {
+    sprintf(temp,"%d", GEN_get_index(gen));
+    strcat(output,temp);
+    if (GEN_get_reg_next(gen) != NULL)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // Loads
+  strcat(output,"\"loads\" : [ ");
+  for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+    sprintf(temp,"%d", LOAD_get_index(load));
+    strcat(output,temp);
+    if (LOAD_get_next(load) != NULL)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // Shunts
+  strcat(output,"\"shunts\" : [ ");
+  for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+    sprintf(temp,"%d", SHUNT_get_index(shunt));
+    strcat(output,temp);
+    if (SHUNT_get_next(shunt) != NULL)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // Reg shunts
+  strcat(output,"\"reg_shunts\" : [ ");
+  for (shunt = BUS_get_reg_shunt(bus); shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
+    sprintf(temp,"%d", SHUNT_get_index(shunt));
+    strcat(output,temp);
+    if (SHUNT_get_reg_next(shunt) != NULL)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // Branches k side
+  strcat(output,"\"branches_k\" : [ ");
+  for (branch = BUS_get_branch_k(bus); branch != NULL; branch = BRANCH_get_next_k(branch)) {
+    sprintf(temp,"%d", BRANCH_get_index(branch));
+    strcat(output,temp);
+    if (BRANCH_get_next_k(branch) != NULL)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // Branches m side
+  strcat(output,"\"branches_m\" : [ ");
+  for (branch = BUS_get_branch_m(bus); branch != NULL; branch = BRANCH_get_next_m(branch)) {
+    sprintf(temp,"%d", BRANCH_get_index(branch));
+    strcat(output,temp);
+    if (BRANCH_get_next_m(branch) != NULL)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // Reg transformers
+  strcat(output,"\"reg_transformers\" : [ ");
+  for (branch = BUS_get_reg_tran(bus); branch != NULL; branch = BRANCH_get_reg_next(branch)) {
+    sprintf(temp,"%d", BRANCH_get_index(branch));
+    strcat(output,temp);
+    if (BRANCH_get_reg_next(branch) != NULL)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // Var generators
+  strcat(output,"\"var_generators\" : [ ");
+  for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+    sprintf(temp,"%d", VARGEN_get_index(vargen));
+    strcat(output,temp);
+    if (VARGEN_get_next(vargen) != NULL)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // Batteries
+  strcat(output,"\"batteries\" : [ ");
+  for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+    sprintf(temp,"%d", BAT_get_index(bat));
+    strcat(output,temp);
+    if (BAT_get_next(bat) != NULL)
+      strcat(output,", ");
+  }
+  strcat(output," ]");
+
   // End
   strcat(output," }");
-  
+      
   // Free 
   free(temp);
-  output = (char*)realloc(output,sizeof(char)*strlen(output));
+  output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
 
   return output;
 }
