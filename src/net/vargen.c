@@ -343,6 +343,131 @@ Vec* VARGEN_get_var_indices(void* vgen, unsigned char var, int t_start, int t_en
   return indices;
 }
 
+char* VARGEN_get_json_string(Vargen* gen) {
+
+  // Local variables
+  char* temp;
+  char* output;
+  int i;
+
+  // No gen
+  if (!gen)
+    return NULL;
+
+  // Alloc
+  temp = (char*)malloc(sizeof(char)*VARGEN_BUFFER_SIZE);
+  output = (char*)malloc(sizeof(char)*VARGEN_BUFFER_SIZE*15*gen->num_periods);
+
+  // Start
+  strcpy(output,"{ ");
+
+  // Bus
+  if (gen->bus)
+    sprintf(temp,"\"bus\" : %d", BUS_get_index(gen->bus));
+  else
+    sprintf(temp,"\"bus\" : %s", "null");
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Num periods
+  sprintf(temp,"\"num_periods\" : %d", gen->num_periods);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Name
+  sprintf(temp,"\"name\" : \"%s\"", gen->name);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Type
+  sprintf(temp,"\"type\" : %d", gen->type);
+  strcat(output,temp);
+  strcat(output,", ");
+  
+  // P
+  strcat(output,"\"P\" : [ ");
+  for (i = 0; i < gen->num_periods; i++) {
+    sprintf(temp,"%.10e", gen->P[i]);
+    strcat(output,temp);
+    if (i < gen->num_periods-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // P ava
+  strcat(output,"\"P_ava\" : [ ");
+  for (i = 0; i < gen->num_periods; i++) {
+    sprintf(temp,"%.10e", gen->P_ava[i]);
+    strcat(output,temp);
+    if (i < gen->num_periods-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // P max
+  sprintf(temp,"\"P_max\" : %.10e", gen->P_max);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // P min
+  sprintf(temp,"\"P_min\" : %.10e", gen->P_min);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // P std
+  strcat(output,"\"P_std\" : [ ");
+  for (i = 0; i < gen->num_periods; i++) {
+    sprintf(temp,"%.10e", gen->P_std[i]);
+    strcat(output,temp);
+    if (i < gen->num_periods-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // Q
+  strcat(output,"\"Q\" : [ ");
+  for (i = 0; i < gen->num_periods; i++) {
+    sprintf(temp,"%.10e", gen->Q[i]);
+    strcat(output,temp);
+    if (i < gen->num_periods-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+  
+  // Q max
+  sprintf(temp,"\"Q_max\" : %.10e", gen->Q_max);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Q min
+  sprintf(temp,"\"Q_min\" : %.10e", gen->Q_min);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Index
+  sprintf(temp,"\"index\" : %d", gen->index);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Next
+  if (gen->next)
+    sprintf(temp,"\"next\" : %d", VARGEN_get_index(gen->next));
+  else
+    sprintf(temp,"\"next\" : %s", "null");
+  strcat(output,temp);
+  strcat(output,"");
+
+   // End
+  strcat(output," }");
+  
+  // Free 
+  free(temp);
+  output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
+  
+  return output;
+}
+
+
 BOOL VARGEN_has_flags(void* vgen, char flag_type, unsigned char mask) {
   Vargen* gen = (Vargen*)vgen;
   if (gen) {

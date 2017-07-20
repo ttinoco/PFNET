@@ -237,6 +237,14 @@ cdef class VarGenerator:
         def __get__(self): return cvargen.VARGEN_get_Q_min(self._c_ptr)
         def __set__(self,Q): cvargen.VARGEN_set_Q_min(self._c_ptr,Q)
 
+    property json_string:
+        """ JSON string (string). """
+        def __get__(self): 
+            cdef char* json_string = cvargen.VARGEN_get_json_string(self._c_ptr)
+            s = json_string.decode('UTF-8')
+            free(json_string)
+            return s
+
 cdef new_VarGenerator(cvargen.Vargen* g):
     if g is not NULL:
         gen = VarGenerator(alloc=False)

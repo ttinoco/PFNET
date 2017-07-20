@@ -36,6 +36,7 @@ cdef extern from "pfnet/vargen.h":
     REAL VARGEN_get_Q_max(Vargen* gen)
     REAL VARGEN_get_Q_min(Vargen* gen)
     Vargen* VARGEN_get_next(Vargen* gen)
+    char* VARGEN_get_json_string(Vargen* gen)
     bint VARGEN_has_flags(Vargen* gen, char flag_type, char mask)
     Vargen* VARGEN_new(int num_periods)
     void VARGEN_set_name(Vargen* gen, char* name)
