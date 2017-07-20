@@ -14,7 +14,7 @@
 
 struct Bat {
 
-// Bus
+  // Bus
   Bus* bus;            /**< @brief Bus to which the battery is connected */
  
   // Times
@@ -359,6 +359,115 @@ Vec* BAT_get_var_indices(void* vbat, unsigned char var, int t_start, int t_end) 
     }
   }
   return indices;
+}
+
+char* BAT_get_json_string(Bat* bat) {
+
+  // Local variables
+  char* temp;
+  char* output;
+  int i;
+
+  // No battery
+  if (!bat)
+    return NULL;
+
+  // Alloc
+  temp = (char*)malloc(sizeof(char)*BAT_BUFFER_SIZE);
+  output = (char*)malloc(sizeof(char)*BAT_BUFFER_SIZE*15*bat->num_periods);
+
+  // Start
+  strcpy(output,"{ ");
+
+  // Bus
+  if (bat->bus)
+    sprintf(temp,"\"bus\" : %d", BUS_get_index(bat->bus));
+  else
+    sprintf(temp,"\"bus\" : %s", "null");
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Num periods
+  sprintf(temp,"\"num_periods\" : %d", bat->num_periods);
+  strcat(output,temp);
+  strcat(output,", ");
+  
+  // P
+  strcat(output,"\"P\" : [ ");
+  for (i = 0; i < bat->num_periods; i++) {
+    sprintf(temp,"%.10e", bat->P[i]);
+    strcat(output,temp);
+    if (i < bat->num_periods-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // P max
+  sprintf(temp,"\"P_max\" : %.10e", bat->P_max);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // P min
+  sprintf(temp,"\"P_min\" : %.10e", bat->P_min);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // eta c
+  sprintf(temp,"\"eta_c\" : %.10e", bat->eta_c);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // eta d
+  sprintf(temp,"\"eta_d\" : %.10e", bat->eta_d);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // E
+  strcat(output,"\"E\" : [ ");
+  for (i = 0; i < bat->num_periods; i++) {
+    sprintf(temp,"%.10e", bat->E[i]);
+    strcat(output,temp);
+    if (i < bat->num_periods-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+  
+  // E init
+  sprintf(temp,"\"E_init\" : %.10e", bat->E_init);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // E final
+  sprintf(temp,"\"E_final\" : %.10e", bat->E_final);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // E max
+  sprintf(temp,"\"E_max\" : %.10e", bat->E_max);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Index
+  sprintf(temp,"\"index\" : %d", bat->index);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Next
+  if (bat->next)
+    sprintf(temp,"\"next\" : %d", BAT_get_index(bat->next));
+  else
+    sprintf(temp,"\"next\" : %s", "null");
+  strcat(output,temp);
+  strcat(output,"");
+
+  // End
+  strcat(output," }");
+  
+  // Free 
+  free(temp);
+  output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
+  
+  return output;
 }
 
 BOOL BAT_has_flags(void* vbat, char flag_type, unsigned char mask) {

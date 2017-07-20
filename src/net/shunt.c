@@ -360,7 +360,7 @@ char* SHUNT_get_json_string(Shunt* shunt) {
   strcat(output,temp);
   strcat(output,"");
 
-   // End
+  // End
   strcat(output," }");
   
   // Free 

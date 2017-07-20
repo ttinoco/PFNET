@@ -457,7 +457,7 @@ char* VARGEN_get_json_string(Vargen* gen) {
   strcat(output,temp);
   strcat(output,"");
 
-   // End
+  // End
   strcat(output," }");
   
   // Free 

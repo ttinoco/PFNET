@@ -542,7 +542,7 @@ char* GEN_get_json_string(Gen* gen) {
   strcat(output,temp);
   strcat(output,"");
 
-   // End
+  // End
   strcat(output," }");
   
   // Free 
