@@ -104,10 +104,21 @@ cdef class Shunt:
         norm : float
         """
         
-        cdef int i
         cdef np.ndarray[double,mode='c'] x = values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (values is not None and values.size) else NULL
-        cshunt.SHUNT_set_b_values(self._c_ptr,cvec.VEC_get_data(v),len(values),norm)
+        cdef cvec.Vec* v =  cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size)
+        cshunt.SHUNT_set_b_values(self._c_ptr,cvec.VEC_get_data(v),cvec.VEC_get_size(v),norm)
+
+    def get_b_values(self):
+        """ 
+        Get the shunt susceptance step block values (p.u.) (np.array). 
+        
+        Returns
+        -------
+        numpy.narray
+        """
+        
+        return Vector(cvec.VEC_new_from_array(cshunt.SHUNT_get_b_values(self._c_ptr),
+                                              cshunt.SHUNT_get_num_b_values(self._c_ptr)))
 
     property num_periods:
         """ Number of time periods (int). """
@@ -184,12 +195,6 @@ cdef class Shunt:
         """ Shunt susceptance lower limit (p.u.) (float). """
         def __get__(self): return cshunt.SHUNT_get_b_min(self._c_ptr)
         def __set__(self,value): cshunt.SHUNT_set_b_min(self._c_ptr,value)
-
-    property b_values:
-        """ Available shunt susceptance step block values (p.u.) (np.array). """
-        def __get__(self):
-            return  Vector(cvec.VEC_new_from_array(cshunt.SHUNT_get_b_values(self._c_ptr),cshunt.SHUNT_get_num_b_values(self._c_ptr)),
-                           owndata=True)
 
 cdef new_Shunt(cshunt.Shunt* s):
     if s is not NULL:
