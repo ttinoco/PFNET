@@ -31,6 +31,7 @@ cdef extern from "pfnet/shunt.h":
     REAL SHUNT_get_b_min(Shunt* shunt)
     Shunt* SHUNT_get_next(Shunt* shunt)
     Shunt* SHUNT_get_reg_next(Shunt* shunt)
+    char* SHUNT_get_json_string(Shunt* shunt)
     bint SHUNT_is_fixed(Shunt* shunt)
     bint SHUNT_is_switched_v(Shunt* shunt)
     bint SHUNT_has_flags(Shunt* shunt, char flag_type, char mask)

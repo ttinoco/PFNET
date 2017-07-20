@@ -101,6 +101,27 @@ class TestJSON(unittest.TestCase):
                 # Detailed checks
                 self.assertEqual(json_model['index'],gen.index)
                 # Add more
+
+    def test_shunt_json_string(self):
+                        
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+
+            for shunt in net.shunts:
+                text = shunt.json_string
+                try:
+                    json_model = json.loads(text)
+                    valid_json = True
+                except ValueError:
+                    valid_json = False
+                self.assertTrue(valid_json)
+
+                # Detailed checks
+                self.assertEqual(json_model['index'],shunt.index)
+                # Add more
                 
     def tearDown(self):
 

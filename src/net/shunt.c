@@ -270,6 +270,106 @@ Vec* SHUNT_get_var_indices(void* vshunt, unsigned char var, int t_start, int t_e
   return indices;
 }
 
+char* SHUNT_get_json_string(Shunt* shunt) {
+
+  // Local variables
+  char* temp;
+  char* output;
+  int i;
+
+  // No shunt
+  if (!shunt)
+    return NULL;
+
+  // Alloc
+  temp = (char*)malloc(sizeof(char)*SHUNT_BUFFER_SIZE);
+  output = (char*)malloc(sizeof(char)*SHUNT_BUFFER_SIZE*15*shunt->num_periods);
+
+  // Start
+  strcpy(output,"{ ");
+
+  // Bus
+  if (shunt->bus)
+    sprintf(temp,"\"bus\" : %d", BUS_get_index(shunt->bus));
+  else
+    sprintf(temp,"\"bus\" : %s", "null");
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Reg bus
+  if (shunt->reg_bus)
+    sprintf(temp,"\"reg_bus\" : %d", BUS_get_index(shunt->reg_bus));
+  else
+    sprintf(temp,"\"reg_bus\" : %s", "null");
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Num periods
+  sprintf(temp,"\"num_periods\" : %d", shunt->num_periods);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // g
+  sprintf(temp,"\"g\" : %.10e", shunt->g);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // b
+  strcat(output,"\"b\" : [ ");
+  for (i = 0; i < shunt->num_periods; i++) {
+    sprintf(temp,"%.10e", shunt->b[i]);
+    strcat(output,temp);
+    if (i < shunt->num_periods-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
+  // b max
+  sprintf(temp,"\"b_max\" : %.10e", shunt->b_max);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // b min
+  sprintf(temp,"\"b_min\" : %.10e", shunt->b_min);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Num b
+  sprintf(temp,"\"num_b\" : %d", shunt->num_b);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Index
+  sprintf(temp,"\"index\" : %d", shunt->index);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Next
+  if (shunt->next)
+    sprintf(temp,"\"next\" : %d", SHUNT_get_index(shunt->next));
+  else
+    sprintf(temp,"\"next\" : %s", "null");
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Reg next
+  if (shunt->reg_next)
+    sprintf(temp,"\"reg_next\" : %d", SHUNT_get_index(shunt->reg_next));
+  else
+    sprintf(temp,"\"reg_next\" : %s", "null");
+  strcat(output,temp);
+  strcat(output,"");
+
+   // End
+  strcat(output," }");
+  
+  // Free 
+  free(temp);
+  output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
+  
+  return output;
+}
+
 BOOL SHUNT_has_flags(void* vshunt, char flag_type, unsigned char mask) {
   Shunt* shunt = (Shunt*)vshunt;
   if (shunt) {
