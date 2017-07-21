@@ -334,6 +334,16 @@ char* SHUNT_get_json_string(Shunt* shunt) {
   strcat(output,temp);
   strcat(output,", ");
 
+  // b values
+  strcat(output,"\"b_values\" : [ ");
+  for (i = 0; i < shunt->num_b; i++) {
+    sprintf(temp,"%.10e", shunt->b_values[i]);
+    strcat(output,temp);
+    if (i < shunt->num_b-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+
   // Num b
   sprintf(temp,"\"num_b\" : %d", shunt->num_b);
   strcat(output,temp);
