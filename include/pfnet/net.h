@@ -133,6 +133,7 @@ REAL NET_get_load_P_vio(Net* net, int t);
 int NET_get_num_actions(Net* net, int t);
 REAL NET_get_vargen_corr_radius(Net* net);
 REAL NET_get_vargen_corr_value(Net* net);
+char* NET_get_json_string(Net* net);
 BOOL NET_has_error(Net* net);
 Net* NET_new(int num_periods);
 void NET_set_base_power(Net* net, REAL base_power);

@@ -170,6 +170,39 @@ class TestJSON(unittest.TestCase):
                 # Detailed checks
                 self.assertEqual(json_model['index'],bat.index)
                 # Add more
+
+    def test_net_json_string(self):
+
+        import time
+
+        print '\n'
+        
+        # Multiperiod
+        for case in test_cases.CASES:
+            
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+            
+            net.add_batteries(net.get_generator_buses(),20.,50.)
+            net.add_var_generators(net.get_load_buses(),100.,50.,30.,5,0.05)
+            self.assertGreaterEqual(net.num_batteries,1)
+            self.assertGreaterEqual(net.num_var_generators,1)
+
+            t0 = time.time()
+            text = net.json_string
+            t1 = time.time()
+            try:
+                json_model = json.loads(text)
+                valid_json = True
+            except ValueError:
+                valid_json = False
+            self.assertTrue(valid_json)
+
+            # Detailed checks
+            self.assertEqual(json_model['num_periods'],self.T)
+            self.assertEqual(json_model['base_power'],net.base_power)
+
+            print case, t1-t0
                 
     def tearDown(self):
 

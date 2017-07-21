@@ -38,7 +38,8 @@
 /** \defgroup shunt_const Shunt Constants
  *  @{
  */
-#define SHUNT_BUFFER_SIZE 100  /**< @brief Constant: buffer size for strings */
+#define SHUNT_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
+#define SHUNT_NUM_JSON_FIELDS 15 /**< @brief Constant: max number of json fields */
 /** @} */
 
 // Struct
@@ -69,7 +70,7 @@ Shunt* SHUNT_get_reg_next(Shunt* shunt);
 void SHUNT_get_var_values(Shunt* shunt, Vec* values, int code);
 int SHUNT_get_num_vars(void* shunt, unsigned char var, int t_start, int t_end);
 Vec* SHUNT_get_var_indices(void* shunt, unsigned char var, int t_start, int t_end);
-char* SHUNT_get_json_string(Shunt* shunt);
+char* SHUNT_get_json_string(Shunt* shunt, char* output);
 BOOL SHUNT_has_flags(void* shunt, char flag_type, unsigned char mask);
 BOOL SHUNT_has_properties(void* shunt, char prop);
 void SHUNT_init(Shunt* shunt, int num_periods);

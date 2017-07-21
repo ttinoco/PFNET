@@ -1759,6 +1759,139 @@ REAL NET_get_vargen_corr_value(Net* net) {
     return 0;
 }
 
+char* NET_get_json_string(Net* net) {
+
+   // Local variables
+  char temp[NET_BUFFER_SIZE];
+  char* output;
+  char* element_output;
+  int max_size;
+  int i;
+
+  // No network
+  if (!net)
+    return NULL;
+
+  // Max size
+  max_size = (2*NET_BUFFER_SIZE +
+	      BUS_BUFFER_SIZE*BUS_NUM_JSON_FIELDS*net->num_buses +
+	      BRANCH_BUFFER_SIZE*BRANCH_NUM_JSON_FIELDS*net->num_branches +
+	      GEN_BUFFER_SIZE*GEN_NUM_JSON_FIELDS*net->num_gens +
+	      LOAD_BUFFER_SIZE*LOAD_NUM_JSON_FIELDS*net->num_loads +
+	      SHUNT_BUFFER_SIZE*SHUNT_NUM_JSON_FIELDS*net->num_shunts +
+	      VARGEN_BUFFER_SIZE*VARGEN_NUM_JSON_FIELDS*net->num_vargens +
+	      BAT_BUFFER_SIZE*BAT_NUM_JSON_FIELDS*net->num_bats)*net->num_periods;
+
+  // Alloc
+  output = (char*)malloc(sizeof(char)*max_size);
+  
+  // Start
+  strcpy(output,"{ ");
+  
+  // Num periods
+  sprintf(temp,"\"num_periods\" : %d", net->num_periods);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Base power
+  sprintf(temp,"\"base_power\" : %.10e", net->base_power);
+  strcat(output,temp);
+  strcat(output,", ");
+
+  // Buses
+  element_output = (char*)malloc(sizeof(char)*BUS_BUFFER_SIZE*BUS_NUM_JSON_FIELDS*net->num_periods);
+  strcat(output,"\"buses\" : [ ");
+  for (i = 0; i < net->num_buses; i++) {
+    BUS_get_json_string(BUS_array_get(net->bus,i),element_output);
+    strcat(output,element_output);
+    if (i < net->num_buses-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+  free(element_output);
+
+  // Branches
+  element_output = (char*)malloc(sizeof(char)*BRANCH_BUFFER_SIZE*BRANCH_NUM_JSON_FIELDS*net->num_periods);
+  strcat(output,"\"branches\" : [ ");
+  for (i = 0; i < net->num_branches; i++) {
+    BRANCH_get_json_string(BRANCH_array_get(net->branch,i),element_output);
+    strcat(output,element_output);
+    if (i < net->num_branches-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+  free(element_output);
+
+  // Generators
+  element_output = (char*)malloc(sizeof(char)*GEN_BUFFER_SIZE*GEN_NUM_JSON_FIELDS*net->num_periods);
+  strcat(output,"\"generators\" : [ ");
+  for (i = 0; i < net->num_gens; i++) {
+    GEN_get_json_string(GEN_array_get(net->gen,i),element_output);
+    strcat(output,element_output);
+    if (i < net->num_gens-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+  free(element_output);
+
+  // Loads
+  element_output = (char*)malloc(sizeof(char)*LOAD_BUFFER_SIZE*LOAD_NUM_JSON_FIELDS*net->num_periods);
+  strcat(output,"\"loads\" : [ ");
+  for (i = 0; i < net->num_loads; i++) {
+    LOAD_get_json_string(LOAD_array_get(net->load,i),element_output);
+    strcat(output,element_output);
+    if (i < net->num_loads-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+  free(element_output);
+
+  // Shunts
+  element_output = (char*)malloc(sizeof(char)*SHUNT_BUFFER_SIZE*SHUNT_NUM_JSON_FIELDS*net->num_periods);
+  strcat(output,"\"shunts\" : [ ");
+  for (i = 0; i < net->num_shunts; i++) {
+    SHUNT_get_json_string(SHUNT_array_get(net->shunt,i),element_output);
+    strcat(output,element_output);
+    if (i < net->num_shunts-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+  free(element_output);
+
+  // Var generators
+  element_output = (char*)malloc(sizeof(char)*VARGEN_BUFFER_SIZE*VARGEN_NUM_JSON_FIELDS*net->num_periods);
+  strcat(output,"\"var_generators\" : [ ");
+  for (i = 0; i < net->num_vargens; i++) {
+    VARGEN_get_json_string(VARGEN_array_get(net->vargen,i),element_output);
+    strcat(output,element_output);
+    if (i < net->num_vargens-1)
+      strcat(output,", ");
+  }
+  strcat(output," ], ");
+  free(element_output);
+
+  // Batteries
+  element_output = (char*)malloc(sizeof(char)*BAT_BUFFER_SIZE*BAT_NUM_JSON_FIELDS*net->num_periods);
+  strcat(output,"\"batteries\" : [ ");
+  for (i = 0; i < net->num_bats; i++) {
+    BAT_get_json_string(BAT_array_get(net->bat,i),element_output);
+    strcat(output,element_output);
+    if (i < net->num_bats-1)
+      strcat(output,", ");
+  }
+  strcat(output," ]");
+  free(element_output);
+
+  // End
+  strcat(output," }");
+  
+  // Resize
+  output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
+
+  // Return
+  return output;
+}
+
 BOOL NET_has_error(Net* net) {
   if (net)
     return net->error_flag;

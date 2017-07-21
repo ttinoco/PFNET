@@ -270,20 +270,24 @@ Vec* SHUNT_get_var_indices(void* vshunt, unsigned char var, int t_start, int t_e
   return indices;
 }
 
-char* SHUNT_get_json_string(Shunt* shunt) {
+char* SHUNT_get_json_string(Shunt* shunt, char* output) {
 
   // Local variables
-  char* temp;
-  char* output;
+  char temp[SHUNT_BUFFER_SIZE];
+  BOOL resize;
   int i;
 
   // No shunt
   if (!shunt)
     return NULL;
 
-  // Alloc
-  temp = (char*)malloc(sizeof(char)*SHUNT_BUFFER_SIZE);
-  output = (char*)malloc(sizeof(char)*SHUNT_BUFFER_SIZE*15*shunt->num_periods);
+  // Output
+  if (output)
+    resize = FALSE;
+  else {
+    output = (char*)malloc(sizeof(char)*SHUNT_BUFFER_SIZE*SHUNT_NUM_JSON_FIELDS*shunt->num_periods);
+    resize = TRUE;
+  }
 
   // Start
   strcpy(output,"{ ");
@@ -373,9 +377,9 @@ char* SHUNT_get_json_string(Shunt* shunt) {
   // End
   strcat(output," }");
   
-  // Free 
-  free(temp);
-  output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
+  // Output
+  if (resize)
+    output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
   
   return output;
 }

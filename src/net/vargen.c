@@ -343,20 +343,24 @@ Vec* VARGEN_get_var_indices(void* vgen, unsigned char var, int t_start, int t_en
   return indices;
 }
 
-char* VARGEN_get_json_string(Vargen* gen) {
+char* VARGEN_get_json_string(Vargen* gen, char* output) {
 
   // Local variables
-  char* temp;
-  char* output;
+  char temp[VARGEN_BUFFER_SIZE];
+  BOOL resize;  
   int i;
 
   // No gen
   if (!gen)
     return NULL;
 
-  // Alloc
-  temp = (char*)malloc(sizeof(char)*VARGEN_BUFFER_SIZE);
-  output = (char*)malloc(sizeof(char)*VARGEN_BUFFER_SIZE*15*gen->num_periods);
+  // Output
+  if (output)
+    resize = FALSE;
+  else {
+    output = (char*)malloc(sizeof(char)*VARGEN_BUFFER_SIZE*VARGEN_NUM_JSON_FIELDS*gen->num_periods);
+    resize = TRUE;
+  }
 
   // Start
   strcpy(output,"{ ");
@@ -460,9 +464,9 @@ char* VARGEN_get_json_string(Vargen* gen) {
   // End
   strcat(output," }");
   
-  // Free 
-  free(temp);
-  output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
+  // Resize
+  if (resize)
+    output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
   
   return output;
 }

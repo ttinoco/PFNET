@@ -65,7 +65,8 @@
 /** \defgroup branch_const Branch Constants
  *  @{
  */
-#define BRANCH_BUFFER_SIZE 100  /**< @brief Constant: buffer size for strings */
+#define BRANCH_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
+#define BRANCH_NUM_JSON_FIELDS 30 /**< @brief Constant: max number of json fields */
 /** @} */
 
 // Branch
@@ -130,7 +131,7 @@ REAL BRANCH_get_P_mk_DC(Branch* br, int t);
 void BRANCH_get_var_values(Branch* br, Vec* values, int code);
 int BRANCH_get_num_vars(void* br, unsigned char var, int t_start, int t_end);
 Vec* BRANCH_get_var_indices(void* br, unsigned char var, int t_start, int t_end);
-char* BRANCH_get_json_string(Branch* br);
+char* BRANCH_get_json_string(Branch* br, char* output);
 BOOL BRANCH_has_flags(void* br, char flag_type, unsigned char mask);
 BOOL BRANCH_has_pos_ratio_v_sens(Branch* br);
 BOOL BRANCH_has_properties(void* br, char prop);

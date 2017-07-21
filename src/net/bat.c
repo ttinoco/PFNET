@@ -361,20 +361,24 @@ Vec* BAT_get_var_indices(void* vbat, unsigned char var, int t_start, int t_end) 
   return indices;
 }
 
-char* BAT_get_json_string(Bat* bat) {
+char* BAT_get_json_string(Bat* bat, char* output) {
 
   // Local variables
-  char* temp;
-  char* output;
+  char temp[BAT_BUFFER_SIZE];
+  BOOL resize;
   int i;
 
   // No battery
   if (!bat)
     return NULL;
 
-  // Alloc
-  temp = (char*)malloc(sizeof(char)*BAT_BUFFER_SIZE);
-  output = (char*)malloc(sizeof(char)*BAT_BUFFER_SIZE*15*bat->num_periods);
+  // Output
+  if (output)
+    resize = FALSE;
+  else {
+    output = (char*)malloc(sizeof(char)*BAT_BUFFER_SIZE*BAT_NUM_JSON_FIELDS*bat->num_periods);
+    resize = TRUE;
+  }
 
   // Start
   strcpy(output,"{ ");
@@ -462,11 +466,12 @@ char* BAT_get_json_string(Bat* bat) {
 
   // End
   strcat(output," }");
-  
-  // Free 
-  free(temp);
-  output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
-  
+
+  // Resize
+  if (resize)
+    output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
+
+  // Return
   return output;
 }
 

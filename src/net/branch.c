@@ -757,21 +757,25 @@ Vec* BRANCH_get_var_indices(void* vbr, unsigned char var, int t_start, int t_end
   return indices;
 }
 
-char* BRANCH_get_json_string(Branch* branch) {
+char* BRANCH_get_json_string(Branch* branch, char* output) {
 
   // Local variables
-  char* temp;
-  char* output;
+  char temp[BRANCH_BUFFER_SIZE];
+  BOOL resize;
   int i;
 
   // No branch
   if (!branch)
     return NULL;
 
-  // Alloc
-  temp = (char*)malloc(sizeof(char)*BRANCH_BUFFER_SIZE);
-  output = (char*)malloc(sizeof(char)*BRANCH_BUFFER_SIZE*30*branch->num_periods);
-
+  // Output
+  if (output)
+    resize = FALSE;
+  else {
+    output = (char*)malloc(sizeof(char)*BRANCH_BUFFER_SIZE*BRANCH_NUM_JSON_FIELDS*branch->num_periods);
+    resize = TRUE;
+  }
+  
   // Start
   strcpy(output,"{ ");
 
@@ -941,9 +945,9 @@ char* BRANCH_get_json_string(Branch* branch) {
   // End
   strcat(output," }");
   
-  // Free 
-  free(temp);
-  output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
+  // Resiye
+  if (resize)
+    output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
 
   return output;
 }

@@ -39,7 +39,8 @@
 /** \defgroup bat_const Bat Constants
  *  @{
  */
-#define BAT_BUFFER_SIZE 100  /**< @brief Constant: buffer size for strings */
+#define BAT_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
+#define BAT_NUM_JSON_FIELDS 15 /**< @brief Constant: max number of json fields */
 /** @} */
 
 // Battery
@@ -74,7 +75,7 @@ REAL BAT_get_eta_d(Bat* bat);
 void BAT_get_var_values(Bat* bat, Vec* values, int code);
 int BAT_get_num_vars(void* bat, unsigned char var, int t_start, int t_end);
 Vec* BAT_get_var_indices(void* bat, unsigned char var, int t_start, int t_end);
-char* BAT_get_json_string(Bat* bat);
+char* BAT_get_json_string(Bat* bat, char* output);
 BOOL BAT_has_flags(void* bat, char flag_type, unsigned char mask);
 BOOL BAT_has_properties(void* bat, char prop);
 void BAT_init(Bat* bat, int num_periods);

@@ -1065,26 +1065,30 @@ REAL BUS_get_quantity(Bus* bus, int qtype, int t) {
   }
 }
 
-char* BUS_get_json_string(Bus* bus) {
+char* BUS_get_json_string(Bus* bus, char* output) {
   
   // Local variables
-  char* temp;
-  char* output;
+  char temp[BUS_BUFFER_SIZE];
   Gen* gen;
   Load* load;
   Shunt* shunt;
   Branch* branch;
   Vargen* vargen;
   Bat* bat;
+  BOOL resize;
   int i;
 
   // No bus
   if (!bus)
     return NULL;
 
-  // Alloc
-  temp = (char*)malloc(sizeof(char)*BUS_BUFFER_SIZE);
-  output = (char*)malloc(sizeof(char)*BUS_BUFFER_SIZE*25*bus->num_periods);
+  // Output
+  if (output)
+    resize = FALSE;
+  else {
+    output = (char*)malloc(sizeof(char)*BUS_BUFFER_SIZE*BUS_NUM_JSON_FIELDS*bus->num_periods);
+    resize = TRUE;
+  }
 
   // Start
   strcpy(output,"{ ");
@@ -1287,10 +1291,11 @@ char* BUS_get_json_string(Bus* bus) {
   // End
   strcat(output," }");
       
-  // Free 
-  free(temp);
-  output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
+  // Resize
+  if (resize)
+    output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
 
+  // Return
   return output;
 }
 

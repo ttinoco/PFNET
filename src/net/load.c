@@ -383,20 +383,24 @@ Vec* LOAD_get_var_indices(void* vload, unsigned char var, int t_start, int t_end
   return indices;
 }
 
-char* LOAD_get_json_string(Load* load) {
+char* LOAD_get_json_string(Load* load, char* output) {
 
   // Local variables
-  char* temp;
-  char* output;
+  char temp[LOAD_BUFFER_SIZE];
+  BOOL resize;
   int i;
 
   // No load
   if (!load)
     return NULL;
 
-  // Alloc
-  temp = (char*)malloc(sizeof(char)*LOAD_BUFFER_SIZE);
-  output = (char*)malloc(sizeof(char)*LOAD_BUFFER_SIZE*15*load->num_periods);
+  // Output
+  if (output)
+    resize = FALSE;
+  else {
+    output = (char*)malloc(sizeof(char)*LOAD_BUFFER_SIZE*LOAD_NUM_JSON_FIELDS*load->num_periods);
+    resize = TRUE;
+  }
   
   // Start
   strcpy(output,"{ ");
@@ -490,10 +494,11 @@ char* LOAD_get_json_string(Load* load) {
   // End
   strcat(output," }");
   
-  // Free 
-  free(temp);
-  output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
+  // Resize
+  if (resize)
+    output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
 
+  // Return
   return output;
 }
 

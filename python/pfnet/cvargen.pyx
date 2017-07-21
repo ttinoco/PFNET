@@ -240,7 +240,7 @@ cdef class VarGenerator:
     property json_string:
         """ JSON string (string). """
         def __get__(self): 
-            cdef char* json_string = cvargen.VARGEN_get_json_string(self._c_ptr)
+            cdef char* json_string = cvargen.VARGEN_get_json_string(self._c_ptr, NULL)
             s = json_string.decode('UTF-8')
             free(json_string)
             return s
