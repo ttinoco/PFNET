@@ -23,6 +23,19 @@
   output += 1;		   \
 }
 
+#define JSON_obj(temp,output,field_name,field,index_func,end) { \
+  if (field)							\
+    sprintf(temp,"\"%s\":%d",field_name,index_func(field));	\
+  else								\
+    sprintf(temp,"\"%s\":%s",field_name,"null");		\
+  strcpy(output,temp);						\
+  output += strlen(temp);					\
+  if (!end) {							\
+    strcpy(output,",");						\
+    output += 1;						\
+  }								\
+}
+
 #define JSON_int(temp,output,field_name,field,end) { \
   sprintf(temp,"\"%s\":%d",field_name,field);	     \
   strcpy(output,temp);				     \

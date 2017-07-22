@@ -11,6 +11,7 @@
 #include <pfnet/branch.h>
 #include <pfnet/bus.h>
 #include <pfnet/array.h>
+#include <pfnet/json.h>
 
 // Branch
 struct Branch {
@@ -761,8 +762,8 @@ char* BRANCH_get_json_string(Branch* branch, char* output) {
 
   // Local variables
   char temp[BRANCH_BUFFER_SIZE];
+  char* output_start;
   BOOL resize;
-  int i;
 
   // No branch
   if (!branch)
@@ -775,180 +776,44 @@ char* BRANCH_get_json_string(Branch* branch, char* output) {
     output = (char*)malloc(sizeof(char)*BRANCH_BUFFER_SIZE*BRANCH_NUM_JSON_FIELDS*branch->num_periods);
     resize = TRUE;
   }
+  output_start = output;
   
-  // Start
-  strcpy(output,"{ ");
-
-  // Type
-  sprintf(temp,"\"type\" : %d", branch->type);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Num periods
-  sprintf(temp,"\"num_periods\" : %d", branch->num_periods);
-  strcat(output,temp);
-  strcat(output,", ");
+  // Write
+  JSON_start(output);
+  JSON_int(temp,output,"type",branch->type,FALSE);
+  JSON_int(temp,output,"num_periods",branch->num_periods,FALSE);
+  JSON_obj(temp,output,"bus_k",branch->bus_k,BUS_get_index,FALSE);
+  JSON_obj(temp,output,"bus_m",branch->bus_m,BUS_get_index,FALSE);
+  JSON_obj(temp,output,"reg_bus",branch->reg_bus,BUS_get_index,FALSE);
+  JSON_float(temp,output,"g",branch->g,FALSE);
+  JSON_float(temp,output,"g_k",branch->g_k,FALSE);
+  JSON_float(temp,output,"g_m",branch->g_m,FALSE);
+  JSON_float(temp,output,"b",branch->b,FALSE);
+  JSON_float(temp,output,"b_k",branch->b_k,FALSE);
+  JSON_float(temp,output,"b_m",branch->b_m,FALSE);
+  JSON_array_float(temp,output,"ratio",branch->ratio,branch->num_periods,FALSE);
+  JSON_float(temp,output,"ratio_max",branch->ratio_max,FALSE);
+  JSON_float(temp,output,"ratio_min",branch->ratio_min,FALSE);
+  JSON_int(temp,output,"num_ratios",branch->num_ratios,FALSE);
+  JSON_array_float(temp,output,"phase",branch->phase,branch->num_periods,FALSE);
+  JSON_float(temp,output,"phase_max",branch->phase_max,FALSE);
+  JSON_float(temp,output,"phase_min",branch->phase_min,FALSE);
+  JSON_float(temp,output,"ratingA",branch->ratingA,FALSE);
+  JSON_float(temp,output,"ratingB",branch->ratingB,FALSE);
+  JSON_float(temp,output,"ratingC",branch->ratingC,FALSE);
+  JSON_bool(temp,output,"outage",branch->outage,FALSE);
+  JSON_bool(temp,output,"pos_ratio_v_sens",branch->pos_ratio_v_sens,FALSE);
+  JSON_int(temp,output,"index",branch->index,FALSE);
+  JSON_obj(temp,output,"reg_next",branch->reg_next,BRANCH_get_index,FALSE);
+  JSON_obj(temp,output,"next_k",branch->next_k,BRANCH_get_index,FALSE);
+  JSON_obj(temp,output,"next_m",branch->next_m,BRANCH_get_index,TRUE);
+  JSON_end(output);
   
-  // Bus k
-  if (branch->bus_k)
-    sprintf(temp,"\"bus_k\" : %d", BUS_get_index(branch->bus_k));
-  else
-    sprintf(temp,"\"bus_k\" : %s", "null");
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Bus m
-  if (branch->bus_m)
-    sprintf(temp,"\"bus_m\" : %d", BUS_get_index(branch->bus_m));
-  else
-    sprintf(temp,"\"bus_m\" : %s", "null");
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Reg bus
-  if (branch->reg_bus)
-    sprintf(temp,"\"reg_bus\" : %d", BUS_get_index(branch->reg_bus));
-  else
-    sprintf(temp,"\"reg_bus\" : %s", "null");
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // g
-  sprintf(temp,"\"g\" : %.10e", branch->g);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // g k
-  sprintf(temp,"\"g_k\" : %.10e", branch->g_k);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // g m
-  sprintf(temp,"\"g_m\" : %.10e", branch->g_m);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // b
-  sprintf(temp,"\"b\" : %.10e", branch->b);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // b k
-  sprintf(temp,"\"b_k\" : %.10e", branch->b_k);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // b m
-  sprintf(temp,"\"b_m\" : %.10e", branch->b_m);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Ratio
-  strcat(output,"\"ratio\" : [ ");
-  for (i = 0; i < branch->num_periods; i++) {
-    sprintf(temp,"%.10e", branch->ratio[i]);
-    strcat(output,temp);
-    if (i < branch->num_periods-1)
-      strcat(output,", ");
-  }
-  strcat(output," ], ");
-  
-  // Ratio max
-  sprintf(temp,"\"ratio_max\" : %.10e", branch->ratio_max);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Ratio min
-  sprintf(temp,"\"ratio_min\" : %.10e", branch->ratio_min);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Num ratios
-  sprintf(temp,"\"num_ratios\" : %d", branch->num_ratios);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Phase
-  strcat(output,"\"phase\" : [ ");
-  for (i = 0; i < branch->num_periods; i++) {
-    sprintf(temp,"%.10e", branch->phase[i]);
-    strcat(output,temp);
-    if (i < branch->num_periods-1)
-      strcat(output,", ");
-  }
-  strcat(output," ], ");
- 
-  // Phase max
-  sprintf(temp,"\"phase_max\" : %.10e", branch->phase_max);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Phase min
-  sprintf(temp,"\"phase_min\" : %.10e", branch->phase_min);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Rating A
-  sprintf(temp,"\"ratingA\" : %.10e", branch->ratingA);
-  strcat(output,temp);
-  strcat(output,", ");
-  
-  // Rating B
-  sprintf(temp,"\"ratingB\" : %.10e", branch->ratingB);
-  strcat(output,temp);
-  strcat(output,", ");
-  
-  // Rating C
-  sprintf(temp,"\"ratingC\" : %.10e", branch->ratingC);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Outage
-  sprintf(temp,"\"outage\" : %s", branch->outage ? "true" : "false");
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Pos ratio-voltage sensitivity
-  sprintf(temp,"\"pos_ratio_v_sens\" : %s", branch->pos_ratio_v_sens ? "true" : "false");
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Index
-  sprintf(temp,"\"index\" : %d", branch->index);
-  strcat(output,temp);
-  strcat(output,", ");
-  
-  // Reg next
-  if (branch->reg_next)
-    sprintf(temp,"\"reg_next\" : %d", BRANCH_get_index(branch->reg_next));
-  else
-    sprintf(temp,"\"reg_next\" : %s", "null");
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Next k
-  if (branch->next_k)
-    sprintf(temp,"\"next_k\" : %d", BRANCH_get_index(branch->next_k));
-  else
-    sprintf(temp,"\"next_k\" : %s", "null");
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Next m
-  if (branch->next_m)
-    sprintf(temp,"\"next_m\" : %d", BRANCH_get_index(branch->next_m));
-  else
-    sprintf(temp,"\"next_m\" : %s", "null");
-  strcat(output,temp);
-  strcat(output,"");
-
-  // End
-  strcat(output," }");
-  
-  // Resiye
+  // Resize
   if (resize)
-    output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
+    output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
 
+  // Return
   return output;
 }
 
