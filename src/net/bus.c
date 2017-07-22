@@ -16,6 +16,7 @@
 #include <pfnet/vargen.h>
 #include <pfnet/bat.h>
 #include <pfnet/array.h>
+#include <pfnet/json.h>
 
 struct Bus {
 
@@ -1070,14 +1071,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   // Local variables
   char temp[BUS_BUFFER_SIZE];
   char* output_start;
-  Gen* gen;
-  Load* load;
-  Shunt* shunt;
-  Branch* branch;
-  Vargen* vargen;
-  Bat* bat;
   BOOL resize;
-  int i;
 
   // No bus
   if (!bus)
@@ -1092,291 +1086,34 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   }
   output_start = output;
   
-  // Start
-  strcpy(output,"{");
-  output += 1;
-  
-  // Number
-  sprintf(temp,"\"number\":%d,", bus->number);
-  strcpy(output,temp);
-  output += strlen(temp);
-
-  // Name
-  sprintf(temp,"\"name\":\"%s\",", bus->name);
-  strcpy(output,temp);
-  output += strlen(temp);
-
-  // Num periods
-  sprintf(temp,"\"num_periods\":%d,", bus->num_periods);
-  strcpy(output,temp);
-  output += strlen(temp);
-  
-  // Voltage mag
-  sprintf(temp,"\"v_mag\":[");
-  strcpy(output,temp);
-  output += strlen(temp);
-  for (i = 0; i < bus->num_periods; i++) {
-    sprintf(temp,"%.10e", bus->v_mag[i]);
-    strcpy(output,temp);
-    output += strlen(temp); 
-    if (i < bus->num_periods-1) {
-      strcpy(output,",");
-      output += 1;
-    }
-  }
-  strcpy(output,"],");
-  output += 2;
-
-  // Voltage ang
-  sprintf(temp,"\"v_ang\":[");
-  strcpy(output,temp);
-  output += strlen(temp);
-  for (i = 0; i < bus->num_periods; i++) {
-    sprintf(temp,"%.10e", bus->v_ang[i]);
-    strcpy(output,temp);
-    output += strlen(temp); 
-    if (i < bus->num_periods-1) {
-      strcpy(output,",");
-      output += 1;
-    }
-  }
-  strcpy(output,"],");
-  output += 2;
-  
-  // Voltage set point
-  sprintf(temp,"\"v_set\":[");
-  strcpy(output,temp);
-  output += strlen(temp);
-  for (i = 0; i < bus->num_periods; i++) {
-    sprintf(temp,"%.10e", bus->v_set[i]);
-    strcpy(output,temp);
-    output += strlen(temp); 
-    if (i < bus->num_periods-1) {
-      strcpy(output,",");
-      output += 1;
-    }
-  }
-  strcpy(output,"],");
-  output += 2;
-  
-  // Voltage max reg
-  sprintf(temp,"\"v_max_reg\":%.10e,", bus->v_max_reg);
-  strcpy(output,temp);
-  output += strlen(temp);
-
-  // Voltage min reg
-  sprintf(temp,"\"v_min_reg\":%.10e,", bus->v_min_reg);
-  strcpy(output,temp);
-  output += strlen(temp);
-
-  // Voltage max norm
-  sprintf(temp,"\"v_max_norm\":%.10e,", bus->v_max_norm);
-  strcpy(output,temp);
-  output += strlen(temp);
-
-  // Voltage min norm
-  sprintf(temp,"\"v_min_norm\":%.10e,", bus->v_min_norm);
-  strcpy(output,temp);
-  output += strlen(temp);
-  
-  // Voltage max emer
-  sprintf(temp,"\"v_max_emer\":%.10e,", bus->v_max_emer);
-  strcpy(output,temp);
-  output += strlen(temp);
-  
-  // Voltage min emer
-  sprintf(temp,"\"v_min_emer\":%.10e,", bus->v_min_emer);
-  strcpy(output,temp);
-  output += strlen(temp);
-
-  // Slack
-  sprintf(temp,"\"slack\":%s,", bus->slack ? "true" : "false");
-  strcpy(output,temp);
-  output += strlen(temp);
-
-  // Price
-  sprintf(temp,"\"price\":[");
-  strcpy(output,temp);
-  output += strlen(temp);
-  for (i = 0; i < bus->num_periods; i++) {
-    sprintf(temp,"%.10e", bus->price[i]);
-    strcpy(output,temp);
-    output += strlen(temp); 
-    if (i < bus->num_periods-1) {
-      strcpy(output,",");
-      output += 1;
-    }
-  }
-  strcpy(output,"],");
-  output += 2;
-
-  // Index
-  sprintf(temp,"\"index\":%d,", bus->index);
-  strcpy(output,temp);
-  output += strlen(temp);
-
-  // Generators
-  sprintf(temp,"\"generators\":[");
-  strcpy(output,temp);
-  output += strlen(temp);
-  for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-    sprintf(temp,"%d", GEN_get_index(gen));
-    strcpy(output,temp);
-    output += strlen(temp);     
-    if (GEN_get_next(gen) != NULL) {
-      strcpy(output,",");
-      output += 1;
-    }
-  }
-  strcpy(output,"],");
-  output += 2;
-
-  // Reg generators
-  sprintf(temp,"\"reg_generators\":[");
-  strcpy(output,temp);
-  output += strlen(temp);
-  for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen)) {
-    sprintf(temp,"%d", GEN_get_index(gen));
-    strcpy(output,temp);
-    output += strlen(temp);     
-    if (GEN_get_reg_next(gen) != NULL) {
-      strcpy(output,",");
-      output += 1;
-    }
-  }
-  strcpy(output,"],");
-  output += 2;
-
-  // Loads
-  sprintf(temp,"\"loads\":[");
-  strcpy(output,temp);
-  output += strlen(temp); 
-  for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
-    sprintf(temp,"%d", LOAD_get_index(load));
-    strcpy(output,temp);
-    output += strlen(temp);     
-    if (LOAD_get_next(load) != NULL) {
-      strcpy(output,",");
-      output += 1;
-    }
-  }
-  strcpy(output,"],");
-  output += 2;
-
-  // Shunts
-  sprintf(temp,"\"shunts\":[");
-  strcpy(output,temp);
-  output += strlen(temp);
-  for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
-    sprintf(temp,"%d", SHUNT_get_index(shunt));
-    strcpy(output,temp);
-    output += strlen(temp);     
-    if (SHUNT_get_next(shunt) != NULL) {
-      strcpy(output,",");
-      output += 1;
-    }
-  }
-  strcpy(output,"],");
-  output += 2;
-
-  // Reg shunts
-  sprintf(temp,"\"reg_shunts\":[");
-  strcpy(output,temp);
-  output += strlen(temp);
-  for (shunt = BUS_get_reg_shunt(bus); shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
-    sprintf(temp,"%d", SHUNT_get_index(shunt));
-    strcpy(output,temp);
-    output += strlen(temp);     
-    if (SHUNT_get_reg_next(shunt) != NULL) {
-      strcpy(output,",");
-      output += 1;
-    }
-  }
-  strcpy(output,"],");
-  output += 2;
-
-  // Branches k side
-  sprintf(temp,"\"branches_k\":[");
-  strcpy(output,temp);
-  output += strlen(temp);
-  for (branch = BUS_get_branch_k(bus); branch != NULL; branch = BRANCH_get_next_k(branch)) {
-    sprintf(temp,"%d", BRANCH_get_index(branch));
-    strcpy(output,temp);
-    output += strlen(temp);     
-    if (BRANCH_get_next_k(branch) != NULL) {
-      strcpy(output,",");
-      output += 1;
-    }
-  }
-  strcpy(output,"],");
-  output += 2;
-
-  // Branches m side
-  sprintf(temp,"\"branches_m\":[");
-  strcpy(output,temp);
-  output += strlen(temp);
-  for (branch = BUS_get_branch_m(bus); branch != NULL; branch = BRANCH_get_next_m(branch)) {
-    sprintf(temp,"%d", BRANCH_get_index(branch));
-    strcpy(output,temp);
-    output += strlen(temp);     
-    if (BRANCH_get_next_m(branch) != NULL) {
-      strcpy(output,",");
-      output += 1;
-    }
-  }
-  strcpy(output,"],");
-  output += 2;
-
-  // Reg transformers
-  sprintf(temp,"\"reg_transformers\":[");
-  strcpy(output,temp);
-  output += strlen(temp);
-  for (branch = BUS_get_reg_tran(bus); branch != NULL; branch = BRANCH_get_reg_next(branch)) {
-    sprintf(temp,"%d", BRANCH_get_index(branch));
-    strcpy(output,temp);
-    output += strlen(temp);     
-    if (BRANCH_get_reg_next(branch) != NULL) {
-      strcpy(output,",");
-      output += 1;
-    }
-  }
-  strcpy(output,"],");
-  output += 2;
-
-  // Var generators
-  sprintf(temp,"\"var_generators\":[");
-  strcpy(output,temp);
-  output += strlen(temp);
-  for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
-    sprintf(temp,"%d", VARGEN_get_index(vargen));
-    strcpy(output,temp);
-    output += strlen(temp);     
-    if (VARGEN_get_next(vargen) != NULL) {
-      strcpy(output,",");
-      output += 1;
-    }
-  }
-  strcpy(output,"],");
-  output += 2;
-
-  // Batteries
-  sprintf(temp,"\"batteries\":[");
-  strcpy(output,temp);
-  output += strlen(temp);
-  for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
-    sprintf(temp,"%d", BAT_get_index(bat));
-    strcpy(output,temp);
-    output += strlen(temp);     
-    if (BAT_get_next(bat) != NULL) {
-      strcpy(output,",");
-      output += 1;
-    }
-  }
-  strcpy(output,"]");
-  output += 1;
-
-  // End
-  strcpy(output,"}");
+  // Write
+  JSON_start(output);
+  JSON_int(temp,output,"number",bus->number,FALSE);
+  JSON_str(temp,output,"name",bus->name,FALSE);
+  JSON_int(temp,output,"num_periods",bus->num_periods,FALSE);
+  JSON_array_float(temp,output,"v_mag",bus->v_mag,bus->num_periods,FALSE);
+  JSON_array_float(temp,output,"v_ang",bus->v_ang,bus->num_periods,FALSE);
+  JSON_array_float(temp,output,"v_set",bus->v_set,bus->num_periods,FALSE);
+  JSON_float(temp,output,"v_max_reg",bus->v_max_reg,FALSE);
+  JSON_float(temp,output,"v_min_reg",bus->v_min_reg,FALSE);
+  JSON_float(temp,output,"v_max_norm",bus->v_max_norm,FALSE);
+  JSON_float(temp,output,"v_min_norm",bus->v_min_norm,FALSE);
+  JSON_float(temp,output,"v_max_emer",bus->v_max_emer,FALSE);
+  JSON_float(temp,output,"v_min_emer",bus->v_min_emer,FALSE);
+  JSON_bool(temp,output,"slack",bus->slack,FALSE);
+  JSON_array_float(temp,output,"price",bus->price,bus->num_periods,FALSE);
+  JSON_int(temp,output,"index",bus->index,FALSE);
+  JSON_list_int(temp,output,"generators",bus,Gen,BUS_get_gen,GEN_get_index,GEN_get_next,FALSE);
+  JSON_list_int(temp,output,"reg_generators",bus,Gen,BUS_get_reg_gen,GEN_get_index,GEN_get_reg_next,FALSE);
+  JSON_list_int(temp,output,"loads",bus,Load,BUS_get_load,LOAD_get_index,LOAD_get_next,FALSE);
+  JSON_list_int(temp,output,"shunts",bus,Shunt,BUS_get_shunt,SHUNT_get_index,SHUNT_get_next,FALSE);
+  JSON_list_int(temp,output,"reg_shunts",bus,Shunt,BUS_get_reg_shunt,SHUNT_get_index,SHUNT_get_reg_next,FALSE);
+  JSON_list_int(temp,output,"branches_k",bus,Branch,BUS_get_branch_k,BRANCH_get_index,BRANCH_get_next_k,FALSE);
+  JSON_list_int(temp,output,"branches_m",bus,Branch,BUS_get_branch_m,BRANCH_get_index,BRANCH_get_next_m,FALSE);
+  JSON_list_int(temp,output,"reg_transformers",bus,Branch,BUS_get_reg_tran,BRANCH_get_index,BRANCH_get_reg_next,FALSE);
+  JSON_list_int(temp,output,"var_generators",bus,Vargen,BUS_get_vargen,VARGEN_get_index,VARGEN_get_next,FALSE);
+  JSON_list_int(temp,output,"batteries",bus,Bat,BUS_get_bat,BAT_get_index,BAT_get_next,TRUE);
+  JSON_end(output);
       
   // Resize
   if (resize)
