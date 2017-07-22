@@ -1069,6 +1069,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   
   // Local variables
   char temp[BUS_BUFFER_SIZE];
+  char* output_start;
   Gen* gen;
   Load* load;
   Shunt* shunt;
@@ -1089,211 +1090,297 @@ char* BUS_get_json_string(Bus* bus, char* output) {
     output = (char*)malloc(sizeof(char)*BUS_BUFFER_SIZE*BUS_NUM_JSON_FIELDS*bus->num_periods);
     resize = TRUE;
   }
-
+  output_start = output;
+  
   // Start
-  strcpy(output,"{ ");
+  strcpy(output,"{");
+  output += 1;
   
   // Number
-  sprintf(temp,"\"number\" : %d", bus->number);
-  strcat(output,temp);
-  strcat(output,", ");
+  sprintf(temp,"\"number\":%d,", bus->number);
+  strcpy(output,temp);
+  output += strlen(temp);
 
   // Name
-  sprintf(temp,"\"name\" : \"%s\"", bus->name);
-  strcat(output,temp);
-  strcat(output,", ");
+  sprintf(temp,"\"name\":\"%s\",", bus->name);
+  strcpy(output,temp);
+  output += strlen(temp);
 
   // Num periods
-  sprintf(temp,"\"num_periods\" : %d", bus->num_periods);
-  strcat(output,temp);
-  strcat(output,", ");
-
+  sprintf(temp,"\"num_periods\":%d,", bus->num_periods);
+  strcpy(output,temp);
+  output += strlen(temp);
+  
   // Voltage mag
-  strcat(output,"\"v_mag\" : [ ");
+  sprintf(temp,"\"v_mag\":[");
+  strcpy(output,temp);
+  output += strlen(temp);
   for (i = 0; i < bus->num_periods; i++) {
     sprintf(temp,"%.10e", bus->v_mag[i]);
-    strcat(output,temp);
-    if (i < bus->num_periods-1)
-      strcat(output,", ");
+    strcpy(output,temp);
+    output += strlen(temp); 
+    if (i < bus->num_periods-1) {
+      strcpy(output,",");
+      output += 1;
+    }
   }
-  strcat(output," ], ");
+  strcpy(output,"],");
+  output += 2;
 
   // Voltage ang
-  strcat(output,"\"v_ang\" : [ ");
+  sprintf(temp,"\"v_ang\":[");
+  strcpy(output,temp);
+  output += strlen(temp);
   for (i = 0; i < bus->num_periods; i++) {
     sprintf(temp,"%.10e", bus->v_ang[i]);
-    strcat(output,temp);
-    if (i < bus->num_periods-1)
-      strcat(output,", ");
+    strcpy(output,temp);
+    output += strlen(temp); 
+    if (i < bus->num_periods-1) {
+      strcpy(output,",");
+      output += 1;
+    }
   }
-  strcat(output," ], ");
-
-  // Voltage setpoint
-  strcat(output,"\"v_set\" : [ ");
+  strcpy(output,"],");
+  output += 2;
+  
+  // Voltage set point
+  sprintf(temp,"\"v_set\":[");
+  strcpy(output,temp);
+  output += strlen(temp);
   for (i = 0; i < bus->num_periods; i++) {
     sprintf(temp,"%.10e", bus->v_set[i]);
-    strcat(output,temp);
-    if (i < bus->num_periods-1)
-      strcat(output,", ");
+    strcpy(output,temp);
+    output += strlen(temp); 
+    if (i < bus->num_periods-1) {
+      strcpy(output,",");
+      output += 1;
+    }
   }
-  strcat(output," ], ");
-
+  strcpy(output,"],");
+  output += 2;
+  
   // Voltage max reg
-  sprintf(temp,"\"v_max_reg\" : %.10e", bus->v_max_reg);
-  strcat(output,temp);
-  strcat(output,", ");
+  sprintf(temp,"\"v_max_reg\":%.10e,", bus->v_max_reg);
+  strcpy(output,temp);
+  output += strlen(temp);
 
   // Voltage min reg
-  sprintf(temp,"\"v_min_reg\" : %.10e", bus->v_min_reg);
-  strcat(output,temp);
-  strcat(output,", ");
+  sprintf(temp,"\"v_min_reg\":%.10e,", bus->v_min_reg);
+  strcpy(output,temp);
+  output += strlen(temp);
 
   // Voltage max norm
-  sprintf(temp,"\"v_max_norm\" : %.10e", bus->v_max_norm);
-  strcat(output,temp);
-  strcat(output,", ");
+  sprintf(temp,"\"v_max_norm\":%.10e,", bus->v_max_norm);
+  strcpy(output,temp);
+  output += strlen(temp);
 
   // Voltage min norm
-  sprintf(temp,"\"v_min_norm\" : %.10e", bus->v_min_norm);
-  strcat(output,temp);
-  strcat(output,", ");
-
+  sprintf(temp,"\"v_min_norm\":%.10e,", bus->v_min_norm);
+  strcpy(output,temp);
+  output += strlen(temp);
+  
   // Voltage max emer
-  sprintf(temp,"\"v_max_emer\" : %.10e", bus->v_max_emer);
-  strcat(output,temp);
-  strcat(output,", ");
-
+  sprintf(temp,"\"v_max_emer\":%.10e,", bus->v_max_emer);
+  strcpy(output,temp);
+  output += strlen(temp);
+  
   // Voltage min emer
-  sprintf(temp,"\"v_min_emer\" : %.10e", bus->v_min_emer);
-  strcat(output,temp);
-  strcat(output,", ");
+  sprintf(temp,"\"v_min_emer\":%.10e,", bus->v_min_emer);
+  strcpy(output,temp);
+  output += strlen(temp);
 
   // Slack
-  sprintf(temp,"\"slack\" : %s", bus->slack ? "true" : "false");
-  strcat(output,temp);
-  strcat(output,", ");
+  sprintf(temp,"\"slack\":%s,", bus->slack ? "true" : "false");
+  strcpy(output,temp);
+  output += strlen(temp);
 
   // Price
-  strcat(output,"\"price\" : [ ");
+  sprintf(temp,"\"price\":[");
+  strcpy(output,temp);
+  output += strlen(temp);
   for (i = 0; i < bus->num_periods; i++) {
     sprintf(temp,"%.10e", bus->price[i]);
-    strcat(output,temp);
-    if (i < bus->num_periods-1)
-      strcat(output,", ");
+    strcpy(output,temp);
+    output += strlen(temp); 
+    if (i < bus->num_periods-1) {
+      strcpy(output,",");
+      output += 1;
+    }
   }
-  strcat(output," ], ");
+  strcpy(output,"],");
+  output += 2;
 
   // Index
-  sprintf(temp,"\"index\" : %d", bus->index);
-  strcat(output,temp);
-  strcat(output,", ");
+  sprintf(temp,"\"index\":%d,", bus->index);
+  strcpy(output,temp);
+  output += strlen(temp);
 
   // Generators
-  strcat(output,"\"generators\" : [ ");
+  sprintf(temp,"\"generators\":[");
+  strcpy(output,temp);
+  output += strlen(temp);
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
     sprintf(temp,"%d", GEN_get_index(gen));
-    strcat(output,temp);
-    if (GEN_get_next(gen) != NULL)
-      strcat(output,", ");
+    strcpy(output,temp);
+    output += strlen(temp);     
+    if (GEN_get_next(gen) != NULL) {
+      strcpy(output,",");
+      output += 1;
+    }
   }
-  strcat(output," ], ");
+  strcpy(output,"],");
+  output += 2;
 
   // Reg generators
-  strcat(output,"\"reg_generators\" : [ ");
+  sprintf(temp,"\"reg_generators\":[");
+  strcpy(output,temp);
+  output += strlen(temp);
   for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen)) {
     sprintf(temp,"%d", GEN_get_index(gen));
-    strcat(output,temp);
-    if (GEN_get_reg_next(gen) != NULL)
-      strcat(output,", ");
+    strcpy(output,temp);
+    output += strlen(temp);     
+    if (GEN_get_reg_next(gen) != NULL) {
+      strcpy(output,",");
+      output += 1;
+    }
   }
-  strcat(output," ], ");
+  strcpy(output,"],");
+  output += 2;
 
   // Loads
-  strcat(output,"\"loads\" : [ ");
+  sprintf(temp,"\"loads\":[");
+  strcpy(output,temp);
+  output += strlen(temp); 
   for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
     sprintf(temp,"%d", LOAD_get_index(load));
-    strcat(output,temp);
-    if (LOAD_get_next(load) != NULL)
-      strcat(output,", ");
+    strcpy(output,temp);
+    output += strlen(temp);     
+    if (LOAD_get_next(load) != NULL) {
+      strcpy(output,",");
+      output += 1;
+    }
   }
-  strcat(output," ], ");
+  strcpy(output,"],");
+  output += 2;
 
   // Shunts
-  strcat(output,"\"shunts\" : [ ");
+  sprintf(temp,"\"shunts\":[");
+  strcpy(output,temp);
+  output += strlen(temp);
   for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
     sprintf(temp,"%d", SHUNT_get_index(shunt));
-    strcat(output,temp);
-    if (SHUNT_get_next(shunt) != NULL)
-      strcat(output,", ");
+    strcpy(output,temp);
+    output += strlen(temp);     
+    if (SHUNT_get_next(shunt) != NULL) {
+      strcpy(output,",");
+      output += 1;
+    }
   }
-  strcat(output," ], ");
+  strcpy(output,"],");
+  output += 2;
 
   // Reg shunts
-  strcat(output,"\"reg_shunts\" : [ ");
+  sprintf(temp,"\"reg_shunts\":[");
+  strcpy(output,temp);
+  output += strlen(temp);
   for (shunt = BUS_get_reg_shunt(bus); shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
     sprintf(temp,"%d", SHUNT_get_index(shunt));
-    strcat(output,temp);
-    if (SHUNT_get_reg_next(shunt) != NULL)
-      strcat(output,", ");
+    strcpy(output,temp);
+    output += strlen(temp);     
+    if (SHUNT_get_reg_next(shunt) != NULL) {
+      strcpy(output,",");
+      output += 1;
+    }
   }
-  strcat(output," ], ");
+  strcpy(output,"],");
+  output += 2;
 
   // Branches k side
-  strcat(output,"\"branches_k\" : [ ");
+  sprintf(temp,"\"branches_k\":[");
+  strcpy(output,temp);
+  output += strlen(temp);
   for (branch = BUS_get_branch_k(bus); branch != NULL; branch = BRANCH_get_next_k(branch)) {
     sprintf(temp,"%d", BRANCH_get_index(branch));
-    strcat(output,temp);
-    if (BRANCH_get_next_k(branch) != NULL)
-      strcat(output,", ");
+    strcpy(output,temp);
+    output += strlen(temp);     
+    if (BRANCH_get_next_k(branch) != NULL) {
+      strcpy(output,",");
+      output += 1;
+    }
   }
-  strcat(output," ], ");
+  strcpy(output,"],");
+  output += 2;
 
   // Branches m side
-  strcat(output,"\"branches_m\" : [ ");
+  sprintf(temp,"\"branches_m\":[");
+  strcpy(output,temp);
+  output += strlen(temp);
   for (branch = BUS_get_branch_m(bus); branch != NULL; branch = BRANCH_get_next_m(branch)) {
     sprintf(temp,"%d", BRANCH_get_index(branch));
-    strcat(output,temp);
-    if (BRANCH_get_next_m(branch) != NULL)
-      strcat(output,", ");
+    strcpy(output,temp);
+    output += strlen(temp);     
+    if (BRANCH_get_next_m(branch) != NULL) {
+      strcpy(output,",");
+      output += 1;
+    }
   }
-  strcat(output," ], ");
+  strcpy(output,"],");
+  output += 2;
 
   // Reg transformers
-  strcat(output,"\"reg_transformers\" : [ ");
+  sprintf(temp,"\"reg_transformers\":[");
+  strcpy(output,temp);
+  output += strlen(temp);
   for (branch = BUS_get_reg_tran(bus); branch != NULL; branch = BRANCH_get_reg_next(branch)) {
     sprintf(temp,"%d", BRANCH_get_index(branch));
-    strcat(output,temp);
-    if (BRANCH_get_reg_next(branch) != NULL)
-      strcat(output,", ");
+    strcpy(output,temp);
+    output += strlen(temp);     
+    if (BRANCH_get_reg_next(branch) != NULL) {
+      strcpy(output,",");
+      output += 1;
+    }
   }
-  strcat(output," ], ");
+  strcpy(output,"],");
+  output += 2;
 
   // Var generators
-  strcat(output,"\"var_generators\" : [ ");
+  sprintf(temp,"\"var_generators\":[");
+  strcpy(output,temp);
+  output += strlen(temp);
   for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
     sprintf(temp,"%d", VARGEN_get_index(vargen));
-    strcat(output,temp);
-    if (VARGEN_get_next(vargen) != NULL)
-      strcat(output,", ");
+    strcpy(output,temp);
+    output += strlen(temp);     
+    if (VARGEN_get_next(vargen) != NULL) {
+      strcpy(output,",");
+      output += 1;
+    }
   }
-  strcat(output," ], ");
+  strcpy(output,"],");
+  output += 2;
 
   // Batteries
-  strcat(output,"\"batteries\" : [ ");
+  sprintf(temp,"\"batteries\":[");
+  strcpy(output,temp);
+  output += strlen(temp);
   for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
     sprintf(temp,"%d", BAT_get_index(bat));
-    strcat(output,temp);
-    if (BAT_get_next(bat) != NULL)
-      strcat(output,", ");
+    strcpy(output,temp);
+    output += strlen(temp);     
+    if (BAT_get_next(bat) != NULL) {
+      strcpy(output,",");
+      output += 1;
+    }
   }
-  strcat(output," ]");
+  strcpy(output,"]");
+  output += 1;
 
   // End
-  strcat(output," }");
+  strcpy(output,"}");
       
   // Resize
   if (resize)
-    output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
+    output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
 
   // Return
   return output;

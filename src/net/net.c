@@ -1807,9 +1807,10 @@ char* NET_get_json_string(Net* net) {
     if (i < net->num_buses-1)
       strcat(output,", ");
   }
-  strcat(output," ], ");
+  strcat(output," ]");
   free(element_output);
 
+  /*
   // Branches
   element_output = (char*)malloc(sizeof(char)*BRANCH_BUFFER_SIZE*BRANCH_NUM_JSON_FIELDS*net->num_periods);
   strcat(output,"\"branches\" : [ ");
@@ -1881,6 +1882,7 @@ char* NET_get_json_string(Net* net) {
   }
   strcat(output," ]");
   free(element_output);
+  */
 
   // End
   strcat(output," }");
