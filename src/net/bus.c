@@ -1114,7 +1114,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_list_int(temp,output,"var_generators",bus,Vargen,BUS_get_vargen,VARGEN_get_index,VARGEN_get_next,FALSE);
   JSON_list_int(temp,output,"batteries",bus,Bat,BUS_get_bat,BAT_get_index,BAT_get_next,TRUE);
   JSON_end(output);
-      
+  
   // Resize
   if (resize)
     output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!

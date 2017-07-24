@@ -10,6 +10,7 @@
 
 #include <pfnet/net.h>
 #include <pfnet/array.h>
+#include <pfnet/json.h>
 
 struct Net {
 
@@ -1764,9 +1765,8 @@ char* NET_get_json_string(Net* net) {
    // Local variables
   char temp[NET_BUFFER_SIZE];
   char* output;
-  char* element_output;
+  char* output_start;
   int max_size;
-  int i;
 
   // No network
   if (!net)
@@ -1782,47 +1782,18 @@ char* NET_get_json_string(Net* net) {
 	      VARGEN_BUFFER_SIZE*VARGEN_NUM_JSON_FIELDS*net->num_vargens +
 	      BAT_BUFFER_SIZE*BAT_NUM_JSON_FIELDS*net->num_bats)*net->num_periods;
 
-  // Alloc
+  // Output
   output = (char*)malloc(sizeof(char)*max_size);
+  output_start = output;
   
-  // Start
-  strcpy(output,"{ ");
-  
-  // Num periods
-  sprintf(temp,"\"num_periods\" : %d", net->num_periods);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Base power
-  sprintf(temp,"\"base_power\" : %.10e", net->base_power);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Buses
-  element_output = (char*)malloc(sizeof(char)*BUS_BUFFER_SIZE*BUS_NUM_JSON_FIELDS*net->num_periods);
-  strcat(output,"\"buses\" : [ ");
-  for (i = 0; i < net->num_buses; i++) {
-    BUS_get_json_string(BUS_array_get(net->bus,i),element_output);
-    strcat(output,element_output);
-    if (i < net->num_buses-1)
-      strcat(output,", ");
-  }
-  strcat(output," ]");
-  free(element_output);
+  // Write
+  JSON_start(output);
+  JSON_int(temp,output,"num_periods",net->num_periods,FALSE);
+  JSON_float(temp,output,"base_power",net->base_power,FALSE);
+  JSON_array_json(temp,output,"buses",net->bus,BUS_array_get,net->num_buses,BUS_get_json_string,FALSE);
+  JSON_array_json(temp,output,"branches",net->branch,BRANCH_array_get,net->num_branches,BRANCH_get_json_string,TRUE);
 
   /*
-  // Branches
-  element_output = (char*)malloc(sizeof(char)*BRANCH_BUFFER_SIZE*BRANCH_NUM_JSON_FIELDS*net->num_periods);
-  strcat(output,"\"branches\" : [ ");
-  for (i = 0; i < net->num_branches; i++) {
-    BRANCH_get_json_string(BRANCH_array_get(net->branch,i),element_output);
-    strcat(output,element_output);
-    if (i < net->num_branches-1)
-      strcat(output,", ");
-  }
-  strcat(output," ], ");
-  free(element_output);
-
   // Generators
   element_output = (char*)malloc(sizeof(char)*GEN_BUFFER_SIZE*GEN_NUM_JSON_FIELDS*net->num_periods);
   strcat(output,"\"generators\" : [ ");
@@ -1885,10 +1856,10 @@ char* NET_get_json_string(Net* net) {
   */
 
   // End
-  strcat(output," }");
+  JSON_end(output);
   
   // Resize
-  output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
+  output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
 
   // Return
   return output;

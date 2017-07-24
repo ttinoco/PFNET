@@ -124,4 +124,26 @@
   }									                         \
 }
 
+#define JSON_array_json(temp,output,field_name,array,array_get,array_size,json_func,end) { \
+  int i;								                   \
+  sprintf(temp,"\"%s\":[",field_name);					                   \
+  strcpy(output,temp);							                   \
+  output += strlen(temp);						                   \
+  for (i = 0; i < array_size; i++) {					                   \
+    output = json_func(array_get(array,i),output);			                   \
+    if (i < array_size-1) {						                   \
+      strcpy(output,",");						                   \
+      output += 1;							                   \
+    }									                   \
+  }									                   \
+  if (!end) {								                   \
+    strcpy(output,"],");						                   \
+    output += 2;							                   \
+  }									                   \
+  else {								                   \
+    strcpy(output,"]");							                   \
+    output += 1;							                   \
+  }									                   \
+}
+  
 #endif
