@@ -11,6 +11,7 @@
 #include <pfnet/load.h>
 #include <pfnet/bus.h>
 #include <pfnet/array.h>
+#include <pfnet/json.h>
 
 struct Load {
 
@@ -387,8 +388,8 @@ char* LOAD_get_json_string(Load* load, char* output) {
 
   // Local variables
   char temp[LOAD_BUFFER_SIZE];
+  char* output_start;
   BOOL resize;
-  int i;
 
   // No load
   if (!load)
@@ -401,102 +402,27 @@ char* LOAD_get_json_string(Load* load, char* output) {
     output = (char*)malloc(sizeof(char)*LOAD_BUFFER_SIZE*LOAD_NUM_JSON_FIELDS*load->num_periods);
     resize = TRUE;
   }
+  output_start = output;
   
-  // Start
-  strcpy(output,"{ ");
-
-  // Bus
-  if (load->bus)
-    sprintf(temp,"\"bus\" : %d", BUS_get_index(load->bus));
-  else
-    sprintf(temp,"\"bus\" : %s", "null");
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Num periods
-  sprintf(temp,"\"num_periods\" : %d", load->num_periods);
-  strcat(output,temp);
-  strcat(output,", ");
-  
-  // P
-  strcat(output,"\"P\" : [ ");
-  for (i = 0; i < load->num_periods; i++) {
-    sprintf(temp,"%.10e", load->P[i]);
-    strcat(output,temp);
-    if (i < load->num_periods-1)
-      strcat(output,", ");
-  }
-  strcat(output," ], ");
-
-  // P max
-  strcat(output,"\"P_max\" : [ ");
-  for (i = 0; i < load->num_periods; i++) {
-    sprintf(temp,"%.10e", load->P_max[i]);
-    strcat(output,temp);
-    if (i < load->num_periods-1)
-      strcat(output,", ");
-  }
-  strcat(output," ], ");
-
-  // P min
-  strcat(output,"\"P_min\" : [ ");
-  for (i = 0; i < load->num_periods; i++) {
-    sprintf(temp,"%.10e", load->P_min[i]);
-    strcat(output,temp);
-    if (i < load->num_periods-1)
-      strcat(output,", ");
-  }
-  strcat(output," ], ");
-
-  // Q
-  strcat(output,"\"Q\" : [ ");
-  for (i = 0; i < load->num_periods; i++) {
-    sprintf(temp,"%.10e", load->Q[i]);
-    strcat(output,temp);
-    if (i < load->num_periods-1)
-      strcat(output,", ");
-  }
-  strcat(output," ], ");
-
-  // Target power factor
-  sprintf(temp,"\"target_power_factor\" : %.10e", load->target_power_factor);
-  strcat(output,temp);
-  strcat(output,", ");
-  
-  // Index
-  sprintf(temp,"\"index\" : %d", load->index);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Util coeff Q0
-  sprintf(temp,"\"util_coeff_Q0\" : %.10e", load->util_coeff_Q0);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Util coeff Q1
-  sprintf(temp,"\"util_coeff_Q1\" : %.10e", load->util_coeff_Q1);
-  strcat(output,temp);
-  strcat(output,", ");
-  
-  // Util coeff Q2
-  sprintf(temp,"\"util_coeff_Q2\" : %.10e", load->util_coeff_Q2);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Next
-  if (load->next)
-    sprintf(temp,"\"next\" : %d", LOAD_get_index(load->next));
-  else
-    sprintf(temp,"\"next\" : %s", "null");
-  strcat(output,temp);
-  strcat(output,"");
-  
-  // End
-  strcat(output," }");
+  // Write
+  JSON_start(output);
+  JSON_obj(temp,output,"bus",load->bus,BUS_get_index,FALSE);
+  JSON_int(temp,output,"num_periods",load->num_periods,FALSE);
+  JSON_array_float(temp,output,"P",load->P,load->num_periods,FALSE);
+  JSON_array_float(temp,output,"P_max",load->P_max,load->num_periods,FALSE);
+  JSON_array_float(temp,output,"P_min",load->P_min,load->num_periods,FALSE);
+  JSON_array_float(temp,output,"Q",load->Q,load->num_periods,FALSE);
+  JSON_float(temp,output,"target_power_factor",load->target_power_factor,FALSE);
+  JSON_int(temp,output,"index",load->index,FALSE);
+  JSON_float(temp,output,"util_coeff_Q0",load->util_coeff_Q0,FALSE);
+  JSON_float(temp,output,"util_coeff_Q1",load->util_coeff_Q1,FALSE);
+  JSON_float(temp,output,"util_coeff_Q2",load->util_coeff_Q2,FALSE);
+  JSON_obj(temp,output,"next",load->next,LOAD_get_index,TRUE);
+  JSON_end(output);
   
   // Resize
   if (resize)
-    output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
+    output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
 
   // Return
   return output;

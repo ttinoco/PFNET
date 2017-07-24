@@ -1792,59 +1792,11 @@ char* NET_get_json_string(Net* net) {
   JSON_float(temp,output,"base_power",net->base_power,FALSE);
   JSON_array_json(temp,output,"buses",net->bus,BUS_array_get,net->num_buses,BUS_get_json_string,FALSE);
   JSON_array_json(temp,output,"branches",net->branch,BRANCH_array_get,net->num_branches,BRANCH_get_json_string,FALSE);
-  JSON_array_json(temp,output,"generators",net->gen,GEN_array_get,net->num_gens,GEN_get_json_string,TRUE);
-
-  /*
-  // Loads
-  element_output = (char*)malloc(sizeof(char)*LOAD_BUFFER_SIZE*LOAD_NUM_JSON_FIELDS*net->num_periods);
-  strcat(output,"\"loads\" : [ ");
-  for (i = 0; i < net->num_loads; i++) {
-    LOAD_get_json_string(LOAD_array_get(net->load,i),element_output);
-    strcat(output,element_output);
-    if (i < net->num_loads-1)
-      strcat(output,", ");
-  }
-  strcat(output," ], ");
-  free(element_output);
-
-  // Shunts
-  element_output = (char*)malloc(sizeof(char)*SHUNT_BUFFER_SIZE*SHUNT_NUM_JSON_FIELDS*net->num_periods);
-  strcat(output,"\"shunts\" : [ ");
-  for (i = 0; i < net->num_shunts; i++) {
-    SHUNT_get_json_string(SHUNT_array_get(net->shunt,i),element_output);
-    strcat(output,element_output);
-    if (i < net->num_shunts-1)
-      strcat(output,", ");
-  }
-  strcat(output," ], ");
-  free(element_output);
-
-  // Var generators
-  element_output = (char*)malloc(sizeof(char)*VARGEN_BUFFER_SIZE*VARGEN_NUM_JSON_FIELDS*net->num_periods);
-  strcat(output,"\"var_generators\" : [ ");
-  for (i = 0; i < net->num_vargens; i++) {
-    VARGEN_get_json_string(VARGEN_array_get(net->vargen,i),element_output);
-    strcat(output,element_output);
-    if (i < net->num_vargens-1)
-      strcat(output,", ");
-  }
-  strcat(output," ], ");
-  free(element_output);
-
-  // Batteries
-  element_output = (char*)malloc(sizeof(char)*BAT_BUFFER_SIZE*BAT_NUM_JSON_FIELDS*net->num_periods);
-  strcat(output,"\"batteries\" : [ ");
-  for (i = 0; i < net->num_bats; i++) {
-    BAT_get_json_string(BAT_array_get(net->bat,i),element_output);
-    strcat(output,element_output);
-    if (i < net->num_bats-1)
-      strcat(output,", ");
-  }
-  strcat(output," ]");
-  free(element_output);
-  */
-
-  // End
+  JSON_array_json(temp,output,"generators",net->gen,GEN_array_get,net->num_gens,GEN_get_json_string,FALSE);
+  JSON_array_json(temp,output,"loads",net->load,LOAD_array_get,net->num_loads,LOAD_get_json_string,FALSE);
+  JSON_array_json(temp,output,"shunts",net->shunt,SHUNT_array_get,net->num_shunts,SHUNT_get_json_string,FALSE);
+  JSON_array_json(temp,output,"var_generators",net->vargen,VARGEN_array_get,net->num_vargens,VARGEN_get_json_string,FALSE);
+  JSON_array_json(temp,output,"batteries",net->bat,BAT_array_get,net->num_bats,BAT_get_json_string,TRUE);
   JSON_end(output);
   
   // Resize

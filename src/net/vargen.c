@@ -11,6 +11,7 @@
 #include <pfnet/vargen.h>
 #include <pfnet/bus.h>
 #include <pfnet/array.h>
+#include <pfnet/json.h>
 
 struct Vargen {
 
@@ -347,8 +348,8 @@ char* VARGEN_get_json_string(Vargen* gen, char* output) {
 
   // Local variables
   char temp[VARGEN_BUFFER_SIZE];
+  char* output_start;
   BOOL resize;  
-  int i;
 
   // No gen
   if (!gen)
@@ -361,113 +362,31 @@ char* VARGEN_get_json_string(Vargen* gen, char* output) {
     output = (char*)malloc(sizeof(char)*VARGEN_BUFFER_SIZE*VARGEN_NUM_JSON_FIELDS*gen->num_periods);
     resize = TRUE;
   }
+  output_start = output;
 
-  // Start
-  strcpy(output,"{ ");
-
-  // Bus
-  if (gen->bus)
-    sprintf(temp,"\"bus\" : %d", BUS_get_index(gen->bus));
-  else
-    sprintf(temp,"\"bus\" : %s", "null");
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Num periods
-  sprintf(temp,"\"num_periods\" : %d", gen->num_periods);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Name
-  sprintf(temp,"\"name\" : \"%s\"", gen->name);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Type
-  sprintf(temp,"\"type\" : %d", gen->type);
-  strcat(output,temp);
-  strcat(output,", ");
-  
-  // P
-  strcat(output,"\"P\" : [ ");
-  for (i = 0; i < gen->num_periods; i++) {
-    sprintf(temp,"%.10e", gen->P[i]);
-    strcat(output,temp);
-    if (i < gen->num_periods-1)
-      strcat(output,", ");
-  }
-  strcat(output," ], ");
-
-  // P ava
-  strcat(output,"\"P_ava\" : [ ");
-  for (i = 0; i < gen->num_periods; i++) {
-    sprintf(temp,"%.10e", gen->P_ava[i]);
-    strcat(output,temp);
-    if (i < gen->num_periods-1)
-      strcat(output,", ");
-  }
-  strcat(output," ], ");
-
-  // P max
-  sprintf(temp,"\"P_max\" : %.10e", gen->P_max);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // P min
-  sprintf(temp,"\"P_min\" : %.10e", gen->P_min);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // P std
-  strcat(output,"\"P_std\" : [ ");
-  for (i = 0; i < gen->num_periods; i++) {
-    sprintf(temp,"%.10e", gen->P_std[i]);
-    strcat(output,temp);
-    if (i < gen->num_periods-1)
-      strcat(output,", ");
-  }
-  strcat(output," ], ");
-
-  // Q
-  strcat(output,"\"Q\" : [ ");
-  for (i = 0; i < gen->num_periods; i++) {
-    sprintf(temp,"%.10e", gen->Q[i]);
-    strcat(output,temp);
-    if (i < gen->num_periods-1)
-      strcat(output,", ");
-  }
-  strcat(output," ], ");
-  
-  // Q max
-  sprintf(temp,"\"Q_max\" : %.10e", gen->Q_max);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Q min
-  sprintf(temp,"\"Q_min\" : %.10e", gen->Q_min);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Index
-  sprintf(temp,"\"index\" : %d", gen->index);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Next
-  if (gen->next)
-    sprintf(temp,"\"next\" : %d", VARGEN_get_index(gen->next));
-  else
-    sprintf(temp,"\"next\" : %s", "null");
-  strcat(output,temp);
-  strcat(output,"");
-
-  // End
-  strcat(output," }");
+  // Write
+  JSON_start(output);
+  JSON_obj(temp,output,"bus",gen->bus,BUS_get_index,FALSE);
+  JSON_int(temp,output,"num_periods",gen->num_periods,FALSE);
+  JSON_str(temp,output,"name",gen->name,FALSE);
+  JSON_int(temp,output,"type",gen->type,FALSE);
+  JSON_array_float(temp,output,"P",gen->P,gen->num_periods,FALSE);
+  JSON_array_float(temp,output,"P_ava",gen->P_ava,gen->num_periods,FALSE)
+  JSON_float(temp,output,"P_max",gen->P_max,FALSE);
+  JSON_float(temp,output,"P_min",gen->P_min,FALSE);
+  JSON_array_float(temp,output,"P_std",gen->P_std,gen->num_periods,FALSE);
+  JSON_array_float(temp,output,"Q",gen->Q,gen->num_periods,FALSE);
+  JSON_float(temp,output,"Q_max",gen->Q_max,FALSE);
+  JSON_float(temp,output,"Q_min",gen->Q_min,FALSE);
+  JSON_int(temp,output,"index",gen->index,FALSE);
+  JSON_obj(temp,output,"next",gen->next,VARGEN_get_index,TRUE);
+  JSON_end(output);
   
   // Resize
   if (resize)
-    output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
-  
+    output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
+
+  // Return
   return output;
 }
 
