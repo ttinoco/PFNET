@@ -11,7 +11,7 @@
 #include <pfnet/branch.h>
 #include <pfnet/bus.h>
 #include <pfnet/array.h>
-#include <pfnet/json.h>
+#include <pfnet/json_macros.h>
 
 // Branch
 struct Branch {

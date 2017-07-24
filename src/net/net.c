@@ -10,7 +10,7 @@
 
 #include <pfnet/net.h>
 #include <pfnet/array.h>
-#include <pfnet/json.h>
+#include <pfnet/json_macros.h>
 
 struct Net {
 

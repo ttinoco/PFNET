@@ -16,7 +16,7 @@
 #include <pfnet/vargen.h>
 #include <pfnet/bat.h>
 #include <pfnet/array.h>
-#include <pfnet/json.h>
+#include <pfnet/json_macros.h>
 
 struct Bus {
 

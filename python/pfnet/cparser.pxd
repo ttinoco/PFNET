@@ -38,6 +38,7 @@ cdef extern from "pfnet/pfnet.h":
     Parser* MAT_PARSER_new()
     Parser* ART_PARSER_new()
     Parser* RAW_PARSER_new()
+    Parser* JSON_PARSER_new()
     
     
 

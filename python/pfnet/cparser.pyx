@@ -135,6 +135,8 @@ cdef class Parser(ParserBase):
             self._c_parser = cparser.ART_PARSER_new()
         elif ext == 'raw':
             self._c_parser = cparser.RAW_PARSER_new()
+        elif ext == 'json':
+            self._c_parser = cparser.JSON_PARSER_new()
         else:
             raise ParserError('invalid extension')
 
@@ -180,6 +182,20 @@ cdef class ParserART(ParserBase):
     def __cinit__(self):
         
         self._c_parser = cparser.ART_PARSER_new()
+        self._alloc = True
+
+cdef class ParserJSON(ParserBase):
+
+    def __init__(self):
+        """
+        JSON parser class.
+        """
+    
+        pass
+        
+    def __cinit__(self):
+        
+        self._c_parser = cparser.JSON_PARSER_new()
         self._alloc = True
 
 cdef class CustomParser(ParserBase):

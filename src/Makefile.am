@@ -127,9 +127,12 @@ problem_func_hdr = 	$(inc_path)/func_GEN_COST.h \
 			$(inc_path)/func_SLIM_VMAG.h \
 			$(inc_path)/func_SP_CONTROLS.h
 
-utils_src = 	utils/utils.c 
+utils_src = 	utils/utils.c \
+		utils/json.c
 
-utils_hdr = 	$(inc_path)/utils.h
+utils_hdr = 	$(inc_path)/utils.h \
+		$(inc_path)/json_macros.h \
+		$(inc_path)/json.h
 
 other_hdr = 	$(inc_path)/array.h $(inc_path)/constants.h $(inc_path)/flag_types.h \
 		$(inc_path)/list.h $(inc_path)/obj_types.h $(inc_path)/types.h \

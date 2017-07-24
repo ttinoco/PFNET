@@ -20,11 +20,11 @@ typedef struct JSON_Parser JSON_Parser;
 
 // Interface
 Parser* JSON_PARSER_new(void);
-void JSON_PARSER_init(Parser* p);
-Net* JSON_PARSER_parse(Parser* p, char* f, int num_periods);
-void JSON_PARSER_set(Parser* p, char* key, REAL value);
-void JSON_PARSER_show(Parser* p);
-void JSON_PARSER_write(Parser* p, Net* net, char* f);
-void JSON_PARSER_free(Parser* p);
+void JSON_PARSER_init(Parser* parser);
+Net* JSON_PARSER_parse(Parser* parser, char* filename, int num_periods);
+void JSON_PARSER_set(Parser* parser, char* key, REAL value);
+void JSON_PARSER_show(Parser* parser);
+void JSON_PARSER_write(Parser* parser, Net* net, char* filename);
+void JSON_PARSER_free(Parser* parser);
 
 #endif
