@@ -203,6 +203,7 @@ class TestJSON(unittest.TestCase):
             self.assertEqual(json_model['base_power'],net.base_power)
             self.assertEqual(len(json_model['buses']),net.num_buses)
             self.assertEqual(len(json_model['branches']),net.num_branches)
+            self.assertEqual(len(json_model['generators']),net.num_generators)
             print case, t1-t0
                 
     def tearDown(self):

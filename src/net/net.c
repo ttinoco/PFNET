@@ -1791,21 +1791,10 @@ char* NET_get_json_string(Net* net) {
   JSON_int(temp,output,"num_periods",net->num_periods,FALSE);
   JSON_float(temp,output,"base_power",net->base_power,FALSE);
   JSON_array_json(temp,output,"buses",net->bus,BUS_array_get,net->num_buses,BUS_get_json_string,FALSE);
-  JSON_array_json(temp,output,"branches",net->branch,BRANCH_array_get,net->num_branches,BRANCH_get_json_string,TRUE);
+  JSON_array_json(temp,output,"branches",net->branch,BRANCH_array_get,net->num_branches,BRANCH_get_json_string,FALSE);
+  JSON_array_json(temp,output,"generators",net->gen,GEN_array_get,net->num_gens,GEN_get_json_string,TRUE);
 
   /*
-  // Generators
-  element_output = (char*)malloc(sizeof(char)*GEN_BUFFER_SIZE*GEN_NUM_JSON_FIELDS*net->num_periods);
-  strcat(output,"\"generators\" : [ ");
-  for (i = 0; i < net->num_gens; i++) {
-    GEN_get_json_string(GEN_array_get(net->gen,i),element_output);
-    strcat(output,element_output);
-    if (i < net->num_gens-1)
-      strcat(output,", ");
-  }
-  strcat(output," ], ");
-  free(element_output);
-
   // Loads
   element_output = (char*)malloc(sizeof(char)*LOAD_BUFFER_SIZE*LOAD_NUM_JSON_FIELDS*net->num_periods);
   strcat(output,"\"loads\" : [ ");

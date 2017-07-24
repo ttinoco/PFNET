@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -11,6 +11,7 @@
 #include <pfnet/gen.h>
 #include <pfnet/bus.h>
 #include <pfnet/array.h>
+#include <pfnet/json.h>
 
 struct Gen {
 
@@ -416,8 +417,8 @@ char* GEN_get_json_string(Gen* gen, char* output) {
 
   // Local variables
   char temp[GEN_BUFFER_SIZE];
+  char* output_start;
   BOOL resize;
-  int i;
 
   // No gen
   if (!gen)
@@ -430,129 +431,35 @@ char* GEN_get_json_string(Gen* gen, char* output) {
     output = (char*)malloc(sizeof(char)*GEN_BUFFER_SIZE*GEN_NUM_JSON_FIELDS*gen->num_periods);
     resize = TRUE;
   }
+  output_start = output;
 
-  // Start
-  strcpy(output,"{ ");
-
-  // Bus
-  if (gen->bus)
-    sprintf(temp,"\"bus\" : %d", BUS_get_index(gen->bus));
-  else
-    sprintf(temp,"\"bus\" : %s", "null");
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Reg bus
-  if (gen->reg_bus)
-    sprintf(temp,"\"reg_bus\" : %d", BUS_get_index(gen->reg_bus));
-  else
-    sprintf(temp,"\"reg_bus\" : %s", "null");
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Num periods
-  sprintf(temp,"\"num_periods\" : %d", gen->num_periods);
-  strcat(output,temp);
-  strcat(output,", ");
-  
-  // Outage
-  sprintf(temp,"\"outage\" : %s", gen->outage ? "true" : "false");
-  strcat(output,temp);
-  strcat(output,", ");
-  
-  // P
-  strcat(output,"\"P\" : [ ");
-  for (i = 0; i < gen->num_periods; i++) {
-    sprintf(temp,"%.10e", gen->P[i]);
-    strcat(output,temp);
-    if (i < gen->num_periods-1)
-      strcat(output,", ");
-  }
-  strcat(output," ], ");
-
-  // P max
-  sprintf(temp,"\"P_max\" : %.10e", gen->P_max);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // P min
-  sprintf(temp,"\"P_min\" : %.10e", gen->P_min);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // dP max
-  sprintf(temp,"\"dP_max\" : %.10e", gen->dP_max);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // P prev
-  sprintf(temp,"\"P_prev\" : %.10e", gen->P_prev);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Q
-  strcat(output,"\"Q\" : [ ");
-  for (i = 0; i < gen->num_periods; i++) {
-    sprintf(temp,"%.10e", gen->Q[i]);
-    strcat(output,temp);
-    if (i < gen->num_periods-1)
-      strcat(output,", ");
-  }
-  strcat(output," ], ");
-  
-  // Q max
-  sprintf(temp,"\"Q_max\" : %.10e", gen->Q_max);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Q min
-  sprintf(temp,"\"Q_min\" : %.10e", gen->Q_min);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Cost coeff Q0
-  sprintf(temp,"\"cost_coeff_Q0\" : %.10e", gen->cost_coeff_Q0);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Cost coeff Q1
-  sprintf(temp,"\"cost_coeff_Q1\" : %.10e", gen->cost_coeff_Q1);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Cost coeff Q2
-  sprintf(temp,"\"cost_coeff_Q2\" : %.10e", gen->cost_coeff_Q2);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Index
-  sprintf(temp,"\"index\" : %d", gen->index);
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Next
-  if (gen->next)
-    sprintf(temp,"\"next\" : %d", GEN_get_index(gen->next));
-  else
-    sprintf(temp,"\"next\" : %s", "null");
-  strcat(output,temp);
-  strcat(output,", ");
-
-  // Reg next
-  if (gen->reg_next)
-    sprintf(temp,"\"reg_next\" : %d", GEN_get_index(gen->reg_next));
-  else
-    sprintf(temp,"\"reg_next\" : %s", "null");
-  strcat(output,temp);
-  strcat(output,"");
-
-  // End
-  strcat(output," }");
+  // Write
+  JSON_start(output);
+  JSON_obj(temp,output,"bus",gen->bus,BUS_get_index,FALSE);
+  JSON_obj(temp,output,"reg_bus",gen->reg_bus,BUS_get_index,FALSE);
+  JSON_int(temp,output,"num_periods",gen->num_periods,FALSE);
+  JSON_bool(temp,output,"outage",gen->outage,FALSE);
+  JSON_array_float(temp,output,"P",gen->P,gen->num_periods,FALSE);
+  JSON_float(temp,output,"P_max",gen->P_max,FALSE);
+  JSON_float(temp,output,"P_min",gen->P_min,FALSE);
+  JSON_float(temp,output,"dP_max",gen->dP_max,FALSE);
+  JSON_float(temp,output,"P_prev",gen->P_prev,FALSE);
+  JSON_array_float(temp,output,"Q",gen->Q,gen->num_periods,FALSE);
+  JSON_float(temp,output,"Q_max",gen->Q_max,FALSE);
+  JSON_float(temp,output,"Q_min",gen->Q_min,FALSE);
+  JSON_float(temp,output,"cost_coeff_Q0",gen->cost_coeff_Q0,FALSE);
+  JSON_float(temp,output,"cost_coeff_Q1",gen->cost_coeff_Q1,FALSE);
+  JSON_float(temp,output,"cost_coeff_Q2",gen->cost_coeff_Q2,FALSE);
+  JSON_int(temp,output,"index",gen->index,FALSE);
+  JSON_obj(temp,output,"next",gen->next,GEN_get_index,FALSE);
+  JSON_obj(temp,output,"reg_next",gen->reg_next,GEN_get_index,TRUE);
+  JSON_end(output);
   
   // Resize
   if (resize)
-    output = (char*)realloc(output,sizeof(char)*(strlen(output)+1)); // +1 important!
-  
+    output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
+
+  // Return
   return output;
 }
 
