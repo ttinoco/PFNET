@@ -15,6 +15,8 @@
 #include <string.h>
 #include <ctype.h>
 
+int imin(int a, int b);
+
 char* trim(char* s);
 char* strtoupper(char s[]);
 char* strtolower(char s[]);

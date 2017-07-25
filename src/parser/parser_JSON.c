@@ -46,7 +46,7 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
   json_value* json_load_array = NULL;
   json_value* json_bat_array = NULL;
   json_value* val;
-  char* name;
+  char* key;
   REAL data_num_periods;
   int num_buses;
   int num_branches;
@@ -101,31 +101,32 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
   }
   if (value->type != json_object) {
     PARSER_set_error(p,"Bad json data");
+    json_value_free(value);
     free(file_contents);
     return NULL;
   }
 
   // Get data
   for (i = 0; i < value->u.object.length; i++) {
-    name = value->u.object.values[i].name;
+    key = value->u.object.values[i].name;
     val = value->u.object.values[i].value;
-    if (strcmp(name,"base_power") == 0)
+    if (strcmp(key,"base_power") == 0)
       json_base_power = val;
-    else if (strcmp(name,"num_periods") == 0)
+    else if (strcmp(key,"num_periods") == 0)
       json_num_periods = val;
-    else if (strcmp(name,"buses") == 0)
+    else if (strcmp(key,"buses") == 0)
       json_bus_array = val;
-    else if (strcmp(name,"branches") == 0)
+    else if (strcmp(key,"branches") == 0)
       json_branch_array = val;
-    else if (strcmp(name,"generators") == 0)
+    else if (strcmp(key,"generators") == 0)
       json_gen_array = val;
-    else if (strcmp(name,"var_generators") == 0)
+    else if (strcmp(key,"var_generators") == 0)
       json_vargen_array = val;
-    else if (strcmp(name,"shunts") == 0)
+    else if (strcmp(key,"shunts") == 0)
       json_shunt_array = val;
-    else if (strcmp(name,"loads") == 0)
+    else if (strcmp(key,"loads") == 0)
       json_load_array = val;
-    else if (strcmp(name,"batteries") == 0)
+    else if (strcmp(key,"batteries") == 0)
       json_bat_array = val;   
   }
 
@@ -185,6 +186,9 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
   // Free
   json_value_free(value);
   free(file_contents);
+
+  // DEBUG
+  printf("a network would be returned here\n");
   
   // Return
   return NULL;
@@ -226,6 +230,169 @@ void JSON_PARSER_free(Parser* p) {
 
 void JSON_PARSER_process_json_bus_array(Parser* p, Net* net, json_value* json_bus_array) {
 
+  // Local variables
+  Bus* bus;
+  json_value* json_bus;
+  json_value* val;
+  char* key;  
+  int i;
+  int j;
+  int k;
+
+  // Processs bus array
+  for (i = 0; i < json_bus_array->u.array.length; i++) {
+
+    // Json bus
+    json_bus = json_bus_array->u.array.values[i];
+
+    // Check
+    if (!json_bus || json_bus->type != json_object) {
+      PARSER_set_error(p,"Bad json bus array");
+      continue;
+    }
+    
+    // Get bus
+    bus = NULL;
+    for (j = 0; j < json_bus->u.object.length; j++) {
+      key = json_bus->u.object.values[j].name;
+      val = json_bus->u.object.values[j].value;
+      if (strcmp(key,"index") == 0)
+	bus = NET_get_bus(net,val->u.integer);
+    }
+    
+    // Check
+    if (!bus) {
+      PARSER_set_error(p,"Bad json bus data");
+      continue;
+    }
+
+    // Fill
+    for (j = 0; j < json_bus->u.object.length; j++) {
+      
+      key = json_bus->u.object.values[j].name;
+      val = json_bus->u.object.values[j].value;
+
+      // number
+      if (strcmp(key,"number") == 0)
+	BUS_set_number(bus,val->u.integer);	
+
+      // name
+      else if (strcmp(key,"name") == 0)
+	BUS_set_name(bus,val->u.string.ptr);
+	
+      // v_mag
+      else if (strcmp(key,"v_mag") == 0) {
+	for (k = 0; k < imin(BUS_get_num_periods(bus),val->u.array.length); k++)
+	  BUS_set_v_mag(bus,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // v_ang
+      else if (strcmp(key,"v_ang") == 0) {
+	for (k = 0; k < imin(BUS_get_num_periods(bus),val->u.array.length); k++)
+	  BUS_set_v_ang(bus,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // v_set
+      else if (strcmp(key,"v_set") == 0) {
+	for (k = 0; k < imin(BUS_get_num_periods(bus),val->u.array.length); k++)
+	  BUS_set_v_set(bus,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // v_max_reg
+      else if (strcmp(key,"v_max_reg") == 0)
+	BUS_set_v_max_reg(bus,val->u.dbl);
+
+      // v_min_reg
+      else if (strcmp(key,"v_min_reg") == 0)
+	BUS_set_v_min_reg(bus,val->u.dbl);
+
+      // v_max_norm
+      else if (strcmp(key,"v_max_norm") == 0)
+	BUS_set_v_max_norm(bus,val->u.dbl);
+
+      // v_min_norm
+      else if (strcmp(key,"v_min_norm") == 0)
+	BUS_set_v_min_norm(bus,val->u.dbl);
+
+      // v_max_emer
+      else if (strcmp(key,"v_max_emer") == 0)
+	BUS_set_v_max_emer(bus,val->u.dbl);
+
+      // v_min_emer
+      else if (strcmp(key,"v_min_emer") == 0)
+	BUS_set_v_min_emer(bus,val->u.dbl);
+      
+      // slack
+      else if (strcmp(key,"slack") == 0)
+	BUS_set_slack(bus,val->u.boolean);
+	
+      // price
+      else if (strcmp(key,"price") == 0) {
+	for (k = 0; k < imin(BUS_get_num_periods(bus),val->u.array.length); k++)
+	  BUS_set_price(bus,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // gen
+      else if (strcmp(key,"generators") == 0) {
+	for (k = 0; k < val->u.array.length; k++)
+	  BUS_add_gen(bus,NET_get_gen(net,val->u.array.values[k]->u.integer));
+      }
+
+      // reg_gen
+      else if (strcmp(key,"reg_generators") == 0) {
+	for (k = 0; k < val->u.array.length; k++)
+	  BUS_add_reg_gen(bus,NET_get_gen(net,val->u.array.values[k]->u.integer));
+      }
+
+      // load
+      else if (strcmp(key,"loads") == 0) {
+	for (k = 0; k < val->u.array.length; k++)
+	  BUS_add_load(bus,NET_get_load(net,val->u.array.values[k]->u.integer));
+      }
+
+      // shunt
+      else if (strcmp(key,"shunts") == 0) {
+	for (k = 0; k < val->u.array.length; k++)
+	  BUS_add_shunt(bus,NET_get_shunt(net,val->u.array.values[k]->u.integer));
+      }
+
+      // reg_shunt
+      else if (strcmp(key,"reg_shunts") == 0) {
+	for (k = 0; k < val->u.array.length; k++)
+	  BUS_add_reg_shunt(bus,NET_get_shunt(net,val->u.array.values[k]->u.integer));
+      }
+
+      // branch_k
+      else if (strcmp(key,"branches_k") == 0) {
+	for (k = 0; k < val->u.array.length; k++)
+	  BUS_add_branch_k(bus,NET_get_branch(net,val->u.array.values[k]->u.integer));
+      }
+
+      // branch_m
+      else if (strcmp(key,"branches_m") == 0) {
+	for (k = 0; k < val->u.array.length; k++)
+	  BUS_add_branch_m(bus,NET_get_branch(net,val->u.array.values[k]->u.integer));
+      }
+
+      // reg_tran
+      else if (strcmp(key,"reg_transformers") == 0) {
+	for (k = 0; k < val->u.array.length; k++)
+	  BUS_add_reg_tran(bus,NET_get_branch(net,val->u.array.values[k]->u.integer));
+      }
+
+      // vargen
+      else if (strcmp(key,"var_generators") == 0) {
+	for (k = 0; k < val->u.array.length; k++)
+	  BUS_add_vargen(bus,NET_get_vargen(net,val->u.array.values[k]->u.integer));
+      }
+
+      // bat
+      else if (strcmp(key,"batteries") == 0) {
+	for (k = 0; k < val->u.array.length; k++)
+	  BUS_add_bat(bus,NET_get_bat(net,val->u.array.values[k]->u.integer));
+      }
+    }
+  }
 }
 											
 void JSON_PARSER_process_json_branch_array(Parser* p, Net* net, json_value* json_branch_array) {
