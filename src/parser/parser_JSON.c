@@ -12,7 +12,15 @@
 #include <pfnet/parser_JSON.h>
 
 Parser* JSON_PARSER_new(void) {
-  return NULL;
+  Parser* p = PARSER_new();
+  PARSER_set_func_init(p,&JSON_PARSER_init);
+  PARSER_set_func_parse(p,&JSON_PARSER_parse);
+  PARSER_set_func_set(p,&JSON_PARSER_set);
+  PARSER_set_func_show(p,&JSON_PARSER_show);
+  PARSER_set_func_write(p,&JSON_PARSER_write);
+  PARSER_set_func_free(p,&JSON_PARSER_free);
+  PARSER_init(p);
+  return p;
 }
 
 void JSON_PARSER_init(Parser* p) {
@@ -20,6 +28,60 @@ void JSON_PARSER_init(Parser* p) {
 }
 
 Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
+
+  // Local variables
+  //  Net* net;
+  char* ext;
+  FILE* file;
+  size_t file_size;
+  char* file_contents;
+  json_char* json_string;
+  json_value* value;
+  
+  // Check extension
+  ext = strrchr(filename,'.');
+  ext = strtolower(ext);
+  if (!ext || strcmp(ext+1,"json") != 0) {
+    PARSER_set_error(p,"invalid file extension");
+    return NULL;
+  }
+
+  // Open file
+  file = fopen(filename,"rb");
+  if (!file) {
+    PARSER_set_error(p,"unable to open file");
+    return NULL;
+  }
+
+  // File size
+  fseek(file, 0L, SEEK_END);
+  file_size = ftell(file);
+  rewind(file);
+
+  // Allocate
+  file_contents = (char*)malloc(file_size);
+
+  // Read file contents
+  if (fread(file_contents,file_size,1,file) != 1 ) {
+    PARSER_set_error(p,"Unable to read file contents");
+    free(file_contents);
+    fclose(file);
+    return NULL;
+  }
+  fclose(file);
+
+  // Parse json string
+  json_string = (json_char*)file_contents;
+  value = json_parse(json_string,file_size);
+  if (value == NULL) {
+    PARSER_set_error(p,"Unable to parse json data");
+    free(file_contents);
+    return NULL;
+  }
+
+  // Process
+
+  // Return
   return NULL;
 }
 

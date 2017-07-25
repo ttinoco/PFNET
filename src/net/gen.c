@@ -772,12 +772,16 @@ void GEN_show(Gen* gen, int t) {
 	 BUS_get_number(gen->reg_bus));
 }
 
-void GEN_propagate_data_in_time(Gen* gen) {
+void GEN_propagate_data_in_time(Gen* gen, int start, int end) {
   int t;
   if (gen) {
-    for (t = 1; t < gen->num_periods; t++) {
-      gen->P[t] = gen->P[0];
-      gen->Q[t] = gen->Q[0];
+    if (start < 0)
+      start = 0;
+    if (end > gen->num_periods)
+      end = gen->num_periods;
+    for (t = start+1; t < end; t++) {
+      gen->P[t] = gen->P[start];
+      gen->Q[t] = gen->Q[start];
     }
   }
 }

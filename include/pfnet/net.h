@@ -58,7 +58,7 @@ void NET_clear_properties(Net* net);
 void NET_clear_sensitivities(Net* net);
 Bus* NET_create_sorted_bus_list(Net* net, int sort_by, int t);
 Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr);
-void NET_propagate_data_in_time(Net* net);
+void NET_propagate_data_in_time(Net* net, int start, int end);
 int NET_get_bus_neighbors(Net* net, Bus* bus, int spread, int* neighbors, char* queued);
 void NET_del(Net* net);
 void NET_init(Net* net, int num_periods);

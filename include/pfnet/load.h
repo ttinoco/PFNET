@@ -59,7 +59,7 @@ Load* LOAD_array_new(int size, int num_periods);
 void LOAD_array_show(Load* load_array, int num, int t);
 void LOAD_clear_sensitivities(Load* load); 
 void LOAD_clear_flags(Load* load, char flag_type);
-void LOAD_propagate_data_in_time(Load* load);
+void LOAD_propagate_data_in_time(Load* load, int start, int end);
 int LOAD_get_num_periods(Load* load);
 REAL LOAD_get_sens_P_u_bound(Load* load, int t);
 REAL LOAD_get_sens_P_l_bound(Load* load, int t);

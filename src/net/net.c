@@ -2732,7 +2732,7 @@ void NET_update_set_points(Net* net) {
   }
 }
 
-void NET_propagate_data_in_time(Net* net) {
+void NET_propagate_data_in_time(Net* net, int start, int end) {
 
   // Local variables
   int i;
@@ -2743,29 +2743,29 @@ void NET_propagate_data_in_time(Net* net) {
 
   // Buses
   for (i = 0; i < net->num_buses; i++)
-    BUS_propagate_data_in_time(BUS_array_get(net->bus,i));
+    BUS_propagate_data_in_time(BUS_array_get(net->bus,i),start,end);
 
   // Branches
   for (i = 0; i < net->num_branches; i++)
-    BRANCH_propagate_data_in_time(BRANCH_array_get(net->branch,i));
+    BRANCH_propagate_data_in_time(BRANCH_array_get(net->branch,i),start,end);
   
   // Generators
   for (i = 0; i < net->num_gens; i++)
-    GEN_propagate_data_in_time(GEN_array_get(net->gen,i));
+    GEN_propagate_data_in_time(GEN_array_get(net->gen,i),start,end);
 
   // Loads
   for (i = 0; i < net->num_loads; i++)
-    LOAD_propagate_data_in_time(LOAD_array_get(net->load,i));
+    LOAD_propagate_data_in_time(LOAD_array_get(net->load,i),start,end);
 
   // Vargens
   for (i = 0; i < net->num_vargens; i++)
-    VARGEN_propagate_data_in_time(VARGEN_array_get(net->vargen,i));
+    VARGEN_propagate_data_in_time(VARGEN_array_get(net->vargen,i),start,end);
 
   // Shunts
   for (i = 0; i < net->num_shunts; i++)
-    SHUNT_propagate_data_in_time(SHUNT_array_get(net->shunt,i));
+    SHUNT_propagate_data_in_time(SHUNT_array_get(net->shunt,i),start,end);
 
   // Batteries
   for (i = 0; i < net->num_bats; i++)
-    BAT_propagate_data_in_time(BAT_array_get(net->bat,i));
+    BAT_propagate_data_in_time(BAT_array_get(net->bat,i),start,end);
 }

@@ -476,3 +476,23 @@ class TestParser(unittest.TestCase):
                 if pf.info['raw_parser']:
                     net = pf.ParserRAW().parse(case)
                     self.assertGreater(net.num_buses,0)
+
+    def test_json_parser(self):
+
+        import os
+
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,4)
+            self.assertEqual(net.num_periods,4)
+
+            json_parser = pf.ParserJSON()
+            
+            json_parser.write(net,"temp_json.json")
+
+            #net = json_parser.parse("temp_json.json")
+
+            os.remove("temp_json.json")
+
+            # continue
+        

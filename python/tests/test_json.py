@@ -174,8 +174,6 @@ class TestJSON(unittest.TestCase):
     def test_net_json_string(self):
 
         import time
-
-        print '\n'
         
         # Multiperiod
         for case in test_cases.CASES:

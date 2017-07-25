@@ -527,10 +527,14 @@ void SHUNT_show(Shunt* shunt, int t) {
 	   shunt->index);
 }
 
-void SHUNT_propagate_data_in_time(Shunt* shunt) {
+void SHUNT_propagate_data_in_time(Shunt* shunt, int start, int end) {
   int t;
   if (shunt) {
-    for (t = 1; t < shunt->num_periods; t++)
-      shunt->b[t] = shunt->b[0];
+    if (start < 0)
+      start = 0;
+    if (end > shunt->num_periods)
+      end = shunt->num_periods;
+    for (t = start+1; t < end; t++)
+      shunt->b[t] = shunt->b[start];
   }
 }

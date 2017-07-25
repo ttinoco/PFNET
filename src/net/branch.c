@@ -1247,12 +1247,16 @@ void BRANCH_show(Branch* br, int t) {
 	 br->type);
 }
 
-void BRANCH_propagate_data_in_time(Branch* br) {
+void BRANCH_propagate_data_in_time(Branch* br, int start, int end) {
   int t;
   if (br) {
-    for (t = 1; t < br->num_periods; t++) {
-      br->ratio[t] = br->ratio[0];
-      br->phase[t] = br->phase[0];
+    if (start < 0)
+      start = 0;
+    if (end > br->num_periods)
+      end = br->num_periods;
+    for (t = start+1; t < end; t++) {
+      br->ratio[t] = br->ratio[start];
+      br->phase[t] = br->phase[start];
     }
   }
 }

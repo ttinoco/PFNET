@@ -618,12 +618,16 @@ void BAT_show(Bat* bat, int t) {
 	   bat->index);
 }
 
-void BAT_propagate_data_in_time(Bat* bat) {
+void BAT_propagate_data_in_time(Bat* bat, int start, int end) {
   int t;
   if (bat) {
-    for (t = 1; t < bat->num_periods; t++) {
-      bat->P[t] = bat->P[0];
-      bat->E[t] = bat->E[0];
+    if (start < 0)
+      start = 0;
+    if (end > bat->num_periods)
+      end = bat->num_periods;
+    for (t = start+1; t < end; t++) {
+      bat->P[t] = bat->P[start];
+      bat->E[t] = bat->E[start];
     }
   }
 }

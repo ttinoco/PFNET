@@ -663,14 +663,18 @@ void LOAD_show(Load* load, int t) {
 	   load->index);
 }
 
-void LOAD_propagate_data_in_time(Load* load) {
+void LOAD_propagate_data_in_time(Load* load, int start, int end) {
   int t;
   if (load) {
-    for (t = 1; t < load->num_periods; t++) {
-      load->P[t] = load->P[0];
-      load->P_max[t] = load->P_max[0];
-      load->P_min[t] = load->P_min[0];
-      load->Q[t] = load->Q[0];
+    if (start < 0)
+      start = 0;
+    if (end > load->num_periods)
+      end = load->num_periods;
+    for (t = start+1; t < end; t++) {
+      load->P[t] = load->P[start];
+      load->P_max[t] = load->P_max[start];
+      load->P_min[t] = load->P_min[start];
+      load->Q[t] = load->Q[start];
     }
   }
 }

@@ -1559,13 +1559,17 @@ void BUS_show(Bus* bus, int t) {
 	 BUS_get_num_shunts(bus));
 }
 
-void BUS_propagate_data_in_time(Bus* bus) {
+void BUS_propagate_data_in_time(Bus* bus, int start, int end) {
   int t;
   if (bus) {
-    for (t = 1; t < bus->num_periods; t++) {
-      bus->v_mag[t] = bus->v_mag[0];
-      bus->v_ang[t] = bus->v_ang[0];
-      bus->v_set[t] = bus->v_set[0];
+    if (start < 0)
+      start = 0;
+    if (end > bus->num_periods)
+      end = bus->num_periods;
+    for (t = start+1; t < end; t++) {
+      bus->v_mag[t] = bus->v_mag[start];
+      bus->v_ang[t] = bus->v_ang[start];
+      bus->v_set[t] = bus->v_set[start];
     }
   }
 }
