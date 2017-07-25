@@ -794,7 +794,6 @@ char* BRANCH_get_json_string(Branch* branch, char* output) {
   JSON_array_float(temp,output,"ratio",branch->ratio,branch->num_periods,FALSE);
   JSON_float(temp,output,"ratio_max",branch->ratio_max,FALSE);
   JSON_float(temp,output,"ratio_min",branch->ratio_min,FALSE);
-  JSON_int(temp,output,"num_ratios",branch->num_ratios,FALSE);
   JSON_array_float(temp,output,"phase",branch->phase,branch->num_periods,FALSE);
   JSON_float(temp,output,"phase_max",branch->phase_max,FALSE);
   JSON_float(temp,output,"phase_min",branch->phase_min,FALSE);
@@ -803,10 +802,7 @@ char* BRANCH_get_json_string(Branch* branch, char* output) {
   JSON_float(temp,output,"ratingC",branch->ratingC,FALSE);
   JSON_bool(temp,output,"outage",branch->outage,FALSE);
   JSON_bool(temp,output,"pos_ratio_v_sens",branch->pos_ratio_v_sens,FALSE);
-  JSON_int(temp,output,"index",branch->index,FALSE);
-  JSON_obj(temp,output,"reg_next",branch->reg_next,BRANCH_get_index,FALSE);
-  JSON_obj(temp,output,"next_k",branch->next_k,BRANCH_get_index,FALSE);
-  JSON_obj(temp,output,"next_m",branch->next_m,BRANCH_get_index,TRUE);
+  JSON_int(temp,output,"index",branch->index,TRUE);
   JSON_end(output);
   
   // Resize

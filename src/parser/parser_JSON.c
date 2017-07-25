@@ -397,6 +397,143 @@ void JSON_PARSER_process_json_bus_array(Parser* p, Net* net, json_value* json_bu
 											
 void JSON_PARSER_process_json_branch_array(Parser* p, Net* net, json_value* json_branch_array) {
 
+  // Local variables
+  Branch* branch;
+  json_value* json_branch;
+  json_value* val;
+  char* key;  
+  int i;
+  int j;
+  int k;
+
+  // Processs branch array
+  for (i = 0; i < json_branch_array->u.array.length; i++) {
+
+    // Json branch
+    json_branch = json_branch_array->u.array.values[i];
+    
+    // Check
+    if (!json_branch || json_branch->type != json_object) {
+      PARSER_set_error(p,"Bad json branch array");
+      continue;
+    }
+    
+    // Get branch
+    branch = NULL;
+    for (j = 0; j < json_branch->u.object.length; j++) {
+      key = json_branch->u.object.values[j].name;
+      val = json_branch->u.object.values[j].value;
+      if (strcmp(key,"index") == 0)
+	branch = NET_get_branch(net,val->u.integer);
+    }
+    
+    // Check
+    if (!branch) {
+      PARSER_set_error(p,"Bad json branch data");
+      continue;
+    }
+
+    // Fill
+    for (j = 0; j < json_branch->u.object.length; j++) {
+      
+      key = json_branch->u.object.values[j].name;
+      val = json_branch->u.object.values[j].value;
+
+      // type
+      if (strcmp(key,"type") == 0)
+	BRANCH_set_type(branch,val->u.integer);
+      
+      // bus_k
+      else if (strcmp(key,"bus_k") == 0) {
+	if (val->type == json_integer)
+	  BRANCH_set_bus_k(branch,NET_get_bus(net,val->u.integer));
+      }
+	    
+      // bus_m
+      else if (strcmp(key,"bus_m") == 0) {
+	if (val->type == json_integer)
+	  BRANCH_set_bus_m(branch,NET_get_bus(net,val->u.integer));
+      }      
+	    
+      // reg_bus
+      else if (strcmp(key,"reg_bus") == 0) {
+	if (val->type == json_integer)
+	  BRANCH_set_reg_bus(branch,NET_get_bus(net,val->u.integer));
+      }
+      
+      // g
+      else if (strcmp(key,"g") == 0)
+	BRANCH_set_g(branch,val->u.dbl);
+
+      // g_k
+      else if (strcmp(key,"g_k") == 0)
+	BRANCH_set_g_k(branch,val->u.dbl);
+
+      // g_m
+      else if (strcmp(key,"g_m") == 0)
+	BRANCH_set_g_m(branch,val->u.dbl);
+      
+      // b
+      else if (strcmp(key,"b") == 0)
+	BRANCH_set_b(branch,val->u.dbl);
+
+      // b_k
+      else if (strcmp(key,"b_k") == 0)
+	BRANCH_set_b_k(branch,val->u.dbl);
+
+      // b_m
+      else if (strcmp(key,"b_m") == 0)
+	BRANCH_set_b_m(branch,val->u.dbl);
+
+      // ratio
+      else if (strcmp(key,"ratio") == 0) {
+	for (k = 0; k < imin(BRANCH_get_num_periods(branch),val->u.array.length); k++)
+	  BRANCH_set_ratio(branch,val->u.array.values[k]->u.dbl,k);
+      }
+      
+      // ratio_max
+      else if (strcmp(key,"ratio_max") == 0)
+	BRANCH_set_ratio_max(branch,val->u.dbl);
+
+      // ratio_min
+      else if (strcmp(key,"ratio_min") == 0)
+	BRANCH_set_ratio_min(branch,val->u.dbl);
+
+      // phase
+      else if (strcmp(key,"phase") == 0) {
+	for (k = 0; k < imin(BRANCH_get_num_periods(branch),val->u.array.length); k++)
+	  BRANCH_set_phase(branch,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // phase_max
+      else if (strcmp(key,"phase_max") == 0)
+	BRANCH_set_phase_max(branch,val->u.dbl);
+
+      // phase_min
+      else if (strcmp(key,"phase_min") == 0)
+	BRANCH_set_phase_min(branch,val->u.dbl);
+
+      // ratingA
+      else if (strcmp(key,"ratingA") == 0)
+	BRANCH_set_ratingA(branch,val->u.dbl);
+
+      // ratingB
+      else if (strcmp(key,"ratingB") == 0)
+	BRANCH_set_ratingB(branch,val->u.dbl);
+
+      // ratingC
+      else if (strcmp(key,"ratingC") == 0)
+	BRANCH_set_ratingC(branch,val->u.dbl);
+      
+      // outage
+      else if (strcmp(key,"outage") == 0)
+	BRANCH_set_outage(branch,val->u.boolean);
+
+      // pos_ratio_v_sens
+      else if (strcmp(key,"pos_ratio_v_sens") == 0)
+	BRANCH_set_pos_ratio_v_sens(branch,val->u.boolean);
+    }
+  }
 }
 
 void JSON_PARSER_process_json_gen_array(Parser* p, Net* net, json_value* json_gen_array) {
