@@ -8,7 +8,6 @@
  * PFNET is released under the BSD 2-clause license.
  */
 
-#include <pfnet/json.h>
 #include <pfnet/parser_JSON.h>
 
 Parser* JSON_PARSER_new(void) {
@@ -30,7 +29,7 @@ void JSON_PARSER_init(Parser* p) {
 Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
 
   // Local variables
-  //  Net* net;
+  Net* net;
   char* ext;
   FILE* file;
   size_t file_size;
@@ -48,6 +47,14 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
   json_value* json_bat_array = NULL;
   json_value* val;
   char* name;
+  REAL data_num_periods;
+  int num_buses;
+  int num_branches;
+  int num_gens;
+  int num_vargens;
+  int num_shunts;
+  int num_loads;
+  int num_bats;
   int i;
 	
   // Check extension
@@ -137,9 +144,44 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
     free(file_contents);
   }
 
-  // DEBUG
-  printf("things going pretty well so far\n");
+  // Num periods
+  data_num_periods = json_num_periods->u.integer;
+  if (num_periods <= 0)
+    num_periods = data_num_periods;
 
+  // Network
+  net = NET_new(num_periods);
+
+  // Base power
+  NET_set_base_power(net,json_base_power->u.dbl);
+
+  // Set arrays
+  num_buses = json_bus_array->u.array.length;
+  num_branches = json_branch_array->u.array.length;
+  num_gens = json_gen_array->u.array.length;
+  num_vargens = json_vargen_array->u.array.length;
+  num_shunts = json_shunt_array->u.array.length;
+  num_loads = json_load_array->u.array.length;
+  num_bats = json_bat_array->u.array.length;  
+  NET_set_bus_array(net,BUS_array_new(num_buses,num_periods),num_buses);
+  NET_set_branch_array(net,BRANCH_array_new(num_branches,num_periods),num_branches);
+  NET_set_gen_array(net,GEN_array_new(num_gens,num_periods),num_gens);
+  NET_set_vargen_array(net,VARGEN_array_new(num_vargens,num_periods),num_vargens);
+  NET_set_shunt_array(net,SHUNT_array_new(num_shunts,num_periods),num_shunts);
+  NET_set_load_array(net,LOAD_array_new(num_loads,num_periods),num_loads);
+  NET_set_bat_array(net,BAT_array_new(num_bats,num_periods),num_bats);
+
+  // Process arrays
+  JSON_PARSER_process_json_bus_array(p,net,json_bus_array);
+  JSON_PARSER_process_json_branch_array(p,net,json_branch_array);
+  JSON_PARSER_process_json_gen_array(p,net,json_gen_array);
+  JSON_PARSER_process_json_vargen_array(p,net,json_vargen_array);
+  JSON_PARSER_process_json_shunt_array(p,net,json_shunt_array);
+  JSON_PARSER_process_json_load_array(p,net,json_load_array);
+  JSON_PARSER_process_json_bat_array(p,net,json_bat_array);
+  
+  // Set hash tables
+  
   // Free
   json_value_free(value);
   free(file_contents);
@@ -180,4 +222,32 @@ void JSON_PARSER_write(Parser* p, Net* net, char* filename) {
 
 void JSON_PARSER_free(Parser* p) {
   // pass
+}
+
+void JSON_PARSER_process_json_bus_array(Parser* p, Net* net, json_value* json_bus_array) {
+
+}
+											
+void JSON_PARSER_process_json_branch_array(Parser* p, Net* net, json_value* json_branch_array) {
+
+}
+
+void JSON_PARSER_process_json_gen_array(Parser* p, Net* net, json_value* json_gen_array) {
+
+}
+
+void JSON_PARSER_process_json_vargen_array(Parser* p, Net* net, json_value* json_vargen_array) {
+
+}
+
+void JSON_PARSER_process_json_shunt_array(Parser* p, Net* net, json_value* json_shunt_array) {
+
+}
+
+void JSON_PARSER_process_json_load_array(Parser* p, Net* net, json_value* json_load_array) {
+
+}
+
+void JSON_PARSER_process_json_bat_array(Parser* p, Net* net, json_value* json_bat_array) {
+
 }

@@ -13,7 +13,8 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "parser.h"
+#include <pfnet/parser.h>
+#include <pfnet/json.h>
 
 // Structs
 typedef struct JSON_Parser JSON_Parser;
@@ -26,5 +27,14 @@ void JSON_PARSER_set(Parser* parser, char* key, REAL value);
 void JSON_PARSER_show(Parser* parser);
 void JSON_PARSER_write(Parser* parser, Net* net, char* filename);
 void JSON_PARSER_free(Parser* parser);
+
+// Others
+void JSON_PARSER_process_json_bus_array(Parser* p, Net* net, json_value* json_bus_array);
+void JSON_PARSER_process_json_branch_array(Parser* p, Net* net, json_value* json_branch_array);
+void JSON_PARSER_process_json_gen_array(Parser* p, Net* net, json_value* json_gen_array);
+void JSON_PARSER_process_json_vargen_array(Parser* p, Net* net, json_value* json_vargen_array);
+void JSON_PARSER_process_json_shunt_array(Parser* p, Net* net, json_value* json_shunt_array);
+void JSON_PARSER_process_json_load_array(Parser* p, Net* net, json_value* json_load_array);
+void JSON_PARSER_process_json_bat_array(Parser* p, Net* net, json_value* json_bat_array);
 
 #endif
