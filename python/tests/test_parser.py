@@ -483,16 +483,18 @@ class TestParser(unittest.TestCase):
 
         for case in test_cases.CASES:
 
-            net = pf.Parser(case).parse(case,4)
-            self.assertEqual(net.num_periods,4)
+            try:
+                net = pf.Parser(case).parse(case,4)
+                self.assertEqual(net.num_periods,4)
+                
+                json_parser = pf.ParserJSON()
+                
+                json_parser.write(net,"temp_json.json")
+                
+                net = json_parser.parse("temp_json.json")
 
-            json_parser = pf.ParserJSON()
-            
-            json_parser.write(net,"temp_json.json")
+                # continue
 
-            #net = json_parser.parse("temp_json.json")
-
-            os.remove("temp_json.json")
-
-            # continue
+            finally:
+                os.remove("temp_json.json")
         
