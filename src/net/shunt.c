@@ -301,10 +301,7 @@ char* SHUNT_get_json_string(Shunt* shunt, char* output) {
   JSON_float(temp,output,"b_max",shunt->b_max,FALSE);
   JSON_float(temp,output,"b_min",shunt->b_min,FALSE);
   JSON_array_float(temp,output,"b_values",shunt->b_values,shunt->num_b,FALSE);
-  JSON_int(temp,output,"num_b",shunt->num_b,FALSE);
-  JSON_int(temp,output,"index",shunt->index,FALSE);
-  JSON_obj(temp,output,"next",shunt->next,SHUNT_get_index,FALSE);
-  JSON_obj(temp,output,"reg_next",shunt->reg_next,SHUNT_get_index,TRUE);
+  JSON_int(temp,output,"index",shunt->index,TRUE);
   JSON_end(output);
   
   // Output
@@ -458,13 +455,10 @@ void SHUNT_set_b_min(Shunt* shunt, REAL b_min) {
     shunt->b_min = b_min;
 }
 
-void SHUNT_set_b_values(Shunt* shunt, REAL* values, int num, REAL norm) {
-  int i;
+void SHUNT_set_b_values(Shunt* shunt, REAL* values, int num) {
   if (shunt) {
-    shunt->b_values = (REAL*)malloc(sizeof(REAL)*num);
+    shunt->b_values = values;
     shunt->num_b = num;
-    for (i = 0; i < shunt->num_b; i++) 
-      shunt->b_values[i] = values[i]/norm; // note normalization
   }
 }
 

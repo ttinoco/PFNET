@@ -180,6 +180,8 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
   JSON_PARSER_process_json_shunt_array(p,net,json_shunt_array);
   JSON_PARSER_process_json_load_array(p,net,json_load_array);
   JSON_PARSER_process_json_bat_array(p,net,json_bat_array);
+
+  // Propagate in time
   
   // Set hash tables
   
@@ -746,6 +748,90 @@ void JSON_PARSER_process_json_vargen_array(Parser* p, Net* net, json_value* json
 
 void JSON_PARSER_process_json_shunt_array(Parser* p, Net* net, json_value* json_shunt_array) {
 
+  // Local variables
+  Shunt* shunt;
+  json_value* json_shunt;
+  json_value* val;
+  char* key;  
+  int i;
+  int j;
+  int k;
+  REAL* b_values;
+  int num_b;
+
+  // Processs shunt array
+  for (i = 0; i < json_shunt_array->u.array.length; i++) {
+
+    // Json shunt
+    json_shunt = json_shunt_array->u.array.values[i];
+    
+    // Check
+    if (!json_shunt || json_shunt->type != json_object) {
+      PARSER_set_error(p,"Bad json shunt array");
+      continue;
+    }
+    
+    // Get shunt
+    shunt = NULL;
+    for (j = 0; j < json_shunt->u.object.length; j++) {
+      key = json_shunt->u.object.values[j].name;
+      val = json_shunt->u.object.values[j].value;
+      if (strcmp(key,"index") == 0)
+	shunt = NET_get_shunt(net,val->u.integer);
+    }
+    
+    // Check
+    if (!shunt) {
+      PARSER_set_error(p,"Bad json shunt data");
+      continue;
+    }
+
+    // Fill
+    for (j = 0; j < json_shunt->u.object.length; j++) {
+      
+      key = json_shunt->u.object.values[j].name;
+      val = json_shunt->u.object.values[j].value;
+      
+      // bus
+      if (strcmp(key,"bus") == 0) {
+	if (val->type == json_integer)
+	  SHUNT_set_bus(shunt,NET_get_bus(net,val->u.integer));
+      }
+
+      // reg_bus
+      if (strcmp(key,"reg_bus") == 0) {
+	if (val->type == json_integer)
+	  SHUNT_set_reg_bus(shunt,NET_get_bus(net,val->u.integer));
+      }
+      
+      // g
+      else if (strcmp(key,"g") == 0)
+	SHUNT_set_g(shunt,val->u.dbl); 
+
+      // b
+      else if (strcmp(key,"b") == 0) {
+	for (k = 0; k < imin(SHUNT_get_num_periods(shunt),val->u.array.length); k++)
+	  SHUNT_set_b(shunt,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // b_max
+      else if (strcmp(key,"b_max") == 0)
+	SHUNT_set_b_max(shunt,val->u.dbl);
+
+      // b_min
+      else if (strcmp(key,"b_min") == 0)
+	SHUNT_set_b_min(shunt,val->u.dbl);      
+
+      // b_values
+      else if (strcmp(key,"b_values") == 0) {
+	num_b = val->u.array.length;
+	b_values = (REAL*)malloc(sizeof(REAL)*num_b);
+	for (k = 0; k < num_b; k++)
+	  b_values[k] = val->u.array.values[k]->u.dbl;
+	SHUNT_set_b_values(shunt,b_values,num_b); // sets num_b as well
+      }      
+    }
+  }
 }
 
 void JSON_PARSER_process_json_load_array(Parser* p, Net* net, json_value* json_load_array) {

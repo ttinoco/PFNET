@@ -89,7 +89,7 @@ void SHUNT_set_g(Shunt* shunt, REAL g);
 void SHUNT_set_b(Shunt* shunt, REAL b, int t);
 void SHUNT_set_b_max(Shunt* shunt, REAL b_max);
 void SHUNT_set_b_min(Shunt* shunt, REAL b_min);
-void SHUNT_set_b_values(Shunt* shunt, REAL* values, int num, REAL norm);
+void SHUNT_set_b_values(Shunt* shunt, REAL* values, int num);
 int SHUNT_set_flags(void* shunt, char flag_type, unsigned char mask, int index);
 void SHUNT_set_var_values(Shunt* shunt, Vec* values);
 void SHUNT_show(Shunt* shunt, int t);
