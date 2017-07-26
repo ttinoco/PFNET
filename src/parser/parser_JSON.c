@@ -649,6 +649,99 @@ void JSON_PARSER_process_json_gen_array(Parser* p, Net* net, json_value* json_ge
 
 void JSON_PARSER_process_json_vargen_array(Parser* p, Net* net, json_value* json_vargen_array) {
 
+  // Local variables
+  Vargen* vargen;
+  json_value* json_vargen;
+  json_value* val;
+  char* key;  
+  int i;
+  int j;
+  int k;
+
+  // Processs vargen array
+  for (i = 0; i < json_vargen_array->u.array.length; i++) {
+
+    // Json vargen
+    json_vargen = json_vargen_array->u.array.values[i];
+    
+    // Check
+    if (!json_vargen || json_vargen->type != json_object) {
+      PARSER_set_error(p,"Bad json vargen array");
+      continue;
+    }
+    
+    // Get vargen
+    vargen = NULL;
+    for (j = 0; j < json_vargen->u.object.length; j++) {
+      key = json_vargen->u.object.values[j].name;
+      val = json_vargen->u.object.values[j].value;
+      if (strcmp(key,"index") == 0)
+	vargen = NET_get_vargen(net,val->u.integer);
+    }
+    
+    // Check
+    if (!vargen) {
+      PARSER_set_error(p,"Bad json vargen data");
+      continue;
+    }
+
+    // Fill
+    for (j = 0; j < json_vargen->u.object.length; j++) {
+      
+      key = json_vargen->u.object.values[j].name;
+      val = json_vargen->u.object.values[j].value;
+
+      // bus
+      if (strcmp(key,"bus") == 0) {
+	if (val->type == json_integer)
+	  VARGEN_set_bus(vargen,NET_get_bus(net,val->u.integer));
+      }
+
+      // name
+      else if (strcmp(key,"name") == 0)
+	VARGEN_set_name(vargen,val->u.string.ptr);
+
+      // P
+      else if (strcmp(key,"P") == 0) {
+	for (k = 0; k < imin(VARGEN_get_num_periods(vargen),val->u.array.length); k++)
+	  VARGEN_set_P(vargen,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // P_ava
+      else if (strcmp(key,"P_ava") == 0) {
+	for (k = 0; k < imin(VARGEN_get_num_periods(vargen),val->u.array.length); k++)
+	  VARGEN_set_P_ava(vargen,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // P_max
+      else if (strcmp(key,"P_max") == 0)
+	VARGEN_set_P_max(vargen,val->u.dbl);
+
+      // P_min
+      else if (strcmp(key,"P_min") == 0)
+	VARGEN_set_P_min(vargen,val->u.dbl);
+
+      // P_std
+      else if (strcmp(key,"P_std") == 0) {
+	for (k = 0; k < imin(VARGEN_get_num_periods(vargen),val->u.array.length); k++)
+	  VARGEN_set_P_std(vargen,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // Q
+      else if (strcmp(key,"Q") == 0) {
+	for (k = 0; k < imin(VARGEN_get_num_periods(vargen),val->u.array.length); k++)
+	  VARGEN_set_Q(vargen,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // Q_max
+      else if (strcmp(key,"Q_max") == 0)
+	VARGEN_set_Q_max(vargen,val->u.dbl);
+
+      // Q_min
+      else if (strcmp(key,"Q_min") == 0)
+	VARGEN_set_Q_min(vargen,val->u.dbl);
+    }
+  }
 }
 
 void JSON_PARSER_process_json_shunt_array(Parser* p, Net* net, json_value* json_shunt_array) {

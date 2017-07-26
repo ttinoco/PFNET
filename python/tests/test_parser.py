@@ -484,6 +484,7 @@ class TestParser(unittest.TestCase):
         for case in test_cases.CASES:
 
             try:
+                
                 net = pf.Parser(case).parse(case,4)
                 self.assertEqual(net.num_periods,4)
                 
@@ -493,8 +494,8 @@ class TestParser(unittest.TestCase):
                 
                 net = json_parser.parse("temp_json.json")
 
-                # continue
+                # add tests here
 
             finally:
+                
                 os.remove("temp_json.json")
-        
