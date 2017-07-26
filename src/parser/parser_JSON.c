@@ -538,6 +538,113 @@ void JSON_PARSER_process_json_branch_array(Parser* p, Net* net, json_value* json
 
 void JSON_PARSER_process_json_gen_array(Parser* p, Net* net, json_value* json_gen_array) {
 
+  // Local variables
+  Gen* gen;
+  json_value* json_gen;
+  json_value* val;
+  char* key;  
+  int i;
+  int j;
+  int k;
+
+  // Processs gen array
+  for (i = 0; i < json_gen_array->u.array.length; i++) {
+
+    // Json gen
+    json_gen = json_gen_array->u.array.values[i];
+    
+    // Check
+    if (!json_gen || json_gen->type != json_object) {
+      PARSER_set_error(p,"Bad json gen array");
+      continue;
+    }
+    
+    // Get gen
+    gen = NULL;
+    for (j = 0; j < json_gen->u.object.length; j++) {
+      key = json_gen->u.object.values[j].name;
+      val = json_gen->u.object.values[j].value;
+      if (strcmp(key,"index") == 0)
+	gen = NET_get_gen(net,val->u.integer);
+    }
+    
+    // Check
+    if (!gen) {
+      PARSER_set_error(p,"Bad json gen data");
+      continue;
+    }
+
+    // Fill
+    for (j = 0; j < json_gen->u.object.length; j++) {
+      
+      key = json_gen->u.object.values[j].name;
+      val = json_gen->u.object.values[j].value;
+
+      // bus
+      if (strcmp(key,"bus") == 0) {
+	if (val->type == json_integer)
+	  GEN_set_bus(gen,NET_get_bus(net,val->u.integer));
+      }
+
+      // reg_bus
+      else if (strcmp(key,"reg_bus") == 0) {
+	if (val->type == json_integer)
+	  GEN_set_reg_bus(gen,NET_get_bus(net,val->u.integer));
+      }
+
+      // outage
+      else if (strcmp(key,"outage") == 0)
+	GEN_set_outage(gen,val->u.boolean);
+
+      // P
+      else if (strcmp(key,"P") == 0) {
+	for (k = 0; k < imin(GEN_get_num_periods(gen),val->u.array.length); k++)
+	  GEN_set_P(gen,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // P_max
+      else if (strcmp(key,"P_max") == 0)
+	GEN_set_P_max(gen,val->u.dbl);
+
+      // P_min
+      else if (strcmp(key,"P_min") == 0)
+	GEN_set_P_min(gen,val->u.dbl);
+
+      // dP_max
+      else if (strcmp(key,"dP_max") == 0)
+	GEN_set_dP_max(gen,val->u.dbl);
+
+      // P_prev
+      else if (strcmp(key,"P_prev") == 0)
+	GEN_set_P_prev(gen,val->u.dbl);
+
+      // Q
+      else if (strcmp(key,"Q") == 0) {
+	for (k = 0; k < imin(GEN_get_num_periods(gen),val->u.array.length); k++)
+	  GEN_set_Q(gen,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // Q_max
+      else if (strcmp(key,"Q_max") == 0)
+	GEN_set_Q_max(gen,val->u.dbl);
+
+      // Q_min
+      else if (strcmp(key,"Q_min") == 0)
+	GEN_set_Q_min(gen,val->u.dbl);
+
+      // cost_coeff_Q0
+      else if (strcmp(key,"cost_coeff_Q0") == 0)
+	GEN_set_cost_coeff_Q0(gen,val->u.dbl);
+
+      // cost_coeff_Q1
+      else if (strcmp(key,"cost_coeff_Q1") == 0)
+	GEN_set_cost_coeff_Q1(gen,val->u.dbl);
+      
+      // cost_coeff_Q2
+      else if (strcmp(key,"cost_coeff_Q2") == 0)
+	GEN_set_cost_coeff_Q2(gen,val->u.dbl);
+    }
+  }
 }
 
 void JSON_PARSER_process_json_vargen_array(Parser* p, Net* net, json_value* json_vargen_array) {
