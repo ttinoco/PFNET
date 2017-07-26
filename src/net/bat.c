@@ -384,6 +384,7 @@ char* BAT_get_json_string(Bat* bat, char* output) {
 
   // Write
   JSON_start(output);
+  JSON_int(temp,output,"index",bat->index,FALSE);
   JSON_obj(temp,output,"bus",bat->bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",bat->num_periods,FALSE);
   JSON_array_float(temp,output,"P",bat->P,bat->num_periods,FALSE);
@@ -394,9 +395,7 @@ char* BAT_get_json_string(Bat* bat, char* output) {
   JSON_array_float(temp,output,"E",bat->E,bat->num_periods,FALSE);
   JSON_float(temp,output,"E_init",bat->E_init,FALSE);
   JSON_float(temp,output,"E_final",bat->E_final,FALSE);
-  JSON_float(temp,output,"E_max",bat->E_max,FALSE);
-  JSON_int(temp,output,"index",bat->index,FALSE);
-  JSON_obj(temp,output,"next",bat->next,BAT_get_index,TRUE);
+  JSON_float(temp,output,"E_max",bat->E_max,TRUE);
   JSON_end(output);
   
   // Resize

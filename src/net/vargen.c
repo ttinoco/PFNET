@@ -366,6 +366,7 @@ char* VARGEN_get_json_string(Vargen* gen, char* output) {
 
   // Write
   JSON_start(output);
+  JSON_int(temp,output,"index",gen->index,FALSE);
   JSON_obj(temp,output,"bus",gen->bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",gen->num_periods,FALSE);
   JSON_str(temp,output,"name",gen->name,FALSE);
@@ -376,8 +377,7 @@ char* VARGEN_get_json_string(Vargen* gen, char* output) {
   JSON_array_float(temp,output,"P_std",gen->P_std,gen->num_periods,FALSE);
   JSON_array_float(temp,output,"Q",gen->Q,gen->num_periods,FALSE);
   JSON_float(temp,output,"Q_max",gen->Q_max,FALSE);
-  JSON_float(temp,output,"Q_min",gen->Q_min,FALSE);
-  JSON_int(temp,output,"index",gen->index,TRUE);
+  JSON_float(temp,output,"Q_min",gen->Q_min,TRUE);
   JSON_end(output);
   
   // Resize

@@ -406,6 +406,7 @@ char* LOAD_get_json_string(Load* load, char* output) {
   
   // Write
   JSON_start(output);
+  JSON_int(temp,output,"index",load->index,FALSE);
   JSON_obj(temp,output,"bus",load->bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",load->num_periods,FALSE);
   JSON_array_float(temp,output,"P",load->P,load->num_periods,FALSE);
@@ -413,11 +414,9 @@ char* LOAD_get_json_string(Load* load, char* output) {
   JSON_array_float(temp,output,"P_min",load->P_min,load->num_periods,FALSE);
   JSON_array_float(temp,output,"Q",load->Q,load->num_periods,FALSE);
   JSON_float(temp,output,"target_power_factor",load->target_power_factor,FALSE);
-  JSON_int(temp,output,"index",load->index,FALSE);
   JSON_float(temp,output,"util_coeff_Q0",load->util_coeff_Q0,FALSE);
   JSON_float(temp,output,"util_coeff_Q1",load->util_coeff_Q1,FALSE);
-  JSON_float(temp,output,"util_coeff_Q2",load->util_coeff_Q2,FALSE);
-  JSON_obj(temp,output,"next",load->next,LOAD_get_index,TRUE);
+  JSON_float(temp,output,"util_coeff_Q2",load->util_coeff_Q2,TRUE);
   JSON_end(output);
   
   // Resize

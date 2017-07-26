@@ -182,18 +182,17 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
   JSON_PARSER_process_json_bat_array(p,net,json_bat_array);
 
   // Propagate in time
+  NET_propagate_data_in_time(net,data_num_periods-1,num_periods);
   
   // Set hash tables
+  
   
   // Free
   json_value_free(value);
   free(file_contents);
-
-  // DEBUG
-  printf("a network would be returned here\n");
   
   // Return
-  return NULL;
+  return net;
 }
 
 void JSON_PARSER_set(Parser* p, char* key, REAL value) {
@@ -258,8 +257,10 @@ void JSON_PARSER_process_json_bus_array(Parser* p, Net* net, json_value* json_bu
     for (j = 0; j < json_bus->u.object.length; j++) {
       key = json_bus->u.object.values[j].name;
       val = json_bus->u.object.values[j].value;
-      if (strcmp(key,"index") == 0)
+      if (strcmp(key,"index") == 0) {
 	bus = NET_get_bus(net,val->u.integer);
+	break;
+      }
     }
     
     // Check
@@ -425,8 +426,10 @@ void JSON_PARSER_process_json_branch_array(Parser* p, Net* net, json_value* json
     for (j = 0; j < json_branch->u.object.length; j++) {
       key = json_branch->u.object.values[j].name;
       val = json_branch->u.object.values[j].value;
-      if (strcmp(key,"index") == 0)
+      if (strcmp(key,"index") == 0) {
 	branch = NET_get_branch(net,val->u.integer);
+	break;
+      }
     }
     
     // Check
@@ -566,8 +569,10 @@ void JSON_PARSER_process_json_gen_array(Parser* p, Net* net, json_value* json_ge
     for (j = 0; j < json_gen->u.object.length; j++) {
       key = json_gen->u.object.values[j].name;
       val = json_gen->u.object.values[j].value;
-      if (strcmp(key,"index") == 0)
+      if (strcmp(key,"index") == 0) {
 	gen = NET_get_gen(net,val->u.integer);
+	break;
+      }
     }
     
     // Check
@@ -677,8 +682,10 @@ void JSON_PARSER_process_json_vargen_array(Parser* p, Net* net, json_value* json
     for (j = 0; j < json_vargen->u.object.length; j++) {
       key = json_vargen->u.object.values[j].name;
       val = json_vargen->u.object.values[j].value;
-      if (strcmp(key,"index") == 0)
+      if (strcmp(key,"index") == 0) {
 	vargen = NET_get_vargen(net,val->u.integer);
+	break;
+      }
     }
     
     // Check
@@ -776,8 +783,10 @@ void JSON_PARSER_process_json_shunt_array(Parser* p, Net* net, json_value* json_
     for (j = 0; j < json_shunt->u.object.length; j++) {
       key = json_shunt->u.object.values[j].name;
       val = json_shunt->u.object.values[j].value;
-      if (strcmp(key,"index") == 0)
+      if (strcmp(key,"index") == 0) {
 	shunt = NET_get_shunt(net,val->u.integer);
+	break;
+      }
     }
     
     // Check
@@ -836,8 +845,191 @@ void JSON_PARSER_process_json_shunt_array(Parser* p, Net* net, json_value* json_
 
 void JSON_PARSER_process_json_load_array(Parser* p, Net* net, json_value* json_load_array) {
 
+  // Local variables
+  Load* load;
+  json_value* json_load;
+  json_value* val;
+  char* key;  
+  int i;
+  int j;
+  int k;
+
+  // Processs load array
+  for (i = 0; i < json_load_array->u.array.length; i++) {
+
+    // Json load
+    json_load = json_load_array->u.array.values[i];
+    
+    // Check
+    if (!json_load || json_load->type != json_object) {
+      PARSER_set_error(p,"Bad json load array");
+      continue;
+    }
+    
+    // Get load
+    load = NULL;
+    for (j = 0; j < json_load->u.object.length; j++) {
+      key = json_load->u.object.values[j].name;
+      val = json_load->u.object.values[j].value;
+      if (strcmp(key,"index") == 0) {
+	load = NET_get_load(net,val->u.integer);
+	break;
+      }
+    }
+    
+    // Check
+    if (!load) {
+      PARSER_set_error(p,"Bad json load data");
+      continue;
+    }
+
+    // Fill
+    for (j = 0; j < json_load->u.object.length; j++) {
+      
+      key = json_load->u.object.values[j].name;
+      val = json_load->u.object.values[j].value;
+
+      // bus
+      if (strcmp(key,"bus") == 0) {
+	if (val->type == json_integer)
+	  LOAD_set_bus(load,NET_get_bus(net,val->u.integer));
+      }
+
+      // P
+      else if (strcmp(key,"P") == 0) {
+	for (k = 0; k < imin(LOAD_get_num_periods(load),val->u.array.length); k++)
+	  LOAD_set_P(load,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // P_max
+      else if (strcmp(key,"P_max") == 0) {
+	for (k = 0; k < imin(LOAD_get_num_periods(load),val->u.array.length); k++)
+	  LOAD_set_P_max(load,val->u.array.values[k]->u.dbl,k);
+      }
+
+
+      // P_min
+      else if (strcmp(key,"P_min") == 0) {
+	for (k = 0; k < imin(LOAD_get_num_periods(load),val->u.array.length); k++)
+	  LOAD_set_P_min(load,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // Q
+      else if (strcmp(key,"Q") == 0) {
+	for (k = 0; k < imin(LOAD_get_num_periods(load),val->u.array.length); k++)
+	  LOAD_set_Q(load,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // target power factor
+      else if (strcmp(key,"target_power_factor") == 0)
+	LOAD_set_target_power_factor(load,val->u.dbl);
+
+      // util_coeff_Q0
+      else if (strcmp(key,"util_coeff_Q0") == 0)
+	LOAD_set_util_coeff_Q0(load,val->u.dbl);
+
+      // util_coeff_Q1
+      else if (strcmp(key,"util_coeff_Q1") == 0)
+	LOAD_set_util_coeff_Q1(load,val->u.dbl);
+      
+      // util_coeff_Q2
+      else if (strcmp(key,"util_coeff_Q2") == 0)
+	LOAD_set_util_coeff_Q2(load,val->u.dbl);
+    }
+  }  
 }
 
 void JSON_PARSER_process_json_bat_array(Parser* p, Net* net, json_value* json_bat_array) {
 
+  // Local variables
+  Bat* bat;
+  json_value* json_bat;
+  json_value* val;
+  char* key;  
+  int i;
+  int j;
+  int k;
+
+  // Processs bat array
+  for (i = 0; i < json_bat_array->u.array.length; i++) {
+
+    // Json bat
+    json_bat = json_bat_array->u.array.values[i];
+    
+    // Check
+    if (!json_bat || json_bat->type != json_object) {
+      PARSER_set_error(p,"Bad json battery array");
+      continue;
+    }
+    
+    // Get bat
+    bat = NULL;
+    for (j = 0; j < json_bat->u.object.length; j++) {
+      key = json_bat->u.object.values[j].name;
+      val = json_bat->u.object.values[j].value;
+      if (strcmp(key,"index") == 0) {
+	bat = NET_get_bat(net,val->u.integer);
+	break;
+      }
+    }
+    
+    // Check
+    if (!bat) {
+      PARSER_set_error(p,"Bad json battery data");
+      continue;
+    }
+
+    // Fill
+    for (j = 0; j < json_bat->u.object.length; j++) {
+      
+      key = json_bat->u.object.values[j].name;
+      val = json_bat->u.object.values[j].value;
+
+      // bus
+      if (strcmp(key,"bus") == 0) {
+	if (val->type == json_integer)
+	  BAT_set_bus(bat,NET_get_bus(net,val->u.integer));
+      }
+
+      // P
+      else if (strcmp(key,"P") == 0) {
+	for (k = 0; k < imin(BAT_get_num_periods(bat),val->u.array.length); k++)
+	  BAT_set_P(bat,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // P_max
+      else if (strcmp(key,"P_max") == 0)
+	BAT_set_P_max(bat,val->u.dbl);
+
+      // P_min
+      else if (strcmp(key,"P_min") == 0)
+	BAT_set_P_min(bat,val->u.dbl);
+
+      // eta_c
+      else if (strcmp(key,"eta_c") == 0)
+	BAT_set_eta_c(bat,val->u.dbl);
+
+      // eta_d
+      else if (strcmp(key,"eta_d") == 0)
+	BAT_set_eta_d(bat,val->u.dbl);
+
+      // E
+      else if (strcmp(key,"E") == 0) {
+	for (k = 0; k < imin(BAT_get_num_periods(bat),val->u.array.length); k++)
+	  BAT_set_E(bat,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // E_init
+      else if (strcmp(key,"E_init") == 0)
+	BAT_set_E_init(bat,val->u.dbl);
+
+      // E_final
+      else if (strcmp(key,"E_final") == 0)
+	BAT_set_E_final(bat,val->u.dbl);
+
+      // E_max
+      else if (strcmp(key,"E_max") == 0)
+	BAT_set_E_max(bat,val->u.dbl);
+    }
+  }
 }

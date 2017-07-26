@@ -293,6 +293,7 @@ char* SHUNT_get_json_string(Shunt* shunt, char* output) {
 
   // Write
   JSON_start(output);
+  JSON_int(temp,output,"index",shunt->index,FALSE);
   JSON_obj(temp,output,"bus",shunt->bus,BUS_get_index,FALSE);
   JSON_obj(temp,output,"reg_bus",shunt->reg_bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",shunt->num_periods,FALSE);
@@ -300,8 +301,7 @@ char* SHUNT_get_json_string(Shunt* shunt, char* output) {
   JSON_array_float(temp,output,"b",shunt->b,shunt->num_periods,FALSE);
   JSON_float(temp,output,"b_max",shunt->b_max,FALSE);
   JSON_float(temp,output,"b_min",shunt->b_min,FALSE);
-  JSON_array_float(temp,output,"b_values",shunt->b_values,shunt->num_b,FALSE);
-  JSON_int(temp,output,"index",shunt->index,TRUE);
+  JSON_array_float(temp,output,"b_values",shunt->b_values,shunt->num_b,TRUE);
   JSON_end(output);
   
   // Output

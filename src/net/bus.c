@@ -1088,6 +1088,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   
   // Write
   JSON_start(output);
+  JSON_int(temp,output,"index",bus->index,FALSE);
   JSON_int(temp,output,"number",bus->number,FALSE);
   JSON_str(temp,output,"name",bus->name,FALSE);
   JSON_int(temp,output,"num_periods",bus->num_periods,FALSE);
@@ -1102,7 +1103,6 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_float(temp,output,"v_min_emer",bus->v_min_emer,FALSE);
   JSON_bool(temp,output,"slack",bus->slack,FALSE);
   JSON_array_float(temp,output,"price",bus->price,bus->num_periods,FALSE);
-  JSON_int(temp,output,"index",bus->index,FALSE);
   JSON_list_int(temp,output,"generators",bus,Gen,BUS_get_gen,GEN_get_index,GEN_get_next,FALSE);
   JSON_list_int(temp,output,"reg_generators",bus,Gen,BUS_get_reg_gen,GEN_get_index,GEN_get_reg_next,FALSE);
   JSON_list_int(temp,output,"loads",bus,Load,BUS_get_load,LOAD_get_index,LOAD_get_next,FALSE);

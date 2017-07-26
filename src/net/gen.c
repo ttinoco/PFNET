@@ -435,6 +435,7 @@ char* GEN_get_json_string(Gen* gen, char* output) {
 
   // Write
   JSON_start(output);
+  JSON_int(temp,output,"index",gen->index,FALSE);
   JSON_obj(temp,output,"bus",gen->bus,BUS_get_index,FALSE);
   JSON_obj(temp,output,"reg_bus",gen->reg_bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",gen->num_periods,FALSE);
@@ -449,8 +450,7 @@ char* GEN_get_json_string(Gen* gen, char* output) {
   JSON_float(temp,output,"Q_min",gen->Q_min,FALSE);
   JSON_float(temp,output,"cost_coeff_Q0",gen->cost_coeff_Q0,FALSE);
   JSON_float(temp,output,"cost_coeff_Q1",gen->cost_coeff_Q1,FALSE);
-  JSON_float(temp,output,"cost_coeff_Q2",gen->cost_coeff_Q2,FALSE);
-  JSON_int(temp,output,"index",gen->index,TRUE);
+  JSON_float(temp,output,"cost_coeff_Q2",gen->cost_coeff_Q2,TRUE);
   JSON_end(output);
   
   // Resize

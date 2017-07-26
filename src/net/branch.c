@@ -780,6 +780,7 @@ char* BRANCH_get_json_string(Branch* branch, char* output) {
   
   // Write
   JSON_start(output);
+  JSON_int(temp,output,"index",branch->index,FALSE);
   JSON_int(temp,output,"type",branch->type,FALSE);
   JSON_int(temp,output,"num_periods",branch->num_periods,FALSE);
   JSON_obj(temp,output,"bus_k",branch->bus_k,BUS_get_index,FALSE);
@@ -801,8 +802,7 @@ char* BRANCH_get_json_string(Branch* branch, char* output) {
   JSON_float(temp,output,"ratingB",branch->ratingB,FALSE);
   JSON_float(temp,output,"ratingC",branch->ratingC,FALSE);
   JSON_bool(temp,output,"outage",branch->outage,FALSE);
-  JSON_bool(temp,output,"pos_ratio_v_sens",branch->pos_ratio_v_sens,FALSE);
-  JSON_int(temp,output,"index",branch->index,TRUE);
+  JSON_bool(temp,output,"pos_ratio_v_sens",branch->pos_ratio_v_sens,TRUE);
   JSON_end(output);
   
   // Resize
