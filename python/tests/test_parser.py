@@ -480,22 +480,82 @@ class TestParser(unittest.TestCase):
     def test_json_parser(self):
 
         import os
+        from numpy.linalg import norm
+        eps = 1e-10
+
+        norminf = lambda x: norm(x,np.inf) if not np.isscalar(x) else np.abs(x)
 
         for case in test_cases.CASES:
 
             try:
+
+                T = 4
                 
-                net = pf.Parser(case).parse(case,4)
-                self.assertEqual(net.num_periods,4)
+                net = pf.Parser(case).parse(case,T)
+                self.assertEqual(net.num_periods,T)
+
+                # Add vargens and betteries
+                net.add_var_generators(net.get_load_buses(),100.,50.,30.,5,0.05)
+                net.add_batteries(net.get_generator_buses(),20.,50.)
+
+                # Some perturbations to reduce luck
+                for bus in net.buses:
+                    bus.price = np.random.randn(T)
                 
                 json_parser = pf.ParserJSON()
                 
                 json_parser.write(net,"temp_json.json")
                 
-                net = json_parser.parse("temp_json.json")
+                new_net = json_parser.parse("temp_json.json")
+                self.assertEqual(new_net.num_periods,T)
 
-                # add tests here
+                # network
+                self.assertTrue(net is not new_net)
+                self.assertEqual(net.num_periods,new_net.num_periods)
+                self.assertEqual(net.base_power,new_net.base_power)
 
+                # buses
+                self.assertEqual(net.num_buses,new_net.num_buses)
+                for i in range(net.num_buses):
+                    bus = net.buses[i]
+                    new_bus = new_net.buses[i]
+                    self.assertEqual(bus.number,new_bus.number)
+                    self.assertEqual(bus.name,new_bus.name)
+                    self.assertLess(norminf(bus.v_mag-new_bus.v_mag),eps)
+                    self.assertLess(norminf(bus.v_ang-new_bus.v_ang),eps)
+                    self.assertLess(norminf(bus.v_set-new_bus.v_set),eps)
+                    self.assertLess(norminf(bus.v_mag-new_bus.v_mag),eps)
+                    self.assertLess(norminf(bus.v_max_reg-new_bus.v_max_reg),eps)
+                    self.assertLess(norminf(bus.v_min_reg-new_bus.v_min_reg),eps)
+                    self.assertLess(norminf(bus.v_max_norm-new_bus.v_max_norm),eps)
+                    self.assertLess(norminf(bus.v_min_norm-new_bus.v_min_norm),eps)
+                    self.assertLess(norminf(bus.v_max_emer-new_bus.v_max_emer),eps)
+                    self.assertLess(norminf(bus.v_min_emer-new_bus.v_min_emer),eps)
+                    self.assertEqual(bus.is_slack(),new_bus.is_slack())
+                    self.assertEqual(bus.is_regulated_by_gen(),new_bus.is_regulated_by_gen())
+                    self.assertEqual(bus.is_regulated_by_tran(),new_bus.is_regulated_by_tran())
+                    self.assertEqual(bus.is_regulated_by_shunt(),new_bus.is_regulated_by_shunt())
+                    self.assertLess(norminf(bus.price-new_bus.price),eps)
+                    self.assertEqual(set([o.index for o in bus.generators]),
+                                     set([o.index for o in new_bus.generators]))
+                    self.assertEqual(set([o.index for o in bus.reg_generators]),
+                                     set([o.index for o in new_bus.reg_generators]))
+                    self.assertEqual(set([o.index for o in bus.loads]),
+                                     set([o.index for o in new_bus.loads]))
+                    self.assertEqual(set([o.index for o in bus.shunts]),
+                                     set([o.index for o in new_bus.shunts]))
+                    self.assertEqual(set([o.index for o in bus.reg_shunts]),
+                                     set([o.index for o in new_bus.reg_shunts]))
+                    self.assertEqual(set([o.index for o in bus.branches_k]),
+                                     set([o.index for o in new_bus.branches_k]))
+                    self.assertEqual(set([o.index for o in bus.branches_m]),
+                                     set([o.index for o in new_bus.branches_m]))
+                    self.assertEqual(set([o.index for o in bus.reg_trans]),
+                                     set([o.index for o in new_bus.reg_trans]))
+                    self.assertEqual(set([o.index for o in bus.var_generators]),
+                                     set([o.index for o in new_bus.var_generators]))
+                    self.assertEqual(set([o.index for o in bus.batteries]),
+                                     set([o.index for o in new_bus.batteries]))
             finally:
                 
                 os.remove("temp_json.json")

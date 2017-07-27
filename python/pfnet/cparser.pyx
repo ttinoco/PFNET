@@ -54,7 +54,7 @@ cdef class ParserBase:
         
         pass
 
-    def parse(self,filename,num_periods=1):
+    def parse(self,filename,num_periods=None):
         """
         Parsers data file.
         
@@ -68,6 +68,8 @@ cdef class ParserBase:
         net : :class:`Network <pfnet.Network>`
         """
 
+        if num_periods is None:
+            num_periods = 0 # format-specific parser will use its default
         filename = filename.encode('UTF-8')
         cdef cparser.Net* net = cparser.PARSER_parse(self._c_parser,filename,num_periods)
         if cparser.PARSER_has_error(self._c_parser):

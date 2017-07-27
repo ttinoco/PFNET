@@ -184,9 +184,6 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
   // Propagate in time
   NET_propagate_data_in_time(net,data_num_periods-1,num_periods);
   
-  // Set hash tables
-  
-  
   // Free
   json_value_free(value);
   free(file_contents);
@@ -276,12 +273,16 @@ void JSON_PARSER_process_json_bus_array(Parser* p, Net* net, json_value* json_bu
       val = json_bus->u.object.values[j].value;
 
       // number
-      if (strcmp(key,"number") == 0)
-	BUS_set_number(bus,val->u.integer);	
+      if (strcmp(key,"number") == 0) {
+	BUS_set_number(bus,val->u.integer);
+	NET_bus_hash_number_add(net,bus);
+      }
 
       // name
-      else if (strcmp(key,"name") == 0)
+      else if (strcmp(key,"name") == 0) {
 	BUS_set_name(bus,val->u.string.ptr);
+	NET_bus_hash_name_add(net,bus);
+      }
 	
       // v_mag
       else if (strcmp(key,"v_mag") == 0) {
@@ -707,8 +708,10 @@ void JSON_PARSER_process_json_vargen_array(Parser* p, Net* net, json_value* json
       }
 
       // name
-      else if (strcmp(key,"name") == 0)
+      else if (strcmp(key,"name") == 0) {
 	VARGEN_set_name(vargen,val->u.string.ptr);
+	NET_vargen_hash_name_add(net,vargen);
+      }
 
       // P
       else if (strcmp(key,"P") == 0) {
