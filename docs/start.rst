@@ -12,7 +12,7 @@ Dependencies
 The PFNET C library has the following optional dependencies:
 
 * `Graphviz`_ (libgvc >= 2.38): for creating network layouts and visualizing networks.
-* Raw Parser (libraw_parser >= 1.2.3) : for parsing PSSE raw files.
+* Raw Parser (libraw_parser >= 1.2.4) : for parsing PSSE raw files.
 * Line Flow (libline_flow): for constructing linear conservative AC branch flow limits.
 
 .. _start_download:
