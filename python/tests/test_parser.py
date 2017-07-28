@@ -460,12 +460,14 @@ class TestParser(unittest.TestCase):
 
             if case.split('.')[-1] == 'mat':
                 self.assertRaises(pf.ParserError,pf.ParserART().parse,case)
+                self.assertRaises(pf.ParserError,pf.ParserJSON().parse,case)
                 if pf.info['raw_parser']:
                     self.assertRaises(pf.ParserError,pf.ParserRAW().parse,case)
                 net = pf.ParserMAT().parse(case)
                 self.assertGreater(net.num_buses,0)
             elif case.split('.')[-1] == 'art':
                 self.assertRaises(pf.ParserError,pf.ParserMAT().parse,case)
+                self.assertRaises(pf.ParserError,pf.ParserJSON().parse,case)
                 if pf.info['raw_parser']:
                     self.assertRaises(pf.ParserError,pf.ParserRAW().parse,case)
                 net = pf.ParserART().parse(case)
@@ -473,6 +475,7 @@ class TestParser(unittest.TestCase):
             elif case.split('.')[-1] == 'raw':
                 self.assertRaises(pf.ParserError,pf.ParserMAT().parse,case)
                 self.assertRaises(pf.ParserError,pf.ParserART().parse,case)
+                self.assertRaises(pf.ParserError,pf.ParserJSON().parse,case)
                 if pf.info['raw_parser']:
                     net = pf.ParserRAW().parse(case)
                     self.assertGreater(net.num_buses,0)

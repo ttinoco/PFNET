@@ -17,7 +17,7 @@ To add a new data parser to PFNET, one should create a subclass of the :class:`C
   
   * Initializes parser data. This is called every time the :func:`parse() <pfnet.ParserBase.parse>` method is called.
 
-* :func:`parse(self,filename,num_periods=1) <pfnet.ParserBase.parse>`
+* :func:`parse(self,filename,num_periods=None) <pfnet.ParserBase.parse>`
 
   * Reads power network data from ``filename`` and constructs and returns a :class:`Network <pfnet.Network>` with the given number of time periods. The custom parser only needs to allocate the :ref:`network components <net_components>` and store their information for time period zero. PFNET allocates flag and other utility arrays, copies the data to all time periods, and computes the initial network properties automatically. 
 

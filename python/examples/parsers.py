@@ -14,3 +14,7 @@ parser = pfnet.Parser("mat")
 
 network = parser.parse("../../data/ieee14.mat")
 
+pfnet.ParserJSON().write(network,"new_network.json")
+
+import os
+os.remove("new_network.json")

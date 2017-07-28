@@ -11,6 +11,7 @@
 #include <pfnet/net.h>
 #include <pfnet/array.h>
 #include <pfnet/json_macros.h>
+#include <pfnet/pfnet_config.h>
 
 struct Net {
 
@@ -1790,6 +1791,7 @@ char* NET_get_json_string(Net* net) {
   JSON_start(output);
   JSON_int(temp,output,"num_periods",net->num_periods,FALSE);
   JSON_float(temp,output,"base_power",net->base_power,FALSE);
+  JSON_str(temp,output,"version",VERSION,FALSE);
   JSON_array_json(temp,output,"buses",net->bus,BUS_array_get,net->num_buses,BUS_get_json_string,FALSE);
   JSON_array_json(temp,output,"branches",net->branch,BRANCH_array_get,net->num_branches,BRANCH_get_json_string,FALSE);
   JSON_array_json(temp,output,"generators",net->gen,GEN_array_get,net->num_gens,GEN_get_json_string,FALSE);

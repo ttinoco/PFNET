@@ -31,6 +31,7 @@ Parser
    :members: 
 
 .. autoclass:: pfnet.Parser
+.. autoclass:: pfnet.ParserJSON
 .. autoclass:: pfnet.ParserMAT
 .. autoclass:: pfnet.ParserART
 .. autoclass:: pfnet.ParserRAW
