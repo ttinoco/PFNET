@@ -196,6 +196,14 @@ cdef class Shunt:
         def __get__(self): return cshunt.SHUNT_get_b_min(self._c_ptr)
         def __set__(self,value): cshunt.SHUNT_set_b_min(self._c_ptr,value)
 
+    property json_string:
+        """ JSON string (string). """
+        def __get__(self): 
+            cdef char* json_string = cshunt.SHUNT_get_json_string(self._c_ptr, NULL)
+            s = json_string.decode('UTF-8')
+            free(json_string)
+            return s
+
 cdef new_Shunt(cshunt.Shunt* s):
     if s is not NULL:
         shunt = Shunt(alloc=False)

@@ -14,6 +14,6 @@ cdef extern from "pfnet/constants.h":
     cdef char UPPER_LIMITS
     cdef char LOWER_LIMITS
 
-
+    cdef char* VERSION
 
     

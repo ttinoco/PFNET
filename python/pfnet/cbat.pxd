@@ -37,6 +37,7 @@ cdef extern from "pfnet/bat.h":
     REAL BAT_get_eta_c(Bat* bat)
     REAL BAT_get_eta_d(Bat* bat)
     Bat* BAT_get_next(Bat* bat)
+    char* BAT_get_json_string(Bat* bat, char* output)
     bint BAT_has_flags(Bat* bat, char flag_type, char mask)
     Bat* BAT_new(int num_periods)
     Bat* BAT_array_new(int size, int num_periods)

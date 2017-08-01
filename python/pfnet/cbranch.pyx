@@ -840,6 +840,14 @@ cdef class Branch:
         def __get__(self): return cbranch.BRANCH_is_on_outage(self._c_ptr)
         def __set__(self,b): cbranch.BRANCH_set_outage(self._c_ptr,b)
 
+    property json_string:
+        """ JSON string (string). """
+        def __get__(self): 
+            cdef char* json_string = cbranch.BRANCH_get_json_string(self._c_ptr, NULL)
+            s = json_string.decode('UTF-8')
+            free(json_string)
+            return s
+
 cdef new_Branch(cbranch.Branch* b):
     if b is not NULL:
         branch = Branch(alloc=False)

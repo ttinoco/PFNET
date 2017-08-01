@@ -771,6 +771,14 @@ cdef class Network:
                 'load_P_vio': self.load_P_vio,
                 'num_actions': self.num_actions}
 
+    property json_string:
+        """ JSON string (string). """
+        def __get__(self): 
+            cdef char* json_string = cnet.NET_get_json_string(self._c_net)
+            s = json_string.decode('UTF-8')
+            free(json_string)
+            return s
+
     def has_error(self):
         """
         Indicates whether the network has the error flag set due to an

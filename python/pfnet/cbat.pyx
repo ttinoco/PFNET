@@ -202,6 +202,14 @@ cdef class Battery:
         def __get__(self): return cbat.BAT_get_eta_d(self._c_ptr)
         def __set__(self,eta_d): cbat.BAT_set_eta_d(self._c_ptr,eta_d)
 
+    property json_string:
+        """ JSON string (string). """
+        def __get__(self): 
+            cdef char* json_string = cbat.BAT_get_json_string(self._c_ptr, NULL)
+            s = json_string.decode('UTF-8')
+            free(json_string)
+            return s
+
 cdef new_Battery(cbat.Bat* b):
     if b is not NULL:
         bat = Battery(alloc=False)

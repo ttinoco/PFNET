@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -11,6 +11,7 @@
 #include <pfnet/gen.h>
 #include <pfnet/bus.h>
 #include <pfnet/array.h>
+#include <pfnet/json_macros.h>
 
 struct Gen {
 
@@ -412,6 +413,54 @@ Vec* GEN_get_var_indices(void* vgen, unsigned char var, int t_start, int t_end) 
   return indices;
 }
 
+char* GEN_get_json_string(Gen* gen, char* output) {
+
+  // Local variables
+  char temp[GEN_BUFFER_SIZE];
+  char* output_start;
+  BOOL resize;
+
+  // No gen
+  if (!gen)
+    return NULL;
+
+  // Output
+  if (output)
+    resize = FALSE;
+  else {
+    output = (char*)malloc(sizeof(char)*GEN_BUFFER_SIZE*GEN_NUM_JSON_FIELDS*gen->num_periods);
+    resize = TRUE;
+  }
+  output_start = output;
+
+  // Write
+  JSON_start(output);
+  JSON_int(temp,output,"index",gen->index,FALSE);
+  JSON_obj(temp,output,"bus",gen->bus,BUS_get_index,FALSE);
+  JSON_obj(temp,output,"reg_bus",gen->reg_bus,BUS_get_index,FALSE);
+  JSON_int(temp,output,"num_periods",gen->num_periods,FALSE);
+  JSON_bool(temp,output,"outage",gen->outage,FALSE);
+  JSON_array_float(temp,output,"P",gen->P,gen->num_periods,FALSE);
+  JSON_float(temp,output,"P_max",gen->P_max,FALSE);
+  JSON_float(temp,output,"P_min",gen->P_min,FALSE);
+  JSON_float(temp,output,"dP_max",gen->dP_max,FALSE);
+  JSON_float(temp,output,"P_prev",gen->P_prev,FALSE);
+  JSON_array_float(temp,output,"Q",gen->Q,gen->num_periods,FALSE);
+  JSON_float(temp,output,"Q_max",gen->Q_max,FALSE);
+  JSON_float(temp,output,"Q_min",gen->Q_min,FALSE);
+  JSON_float(temp,output,"cost_coeff_Q0",gen->cost_coeff_Q0,FALSE);
+  JSON_float(temp,output,"cost_coeff_Q1",gen->cost_coeff_Q1,FALSE);
+  JSON_float(temp,output,"cost_coeff_Q2",gen->cost_coeff_Q2,TRUE);
+  JSON_end(output);
+  
+  // Resize
+  if (resize)
+    output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
+
+  // Return
+  return output;
+}
+
 BOOL GEN_has_flags(void* vgen, char flag_type, unsigned char mask) {
   Gen* gen = (Gen*)vgen;
   if (gen) {
@@ -721,12 +770,16 @@ void GEN_show(Gen* gen, int t) {
 	 BUS_get_number(gen->reg_bus));
 }
 
-void GEN_propagate_data_in_time(Gen* gen) {
+void GEN_propagate_data_in_time(Gen* gen, int start, int end) {
   int t;
   if (gen) {
-    for (t = 1; t < gen->num_periods; t++) {
-      gen->P[t] = gen->P[0];
-      gen->Q[t] = gen->Q[0];
+    if (start < 0)
+      start = 0;
+    if (end > gen->num_periods)
+      end = gen->num_periods;
+    for (t = start+1; t < end; t++) {
+      gen->P[t] = gen->P[start];
+      gen->Q[t] = gen->Q[start];
     }
   }
 }

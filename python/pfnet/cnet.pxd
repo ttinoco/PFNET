@@ -120,6 +120,7 @@ cdef extern from "pfnet/net.h":
     REAL NET_get_vargen_corr_value(Net* net)
     cvec.Vec* NET_get_var_values(Net* net, int code)
     cmat.Mat* NET_get_var_projection(Net* net, char obj_type, char var, int t_start, int t_end)
+    char* NET_get_json_string(Net* net)
     bint NET_has_error(Net* net)
     Net* NET_new(int num_periods)
     void NET_set_base_power(Net* net, REAL base_power)

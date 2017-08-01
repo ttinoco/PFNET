@@ -16,12 +16,13 @@
 #include <pfnet/vargen.h>
 #include <pfnet/bat.h>
 #include <pfnet/array.h>
+#include <pfnet/json_macros.h>
 
 struct Bus {
 
   // Properties
-  int number;                      /**< @brief Bus number */
-  char name[BUS_NAME_BUFFER_SIZE]; /**< @brief Bus name */
+  int number;                 /**< @brief Bus number */
+  char name[BUS_BUFFER_SIZE]; /**< @brief Bus name */
 
   // Times
   int num_periods;   /**< @brief Number of time periods. */
@@ -44,18 +45,6 @@ struct Bus {
   char sparse;       /**< @brief Flags for indicating which control adjustments should be sparse */
   char vars;         /**< @brief Flags for indicating which quantities should be treated as variables */
 
-  // Components
-  Gen* gen;            /**< @brief List of generators connected to bus */
-  Gen* reg_gen;        /**< @brief List of generators regulating the voltage magnitude of bus */
-  Branch* reg_tran;    /**< @brief List of transformers regulating the voltage magnitude of bus */
-  Load* load;          /**< @brief List of loads connected to bus */
-  Shunt* shunt;        /**< @brief List of shunt devices connected to bus */
-  Shunt* reg_shunt;    /**< @brief List of shunt devices regulating the voltage magnitude of bus */
-  Branch* branch_k;    /**< @brief List of branches having this bus on the "k" side */
-  Branch* branch_m;    /**< @brief List of branches having this bus on the "m" side */
-  Vargen* vargen;      /**< @brief List of variable generators connected to bus */
-  Bat* bat;            /**< @brief List of batteries connected to bus */
-
   // Price
   REAL* price;        /**< @brief Energy price at bus ($/ (hr p.u.)) */
 
@@ -63,6 +52,18 @@ struct Bus {
   int index;          /**< @brief Bus index */
   int* index_v_mag;   /**< @brief Voltage magnitude index */
   int* index_v_ang;   /**< @brief Voltage angle index */
+
+  // Components
+  Gen* gen;            /**< @brief List of generators connected to bus */
+  Gen* reg_gen;        /**< @brief List of generators regulating the voltage magnitude of bus */
+  Load* load;          /**< @brief List of loads connected to bus */
+  Shunt* shunt;        /**< @brief List of shunt devices connected to bus */
+  Shunt* reg_shunt;    /**< @brief List of shunt devices regulating the voltage magnitude of bus */
+  Branch* branch_k;    /**< @brief List of branches having this bus on the "k" side */
+  Branch* branch_m;    /**< @brief List of branches having this bus on the "m" side */
+  Branch* reg_tran;    /**< @brief List of transformers regulating the voltage magnitude of bus */
+  Vargen* vargen;      /**< @brief List of variable generators connected to bus */
+  Bat* bat;            /**< @brief List of batteries connected to bus */
 
   // Sensitivities
   REAL* sens_P_balance;      /**< @brief Sensitivity of active power balance */
@@ -1065,6 +1066,63 @@ REAL BUS_get_quantity(Bus* bus, int qtype, int t) {
   }
 }
 
+char* BUS_get_json_string(Bus* bus, char* output) {
+  
+  // Local variables
+  char temp[BUS_BUFFER_SIZE];
+  char* output_start;
+  BOOL resize;
+
+  // No bus
+  if (!bus)
+    return NULL;
+
+  // Output
+  if (output)
+    resize = FALSE;
+  else {
+    output = (char*)malloc(sizeof(char)*BUS_BUFFER_SIZE*BUS_NUM_JSON_FIELDS*bus->num_periods);
+    resize = TRUE;
+  }
+  output_start = output;
+  
+  // Write
+  JSON_start(output);
+  JSON_int(temp,output,"index",bus->index,FALSE);
+  JSON_int(temp,output,"number",bus->number,FALSE);
+  JSON_str(temp,output,"name",bus->name,FALSE);
+  JSON_int(temp,output,"num_periods",bus->num_periods,FALSE);
+  JSON_array_float(temp,output,"v_mag",bus->v_mag,bus->num_periods,FALSE);
+  JSON_array_float(temp,output,"v_ang",bus->v_ang,bus->num_periods,FALSE);
+  JSON_array_float(temp,output,"v_set",bus->v_set,bus->num_periods,FALSE);
+  JSON_float(temp,output,"v_max_reg",bus->v_max_reg,FALSE);
+  JSON_float(temp,output,"v_min_reg",bus->v_min_reg,FALSE);
+  JSON_float(temp,output,"v_max_norm",bus->v_max_norm,FALSE);
+  JSON_float(temp,output,"v_min_norm",bus->v_min_norm,FALSE);
+  JSON_float(temp,output,"v_max_emer",bus->v_max_emer,FALSE);
+  JSON_float(temp,output,"v_min_emer",bus->v_min_emer,FALSE);
+  JSON_bool(temp,output,"slack",bus->slack,FALSE);
+  JSON_array_float(temp,output,"price",bus->price,bus->num_periods,FALSE);
+  JSON_list_int(temp,output,"generators",bus,Gen,BUS_get_gen,GEN_get_index,GEN_get_next,FALSE);
+  JSON_list_int(temp,output,"reg_generators",bus,Gen,BUS_get_reg_gen,GEN_get_index,GEN_get_reg_next,FALSE);
+  JSON_list_int(temp,output,"loads",bus,Load,BUS_get_load,LOAD_get_index,LOAD_get_next,FALSE);
+  JSON_list_int(temp,output,"shunts",bus,Shunt,BUS_get_shunt,SHUNT_get_index,SHUNT_get_next,FALSE);
+  JSON_list_int(temp,output,"reg_shunts",bus,Shunt,BUS_get_reg_shunt,SHUNT_get_index,SHUNT_get_reg_next,FALSE);
+  JSON_list_int(temp,output,"branches_k",bus,Branch,BUS_get_branch_k,BRANCH_get_index,BRANCH_get_next_k,FALSE);
+  JSON_list_int(temp,output,"branches_m",bus,Branch,BUS_get_branch_m,BRANCH_get_index,BRANCH_get_next_m,FALSE);
+  JSON_list_int(temp,output,"reg_transformers",bus,Branch,BUS_get_reg_tran,BRANCH_get_index,BRANCH_get_reg_next,FALSE);
+  JSON_list_int(temp,output,"var_generators",bus,Vargen,BUS_get_vargen,VARGEN_get_index,VARGEN_get_next,FALSE);
+  JSON_list_int(temp,output,"batteries",bus,Bat,BUS_get_bat,BAT_get_index,BAT_get_next,TRUE);
+  JSON_end(output);
+  
+  // Resize
+  if (resize)
+    output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
+
+  // Return
+  return output;
+}
+
 BOOL BUS_has_flags(void* vbus, char flag_type, unsigned char mask) {
   Bus* bus = (Bus*)vbus;
   if (bus) {
@@ -1156,7 +1214,7 @@ void BUS_init(Bus* bus, int num_periods) {
   bus->num_periods = num_periods;
 
   bus->number = 0;
-  for (i = 0; i < BUS_NAME_BUFFER_SIZE; i++)
+  for (i = 0; i < BUS_BUFFER_SIZE; i++)
     bus->name[i] = 0;
 
   bus->index = 0;
@@ -1319,7 +1377,7 @@ void BUS_set_number(Bus* bus, int number) {
 
 void BUS_set_name(Bus* bus, char* name) {
   if (bus)
-    strncpy(bus->name,name,(size_t)(BUS_NAME_BUFFER_SIZE-1));
+    strncpy(bus->name,name,(size_t)(BUS_BUFFER_SIZE-1));
 }
 
 void BUS_set_price(Bus* bus, REAL price, int t) {
@@ -1501,13 +1559,17 @@ void BUS_show(Bus* bus, int t) {
 	 BUS_get_num_shunts(bus));
 }
 
-void BUS_propagate_data_in_time(Bus* bus) {
+void BUS_propagate_data_in_time(Bus* bus, int start, int end) {
   int t;
   if (bus) {
-    for (t = 1; t < bus->num_periods; t++) {
-      bus->v_mag[t] = bus->v_mag[0];
-      bus->v_ang[t] = bus->v_ang[0];
-      bus->v_set[t] = bus->v_set[0];
+    if (start < 0)
+      start = 0;
+    if (end > bus->num_periods)
+      end = bus->num_periods;
+    for (t = start+1; t < end; t++) {
+      bus->v_mag[t] = bus->v_mag[start];
+      bus->v_ang[t] = bus->v_ang[start];
+      bus->v_set[t] = bus->v_set[start];
     }
   }
 }

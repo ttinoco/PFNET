@@ -769,8 +769,9 @@ class TestProblem(unittest.TestCase):
             E = G - bmat([[G1],[G2]])
             self.assertEqual(E.nnz,0)
 
-    def test_problem_ACOPF_with_thermal(self):
+    def test_problem_ACOPF_with_thermal1(self):
 
+        # Single period
         for case in test_cases.CASES:
             
             net = pf.Parser(case).parse(case)
@@ -834,7 +835,8 @@ class TestProblem(unittest.TestCase):
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars+p.num_extra_vars,))
             x = net.get_var_values()
-            x0_check = np.hstack((x,np.zeros(p.num_extra_vars)))
+            c = p.find_constraint('AC branch flow limits')
+            x0_check = np.hstack((x,c.init_extra_vars))
             self.assertTrue(np.all(x0 == x0_check))
             
             y0 = np.random.randn(p.num_extra_vars)
@@ -1020,6 +1022,64 @@ class TestProblem(unittest.TestCase):
                 error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
                 self.assertLessEqual(error,EPS)
 
+    def test_problem_ACOPF_with_thermal2(self):
+
+        # Single period
+        for case in test_cases.CASES:
+            
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
+            
+            net.set_flags('bus',['variable','bounded'],'any','voltage magnitude')
+            net.set_flags('bus','variable','not slack','voltage angle')
+            net.set_flags('generator',['variable','bounded'],'any',['active power','reactive power'])
+            
+            problem = pf.Problem(net)
+            problem.add_function(pf.Function('generation cost',1e0,net))
+            problem.add_constraint(pf.Constraint('AC power balance',net))
+            problem.add_constraint(pf.Constraint('AC branch flow limits',net))
+            problem.add_constraint(pf.Constraint('variable bounds',net))
+            problem.analyze()
+
+            if problem.num_extra_vars == 0:
+                continue
+                
+            x0 = problem.x.copy()
+            lamf = np.random.randn(problem.get_num_nonlinear_equality_constraints())
+            lamf[2*net.num_buses:] = 1.
+            
+            problem.eval(x0)
+            problem.combine_H(lamf)
+            
+            F0 = np.dot(problem.f,lamf)
+            GradF0 = problem.J.T*lamf
+            HessF0 = problem.H_combined.copy()
+            HessF0 = (HessF0 + HessF0.T - triu(HessF0))
+            
+            h = 1e-10
+            for i in range(10):
+                
+                d = np.random.randn(x0.size)
+                
+                x = x0 + h*d
+                
+                problem.eval(x)
+                
+                F1 = np.dot(problem.f,lamf)
+                GradF1 = problem.J.T*lamf
+                
+                Jd_exact = np.dot(GradF0,d)
+                Jd_approx = (F1-F0)/h
+                
+                Hd_exact = HessF0*d
+                Hd_approx = (GradF1-GradF0)/h
+                
+                errorJ = 100.*norm(Jd_exact-Jd_approx)/norm(Jd_exact) 
+                errorH = 100.*norm(Hd_exact-Hd_approx)/norm(Hd_exact) 
+        
+                self.assertLess(errorJ,EPS)
+                self.assertLess(errorH,EPS)
+        
     def test_problem_with_DUMMY_func(self):
         
         for case in test_cases.CASES:
@@ -1081,6 +1141,9 @@ class TestProblem(unittest.TestCase):
             
             net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
+
+            if net.num_buses > 1000:
+                continue
 
             p1 = pf.Problem(net)
             p2 = pf.Problem(net)

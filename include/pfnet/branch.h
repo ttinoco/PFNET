@@ -61,6 +61,14 @@
 #define BRANCH_PROP_NOT_OUT 0x10       /**< @brief Property: branch not on outage */
 /** @} */
 
+// Constants
+/** \defgroup branch_const Branch Constants
+ *  @{
+ */
+#define BRANCH_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
+#define BRANCH_NUM_JSON_FIELDS 30 /**< @brief Constant: max number of json fields */
+/** @} */
+
 // Branch
 typedef struct Branch Branch;
 
@@ -75,7 +83,7 @@ Branch* BRANCH_array_new(int size, int num_periods);
 void BRANCH_array_show(Branch* br, int size, int t);
 void BRANCH_clear_sensitivities(Branch* br);
 void BRANCH_clear_flags(Branch* br, char flag_type);
-void BRANCH_propagate_data_in_time(Branch* br);
+void BRANCH_propagate_data_in_time(Branch* br, int start, int end);
 int BRANCH_get_num_periods(Branch* br);
 char BRANCH_get_type(Branch* br);
 char BRANCH_get_obj_type(void* br);
@@ -123,6 +131,7 @@ REAL BRANCH_get_P_mk_DC(Branch* br, int t);
 void BRANCH_get_var_values(Branch* br, Vec* values, int code);
 int BRANCH_get_num_vars(void* br, unsigned char var, int t_start, int t_end);
 Vec* BRANCH_get_var_indices(void* br, unsigned char var, int t_start, int t_end);
+char* BRANCH_get_json_string(Branch* br, char* output);
 BOOL BRANCH_has_flags(void* br, char flag_type, unsigned char mask);
 BOOL BRANCH_has_pos_ratio_v_sens(Branch* br);
 BOOL BRANCH_has_properties(void* br, char prop);

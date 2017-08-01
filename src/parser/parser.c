@@ -78,7 +78,6 @@ Net* PARSER_parse(Parser* p, char* f, int n) {
   PARSER_clear_error(p);
   if (p && p->func_parse)
     net = (*(p->func_parse))(p,f,n);
-  NET_propagate_data_in_time(net);
   NET_update_properties(net,NULL);
   return net;
 }

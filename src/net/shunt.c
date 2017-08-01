@@ -11,6 +11,7 @@
 #include <pfnet/shunt.h>
 #include <pfnet/bus.h>
 #include <pfnet/array.h>
+#include <pfnet/json_macros.h>
 
 struct Shunt {
   
@@ -285,6 +286,47 @@ Vec* SHUNT_get_var_indices(void* vshunt, unsigned char var, int t_start, int t_e
   return indices;
 }
 
+char* SHUNT_get_json_string(Shunt* shunt, char* output) {
+
+  // Local variables
+  char temp[SHUNT_BUFFER_SIZE];
+  char* output_start;
+  BOOL resize;
+
+  // No shunt
+  if (!shunt)
+    return NULL;
+
+  // Output
+  if (output)
+    resize = FALSE;
+  else {
+    output = (char*)malloc(sizeof(char)*SHUNT_BUFFER_SIZE*SHUNT_NUM_JSON_FIELDS*shunt->num_periods);
+    resize = TRUE;
+  }
+  output_start = output;
+
+  // Write
+  JSON_start(output);
+  JSON_int(temp,output,"index",shunt->index,FALSE);
+  JSON_obj(temp,output,"bus",shunt->bus,BUS_get_index,FALSE);
+  JSON_obj(temp,output,"reg_bus",shunt->reg_bus,BUS_get_index,FALSE);
+  JSON_int(temp,output,"num_periods",shunt->num_periods,FALSE);
+  JSON_float(temp,output,"g",shunt->g,FALSE);
+  JSON_array_float(temp,output,"b",shunt->b,shunt->num_periods,FALSE);
+  JSON_float(temp,output,"b_max",shunt->b_max,FALSE);
+  JSON_float(temp,output,"b_min",shunt->b_min,FALSE);
+  JSON_array_float(temp,output,"b_values",shunt->b_values,shunt->num_b,TRUE);
+  JSON_end(output);
+  
+  // Output
+  if (resize)
+    output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
+
+  // Return
+  return output;
+}
+
 BOOL SHUNT_has_flags(void* vshunt, char flag_type, unsigned char mask) {
   Shunt* shunt = (Shunt*)vshunt;
   if (shunt) {
@@ -428,13 +470,10 @@ void SHUNT_set_b_min(Shunt* shunt, REAL b_min) {
     shunt->b_min = b_min;
 }
 
-void SHUNT_set_b_values(Shunt* shunt, REAL* values, int num, REAL norm) {
-  int i;
+void SHUNT_set_b_values(Shunt* shunt, REAL* values, int num) {
   if (shunt) {
-    shunt->b_values = (REAL*)malloc(sizeof(REAL)*num);
+    shunt->b_values = values;
     shunt->num_b = num;
-    for (i = 0; i < shunt->num_b; i++) 
-      shunt->b_values[i] = values[i]/norm; // note normalization
   }
 }
 
@@ -497,10 +536,14 @@ void SHUNT_show(Shunt* shunt, int t) {
 	   shunt->index);
 }
 
-void SHUNT_propagate_data_in_time(Shunt* shunt) {
+void SHUNT_propagate_data_in_time(Shunt* shunt, int start, int end) {
   int t;
   if (shunt) {
-    for (t = 1; t < shunt->num_periods; t++)
-      shunt->b[t] = shunt->b[0];
+    if (start < 0)
+      start = 0;
+    if (end > shunt->num_periods)
+      end = shunt->num_periods;
+    for (t = start+1; t < end; t++)
+      shunt->b[t] = shunt->b[start];
   }
 }

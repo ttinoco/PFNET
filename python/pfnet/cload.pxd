@@ -42,6 +42,7 @@ cdef extern from "pfnet/load.h":
     REAL LOAD_get_P_min(Load* load, int t)
     REAL LOAD_get_Q(Load* load, int t)
     Load* LOAD_get_next(Load* load)
+    char* LOAD_get_json_string(Load* load, char* output)
     bint LOAD_is_P_adjustable(Load* load)
     bint LOAD_has_flags(Load* load, char flag_type, char mask)
     Load* LOAD_new(int num_periods)

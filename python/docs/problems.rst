@@ -362,7 +362,7 @@ Variable bounds
 
 This constraint is associated with the string ``"variable bounds"``. It constrains specific variables to be inside their bounds. The variables to be bounded are specified using the :class:`Network <pfnet.Network>` class methods :func:`set_flags() <pfnet.Network.set_flags>` or :func:`set_flags_of_component() <pfnet.Network.set_flags_of_component>` with the flag ``"bounded"``. 
 
-Variable bounds can also be expressed as nonlinear equality constraints using the techniques described in Section 4.3.3 of [TTR2015]_. The string associated with this constraint type is ``"variable nonlinear bounds"``. 
+Variable bounds can also be expressed as nonlinear equality constraints using the techniques described in Section 4.3.3 of [TT2015]_. The string associated with this constraint type is ``"variable nonlinear bounds"``. 
 
 .. _prob_constr_PAR_GEN:
 

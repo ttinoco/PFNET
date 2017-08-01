@@ -10,6 +10,11 @@
 
 #include <pfnet/utils.h>
 
+int imin(int a, int b) {
+  /* Returns minimum of two integers. */
+  return (a < b) ? a : b;
+}
+
 char* trim(char* s) {
   /* Trims string inplace. */
 

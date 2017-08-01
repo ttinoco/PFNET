@@ -44,7 +44,8 @@
 /** \defgroup vargen_const Variable Generator Constants
  *  @{
  */
-#define VARGEN_NAME_BUFFER_SIZE 25       /**< @brief Constant: buffer size for name */
+#define VARGEN_BUFFER_SIZE 100    /**< @brief Constant: buffer size for name */
+#define VARGEN_NUM_JSON_FIELDS 15 /**< @brief Constant: max number of json fields */
 /** @} */
 
 // Variable generator
@@ -59,7 +60,7 @@ void* VARGEN_array_get(void* gen_array, int index);
 Vargen* VARGEN_array_new(int size, int num_periods);
 void VARGEN_array_show(Vargen* gen_array, int size, int t);
 void VARGEN_clear_flags(Vargen* gen, char flag_type);
-void VARGEN_propagate_data_in_time(Vargen* gen);
+void VARGEN_propagate_data_in_time(Vargen* gen, int start, int end);
 int VARGEN_get_num_periods(Vargen* gen);
 char* VARGEN_get_name(Vargen* gen);
 Bus* VARGEN_get_bus(Vargen* gen);
@@ -79,6 +80,7 @@ REAL VARGEN_get_Q_min(Vargen* gen);
 void VARGEN_get_var_values(Vargen* gen, Vec* values, int code);
 int VARGEN_get_num_vars(void* gen, unsigned char var, int t_start, int t_end);
 Vec* VARGEN_get_var_indices(void* gen, unsigned char var, int t_start, int t_end);
+char* VARGEN_get_json_string(Vargen* gen, char* output);
 BOOL VARGEN_has_flags(void* gen, char flag_type, unsigned char mask);
 BOOL VARGEN_has_properties(void* gen, char prop);
 Vargen* VARGEN_hash_name_add(Vargen* vargen_hash, Vargen* vg);

@@ -7,9 +7,22 @@ Targets
 * Instructions for adding new functions and constraints in C.
 * Area/zone projections.
 * Variable generator curtailment cost.
+* Network object serialization using json.
 
 Unreleased
 ----------
+
+Version 1.3.1
+-------------
+* Support for init values for constraint extra variables.
+* Improved post processing of structures of constraint Hessians (now constr.c ensures lower triangular and fills H_combined ij, fixing bug in AC_FLOW_LIM).
+* Mat parser detection of branches out of service.
+* H_combined is now completely handled by "base" constraint in constr.c. Custom constraints no longer need to allocate this matrix.
+* -Wall -Werror had no effect in Makefile.am and were moved to configure.ac. Now they work (requires autoconf-archive).
+* Support for adding nonlinear constraints in Python and documentation.
+* JSON network representation and parser with read/write capability.
+* Base parser defaults to number of periods associated with data file and format-specific parsers are responsible for "propagating data on time".
+* Added version string to info dictionary of pfnet python module.
 
 Version 1.3.0
 -------------

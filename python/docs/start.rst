@@ -16,7 +16,7 @@ PFNET for Python has the following dependencies:
 * `Numpy <http://www.numpy.org>`_ (>=1.11.2): the fundamental package for scientific computing in Python.
 * `Scipy <http://www.scipy.org>`_ (>=0.18.1): a collection of mathematical algorithms and functions built on top of Numpy.
 * `Cython <http://cython.org>`_ (>=0.20.1): an optimizing static compiler for both Python and the extended Cython programming language.
-* `PFNET <https://github.com/ttinoco/PFNET>`_ (== 1.2.9): underlying C routines wrapped by this package.
+* `PFNET <https://github.com/ttinoco/PFNET>`_ (== 1.3.1): underlying C routines wrapped by this package.
 
 .. _start_download:
 
@@ -40,11 +40,11 @@ from the ``python`` directory of the PFNET library. The module can be tested usi
   python setup.py build_ext --inplace
   nosetests -s -v
 
-The availability of optional features of PFNET can be checked using::
+The availability of optional features and version of PFNET can be checked using::
 
   >>> import pfnet
   >>> pfnet.info
-  {'line_flow': True, 'raw_parser': True, 'graphviz': True}
+  {'line_flow': True, 'raw_parser': True, 'graphviz': True, 'version': '1.3.1'}
 
 .. _start_example:
 
