@@ -47,4 +47,4 @@ cdef extern from "pfnet/shunt.h":
     void SHUNT_set_b(Shunt* shunt, REAL b, int t)
     void SHUNT_set_b_max(Shunt* shunt, REAL b_max)
     void SHUNT_set_b_min(Shunt* shunt, REAL b_min)
-    void SHUNT_set_b_values(Shunt* shunt, REAL* values, int num, REAL norm)
+    void SHUNT_set_b_values(Shunt* shunt, REAL* values, int num)

@@ -133,5 +133,5 @@ cdef extern from "pfnet/net.h":
     char* NET_get_show_properties_str(Net* net, int t)
     void NET_show_buses(Net* net, int number, int sort_by, int t)
     void NET_update_properties(Net* net, cvec.Vec* values)
-    void NET_propagate_data_in_time(Net* net)
+    void NET_propagate_data_in_time(Net* net, int start, int end)
     void NET_update_set_points(Net* net)

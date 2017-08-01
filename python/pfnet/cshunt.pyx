@@ -94,19 +94,18 @@ cdef class Shunt:
                                       str2flag[flag_type],
                                       reduce(lambda x,y: x|y,[str2q[self.obj_type][qq] for qq in q],0))
 
-    def set_b_values(self,values,norm=1.0):
+    def set_b_values(self,values):
         """
-        Sets the block susceptance values for :attr:`b_values` with normalization.
+        Sets the block susceptance values for :attr:`b_values`.
         
         Parameters
         ----------
         values : :class:`ndarray <numpy.ndarray>`
-        norm : float
         """
         
         cdef np.ndarray[double,mode='c'] x = values
         cdef cvec.Vec* v =  cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size)
-        cshunt.SHUNT_set_b_values(self._c_ptr,cvec.VEC_get_data(v),cvec.VEC_get_size(v),norm)
+        cshunt.SHUNT_set_b_values(self._c_ptr,cvec.VEC_get_data(v),cvec.VEC_get_size(v))
 
     def get_b_values(self):
         """ 
@@ -195,6 +194,11 @@ cdef class Shunt:
         """ Shunt susceptance lower limit (p.u.) (float). """
         def __get__(self): return cshunt.SHUNT_get_b_min(self._c_ptr)
         def __set__(self,value): cshunt.SHUNT_set_b_min(self._c_ptr,value)
+        
+    property b_values:
+        """ Shunt susceptance valid values (p.u.) if switchable (list of floats). """
+        def __get__(self): return self.get_b_values()
+        def __set__(self,values): self.set_b_values(values)
 
     property json_string:
         """ JSON string (string). """
