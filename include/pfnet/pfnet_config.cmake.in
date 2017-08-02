@@ -7,6 +7,32 @@
 #ifndef _PFNET_CONFIG_HEADER_GUARD_H_
 #define _PFNET_CONFIG_HEADER_GUARD_H_
 
+/* Define Autoconfig default info from CMakeLists.txt */
+
+/* Name of package */
+#define PACKAGE "@PFNET_PACKAGE@"
+
+/* Version number of package */
+#define VERSION "@PFNET_VERSION@"
+
+/* Define to the full name of this package. */
+#define PACKAGE_NAME "@PFNET_NAME@"
+
+/* Define to the version of this package. */
+#define PACKAGE_VERSION "@PFNET_VERSION@"
+
+/* Define to the full name and version of this package. */
+#define PACKAGE_STRING "@PFNET_STRING@"
+
+/* Define to the address where bug reports for this package should be sent. */
+#define PACKAGE_BUGREPORT "@PFNET_BUGREPORT@"
+
+/* Define to the one symbol short name of this package. */
+#define PACKAGE_TARNAME "@PFNET_PACKAGE@"
+
+/* Define to the home page for this package. */
+#define PACKAGE_URL "@PFNET_URL@"
+
 /* Define to 1 if <stdint.h> header file. */
 #cmakedefine HAVE_STDINT_H @HAVE_STDINT_H@
 

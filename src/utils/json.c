@@ -25,7 +25,7 @@
  * SUCH DAMAGE.
  */
 
-#include "json.h"
+#include <pfnet/json.h>
 
 #ifdef _MSC_VER
    #ifndef _CRT_SECURE_NO_WARNINGS
