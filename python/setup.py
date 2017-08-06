@@ -6,9 +6,15 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
+import os
 import numpy as np
+from subprocess import call
 from Cython.Build import cythonize
-from distutils.core import setup, Extension
+from setuptools import setup, Extension, find_packages
+
+return_code = call(["./build_lib.sh"])
+
+DIR = os.getcwd()+'/lib/pfnet/build'
 
 setup(name='PFNET',
       version='1.3.1',
@@ -17,10 +23,11 @@ setup(name='PFNET',
       author='Tomas Tinoco De Rubira',
       author_email='ttinoco5687@gmail.com',
       url='https://github.com/ttinoco/PFNET/python',
-      packages=['pfnet',
-                'pfnet.parsers',
-                'pfnet.functions',
-                'pfnet.constraints'],
-      ext_modules=cythonize([Extension(name="pfnet.cpfnet", 
+      packages=find_packages(),
+      ext_modules=cythonize([Extension(name="pfnet.cpfnet",
                                        sources=["./pfnet/cpfnet.pyx"],
-                                       include_dirs=[np.get_include()])]))
+                                       libraries=['pfnet'],
+                                       include_dirs=[np.get_include(),DIR+'/include'],
+                                       library_dirs=[DIR+'/lib'],
+                                       extra_link_args=['-Wl,-rpath,'+DIR+'/lib'])]))
+                                       

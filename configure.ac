@@ -26,9 +26,9 @@ AC_CHECK_LIB(cgraph, agopen)
 AC_CHECK_HEADERS(graphviz/gvc.h)
 
 # Checks for raw parser
-AC_CHECK_FILES([$PWD/lib/libraw_parser.so],
+AC_CHECK_FILES([$RAW_PARSER/lib/libraw_parser.so],
 	[AC_DEFINE([HAVE_RAW_PARSER],[1],[Define to 1 if you have the raw parser library.])
-	 LDFLAGS="$LDFLAGS -L$PWD/lib -lraw_parser -Wl,-rpath,$PWD/lib"],
+	 LDFLAGS="$LDFLAGS -L$RAW_PARSER/lib -lraw_parser -Wl,-rpath,$RAW_PARSER/lib"],
 	[AC_DEFINE([HAVE_RAW_PARSER],[0],[Define to 0 if you do not have the raw parser library.])])
 
 # Checks for line flow

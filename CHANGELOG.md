@@ -11,6 +11,14 @@ Targets
 
 Unreleased
 ----------
+* Moved to setuptools (done).
+* Changed configure.ac to look for raw_parser using RAW_PARSER env variable (done).
+* Removed C lib tarball from python/docs/_static (done).
+* Made Python wrapper self-contained, i.e., it contains and installs the C library from a tarball in lib directory (done).
+* Updated travis instructions to directly install python wrapper (done).
+* Removed "build" script for readthedocs since it was no longer needed (done).
+* Removed setup.cfg since it was no longer needed (done).
+* Distributed pfnet python wrapper through pypi (todo).
 
 Version 1.3.1
 -------------
