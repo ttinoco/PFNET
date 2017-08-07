@@ -19,6 +19,7 @@ Unreleased
 * Removed "build" script for readthedocs since it was no longer needed (done).
 * Removed setup.cfg since it was no longer needed (done).
 * Distributed pfnet python wrapper through pypi (todo).
+* Updated Python wrapper documentation to show how to install with pip or download/run tests.
 
 Version 1.3.1
 -------------
