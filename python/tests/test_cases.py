@@ -8,5 +8,5 @@
 
 import os
 
-DATA_DIR = '../data/'
+DATA_DIR = './data/'
 CASES = [DATA_DIR+f for f in os.listdir(DATA_DIR)]

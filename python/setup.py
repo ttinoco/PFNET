@@ -16,7 +16,7 @@ if return_code != 0:
     raise ValueError('Unable to build C library')
 
 setup(name='PFNET',
-      version='1.3.1rc1',
+      version='1.3.1rc2',
       description='Power Flow Network Library',
       url='https://github.com/ttinoco/PFNET/python',
       author='Tomas Tinoco De Rubira',
