@@ -14,7 +14,8 @@ cdef extern from "pfnet/constr.h":
     ctypedef struct Mat
     ctypedef struct Branch
     ctypedef double REAL
-        
+
+    void CONSTR_allocate_H_array(Constr* c, int size)        
     void CONSTR_combine_H(Constr* c, Vec* coeff, bint ensure_psd)
     void CONSTR_del(Constr* c)
     void CONSTR_del_matvec(Constr* constr)
@@ -22,6 +23,8 @@ cdef extern from "pfnet/constr.h":
     int CONSTR_get_A_nnz(Constr* c)
     int CONSTR_get_G_nnz(Constr* c)
     int CONSTR_get_J_nnz(Constr* c)
+    int* CONSTR_get_H_nnz(Constr* c)
+    int CONSTR_get_H_nnz_size(Constr* c)
     int CONSTR_get_A_row(Constr* c)
     int CONSTR_get_G_row(Constr* c)
     int CONSTR_get_J_row(Constr* c)
@@ -34,9 +37,11 @@ cdef extern from "pfnet/constr.h":
     Vec* CONSTR_get_u(Constr* c)
     Vec* CONSTR_get_l_extra_vars(Constr* c)
     Vec* CONSTR_get_u_extra_vars(Constr* c)
+    Vec* CONSTR_get_init_extra_vars(Constr* c)
     Mat* CONSTR_get_G(Constr* c)
     Mat* CONSTR_get_H_single(Constr* c, int i)
     Mat* CONSTR_get_H_combined(Constr* c)
+    int CONSTR_get_H_array_size(Constr* c)
     int CONSTR_get_type(Constr* c)
     Constr* CONSTR_get_next(Constr* c)
     void CONSTR_init(Constr* c)
@@ -67,6 +72,7 @@ cdef extern from "pfnet/constr.h":
     void CONSTR_set_G(Constr* c, Mat* G)
     void CONSTR_set_f(Constr* c, Vec* f)
     void CONSTR_set_J(Constr* c, Mat* J)
+    void CONSTR_set_H_single(Constr* c, int i, Mat* m)
 
     void CONSTR_set_func_init(Constr* c, void (*func)(Constr* c))
     void CONSTR_set_func_count_step(Constr* c, void (*func)(Constr* c, Branch* br, int t))

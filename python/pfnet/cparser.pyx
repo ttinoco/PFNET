@@ -54,7 +54,7 @@ cdef class ParserBase:
         
         pass
 
-    def parse(self,filename,num_periods=1):
+    def parse(self,filename,num_periods=None):
         """
         Parsers data file.
         
@@ -68,6 +68,8 @@ cdef class ParserBase:
         net : :class:`Network <pfnet.Network>`
         """
 
+        if num_periods is None:
+            num_periods = 0 # format-specific parser will use its default
         filename = filename.encode('UTF-8')
         cdef cparser.Net* net = cparser.PARSER_parse(self._c_parser,filename,num_periods)
         if cparser.PARSER_has_error(self._c_parser):
@@ -135,6 +137,8 @@ cdef class Parser(ParserBase):
             self._c_parser = cparser.ART_PARSER_new()
         elif ext == 'raw':
             self._c_parser = cparser.RAW_PARSER_new()
+        elif ext == 'json':
+            self._c_parser = cparser.JSON_PARSER_new()
         else:
             raise ParserError('invalid extension')
 
@@ -180,6 +184,20 @@ cdef class ParserART(ParserBase):
     def __cinit__(self):
         
         self._c_parser = cparser.ART_PARSER_new()
+        self._alloc = True
+
+cdef class ParserJSON(ParserBase):
+
+    def __init__(self):
+        """
+        JSON parser class.
+        """
+    
+        pass
+        
+    def __cinit__(self):
+        
+        self._c_parser = cparser.JSON_PARSER_new()
         self._alloc = True
 
 cdef class CustomParser(ParserBase):

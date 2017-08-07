@@ -31,6 +31,7 @@ Parser
    :members: 
 
 .. autoclass:: pfnet.Parser
+.. autoclass:: pfnet.ParserJSON
 .. autoclass:: pfnet.ParserMAT
 .. autoclass:: pfnet.ParserART
 .. autoclass:: pfnet.ParserRAW
@@ -525,12 +526,3 @@ Problem Class
 .. autoclass:: pfnet.Problem
    :members:
    :exclude-members: add_heuristic, apply_heuristics
-
-.. _ref_papers:
-
-Papers
-======
-
-.. [DS2017] D\. Shchetinin, T\. Tinoco De Rubira, G\. Hug, *Conservative Linear Line Flow Constraints for AC Optimal Power Flow*, IEEE PES Powertech Conference, June 2017.
-
-.. [TTR2015] T\. Tinoco De Rubira, *Numerical Optimization and Modeling Techniques for Power System Operations and Planning*. PhD thesis, Stanford University, March 2015.

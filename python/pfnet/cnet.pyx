@@ -771,6 +771,14 @@ cdef class Network:
                 'load_P_vio': self.load_P_vio,
                 'num_actions': self.num_actions}
 
+    property json_string:
+        """ JSON string (string). """
+        def __get__(self): 
+            cdef char* json_string = cnet.NET_get_json_string(self._c_net)
+            s = json_string.decode('UTF-8')
+            free(json_string)
+            return s
+
     def has_error(self):
         """
         Indicates whether the network has the error flag set due to an
@@ -971,9 +979,15 @@ cdef class Network:
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if values is not None else NULL
         cnet.NET_update_properties(self._c_net,v)
         
-    def propogate_data_in_time(self):
-        """ Propogates data from the first period through time. """
-        cnet.NET_propagate_data_in_time(self._c_net)
+    def propogate_data_in_time(self, start, end):
+        """ Propogates data from the first period through time. 
+        
+        Parameters
+        ----------
+        start : int
+        end : int
+        """
+        cnet.NET_propagate_data_in_time(self._c_net, start, end)
 
     def update_set_points(self):
         """

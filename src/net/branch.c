@@ -11,6 +11,7 @@
 #include <pfnet/branch.h>
 #include <pfnet/bus.h>
 #include <pfnet/array.h>
+#include <pfnet/json_macros.h>
 
 // Branch
 struct Branch {
@@ -757,6 +758,61 @@ Vec* BRANCH_get_var_indices(void* vbr, unsigned char var, int t_start, int t_end
   return indices;
 }
 
+char* BRANCH_get_json_string(Branch* branch, char* output) {
+
+  // Local variables
+  char temp[BRANCH_BUFFER_SIZE];
+  char* output_start;
+  BOOL resize;
+
+  // No branch
+  if (!branch)
+    return NULL;
+
+  // Output
+  if (output)
+    resize = FALSE;
+  else {
+    output = (char*)malloc(sizeof(char)*BRANCH_BUFFER_SIZE*BRANCH_NUM_JSON_FIELDS*branch->num_periods);
+    resize = TRUE;
+  }
+  output_start = output;
+  
+  // Write
+  JSON_start(output);
+  JSON_int(temp,output,"index",branch->index,FALSE);
+  JSON_int(temp,output,"type",branch->type,FALSE);
+  JSON_int(temp,output,"num_periods",branch->num_periods,FALSE);
+  JSON_obj(temp,output,"bus_k",branch->bus_k,BUS_get_index,FALSE);
+  JSON_obj(temp,output,"bus_m",branch->bus_m,BUS_get_index,FALSE);
+  JSON_obj(temp,output,"reg_bus",branch->reg_bus,BUS_get_index,FALSE);
+  JSON_float(temp,output,"g",branch->g,FALSE);
+  JSON_float(temp,output,"g_k",branch->g_k,FALSE);
+  JSON_float(temp,output,"g_m",branch->g_m,FALSE);
+  JSON_float(temp,output,"b",branch->b,FALSE);
+  JSON_float(temp,output,"b_k",branch->b_k,FALSE);
+  JSON_float(temp,output,"b_m",branch->b_m,FALSE);
+  JSON_array_float(temp,output,"ratio",branch->ratio,branch->num_periods,FALSE);
+  JSON_float(temp,output,"ratio_max",branch->ratio_max,FALSE);
+  JSON_float(temp,output,"ratio_min",branch->ratio_min,FALSE);
+  JSON_array_float(temp,output,"phase",branch->phase,branch->num_periods,FALSE);
+  JSON_float(temp,output,"phase_max",branch->phase_max,FALSE);
+  JSON_float(temp,output,"phase_min",branch->phase_min,FALSE);
+  JSON_float(temp,output,"ratingA",branch->ratingA,FALSE);
+  JSON_float(temp,output,"ratingB",branch->ratingB,FALSE);
+  JSON_float(temp,output,"ratingC",branch->ratingC,FALSE);
+  JSON_bool(temp,output,"outage",branch->outage,FALSE);
+  JSON_bool(temp,output,"pos_ratio_v_sens",branch->pos_ratio_v_sens,TRUE);
+  JSON_end(output);
+  
+  // Resize
+  if (resize)
+    output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
+
+  // Return
+  return output;
+}
+
 BOOL BRANCH_has_pos_ratio_v_sens(Branch* branch) {
   if (branch)
     return branch->pos_ratio_v_sens;
@@ -1187,12 +1243,16 @@ void BRANCH_show(Branch* br, int t) {
 	 br->type);
 }
 
-void BRANCH_propagate_data_in_time(Branch* br) {
+void BRANCH_propagate_data_in_time(Branch* br, int start, int end) {
   int t;
   if (br) {
-    for (t = 1; t < br->num_periods; t++) {
-      br->ratio[t] = br->ratio[0];
-      br->phase[t] = br->phase[0];
+    if (start < 0)
+      start = 0;
+    if (end > br->num_periods)
+      end = br->num_periods;
+    for (t = start+1; t < end; t++) {
+      br->ratio[t] = br->ratio[start];
+      br->phase[t] = br->phase[start];
     }
   }
 }

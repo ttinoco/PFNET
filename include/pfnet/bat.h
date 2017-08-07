@@ -35,6 +35,14 @@
 #define BAT_PROP_ANY 0x00     /**< @brief Property: any */
 /** @} */
 
+// Constants
+/** \defgroup bat_const Bat Constants
+ *  @{
+ */
+#define BAT_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
+#define BAT_NUM_JSON_FIELDS 15 /**< @brief Constant: max number of json fields */
+/** @} */
+
 // Battery
 typedef struct Bat Bat;
 
@@ -46,7 +54,7 @@ void* BAT_array_get(void* bat_array, int index);
 Bat* BAT_array_new(int size, int num_periods);
 void BAT_array_show(Bat* bat_array, int size, int t);
 void BAT_clear_flags(Bat* bat, char flag_type);
-void BAT_propagate_data_in_time(Bat* bat);
+void BAT_propagate_data_in_time(Bat* bat, int start, int end);
 int BAT_get_num_periods(Bat* bat);
 char BAT_get_obj_type(void* bat);
 Bus* BAT_get_bus(Bat* bat);
@@ -67,6 +75,7 @@ REAL BAT_get_eta_d(Bat* bat);
 void BAT_get_var_values(Bat* bat, Vec* values, int code);
 int BAT_get_num_vars(void* bat, unsigned char var, int t_start, int t_end);
 Vec* BAT_get_var_indices(void* bat, unsigned char var, int t_start, int t_end);
+char* BAT_get_json_string(Bat* bat, char* output);
 BOOL BAT_has_flags(void* bat, char flag_type, unsigned char mask);
 BOOL BAT_has_properties(void* bat, char prop);
 void BAT_init(Bat* bat, int num_periods);

@@ -25,6 +25,8 @@ import tempfile
 
 from scipy.sparse import coo_matrix
 
+from libc.stdlib cimport free
+
 np.import_array()
 
 # Information
@@ -32,7 +34,8 @@ np.import_array()
 
 info = {'graphviz': bool(cgraph.HAVE_GRAPHVIZ),
         'raw_parser': bool(cparser_raw.HAVE_RAW_PARSER),
-        'line_flow': bool(cline_flow.HAVE_LINE_FLOW)}
+        'line_flow': bool(cline_flow.HAVE_LINE_FLOW),
+        'version': str(cconstants.VERSION.decode('UTF-8'))}
 
 # Constants
 ###########
@@ -85,6 +88,20 @@ cdef BoolArray(char* a, int size, owndata=False):
         return arr
     else:
         return np.zeros(0,dtype='bool')
+
+# Int array
+###########
+
+cdef IntArray(int* a, int size, owndata=False):
+    cdef np.npy_intp shape[1]
+    if a is not NULL:
+        shape[0] = <np.npy_intp>size
+        arr = np.PyArray_SimpleNewFromData(1,shape,np.NPY_INT,a)
+        if owndata:
+            PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
+        return arr
+    else:
+        return np.zeros(0,dtype='int')
 
 # Matrix
 ########

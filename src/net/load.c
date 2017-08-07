@@ -11,6 +11,7 @@
 #include <pfnet/load.h>
 #include <pfnet/bus.h>
 #include <pfnet/array.h>
+#include <pfnet/json_macros.h>
 
 struct Load {
 
@@ -383,6 +384,49 @@ Vec* LOAD_get_var_indices(void* vload, unsigned char var, int t_start, int t_end
   return indices;
 }
 
+char* LOAD_get_json_string(Load* load, char* output) {
+
+  // Local variables
+  char temp[LOAD_BUFFER_SIZE];
+  char* output_start;
+  BOOL resize;
+
+  // No load
+  if (!load)
+    return NULL;
+
+  // Output
+  if (output)
+    resize = FALSE;
+  else {
+    output = (char*)malloc(sizeof(char)*LOAD_BUFFER_SIZE*LOAD_NUM_JSON_FIELDS*load->num_periods);
+    resize = TRUE;
+  }
+  output_start = output;
+  
+  // Write
+  JSON_start(output);
+  JSON_int(temp,output,"index",load->index,FALSE);
+  JSON_obj(temp,output,"bus",load->bus,BUS_get_index,FALSE);
+  JSON_int(temp,output,"num_periods",load->num_periods,FALSE);
+  JSON_array_float(temp,output,"P",load->P,load->num_periods,FALSE);
+  JSON_array_float(temp,output,"P_max",load->P_max,load->num_periods,FALSE);
+  JSON_array_float(temp,output,"P_min",load->P_min,load->num_periods,FALSE);
+  JSON_array_float(temp,output,"Q",load->Q,load->num_periods,FALSE);
+  JSON_float(temp,output,"target_power_factor",load->target_power_factor,FALSE);
+  JSON_float(temp,output,"util_coeff_Q0",load->util_coeff_Q0,FALSE);
+  JSON_float(temp,output,"util_coeff_Q1",load->util_coeff_Q1,FALSE);
+  JSON_float(temp,output,"util_coeff_Q2",load->util_coeff_Q2,TRUE);
+  JSON_end(output);
+  
+  // Resize
+  if (resize)
+    output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
+
+  // Return
+  return output;
+}
+
 BOOL LOAD_has_flags(void* vload, char flag_type, unsigned char mask) {
   Load* load = (Load*)vload;
   if (load) {
@@ -618,14 +662,18 @@ void LOAD_show(Load* load, int t) {
 	   load->index);
 }
 
-void LOAD_propagate_data_in_time(Load* load) {
+void LOAD_propagate_data_in_time(Load* load, int start, int end) {
   int t;
   if (load) {
-    for (t = 1; t < load->num_periods; t++) {
-      load->P[t] = load->P[0];
-      load->P_max[t] = load->P_max[0];
-      load->P_min[t] = load->P_min[0];
-      load->Q[t] = load->Q[0];
+    if (start < 0)
+      start = 0;
+    if (end > load->num_periods)
+      end = load->num_periods;
+    for (t = start+1; t < end; t++) {
+      load->P[t] = load->P[start];
+      load->P_max[t] = load->P_max[start];
+      load->P_min[t] = load->P_min[start];
+      load->Q[t] = load->Q[start];
     }
   }
 }

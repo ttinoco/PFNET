@@ -179,9 +179,7 @@ void CONSTR_REG_TRAN_allocate(Constr* c) {
   int A_row;
   int J_row; 
   int* H_nnz;
-  Mat* H_array;
   Mat* H;
-  int H_comb_nnz;
   int num_vars;
   int num_extra_vars;
   int i;
@@ -194,9 +192,10 @@ void CONSTR_REG_TRAN_allocate(Constr* c) {
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
   num_extra_vars = CONSTR_get_num_extra_vars(c);
 
-  // Extra var limits
+  // Extra vars
   CONSTR_set_l_extra_vars(c,VEC_new(num_extra_vars));
   CONSTR_set_u_extra_vars(c,VEC_new(num_extra_vars));
+  CONSTR_set_init_extra_vars(c,VEC_new(num_extra_vars));
 
   // G u l
   CONSTR_set_G(c,MAT_new(0,num_vars+num_extra_vars,0));
@@ -220,24 +219,16 @@ void CONSTR_REG_TRAN_allocate(Constr* c) {
 			 J_nnz));                 // nnz
   
   // H
-  H_comb_nnz = 0;
-  H_array = MAT_array_new(J_row);
-  CONSTR_set_H_array(c,H_array,J_row);
+  CONSTR_allocate_H_array(c,J_row);
   for (i = 0; i < J_row; i++) {
-    H = MAT_array_get(H_array,i);
+    H = CONSTR_get_H_single(c,i);
     MAT_set_nnz(H,H_nnz[i]);
     MAT_set_size1(H,num_vars+num_extra_vars);
     MAT_set_size2(H,num_vars+num_extra_vars);
     MAT_set_row_array(H,(int*)calloc(H_nnz[i],sizeof(int)));
     MAT_set_col_array(H,(int*)calloc(H_nnz[i],sizeof(int)));
     MAT_set_data_array(H,(REAL*)malloc(H_nnz[i]*sizeof(REAL)));
-    H_comb_nnz += H_nnz[i];
   }
-
-  // H combined
-  CONSTR_set_H_combined(c,MAT_new(num_vars+num_extra_vars, // size1 (rows)
-				  num_vars+num_extra_vars, // size2 (cols)
-				  H_comb_nnz));            // nnz
 }
 
 void CONSTR_REG_TRAN_analyze_step(Constr* c, Branch* br, int tau) {
@@ -252,19 +243,11 @@ void CONSTR_REG_TRAN_analyze_step(Constr* c, Branch* br, int tau) {
   Mat* Hvmax;
   Mat* Htmin;
   Mat* Htmax;
-  int* Hi;
-  int* Hj;
-  int* Hi_comb;
-  int* Hj_comb;
   int* A_nnz;
   int* J_nnz;
   int* A_row;
   int* J_row;
   int* H_nnz;
-  int H_nnz_comb;
-  int k;
-  int m;
-  int temp;
   int index_yz_vmin;
   int index_yz_vmax;
   int index_vvio_tmax;
@@ -275,11 +258,9 @@ void CONSTR_REG_TRAN_analyze_step(Constr* c, Branch* br, int tau) {
   int index_t;
   int index_y;
   int index_z;
-  int T;
   int num_vars;
 
-  // Number of periods and vars
-  T = BRANCH_get_num_periods(br);
+  // Number of vars
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
 
   // Constr data
@@ -294,7 +275,7 @@ void CONSTR_REG_TRAN_analyze_step(Constr* c, Branch* br, int tau) {
   H_nnz = CONSTR_get_H_nnz(c);
 
   // Check pointers
-  if (!A_nnz || !J_nnz || !A_row || !J_row || !H_nnz)
+  if (!A_nnz || !J_nnz || !A_row || !H_array || !J_row || !H_nnz)
     return;
 
   // Check outage
@@ -512,29 +493,6 @@ void CONSTR_REG_TRAN_analyze_step(Constr* c, Branch* br, int tau) {
     (*J_row)++; // CompVmax
     (*J_row)++; // CompTmax
     (*J_row)++; // CompTmin
-  }
-
-  // Done
-  if ((tau == T-1) && (BRANCH_get_index(br) == NET_get_num_branches(CONSTR_get_network(c))-1)) {
-    
-    // Ensure lower triangular and save struct of H comb
-    H_nnz_comb = 0;
-    Hi_comb = MAT_get_row_array(CONSTR_get_H_combined(c));
-    Hj_comb = MAT_get_col_array(CONSTR_get_H_combined(c));
-    for (k = 0; k < CONSTR_get_H_array_size(c); k++) {
-      Hi = MAT_get_row_array(MAT_array_get(H_array,k));
-      Hj = MAT_get_col_array(MAT_array_get(H_array,k));
-      for (m = 0; m < MAT_get_nnz(MAT_array_get(H_array,k)); m++) {
-	if (Hi[m] < Hj[m]) {
-	  temp = Hi[m];
-	  Hi[m] = Hj[m];
-	  Hj[m] = temp;
-	}
-	Hi_comb[H_nnz_comb] = Hi[m];
-	Hj_comb[H_nnz_comb] = Hj[m];
-	H_nnz_comb++;
-      }
-    }
   }
 }
 

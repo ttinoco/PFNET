@@ -20,6 +20,7 @@
 #include "parser_MAT.h"
 #include "parser_ART.h"
 #include "parser_RAW.h"
+#include "parser_JSON.h"
 
 // Functions
 #include "func_GEN_COST.h"

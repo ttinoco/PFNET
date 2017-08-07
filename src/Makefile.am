@@ -45,13 +45,15 @@ parser_src = 	parser/parser.c \
 		parser/parser_ART.c \
 		parser/parser_CSV.c \
 		parser/parser_MAT.c \
-		parser/parser_RAW.c
+		parser/parser_RAW.c \
+		parser/parser_JSON.c
 
 parser_hdr = 	$(inc_path)/parser.h \
 		$(inc_path)/parser_ART.h \
 		$(inc_path)/parser_CSV.h \
 		$(inc_path)/parser_MAT.h \
-		$(inc_path)/parser_RAW.h
+		$(inc_path)/parser_RAW.h \
+		$(inc_path)/parser_JSON.h
 
 problem_src = 	problem/constr.c \
 		problem/func.c \
@@ -125,9 +127,12 @@ problem_func_hdr = 	$(inc_path)/func_GEN_COST.h \
 			$(inc_path)/func_SLIM_VMAG.h \
 			$(inc_path)/func_SP_CONTROLS.h
 
-utils_src = 	utils/utils.c 
+utils_src = 	utils/utils.c \
+		utils/json.c
 
-utils_hdr = 	$(inc_path)/utils.h
+utils_hdr = 	$(inc_path)/utils.h \
+		$(inc_path)/json_macros.h \
+		$(inc_path)/json.h
 
 other_hdr = 	$(inc_path)/array.h $(inc_path)/constants.h $(inc_path)/flag_types.h \
 		$(inc_path)/list.h $(inc_path)/obj_types.h $(inc_path)/types.h \

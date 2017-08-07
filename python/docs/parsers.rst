@@ -11,7 +11,7 @@ This section describes the different data parsers available in PFNET and the sup
 Overview
 ========
 
-Parsers in PFNET are subclasses of the :class:`ParserBase <pfnet.ParserBase>` class. They can be used to read a power network data file and create a :class:`Power Network <pfnet.Network>`. For convenience, a format-specific parser can be instantiated from the :class:`Parser <pfnet.Parser>` class by specifying the file extension or by specifying a sample file name::
+Parsers in PFNET are subclasses of the :class:`ParserBase <pfnet.ParserBase>` class. They can be used to read a power network data file and create a :class:`Power Network <pfnet.Network>`. For convenience, a format-specific parser can be instantiated from the :class:`Parser <pfnet.Parser>` class by specifying the file extension or a sample file name::
 
   >>> import pfnet
   >>> parser = pfnet.Parser("mat")
@@ -19,6 +19,22 @@ Parsers in PFNET are subclasses of the :class:`ParserBase <pfnet.ParserBase>` cl
 
 In this example, is it assumed that the Python interpreter was started from the ``data`` directory of the PFNET library, where the sample case ``ieee14.mat`` is located.
 
+.. _parsers_json:
+
+JSON Data Files
+===============
+
+PFNET networks can be constructed from data files in the widely-popular lightweight data-interchange format `JSON`_. These network data files have extension ``.json`` and parsers for them can be instantiated from the class :class:`ParserJSON <pfnet.ParserJSON>`. These JSON parsers also allow writing a given network to file, as the example below shows::
+
+  >>> pfnet.ParserJSON().write(network,"new_network.json")
+
+For creating, visualizing, or modifying these JSON network files, online editors such as the following may be used for convenience:
+
+* `<http://jsoneditoronline.org>`_
+* `<http://www.cleancss.com/json-editor>`_
+
+In the top-level object of the JSON data, *i.e.*, the network, the field ``version`` indicates the PFNET version associated with the data.    
+  
 .. _parsers_mat:
 
 MATPOWER Data Files
@@ -52,3 +68,4 @@ If built with raw parsing capabilities, PFNET can construct power networks from 
 .. _ARTERE: http://www.montefiore.ulg.ac.be/~vct/software.html
 .. _MATPOWER: http://www.pserc.cornell.edu//matpower/
 .. _MATLAB: http://www.mathworks.com/products/matlab/
+.. _JSON: http://www.json.org/

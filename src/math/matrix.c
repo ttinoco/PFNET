@@ -150,6 +150,13 @@ REAL* MAT_get_data_array(Mat* m) {
     return NULL;  
 }
 
+BOOL MAT_get_owns_rowcol(Mat* m) {
+  if (m)
+    return m->owns_rowcol;
+  else
+    return TRUE;
+}
+
 void MAT_init(Mat* m) {
   if (m) {
     m->size1 = 0;

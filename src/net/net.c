@@ -10,6 +10,8 @@
 
 #include <pfnet/net.h>
 #include <pfnet/array.h>
+#include <pfnet/json_macros.h>
+#include <pfnet/pfnet_config.h>
 
 struct Net {
 
@@ -1759,6 +1761,53 @@ REAL NET_get_vargen_corr_value(Net* net) {
     return 0;
 }
 
+char* NET_get_json_string(Net* net) {
+
+   // Local variables
+  char temp[NET_BUFFER_SIZE];
+  char* output;
+  char* output_start;
+  int max_size;
+
+  // No network
+  if (!net)
+    return NULL;
+
+  // Max size
+  max_size = (2*NET_BUFFER_SIZE +
+	      BUS_BUFFER_SIZE*BUS_NUM_JSON_FIELDS*net->num_buses +
+	      BRANCH_BUFFER_SIZE*BRANCH_NUM_JSON_FIELDS*net->num_branches +
+	      GEN_BUFFER_SIZE*GEN_NUM_JSON_FIELDS*net->num_gens +
+	      LOAD_BUFFER_SIZE*LOAD_NUM_JSON_FIELDS*net->num_loads +
+	      SHUNT_BUFFER_SIZE*SHUNT_NUM_JSON_FIELDS*net->num_shunts +
+	      VARGEN_BUFFER_SIZE*VARGEN_NUM_JSON_FIELDS*net->num_vargens +
+	      BAT_BUFFER_SIZE*BAT_NUM_JSON_FIELDS*net->num_bats)*net->num_periods;
+
+  // Output
+  output = (char*)malloc(sizeof(char)*max_size);
+  output_start = output;
+  
+  // Write
+  JSON_start(output);
+  JSON_int(temp,output,"num_periods",net->num_periods,FALSE);
+  JSON_float(temp,output,"base_power",net->base_power,FALSE);
+  JSON_str(temp,output,"version",VERSION,FALSE);
+  JSON_array_json(temp,output,"buses",net->bus,BUS_array_get,net->num_buses,BUS_get_json_string,FALSE);
+  JSON_array_json(temp,output,"branches",net->branch,BRANCH_array_get,net->num_branches,BRANCH_get_json_string,FALSE);
+  JSON_array_json(temp,output,"generators",net->gen,GEN_array_get,net->num_gens,GEN_get_json_string,FALSE);
+  JSON_array_json(temp,output,"loads",net->load,LOAD_array_get,net->num_loads,LOAD_get_json_string,FALSE);
+  JSON_array_json(temp,output,"shunts",net->shunt,SHUNT_array_get,net->num_shunts,SHUNT_get_json_string,FALSE);
+  JSON_array_json(temp,output,"var_generators",net->vargen,VARGEN_array_get,net->num_vargens,VARGEN_get_json_string,FALSE);
+  JSON_array_json(temp,output,"batteries",net->bat,BAT_array_get,net->num_bats,BAT_get_json_string,TRUE);
+  JSON_end(output);
+  
+  // Resize
+  output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
+
+  // Return
+  return output;
+}
+
 BOOL NET_has_error(Net* net) {
   if (net)
     return net->error_flag;
@@ -2685,7 +2734,7 @@ void NET_update_set_points(Net* net) {
   }
 }
 
-void NET_propagate_data_in_time(Net* net) {
+void NET_propagate_data_in_time(Net* net, int start, int end) {
 
   // Local variables
   int i;
@@ -2696,29 +2745,29 @@ void NET_propagate_data_in_time(Net* net) {
 
   // Buses
   for (i = 0; i < net->num_buses; i++)
-    BUS_propagate_data_in_time(BUS_array_get(net->bus,i));
+    BUS_propagate_data_in_time(BUS_array_get(net->bus,i),start,end);
 
   // Branches
   for (i = 0; i < net->num_branches; i++)
-    BRANCH_propagate_data_in_time(BRANCH_array_get(net->branch,i));
+    BRANCH_propagate_data_in_time(BRANCH_array_get(net->branch,i),start,end);
   
   // Generators
   for (i = 0; i < net->num_gens; i++)
-    GEN_propagate_data_in_time(GEN_array_get(net->gen,i));
+    GEN_propagate_data_in_time(GEN_array_get(net->gen,i),start,end);
 
   // Loads
   for (i = 0; i < net->num_loads; i++)
-    LOAD_propagate_data_in_time(LOAD_array_get(net->load,i));
+    LOAD_propagate_data_in_time(LOAD_array_get(net->load,i),start,end);
 
   // Vargens
   for (i = 0; i < net->num_vargens; i++)
-    VARGEN_propagate_data_in_time(VARGEN_array_get(net->vargen,i));
+    VARGEN_propagate_data_in_time(VARGEN_array_get(net->vargen,i),start,end);
 
   // Shunts
   for (i = 0; i < net->num_shunts; i++)
-    SHUNT_propagate_data_in_time(SHUNT_array_get(net->shunt,i));
+    SHUNT_propagate_data_in_time(SHUNT_array_get(net->shunt,i),start,end);
 
   // Batteries
   for (i = 0; i < net->num_bats; i++)
-    BAT_propagate_data_in_time(BAT_array_get(net->bat,i));
+    BAT_propagate_data_in_time(BAT_array_get(net->bat,i),start,end);
 }

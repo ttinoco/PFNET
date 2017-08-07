@@ -11,6 +11,7 @@
 #include <pfnet/vargen.h>
 #include <pfnet/bus.h>
 #include <pfnet/array.h>
+#include <pfnet/json_macros.h>
 
 struct Vargen {
 
@@ -21,8 +22,8 @@ struct Vargen {
   int num_periods;   /**< @brief Number of time periods. */
 
   // Properties
-  char name[VARGEN_NAME_BUFFER_SIZE]; /**< @brief Variable generator name */
-  char type;                          /**< @brief Variable generator type */
+  char name[VARGEN_BUFFER_SIZE]; /**< @brief Variable generator name */
+  char type;                     /**< @brief Variable generator type */
   
   // Flags
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
@@ -85,7 +86,7 @@ Vargen* VARGEN_array_new(int size, int num_periods) {
     for (i = 0; i < size; i++) {
       VARGEN_init(&(gen_array[i]),num_periods);
       VARGEN_set_index(&(gen_array[i]),i);
-      snprintf(gen_array[i].name,(size_t)(VARGEN_NAME_BUFFER_SIZE-1),"VARGEN %d",i+1);
+      snprintf(gen_array[i].name,(size_t)(VARGEN_BUFFER_SIZE-1),"VARGEN %d",i+1);
     }
     return gen_array;
   }
@@ -343,6 +344,51 @@ Vec* VARGEN_get_var_indices(void* vgen, unsigned char var, int t_start, int t_en
   return indices;
 }
 
+char* VARGEN_get_json_string(Vargen* gen, char* output) {
+
+  // Local variables
+  char temp[VARGEN_BUFFER_SIZE];
+  char* output_start;
+  BOOL resize;  
+
+  // No gen
+  if (!gen)
+    return NULL;
+
+  // Output
+  if (output)
+    resize = FALSE;
+  else {
+    output = (char*)malloc(sizeof(char)*VARGEN_BUFFER_SIZE*VARGEN_NUM_JSON_FIELDS*gen->num_periods);
+    resize = TRUE;
+  }
+  output_start = output;
+
+  // Write
+  JSON_start(output);
+  JSON_int(temp,output,"index",gen->index,FALSE);
+  JSON_obj(temp,output,"bus",gen->bus,BUS_get_index,FALSE);
+  JSON_int(temp,output,"num_periods",gen->num_periods,FALSE);
+  JSON_str(temp,output,"name",gen->name,FALSE);
+  JSON_array_float(temp,output,"P",gen->P,gen->num_periods,FALSE);
+  JSON_array_float(temp,output,"P_ava",gen->P_ava,gen->num_periods,FALSE)
+  JSON_float(temp,output,"P_max",gen->P_max,FALSE);
+  JSON_float(temp,output,"P_min",gen->P_min,FALSE);
+  JSON_array_float(temp,output,"P_std",gen->P_std,gen->num_periods,FALSE);
+  JSON_array_float(temp,output,"Q",gen->Q,gen->num_periods,FALSE);
+  JSON_float(temp,output,"Q_max",gen->Q_max,FALSE);
+  JSON_float(temp,output,"Q_min",gen->Q_min,TRUE);
+  JSON_end(output);
+  
+  // Resize
+  if (resize)
+    output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
+
+  // Return
+  return output;
+}
+
+
 BOOL VARGEN_has_flags(void* vgen, char flag_type, unsigned char mask) {
   Vargen* gen = (Vargen*)vgen;
   if (gen) {
@@ -401,7 +447,7 @@ void VARGEN_init(Vargen* gen, int num_periods) {
 
   gen->bus = NULL;
   gen->type = VARGEN_TYPE_WIND;
-  ARRAY_clear(gen->name,char,VARGEN_NAME_BUFFER_SIZE);
+  ARRAY_clear(gen->name,char,VARGEN_BUFFER_SIZE);
   gen->fixed = 0x00;
   gen->bounded = 0x00;
   gen->sparse = 0x00;
@@ -466,7 +512,7 @@ Vargen* VARGEN_new(int num_periods) {
 
 void VARGEN_set_name(Vargen* gen, char* name) {
   if (gen)
-    strncpy(gen->name,name,(size_t)(VARGEN_NAME_BUFFER_SIZE-1));
+    strncpy(gen->name,name,(size_t)(VARGEN_BUFFER_SIZE-1));
 }
 
 void VARGEN_set_bus(Vargen* gen, Bus* bus) {
@@ -587,14 +633,18 @@ void VARGEN_show(Vargen* gen, int t) {
 	 VARGEN_is_wind(gen));
 }
 
-void VARGEN_propagate_data_in_time(Vargen* gen) {
+void VARGEN_propagate_data_in_time(Vargen* gen, int start, int end) {
   int t;
   if (gen) {
-    for (t = 1; t < gen->num_periods; t++) {
-      gen->P[t] = gen->P[0];
-      gen->P_ava[t] = gen->P_ava[0];
-      gen->P_std[t] = gen->P_std[0];
-      gen->Q[t] = gen->Q[0];
+    if (start < 0)
+      start = 0;
+    if (end > gen->num_periods)
+      end = gen->num_periods;
+    for (t = start+1; t < end; t++) {
+      gen->P[t] = gen->P[start];
+      gen->P_ava[t] = gen->P_ava[start];
+      gen->P_std[t] = gen->P_std[start];
+      gen->Q[t] = gen->Q[start];
     }
   }
 }

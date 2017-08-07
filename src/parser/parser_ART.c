@@ -338,6 +338,10 @@ Net* ART_PARSER_parse(Parser* p, char* filename, int num_periods) {
   if (PARSER_has_error(p))
     return NULL;
 
+  // Num periods
+  if (num_periods <= 0)
+    num_periods = 1;
+
   // Network
   net = NET_new(num_periods);
   ART_PARSER_load(parser,net);
@@ -345,6 +349,9 @@ Net* ART_PARSER_parse(Parser* p, char* filename, int num_periods) {
   // Check error
   if (parser->error_flag)
     PARSER_set_error(p,parser->error_string);
+
+  // Propagate data
+  NET_propagate_data_in_time(net,0,num_periods);
  
   // Return
   return net;

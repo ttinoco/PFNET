@@ -41,6 +41,14 @@
 #define GEN_PROP_P_ADJUST 0x20  /**< @brief Property: P adjustable (Pmin < Pmax) */
 /** @} */
 
+// Constants
+/** \defgroup gen_const Gen Constants
+ *  @{
+ */
+#define GEN_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
+#define GEN_NUM_JSON_FIELDS 20 /**< @brief Constant: max number of json fields */
+/** @} */
+
 // Generator
 typedef struct Gen Gen;
 
@@ -54,7 +62,7 @@ Gen* GEN_array_new(int size, int num_periods);
 void GEN_array_show(Gen* gen_array, int size, int t);
 void GEN_clear_sensitivities(Gen* gen);
 void GEN_clear_flags(Gen* gen, char flag_type);
-void GEN_propagate_data_in_time(Gen* gen);
+void GEN_propagate_data_in_time(Gen* gen, int start, int end);
 int GEN_get_num_periods(Gen* gen);
 REAL GEN_get_sens_P_u_bound(Gen* gen, int t);
 REAL GEN_get_sens_P_l_bound(Gen* gen, int t);
@@ -82,6 +90,7 @@ REAL GEN_get_Q_min(Gen* gen);
 void GEN_get_var_values(Gen* gen, Vec* values, int code);
 int GEN_get_num_vars(void* gen, unsigned char var, int t_start, int t_end);
 Vec* GEN_get_var_indices(void* gen, unsigned char var, int t_start, int t_end);
+char* GEN_get_json_string(Gen* gen, char* output);
 BOOL GEN_has_flags(void* gen, char flag_type, unsigned char mask);
 BOOL GEN_has_properties(void* gen, char prop);
 void GEN_init(Gen* gen, int num_periods);

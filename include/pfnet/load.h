@@ -39,6 +39,14 @@
 #define LOAD_PROP_P_ADJUST 0x1 /**< @brief Property: P adjustable (Pmin < Pmax) */
 /** @} */
 
+// Constants
+/** \defgroup load_const Load Constants
+ *  @{
+ */
+#define LOAD_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
+#define LOAD_NUM_JSON_FIELDS 15 /**< @brief Constant: max number of json fields */
+/** @} */
+
 // Load
 typedef struct Load Load;
 
@@ -51,7 +59,7 @@ Load* LOAD_array_new(int size, int num_periods);
 void LOAD_array_show(Load* load_array, int num, int t);
 void LOAD_clear_sensitivities(Load* load); 
 void LOAD_clear_flags(Load* load, char flag_type);
-void LOAD_propagate_data_in_time(Load* load);
+void LOAD_propagate_data_in_time(Load* load, int start, int end);
 int LOAD_get_num_periods(Load* load);
 REAL LOAD_get_sens_P_u_bound(Load* load, int t);
 REAL LOAD_get_sens_P_l_bound(Load* load, int t);
@@ -75,6 +83,7 @@ REAL LOAD_get_Q(Load* load, int t);
 void LOAD_get_var_values(Load* load, Vec* values, int code);
 int LOAD_get_num_vars(void* load, unsigned char var, int t_start, int t_end);
 Vec* LOAD_get_var_indices(void* load, unsigned char var, int t_start, int t_end);
+char* LOAD_get_json_string(Load* load, char* output);
 BOOL LOAD_has_flags(void* load, char flag_type, unsigned char mask);
 BOOL LOAD_has_properties(void* load, char prop);
 void LOAD_init(Load* load, int num_periods);

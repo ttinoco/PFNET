@@ -666,12 +666,20 @@ cdef class Bus:
             cbus.BUS_set_number(self._c_ptr,num)
 
     property name:
-        """ Bus name (sting). """
+        """ Bus name (string). """
         def __get__(self):
             return cbus.BUS_get_name(self._c_ptr).decode('UTF-8')
         def __set__(self,name):
             name = name.encode('UTF-8')
             cbus.BUS_set_name(self._c_ptr,name)
+
+    property json_string:
+        """ JSON string (string). """
+        def __get__(self): 
+            cdef char* json_string = cbus.BUS_get_json_string(self._c_ptr, NULL)
+            s = json_string.decode('UTF-8')
+            free(json_string)
+            return s
 
     property degree:
         """ Bus degree (number of incident branches) (float). """

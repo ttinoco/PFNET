@@ -11,10 +11,11 @@
 #include <pfnet/bat.h>
 #include <pfnet/bus.h>
 #include <pfnet/array.h>
+#include <pfnet/json_macros.h>
 
 struct Bat {
 
-// Bus
+  // Bus
   Bus* bus;            /**< @brief Bus to which the battery is connected */
  
   // Times
@@ -361,6 +362,50 @@ Vec* BAT_get_var_indices(void* vbat, unsigned char var, int t_start, int t_end) 
   return indices;
 }
 
+char* BAT_get_json_string(Bat* bat, char* output) {
+
+  // Local variables
+  char temp[BAT_BUFFER_SIZE];
+  char* output_start;
+  BOOL resize;
+
+  // No battery
+  if (!bat)
+    return NULL;
+
+  // Output
+  if (output)
+    resize = FALSE;
+  else {
+    output = (char*)malloc(sizeof(char)*BAT_BUFFER_SIZE*BAT_NUM_JSON_FIELDS*bat->num_periods);
+    resize = TRUE;
+  }
+  output_start = output;
+
+  // Write
+  JSON_start(output);
+  JSON_int(temp,output,"index",bat->index,FALSE);
+  JSON_obj(temp,output,"bus",bat->bus,BUS_get_index,FALSE);
+  JSON_int(temp,output,"num_periods",bat->num_periods,FALSE);
+  JSON_array_float(temp,output,"P",bat->P,bat->num_periods,FALSE);
+  JSON_float(temp,output,"P_max",bat->P_max,FALSE);
+  JSON_float(temp,output,"P_min",bat->P_min,FALSE);
+  JSON_float(temp,output,"eta_c",bat->eta_c,FALSE);
+  JSON_float(temp,output,"eta_d",bat->eta_d,FALSE);
+  JSON_array_float(temp,output,"E",bat->E,bat->num_periods,FALSE);
+  JSON_float(temp,output,"E_init",bat->E_init,FALSE);
+  JSON_float(temp,output,"E_final",bat->E_final,FALSE);
+  JSON_float(temp,output,"E_max",bat->E_max,TRUE);
+  JSON_end(output);
+  
+  // Resize
+  if (resize)
+    output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
+
+  // Return
+  return output;
+}
+
 BOOL BAT_has_flags(void* vbat, char flag_type, unsigned char mask) {
   Bat* bat = (Bat*)vbat;
   if (bat) {
@@ -572,12 +617,16 @@ void BAT_show(Bat* bat, int t) {
 	   bat->index);
 }
 
-void BAT_propagate_data_in_time(Bat* bat) {
+void BAT_propagate_data_in_time(Bat* bat, int start, int end) {
   int t;
   if (bat) {
-    for (t = 1; t < bat->num_periods; t++) {
-      bat->P[t] = bat->P[0];
-      bat->E[t] = bat->E[0];
+    if (start < 0)
+      start = 0;
+    if (end > bat->num_periods)
+      end = bat->num_periods;
+    for (t = start+1; t < end; t++) {
+      bat->P[t] = bat->P[start];
+      bat->E[t] = bat->E[start];
     }
   }
 }
