@@ -65,6 +65,8 @@ char* CONSTR_get_bus_counted(Constr *c);
 int CONSTR_get_bus_counted_size(Constr* c);
 void* CONSTR_get_data(Constr* c);
 Constr* CONSTR_get_next(Constr* c);
+Mat* CONSTR_get_var_projection(Constr* c);
+Mat* CONSTR_get_extra_var_projection(Constr* c);
 void CONSTR_list_finalize_structure_of_Hessians(Constr* clist);
 void CONSTR_list_clear_error(Constr* clist);
 BOOL CONSTR_list_has_error(Constr* clist);

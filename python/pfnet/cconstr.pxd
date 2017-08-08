@@ -56,6 +56,8 @@ cdef extern from "pfnet/constr.h":
     void CONSTR_update_network(Constr* c)
     int CONSTR_get_num_extra_vars(Constr* c)
     Net* CONSTR_get_network(Constr* c)
+    Mat* CONSTR_get_var_projection(Constr* c)
+    Mat* CONSTR_get_extra_var_projection(Constr* c)
 
     void CONSTR_set_name(Constr* f, char*)
     void CONSTR_set_A_nnz(Constr* c, int nnz)

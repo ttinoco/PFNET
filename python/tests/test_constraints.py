@@ -259,6 +259,18 @@ class TestConstraints(unittest.TestCase):
                 self.assertEqual(A.col[ar[0]],load.index_P)
                 self.assertEqual(b[A.row[ar[0]]],load.P)
 
+            # Projections
+            P1 = constr.get_var_projection()
+            P2 = constr.get_extra_var_projection()
+            self.assertTrue(isinstance(P1,coo_matrix))
+            self.assertTrue(isinstance(P2,coo_matrix))
+            self.assertEqual(P1.shape[0],net.num_vars)
+            self.assertEqual(P2.shape[0],0)
+            self.assertEqual(P1.shape[1],net.num_vars)
+            self.assertEqual(P2.shape[1],net.num_vars)
+            self.assertEqual(P1.nnz,net.num_vars)
+            self.assertEqual(P2.nnz,0)
+            self.assertLess(np.linalg.norm(x0-P1*x0),1e-12)
         
         # Multiperiods
         for case in test_cases.CASES:
@@ -3938,6 +3950,20 @@ class TestConstraints(unittest.TestCase):
             # After eval
             self.assertTrue(not np.any(np.isinf(f)))
             self.assertTrue(not np.any(np.isnan(f)))
+
+            # Projections
+            P1 = constr.get_var_projection()
+            P2 = constr.get_extra_var_projection()
+            self.assertTrue(isinstance(P1,coo_matrix))
+            self.assertTrue(isinstance(P2,coo_matrix))
+            self.assertEqual(P1.shape[0],net.num_vars)
+            self.assertEqual(P2.shape[0],constr.num_extra_vars)
+            self.assertEqual(P1.shape[1],net.num_vars+constr.num_extra_vars)
+            self.assertEqual(P2.shape[1],net.num_vars+constr.num_extra_vars)
+            self.assertEqual(P1.nnz,net.num_vars)
+            self.assertEqual(P2.nnz,constr.num_extra_vars)
+            self.assertLess(np.linalg.norm(x0-P1*np.hstack((x0,y0))),1e-12)
+            self.assertLess(np.linalg.norm(y0-P2*np.hstack((x0,y0))),1e-12)
             
             # Cross check current magnitudes
             J_row = 0
@@ -4167,6 +4193,8 @@ class TestConstraints(unittest.TestCase):
                             if counter >= num_max:
                                 break
                         self.assertLess((100.*num_bad)/min([net.num_buses,num_max]),1.) # less then 1 %
+
+            
 
         # Single period
         for case in test_cases.CASES:

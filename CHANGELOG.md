@@ -11,7 +11,8 @@ Targets
 
 Unreleased
 ----------
-* Added property mask to projection operator (done).	
+* Added property mask to projection operator (done).
+* Added projection getters for network and extra vars of constraints (done).	
 
 Version 1.3.1
 -------------

@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -474,6 +474,58 @@ Constr* CONSTR_get_next(Constr* c) {
     return c->next;
   else
     return NULL;
+}
+
+Mat* CONSTR_get_var_projection(Constr* c) {
+
+  // Local variables
+  Mat* P;
+  int i;
+
+  // Check
+  if (!c)
+    return NULL;
+
+  // Allocate
+  P = MAT_new(NET_get_num_vars(c->net),
+	      NET_get_num_vars(c->net)+c->num_extra_vars,
+	      NET_get_num_vars(c->net));
+
+  // Fill
+  for (i = 0; i < MAT_get_nnz(P); i++) {
+    MAT_set_i(P,i,i);
+    MAT_set_j(P,i,i);
+    MAT_set_d(P,i,1.);
+  }
+
+  // Return
+  return P;
+}
+
+Mat* CONSTR_get_extra_var_projection(Constr* c) {
+
+    // Local variables
+  Mat* P;
+  int i;
+
+  // Check
+  if (!c)
+    return NULL;
+
+  // Allocate
+  P = MAT_new(c->num_extra_vars,
+	      NET_get_num_vars(c->net)+c->num_extra_vars,
+	      c->num_extra_vars);
+
+  // Fill
+  for (i = 0; i < MAT_get_nnz(P); i++) {
+    MAT_set_i(P,i,i);
+    MAT_set_j(P,i,NET_get_num_vars(c->net)+i);
+    MAT_set_d(P,i,1.);
+  }
+
+  // Return
+  return P;
 }
 
 void CONSTR_list_finalize_structure_of_Hessians(Constr* clist) {

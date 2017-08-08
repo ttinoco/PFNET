@@ -111,6 +111,32 @@ cdef class ConstraintBase:
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
 
+    def get_var_projection(self):
+        """
+        Gets projection matrix P for getting x = P*(x,y), where x are 
+        network variablas and y are extra variables.
+
+        Returns
+        -------
+        P : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        """
+
+        return Matrix(cconstr.CONSTR_get_var_projection(self._c_constr),
+                      owndata=True)
+
+    def get_extra_var_projection(self):
+        """
+        Gets projection matrix P for getting y = P*(x,y), where x are 
+        network variablas and y are extra variables.
+
+        Returns
+        -------
+        P : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        """
+
+        return Matrix(cconstr.CONSTR_get_extra_var_projection(self._c_constr),
+                      owndata=True)
+
     def eval(self,x,y=None):
         """
         Evaluates constraint violations, Jacobian, and individual Hessian matrices.
