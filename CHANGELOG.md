@@ -11,6 +11,7 @@ Targets
 
 Unreleased
 ----------
+* Added property mask to projection operator (done).	
 
 Version 1.3.1
 -------------

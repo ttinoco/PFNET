@@ -113,7 +113,7 @@ REAL NET_get_total_gen_Q(Net* net, int t);
 REAL NET_get_total_load_P(Net* net, int t);
 REAL NET_get_total_load_Q(Net* net, int t);
 Vec* NET_get_var_values(Net* net, int code);
-Mat* NET_get_var_projection(Net* net, char obj_type, unsigned char var, int t_start, int t_end);
+Mat* NET_get_var_projection(Net* net, char obj_type, char prop_mask, unsigned char var, int t_start, int t_end);
 REAL NET_get_bus_v_max(Net* net, int t);
 REAL NET_get_bus_v_min(Net* net, int t);
 REAL NET_get_bus_v_vio(Net* net, int t);

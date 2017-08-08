@@ -2423,7 +2423,7 @@ class TestNetwork(unittest.TestCase):
             x = net.get_var_values()
 
             # bus vmag
-            P = net.get_var_projection('bus','voltage magnitude')
+            P = net.get_var_projection('bus','any','voltage magnitude')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.num_buses-1)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2437,7 +2437,7 @@ class TestNetwork(unittest.TestCase):
                     index += 1
 
             # bus vang
-            P = net.get_var_projection('bus','voltage angle')
+            P = net.get_var_projection('bus','any','voltage angle')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.num_buses-1)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2451,7 +2451,7 @@ class TestNetwork(unittest.TestCase):
                     index += 1
 
             # gen active power
-            P = net.get_var_projection('generator','active power')
+            P = net.get_var_projection('generator','any','active power')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.get_num_slack_gens())
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2465,7 +2465,7 @@ class TestNetwork(unittest.TestCase):
                     index += 1
 
             # gen reactive power
-            P = net.get_var_projection('generator','reactive power')
+            P = net.get_var_projection('generator','any','reactive power')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.get_num_reg_gens())
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2479,7 +2479,7 @@ class TestNetwork(unittest.TestCase):
                     index += 1
 
             # load active power
-            P = net.get_var_projection('load','active power')
+            P = net.get_var_projection('load','any','active power')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.num_loads)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2493,7 +2493,7 @@ class TestNetwork(unittest.TestCase):
                 index += 1
 
             # load reactive power
-            P = net.get_var_projection('load','reactive power')
+            P = net.get_var_projection('load','any','reactive power')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.num_loads)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2508,7 +2508,7 @@ class TestNetwork(unittest.TestCase):
                 index += 1
 
             # tap changer ratio
-            P = net.get_var_projection('branch','tap ratio')
+            P = net.get_var_projection('branch','any','tap ratio')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.get_num_tap_changers_v())
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2522,7 +2522,7 @@ class TestNetwork(unittest.TestCase):
                     index += 1
 
             # phase shifter
-            P = net.get_var_projection('branch','phase shift')
+            P = net.get_var_projection('branch','any','phase shift')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.get_num_phase_shifters())
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2536,7 +2536,7 @@ class TestNetwork(unittest.TestCase):
                     index += 1
 
             # shunt susceptance
-            P = net.get_var_projection('shunt','susceptance')
+            P = net.get_var_projection('shunt','any','susceptance')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.get_num_switched_shunts())
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2550,7 +2550,7 @@ class TestNetwork(unittest.TestCase):
                     index += 1
 
             # vargen active power
-            P = net.get_var_projection('variable generator','active power')
+            P = net.get_var_projection('variable generator','any','active power')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.num_var_generators)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2566,7 +2566,7 @@ class TestNetwork(unittest.TestCase):
                     index += 1
 
             # vargen reactive power
-            P = net.get_var_projection('variable generator','reactive power')
+            P = net.get_var_projection('variable generator','any','reactive power')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.num_var_generators)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2582,7 +2582,7 @@ class TestNetwork(unittest.TestCase):
                     index += 1
 
             # battery charging
-            P = net.get_var_projection('battery','charging power')
+            P = net.get_var_projection('battery','any','charging power')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],2*net.num_batteries)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2609,7 +2609,7 @@ class TestNetwork(unittest.TestCase):
                     index += 2
 
             # battery energy
-            P = net.get_var_projection('battery','energy level')
+            P = net.get_var_projection('battery','any','energy level')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.num_batteries)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2625,19 +2625,19 @@ class TestNetwork(unittest.TestCase):
                     index += 1
 
             # All
-            Plist = [net.get_var_projection('bus','voltage magnitude'),
-                     net.get_var_projection('bus','voltage angle'),
-                     net.get_var_projection('generator','active power'),
-                     net.get_var_projection('generator','reactive power'),
-                     net.get_var_projection('load','active power'),
-                     net.get_var_projection('load','reactive power'),
-                     net.get_var_projection('branch','tap ratio'),
-                     net.get_var_projection('branch','phase shift'),
-                     net.get_var_projection('shunt','susceptance'),
-                     net.get_var_projection('variable generator','active power'),
-                     net.get_var_projection('variable generator','reactive power'),
-                     net.get_var_projection('battery','charging power'),
-                     net.get_var_projection('battery','energy level')]
+            Plist = [net.get_var_projection('bus','any','voltage magnitude'),
+                     net.get_var_projection('bus','any','voltage angle'),
+                     net.get_var_projection('generator','any','active power'),
+                     net.get_var_projection('generator','any','reactive power'),
+                     net.get_var_projection('load','any','active power'),
+                     net.get_var_projection('load','any','reactive power'),
+                     net.get_var_projection('branch','any','tap ratio'),
+                     net.get_var_projection('branch','any','phase shift'),
+                     net.get_var_projection('shunt','any','susceptance'),
+                     net.get_var_projection('variable generator','any','active power'),
+                     net.get_var_projection('variable generator','any','reactive power'),
+                     net.get_var_projection('battery','any','charging power'),
+                     net.get_var_projection('battery','any','energy level')]
             P = bmat([[P] for P in Plist if P.shape[0] > 0])
             self.assertTupleEqual(P.shape,(net.num_vars,net.num_vars))
             for i in range(10):
@@ -2737,7 +2737,7 @@ class TestNetwork(unittest.TestCase):
             x = net.get_var_values()
 
             # bus vmag
-            P = net.get_var_projection('bus','voltage magnitude')
+            P = net.get_var_projection('bus','any','voltage magnitude')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],(net.num_buses-1)*self.T)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2752,7 +2752,7 @@ class TestNetwork(unittest.TestCase):
                         index += 1
 
             # bus vang
-            P = net.get_var_projection('bus','voltage angle')
+            P = net.get_var_projection('bus','any','voltage angle')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],(net.num_buses-1)*self.T)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2767,7 +2767,7 @@ class TestNetwork(unittest.TestCase):
                         index += 1
 
             # gen active power
-            P = net.get_var_projection('generator','active power')
+            P = net.get_var_projection('generator','any','active power')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.get_num_slack_gens()*self.T)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2782,7 +2782,7 @@ class TestNetwork(unittest.TestCase):
                         index += 1
 
             # gen reactive power
-            P = net.get_var_projection('generator','reactive power')
+            P = net.get_var_projection('generator','any','reactive power')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.get_num_reg_gens()*self.T)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2797,7 +2797,7 @@ class TestNetwork(unittest.TestCase):
                         index += 1
 
             # load active power
-            P = net.get_var_projection('load','active power')
+            P = net.get_var_projection('load','any','active power')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.num_loads*self.T)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2812,7 +2812,7 @@ class TestNetwork(unittest.TestCase):
                     index += 1
                     
             # load reactive power
-            P = net.get_var_projection('load','reactive power')
+            P = net.get_var_projection('load','any','reactive power')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.num_loads*self.T)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2828,7 +2828,7 @@ class TestNetwork(unittest.TestCase):
                     index += 1
 
             # tap changer ratio
-            P = net.get_var_projection('branch','tap ratio')
+            P = net.get_var_projection('branch','any','tap ratio')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.get_num_tap_changers_v()*self.T)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2843,7 +2843,7 @@ class TestNetwork(unittest.TestCase):
                         index += 1
 
             # phase shifter
-            P = net.get_var_projection('branch','phase shift')
+            P = net.get_var_projection('branch','any','phase shift')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.get_num_phase_shifters()*self.T)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2858,7 +2858,7 @@ class TestNetwork(unittest.TestCase):
                         index += 1
 
             # shunt susceptance
-            P = net.get_var_projection('shunt','susceptance')
+            P = net.get_var_projection('shunt','any','susceptance')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.get_num_switched_shunts()*self.T)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2873,7 +2873,7 @@ class TestNetwork(unittest.TestCase):
                         index += 1
 
             # vargen active power
-            P = net.get_var_projection('variable generator','active power')
+            P = net.get_var_projection('variable generator','any','active power')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.num_var_generators*self.T)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2889,7 +2889,7 @@ class TestNetwork(unittest.TestCase):
                         index += 1
 
             # vargen reactive power
-            P = net.get_var_projection('variable generator','reactive power')
+            P = net.get_var_projection('variable generator','any','reactive power')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.num_var_generators*self.T)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2905,7 +2905,7 @@ class TestNetwork(unittest.TestCase):
                         index += 1
 
             # battery charging
-            P = net.get_var_projection('battery','charging power')
+            P = net.get_var_projection('battery','any','charging power')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],2*net.num_batteries*self.T)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2933,7 +2933,7 @@ class TestNetwork(unittest.TestCase):
                         index += 2
 
             # battery energy
-            P = net.get_var_projection('battery','energy level')
+            P = net.get_var_projection('battery','any','energy level')
             self.assertTrue(isinstance(P,coo_matrix))
             self.assertEqual(P.shape[0],net.num_batteries*self.T)
             self.assertEqual(P.shape[1],net.num_vars)
@@ -2948,24 +2948,96 @@ class TestNetwork(unittest.TestCase):
                         index += 1
 
             # All
-            Plist = [net.get_var_projection('bus','voltage magnitude'),
-                     net.get_var_projection('bus','voltage angle'),
-                     net.get_var_projection('generator','active power'),
-                     net.get_var_projection('generator','reactive power'),
-                     net.get_var_projection('load','active power'),
-                     net.get_var_projection('load','reactive power'),
-                     net.get_var_projection('branch','tap ratio'),
-                     net.get_var_projection('branch','phase shift'),
-                     net.get_var_projection('shunt','susceptance'),
-                     net.get_var_projection('variable generator','active power'),
-                     net.get_var_projection('variable generator','reactive power'),
-                     net.get_var_projection('battery','charging power'),
-                     net.get_var_projection('battery','energy level')]
+            Plist = [net.get_var_projection('bus','any','voltage magnitude'),
+                     net.get_var_projection('bus','any','voltage angle'),
+                     net.get_var_projection('generator','any','active power'),
+                     net.get_var_projection('generator','any','reactive power'),
+                     net.get_var_projection('load','any','active power'),
+                     net.get_var_projection('load','any','reactive power'),
+                     net.get_var_projection('branch','any','tap ratio'),
+                     net.get_var_projection('branch','any','phase shift'),
+                     net.get_var_projection('shunt','any','susceptance'),
+                     net.get_var_projection('variable generator','any','active power'),
+                     net.get_var_projection('variable generator','any','reactive power'),
+                     net.get_var_projection('battery','any','charging power'),
+                     net.get_var_projection('battery','any','energy level')]
             P = bmat([[P] for P in Plist if P.shape[0] > 0])
             self.assertTupleEqual(P.shape,(net.num_vars,net.num_vars))
             for i in range(10):
                 x = np.random.randn(net.num_vars)
                 self.assertLess(np.linalg.norm(x-P.T*P*x),1e-12)
+
+    def test_projections_with_properties(self):
+
+        # Single period
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
+
+            self.assertEqual(net.num_vars,0)
+
+            # bus vmag and vang
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+
+            # gen powers
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          ['active power','reactive power'])
+
+            # load powers
+            net.set_flags('load',
+                          'variable',
+                          'any',
+                          ['active power','reactive power'])
+
+            # branch ratio and phase
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer - v',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+
+            # shunt
+            net.set_flags('shunt',
+                          'variable',
+                          'switching - v',
+                          'susceptance')
+
+            self.assertEqual(net.num_vars,
+                             (2*net.num_buses +
+                              2*net.num_generators +
+                              net.get_num_tap_changers_v() +
+                              net.get_num_phase_shifters() +
+                              net.get_num_switched_shunts() +
+                              2*net.num_loads))
+
+            # Slack gen active power
+            P = net.get_var_projection('generator','slack','active power')
+            self.assertTupleEqual(P.shape,(net.get_num_slack_gens(),net.num_vars))
+            self.assertTrue(isinstance(P,coo_matrix))
+            self.assertTrue(np.all(P.data == 1.))
+            self.assertTrue(np.all(P.row == range(net.get_num_slack_gens())))
+            for gen in net.generators:
+                if gen.is_slack():
+                    self.assertTrue(gen.index_P in P.col)
+
+            # Voltage mag of regulated voltages
+            P = net.get_var_projection('bus','regulated by generator','voltage magnitude')
+            self.assertTupleEqual(P.shape,(net.get_num_buses_reg_by_gen(),net.num_vars))
+            self.assertTrue(isinstance(P,coo_matrix))
+            self.assertTrue(np.all(P.data == 1.))
+            self.assertTrue(np.all(P.row == range(net.get_num_buses_reg_by_gen())))
+            for bus in net.buses:
+                if bus.is_regulated_by_gen():
+                    self.assertTrue(bus.index_v_mag in P.col)
 
     def test_fancy_projections(self):
 
@@ -3044,50 +3116,50 @@ class TestNetwork(unittest.TestCase):
                               2*net.num_loads+
                               3*net.num_batteries)*self.T)
 
-            self.assertRaises(KeyError,net.get_var_projection,'all','voltage magnitude',2,4)
+            self.assertRaises(KeyError,net.get_var_projection,'all','any','voltage magnitude',2,4)
             self.assertFalse(net.has_error())
             net.clear_error()
             self.assertFalse(net.has_error())
 
             # bus all
-            P = net.get_var_projection('bus','all',2,3)
+            P = net.get_var_projection('bus','any','all',2,3)
             self.assertTrue(np.all(P.data == 1.))
             self.assertTupleEqual(P.shape,(2*(net.num_buses-1)*2,net.num_vars))
 
             # gen all
-            P = net.get_var_projection('generator','all',2,4)
+            P = net.get_var_projection('generator','any','all',2,4)
             self.assertTrue(np.all(P.data == 1.))
             self.assertTupleEqual(P.shape,((net.num_generators-net.get_num_slack_gens() +
                                             net.get_num_reg_gens())*3,net.num_vars))
 
             # load all
-            P = net.get_var_projection('load','all',1,4)
+            P = net.get_var_projection('load','any','all',1,4)
             self.assertTrue(np.all(P.data == 1.))
             self.assertTupleEqual(P.shape,(net.num_loads*4*2,net.num_vars))
 
             # branch all
-            P = net.get_var_projection('branch','all')
+            P = net.get_var_projection('branch','any','all')
             self.assertTrue(np.all(P.data == 1.))
             self.assertTupleEqual(P.shape,((net.get_num_tap_changers_v() +
                                             net.get_num_phase_shifters())*self.T,net.num_vars))
 
             # shunt all
-            P = net.get_var_projection('shunt','all',3,3)
+            P = net.get_var_projection('shunt','any','all',3,3)
             self.assertTrue(np.all(P.data == 1.))
             self.assertTupleEqual(P.shape,(net.get_num_switched_shunts(),net.num_vars))
 
             # vargen all
-            P = net.get_var_projection('variable generator','all',-1,2)
+            P = net.get_var_projection('variable generator','any','all',-1,2)
             self.assertTrue(np.all(P.data == 1.))
             self.assertTupleEqual(P.shape,(2*net.num_var_generators*3,net.num_vars))
 
             # battery all
-            P = net.get_var_projection('battery','all',3,6)
+            P = net.get_var_projection('battery','any','all',3,6)
             self.assertTrue(np.all(P.data == 1.))
             self.assertTupleEqual(P.shape,(net.num_batteries*3*2,net.num_vars))
 
             # all all
-            P = net.get_var_projection('all','all',2,2)
+            P = net.get_var_projection('all','any','all',2,2)
             self.assertTrue(np.all(P.data == 1.))
             self.assertTupleEqual(P.shape,(net.num_vars/self.T,net.num_vars))
             for t in range(self.T):
@@ -3178,7 +3250,7 @@ class TestNetwork(unittest.TestCase):
             # Recovery
             Projs = []
             for t in range(self.T):
-                Projs.append(net.get_var_projection('all','all',t,t))
+                Projs.append(net.get_var_projection('all','any','all',t,t))
             x = net.get_var_values()
             self.assertTupleEqual(x.shape,(net.num_vars,))
             self.assertEqual(net.num_periods,self.T)

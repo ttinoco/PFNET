@@ -1675,7 +1675,7 @@ class TestConstraints(unittest.TestCase):
             J = constr.J
             P_list = []
             for t in range(self.T):
-                P_list.append(net.get_var_projection('all','all',t_start=t,t_end=t))
+                P_list.append(net.get_var_projection('all','any','all',t_start=t,t_end=t))
             f_list = [f[t*2*net.num_buses:(t+1)*2*net.num_buses] for t in range(self.T)]
             for t in range(self.T-1):
                 self.assertLess(norm(f_list[t]-f_list[t+1]),1e-12*norm(f_list[t]))
@@ -3013,12 +3013,12 @@ class TestConstraints(unittest.TestCase):
                               2*net.num_batteries))
 
             # Extract pieces
-            P1 = net.get_var_projection('bus','voltage angle')
-            P2 = net.get_var_projection('generator','active power')
-            P3 = net.get_var_projection('variable generator','active power')
-            P4 = net.get_var_projection('branch','phase shift')
-            P5 = net.get_var_projection('load','active power')
-            P6 = net.get_var_projection('battery','charging power')
+            P1 = net.get_var_projection('bus','any','voltage angle')
+            P2 = net.get_var_projection('generator','any','active power')
+            P3 = net.get_var_projection('variable generator','any','active power')
+            P4 = net.get_var_projection('branch','any','phase shift')
+            P5 = net.get_var_projection('load','any','active power')
+            P6 = net.get_var_projection('battery','any','charging power')
 
             G = A*P2.T
             R = A*P3.T
@@ -3440,7 +3440,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(G.shape,(num_constr*self.T,net.num_vars))
             Projs = []
             for t in range(self.T):
-                Projs.append(net.get_var_projection('all','all',t,t))
+                Projs.append(net.get_var_projection('all','any','all',t,t))
             Gs = [G*P.T for P in Projs]
             x0s = [P*x0 for P in Projs]
             Gx0s = [(Gs[t]*x0s[t])[t*num_constr:(t+1)*num_constr] for t in range(self.T)]
