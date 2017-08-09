@@ -12,7 +12,8 @@ Targets
 Unreleased
 ----------
 * Added property mask to projection operator (done).
-* Added projection getters for network and extra vars of constraints (done).	
+* Added projection getters for network and extra vars of constraints (done).
+* Made gen Qmin,Qmax writable in Python (done).	
 
 Version 1.3.1
 -------------
