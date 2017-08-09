@@ -638,6 +638,14 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(gen.P_min,np.pi)
                 self.assertEqual(gen.P_max,2*np.pi)
 
+                # set/get Q_min and Q_max
+                self.assertNotEqual(gen.Q_max,4*np.pi)
+                self.assertNotEqual(gen.Q_min,5*np.pi)
+                gen.Q_min = 5*np.pi
+                gen.Q_max = 4*np.pi
+                self.assertEqual(gen.Q_min,5*np.pi)
+                self.assertEqual(gen.Q_max,4*np.pi)
+
                 # set/get P,Q
                 self.assertNotEqual(gen.P,0.333)
                 self.assertNotEqual(gen.Q,0.221)
