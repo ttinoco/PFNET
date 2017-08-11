@@ -3,7 +3,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -136,6 +136,51 @@ cdef class ConstraintBase:
 
         return Matrix(cconstr.CONSTR_get_extra_var_projection(self._c_constr),
                       owndata=True)
+
+    def get_A_row_info_string(self,index):
+        """
+        Gets info string associated with row of A matrix.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        info : string
+        """
+
+        return cconstr.CONSTR_get_A_row_info_string(self._c_constr,index).decode('UTF-8')
+
+    def get_J_row_info_string(self,index):
+        """
+        Gets info string associated with row of J matrix.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        info : string
+        """
+
+        return cconstr.CONSTR_get_J_row_info_string(self._c_constr,index).decode('UTF-8')
+
+    def get_G_row_info_string(self,index):
+        """
+        Gets info string associated with row of G matrix.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        info : string
+        """
+
+        return cconstr.CONSTR_get_G_row_info_string(self._c_constr,index).decode('UTF-8')
 
     def eval(self,x,y=None):
         """

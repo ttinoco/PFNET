@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -3910,6 +3910,21 @@ class TestConstraints(unittest.TestCase):
                     i = t*net.num_branches*2+2*branch.index
                     self.assertEqual(u[i],branch.ratingA)
                     self.assertEqual(u[i+1],branch.ratingA)
+
+            # Row info
+            index = 0
+            for t in range(net.num_periods):
+                for branch in net.branches:
+                    if branch.ratingA != 0:
+                        skmJ = constr.get_J_row_info_string(index)
+                        smkJ = constr.get_J_row_info_string(index+1)
+                        self.assertEqual(skmJ,"branch %d AC flow limit %s time %d" %(branch.index,"km",t))
+                        self.assertEqual(smkJ,"branch %d AC flow limit %s time %d" %(branch.index,"mk",t))
+                        skmG = constr.get_G_row_info_string(index)
+                        smkG = constr.get_G_row_info_string(index+1)
+                        self.assertEqual(skmG,"branch %d AC flow limit %s time %d" %(branch.index,"km",t))
+                        self.assertEqual(smkG,"branch %d AC flow limit %s time %d" %(branch.index,"mk",t))
+                        index += 2
 
             # Hessian structure
             for i in range(constr.J.shape[0]):

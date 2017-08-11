@@ -56,6 +56,11 @@ struct Constr {
   int G_row;             /**< @brief Counter for linear inequality constraints */
   char* bus_counted;     /**< @brief Flag for processing buses */
   int bus_counted_size;  /**< @brief Size of array of flags for processing buses */
+
+  // Row info
+  char* A_row_info; /**< @brief Array for info strings of rows of A (x,y) = b */
+  char* J_row_info; /**< @brief Array for info strings of rows of f(x,y) = 0 */
+  char* G_row_info; /**< @brief Array for info strings of rows of l <= G (x,y) <= u */
   
   // Type functions
   void (*func_init)(Constr* c);                                          /**< @brief Initialization function */
@@ -242,6 +247,14 @@ void CONSTR_del(Constr* c) {
       free(c->bus_counted);
     if (c->H_nnz)
       free(c->H_nnz);
+
+    // Row infos
+    if (c->A_row_info)
+      free(c->A_row_info);
+    if (c->J_row_info)
+      free(c->J_row_info);
+    if (c->G_row_info)
+      free(c->G_row_info);
 
     // Data
     if (c->func_free)
@@ -528,6 +541,27 @@ Mat* CONSTR_get_extra_var_projection(Constr* c) {
   return P;
 }
 
+char* CONSTR_get_A_row_info_string(Constr* c, int index) {
+  if (c && c->A_row_info && 0 <= index && index < MAT_get_size1(c->A))
+    return c->A_row_info+index*CONSTR_INFO_BUFFER_SIZE*sizeof(char);
+  else
+    return NULL;
+}
+
+char* CONSTR_get_J_row_info_string(Constr* c, int index) {
+  if (c && c->J_row_info && 0 <= index && index < MAT_get_size1(c->J))
+    return c->J_row_info+index*CONSTR_INFO_BUFFER_SIZE*sizeof(char);
+  else
+    return NULL;
+}
+
+char* CONSTR_get_G_row_info_string(Constr* c, int index) {
+  if (c && c->G_row_info && 0 <= index && index < MAT_get_size1(c->G))
+    return c->G_row_info+index*CONSTR_INFO_BUFFER_SIZE*sizeof(char);
+  else
+    return NULL;
+}
+
 void CONSTR_list_finalize_structure_of_Hessians(Constr* clist) {
   Constr* cc;
   for (cc = clist; cc != NULL; cc = CONSTR_get_next(cc))
@@ -727,6 +761,11 @@ Constr* CONSTR_new(Net* net) {
   c->G_row = 0;
   c->next = NULL;
 
+  // Row infos
+  c->A_row_info = NULL;
+  c->J_row_info = NULL;
+  c->G_row_info = NULL;
+
   // Bus counted flags
   c->bus_counted_size = 0;
   c->bus_counted = NULL;
@@ -892,6 +931,48 @@ void CONSTR_set_data(Constr* c, void* data) {
     c->data = data;
 }
 
+void CONSTR_set_A_row_info(Constr* c, char* A_row_info) {
+  if (c)
+    c->A_row_info = A_row_info;
+}
+
+void CONSTR_set_J_row_info(Constr* c, char* J_row_info) {
+  if (c)
+    c->J_row_info = J_row_info;
+}
+
+void CONSTR_set_G_row_info(Constr* c, char* G_row_info) {
+  if (c)
+    c->G_row_info = G_row_info;
+}
+
+void CONSTR_set_A_row_info_string(Constr* c, int index, char* info) {
+  if (c && c->A_row_info && 0 <= index && index < MAT_get_size1(c->A)) {
+    snprintf(c->A_row_info+index*CONSTR_INFO_BUFFER_SIZE*sizeof(char),
+	     CONSTR_INFO_BUFFER_SIZE*sizeof(char),
+	     "%s",
+	     info);
+  }
+}
+
+void CONSTR_set_J_row_info_string(Constr* c, int index, char* info) {
+  if (c && c->J_row_info && 0 <= index && index < MAT_get_size1(c->J)) {
+    snprintf(c->J_row_info+index*CONSTR_INFO_BUFFER_SIZE*sizeof(char),
+	     CONSTR_INFO_BUFFER_SIZE*sizeof(char),
+	     "%s",
+	     info);
+  }
+}
+
+void CONSTR_set_G_row_info_string(Constr* c, int index, char* info) {
+  if (c && c->G_row_info && 0 <= index && index < MAT_get_size1(c->G)) {
+    snprintf(c->G_row_info+index*CONSTR_INFO_BUFFER_SIZE*sizeof(char),
+	     CONSTR_INFO_BUFFER_SIZE*sizeof(char),
+	     "%s",
+	     info);
+  }
+}
+
 void CONSTR_init(Constr* c) {
   if (c && c->func_free)
     (*(c->func_free))(c);
@@ -920,6 +1001,9 @@ void CONSTR_allocate(Constr* c) {
     CONSTR_del_matvec(c);
     (*(c->func_allocate))(c);
     CONSTR_allocate_H_combined(c);
+    CONSTR_set_A_row_info(c,(char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->A)));
+    CONSTR_set_J_row_info(c,(char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->J)));
+    CONSTR_set_G_row_info(c,(char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->G)));
   }
 }
 
@@ -1072,6 +1156,20 @@ char* CONSTR_get_error_string(Constr* c) {
     return NULL;
 }
 
+char* CONSTR_get_name(Constr* c) {
+  if (c)
+    return c->name;
+  else
+    return NULL;
+}
+
+Net* CONSTR_get_network(Constr* c) {
+  if (c)
+    return c->net;
+  else
+    return NULL;
+}
+
 void CONSTR_update_network(Constr* c) {
   
   // No c
@@ -1086,20 +1184,6 @@ void CONSTR_update_network(Constr* c) {
 
   // Init
   CONSTR_init(c);
-}
-
-char* CONSTR_get_name(Constr* c) {
-  if (c)
-    return c->name;
-  else
-    return NULL;
-}
-
-Net* CONSTR_get_network(Constr* c) {
-  if (c)
-    return c->net;
-  else
-    return NULL;
 }
 
 void CONSTR_set_func_init(Constr* c, void (*func)(Constr* c)) {
