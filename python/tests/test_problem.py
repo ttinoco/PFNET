@@ -992,7 +992,7 @@ class TestProblem(unittest.TestCase):
                 self.assertLessEqual(error,EPS)
 
             # Check Hcombined
-            h = 1e-13
+            h = 1e-12
             coeff = np.random.randn(f.shape[0])
             p.eval(x0)
             self.assertRaises(pf.ProblemError,p.combine_H,np.zeros(f.shape[0]+1),False)
