@@ -16,7 +16,7 @@ Unreleased
 * Made gen Qmin,Qmax writable in Python (done).
 * Added routines for extracting constraint A,J,G row info strings (done).
 * Made AC_FLOW_LIM constraint store row info (done).
-* Made LBOUND constraint store row info (todo).	
+* Made LBOUND constraint store row info (done).
 * Added routines for extracting info strings about entries of row vector (todo).
 * Added routines for extracting info strings for rows of var projection matrices (todo).
 

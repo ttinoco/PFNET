@@ -545,21 +545,21 @@ char* CONSTR_get_A_row_info_string(Constr* c, int index) {
   if (c && c->A_row_info && 0 <= index && index < MAT_get_size1(c->A))
     return c->A_row_info+index*CONSTR_INFO_BUFFER_SIZE*sizeof(char);
   else
-    return NULL;
+    return "";
 }
 
 char* CONSTR_get_J_row_info_string(Constr* c, int index) {
   if (c && c->J_row_info && 0 <= index && index < MAT_get_size1(c->J))
     return c->J_row_info+index*CONSTR_INFO_BUFFER_SIZE*sizeof(char);
   else
-    return NULL;
+    return "";
 }
 
 char* CONSTR_get_G_row_info_string(Constr* c, int index) {
   if (c && c->G_row_info && 0 <= index && index < MAT_get_size1(c->G))
     return c->G_row_info+index*CONSTR_INFO_BUFFER_SIZE*sizeof(char);
   else
-    return NULL;
+    return "";
 }
 
 void CONSTR_list_finalize_structure_of_Hessians(Constr* clist) {

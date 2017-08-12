@@ -963,6 +963,10 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
 
+            # add batteries
+            gen_buses = net.get_generator_buses()
+            net.add_batteries(gen_buses,20.,40.,0.8,0.9)
+
             # loads
             for load in net.loads:
                 load.P_min = -2.4*(load.index+1)*np.array(range(net.num_periods))
@@ -1067,6 +1071,89 @@ class TestConstraints(unittest.TestCase):
                     if shunt.is_switched_v():
                         self.assertEqual(u[shunt.index_b[t]],pf.SHUNT_INF_SUSC)
                         self.assertEqual(l[shunt.index_b[t]],-pf.SHUNT_INF_SUSC)
+
+            # Row info
+            for t in range(self.T):
+                for bus in net.buses:
+                    i = bus.index_v_mag[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'bus %d voltage magnitude limit time %d' %(bus.index,t))
+                    i = bus.index_v_ang[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'bus %d voltage angle limit time %d' %(bus.index,t))
+                for gen in net.generators:
+                    i = gen.index_P[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'generator %d active power limit time %d' %(gen.index,t))
+                    i = gen.index_Q[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'generator %d reactive power limit time %d' %(gen.index,t))
+                for load in net.loads:
+                    i = load.index_P[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'load %d active power limit time %d' %(load.index,t))
+                    i = load.index_Q[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'load %d reactive power limit time %d' %(load.index,t))
+                for vargen in net.var_generators:
+                    i = vargen.index_P[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'var generator %d active power limit time %d' %(vargen.index,t))
+                    i = vargen.index_Q[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'var generator %d reactive power limit time %d' %(vargen.index,t))
+                for branch in net.branches:
+                    if branch.is_tap_changer():
+                        i = branch.index_ratio[t]
+                        s = constr.get_G_row_info_string(i)
+                        self.assertEqual(constr.get_A_row_info_string(i),"")
+                        self.assertEqual(constr.get_J_row_info_string(i),"")
+                        self.assertEqual(s,'branch %d tap ratio limit time %d' %(branch.index,t))
+                    if branch.is_phase_shifter():
+                        i = branch.index_phase[t]
+                        s = constr.get_G_row_info_string(i)
+                        self.assertEqual(constr.get_A_row_info_string(i),"")
+                        self.assertEqual(constr.get_J_row_info_string(i),"")
+                        self.assertEqual(s,'branch %d phase shift limit time %d' %(branch.index,t))
+                for shunt in net.shunts:
+                    if shunt.is_switched_v():
+                        i = shunt.index_b[t]
+                        s = constr.get_G_row_info_string(i)
+                        self.assertEqual(constr.get_A_row_info_string(i),"")
+                        self.assertEqual(constr.get_J_row_info_string(i),"")
+                        self.assertEqual(s,'shunt %d susceptance limit time %d' %(shunt.index,t))
+                for bat in net.batteries:
+                    i = bat.index_Pc[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'battery %d charging power limit time %d' %(bat.index,t))
+                    i = bat.index_Pd[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'battery %d discharging power limit time %d' %(bat.index,t))
+                    i = bat.index_E[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'battery %d energy level limit time %d' %(bat.index,t))
 
             # Bounded
             net.set_flags('bus',
