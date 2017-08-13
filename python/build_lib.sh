@@ -7,10 +7,11 @@ if [ ! -d "lib/pfnet" ]; then
   rm pfnet.tar
   mv pfnet*/ pfnet
   cd pfnet
-  ./configure
+  ./configure --prefix=$PWD/build
   make clean
   make uninstall
   make
   make check
   make install
+  cp build/lib/* ../../pfnet/
 fi

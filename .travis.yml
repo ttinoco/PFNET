@@ -18,5 +18,5 @@ install:
 
 script: 
 - cd python
-- sudo python setup.py build_ext --inplace
+- sudo -E python setup.py build_ext --inplace
 - nosetests -s -v

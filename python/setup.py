@@ -6,17 +6,26 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
+import sys
 import numpy as np
 from subprocess import call
 from Cython.Build import cythonize
 from setuptools import setup, Extension
+
+if 'darwin' in sys.platform.lower():
+    extra_link_args=['-Wl,-rpath,@loader_path/']
+elif 'linux' in sys.platform.lower():
+    extra_link_args=['-Wl,-rpath=$ORIGIN']
+else:
+    extra_link_args=['']
 
 return_code = call(["./build_lib.sh"])
 if return_code != 0:
     raise ValueError('Unable to build C library')
 
 setup(name='PFNET',
-      version='1.3.1rc3',
+      zip_safe=False,
+      version='1.3.1rc5',
       description='Power Flow Network Library',
       url='https://github.com/ttinoco/PFNET/python',
       author='Tomas Tinoco De Rubira',
@@ -30,6 +39,7 @@ setup(name='PFNET',
                         'numpy>=1.11.2',
                         'scipy>=0.18.1',
                         'nose'],
+      package_data={'pfnet':['libpfnet*']},
       classifiers=['Development Status :: 5 - Production/Stable',
                    'License :: OSI Approved :: BSD License',
                    'Programming Language :: Python :: 2.7',
@@ -37,7 +47,7 @@ setup(name='PFNET',
       ext_modules=cythonize([Extension(name="pfnet.cpfnet",
                                        sources=["./pfnet/cpfnet.pyx"],
                                        libraries=['pfnet'],
-                                       include_dirs=[np.get_include(),'./lib/pfnet/include'],
-                                       library_dirs=['/usr/local/lib'],
-                                       extra_link_args=['-Wl,-rpath,/usr/local/lib'])]))
+                                       include_dirs=[np.get_include(),'./lib/pfnet/build/include'],
+                                       library_dirs=['./lib/pfnet/build/lib'],
+                                       extra_link_args=extra_link_args)]))
                                        

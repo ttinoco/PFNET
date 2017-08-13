@@ -4,7 +4,7 @@
 *.raw
 *~
 *.out
-*.so
+*.so.*
 *.art
 *.dot
 *.prof
