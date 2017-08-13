@@ -9,6 +9,7 @@
 cdef extern from "pfnet/flag_types.h":
 
     cdef char ALL_VARS
+    cdef char ANY_PROP
     
     cdef char FLAG_NONE
     cdef char FLAG_VARS

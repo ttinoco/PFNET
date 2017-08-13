@@ -18,8 +18,16 @@ Unreleased
 * Updated travis instructions to directly install python wrapper (done).
 * Removed "build" script for readthedocs since it was no longer needed (done).
 * Removed setup.cfg since it was no longer needed (done).
-* Distributed pfnet python wrapper through pypi (todo).
-* Updated Python wrapper documentation to show how to install with pip or download/run tests.
+* Distribute pfnet python wrapper through pypi (todo).
+* Update Python wrapper documentation to show how to install with pip or download/run tests (todo).
+* Added property mask to projection operator (done).
+* Added projection getters for network and extra vars of constraints (done).
+* Made gen Qmin,Qmax writable in Python (done).
+* Added routines for extracting constraint A,J,G row info strings (done).
+* Made AC_FLOW_LIM constraint store row info (done).
+* Made LBOUND constraint store row info (done).
+* Add routines for extracting info strings about entries of row vector (todo).
+* Add routines for extracting info strings for rows of var projection matrices (todo).
 
 Version 1.3.1
 -------------

@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -44,6 +44,9 @@ cdef extern from "pfnet/constr.h":
     int CONSTR_get_H_array_size(Constr* c)
     int CONSTR_get_type(Constr* c)
     Constr* CONSTR_get_next(Constr* c)
+    char* CONSTR_get_A_row_info_string(Constr* c, int index)
+    char* CONSTR_get_J_row_info_string(Constr* c, int index)
+    char* CONSTR_get_G_row_info_string(Constr* c, int index)
     void CONSTR_init(Constr* c)
     void CONSTR_count(Constr* c)
     void CONSTR_allocate(Constr* c)
@@ -56,6 +59,8 @@ cdef extern from "pfnet/constr.h":
     void CONSTR_update_network(Constr* c)
     int CONSTR_get_num_extra_vars(Constr* c)
     Net* CONSTR_get_network(Constr* c)
+    Mat* CONSTR_get_var_projection(Constr* c)
+    Mat* CONSTR_get_extra_var_projection(Constr* c)
 
     void CONSTR_set_name(Constr* f, char*)
     void CONSTR_set_A_nnz(Constr* c, int nnz)

@@ -3,7 +3,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -110,6 +110,77 @@ cdef class ConstraintBase:
         cconstr.CONSTR_combine_H(self._c_constr,v,ensure_psd)
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
+
+    def get_var_projection(self):
+        """
+        Gets projection matrix P for getting x = P*(x,y), where x are 
+        network variablas and y are extra variables.
+
+        Returns
+        -------
+        P : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        """
+
+        return Matrix(cconstr.CONSTR_get_var_projection(self._c_constr),
+                      owndata=True)
+
+    def get_extra_var_projection(self):
+        """
+        Gets projection matrix P for getting y = P*(x,y), where x are 
+        network variablas and y are extra variables.
+
+        Returns
+        -------
+        P : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        """
+
+        return Matrix(cconstr.CONSTR_get_extra_var_projection(self._c_constr),
+                      owndata=True)
+
+    def get_A_row_info_string(self,index):
+        """
+        Gets info string associated with row of A matrix.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        info : string
+        """
+
+        return cconstr.CONSTR_get_A_row_info_string(self._c_constr,index).decode('UTF-8')
+
+    def get_J_row_info_string(self,index):
+        """
+        Gets info string associated with row of J matrix.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        info : string
+        """
+
+        return cconstr.CONSTR_get_J_row_info_string(self._c_constr,index).decode('UTF-8')
+
+    def get_G_row_info_string(self,index):
+        """
+        Gets info string associated with row of G matrix.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        info : string
+        """
+
+        return cconstr.CONSTR_get_G_row_info_string(self._c_constr,index).decode('UTF-8')
 
     def eval(self,x,y=None):
         """
