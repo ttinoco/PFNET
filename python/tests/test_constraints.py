@@ -4674,6 +4674,7 @@ class TestConstraints(unittest.TestCase):
             # Powers
             for load in net.loads:
                 load.P = np.random.rand(net.num_periods)
+                self.assertTrue(np.all(load.P > 0))
 
             # Target power factors
             for load in net.loads:
@@ -4771,9 +4772,15 @@ class TestConstraints(unittest.TestCase):
                     for i in indices:
                         if A.col[i] == load.index_P[t]:
                             gamma = load.target_power_factor
-                            factor = np.sqrt(1.-gamma**2.)/gamma
-                            load.Q = load.P*factor
-                            self.assertAlmostEqual(A.data[i],-factor)
+                            factor = np.sqrt((1.-gamma**2.)/(gamma**2.))
+                            load.Q[t] = np.abs(load.P[t])*factor*(1. if load.Q[t] >= 0 else -1.)
+                            self.assertLess(np.abs(gamma-load.power_factor[t]),1e-12)
+                            if load.P[t]*load.Q[t] >= 0:
+                                self.assertAlmostEqual(A.data[i],-factor)
+                                self.assertLess(np.abs(-factor*load.P[t]+load.Q[t]),1e-12)
+                            else:
+                                self.assertAlmostEqual(A.data[i],factor)
+                                self.assertLess(np.abs(factor*load.P[t]+load.Q[t]),1e-12)
                         else:
                             self.assertEqual(A.col[i],load.index_Q[t])
                             self.assertEqual(A.data[i],1.)

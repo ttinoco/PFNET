@@ -530,10 +530,12 @@ void LOAD_set_target_power_factor(Load* load, REAL pf) {
   if (load) {
     if (pf > 1.)
       load->target_power_factor = 1.;
-    else if (pf < LOAD_MIN_TARGET_PF)
+    else if (pf < -1.)
+      load->target_power_factor = -1.;
+    else if (fabs(pf) < LOAD_MIN_TARGET_PF)
       load->target_power_factor = LOAD_MIN_TARGET_PF;
     else
-      load->target_power_factor = pf;	
+      load->target_power_factor = pf;
   }
 }
 
