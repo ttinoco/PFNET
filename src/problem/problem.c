@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -301,13 +301,13 @@ void PROB_eval(Prob* p, Vec* point) {
   // Eval
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
     for (k = 0; k < NET_get_num_branches(p->net); k++) {
-    
+      
       br = NET_get_branch(p->net,k);
       
       // Constraints
       CONSTR_list_eval_step(p->constr,br,t,x,y);
       if (CONSTR_list_has_error(p->constr)) {
-	strcpy(p->error_string,CONSTR_list_get_error_string(p->constr));
+      	strcpy(p->error_string,CONSTR_list_get_error_string(p->constr));
 	p->error_flag = TRUE;
 	return;
       }
@@ -315,7 +315,7 @@ void PROB_eval(Prob* p, Vec* point) {
       // Functions
       FUNC_list_eval_step(p->func,br,t,x);
       if (FUNC_list_has_error(p->func)) {
-	strcpy(p->error_string,FUNC_list_get_error_string(p->func));
+      	strcpy(p->error_string,FUNC_list_get_error_string(p->func));
 	p->error_flag = TRUE;
 	return;
       }
@@ -330,7 +330,11 @@ void PROB_eval(Prob* p, Vec* point) {
     }
   }
 
-  // Update 
+  // Clear
+  free(x);
+  free(y);
+
+  // Update
   PROB_update_nonlin_data(p,point);
 }
 
@@ -376,7 +380,7 @@ void PROB_store_sens(Prob* p, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 }
 
 void PROB_del(Prob* p) {
-  if (p) {
+  if (p) {    
     PROB_clear(p);
     free(p);
   }

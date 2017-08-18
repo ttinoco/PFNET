@@ -3,7 +3,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -849,6 +849,7 @@ cdef class Network:
         cdef np.ndarray[double,mode='c'] x = values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size)
         cnet.NET_set_var_values(self._c_net,v)
+        free(v)
 
     def show_components(self):
         """
@@ -895,6 +896,8 @@ cdef class Network:
         cdef np.ndarray[double,mode='c'] x = values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if values is not None else NULL
         cnet.NET_update_properties(self._c_net,v)
+        if v != NULL:
+            free(v)
 
     def update_set_points(self):
         """

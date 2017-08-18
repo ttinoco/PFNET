@@ -619,6 +619,8 @@ void CONSTR_list_combine_H(Constr* clist, Vec* coeff, BOOL ensure_psd) {
       v = NULL;       
     CONSTR_combine_H(cc,v,ensure_psd);
     offset += VEC_get_size(CONSTR_get_f(cc));
+    if (v)
+      free(v);
   }
 }
 
@@ -658,6 +660,8 @@ void CONSTR_list_eval_step(Constr* clist, Branch* br, int t, Vec* v, Vec* ve) {
       ve_c = NULL;
     CONSTR_eval_step(cc,br,t,v,ve_c);
     offset += CONSTR_get_num_extra_vars(cc);
+    if (ve_c)
+      free(ve_c);
   }
 }
 
@@ -717,6 +721,15 @@ void CONSTR_list_store_sens_step(Constr* clist, Branch* br, int t, Vec* sA, Vec*
     offset_sA += MAT_get_size1(CONSTR_get_A(cc));
     offset_sf += VEC_get_size(CONSTR_get_f(cc));
     offset_sG += MAT_get_size1(CONSTR_get_G(cc));
+
+    if (vA)
+      free(vA);
+    if (vf)
+      free(vf);
+    if (vGu)
+      free(vGu);
+    if (vGl)
+      free(vGl);
   }
 }
 

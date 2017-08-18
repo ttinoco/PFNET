@@ -108,6 +108,7 @@ cdef class ConstraintBase:
         cdef np.ndarray[double,mode='c'] x = coeff
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(x.data),x.size)
         cconstr.CONSTR_combine_H(self._c_constr,v,ensure_psd)
+        free(v)
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
 
@@ -197,6 +198,9 @@ cdef class ConstraintBase:
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(xx.data),xx.size)
         cdef cvec.Vec* ve = cvec.VEC_new_from_array(<cconstr.REAL*>(yy.data),yy.size) if y is not None else NULL
         cconstr.CONSTR_eval(self._c_constr,v,ve)
+        free(v)
+        if ve != NULL:
+            free(ve)
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
 
@@ -222,6 +226,14 @@ cdef class ConstraintBase:
         cdef cvec.Vec* vGu = cvec.VEC_new_from_array(<cconstr.REAL*>(xGu.data),xGu.size) if sGu is not None else NULL
         cdef cvec.Vec* vGl = cvec.VEC_new_from_array(<cconstr.REAL*>(xGl.data),xGl.size) if sGl is not None else NULL
         cconstr.CONSTR_store_sens(self._c_constr,vA,vf,vGu,vGl)
+        if vA != NULL:
+            free(vA)
+        if vf != NULL:
+            free(vf)
+        if vGu != NULL:
+            free(vGu)
+        if vGl != NULL:
+            free(vGl)
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
 
@@ -321,7 +333,7 @@ cdef class ConstraintBase:
         cdef np.ndarray[double,mode='c'] ll = l
         PyArray_CLEARFLAGS(ll,np.NPY_OWNDATA)
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(ll.data),ll.size)
-        cconstr.CONSTR_set_l(self._c_constr,v)  
+        cconstr.CONSTR_set_l(self._c_constr,v)
 
     def set_u(self,u):
         """
@@ -335,7 +347,7 @@ cdef class ConstraintBase:
         cdef np.ndarray[double,mode='c'] uu = u
         PyArray_CLEARFLAGS(uu,np.NPY_OWNDATA)
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(uu.data),uu.size)
-        cconstr.CONSTR_set_u(self._c_constr,v)  
+        cconstr.CONSTR_set_u(self._c_constr,v)
 
     def set_G(self,G):
         """
@@ -370,7 +382,7 @@ cdef class ConstraintBase:
         cdef np.ndarray[double,mode='c'] ff = f
         PyArray_CLEARFLAGS(ff,np.NPY_OWNDATA)
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(ff.data),ff.size)
-        cconstr.CONSTR_set_f(self._c_constr,v)  
+        cconstr.CONSTR_set_f(self._c_constr,v)
 
     def set_J(self,J):
         """

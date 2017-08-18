@@ -3,7 +3,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -97,6 +97,7 @@ cdef class FunctionBase:
         cdef np.ndarray[double,mode='c'] x = values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cfunc.REAL*>(x.data),x.size)
         cfunc.FUNC_eval(self._c_func,v)
+        free(v)
         if cfunc.FUNC_has_error(self._c_func):
             raise FunctionError(cfunc.FUNC_get_error_string(self._c_func))
 

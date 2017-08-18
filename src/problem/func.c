@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -74,7 +74,7 @@ void FUNC_del_matvec(Func* f) {
 
 void FUNC_del(Func* f) {
   if (f) {
-
+    
     // Mat and vec
     FUNC_del_matvec(f);
 

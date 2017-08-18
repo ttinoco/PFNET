@@ -26,6 +26,7 @@ Unreleased
 * Made LBOUND constraint store row info (done).
 * Updated LOAD_PF (load constant power factor) constraint to maintain sign differences of current P and Q (done).
 * Made load "set_target_power_factor" routine accept negative power factors (done).
+* Fixed memory leaks coming from "VEC_new_from_array" (done).	
 * Add routines for extracting info strings about entries of var values vector (todo).
 * Add routines for extracting info strings for rows of var projection matrices (todo).
 * Update Python wrapper documentation to show how to install with pip or download/run tests (todo).
