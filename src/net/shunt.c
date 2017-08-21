@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -26,11 +26,11 @@ struct Shunt {
   REAL g;         /**< @brief Conductance (p.u) */
 
   // Susceptance
-  REAL* b;         /**< @brief Susceptance (p.u.) */
-  REAL b_max;     /**< @brief Maximum susceptance (p.u.) */
-  REAL b_min;     /**< @brief Minimum susceptance (p.u.) */
-  REAL* b_values; /**< @brief Array of valid susceptances (p.u.) */
-  char num_b;     /**< @brief Number of valid susceptances (p.u.) */
+  REAL* b;           /**< @brief Susceptance (p.u.) */
+  REAL b_max;        /**< @brief Maximum susceptance (p.u.) */
+  REAL b_min;        /**< @brief Minimum susceptance (p.u.) */
+  REAL* b_values;    /**< @brief Array of valid susceptances (p.u.) */
+  char num_b_values; /**< @brief Number of valid susceptances (p.u.) */
  
   // Flags
   char vars;      /**< @brief Flags for indicating which quantities are treated as variables **/
@@ -181,7 +181,7 @@ REAL* SHUNT_get_b_values(Shunt* shunt) {
 
 int SHUNT_get_num_b_values(Shunt* shunt) {
   if (shunt)
-    return shunt->num_b;
+    return shunt->num_b_values;
   else
     return 0;
 }
@@ -316,7 +316,7 @@ char* SHUNT_get_json_string(Shunt* shunt, char* output) {
   JSON_array_float(temp,output,"b",shunt->b,shunt->num_periods,FALSE);
   JSON_float(temp,output,"b_max",shunt->b_max,FALSE);
   JSON_float(temp,output,"b_min",shunt->b_min,FALSE);
-  JSON_array_float(temp,output,"b_values",shunt->b_values,shunt->num_b,TRUE);
+  JSON_array_float(temp,output,"b_values",shunt->b_values,shunt->num_b_values,TRUE);
   JSON_end(output);
   
   // Output
@@ -371,7 +371,7 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
   shunt->b_max = 0;
   shunt->b_min = 0;
   shunt->b_values = NULL;
-  shunt->num_b = 0;
+  shunt->num_b_values = 0;
   shunt->vars = 0x00;
   shunt->fixed = 0x00;
   shunt->bounded = 0x00;
@@ -472,8 +472,10 @@ void SHUNT_set_b_min(Shunt* shunt, REAL b_min) {
 
 void SHUNT_set_b_values(Shunt* shunt, REAL* values, int num) {
   if (shunt) {
+    if (shunt->b_values)
+      free(shunt->b_values);
     shunt->b_values = values;
-    shunt->num_b = num;
+    shunt->num_b_values = num;
   }
 }
 

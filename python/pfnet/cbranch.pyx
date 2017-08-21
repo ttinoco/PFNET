@@ -3,7 +3,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -838,7 +838,6 @@ cdef class Branch:
     property outage:
         """ Flag that indicates whether branch is on outage. """
         def __get__(self): return cbranch.BRANCH_is_on_outage(self._c_ptr)
-        def __set__(self,b): cbranch.BRANCH_set_outage(self._c_ptr,b)
 
     property json_string:
         """ JSON string (string). """

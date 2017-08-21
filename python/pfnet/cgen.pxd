@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -59,7 +59,6 @@ cdef extern from "pfnet/gen.h":
     bint GEN_has_flags(Gen* gen, char flag_type, char mask)
     Gen* GEN_new(int num_periods)
     Gen* GEN_array_new(int size, int num_periods)
-    void GEN_set_outage(Gen* gen, BOOL outage)
     void GEN_set_bus(Gen* gen, Bus* bus)
     void GEN_set_reg_bus(Gen* gen, Bus* reg_bus)
     void GEN_set_P(Gen* gen, REAL P, int t)

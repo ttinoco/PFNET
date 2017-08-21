@@ -3,7 +3,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -104,22 +104,8 @@ cdef class Shunt:
         """
         
         cdef np.ndarray[double,mode='c'] x = values
-        cdef cvec.Vec* v =  cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size)
-        cshunt.SHUNT_set_b_values(self._c_ptr,cvec.VEC_get_data(v),cvec.VEC_get_size(v))
-        if v != NULL:
-            free(v)
-
-    def get_b_values(self):
-        """ 
-        Get the shunt susceptance step block values (p.u.) (np.array). 
-        
-        Returns
-        -------
-        numpy.narray
-        """
-        
-        return Vector(cvec.VEC_new_from_array(cshunt.SHUNT_get_b_values(self._c_ptr),
-                                              cshunt.SHUNT_get_num_b_values(self._c_ptr)))
+        PyArray_CLEARFLAGS(x,np.NPY_OWNDATA)
+        cshunt.SHUNT_set_b_values(self._c_ptr,<cnet.REAL*>(x.data),x.size)
 
     property num_periods:
         """ Number of time periods (int). """
@@ -198,9 +184,11 @@ cdef class Shunt:
         def __set__(self,value): cshunt.SHUNT_set_b_min(self._c_ptr,value)
         
     property b_values:
-        """ Shunt susceptance valid values (p.u.) if switchable (list of floats). """
-        def __get__(self): return self.get_b_values()
-        def __set__(self,values): self.set_b_values(values)
+        """ Valid shunt susceptance values if switchable (p.u.) (:class:`ndarray <numpy.ndarray>`). """
+        def __get__(self): return DoubleArray(cshunt.SHUNT_get_b_values(self._c_ptr),
+                                              cshunt.SHUNT_get_num_b_values(self._c_ptr))
+        def __set__(self,x):
+            self.b_values[:] = x
 
     property json_string:
         """ JSON string (string). """

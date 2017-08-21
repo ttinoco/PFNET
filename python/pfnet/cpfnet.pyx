@@ -75,6 +75,20 @@ cdef Vector(cvec.Vec* v, owndata=False):
     else:
         return np.zeros(0)
 
+# Double array
+##############
+
+cdef DoubleArray(double* a, int size, owndata=False):
+    cdef np.npy_intp shape[1]
+    if a is not NULL:
+        shape[0] = <np.npy_intp>size
+        arr = np.PyArray_SimpleNewFromData(1,shape,np.NPY_DOUBLE,a)
+        if owndata:
+            PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
+        return arr
+    else:
+        return np.zeros(0)
+
 # Bool array
 ############
 

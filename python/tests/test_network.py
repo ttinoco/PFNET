@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -1017,6 +1017,37 @@ class TestNetwork(unittest.TestCase):
                     self.assertTrue(shunt.is_fixed())
                     self.assertRaises(pf.BusError,lambda : shunt.reg_bus)
 
+                # b_values
+                if shunt.b_values.size:
+                    x = np.random.randn(shunt.b_values.size)
+                    for i in range(shunt.b_values.size):
+                        shunt.b_values[i] = x[i]
+                        self.assertEqual(shunt.b_values[i],x[i])
+                    self.assertLess(np.linalg.norm(shunt.b_values-x),1e-12)
+                    y = np.random.randn(shunt.b_values.size)
+                    shunt.b_values = y
+                    self.assertLess(np.linalg.norm(shunt.b_values-y),1e-12)
+                    z = np.random.randn(shunt.b_values.size)
+                    shunt.b_values[:] = z
+                    self.assertLess(np.linalg.norm(shunt.b_values-z),1e-12)
+                xx = np.random.randn(10)
+                shunt.set_b_values(xx)
+                self.assertEqual(shunt.b_values.size,10)
+                for i in range(10):
+                    self.assertEqual(xx[i],shunt.b_values[i])
+                self.assertLess(np.linalg.norm(shunt.b_values-xx),1e-12)
+                x = np.random.randn(shunt.b_values.size)
+                for i in range(shunt.b_values.size):
+                    shunt.b_values[i] = x[i]
+                    self.assertEqual(shunt.b_values[i],x[i])
+                self.assertLess(np.linalg.norm(shunt.b_values-x),1e-12)
+                y = np.random.randn(shunt.b_values.size)
+                shunt.b_values = y
+                self.assertLess(np.linalg.norm(shunt.b_values-y),1e-12)
+                z = np.random.randn(shunt.b_values.size)
+                shunt.b_values[:] = z
+                self.assertLess(np.linalg.norm(shunt.b_values-z),1e-12)
+                
         # Multi period
         for case in test_cases.CASES:
 

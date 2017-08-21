@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -101,7 +101,6 @@ cdef extern from "pfnet/branch.h":
     void BRANCH_set_b(Branch* br, REAL b)
     void BRANCH_set_b_k(Branch* br, REAL b_k)
     void BRANCH_set_b_m(Branch* br, REAL b_m)
-    void BRANCH_set_outage(Branch* br, BOOL outage)
     void BRANCH_set_ratio(Branch* br, REAL ratio, int t)
     void BRANCH_set_ratio_max(Branch* br, REAL ratio)
     void BRANCH_set_ratio_min(Branch* br, REAL ratio)
