@@ -16,6 +16,7 @@
  *  @{
  */
 #define ALL_VARS 0xFF    /**< @brief All variables. */
+#define ANY_PROP 0x00    /**< @brief Any property. */
 /** @} */
 
 // Flag types

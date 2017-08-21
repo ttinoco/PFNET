@@ -106,6 +106,8 @@ cdef class Shunt:
         cdef np.ndarray[double,mode='c'] x = values
         cdef cvec.Vec* v =  cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size)
         cshunt.SHUNT_set_b_values(self._c_ptr,cvec.VEC_get_data(v),cvec.VEC_get_size(v))
+        if v != NULL:
+            free(v)
 
     def get_b_values(self):
         """ 

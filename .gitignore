@@ -4,16 +4,16 @@
 *.raw
 *~
 *.out
-*.so
+*.so.*
 *.art
 *.dot
 *.prof
 cpfnet.c
 cpfnet.h
 build/
-lib/
 __pycache__/
 *foo*
+temp_json.json
 
 # PyCharm Project Files
 .idea/*
@@ -23,6 +23,7 @@ __pycache__/
 lib/*
 python/build/*
 python/pfnet/*.so
+python/lib/pfnet
 
 # pycache
 *.pyc

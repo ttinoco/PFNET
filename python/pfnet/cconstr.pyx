@@ -3,7 +3,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -108,8 +108,80 @@ cdef class ConstraintBase:
         cdef np.ndarray[double,mode='c'] x = coeff
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(x.data),x.size)
         cconstr.CONSTR_combine_H(self._c_constr,v,ensure_psd)
+        free(v)
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
+
+    def get_var_projection(self):
+        """
+        Gets projection matrix P for getting x = P*(x,y), where x are 
+        network variablas and y are extra variables.
+
+        Returns
+        -------
+        P : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        """
+
+        return Matrix(cconstr.CONSTR_get_var_projection(self._c_constr),
+                      owndata=True)
+
+    def get_extra_var_projection(self):
+        """
+        Gets projection matrix P for getting y = P*(x,y), where x are 
+        network variablas and y are extra variables.
+
+        Returns
+        -------
+        P : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        """
+
+        return Matrix(cconstr.CONSTR_get_extra_var_projection(self._c_constr),
+                      owndata=True)
+
+    def get_A_row_info_string(self,index):
+        """
+        Gets info string associated with row of A matrix.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        info : string
+        """
+
+        return cconstr.CONSTR_get_A_row_info_string(self._c_constr,index).decode('UTF-8')
+
+    def get_J_row_info_string(self,index):
+        """
+        Gets info string associated with row of J matrix.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        info : string
+        """
+
+        return cconstr.CONSTR_get_J_row_info_string(self._c_constr,index).decode('UTF-8')
+
+    def get_G_row_info_string(self,index):
+        """
+        Gets info string associated with row of G matrix.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        info : string
+        """
+
+        return cconstr.CONSTR_get_G_row_info_string(self._c_constr,index).decode('UTF-8')
 
     def eval(self,x,y=None):
         """
@@ -126,6 +198,9 @@ cdef class ConstraintBase:
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(xx.data),xx.size)
         cdef cvec.Vec* ve = cvec.VEC_new_from_array(<cconstr.REAL*>(yy.data),yy.size) if y is not None else NULL
         cconstr.CONSTR_eval(self._c_constr,v,ve)
+        free(v)
+        if ve != NULL:
+            free(ve)
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
 
@@ -151,6 +226,14 @@ cdef class ConstraintBase:
         cdef cvec.Vec* vGu = cvec.VEC_new_from_array(<cconstr.REAL*>(xGu.data),xGu.size) if sGu is not None else NULL
         cdef cvec.Vec* vGl = cvec.VEC_new_from_array(<cconstr.REAL*>(xGl.data),xGl.size) if sGl is not None else NULL
         cconstr.CONSTR_store_sens(self._c_constr,vA,vf,vGu,vGl)
+        if vA != NULL:
+            free(vA)
+        if vf != NULL:
+            free(vf)
+        if vGu != NULL:
+            free(vGu)
+        if vGl != NULL:
+            free(vGl)
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
 
@@ -250,7 +333,7 @@ cdef class ConstraintBase:
         cdef np.ndarray[double,mode='c'] ll = l
         PyArray_CLEARFLAGS(ll,np.NPY_OWNDATA)
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(ll.data),ll.size)
-        cconstr.CONSTR_set_l(self._c_constr,v)  
+        cconstr.CONSTR_set_l(self._c_constr,v)
 
     def set_u(self,u):
         """
@@ -264,7 +347,7 @@ cdef class ConstraintBase:
         cdef np.ndarray[double,mode='c'] uu = u
         PyArray_CLEARFLAGS(uu,np.NPY_OWNDATA)
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(uu.data),uu.size)
-        cconstr.CONSTR_set_u(self._c_constr,v)  
+        cconstr.CONSTR_set_u(self._c_constr,v)
 
     def set_G(self,G):
         """
@@ -299,7 +382,7 @@ cdef class ConstraintBase:
         cdef np.ndarray[double,mode='c'] ff = f
         PyArray_CLEARFLAGS(ff,np.NPY_OWNDATA)
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(ff.data),ff.size)
-        cconstr.CONSTR_set_f(self._c_constr,v)  
+        cconstr.CONSTR_set_f(self._c_constr,v)
 
     def set_J(self,J):
         """

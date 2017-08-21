@@ -7,24 +7,16 @@ os:
 before_install:
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then 
     sudo apt-get update;
-    sudo apt-get -y purge libgraphviz-dev; 
-    sudo apt-get -y install m4;
-    sudo apt-get -y install autoconf-archive;
+    sudo apt-get -y purge libgraphviz-dev;
   fi
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then 
     brew update;
-    brew install autoconf-archive;
   fi
 
 install:
 - sudo pip install -r ./python/requirements.txt
 
 script: 
-- ./autogen.sh
-- ./configure
-- make
-- make check
-- sudo make install
 - cd python
-- python setup.py build_ext --inplace
+- sudo -E python setup.py build_ext --inplace
 - nosetests -s -v

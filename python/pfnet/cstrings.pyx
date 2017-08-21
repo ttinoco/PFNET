@@ -114,7 +114,8 @@ str2prop_vargen = {'any' : cvargen.VARGEN_PROP_ANY}
 
 str2prop_bat = {'any' : cbat.BAT_PROP_ANY}
 
-str2prop = {'bus' : str2prop_bus,
+str2prop = {'all' : {'any' : cflags.ANY_PROP},
+            'bus' : str2prop_bus,
             'branch' : str2prop_branch,
             'generator' : str2prop_gen,
             'shunt' : str2prop_shunt,

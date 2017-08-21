@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -18,7 +18,8 @@
 #include "matrix.h"
 
 // Buffer
-#define CONSTR_BUFFER_SIZE 1024 /**< @brief Default constraint buffer size for strings */
+#define CONSTR_BUFFER_SIZE 1024     /**< @brief Default constraint buffer size for general strings */
+#define CONSTR_INFO_BUFFER_SIZE 100 /**< @brife Default buffer size for row info strings */
 
 // Constraint
 typedef struct Constr Constr;
@@ -65,6 +66,11 @@ char* CONSTR_get_bus_counted(Constr *c);
 int CONSTR_get_bus_counted_size(Constr* c);
 void* CONSTR_get_data(Constr* c);
 Constr* CONSTR_get_next(Constr* c);
+Mat* CONSTR_get_var_projection(Constr* c);
+Mat* CONSTR_get_extra_var_projection(Constr* c);
+char* CONSTR_get_A_row_info_string(Constr* c, int index);
+char* CONSTR_get_J_row_info_string(Constr* c, int index);
+char* CONSTR_get_G_row_info_string(Constr* c, int index);
 void CONSTR_list_finalize_structure_of_Hessians(Constr* clist);
 void CONSTR_list_clear_error(Constr* clist);
 BOOL CONSTR_list_has_error(Constr* clist);
@@ -103,6 +109,12 @@ void CONSTR_set_G_row(Constr* c, int index);
 void CONSTR_set_J_row(Constr* c, int index);
 void CONSTR_set_bus_counted(Constr* c, char* counted, int size);
 void CONSTR_set_data(Constr* c, void* data);
+void CONSTR_set_A_row_info(Constr* c, char* A_row_info);
+void CONSTR_set_J_row_info(Constr* c, char* J_row_info);
+void CONSTR_set_G_row_info(Constr* c, char* G_row_info);
+void CONSTR_set_A_row_info_string(Constr* c, int index, char* info);
+void CONSTR_set_J_row_info_string(Constr* c, int index, char* info);
+void CONSTR_set_G_row_info_string(Constr* c, int index, char* info);
 void CONSTR_init(Constr* c);
 void CONSTR_count(Constr* c);
 void CONSTR_count_step(Constr* c, Branch* br, int t);

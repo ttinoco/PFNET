@@ -1,44 +1,54 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
 import sys
 import numpy as np
+from subprocess import call
 from Cython.Build import cythonize
 from setuptools import setup, Extension
 
-package_data = {}
-extra_link_args = []
+if 'darwin' in sys.platform.lower():
+    extra_link_args=['-Wl,-rpath,@loader_path/']
+elif 'linux' in sys.platform.lower():
+    extra_link_args=['-Wl,-rpath=$ORIGIN']
+else:
+    extra_link_args=['']
 
-# need to check if building distributable wheel and make sure to package libpfnet.*
-if 'bdist_wheel' in sys.argv:
-    package_data={'pfnet': ["libpfnet.*"]}
-    # if on OSX add loader_path to rpath, so libpfnet.* is located
-    if sys.platform.lower() == 'darwin':
-        extra_link_args.append("-Wl,-rpath,@loader_path/")
-    # if on Linux add origin to rpath, so libpfnet.so is located
-    elif 'linux' in sys.platform.lower():
-	extra_link_args.append("-Wl,-rpath=$ORIGIN")
+return_code = call(["./build_lib.sh"])
+if return_code != 0:
+    raise ValueError('Unable to build C library')
 
 setup(name='PFNET',
-      version='1.3.1',
-      license='BSD 2-clause license',
+      zip_safe=False,
+      version='1.3.1rc5',
       description='Power Flow Network Library',
+      url='https://github.com/ttinoco/PFNET/python',
       author='Tomas Tinoco De Rubira',
       author_email='ttinoco5687@gmail.com',
-      url='https://github.com/ttinoco/PFNET/python',
       include_package_data=True,
-      package_data=package_data,
+      license='BSD 2-Clause License',
       packages=['pfnet',
                 'pfnet.parsers',
                 'pfnet.functions',
                 'pfnet.constraints'],
-      ext_modules=cythonize([Extension(name="pfnet.cpfnet", 
+      install_requires=['cython>=0.20.1',
+                        'numpy>=1.11.2',
+                        'scipy>=0.18.1',
+                        'nose'],
+      package_data={'pfnet':['libpfnet*']},
+      classifiers=['Development Status :: 5 - Production/Stable',
+                   'License :: OSI Approved :: BSD License',
+                   'Programming Language :: Python :: 2.7',
+                   'Programming Language :: Python :: 3.5'],
+      ext_modules=cythonize([Extension(name="pfnet.cpfnet",
                                        sources=["./pfnet/cpfnet.pyx"],
-                                       include_dirs=[np.get_include()],
-                                       extra_link_args=extra_link_args
-                                       )]))
+                                       libraries=['pfnet'],
+                                       include_dirs=[np.get_include(),'./lib/pfnet/build/include'],
+                                       library_dirs=['./lib/pfnet/build/lib'],
+                                       extra_link_args=extra_link_args)]))
+                                       

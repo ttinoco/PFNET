@@ -3,7 +3,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -436,24 +436,27 @@ cdef class Network:
         """
         return Vector(cnet.NET_get_var_values(self._c_net,str2const[option]),owndata=True)
 
-    def get_var_projection(self,obj_type,q,t_start=0,t_end=None):
+    def get_var_projection(self,obj_type,props,q,t_start=0,t_end=None):
         """
         Gets projection matrix for specific object variables.
 
         Parameters
         ----------
         obj_type : string (:ref:`ref_net_obj`)
+        props : string or list of strings (:ref:`ref_bus_prop`, :ref:`ref_branch_prop`, :ref:`ref_gen_prop`, :ref:`ref_shunt_prop`, :ref:`ref_load_prop`, :ref:`ref_vargen_prop`, :ref:`ref_bat_prop`)
         q : string or list of strings (:ref:`ref_bus_q`, :ref:`ref_branch_q`, :ref:`ref_gen_q`, :ref:`ref_shunt_q`, :ref:`ref_load_q`, :ref:`ref_vargen_q`, :ref:`ref_bat_q`)
         t_start : int
         t_end : int (inclusive)
         """
 
+        props = props if isinstance(props,list) else [props]
         q = q if isinstance(q,list) else [q]
 
         if t_end is None:
             t_end = self.num_periods-1
         m = Matrix(cnet.NET_get_var_projection(self._c_net,
                                                str2obj[obj_type],
+					                           reduce(lambda x,y: x|y,[str2prop[obj_type][pp] for pp in props],0),
                                                reduce(lambda x,y: x|y,[str2q[obj_type][qq] for qq in q],0),
                                                t_start,
                                                t_end),
@@ -932,6 +935,7 @@ cdef class Network:
         cdef np.ndarray[double,mode='c'] x = values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size)
         cnet.NET_set_var_values(self._c_net,v)
+        free(v)
 
     def show_components(self):
         """
@@ -978,6 +982,8 @@ cdef class Network:
         cdef np.ndarray[double,mode='c'] x = values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if values is not None else NULL
         cnet.NET_update_properties(self._c_net,v)
+        if v != NULL:
+            free(v)
         
     def propogate_data_in_time(self, start, end):
         """ Propogates data from the first period through time. 

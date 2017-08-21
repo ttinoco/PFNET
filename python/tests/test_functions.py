@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -29,7 +29,7 @@ class TestFunctions(unittest.TestCase):
     def test_func_REG_VMAG(self):
 
         # Constants
-        h = 1e-9
+        h = 1e-8
 
         # Multiperiod
         for case in test_cases.CASES:
@@ -940,7 +940,7 @@ class TestFunctions(unittest.TestCase):
     def test_func_SP_CONTROLS(self):
 
         # Constants
-        h = 1e-9
+        h = 1e-10
 
         # Single period
         for case in test_cases.CASES:

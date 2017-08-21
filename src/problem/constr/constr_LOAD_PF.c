@@ -178,12 +178,15 @@ void CONSTR_LOAD_PF_analyze_step(Constr* c, Branch* br, int t) {
 	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P) && LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) {
 
 	  gamma = LOAD_get_target_power_factor(load);
-	  factor = sqrt(1.-gamma*gamma)/gamma;
+	  factor = sqrt((1.-gamma*gamma)/(gamma*gamma));
 
 	  // A
 	  MAT_set_i(A,*A_nnz,*A_row);
 	  MAT_set_j(A,*A_nnz,LOAD_get_index_P(load,t));
-	  MAT_set_d(A,*A_nnz,-factor);
+	  if (LOAD_get_P(load,t)*LOAD_get_Q(load,t) >= 0)
+	    MAT_set_d(A,*A_nnz,-factor);
+	  else
+	    MAT_set_d(A,*A_nnz,factor);
 	  (*A_nnz)++;
 
 	  // A

@@ -1,7 +1,9 @@
-python setup.py clean
-#find ./pfnet -name \*.so -delete
+echo "cleaning..."
+find ./pfnet -name \*.so -delete
 find ./pfnet -name \*.pyc -delete
-rm ./pfnet/cpfnet.c
+find . -name libpfnet* -delete
+rm -rf PFNET.egg-info
+rm -f ./pfnet/cpfnet.c
 rm -rf build
 rm -rf dist
-rm -rf PFNET.egg-info
+rm -rf lib/pfnet

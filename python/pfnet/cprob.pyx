@@ -3,7 +3,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -114,8 +114,9 @@ cdef class Problem:
 
     def apply_heuristics(self,var_values):
         cdef np.ndarray[double,mode='c'] x = var_values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if var_values.size else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cprob.REAL*>(x.data),x.size)
         cprob.PROB_apply_heuristics(self._c_prob,v)
+        free(v)
 
     def clear(self):
         """
@@ -143,8 +144,9 @@ cdef class Problem:
         """
 
         cdef np.ndarray[double,mode='c'] x = coeff
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if coeff.size else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cprob.REAL*>(x.data),x.size)
         cprob.PROB_combine_H(self._c_prob,v,ensure_psd)
+        free(v)
         if cprob.PROB_has_error(self._c_prob):
             raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 
@@ -171,8 +173,9 @@ cdef class Problem:
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if var_values.size else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cprob.REAL*>(x.data),x.size)
         cprob.PROB_eval(self._c_prob,v)
+        free(v)
         if cprob.PROB_has_error(self._c_prob):
             raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 
@@ -197,11 +200,19 @@ cdef class Problem:
         cdef np.ndarray[double,mode='c'] xf = sf
         cdef np.ndarray[double,mode='c'] xGu = sGu
         cdef np.ndarray[double,mode='c'] xGl = sGl
-        cdef cvec.Vec* vA = cvec.VEC_new_from_array(&(xA[0]),len(xA)) if (sA is not None and sA.size) else NULL
-        cdef cvec.Vec* vf = cvec.VEC_new_from_array(&(xf[0]),len(xf)) if (sf is not None and sf.size) else NULL
-        cdef cvec.Vec* vGu = cvec.VEC_new_from_array(&(xGu[0]),len(xGu)) if (sGu is not None and sGu.size) else NULL
-        cdef cvec.Vec* vGl = cvec.VEC_new_from_array(&(xGl[0]),len(xGl)) if (sGl is not None and sGl.size) else NULL
+        cdef cvec.Vec* vA = cvec.VEC_new_from_array(<cprob.REAL*>(xA.data),xA.size) if sA is not None else NULL
+        cdef cvec.Vec* vf = cvec.VEC_new_from_array(<cprob.REAL*>(xf.data),xf.size) if sf is not None else NULL
+        cdef cvec.Vec* vGu = cvec.VEC_new_from_array(<cprob.REAL*>(xGu.data),xGu.size) if sGu is not None else NULL
+        cdef cvec.Vec* vGl = cvec.VEC_new_from_array(<cprob.REAL*>(xGl.data),xGl.size) if sGl is not None else NULL
         cprob.PROB_store_sens(self._c_prob,vA,vf,vGu,vGl)
+        if vA != NULL:
+            free(vA)
+        if vf != NULL:
+            free(vf)
+        if vGu != NULL:
+            free(vGu)
+        if vGl != NULL:
+            free(vGl)
         if cprob.PROB_has_error(self._c_prob):
             raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 

@@ -11,6 +11,27 @@ Targets
 
 Unreleased
 ----------
+* Moved to setuptools (done).
+* Changed configure.ac to look for raw_parser using RAW_PARSER env variable (done).
+* Removed C lib tarball from python/docs/_static (done).
+* Made Python wrapper self-contained, i.e., it contains and installs the C library from a tarball in lib directory (done).
+* Updated travis instructions to directly install python wrapper (done).
+* Removed "build" script for readthedocs since it was no longer needed (done).
+* Removed setup.cfg since it was no longer needed (done).
+* Added property mask to projection operator (done).
+* Added projection getters for network and extra vars of constraints (done).
+* Made gen Qmin,Qmax writable in Python (done).
+* Added routines for extracting constraint A,J,G row info strings (done).
+* Made AC_FLOW_LIM constraint store row info (done).
+* Made LBOUND constraint store row info (done).
+* Updated LOAD_PF (load constant power factor) constraint to maintain sign differences of current P and Q (done).
+* Made load "set_target_power_factor" routine accept negative power factors (done).
+* Fixed memory leaks coming from "VEC_new_from_array" (done).	
+* Add routines for extracting info strings about entries of var values vector (todo).
+* Add routines for extracting info strings for rows of var projection matrices (todo).
+* Update Python wrapper documentation to show how to install with pip or download/run tests (todo).
+* Update examples, documentation and create release (todo).
+* Distribute pfnet python wrapper through pypi (todo).
 
 Version 1.3.1
 -------------

@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -56,6 +56,11 @@ struct Constr {
   int G_row;             /**< @brief Counter for linear inequality constraints */
   char* bus_counted;     /**< @brief Flag for processing buses */
   int bus_counted_size;  /**< @brief Size of array of flags for processing buses */
+
+  // Row info
+  char* A_row_info; /**< @brief Array for info strings of rows of A (x,y) = b */
+  char* J_row_info; /**< @brief Array for info strings of rows of f(x,y) = 0 */
+  char* G_row_info; /**< @brief Array for info strings of rows of l <= G (x,y) <= u */
   
   // Type functions
   void (*func_init)(Constr* c);                                          /**< @brief Initialization function */
@@ -242,6 +247,14 @@ void CONSTR_del(Constr* c) {
       free(c->bus_counted);
     if (c->H_nnz)
       free(c->H_nnz);
+
+    // Row infos
+    if (c->A_row_info)
+      free(c->A_row_info);
+    if (c->J_row_info)
+      free(c->J_row_info);
+    if (c->G_row_info)
+      free(c->G_row_info);
 
     // Data
     if (c->func_free)
@@ -476,6 +489,79 @@ Constr* CONSTR_get_next(Constr* c) {
     return NULL;
 }
 
+Mat* CONSTR_get_var_projection(Constr* c) {
+
+  // Local variables
+  Mat* P;
+  int i;
+
+  // Check
+  if (!c)
+    return NULL;
+
+  // Allocate
+  P = MAT_new(NET_get_num_vars(c->net),
+	      NET_get_num_vars(c->net)+c->num_extra_vars,
+	      NET_get_num_vars(c->net));
+
+  // Fill
+  for (i = 0; i < MAT_get_nnz(P); i++) {
+    MAT_set_i(P,i,i);
+    MAT_set_j(P,i,i);
+    MAT_set_d(P,i,1.);
+  }
+
+  // Return
+  return P;
+}
+
+Mat* CONSTR_get_extra_var_projection(Constr* c) {
+
+    // Local variables
+  Mat* P;
+  int i;
+
+  // Check
+  if (!c)
+    return NULL;
+
+  // Allocate
+  P = MAT_new(c->num_extra_vars,
+	      NET_get_num_vars(c->net)+c->num_extra_vars,
+	      c->num_extra_vars);
+
+  // Fill
+  for (i = 0; i < MAT_get_nnz(P); i++) {
+    MAT_set_i(P,i,i);
+    MAT_set_j(P,i,NET_get_num_vars(c->net)+i);
+    MAT_set_d(P,i,1.);
+  }
+
+  // Return
+  return P;
+}
+
+char* CONSTR_get_A_row_info_string(Constr* c, int index) {
+  if (c && c->A_row_info && 0 <= index && index < MAT_get_size1(c->A))
+    return c->A_row_info+index*CONSTR_INFO_BUFFER_SIZE*sizeof(char);
+  else
+    return "";
+}
+
+char* CONSTR_get_J_row_info_string(Constr* c, int index) {
+  if (c && c->J_row_info && 0 <= index && index < MAT_get_size1(c->J))
+    return c->J_row_info+index*CONSTR_INFO_BUFFER_SIZE*sizeof(char);
+  else
+    return "";
+}
+
+char* CONSTR_get_G_row_info_string(Constr* c, int index) {
+  if (c && c->G_row_info && 0 <= index && index < MAT_get_size1(c->G))
+    return c->G_row_info+index*CONSTR_INFO_BUFFER_SIZE*sizeof(char);
+  else
+    return "";
+}
+
 void CONSTR_list_finalize_structure_of_Hessians(Constr* clist) {
   Constr* cc;
   for (cc = clist; cc != NULL; cc = CONSTR_get_next(cc))
@@ -533,6 +619,8 @@ void CONSTR_list_combine_H(Constr* clist, Vec* coeff, BOOL ensure_psd) {
       v = NULL;       
     CONSTR_combine_H(cc,v,ensure_psd);
     offset += VEC_get_size(CONSTR_get_f(cc));
+    if (v)
+      free(v);
   }
 }
 
@@ -572,6 +660,8 @@ void CONSTR_list_eval_step(Constr* clist, Branch* br, int t, Vec* v, Vec* ve) {
       ve_c = NULL;
     CONSTR_eval_step(cc,br,t,v,ve_c);
     offset += CONSTR_get_num_extra_vars(cc);
+    if (ve_c)
+      free(ve_c);
   }
 }
 
@@ -631,6 +721,15 @@ void CONSTR_list_store_sens_step(Constr* clist, Branch* br, int t, Vec* sA, Vec*
     offset_sA += MAT_get_size1(CONSTR_get_A(cc));
     offset_sf += VEC_get_size(CONSTR_get_f(cc));
     offset_sG += MAT_get_size1(CONSTR_get_G(cc));
+
+    if (vA)
+      free(vA);
+    if (vf)
+      free(vf);
+    if (vGu)
+      free(vGu);
+    if (vGl)
+      free(vGl);
   }
 }
 
@@ -674,6 +773,11 @@ Constr* CONSTR_new(Net* net) {
   c->J_row = 0;
   c->G_row = 0;
   c->next = NULL;
+
+  // Row infos
+  c->A_row_info = NULL;
+  c->J_row_info = NULL;
+  c->G_row_info = NULL;
 
   // Bus counted flags
   c->bus_counted_size = 0;
@@ -840,6 +944,48 @@ void CONSTR_set_data(Constr* c, void* data) {
     c->data = data;
 }
 
+void CONSTR_set_A_row_info(Constr* c, char* A_row_info) {
+  if (c)
+    c->A_row_info = A_row_info;
+}
+
+void CONSTR_set_J_row_info(Constr* c, char* J_row_info) {
+  if (c)
+    c->J_row_info = J_row_info;
+}
+
+void CONSTR_set_G_row_info(Constr* c, char* G_row_info) {
+  if (c)
+    c->G_row_info = G_row_info;
+}
+
+void CONSTR_set_A_row_info_string(Constr* c, int index, char* info) {
+  if (c && c->A_row_info && 0 <= index && index < MAT_get_size1(c->A)) {
+    snprintf(c->A_row_info+index*CONSTR_INFO_BUFFER_SIZE*sizeof(char),
+	     CONSTR_INFO_BUFFER_SIZE*sizeof(char),
+	     "%s",
+	     info);
+  }
+}
+
+void CONSTR_set_J_row_info_string(Constr* c, int index, char* info) {
+  if (c && c->J_row_info && 0 <= index && index < MAT_get_size1(c->J)) {
+    snprintf(c->J_row_info+index*CONSTR_INFO_BUFFER_SIZE*sizeof(char),
+	     CONSTR_INFO_BUFFER_SIZE*sizeof(char),
+	     "%s",
+	     info);
+  }
+}
+
+void CONSTR_set_G_row_info_string(Constr* c, int index, char* info) {
+  if (c && c->G_row_info && 0 <= index && index < MAT_get_size1(c->G)) {
+    snprintf(c->G_row_info+index*CONSTR_INFO_BUFFER_SIZE*sizeof(char),
+	     CONSTR_INFO_BUFFER_SIZE*sizeof(char),
+	     "%s",
+	     info);
+  }
+}
+
 void CONSTR_init(Constr* c) {
   if (c && c->func_free)
     (*(c->func_free))(c);
@@ -868,6 +1014,9 @@ void CONSTR_allocate(Constr* c) {
     CONSTR_del_matvec(c);
     (*(c->func_allocate))(c);
     CONSTR_allocate_H_combined(c);
+    CONSTR_set_A_row_info(c,(char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->A)));
+    CONSTR_set_J_row_info(c,(char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->J)));
+    CONSTR_set_G_row_info(c,(char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->G)));
   }
 }
 
@@ -1020,6 +1169,20 @@ char* CONSTR_get_error_string(Constr* c) {
     return NULL;
 }
 
+char* CONSTR_get_name(Constr* c) {
+  if (c)
+    return c->name;
+  else
+    return NULL;
+}
+
+Net* CONSTR_get_network(Constr* c) {
+  if (c)
+    return c->net;
+  else
+    return NULL;
+}
+
 void CONSTR_update_network(Constr* c) {
   
   // No c
@@ -1034,20 +1197,6 @@ void CONSTR_update_network(Constr* c) {
 
   // Init
   CONSTR_init(c);
-}
-
-char* CONSTR_get_name(Constr* c) {
-  if (c)
-    return c->name;
-  else
-    return NULL;
-}
-
-Net* CONSTR_get_network(Constr* c) {
-  if (c)
-    return c->net;
-  else
-    return NULL;
 }
 
 void CONSTR_set_func_init(Constr* c, void (*func)(Constr* c)) {

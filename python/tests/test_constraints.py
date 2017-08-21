@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -259,6 +259,18 @@ class TestConstraints(unittest.TestCase):
                 self.assertEqual(A.col[ar[0]],load.index_P)
                 self.assertEqual(b[A.row[ar[0]]],load.P)
 
+            # Projections
+            P1 = constr.get_var_projection()
+            P2 = constr.get_extra_var_projection()
+            self.assertTrue(isinstance(P1,coo_matrix))
+            self.assertTrue(isinstance(P2,coo_matrix))
+            self.assertEqual(P1.shape[0],net.num_vars)
+            self.assertEqual(P2.shape[0],0)
+            self.assertEqual(P1.shape[1],net.num_vars)
+            self.assertEqual(P2.shape[1],net.num_vars)
+            self.assertEqual(P1.nnz,net.num_vars)
+            self.assertEqual(P2.nnz,0)
+            self.assertLess(np.linalg.norm(x0-P1*x0),1e-12)
         
         # Multiperiods
         for case in test_cases.CASES:
@@ -951,6 +963,10 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_vars,0)
             self.assertEqual(net.num_fixed,0)
 
+            # add batteries
+            gen_buses = net.get_generator_buses()
+            net.add_batteries(gen_buses,20.,40.,0.8,0.9)
+
             # loads
             for load in net.loads:
                 load.P_min = -2.4*(load.index+1)*np.array(range(net.num_periods))
@@ -1055,6 +1071,89 @@ class TestConstraints(unittest.TestCase):
                     if shunt.is_switched_v():
                         self.assertEqual(u[shunt.index_b[t]],pf.SHUNT_INF_SUSC)
                         self.assertEqual(l[shunt.index_b[t]],-pf.SHUNT_INF_SUSC)
+
+            # Row info
+            for t in range(self.T):
+                for bus in net.buses:
+                    i = bus.index_v_mag[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'bus %d voltage magnitude limit time %d' %(bus.index,t))
+                    i = bus.index_v_ang[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'bus %d voltage angle limit time %d' %(bus.index,t))
+                for gen in net.generators:
+                    i = gen.index_P[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'generator %d active power limit time %d' %(gen.index,t))
+                    i = gen.index_Q[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'generator %d reactive power limit time %d' %(gen.index,t))
+                for load in net.loads:
+                    i = load.index_P[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'load %d active power limit time %d' %(load.index,t))
+                    i = load.index_Q[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'load %d reactive power limit time %d' %(load.index,t))
+                for vargen in net.var_generators:
+                    i = vargen.index_P[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'var generator %d active power limit time %d' %(vargen.index,t))
+                    i = vargen.index_Q[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'var generator %d reactive power limit time %d' %(vargen.index,t))
+                for branch in net.branches:
+                    if branch.is_tap_changer():
+                        i = branch.index_ratio[t]
+                        s = constr.get_G_row_info_string(i)
+                        self.assertEqual(constr.get_A_row_info_string(i),"")
+                        self.assertEqual(constr.get_J_row_info_string(i),"")
+                        self.assertEqual(s,'branch %d tap ratio limit time %d' %(branch.index,t))
+                    if branch.is_phase_shifter():
+                        i = branch.index_phase[t]
+                        s = constr.get_G_row_info_string(i)
+                        self.assertEqual(constr.get_A_row_info_string(i),"")
+                        self.assertEqual(constr.get_J_row_info_string(i),"")
+                        self.assertEqual(s,'branch %d phase shift limit time %d' %(branch.index,t))
+                for shunt in net.shunts:
+                    if shunt.is_switched_v():
+                        i = shunt.index_b[t]
+                        s = constr.get_G_row_info_string(i)
+                        self.assertEqual(constr.get_A_row_info_string(i),"")
+                        self.assertEqual(constr.get_J_row_info_string(i),"")
+                        self.assertEqual(s,'shunt %d susceptance limit time %d' %(shunt.index,t))
+                for bat in net.batteries:
+                    i = bat.index_Pc[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'battery %d charging power limit time %d' %(bat.index,t))
+                    i = bat.index_Pd[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'battery %d discharging power limit time %d' %(bat.index,t))
+                    i = bat.index_E[t]
+                    s = constr.get_G_row_info_string(i)
+                    self.assertEqual(constr.get_A_row_info_string(i),"")
+                    self.assertEqual(constr.get_J_row_info_string(i),"")
+                    self.assertEqual(s,'battery %d energy level limit time %d' %(bat.index,t))
 
             # Bounded
             net.set_flags('bus',
@@ -1675,7 +1774,7 @@ class TestConstraints(unittest.TestCase):
             J = constr.J
             P_list = []
             for t in range(self.T):
-                P_list.append(net.get_var_projection('all','all',t_start=t,t_end=t))
+                P_list.append(net.get_var_projection('all','any','all',t_start=t,t_end=t))
             f_list = [f[t*2*net.num_buses:(t+1)*2*net.num_buses] for t in range(self.T)]
             for t in range(self.T-1):
                 self.assertLess(norm(f_list[t]-f_list[t+1]),1e-12*norm(f_list[t]))
@@ -3013,12 +3112,12 @@ class TestConstraints(unittest.TestCase):
                               2*net.num_batteries))
 
             # Extract pieces
-            P1 = net.get_var_projection('bus','voltage angle')
-            P2 = net.get_var_projection('generator','active power')
-            P3 = net.get_var_projection('variable generator','active power')
-            P4 = net.get_var_projection('branch','phase shift')
-            P5 = net.get_var_projection('load','active power')
-            P6 = net.get_var_projection('battery','charging power')
+            P1 = net.get_var_projection('bus','any','voltage angle')
+            P2 = net.get_var_projection('generator','any','active power')
+            P3 = net.get_var_projection('variable generator','any','active power')
+            P4 = net.get_var_projection('branch','any','phase shift')
+            P5 = net.get_var_projection('load','any','active power')
+            P6 = net.get_var_projection('battery','any','charging power')
 
             G = A*P2.T
             R = A*P3.T
@@ -3440,7 +3539,7 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(G.shape,(num_constr*self.T,net.num_vars))
             Projs = []
             for t in range(self.T):
-                Projs.append(net.get_var_projection('all','all',t,t))
+                Projs.append(net.get_var_projection('all','any','all',t,t))
             Gs = [G*P.T for P in Projs]
             x0s = [P*x0 for P in Projs]
             Gx0s = [(Gs[t]*x0s[t])[t*num_constr:(t+1)*num_constr] for t in range(self.T)]
@@ -3899,6 +3998,21 @@ class TestConstraints(unittest.TestCase):
                     self.assertEqual(u[i],branch.ratingA)
                     self.assertEqual(u[i+1],branch.ratingA)
 
+            # Row info
+            index = 0
+            for t in range(net.num_periods):
+                for branch in net.branches:
+                    if branch.ratingA != 0:
+                        skmJ = constr.get_J_row_info_string(index)
+                        smkJ = constr.get_J_row_info_string(index+1)
+                        self.assertEqual(skmJ,"branch %d AC flow limit %s time %d" %(branch.index,"km",t))
+                        self.assertEqual(smkJ,"branch %d AC flow limit %s time %d" %(branch.index,"mk",t))
+                        skmG = constr.get_G_row_info_string(index)
+                        smkG = constr.get_G_row_info_string(index+1)
+                        self.assertEqual(skmG,"branch %d AC flow limit %s time %d" %(branch.index,"km",t))
+                        self.assertEqual(smkG,"branch %d AC flow limit %s time %d" %(branch.index,"mk",t))
+                        index += 2
+
             # Hessian structure
             for i in range(constr.J.shape[0]):
                 H = constr.get_H_single(i)
@@ -3938,6 +4052,20 @@ class TestConstraints(unittest.TestCase):
             # After eval
             self.assertTrue(not np.any(np.isinf(f)))
             self.assertTrue(not np.any(np.isnan(f)))
+
+            # Projections
+            P1 = constr.get_var_projection()
+            P2 = constr.get_extra_var_projection()
+            self.assertTrue(isinstance(P1,coo_matrix))
+            self.assertTrue(isinstance(P2,coo_matrix))
+            self.assertEqual(P1.shape[0],net.num_vars)
+            self.assertEqual(P2.shape[0],constr.num_extra_vars)
+            self.assertEqual(P1.shape[1],net.num_vars+constr.num_extra_vars)
+            self.assertEqual(P2.shape[1],net.num_vars+constr.num_extra_vars)
+            self.assertEqual(P1.nnz,net.num_vars)
+            self.assertEqual(P2.nnz,constr.num_extra_vars)
+            self.assertLess(np.linalg.norm(x0-P1*np.hstack((x0,y0))),1e-12)
+            self.assertLess(np.linalg.norm(y0-P2*np.hstack((x0,y0))),1e-12)
             
             # Cross check current magnitudes
             J_row = 0
@@ -4167,6 +4295,8 @@ class TestConstraints(unittest.TestCase):
                             if counter >= num_max:
                                 break
                         self.assertLess((100.*num_bad)/min([net.num_buses,num_max]),1.) # less then 1 %
+
+            
 
         # Single period
         for case in test_cases.CASES:
@@ -4544,6 +4674,7 @@ class TestConstraints(unittest.TestCase):
             # Powers
             for load in net.loads:
                 load.P = np.random.rand(net.num_periods)
+                self.assertTrue(np.all(load.P > 0))
 
             # Target power factors
             for load in net.loads:
@@ -4641,9 +4772,15 @@ class TestConstraints(unittest.TestCase):
                     for i in indices:
                         if A.col[i] == load.index_P[t]:
                             gamma = load.target_power_factor
-                            factor = np.sqrt(1.-gamma**2.)/gamma
-                            load.Q = load.P*factor
-                            self.assertAlmostEqual(A.data[i],-factor)
+                            factor = np.sqrt((1.-gamma**2.)/(gamma**2.))
+                            load.Q[t] = np.abs(load.P[t])*factor*(1. if load.Q[t] >= 0 else -1.)
+                            self.assertLess(np.abs(gamma-load.power_factor[t]),1e-12)
+                            if load.P[t]*load.Q[t] >= 0:
+                                self.assertAlmostEqual(A.data[i],-factor)
+                                self.assertLess(np.abs(-factor*load.P[t]+load.Q[t]),1e-12)
+                            else:
+                                self.assertAlmostEqual(A.data[i],factor)
+                                self.assertLess(np.abs(factor*load.P[t]+load.Q[t]),1e-12)
                         else:
                             self.assertEqual(A.col[i],load.index_Q[t])
                             self.assertEqual(A.data[i],1.)
