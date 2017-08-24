@@ -51,6 +51,7 @@ cdef extern from "pfnet/gen.h":
     Gen* GEN_get_next(Gen* gen)
     Gen* GEN_get_reg_next(Gen* gen)
     char* GEN_get_json_string(Gen* gen, char* output)
+    char* GEN_get_var_info_string(Gen* gen, int index)
     bint GEN_is_equal(Gen* gen, Gen* other)
     bint GEN_is_on_outage(Gen* gen)
     bint GEN_is_P_adjustable(Gen* gen)

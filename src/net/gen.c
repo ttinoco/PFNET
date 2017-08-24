@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -354,6 +354,39 @@ void GEN_get_var_values(Gen* gen, Vec* values, int code) {
       }
     }
   }
+}
+
+char* GEN_get_var_info_string(Gen* gen, int index) {
+
+  // Local variables
+  char* info;
+
+  //Check
+  if (!gen)
+    return NULL;
+
+  // Active power
+  if ((gen->vars & GEN_VAR_P) &&
+      index >= gen->index_P[0] &&
+      index <= gen->index_P[gen->num_periods-1]) {
+    info = (char*)malloc(GEN_BUFFER_SIZE*sizeof(char));
+    snprintf(info,GEN_BUFFER_SIZE*sizeof(char),
+	     "generator %d active power time %d",gen->index,index-gen->index_P[0]);
+    return info;
+  }
+
+  // Reactive power
+  if ((gen->vars & GEN_VAR_Q) &&
+      index >= gen->index_Q[0] &&
+      index <= gen->index_Q[gen->num_periods-1]) {
+    info = (char*)malloc(GEN_BUFFER_SIZE*sizeof(char));
+    snprintf(info,GEN_BUFFER_SIZE*sizeof(char),
+	     "generator %d reactive power time %d",gen->index,index-gen->index_Q[0]);
+    return info;
+  }
+
+  // Return
+  return NULL;
 }
 
 int GEN_get_num_vars(void* vgen, unsigned char var, int t_start, int t_end) {

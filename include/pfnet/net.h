@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -113,6 +113,7 @@ REAL NET_get_total_gen_Q(Net* net, int t);
 REAL NET_get_total_load_P(Net* net, int t);
 REAL NET_get_total_load_Q(Net* net, int t);
 Vec* NET_get_var_values(Net* net, int code);
+char* NET_get_var_info_string(Net* net, int index);
 Mat* NET_get_var_projection(Net* net, char obj_type, char prop_mask, unsigned char var, int t_start, int t_end);
 REAL NET_get_bus_v_max(Net* net, int t);
 REAL NET_get_bus_v_min(Net* net, int t);

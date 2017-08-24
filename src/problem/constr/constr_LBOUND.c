@@ -326,7 +326,7 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  // Row info
 	  snprintf(info,
 		   CONSTR_INFO_BUFFER_SIZE*sizeof(char),
-		   "var generator %d active power limit time %d",
+		   "variable generator %d active power limit time %d",
 		   VARGEN_get_index(vargen),
 		   t);
 	  CONSTR_set_G_row_info_string(c,index,info);
@@ -350,7 +350,7 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  // Row info
 	  snprintf(info,
 		   CONSTR_INFO_BUFFER_SIZE*sizeof(char),
-		   "var generator %d reactive power limit time %d",
+		   "variable generator %d reactive power limit time %d",
 		   VARGEN_get_index(vargen),
 		   t);
 	  CONSTR_set_G_row_info_string(c,index,info);

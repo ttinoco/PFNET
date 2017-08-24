@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -325,6 +325,39 @@ void LOAD_get_var_values(Load* load, Vec* values, int code) {
       }
     }
   }
+}
+
+char* LOAD_get_var_info_string(Load* load, int index) {
+
+  // Local variables
+  char* info;
+
+  //Check
+  if (!load)
+    return NULL;
+
+  // Active power
+  if ((load->vars & LOAD_VAR_P) &&
+      index >= load->index_P[0] &&
+      index <= load->index_P[load->num_periods-1]) {
+    info = (char*)malloc(LOAD_BUFFER_SIZE*sizeof(char));
+    snprintf(info,LOAD_BUFFER_SIZE*sizeof(char),
+	     "load %d active power time %d",load->index,index-load->index_P[0]);
+    return info;
+  }
+
+  // Reactive power
+  if ((load->vars & LOAD_VAR_Q) &&
+      index >= load->index_Q[0] &&
+      index <= load->index_Q[load->num_periods-1]) {
+    info = (char*)malloc(LOAD_BUFFER_SIZE*sizeof(char));
+    snprintf(info,LOAD_BUFFER_SIZE*sizeof(char),
+	     "load %d reactive power time %d",load->index,index-load->index_Q[0]);
+    return info;
+  }
+
+  // Return
+  return NULL;
 }
 
 int LOAD_get_num_vars(void* vload, unsigned char var, int t_start, int t_end) {

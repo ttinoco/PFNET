@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -784,6 +784,39 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
   }
 }
 
+char* BUS_get_var_info_string(Bus* bus, int index) {
+
+  // Local variables
+  char* info;
+
+  //Check
+  if (!bus)
+    return NULL;
+
+  // Voltage magnitude
+  if ((bus->vars & BUS_VAR_VMAG) &&
+      index >= bus->index_v_mag[0] &&
+      index <= bus->index_v_mag[bus->num_periods-1]) {
+    info = (char*)malloc(BUS_BUFFER_SIZE*sizeof(char));
+    snprintf(info,BUS_BUFFER_SIZE*sizeof(char),
+	     "bus %d voltage magnitude time %d",bus->index,index-bus->index_v_mag[0]);
+    return info;
+  }
+
+  // Voltage angle
+  if ((bus->vars & BUS_VAR_VANG) &&
+      index >= bus->index_v_ang[0] &&
+      index <= bus->index_v_ang[bus->num_periods-1]) {
+    info = (char*)malloc(BUS_BUFFER_SIZE*sizeof(char));
+    snprintf(info,BUS_BUFFER_SIZE*sizeof(char),
+	     "bus %d voltage angle time %d",bus->index,index-bus->index_v_ang[0]);
+    return info;
+  }
+
+  // Return
+  return NULL;
+}
+
 int BUS_get_num_vars(void* vbus, unsigned char var, int t_start, int t_end) {
 
   // Local vars
@@ -791,7 +824,7 @@ int BUS_get_num_vars(void* vbus, unsigned char var, int t_start, int t_end) {
   int num_vars = 0;
   int dt;
 
-  // Cheks
+  // Checks
   if (!bus)
     return 0;
   if (t_start < 0)

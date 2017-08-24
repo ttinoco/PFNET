@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -119,6 +119,7 @@ cdef extern from "pfnet/net.h":
     REAL NET_get_vargen_corr_radius(Net* net)
     REAL NET_get_vargen_corr_value(Net* net)
     cvec.Vec* NET_get_var_values(Net* net, int code)
+    char* NET_get_var_info_string(Net* net, int index)
     cmat.Mat* NET_get_var_projection(Net* net, char obj_type, char prop_mask, char var, int t_start, int t_end)
     char* NET_get_json_string(Net* net)
     bint NET_has_error(Net* net)

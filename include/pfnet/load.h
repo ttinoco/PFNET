@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -81,6 +81,7 @@ REAL LOAD_get_P_max(Load* load, int t);
 REAL LOAD_get_P_min(Load* load, int t);
 REAL LOAD_get_Q(Load* load, int t);
 void LOAD_get_var_values(Load* load, Vec* values, int code);
+char* LOAD_get_var_info_string(Load* load, int index);
 int LOAD_get_num_vars(void* load, unsigned char var, int t_start, int t_end);
 Vec* LOAD_get_var_indices(void* load, unsigned char var, int t_start, int t_end);
 char* LOAD_get_json_string(Load* load, char* output);

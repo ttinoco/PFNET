@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -106,6 +106,7 @@ cdef extern from "pfnet/bus.h":
     REAL BUS_get_quantity(Bus* bus, int qtype, int t)
     Bus* BUS_get_next(Bus* bus)
     char* BUS_get_json_string(Bus* bus, char* output)
+    char* BUS_get_var_info_string(Bus* bus, int index)  
     bint BUS_is_equal(Bus* bus, Bus* other)
     bint BUS_is_slack(Bus* bus)
     bint BUS_is_regulated_by_gen(Bus* bus)

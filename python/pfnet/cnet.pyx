@@ -198,6 +198,27 @@ cdef class Network:
         else:
             return sigma
 
+    def get_var_info_string(self, index):
+        """
+        Gets info string of variable associated with index.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        info : string
+        """
+
+        cdef char* info_string = cnet.NET_get_var_info_string(self._c_net, index)
+        if info_string:
+            s = info_string.decode('UTF-8')
+            free(info_string)
+            return s
+        else:
+            raise NetworkError('index does not correspond to any variable')
+
     def get_bus_by_number(self,number):
         """
         Gets bus with the given number.

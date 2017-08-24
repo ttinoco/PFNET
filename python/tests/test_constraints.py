@@ -1112,12 +1112,12 @@ class TestConstraints(unittest.TestCase):
                     s = constr.get_G_row_info_string(i)
                     self.assertEqual(constr.get_A_row_info_string(i),"")
                     self.assertEqual(constr.get_J_row_info_string(i),"")
-                    self.assertEqual(s,'var generator %d active power limit time %d' %(vargen.index,t))
+                    self.assertEqual(s,'variable generator %d active power limit time %d' %(vargen.index,t))
                     i = vargen.index_Q[t]
                     s = constr.get_G_row_info_string(i)
                     self.assertEqual(constr.get_A_row_info_string(i),"")
                     self.assertEqual(constr.get_J_row_info_string(i),"")
-                    self.assertEqual(s,'var generator %d reactive power limit time %d' %(vargen.index,t))
+                    self.assertEqual(s,'variable generator %d reactive power limit time %d' %(vargen.index,t))
                 for branch in net.branches:
                     if branch.is_tap_changer():
                         i = branch.index_ratio[t]

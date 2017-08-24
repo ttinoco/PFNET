@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -38,6 +38,7 @@ cdef extern from "pfnet/bat.h":
     REAL BAT_get_eta_d(Bat* bat)
     Bat* BAT_get_next(Bat* bat)
     char* BAT_get_json_string(Bat* bat, char* output)
+    char* BAT_get_var_info_string(Bat* bat, int index)
     bint BAT_has_flags(Bat* bat, char flag_type, char mask)
     Bat* BAT_new(int num_periods)
     Bat* BAT_array_new(int size, int num_periods)

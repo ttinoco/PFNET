@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -670,11 +670,110 @@ class TestFlags(unittest.TestCase):
                               -1,
                               'tap changer - v',
                               'tap ratio')
+
+    def test_var_info_strings(self):
+
+        T = 5
+
+        for case in test_cases.CASES:
+            
+            net = pf.Parser(case).parse(case,num_periods=T)
+            self.assertEqual(net.num_periods,T)
+
+            # Add vargens and batteries
+            net.add_var_generators(net.get_generator_buses(),80.,50.,30.,5,0.05)
+            net.add_batteries(net.get_generator_buses(),20.,50.)
+            self.assertGreaterEqual(net.num_var_generators,1)
+            self.assertGreaterEqual(net.num_batteries,1)
+
+            # Errors
+            for bus in net.buses:
+                self.assertRaises(pf.BusError,bus.get_var_info_string,10)
+            for branch in net.branches:
+                self.assertRaises(pf.BranchError,branch.get_var_info_string,10)
+            for gen in net.generators:
+                self.assertRaises(pf.GeneratorError,gen.get_var_info_string,10)
+            for load in net.loads:
+                self.assertRaises(pf.LoadError,load.get_var_info_string,10)
+            for shunt in net.shunts:
+                self.assertRaises(pf.ShuntError,shunt.get_var_info_string,10)
+            for vargen in net.var_generators:
+                self.assertRaises(pf.VarGeneratorError,vargen.get_var_info_string,10)
+            for bat in net.batteries:
+                self.assertRaises(pf.BatteryError,bat.get_var_info_string,10)
+            self.assertRaises(pf.NetworkError,net.get_var_info_string,10)
+                
+            # Set flags
+            net.set_flags('bus','variable','any',['voltage magnitude','voltage angle'])
+            net.set_flags('generator','variable','any',['active power','reactive power'])
+            net.set_flags('load','variable','any',['active power','reactive power'])
+            net.set_flags('variable generator','variable','any',['active power','reactive power'])
+            net.set_flags('branch','variable','tap changer','tap ratio')
+            net.set_flags('branch','variable','phase shifter','phase shift')
+            net.set_flags('shunt','variable','switching - v','susceptance')
+            net.set_flags('battery','variable','any',['charging power','energy level'])
+            self.assertEqual(net.num_vars,
+                             (net.num_buses*2+net.num_generators*2+net.num_loads*2+
+                              net.num_var_generators*2+net.get_num_tap_changers()+
+                              net.get_num_phase_shifters()+
+                              net.get_num_switched_shunts()+
+                              net.num_batteries*3)*net.num_periods)
+
+            # Info strings
+            for t in range(T):
+                for bus in net.buses:
+                    target = "bus %d voltage magnitude time %d" %(bus.index,t)
+                    self.assertEqual(bus.get_var_info_string(bus.index_v_mag[t]),target)
+                    self.assertEqual(net.get_var_info_string(bus.index_v_mag[t]),target)
+                    target = "bus %d voltage angle time %d" %(bus.index,t)
+                    self.assertEqual(bus.get_var_info_string(bus.index_v_ang[t]),target)
+                    self.assertEqual(net.get_var_info_string(bus.index_v_ang[t]),target)
+                for gen in net.generators:
+                    target = "generator %d active power time %d" %(gen.index,t)
+                    self.assertEqual(gen.get_var_info_string(gen.index_P[t]),target)
+                    self.assertEqual(net.get_var_info_string(gen.index_P[t]),target)
+                    target = "generator %d reactive power time %d" %(gen.index,t)
+                    self.assertEqual(gen.get_var_info_string(gen.index_Q[t]),target)
+                    self.assertEqual(net.get_var_info_string(gen.index_Q[t]),target)
+                for branch in net.branches:
+                    if branch.is_tap_changer():
+                        target = "branch %d tap ratio time %d" %(branch.index,t)
+                        self.assertEqual(branch.get_var_info_string(branch.index_ratio[t]),target)
+                        self.assertEqual(net.get_var_info_string(branch.index_ratio[t]),target)
+                    if branch.is_phase_shifter():
+                        target = "branch %d phase shift time %d" %(branch.index,t)
+                        self.assertEqual(branch.get_var_info_string(branch.index_phase[t]),target)
+                        self.assertEqual(net.get_var_info_string(branch.index_phase[t]),target)
+                for load in net.loads:
+                    target = "load %d active power time %d" %(load.index,t)
+                    self.assertEqual(load.get_var_info_string(load.index_P[t]),target)
+                    self.assertEqual(net.get_var_info_string(load.index_P[t]),target)
+                    target = "load %d reactive power time %d" %(load.index,t)
+                    self.assertEqual(load.get_var_info_string(load.index_Q[t]),target)
+                    self.assertEqual(net.get_var_info_string(load.index_Q[t]),target)
+                for vargen in net.var_generators:
+                    target = "variable generator %d active power time %d" %(vargen.index,t)
+                    self.assertEqual(vargen.get_var_info_string(vargen.index_P[t]),target)
+                    self.assertEqual(net.get_var_info_string(vargen.index_P[t]),target)
+                    target = "variable generator %d reactive power time %d" %(vargen.index,t)
+                    self.assertEqual(vargen.get_var_info_string(vargen.index_Q[t]),target)
+                    self.assertEqual(net.get_var_info_string(vargen.index_Q[t]),target)
+                for shunt in net.shunts:
+                    if shunt.is_switched_v():
+                        target = "shunt %d susceptance time %d" %(shunt.index,t)
+                        self.assertEqual(shunt.get_var_info_string(shunt.index_b[t]),target)
+                        self.assertEqual(net.get_var_info_string(shunt.index_b[t]),target)
+                for bat in net.batteries:
+                    target = "battery %d charging power time %d" %(bat.index,t)
+                    self.assertEqual(bat.get_var_info_string(bat.index_Pc[t]),target)
+                    self.assertEqual(net.get_var_info_string(bat.index_Pc[t]),target)
+                    target = "battery %d discharging power time %d" %(bat.index,t)
+                    self.assertEqual(bat.get_var_info_string(bat.index_Pd[t]),target)
+                    self.assertEqual(net.get_var_info_string(bat.index_Pd[t]),target)
+                    target = "battery %d energy level time %d" %(bat.index,t)
+                    self.assertEqual(bat.get_var_info_string(bat.index_E[t]),target)
+                    self.assertEqual(net.get_var_info_string(bat.index_E[t]),target)
             
     def tearDown(self):
         
         pass
-
-
-
-

@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -302,6 +302,49 @@ void BAT_get_var_values(Bat* bat, Vec* values, int code) {
       }
     }
   }
+}
+
+char* BAT_get_var_info_string(Bat* bat, int index) {
+
+  // Local variables
+  char* info;
+  int indicator;
+  int t;
+
+  //Check
+  if (!bat)
+    return NULL;
+
+  // Charging/discharging power
+  if ((bat->vars & BAT_VAR_P) &&
+      index >= bat->index_Pc[0] &&
+      index <= bat->index_Pd[bat->num_periods-1]) {
+    info = (char*)malloc(BAT_BUFFER_SIZE*sizeof(char));
+    t = (index-bat->index_Pc[0])/2;
+    indicator = (index-bat->index_Pc[0]) % 2;
+    if (indicator == 0) {
+      snprintf(info,BAT_BUFFER_SIZE*sizeof(char),
+	       "battery %d charging power time %d",bat->index,t);
+    }
+    else {
+      snprintf(info,BAT_BUFFER_SIZE*sizeof(char),
+	       "battery %d discharging power time %d",bat->index,t);
+    }
+    return info;
+  }
+
+  // Energy level
+  if ((bat->vars & BAT_VAR_E) &&
+      index >= bat->index_E[0] &&
+      index <= bat->index_E[bat->num_periods-1]) {
+    info = (char*)malloc(BAT_BUFFER_SIZE*sizeof(char));
+    snprintf(info,BAT_BUFFER_SIZE*sizeof(char),
+	     "battery %d energy level time %d",bat->index,index-bat->index_E[0]);
+    return info;
+  }
+
+  // Return
+  return NULL;
 }
 
 int BAT_get_num_vars(void* vbat, unsigned char var, int t_start, int t_end) {
