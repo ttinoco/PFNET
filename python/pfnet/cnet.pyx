@@ -58,7 +58,6 @@ cdef class Network:
             self._c_net = NULL
 
     def __getstate__(self):
-        # print ("pickling a Network instance...")
         return  self.json_string
 
     def __setstate__(self, state):
@@ -73,7 +72,6 @@ cdef class Network:
             self._c_net = new_net._c_net
             new_net.alloc = False
             f.close()
-            # print ("Unpickling complete")
             
     def add_var_generators(self,buses,power_capacity,power_base,power_std=0.,corr_radius=0,corr_value=0.):
         """
