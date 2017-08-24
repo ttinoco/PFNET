@@ -371,7 +371,7 @@ char* GEN_get_var_info_string(Gen* gen, int index) {
       index <= gen->index_P[gen->num_periods-1]) {
     info = (char*)malloc(GEN_BUFFER_SIZE*sizeof(char));
     snprintf(info,GEN_BUFFER_SIZE*sizeof(char),
-	     "generator %d active power time %d",gen->index,index-gen->index_P[0]);
+	     "generator:%d:active power:%d",gen->index,index-gen->index_P[0]);
     return info;
   }
 
@@ -381,7 +381,7 @@ char* GEN_get_var_info_string(Gen* gen, int index) {
       index <= gen->index_Q[gen->num_periods-1]) {
     info = (char*)malloc(GEN_BUFFER_SIZE*sizeof(char));
     snprintf(info,GEN_BUFFER_SIZE*sizeof(char),
-	     "generator %d reactive power time %d",gen->index,index-gen->index_Q[0]);
+	     "generator:%d:reactive power:%d",gen->index,index-gen->index_Q[0]);
     return info;
   }
 

@@ -324,11 +324,11 @@ char* BAT_get_var_info_string(Bat* bat, int index) {
     indicator = (index-bat->index_Pc[0]) % 2;
     if (indicator == 0) {
       snprintf(info,BAT_BUFFER_SIZE*sizeof(char),
-	       "battery %d charging power time %d",bat->index,t);
+	       "battery:%d:charging power:%d",bat->index,t);
     }
     else {
       snprintf(info,BAT_BUFFER_SIZE*sizeof(char),
-	       "battery %d discharging power time %d",bat->index,t);
+	       "battery:%d:discharging power:%d",bat->index,t);
     }
     return info;
   }
@@ -339,7 +339,7 @@ char* BAT_get_var_info_string(Bat* bat, int index) {
       index <= bat->index_E[bat->num_periods-1]) {
     info = (char*)malloc(BAT_BUFFER_SIZE*sizeof(char));
     snprintf(info,BAT_BUFFER_SIZE*sizeof(char),
-	     "battery %d energy level time %d",bat->index,index-bat->index_E[0]);
+	     "battery:%d:energy level:%d",bat->index,index-bat->index_E[0]);
     return info;
   }
 

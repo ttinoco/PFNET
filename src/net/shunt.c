@@ -252,7 +252,7 @@ char* SHUNT_get_var_info_string(Shunt* shunt, int index) {
       index <= shunt->index_b[shunt->num_periods-1]) {
     info = (char*)malloc(SHUNT_BUFFER_SIZE*sizeof(char));
     snprintf(info,SHUNT_BUFFER_SIZE*sizeof(char),
-	     "shunt %d susceptance time %d",shunt->index,index-shunt->index_b[0]);
+	     "shunt:%d:susceptance:%d",shunt->index,index-shunt->index_b[0]);
     return info;
   }
   // Return

@@ -799,7 +799,7 @@ char* BUS_get_var_info_string(Bus* bus, int index) {
       index <= bus->index_v_mag[bus->num_periods-1]) {
     info = (char*)malloc(BUS_BUFFER_SIZE*sizeof(char));
     snprintf(info,BUS_BUFFER_SIZE*sizeof(char),
-	     "bus %d voltage magnitude time %d",bus->index,index-bus->index_v_mag[0]);
+	     "bus:%d:voltage magnitude:%d",bus->index,index-bus->index_v_mag[0]);
     return info;
   }
 
@@ -809,7 +809,7 @@ char* BUS_get_var_info_string(Bus* bus, int index) {
       index <= bus->index_v_ang[bus->num_periods-1]) {
     info = (char*)malloc(BUS_BUFFER_SIZE*sizeof(char));
     snprintf(info,BUS_BUFFER_SIZE*sizeof(char),
-	     "bus %d voltage angle time %d",bus->index,index-bus->index_v_ang[0]);
+	     "bus:%d:voltage angle:%d",bus->index,index-bus->index_v_ang[0]);
     return info;
   }
 

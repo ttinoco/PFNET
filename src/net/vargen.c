@@ -302,7 +302,7 @@ char* VARGEN_get_var_info_string(Vargen* gen, int index) {
       index <= gen->index_P[gen->num_periods-1]) {
     info = (char*)malloc(VARGEN_BUFFER_SIZE*sizeof(char));
     snprintf(info,VARGEN_BUFFER_SIZE*sizeof(char),
-	     "variable generator %d active power time %d",gen->index,index-gen->index_P[0]);
+	     "variable generator:%d:active power:%d",gen->index,index-gen->index_P[0]);
     return info;
   }
   
@@ -312,7 +312,7 @@ char* VARGEN_get_var_info_string(Vargen* gen, int index) {
       index <= gen->index_Q[gen->num_periods-1]) {
     info = (char*)malloc(VARGEN_BUFFER_SIZE*sizeof(char));
     snprintf(info,VARGEN_BUFFER_SIZE*sizeof(char),
-	     "variable generator %d reactive power time %d",gen->index,index-gen->index_Q[0]);
+	     "variable generator:%d:reactive power:%d",gen->index,index-gen->index_Q[0]);
     return info;
   }
 

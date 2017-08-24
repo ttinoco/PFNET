@@ -722,55 +722,55 @@ class TestFlags(unittest.TestCase):
             # Info strings
             for t in range(T):
                 for bus in net.buses:
-                    target = "bus %d voltage magnitude time %d" %(bus.index,t)
+                    target = "bus:%d:voltage magnitude:%d" %(bus.index,t)
                     self.assertEqual(bus.get_var_info_string(bus.index_v_mag[t]),target)
                     self.assertEqual(net.get_var_info_string(bus.index_v_mag[t]),target)
-                    target = "bus %d voltage angle time %d" %(bus.index,t)
+                    target = "bus:%d:voltage angle:%d" %(bus.index,t)
                     self.assertEqual(bus.get_var_info_string(bus.index_v_ang[t]),target)
                     self.assertEqual(net.get_var_info_string(bus.index_v_ang[t]),target)
                 for gen in net.generators:
-                    target = "generator %d active power time %d" %(gen.index,t)
+                    target = "generator:%d:active power:%d" %(gen.index,t)
                     self.assertEqual(gen.get_var_info_string(gen.index_P[t]),target)
                     self.assertEqual(net.get_var_info_string(gen.index_P[t]),target)
-                    target = "generator %d reactive power time %d" %(gen.index,t)
+                    target = "generator:%d:reactive power:%d" %(gen.index,t)
                     self.assertEqual(gen.get_var_info_string(gen.index_Q[t]),target)
                     self.assertEqual(net.get_var_info_string(gen.index_Q[t]),target)
                 for branch in net.branches:
                     if branch.is_tap_changer():
-                        target = "branch %d tap ratio time %d" %(branch.index,t)
+                        target = "branch:%d:tap ratio:%d" %(branch.index,t)
                         self.assertEqual(branch.get_var_info_string(branch.index_ratio[t]),target)
                         self.assertEqual(net.get_var_info_string(branch.index_ratio[t]),target)
                     if branch.is_phase_shifter():
-                        target = "branch %d phase shift time %d" %(branch.index,t)
+                        target = "branch:%d:phase shift:%d" %(branch.index,t)
                         self.assertEqual(branch.get_var_info_string(branch.index_phase[t]),target)
                         self.assertEqual(net.get_var_info_string(branch.index_phase[t]),target)
                 for load in net.loads:
-                    target = "load %d active power time %d" %(load.index,t)
+                    target = "load:%d:active power:%d" %(load.index,t)
                     self.assertEqual(load.get_var_info_string(load.index_P[t]),target)
                     self.assertEqual(net.get_var_info_string(load.index_P[t]),target)
-                    target = "load %d reactive power time %d" %(load.index,t)
+                    target = "load:%d:reactive power:%d" %(load.index,t)
                     self.assertEqual(load.get_var_info_string(load.index_Q[t]),target)
                     self.assertEqual(net.get_var_info_string(load.index_Q[t]),target)
                 for vargen in net.var_generators:
-                    target = "variable generator %d active power time %d" %(vargen.index,t)
+                    target = "variable generator:%d:active power:%d" %(vargen.index,t)
                     self.assertEqual(vargen.get_var_info_string(vargen.index_P[t]),target)
                     self.assertEqual(net.get_var_info_string(vargen.index_P[t]),target)
-                    target = "variable generator %d reactive power time %d" %(vargen.index,t)
+                    target = "variable generator:%d:reactive power:%d" %(vargen.index,t)
                     self.assertEqual(vargen.get_var_info_string(vargen.index_Q[t]),target)
                     self.assertEqual(net.get_var_info_string(vargen.index_Q[t]),target)
                 for shunt in net.shunts:
                     if shunt.is_switched_v():
-                        target = "shunt %d susceptance time %d" %(shunt.index,t)
+                        target = "shunt:%d:susceptance:%d" %(shunt.index,t)
                         self.assertEqual(shunt.get_var_info_string(shunt.index_b[t]),target)
                         self.assertEqual(net.get_var_info_string(shunt.index_b[t]),target)
                 for bat in net.batteries:
-                    target = "battery %d charging power time %d" %(bat.index,t)
+                    target = "battery:%d:charging power:%d" %(bat.index,t)
                     self.assertEqual(bat.get_var_info_string(bat.index_Pc[t]),target)
                     self.assertEqual(net.get_var_info_string(bat.index_Pc[t]),target)
-                    target = "battery %d discharging power time %d" %(bat.index,t)
+                    target = "battery:%d:discharging power:%d" %(bat.index,t)
                     self.assertEqual(bat.get_var_info_string(bat.index_Pd[t]),target)
                     self.assertEqual(net.get_var_info_string(bat.index_Pd[t]),target)
-                    target = "battery %d energy level time %d" %(bat.index,t)
+                    target = "battery:%d:energy level:%d" %(bat.index,t)
                     self.assertEqual(bat.get_var_info_string(bat.index_E[t]),target)
                     self.assertEqual(net.get_var_info_string(bat.index_E[t]),target)
             

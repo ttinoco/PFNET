@@ -342,7 +342,7 @@ char* LOAD_get_var_info_string(Load* load, int index) {
       index <= load->index_P[load->num_periods-1]) {
     info = (char*)malloc(LOAD_BUFFER_SIZE*sizeof(char));
     snprintf(info,LOAD_BUFFER_SIZE*sizeof(char),
-	     "load %d active power time %d",load->index,index-load->index_P[0]);
+	     "load:%d:active power:%d",load->index,index-load->index_P[0]);
     return info;
   }
 
@@ -352,7 +352,7 @@ char* LOAD_get_var_info_string(Load* load, int index) {
       index <= load->index_Q[load->num_periods-1]) {
     info = (char*)malloc(LOAD_BUFFER_SIZE*sizeof(char));
     snprintf(info,LOAD_BUFFER_SIZE*sizeof(char),
-	     "load %d reactive power time %d",load->index,index-load->index_Q[0]);
+	     "load:%d:reactive power:%d",load->index,index-load->index_Q[0]);
     return info;
   }
 

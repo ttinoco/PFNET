@@ -87,7 +87,6 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
   int index1;
   int index2;
   int T;
-  char info[CONSTR_INFO_BUFFER_SIZE];
 
   // Number of periods
   T = BRANCH_get_num_periods(br);
@@ -126,12 +125,12 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
     }
 
     // Row info
-    snprintf(info,
-	     CONSTR_INFO_BUFFER_SIZE*sizeof(char),
-	     "branch %d tap ratio limit time %d",
-	     BRANCH_get_index(br),
-	     t);
-    CONSTR_set_G_row_info_string(c,index,info);
+    CONSTR_set_G_row_info_string(c,
+				 index,
+				 "branch",
+				 BRANCH_get_index(br),
+				 "tap ratio",
+				 t);
   }
 
   // Phase shift
@@ -150,12 +149,12 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
     }
 
     // Row info
-    snprintf(info,
-	     CONSTR_INFO_BUFFER_SIZE*sizeof(char),
-	     "branch %d phase shift limit time %d",
-	     BRANCH_get_index(br),
-	     t);
-    CONSTR_set_G_row_info_string(c,index,info);
+    CONSTR_set_G_row_info_string(c,
+				 index,
+				 "branch",
+				 BRANCH_get_index(br),
+				 "phase shift",
+				 t);
   }
 
   // Buses
@@ -181,12 +180,12 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	}
 
 	// Row info
-	snprintf(info,
-		 CONSTR_INFO_BUFFER_SIZE*sizeof(char),
-		 "bus %d voltage magnitude limit time %d",
-		 BUS_get_index(bus),
-		 t);
-	CONSTR_set_G_row_info_string(c,index,info);
+	CONSTR_set_G_row_info_string(c,
+				     index,
+				     "bus",
+				     BUS_get_index(bus),
+				     "voltage magnitude",
+				     t);
       }
 
       // Voltage angle (V_ANG)
@@ -199,12 +198,12 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	VEC_set(l,index,-BUS_INF_V_ANG);
 
 	// Row info
-	snprintf(info,
-		 CONSTR_INFO_BUFFER_SIZE*sizeof(char),
-		 "bus %d voltage angle limit time %d",
-		 BUS_get_index(bus),
-		 t);
-	CONSTR_set_G_row_info_string(c,index,info);
+	CONSTR_set_G_row_info_string(c,
+				     index,
+				     "bus",
+				     BUS_get_index(bus),
+				     "voltage angle",
+				     t);
       }
 
       // Generators
@@ -226,12 +225,12 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  }
 
 	  // Row info
-	  snprintf(info,
-		   CONSTR_INFO_BUFFER_SIZE*sizeof(char),
-		   "generator %d active power limit time %d",
-		   GEN_get_index(gen),
-		   t);
-	  CONSTR_set_G_row_info_string(c,index,info);
+	  CONSTR_set_G_row_info_string(c,
+				       index,
+				       "generator",
+				       GEN_get_index(gen),
+				       "active power",
+				       t);
 	}
 
 	// Reactive power (Q)
@@ -250,12 +249,12 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  }
 
 	  // Row info
-	  snprintf(info,
-		   CONSTR_INFO_BUFFER_SIZE*sizeof(char),
-		   "generator %d reactive power limit time %d",
-		   GEN_get_index(gen),
-		   t);
-	  CONSTR_set_G_row_info_string(c,index,info);
+	  CONSTR_set_G_row_info_string(c,
+				       index,
+				       "generator",
+				       GEN_get_index(gen),
+				       "reactive power",
+				       t);
 	}
       }
 
@@ -278,12 +277,12 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  }
 
 	  // Row info
-	  snprintf(info,
-		   CONSTR_INFO_BUFFER_SIZE*sizeof(char),
-		   "load %d active power limit time %d",
-		   LOAD_get_index(load),
-		   t);
-	  CONSTR_set_G_row_info_string(c,index,info);
+	  CONSTR_set_G_row_info_string(c,
+				       index,
+				       "load",
+				       LOAD_get_index(load),
+				       "active power",
+				       t);
 	}
 
 	// Rective power (Q)
@@ -296,12 +295,12 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  VEC_set(l,index,-LOAD_INF_Q);
 
 	  // Row info
-	  snprintf(info,
-		   CONSTR_INFO_BUFFER_SIZE*sizeof(char),
-		   "load %d reactive power limit time %d",
-		   LOAD_get_index(load),
-		   t);
-	  CONSTR_set_G_row_info_string(c,index,info);
+	  CONSTR_set_G_row_info_string(c,
+				       index,
+				       "load",
+				       LOAD_get_index(load),
+				       "reactive power",
+				       t);
 	}
       }
 
@@ -324,12 +323,12 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  }
 
 	  // Row info
-	  snprintf(info,
-		   CONSTR_INFO_BUFFER_SIZE*sizeof(char),
-		   "variable generator %d active power limit time %d",
-		   VARGEN_get_index(vargen),
-		   t);
-	  CONSTR_set_G_row_info_string(c,index,info);
+	  CONSTR_set_G_row_info_string(c,
+				       index,
+				       "variable generator",
+				       VARGEN_get_index(vargen),
+				       "active power",
+				       t);
 	}
 
 	// Reactive power (Q)
@@ -348,12 +347,12 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  }
 
 	  // Row info
-	  snprintf(info,
-		   CONSTR_INFO_BUFFER_SIZE*sizeof(char),
-		   "variable generator %d reactive power limit time %d",
-		   VARGEN_get_index(vargen),
-		   t);
-	  CONSTR_set_G_row_info_string(c,index,info);
+	  CONSTR_set_G_row_info_string(c,
+				       index,
+				       "variable generator",
+				       VARGEN_get_index(vargen),
+				       "reactive power",
+				       t);
 	}
       }
 
@@ -376,12 +375,12 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  }
 
 	  // Row info
-	  snprintf(info,
-		   CONSTR_INFO_BUFFER_SIZE*sizeof(char),
-		   "shunt %d susceptance limit time %d",
-		   SHUNT_get_index(shunt),
-		   t);
-	  CONSTR_set_G_row_info_string(c,index,info);
+	  CONSTR_set_G_row_info_string(c,
+				       index,
+				       "shunt",
+				       SHUNT_get_index(shunt),
+				       "susceptance",
+				       t);
 	}
       }
 
@@ -420,18 +419,18 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  }
 
 	  // Row info
-	  snprintf(info,
-		   CONSTR_INFO_BUFFER_SIZE*sizeof(char),
-		   "battery %d charging power limit time %d",
-		   BAT_get_index(bat),
-		   t);
-	  CONSTR_set_G_row_info_string(c,index1,info);
-	  snprintf(info,
-		   CONSTR_INFO_BUFFER_SIZE*sizeof(char),
-		   "battery %d discharging power limit time %d",
-		   BAT_get_index(bat),
-		   t);
-	  CONSTR_set_G_row_info_string(c,index2,info);
+	  CONSTR_set_G_row_info_string(c,
+				       index1,
+				       "battery",
+				       BAT_get_index(bat),
+				       "charging power",
+				       t);
+	  CONSTR_set_G_row_info_string(c,
+				       index2,
+				       "battery",
+				       BAT_get_index(bat),
+				       "discharging power",
+				       t);
 	}
 
 	// Energy level (E)
@@ -450,12 +449,12 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  }
 
 	  // Row info
-	  snprintf(info,
-		   CONSTR_INFO_BUFFER_SIZE*sizeof(char),
-		   "battery %d energy level limit time %d",
-		   BAT_get_index(bat),
-		   t);
-	  CONSTR_set_G_row_info_string(c,index,info);
+	  CONSTR_set_G_row_info_string(c,
+				       index,
+				       "battery",
+				       BAT_get_index(bat),
+				       "energy level",
+				       t);
 	}
       }
     }

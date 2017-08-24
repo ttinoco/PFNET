@@ -716,7 +716,7 @@ char* BRANCH_get_var_info_string(Branch* br, int index) {
       index <= br->index_ratio[br->num_periods-1]) {
     info = (char*)malloc(BRANCH_BUFFER_SIZE*sizeof(char));
     snprintf(info,BRANCH_BUFFER_SIZE*sizeof(char),
-	     "branch %d tap ratio time %d",br->index,index-br->index_ratio[0]);
+	     "branch:%d:tap ratio:%d",br->index,index-br->index_ratio[0]);
     return info;
   }
 
@@ -726,7 +726,7 @@ char* BRANCH_get_var_info_string(Branch* br, int index) {
       index <= br->index_phase[br->num_periods-1]) {
     info = (char*)malloc(BRANCH_BUFFER_SIZE*sizeof(char));
     snprintf(info,BRANCH_BUFFER_SIZE*sizeof(char),
-	     "branch %d phase shift time %d",br->index,index-br->index_phase[0]);
+	     "branch:%d:phase shift:%d",br->index,index-br->index_phase[0]);
     return info;
   }
 
