@@ -20,7 +20,7 @@ Unreleased
 * Removed setup.cfg since it was no longer needed (done).
 * Added property mask to projection operator (done).
 * Added projection getters for network and extra vars of constraints (done).
-* Made gen Qmin,Qmax writable in Python (done).
+* Made gen Qmin, Qmax writable in Python (done).
 * Added routines for extracting constraint A,J,G row info strings with format (constr_name:obj:obj_id:constr_info:time) (done).
 * Made AC_FLOW_LIM constraint store row info (done).
 * Made LBOUND constraint store row info (done).
@@ -28,6 +28,7 @@ Unreleased
 * Made load "set_target_power_factor" routine accept negative power factors (done).
 * Fixed memory leaks coming from "VEC_new_from_array" (done).
 * Add routines for extracting info strings about entries of var values vector (obj:obj_id:quantity:time) (done).
+* Added "v_base" field of bus structure/object to store base voltage in kv and updated all parsers to store this info (done).
 * Update Python wrapper documentation to show how to install with pip or download/run tests (todo).
 * Add cmake windows build script invokation in setup.py (todo).
 * Update examples, documentation and create release (todo).

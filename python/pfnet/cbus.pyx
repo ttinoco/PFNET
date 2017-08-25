@@ -707,6 +707,13 @@ cdef class Bus:
         def __get__(self):
             return cbus.BUS_get_degree(self._c_ptr)
 
+    property v_base:
+        """ Bus base voltage (kilovolts) (float). """
+        def __get__(self):
+            return cbus.BUS_get_v_base(self._c_ptr)
+        def __set__(self,value):
+            cbus.BUS_set_v_base(self._c_ptr,value)
+
     property v_mag:
         """ Bus volatge magnitude (p.u. bus base kv) (float or array). """
         def __get__(self):

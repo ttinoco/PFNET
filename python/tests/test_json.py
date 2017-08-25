@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -37,6 +37,7 @@ class TestJSON(unittest.TestCase):
 
                 # Detailed checks
                 self.assertEqual(json_model['index'],bus.index)
+                self.assertEqual(json_model['v_base'],bus.v_base)
                 # Add more
 
     def test_branch_json_string(self):

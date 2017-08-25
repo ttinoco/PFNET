@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -29,10 +29,27 @@ class TestParser(unittest.TestCase):
         self.assertTrue(isinstance(net,pf.Network))
         self.assertEqual(net.num_buses,0)
 
+    def test_ieee25_raw(self):
+
+        for case in test_cases.CASES:
+            if case == './data/ieee25.raw':
+
+                net = pf.ParserRAW().parse(case)
+
+                self.assertEqual(net.num_buses,25)
+
+                for bus in net.buses:
+                    if bus.number >= 101 and bus.number <= 110:
+                        self.assertEqual(bus.v_base,138.)
+                    else:
+                        self.assertLessEqual(bus.number,225)
+                        self.assertGreaterEqual(bus.number,211)
+                        self.assertEqual(bus.v_base,230.)
+                
     def test_sys_problem2(self):
 
         for case in test_cases.CASES:
-            if case == '../data/sys_problem2.mat':
+            if case == './data/sys_problem2.mat':
 
                 net = pf.ParserMAT().parse(case)
 
@@ -46,6 +63,9 @@ class TestParser(unittest.TestCase):
                 bus1 = net.get_bus_by_number(1)
                 bus2 = net.get_bus_by_number(2)
                 bus3 = net.get_bus_by_number(3)
+
+                for bus in net.buses:
+                    self.assertEqual(bus.v_base,220.)
 
                 self.assertEqual(bus1.number,1)
                 self.assertEqual(bus2.number,2)
@@ -150,7 +170,7 @@ class TestParser(unittest.TestCase):
     def test_sys_problem3(self):
 
         for case in test_cases.CASES:
-            if case == '../data/sys_problem3.mat':
+            if case == './data/sys_problem3.mat':
 
                 net = pf.ParserMAT().parse(case)
 
@@ -175,6 +195,9 @@ class TestParser(unittest.TestCase):
                 bus8 = net.get_bus_by_number(8)
                 bus9 = net.get_bus_by_number(9)
                 bus10 = net.get_bus_by_number(10)
+
+                for bus in net.buses:
+                    self.assertEqual(bus.v_base,69.)
 
                 # loads
                 for bus in net.buses:
@@ -382,7 +405,7 @@ class TestParser(unittest.TestCase):
     def test_cas32art(self):
 
         for case in test_cases.CASES:
-            if case == '../data/case32.art':
+            if case == './data/case32.art':
 
                 net = pf.ParserART().parse(case)
 
@@ -435,7 +458,7 @@ class TestParser(unittest.TestCase):
     def test_ieee14_gen_cost(self):
 
         for case in test_cases.CASES:
-            if case == '../data/ieee14.mat':
+            if case == './data/ieee14.mat':
 
                 net = pf.ParserMAT().parse(case)
 
@@ -532,6 +555,7 @@ class TestParser(unittest.TestCase):
                     self.assertTrue(bus is not new_bus)
                     self.assertEqual(bus.number,new_bus.number)
                     self.assertEqual(bus.name,new_bus.name)
+                    self.assertLess(norminf(bus.v_base-new_bus.v_base),eps)
                     self.assertLess(norminf(bus.v_mag-new_bus.v_mag),eps)
                     self.assertLess(norminf(bus.v_ang-new_bus.v_ang),eps)
                     self.assertLess(norminf(bus.v_set-new_bus.v_set),eps)
