@@ -51,20 +51,21 @@ cdef class Network:
         Frees network C data structure.
         """
 
-        # TODO: call _free_branches, or will NET_del handle it? I think it already does
-
         if self.alloc:
             cnet.NET_del(self._c_net)
             self._c_net = NULL
 
     def __getstate__(self):
+        
         return  self.json_string
 
     def __setstate__(self, state):
+        
         cdef Network new_net
         if self._c_net != NULL:
             cnet.NET_del(self._c_net)
             self._c_net = NULL
+            
         with tempfile.NamedTemporaryFile(suffix='.json') as f:
             f.write(state)
             f.seek(0)
@@ -791,13 +792,20 @@ cdef class Network:
                 'load_P_vio': self.load_P_vio,
                 'num_actions': self.num_actions}
 
-    property json_string:
-        """ JSON string (string). """
-        def __get__(self):
-            cdef char* json_string = cnet.NET_get_json_string(self._c_net)
-            s = json_string.decode('UTF-8')
-            free(json_string)
-            return s
+    def has_same_data(self, Network other):
+        """
+        Checks whether network shares memory with another network.
+
+        Parameters
+        ----------
+        other : :class:`Buses <pfnet.Bus>`
+
+        Returns
+        -------
+        flag : {`True`, `False`}
+        """
+
+        return self._c_net == other._c_net
 
     def has_error(self):
         """
@@ -1035,6 +1043,14 @@ cdef class Network:
         for vg in self.var_generators:
             cvg = vg
             cnet.NET_vargen_hash_name_add(self._c_net,cvg._c_ptr)
+
+    property json_string:
+        """ JSON string (string). """
+        def __get__(self):
+            cdef char* json_string = cnet.NET_get_json_string(self._c_net)
+            s = json_string.decode('UTF-8')
+            free(json_string)
+            return s
 
     property num_periods:
         """ Number of time periods (int). """
@@ -1301,5 +1317,3 @@ cdef public new_Network(cnet.Net* n):
         return net
     else:
         raise NetworkError('no network data')
-
-# cdef private allocate_Branches()

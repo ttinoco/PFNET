@@ -1,8 +1,9 @@
 #***************************************************#
-#
-#
-#
-#
+# This file is part of PFNET.                       #
+#                                                   #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
+#                                                   #
+# PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
 import unittest
@@ -10,7 +11,6 @@ import numpy as np
 import pickle
 import tempfile
 
-# local
 import pfnet as pf
 import utils
 
@@ -26,11 +26,11 @@ class TestSerialization(unittest.TestCase):
 
         for case in test_cases.CASES:
 
-            # load network
+            # Load network
             net1 = pf.Parser(case).parse(case)
 
             # Testing pickle string
-            pkld_net_string = pickle.dumps(net1, protocol=-1)       #protocol=-1 means HIGHEST_PROTOCOL; 2 or higher needed
+            pkld_net_string = pickle.dumps(net1, protocol=-1)
             net2 = pickle.loads(pkld_net_string)
             utils.compare_two_networks(self, net1, net2)
 
@@ -42,13 +42,16 @@ class TestSerialization(unittest.TestCase):
                 pkld_net_file.close()
                 utils.compare_two_networks(self, net1, net3)
 
-    # tests the method from utils.py
+            print 'great', case
+
     def test_compare_two_networks(self):
-        case = test_cases.CASES[0]
-        net1 = pf.Parser(case).parse(case)
-        net2 = pf.Parser(case).parse(case)
-        net2.buses[0].v_mag = 100
-        self.assertRaises(AssertionError, utils.compare_two_networks, self, net1, net2)
+
+        for case in test_cases.CASES:
+            net1 = pf.Parser(case).parse(case)
+            net2 = pf.Parser(case).parse(case)
+            net2.buses[0].v_mag = 100
+            self.assertRaises(AssertionError, utils.compare_two_networks, self, net1, net2)
+            print 'perfect', case
 
     def tearDown(self):
 
