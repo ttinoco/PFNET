@@ -3,7 +3,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -71,6 +71,27 @@ cdef class VarGenerator:
         return cvargen.VARGEN_has_flags(self._c_ptr,
                                         str2flag[flag_type],
                                         reduce(lambda x,y: x|y,[str2q[self.obj_type][qq] for qq in q],0))
+
+    def get_var_info_string(self, index):
+        """
+        Gets info string of variable associated with index.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        info : string
+        """
+
+        cdef char* info_string = cvargen.VARGEN_get_var_info_string(self._c_ptr, index)
+        if info_string:
+            s = info_string.decode('UTF-8')
+            free(info_string)
+            return s
+        else:
+            raise VarGeneratorError('index does not correspond to any variable')
 
     def set_P(self,P,t=0):
         """"

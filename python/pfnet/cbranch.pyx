@@ -246,6 +246,27 @@ cdef class Branch:
                                         str2flag[flag_type],
                                         reduce(lambda x,y: x|y,[str2q[self.obj_type][qq] for qq in q],0))
 
+    def get_var_info_string(self, index):
+        """
+        Gets info string of variable associated with index.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        info : string
+        """
+
+        cdef char* info_string = cbranch.BRANCH_get_var_info_string(self._c_ptr, index)
+        if info_string:
+            s = info_string.decode('UTF-8')
+            free(info_string)
+            return s
+        else:
+            raise BranchError('index does not correspond to any variable')
+
     def get_P_km(self,var_values=None):
         """
         Gets the real power flow at bus "k" towards bus "m" (from -> to) (p.u.)

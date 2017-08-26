@@ -70,6 +70,7 @@ int SHUNT_get_num_b_values(Shunt* shunt);
 Shunt* SHUNT_get_next(Shunt* shunt);
 Shunt* SHUNT_get_reg_next(Shunt* shunt);
 void SHUNT_get_var_values(Shunt* shunt, Vec* values, int code);
+char* SHUNT_get_var_info_string(Shunt* shunt, int index);
 int SHUNT_get_num_vars(void* shunt, unsigned char var, int t_start, int t_end);
 Vec* SHUNT_get_var_indices(void* shunt, unsigned char var, int t_start, int t_end);
 char* SHUNT_get_json_string(Shunt* shunt, char* output);

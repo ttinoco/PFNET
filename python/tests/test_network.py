@@ -324,6 +324,11 @@ class TestNetwork(unittest.TestCase):
                 # obj type
                 self.assertEqual(bus.obj_type,'bus')
                 self.assertNotEqual(bus.obj_type,'unknown')
+
+                # vbase
+                self.assertGreaterEqual(bus.v_base,0.)
+                bus.v_base = 110
+                self.assertEqual(bus.v_base,110)
                 
                 # vmag vang set get
                 bus.v_mag = 1.234567
@@ -497,7 +502,7 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(bus.price,0.)
                 bus.price = bus.index*4.33
                 self.assertEqual(bus.price,bus.index*4.33)
-
+                
             # sum of degrees
             sum_deg = 0
             for i in range(net.num_buses):

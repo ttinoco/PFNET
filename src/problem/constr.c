@@ -944,23 +944,17 @@ void CONSTR_set_data(Constr* c, void* data) {
     c->data = data;
 }
 
-void CONSTR_set_A_row_info(Constr* c, char* A_row_info) {
-  if (c)
-    c->A_row_info = A_row_info;
-}
-
-void CONSTR_set_J_row_info(Constr* c, char* J_row_info) {
-  if (c)
-    c->J_row_info = J_row_info;
-}
-
-void CONSTR_set_G_row_info(Constr* c, char* G_row_info) {
-  if (c)
-    c->G_row_info = G_row_info;
-}
-
-void CONSTR_set_A_row_info_string(Constr* c, int index, char* info) {
+void CONSTR_set_A_row_info_string(Constr* c, int index, char* obj, int obj_id, char* constr_info, int time) {
+  char info[CONSTR_INFO_BUFFER_SIZE];
   if (c && c->A_row_info && 0 <= index && index < MAT_get_size1(c->A)) {
+    snprintf(info,
+	     CONSTR_INFO_BUFFER_SIZE*sizeof(char),
+	     "%s:%s:%d:%s:%d",
+	     c->name,
+	     obj,
+	     obj_id,
+	     constr_info,
+	     time);
     snprintf(c->A_row_info+index*CONSTR_INFO_BUFFER_SIZE*sizeof(char),
 	     CONSTR_INFO_BUFFER_SIZE*sizeof(char),
 	     "%s",
@@ -968,8 +962,17 @@ void CONSTR_set_A_row_info_string(Constr* c, int index, char* info) {
   }
 }
 
-void CONSTR_set_J_row_info_string(Constr* c, int index, char* info) {
+void CONSTR_set_J_row_info_string(Constr* c, int index, char* obj, int obj_id, char* constr_info, int time) {
+  char info[CONSTR_INFO_BUFFER_SIZE];
   if (c && c->J_row_info && 0 <= index && index < MAT_get_size1(c->J)) {
+    snprintf(info,
+	     CONSTR_INFO_BUFFER_SIZE*sizeof(char),
+	     "%s:%s:%d:%s:%d",
+	     c->name,
+	     obj,
+	     obj_id,
+	     constr_info,
+	     time);
     snprintf(c->J_row_info+index*CONSTR_INFO_BUFFER_SIZE*sizeof(char),
 	     CONSTR_INFO_BUFFER_SIZE*sizeof(char),
 	     "%s",
@@ -977,8 +980,17 @@ void CONSTR_set_J_row_info_string(Constr* c, int index, char* info) {
   }
 }
 
-void CONSTR_set_G_row_info_string(Constr* c, int index, char* info) {
+void CONSTR_set_G_row_info_string(Constr* c, int index, char* obj, int obj_id, char* constr_info, int time) {
+  char info[CONSTR_INFO_BUFFER_SIZE];
   if (c && c->G_row_info && 0 <= index && index < MAT_get_size1(c->G)) {
+    snprintf(info,
+	     CONSTR_INFO_BUFFER_SIZE*sizeof(char),
+	     "%s:%s:%d:%s:%d",
+	     c->name,
+	     obj,
+	     obj_id,
+	     constr_info,
+	     time);
     snprintf(c->G_row_info+index*CONSTR_INFO_BUFFER_SIZE*sizeof(char),
 	     CONSTR_INFO_BUFFER_SIZE*sizeof(char),
 	     "%s",
@@ -1014,9 +1026,9 @@ void CONSTR_allocate(Constr* c) {
     CONSTR_del_matvec(c);
     (*(c->func_allocate))(c);
     CONSTR_allocate_H_combined(c);
-    CONSTR_set_A_row_info(c,(char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->A)));
-    CONSTR_set_J_row_info(c,(char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->J)));
-    CONSTR_set_G_row_info(c,(char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->G)));
+    c->A_row_info = (char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->A));
+    c->J_row_info = (char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->J));
+    c->G_row_info = (char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->G));
   }
 }
 

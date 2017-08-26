@@ -8,6 +8,7 @@
 
 import pfnet as pf
 import numpy as np
+from numpy.linalg import norm
 
 def compare_two_networks(unittest, net, new_net):
     """
@@ -21,7 +22,7 @@ def compare_two_networks(unittest, net, new_net):
     new_net : :class:`Network <pfnet.Network>`
     """
 
-    norminf = lambda x: norm(x,np.inf) if not np.isscalar(x) else np.abs(x)
+    norminf = lambda x: norm(x,np.inf) if isinstance(x,np.ndarray) else np.abs(x)
     eps = 1e-10
 
     # Network
@@ -29,7 +30,7 @@ def compare_two_networks(unittest, net, new_net):
     unittest.assertFalse(net.has_same_data(new_net))
     unittest.assertEqual(net.num_periods,new_net.num_periods)
     unittest.assertEqual(net.base_power,new_net.base_power)
-
+    
     # Buses
     unittest.assertEqual(net.num_buses, new_net.num_buses)
     for i in range(net.num_buses):
@@ -123,7 +124,7 @@ def compare_two_networks(unittest, net, new_net):
         unittest.assertEqual(gen.is_regulator(), new_gen.is_regulator())
         unittest.assertEqual(gen.is_P_adjustable(), new_gen.is_P_adjustable())
         if gen.is_regulator():
-            unittest.assertEqual(gen.reg_bus.index, new_gen.reg_bus.index)
+            unittest.assertEqual(gen.reg_bus.index, new_gen.reg_bus.index)           
         unittest.assertLess(norminf(gen.P-new_gen.P), eps)
         unittest.assertLess(norminf(gen.P_max-new_gen.P_max), eps)
         unittest.assertLess(norminf(gen.P_min-new_gen.P_min), eps)
@@ -144,7 +145,7 @@ def compare_two_networks(unittest, net, new_net):
         unittest.assertTrue(vargen is not new_vargen)
         unittest.assertEqual(vargen.num_periods, new_vargen.num_periods)
         unittest.assertEqual(vargen.bus.index, new_vargen.bus.index)
-        unittest.assertEqual(vargen.name, new_vargen.name)
+        unittest.assertEqual(vargen.name, new_vargen.name)        
         unittest.assertLess(norminf(vargen.P-new_vargen.P), eps)
         unittest.assertLess(norminf(vargen.P_ava-new_vargen.P_ava), eps)
         unittest.assertLess(norminf(vargen.P_max-new_vargen.P_max), eps)
@@ -206,4 +207,9 @@ def compare_two_networks(unittest, net, new_net):
         unittest.assertLess(norminf(bat.E_final-new_bat.E_final), eps)
         unittest.assertLess(norminf(bat.E_max-new_bat.E_max), eps)
 
-    print 'compared two networks'
+    # Hashes                 
+    for bus in net.buses:
+        unittest.assertEqual(bus.index,net.get_bus_by_number(bus.number).index)
+        unittest.assertEqual(bus.name,net.get_bus_by_name(bus.name).name)
+    for vargen in net.var_generators:
+        unittest.assertEqual(vargen.index,net.get_var_generator_by_name(vargen.name).index)

@@ -155,6 +155,27 @@ cdef class Generator:
                                   str2flag[flag_type],
                                   reduce(lambda x,y: x|y,[str2q[self.obj_type][qq] for qq in q],0))
 
+    def get_var_info_string(self, index):
+        """
+        Gets info string of variable associated with index.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        info : string
+        """
+
+        cdef char* info_string = cgen.GEN_get_var_info_string(self._c_ptr, index)
+        if info_string:
+            s = info_string.decode('UTF-8')
+            free(info_string)
+            return s
+        else:
+            raise GeneratorError('index does not correspond to any variable')
+
     def set_P(self,P,t=0):
         """"
         Sets active power.

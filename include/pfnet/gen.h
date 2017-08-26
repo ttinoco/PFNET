@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -88,6 +88,7 @@ REAL GEN_get_P_min(Gen* gen);
 REAL GEN_get_Q_max(Gen* gen);
 REAL GEN_get_Q_min(Gen* gen);
 void GEN_get_var_values(Gen* gen, Vec* values, int code);
+char* GEN_get_var_info_string(Gen* gen, int index);
 int GEN_get_num_vars(void* gen, unsigned char var, int t_start, int t_end);
 Vec* GEN_get_var_indices(void* gen, unsigned char var, int t_start, int t_end);
 char* GEN_get_json_string(Gen* gen, char* output);

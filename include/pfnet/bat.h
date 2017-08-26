@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2016, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -73,6 +73,7 @@ REAL BAT_get_E_max(Bat* bat);
 REAL BAT_get_eta_c(Bat* bat);
 REAL BAT_get_eta_d(Bat* bat);
 void BAT_get_var_values(Bat* bat, Vec* values, int code);
+char* BAT_get_var_info_string(Bat* bat, int index);
 int BAT_get_num_vars(void* bat, unsigned char var, int t_start, int t_end);
 Vec* BAT_get_var_indices(void* bat, unsigned char var, int t_start, int t_end);
 char* BAT_get_json_string(Bat* bat, char* output);

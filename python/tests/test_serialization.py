@@ -42,8 +42,6 @@ class TestSerialization(unittest.TestCase):
                 pkld_net_file.close()
                 utils.compare_two_networks(self, net1, net3)
 
-            print 'great', case
-
     def test_compare_two_networks(self):
 
         for case in test_cases.CASES:
@@ -51,7 +49,6 @@ class TestSerialization(unittest.TestCase):
             net2 = pf.Parser(case).parse(case)
             net2.buses[0].v_mag = 100
             self.assertRaises(AssertionError, utils.compare_two_networks, self, net1, net2)
-            print 'perfect', case
 
     def tearDown(self):
 

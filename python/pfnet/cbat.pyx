@@ -3,7 +3,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -50,6 +50,27 @@ cdef class Battery:
     def _get_c_ptr(self):
 
         return new_CPtr(self._c_ptr)
+
+    def get_var_info_string(self, index):
+        """
+        Gets info string of variable associated with index.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        info : string
+        """
+
+        cdef char* info_string = cbat.BAT_get_var_info_string(self._c_ptr, index)
+        if info_string:
+            s = info_string.decode('UTF-8')
+            free(info_string)
+            return s
+        else:
+            raise BatteryError('index does not correspond to any variable')
 
     def has_flags(self,flag_type,q):
         """

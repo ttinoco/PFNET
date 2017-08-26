@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -129,6 +129,7 @@ REAL BRANCH_get_ratingC(Branch* br);
 REAL BRANCH_get_P_km_DC(Branch* br, int t);
 REAL BRANCH_get_P_mk_DC(Branch* br, int t);
 void BRANCH_get_var_values(Branch* br, Vec* values, int code);
+char* BRANCH_get_var_info_string(Branch* br, int index);
 int BRANCH_get_num_vars(void* br, unsigned char var, int t_start, int t_end);
 Vec* BRANCH_get_var_indices(void* br, unsigned char var, int t_start, int t_end);
 char* BRANCH_get_json_string(Branch* br, char* output);

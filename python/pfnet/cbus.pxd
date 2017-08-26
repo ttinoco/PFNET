@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -79,6 +79,7 @@ cdef extern from "pfnet/bus.h":
     REAL BUS_get_total_load_Q(Bus* bus, int t)
     REAL BUS_get_total_shunt_g(Bus* bus)
     REAL BUS_get_total_shunt_b(Bus* bus, int t)
+    REAL BUS_get_v_base(Bus* bus)
     REAL BUS_get_v_mag(Bus* bus, int t)
     REAL BUS_get_v_ang(Bus* bus, int t)
     REAL BUS_get_v_set(Bus* bus, int t)
@@ -106,6 +107,7 @@ cdef extern from "pfnet/bus.h":
     REAL BUS_get_quantity(Bus* bus, int qtype, int t)
     Bus* BUS_get_next(Bus* bus)
     char* BUS_get_json_string(Bus* bus, char* output)
+    char* BUS_get_var_info_string(Bus* bus, int index)  
     bint BUS_is_equal(Bus* bus, Bus* other)
     bint BUS_is_slack(Bus* bus)
     bint BUS_is_regulated_by_gen(Bus* bus)
@@ -119,6 +121,7 @@ cdef extern from "pfnet/bus.h":
     void BUS_set_number(Bus* bus, REAL num)
     void BUS_set_name(Bus* bus, char* name)
     void BUS_set_price(Bus* bus, REAL price, int t)
+    void BUS_set_v_base(Bus* bus, REAL v_base)
     void BUS_set_v_mag(Bus* bus, REAL v_mag, int t)
     void BUS_set_v_ang(Bus* bus, REAL v_ang, int t)
     void BUS_set_v_set(Bus* bus, REAL v_set, int t)

@@ -316,7 +316,6 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
   int k;
   int m;
   int num_vars;
-  char info[CONSTR_INFO_BUFFER_SIZE];
   
   // Num net vars
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
@@ -561,14 +560,18 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
     VEC_set(u,*J_row,BRANCH_get_ratingA(br));
 
     // Row info
-    snprintf(info,
-	     CONSTR_INFO_BUFFER_SIZE*sizeof(char),
-	     "branch %d AC flow limit %s time %d",
-	     BRANCH_get_index(br),
-	     (k == 0) ? "km" : "mk",
-	     t);
-    CONSTR_set_J_row_info_string(c,*J_row,info);
-    CONSTR_set_G_row_info_string(c,*J_row,info);
+    CONSTR_set_J_row_info_string(c,
+				 *J_row,
+				 "branch",               // object
+				 BRANCH_get_index(br),   // object id
+				 (k == 0) ? "km" : "mk", // constraint info
+				 t);                     // time
+    CONSTR_set_G_row_info_string(c,
+				 *J_row,
+				 "branch",               // object
+				 BRANCH_get_index(br),   // object id
+				 (k == 0) ? "km" : "mk", // constraint info
+				 t);                     // time
     
     // Constraint counter
     (*J_row)++;

@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -25,9 +25,10 @@ struct Bus {
   char name[BUS_BUFFER_SIZE]; /**< @brief Bus name */
 
   // Times
-  int num_periods;   /**< @brief Number of time periods. */
+  int num_periods;    /**< @brief Number of time periods. */
 
   // Voltage
+  REAL v_base;       /**< @brief Base voltage (kilovolts) */
   REAL* v_mag;        /**< @brief Voltage magnitude (p.u.) */
   REAL* v_ang;        /**< @brief Voltage angle (radians) */
   REAL* v_set;        /**< @brief Voltage magnitude set point (p.u.) */
@@ -342,6 +343,13 @@ void BUS_clear_vargen(Bus* bus) {
 void BUS_clear_bat(Bus* bus) {
   if (bus)
     bus->bat = NULL;
+}
+
+REAL BUS_get_v_base(Bus* bus) {
+  if (bus)
+    return bus->v_base;
+  else
+    return 0;
 }
 
 char BUS_get_obj_type(void* bus) {
@@ -784,6 +792,39 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
   }
 }
 
+char* BUS_get_var_info_string(Bus* bus, int index) {
+
+  // Local variables
+  char* info;
+
+  //Check
+  if (!bus)
+    return NULL;
+
+  // Voltage magnitude
+  if ((bus->vars & BUS_VAR_VMAG) &&
+      index >= bus->index_v_mag[0] &&
+      index <= bus->index_v_mag[bus->num_periods-1]) {
+    info = (char*)malloc(BUS_BUFFER_SIZE*sizeof(char));
+    snprintf(info,BUS_BUFFER_SIZE*sizeof(char),
+	     "bus:%d:voltage magnitude:%d",bus->index,index-bus->index_v_mag[0]);
+    return info;
+  }
+
+  // Voltage angle
+  if ((bus->vars & BUS_VAR_VANG) &&
+      index >= bus->index_v_ang[0] &&
+      index <= bus->index_v_ang[bus->num_periods-1]) {
+    info = (char*)malloc(BUS_BUFFER_SIZE*sizeof(char));
+    snprintf(info,BUS_BUFFER_SIZE*sizeof(char),
+	     "bus:%d:voltage angle:%d",bus->index,index-bus->index_v_ang[0]);
+    return info;
+  }
+
+  // Return
+  return NULL;
+}
+
 int BUS_get_num_vars(void* vbus, unsigned char var, int t_start, int t_end) {
 
   // Local vars
@@ -791,7 +832,7 @@ int BUS_get_num_vars(void* vbus, unsigned char var, int t_start, int t_end) {
   int num_vars = 0;
   int dt;
 
-  // Cheks
+  // Checks
   if (!bus)
     return 0;
   if (t_start < 0)
@@ -1092,6 +1133,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_int(temp,output,"number",bus->number,FALSE);
   JSON_str(temp,output,"name",bus->name,FALSE);
   JSON_int(temp,output,"num_periods",bus->num_periods,FALSE);
+  JSON_float(temp,output,"v_base",bus->v_base,FALSE);
   JSON_array_float(temp,output,"v_mag",bus->v_mag,bus->num_periods,FALSE);
   JSON_array_float(temp,output,"v_ang",bus->v_ang,bus->num_periods,FALSE);
   JSON_array_float(temp,output,"v_set",bus->v_set,bus->num_periods,FALSE);
@@ -1216,6 +1258,8 @@ void BUS_init(Bus* bus, int num_periods) {
   bus->number = 0;
   for (i = 0; i < BUS_BUFFER_SIZE; i++)
     bus->name[i] = 0;
+
+  bus->v_base = 0.;
 
   bus->index = 0;
 
@@ -1362,6 +1406,11 @@ Bus* BUS_new(int num_periods) {
   }
   else
     return NULL;
+}
+
+void BUS_set_v_base(Bus* bus, REAL v_base) {
+  if (bus)
+    bus->v_base = v_base;
 }
 
 void BUS_set_next(Bus* bus, Bus* next_bus) {

@@ -1079,81 +1079,81 @@ class TestConstraints(unittest.TestCase):
                     s = constr.get_G_row_info_string(i)
                     self.assertEqual(constr.get_A_row_info_string(i),"")
                     self.assertEqual(constr.get_J_row_info_string(i),"")
-                    self.assertEqual(s,'bus %d voltage magnitude limit time %d' %(bus.index,t))
+                    self.assertEqual(s,'variable bounds:bus:%d:voltage magnitude:%d' %(bus.index,t))
                     i = bus.index_v_ang[t]
                     s = constr.get_G_row_info_string(i)
                     self.assertEqual(constr.get_A_row_info_string(i),"")
                     self.assertEqual(constr.get_J_row_info_string(i),"")
-                    self.assertEqual(s,'bus %d voltage angle limit time %d' %(bus.index,t))
+                    self.assertEqual(s,'variable bounds:bus:%d:voltage angle:%d' %(bus.index,t))
                 for gen in net.generators:
                     i = gen.index_P[t]
                     s = constr.get_G_row_info_string(i)
                     self.assertEqual(constr.get_A_row_info_string(i),"")
                     self.assertEqual(constr.get_J_row_info_string(i),"")
-                    self.assertEqual(s,'generator %d active power limit time %d' %(gen.index,t))
+                    self.assertEqual(s,'variable bounds:generator:%d:active power:%d' %(gen.index,t))
                     i = gen.index_Q[t]
                     s = constr.get_G_row_info_string(i)
                     self.assertEqual(constr.get_A_row_info_string(i),"")
                     self.assertEqual(constr.get_J_row_info_string(i),"")
-                    self.assertEqual(s,'generator %d reactive power limit time %d' %(gen.index,t))
+                    self.assertEqual(s,'variable bounds:generator:%d:reactive power:%d' %(gen.index,t))
                 for load in net.loads:
                     i = load.index_P[t]
                     s = constr.get_G_row_info_string(i)
                     self.assertEqual(constr.get_A_row_info_string(i),"")
                     self.assertEqual(constr.get_J_row_info_string(i),"")
-                    self.assertEqual(s,'load %d active power limit time %d' %(load.index,t))
+                    self.assertEqual(s,'variable bounds:load:%d:active power:%d' %(load.index,t))
                     i = load.index_Q[t]
                     s = constr.get_G_row_info_string(i)
                     self.assertEqual(constr.get_A_row_info_string(i),"")
                     self.assertEqual(constr.get_J_row_info_string(i),"")
-                    self.assertEqual(s,'load %d reactive power limit time %d' %(load.index,t))
+                    self.assertEqual(s,'variable bounds:load:%d:reactive power:%d' %(load.index,t))
                 for vargen in net.var_generators:
                     i = vargen.index_P[t]
                     s = constr.get_G_row_info_string(i)
                     self.assertEqual(constr.get_A_row_info_string(i),"")
                     self.assertEqual(constr.get_J_row_info_string(i),"")
-                    self.assertEqual(s,'var generator %d active power limit time %d' %(vargen.index,t))
+                    self.assertEqual(s,'variable bounds:variable generator:%d:active power:%d' %(vargen.index,t))
                     i = vargen.index_Q[t]
                     s = constr.get_G_row_info_string(i)
                     self.assertEqual(constr.get_A_row_info_string(i),"")
                     self.assertEqual(constr.get_J_row_info_string(i),"")
-                    self.assertEqual(s,'var generator %d reactive power limit time %d' %(vargen.index,t))
+                    self.assertEqual(s,'variable bounds:variable generator:%d:reactive power:%d' %(vargen.index,t))
                 for branch in net.branches:
                     if branch.is_tap_changer():
                         i = branch.index_ratio[t]
                         s = constr.get_G_row_info_string(i)
                         self.assertEqual(constr.get_A_row_info_string(i),"")
                         self.assertEqual(constr.get_J_row_info_string(i),"")
-                        self.assertEqual(s,'branch %d tap ratio limit time %d' %(branch.index,t))
+                        self.assertEqual(s,'variable bounds:branch:%d:tap ratio:%d' %(branch.index,t))
                     if branch.is_phase_shifter():
                         i = branch.index_phase[t]
                         s = constr.get_G_row_info_string(i)
                         self.assertEqual(constr.get_A_row_info_string(i),"")
                         self.assertEqual(constr.get_J_row_info_string(i),"")
-                        self.assertEqual(s,'branch %d phase shift limit time %d' %(branch.index,t))
+                        self.assertEqual(s,'variable bounds:branch:%d:phase shift:%d' %(branch.index,t))
                 for shunt in net.shunts:
                     if shunt.is_switched_v():
                         i = shunt.index_b[t]
                         s = constr.get_G_row_info_string(i)
                         self.assertEqual(constr.get_A_row_info_string(i),"")
                         self.assertEqual(constr.get_J_row_info_string(i),"")
-                        self.assertEqual(s,'shunt %d susceptance limit time %d' %(shunt.index,t))
+                        self.assertEqual(s,'variable bounds:shunt:%d:susceptance:%d' %(shunt.index,t))
                 for bat in net.batteries:
                     i = bat.index_Pc[t]
                     s = constr.get_G_row_info_string(i)
                     self.assertEqual(constr.get_A_row_info_string(i),"")
                     self.assertEqual(constr.get_J_row_info_string(i),"")
-                    self.assertEqual(s,'battery %d charging power limit time %d' %(bat.index,t))
+                    self.assertEqual(s,'variable bounds:battery:%d:charging power:%d' %(bat.index,t))
                     i = bat.index_Pd[t]
                     s = constr.get_G_row_info_string(i)
                     self.assertEqual(constr.get_A_row_info_string(i),"")
                     self.assertEqual(constr.get_J_row_info_string(i),"")
-                    self.assertEqual(s,'battery %d discharging power limit time %d' %(bat.index,t))
+                    self.assertEqual(s,'variable bounds:battery:%d:discharging power:%d' %(bat.index,t))
                     i = bat.index_E[t]
                     s = constr.get_G_row_info_string(i)
                     self.assertEqual(constr.get_A_row_info_string(i),"")
                     self.assertEqual(constr.get_J_row_info_string(i),"")
-                    self.assertEqual(s,'battery %d energy level limit time %d' %(bat.index,t))
+                    self.assertEqual(s,'variable bounds:battery:%d:energy level:%d' %(bat.index,t))
 
             # Bounded
             net.set_flags('bus',
@@ -4005,12 +4005,12 @@ class TestConstraints(unittest.TestCase):
                     if branch.ratingA != 0:
                         skmJ = constr.get_J_row_info_string(index)
                         smkJ = constr.get_J_row_info_string(index+1)
-                        self.assertEqual(skmJ,"branch %d AC flow limit %s time %d" %(branch.index,"km",t))
-                        self.assertEqual(smkJ,"branch %d AC flow limit %s time %d" %(branch.index,"mk",t))
+                        self.assertEqual(skmJ,"AC branch flow limits:branch:%d:%s:%d" %(branch.index,"km",t))
+                        self.assertEqual(smkJ,"AC branch flow limits:branch:%d:%s:%d" %(branch.index,"mk",t))
                         skmG = constr.get_G_row_info_string(index)
                         smkG = constr.get_G_row_info_string(index+1)
-                        self.assertEqual(skmG,"branch %d AC flow limit %s time %d" %(branch.index,"km",t))
-                        self.assertEqual(smkG,"branch %d AC flow limit %s time %d" %(branch.index,"mk",t))
+                        self.assertEqual(skmG,"AC branch flow limits:branch:%d:%s:%d" %(branch.index,"km",t))
+                        self.assertEqual(smkG,"AC branch flow limits:branch:%d:%s:%d" %(branch.index,"mk",t))
                         index += 2
 
             # Hessian structure
