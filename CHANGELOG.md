@@ -30,6 +30,7 @@ Unreleased
 * Add routines for extracting info strings about entries of var values vector (obj:obj_id:quantity:time) (done).
 * Added "v_base" field of bus structure/object to store base voltage in kv and updated all parsers to store this info (done).
 * Made Network object pickle-able (done).
+* Added automatic enforcement of lower-triangularity of Hessian of objective functions (done).
 * Update Python wrapper documentation to show how to install with pip or download/run tests (todo).
 * Add cmake windows build script invokation in setup.py (todo).
 * Update examples, documentation and create release (todo).

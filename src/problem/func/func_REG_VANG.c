@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -168,14 +168,8 @@ void FUNC_REG_VANG_analyze_step(Func* f, Branch* br, int t) {
     (*Hphi_nnz)++; // wk and wk
 
     if (BUS_has_flags(buses[1],FLAG_VARS,BUS_VAR_VANG)) {
-      if (index_v_ang[0] >= index_v_ang[1]) {
-	MAT_set_i(H,*Hphi_nnz,index_v_ang[0]);
-	MAT_set_j(H,*Hphi_nnz,index_v_ang[1]);
-      }
-      else {
-	MAT_set_i(H,*Hphi_nnz,index_v_ang[1]);
-	MAT_set_j(H,*Hphi_nnz,index_v_ang[0]);
-      }
+      MAT_set_i(H,*Hphi_nnz,index_v_ang[0]);
+      MAT_set_j(H,*Hphi_nnz,index_v_ang[1]);
       MAT_set_d(H,*Hphi_nnz,-1./(dw*dw));
       (*Hphi_nnz)++; // wk and wm
     }
