@@ -80,6 +80,18 @@ cdef class Branch:
         b_other = other
 
         return cbranch.BRANCH_is_equal(self._c_ptr,b_other._c_ptr)
+        
+    def set_pos_ratio_v_sens(self,flag):
+        """
+        Set the flag for positive ratio-voltage sensitivity.
+        
+        Parameters
+        ----------
+        flag : {``True``, ``False``}
+        """
+        
+        cbranch.BRANCH_set_pos_ratio_v_sens(self._c_ptr, flag);
+
 
     def set_ratio(self,r,t=0):
         """
@@ -674,6 +686,26 @@ cdef class Branch:
         """ Transformer phase shift lower limit (radians) (float). """
         def __get__(self): return cbranch.BRANCH_get_phase_min(self._c_ptr)
         def __set__(self,value): cbranch.BRANCH_set_phase_min(self._c_ptr,value)
+        
+    property P_max:
+        """ Maximum active power flow (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_P_max(self._c_ptr)
+        def __set__(self,value): cbranch.BRANCH_set_P_max(self._c_ptr,value)
+        
+    property P_min:
+        """ Minimum active power flow (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_P_min(self._c_ptr)
+        def __set__(self,value): cbranch.BRANCH_set_P_min(self._c_ptr,value)
+        
+    property Q_max:
+        """ Maximum reactive power flow (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_Q_max(self._c_ptr)
+        def __set__(self,value): cbranch.BRANCH_set_Q_max(self._c_ptr,value)
+        
+    property Q_min:
+        """ Minimum reactive power flow (p.u.) (float). """
+        def __get__(self): return cbranch.BRANCH_get_Q_min(self._c_ptr)
+        def __set__(self,value): cbranch.BRANCH_set_Q_min(self._c_ptr,value)
 
     property P_km:
         """ Real power flow at bus "k" towards bus "m" (from -> to) (p.u.) (float or array). """

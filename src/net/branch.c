@@ -333,6 +333,33 @@ REAL BRANCH_get_phase_min(Branch* br) {
     return 0;
 }
 
+REAL BRANCH_get_P_max(Branch* br) {
+  if (br)
+    return br->P_max;
+  else
+    return 0;
+}
+
+REAL BRANCH_get_P_min(Branch* br) {
+  if (br)
+    return br->P_min;
+  else
+    return 0;
+}
+REAL BRANCH_get_Q_max(Branch* br) {
+  if (br)
+    return br->Q_max;
+  else
+    return 0;
+}
+
+REAL BRANCH_get_Q_min(Branch* br) {
+  if (br)
+    return br->Q_min;
+  else
+    return 0;
+}
+
 void BRANCH_compute_flows(Branch* br, Vec* var_values, int t, REAL* flows) {
   /** Compute the flows in this branch's pi model equivalent
    *  including the flow from the bus, the flow in the shunt elements,
