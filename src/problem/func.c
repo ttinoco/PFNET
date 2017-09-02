@@ -90,6 +90,30 @@ void FUNC_del(Func* f) {
   }
 }
 
+void FUNC_finalize_structure_of_Hessian(Func* f) {
+
+  // Local variables
+  int* Hi;
+  int* Hj;
+  int temp;
+  int m;
+  
+  // Check
+  if (!f)
+    return;
+
+  // Ensure lower triangular
+  Hi = MAT_get_row_array(f->Hphi);
+  Hj = MAT_get_col_array(f->Hphi);
+  for (m = 0; m < MAT_get_nnz(f->Hphi); m++) {
+    if (Hi[m] < Hj[m]) {
+      temp = Hi[m];
+      Hi[m] = Hj[m];
+      Hj[m] = temp;
+    }
+  }
+}
+
 REAL FUNC_get_weight(Func* f) {
   if (f)
     return f->weight;
@@ -199,34 +223,40 @@ void FUNC_list_del(Func* flist) {
   LIST_map(Func,flist,f,next,{FUNC_del(f);});
 }
 
-void FUNC_list_count_step(Func* f, Branch* br, int t) {
+void FUNC_list_count_step(Func* flist, Branch* br, int t) {
   Func* ff;
-  for (ff = f; ff != NULL; ff = FUNC_get_next(ff))
+  for (ff = flist; ff != NULL; ff = FUNC_get_next(ff))
     FUNC_count_step(ff,br,t);
 }
 
-void FUNC_list_allocate(Func* f) {
+void FUNC_list_allocate(Func* flist) {
   Func* ff;
-  for (ff = f; ff != NULL; ff = FUNC_get_next(ff))
+  for (ff = flist; ff != NULL; ff = FUNC_get_next(ff))
     FUNC_allocate(ff);
 }
 
-void FUNC_list_clear(Func* f) {
+void FUNC_list_clear(Func* flist) {
   Func* ff;
-  for (ff = f; ff != NULL; ff = FUNC_get_next(ff))
+  for (ff = flist; ff != NULL; ff = FUNC_get_next(ff))
     FUNC_clear(ff);
 }
 
-void FUNC_list_analyze_step(Func* f, Branch* br, int t) {
+void FUNC_list_analyze_step(Func* flist, Branch* br, int t) {
   Func* ff;
-  for (ff = f; ff != NULL; ff = FUNC_get_next(ff))
+  for (ff = flist; ff != NULL; ff = FUNC_get_next(ff))
     FUNC_analyze_step(ff,br,t);
 }
 
-void FUNC_list_eval_step(Func* f, Branch* br, int t, Vec* values) {
+void FUNC_list_eval_step(Func* flist, Branch* br, int t, Vec* values) {
   Func* ff;
-  for (ff = f; ff != NULL; ff = FUNC_get_next(ff))
+  for (ff = flist; ff != NULL; ff = FUNC_get_next(ff))
     FUNC_eval_step(ff,br,t,values);
+}
+
+void FUNC_list_finalize_structure_of_Hessian(Func* flist) {
+  Func* ff;
+  for (ff = flist; ff != NULL; ff = FUNC_get_next(ff))
+    FUNC_finalize_structure_of_Hessian(ff);
 }
 
 Func* FUNC_new(REAL weight, Net* net) {
@@ -351,6 +381,7 @@ void FUNC_analyze(Func* f) {
     for (i = 0; i < NET_get_num_branches(net); i++)
       FUNC_analyze_step(f,NET_get_branch(net,i),t);
   }
+  FUNC_finalize_structure_of_Hessian(f);
 }
 
 void FUNC_analyze_step(Func* f, Branch* br, int t) {

@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -673,6 +673,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
     bus = NET_get_bus(net,index);
     BUS_set_number(bus,art_bus->index+1);
     BUS_set_name(bus,art_bus->name);
+    BUS_set_v_base(bus,art_bus->vnom);
     NET_bus_hash_number_add(net,bus);
     NET_bus_hash_name_add(net,bus);
     index++;

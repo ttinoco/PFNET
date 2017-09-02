@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -1437,6 +1437,7 @@ Vec* NET_get_var_values(Net* net, int code) {
   int i;
   Vec* values;
 
+  // No net
   if (!net)
     return NULL;
 
@@ -1473,6 +1474,69 @@ Vec* NET_get_var_values(Net* net, int code) {
 
   // Return
   return values;
+}
+
+char* NET_get_var_info_string(Net* net, int index) {
+  
+  // Local variables
+  char* info;
+  int i;
+
+  // No net
+  if (!net)
+    return NULL;
+
+  // Buses
+  for (i = 0; i < net->num_buses; i++) {
+    info = BUS_get_var_info_string(BUS_array_get(net->bus,i),index);
+    if (info)
+      return info;
+  }
+
+  // Generators
+  for (i = 0; i < net->num_gens; i++) {
+    info = GEN_get_var_info_string(GEN_array_get(net->gen,i),index);
+    if (info)
+      return info;
+  }
+
+  // Branches
+  for (i = 0; i < net->num_branches; i++) {
+    info = BRANCH_get_var_info_string(BRANCH_array_get(net->branch,i),index);
+    if (info)
+      return info;
+  }
+
+  // Shunts
+  for (i = 0; i < net->num_shunts; i++) {
+    info = SHUNT_get_var_info_string(SHUNT_array_get(net->shunt,i),index);
+    if (info)
+      return info;
+  }
+
+  // Loads
+  for (i = 0; i < net->num_loads; i++) {
+    info = LOAD_get_var_info_string(LOAD_array_get(net->load,i),index);
+    if (info)
+      return info;
+  }
+  
+  // Variable generators
+  for (i = 0; i < net->num_vargens; i++) {
+    info = VARGEN_get_var_info_string(VARGEN_array_get(net->vargen,i),index);
+    if (info)
+      return info;
+  }
+
+  // Batteries
+  for (i = 0; i < net->num_bats; i++) {
+    info = BAT_get_var_info_string(BAT_array_get(net->bat,i),index);
+    if (info)
+      return info;
+  }
+
+  // Return
+  return NULL;  
 }
 
 Mat* NET_get_var_projection(Net* net, char obj_type, char prop_mask, unsigned char var, int t_start, int t_end) {

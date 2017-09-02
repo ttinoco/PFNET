@@ -9,6 +9,7 @@
 #***************************************************#
 
 cimport cnet
+import tempfile
 
 class NetworkError(Exception):
     """
@@ -49,18 +50,35 @@ cdef class Network:
         """
         Frees network C data structure.
         """
-        
-        # TODO: call _free_branches, or will NET_del handle it? I think it already does
 
         if self.alloc:
             cnet.NET_del(self._c_net)
             self._c_net = NULL
 
+    def __getstate__(self):
+        
+        return  self.json_string
+
+    def __setstate__(self, state):
+        
+        cdef Network new_net
+        if self._c_net != NULL:
+            cnet.NET_del(self._c_net)
+            self._c_net = NULL
+            
+        with tempfile.NamedTemporaryFile(suffix='.json') as f:
+            f.write(state)
+            f.seek(0)
+            new_net = ParserJSON().parse(f.name)
+            self._c_net = new_net._c_net
+            new_net.alloc = False
+            f.close()
+            
     def add_var_generators(self,buses,power_capacity,power_base,power_std=0.,corr_radius=0,corr_value=0.):
         """
         Adds variable generators to the network. The capacities of the generators are divided
-        evenly. 
-        
+        evenly.
+
         Parameters
         ----------
         buses : list of :class:`Buses <pfnet.Bus>`
@@ -91,8 +109,8 @@ cdef class Network:
     def add_batteries(self,buses,power_capacity,energy_capacity,eta_c=1.,etc_d=1.):
         """
         Adds batteries to the network. The power and energy capacities of the batteries are divided
-        evenly. 
-        
+        evenly.
+
         Parameters
         ----------
         buses : list of :class:`Buses <pfnet.Bus>`
@@ -197,6 +215,27 @@ cdef class Network:
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
         else:
             return sigma
+
+    def get_var_info_string(self, index):
+        """
+        Gets info string of variable associated with index.
+
+        Parameters
+        ----------
+        index : int
+
+        Returns
+        -------
+        info : string
+        """
+
+        cdef char* info_string = cnet.NET_get_var_info_string(self._c_net, index)
+        if info_string:
+            s = info_string.decode('UTF-8')
+            free(info_string)
+            return s
+        else:
+            raise NetworkError('index does not correspond to any variable')
 
     def get_bus_by_number(self,number):
         """
@@ -774,13 +813,20 @@ cdef class Network:
                 'load_P_vio': self.load_P_vio,
                 'num_actions': self.num_actions}
 
-    property json_string:
-        """ JSON string (string). """
-        def __get__(self): 
-            cdef char* json_string = cnet.NET_get_json_string(self._c_net)
-            s = json_string.decode('UTF-8')
-            free(json_string)
-            return s
+    def has_same_data(self, Network other):
+        """
+        Checks whether network shares memory with another network.
+
+        Parameters
+        ----------
+        other : :class:`Buses <pfnet.Bus>`
+
+        Returns
+        -------
+        flag : {`True`, `False`}
+        """
+
+        return self._c_net == other._c_net
 
     def has_error(self):
         """
@@ -850,7 +896,7 @@ cdef class Network:
 
         cdef cbranch.Branch* array = cbranch.BRANCH_array_new(size,self.num_periods)
         cnet.NET_set_branch_array(self._c_net,array,size)
-        
+
     def set_bus_array(self,size):
         """
         Allocates and sets bus array.
@@ -874,7 +920,7 @@ cdef class Network:
 
         cdef cgen.Gen* array = cgen.GEN_array_new(size,self.num_periods)
         cnet.NET_set_gen_array(self._c_net,array,size)
-        
+
     def set_load_array(self,size):
         """
         Allocates and sets load array.
@@ -898,7 +944,7 @@ cdef class Network:
 
         cdef cshunt.Shunt* array = cshunt.SHUNT_array_new(size,self.num_periods)
         cnet.NET_set_shunt_array(self._c_net,array,size)
-        
+
     def set_vargen_array(self,size):
         """
         Allocates and sets variable generator array.
@@ -910,7 +956,7 @@ cdef class Network:
 
         cdef cvargen.Vargen* array = cvargen.VARGEN_array_new(size,self.num_periods)
         cnet.NET_set_vargen_array(self._c_net,array,size)
-        
+
     def set_battery_array(self,size):
         """
         Allocates and sets battery array.
@@ -984,10 +1030,10 @@ cdef class Network:
         cnet.NET_update_properties(self._c_net,v)
         if v != NULL:
             free(v)
-        
+
     def propogate_data_in_time(self, start, end):
-        """ Propogates data from the first period through time. 
-        
+        """ Propogates data from the first period through time.
+
         Parameters
         ----------
         start : int
@@ -1002,22 +1048,30 @@ cdef class Network:
         """
 
         cnet.NET_update_set_points(self._c_net)
-        
+
     def update_hashes(self):
         """
         Update the bus name and number hash lists.
         """
         cdef Bus cb
         cdef VarGenerator cvg
-        
+
         for bus in self.buses:
             cb = bus
             cnet.NET_bus_hash_number_add(self._c_net,cb._c_ptr)
             cnet.NET_bus_hash_name_add(self._c_net,cb._c_ptr)
-            
+
         for vg in self.var_generators:
             cvg = vg
             cnet.NET_vargen_hash_name_add(self._c_net,cvg._c_ptr)
+
+    property json_string:
+        """ JSON string (string). """
+        def __get__(self):
+            cdef char* json_string = cnet.NET_get_json_string(self._c_net)
+            s = json_string.decode('UTF-8')
+            free(json_string)
+            return s
 
     property num_periods:
         """ Number of time periods (int). """
@@ -1284,5 +1338,3 @@ cdef public new_Network(cnet.Net* n):
         return net
     else:
         raise NetworkError('no network data')
-
-# cdef private allocate_Branches()

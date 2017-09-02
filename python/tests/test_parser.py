@@ -1,11 +1,12 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
+import utils
 import pfnet as pf
 import unittest
 from . import test_cases
@@ -29,10 +30,27 @@ class TestParser(unittest.TestCase):
         self.assertTrue(isinstance(net,pf.Network))
         self.assertEqual(net.num_buses,0)
 
+    def test_ieee25_raw(self):
+
+        for case in test_cases.CASES:
+            if case == './data/ieee25.raw':
+
+                net = pf.ParserRAW().parse(case)
+
+                self.assertEqual(net.num_buses,25)
+
+                for bus in net.buses:
+                    if bus.number >= 101 and bus.number <= 110:
+                        self.assertEqual(bus.v_base,138.)
+                    else:
+                        self.assertLessEqual(bus.number,225)
+                        self.assertGreaterEqual(bus.number,211)
+                        self.assertEqual(bus.v_base,230.)
+                
     def test_sys_problem2(self):
 
         for case in test_cases.CASES:
-            if case == '../data/sys_problem2.mat':
+            if case == './data/sys_problem2.mat':
 
                 net = pf.ParserMAT().parse(case)
 
@@ -46,6 +64,9 @@ class TestParser(unittest.TestCase):
                 bus1 = net.get_bus_by_number(1)
                 bus2 = net.get_bus_by_number(2)
                 bus3 = net.get_bus_by_number(3)
+
+                for bus in net.buses:
+                    self.assertEqual(bus.v_base,220.)
 
                 self.assertEqual(bus1.number,1)
                 self.assertEqual(bus2.number,2)
@@ -150,7 +171,7 @@ class TestParser(unittest.TestCase):
     def test_sys_problem3(self):
 
         for case in test_cases.CASES:
-            if case == '../data/sys_problem3.mat':
+            if case == './data/sys_problem3.mat':
 
                 net = pf.ParserMAT().parse(case)
 
@@ -175,6 +196,9 @@ class TestParser(unittest.TestCase):
                 bus8 = net.get_bus_by_number(8)
                 bus9 = net.get_bus_by_number(9)
                 bus10 = net.get_bus_by_number(10)
+
+                for bus in net.buses:
+                    self.assertEqual(bus.v_base,69.)
 
                 # loads
                 for bus in net.buses:
@@ -382,7 +406,7 @@ class TestParser(unittest.TestCase):
     def test_cas32art(self):
 
         for case in test_cases.CASES:
-            if case == '../data/case32.art':
+            if case == './data/case32.art':
 
                 net = pf.ParserART().parse(case)
 
@@ -435,7 +459,7 @@ class TestParser(unittest.TestCase):
     def test_ieee14_gen_cost(self):
 
         for case in test_cases.CASES:
-            if case == '../data/ieee14.mat':
+            if case == './data/ieee14.mat':
 
                 net = pf.ParserMAT().parse(case)
 
@@ -516,202 +540,9 @@ class TestParser(unittest.TestCase):
                 new_net = json_parser.parse("temp_json.json")
                 self.assertEqual(new_net.num_periods,T)
 
-                # Network
-                self.assertTrue(net is not new_net)
-                self.assertEqual(net.num_periods,new_net.num_periods)
-                self.assertEqual(net.base_power,new_net.base_power)
-                self.assertNotEqual(net.num_vars,new_net.num_vars)
-                self.assertEqual(new_net.num_vars,0)
-                
-                # Buses
-                self.assertEqual(net.num_buses,new_net.num_buses)
-                for i in range(net.num_buses):
-                    bus = net.buses[i]
-                    new_bus = new_net.buses[i]
-                    self.assertEqual(bus.num_periods,T)
-                    self.assertTrue(bus is not new_bus)
-                    self.assertEqual(bus.number,new_bus.number)
-                    self.assertEqual(bus.name,new_bus.name)
-                    self.assertLess(norminf(bus.v_mag-new_bus.v_mag),eps)
-                    self.assertLess(norminf(bus.v_ang-new_bus.v_ang),eps)
-                    self.assertLess(norminf(bus.v_set-new_bus.v_set),eps)
-                    self.assertLess(norminf(bus.v_mag-new_bus.v_mag),eps)
-                    self.assertLess(norminf(bus.v_max_reg-new_bus.v_max_reg),eps)
-                    self.assertLess(norminf(bus.v_min_reg-new_bus.v_min_reg),eps)
-                    self.assertLess(norminf(bus.v_max_norm-new_bus.v_max_norm),eps)
-                    self.assertLess(norminf(bus.v_min_norm-new_bus.v_min_norm),eps)
-                    self.assertLess(norminf(bus.v_max_emer-new_bus.v_max_emer),eps)
-                    self.assertLess(norminf(bus.v_min_emer-new_bus.v_min_emer),eps)
-                    self.assertEqual(bus.is_slack(),new_bus.is_slack())
-                    self.assertEqual(bus.is_regulated_by_gen(),new_bus.is_regulated_by_gen())
-                    self.assertEqual(bus.is_regulated_by_tran(),new_bus.is_regulated_by_tran())
-                    self.assertEqual(bus.is_regulated_by_shunt(),new_bus.is_regulated_by_shunt())
-                    self.assertLess(norminf(bus.price-new_bus.price),eps)
-                    self.assertEqual(set([o.index for o in bus.generators]),
-                                     set([o.index for o in new_bus.generators]))
-                    self.assertEqual(set([o.index for o in bus.reg_generators]),
-                                     set([o.index for o in new_bus.reg_generators]))
-                    self.assertEqual(set([o.index for o in bus.loads]),
-                                     set([o.index for o in new_bus.loads]))
-                    self.assertEqual(set([o.index for o in bus.shunts]),
-                                     set([o.index for o in new_bus.shunts]))
-                    self.assertEqual(set([o.index for o in bus.reg_shunts]),
-                                     set([o.index for o in new_bus.reg_shunts]))
-                    self.assertEqual(set([o.index for o in bus.branches_k]),
-                                     set([o.index for o in new_bus.branches_k]))
-                    self.assertEqual(set([o.index for o in bus.branches_m]),
-                                     set([o.index for o in new_bus.branches_m]))
-                    self.assertEqual(set([o.index for o in bus.reg_trans]),
-                                     set([o.index for o in new_bus.reg_trans]))
-                    self.assertEqual(set([o.index for o in bus.var_generators]),
-                                     set([o.index for o in new_bus.var_generators]))
-                    self.assertEqual(set([o.index for o in bus.batteries]),
-                                     set([o.index for o in new_bus.batteries]))
-
-                # Branches
-                self.assertEqual(net.num_branches,new_net.num_branches)
-                for i in range(net.num_branches):
-                    branch = net.branches[i]
-                    new_branch = new_net.branches[i]
-                    self.assertTrue(branch is not new_branch)
-                    self.assertEqual(branch.num_periods,T)
-                    self.assertEqual(branch.num_periods,new_branch.num_periods)
-                    self.assertEqual(branch.bus_k.index,new_branch.bus_k.index)
-                    self.assertEqual(branch.bus_m.index,new_branch.bus_m.index)
-                    self.assertEqual(branch.is_fixed_tran(),new_branch.is_fixed_tran())
-                    self.assertEqual(branch.is_line(),new_branch.is_line())
-                    self.assertEqual(branch.is_phase_shifter(),new_branch.is_phase_shifter())
-                    self.assertEqual(branch.is_tap_changer(),new_branch.is_tap_changer())
-                    self.assertEqual(branch.is_tap_changer_v(),new_branch.is_tap_changer_v())
-                    self.assertEqual(branch.is_tap_changer_Q(),new_branch.is_tap_changer_Q())
-                    if branch.is_tap_changer_v():
-                        self.assertEqual(branch.reg_bus.index,new_branch.reg_bus.index)
-                    self.assertLess(norminf(branch.g-new_branch.g),eps*(1+norminf(branch.g)))
-                    self.assertLess(norminf(branch.g_k-new_branch.g_k),eps*(1+norminf(branch.g_k)))
-                    self.assertLess(norminf(branch.g_m-new_branch.g_m),eps*(1+norminf(branch.g_m)))
-                    self.assertLess(norminf(branch.b-new_branch.b),eps*(1+norminf(branch.b)))
-                    self.assertLess(norminf(branch.b_k-new_branch.b_k),eps*(1+norminf(branch.b_k)))
-                    self.assertLess(norminf(branch.b_m-new_branch.b_m),eps*(1+norminf(branch.b_m)))
-                    self.assertLess(norminf(branch.ratio-new_branch.ratio),eps)
-                    self.assertLess(norminf(branch.ratio_max-new_branch.ratio_max),eps)
-                    self.assertLess(norminf(branch.ratio_min-new_branch.ratio_min),eps)
-                    self.assertLess(norminf(branch.phase-new_branch.phase),eps)
-                    self.assertLess(norminf(branch.phase_max-new_branch.phase_max),eps)
-                    self.assertLess(norminf(branch.phase_min-new_branch.phase_min),eps)
-                    self.assertLess(norminf(branch.ratingA-new_branch.ratingA),eps)
-                    self.assertLess(norminf(branch.ratingB-new_branch.ratingB),eps)
-                    self.assertLess(norminf(branch.ratingC-new_branch.ratingC),eps)
-                    self.assertEqual(branch.is_on_outage(),new_branch.is_on_outage())
-                    self.assertEqual(branch.has_pos_ratio_v_sens(),new_branch.has_pos_ratio_v_sens())
-
-                # Generators
-                self.assertEqual(net.num_generators,new_net.num_generators)
-                for i in range(net.num_generators):
-                    gen = net.generators[i]
-                    new_gen = new_net.generators[i]
-                    self.assertTrue(gen is not new_gen)
-                    self.assertEqual(gen.num_periods,T)
-                    self.assertEqual(gen.num_periods,new_gen.num_periods)
-                    self.assertEqual(gen.bus.index,new_gen.bus.index)
-                    self.assertEqual(gen.is_on_outage(),new_gen.is_on_outage())
-                    self.assertEqual(gen.is_slack(),new_gen.is_slack())
-                    self.assertEqual(gen.is_regulator(),new_gen.is_regulator())
-                    self.assertEqual(gen.is_P_adjustable(),new_gen.is_P_adjustable())
-                    if gen.is_regulator():
-                        self.assertEqual(gen.reg_bus.index,new_gen.reg_bus.index)
-                    self.assertLess(norminf(gen.P-new_gen.P),eps)
-                    self.assertLess(norminf(gen.P_max-new_gen.P_max),eps)
-                    self.assertLess(norminf(gen.P_min-new_gen.P_min),eps)
-                    self.assertLess(norminf(gen.dP_max-new_gen.dP_max),eps)
-                    self.assertLess(norminf(gen.P_prev-new_gen.P_prev),eps)
-                    self.assertLess(norminf(gen.Q-new_gen.Q),eps)
-                    self.assertLess(norminf(gen.Q_max-new_gen.Q_max),eps)
-                    self.assertLess(norminf(gen.Q_min-new_gen.Q_min),eps)
-                    self.assertLess(norminf(gen.cost_coeff_Q0-new_gen.cost_coeff_Q0),eps)
-                    self.assertLess(norminf(gen.cost_coeff_Q1-new_gen.cost_coeff_Q1),eps)
-                    self.assertLess(norminf(gen.cost_coeff_Q2-new_gen.cost_coeff_Q2),eps)
-
-                # Var generators
-                self.assertEqual(net.num_var_generators,new_net.num_var_generators)
-                for i in range(net.num_var_generators):
-                    vargen = net.var_generators[i]
-                    new_vargen = new_net.var_generators[i]
-                    self.assertTrue(vargen is not new_vargen)
-                    self.assertEqual(vargen.num_periods,T)
-                    self.assertEqual(vargen.num_periods,new_vargen.num_periods)
-                    self.assertEqual(vargen.bus.index,new_vargen.bus.index)
-                    self.assertEqual(vargen.name,new_vargen.name)
-                    self.assertLess(norminf(vargen.P-new_vargen.P),eps)
-                    self.assertLess(norminf(vargen.P_ava-new_vargen.P_ava),eps)
-                    self.assertLess(norminf(vargen.P_max-new_vargen.P_max),eps)
-                    self.assertLess(norminf(vargen.P_min-new_vargen.P_min),eps)
-                    self.assertLess(norminf(vargen.P_std-new_vargen.P_std),eps)
-                    self.assertLess(norminf(vargen.Q-new_vargen.Q),eps)
-                    self.assertLess(norminf(vargen.Q_max-new_vargen.Q_max),eps)
-                    self.assertLess(norminf(vargen.Q_min-new_vargen.Q_min),eps)
-
-                # Shunts
-                self.assertEqual(net.num_shunts,new_net.num_shunts)
-                for i in range(net.num_shunts):
-                    shunt = net.shunts[i]
-                    new_shunt = new_net.shunts[i]
-                    self.assertTrue(shunt is not new_shunt)
-                    self.assertEqual(shunt.num_periods,T)
-                    self.assertEqual(shunt.num_periods,new_shunt.num_periods)
-                    self.assertEqual(shunt.bus.index,new_shunt.bus.index)
-                    self.assertEqual(shunt.is_fixed(),new_shunt.is_fixed())
-                    self.assertEqual(shunt.is_switched_v(),new_shunt.is_switched_v())
-                    if shunt.is_switched_v():
-                        self.assertEqual(shunt.reg_bus.index,new_shunt.reg_bus.index)
-                    self.assertLess(norminf(shunt.g-new_shunt.g),eps*(1+norminf(shunt.g)))
-                    self.assertLess(norminf(shunt.b-new_shunt.b),eps*(1+norminf(shunt.b)))
-                    self.assertLess(norminf(shunt.b_max-new_shunt.b_max),eps*(1+norminf(shunt.b_max)))
-                    self.assertLess(norminf(shunt.b_min-new_shunt.b_min),eps*(1+norminf(shunt.b_min)))
-                    
-                # Loads
-                self.assertEqual(net.num_loads,new_net.num_loads)
-                for i in range(net.num_loads):
-                    load = net.loads[i]
-                    new_load = new_net.loads[i]
-                    self.assertTrue(load is not new_load)
-                    self.assertEqual(load.num_periods,T)
-                    self.assertEqual(load.num_periods,new_load.num_periods)
-                    self.assertEqual(load.bus.index,new_load.bus.index)
-                    self.assertLess(norminf(load.P-new_load.P),eps)
-                    self.assertLess(norminf(load.P_max-new_load.P_max),eps)
-                    self.assertLess(norminf(load.P_min-new_load.P_min),eps)
-                    self.assertLess(norminf(load.Q-new_load.Q),eps)
-                    self.assertLess(norminf(load.target_power_factor-new_load.target_power_factor),eps)
-                    self.assertLess(norminf(load.util_coeff_Q0-new_load.util_coeff_Q0),eps)
-                    self.assertLess(norminf(load.util_coeff_Q1-new_load.util_coeff_Q1),eps)
-                    self.assertLess(norminf(load.util_coeff_Q2-new_load.util_coeff_Q2),eps)                    
-
-                # Batteries
-                self.assertEqual(net.num_batteries,new_net.num_batteries)
-                for i in range(net.num_batteries):
-                    bat = net.batteries[i]
-                    new_bat = new_net.batteries[i]
-                    self.assertTrue(bat is not new_bat)
-                    self.assertEqual(bat.num_periods,T)
-                    self.assertEqual(bat.num_periods,new_bat.num_periods)
-                    self.assertEqual(bat.bus.index,new_bat.bus.index)
-                    self.assertLess(norminf(bat.P-new_bat.P),eps)
-                    self.assertLess(norminf(bat.P_max-new_bat.P_max),eps)
-                    self.assertLess(norminf(bat.P_min-new_bat.P_min),eps)
-                    self.assertLess(norminf(bat.eta_c-new_bat.eta_c),eps)
-                    self.assertLess(norminf(bat.eta_d-new_bat.eta_d),eps)
-                    self.assertLess(norminf(bat.E-new_bat.E),eps)
-                    self.assertLess(norminf(bat.E_init-new_bat.E_init),eps)
-                    self.assertLess(norminf(bat.E_final-new_bat.E_final),eps)
-                    self.assertLess(norminf(bat.E_max-new_bat.E_max),eps)
-                    
-                # Hashes                 
-                for bus in net.buses:
-                    self.assertEqual(bus.index,net.get_bus_by_number(bus.number).index)
-                    self.assertEqual(bus.name,net.get_bus_by_name(bus.name).name)
-                for vargen in net.var_generators:
-                    self.assertEqual(vargen.index,net.get_var_generator_by_name(vargen.name).index)
-                    
+                # Compare
+                utils.compare_two_networks(self, net, new_net)
+                                    
             finally:
                 
                 os.remove("temp_json.json")

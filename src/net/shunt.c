@@ -237,6 +237,28 @@ void SHUNT_get_var_values(Shunt* shunt, Vec* values, int code) {
   }
 }
 
+char* SHUNT_get_var_info_string(Shunt* shunt, int index) {
+
+  // Local variables
+  char* info;
+
+  //Check
+  if (!shunt)
+    return NULL;
+
+  // Susceptance
+  if ((shunt->vars & SHUNT_VAR_SUSC) &&
+      index >= shunt->index_b[0] &&
+      index <= shunt->index_b[shunt->num_periods-1]) {
+    info = (char*)malloc(SHUNT_BUFFER_SIZE*sizeof(char));
+    snprintf(info,SHUNT_BUFFER_SIZE*sizeof(char),
+	     "shunt:%d:susceptance:%d",shunt->index,index-shunt->index_b[0]);
+    return info;
+  }
+  // Return
+  return NULL;
+}
+
 int SHUNT_get_num_vars(void* vshunt, unsigned char var, int t_start, int t_end) {
 
   // Local vars

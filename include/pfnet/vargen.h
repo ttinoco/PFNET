@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -78,6 +78,7 @@ REAL VARGEN_get_Q(Vargen* gen, int t);
 REAL VARGEN_get_Q_max(Vargen* gen);
 REAL VARGEN_get_Q_min(Vargen* gen);
 void VARGEN_get_var_values(Vargen* gen, Vec* values, int code);
+char* VARGEN_get_var_info_string(Vargen* gen, int index);
 int VARGEN_get_num_vars(void* gen, unsigned char var, int t_start, int t_end);
 Vec* VARGEN_get_var_indices(void* gen, unsigned char var, int t_start, int t_end);
 char* VARGEN_get_json_string(Vargen* gen, char* output);

@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -37,6 +37,7 @@ cdef extern from "pfnet/vargen.h":
     REAL VARGEN_get_Q_min(Vargen* gen)
     Vargen* VARGEN_get_next(Vargen* gen)
     char* VARGEN_get_json_string(Vargen* gen, char* output)
+    char* VARGEN_get_var_info_string(Vargen* gen, int index)
     bint VARGEN_has_flags(Vargen* gen, char flag_type, char mask)
     Vargen* VARGEN_new(int num_periods)
     Vargen* VARGEN_array_new(int size, int num_periods)

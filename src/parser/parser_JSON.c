@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -283,6 +283,10 @@ void JSON_PARSER_process_json_bus_array(Parser* p, Net* net, json_value* json_bu
 	BUS_set_name(bus,val->u.string.ptr);
 	NET_bus_hash_name_add(net,bus);
       }
+
+      // v_base
+      else if (strcmp(key,"v_base") == 0)
+	BUS_set_v_base(bus,val->u.dbl);
 	
       // v_mag
       else if (strcmp(key,"v_mag") == 0) {

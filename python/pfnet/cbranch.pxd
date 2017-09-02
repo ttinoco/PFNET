@@ -82,6 +82,7 @@ cdef extern from "pfnet/branch.h":
     Branch* BRANCH_get_next_k(Branch* br)
     Branch* BRANCH_get_next_m(Branch* br)
     char* BRANCH_get_json_string(Branch* br, char* output)
+    char* BRANCH_get_var_info_string(Branch* br, int index)  
     bint BRANCH_has_pos_ratio_v_sens(Branch* br)
     bint BRANCH_is_equal(Branch* br, Branch* other)
     bint BRANCH_is_on_outage(Branch* br)

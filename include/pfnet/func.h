@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -49,6 +49,8 @@ void FUNC_list_allocate(Func* f);
 void FUNC_list_clear(Func* f);
 void FUNC_list_analyze_step(Func* f, Branch* br, int t);
 void FUNC_list_eval_step(Func* f, Branch* br, int t, Vec* var_values);
+void FUNC_list_finalize_structure_of_Hessian(Func* flist);
+void FUNC_finalize_structure_of_Hessian(Func* f);
 Func* FUNC_new(REAL weight, Net* net);
 void FUNC_set_name(Func* f, char* name);
 void FUNC_set_phi(Func* f, REAL phi);

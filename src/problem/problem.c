@@ -172,6 +172,7 @@ void PROB_analyze(Prob* p) {
     }
   }
   CONSTR_list_finalize_structure_of_Hessians(p->constr);
+  FUNC_list_finalize_structure_of_Hessian(p->func);
 
   // Delete matvec
   PROB_del_matvec(p);

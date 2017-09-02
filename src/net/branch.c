@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -726,6 +726,39 @@ void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
       }
     }
   }
+}
+
+char* BRANCH_get_var_info_string(Branch* br, int index) {
+
+  // Local variables
+  char* info;
+
+  //Check
+  if (!br)
+    return NULL;
+
+  // Taps ratio
+  if ((br->vars & BRANCH_VAR_RATIO) &&
+      index >= br->index_ratio[0] &&
+      index <= br->index_ratio[br->num_periods-1]) {
+    info = (char*)malloc(BRANCH_BUFFER_SIZE*sizeof(char));
+    snprintf(info,BRANCH_BUFFER_SIZE*sizeof(char),
+	     "branch:%d:tap ratio:%d",br->index,index-br->index_ratio[0]);
+    return info;
+  }
+
+  // Phase shift
+  if ((br->vars & BRANCH_VAR_PHASE) &&
+      index >= br->index_phase[0] &&
+      index <= br->index_phase[br->num_periods-1]) {
+    info = (char*)malloc(BRANCH_BUFFER_SIZE*sizeof(char));
+    snprintf(info,BRANCH_BUFFER_SIZE*sizeof(char),
+	     "branch:%d:phase shift:%d",br->index,index-br->index_phase[0]);
+    return info;
+  }
+
+  // Return
+  return NULL;
 }
 
 int BRANCH_get_num_vars(void* vbr, unsigned char var, int t_start, int t_end) {

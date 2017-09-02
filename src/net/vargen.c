@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -227,7 +227,7 @@ REAL VARGEN_get_Q_min(Vargen* gen) {
     return 0;
 }
 
-void VARGEN_get_var_values(Vargen* gen, Vec* values, int code) {  
+void VARGEN_get_var_values(Vargen* gen, Vec* values, int code) {
 
   // Local vars
   int t;
@@ -285,6 +285,39 @@ void VARGEN_get_var_values(Vargen* gen, Vec* values, int code) {
       }
     }
   }
+}
+
+char* VARGEN_get_var_info_string(Vargen* gen, int index) {
+
+  // Local variables
+  char* info;
+
+  //Check
+  if (!gen)
+    return NULL;
+
+  // Active power
+  if ((gen->vars & VARGEN_VAR_P) &&
+      index >= gen->index_P[0] &&
+      index <= gen->index_P[gen->num_periods-1]) {
+    info = (char*)malloc(VARGEN_BUFFER_SIZE*sizeof(char));
+    snprintf(info,VARGEN_BUFFER_SIZE*sizeof(char),
+	     "variable generator:%d:active power:%d",gen->index,index-gen->index_P[0]);
+    return info;
+  }
+  
+  // Reactive power
+  if ((gen->vars & VARGEN_VAR_Q) &&
+      index >= gen->index_Q[0] &&
+      index <= gen->index_Q[gen->num_periods-1]) {
+    info = (char*)malloc(VARGEN_BUFFER_SIZE*sizeof(char));
+    snprintf(info,VARGEN_BUFFER_SIZE*sizeof(char),
+	     "variable generator:%d:reactive power:%d",gen->index,index-gen->index_Q[0]);
+    return info;
+  }
+
+  // Return
+  return NULL;
 }
 
 int VARGEN_get_num_vars(void* vgen, unsigned char var, int t_start, int t_end) {
