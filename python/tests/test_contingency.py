@@ -101,7 +101,7 @@ class TestContingency(unittest.TestCase):
             self.assertEqual(len([b for b in net.branches if not b.outage]),net.num_branches)
             self.assertEqual(len([g for g in net.generators if g.outage]),0)
             self.assertEqual(len([b for b in net.branches if b.outage]),0)
-            cont.apply()
+            cont.apply(net)
             if net.num_generators > 5:
                 self.assertEqual(net.get_num_gens_not_on_outage(),net.num_generators-2)
                 self.assertEqual(len([g for g in net.generators if g.outage]),2)
@@ -170,7 +170,7 @@ class TestContingency(unittest.TestCase):
             cont2 = pf.Contingency()
             cont2.add_branch_outage(net.get_branch(2))
             self.assertFalse(net.get_branch(2).outage)
-            cont2.apply()
+            cont2.apply(net)
             self.assertTrue(net.get_branch(2).outage)
             self.assertTrue(net.get_branch(0).outage)
             self.assertTrue(net.get_branch(1).outage)
@@ -181,7 +181,7 @@ class TestContingency(unittest.TestCase):
             self.assertEqual(cont2.num_gen_outages,0)
 
             # clear
-            cont.clear()
+            cont.clear(net)
             self.assertTrue(net.get_branch(2).outage)
             self.assertFalse(net.get_branch(1).outage)
             self.assertFalse(net.get_branch(0).outage)
@@ -189,7 +189,7 @@ class TestContingency(unittest.TestCase):
             if net.num_generators > 5:
                 self.assertFalse(net.get_generator(5).outage)
             self.assertEqual(len([b for b in net.branches if b.outage]),1)
-            cont2.clear()
+            cont2.clear(net)
             self.assertEqual(len([b for b in net.branches if b.outage]),0)
             for g in net.generators:
                 if g.index == 0 or g.index == 5:
@@ -254,9 +254,9 @@ class TestContingency(unittest.TestCase):
                 if reg_bus is not None:
                     reg_gens = reg_bus.reg_generators
 
-                cont.apply()
-                cont.apply()
-                cont.apply()
+                cont.apply(net)
+                cont.apply(net)
+                cont.apply(net)
 
                 self.assertTrue(gen.is_on_outage())
                 self.assertFalse(gen.is_regulator())
@@ -269,9 +269,9 @@ class TestContingency(unittest.TestCase):
                     self.assertFalse(gen.index in [x.index for x in reg_bus.reg_generators])
                     self.assertTrue(gen.index in [x.index for x in reg_gens])
 
-                cont.clear()
-                cont.clear()
-                cont.clear()
+                cont.clear(net)
+                cont.clear(net)
+                cont.clear(net)
 
                 self.assertFalse(gen.is_on_outage())
                 self.assertEqual(gen.bus.index,bus.index)
@@ -319,9 +319,9 @@ class TestContingency(unittest.TestCase):
                             br.is_tap_changer_v(),
                             br.is_tap_changer_Q()]
 
-                cont.apply()
-                cont.apply()
-                cont.apply()
+                cont.apply(net)
+                cont.apply(net)
+                cont.apply(net)
 
                 self.assertTrue(br.is_on_outage())
                 self.assertFalse(br.is_tap_changer())
@@ -352,9 +352,9 @@ class TestContingency(unittest.TestCase):
                     self.assertFalse(br.index in [x.index for x in reg_bus.reg_trans])
                     self.assertTrue(br.index in [x.index for x in reg_trans])
 
-                cont.clear()
-                cont.clear()
-                cont.clear()
+                cont.clear(net)
+                cont.clear(net)
+                cont.clear(net)
 
                 self.assertFalse(br.is_on_outage())
                 self.assertEqual(br.bus_k.index,bus_k.index)
@@ -446,7 +446,7 @@ class TestContingency(unittest.TestCase):
 
                 cont = pf.Contingency()
                 cont.add_gen_outage(gen)
-                cont.apply()
+                cont.apply(net)
 
                 func.del_matvec()
                 func.analyze()
@@ -469,7 +469,7 @@ class TestContingency(unittest.TestCase):
                 self.assertTrue(np.all(Hphi.row != gen.index_P))
                 self.assertTrue(np.all(Hphi.col != gen.index_P))
 
-                cont.clear()
+                cont.clear(net)
                 counter += 1
                 if counter > TEST_GENS:
                     break
@@ -483,7 +483,7 @@ class TestContingency(unittest.TestCase):
 
                 cont = pf.Contingency()
                 cont.add_branch_outage(br)
-                cont.apply()
+                cont.apply(net)
 
                 func.del_matvec()
                 func.analyze()
@@ -502,7 +502,7 @@ class TestContingency(unittest.TestCase):
                 E = func.Hphi-Hphi_base
                 self.assertEqual(E.nnz,0)
 
-                cont.clear()
+                cont.clear(net)
                 counter += 1
                 if counter > TEST_BRANCHES:
                     break
@@ -562,7 +562,7 @@ class TestContingency(unittest.TestCase):
 
                 cont = pf.Contingency()
                 cont.add_gen_outage(gen)
-                cont.apply()
+                cont.apply(net)
 
                 constr.del_matvec()
                 constr.analyze()
@@ -588,7 +588,7 @@ class TestContingency(unittest.TestCase):
                         if counter1 > TEST_BUSES:
                             break
 
-                cont.clear()
+                cont.clear(net)
                 counter += 1
                 if counter > TEST_GENS:
                     break
@@ -602,7 +602,7 @@ class TestContingency(unittest.TestCase):
 
                 cont = pf.Contingency()
                 cont.add_branch_outage(br)
-                cont.apply()
+                cont.apply(net)
 
                 constr.del_matvec()
                 constr.analyze()
@@ -613,7 +613,7 @@ class TestContingency(unittest.TestCase):
                 # NEED TO TEST
                 #*************
 
-                cont.clear()
+                cont.clear(net)
                 counter += 1
                 if counter > TEST_BRANCHES:
                     break
@@ -659,7 +659,7 @@ class TestContingency(unittest.TestCase):
 
                 cont = pf.Contingency()
                 cont.add_gen_outage(gen)
-                cont.apply()
+                cont.apply(net)
 
                 constr.del_matvec()
                 constr.analyze()
@@ -680,7 +680,7 @@ class TestContingency(unittest.TestCase):
                         if counter1 > TEST_BUSES:
                             break
 
-                cont.clear()
+                cont.clear(net)
                 counter += 1
                 if counter > TEST_GENS:
                     break
@@ -699,7 +699,7 @@ class TestContingency(unittest.TestCase):
 
                 cont = pf.Contingency()
                 cont.add_branch_outage(br)
-                cont.apply()
+                cont.apply(net)
 
                 constr.del_matvec()
                 constr.analyze()
@@ -710,7 +710,7 @@ class TestContingency(unittest.TestCase):
                 self.assertLess(np.abs((A*x-b)[bus_m.index]-
                                        ((constr.A*x-constr.b)[bus_m.index]+Pkm)),1e-8)
 
-                cont.clear()
+                cont.clear(net)
                 counter += 1
                 if counter > TEST_BRANCHES:
                     break
@@ -754,7 +754,7 @@ class TestContingency(unittest.TestCase):
 
                 cont = pf.Contingency()
                 cont.add_gen_outage(gen)
-                cont.apply()
+                cont.apply(net)
 
                 constr.del_matvec()
                 constr.analyze()
@@ -764,7 +764,7 @@ class TestContingency(unittest.TestCase):
                 self.assertEqual(np.linalg.norm(l-constr.l),0.)
                 self.assertEqual(np.linalg.norm(u-constr.u),0.)
 
-                cont.clear()
+                cont.clear(net)
                 counter += 1
                 if counter > TEST_GENS:
                     break
@@ -778,7 +778,7 @@ class TestContingency(unittest.TestCase):
 
                 cont = pf.Contingency()
                 cont.add_branch_outage(br)
-                cont.apply()
+                cont.apply(net)
 
                 constr.del_matvec()
                 constr.analyze()
@@ -802,7 +802,7 @@ class TestContingency(unittest.TestCase):
                 Gcut = coo_matrix((data,(row,col)),shape=(net.num_branches-1,net.num_vars))
                 self.assertEqual((Gnew-Gcut).nnz,0)
 
-                cont.clear()
+                cont.clear(net)
                 counter += 1
                 if counter > TEST_BRANCHES:
                     break
@@ -819,7 +819,7 @@ class TestContingency(unittest.TestCase):
             cont.add_branch_outage(net.get_branch(0))
             cont.add_branch_outage(net.get_branch(1))
 
-            cont.apply()
+            cont.apply(net)
 
             # variables
             net.set_flags('generator',

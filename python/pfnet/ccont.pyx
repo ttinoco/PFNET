@@ -3,7 +3,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -52,11 +52,11 @@ cdef class Contingency:
         if gens:
             for gen in gens:
                 g = gen
-                ccont.CONT_add_gen_outage(self._c_cont,g._c_ptr)
+                ccont.CONT_add_gen_outage(self._c_cont,g.index)
         if branches:
             for branch in branches:
                 br = branch
-                ccont.CONT_add_branch_outage(self._c_cont,br._c_ptr)
+                ccont.CONT_add_branch_outage(self._c_cont,br.index)
 
     def __dealloc__(self):
         """
@@ -67,19 +67,29 @@ cdef class Contingency:
             ccont.CONT_del(self._c_cont)
             self._c_cont = NULL
 
-    def apply(self):
+    def apply(self, network):
         """
         Applies outages that characterize contingency.
+
+        Paramaters
+        ----------
+        network : :class:`Network <pfnet.Network>`
         """
 
-        ccont.CONT_apply(self._c_cont)
+        cdef Network n = network
+        ccont.CONT_apply(self._c_cont, n._c_net)
 
-    def clear(self):
+    def clear(self, network):
         """
         Clears outages that characterize contingency.
+
+        Paramaters
+        ----------
+        network : :class:`Network <pfnet.Network>`
         """
 
-        ccont.CONT_clear(self._c_cont)
+        cdef Network n = network
+        ccont.CONT_clear(self._c_cont, n._c_net)
 
     def show(self):
         """
@@ -98,7 +108,7 @@ cdef class Contingency:
         """
 
         cdef Generator g = gen
-        ccont.CONT_add_gen_outage(self._c_cont,g._c_ptr)
+        ccont.CONT_add_gen_outage(self._c_cont,g.index)
 
     def add_branch_outage(self,br):
         """
@@ -110,7 +120,7 @@ cdef class Contingency:
         """
 
         cdef Branch b = br
-        ccont.CONT_add_branch_outage(self._c_cont,b._c_ptr)
+        ccont.CONT_add_branch_outage(self._c_cont,b.index)
 
     def has_gen_outage(self,gen):
         """
@@ -126,7 +136,7 @@ cdef class Contingency:
         """
 
         cdef Generator g = gen
-        return ccont.CONT_has_gen_outage(self._c_cont,g._c_ptr)
+        return ccont.CONT_has_gen_outage(self._c_cont,g.index)
 
     def has_branch_outage(self,br):
         """
@@ -142,7 +152,7 @@ cdef class Contingency:
         """
 
         cdef Branch b = br
-        return ccont.CONT_has_branch_outage(self._c_cont,b._c_ptr)
+        return ccont.CONT_has_branch_outage(self._c_cont,b.index)
 
     property num_gen_outages:
         """ Number of generator outages. """
