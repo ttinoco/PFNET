@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2016, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -24,7 +24,7 @@ cdef extern from "pfnet/contingency.h":
     Cont* CONT_new()
     void CONT_show(Cont* cont)
     char* CONT_get_show_str(Cont* cont)
-
+    char* CONT_get_json_string(Cont* cont)
 
         
 

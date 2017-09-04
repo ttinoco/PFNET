@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -98,6 +98,30 @@
     strcpy(output,"]");						 \
     output += 1;						 \
   }								 \
+}
+
+#define JSON_array_int(temp,output,field_name,field,num,end) { \
+  int i;						       \
+  sprintf(temp,"\"%s\":[",field_name);			       \
+  strcpy(output,temp);					       \
+  output += strlen(temp);				       \
+  for (i = 0; i < num; i++) {				       \
+    sprintf(temp,"%d",field[i]);			       \
+    strcpy(output,temp);                                       \
+    output += strlen(temp);                                    \
+    if (i < num-1) {	                                       \
+      strcpy(output,",");				       \
+      output += 1;					       \
+    }							       \
+  }							       \
+  if (!end) {						       \
+    strcpy(output,"],");				       \
+    output += 2;					       \
+  }							       \
+  else {						       \
+    strcpy(output,"]");					       \
+    output += 1;					       \
+  }							       \
 }
 
 #define JSON_list_int(temp,output,field_name,obj,iter_type,list_func,field_func,next_func,end) { \

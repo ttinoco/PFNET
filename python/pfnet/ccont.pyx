@@ -10,6 +10,8 @@
 
 cimport ccont
 
+import json
+
 class ContingencyError(Exception):
     """
     Contingency error exception.
@@ -67,6 +69,23 @@ cdef class Contingency:
             ccont.CONT_del(self._c_cont)
             self._c_cont = NULL
 
+    def __getstate__(self):
+
+        return self.json_string
+
+    def __setstate__(self, state):
+
+        class temp: pass
+        state = json.loads(state)
+        for index in state['generator_outages']:
+            gen = temp()
+            gen.index =index
+            self.add_gen_outage(gen)
+        for index in state['branch_outages']:
+            br = temp()
+            br.index =index
+            self.add_branch_outage(br)
+
     def apply(self, network):
         """
         Applies outages that characterize contingency.
@@ -107,8 +126,7 @@ cdef class Contingency:
         gen : :class:`Generator <pfnet.Generator>`
         """
 
-        cdef Generator g = gen
-        ccont.CONT_add_gen_outage(self._c_cont,g.index)
+        ccont.CONT_add_gen_outage(self._c_cont,gen.index)
 
     def add_branch_outage(self,br):
         """
@@ -119,8 +137,7 @@ cdef class Contingency:
         br : :class:`Branch <pfnet.Branch>`
         """
 
-        cdef Branch b = br
-        ccont.CONT_add_branch_outage(self._c_cont,b.index)
+        ccont.CONT_add_branch_outage(self._c_cont,br.index)
 
     def has_gen_outage(self,gen):
         """
@@ -161,3 +178,11 @@ cdef class Contingency:
     property num_branch_outages:
         """ Number of branch outages. """
         def __get__(self): return ccont.CONT_get_num_branch_outages(self._c_cont)
+
+    property json_string:
+        """ JSON string (string). """
+        def __get__(self): 
+            cdef char* json_string = ccont.CONT_get_json_string(self._c_cont)
+            s = json_string.decode('UTF-8')
+            free(json_string)
+            return s

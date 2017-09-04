@@ -9,6 +9,7 @@
  */
 
 #include <pfnet/contingency.h>
+#include <pfnet/json_macros.h>
 
 // Gen outage
 struct Gen_outage {
@@ -326,4 +327,62 @@ char* CONT_get_show_str(Cont* cont) {
 void CONT_show(Cont* cont) {
 
   printf("%s",CONT_get_show_str(cont));
+}
+
+char* CONT_get_json_string(Cont* cont) {
+
+  // Local vars
+  Gen_outage* go;
+  Branch_outage* bo;
+  char* output;
+  char* output_start;
+  char temp[CONT_BUFFER_SIZE];
+  int* indices;
+  int num;
+
+  // No contingency
+  if (!cont)
+    return NULL;
+
+  // Output
+  output = (char*)malloc(sizeof(char)*CONT_BUFFER_SIZE*5);
+  output_start = output;
+
+  // Write
+  JSON_start(output);
+
+  // Gen outages
+  num = 0;
+  for (go = cont->gen_outage; go != NULL; go = go->next)
+    num++;
+  indices = (int*)malloc(num*sizeof(int));
+  num = 0;
+  for (go = cont->gen_outage; go != NULL; go = go->next) {
+    indices[num] = go->gen_index;
+    num++;
+  }
+  JSON_array_int(temp,output,"generator_outages",indices,num,FALSE);
+  free(indices);
+
+  // Branch outages
+  num = 0;
+  for (bo = cont->br_outage; bo != NULL; bo = bo->next)
+    num++;
+  indices = (int*)malloc(num*sizeof(int));
+  num = 0;
+  for (bo = cont->br_outage; bo != NULL; bo = bo->next) {
+    indices[num] = bo->br_index;
+    num++;
+  }
+  JSON_array_int(temp,output,"branch_outages",indices,num,TRUE);
+  free(indices);
+
+  // End
+  JSON_end(output);
+
+  // Resize
+  output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
+
+  // Return
+  return output;
 }

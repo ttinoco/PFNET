@@ -6,6 +6,8 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
+import json
+import pickle
 import pfnet as pf
 import unittest
 from . import test_cases
@@ -21,6 +23,63 @@ class TestContingency(unittest.TestCase):
     def setUp(self):
 
         pass
+
+    def test_pickle(self):
+
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
+
+            cont1 = pf.Contingency()
+
+            if net.num_branches > 1 and net.num_generators > 1:
+                cont1.add_branch_outage(net.get_branch(net.num_branches-1))
+                cont1.add_branch_outage(net.get_branch(net.num_branches-2))
+                cont1.add_gen_outage(net.get_generator(0))
+                cont1.add_gen_outage(net.get_generator(1))
+                pkld_cont = pickle.dumps(cont1,protocol=-1)
+                cont2 = pickle.loads(pkld_cont)
+
+                self.assertEqual(cont1.num_gen_outages,cont2.num_gen_outages)
+                self.assertEqual(cont1.num_branch_outages,cont2.num_branch_outages)
+                for branch in net.branches:
+                    if cont1.has_branch_outage(branch):
+                        self.assertTrue(cont2.has_branch_outage(branch))
+                    else:
+                        self.assertFalse(cont2.has_branch_outage(branch))
+                for gen in net.generators:
+                    if cont1.has_gen_outage(gen):
+                        self.assertTrue(cont2.has_gen_outage(gen))
+                    else:
+                        self.assertFalse(cont2.has_gen_outage(gen))
+                self.assertEqual(cont1.json_string,cont2.json_string)
+                
+    def test_json_string(self):
+
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
+
+            cont = pf.Contingency()
+            s = json.loads(cont.json_string)
+
+            self.assertTrue('generator_outages' in s)
+            self.assertTrue('branch_outages' in s)
+
+            self.assertEqual(s['generator_outages'],[])
+            self.assertEqual(s['branch_outages'],[])
+
+            if net.num_branches > 1 and net.num_generators > 1:
+                cont.add_branch_outage(net.get_branch(net.num_branches-1))
+                cont.add_branch_outage(net.get_branch(net.num_branches-2))
+                cont.add_gen_outage(net.get_generator(0))
+                cont.add_gen_outage(net.get_generator(1))
+                
+                s = json.loads(cont.json_string)
+                self.assertEqual(s['generator_outages'],[0,1])
+                self.assertEqual(s['branch_outages'],[net.num_branches-1,net.num_branches-2])
 
     def test_construction(self):
 

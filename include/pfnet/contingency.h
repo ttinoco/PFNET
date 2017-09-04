@@ -35,5 +35,6 @@ void CONT_init(Cont* cont);
 Cont* CONT_new(void);
 void CONT_show(Cont* cont);
 char* CONT_get_show_str(Cont* cont);
+char* CONT_get_json_string(Cont* cont);
 
 #endif
