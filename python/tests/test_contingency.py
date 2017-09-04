@@ -8,21 +8,44 @@
 
 import json
 import pickle
-import pfnet as pf
 import unittest
-from . import test_cases
+import pfnet as pf
 import numpy as np
+import multiprocessing
+from . import test_cases
 from scipy.sparse import coo_matrix, bmat, triu
 
 TEST_BRANCHES = 100
 TEST_GENS = 100
 TEST_BUSES = 20
 
+class ContingencyHandler:
+
+    def __call__(self, c):
+        return c.num_gen_outages == 1 and c.num_branch_outages == 0
+
 class TestContingency(unittest.TestCase):
 
     def setUp(self):
 
         pass
+
+    def test_parallel_pool_map(self):
+
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
+
+            if net.num_branches > 1 and net.num_generators > 1:
+
+                contingencies = []
+                for gen in net.generators[:5]:
+                    contingencies.append(pf.Contingency(gens=[gen]))
+                        
+                pool = multiprocessing.Pool()
+                results = pool.map(ContingencyHandler(),contingencies)
+                self.assertEqual(results,[True]*min([5,net.num_generators]))
 
     def test_pickle(self):
 
