@@ -10,10 +10,10 @@ import pfnet as pf
 import numpy as np
 from numpy.linalg import norm
 
-def compare_two_networks(unittest, net, new_net):
+def compare_networks(unittest, net, new_net):
     """
     Method for checking if two :class:`Network <pfnet.Network>` objects are held in different 
-    memory locations but are otherwise identical
+    memory locations but are otherwise identical. Comparison made by bus numbers.
 
     Parameters
     ----------
@@ -38,7 +38,7 @@ def compare_two_networks(unittest, net, new_net):
         new_bus = new_net.buses[i]
         unittest.assertTrue(bus is not new_bus)
         unittest.assertEqual(bus.number, new_bus.number)
-        unittest.assertEqual(bus.name, new_bus.name)
+        unittest.assertEqual(bus.name.upper().strip(), new_bus.name.upper().strip())
         unittest.assertLess(norminf(bus.v_base-new_bus.v_base), eps)
         unittest.assertLess(norminf(bus.v_mag-new_bus.v_mag), eps)
         unittest.assertLess(norminf(bus.v_ang-new_bus.v_ang), eps)

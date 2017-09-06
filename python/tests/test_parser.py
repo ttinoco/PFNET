@@ -6,7 +6,6 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
-import utils
 import pfnet as pf
 import unittest
 from . import test_cases
@@ -541,7 +540,7 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(new_net.num_periods,T)
 
                 # Compare
-                utils.compare_two_networks(self, net, new_net)
+                pf.tests.utils.compare_networks(self, net, new_net)
                                     
             finally:
                 

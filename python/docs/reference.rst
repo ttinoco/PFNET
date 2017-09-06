@@ -526,3 +526,12 @@ Problem Class
 .. autoclass:: pfnet.Problem
    :members:
    :exclude-members: add_heuristic, apply_heuristics
+   
+   
+Test Utilities
+==============
+
+.. _ref_test_utilities:
+
+.. autofunction:: pfnet.tests.utils.compare_networks
+

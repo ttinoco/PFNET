@@ -12,7 +12,6 @@ import pickle
 import tempfile
 
 import pfnet as pf
-import utils
 
 from . import test_cases
 
@@ -32,7 +31,7 @@ class TestSerialization(unittest.TestCase):
             # Testing pickle string
             pkld_net_string = pickle.dumps(net1, protocol=-1)
             net2 = pickle.loads(pkld_net_string)
-            utils.compare_two_networks(self, net1, net2)
+            pf.tests.utils.compare_networks(self, net1, net2)
 
             # Testing pickle with file
             with tempfile.TemporaryFile() as pkld_net_file:
@@ -40,7 +39,7 @@ class TestSerialization(unittest.TestCase):
                 pkld_net_file.seek(0)
                 net3 = pickle.load(pkld_net_file)
                 pkld_net_file.close()
-                utils.compare_two_networks(self, net1, net3)
+                pf.tests.utils.compare_networks(self, net1, net3)
 
     def test_compare_two_networks(self):
 
@@ -48,7 +47,7 @@ class TestSerialization(unittest.TestCase):
             net1 = pf.Parser(case).parse(case)
             net2 = pf.Parser(case).parse(case)
             net2.buses[0].v_mag = 100
-            self.assertRaises(AssertionError, utils.compare_two_networks, self, net1, net2)
+            self.assertRaises(AssertionError, pf.tests.utils.compare_networks, self, net1, net2)
 
     def tearDown(self):
 
