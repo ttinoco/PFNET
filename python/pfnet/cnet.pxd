@@ -23,24 +23,7 @@ cdef extern from "pfnet/net.h":
     ctypedef double REAL
  
     void NET_add_vargens(Net* net, cbus.Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value)
-    void NET_add_batteries(Net* net, cbus.Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d)
-    
-    # component arrays
-    void NET_set_bus_array(Net* net, cbus.Bus* bus_list, int num_buses)
-    void NET_set_branch_array(Net* net, cbranch.Branch* branch_list, int num_branches)
-    void NET_set_gen_array(Net* net, cgen.Gen* gen_list, int num_generators)
-    void NET_set_load_array(Net* net, cload.Load* load_list, int num_loads)
-    void NET_set_shunt_array(Net* net, cshunt.Shunt* shunt_list, int num_shunts)
-    void NET_set_vargen_array(Net* net, cvargen.Vargen* vargen_list, int num_vargens)
-    void NET_set_bat_array(Net* net, cbat.Bat* bat_list, int num_batteries)
-    
-    # TODO new methods needed for adding components to the network
-    # void NET_add_new_generator(Net* net, cgen.Generator generator)
-    # void NET_add_new_branch(Net* net, cbranch.Branch branch)
-    # void NET_add_new_bus(Net* net, cbus.Bus bus)
-    # void NET_add_new_load(Net* net, cload.Load load)
-    # void NET_add_new_shunt(Net* net, cshunt.Shunt shunt)
-    
+    void NET_add_batteries(Net* net, cbus.Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d)        
     void NET_adjust_generators(Net* net)
     cbus.Bus* NET_bus_hash_number_find(Net* net, int number)
     cbus.Bus* NET_bus_hash_name_find(Net* net, char* name)
@@ -136,3 +119,11 @@ cdef extern from "pfnet/net.h":
     void NET_update_properties(Net* net, cvec.Vec* values)
     void NET_propagate_data_in_time(Net* net, int start, int end)
     void NET_update_set_points(Net* net)
+
+    void NET_set_bus_array(Net* net, cbus.Bus* bus_list, int num_buses)
+    void NET_set_branch_array(Net* net, cbranch.Branch* branch_list, int num_branches)
+    void NET_set_gen_array(Net* net, cgen.Gen* gen_list, int num_generators)
+    void NET_set_load_array(Net* net, cload.Load* load_list, int num_loads)
+    void NET_set_shunt_array(Net* net, cshunt.Shunt* shunt_list, int num_shunts)
+    void NET_set_vargen_array(Net* net, cvargen.Vargen* vargen_list, int num_vargens)
+    void NET_set_bat_array(Net* net, cbat.Bat* bat_list, int num_batteries)
