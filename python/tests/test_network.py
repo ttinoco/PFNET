@@ -793,6 +793,12 @@ class TestNetwork(unittest.TestCase):
                 branch.ratio = 1.1102
                 self.assertEqual(branch.ratio,1.1102)
 
+                # flow limits set/get
+                branch.P_max = 1.344
+                branch.P_min = 0.222
+                self.assertEqual(branch.P_max,1.344)
+                self.assertEqual(branch.P_min,0.222)
+
                 # tap changer v
                 if branch.is_tap_changer_v():
                     self.assertTrue(branch.is_tap_changer())
