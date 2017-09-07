@@ -31,6 +31,7 @@ Unreleased
 * Made Network object pickle-able (done).
 * Added automatic enforcement of lower-triangularity of Hessian of objective functions (done).
 * Made Contingency object pickle-able (done).
+* Added test utilities in new module pfnet.tests (done).
 * Update Python wrapper documentation to show how to install with pip or download/run tests (todo).
 * Add cmake windows build script invokation in setup.py (todo).
 * Update examples, documentation and create release (todo).
