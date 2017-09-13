@@ -639,6 +639,129 @@ Bus* NET_create_sorted_bus_list(Net* net, int sort_by, int t) {
   return bus_list;
 }
 
+Net* NET_get_copy(Net* net) {
+  /** Gets deep copy of network.
+   */
+
+  // Local variables
+  Net* new_net = NULL;
+  Bus* bus;
+  Bus* new_bus;
+  Branch* branch;
+  Branch* new_branch;
+  Gen* gen;
+  Get* new_gen;
+  Vargen* vargen;
+  Vargen* new_vargen;
+  Load* load;
+  Load* new_load;
+  Shunt* shunt;
+  Shunt* new_shunt;
+  Bat* bat;
+  Bat* new_bat;
+  int i;
+
+  // Check
+  if (!net)
+    return new_net;
+
+  // Allocate
+  new_net = NET_new(net->num_periods);
+
+  // Error
+  new_net->error_flag = net->error_flag;
+  strcpy(new_net->error_string, net->error_string);
+
+  // Output
+  strcpy(new_net->output_string, net->output_string);
+
+  // Base power
+  new_net->base_power = net->base_power;
+
+  // Arrays
+  new_net->bus = BUS_array_new(net->num_buses,net->num_periods);
+  new_net->num_buses = net->num_buses;
+  
+  new_net->branch = BRANCH_array_new(net->num_branches,net->num_periods);
+  new_net->num_branches = net->num_branches;
+
+  new_net->gen = GEN_array_new(net->num_gens,net->num_periods);
+  new_net->num_gens = net->num_gens;
+  
+  new_net->vargen = VARGEN_array_new(net->num_vargens,net->num_periods);
+  new_net->num_vargens = net->num_vargens;
+  
+  new_net->shunt = SHUNT_array_new(net->num_shunts,net->num_periods);
+  new_net->num_shunts = net->num_shunts;
+  
+  new_net->load = LOAD_array_new(net->num_loads,net->num_periods);
+  new_net->num_loads = net->num_loads;
+  
+  new_net->bat = BAT_array_new(net->num_bats,net->num_periods);
+  new_net->num_bats = net->num_bats;
+
+  // Buses
+  for (i = 0; i < net->num_buses; i++) {
+    bus = NET_get_bus(net,i);
+    new_bus = NET_get_bus(new_net,i);
+    // copy data
+  }				     
+
+  // Branches
+  for (i = 0; i < net->num_branches; i++) {
+    branch = NET_get_branch(net,i);
+    new_branch = NET_get_branch(new_net,i);
+    // copy data
+    // add connections
+  }
+
+  // Generators
+  for (i = 0; i < net->num_gens; i++) {
+    gen = NET_get_gen(net,i);
+    new_gen = NET_get_gen(new_net,i);
+    // copy data
+    // add connections
+  }
+
+  // Var generators
+  for (i = 0; i < net->num_vargens; i++) {
+    vargen = NET_get_vargen(net,i);
+    new_vargen = NET_get_vargen(new_net,i);
+    // copy data
+    // add connections
+  }
+
+  // Shunts
+  for (i = 0; i < net->num_shunts; i++) {
+    shunt = NET_get_shunt(net,i);
+    new_shunt = NET_get_shunt(new_net,i);
+    // copy data
+    // add connections
+  }
+
+  // Loads
+  for (i = 0; i < net->num_loads; i++) {
+    load = NET_get_load(net,i);
+    new_load = NET_get_load(new_net,i);
+    // copy data
+    // add connections
+  }
+
+  // Batteries
+  for (i = 0; i < net->num_batteries; i++) {
+    bat = NET_get_bat(net,i);
+    new_bat = NET_get_bat(new_net,i);
+    // copy data
+    // add connections
+  }
+  
+  // Hashes
+
+
+  // Return
+  return new_net;
+}
+
 int NET_get_bus_neighbors(Net* net, Bus* bus, int spread, int* neighbors, char* queued) {
   /** Returns number of neighbors including itself that are at most "spread"
    *  branches away.

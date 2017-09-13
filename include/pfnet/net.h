@@ -62,6 +62,7 @@ void NET_propagate_data_in_time(Net* net, int start, int end);
 int NET_get_bus_neighbors(Net* net, Bus* bus, int spread, int* neighbors, char* queued);
 void NET_del(Net* net);
 void NET_init(Net* net, int num_periods);
+Net* NET_get_copy(Net* net);
 REAL NET_get_base_power(Net* net);
 Branch* NET_get_branch(Net* net, int index);
 Bus* NET_get_bus(Net* net, int index);
