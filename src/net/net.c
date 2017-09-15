@@ -672,7 +672,7 @@ void NET_copy_from_net(Net* net, Net* other_net) {
   net->bus_hash_number = NULL;
   net->bus_hash_name = NULL;
   net->vargen_hash_name = NULL;  
-
+  
   // Error
   net->error_flag = other_net->error_flag;
   strcpy(net->error_string, other_net->error_string);
@@ -682,6 +682,12 @@ void NET_copy_from_net(Net* net, Net* other_net) {
 
   // Base power
   net->base_power = other_net->base_power;
+
+  // Num flags
+  net->num_vars = other_net->num_vars;
+  net->num_fixed = other_net->num_fixed;
+  net->num_bounded = other_net->num_bounded;
+  net->num_sparse = other_net->num_sparse;  
 
   // Buses
   for (i = 0; i < net->num_buses; i++) {

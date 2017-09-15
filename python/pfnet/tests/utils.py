@@ -34,6 +34,10 @@ def compare_networks(test, net1, net2, check_internals=False):
     if check_internals:
         test.assertEqual(net1.has_error(),net2.has_error())
         test.assertEqual(net1.error_string,net2.error_string)
+        test.assertEqual(net1.num_vars,net2.num_vars)
+        test.assertEqual(net1.num_fixed,net2.num_fixed)
+        test.assertEqual(net1.num_bounded,net2.num_bounded)
+        test.assertEqual(net1.num_sparse,net2.num_sparse)
     
     # Buses
     test.assertEqual(net1.num_buses, net2.num_buses)
