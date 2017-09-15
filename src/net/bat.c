@@ -110,6 +110,86 @@ void BAT_clear_flags(Bat* bat, char flag_type) {
   }
 }
 
+void BAT_copy_from_bat(Bat* bat, Bat* other) {
+  
+  // Local variables
+  int num_periods;
+
+  // Check
+  if (!bat || !other)
+    return;
+
+  // Min num periods
+  if (bat->num_periods < other->num_periods)
+    num_periods = bat->num_periods;
+  else
+    num_periods = other->num_periods;
+
+  // Bus
+  // skip bus
+
+  // Times
+  // skip num periods
+
+  // Flags
+  bat->fixed = other->fixed;
+  bat->bounded = other->bounded;
+  bat->sparse = other->sparse;
+  bat->vars = other->vars;
+
+  // Charging power
+  memcpy(bat->P,other->P,num_periods*sizeof(REAL));
+  bat->P_max = other->P_max;
+  bat->P_min = other->P_min;
+
+  // Efficiencies
+  bat->eta_c = other->eta_c;
+  bat->eta_d = other->eta_d;
+
+  // Energy level
+  memcpy(bat->E,other->E,num_periods*sizeof(REAL));
+  bat->E_init = other->E_init;
+  bat->E_final = other->E_final;
+  bat->E_max = other->E_max;
+
+  // Indices
+  // skip index
+  memcpy(bat->index_Pc,other->index_Pc,num_periods*sizeof(int));
+  memcpy(bat->index_Pd,other->index_Pd,num_periods*sizeof(int));
+  memcpy(bat->index_E,other->index_E,num_periods*sizeof(int));
+
+  // List
+  // skip next
+}
+
+char BAT_get_flags_vars(Bat* bat) {
+  if (bat)
+    return bat->vars;
+  else
+    return 0;
+}
+
+char BAT_get_flags_fixed(Bat* bat) {
+  if (bat)
+    return bat->fixed;
+  else
+    return 0;
+}
+
+char BAT_get_flags_bounded(Bat* bat) {
+  if (bat)
+    return bat->bounded;
+  else
+    return 0;
+}
+
+char BAT_get_flags_sparse(Bat* bat) {
+  if (bat)
+    return bat->sparse;
+  else
+    return 0;
+}
+
 int BAT_get_num_periods(Bat* bat) {
   if (bat)
     return bat->num_periods;
@@ -135,28 +215,28 @@ int BAT_get_index(Bat* bat) {
   if (bat)
     return bat->index;
   else
-    return 0;
+    return -1;
 }
 
 int BAT_get_index_Pc(Bat* bat, int t) {
   if (bat && t >= 0 && t < bat->num_periods)
     return bat->index_Pc[t];
   else
-    return 0;
+    return -1;
 }
 
 int BAT_get_index_Pd(Bat* bat, int t) {
   if (bat && t >= 0 && t < bat->num_periods)
     return bat->index_Pd[t];
   else
-    return 0;
+    return -1;
 }
 
 int BAT_get_index_E(Bat* bat, int t) {
   if (bat && t >= 0 && t < bat->num_periods)
     return bat->index_E[t];
   else
-    return 0;
+    return -1;
 }
 
 Bat* BAT_get_next(Bat* bat) {

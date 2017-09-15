@@ -345,6 +345,111 @@ void BUS_clear_bat(Bus* bus) {
     bus->bat = NULL;
 }
 
+void BUS_copy_from_bus(Bus* bus, Bus* other) {
+  /** Copies data from another bus except
+   *  index, hash info, and connections.
+   */
+
+  // Local variables
+  int num_periods;
+
+  // Check
+  if (!bus || !other)
+    return;
+
+  // Min num periods
+  if (bus->num_periods < other->num_periods)
+    num_periods = bus->num_periods;
+  else
+    num_periods = other->num_periods;
+
+  // Properties
+  bus->number = other->number;
+  strcpy(bus->name,other->name);
+
+  // Time
+  // skip num periods
+
+  // Voltage
+  bus->v_base = other->v_base;
+  memcpy(bus->v_mag,other->v_mag,num_periods*sizeof(REAL));
+  memcpy(bus->v_ang,other->v_ang,num_periods*sizeof(REAL));
+  memcpy(bus->v_set,other->v_set,num_periods*sizeof(REAL));
+  bus->v_max_reg = other->v_max_reg;
+  bus->v_min_reg = other->v_min_reg;
+  bus->v_max_norm = other->v_max_norm;
+  bus->v_min_norm = other->v_min_norm;
+  bus->v_max_emer = other->v_max_emer;
+  bus->v_min_emer = other->v_min_emer;
+
+  // Flags
+  bus->slack = other->slack;
+  bus->fixed = other->fixed;
+  bus->bounded = other->bounded;
+  bus->sparse = other->sparse;
+  bus->vars = other->vars;
+
+  // Price
+  memcpy(bus->price,other->price,num_periods*sizeof(REAL));
+
+  // Indices
+  // skip index
+  memcpy(bus->index_v_mag,other->index_v_mag,num_periods*sizeof(int));
+  memcpy(bus->index_v_ang,other->index_v_ang,num_periods*sizeof(int));
+
+  // Connections
+  // skip connections
+
+  // Sensitivities
+  memcpy(bus->sens_P_balance,other->sens_P_balance,num_periods*sizeof(REAL));
+  memcpy(bus->sens_Q_balance,other->sens_Q_balance,num_periods*sizeof(REAL));
+  memcpy(bus->sens_v_mag_u_bound,other->sens_v_mag_u_bound,num_periods*sizeof(REAL));
+  memcpy(bus->sens_v_mag_l_bound,other->sens_v_mag_l_bound,num_periods*sizeof(REAL));
+  memcpy(bus->sens_v_ang_u_bound,other->sens_v_ang_u_bound,num_periods*sizeof(REAL));
+  memcpy(bus->sens_v_ang_l_bound,other->sens_v_ang_l_bound,num_periods*sizeof(REAL));
+  memcpy(bus->sens_v_reg_by_gen,other->sens_v_reg_by_gen,num_periods*sizeof(REAL));
+  memcpy(bus->sens_v_reg_by_tran,other->sens_v_reg_by_tran,num_periods*sizeof(REAL));
+  memcpy(bus->sens_v_reg_by_shunt,other->sens_v_reg_by_shunt,num_periods*sizeof(REAL));
+
+  // Mismatches
+  memcpy(bus->P_mis,other->P_mis,num_periods*sizeof(REAL));
+  memcpy(bus->Q_mis,other->Q_mis,num_periods*sizeof(REAL));
+
+  // Hash
+  // skip hash
+
+  // List
+  // skip next
+}
+
+char BUS_get_flags_vars(Bus* bus) {
+  if (bus)
+    return bus->vars;
+  else
+    return 0;
+}
+
+char BUS_get_flags_fixed(Bus* bus) {
+  if (bus)
+    return bus->fixed;
+  else
+    return 0;
+}
+
+char BUS_get_flags_bounded(Bus* bus) {
+  if (bus)
+    return bus->bounded;
+  else
+    return 0;
+}
+
+char BUS_get_flags_sparse(Bus* bus) {
+  if (bus)
+    return bus->sparse;
+  else
+    return 0;
+}
+
 REAL BUS_get_v_base(Bus* bus) {
   if (bus)
     return bus->v_base;
@@ -377,35 +482,35 @@ int BUS_get_index(Bus* bus) {
   if (bus)
     return bus->index;
   else
-    return 0;
+    return -1;
 }
 
 int BUS_get_index_v_mag(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     return bus->index_v_mag[t];
   else
-    return 0;
+    return -1;
 }
 
 int BUS_get_index_v_ang(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     return bus->index_v_ang[t];
   else
-    return 0;
+    return -1;
 }
 
 int BUS_get_index_P(Bus* bus) {
   if (bus)
     return 2*bus->index;
   else
-    return 0;
+    return -1;
 }
 
 int BUS_get_index_Q(Bus* bus) {
   if (bus)
     return 2*bus->index+1;
   else
-    return 0;
+    return -1;
 }
 
 Bus* BUS_get_next(Bus* bus) {

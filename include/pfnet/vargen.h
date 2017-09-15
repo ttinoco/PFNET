@@ -60,7 +60,13 @@ void* VARGEN_array_get(void* gen_array, int index);
 Vargen* VARGEN_array_new(int size, int num_periods);
 void VARGEN_array_show(Vargen* gen_array, int size, int t);
 void VARGEN_clear_flags(Vargen* gen, char flag_type);
-void VARGEN_propagate_data_in_time(Vargen* gen, int start, int end);
+void VARGEN_copy_from_vargen(Vargen* vargen, Vargen* other);
+
+char VARGEN_get_flags_vars(Vargen* gen);
+char VARGEN_get_flags_fixed(Vargen* gen);
+char VARGEN_get_flags_bounded(Vargen* gen);
+char VARGEN_get_flags_sparse(Vargen* gen);
+
 int VARGEN_get_num_periods(Vargen* gen);
 char* VARGEN_get_name(Vargen* gen);
 Bus* VARGEN_get_bus(Vargen* gen);
@@ -94,6 +100,7 @@ BOOL VARGEN_is_solar(Vargen* gen);
 Vargen* VARGEN_list_add(Vargen* gen_list, Vargen* gen);
 int VARGEN_list_len(Vargen* gen_list);
 Vargen* VARGEN_new(int num_periods);
+void VARGEN_propagate_data_in_time(Vargen* gen, int start, int end);
 void VARGEN_set_name(Vargen* gen, char* name);
 void VARGEN_set_type(Vargen* gen, int type);
 void VARGEN_set_bus(Vargen* gen, Bus* bus);

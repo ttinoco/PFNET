@@ -54,7 +54,13 @@ void* BAT_array_get(void* bat_array, int index);
 Bat* BAT_array_new(int size, int num_periods);
 void BAT_array_show(Bat* bat_array, int size, int t);
 void BAT_clear_flags(Bat* bat, char flag_type);
-void BAT_propagate_data_in_time(Bat* bat, int start, int end);
+void BAT_copy_from_bat(Bat* bat, Bat* other);
+
+char BAT_get_flags_vars(Bat* bat);
+char BAT_get_flags_fixed(Bat* bat);
+char BAT_get_flags_bounded(Bat* bat);
+char BAT_get_flags_sparse(Bat* bat);
+
 int BAT_get_num_periods(Bat* bat);
 char BAT_get_obj_type(void* bat);
 Bus* BAT_get_bus(Bat* bat);
@@ -83,6 +89,7 @@ void BAT_init(Bat* bat, int num_periods);
 Bat* BAT_list_add(Bat *bat_list, Bat* bat);
 int BAT_list_len(Bat* bat_list);
 Bat* BAT_new(int num_periods);
+void BAT_propagate_data_in_time(Bat* bat, int start, int end);
 void BAT_set_bus(Bat* bat, Bus* bus);
 void BAT_set_index(Bat* bat, int index);
 void BAT_set_P(Bat* bat, REAL P, int t);

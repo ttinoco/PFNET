@@ -115,6 +115,89 @@ void VARGEN_clear_flags(Vargen* gen, char flag_type) {
   }
 }
 
+void VARGEN_copy_from_vargen(Vargen* gen, Vargen* other) {
+  
+  // Local variables
+  int num_periods;
+
+  // Check
+  if (!gen || !other)
+    return;
+
+  // Min num periods
+  if (gen->num_periods < other->num_periods)
+    num_periods = gen->num_periods;
+  else
+    num_periods = other->num_periods;
+
+  // Bus
+  // skip buses
+
+  // Times
+  // skip num periods
+
+  // Properties
+  strcpy(gen->name,other->name);
+  gen->type = other->type;
+
+  // Flags
+  gen->fixed = other->fixed;
+  gen->bounded = other->bounded;
+  gen->sparse = other->sparse;
+  gen->vars = other->vars;
+
+  // Active power
+  memcpy(gen->P,other->P,num_periods*sizeof(REAL));
+  memcpy(gen->P_ava,other->P_ava,num_periods*sizeof(REAL));
+  memcpy(gen->P_std,other->P_std,num_periods*sizeof(REAL));
+  gen->P_max = other->P_max;
+  gen->P_min = other->P_min;
+
+  // Reactive power
+  memcpy(gen->Q,other->Q,num_periods*sizeof(REAL));
+  gen->Q_max = other->Q_max;
+  gen->Q_min = other->Q_min;
+
+  // Indices
+  // skip index
+  memcpy(gen->index_P,other->index_P,num_periods*sizeof(int));
+  memcpy(gen->index_Q,other->index_Q,num_periods*sizeof(int));
+
+  // Hash
+  // skip hash
+
+  // List
+  // skip next    
+}
+
+char VARGEN_get_flags_vars(Vargen* gen) {
+  if (gen)
+    return gen->vars;
+  else
+    return 0;
+}
+
+char VARGEN_get_flags_fixed(Vargen* gen) {
+  if (gen)
+    return gen->fixed;
+  else
+    return 0;
+}
+
+char VARGEN_get_flags_bounded(Vargen* gen) {
+  if (gen)
+    return gen->bounded;
+  else
+    return 0;
+}
+
+char VARGEN_get_flags_sparse(Vargen* gen) {
+  if (gen)
+    return gen->sparse;
+  else
+    return 0;
+}
+
 int VARGEN_get_num_periods(Vargen* gen) {
   if (gen)
     return gen->num_periods;
@@ -147,21 +230,21 @@ int VARGEN_get_index(Vargen* gen) {
   if (gen)
     return gen->index;
   else
-    return 0;
+    return -1;
 }
 
 int VARGEN_get_index_P(Vargen* gen, int t) {
   if (gen && t >= 0 && t < gen->num_periods)
     return gen->index_P[t];
   else
-    return 0;
+    return -1;
 }
 
 int VARGEN_get_index_Q(Vargen* gen, int t) {
   if (gen && t >= 0 && t < gen->num_periods)
     return gen->index_Q[t];
   else
-    return 0;
+    return -1;
 }
 
 Vargen* VARGEN_get_next(Vargen* gen) {

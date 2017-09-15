@@ -19,6 +19,11 @@ cdef extern from "pfnet/bat.h":
     cdef double BAT_INF_E
        
     cdef char BAT_PROP_ANY
+
+    char BAT_get_flags_vars(Bat* bat)
+    char BAT_get_flags_fixed(Bat* bat)
+    char BAT_get_flags_bounded(Bat* bat)
+    char BAT_get_flags_sparse(Bat* bat)
     
     char BAT_get_obj_type(void* bat)
     int BAT_get_num_periods(Bat* bat)

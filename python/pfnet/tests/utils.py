@@ -1,5 +1,5 @@
 #***************************************************#
-# This file is part of PFNET.                       #
+# This file is part of PFNET1.                      #
 #                                                   #
 # Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
@@ -10,206 +10,259 @@ import pfnet as pf
 import numpy as np
 from numpy.linalg import norm
 
-def compare_networks(unittest, net, new_net):
+def compare_networks(test, net1, net2, check_internals=False):
     """
-    Method for checking if two :class:`Network <pfnet.Network>` objects are held in different 
-    memory locations but are otherwise identical. Comparison made by bus numbers.
+    Method for checking if two :class:`Network <pfnet1.Network>` objects are held in different 
+    memory locations but are otherwise identical.
 
     Parameters
     ----------
-    unittest : unittest.TestCase
-    net : :class:`Network <pfnet.Network>`
-    new_net : :class:`Network <pfnet.Network>`
+    test : unittest.TestCase
+    net1 : :class:`Network <pfnet1.Network>`
+    net2 : :class:`Network <pfnet1.Network>`
+    check_configuration: {``True``, ``False``}
     """
 
     norminf = lambda x: norm(x,np.inf) if isinstance(x,np.ndarray) else np.abs(x)
     eps = 1e-10
 
     # Network
-    unittest.assertTrue(net is not new_net)
-    unittest.assertFalse(net.has_same_data(new_net))
-    unittest.assertEqual(net.num_periods,new_net.num_periods)
-    unittest.assertEqual(net.base_power,new_net.base_power)
+    test.assertTrue(net1 is not net2)
+    test.assertFalse(net1.has_same_ptr(net2))
+    test.assertEqual(net1.num_periods,net2.num_periods)
+    test.assertEqual(net1.base_power,net2.base_power)
+    if check_internals:
+        test.assertEqual(net1.has_error(),net2.has_error())
+        test.assertEqual(net1.error_string,net2.error_string)
     
     # Buses
-    unittest.assertEqual(net.num_buses, new_net.num_buses)
-    for i in range(net.num_buses):
-        bus = net.buses[i]
-        new_bus = new_net.buses[i]
-        unittest.assertTrue(bus is not new_bus)
-        unittest.assertEqual(bus.number, new_bus.number)
-        unittest.assertEqual(bus.name.upper().strip(), new_bus.name.upper().strip())
-        unittest.assertLess(norminf(bus.v_base-new_bus.v_base), eps)
-        unittest.assertLess(norminf(bus.v_mag-new_bus.v_mag), eps)
-        unittest.assertLess(norminf(bus.v_ang-new_bus.v_ang), eps)
-        unittest.assertLess(norminf(bus.v_set-new_bus.v_set), eps)
-        unittest.assertLess(norminf(bus.v_mag-new_bus.v_mag), eps)
-        unittest.assertLess(norminf(bus.v_max_reg-new_bus.v_max_reg), eps)
-        unittest.assertLess(norminf(bus.v_min_reg-new_bus.v_min_reg), eps)
-        unittest.assertLess(norminf(bus.v_max_norm-new_bus.v_max_norm), eps)
-        unittest.assertLess(norminf(bus.v_min_norm-new_bus.v_min_norm), eps)
-        unittest.assertLess(norminf(bus.v_max_emer-new_bus.v_max_emer), eps)
-        unittest.assertLess(norminf(bus.v_min_emer-new_bus.v_min_emer), eps)
-        unittest.assertEqual(bus.is_slack(), new_bus.is_slack())
-        unittest.assertEqual(bus.is_regulated_by_gen(),new_bus.is_regulated_by_gen())
-        unittest.assertEqual(bus.is_regulated_by_tran(),new_bus.is_regulated_by_tran())
-        unittest.assertEqual(bus.is_regulated_by_shunt(),new_bus.is_regulated_by_shunt())
-        unittest.assertLess(norminf(bus.price-new_bus.price), eps)
-        unittest.assertEqual(set([o.index for o in bus.generators]),
-                             set([o.index for o in new_bus.generators]))
-        unittest.assertEqual(set([o.index for o in bus.reg_generators]),
-                             set([o.index for o in new_bus.reg_generators]))
-        unittest.assertEqual(set([o.index for o in bus.loads]),
-                             set([o.index for o in new_bus.loads]))
-        unittest.assertEqual(set([o.index for o in bus.shunts]),
-                             set([o.index for o in new_bus.shunts]))
-        unittest.assertEqual(set([o.index for o in bus.reg_shunts]),
-                             set([o.index for o in new_bus.reg_shunts]))
-        unittest.assertEqual(set([o.index for o in bus.branches_k]),
-                             set([o.index for o in new_bus.branches_k]))
-        unittest.assertEqual(set([o.index for o in bus.branches_m]),
-                             set([o.index for o in new_bus.branches_m]))
-        unittest.assertEqual(set([o.index for o in bus.reg_trans]),
-                             set([o.index for o in new_bus.reg_trans]))
-        unittest.assertEqual(set([o.index for o in bus.var_generators]),
-                             set([o.index for o in new_bus.var_generators]))
-        unittest.assertEqual(set([o.index for o in bus.batteries]),
-                             set([o.index for o in new_bus.batteries]))
+    test.assertEqual(net1.num_buses, net2.num_buses)
+    for i in range(net1.num_buses):
+        bus1 = net1.buses[i]
+        bus2 = net2.buses[i]
+        test.assertTrue(bus1 is not bus2)
+        test.assertEqual(bus1.number, bus2.number)
+        test.assertEqual(bus1.num_periods, bus2.num_periods)
+        test.assertEqual(bus1.name.upper().strip(), bus2.name.upper().strip())
+        test.assertLess(norminf(bus1.v_base-bus2.v_base), eps)
+        test.assertLess(norminf(bus1.v_mag-bus2.v_mag), eps)
+        test.assertLess(norminf(bus1.v_ang-bus2.v_ang), eps)
+        test.assertLess(norminf(bus1.v_set-bus2.v_set), eps)
+        test.assertLess(norminf(bus1.v_max_reg-bus2.v_max_reg), eps)
+        test.assertLess(norminf(bus1.v_min_reg-bus2.v_min_reg), eps)
+        test.assertLess(norminf(bus1.v_max_norm-bus2.v_max_norm), eps)
+        test.assertLess(norminf(bus1.v_min_norm-bus2.v_min_norm), eps)
+        test.assertLess(norminf(bus1.v_max_emer-bus2.v_max_emer), eps)
+        test.assertLess(norminf(bus1.v_min_emer-bus2.v_min_emer), eps)
+        test.assertEqual(bus1.is_slack(), bus2.is_slack())
+        test.assertEqual(bus1.is_regulated_by_gen(),bus2.is_regulated_by_gen())
+        test.assertEqual(bus1.is_regulated_by_tran(),bus2.is_regulated_by_tran())
+        test.assertEqual(bus1.is_regulated_by_shunt(),bus2.is_regulated_by_shunt())
+        test.assertLess(norminf(bus1.price-bus2.price), eps)
+        test.assertEqual(set([o.index for o in bus1.generators]),
+                             set([o.index for o in bus2.generators]))
+        test.assertEqual(set([o.index for o in bus1.reg_generators]),
+                             set([o.index for o in bus2.reg_generators]))
+        test.assertEqual(set([o.index for o in bus1.loads]),
+                             set([o.index for o in bus2.loads]))
+        test.assertEqual(set([o.index for o in bus1.shunts]),
+                             set([o.index for o in bus2.shunts]))
+        test.assertEqual(set([o.index for o in bus1.reg_shunts]),
+                             set([o.index for o in bus2.reg_shunts]))
+        test.assertEqual(set([o.index for o in bus1.branches_k]),
+                             set([o.index for o in bus2.branches_k]))
+        test.assertEqual(set([o.index for o in bus1.branches_m]),
+                             set([o.index for o in bus2.branches_m]))
+        test.assertEqual(set([o.index for o in bus1.reg_trans]),
+                             set([o.index for o in bus2.reg_trans]))
+        test.assertEqual(set([o.index for o in bus1.var_generators]),
+                             set([o.index for o in bus2.var_generators]))
+        test.assertEqual(set([o.index for o in bus1.batteries]),
+                             set([o.index for o in bus2.batteries]))
+        if check_internals:
+            test.assertLess(norminf(bus1.index_v_mag-bus2.index_v_mag),eps)
+            test.assertLess(norminf(bus1.index_v_ang-bus2.index_v_ang),eps)
+            test.assertEqual(bus1.flags_vars,bus2.flags_vars)
+            test.assertEqual(bus1.flags_fixed,bus2.flags_fixed)
+            test.assertEqual(bus1.flags_bounded,bus2.flags_bounded)
+            test.assertEqual(bus1.flags_sparse,bus2.flags_sparse)
 
     # Branches
-    unittest.assertEqual(net.num_branches, new_net.num_branches)
-    for i in range(net.num_branches):
-        branch = net.branches[i]
-        new_branch = new_net.branches[i]
-        unittest.assertTrue(branch is not new_branch)
-        unittest.assertEqual(branch.num_periods, new_branch.num_periods)
-        unittest.assertEqual(branch.bus_k.index, new_branch.bus_k.index)
-        unittest.assertEqual(branch.bus_m.index, new_branch.bus_m.index)
-        unittest.assertEqual(branch.is_fixed_tran(), new_branch.is_fixed_tran())
-        unittest.assertEqual(branch.is_line(), new_branch.is_line())
-        unittest.assertEqual(branch.is_phase_shifter(), new_branch.is_phase_shifter())
-        unittest.assertEqual(branch.is_tap_changer(), new_branch.is_tap_changer())
-        unittest.assertEqual(branch.is_tap_changer_v(), new_branch.is_tap_changer_v())
-        unittest.assertEqual(branch.is_tap_changer_Q(), new_branch.is_tap_changer_Q())
-        if branch.is_tap_changer_v():
-            unittest.assertEqual(branch.reg_bus.index, new_branch.reg_bus.index)
-        unittest.assertLess(norminf(branch.g-new_branch.g), eps*(1+norminf(branch.g)))
-        unittest.assertLess(norminf(branch.g_k-new_branch.g_k), eps*(1+norminf(branch.g_k)))
-        unittest.assertLess(norminf(branch.g_m-new_branch.g_m), eps*(1+norminf(branch.g_m)))
-        unittest.assertLess(norminf(branch.b-new_branch.b), eps*(1+norminf(branch.b)))
-        unittest.assertLess(norminf(branch.b_k-new_branch.b_k), eps*(1+norminf(branch.b_k)))
-        unittest.assertLess(norminf(branch.b_m-new_branch.b_m), eps*(1+norminf(branch.b_m)))
-        unittest.assertLess(norminf(branch.ratio-new_branch.ratio), eps)
-        unittest.assertLess(norminf(branch.ratio_max-new_branch.ratio_max), eps)
-        unittest.assertLess(norminf(branch.ratio_min-new_branch.ratio_min), eps)
-        unittest.assertLess(norminf(branch.phase-new_branch.phase), eps)
-        unittest.assertLess(norminf(branch.phase_max-new_branch.phase_max), eps)
-        unittest.assertLess(norminf(branch.phase_min-new_branch.phase_min), eps)
-        unittest.assertLess(norminf(branch.ratingA-new_branch.ratingA), eps)
-        unittest.assertLess(norminf(branch.ratingB-new_branch.ratingB), eps)
-        unittest.assertLess(norminf(branch.ratingC-new_branch.ratingC), eps)
-        unittest.assertEqual(branch.is_on_outage(), new_branch.is_on_outage())
-        unittest.assertEqual(branch.has_pos_ratio_v_sens(), new_branch.has_pos_ratio_v_sens())
+    test.assertEqual(net1.num_branches, net2.num_branches)
+    for i in range(net1.num_branches):
+        branch1 = net1.branches[i]
+        branch2 = net2.branches[i]
+        test.assertTrue(branch1 is not branch2)
+        test.assertEqual(branch1.num_periods, branch2.num_periods)
+        test.assertEqual(branch1.bus_k.index, branch2.bus_k.index)
+        test.assertEqual(branch1.bus_m.index, branch2.bus_m.index)
+        test.assertEqual(branch1.is_fixed_tran(), branch2.is_fixed_tran())
+        test.assertEqual(branch1.is_line(), branch2.is_line())
+        test.assertEqual(branch1.is_phase_shifter(), branch2.is_phase_shifter())
+        test.assertEqual(branch1.is_tap_changer(), branch2.is_tap_changer())
+        test.assertEqual(branch1.is_tap_changer_v(), branch2.is_tap_changer_v())
+        test.assertEqual(branch1.is_tap_changer_Q(), branch2.is_tap_changer_Q())
+        if branch1.is_tap_changer_v():
+            test.assertEqual(branch1.reg_bus.index, branch2.reg_bus.index)
+        test.assertLess(norminf(branch1.g-branch2.g), eps*(1+norminf(branch1.g)))
+        test.assertLess(norminf(branch1.g_k-branch2.g_k), eps*(1+norminf(branch1.g_k)))
+        test.assertLess(norminf(branch1.g_m-branch2.g_m), eps*(1+norminf(branch1.g_m)))
+        test.assertLess(norminf(branch1.b-branch2.b), eps*(1+norminf(branch1.b)))
+        test.assertLess(norminf(branch1.b_k-branch2.b_k), eps*(1+norminf(branch1.b_k)))
+        test.assertLess(norminf(branch1.b_m-branch2.b_m), eps*(1+norminf(branch1.b_m)))
+        test.assertLess(norminf(branch1.ratio-branch2.ratio), eps)
+        test.assertLess(norminf(branch1.ratio_max-branch2.ratio_max), eps)
+        test.assertLess(norminf(branch1.ratio_min-branch2.ratio_min), eps)
+        test.assertLess(norminf(branch1.phase-branch2.phase), eps)
+        test.assertLess(norminf(branch1.phase_max-branch2.phase_max), eps)
+        test.assertLess(norminf(branch1.phase_min-branch2.phase_min), eps)
+        test.assertLess(norminf(branch1.ratingA-branch2.ratingA), eps)
+        test.assertLess(norminf(branch1.ratingB-branch2.ratingB), eps)
+        test.assertLess(norminf(branch1.ratingC-branch2.ratingC), eps)
+        test.assertEqual(branch1.is_on_outage(), branch2.is_on_outage())
+        test.assertEqual(branch1.has_pos_ratio_v_sens(), branch2.has_pos_ratio_v_sens())
+        if check_internals:
+            test.assertLess(norminf(branch1.index_ratio-branch2.index_ratio),eps)
+            test.assertLess(norminf(branch1.index_phase-branch2.index_phase),eps)
+            test.assertEqual(branch1.flags_vars,branch2.flags_vars)
+            test.assertEqual(branch1.flags_fixed,branch2.flags_fixed)
+            test.assertEqual(branch1.flags_bounded,branch2.flags_bounded)
+            test.assertEqual(branch1.flags_sparse,branch2.flags_sparse)
 
     # Generators
-    unittest.assertEqual(net.num_generators, new_net.num_generators)
-    for i in range(net.num_generators):
-        gen = net.generators[i]
-        new_gen = new_net.generators[i]
-        unittest.assertTrue(gen is not new_gen)
-        unittest.assertEqual(gen.num_periods, new_gen.num_periods)
-        unittest.assertEqual(gen.bus.index, new_gen.bus.index)
-        unittest.assertEqual(gen.is_on_outage(), new_gen.is_on_outage())
-        unittest.assertEqual(gen.is_slack(), new_gen.is_slack())
-        unittest.assertEqual(gen.is_regulator(), new_gen.is_regulator())
-        unittest.assertEqual(gen.is_P_adjustable(), new_gen.is_P_adjustable())
-        if gen.is_regulator():
-            unittest.assertEqual(gen.reg_bus.index, new_gen.reg_bus.index)           
-        unittest.assertLess(norminf(gen.P-new_gen.P), eps)
-        unittest.assertLess(norminf(gen.P_max-new_gen.P_max), eps)
-        unittest.assertLess(norminf(gen.P_min-new_gen.P_min), eps)
-        unittest.assertLess(norminf(gen.dP_max-new_gen.dP_max), eps)
-        unittest.assertLess(norminf(gen.P_prev-new_gen.P_prev), eps)
-        unittest.assertLess(norminf(gen.Q-new_gen.Q), eps)
-        unittest.assertLess(norminf(gen.Q_max-new_gen.Q_max), eps)
-        unittest.assertLess(norminf(gen.Q_min-new_gen.Q_min), eps)
-        unittest.assertLess(norminf(gen.cost_coeff_Q0-new_gen.cost_coeff_Q0), eps)
-        unittest.assertLess(norminf(gen.cost_coeff_Q1-new_gen.cost_coeff_Q1), eps)
-        unittest.assertLess(norminf(gen.cost_coeff_Q2-new_gen.cost_coeff_Q2), eps)
+    test.assertEqual(net1.num_generators, net2.num_generators)
+    for i in range(net1.num_generators):
+        gen1 = net1.generators[i]
+        gen2 = net2.generators[i]
+        test.assertTrue(gen1 is not gen2)
+        test.assertEqual(gen1.num_periods, gen2.num_periods)
+        test.assertEqual(gen1.bus.index, gen2.bus.index)
+        test.assertEqual(gen1.is_on_outage(), gen2.is_on_outage())
+        test.assertEqual(gen1.is_slack(), gen2.is_slack())
+        test.assertEqual(gen1.is_regulator(), gen2.is_regulator())
+        test.assertEqual(gen1.is_P_adjustable(), gen2.is_P_adjustable())
+        if gen1.is_regulator():
+            test.assertEqual(gen1.reg_bus.index, gen2.reg_bus.index)
+        test.assertLess(norminf(gen1.P-gen2.P), eps)
+        test.assertLess(norminf(gen1.P_max-gen2.P_max), eps)
+        test.assertLess(norminf(gen1.P_min-gen2.P_min), eps)
+        test.assertLess(norminf(gen1.dP_max-gen2.dP_max), eps)
+        test.assertLess(norminf(gen1.P_prev-gen2.P_prev), eps)
+        test.assertLess(norminf(gen1.Q-gen2.Q), eps)
+        test.assertLess(norminf(gen1.Q_max-gen2.Q_max), eps)
+        test.assertLess(norminf(gen1.Q_min-gen2.Q_min), eps)
+        test.assertLess(norminf(gen1.cost_coeff_Q0-gen2.cost_coeff_Q0), eps)
+        test.assertLess(norminf(gen1.cost_coeff_Q1-gen2.cost_coeff_Q1), eps)
+        test.assertLess(norminf(gen1.cost_coeff_Q2-gen2.cost_coeff_Q2), eps)
+        if check_internals:
+            test.assertLess(norminf(gen1.index_P-gen2.index_P),eps)
+            test.assertLess(norminf(gen1.index_Q-gen2.index_Q),eps)
+            test.assertEqual(gen1.flags_vars,gen2.flags_vars)
+            test.assertEqual(gen1.flags_fixed,gen2.flags_fixed)
+            test.assertEqual(gen1.flags_bounded,gen2.flags_bounded)
+            test.assertEqual(gen1.flags_sparse,gen2.flags_sparse)
 
     # Var generators
-    unittest.assertEqual(net.num_var_generators, new_net.num_var_generators)
-    for i in range(net.num_var_generators):
-        vargen = net.var_generators[i]
-        new_vargen = new_net.var_generators[i]
-        unittest.assertTrue(vargen is not new_vargen)
-        unittest.assertEqual(vargen.num_periods, new_vargen.num_periods)
-        unittest.assertEqual(vargen.bus.index, new_vargen.bus.index)
-        unittest.assertEqual(vargen.name, new_vargen.name)        
-        unittest.assertLess(norminf(vargen.P-new_vargen.P), eps)
-        unittest.assertLess(norminf(vargen.P_ava-new_vargen.P_ava), eps)
-        unittest.assertLess(norminf(vargen.P_max-new_vargen.P_max), eps)
-        unittest.assertLess(norminf(vargen.P_min-new_vargen.P_min), eps)
-        unittest.assertLess(norminf(vargen.P_std-new_vargen.P_std), eps)
-        unittest.assertLess(norminf(vargen.Q-new_vargen.Q), eps)
-        unittest.assertLess(norminf(vargen.Q_max-new_vargen.Q_max), eps)
-        unittest.assertLess(norminf(vargen.Q_min-new_vargen.Q_min), eps)
+    test.assertEqual(net1.num_var_generators, net2.num_var_generators)
+    for i in range(net1.num_var_generators):
+        vargen1 = net1.var_generators[i]
+        vargen2 = net2.var_generators[i]
+        test.assertTrue(vargen1 is not vargen2)
+        test.assertEqual(vargen1.num_periods, vargen2.num_periods)
+        test.assertEqual(vargen1.bus.index, vargen2.bus.index)
+        test.assertEqual(vargen1.name, vargen2.name)        
+        test.assertLess(norminf(vargen1.P-vargen2.P), eps)
+        test.assertLess(norminf(vargen1.P_ava-vargen2.P_ava), eps)
+        test.assertLess(norminf(vargen1.P_max-vargen2.P_max), eps)
+        test.assertLess(norminf(vargen1.P_min-vargen2.P_min), eps)
+        test.assertLess(norminf(vargen1.P_std-vargen2.P_std), eps)
+        test.assertLess(norminf(vargen1.Q-vargen2.Q), eps)
+        test.assertLess(norminf(vargen1.Q_max-vargen2.Q_max), eps)
+        test.assertLess(norminf(vargen1.Q_min-vargen2.Q_min), eps)
+        if check_internals:
+            test.assertLess(norminf(vargen1.index_P-vargen2.index_P),eps)
+            test.assertLess(norminf(vargen1.index_Q-vargen2.index_Q),eps)
+            test.assertEqual(vargen1.flags_vars,vargen2.flags_vars)
+            test.assertEqual(vargen1.flags_fixed,vargen2.flags_fixed)
+            test.assertEqual(vargen1.flags_bounded,vargen2.flags_bounded)
+            test.assertEqual(vargen1.flags_sparse,vargen2.flags_sparse)
 
     # Shunts
-    unittest.assertEqual(net.num_shunts, new_net.num_shunts)
-    for i in range(net.num_shunts):
-        shunt = net.shunts[i]
-        new_shunt = new_net.shunts[i]
-        unittest.assertTrue(shunt is not new_shunt)
-        unittest.assertEqual(shunt.num_periods, new_shunt.num_periods)
-        unittest.assertEqual(shunt.bus.index, new_shunt.bus.index)
-        unittest.assertEqual(shunt.is_fixed(), new_shunt.is_fixed())
-        unittest.assertEqual(shunt.is_switched_v(), new_shunt.is_switched_v())
-        if shunt.is_switched_v():
-            unittest.assertEqual(shunt.reg_bus.index, new_shunt.reg_bus.index)
-        unittest.assertLess(norminf(shunt.g-new_shunt.g),eps*(1+norminf(shunt.g)))
-        unittest.assertLess(norminf(shunt.b-new_shunt.b),eps*(1+norminf(shunt.b)))
-        unittest.assertLess(norminf(shunt.b_max-new_shunt.b_max), eps*(1+norminf(shunt.b_max)))
-        unittest.assertLess(norminf(shunt.b_min-new_shunt.b_min), eps*(1+norminf(shunt.b_min)))
+    test.assertEqual(net1.num_shunts, net2.num_shunts)
+    for i in range(net1.num_shunts):
+        shunt1 = net1.shunts[i]
+        shunt2 = net2.shunts[i]
+        test.assertTrue(shunt1 is not shunt2)
+        test.assertEqual(shunt1.num_periods, shunt2.num_periods)
+        test.assertEqual(shunt1.bus.index, shunt2.bus.index)
+        test.assertEqual(shunt1.is_fixed(), shunt2.is_fixed())
+        test.assertEqual(shunt1.is_switched_v(), shunt2.is_switched_v())
+        if shunt1.is_switched_v():
+            test.assertEqual(shunt1.reg_bus.index, shunt2.reg_bus.index)
+        test.assertLess(norminf(shunt1.g-shunt2.g),eps*(1+norminf(shunt1.g)))
+        test.assertLess(norminf(shunt1.b-shunt2.b),eps*(1+norminf(shunt1.b)))
+        test.assertLess(norminf(shunt1.b_max-shunt2.b_max), eps*(1+norminf(shunt1.b_max)))
+        test.assertLess(norminf(shunt1.b_min-shunt2.b_min), eps*(1+norminf(shunt1.b_min)))
+        if check_internals:
+            test.assertLess(norminf(shunt1.index_b-shunt2.index_b),eps)
+            test.assertEqual(shunt1.flags_vars,shunt2.flags_vars)
+            test.assertEqual(shunt1.flags_fixed,shunt2.flags_fixed)
+            test.assertEqual(shunt1.flags_bounded,shunt2.flags_bounded)
+            test.assertEqual(shunt1.flags_sparse,shunt2.flags_sparse)
 
     # Loads
-    unittest.assertEqual(net.num_loads, new_net.num_loads)
-    for i in range(net.num_loads):
-        load = net.loads[i]
-        new_load = new_net.loads[i]
-        unittest.assertTrue(load is not new_load)
-        unittest.assertEqual(load.num_periods, new_load.num_periods)
-        unittest.assertEqual(load.bus.index, new_load.bus.index)
-        unittest.assertLess(norminf(load.P-new_load.P), eps)
-        unittest.assertLess(norminf(load.P_max-new_load.P_max), eps)
-        unittest.assertLess(norminf(load.P_min-new_load.P_min), eps)
-        unittest.assertLess(norminf(load.Q-new_load.Q), eps)
-        unittest.assertLess(norminf(load.target_power_factor-new_load.target_power_factor), eps)
-        unittest.assertLess(norminf(load.util_coeff_Q0-new_load.util_coeff_Q0), eps)
-        unittest.assertLess(norminf(load.util_coeff_Q1-new_load.util_coeff_Q1), eps)
-        unittest.assertLess(norminf(load.util_coeff_Q2-new_load.util_coeff_Q2), eps)
+    test.assertEqual(net1.num_loads, net2.num_loads)
+    for i in range(net1.num_loads):
+        load1 = net1.loads[i]
+        load2 = net2.loads[i]
+        test.assertTrue(load1 is not load2)
+        test.assertEqual(load1.num_periods, load2.num_periods)
+        test.assertEqual(load1.bus.index, load2.bus.index)
+        test.assertLess(norminf(load1.P-load2.P), eps)
+        test.assertLess(norminf(load1.P_max-load2.P_max), eps)
+        test.assertLess(norminf(load1.P_min-load2.P_min), eps)
+        test.assertLess(norminf(load1.Q-load2.Q), eps)
+        test.assertLess(norminf(load1.target_power_factor-load2.target_power_factor), eps)
+        test.assertLess(norminf(load1.util_coeff_Q0-load2.util_coeff_Q0), eps)
+        test.assertLess(norminf(load1.util_coeff_Q1-load2.util_coeff_Q1), eps)
+        test.assertLess(norminf(load1.util_coeff_Q2-load2.util_coeff_Q2), eps)
+        if check_internals:
+            test.assertLess(norminf(load1.index_P-load2.index_P),eps)
+            test.assertLess(norminf(load1.index_Q-load2.index_Q),eps)
+            test.assertEqual(load1.flags_vars,load2.flags_vars)
+            test.assertEqual(load1.flags_fixed,load2.flags_fixed)
+            test.assertEqual(load1.flags_bounded,load2.flags_bounded)
+            test.assertEqual(load1.flags_sparse,load2.flags_sparse)
 
     # Batteries
-    unittest.assertEqual(net.num_batteries, new_net.num_batteries)
-    for i in range(net.num_batteries):
-        bat = net.batteries[i]
-        new_bat = new_net.batteries[i]
-        unittest.assertTrue(bat is not new_bat)
-        unittest.assertEqual(bat.num_periods, new_bat.num_periods)
-        unittest.assertEqual(bat.bus.index, new_bat.bus.index)
-        unittest.assertLess(norminf(bat.P-new_bat.P), eps)
-        unittest.assertLess(norminf(bat.P_max-new_bat.P_max), eps)
-        unittest.assertLess(norminf(bat.P_min-new_bat.P_min), eps)
-        unittest.assertLess(norminf(bat.eta_c-new_bat.eta_c), eps)
-        unittest.assertLess(norminf(bat.eta_d-new_bat.eta_d), eps)
-        unittest.assertLess(norminf(bat.E-new_bat.E), eps)
-        unittest.assertLess(norminf(bat.E_init-new_bat.E_init), eps)
-        unittest.assertLess(norminf(bat.E_final-new_bat.E_final), eps)
-        unittest.assertLess(norminf(bat.E_max-new_bat.E_max), eps)
+    test.assertEqual(net1.num_batteries, net2.num_batteries)
+    for i in range(net1.num_batteries):
+        bat1 = net1.batteries[i]
+        bat2 = net2.batteries[i]
+        test.assertTrue(bat1 is not bat2)
+        test.assertEqual(bat1.num_periods, bat2.num_periods)
+        test.assertEqual(bat1.bus.index, bat2.bus.index)
+        test.assertLess(norminf(bat1.P-bat2.P), eps)
+        test.assertLess(norminf(bat1.P_max-bat2.P_max), eps)
+        test.assertLess(norminf(bat1.P_min-bat2.P_min), eps)
+        test.assertLess(norminf(bat1.eta_c-bat2.eta_c), eps)
+        test.assertLess(norminf(bat1.eta_d-bat2.eta_d), eps)
+        test.assertLess(norminf(bat1.E-bat2.E), eps)
+        test.assertLess(norminf(bat1.E_init-bat2.E_init), eps)
+        test.assertLess(norminf(bat1.E_final-bat2.E_final), eps)
+        test.assertLess(norminf(bat1.E_max-bat2.E_max), eps)
+        if check_internals:
+            test.assertLess(norminf(bat1.index_Pc-bat2.index_Pc),eps)
+            test.assertLess(norminf(bat1.index_Pd-bat2.index_Pd),eps)
+            test.assertLess(norminf(bat1.index_E-bat2.index_E),eps)
+            test.assertEqual(bat1.flags_vars,bat2.flags_vars)
+            test.assertEqual(bat1.flags_fixed,bat2.flags_fixed)
+            test.assertEqual(bat1.flags_bounded,bat2.flags_bounded)
+            test.assertEqual(bat1.flags_sparse,bat2.flags_sparse)
 
     # Hashes                 
-    for bus in net.buses:
-        unittest.assertEqual(bus.index,net.get_bus_by_number(bus.number).index)
-        unittest.assertEqual(bus.name,net.get_bus_by_name(bus.name).name)
-    for vargen in net.var_generators:
-        unittest.assertEqual(vargen.index,net.get_var_generator_by_name(vargen.name).index)
+    for bus in net1.buses:
+        test.assertEqual(bus.index,net2.get_bus_by_number(bus.number).index)
+        test.assertEqual(bus.name,net2.get_bus_by_name(bus.name).name)
+    for vargen in net1.var_generators:
+        test.assertEqual(vargen.index,net2.get_var_generator_by_name(vargen.name).index)

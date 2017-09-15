@@ -49,6 +49,11 @@ cdef extern from "pfnet/bus.h":
     cdef char BUS_MIS_ACTIVE
     cdef char BUS_MIS_REACTIVE
 
+    char BUS_get_flags_vars(Bus* bus)
+    char BUS_get_flags_fixed(Bus* bus)
+    char BUS_get_flags_bounded(Bus* bus)
+    char BUS_get_flags_sparse(Bus* bus)
+
     char BUS_get_obj_type(void* bus)
     int BUS_get_num_periods(Bus* bus)
     int BUS_get_index(Bus* bus)

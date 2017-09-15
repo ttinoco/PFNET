@@ -219,6 +219,22 @@ cdef class Shunt:
             free(json_string)
             return s
 
+    property flags_vars:
+        """ Flags associated with variable quantities. """
+        def __get__(self): return cshunt.SHUNT_get_flags_vars(self._c_ptr)
+
+    property flags_fixed:
+        """ Flags associated with fixed quantities. """
+        def __get__(self): return cshunt.SHUNT_get_flags_fixed(self._c_ptr)
+
+    property flags_bounded:
+        """ Flags associated with bounded quantities. """
+        def __get__(self): return cshunt.SHUNT_get_flags_bounded(self._c_ptr)
+
+    property flags_sparse:
+        """ Flags associated with sparse quantities. """
+        def __get__(self): return cshunt.SHUNT_get_flags_sparse(self._c_ptr)
+
 cdef new_Shunt(cshunt.Shunt* s):
     if s is not NULL:
         shunt = Shunt(alloc=False)

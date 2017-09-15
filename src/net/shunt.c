@@ -103,6 +103,81 @@ void SHUNT_clear_flags(Shunt* shunt, char flag_type) {
   }
 }
 
+void SHUNT_copy_from_shunt(Shunt* shunt, Shunt* other) {
+
+  // Local variables
+  int num_periods;
+
+  // Check
+  if (!shunt || !other)
+    return;
+
+  // Min num periods
+  if (shunt->num_periods < other->num_periods)
+    num_periods = shunt->num_periods;
+  else
+    num_periods = other->num_periods;
+
+  // Bus
+  // skip buses
+
+  // Times
+  // skip num periods
+
+  // Conductance
+  shunt->g = other->g;
+
+  // Susceptance
+  memcpy(shunt->b,other->b,num_periods*sizeof(REAL));
+  shunt->b_max = other->b_max;
+  shunt->b_min = other->b_min;
+  free(shunt->b_values);
+  ARRAY_zalloc(shunt->b_values,REAL,other->num_b_values);
+  memcpy(shunt->b_values,other->b_values,other->num_b_values*sizeof(REAL));
+  shunt->num_b_values = other->num_b_values;
+
+  // Flags
+  shunt->fixed = other->fixed;
+  shunt->bounded = other->bounded;
+  shunt->sparse = other->sparse;
+  shunt->vars = other->vars;
+
+  // Indices
+  // skip index
+  memcpy(shunt->index_b,other->index_b,num_periods*sizeof(int));
+
+  // List
+  // skip next
+}
+
+char SHUNT_get_flags_vars(Shunt* shunt) {
+  if (shunt)
+    return shunt->vars;
+  else
+    return 0;
+}
+
+char SHUNT_get_flags_fixed(Shunt* shunt) {
+  if (shunt)
+    return shunt->fixed;
+  else
+    return 0;
+}
+
+char SHUNT_get_flags_bounded(Shunt* shunt) {
+  if (shunt)
+    return shunt->bounded;
+  else
+    return 0;
+}
+
+char SHUNT_get_flags_sparse(Shunt* shunt) {
+  if (shunt)
+    return shunt->sparse;
+  else
+    return 0;
+}
+
 int SHUNT_get_num_periods(Shunt* shunt) {
   if (shunt)
     return shunt->num_periods;
@@ -121,14 +196,14 @@ int SHUNT_get_index(Shunt* shunt) {
   if (shunt)
     return shunt->index;
   else
-    return 0;
+    return -1;
 }
 
 int SHUNT_get_index_b(Shunt* shunt, int t) {
   if (shunt && t >= 0 && t < shunt->num_periods)
     return shunt->index_b[t];
   else
-    return 0;
+    return -1;
 }
 
 Bus* SHUNT_get_bus(Shunt* shunt) {

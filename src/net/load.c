@@ -127,6 +127,90 @@ void LOAD_clear_flags(Load* load, char flag_type) {
   }
 }
 
+void LOAD_copy_from_load(Load* load, Load* other) {
+
+  // Local variables
+  int num_periods;
+
+  // Check
+  if (!load || !other)
+    return;
+
+  // Min num periods
+  if (load->num_periods < other->num_periods)
+    num_periods = load->num_periods;
+  else
+    num_periods = other->num_periods;
+
+  // Bus
+  // skip bue
+
+  // Times
+  // skip num periods
+
+  // Flags
+  load->fixed = other->fixed;
+  load->bounded = other->bounded;
+  load->sparse = other->sparse;
+  load->vars = other->vars;
+
+  // Active power
+  memcpy(load->P,other->P,num_periods*sizeof(REAL));
+  memcpy(load->P_max,other->P_max,num_periods*sizeof(REAL));
+  memcpy(load->P_min,other->P_min,num_periods*sizeof(REAL));
+
+  // Reactive power
+  memcpy(load->Q,other->Q,num_periods*sizeof(REAL));
+
+  // Power factor
+  load->target_power_factor = other->target_power_factor;
+
+  // Utility
+  load->util_coeff_Q0 = other->util_coeff_Q0;
+  load->util_coeff_Q1 = other->util_coeff_Q1;
+  load->util_coeff_Q2 = other->util_coeff_Q2;
+
+  // Indices
+  // skip index
+  memcpy(load->index_P,other->index_P,num_periods*sizeof(int));
+  memcpy(load->index_Q,other->index_Q,num_periods*sizeof(int));
+
+  // Sensitivities
+  memcpy(load->sens_P_u_bound,other->sens_P_u_bound,num_periods*sizeof(REAL));
+  memcpy(load->sens_P_l_bound,other->sens_P_l_bound,num_periods*sizeof(REAL));
+
+  // List
+  // skip next
+}
+
+char LOAD_get_flags_vars(Load* load) {
+  if (load)
+    return load->vars;
+  else
+    return 0;
+}
+
+char LOAD_get_flags_fixed(Load* load) {
+  if (load)
+    return load->fixed;
+  else
+    return 0;
+}
+
+char LOAD_get_flags_bounded(Load* load) {
+  if (load)
+    return load->bounded;
+  else
+    return 0;
+}
+
+char LOAD_get_flags_sparse(Load* load) {
+  if (load)
+    return load->sparse;
+  else
+    return 0;
+}
+
 int LOAD_get_num_periods(Load* load) {
   if (load)
     return load->num_periods;
@@ -223,21 +307,21 @@ int LOAD_get_index(Load* load) {
   if (load)
     return load->index;
   else
-    return 0;
+    return -1;
 }
 
 int LOAD_get_index_P(Load* load, int t) {
   if (load && t >= 0 && t < load->num_periods)
     return load->index_P[t];
   else
-    return 0;
+    return -1;
 }
 
 int LOAD_get_index_Q(Load* load, int t) {
   if (load && t >= 0 && t < load->num_periods)
     return load->index_Q[t];
   else
-    return 0;
+    return -1;
 }
 
 Load* LOAD_get_next(Load* load) {

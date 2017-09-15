@@ -27,6 +27,9 @@ class TestFlags(unittest.TestCase):
             # add vargens
             net.add_var_generators(net.get_generator_buses(),80.,50.,30.,5,0.05)
 
+            # add batteries
+            net.add_batteries(net.get_generator_buses(),20.,50.)            
+
             # loads
             lcount = 0
             for load in net.loads:
@@ -48,6 +51,15 @@ class TestFlags(unittest.TestCase):
                           ['voltage magnitude','voltage angle'])
             num_vars += 2*net.get_num_slack_buses()
             self.assertEqual(net.num_vars,num_vars)
+            for bus in net.buses:
+                self.assertEqual(bus.flags_fixed,0)
+                self.assertEqual(bus.flags_sparse,0)
+                self.assertEqual(bus.flags_bounded,0)
+                if bus.is_slack():
+                    self.assertTrue(bus.has_flags('variable',['voltage magnitude','voltage angle']))
+                    self.assertNotEqual(bus.flags_vars,0)
+                else:
+                    self.assertEqual(bus.flags_vars,0)
             
             net.set_flags('bus',
                           'variable',
@@ -103,7 +115,16 @@ class TestFlags(unittest.TestCase):
                           'reactive power')
             num_vars += net.get_num_slack_gens()
             self.assertEqual(net.num_vars,num_vars)
-
+            for gen in net.generators:
+                self.assertEqual(gen.flags_fixed,0)
+                self.assertEqual(gen.flags_sparse,0)
+                self.assertEqual(gen.flags_bounded,0)
+                if gen.is_slack():
+                    self.assertTrue(gen.has_flags('variable','reactive power'))
+                    self.assertNotEqual(gen.flags_vars,0)
+                else:
+                    self.assertEqual(gen.flags_vars,0)
+                    
             net.set_flags('generator',
                           'variable',
                           'regulator',
@@ -118,6 +139,15 @@ class TestFlags(unittest.TestCase):
                           'active power')
             num_vars += net.get_num_P_adjust_loads()
             self.assertEqual(net.num_vars,num_vars)
+            for load in net.loads:
+                self.assertEqual(load.flags_fixed,0)
+                self.assertEqual(load.flags_sparse,0)
+                self.assertEqual(load.flags_bounded,0)
+                if load.is_P_adjustable():
+                    self.assertTrue(load.has_flags('variable','active power'))
+                    self.assertNotEqual(load.flags_vars,0)
+                else:
+                    self.assertEqual(load.flags_vars,0)
 
             net.set_flags('load',
                           'variable',
@@ -132,6 +162,15 @@ class TestFlags(unittest.TestCase):
                           'tap ratio')
             num_vars += net.get_num_tap_changers_v()
             self.assertEqual(net.num_vars,num_vars)
+            for branch in net.branches:
+                self.assertEqual(branch.flags_fixed,0)
+                self.assertEqual(branch.flags_sparse,0)
+                self.assertEqual(branch.flags_bounded,0)
+                if branch.is_tap_changer_v():
+                    self.assertTrue(branch.has_flags('variable','tap ratio'))
+                    self.assertNotEqual(branch.flags_vars,0)
+                else:
+                    self.assertEqual(branch.flags_vars,0)
             
             net.set_flags('branch',
                           'variable',
@@ -147,6 +186,15 @@ class TestFlags(unittest.TestCase):
                           'susceptance')
             num_vars += net.get_num_switched_shunts()
             self.assertEqual(net.num_vars,num_vars)
+            for shunt in net.shunts:
+                self.assertEqual(shunt.flags_fixed,0)
+                self.assertEqual(shunt.flags_sparse,0)
+                self.assertEqual(shunt.flags_bounded,0)
+                if shunt.is_switched_v():
+                    self.assertTrue(shunt.has_flags('variable','susceptance'))
+                    self.assertNotEqual(shunt.flags_vars,0)
+                else:
+                    self.assertEqual(shunt.flags_vars,0)
 
             # Vargens
             self.assertGreater(net.num_var_generators,0)
@@ -156,6 +204,13 @@ class TestFlags(unittest.TestCase):
                           'active power')
             num_vars += net.num_var_generators
             self.assertEqual(net.num_vars,num_vars)
+            for vargen in net.var_generators:
+                self.assertEqual(vargen.flags_fixed,0)
+                self.assertEqual(vargen.flags_sparse,0)
+                self.assertEqual(vargen.flags_bounded,0)
+                self.assertNotEqual(vargen.flags_vars,0)
+                self.assertTrue(vargen.has_flags('variable','active power'))
+            
             net.set_flags('variable generator',
                           'variable',
                           'any',
@@ -176,6 +231,12 @@ class TestFlags(unittest.TestCase):
                           ['charging power','energy level'])
             num_vars += 3*net.num_batteries
             self.assertEqual(net.num_vars,num_vars)
+            for bat in net.batteries:
+                self.assertEqual(bat.flags_fixed,0)
+                self.assertEqual(bat.flags_sparse,0)
+                self.assertEqual(bat.flags_bounded,0)
+                self.assertNotEqual(bat.flags_vars,0)
+                self.assertTrue(bat.has_flags('variable',['charging power','energy level']))
 
             net.set_flags('battery',
                           'variable',

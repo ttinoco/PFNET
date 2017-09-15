@@ -54,7 +54,13 @@ void SHUNT_array_del(Shunt* shunt_array, int size);
 Shunt* SHUNT_array_new(int size, int num_periods);
 void SHUNT_array_show(Shunt* shunt_array, int size, int t);
 void SHUNT_clear_flags(Shunt* shunt, char flag_type);
-void SHUNT_propagate_data_in_time(Shunt* shunt, int start, int end);
+void SHUNT_copy_from_shunt(Shunt* shunt, Shunt* other);
+
+char SHUNT_get_flags_vars(Shunt* shunt);
+char SHUNT_get_flags_fixed(Shunt* shunt);
+char SHUNT_get_flags_bounded(Shunt* shunt);
+char SHUNT_get_flags_sparse(Shunt* shunt);
+
 int SHUNT_get_num_periods(Shunt* shunt);
 char SHUNT_get_obj_type(void* shunt);
 int SHUNT_get_index(Shunt* shunt);
@@ -85,6 +91,7 @@ int SHUNT_list_len(Shunt* shunt_list);
 Shunt* SHUNT_list_reg_add(Shunt *reg_shunt_list, Shunt* reg_shunt);
 int SHUNT_list_reg_len(Shunt* reg_shunt_list);
 Shunt* SHUNT_new(int num_periods);
+void SHUNT_propagate_data_in_time(Shunt* shunt, int start, int end);
 void SHUNT_set_bus(Shunt* shunt, Bus* bus);
 void SHUNT_set_reg_bus(Shunt* shunt, Bus* reg_bus);
 void SHUNT_set_index(Shunt* shunt, int index);

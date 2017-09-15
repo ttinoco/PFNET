@@ -216,6 +216,19 @@ cdef class Network:
         else:
             return sigma
 
+    def get_copy(self):
+        """ 
+        Gets deep copy of network.
+
+        Returns
+        -------
+        net : :class:`Network <pfnet.Network>`
+        """
+
+        cdef Network net = new_Network(cnet.NET_get_copy(self._c_net))
+        net.alloc = True
+        return net
+
     def get_var_info_string(self, index):
         """
         Gets info string of variable associated with index.
@@ -813,7 +826,7 @@ cdef class Network:
                 'load_P_vio': self.load_P_vio,
                 'num_actions': self.num_actions}
 
-    def has_same_data(self, Network other):
+    def has_same_ptr(self, Network other):
         """
         Checks whether network shares memory with another network.
 
@@ -1064,6 +1077,11 @@ cdef class Network:
         for vg in self.var_generators:
             cvg = vg
             cnet.NET_vargen_hash_name_add(self._c_net,cvg._c_ptr)
+
+    property error_string:
+        """ Error string (string). """
+        def __get__(self):
+            return cnet.NET_get_error_string(self._c_net).decode('UTF-8')
 
     property json_string:
         """ JSON string (string). """

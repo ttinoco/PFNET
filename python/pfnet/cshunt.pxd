@@ -20,6 +20,12 @@ cdef extern from "pfnet/shunt.h":
 
     cdef char SHUNT_PROP_ANY
     cdef char SHUNT_PROP_SWITCHED_V
+
+    char SHUNT_get_flags_vars(Shunt* shunt)
+    char SHUNT_get_flags_fixed(Shunt* shunt)
+    char SHUNT_get_flags_bounded(Shunt* shunt)
+    char SHUNT_get_flags_sparse(Shunt* shunt)
+
     
     int SHUNT_get_num_periods(Shunt* shunt)
     char SHUNT_get_obj_type(void* shunt)

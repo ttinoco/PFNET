@@ -27,6 +27,11 @@ cdef extern from "pfnet/gen.h":
     cdef char GEN_PROP_NOT_OUT
     cdef char GEN_PROP_P_ADJUST
 
+    char GEN_get_flags_vars(Gen* gen)
+    char GEN_get_flags_fixed(Gen* gen)
+    char GEN_get_flags_bounded(Gen* gen)
+    char GEN_get_flags_sparse(Gen* gen)
+
     REAL GEN_get_sens_P_u_bound(Gen* gen, int t)
     REAL GEN_get_sens_P_l_bound(Gen* gen, int t)
     REAL GEN_get_P_cost(Gen* gen, int t)

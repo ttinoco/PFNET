@@ -54,10 +54,10 @@ struct Branch {
   REAL Q_max;        /**< @brief Maximum reactive power flow (p.u.) */
   REAL Q_min;        /**< @brief Minimum reactive power flow (p.u.) */
 
-  // Power ratings
-  REAL ratingA;      /**< @brief Power rating A (p.u. system base MVA) */
-  REAL ratingB;      /**< @brief Power rating B (p.u. system base MVA) */
-  REAL ratingC;      /**< @brief Power rating C (p.u. system base MVA) */
+  // Thermal ratings
+  REAL ratingA;      /**< @brief Thermal rating A (p.u. system base MVA) */
+  REAL ratingB;      /**< @brief Thermal rating B (p.u. system base MVA) */
+  REAL ratingC;      /**< @brief Thermal rating C (p.u. system base MVA) */
 
   // Flags
   BOOL outage;           /**< @brief Flag for indicating that branch in on outage */
@@ -151,6 +151,111 @@ void BRANCH_clear_sensitivities(Branch* br) {
   }
 }
 
+void BRANCH_copy_from_branch(Branch* br, Branch* other) {
+
+  // Local variables
+  int num_periods;
+
+  // Check
+  if (!br || !other)
+    return;
+
+  // Min num periods
+  if (br->num_periods < other->num_periods)
+    num_periods = br->num_periods;
+  else
+    num_periods = other->num_periods;
+
+  // Properties
+  br->type = other->type;
+
+  // Time
+  // skip time
+
+  // Buses
+  // skip buses
+
+  // Conductance
+  br->g = other->g;
+  br->g_k = other->g_k;
+  br->g_m = other->g_m;
+
+  // Susceptance
+  br->b = other->b;
+  br->b_k = other->b_k;
+  br->b_m = other->b_m;
+
+  // Tap ratio
+  memcpy(br->ratio,other->ratio,num_periods*sizeof(REAL));
+  br->ratio_max = other->ratio_max;
+  br->ratio_min = other->ratio_min;
+  br->num_ratios = other->num_ratios;
+  
+  // Phase shift
+  memcpy(br->phase,other->phase,num_periods*sizeof(REAL));
+  br->phase_max = other->phase_max;
+  br->phase_min = other->phase_min;
+
+  // Flow bounds
+  br->P_max = other->P_max;
+  br->P_min = other->P_min;
+  br->Q_max = other->Q_max;
+  br->Q_min = other->Q_min;
+
+  // Thermal ratings
+  br->ratingA = other->ratingA;
+  br->ratingB = other->ratingB;
+  br->ratingC = other->ratingC;
+  
+  // Flags
+  br->outage = other->outage;
+  br->pos_ratio_v_sens = other->pos_ratio_v_sens;
+  br->fixed = other->fixed;
+  br->bounded = other->bounded;
+  br->sparse = other->sparse;
+  br->vars = other->vars;
+  
+  // Indices
+  // skip index
+  memcpy(br->index_ratio,other->index_ratio,num_periods*sizeof(int));
+  memcpy(br->index_phase,other->index_phase,num_periods*sizeof(int));
+  
+  // Sensitivities
+  memcpy(br->sens_P_u_bound,other->sens_P_u_bound,num_periods*sizeof(REAL));
+  memcpy(br->sens_P_l_bound,other->sens_P_l_bound,num_periods*sizeof(REAL));
+  
+  // List
+  // skip next
+}
+
+char BRANCH_get_flags_vars(Branch* br) {
+  if (br)
+    return br->vars;
+  else
+    return 0;
+}
+
+char BRANCH_get_flags_fixed(Branch* br) {
+  if (br)
+    return br->fixed;
+  else
+    return 0;
+}
+
+char BRANCH_get_flags_bounded(Branch* br) {
+  if (br)
+    return br->bounded;
+  else
+    return 0;
+}
+
+char BRANCH_get_flags_sparse(Branch* br) {
+  if (br)
+    return br->sparse;
+  else
+    return 0;
+}
+
 int BRANCH_get_num_periods(Branch* br) {
   if (br)
     return br->num_periods;
@@ -190,21 +295,21 @@ int BRANCH_get_index(Branch* br) {
   if (br)
     return br->index;
   else
-    return 0;
+    return -1;
 }
 
 int BRANCH_get_index_ratio(Branch* br, int t) {
   if (br && t >= 0 && t < br->num_periods)
     return br->index_ratio[t];
   else
-    return 0;
+    return -1;
 }
 
 int BRANCH_get_index_phase(Branch* br, int t) {
   if (br && t >= 0 && t < br->num_periods)
     return br->index_phase[t];
   else
-    return 0;
+    return -1;
 }
 
 REAL BRANCH_get_ratio(Branch* br, int t) {

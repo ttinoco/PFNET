@@ -35,6 +35,11 @@ cdef extern from "pfnet/branch.h":
     cdef int BRANCH_TYPE_TRAN_TAP_Q
     cdef int BRANCH_TYPE_TRAN_PHASE
 
+    char BRANCH_get_flags_vars(Branch* br)
+    char BRANCH_get_flags_fixed(Branch* br)
+    char BRANCH_get_flags_bounded(Branch* br)
+    char BRANCH_get_flags_sparse(Branch* br)
+
     REAL BRANCH_get_sens_P_u_bound(Branch* br, int t)
     REAL BRANCH_get_sens_P_l_bound(Branch* br, int t)
     char BRANCH_get_obj_type(void* br)

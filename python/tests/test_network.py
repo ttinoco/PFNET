@@ -3895,6 +3895,97 @@ class TestNetwork(unittest.TestCase):
                     else:
                         self.assertLess(np.abs(d - corr*vg1.P_std[t]*vg2.P_std[t]),1e-12)
 
+    def test_network_copy(self):
+
+        # Multi-period
+        for case in test_cases.CASES:
+
+            net1 = pf.Parser(case).parse(case, num_periods=self.T)
+            self.assertEqual(net1.num_periods,self.T)
+
+            # Add vargen and battery
+            net1.add_var_generators(net1.get_load_buses(),100.,50.,30.,5,0.05)
+            net1.add_batteries(net1.get_generator_buses(),20.,50.)
+            self.assertGreater(net1.num_var_generators,0)
+            self.assertGreater(net1.num_batteries,0)
+
+            # Configure
+            net1.set_flags('bus',
+                           'variable',
+                           'slack',
+                           'voltage magnitude')
+            net1.set_flags('bus',
+                           'fixed',
+                           'any',
+                           'voltage angle')
+            net1.set_flags('bus',
+                           'bounded',
+                           'regulated by generator',
+                           'voltage magnitude')
+            net1.set_flags('bus',
+                           'sparse',
+                           'not slack',
+                           ['voltage magnitude','voltage angle'])
+
+            net1.set_flags('branch',
+                           'variable',
+                           'tap changer',
+                           'tap ratio')
+            net1.set_flags('branch',
+                           'bounded',
+                           'any',
+                           'tap ratio')
+            net1.set_flags('branch',
+                           'fixed',
+                           'any',
+                           ['tap ratio','phase shift'])
+
+            net1.set_flags('generator',
+                           ['bounded','variable'],
+                           'regulator',
+                           ['active power','reactive power'])
+            net1.set_flags('generator',
+                           ['fixed','sparse'],
+                           'slack',
+                           ['active power'])
+
+            net1.set_flags('variable generator',
+                           ['bounded','variable'],
+                           'any',
+                           ['active power','reactive power'])
+            net1.set_flags('variable generator',
+                           ['fixed','sparse'],
+                           'any',
+                           ['reactive power'])
+
+            net1.set_flags('shunt',
+                           'variable',
+                           'any',
+                           'susceptance')
+            net1.set_flags('shunt',
+                           ['bounded','fixed','sparse'],
+                           'switching - v',
+                           'susceptance')
+
+            net1.set_flags('load',
+                           ['bounded','variable'],
+                           'any',
+                           ['active power','reactive power'])
+            net1.set_flags('load',
+                           ['fixed','sparse'],
+                           'adjustable active power',
+                           ['reactive power'])
+
+            net1.set_flags('battery',
+                           ['variable','fixed','bounded','sparse'],
+                           'any',
+                           ['charging power', 'energy level'])                           
+            
+
+            net2 = net1.get_copy()
+
+            pf.tests.utils.compare_networks(self,net1,net2,check_internals=True)
+
     def tearDown(self):
 
         pass

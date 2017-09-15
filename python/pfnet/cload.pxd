@@ -22,6 +22,11 @@ cdef extern from "pfnet/load.h":
        
     cdef char LOAD_PROP_ANY
     cdef char LOAD_PROP_P_ADJUST
+
+    char LOAD_get_flags_vars(Load* load)
+    char LOAD_get_flags_fixed(Load* load)
+    char LOAD_get_flags_bounded(Load* load)
+    char LOAD_get_flags_sparse(Load* load)
  
     REAL LOAD_get_power_factor(Load* load, int t)
     REAL LOAD_get_target_power_factor(Load* load)

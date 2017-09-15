@@ -645,20 +645,20 @@ Net* NET_get_copy(Net* net) {
 
   // Local variables
   Net* new_net = NULL;
-  Bus* bus;
-  Bus* new_bus;
-  Branch* branch;
-  Branch* new_branch;
-  Gen* gen;
-  Get* new_gen;
-  Vargen* vargen;
-  Vargen* new_vargen;
-  Load* load;
-  Load* new_load;
-  Shunt* shunt;
-  Shunt* new_shunt;
-  Bat* bat;
-  Bat* new_bat;
+  Bus* bus = NULL;
+  Bus* new_bus = NULL;
+  Branch* branch = NULL;
+  Branch* new_branch = NULL;
+  Gen* gen = NULL;
+  Gen* new_gen = NULL;
+  Vargen* vargen = NULL;
+  Vargen* new_vargen = NULL;
+  Load* load = NULL;
+  Load* new_load = NULL;
+  Shunt* shunt = NULL;
+  Shunt* new_shunt = NULL;
+  Bat* bat = NULL;
+  Bat* new_bat = NULL;
   int i;
 
   // Check
@@ -702,62 +702,134 @@ Net* NET_get_copy(Net* net) {
 
   // Buses
   for (i = 0; i < net->num_buses; i++) {
+
     bus = NET_get_bus(net,i);
     new_bus = NET_get_bus(new_net,i);
-    // copy data
-  }				     
+
+    BUS_copy_from_bus(new_bus, bus);
+
+    NET_bus_hash_number_add(new_net, new_bus);
+    NET_bus_hash_name_add(new_net, new_bus);
+
+    // Connections gen
+    for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen))
+      BUS_add_gen(new_bus,NET_get_gen(new_net,GEN_get_index(gen)));
+
+    // Connections reg gen
+    for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen))
+      BUS_add_reg_gen(new_bus,NET_get_gen(new_net,GEN_get_index(gen)));
+
+    // Connections load
+    for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load))
+      BUS_add_load(new_bus,NET_get_load(new_net,LOAD_get_index(load)));
+
+    // Connections shunt
+    for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt))
+      BUS_add_shunt(new_bus,NET_get_shunt(new_net,SHUNT_get_index(shunt)));
+
+    // Connections reg_shunt
+    for (shunt = BUS_get_reg_shunt(bus); shunt != NULL; shunt = SHUNT_get_reg_next(shunt))
+      BUS_add_reg_shunt(new_bus,NET_get_shunt(new_net,SHUNT_get_index(shunt)));
+
+    // Connections branch_k
+    for (branch = BUS_get_branch_k(bus); branch != NULL; branch = BRANCH_get_next_k(branch))
+      BUS_add_branch_k(new_bus,NET_get_branch(new_net,BRANCH_get_index(branch)));
+
+    // Connections branch_m
+    for (branch = BUS_get_branch_m(bus); branch != NULL; branch = BRANCH_get_next_m(branch))
+      BUS_add_branch_m(new_bus,NET_get_branch(new_net,BRANCH_get_index(branch)));
+
+    // Connections reg_tran
+    for (branch = BUS_get_reg_tran(bus); branch != NULL; branch = BRANCH_get_reg_next(branch))
+      BUS_add_reg_tran(new_bus,NET_get_branch(new_net,BRANCH_get_index(branch)));
+
+    // Connections vargen
+    for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen))
+      BUS_add_vargen(new_bus, NET_get_vargen(new_net,VARGEN_get_index(vargen)));
+
+    // Connections bat
+    for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat))
+      BUS_add_bat(new_bus,NET_get_bat(new_net,BAT_get_index(bat)));
+  }
 
   // Branches
   for (i = 0; i < net->num_branches; i++) {
+    
     branch = NET_get_branch(net,i);
     new_branch = NET_get_branch(new_net,i);
-    // copy data
-    // add connections
+
+    BRANCH_copy_from_branch(new_branch, branch);
+
+    // Connections bus
+    BRANCH_set_bus_k(new_branch,NET_get_bus(new_net,BUS_get_index(BRANCH_get_bus_k(branch))));
+    BRANCH_set_bus_m(new_branch,NET_get_bus(new_net,BUS_get_index(BRANCH_get_bus_m(branch))));
+    BRANCH_set_reg_bus(new_branch,NET_get_bus(new_net,BUS_get_index(BRANCH_get_reg_bus(branch))));
   }
 
   // Generators
   for (i = 0; i < net->num_gens; i++) {
+    
     gen = NET_get_gen(net,i);
     new_gen = NET_get_gen(new_net,i);
-    // copy data
-    // add connections
+
+    GEN_copy_from_gen(new_gen, gen);
+
+    // Connections bus
+    GEN_set_bus(new_gen,NET_get_bus(new_net,BUS_get_index(GEN_get_bus(gen))));
+    GEN_set_reg_bus(new_gen,NET_get_bus(new_net,BUS_get_index(GEN_get_reg_bus(gen))));
   }
 
   // Var generators
   for (i = 0; i < net->num_vargens; i++) {
+    
     vargen = NET_get_vargen(net,i);
     new_vargen = NET_get_vargen(new_net,i);
-    // copy data
-    // add connections
+
+    VARGEN_copy_from_vargen(new_vargen, vargen);
+
+    NET_vargen_hash_name_add(new_net, new_vargen);
+
+    // Connections bus
+    VARGEN_set_bus(new_vargen,NET_get_bus(new_net,BUS_get_index(VARGEN_get_bus(vargen))));
   }
 
   // Shunts
   for (i = 0; i < net->num_shunts; i++) {
+    
     shunt = NET_get_shunt(net,i);
     new_shunt = NET_get_shunt(new_net,i);
-    // copy data
-    // add connections
+
+    SHUNT_copy_from_shunt(new_shunt, shunt);
+
+    // Connections bus
+    SHUNT_set_bus(new_shunt,NET_get_bus(new_net,BUS_get_index(SHUNT_get_bus(shunt))));
+    SHUNT_set_reg_bus(new_shunt,NET_get_bus(new_net,BUS_get_index(SHUNT_get_reg_bus(shunt))));
   }
 
   // Loads
   for (i = 0; i < net->num_loads; i++) {
+    
     load = NET_get_load(net,i);
     new_load = NET_get_load(new_net,i);
-    // copy data
-    // add connections
+
+    LOAD_copy_from_load(new_load, load);
+
+    // Connections bus
+    LOAD_set_bus(new_load,NET_get_bus(new_net,BUS_get_index(LOAD_get_bus(load))));
   }
 
   // Batteries
-  for (i = 0; i < net->num_batteries; i++) {
+  for (i = 0; i < net->num_bats; i++) {
+    
     bat = NET_get_bat(net,i);
     new_bat = NET_get_bat(new_net,i);
-    // copy data
-    // add connections
+
+    BAT_copy_from_bat(new_bat, bat);
+
+    // Connections bus
+    BAT_set_bus(new_bat,NET_get_bus(new_net,BUS_get_index(BAT_get_bus(bat))));
   }
-  
-  // Hashes
-
-
+    
   // Return
   return new_net;
 }

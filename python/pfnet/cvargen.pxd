@@ -20,6 +20,11 @@ cdef extern from "pfnet/vargen.h":
 
     cdef char VARGEN_PROP_ANY
 
+    char VARGEN_get_flags_vars(Vargen* gen)
+    char VARGEN_get_flags_fixed(Vargen* gen)
+    char VARGEN_get_flags_bounded(Vargen* gen)
+    char VARGEN_get_flags_sparse(Vargen* gen)
+
     int VARGEN_get_num_periods(Vargen* gen)
     char* VARGEN_get_name(Vargen* gen)
     char VARGEN_get_obj_type(void* gen)

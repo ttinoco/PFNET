@@ -59,7 +59,13 @@ Load* LOAD_array_new(int size, int num_periods);
 void LOAD_array_show(Load* load_array, int num, int t);
 void LOAD_clear_sensitivities(Load* load); 
 void LOAD_clear_flags(Load* load, char flag_type);
-void LOAD_propagate_data_in_time(Load* load, int start, int end);
+void LOAD_copy_from_load(Load* load, Load* other);
+
+char LOAD_get_flags_vars(Load* load);
+char LOAD_get_flags_fixed(Load* load);
+char LOAD_get_flags_bounded(Load* load);
+char LOAD_get_flags_sparse(Load* load);
+
 int LOAD_get_num_periods(Load* load);
 REAL LOAD_get_sens_P_u_bound(Load* load, int t);
 REAL LOAD_get_sens_P_l_bound(Load* load, int t);
@@ -92,6 +98,7 @@ BOOL LOAD_is_P_adjustable(Load* load);
 Load* LOAD_list_add(Load *load_list, Load* load);
 int LOAD_list_len(Load* load_list);
 Load* LOAD_new(int num_periods);
+void LOAD_propagate_data_in_time(Load* load, int start, int end);
 void LOAD_set_target_power_factor(Load* load, REAL pf);
 void LOAD_set_sens_P_u_bound(Load* load, REAL value, int t);
 void LOAD_set_sens_P_l_bound(Load* load, REAL value, int t);

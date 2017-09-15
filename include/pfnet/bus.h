@@ -143,7 +143,13 @@ void BUS_clear_sensitivities(Bus* bus);
 void BUS_clear_mismatches(Bus* bus);
 void BUS_clear_vargen(Bus* bus);
 void BUS_clear_bat(Bus* bus);
-void BUS_propagate_data_in_time(Bus* bus, int start, int end);
+void BUS_copy_from_bus(Bus* bus, Bus* other);
+
+char BUS_get_flags_vars(Bus* bus);
+char BUS_get_flags_fixed(Bus* bus);
+char BUS_get_flags_bounded(Bus* bus);
+char BUS_get_flags_sparse(Bus* bus);
+
 char BUS_get_obj_type(void* bus);
 int BUS_get_degree(Bus* bus);
 REAL BUS_get_price(Bus* bus, int t);
@@ -237,6 +243,7 @@ Bus* BUS_list_add(Bus* bus_list, Bus* bus);
 Bus* BUS_list_add_sorting(Bus* bus_list, Bus* bus, int sort_by, int t);
 int BUS_list_len(Bus* bus_list);
 Bus* BUS_new(int num_periods);
+void BUS_propagate_data_in_time(Bus* bus, int start, int end);
 void BUS_set_next(Bus* bus, Bus* next_bus);
 void BUS_set_number(Bus* bus, int number);
 void BUS_set_name(Bus* bus, char* name);

@@ -62,7 +62,13 @@ Gen* GEN_array_new(int size, int num_periods);
 void GEN_array_show(Gen* gen_array, int size, int t);
 void GEN_clear_sensitivities(Gen* gen);
 void GEN_clear_flags(Gen* gen, char flag_type);
-void GEN_propagate_data_in_time(Gen* gen, int start, int end);
+void GEN_copy_from_gen(Gen* gen, Gen* other);
+
+char GEN_get_flags_vars(Gen* gen);
+char GEN_get_flags_fixed(Gen* gen);
+char GEN_get_flags_bounded(Gen* gen);
+char GEN_get_flags_sparse(Gen* gen);
+
 int GEN_get_num_periods(Gen* gen);
 REAL GEN_get_sens_P_u_bound(Gen* gen, int t);
 REAL GEN_get_sens_P_l_bound(Gen* gen, int t);
@@ -107,6 +113,7 @@ Gen* GEN_list_reg_add(Gen* reg_gen_list, Gen* reg_gen);
 Gen* GEN_list_reg_del(Gen* reg_gen_list, Gen* reg_gen);
 int GEN_list_reg_len(Gen* reg_gen_list);
 Gen* GEN_new(int num_periods);
+void GEN_propagate_data_in_time(Gen* gen, int start, int end);
 void GEN_set_sens_P_u_bound(Gen* gen, REAL value, int t);
 void GEN_set_sens_P_l_bound(Gen* gen, REAL value, int t);
 void GEN_set_cost_coeff_Q0(Gen* gen, REAL q);

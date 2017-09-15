@@ -129,6 +129,92 @@ void GEN_clear_flags(Gen* gen, char flag_type) {
   }
 }
 
+void GEN_copy_from_gen(Gen* gen, Gen* other) {
+
+  // Local variables
+  int num_periods;
+
+  // Check
+  if (!gen || !other)
+    return;
+
+  // Min num periods
+  if (gen->num_periods < other->num_periods)
+    num_periods = gen->num_periods;
+  else
+    num_periods = other->num_periods;
+
+  // Bus
+  // skip buses
+
+  // Times
+  // skip num periods
+
+  // Flags
+  gen->outage = other->outage;
+  gen->fixed = other->fixed;
+  gen->bounded = other->bounded;
+  gen->sparse = other->sparse;
+  gen->vars = other->vars;
+
+  // Active power
+  memcpy(gen->P,other->P,num_periods*sizeof(REAL));
+  gen->P_max = other->P_max;
+  gen->P_min = other->P_min;
+  gen->P_prev = other->P_prev;
+  gen->dP_max = other->dP_max;
+
+  // Reactive power
+  memcpy(gen->Q,other->Q,num_periods*sizeof(REAL));
+  gen->Q_max = other->Q_max;
+  gen->Q_min = other->Q_min;
+
+  // Cost coefficients
+  gen->cost_coeff_Q0 = other->cost_coeff_Q0;
+  gen->cost_coeff_Q1 = other->cost_coeff_Q1;
+  gen->cost_coeff_Q2 = other->cost_coeff_Q2;
+
+  // Indices
+  // skip index
+  memcpy(gen->index_P,other->index_P,num_periods*sizeof(int));
+  memcpy(gen->index_Q,other->index_Q,num_periods*sizeof(int));
+
+  // Sensitivities
+  memcpy(gen->sens_P_u_bound,other->sens_P_u_bound,num_periods*sizeof(REAL));
+  memcpy(gen->sens_P_l_bound,other->sens_P_l_bound,num_periods*sizeof(REAL));
+
+  // List
+  // skip next 
+}
+
+char GEN_get_flags_vars(Gen* gen) {
+  if (gen)
+    return gen->vars;
+  else
+    return 0;
+}
+
+char GEN_get_flags_fixed(Gen* gen) {
+  if (gen)
+    return gen->fixed;
+  else
+    return 0;
+}
+
+char GEN_get_flags_bounded(Gen* gen) {
+  if (gen)
+    return gen->bounded;
+  else
+    return 0;
+}
+
+char GEN_get_flags_sparse(Gen* gen) {
+  if (gen)
+    return gen->sparse;
+  else
+    return 0;
+}
+
 int GEN_get_num_periods(Gen* gen) {
   if (gen)
     return gen->num_periods;
@@ -212,21 +298,21 @@ int GEN_get_index(Gen* gen) {
   if (gen)
     return gen->index;
   else
-    return 0;
+    return -1;
 }
 
 int GEN_get_index_P(Gen* gen, int t) {
   if (gen && t >= 0 && t < gen->num_periods)
     return gen->index_P[t];
   else
-    return 0;
+    return -1;
 }
 
 int GEN_get_index_Q(Gen* gen, int t) {
   if (gen && t >= 0 && t < gen->num_periods)
     return gen->index_Q[t];
   else
-    return 0;
+    return -1;
 }
 
 Gen* GEN_get_next(Gen* gen) {
