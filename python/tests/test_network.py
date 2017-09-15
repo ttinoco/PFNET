@@ -3986,6 +3986,15 @@ class TestNetwork(unittest.TestCase):
 
             pf.tests.utils.compare_networks(self,net1,net2,check_internals=True)
 
+            net2.clear_flags()
+            net2.buses[0].v_mag[0] = 1.111
+
+            self.assertRaises(AssertionError,pf.tests.utils.compare_networks,self,net1,net2,True)
+
+            net2.copy_from_network(net1)
+
+            pf.tests.utils.compare_networks(self,net1,net2,True)
+            
     def tearDown(self):
 
         pass

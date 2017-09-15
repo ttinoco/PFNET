@@ -173,6 +173,18 @@ cdef class Network:
 
         cnet.NET_clear_sensitivities(self._c_net)
 
+    def copy_from_network(self, net):
+        """
+        Copies data from another network.
+
+        Parameters
+        ----------
+        net : :class:`Network <pfnet.Network>`
+        """
+        
+        cdef Network n = net
+        cnet.NET_copy_from_net(self._c_net, n._c_net)
+
     def create_sorted_bus_list(self,sort_by,t=0):
         """
         Creates list of buses sorted in descending order according to a specific quantity.

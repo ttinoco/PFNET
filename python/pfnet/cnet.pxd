@@ -37,6 +37,7 @@ cdef extern from "pfnet/net.h":
     void NET_clear_sensitivities(Net* net)
     cbus.Bus* NET_create_sorted_bus_list(Net* net, int sort_by, int t)
     cmat.Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr)
+    void NET_copy_from_net(Net* net, Net* other_net)
     void NET_del(Net* net)
     Net* NET_get_copy(Net* net)
     REAL NET_get_base_power(Net* net)
