@@ -35,6 +35,7 @@ Unreleased
 * Exposed component flags bit masks in Python (done).
 * Added network "get_copy" and "copy_from_net" routines and enhanced network comparison test utility (done).
 * Made "get_index"-type routines of network components return -1 for NULL pointers to avoid silent errors (done).
+* Changed Contigency class methods to use word "generator" instead of "gen" abbreviation (done).
 * Update Python wrapper documentation to show how to install with pip or download/run tests (todo).
 * Add cmake windows build script invokation in setup.py (todo).
 * Update examples, documentation and create release (todo).

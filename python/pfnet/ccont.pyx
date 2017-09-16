@@ -27,20 +27,20 @@ cdef class Contingency:
     cdef ccont.Cont* _c_cont
     cdef bint alloc
 
-    def __init__(self,gens=None,branches=None,alloc=True):
+    def __init__(self,generators=None,branches=None,alloc=True):
         """
         Contingency class.
 
         Parameters
         ----------
-        gens : list or :class:`Generators <pfnet.Generator>`
+        generators : list or :class:`Generators <pfnet.Generator>`
         branches : list :class:`Branchs <pfnet.Branch>`
         alloc : {``True``, ``False``}
         """
 
         pass
 
-    def __cinit__(self,gens=None,branches=None,alloc=True):
+    def __cinit__(self,generators=None,branches=None,alloc=True):
 
         cdef Generator g
         cdef Branch br
@@ -51,8 +51,8 @@ cdef class Contingency:
             self._c_cont = NULL
         self.alloc = alloc
 
-        if gens:
-            for gen in gens:
+        if generators:
+            for gen in generators:
                 g = gen
                 ccont.CONT_add_gen_outage(self._c_cont,g.index)
         if branches:
@@ -79,11 +79,11 @@ cdef class Contingency:
         state = json.loads(state)
         for index in state['generator_outages']:
             gen = temp()
-            gen.index =index
-            self.add_gen_outage(gen)
+            gen.index = index
+            self.add_generator_outage(gen)
         for index in state['branch_outages']:
             br = temp()
-            br.index =index
+            br.index = index
             self.add_branch_outage(br)
 
     def apply(self, network):
@@ -117,7 +117,7 @@ cdef class Contingency:
 
         print(ccont.CONT_get_show_str(self._c_cont).decode('UTF-8'))
 
-    def add_gen_outage(self,gen):
+    def add_generator_outage(self, gen):
         """
         Adds generator outage to contingency.
 
@@ -126,9 +126,9 @@ cdef class Contingency:
         gen : :class:`Generator <pfnet.Generator>`
         """
 
-        ccont.CONT_add_gen_outage(self._c_cont,gen.index)
+        ccont.CONT_add_gen_outage(self._c_cont, gen.index)
 
-    def add_branch_outage(self,br):
+    def add_branch_outage(self, br):
         """
         Adds branch outage to contingency.
 
@@ -139,7 +139,7 @@ cdef class Contingency:
 
         ccont.CONT_add_branch_outage(self._c_cont,br.index)
 
-    def has_gen_outage(self,gen):
+    def has_generator_outage(self, gen):
         """
         Determines whether contingency specifies the given generator as being on outage.
 
@@ -155,7 +155,7 @@ cdef class Contingency:
         cdef Generator g = gen
         return ccont.CONT_has_gen_outage(self._c_cont,g.index)
 
-    def has_branch_outage(self,br):
+    def has_branch_outage(self, br):
         """
         Determines whether contingency specifies the given branch as being on outage.
 
@@ -171,7 +171,7 @@ cdef class Contingency:
         cdef Branch b = br
         return ccont.CONT_has_branch_outage(self._c_cont,b.index)
 
-    property num_gen_outages:
+    property num_generator_outages:
         """ Number of generator outages. """
         def __get__(self): return ccont.CONT_get_num_gen_outages(self._c_cont)
 
