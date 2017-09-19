@@ -471,18 +471,16 @@ void BRANCH_compute_flows(Branch* br, Vec* var_values, int t, REAL* flows) {
    *  and the flow in the series element. These values are returned in 
    *  the 'flows' argument.
    */
-
-  int i;
-  
+    
   // Buses
   Bus* bus_k;
   Bus* bus_m;
   
-  // Voltages
+  // Voltage magnitudes
   REAL v_k;
   REAL v_m;
   
-  // Angles
+  // Voltage angles
   REAL w_k;
   REAL w_m;
   
@@ -513,13 +511,8 @@ void BRANCH_compute_flows(Branch* br, Vec* var_values, int t, REAL* flows) {
   REAL theta_mk;
 
   // Check inputs
-  if (!flows)
+  if (!flows || !br)
     return;
-  else if (!br || t < 0) {
-    for (i=0; i < BRANCH_FLOW_SIZE; i++)
-      flows[i] = 0;
-    return;
-  }
 
   // Populate the local variables
   bus_k = BRANCH_get_bus_k(br);
@@ -618,112 +611,262 @@ void BRANCH_compute_flows(Branch* br, Vec* var_values, int t, REAL* flows) {
   flows[BRANCH_Q_MK] = flows[BRANCH_Q_MK_SERIES] + flows[BRANCH_Q_M_SHUNT];
 }
 
+REAL BRANCH_get_i_km_mag(Branch* br, Vec* var_values, int t, REAL eps) {
+
+  REAL flows[BRANCH_FLOW_SIZE];
+  REAL R_km;
+  REAL I_km;
+  Bus* bus_k;
+  REAL vk;
+
+  if (br) {
+    bus_k = BRANCH_get_bus_k(br);
+    if (BUS_has_flags(bus_k,FLAG_VARS,BUS_VAR_VMAG) && var_values)
+      vk = VEC_get(var_values,BUS_get_index_v_mag(bus_k,t));
+    else
+      vk = BUS_get_v_mag(bus_k,t);
+    BRANCH_compute_flows(br,var_values,t,flows);
+    R_km = flows[BRANCH_P_KM]/vk;
+    I_km = flows[BRANCH_Q_KM]/vk;
+    return sqrt(R_km*R_km+I_km*I_km+eps);
+  }
+  else
+    return 0;
+}
+
+REAL BRANCH_get_i_mk_mag(Branch* br, Vec* var_values, int t, REAL eps) {
+  
+  REAL flows[BRANCH_FLOW_SIZE];
+  REAL R_mk;
+  REAL I_mk;
+  Bus* bus_m;
+  REAL vm;
+
+  if (br) {
+    bus_m = BRANCH_get_bus_m(br);
+    if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VMAG) && var_values)
+      vm = VEC_get(var_values,BUS_get_index_v_mag(bus_m,t));
+    else
+      vm = BUS_get_v_mag(bus_m,t);
+    BRANCH_compute_flows(br,var_values,t,flows);
+    R_mk = flows[BRANCH_P_MK]/vm;
+    I_mk = flows[BRANCH_Q_MK]/vm;
+    return sqrt(R_mk*R_mk+I_mk*I_mk+eps);
+  }
+  else
+    return 0;
+}
+
+REAL BRANCH_get_S_km_mag(Branch* br, Vec* var_values, int t) {
+
+  REAL flows[BRANCH_FLOW_SIZE];
+  REAL P_km;
+  REAL Q_km;
+
+  if (br) {
+    BRANCH_compute_flows(br,var_values,t,flows);
+    P_km = flows[BRANCH_P_KM];
+    Q_km = flows[BRANCH_Q_KM];
+    return sqrt(P_km*P_km+Q_km*Q_km);
+  }
+  else
+    return 0;
+}
+
+REAL BRANCH_get_S_mk_mag(Branch* br, Vec* var_values, int t) {
+
+  REAL flows[BRANCH_FLOW_SIZE];
+  REAL P_mk;
+  REAL Q_mk;
+
+  if (br) {
+    BRANCH_compute_flows(br,var_values,t,flows);
+    P_mk = flows[BRANCH_P_MK];
+    Q_mk = flows[BRANCH_Q_MK];
+    return sqrt(P_mk*P_mk+Q_mk*Q_mk);
+  }
+  else
+    return 0;
+}
+
 REAL BRANCH_get_P_km(Branch* br, Vec* var_values, int t) {
   /** Get the real power flow measured at bus "k" towards bus "m".
    *  P_km = P_km_series + P_k_shunt
    */
+  
   REAL flows[BRANCH_FLOW_SIZE];
-  BRANCH_compute_flows(br,var_values,t,flows);
-  return flows[BRANCH_P_KM];
+
+  if (br) {
+    BRANCH_compute_flows(br,var_values,t,flows);
+    return flows[BRANCH_P_KM];
+  }
+  else
+    return 0;
 }
 
 REAL BRANCH_get_Q_km(Branch* br, Vec* var_values, int t) {
   /** Get the reactive power flow measured at bus "k" towards bus "m".
    *  Q_km = Q_km_series + Q_k_shunt
    */
+  
   REAL flows[BRANCH_FLOW_SIZE];
-  BRANCH_compute_flows(br,var_values,t,flows);
-  return flows[BRANCH_Q_KM];
+  
+  if (br) {
+    BRANCH_compute_flows(br,var_values,t,flows);
+    return flows[BRANCH_Q_KM];
+  }
+  else
+    return 0;
 }
 
 REAL BRANCH_get_P_mk(Branch* br, Vec* var_values, int t) {
   /** Get the real power flow measured at bus "m" towards bus "k".
    *  P_mk = P_mk_series + P_m_shunt
    */
+
   REAL flows[BRANCH_FLOW_SIZE];
-  BRANCH_compute_flows(br,var_values,t,flows);
-  return flows[BRANCH_P_MK];
+  
+  if (br) {
+    BRANCH_compute_flows(br,var_values,t,flows);
+    return flows[BRANCH_P_MK];
+  }
+  else
+    return 0;
 }
 
 REAL BRANCH_get_Q_mk(Branch* br, Vec* var_values, int t) {
   /** Get the reactive power flow measured at bus "m" towards bus "k".
    *  Q_mk = Q_mk_series + Q_m_shunt
    */
+  
   REAL flows[BRANCH_FLOW_SIZE];
-  BRANCH_compute_flows(br,var_values,t,flows);
-  return flows[BRANCH_Q_MK];
+
+  if (br) {
+    BRANCH_compute_flows(br,var_values,t,flows);
+    return flows[BRANCH_Q_MK];
+  }
+  else
+    return 0;
 }
 
 REAL BRANCH_get_P_km_series(Branch* br, Vec* var_values, int t) {
   /** Get the real power flow across the series element from bus "k" to bus "m".
    *  P_km_series = a_km^2*v_k^2*g_km - a_km*a_mk*v_k*v_m*( g_km*cos(w_k-w_m-phi) + b_km*sin(w_k-w_m-phi))
    */
+  
   REAL flows[BRANCH_FLOW_SIZE];
-  BRANCH_compute_flows(br,var_values,t,flows);
-  return flows[BRANCH_P_KM_SERIES];
+
+  if (br) {
+    BRANCH_compute_flows(br,var_values,t,flows);
+    return flows[BRANCH_P_KM_SERIES];
+  }
+  else
+    return 0;
 }
 
 REAL BRANCH_get_Q_km_series(Branch* br, Vec* var_values, int t) {
   /** Get the reactive power flow across the series element from bus "k" to bus "m".
    *  Q_km_series = -a_km^2*v_k^2*b_km - a_km*a_mk*v_k*v_m*( g_km*sin(w_k-w_m-phi) - b_km*cos(w_k-w_m-phi))
    */
+  
   REAL flows[BRANCH_FLOW_SIZE];
-  BRANCH_compute_flows(br,var_values,t,flows);
-  return flows[BRANCH_Q_KM_SERIES];
+
+  if (br) {
+    BRANCH_compute_flows(br,var_values,t,flows);
+    return flows[BRANCH_Q_KM_SERIES];
+  }
+  else
+    return 0;
 }
 
 REAL BRANCH_get_P_mk_series(Branch* br, Vec* var_values, int t) {
   /** Get the real power flow across the series element from bus "m" to bus "k".
    *  P_mk_series = -a_mk^2*v_m^2*g_mk - a_mk*a_km*v_k*v_m*( g_mk*cos(w_k-w_m+phi) + b_mk*sin(w_k-w_m+phi))
    */
+  
   REAL flows[BRANCH_FLOW_SIZE];
-  BRANCH_compute_flows(br,var_values,t,flows);
-  return flows[BRANCH_P_MK_SERIES];
+
+  if (br) {
+    BRANCH_compute_flows(br,var_values,t,flows);
+    return flows[BRANCH_P_MK_SERIES];
+  }
+  else
+    return 0;
 }
 
 REAL BRANCH_get_Q_mk_series(Branch* br, Vec* var_values, int t) {
-   /** Get the real power flow across the series element from bus "m" to bus "k".
-    *  Q_mk_series = -a_mk^2*v_m^2*b_mk - a_mk*a_km*v_k*v_m*( g_mk*sin(w_k-w_m+phi) - b_mk*cos(w_k-w_m+phi))
-    */
-   REAL flows[BRANCH_FLOW_SIZE];
-   BRANCH_compute_flows(br,var_values,t,flows);
-   return flows[BRANCH_Q_MK_SERIES];
+  /** Get the real power flow across the series element from bus "m" to bus "k".
+   *  Q_mk_series = -a_mk^2*v_m^2*b_mk - a_mk*a_km*v_k*v_m*( g_mk*sin(w_k-w_m+phi) - b_mk*cos(w_k-w_m+phi))
+   */
+  
+  REAL flows[BRANCH_FLOW_SIZE];
+  
+  if (br) {
+    BRANCH_compute_flows(br,var_values,t,flows);
+    return flows[BRANCH_Q_MK_SERIES];
+  }
+  else
+    return 0;
 }
 
 REAL BRANCH_get_P_k_shunt(Branch* br, Vec* var_values, int t) {
-   /** Get the real power flow to the shunt element from bus "k".
-    *  P_k_shunt = v_k^2*a_km^2*g_k_sh
-    */
-   REAL flows[BRANCH_FLOW_SIZE];
-   BRANCH_compute_flows(br,var_values,t,flows);
-   return flows[BRANCH_P_K_SHUNT];
+  /** Get the real power flow to the shunt element from bus "k".
+   *  P_k_shunt = v_k^2*a_km^2*g_k_sh
+   */
+  
+  REAL flows[BRANCH_FLOW_SIZE];
+  
+  if (br) {
+    BRANCH_compute_flows(br,var_values,t,flows);
+    return flows[BRANCH_P_K_SHUNT];
+  }
+  else
+    return 0;
 }
 
 REAL BRANCH_get_Q_k_shunt(Branch* br, Vec* var_values, int t) {
-   /** Get the reactive power flow to the shunt element from bus "k".
-    *  Q_k_shunt = v_k^2*a_km^2*b_k_sh
-    */
-   REAL flows[BRANCH_FLOW_SIZE];
-   BRANCH_compute_flows(br,var_values,t,flows);
-   return flows[BRANCH_Q_K_SHUNT];
+  /** Get the reactive power flow to the shunt element from bus "k".
+   *  Q_k_shunt = v_k^2*a_km^2*b_k_sh
+   */
+  
+  REAL flows[BRANCH_FLOW_SIZE];
+  
+  if (br) {
+    BRANCH_compute_flows(br,var_values,t,flows);
+    return flows[BRANCH_Q_K_SHUNT];
+  }
+  else
+    return 0;
 }
 
 REAL BRANCH_get_P_m_shunt(Branch* br, Vec* var_values, int t) {
-   /** Get the real power flow to the shunt element from bus "m".
-    *  P_m_shunt = v_m^2*a_mk^2*g_m_sh
-    */
-   REAL flows[BRANCH_FLOW_SIZE];
-   BRANCH_compute_flows(br,var_values,t,flows);
-   return flows[BRANCH_P_M_SHUNT];
+  /** Get the real power flow to the shunt element from bus "m".
+   *  P_m_shunt = v_m^2*a_mk^2*g_m_sh
+   */
+  
+  REAL flows[BRANCH_FLOW_SIZE];
+
+  if (br) {
+    BRANCH_compute_flows(br,var_values,t,flows);
+    return flows[BRANCH_P_M_SHUNT];
+  }
+  else
+    return 0;
 }
 
 REAL BRANCH_get_Q_m_shunt(Branch* br, Vec* var_values, int t) {
-   /** Get the reactive power flow to the shunt element from bus "m".
-    *  Q_m_shunt = v_m^2*a_mk^2*b_m_sh
-    */
-   REAL flows[BRANCH_FLOW_SIZE];
-   BRANCH_compute_flows(br,var_values,t,flows);
-   return flows[BRANCH_Q_M_SHUNT];
+  /** Get the reactive power flow to the shunt element from bus "m".
+   *  Q_m_shunt = v_m^2*a_mk^2*b_m_sh
+   */
+  
+  REAL flows[BRANCH_FLOW_SIZE];
+
+  if (br) {
+    BRANCH_compute_flows(br,var_values,t,flows);
+    return flows[BRANCH_Q_M_SHUNT];
+  }
+  else
+    return 0;
 }
 
 REAL BRANCH_get_ratingA(Branch* br) {

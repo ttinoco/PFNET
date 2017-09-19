@@ -774,6 +774,7 @@ class TestNetwork(unittest.TestCase):
                 self.assertTrue(branch.bus_m)
                 self.assertGreater(branch.ratio,0)
 
+                # ratings set/get
                 self.assertGreaterEqual(branch.ratingA,0.)
                 self.assertGreaterEqual(branch.ratingB,0.)
                 self.assertGreaterEqual(branch.ratingC,0.)
@@ -787,7 +788,7 @@ class TestNetwork(unittest.TestCase):
                 branch.ratingC = r
                 self.assertEqual(r,branch.ratingC)
 
-                # ratio and phase set
+                # ratio and phase set/get
                 branch.phase = 1.234
                 self.assertEqual(branch.phase,1.234)
                 branch.ratio = 1.1102
@@ -923,6 +924,10 @@ class TestNetwork(unittest.TestCase):
                 self.assertAlmostEqual(branch.Q_km, flows['Q_km'])
                 self.assertAlmostEqual(branch.P_mk, flows['P_mk'])
                 self.assertAlmostEqual(branch.Q_mk, flows['Q_mk'])
+                self.assertAlmostEqual(branch.i_km_mag, np.sqrt(flows['P_km']**2.+flows['Q_km']**2.)/branch.bus_k.v_mag)
+                self.assertAlmostEqual(branch.i_mk_mag, np.sqrt(flows['P_mk']**2.+flows['Q_mk']**2.)/branch.bus_m.v_mag)
+                self.assertAlmostEqual(branch.S_km_mag, np.sqrt(flows['P_km']**2.+flows['Q_km']**2.))
+                self.assertAlmostEqual(branch.S_mk_mag, np.sqrt(flows['P_mk']**2.+flows['Q_mk']**2.))
 
                 # check flow at bus equal to shunt + series elements
                 self.assertTrue(branch.P_km == branch.P_km_series+branch.P_k_shunt)
@@ -972,6 +977,14 @@ class TestNetwork(unittest.TestCase):
                 self.assertAlmostEqual(flowsR['Q_km'], branch.get_Q_km(var_values=xR))
                 self.assertAlmostEqual(flowsR['P_mk'], branch.get_P_mk(var_values=xR))
                 self.assertAlmostEqual(flowsR['Q_mk'], branch.get_Q_mk(var_values=xR))
+                self.assertAlmostEqual(branch.get_i_km_mag(xR),
+                                       np.sqrt(flowsR['P_km']**2.+flowsR['Q_km']**2.)/xR[branch.bus_k.index_v_mag])
+                self.assertAlmostEqual(branch.get_i_mk_mag(xR),
+                                       np.sqrt(flowsR['P_mk']**2.+flowsR['Q_mk']**2.)/xR[branch.bus_m.index_v_mag])
+                self.assertAlmostEqual(branch.get_S_km_mag(xR),
+                                       np.sqrt(flowsR['P_km']**2.+flowsR['Q_km']**2.))
+                self.assertAlmostEqual(branch.get_S_mk_mag(xR),
+                                       np.sqrt(flowsR['P_mk']**2.+flowsR['Q_mk']**2.))
 
         # Multi-period
         for case in test_cases.CASES:
@@ -989,6 +1002,10 @@ class TestNetwork(unittest.TestCase):
                     self.assertEqual(branch.Q_km[t],branch.Q_km[0])
                     self.assertEqual(branch.P_mk[t],branch.P_mk[0])
                     self.assertEqual(branch.Q_mk[t],branch.Q_mk[0])
+                    self.assertEqual(branch.i_km_mag[t], branch.i_km_mag[0])
+                    self.assertEqual(branch.i_mk_mag[t], branch.i_mk_mag[0])
+                    self.assertEqual(branch.S_km_mag[t], branch.S_km_mag[0])
+                    self.assertEqual(branch.S_mk_mag[t], branch.S_mk_mag[0])
 
     def test_shunts(self):
 

@@ -118,23 +118,38 @@ cdef class Branch:
         cbranch.BRANCH_set_phase(self._c_ptr,p,t)
 
     def set_as_fixed_tran(self):
-        """ Set the branch as a fixed transformer. """
+        """ 
+        Sets branch as a fixed transformer. 
+        """
+        
         cbranch.BRANCH_set_type(self._c_ptr,cbranch.BRANCH_TYPE_TRAN_FIXED)
 
     def set_as_line(self):
-        """ Set the branch as a line. """
+        """ 
+        Sets branch as a line. 
+        """
+
         cbranch.BRANCH_set_type(self._c_ptr,cbranch.BRANCH_TYPE_LINE)
 
     def set_as_phase_shifter(self):
-        """ Set the branch as a phase shifter. """
+        """ 
+        Sets branch as a phase shifter. 
+        """
+
         cbranch.BRANCH_set_type(self._c_ptr,cbranch.BRANCH_TYPE_TRAN_PHASE)
 
     def set_as_tap_changer_v(self):
-        """ Set the branch as a tap changer regulating voltage. """
+        """ 
+        Sets branch as a tap changer regulating voltage. 
+        """
+
         cbranch.BRANCH_set_type(self._c_ptr,cbranch.BRANCH_TYPE_TRAN_TAP_V)
 
     def set_as_tap_changer_Q(self):
-        """ Set the branch as a tap changer regulating reactive power. """
+        """ 
+        Sets branch as a tap changer regulating reactive power. 
+        """
+
         cbranch.BRANCH_set_type(self._c_ptr,cbranch.BRANCH_TYPE_TRAN_TAP_Q)
 
     def __richcmp__(self,other,op):
@@ -279,9 +294,99 @@ cdef class Branch:
         else:
             raise BranchError('index does not correspond to any variable')
 
-    def get_P_km(self,var_values=None):
+    def get_i_km_mag(self, var_values=None, eps=0.):
         """
-        Gets the real power flow at bus "k" towards bus "m" (from -> to) (p.u.)
+        Gets the branch current magnitude at bus "k" torwards bus "m" (p.u.).
+        
+        Parameters
+        ----------
+        var_values : :class:`ndarray <numpy.ndarray>`
+        eps : float
+
+        Returns
+        -------
+        i_mag : float or :class:`ndarray <numpy.ndarray>`
+        """
+
+        cdef np.ndarray[double,mode='c'] x = var_values
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if var_values is not None else NULL
+        r = [cbranch.BRANCH_get_i_km_mag(self._c_ptr,v,t,eps) for t in range(self.num_periods)]
+        free(v)
+        if self.num_periods == 1:
+            return AttributeFloat(r[0])
+        else:
+            return np.array(r)
+        
+    def get_i_mk_mag(self, var_values=None, eps=0.):
+        """
+        Gets the branch current magnitude at bus "m" torwards bus "k" (p.u.).
+        
+        Parameters
+        ----------
+        var_values : :class:`ndarray <numpy.ndarray>`
+        eps : float
+
+        Returns
+        -------
+        i_mag : float or :class:`ndarray <numpy.ndarray>`
+        """
+
+        cdef np.ndarray[double,mode='c'] x = var_values
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if var_values is not None else NULL
+        r = [cbranch.BRANCH_get_i_mk_mag(self._c_ptr,v,t,eps) for t in range(self.num_periods)]
+        free(v)
+        if self.num_periods == 1:
+            return AttributeFloat(r[0])
+        else:
+            return np.array(r)
+
+    def get_S_km_mag(self, var_values=None):
+        """
+        Gets the branch apparent power magnitude at bus "k" torwards bus "m" (p.u.).
+        
+        Parameters
+        ----------
+        var_values : :class:`ndarray <numpy.ndarray>`
+
+        Returns
+        -------
+        S_mag : float or :class:`ndarray <numpy.ndarray>`
+        """
+
+        cdef np.ndarray[double,mode='c'] x = var_values
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if var_values is not None else NULL
+        r = [cbranch.BRANCH_get_S_km_mag(self._c_ptr,v,t) for t in range(self.num_periods)]
+        free(v)
+        if self.num_periods == 1:
+            return AttributeFloat(r[0])
+        else:
+            return np.array(r)
+
+    def get_S_mk_mag(self, var_values=None):
+        """
+        Gets the branch apparent power magnitude at bus "m" torwards bus "k" (p.u.).
+        
+        Parameters
+        ----------
+        var_values : :class:`ndarray <numpy.ndarray>`
+
+        Returns
+        -------
+        S_mag : float or :class:`ndarray <numpy.ndarray>`
+        """
+
+        cdef np.ndarray[double,mode='c'] x = var_values
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if var_values is not None else NULL
+        r = [cbranch.BRANCH_get_S_mk_mag(self._c_ptr,v,t) for t in range(self.num_periods)]
+        free(v)
+        if self.num_periods == 1:
+            return AttributeFloat(r[0])
+        else:
+            return np.array(r)
+
+    def get_P_km(self, var_values=None):
+        """
+        Gets the real power flow at bus "k" towards bus "m" (p.u.)
 
         Parameters
         ----------
@@ -293,16 +398,17 @@ cdef class Branch:
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if var_values is not None else NULL
         r = [cbranch.BRANCH_get_P_km(self._c_ptr,v,t) for t in range(self.num_periods)]
+        free(v)
         if self.num_periods == 1:
             return AttributeFloat(r[0])
         else:
             return np.array(r)
 
-    def get_Q_km(self,var_values=None):
+    def get_Q_km(self, var_values=None):
         """
-        Gets the reactive power flow at bus "k" towards bus "m" (from -> to) (p.u.)
+        Gets the reactive power flow at bus "k" towards bus "m" (p.u.).
 
         Parameters
         ----------
@@ -314,16 +420,17 @@ cdef class Branch:
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if var_values is not None else NULL
         r = [cbranch.BRANCH_get_Q_km(self._c_ptr,v,t) for t in range(self.num_periods)]
+        free(v)
         if self.num_periods == 1:
             return AttributeFloat(r[0])
         else:
             return np.array(r)
 
-    def get_P_mk(self,var_values=None):
+    def get_P_mk(self, var_values=None):
         """
-        Gets the real power flow at bus "m" towards bus "k" (to -> from) (p.u.)
+        Gets the real power flow at bus "m" towards bus "k" (p.u.).
 
         Parameters
         ----------
@@ -335,16 +442,17 @@ cdef class Branch:
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if var_values is not None else NULL
         r = [cbranch.BRANCH_get_P_mk(self._c_ptr,v,t) for t in range(self.num_periods)]
+        free(v)
         if self.num_periods == 1:
             return AttributeFloat(r[0])
         else:
             return np.array(r)
 
-    def get_Q_mk(self,var_values=None):
+    def get_Q_mk(self, var_values=None):
         """
-        Gets the reactive power flow at bus "m" towards bus "k" (to -> from) (p.u.)
+        Gets the reactive power flow at bus "m" towards bus "k" (p.u.).
 
         Parameters
         ----------
@@ -356,16 +464,17 @@ cdef class Branch:
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if var_values is not None else NULL
         r = [cbranch.BRANCH_get_Q_mk(self._c_ptr,v,t) for t in range(self.num_periods)]
+        free(v)
         if self.num_periods == 1:
             return AttributeFloat(r[0])
         else:
             return np.array(r)
 
-    def get_P_km_series(self,var_values=None):
+    def get_P_km_series(self, var_values=None):
         """
-        Gets the real power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (p.u.)
+        Gets the real power flow at bus "k" towards bus "m" over the series impedance of the line (p.u.).
 
         Parameters
         ----------
@@ -377,16 +486,17 @@ cdef class Branch:
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if var_values is not None else NULL
         r = [cbranch.BRANCH_get_P_km_series(self._c_ptr,v,t) for t in range(self.num_periods)]
+        free(v)
         if self.num_periods == 1:
             return AttributeFloat(r[0])
         else:
             return np.array(r)
 
-    def get_Q_km_series(self,var_values=None):
+    def get_Q_km_series(self, var_values=None):
         """
-        Gets the reactive power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (p.u.)
+        Gets the reactive power flow at bus "k" towards bus "m" over the series impedance of the line (p.u.).
 
         Parameters
         ----------
@@ -398,16 +508,17 @@ cdef class Branch:
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if var_values is not None else NULL
         r = [cbranch.BRANCH_get_Q_km_series(self._c_ptr,v,t) for t in range(self.num_periods)]
+        free(v)
         if self.num_periods == 1:
             return AttributeFloat(r[0])
         else:
             return np.array(r)
 
-    def get_P_mk_series(self,var_values=None):
+    def get_P_mk_series(self, var_values=None):
         """
-        Gets the real power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (p.u.)
+        Gets the real power flow at bus "m" towards bus "k" over the series impedance of the line (p.u.).
 
         Parameters
         ----------
@@ -419,16 +530,17 @@ cdef class Branch:
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if var_values is not None else NULL
         r = [cbranch.BRANCH_get_P_mk_series(self._c_ptr,v,t) for t in range(self.num_periods)]
+        free(v)
         if self.num_periods == 1:
             return AttributeFloat(r[0])
         else:
             return np.array(r)
 
-    def get_Q_mk_series(self,var_values=None):
+    def get_Q_mk_series(self, var_values=None):
         """
-        Gets the reactive power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (p.u.)
+        Gets the reactive power flow at bus "m" towards bus "k" over the series impedance of the line (p.u.).
 
         Parameters
         ----------
@@ -440,16 +552,17 @@ cdef class Branch:
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if var_values is not None else NULL
         r = [cbranch.BRANCH_get_Q_mk_series(self._c_ptr,v,t) for t in range(self.num_periods)]
+        free(v)
         if self.num_periods == 1:
             return AttributeFloat(r[0])
         else:
             return np.array(r)
 
-    def get_P_k_shunt(self,var_values=None):
+    def get_P_k_shunt(self, var_values=None):
         """
-        Gets the real power flow into the shunt element at bus "k" (aka "from") (p.u.)
+        Gets the real power flow into the shunt element at bus "k" (p.u.).
 
         Parameters
         ----------
@@ -461,16 +574,17 @@ cdef class Branch:
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if var_values is not None else NULL
         r = [cbranch.BRANCH_get_P_k_shunt(self._c_ptr,v,t) for t in range(self.num_periods)]
+        free(v)
         if self.num_periods == 1:
             return AttributeFloat(r[0])
         else:
             return np.array(r)
 
-    def get_Q_k_shunt(self,var_values=None):
+    def get_Q_k_shunt(self, var_values=None):
         """
-        Gets the reactive power flow into the shunt element bus "k" (aka "from") (p.u.)
+        Gets the reactive power flow into the shunt element bus "k" (p.u.).
 
         Parameters
         ----------
@@ -482,16 +596,17 @@ cdef class Branch:
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if var_values is not None else NULL
         r = [cbranch.BRANCH_get_Q_k_shunt(self._c_ptr,v,t) for t in range(self.num_periods)]
+        free(v)
         if self.num_periods == 1:
             return AttributeFloat(r[0])
         else:
             return np.array(r)
 
-    def get_P_m_shunt(self,var_values=None):
+    def get_P_m_shunt(self, var_values=None):
         """
-        Gets the real power flow into the shunt element at bus "m" (aka "to") (p.u.)
+        Gets the real power flow into the shunt element at bus "m" (p.u.).
 
         Parameters
         ----------
@@ -503,16 +618,17 @@ cdef class Branch:
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if var_values is not None else NULL
         r = [cbranch.BRANCH_get_P_m_shunt(self._c_ptr,v,t) for t in range(self.num_periods)]
+        free(v)
         if self.num_periods == 1:
             return AttributeFloat(r[0])
         else:
             return np.array(r)
 
-    def get_Q_m_shunt(self,var_values=None):
+    def get_Q_m_shunt(self, var_values=None):
         """
-        Gets the reactive power flow into the shunt element at bus "m" (aka "to") (p.u.)
+        Gets the reactive power flow into the shunt element at bus "m" (p.u.).
 
         Parameters
         ----------
@@ -524,8 +640,9 @@ cdef class Branch:
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
-        cdef cvec.Vec* v = cvec.VEC_new_from_array(&(x[0]),len(x)) if (var_values is not None and var_values.size) else NULL
+        cdef cvec.Vec* v = cvec.VEC_new_from_array(<cnet.REAL*>(x.data),x.size) if var_values is not None else NULL
         r = [cbranch.BRANCH_get_Q_m_shunt(self._c_ptr,v,t) for t in range(self.num_periods)]
+        free(v)
         if self.num_periods == 1:
             return AttributeFloat(r[0])
         else:
@@ -591,7 +708,7 @@ cdef class Branch:
         def __set__(self,bus): self.bus_k = bus
 
     property bus_k:
-        """ :class:`Bus <pfnet.Bus>` connected to the "k" (aka "from" or "i") side. """
+        """ :class:`Bus <pfnet.Bus>` connected to the "k" side. """
         def __get__(self):
             return new_Bus(cbranch.BRANCH_get_bus_k(self._c_ptr))
         def __set__(self,bus): 
@@ -609,7 +726,7 @@ cdef class Branch:
         def __set__(self,bus): self.bus_m = bus
 
     property bus_m:
-        """ :class:`Bus <pfnet.Bus>` connected to the "m" (aka "to" or "j") side. """
+        """ :class:`Bus <pfnet.Bus>` connected to the "m" side. """
         def __get__(self):
             return new_Bus(cbranch.BRANCH_get_bus_m(self._c_ptr))
         def __set__(self,bus): 
@@ -645,7 +762,7 @@ cdef class Branch:
         def __set__(self,value): self.b_k = value
 
     property b_k:
-        """ Branch shunt susceptance at the "k" (aka "from" or "i") side (p.u.) (float). """
+        """ Branch shunt susceptance at the "k" side (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_b_k(self._c_ptr)
         def __set__(self,value): cbranch.BRANCH_set_b_k(self._c_ptr,value)
 
@@ -655,7 +772,7 @@ cdef class Branch:
         def __set__(self,value): self.b_m = value
 
     property b_m:
-        """ Branch shunt susceptance at the "m" (aka "to" or "j") side (p.u.) (float). """
+        """ Branch shunt susceptance at the "m" side (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_b_m(self._c_ptr)
         def __set__(self,value): cbranch.BRANCH_set_b_m(self._c_ptr,value)
 
@@ -670,7 +787,7 @@ cdef class Branch:
         def __set__(self,value): self.g_k = value
 
     property g_k:
-        """ Branch shunt conductance at the "k" (aka "from" or "i") side (p.u.) (float). """
+        """ Branch shunt conductance at the "k" side (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_g_k(self._c_ptr)
         def __set__(self,value): cbranch.BRANCH_set_g_k(self._c_ptr,value)
 
@@ -680,7 +797,7 @@ cdef class Branch:
         def __set__(self,value): self.g_m = value
 
     property g_m:
-        """ Branch shunt conductance at the "m" (aka "to" or "j") side (p.u.) (float). """
+        """ Branch shunt conductance at the "m" side (p.u.) (float). """
         def __get__(self): return cbranch.BRANCH_get_g_m(self._c_ptr)
         def __set__(self,value): cbranch.BRANCH_set_g_m(self._c_ptr,value)
 
@@ -728,63 +845,83 @@ cdef class Branch:
         def __get__(self): return cbranch.BRANCH_get_Q_min(self._c_ptr)
         def __set__(self,value): cbranch.BRANCH_set_Q_min(self._c_ptr,value)
 
+    property i_km_mag:
+        """ Branch current magnitude at bus "k" towards bus "m" (p.u.) (float or array). """
+        def __get__(self):
+            return self.get_i_km_mag()
+
+    property i_mk_mag:
+        """ Branch current magnitude at bus "m" towards bus "k" (p.u.) (float or array). """
+        def __get__(self):
+            return self.get_i_mk_mag()
+
+    property S_km_mag:
+        """ Branch apparent power magnitude at bus "k" towards bus "m" (p.u.) (float or array). """
+        def __get__(self):
+            return self.get_S_km_mag()
+
+    property S_mk_mag:
+        """ Branch apparent power magnitude at bus "m" towards bus "k" (p.u.) (float or array). """
+        def __get__(self):
+            return self.get_S_mk_mag()
+
     property P_km:
-        """ Real power flow at bus "k" towards bus "m" (from -> to) (p.u.) (float or array). """
+        """ Real power flow at bus "k" towards bus "m" (p.u.) (float or array). """
         def __get__(self):
             return self.get_P_km()
 
     property Q_km:
-        """ Reactive power flow at bus "k" towards bus "m" (from -> to) (p.u.) (float or array). """
+        """ Reactive power flow at bus "k" towards bus "m" (p.u.) (float or array). """
         def __get__(self):
             return self.get_Q_km()
 
     property P_mk:
-        """ Real power flow at bus "m" towards bus "k" (to -> from) (p.u.) (float or array). """
+        """ Real power flow at bus "m" towards bus "k" (p.u.) (float or array). """
         def __get__(self):
             return self.get_P_mk()
 
     property Q_mk:
-        """ Reactive power flow at bus "m" towards bus "k" (to -> from) (p.u.) (float or array). """
+        """ Reactive power flow at bus "m" towards bus "k" (p.u.) (float or array). """
         def __get__(self):
              return self.get_Q_mk()
 
     property P_km_series:
-        """ Real power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (p.u.) (float or array). """
+        """ Real power flow at bus "k" towards bus "m" over the series impedance of the line (p.u.) (float or array). """
         def __get__(self):
             return self.get_P_km_series()
 
     property Q_km_series:
-        """ Reactive power flow at bus "k" towards bus "m" over the series impedance of the line (from -> to) (p.u.) (float or array). """
+        """ Reactive power flow at bus "k" towards bus "m" over the series impedance of the line (p.u.) (float or array). """
         def __get__(self):
             return self.get_Q_km_series()
 
     property P_mk_series:
-        """ Real power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (p.u.) (float or array). """
+        """ Real power flow at bus "m" towards bus "k" over the series impedance of the line (p.u.) (float or array). """
         def __get__(self):
             return self.get_P_mk_series()
 
     property Q_mk_series:
-        """ Reactive power flow at bus "m" towards bus "k" over the series impedance of the line (to -> from) (p.u.) (float or array). """
+        """ Reactive power flow at bus "m" towards bus "k" over the series impedance of the line (p.u.) (float or array). """
         def __get__(self):
             return self.get_Q_mk_series()
 
     property P_k_shunt:
-        """ Real power flow into the shunt element at bus "k" (aka "from") (p.u.) (float or array). """
+        """ Real power flow into the shunt element at bus "k" (p.u.) (float or array). """
         def __get__(self):
             return self.get_P_k_shunt()
 
     property Q_k_shunt:
-        """ Reactive power flow into the shunt element bus "k" (aka "from") (p.u.) (float or array). """
+        """ Reactive power flow into the shunt element bus "k" (p.u.) (float or array). """
         def __get__(self):
             return self.get_Q_k_shunt()
 
     property P_m_shunt:
-        """ Real power flow into the shunt element at bus "m" (aka "to") (p.u.) (float or array). """
+        """ Real power flow into the shunt element at bus "m" (p.u.) (float or array). """
         def __get__(self):
             return self.get_P_m_shunt()
 
     property Q_m_shunt:
-        """ Reactive power flow into the shunt element at bus "m" (aka "to") (p.u.) (float or array). """
+        """ Reactive power flow into the shunt element at bus "m" (p.u.) (float or array). """
         def __get__(self):
             return self.get_Q_m_shunt()
 
@@ -853,7 +990,7 @@ cdef class Branch:
         def __set__(self,r): cbranch.BRANCH_set_ratingC(self._c_ptr,r)
 
     property P_km_DC:
-        """ Active power flow (DC approx.) from bus "k/from" to bus "m/to" (float). """
+        """ Active power flow (DC approx.) from bus "k" to bus "m" (float). """
         def __get__(self):
             r = [cbranch.BRANCH_get_P_km_DC(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -862,7 +999,7 @@ cdef class Branch:
                 return np.array(r)
 
     property P_mk_DC:
-        """ Active power flow (DC approx.) from bus "m/to" to bus "k/from" (float). """
+        """ Active power flow (DC approx.) from bus "m" to bus "k" (float). """
         def __get__(self):
             r = [cbranch.BRANCH_get_P_mk_DC(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:

@@ -4078,8 +4078,8 @@ class TestConstraints(unittest.TestCase):
                     Qmk = branch.get_Q_mk()[t]
                     vk = branch.bus_k.v_mag[t]
                     vm = branch.bus_m.v_mag[t]
-                    ikmmag = np.sqrt(np.abs((Pkm/vk) + 1j*(Qkm/vk))**2.+param)
-                    imkmag = np.sqrt(np.abs((Pmk/vm) + 1j*(Qmk/vm))**2.+param)
+                    ikmmag = branch.get_i_km_mag(eps=param)[t]
+                    imkmag = branch.get_i_mk_mag(eps=param)[t]
                     error_km = 100.*np.abs(ikmmag-f[i]-y0[J_row])/max([ikmmag,tol])
                     error_mk = 100.*np.abs(imkmag-f[i+1]-y0[J_row+1])/max([imkmag,tol])
                     self.assertLess(error_km,eps)
