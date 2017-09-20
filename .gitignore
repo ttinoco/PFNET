@@ -27,6 +27,7 @@ temp_json.json
 lib/*
 python/build/*
 python/pfnet/*.so
+python/pfnet/*.dll
 python/lib/pfnet
 
 # Tests
