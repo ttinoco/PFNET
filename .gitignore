@@ -9,6 +9,7 @@
 *.dot
 *.prof
 *.cfg
+cpfnet.pyd
 cpfnet.c
 cpfnet.h
 *foo*
