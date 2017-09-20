@@ -14,8 +14,8 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)  # so that cmake builds with rpath alre
 set(CMAKE_INSTALL_RPATH "@loader_path")  # for relocatable libraries
 
 option(PFNET_DEBUG "set to ON to enable PFNET debug definition" OFF)
-option(PFNET_GRAPHVIZ "set to OFF to disable search for graphviz" ON)
-option(PFNET_LINE_FLOW "set to ON to enable LINE_FLOW addon" OFF)
+option(PFNET_GRAPHVIZ "set to ON to enable graphviz addon" ON)
+option(PFNET_LINE_FLOW "set to ON to enable line flow addon" ON)
 
 set(M_LIB,"")
 # REQUIRE MATH LIBRARY (NOT SURE IF OS SPECIFIC)
@@ -27,9 +27,9 @@ endif (UNIX)
 # CHECK_INCLUDE_FILES("math.h" HAVE_MATH_H)
 
 # RAW_PARSER_INSTALL_PREFIX
-set(RAW_PARSER_SOURCE_DIR ""
-    CACHE FILEPATH
-    "path to raw-parser source directory")
+#set(RAW_PARSER_SOURCE_DIR ""
+#    CACHE FILEPATH
+#    "path to raw-parser source directory")
 
 # find PFNET source files
 file(GLOB_RECURSE pfnet_source src/*.c)
@@ -78,22 +78,22 @@ else()
 endif()
 
 # add raw-parser if specified
-if(NOT ${RAW_PARSER_SOURCE_DIR} STREQUAL "")
-  include_directories(${RAW_PARSER_SOURCE_DIR}/include)
-  set(raw_parser_source ${RAW_PARSER_SOURCE_DIR}/src/RAW_net.c
-                        ${RAW_PARSER_SOURCE_DIR}/src/RAW_parser.c)
-  target_sources(pfnet PUBLIC ${raw_parser_source})
-  target_sources(pfnet_static PUBLIC ${raw_parser_source})
-  message("raw-parser enabled.")
-  # install raw-parser headers also
-  install(DIRECTORY ${RAW_PARSER_SOURCE_DIR}/include/
-          DESTINATION include
-          FILES_MATCHING PATTERN "*.h")
-  set(HAVE_RAW_PARSER 1)  # need to set it to 1 so that the dummy parser in pfnet does not conflict
-else()
-  message("raw-parser not enabled.")
-  set(HAVE_RAW_PARSER 0)
-endif()
+#if(NOT ${RAW_PARSER_SOURCE_DIR} STREQUAL "")
+#  include_directories(${RAW_PARSER_SOURCE_DIR}/include)
+#  set(raw_parser_source ${RAW_PARSER_SOURCE_DIR}/src/RAW_net.c
+#                        ${RAW_PARSER_SOURCE_DIR}/src/RAW_parser.c)
+#  target_sources(pfnet PUBLIC ${raw_parser_source})
+#  target_sources(pfnet_static PUBLIC ${raw_parser_source})
+#  message("raw-parser enabled.")
+#  # install raw-parser headers also
+#  install(DIRECTORY ${RAW_PARSER_SOURCE_DIR}/include/
+#          DESTINATION include
+#          FILES_MATCHING PATTERN "*.h")
+#  set(HAVE_RAW_PARSER 1)  # need to set it to 1 so that the dummy parser in pfnet does not conflict
+#else()
+#  message("raw-parser not enabled.")
+#  set(HAVE_RAW_PARSER 0)
+#endif()
 
 # add line-flow if specified
 # if(PFNET_LINE_FLOW)
@@ -118,7 +118,7 @@ CHECK_LIBRARY_EXISTS(cgraph agopen "" HAVE_LIBCGRAPH)
 CHECK_INCLUDE_FILES("graphviz/gvc.h"  HAVE_GRAPHVIZ_GVC_H)
 
 # check for line-flow
-CHECK_LIBRARY_EXISTS(line_flow LINE_FLOW_new "${PFNET_SOURCE_DIR}/lib/" HAVE_LINE_FLOW)
+CHECK_LIBRARY_EXISTS(line_flow LINE_FLOW_new "${LINE_FLOW}/lib/" HAVE_LINE_FLOW)
 
 # Checks std header files.
 CHECK_INCLUDE_FILES("stddef.h"  HAVE_STDDEF_H)
@@ -135,7 +135,7 @@ CHECK_INCLUDE_FILES("unistd.h"  HAVE_UNISTD_H)
 
 # Checks for raw parser, not needed since adding files directly to package above
 # Option "-Wl,-rpath,$PWD/lib" needed for "make check" without LD_LIBRARY_PATH
-#CHECK_LIBRARY_EXISTS(raw_parser RAW_PARSER_new ${PFNET_SOURCE_DIR}/lib/ HAVE_RAW_PARSER)
+CHECK_LIBRARY_EXISTS(raw_parser RAW_PARSER_new "${RAW_PARSER}/lib/" HAVE_RAW_PARSER)
 
 # Checks for typedefs, structures, and compiler characteristics.
 CHECK_INCLUDE_FILES("inttypes.h" HAVE_INTTYPES_H)

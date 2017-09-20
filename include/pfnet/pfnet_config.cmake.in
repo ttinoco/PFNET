@@ -100,6 +100,6 @@
 #cmakedefine01 HAVE_LINE_FLOW @HAVE_LINE_FLOW@
 
 /* Define to 0 if you do not have the raw-parser library. */
-#cmakedefine HAVE_RAW_PARSER @HAVE_RAW_PARSER@
+#cmakedefine01 HAVE_RAW_PARSER @HAVE_RAW_PARSER@
 
 #endif
