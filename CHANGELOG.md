@@ -37,8 +37,8 @@ Unreleased
 * Made "get_index"-type routines of network components return -1 for NULL pointers to avoid silent errors (done).
 * Changed Contigency class methods to use word "generator" instead of "gen" abbreviation (done).
 * Added network getters for branch current and apparent power magnitudes (done).
+* Add cmake windows build script invokation in setup.py (done).
 * Update Python wrapper documentation to show how to install with pip or download/run tests (todo).
-* Add cmake windows build script invokation in setup.py (todo).
 * Update examples, documentation and create release (todo).
 * Distribute pfnet python wrapper through pypi (todo).
 

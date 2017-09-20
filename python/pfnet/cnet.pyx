@@ -8,6 +8,7 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
+import os
 cimport cnet
 import tempfile
 
@@ -66,13 +67,14 @@ cdef class Network:
             cnet.NET_del(self._c_net)
             self._c_net = NULL
             
-        with tempfile.NamedTemporaryFile(suffix='.json') as f:
+        with tempfile.NamedTemporaryFile(suffix='.json', delete=False) as f:
             f.write(state)
             f.seek(0)
+            f.close()
             new_net = ParserJSON().parse(f.name)
             self._c_net = new_net._c_net
             new_net.alloc = False
-            f.close()
+            os.remove(f.name)
             
     def add_var_generators(self,buses,power_capacity,power_base,power_std=0.,corr_radius=0,corr_value=0.):
         """
