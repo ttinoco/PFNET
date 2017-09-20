@@ -160,7 +160,7 @@ include_directories(${PFNET_SOURCE_DIR}/include)
 install(TARGETS pfnet pfnet_static
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
-        RUNTIME DESTINATION bin)
+        RUNTIME DESTINATION lib)
 # install header files
 install(DIRECTORY include/
         DESTINATION include

@@ -10,4 +10,6 @@ IF NOT EXIST "lib\pfnet" (
   mingw32-make -j
   mingw32-make install
   copy build\lib\* ..\..\pfnet\
+  cd  ..\..\
+  python setup.py setopt --command build -o compiler -s mingw32
 )

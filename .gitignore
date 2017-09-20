@@ -8,11 +8,14 @@
 *.art
 *.dot
 *.prof
+*.cfg
 cpfnet.c
 cpfnet.h
+*foo*
 build/
 __pycache__/
-*foo*
+
+# JSON
 temp_json.json
 
 # PyCharm Project Files
@@ -24,9 +27,6 @@ lib/*
 python/build/*
 python/pfnet/*.so
 python/lib/pfnet
-
-# pycache
-*.pyc
 
 # Tests
 tests/*.out
