@@ -9,4 +9,5 @@ IF NOT EXIST "lib\pfnet" (
   cmake -DCMAKE_INSTALL_PREFIX=.\build -G"MinGW Makefiles" -DPFNET_GRAPHVIZ=OFF -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=TRUE -DRAW_PARSER_SOURCE_DIR=%RAW_PARSER% .
   mingw32-make -j
   mingw32-make install
+  copy build\lib\* ..\..\pfnet\
 )

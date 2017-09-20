@@ -12,16 +12,21 @@ from subprocess import call
 from Cython.Build import cythonize
 from setuptools import setup, Extension
 
+# C library build
+if 'darwin' in sys.platform.lower() or 'linux' in sys.platform.lower():
+    return_code = call(["./build_lib.sh"])
+else:
+    return_code = call(["build_lib.bat"])
+if return_code != 0:
+    raise ValueError('Unable to build C library')
+
+# Extra link args
 if 'darwin' in sys.platform.lower():
     extra_link_args=['-Wl,-rpath,@loader_path/']
 elif 'linux' in sys.platform.lower():
     extra_link_args=['-Wl,-rpath=$ORIGIN']
 else:
     extra_link_args=['']
-
-return_code = call(["./build_lib.sh"])
-if return_code != 0:
-    raise ValueError('Unable to build C library')
 
 setup(name='PFNET',
       zip_safe=False,

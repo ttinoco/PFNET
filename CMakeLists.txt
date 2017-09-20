@@ -2,13 +2,6 @@ cmake_minimum_required(VERSION 3.5.0)
 project(PFNET)
 enable_testing()
 
-# example cmake usage from raw-parser directory
-# $ mkdir build
-# $ cd build
-# $ cmake -DCMAKE_INSTALL_PREFIX=../.. -DRAW_PARSER_SOURCE_DIR=../../raw-parser ..
-# $ make
-# $ ls # see libpfnet.{so,dylib} depending on configuration
-
 set(PFNET_VERSION 1.3.1)
 set(PFNET_PACKAGE "pfnet")
 set(PFNET_NAME "PFNET")
@@ -82,7 +75,6 @@ if(GRAPHVIZ_LIB)
   target_link_libraries(pfnet_static_tests gvc cgraph)
 else()
   message("Graphiz not enabled.")
-  add_definitions(-DNO_GRAPHVIZ)
 endif()
 
 # add raw-parser if specified
@@ -100,7 +92,7 @@ if(NOT ${RAW_PARSER_SOURCE_DIR} STREQUAL "")
   set(HAVE_RAW_PARSER 1)  # need to set it to 1 so that the dummy parser in pfnet does not conflict
 else()
   message("raw-parser not enabled.")
-  add_definitions(-DNO_RAW_PARSER)
+  set(HAVE_RAW_PARSER 0)
 endif()
 
 # add line-flow if specified
