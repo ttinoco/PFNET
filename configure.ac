@@ -1,7 +1,6 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-#AC_PREREQ([2.69])
 AC_INIT([PFNET], [1.3.1], [ttinoco5687@gmail.com])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_SRCDIR([src/net/net.c])
@@ -26,10 +25,13 @@ AC_CHECK_LIB(cgraph, agopen)
 AC_CHECK_HEADERS(graphviz/gvc.h)
 
 # Checks for raw parser
-AC_CHECK_FILES([$RAW_PARSER/lib/libraw_parser.so],
+AC_SUBST(rawtop_srcdir,$RAW_PARSER)
+AC_CHECK_FILES([$RAW_PARSER/src/RAW_parser.c],
 	[AC_DEFINE([HAVE_RAW_PARSER],[1],[Define to 1 if you have the raw parser library.])
-	 LDFLAGS="$LDFLAGS -L$RAW_PARSER/lib -lraw_parser -Wl,-rpath,$RAW_PARSER/lib"],
-	[AC_DEFINE([HAVE_RAW_PARSER],[0],[Define to 0 if you do not have the raw parser library.])])
+	 AM_CONDITIONAL(HAS_RAW_PARSER,true)
+	 AC_SUBST(raw_dir,$RAW_PARSER)],
+	[AC_DEFINE([HAVE_RAW_PARSER],[0],[Define to 0 if you do not have the raw parser library.])
+	 AM_CONDITIONAL(HAS_RAW_PARSER,false)])
 
 # Checks for line flow
 AC_CHECK_FILES([$LINE_FLOW/lib/libline_flow.so],

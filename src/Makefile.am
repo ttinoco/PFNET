@@ -1,16 +1,17 @@
 # Automake options
-AUTOMAKE_OPTIONS = subdir-objects
+#AUTOMAKE_OPTIONS = subdir-objects
 ACLOCAL_AMFLAGS = -I m4
 
-# local paths for includes
+# Local paths for includes
 inc_path = $(top_srcdir)/include/pfnet
 
+# Config header
 nobase_nodist_include_HEADERS = $(inc_path)/pfnet_config.h
 
-# libraries
+# Libraries
 lib_LTLIBRARIES = libpfnet.la
 
-# sources (note all headers are in $PFNET/include/pfnet)
+# PFNET sources and headers (note all headers are in $PFNET/include/pfnet)
 graph_src = 	graph/graph.c 
 
 graph_hdr = 	$(inc_path)/graph.h
@@ -138,14 +139,25 @@ other_hdr = 	$(inc_path)/array.h $(inc_path)/constants.h $(inc_path)/flag_types.
 		$(inc_path)/list.h $(inc_path)/obj_types.h $(inc_path)/types.h \
 		$(inc_path)/uthash.h $(inc_path)/pfnet.h
 
+# All sources 
 libpfnet_la_SOURCES = 	$(graph_src) $(math_src) $(net_src) $(parser_src) \
 		      	$(problem_src) $(problem_constr_src) $(problem_func_src) $(utils_src)
 
 # Have to move back a directory $PFNET/include/pfnet/*.h
 libpfnet_la_CFLAGS = -I$(inc_path)/..
-libpfnet_la_LDFLAGS = -shared # want both static and shared
+libpfnet_la_LDFLAGS = -shared
 libpfnet_la_LIBADD = -lm
 
+# All headers
 pkginclude_HEADERS = 	$(graph_hdr) $(math_hdr) $(net_hdr) $(parser_hdr) \
 			$(problem_hdr) $(problem_constr_hdr) $(problem_func_hdr) \
 			$(utils_hdr) $(other_hdr)
+
+# Raw parser
+if HAS_RAW_PARSER
+raw_inc_path = @raw_dir@/include
+raw_src = @raw_dir@/src/RAW_parser.c \
+	  @raw_dir@/src/RAW_net.c
+nodist_libpfnet_la_SOURCES = $(raw_src)
+libpfnet_la_CFLAGS +=  -I$(raw_inc_path)
+endif
