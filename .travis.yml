@@ -13,9 +13,6 @@ before_install:
     brew update;
   fi
 
-install:
-- sudo pip install -r ./python/requirements.txt
-
 script: 
 - cd python
 - sudo -E python setup.py build_ext --inplace
