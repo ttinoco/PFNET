@@ -38,7 +38,7 @@ Unreleased
 * Changed Contigency class methods to use word "generator" instead of "gen" abbreviation (done).
 * Added network getters for branch current and apparent power magnitudes (done).
 * Added cmake windows build script invokation in setup.py (done).
-* Changed autotool rules to incoporate raw_parser using conditional joint compilation of sources as oppposed to linkage with external library (done).
+* Changed autotool and cmake rules to incoporate raw_parser using conditional joint compilation of sources as oppposed to linkage with external library (done).
 * Update Python wrapper documentation to show how to install with pip or download/run tests (todo).
 * Update examples, documentation and create release (todo).
 * Distribute pfnet python wrapper through pypi (todo).
