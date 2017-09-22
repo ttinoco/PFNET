@@ -18,18 +18,11 @@ option(PFNET_GRAPHVIZ "set to ON to enable graphviz addon" ON)
 option(PFNET_LINE_FLOW "set to ON to enable line flow addon" ON)
 
 set(M_LIB,"")
-# REQUIRE MATH LIBRARY (NOT SURE IF OS SPECIFIC)
 if (UNIX)
   find_library(M_LIB m)
   set(CMAKE_REQUIRED_INCLUDES math.h)
   set(CMAKE_REQUIRED_LIBRARIES m)
 endif (UNIX)
-# CHECK_INCLUDE_FILES("math.h" HAVE_MATH_H)
-
-# RAW_PARSER_INSTALL_PREFIX
-#set(RAW_PARSER_SOURCE_DIR ""
-#    CACHE FILEPATH
-#    "path to raw-parser source directory")
 
 # find PFNET source files
 file(GLOB_RECURSE pfnet_source src/*.c)
@@ -77,23 +70,23 @@ else()
   message("Graphiz not enabled.")
 endif()
 
-# add raw-parser if specified
-#if(NOT ${RAW_PARSER_SOURCE_DIR} STREQUAL "")
-#  include_directories(${RAW_PARSER_SOURCE_DIR}/include)
-#  set(raw_parser_source ${RAW_PARSER_SOURCE_DIR}/src/RAW_net.c
-#                        ${RAW_PARSER_SOURCE_DIR}/src/RAW_parser.c)
-#  target_sources(pfnet PUBLIC ${raw_parser_source})
-#  target_sources(pfnet_static PUBLIC ${raw_parser_source})
-#  message("raw-parser enabled.")
-#  # install raw-parser headers also
-#  install(DIRECTORY ${RAW_PARSER_SOURCE_DIR}/include/
-#          DESTINATION include
-#          FILES_MATCHING PATTERN "*.h")
-#  set(HAVE_RAW_PARSER 1)  # need to set it to 1 so that the dummy parser in pfnet does not conflict
-#else()
-#  message("raw-parser not enabled.")
-#  set(HAVE_RAW_PARSER 0)
-#endif()
+# add raw-parser if available
+if(EXISTS $ENV{RAW_PARSER}/src/RAW_parser.c)
+  include_directories($ENV{RAW_PARSER}/include)
+  set(raw_parser_source $ENV{RAW_PARSER}/src/RAW_net.c
+                        $ENV{RAW_PARSER}/src/RAW_parser.c)
+  target_sources(pfnet PUBLIC ${raw_parser_source})
+  target_sources(pfnet_static PUBLIC ${raw_parser_source})
+  message("raw-parser enabled.")
+  # install raw-parser headers also
+  install(DIRECTORY $ENV{RAW_PARSER}/include/
+          DESTINATION include
+          FILES_MATCHING PATTERN "*.h")
+  set(HAVE_RAW_PARSER 1)  # need to set it to 1 so that the dummy parser in pfnet does not conflict
+else()
+  message("raw-parser not enabled.")
+  set(HAVE_RAW_PARSER 0)
+endif()
 
 # add line-flow if specified
 # if(PFNET_LINE_FLOW)
@@ -132,10 +125,6 @@ CHECK_INCLUDE_FILES("memory.h"  HAVE_MEMORY_H)
 CHECK_INCLUDE_FILES("sys/stat.h"  HAVE_SYS_STAT_H)
 CHECK_INCLUDE_FILES("sys/types.h"  HAVE_SYS_TYPES_H)
 CHECK_INCLUDE_FILES("unistd.h"  HAVE_UNISTD_H)
-
-# Checks for raw parser, not needed since adding files directly to package above
-# Option "-Wl,-rpath,$PWD/lib" needed for "make check" without LD_LIBRARY_PATH
-CHECK_LIBRARY_EXISTS(raw_parser RAW_PARSER_new "${RAW_PARSER}/lib/" HAVE_RAW_PARSER)
 
 # Checks for typedefs, structures, and compiler characteristics.
 CHECK_INCLUDE_FILES("inttypes.h" HAVE_INTTYPES_H)
