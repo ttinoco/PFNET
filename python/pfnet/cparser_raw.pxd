@@ -6,6 +6,6 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
-cdef extern from "pfnet/pfnet_config.h":
+cdef extern from "pfnet/parser_RAW.h":
 
     cdef char HAVE_RAW_PARSER
