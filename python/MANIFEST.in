@@ -1,4 +1,5 @@
 include build_lib.sh
+include build_lib.bat
 include clean.sh
 include lib/pfnet*.tar.gz
 include LICENSE.txt

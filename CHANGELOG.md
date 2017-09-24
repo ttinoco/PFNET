@@ -12,33 +12,33 @@ Unreleased
 ----------
 * Moved to setuptools (done).
 * Changed configure.ac to look for raw_parser using RAW_PARSER env variable (done).
-* Removed C lib tarball from python/docs/_static (done).
+* Removed C library tarball from python/docs/_static (done).
 * Made Python wrapper self-contained, i.e., it contains and installs the C library from a tarball in lib directory (done).
 * Updated travis instructions to directly install python wrapper (done).
 * Removed "build" script for readthedocs since it was no longer needed (done).
 * Removed setup.cfg since it was no longer needed (done).
 * Added property mask to projection operator (done).
-* Added projection getters for network and extra vars of constraints (done).
-* Made gen Qmin, Qmax writable in Python (done).
-* Added routines for extracting constraint A,J,G row info strings with format (constr_name:obj:obj_id:constr_info:time) (done).
+* Added projection getters for network and extra variables of constraints (done).
+* Made generator Qmin, Qmax writable in Python (done).
+* Added routines for extracting constraint row info strings with format (constr_name:obj:obj_id:constr_info:time) (done).
 * Made AC_FLOW_LIM constraint store row info (done).
 * Made LBOUND constraint store row info (done).
 * Updated LOAD_PF (load constant power factor) constraint to maintain sign differences of current P and Q (done).
 * Made load "set_target_power_factor" routine accept negative power factors (done).
-* Fixed memory leaks coming from "VEC_new_from_array" (done).
+* Fixed memory leaks coming from "VEC_new_from_array" in Python wrapper (done).
 * Add routines for extracting info strings about entries of var values vector (obj:obj_id:quantity:time) (done).
-* Added "v_base" field of bus structure/object to store base voltage in kv and updated all parsers to store this info (done).
+* Added "v_base" field to bus structure/object to store base voltage in kv and updated all parsers to store this info (done).
 * Made Network object pickle-able (done).
 * Added automatic enforcement of lower-triangularity of Hessian of objective functions (done).
 * Made Contingency object pickle-able (done).
 * Added test utilities in new module pfnet.tests (done).
-* Exposed component flags bit masks in Python (done).
+* Exposed component flags bit masks in Python for network comparisons (done).
 * Added network "get_copy" and "copy_from_net" routines and enhanced network comparison test utility (done).
 * Made "get_index"-type routines of network components return -1 for NULL pointers to avoid silent errors (done).
 * Changed Contigency class methods to use word "generator" instead of "gen" abbreviation (done).
 * Added network getters for branch current and apparent power magnitudes (done).
 * Added cmake windows build script invokation in setup.py (done).
-* Changed autotool and cmake rules to incoporate raw_parser using conditional joint compilation of sources as oppposed to linkage with external library (done).
+* Changed autotools and cmake rules to incoporate raw_parser using conditional joint compilation of sources as opposed to linkage with external library (done).
 * Update Python wrapper documentation to show how to install with pip or download/run tests (todo).
 * Update examples, documentation and create release (todo).
 * Distribute pfnet python wrapper through pypi (todo).

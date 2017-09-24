@@ -68,7 +68,7 @@ cdef class Network:
             self._c_net = NULL
             
         with tempfile.NamedTemporaryFile(suffix='.json', delete=False) as f:
-            f.write(state)
+            f.write(state.encode('UTF-8'))
             f.seek(0)
             f.close()
             new_net = ParserJSON().parse(f.name)
