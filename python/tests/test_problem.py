@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -591,8 +591,8 @@ class TestProblem(unittest.TestCase):
             offset = 0
             for branch in net.branches:
                 if branch.ratingA != 0.:
-                    self.assertEqual(l[net.num_vars+offset],0.)
-                    self.assertEqual(l[net.num_vars+offset+1],0.)
+                    self.assertEqual(l[net.num_vars+offset],-branch.ratingA)
+                    self.assertEqual(l[net.num_vars+offset+1],-branch.ratingA)
                     self.assertEqual(u[net.num_vars+offset],branch.ratingA)
                     self.assertEqual(u[net.num_vars+offset+1],branch.ratingA)
                     offset += 2

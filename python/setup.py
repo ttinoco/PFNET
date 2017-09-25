@@ -30,7 +30,7 @@ else:
 
 setup(name='PFNET',
       zip_safe=False,
-      version='1.3.1rc6',
+      version='1.3.1rc7',
       description='Power Flow Network Library',
       url='https://github.com/ttinoco/PFNET/python',
       author='Tomas Tinoco De Rubira',

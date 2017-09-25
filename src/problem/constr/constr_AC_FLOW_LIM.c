@@ -544,7 +544,7 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
     //**********
 
     // Extra vars
-    VEC_set(CONSTR_get_l_extra_vars(c),*J_row,0.);
+    VEC_set(CONSTR_get_l_extra_vars(c),*J_row,-BRANCH_get_ratingA(br));
     VEC_set(CONSTR_get_u_extra_vars(c),*J_row,BRANCH_get_ratingA(br));
     
     // J
@@ -556,7 +556,7 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
     MAT_set_i(G,*J_row,*J_row);
     MAT_set_j(G,*J_row,num_vars+(*J_row));
     MAT_set_d(G,*J_row,1.);
-    VEC_set(l,*J_row,0.);
+    VEC_set(l,*J_row,-BRANCH_get_ratingA(br));
     VEC_set(u,*J_row,BRANCH_get_ratingA(br));
 
     // Row info

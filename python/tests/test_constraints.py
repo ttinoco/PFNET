@@ -3991,12 +3991,13 @@ class TestConstraints(unittest.TestCase):
             self.assertTupleEqual(u.shape,(num_constr,))
             self.assertTrue(type(l) is np.ndarray)
             self.assertTupleEqual(l.shape,(num_constr,))
-            self.assertTrue(np.all(l == 0.))
             for t in range(net.num_periods):
                 for branch in net.branches:
                     i = t*net.num_branches*2+2*branch.index
                     self.assertEqual(u[i],branch.ratingA)
                     self.assertEqual(u[i+1],branch.ratingA)
+                    self.assertEqual(l[i],-branch.ratingA)
+                    self.assertEqual(l[i+1],-branch.ratingA)
 
             # Row info
             index = 0
