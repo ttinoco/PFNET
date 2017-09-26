@@ -2193,7 +2193,7 @@ class TestFunctions(unittest.TestCase):
                 for gen in net.generators:
                     P = x0[gen.index_P[t]]
                     phi += gen.cost_coeff_Q0+gen.cost_coeff_Q1*P+gen.cost_coeff_Q2*P*P
-            self.assertLess(abs(func.phi-phi),1e-8)
+            self.assertLess(abs(func.phi-phi),1e-8*(1.+np.abs(phi)))
 
     def tearDown(self):
 

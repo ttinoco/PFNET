@@ -2593,14 +2593,14 @@ class TestConstraints(unittest.TestCase):
             counter = 0
             for t in range(self.T):
                 for branch in net.branches:
-                    if branch.is_tap_changer():
+                    if branch.is_tap_changer_v():
                         sens[counter:counter+4] = branch.reg_bus.index*t
                         counter += 4
             self.assertEqual(counter,constr.f.size)
             constr.store_sensitivities(np.zeros(constr.A.shape[0]),sens,None,None)
             for t in range(self.T):
                 for branch in net.branches:
-                    if branch.is_tap_changer():
+                    if branch.is_tap_changer_v():
                         self.assertEqual(branch.reg_bus.sens_v_reg_by_tran[t],branch.reg_bus.index*t)
 
     def test_constr_REG_SHUNT(self):
