@@ -97,16 +97,16 @@ cdef class Bus:
 
         return cbus.BUS_is_slack(self._c_ptr)
         
-    def set_as_slack(self, b):
+    def set_slack_flag(self, flag):
         """
-        Set the bus to be a slack bus.
+        Sets the slack flag.
         
         Parameters
         ----------
         bool : {``True``, ``False``}
         """
 
-        cbus.BUS_set_slack(self._c_ptr, b)
+        cbus.BUS_set_slack_flag(self._c_ptr, flag)
 
     def is_regulated_by_gen(self):
         """

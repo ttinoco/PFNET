@@ -15,6 +15,7 @@
 struct Gen_outage {
   int gen_index;
   int bus_index;
+  char bus_slack_flag;
   int reg_bus_index;
   BOOL applied;
   struct Gen_outage* next;
@@ -77,6 +78,7 @@ void CONT_apply(Cont* cont, Net* net) {
 
       // Save data
       go->bus_index = BUS_get_index(bus);
+      go->bus_slack_flag = BUS_is_slack(bus);
       go->reg_bus_index = BUS_get_index(reg_bus);
       go->applied = TRUE;
 
@@ -90,6 +92,10 @@ void CONT_apply(Cont* cont, Net* net) {
       // Regulation
       GEN_set_reg_bus(gen,NULL);    // gen does not regulate reg_bus
       BUS_del_reg_gen(reg_bus,gen); // reg_bus is not regulated by gen
+
+      // Slack flag
+      if (!BUS_get_gen(bus))
+	BUS_set_slack_flag(bus,FALSE);
     }
 
     // Branches
@@ -157,7 +163,7 @@ void CONT_clear(Cont* cont, Net* net) {
       gen = NET_get_gen(net,go->gen_index);
       bus = NET_get_bus(net,go->bus_index);
       reg_bus = NET_get_bus(net,go->reg_bus_index);
-
+      
       // Outage flag
       GEN_set_outage(gen,FALSE);
 
@@ -168,6 +174,9 @@ void CONT_clear(Cont* cont, Net* net) {
       // Regulation
       GEN_set_reg_bus(gen,reg_bus); // gen does regulates reg_bus
       BUS_add_reg_gen(reg_bus,gen); // reg_bus is regulated by gen
+
+      // Slack flag
+      BUS_set_slack_flag(bus,go->bus_slack_flag);
 
       // Clear flag
       go->applied = FALSE;

@@ -685,7 +685,7 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
     HASH_FIND_STR(parser->bus_hash,art_slack->at_bus,art_bus);
     if (art_bus) {
       bus = NET_get_bus(net,art_bus->index);
-      BUS_set_slack(bus,TRUE);
+      BUS_set_slack_flag(bus,TRUE);
     }
     else {
       sprintf(parser->error_string,"unable to find slack bus %s",art_slack->at_bus);

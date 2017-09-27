@@ -332,7 +332,7 @@ void JSON_PARSER_process_json_bus_array(Parser* p, Net* net, json_value* json_bu
       
       // slack
       else if (strcmp(key,"slack") == 0)
-	BUS_set_slack(bus,val->u.boolean);
+	BUS_set_slack_flag(bus,val->u.boolean);
 	
       // price
       else if (strcmp(key,"price") == 0) {

@@ -258,7 +258,7 @@ void BUS_set_v_max_norm(Bus* bus, REAL v_max_norm);
 void BUS_set_v_min_norm(Bus* bus, REAL v_min_norm);
 void BUS_set_v_max_emer(Bus* bus, REAL v_max_emer);
 void BUS_set_v_min_emer(Bus* bus, REAL v_min_emer);
-void BUS_set_slack(Bus* bus, BOOL slack);
+void BUS_set_slack_flag(Bus* bus, BOOL slack);
 void BUS_set_index(Bus* bus, int index);
 int BUS_set_flags(void* bus, char flag_type, unsigned char mask, int index);
 void BUS_set_var_values(Bus* bus, Vec* values);

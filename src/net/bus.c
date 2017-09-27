@@ -1584,7 +1584,7 @@ void BUS_set_v_min_emer(Bus* bus, REAL v_min_emer) {
     bus->v_min_emer = v_min_emer;
 }
 
-void BUS_set_slack(Bus* bus, BOOL slack) {
+void BUS_set_slack_flag(Bus* bus, BOOL slack) {
   if (bus)
     bus->slack = slack;
 }

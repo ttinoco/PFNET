@@ -495,6 +495,70 @@ class TestContingency(unittest.TestCase):
                                        br.is_tap_changer_v(),
                                        br.is_tap_changer_Q()))
 
+    def test_slack_outages(self):
+
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case)
+
+            generators = []
+            slack_buses = []
+            for bus in net.buses:
+                if bus.is_slack():
+                    generators += bus.generators
+                    slack_buses.append(bus)
+
+            self.assertGreater(len(generators),0)
+            self.assertGreater(len(slack_buses),0)
+                    
+            c = pf.Contingency(generators=generators)
+
+            c.apply(net)
+
+            self.assertEqual(net.get_num_gens_not_on_outage(),net.num_generators-len(generators))
+
+            self.assertTrue(all([not g.is_slack() for g in generators]))
+            self.assertTrue(all([not b.is_slack() for b in slack_buses]))
+
+            c.clear(net)
+
+            self.assertEqual(net.get_num_gens_not_on_outage(),net.num_generators)
+
+            self.assertTrue(all([g.is_slack() for g in generators]))
+            self.assertTrue(all([b.is_slack() for b in slack_buses]))
+
+            for bus in net.buses:
+                if bus.is_slack() and len(bus.generators) > 1:
+                    print case, len(bus.generators)
+                    contingencies = []
+                    generators = bus.generators
+                    self.assertTrue(bus.is_slack())
+                    for i in range(len(generators)):
+                        gen = generators[i]
+                        c = pf.Contingency(generators=[gen])
+                        contingencies.append(c)
+                        self.assertTrue(gen.is_slack())
+                        c.apply(net)
+                        self.assertFalse(gen.is_slack())
+                        if i == len(generators)-1:
+                            self.assertFalse(bus.is_slack())
+                        else:
+                            self.assertTrue(bus.is_slack())
+                    self.assertFalse(bus.is_slack())
+                    self.assertTrue(all([not g.is_slack for g in bus.generators]))
+                    for i in range(len(generators)):
+                        c = contingencies[i]
+                        gen = generators[i]
+                        self.assertFalse(gen.is_slack())
+                        if i == 0:
+                            self.assertFalse(bus.is_slack())
+                        else:
+                            self.assertTrue(bus.is_slack())
+                        c.clear(net)
+                        self.assertTrue(gen.is_slack())
+                    self.assertTrue(bus.is_slack())
+                    self.assertTrue(all([g.is_slack for g in bus.generators]))
+
     def test_gen_cost(self):
 
         for case in test_cases.CASES:
