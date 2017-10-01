@@ -969,7 +969,6 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       VARGEN_set_Q(vargen,art_vargen->q/parser->base_power,0);      // per unit
       VARGEN_set_Q_max(vargen,art_vargen->qmax/parser->base_power); // per unit
       VARGEN_set_Q_min(vargen,art_vargen->qmin/parser->base_power); // per unit
-      NET_vargen_hash_name_add(net,vargen);
     }
     else {
       sprintf(parser->error_string,"unable to find var-generator bus %s",art_vargen->bus);

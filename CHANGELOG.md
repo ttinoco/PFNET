@@ -40,7 +40,8 @@ Unreleased
 * Added cmake windows build script invokation in setup.py (done).
 * Changed autotools and cmake rules to incoporate raw_parser using conditional joint compilation of sources as opposed to linkage with external library (done).
 * Changed slack limits in branch flow constraints from [0,thermal_rating] to [-thermal_rating,thermal_rating] (done).
-* Improved contingency to disable slack bus if all its generators are on outage (done).	
+* Improved contingency to disable slack bus if all its generators are on outage (done).
+* Added name attributes to all bus-connected components and removed vargens name hash (todo).
 * Update Python wrapper documentation to show how to install with pip or download/run tests (todo).
 * Update examples, documentation and create release (todo).
 * Distribute pfnet python wrapper through pypi (todo).

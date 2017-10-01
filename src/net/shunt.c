@@ -16,14 +16,17 @@
 struct Shunt {
   
   // Bus
-  Bus* bus;       /**< @brief Bus where the shunt is connected */
-  Bus* reg_bus;   /**< @brief Bus regulated by this shunt */
+  Bus* bus;          /**< @brief Bus where the shunt is connected */
+  Bus* reg_bus;      /**< @brief Bus regulated by this shunt */
 
   // Times
   int num_periods;   /**< @brief Number of time periods. */
 
+  // Properties
+  char name[SHUNT_BUFFER_SIZE]; /**< @brief Shunt name */
+
   // Conductance
-  REAL g;         /**< @brief Conductance (p.u) */
+  REAL g;            /**< @brief Conductance (p.u) */
 
   // Susceptance
   REAL* b;           /**< @brief Susceptance (p.u.) */
@@ -75,6 +78,7 @@ Shunt* SHUNT_array_new(int size, int num_periods) {
     for (i = 0; i < size; i++) {
       SHUNT_init(&(shunt_array[i]),num_periods);
       SHUNT_set_index(&(shunt_array[i]),i);
+      snprintf(shunt_array[i].name,(size_t)(SHUNT_BUFFER_SIZE-1),"SHUNT %d",i);
     }
     return shunt_array;
   }
@@ -123,6 +127,9 @@ void SHUNT_copy_from_shunt(Shunt* shunt, Shunt* other) {
 
   // Times
   // skip num periods
+
+  // Properties
+  strcpy(shunt->name,other->name);
 
   // Conductance
   shunt->g = other->g;
@@ -176,6 +183,13 @@ char SHUNT_get_flags_sparse(Shunt* shunt) {
     return shunt->sparse;
   else
     return 0;
+}
+
+char* SHUNT_get_name(Shunt* shunt) {
+  if (shunt)
+    return shunt->name;
+  else
+    return NULL;
 }
 
 int SHUNT_get_num_periods(Shunt* shunt) {
@@ -409,6 +423,7 @@ char* SHUNT_get_json_string(Shunt* shunt, char* output) {
   JSON_obj(temp,output,"bus",shunt->bus,BUS_get_index,FALSE);
   JSON_obj(temp,output,"reg_bus",shunt->reg_bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",shunt->num_periods,FALSE);
+  JSON_str(temp,output,"name",shunt->name,FALSE);
   JSON_float(temp,output,"g",shunt->g,FALSE);
   JSON_array_float(temp,output,"b",shunt->b,shunt->num_periods,FALSE);
   JSON_float(temp,output,"b_max",shunt->b_max,FALSE);
@@ -461,7 +476,8 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
 
   T = num_periods;
   shunt->num_periods = num_periods;
- 
+  ARRAY_clear(shunt->name,char,SHUNT_BUFFER_SIZE);
+  
   shunt->bus = NULL;
   shunt->reg_bus = NULL;
   shunt->g = 0;
@@ -530,6 +546,11 @@ Shunt* SHUNT_new(int num_periods) {
   }
   else
     return NULL;
+}
+
+void SHUNT_set_name(Shunt* shunt, char* name) {
+  if (shunt)
+    strncpy(shunt->name,name,(size_t)(SHUNT_BUFFER_SIZE-1));
 }
 
 void SHUNT_set_bus(Shunt* shunt, Bus* bus) { 

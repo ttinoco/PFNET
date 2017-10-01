@@ -36,8 +36,9 @@ class TestJSON(unittest.TestCase):
                 self.assertTrue(valid_json)
 
                 # Detailed checks
-                self.assertEqual(json_model['index'],bus.index)
-                self.assertEqual(json_model['v_base'],bus.v_base)
+                self.assertEqual(json_model['index'], bus.index)
+                self.assertEqual(json_model['v_base'], bus.v_base)
+                self.assertEqual(json_model['name'], bus.name)
                 # Add more
 
     def test_branch_json_string(self):
@@ -59,6 +60,7 @@ class TestJSON(unittest.TestCase):
 
                 # Detailed checks
                 self.assertEqual(json_model['index'],branch.index)
+                self.assertEqual(json_model['name'], branch.name)
                 # Add more
 
     def test_load_json_string(self):
@@ -80,6 +82,7 @@ class TestJSON(unittest.TestCase):
 
                 # Detailed checks
                 self.assertEqual(json_model['index'],load.index)
+                self.assertEqual(json_model['name'], load.name)
                 # Add more
 
     def test_gen_json_string(self):
@@ -101,6 +104,7 @@ class TestJSON(unittest.TestCase):
 
                 # Detailed checks
                 self.assertEqual(json_model['index'],gen.index)
+                self.assertEqual(json_model['name'], gen.name)
                 # Add more
 
     def test_shunt_json_string(self):
@@ -122,6 +126,7 @@ class TestJSON(unittest.TestCase):
 
                 # Detailed checks
                 self.assertEqual(json_model['index'],shunt.index)
+                self.assertEqual(json_model['name'], shunt.name)
                 # Add more
 
     def test_vargen_json_string(self):
@@ -146,6 +151,7 @@ class TestJSON(unittest.TestCase):
 
                 # Detailed checks
                 self.assertEqual(json_model['index'],gen.index)
+                self.assertEqual(json_model['name'], gen.name)
                 # Add more
 
     def test_bat_json_string(self):
@@ -170,6 +176,7 @@ class TestJSON(unittest.TestCase):
 
                 # Detailed checks
                 self.assertEqual(json_model['index'],bat.index)
+                self.assertEqual(json_model['name'], bat.name)
                 # Add more
 
     def test_net_json_string(self):

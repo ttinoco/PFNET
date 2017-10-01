@@ -90,6 +90,7 @@ char BRANCH_get_flags_fixed(Branch* br);
 char BRANCH_get_flags_bounded(Branch* br);
 char BRANCH_get_flags_sparse(Branch* br);
 
+char* BRANCH_get_name(Branch* br);
 int BRANCH_get_num_periods(Branch* br);
 char BRANCH_get_type(Branch* br);
 char BRANCH_get_obj_type(void* br);
@@ -170,7 +171,8 @@ Branch* BRANCH_list_m_del(Branch* m_br_list, Branch* br);
 int BRANCH_list_m_len(Branch* m_br_list);
 Branch* BRANCH_new(int num_periods);
 void BRANCH_propagate_data_in_time(Branch* br, int start, int end);
-void BRANCH_set_outage(Branch* branch, BOOL outage);
+void BRANCH_set_name(Branch* br, char* name);
+void BRANCH_set_outage(Branch* br, BOOL outage);
 void BRANCH_set_sens_P_u_bound(Branch* br, REAL value, int t);
 void BRANCH_set_sens_P_l_bound(Branch* br, REAL value, int t);
 void BRANCH_set_index(Branch* br, int index);

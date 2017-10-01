@@ -66,6 +66,7 @@ char LOAD_get_flags_fixed(Load* load);
 char LOAD_get_flags_bounded(Load* load);
 char LOAD_get_flags_sparse(Load* load);
 
+char* LOAD_get_name(Load* load);
 int LOAD_get_num_periods(Load* load);
 REAL LOAD_get_sens_P_u_bound(Load* load, int t);
 REAL LOAD_get_sens_P_l_bound(Load* load, int t);
@@ -99,6 +100,7 @@ Load* LOAD_list_add(Load *load_list, Load* load);
 int LOAD_list_len(Load* load_list);
 Load* LOAD_new(int num_periods);
 void LOAD_propagate_data_in_time(Load* load, int start, int end);
+void LOAD_set_name(Load* load, char* name);
 void LOAD_set_target_power_factor(Load* load, REAL pf);
 void LOAD_set_sens_P_u_bound(Load* load, REAL value, int t);
 void LOAD_set_sens_P_l_bound(Load* load, REAL value, int t);

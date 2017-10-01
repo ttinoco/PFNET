@@ -18,6 +18,7 @@ struct Branch {
 
   // Properties
   char type;         /**< @brief %Branch type */
+  char name[BRANCH_BUFFER_SIZE]; /**< @brief Branch name */
 
   // Times
   int num_periods;   /**< @brief Number of time periods. */
@@ -113,6 +114,7 @@ Branch* BRANCH_array_new(int size, int num_periods) {
     for (i = 0; i < size; i++) {
       BRANCH_init(&(br_array[i]),num_periods);
       BRANCH_set_index(&(br_array[i]),i);
+      snprintf(br_array[i].name,(size_t)(BRANCH_BUFFER_SIZE-1),"BRANCH %d",i);
     }
     return br_array;
   }
@@ -168,6 +170,7 @@ void BRANCH_copy_from_branch(Branch* br, Branch* other) {
 
   // Properties
   br->type = other->type;
+  strcpy(br->name,other->name);
 
   // Time
   // skip time
@@ -254,6 +257,13 @@ char BRANCH_get_flags_sparse(Branch* br) {
     return br->sparse;
   else
     return 0;
+}
+
+char* BRANCH_get_name(Branch* br) {
+  if (br)
+    return br->name;
+  else
+    return NULL;
 }
 
 int BRANCH_get_num_periods(Branch* br) {
@@ -1091,6 +1101,7 @@ char* BRANCH_get_json_string(Branch* branch, char* output) {
   JSON_int(temp,output,"index",branch->index,FALSE);
   JSON_int(temp,output,"type",branch->type,FALSE);
   JSON_int(temp,output,"num_periods",branch->num_periods,FALSE);
+  JSON_str(temp,output,"name",branch->name,FALSE);
   JSON_obj(temp,output,"bus_k",branch->bus_k,BUS_get_index,FALSE);
   JSON_obj(temp,output,"bus_m",branch->bus_m,BUS_get_index,FALSE);
   JSON_obj(temp,output,"reg_bus",branch->reg_bus,BUS_get_index,FALSE);
@@ -1176,6 +1187,7 @@ void BRANCH_init(Branch* br, int num_periods) {
   br->num_periods = num_periods;
 
   br->type = BRANCH_TYPE_LINE;
+  ARRAY_clear(br->name,char,BRANCH_BUFFER_SIZE);
 
   br->bus_k = NULL;
   br->bus_m = NULL;
@@ -1339,6 +1351,11 @@ Branch* BRANCH_new(int num_periods) {
   }
   else
     return NULL;
+}
+
+void BRANCH_set_name(Branch* br, char* name) {
+  if (br)
+    strncpy(br->name,name,(size_t)(BRANCH_BUFFER_SIZE-1));
 }
 
 void BRANCH_set_sens_P_u_bound(Branch* br, REAL value, int t) {

@@ -26,7 +26,7 @@ cdef extern from "pfnet/shunt.h":
     char SHUNT_get_flags_bounded(Shunt* shunt)
     char SHUNT_get_flags_sparse(Shunt* shunt)
 
-    
+    char* SHUNT_get_name(Shunt* shunt)    
     int SHUNT_get_num_periods(Shunt* shunt)
     char SHUNT_get_obj_type(void* shunt)
     int SHUNT_get_index(Shunt* shunt)
@@ -48,6 +48,7 @@ cdef extern from "pfnet/shunt.h":
     bint SHUNT_has_flags(Shunt* shunt, char flag_type, char mask)
     Shunt* SHUNT_new(int num_periods)
     Shunt* SHUNT_array_new(int size, int num_periods)
+    void SHUNT_set_name(Shunt* shunt, char* name)
     void SHUNT_set_bus(Shunt* shunt, Bus* bus)
     void SHUNT_set_reg_bus(Shunt* shunt, Bus* reg_bus)
     void SHUNT_set_g(Shunt* shunt, REAL g)

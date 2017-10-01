@@ -614,6 +614,12 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(gen.obj_type,'generator')
                 self.assertNotEqual(gen.obj_type,'unknown')
 
+                # name
+                if not case.endswith('raw'):
+                    self.assertEqual(gen.name, 'GEN %d' %gen.index)
+                gen.name = 'some name'
+                self.assertEqual(gen.name, 'some name')
+
                 # slack
                 if gen.is_slack():
                     self.assertTrue(gen.is_regulator())
@@ -765,6 +771,12 @@ class TestNetwork(unittest.TestCase):
                 # obj type
                 self.assertEqual(branch.obj_type,'branch')
                 self.assertNotEqual(branch.obj_type,'unknown')
+
+                # name
+                if not case.endswith('raw'):
+                    self.assertEqual(branch.name, 'BRANCH %d' %branch.index)
+                branch.name = 'some name'
+                self.assertEqual(branch.name, 'some name')
 
                 self.assertEqual(branch.index,net.branches[i].index)
 
@@ -1027,8 +1039,13 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(shunt.obj_type,'shunt')
                 self.assertNotEqual(shunt.obj_type,'unknown')
 
-                self.assertEqual(shunt.index,i)
+                # name
+                if not case.endswith('raw'):
+                    self.assertEqual(shunt.name, 'SHUNT %d' %shunt.index)
+                shunt.name = 'some name'
+                self.assertEqual(shunt.name, 'some name')
 
+                self.assertEqual(shunt.index,i)
                 self.assertEqual(shunt.index,net.shunts[i].index)
 
                 self.assertTrue(shunt.bus)
@@ -1123,8 +1140,13 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(load.obj_type,'load')
                 self.assertNotEqual(load.obj_type,'unknown')
 
-                self.assertEqual(load.index,i)
+                # name
+                if not case.endswith('raw'):
+                    self.assertEqual(load.name, 'LOAD %d' %load.index)
+                load.name = 'some name'
+                self.assertEqual(load.name, 'some name')
 
+                self.assertEqual(load.index,i)
                 self.assertEqual(load.index,net.loads[i].index)
 
                 self.assertTrue(load.bus)
@@ -1273,10 +1295,9 @@ class TestNetwork(unittest.TestCase):
             # Existing vargens
             for vg in net.var_generators:
                 self.assertTrue(isinstance(vg.name,str) or isinstance(vg.name,unicode))
-                self.assertEqual(net.get_var_generator_by_name(vg.name).name,vg.name)
+                self.assertEqual(vg.name, "VARGEN %d" %vg.index)
                 vg.name = "some vargen"
                 self.assertEqual(vg.name,"some vargen")
-                self.assertRaises(pf.NetworkError,net.get_var_generator_by_name,vg.name)
 
             # Add vargens (defaults)
             net.add_var_generators(net.get_load_buses(),80.,50.)
@@ -1297,13 +1318,18 @@ class TestNetwork(unittest.TestCase):
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len(load_buses))
             for i in range(net.num_var_generators):
+
                 vargen = net.get_var_generator(i)
                 self.assertEqual(vargen.index,i)
                 self.assertEqual(vargen.obj_type,'variable generator')
                 self.assertNotEqual(vargen.obj_type,'unknown')
+
+                # name
                 self.assertTrue(isinstance(vargen.name,str) or isinstance(vargen.name,unicode))
-                self.assertEqual(vargen.name,"VARGEN %d" %(vargen.index+1))
-                self.assertEqual(net.get_var_generator_by_name(vargen.name).name,vargen.name)
+                self.assertEqual(vargen.name,"VARGEN %d" %vargen.index)
+                vargen.name = 'some name'
+                self.assertEqual(vargen.name,"some name")
+
                 self.assertEqual(vargen.P,0.5*vargen.P_max)
                 self.assertEqual(vargen.P_ava,0.5*vargen.P_max)
                 self.assertEqual(vargen.P_max,0.8*total_load/net.num_var_generators)
@@ -1539,6 +1565,11 @@ class TestNetwork(unittest.TestCase):
                 # obj type
                 self.assertEqual(bat.obj_type,'battery')
                 self.assertNotEqual(bat.obj_type,'unknown')
+
+                # name
+                self.assertEqual(bat.name, 'BATTERY %d' %bat.index)
+                bat.name = 'some name'
+                self.assertEqual(bat.name, 'some name')
 
                 self.assertEqual(bat.index,i)
                 self.assertEqual(bat.index,net.batteries[i].index)
@@ -1878,8 +1909,7 @@ class TestNetwork(unittest.TestCase):
             netMP.add_var_generators(netMP.get_load_buses(),80.,50.,30.,5,0.05)
             for vargen in net.var_generators:
                 self.assertTrue(isinstance(vargen.name,str) or isinstance(vargen.name,unicode))
-                self.assertEqual(vargen.name,"VARGEN %d" %(vargen.index+1))
-                self.assertEqual(net.get_var_generator_by_name(vargen.name).name,vargen.name)
+                self.assertEqual(vargen.name,"VARGEN %d" %(vargen.index))
                 vargen.P = 1.
                 vargen.Q = 2.
                 self.assertGreater(len(vargen.bus.loads),0)
@@ -3806,8 +3836,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.num_var_generators,len([b for b in net.buses if b.generators]))
             for vg in net.var_generators:
                 self.assertTrue(isinstance(vg.name,str) or isinstance(vg.name,unicode))
-                self.assertEqual(vg.name,"VARGEN %d" %(vg.index+1))
-                self.assertEqual(net.get_var_generator_by_name(vg.name).name,vg.name)
+                self.assertEqual(vg.name,"VARGEN %d" %(vg.index))
                 self.assertEqual(vg.P,0.5*vg.P_max)
                 self.assertEqual(vg.P_ava,0.5*vg.P_max)
                 self.assertEqual(vg.P_min,0)
@@ -3872,7 +3901,6 @@ class TestNetwork(unittest.TestCase):
             net.add_var_generators(gen_buses,80.,50.,30.,5,0.05)
             self.assertEqual(net.num_var_generators,len([b for b in net.buses if b.generators]))
             for vg in net.var_generators:
-                self.assertEqual(net.get_var_generator_by_name(vg.name).name,vg.name)
                 self.assertEqual(vg.P_min,0)
                 self.assertEqual(vg.P_max,0.8*total_load/net.num_var_generators)
                 self.assertGreater(len(vg.bus.generators),0)

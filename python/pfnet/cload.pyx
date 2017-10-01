@@ -155,6 +155,14 @@ cdef class Load:
 
         cload.LOAD_set_Q(self._c_ptr,Q,t)
 
+    property name:
+        """ Load name (string). """
+        def __get__(self):
+            return cload.LOAD_get_name(self._c_ptr).decode('UTF-8')
+        def __set__(self,name):
+            name = name.encode('UTF-8')
+            cload.LOAD_set_name(self._c_ptr,name)
+
     property num_periods:
         """ Number of time periods (int). """
         def __get__(self): return cload.LOAD_get_num_periods(self._c_ptr)

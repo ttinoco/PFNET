@@ -32,6 +32,7 @@ cdef extern from "pfnet/gen.h":
     char GEN_get_flags_bounded(Gen* gen)
     char GEN_get_flags_sparse(Gen* gen)
 
+    char* GEN_get_name(Gen* gen)
     REAL GEN_get_sens_P_u_bound(Gen* gen, int t)
     REAL GEN_get_sens_P_l_bound(Gen* gen, int t)
     REAL GEN_get_P_cost(Gen* gen, int t)
@@ -65,6 +66,7 @@ cdef extern from "pfnet/gen.h":
     bint GEN_has_flags(Gen* gen, char flag_type, char mask)
     Gen* GEN_new(int num_periods)
     Gen* GEN_array_new(int size, int num_periods)
+    void GEN_set_name(Gen* gen, char* name)
     void GEN_set_bus(Gen* gen, Bus* bus)
     void GEN_set_reg_bus(Gen* gen, Bus* reg_bus)
     void GEN_set_P(Gen* gen, REAL P, int t)

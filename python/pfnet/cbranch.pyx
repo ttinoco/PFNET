@@ -648,6 +648,14 @@ cdef class Branch:
         else:
             return np.array(r)
 
+    property name:
+        """ Branch name (string). """
+        def __get__(self):
+            return cbranch.BRANCH_get_name(self._c_ptr).decode('UTF-8')
+        def __set__(self,name):
+            name = name.encode('UTF-8')
+            cbranch.BRANCH_set_name(self._c_ptr,name)
+
     property num_periods:
         """ Number of time periods (int). """
         def __get__(self): return cbranch.BRANCH_get_num_periods(self._c_ptr)

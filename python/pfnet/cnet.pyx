@@ -303,26 +303,6 @@ cdef class Network:
         else:
             raise NetworkError('bus not found')
 
-    def get_var_generator_by_name(self,name):
-        """
-        Gets variable generator with the given name.
-
-        Parameters
-        ----------
-        name : string
-
-        Returns
-        -------
-        vargen : :class:`VarGenerator <pfnet.VarGenerator>`
-        """
-
-        name = name.encode('UTF-8')
-        ptr = cnet.NET_vargen_hash_name_find(self._c_net,name)
-        if ptr is not NULL:
-            return new_VarGenerator(ptr)
-        else:
-            raise NetworkError('vargen not found')
-
     def get_bus(self,index):
         """
         Gets bus with the given index.
@@ -1081,16 +1061,11 @@ cdef class Network:
         Update the bus name and number hash lists.
         """
         cdef Bus cb
-        cdef VarGenerator cvg
 
         for bus in self.buses:
             cb = bus
             cnet.NET_bus_hash_number_add(self._c_net,cb._c_ptr)
             cnet.NET_bus_hash_name_add(self._c_net,cb._c_ptr)
-
-        for vg in self.var_generators:
-            cvg = vg
-            cnet.NET_vargen_hash_name_add(self._c_net,cvg._c_ptr)
 
     property error_string:
         """ Error string (string). """

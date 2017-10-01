@@ -40,6 +40,7 @@ cdef extern from "pfnet/branch.h":
     char BRANCH_get_flags_bounded(Branch* br)
     char BRANCH_get_flags_sparse(Branch* br)
 
+    char* BRANCH_get_name(Branch* br)
     REAL BRANCH_get_sens_P_u_bound(Branch* br, int t)
     REAL BRANCH_get_sens_P_l_bound(Branch* br, int t)
     char BRANCH_get_obj_type(void* br)
@@ -105,6 +106,7 @@ cdef extern from "pfnet/branch.h":
     Branch* BRANCH_new(int num_periods)
     Branch* BRANCH_array_new(int size, int num_periods)
     void BRANCH_array_show(Branch* br_array, int size, int t)
+    void BRANCH_set_name(Branch* br, char* name)
     void BRANCH_set_type(Branch* br, int type)
     void BRANCH_set_bus_k(Branch* br, Bus* bus_k)
     void BRANCH_set_bus_m(Branch* br, Bus* bus_m)

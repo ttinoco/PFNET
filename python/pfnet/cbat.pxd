@@ -24,7 +24,8 @@ cdef extern from "pfnet/bat.h":
     char BAT_get_flags_fixed(Bat* bat)
     char BAT_get_flags_bounded(Bat* bat)
     char BAT_get_flags_sparse(Bat* bat)
-    
+
+    char* BAT_get_name(Bat* bat)
     char BAT_get_obj_type(void* bat)
     int BAT_get_num_periods(Bat* bat)
     int BAT_get_index(Bat* bat)
@@ -47,6 +48,7 @@ cdef extern from "pfnet/bat.h":
     bint BAT_has_flags(Bat* bat, char flag_type, char mask)
     Bat* BAT_new(int num_periods)
     Bat* BAT_array_new(int size, int num_periods)
+    void BAT_set_name(Bat* bat, char* name)
     void BAT_set_P(Bat* bat, REAL P, int t)
     void BAT_set_P_min(Bat* bat, REAL P_min)
     void BAT_set_P_max(Bat* bat, REAL P_max)

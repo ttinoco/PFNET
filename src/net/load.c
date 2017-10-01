@@ -19,7 +19,10 @@ struct Load {
   Bus* bus;            /**< @brief Bus to which the load is connected */
 
   // Times
-  int num_periods;   /**< @brief Number of time periods. */
+  int num_periods;     /**< @brief Number of time periods. */
+
+  // Properties
+  char name[LOAD_BUFFER_SIZE]; /**< @brief Load name */
   
   // Flags
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
@@ -89,6 +92,7 @@ Load* LOAD_array_new(int size, int num_periods) {
     for (i = 0; i < size; i++) {
       LOAD_init(&(load_array[i]),num_periods);
       LOAD_set_index(&(load_array[i]),i);
+      snprintf(load_array[i].name,(size_t)(LOAD_BUFFER_SIZE-1),"LOAD %d",i);
     }
     return load_array;
   }
@@ -147,6 +151,9 @@ void LOAD_copy_from_load(Load* load, Load* other) {
 
   // Times
   // skip num periods
+
+  // Properties
+  strcpy(load->name,other->name);
 
   // Flags
   load->fixed = other->fixed;
@@ -209,6 +216,13 @@ char LOAD_get_flags_sparse(Load* load) {
     return load->sparse;
   else
     return 0;
+}
+
+char* LOAD_get_name(Load* load) {
+  if (load)
+    return load->name;
+  else
+    return NULL;
 }
 
 int LOAD_get_num_periods(Load* load) {
@@ -526,6 +540,7 @@ char* LOAD_get_json_string(Load* load, char* output) {
   JSON_int(temp,output,"index",load->index,FALSE);
   JSON_obj(temp,output,"bus",load->bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",load->num_periods,FALSE);
+  JSON_str(temp,output,"name",load->name,FALSE);
   JSON_array_float(temp,output,"P",load->P,load->num_periods,FALSE);
   JSON_array_float(temp,output,"P_max",load->P_max,load->num_periods,FALSE);
   JSON_array_float(temp,output,"P_min",load->P_min,load->num_periods,FALSE);
@@ -581,7 +596,8 @@ void LOAD_init(Load* load, int num_periods) {
 
   T = num_periods;
   load->num_periods = num_periods;
-    
+  ARRAY_clear(load->name,char,LOAD_BUFFER_SIZE);
+  
   load->bus = NULL;
   
   load->fixed = 0x00;
@@ -641,6 +657,11 @@ Load* LOAD_new(int num_periods) {
   }
   else
     return NULL;
+}
+
+void LOAD_set_name(Load* load, char* name) {
+  if (load)
+    strncpy(load->name,name,(size_t)(LOAD_BUFFER_SIZE-1));
 }
 
 void LOAD_set_target_power_factor(Load* load, REAL pf) {
