@@ -199,10 +199,8 @@ cdef class Load:
             return new_Bus(cload.LOAD_get_bus(self._c_ptr))
         def __set__(self,bus):
             cdef Bus cbus
-            
             if not isinstance(bus,Bus):
                 raise LoadError('Not a Bus type object')
-                
             cbus = bus
             cload.LOAD_set_bus(self._c_ptr,cbus._c_ptr)
 

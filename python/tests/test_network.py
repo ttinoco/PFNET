@@ -4040,22 +4040,26 @@ class TestNetwork(unittest.TestCase):
 
             pf.tests.utils.compare_networks(self,net1,net2,True)
             
-    def test_network_creation(self):
+    def test_python_network_creation(self):
         
-        # Single period
+        # Multi-period
         for case in test_cases.CASES:
 
-            # original network
-            orig_net = pf.Network(num_periods=1)
-            orig_net = pf.Parser(case).parse(case)
+            # Original network
+            orig_net = pf.Parser(case).parse(case, num_periods=2)
+
+            # Add vargens and batteries
+            orig_net.add_var_generators(orig_net.get_load_buses(),100.,50.,30.,5,0.05)
+            orig_net.add_batteries(orig_net.get_generator_buses(),20.,50.)
+            self.assertGreater(orig_net.num_var_generators,0)
+            self.assertGreater(orig_net.num_batteries,0)
             
-            # network to copy to
+            # Network to copy to
             copy_net = pf.Network(num_periods=orig_net.num_periods)
-            copy_net.clear_properties()
             
-            self.assertEqual(copy_net.num_periods,1)
+            self.assertEqual(copy_net.num_periods,2)
             
-            # test allocated arrays
+            # Test allocated arrays
             copy_net.set_bus_array(orig_net.num_buses)
             copy_net.set_gen_array(orig_net.num_generators)
             copy_net.set_shunt_array(orig_net.num_shunts)
@@ -4064,82 +4068,39 @@ class TestNetwork(unittest.TestCase):
             copy_net.set_vargen_array(orig_net.num_var_generators)
             copy_net.set_battery_array(orig_net.num_batteries)
             
-            self.assertEqual(copy_net.num_buses,orig_net.num_buses)
-            self.assertEqual(copy_net.num_generators,orig_net.num_generators)
-            self.assertEqual(copy_net.num_shunts,orig_net.num_shunts)
-            self.assertEqual(copy_net.num_loads,orig_net.num_loads)
-            self.assertEqual(copy_net.num_branches,orig_net.num_branches)
-            self.assertEqual(copy_net.num_var_generators,orig_net.num_var_generators)
-            self.assertEqual(copy_net.num_batteries,orig_net.num_batteries)
-            
             # Buses (must be first)
             for i in range(copy_net.num_buses):
                 
                 copy_bus = copy_net.buses[i]
                 orig_bus = orig_net.buses[i]
                 
-                copy_bus.number      = orig_bus.number
-                copy_bus.name        = orig_bus.name
-                copy_bus.price       = orig_bus.price
-                copy_bus.v_base      = orig_bus.v_base
-                copy_bus.v_mag       = orig_bus.v_mag
-                copy_bus.v_ang       = orig_bus.v_ang
-                copy_bus.v_set       = orig_bus.v_set
-                copy_bus.v_max       = orig_bus.v_max
-                copy_bus.v_min       = orig_bus.v_min
-                copy_bus.v_max_reg   = orig_bus.v_max_reg
-                copy_bus.v_min_reg   = orig_bus.v_min_reg
-                copy_bus.v_max_norm  = orig_bus.v_max_norm
-                copy_bus.v_min_norm  = orig_bus.v_min_norm
-                copy_bus.v_max_emer  = orig_bus.v_max_emer
-                copy_bus.v_min_emer  = orig_bus.v_min_emer
+                copy_bus.number = orig_bus.number
+                copy_bus.name = orig_bus.name
+                copy_bus.price = orig_bus.price
+                copy_bus.v_base = orig_bus.v_base
+                copy_bus.v_mag = orig_bus.v_mag
+                copy_bus.v_ang = orig_bus.v_ang
+                copy_bus.v_set = orig_bus.v_set
+                copy_bus.v_max = orig_bus.v_max
+                copy_bus.v_min = orig_bus.v_min
+                copy_bus.v_max_reg = orig_bus.v_max_reg
+                copy_bus.v_min_reg = orig_bus.v_min_reg
+                copy_bus.v_max_norm = orig_bus.v_max_norm
+                copy_bus.v_min_norm = orig_bus.v_min_norm
+                copy_bus.v_max_emer = orig_bus.v_max_emer
+                copy_bus.v_min_emer = orig_bus.v_min_emer
                 copy_bus.set_slack_flag(orig_bus.is_slack())
 
-                self.assertEqual(copy_bus.index,
-                                 orig_bus.index)
-                self.assertEqual(copy_bus.number,
-                                 orig_bus.number)
-                self.assertEqual(copy_bus.name,
-                                 orig_bus.name)
-                self.assertEqual(copy_bus.price,
-                                 orig_bus.price)
-                self.assertEqual(copy_bus.v_base,
-                                 orig_bus.v_base)
-                self.assertEqual(copy_bus.v_mag,
-                                 orig_bus.v_mag)
-                self.assertEqual(copy_bus.v_ang,
-                                 orig_bus.v_ang)
-                self.assertEqual(copy_bus.v_set,
-                                 orig_bus.v_set)
-                self.assertEqual(copy_bus.v_max,
-                                 orig_bus.v_max)
-                self.assertEqual(copy_bus.v_min,
-                                 orig_bus.v_min)
-                self.assertEqual(copy_bus.v_max_reg,
-                                 orig_bus.v_max_reg)
-                self.assertEqual(copy_bus.v_min_reg,
-                                 orig_bus.v_min_reg)
-                self.assertEqual(copy_bus.v_max_norm,
-                                 orig_bus.v_max_norm)
-                self.assertEqual(copy_bus.v_min_norm,
-                                 orig_bus.v_min_norm)
-                self.assertEqual(copy_bus.v_max_emer,
-                                 orig_bus.v_max_emer)
-                self.assertEqual(copy_bus.v_min_emer,
-                                 orig_bus.v_min_emer)
-                self.assertEqual(copy_bus.num_periods,
-                                 orig_bus.num_periods)
-                self.assertEqual(copy_bus.is_slack(),
-                                 orig_bus.is_slack())
-
-            # update hash tables, important
+            # Update hash tables, important
             copy_net.update_hashes()
             
-            # generators
+            # Generators
             for i in range(copy_net.num_generators):
                 
                 copy_gen = copy_net.generators[i]
                 orig_gen = orig_net.generators[i]
+
+                copy_gen.name = orig_gen.name
                 
                 copy_gen.bus = copy_net.get_bus_by_number(orig_gen.bus.number)
                 copy_gen.bus.add_generator(copy_gen)
@@ -4149,100 +4110,44 @@ class TestNetwork(unittest.TestCase):
                     copy_gen.reg_bus.add_reg_generator(copy_gen)
                 except pf.BusError as e:
                     pass
-                copy_gen.P       = orig_gen.P
-                copy_gen.P_max   = orig_gen.P_max
-                copy_gen.P_min   = orig_gen.P_min
-                copy_gen.P_prev  = orig_gen.P_prev
-                copy_gen.Q       = orig_gen.Q
-                copy_gen.Q_max   = orig_gen.Q_max
-                copy_gen.Q_min   = orig_gen.Q_min
+                copy_gen.P = orig_gen.P
+                copy_gen.P_max = orig_gen.P_max
+                copy_gen.P_min = orig_gen.P_min
+                copy_gen.P_prev = orig_gen.P_prev
+                copy_gen.Q = orig_gen.Q
+                copy_gen.Q_max = orig_gen.Q_max
+                copy_gen.Q_min = orig_gen.Q_min
                 copy_gen.cost_coeff_Q0 = orig_gen.cost_coeff_Q0
                 copy_gen.cost_coeff_Q1 = orig_gen.cost_coeff_Q1
                 copy_gen.cost_coeff_Q2 = orig_gen.cost_coeff_Q2
-                
-                self.assertEqual(copy_gen.index,
-                                 orig_gen.index)
-                self.assertEqual(copy_gen.bus.index,
-                                 orig_gen.bus.index)
-                try:
-                    orig_reg_bus = orig_gen.reg_bus
-                    copy_reg_bus = copy_gen.reg_bus
-                    self.assertEqual(copy_reg_bus.index,
-                                     orig_reg_bus.index)
-                    for j in range(len(copy_reg_bus.reg_generators)):
-                        self.assertEqual(copy_reg_bus.reg_generators[j].index,
-                                         orig_reg_bus.reg_generators[j].index)
-                except pf.BusError as e:
-                    pass
-                self.assertEqual(copy_gen.P,
-                                 orig_gen.P)
-                self.assertEqual(copy_gen.P_cost,
-                                 orig_gen.P_cost)
-                self.assertEqual(copy_gen.P_max,
-                                 orig_gen.P_max)
-                self.assertEqual(copy_gen.P_min,
-                                 orig_gen.P_min)
-                self.assertEqual(copy_gen.P_prev,
-                                 orig_gen.P_prev)
-                self.assertEqual(copy_gen.dP_max,
-                                 orig_gen.dP_max)
-                self.assertEqual(copy_gen.Q,
-                                 orig_gen.Q)
-                self.assertEqual(copy_gen.Q_max,
-                                 orig_gen.Q_max)
-                self.assertEqual(copy_gen.Q_min,
-                                 orig_gen.Q_min)
-                self.assertEqual(copy_gen.cost_coeff_Q0,
-                                 orig_gen.cost_coeff_Q0)
-                self.assertEqual(copy_gen.cost_coeff_Q1,
-                                 orig_gen.cost_coeff_Q1)
-                self.assertEqual(copy_gen.cost_coeff_Q2,
-                                 orig_gen.cost_coeff_Q2)
             
-            # loads
+            # Loads
             for i in range(copy_net.num_loads):
      
                 copy_load = copy_net.loads[i]
                 orig_load = orig_net.loads[i]
+
+                copy_load.name = orig_load.name
      
                 copy_load.bus = copy_net.get_bus_by_number(orig_load.bus.number)
                 copy_load.bus.add_load(copy_load)
                 
-                copy_load.P     = orig_load.P
+                copy_load.P = orig_load.P
                 copy_load.P_max = orig_load.P_max
                 copy_load.P_min = orig_load.P_min
-                copy_load.Q     = orig_load.Q
+                copy_load.Q = orig_load.Q
                 copy_load.target_power_factor = orig_load.target_power_factor
                 copy_load.util_coeff_Q0 = orig_load.util_coeff_Q0
                 copy_load.util_coeff_Q1 = orig_load.util_coeff_Q1
                 copy_load.util_coeff_Q2 = orig_load.util_coeff_Q2
                 
-                self.assertEqual(copy_load.index,
-                                 orig_load.index)
-                self.assertEqual(copy_load.bus.index,
-                                 orig_load.bus.index)
-                self.assertEqual(copy_load.P,
-                                 orig_load.P)
-                self.assertEqual(copy_load.P_max,
-                                 orig_load.P_max)
-                self.assertEqual(copy_load.P_min,
-                                 orig_load.P_min)
-                self.assertEqual(copy_load.Q,
-                                 orig_load.Q)
-                self.assertEqual(copy_load.target_power_factor,
-                                 orig_load.target_power_factor)
-                self.assertEqual(copy_load.util_coeff_Q0,
-                                 orig_load.util_coeff_Q0)
-                self.assertEqual(copy_load.util_coeff_Q1,
-                                 orig_load.util_coeff_Q1)
-                self.assertEqual(copy_load.util_coeff_Q2,
-                                 orig_load.util_coeff_Q2)
-                
-            # shunts
+            # Shunts
             for i in range(copy_net.num_shunts):
                 
                 copy_shunt = copy_net.shunts[i]
                 orig_shunt = orig_net.shunts[i]
+
+                copy_shunt.name = orig_shunt.name
                 
                 copy_shunt.bus = copy_net.get_bus_by_number(orig_shunt.bus.number)
                 copy_shunt.bus.add_shunt(copy_shunt)
@@ -4256,41 +4161,17 @@ class TestNetwork(unittest.TestCase):
                 copy_shunt.b = orig_shunt.b
                 copy_shunt.b_max = orig_shunt.b_max
                 copy_shunt.b_min = orig_shunt.b_min
+                copy_shunt.set_b_values(np.zeros(orig_shunt.b_values.size))
                 copy_shunt.b_values = orig_shunt.b_values
-
-                self.assertEqual(copy_shunt.index,
-                                 orig_shunt.index)
-                self.assertEqual(copy_shunt.bus.index,
-                                 orig_shunt.bus.index)
-                try:
-                    orig_reg_bus = orig_shunt.reg_bus
-                    copy_reg_bus = copy_shunt.reg_bus
-                    self.assertEqual(copy_reg_bus.index,
-                                     orig_reg_bus.index)
-                    for j in range(len(copy_reg_bus.reg_shunts)):
-                        self.assertEqual(copy_reg_bus.reg_shunts[j].index,
-                                         orig_reg_bus.reg_shunts[j].index)
-                except pf.BusError as e:
-                    pass
-                self.assertEqual(copy_shunt.g,
-                                 orig_shunt.g)
-                self.assertEqual(copy_shunt.b,
-                                 orig_shunt.b)
-                self.assertEqual(copy_shunt.b_max,
-                                 orig_shunt.b_max)
-                self.assertEqual(copy_shunt.b_min,
-                                 orig_shunt.b_min)
-                self.assertEqual(len(copy_shunt.b_values),
-                                 len(orig_shunt.b_values))
-                for j in range(len(copy_shunt.b_values)):
-                    self.assertEqual(copy_shunt.b_values[j],
-                                     orig_shunt.b_values[j])
                 
-            # branches
+            # Branches
             for i in range(copy_net.num_branches):
                 
                 copy_branch = copy_net.branches[i]
                 orig_branch = orig_net.branches[i]
+
+                copy_branch.name = orig_branch.name
+                copy_branch.set_pos_ratio_v_sens(orig_branch.has_pos_ratio_v_sens())
                 
                 copy_branch.bus_k = copy_net.get_bus_by_number(orig_branch.bus_k.number)
                 copy_branch.bus_k.add_branch_k(copy_branch)
@@ -4327,147 +4208,55 @@ class TestNetwork(unittest.TestCase):
                     copy_branch.set_as_line()
                 elif orig_branch.is_phase_shifter():
                     copy_branch.set_as_phase_shifter()
-                elif orig_branh.is_tap_changer_v():
+                elif orig_branch.is_tap_changer_v():
                     copy_branch.set_as_tap_changer_v()
                 elif orig_branch.is_tap_changer_Q():
                     copy_branch.set_as_tap_changer_Q()
-                    
-                self.assertEqual(copy_branch.index,
-                                 orig_branch.index)
-                self.assertEqual(copy_branch.bus_k.index,
-                                 orig_branch.bus_k.index)
-                self.assertEqual(copy_branch.bus_m.index,
-                                 orig_branch.bus_m.index)
-                try:
-                    orig_reg_bus = orig_branch.reg_bus
-                    copy_reg_bus = copy_branch.reg_bus
-                    self.assertEqual(copy_reg_bus.index,
-                                     orig_reg_bus.index)
-                    for j in range(len(copy_reg_bus.reg_trans)):
-                        self.assertEqual(copy_reg_bus.reg_trans[j].index,
-                                         orig_reg_bus.reg_trans[j].index)
-                except pf.BusError as e:
-                    pass
-                self.assertEqual(copy_branch.ratio,
-                                 orig_branch.ratio)
-                self.assertEqual(copy_branch.ratio_max,
-                                 orig_branch.ratio_max)
-                self.assertEqual(copy_branch.ratio_min,
-                                 orig_branch.ratio_min)
-                self.assertEqual(copy_branch.b,
-                                 orig_branch.b)
-                self.assertEqual(copy_branch.b_k,
-                                 orig_branch.b_k)
-                self.assertEqual(copy_branch.b_m,
-                                 orig_branch.b_m)
-                self.assertEqual(copy_branch.g,
-                                 orig_branch.g)
-                self.assertEqual(copy_branch.g_k,
-                                 orig_branch.g_k)
-                self.assertEqual(copy_branch.g_m,
-                                 orig_branch.g_m)
-                self.assertEqual(copy_branch.phase,
-                                 orig_branch.phase)
-                self.assertEqual(copy_branch.phase_max,
-                                 orig_branch.phase_max)
-                self.assertEqual(copy_branch.phase_min,
-                                 orig_branch.phase_min)
-                self.assertEqual(copy_branch.ratingA,
-                                 orig_branch.ratingA)
-                self.assertEqual(copy_branch.ratingB,
-                                 orig_branch.ratingB)
-                self.assertEqual(copy_branch.ratingC,
-                                 orig_branch.ratingC)
-                self.assertEqual(copy_branch.is_fixed_tran(),
-                                 orig_branch.is_fixed_tran())
-                self.assertEqual(copy_branch.is_line(),
-                                 orig_branch.is_line())
-                self.assertEqual(copy_branch.is_phase_shifter(),
-                                 orig_branch.is_phase_shifter())
-                self.assertEqual(copy_branch.is_tap_changer_v(),
-                                 orig_branch.is_tap_changer_v())
-                self.assertEqual(copy_branch.is_tap_changer_Q(),
-                                 orig_branch.is_tap_changer_Q())
 
-            # check connections from buses
-            for i in range(copy_net.num_buses):
+            # Var generators
+            for i in range(copy_net.num_var_generators):
+     
+                copy_vargen = copy_net.var_generators[i]
+                orig_vargen = orig_net.var_generators[i]
+
+                copy_vargen.name = orig_vargen.name
+     
+                copy_vargen.bus = copy_net.get_bus_by_number(orig_vargen.bus.number)
+                copy_vargen.bus.add_var_generator(copy_vargen)
                 
-                orig_bus = orig_net.buses[i]
-                copy_bus = copy_net.buses[i]
+                copy_vargen.P = orig_vargen.P
+                copy_vargen.P_ava = orig_vargen.P_ava
+                copy_vargen.P_std = orig_vargen.P_std
+                copy_vargen.P_max = orig_vargen.P_max
+                copy_vargen.P_min = orig_vargen.P_min
+                copy_vargen.Q = orig_vargen.Q
+                copy_vargen.Q_max = orig_vargen.Q_max
+                copy_vargen.Q_min = orig_vargen.Q_min
+
+            # Batteries
+            for i in range(copy_net.num_batteries):
+     
+                copy_bat = copy_net.batteries[i]
+                orig_bat = orig_net.batteries[i]
+
+                copy_bat.name = orig_bat.name
                 
-                self.assertEqual(copy_bus.number,
-                                 orig_bus.number)
-                self.assertEqual(copy_bus.is_regulated_by_gen(),
-                                 orig_bus.is_regulated_by_gen())
-                self.assertEqual(copy_bus.is_regulated_by_shunt(),
-                                 orig_bus.is_regulated_by_shunt())
-                self.assertEqual(copy_bus.is_regulated_by_tran(),
-                                 orig_bus.is_regulated_by_tran())
-                self.assertEqual(copy_bus.is_slack(),
-                                 orig_bus.is_slack())
+                copy_bat.bus = copy_net.get_bus_by_number(orig_bat.bus.number)
+                copy_bat.bus.add_battery(copy_bat)
                 
-                # connected generators
-                self.assertEqual(len(copy_bus.generators),
-                                 len(orig_bus.generators))
-                for copy_gen,orig_gen in zip(copy_bus.generators,
-                                             orig_bus.generators):
-                    self.assertEqual(copy_gen.index,
-                                     orig_gen.index)
-                    self.assertEqual(copy_gen.bus.number,
-                                     orig_gen.bus.number)
+                copy_bat.P = orig_bat.P
+                copy_bat.P_max = orig_bat.P_max
+                copy_bat.P_min = orig_bat.P_min
+                copy_bat.eta_c = orig_bat.eta_c
+                copy_bat.eta_d = orig_bat.eta_d
+                copy_bat.E = orig_bat.E
+                copy_bat.E_init = orig_bat.E_init
+                copy_bat.E_final = orig_bat.E_final
+                copy_bat.E_max = orig_bat.E_max
 
-                # regulating generators
-                self.assertEqual(len(copy_bus.reg_generators),
-                                 len(orig_bus.reg_generators))
-                for copy_gen,orig_gen in zip(copy_bus.reg_generators,
-                                             orig_bus.reg_generators):
-                    self.assertEqual(copy_gen.index,
-                                     orig_gen.index)
-                    self.assertEqual(copy_gen.bus.number,
-                                     orig_gen.bus.number)
-                    
-                # connected loads
-                self.assertEqual(len(copy_bus.loads),
-                                 len(orig_bus.loads))
-                for copy_load,orig_load in zip(copy_bus.loads,
-                                               orig_bus.loads):
-                    self.assertEqual(copy_load.index,
-                                     orig_load.index)
-                    self.assertEqual(copy_load.bus.number,
-                                     orig_load.bus.number)
-
-                # connected shunts
-                self.assertEqual(len(copy_bus.shunts),
-                                 len(orig_bus.shunts))
-                for copy_shunt,orig_shunt in zip(copy_bus.shunts,
-                                               orig_bus.shunts):
-                    self.assertEqual(copy_shunt.index,
-                                     orig_shunt.index)
-                    self.assertEqual(copy_shunt.bus.number,
-                                     orig_shunt.bus.number)
-
-                # regulating shunts
-                self.assertEqual(len(copy_bus.reg_shunts),
-                                 len(orig_bus.reg_shunts))
-                for copy_shunt,orig_shunt in zip(copy_bus.reg_shunts,
-                                                 orig_bus.reg_shunts):
-                    self.assertEqual(copy_shunt.index,
-                                     orig_shunt.index)
-                    self.assertEqual(copy_shunt.bus.number,
-                                     orig_shunt.bus.number)
-
-                # connected shunts
-                self.assertEqual(len(copy_bus.branches),
-                                 len(orig_bus.branches))
-                for copy_branch,orig_branch in zip(copy_bus.branches,
-                                                   orig_bus.branches):
-                    self.assertEqual(copy_branch.index,
-                                     orig_branch.index)
-                    self.assertEqual(copy_branch.bus_k.number,
-                                     orig_branch.bus_k.number)
-                    self.assertEqual(copy_branch.bus_m.number,
-                                     orig_branch.bus_m.number)
-
+            # Compare
+            pf.tests.utils.compare_networks(self, orig_net, copy_net)            
+            
     def tearDown(self):
 
         pass

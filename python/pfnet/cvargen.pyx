@@ -181,7 +181,14 @@ cdef class VarGenerator:
 
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which variable generator is connected. """
-        def __get__(self): return new_Bus(cvargen.VARGEN_get_bus(self._c_ptr))
+        def __get__(self):
+            return new_Bus(cvargen.VARGEN_get_bus(self._c_ptr))
+        def __set__(self,bus):
+            cdef Bus cbus
+            if not isinstance(bus,Bus):
+                raise VarGeneratorError('Not a Bus type object')
+            cbus = bus
+            cvargen.VARGEN_set_bus(self._c_ptr,cbus._c_ptr) 
 
     property P:
         """ Variable generator active power after curtailments (p.u. system base MVA) (float or array). """

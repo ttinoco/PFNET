@@ -244,12 +244,10 @@ cdef class Generator:
             return new_Bus(cgen.GEN_get_bus(self._c_ptr))
         def __set__(self,bus):
             cdef Bus cbus
-            
             if not isinstance(bus,Bus):
                 raise GeneratorError('Not a Bus type object')
-            
             cbus = bus
-            cgen.GEN_set_bus(self._c_ptr,cbus._c_ptr) 
+            cgen.GEN_set_bus(self._c_ptr,cbus._c_ptr)
 
     property reg_bus:
         """ :class:`Bus <pfnet.Bus>` whose voltage is regulated by this generator. """
@@ -257,10 +255,8 @@ cdef class Generator:
             return new_Bus(cgen.GEN_get_reg_bus(self._c_ptr))
         def __set__(self,reg_bus):
             cdef Bus creg_bus
-            
             if not isinstance(reg_bus,Bus):
                 raise GeneratorError('Not a Bus type object')
-            
             creg_bus = reg_bus
             cgen.GEN_set_reg_bus(self._c_ptr,creg_bus._c_ptr) 
 

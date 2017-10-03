@@ -81,7 +81,7 @@ cdef class Branch:
 
         return cbranch.BRANCH_is_equal(self._c_ptr,b_other._c_ptr)
         
-    def set_pos_ratio_v_sens(self,flag):
+    def set_pos_ratio_v_sens(self, flag):
         """
         Set the flag for positive ratio-voltage sensitivity.
         
@@ -91,7 +91,6 @@ cdef class Branch:
         """
         
         cbranch.BRANCH_set_pos_ratio_v_sens(self._c_ptr, flag);
-
 
     def set_ratio(self,r,t=0):
         """
@@ -721,10 +720,8 @@ cdef class Branch:
             return new_Bus(cbranch.BRANCH_get_bus_k(self._c_ptr))
         def __set__(self,bus): 
             cdef Bus cbus
-            
             if not isinstance(bus,Bus):
                 raise BranchError('Not a Bus type object')
-            
             cbus = bus
             cbranch.BRANCH_set_bus_k(self._c_ptr,cbus._c_ptr)
 
@@ -739,10 +736,8 @@ cdef class Branch:
             return new_Bus(cbranch.BRANCH_get_bus_m(self._c_ptr))
         def __set__(self,bus): 
             cdef Bus cbus
-            
             if not isinstance(bus,Bus):
                 raise BranchError('Not a Bus type object')
-            
             cbus = bus
             cbranch.BRANCH_set_bus_m(self._c_ptr,cbus._c_ptr)
 
@@ -752,10 +747,8 @@ cdef class Branch:
             return new_Bus(cbranch.BRANCH_get_reg_bus(self._c_ptr))
         def __set__(self,bus): 
             cdef Bus cbus
-            
             if not isinstance(bus,Bus):
                 raise BranchError('Not a Bus type object')
-            
             cbus = bus
             cbranch.BRANCH_set_reg_bus(self._c_ptr,cbus._c_ptr)
 

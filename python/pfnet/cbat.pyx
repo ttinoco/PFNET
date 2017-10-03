@@ -166,7 +166,14 @@ cdef class Battery:
 
     property bus:
         """ :class:`Bus <pfnet.Bus>` to which battery is connected. """
-        def __get__(self): return new_Bus(cbat.BAT_get_bus(self._c_ptr))
+        def __get__(self):
+            return new_Bus(cbat.BAT_get_bus(self._c_ptr))
+        def __set__(self, bus):
+            cdef Bus cbus
+            if not isinstance(bus,Bus):
+                raise BatteryError('Not a Bus type object')
+            cbus = bus
+            cbat.BAT_set_bus(self._c_ptr,cbus._c_ptr)
 
     property P:
         """ Battery charging power (p.u. system base MVA) (float or array). """
