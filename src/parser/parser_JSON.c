@@ -452,6 +452,10 @@ void JSON_PARSER_process_json_branch_array(Parser* p, Net* net, json_value* json
       // type
       if (strcmp(key,"type") == 0)
 	BRANCH_set_type(branch,val->u.integer);
+
+      // name
+      else if (strcmp(key,"name") == 0)
+	BRANCH_set_name(branch,val->u.string.ptr);
       
       // bus_k
       else if (strcmp(key,"bus_k") == 0) {
@@ -604,6 +608,10 @@ void JSON_PARSER_process_json_gen_array(Parser* p, Net* net, json_value* json_ge
 	  GEN_set_reg_bus(gen,NET_get_bus(net,val->u.integer));
       }
 
+      // name
+      else if (strcmp(key,"name") == 0)
+	GEN_set_name(gen,val->u.string.ptr);
+
       // outage
       else if (strcmp(key,"outage") == 0)
 	GEN_set_outage(gen,val->u.boolean);
@@ -712,10 +720,8 @@ void JSON_PARSER_process_json_vargen_array(Parser* p, Net* net, json_value* json
       }
 
       // name
-      else if (strcmp(key,"name") == 0) {
+      else if (strcmp(key,"name") == 0)
 	VARGEN_set_name(vargen,val->u.string.ptr);
-	NET_vargen_hash_name_add(net,vargen);
-      }
 
       // P
       else if (strcmp(key,"P") == 0) {
@@ -819,6 +825,10 @@ void JSON_PARSER_process_json_shunt_array(Parser* p, Net* net, json_value* json_
 	if (val->type == json_integer)
 	  SHUNT_set_reg_bus(shunt,NET_get_bus(net,val->u.integer));
       }
+
+      // name
+      else if (strcmp(key,"name") == 0)
+	SHUNT_set_name(shunt,val->u.string.ptr);
       
       // g
       else if (strcmp(key,"g") == 0)
@@ -901,6 +911,10 @@ void JSON_PARSER_process_json_load_array(Parser* p, Net* net, json_value* json_l
 	if (val->type == json_integer)
 	  LOAD_set_bus(load,NET_get_bus(net,val->u.integer));
       }
+
+      // name
+      else if (strcmp(key,"name") == 0)
+	LOAD_set_name(load,val->u.string.ptr);
 
       // P
       else if (strcmp(key,"P") == 0) {
@@ -997,6 +1011,10 @@ void JSON_PARSER_process_json_bat_array(Parser* p, Net* net, json_value* json_ba
 	if (val->type == json_integer)
 	  BAT_set_bus(bat,NET_get_bus(net,val->u.integer));
       }
+
+      // name
+      else if (strcmp(key,"name") == 0)
+	BAT_set_name(bat,val->u.string.ptr);
 
       // P
       else if (strcmp(key,"P") == 0) {

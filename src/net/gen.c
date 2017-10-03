@@ -21,6 +21,9 @@ struct Gen {
 
   // Times
   int num_periods;   /**< @brief Number of time periods. */
+
+  // Properties
+  char name[GEN_BUFFER_SIZE]; /**< @brief Generator name */
   
   // Flags
   BOOL outage;         /**< @brief Flag for indicating that generator in on outage. */
@@ -91,6 +94,7 @@ Gen* GEN_array_new(int size, int num_periods) {
     for (i = 0; i < size; i++) {
       GEN_init(&(gen_array[i]),num_periods);
       GEN_set_index(&(gen_array[i]),i);
+      snprintf(gen_array[i].name,(size_t)(GEN_BUFFER_SIZE-1),"GEN %d",i);
     }
     return gen_array;
   }
@@ -149,6 +153,9 @@ void GEN_copy_from_gen(Gen* gen, Gen* other) {
 
   // Times
   // skip num periods
+
+  // Properties
+  strcpy(gen->name,other->name);
 
   // Flags
   gen->outage = other->outage;
@@ -213,6 +220,13 @@ char GEN_get_flags_sparse(Gen* gen) {
     return gen->sparse;
   else
     return 0;
+}
+
+char* GEN_get_name(Gen* gen) {
+  if (gen)
+    return gen->name;
+  else
+    return NULL;
 }
 
 int GEN_get_num_periods(Gen* gen) {
@@ -558,6 +572,7 @@ char* GEN_get_json_string(Gen* gen, char* output) {
   JSON_obj(temp,output,"bus",gen->bus,BUS_get_index,FALSE);
   JSON_obj(temp,output,"reg_bus",gen->reg_bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",gen->num_periods,FALSE);
+  JSON_str(temp,output,"name",gen->name,FALSE);
   JSON_bool(temp,output,"outage",gen->outage,FALSE);
   JSON_array_float(temp,output,"P",gen->P,gen->num_periods,FALSE);
   JSON_float(temp,output,"P_max",gen->P_max,FALSE);
@@ -630,6 +645,8 @@ void GEN_init(Gen* gen, int num_periods) {
         
   gen->bus = NULL;
   gen->reg_bus = NULL;
+
+  ARRAY_clear(gen->name,char,GEN_BUFFER_SIZE);
   
   gen->outage = FALSE;
   gen->fixed = 0x00;
@@ -734,6 +751,11 @@ Gen* GEN_new(int num_periods) {
   }
   else
     return NULL;
+}
+
+void GEN_set_name(Gen* gen, char* name) {
+  if (gen)
+    strncpy(gen->name,name,(size_t)(GEN_BUFFER_SIZE-1));
 }
 
 void GEN_set_sens_P_u_bound(Gen* gen, REAL value, int t) {

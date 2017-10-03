@@ -27,7 +27,8 @@ cdef extern from "pfnet/load.h":
     char LOAD_get_flags_fixed(Load* load)
     char LOAD_get_flags_bounded(Load* load)
     char LOAD_get_flags_sparse(Load* load)
- 
+
+    char* LOAD_get_name(Load* load)
     REAL LOAD_get_power_factor(Load* load, int t)
     REAL LOAD_get_target_power_factor(Load* load)
     REAL LOAD_get_sens_P_u_bound(Load* load, int t)
@@ -53,6 +54,7 @@ cdef extern from "pfnet/load.h":
     bint LOAD_has_flags(Load* load, char flag_type, char mask)
     Load* LOAD_new(int num_periods)
     Load* LOAD_array_new(int size, int num_periods)
+    void LOAD_set_name(Load* load, char* name)
     void LOAD_set_bus(Load* load, Bus* bus)
     void LOAD_set_P(Load* load, REAL P, int t)
     void LOAD_set_P_min(Load* load, REAL P_min, int t)

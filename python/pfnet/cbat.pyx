@@ -117,6 +117,14 @@ cdef class Battery:
 
         cbat.BAT_set_E(self._c_ptr,E,t)
 
+    property name:
+        """ Battery name (string). """
+        def __get__(self):
+            return cbat.BAT_get_name(self._c_ptr).decode('UTF-8')
+        def __set__(self,name):
+            name = name.encode('UTF-8')
+            cbat.BAT_set_name(self._c_ptr,name)
+
     property num_periods:
         """ Number of time periods (int). """
         def __get__(self): return cbat.BAT_get_num_periods(self._c_ptr)

@@ -529,7 +529,6 @@ class TestContingency(unittest.TestCase):
 
             for bus in net.buses:
                 if bus.is_slack() and len(bus.generators) > 1:
-                    print case, len(bus.generators)
                     contingencies = []
                     generators = bus.generators
                     self.assertTrue(bus.is_slack())

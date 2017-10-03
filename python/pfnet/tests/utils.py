@@ -97,6 +97,7 @@ def compare_networks(test, net1, net2, check_internals=False):
         branch1 = net1.branches[i]
         branch2 = net2.branches[i]
         test.assertTrue(branch1 is not branch2)
+        test.assertEqual(branch1.name, branch2.name)
         test.assertEqual(branch1.num_periods, branch2.num_periods)
         test.assertEqual(branch1.bus_k.index, branch2.bus_k.index)
         test.assertEqual(branch1.bus_m.index, branch2.bus_m.index)
@@ -139,6 +140,7 @@ def compare_networks(test, net1, net2, check_internals=False):
         gen1 = net1.generators[i]
         gen2 = net2.generators[i]
         test.assertTrue(gen1 is not gen2)
+        test.assertEqual(gen1.name, gen2.name)
         test.assertEqual(gen1.num_periods, gen2.num_periods)
         test.assertEqual(gen1.bus.index, gen2.bus.index)
         test.assertEqual(gen1.is_on_outage(), gen2.is_on_outage())
@@ -174,7 +176,7 @@ def compare_networks(test, net1, net2, check_internals=False):
         test.assertTrue(vargen1 is not vargen2)
         test.assertEqual(vargen1.num_periods, vargen2.num_periods)
         test.assertEqual(vargen1.bus.index, vargen2.bus.index)
-        test.assertEqual(vargen1.name, vargen2.name)        
+        test.assertEqual(vargen1.name, vargen2.name)
         test.assertLess(norminf(vargen1.P-vargen2.P), eps)
         test.assertLess(norminf(vargen1.P_ava-vargen2.P_ava), eps)
         test.assertLess(norminf(vargen1.P_max-vargen2.P_max), eps)
@@ -197,6 +199,7 @@ def compare_networks(test, net1, net2, check_internals=False):
         shunt1 = net1.shunts[i]
         shunt2 = net2.shunts[i]
         test.assertTrue(shunt1 is not shunt2)
+        test.assertEqual(shunt1.name, shunt2.name)
         test.assertEqual(shunt1.num_periods, shunt2.num_periods)
         test.assertEqual(shunt1.bus.index, shunt2.bus.index)
         test.assertEqual(shunt1.is_fixed(), shunt2.is_fixed())
@@ -220,6 +223,7 @@ def compare_networks(test, net1, net2, check_internals=False):
         load1 = net1.loads[i]
         load2 = net2.loads[i]
         test.assertTrue(load1 is not load2)
+        test.assertEqual(load1.name, load2.name)
         test.assertEqual(load1.num_periods, load2.num_periods)
         test.assertEqual(load1.bus.index, load2.bus.index)
         test.assertLess(norminf(load1.P-load2.P), eps)
@@ -244,6 +248,7 @@ def compare_networks(test, net1, net2, check_internals=False):
         bat1 = net1.batteries[i]
         bat2 = net2.batteries[i]
         test.assertTrue(bat1 is not bat2)
+        test.assertEqual(bat1.name, bat2.name)
         test.assertEqual(bat1.num_periods, bat2.num_periods)
         test.assertEqual(bat1.bus.index, bat2.bus.index)
         test.assertLess(norminf(bat1.P-bat2.P), eps)
@@ -268,5 +273,3 @@ def compare_networks(test, net1, net2, check_internals=False):
     for bus in net1.buses:
         test.assertEqual(bus.index,net2.get_bus_by_number(bus.number).index)
         test.assertEqual(bus.name,net2.get_bus_by_name(bus.name).name)
-    for vargen in net1.var_generators:
-        test.assertEqual(vargen.index,net2.get_var_generator_by_name(vargen.name).index)

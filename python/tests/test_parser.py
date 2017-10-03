@@ -38,13 +38,64 @@ class TestParser(unittest.TestCase):
 
                 self.assertEqual(net.num_buses,25)
 
+                self.assertTrue(101 in [bus.number for bus in net.buses])
+                self.assertTrue(104 in [bus.number for bus in net.buses])
+                self.assertTrue(106 in [bus.number for bus in net.buses])
+                self.assertTrue(222 in [bus.number for bus in net.buses])
+
+                tested_101 = False
+                tested_104 = False
+                tested_106 = False
+                tested_222 = False
                 for bus in net.buses:
+
+                    # base kv
                     if bus.number >= 101 and bus.number <= 110:
                         self.assertEqual(bus.v_base,138.)
                     else:
                         self.assertLessEqual(bus.number,225)
                         self.assertGreaterEqual(bus.number,211)
                         self.assertEqual(bus.v_base,230.)
+
+                    # names
+                    if bus.number == 101:
+                        self.assertEqual(bus.name, 'COAL-A')
+                        self.assertEqual(len(bus.generators),3)
+                        self.assertEqual([g.name for g in bus.generators],
+                                         ['5','4','3'])
+                        tested_101 = True
+                        
+                    if bus.number == 104:
+                        self.assertEqual(len(bus.loads),1)
+                        self.assertEqual(bus.loads[0].name, '1')
+                        tested_104 = True
+
+                    if bus.number == 106:
+                        self.assertEqual(len(bus.shunts),2)
+                        self.assertEqual([s.name for s in bus.shunts],
+                                         ['','1'])
+                        tested_106 = True
+
+                    if bus.number == 222:
+                        self.assertEqual(bus.name,'HYDRO')
+                        self.assertEqual(len(bus.generators),10)
+                        self.assertEqual([g.name for g in bus.generators],
+                                         ['A','9','8','7','6','5','4','3','2','1'])
+                        tested_222 = True
+
+                brs = []
+                for branch in net.branches:
+                    if (branch.bus_k.number, branch.bus_m.number) == (215,221):
+                        brs.append(branch)
+                    if (branch.bus_k.number, branch.bus_m.number) == (103,224):
+                        self.assertEqual(branch.name,'1')
+                self.assertEqual(len(brs),2)
+                self.assertEqual([br.name for br in brs],['2','1'])
+
+                self.assertTrue(tested_101)
+                self.assertTrue(tested_104)
+                self.assertTrue(tested_106)
+                self.assertTrue(tested_222)
                 
     def test_sys_problem2(self):
 

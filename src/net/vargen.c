@@ -19,7 +19,7 @@ struct Vargen {
   Bus* bus;            /**< @brief Bus to which variable generator is connected */
 
   // Times
-  int num_periods;   /**< @brief Number of time periods. */
+  int num_periods;     /**< @brief Number of time periods. */
 
   // Properties
   char name[VARGEN_BUFFER_SIZE]; /**< @brief Variable generator name */
@@ -47,9 +47,6 @@ struct Vargen {
   int index;           /**< @brief Generator index */
   int* index_P;        /**< @brief Active power index */
   int* index_Q;        /**< @brief Reactive power index */
-
-  // Hash
-  UT_hash_handle hh;   /**< @brief Handle for vargen hash table based on names */
 
   // List
   Vargen* next;        /**< @brief List of variable generators connected to a bus */
@@ -86,7 +83,7 @@ Vargen* VARGEN_array_new(int size, int num_periods) {
     for (i = 0; i < size; i++) {
       VARGEN_init(&(gen_array[i]),num_periods);
       VARGEN_set_index(&(gen_array[i]),i);
-      snprintf(gen_array[i].name,(size_t)(VARGEN_BUFFER_SIZE-1),"VARGEN %d",i+1);
+      snprintf(gen_array[i].name,(size_t)(VARGEN_BUFFER_SIZE-1),"VARGEN %d",i);
     }
     return gen_array;
   }
@@ -162,9 +159,6 @@ void VARGEN_copy_from_vargen(Vargen* gen, Vargen* other) {
   // skip index
   memcpy(gen->index_P,other->index_P,num_periods*sizeof(int));
   memcpy(gen->index_Q,other->index_Q,num_periods*sizeof(int));
-
-  // Hash
-  // skip hash
 
   // List
   // skip next    
@@ -527,26 +521,6 @@ BOOL VARGEN_has_properties(void* vgen, char prop) {
   if (!gen)
     return FALSE;
   return TRUE;
-}
-
-Vargen* VARGEN_hash_name_add(Vargen* vargen_hash, Vargen* vargen) {
-  HASH_ADD_STR(vargen_hash,name,vargen);
-  return vargen_hash;
-}
-
-void VARGEN_hash_name_del(Vargen* vargen_hash) {
-  while (vargen_hash != NULL)
-    HASH_DEL(vargen_hash,vargen_hash);
-}
-
-Vargen* VARGEN_hash_name_find(Vargen* vargen_hash, char* name) {
-  Vargen* vargen;
-  HASH_FIND_STR(vargen_hash,name,vargen);
-  return vargen;
-}
-
-int VARGEN_hash_name_len(Vargen* vargen_hash) {
-  return HASH_COUNT(vargen_hash);
 }
 
 void VARGEN_init(Vargen* gen, int num_periods) {

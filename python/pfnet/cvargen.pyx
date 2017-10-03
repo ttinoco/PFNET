@@ -147,7 +147,8 @@ cdef class VarGenerator:
 
     property name:
         """ Variable generator name (string). """
-        def __get__(self): return cvargen.VARGEN_get_name(self._c_ptr).decode('UTF-8')
+        def __get__(self):
+            return cvargen.VARGEN_get_name(self._c_ptr).decode('UTF-8')
         def __set__(self,name):
             name = name.encode('UTF-8')
             cvargen.VARGEN_set_name(self._c_ptr,name)

@@ -19,7 +19,10 @@ struct Bat {
   Bus* bus;            /**< @brief Bus to which the battery is connected */
  
   // Times
-  int num_periods;   /**< @brief Number of time periods. */ 
+  int num_periods;   /**< @brief Number of time periods. */
+
+  // Properties
+  char name[BAT_BUFFER_SIZE]; /**< @brief Battery name */
 
   // Flags
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
@@ -82,6 +85,7 @@ Bat* BAT_array_new(int size, int num_periods) {
     for (i = 0; i < size; i++) {
       BAT_init(&(bat_array[i]),num_periods);
       BAT_set_index(&(bat_array[i]),i);
+      snprintf(bat_array[i].name,(size_t)(BAT_BUFFER_SIZE-1),"BATTERY %d",i);
     }
     return bat_array;
   }
@@ -130,6 +134,9 @@ void BAT_copy_from_bat(Bat* bat, Bat* other) {
 
   // Times
   // skip num periods
+
+  // Properties
+  strcpy(bat->name,other->name);
 
   // Flags
   bat->fixed = other->fixed;
@@ -188,6 +195,13 @@ char BAT_get_flags_sparse(Bat* bat) {
     return bat->sparse;
   else
     return 0;
+}
+
+char* BAT_get_name(Bat* bat) {
+  if (bat)
+    return bat->name;
+  else
+    return NULL;
 }
 
 int BAT_get_num_periods(Bat* bat) {
@@ -510,6 +524,7 @@ char* BAT_get_json_string(Bat* bat, char* output) {
   JSON_int(temp,output,"index",bat->index,FALSE);
   JSON_obj(temp,output,"bus",bat->bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",bat->num_periods,FALSE);
+  JSON_str(temp,output,"name",bat->name,FALSE);
   JSON_array_float(temp,output,"P",bat->P,bat->num_periods,FALSE);
   JSON_float(temp,output,"P_max",bat->P_max,FALSE);
   JSON_float(temp,output,"P_min",bat->P_min,FALSE);
@@ -564,6 +579,8 @@ void BAT_init(Bat* bat, int num_periods) {
   
   T = num_periods;
   bat->num_periods = num_periods;
+
+  ARRAY_clear(bat->name,char,BAT_BUFFER_SIZE);
   
   bat->bus = NULL;
   
@@ -612,6 +629,11 @@ Bat* BAT_new(int num_periods) {
   }
   else
     return NULL;
+}
+
+void BAT_set_name(Bat* bat, char* name) {
+  if (bat)
+    strncpy(bat->name,name,(size_t)(BAT_BUFFER_SIZE-1));
 }
 
 void BAT_set_bus(Bat* bat, Bus* bus) { 
