@@ -19,12 +19,16 @@ char* trim(char* s) {
   /* Trims string inplace. */
 
   char* ptr;
+  int len = strlen(s);
   if (!s)
     return NULL;   // handle NULL string
   if (!*s)
     return s;      // handle empty string
-  for (ptr = s + strlen(s) - 1; (ptr >= s) && isspace(*ptr); --ptr);
+  for (ptr = s + len - 1; (ptr >= s) && isspace(*ptr); --ptr);
   ptr[1] = '\0';
+  for (ptr = s; (ptr < s+len) && isspace(*ptr); ptr++);
+  s = ptr;
+    
   return s;
 }
 
