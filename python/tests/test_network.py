@@ -616,7 +616,7 @@ class TestNetwork(unittest.TestCase):
 
                 # name
                 if not case.endswith('raw'):
-                    self.assertEqual(gen.name, 'GEN %d' %gen.index)
+                    self.assertEqual(gen.name, '%d' %gen.index)
                 gen.name = 'some name'
                 self.assertEqual(gen.name, 'some name')
 
@@ -774,7 +774,7 @@ class TestNetwork(unittest.TestCase):
 
                 # name
                 if not case.endswith('raw'):
-                    self.assertEqual(branch.name, 'BRANCH %d' %branch.index)
+                    self.assertEqual(branch.name, '%d' %branch.index)
                 branch.name = 'some name'
                 self.assertEqual(branch.name, 'some name')
 
@@ -1041,7 +1041,7 @@ class TestNetwork(unittest.TestCase):
 
                 # name
                 if not case.endswith('raw'):
-                    self.assertEqual(shunt.name, 'SHUNT %d' %shunt.index)
+                    self.assertEqual(shunt.name, '%d' %shunt.index)
                 shunt.name = 'some name'
                 self.assertEqual(shunt.name, 'some name')
 
@@ -1142,7 +1142,7 @@ class TestNetwork(unittest.TestCase):
 
                 # name
                 if not case.endswith('raw'):
-                    self.assertEqual(load.name, 'LOAD %d' %load.index)
+                    self.assertEqual(load.name, '%d' %load.index)
                 load.name = 'some name'
                 self.assertEqual(load.name, 'some name')
 
@@ -1295,7 +1295,7 @@ class TestNetwork(unittest.TestCase):
             # Existing vargens
             for vg in net.var_generators:
                 self.assertTrue(isinstance(vg.name,str) or isinstance(vg.name,unicode))
-                self.assertEqual(vg.name, "VARGEN %d" %vg.index)
+                self.assertEqual(vg.name, "%d" %vg.index)
                 vg.name = "some vargen"
                 self.assertEqual(vg.name,"some vargen")
 
@@ -1326,7 +1326,7 @@ class TestNetwork(unittest.TestCase):
 
                 # name
                 self.assertTrue(isinstance(vargen.name,str) or isinstance(vargen.name,unicode))
-                self.assertEqual(vargen.name,"VARGEN %d" %vargen.index)
+                self.assertEqual(vargen.name,"%d" %vargen.index)
                 vargen.name = 'some name'
                 self.assertEqual(vargen.name,"some name")
 
@@ -1567,7 +1567,7 @@ class TestNetwork(unittest.TestCase):
                 self.assertNotEqual(bat.obj_type,'unknown')
 
                 # name
-                self.assertEqual(bat.name, 'BATTERY %d' %bat.index)
+                self.assertEqual(bat.name, '%d' %bat.index)
                 bat.name = 'some name'
                 self.assertEqual(bat.name, 'some name')
 
@@ -1909,7 +1909,7 @@ class TestNetwork(unittest.TestCase):
             netMP.add_var_generators(netMP.get_load_buses(),80.,50.,30.,5,0.05)
             for vargen in net.var_generators:
                 self.assertTrue(isinstance(vargen.name,str) or isinstance(vargen.name,unicode))
-                self.assertEqual(vargen.name,"VARGEN %d" %(vargen.index))
+                self.assertEqual(vargen.name,"%d" %(vargen.index))
                 vargen.P = 1.
                 vargen.Q = 2.
                 self.assertGreater(len(vargen.bus.loads),0)
@@ -3836,7 +3836,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.num_var_generators,len([b for b in net.buses if b.generators]))
             for vg in net.var_generators:
                 self.assertTrue(isinstance(vg.name,str) or isinstance(vg.name,unicode))
-                self.assertEqual(vg.name,"VARGEN %d" %(vg.index))
+                self.assertEqual(vg.name,"%d" %(vg.index))
                 self.assertEqual(vg.P,0.5*vg.P_max)
                 self.assertEqual(vg.P_ava,0.5*vg.P_max)
                 self.assertEqual(vg.P_min,0)

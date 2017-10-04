@@ -114,7 +114,7 @@ Branch* BRANCH_array_new(int size, int num_periods) {
     for (i = 0; i < size; i++) {
       BRANCH_init(&(br_array[i]),num_periods);
       BRANCH_set_index(&(br_array[i]),i);
-      snprintf(br_array[i].name,(size_t)(BRANCH_BUFFER_SIZE-1),"BRANCH %d",i);
+      snprintf(br_array[i].name,(size_t)(BRANCH_BUFFER_SIZE-1),"%d",i);
     }
     return br_array;
   }

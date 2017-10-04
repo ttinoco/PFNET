@@ -83,7 +83,7 @@ Vargen* VARGEN_array_new(int size, int num_periods) {
     for (i = 0; i < size; i++) {
       VARGEN_init(&(gen_array[i]),num_periods);
       VARGEN_set_index(&(gen_array[i]),i);
-      snprintf(gen_array[i].name,(size_t)(VARGEN_BUFFER_SIZE-1),"VARGEN %d",i);
+      snprintf(gen_array[i].name,(size_t)(VARGEN_BUFFER_SIZE-1),"%d",i);
     }
     return gen_array;
   }

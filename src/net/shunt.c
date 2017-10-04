@@ -78,7 +78,7 @@ Shunt* SHUNT_array_new(int size, int num_periods) {
     for (i = 0; i < size; i++) {
       SHUNT_init(&(shunt_array[i]),num_periods);
       SHUNT_set_index(&(shunt_array[i]),i);
-      snprintf(shunt_array[i].name,(size_t)(SHUNT_BUFFER_SIZE-1),"SHUNT %d",i);
+      snprintf(shunt_array[i].name,(size_t)(SHUNT_BUFFER_SIZE-1),"%d",i);
     }
     return shunt_array;
   }

@@ -94,7 +94,7 @@ Gen* GEN_array_new(int size, int num_periods) {
     for (i = 0; i < size; i++) {
       GEN_init(&(gen_array[i]),num_periods);
       GEN_set_index(&(gen_array[i]),i);
-      snprintf(gen_array[i].name,(size_t)(GEN_BUFFER_SIZE-1),"GEN %d",i);
+      snprintf(gen_array[i].name,(size_t)(GEN_BUFFER_SIZE-1),"%d",i);
     }
     return gen_array;
   }

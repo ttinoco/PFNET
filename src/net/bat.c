@@ -85,7 +85,7 @@ Bat* BAT_array_new(int size, int num_periods) {
     for (i = 0; i < size; i++) {
       BAT_init(&(bat_array[i]),num_periods);
       BAT_set_index(&(bat_array[i]),i);
-      snprintf(bat_array[i].name,(size_t)(BAT_BUFFER_SIZE-1),"BATTERY %d",i);
+      snprintf(bat_array[i].name,(size_t)(BAT_BUFFER_SIZE-1),"%d",i);
     }
     return bat_array;
   }

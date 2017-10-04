@@ -92,7 +92,7 @@ Load* LOAD_array_new(int size, int num_periods) {
     for (i = 0; i < size; i++) {
       LOAD_init(&(load_array[i]),num_periods);
       LOAD_set_index(&(load_array[i]),i);
-      snprintf(load_array[i].name,(size_t)(LOAD_BUFFER_SIZE-1),"LOAD %d",i);
+      snprintf(load_array[i].name,(size_t)(LOAD_BUFFER_SIZE-1),"%d",i);
     }
     return load_array;
   }

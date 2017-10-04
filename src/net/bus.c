@@ -216,7 +216,7 @@ Bus* BUS_array_new(int size, int num_periods) {
     for (i = 0; i < size; i++) {
       BUS_init(&(bus_array[i]),num_periods);
       BUS_set_index(&(bus_array[i]),i);
-      snprintf(bus_array[i].name,(size_t)(BUS_BUFFER_SIZE-1),"BUS %d",i);
+      snprintf(bus_array[i].name,(size_t)(BUS_BUFFER_SIZE-1),"%d",i);
     }
     return bus_array;
   }
