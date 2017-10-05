@@ -104,7 +104,20 @@ cdef class Branch:
         
         cbranch.BRANCH_set_ratio(self._c_ptr,r,t)
 
-    def set_phase(self,p,t=0):
+    def get_rating(self, code):
+        """
+        Gets branch thermal rating.
+        """
+
+        if code == 'A':
+            return self.ratingA
+        if code == 'B':
+            return self.ratingB
+        if code == 'C':
+            return self.ratingC
+        raise BranchError('thermal rating code must be A, B, or C')
+
+    def set_phase(self, p, t=0):
         """
         Sets branch phase shift.
 

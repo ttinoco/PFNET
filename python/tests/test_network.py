@@ -768,11 +768,11 @@ class TestNetwork(unittest.TestCase):
                     self.assertFalse(branch == other_branch)
                     self.assertTrue(branch != other_branch)
 
-                # obj type
+                # Obj type
                 self.assertEqual(branch.obj_type,'branch')
                 self.assertNotEqual(branch.obj_type,'unknown')
 
-                # name
+                # Name
                 if not case.endswith('raw'):
                     self.assertEqual(branch.name, '%d' %branch.index)
                 branch.name = 'some name'
@@ -786,7 +786,13 @@ class TestNetwork(unittest.TestCase):
                 self.assertTrue(branch.bus_m)
                 self.assertGreater(branch.ratio,0)
 
-                # ratings set/get
+                # Rating getters
+                self.assertEqual(branch.ratingA, branch.get_rating('A'))
+                self.assertEqual(branch.ratingB, branch.get_rating('B'))
+                self.assertEqual(branch.ratingC, branch.get_rating('C'))
+                self.assertRaises(pf.BranchError, branch.get_rating, 'D')
+                
+                # Ratings set/get
                 self.assertGreaterEqual(branch.ratingA,0.)
                 self.assertGreaterEqual(branch.ratingB,0.)
                 self.assertGreaterEqual(branch.ratingC,0.)
@@ -800,19 +806,19 @@ class TestNetwork(unittest.TestCase):
                 branch.ratingC = r
                 self.assertEqual(r,branch.ratingC)
 
-                # ratio and phase set/get
+                # Ratio and phase set/get
                 branch.phase = 1.234
                 self.assertEqual(branch.phase,1.234)
                 branch.ratio = 1.1102
                 self.assertEqual(branch.ratio,1.1102)
 
-                # flow limits set/get
+                # Flow limits set/get
                 branch.P_max = 1.344
                 branch.P_min = 0.222
                 self.assertEqual(branch.P_max,1.344)
                 self.assertEqual(branch.P_min,0.222)
 
-                # tap changer v
+                # Tap changer v
                 if branch.is_tap_changer_v():
                     self.assertTrue(branch.is_tap_changer())
                     self.assertTrue(branch.reg_bus)
@@ -821,7 +827,7 @@ class TestNetwork(unittest.TestCase):
                 else:
                     self.assertRaises(pf.BusError,lambda : branch.reg_bus)
 
-                # sens
+                # Sensitivities
                 self.assertEqual(branch.sens_P_u_bound,0.)
                 self.assertEqual(branch.sens_P_l_bound,0.)
 

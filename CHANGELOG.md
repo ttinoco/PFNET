@@ -42,6 +42,7 @@ Unreleased
 * Changed slack limits in branch flow constraints from [0,thermal_rating] to [-thermal_rating,thermal_rating] (done).
 * Improved contingency to disable slack bus if all its generators are on outage (done).
 * Added name attributes to all bus-connected components and removed vargens name hash (done).
+* Added branch "get_rating" method that takes 'A', 'B', or 'C' as argument (done).	
 * Update Python wrapper documentation to show how to install with pip or download/run tests (todo).
 * Update examples, documentation and create release (todo).
 * Distribute pfnet python wrapper through pypi (todo).
