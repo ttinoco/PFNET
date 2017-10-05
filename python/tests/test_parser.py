@@ -17,18 +17,6 @@ class TestParser(unittest.TestCase):
 
         pass
 
-    def test_dummy_parser(self):
-
-        p = pf.parsers.DummyParser()
-        
-        self.assertEqual(p.some_init_data,3)
-        
-        self.assertRaises(pf.ParserError,p.parse,"foo.mat")
-        
-        net = p.parse("foo.dummy")
-        self.assertTrue(isinstance(net,pf.Network))
-        self.assertEqual(net.num_buses,0)
-
     def test_ieee25_raw(self):
 
         for case in test_cases.CASES:
