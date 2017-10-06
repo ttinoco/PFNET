@@ -44,6 +44,7 @@ Unreleased
 * Added name attributes to all bus-connected components and removed vargens name hash (done).
 * Added branch "get_rating" method that takes 'A', 'B', or 'C' as argument (done).
 * Eliminated CustomParser and dummy python parser example (done).
+* Fixed bug with treatment of outage branches in PV-PQ switching heuristics (done).
 * Update Python wrapper documentation to show how to install with pip or download/run tests (todo).
 * Update examples, documentation and create release (todo).
 * Distribute pfnet python wrapper through pypi (todo).

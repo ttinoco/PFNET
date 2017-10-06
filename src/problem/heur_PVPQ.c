@@ -94,6 +94,10 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
   data = (Heur_PVPQ_Data*)HEUR_get_data(h);
   reg_flag = data->reg_flag;
 
+  // Check outage
+  if (BRANCH_is_on_outage(br))
+    return;
+
   // Bus from data
   bus[0] = BRANCH_get_bus_k(br);
   bus_index_t[0] = BUS_get_index(bus[0])*T+t;
