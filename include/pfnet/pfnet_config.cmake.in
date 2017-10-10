@@ -97,9 +97,9 @@
 #cmakedefine HAVE_UNISTD_H @HAVE_UNISTD_H@
 
 /* Define to 0 if you do not have the line-flow library. */
-#cmakedefine01 HAVE_LINE_FLOW @HAVE_LINE_FLOW@
+#cmakedefine01 HAVE_PFNET_LINE_FLOW @HAVE_PFNET_LINE_FLOW@
 
 /* Define to 0 if you do not have the raw-parser library. */
-#cmakedefine HAVE_RAW_PARSER @HAVE_RAW_PARSER@
+#cmakedefine HAVE_PFNET_RAW_PARSER @HAVE_PFNET_RAW_PARSER@
 
 #endif

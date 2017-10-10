@@ -54,9 +54,13 @@ if(PFNET_DEBUG)
   add_definitions(-DDEBUG)
 endif()
 
-# find graphviz
-if(PFNET_GRAPHVIZ)
-  find_library(GRAPHVIZ_LIB gvc)
+# find graphviz (check env variable first)
+if($ENV{PFNET_GRAPHVIZ})
+  if(PFNET_GRAPHVIZ)
+    find_library(GRAPHVIZ_LIB gvc)
+  else()
+    set(GRAPHVIZ_LIB "")
+  endif()
 else()
   set(GRAPHVIZ_LIB "")
 endif()
@@ -71,31 +75,31 @@ else()
 endif()
 
 # add raw-parser if available
-if(EXISTS $ENV{RAW_PARSER}/src/RAW_parser.c)
-  include_directories($ENV{RAW_PARSER}/include)
-  set(raw_parser_source $ENV{RAW_PARSER}/src/RAW_net.c
-                        $ENV{RAW_PARSER}/src/RAW_parser.c)
+if(EXISTS $ENV{PFNET_RAW_PARSER}/src/RAW_parser.c)
+  include_directories($ENV{PFNET_RAW_PARSER}/include)
+  set(raw_parser_source $ENV{PFNET_RAW_PARSER}/src/RAW_net.c
+                        $ENV{PFNET_RAW_PARSER}/src/RAW_parser.c)
   target_sources(pfnet PUBLIC ${raw_parser_source})
   target_sources(pfnet_static PUBLIC ${raw_parser_source})
   message("raw-parser enabled.")
   # install raw-parser headers also
-  install(DIRECTORY $ENV{RAW_PARSER}/include/
+  install(DIRECTORY $ENV{PFNET_RAW_PARSER}/include/
           DESTINATION include
           FILES_MATCHING PATTERN "*.h")
-  set(HAVE_RAW_PARSER 1)  # need to set it to 1 so that the dummy parser in pfnet does not conflict
+  set(HAVE_PFNET_RAW_PARSER 1)  # need to set it to 1 so that the dummy parser in pfnet does not conflict
 else()
   message("raw-parser not enabled.")
-  set(HAVE_RAW_PARSER 0)
+  set(HAVE_PFNET_RAW_PARSER 0)
 endif()
 
 # add line-flow if specified
 # if(PFNET_LINE_FLOW)
 #   message("line-flow enabled.")
-#   set(HAVE_LINE_FLOW 1 CACHE INTERNAL "")
+#   set(HAVE_PFNET_LINE_FLOW 1 CACHE INTERNAL "")
 #   # find_library(LINE_FLOW_LIB ?)  # TODO check with tomas
 # else()
 #   message("line-flow not enabled.")
-#   set(HAVE_LINE_FLOW 0 CACHE INTERNAL "")
+#   set(HAVE_PFNET_LINE_FLOW 0 CACHE INTERNAL "")
 # endif()
 
 # add checks needed to produce pfnet_config.h
@@ -111,7 +115,9 @@ CHECK_LIBRARY_EXISTS(cgraph agopen "" HAVE_LIBCGRAPH)
 CHECK_INCLUDE_FILES("graphviz/gvc.h"  HAVE_GRAPHVIZ_GVC_H)
 
 # check for line-flow
-CHECK_LIBRARY_EXISTS(line_flow LINE_FLOW_new "${LINE_FLOW}/lib/" HAVE_LINE_FLOW)
+if($ENV{PFNET_LINE_FLOW})
+  CHECK_LIBRARY_EXISTS(line_flow LINE_FLOW_new "${PFNET_LINE_FLOW}/lib/" HAVE_PFNET_LINE_FLOW)
+endif()
 
 # Checks std header files.
 CHECK_INCLUDE_FILES("stddef.h"  HAVE_STDDEF_H)
