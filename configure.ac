@@ -19,10 +19,13 @@ AC_PROG_MAKE_SET
 AX_CHECK_COMPILE_FLAG([-Wall], [CFLAGS="$CFLAGS -Wall"], [], [])
 AX_CHECK_COMPILE_FLAG([-Werror], [CFLAGS="$CFLAGS -Werror"], [], [])
 
-# Checks for graphviz
-AC_CHECK_LIB(gvc, gvContext)
-AC_CHECK_LIB(cgraph, agopen)
-AC_CHECK_HEADERS(graphviz/gvc.h)
+# Checks for graphviz, skips of PFNET_GRAPHVIZ set to OFF
+AM_CONDITIONAL([skip_pfnet_graphviz], [test x$PFNET_GRAPHVIZ = xOFF])
+AM_COND_IF([skip_pfnet_graphviz],
+		   [AC_SUBST([HAVE_PFNET_GRAPHVIZ],[0],[Define to 0 to avoid check for graphviz.])],
+		   [AC_CHECK_LIB(gvc, gvContext)
+		   	AC_CHECK_LIB(cgraph, agopen)
+		   	AC_CHECK_HEADERS(graphviz/gvc.h)])
 
 # Checks for raw parser
 AC_SUBST(rawtop_srcdir,$PFNET_RAW_PARSER)
