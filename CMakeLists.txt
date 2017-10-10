@@ -110,9 +110,11 @@ INCLUDE (CheckLibraryExists)
 
 # Check for include files
 # Checks for graphviz
-CHECK_LIBRARY_EXISTS(gvc gvContext "" HAVE_LIBGVC)
-CHECK_LIBRARY_EXISTS(cgraph agopen "" HAVE_LIBCGRAPH)
-CHECK_INCLUDE_FILES("graphviz/gvc.h"  HAVE_GRAPHVIZ_GVC_H)
+if(GRAPHVIZ_LIB)
+  CHECK_LIBRARY_EXISTS(gvc gvContext "" HAVE_LIBGVC)
+  CHECK_LIBRARY_EXISTS(cgraph agopen "" HAVE_LIBCGRAPH)
+  CHECK_INCLUDE_FILES("graphviz/gvc.h"  HAVE_GRAPHVIZ_GVC_H)
+endif()
 
 # check for line-flow
 if($ENV{PFNET_LINE_FLOW})
