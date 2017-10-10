@@ -16,12 +16,12 @@
 #include "pfnet_config.h"
 
 #if defined(HAVE_GRAPHVIZ_GVC_H) && defined(HAVE_LIBGVC) && defined(HAVE_LIBCGRAPH)
-#define HAVE_GRAPHVIZ 1
+#define HAVE_PFNET_GRAPHVIZ 1
 #else
-#define HAVE_GRAPHVIZ 0
+#define HAVE_PFNET_GRAPHVIZ 0
 #endif
 
-#if HAVE_GRAPHVIZ
+#if HAVE_PFNET_GRAPHVIZ
 #include <graphviz/gvc.h>
 #endif
 

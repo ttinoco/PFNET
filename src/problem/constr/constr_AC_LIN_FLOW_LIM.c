@@ -11,7 +11,7 @@
 #include <pfnet/array.h>
 #include <pfnet/constr_AC_LIN_FLOW_LIM.h>
 
-#if !HAVE_LINE_FLOW
+#if !HAVE_PNFET_LINE_FLOW
 
 // Dummies
 LINE_FLOW_Results* LINE_FLOW_construct(double V_i_min, double V_i_max, double V_j_min, double V_j_max,

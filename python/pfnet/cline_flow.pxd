@@ -8,4 +8,4 @@
 
 cdef extern from "pfnet/pfnet_config.h":
 
-    cdef char HAVE_LINE_FLOW
+    cdef char HAVE_PFNET_LINE_FLOW

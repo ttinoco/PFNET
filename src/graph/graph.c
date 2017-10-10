@@ -19,7 +19,7 @@ struct Graph {
   Net* net;
   BOOL layout_done;
 
-  #if HAVE_GRAPHVIZ
+  #if HAVE_PFNET_GRAPHVIZ
   Agraph_t* G;
   GVC_t* gvc;
   #endif
@@ -28,7 +28,7 @@ struct Graph {
 void GRAPH_del(Graph* g) {
   if (g) {
 
-    #if HAVE_GRAPHVIZ
+    #if HAVE_PFNET_GRAPHVIZ
     gvFreeLayout(g->gvc,g->G); 
     agclose(g->G); 
     gvFreeContext(g->gvc);
@@ -63,7 +63,7 @@ Graph* GRAPH_new(Net* net) {
 
   Graph* g;
   
-  #if HAVE_GRAPHVIZ
+  #if HAVE_PFNET_GRAPHVIZ
   Branch* br;
   Bus* busk;
   Bus* busm;
@@ -81,7 +81,7 @@ Graph* GRAPH_new(Net* net) {
   strcpy(g->error_string,"");
 
   // Graph
-  #if HAVE_GRAPHVIZ
+  #if HAVE_PFNET_GRAPHVIZ
   g->gvc = gvContext();
   g->G = agopen("network",Agundirected,NULL);
 
@@ -131,7 +131,7 @@ Graph* GRAPH_new(Net* net) {
 
 BOOL GRAPH_can_viz(Graph* g) {
   if (g) {
-    #if HAVE_GRAPHVIZ
+    #if HAVE_PFNET_GRAPHVIZ
     return TRUE;
     #else
     return FALSE;
@@ -142,7 +142,7 @@ BOOL GRAPH_can_viz(Graph* g) {
 
 void GRAPH_set_layout(Graph* g) {
   if (g) {
-    #if HAVE_GRAPHVIZ
+    #if HAVE_PFNET_GRAPHVIZ
     gvFreeLayout(g->gvc,g->G);
     gvLayout(g->gvc,g->G,"sfdp");
     g->layout_done = TRUE;
@@ -152,7 +152,7 @@ void GRAPH_set_layout(Graph* g) {
 
 void GRAPH_set_node_property(Graph* g, Bus* bus, char* prop, char* value) {
 
-  #if HAVE_GRAPHVIZ
+  #if HAVE_PFNET_GRAPHVIZ
 
   // Local variables
   Agsym_t* att;
@@ -189,7 +189,7 @@ void GRAPH_set_nodes_property(Graph* g, char* prop, char* value) {
 
 void GRAPH_set_edges_property(Graph* g, char* prop, char* value) {
 
-  #if HAVE_GRAPHVIZ
+  #if HAVE_PFNET_GRAPHVIZ
 
   // Local variables
   Agsym_t* att;
@@ -234,7 +234,7 @@ void GRAPH_set_edges_property(Graph* g, char* prop, char* value) {
 void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type, int t) {
 
   // Local variables
-  #if HAVE_GRAPHVIZ
+  #if HAVE_PFNET_GRAPHVIZ
   Agsym_t* att;
   Agnode_t* node;
   Bus* bus;
@@ -260,7 +260,7 @@ void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type, int t) {
   // Update properties
   NET_update_properties(g->net,NULL);
 
-  #if HAVE_GRAPHVIZ
+  #if HAVE_PFNET_GRAPHVIZ
   
   // Color
   for (i = 0; i < NET_get_num_buses(g->net); i++) {
@@ -297,7 +297,7 @@ void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type, int t) {
 void GRAPH_color_nodes_by_sensitivity(Graph* g, int sens_type, int t) {
 
   // Local variables
-  #if HAVE_GRAPHVIZ
+  #if HAVE_PFNET_GRAPHVIZ
   Agsym_t* att;
   Agnode_t* node;
   Bus* bus;
@@ -323,7 +323,7 @@ void GRAPH_color_nodes_by_sensitivity(Graph* g, int sens_type, int t) {
   // Update properties
   NET_update_properties(g->net,NULL);
 
-  #if HAVE_GRAPHVIZ
+  #if HAVE_PFNET_GRAPHVIZ
 
   // Color
   for (i = 0; i < 2; i++) {
@@ -371,7 +371,7 @@ void GRAPH_write(Graph* g, char* format, char* filename) {
     return;
   }
 
-  #if HAVE_GRAPHVIZ
+  #if HAVE_PFNET_GRAPHVIZ
   if (gvRenderFilename(g->gvc,g->G,format,filename) == -1) {
     sprintf(g->error_string,"unable to render graph");
     g->error_flag = TRUE;

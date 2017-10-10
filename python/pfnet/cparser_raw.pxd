@@ -8,4 +8,4 @@
 
 cdef extern from "pfnet/parser_RAW.h":
 
-    cdef char HAVE_RAW_PARSER
+    cdef char HAVE_PFNET_RAW_PARSER

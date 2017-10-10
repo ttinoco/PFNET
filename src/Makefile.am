@@ -154,7 +154,7 @@ pkginclude_HEADERS = 	$(graph_hdr) $(math_hdr) $(net_hdr) $(parser_hdr) \
 			$(utils_hdr) $(other_hdr)
 
 # Raw parser
-if HAS_RAW_PARSER
+if HAS_PFNET_RAW_PARSER
 raw_inc_path = @raw_dir@/include
 raw_src = @raw_dir@/src/RAW_parser.c \
 	  @raw_dir@/src/RAW_net.c

@@ -32,9 +32,9 @@ np.import_array()
 # Information
 #############
 
-info = {'graphviz': bool(cgraph.HAVE_GRAPHVIZ),
-        'raw_parser': bool(cparser_raw.HAVE_RAW_PARSER),
-        'line_flow': bool(cline_flow.HAVE_LINE_FLOW),
+info = {'graphviz': bool(cgraph.HAVE_PFNET_GRAPHVIZ),
+        'raw_parser': bool(cparser_raw.HAVE_PFNET_RAW_PARSER),
+        'line_flow': bool(cline_flow.HAVE_PFNET_LINE_FLOW),
         'version': str(cconstants.VERSION.decode('UTF-8'))}
 
 # Constants
