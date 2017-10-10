@@ -49,7 +49,7 @@
 - Update examples, documentation and create release (todo).
 - Distribute pfnet python wrapper through pypi (todo).
 - Changed configure.ac and CMakeLists.txt and associated references to RAW_PARSER to PFNET_RAW_PARSER and LINE_FLOW to PFNET_LINE_FLOW for consistency.
-- Added options to check for graphviz with the environment variable PFNET_GRAPHVIZ for cmake.
+- Added an option to skip graphviz check with the environment variable PFNET_GRAPHVIZ=OFF for cmake.
 
 # Version 1.3.1
 
