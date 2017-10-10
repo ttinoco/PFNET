@@ -12,7 +12,7 @@ cdef extern from "pfnet/graph.h":
     ctypedef struct Bus
     ctypedef struct Net
 
-    cdef char HAVE_PNFET_GRAPHVIZ
+    cdef char HAVE_PFNET_GRAPHVIZ
 
     void GRAPH_color_nodes_by_mismatch(Graph* g, int mis_type, int t)
     void GRAPH_color_nodes_by_sensitivity(Graph* g, int sens_type, int t)
