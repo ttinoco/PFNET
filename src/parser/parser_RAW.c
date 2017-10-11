@@ -10,7 +10,7 @@
 
 #include <pfnet/parser_RAW.h>
 
-#if !HAVE_PFNET_RAW_PARSER
+#if !HAVE_RAW_PARSER
 
 Parser* RAW_PARSER_new(void) {
   return NULL;

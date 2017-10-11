@@ -14,8 +14,8 @@
 #include "parser.h"
 #include "pfnet_config.h"
 
-#ifndef HAVE_PFNET_RAW_PARSER
-#define HAVE_PFNET_RAW_PARSER 0
+#ifndef HAVE_RAW_PARSER
+#define HAVE_RAW_PARSER 0
 #endif
 
 // Interface

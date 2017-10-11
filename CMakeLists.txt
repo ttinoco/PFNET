@@ -15,7 +15,8 @@ set(CMAKE_INSTALL_RPATH "@loader_path")  # for relocatable libraries
 
 option(PFNET_DEBUG "set to ON to enable PFNET debug definition" OFF)
 option(PFNET_GRAPHVIZ "set to ON to enable graphviz addon" ON)
-option(PFNET_LINE_FLOW "set to ON to enable line flow addon" ON)
+option(PFNET_LINE_FLOW "set to line flow directory to enable line flow addon" "")
+option(PFNET_RAW_PARSER "set to raw-parser directory to enable raw-parser addon" "")
 
 set(M_LIB,"")
 if (UNIX)
@@ -56,22 +57,18 @@ endif()
 
 # find graphviz (check env variable first)
 if($ENV{PFNET_GRAPHVIZ})
-  if(PFNET_GRAPHVIZ)
-    find_library(GRAPHVIZ_LIB gvc)
-  else()
-    set(GRAPHVIZ_LIB "")
-  endif()
+  find_library(GRAPHVIZ_LIB gvc)
 else()
   set(GRAPHVIZ_LIB "")
 endif()
 
 if(GRAPHVIZ_LIB)
-  message("Graphiz found: " ${GRAPHVIZ_LIB})
+  message("Graphviz found: " ${GRAPHVIZ_LIB})
   target_link_libraries(pfnet gvc cgraph)
   target_link_libraries(pfnet_tests gvc cgraph)
   target_link_libraries(pfnet_static_tests gvc cgraph)
 else()
-  message("Graphiz not enabled.")
+  message("Graphviz not enabled.")
 endif()
 
 # add raw-parser if available
@@ -86,20 +83,20 @@ if(EXISTS $ENV{PFNET_RAW_PARSER}/src/RAW_parser.c)
   install(DIRECTORY $ENV{PFNET_RAW_PARSER}/include/
           DESTINATION include
           FILES_MATCHING PATTERN "*.h")
-  set(HAVE_PFNET_RAW_PARSER 1)  # need to set it to 1 so that the dummy parser in pfnet does not conflict
+  set(HAVE_RAW_PARSER 1)  # need to set it to 1 so that the dummy parser in pfnet does not conflict
 else()
   message("raw-parser not enabled.")
-  set(HAVE_PFNET_RAW_PARSER 0)
+  set(HAVE_RAW_PARSER 0)
 endif()
 
 # add line-flow if specified
 # if(PFNET_LINE_FLOW)
 #   message("line-flow enabled.")
-#   set(HAVE_PFNET_LINE_FLOW 1 CACHE INTERNAL "")
+#   set(HAVE_LINE_FLOW 1 CACHE INTERNAL "")
 #   # find_library(LINE_FLOW_LIB ?)  # TODO check with tomas
 # else()
 #   message("line-flow not enabled.")
-#   set(HAVE_PFNET_LINE_FLOW 0 CACHE INTERNAL "")
+#   set(HAVE_LINE_FLOW 0 CACHE INTERNAL "")
 # endif()
 
 # add checks needed to produce pfnet_config.h

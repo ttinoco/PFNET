@@ -48,8 +48,7 @@
 - Update Python wrapper documentation to show how to install with pip or download/run tests (todo).
 - Update examples, documentation and create release (todo).
 - Distribute pfnet python wrapper through pypi (todo).
-- Changed configure.ac and CMakeLists.txt and associated references to RAW_PARSER to PFNET_RAW_PARSER and LINE_FLOW to PFNET_LINE_FLOW for consistency.
-- Added an option to skip graphviz check with the environment variable PFNET_GRAPHVIZ=OFF for cmake.
+- Both autotools and cmake builds use PFNET_GRAPHVIZ (skipped if set to OFF), PFNET_RAW_PARSER (directory of raw-parser source), and PFNET_LINE_FLOW (directory of line-flow library) options
 
 # Version 1.3.1
 
