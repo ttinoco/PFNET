@@ -19,24 +19,27 @@ AC_PROG_MAKE_SET
 AX_CHECK_COMPILE_FLAG([-Wall], [CFLAGS="$CFLAGS -Wall"], [], [])
 AX_CHECK_COMPILE_FLAG([-Werror], [CFLAGS="$CFLAGS -Werror"], [], [])
 
-# Checks for graphviz
-AC_CHECK_LIB(gvc, gvContext)
-AC_CHECK_LIB(cgraph, agopen)
-AC_CHECK_HEADERS(graphviz/gvc.h)
+# Checks for graphviz, skips of PFNET_GRAPHVIZ set to OFF
+AM_CONDITIONAL([skip_pfnet_graphviz], [test x$PFNET_GRAPHVIZ = xOFF])
+AM_COND_IF([skip_pfnet_graphviz],
+		   [AC_SUBST([HAVE_GRAPHVIZ],[0],[Define to 0 to avoid check for graphviz.])],
+		   [AC_CHECK_LIB(gvc, gvContext)
+		   	AC_CHECK_LIB(cgraph, agopen)
+		   	AC_CHECK_HEADERS(graphviz/gvc.h)])
 
 # Checks for raw parser
-AC_SUBST(rawtop_srcdir,$RAW_PARSER)
-AC_CHECK_FILES([$RAW_PARSER/src/RAW_parser.c],
+AC_SUBST(rawtop_srcdir,$PFNET_RAW_PARSER)
+AC_CHECK_FILES([$PFNET_RAW_PARSER/src/RAW_parser.c],
 	[AC_DEFINE([HAVE_RAW_PARSER],[1],[Define to 1 if you have the raw parser library.])
 	 AM_CONDITIONAL(HAS_RAW_PARSER,true)
-	 AC_SUBST(raw_dir,$RAW_PARSER)],
+	 AC_SUBST(raw_dir,$PFNET_RAW_PARSER)],
 	[AC_DEFINE([HAVE_RAW_PARSER],[0],[Define to 0 if you do not have the raw parser library.])
 	 AM_CONDITIONAL(HAS_RAW_PARSER,false)])
 
 # Checks for line flow
-AC_CHECK_FILES([$LINE_FLOW/lib/libline_flow.so],
+AC_CHECK_FILES([$PFNET_LINE_FLOW/lib/libline_flow.so],
 	[AC_DEFINE([HAVE_LINE_FLOW],[1],[Define to 1 if you have the line flow library.])
-	 LDFLAGS="$LDFLAGS -L$LINE_FLOW/lib -lline_flow -Wl,-rpath,$LINE_FLOW/lib"],
+	 LDFLAGS="$LDFLAGS -L$PFNET_LINE_FLOW/lib -lline_flow -Wl,-rpath,$PFNET_LINE_FLOW/lib"],
 	[AC_DEFINE([HAVE_LINE_FLOW],[0],[Define to 0 if you do not have the line flow library.])])
 
 # Checks for other header files.

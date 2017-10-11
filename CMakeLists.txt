@@ -15,7 +15,8 @@ set(CMAKE_INSTALL_RPATH "@loader_path")  # for relocatable libraries
 
 option(PFNET_DEBUG "set to ON to enable PFNET debug definition" OFF)
 option(PFNET_GRAPHVIZ "set to ON to enable graphviz addon" ON)
-option(PFNET_LINE_FLOW "set to ON to enable line flow addon" ON)
+option(PFNET_LINE_FLOW "set to line flow directory to enable line flow addon" "")
+option(PFNET_RAW_PARSER "set to raw-parser directory to enable raw-parser addon" "")
 
 set(M_LIB,"")
 if (UNIX)
@@ -54,32 +55,32 @@ if(PFNET_DEBUG)
   add_definitions(-DDEBUG)
 endif()
 
-# find graphviz
-if(PFNET_GRAPHVIZ)
+# find graphviz (check env variable first)
+if($ENV{PFNET_GRAPHVIZ})
   find_library(GRAPHVIZ_LIB gvc)
 else()
   set(GRAPHVIZ_LIB "")
 endif()
 
 if(GRAPHVIZ_LIB)
-  message("Graphiz found: " ${GRAPHVIZ_LIB})
+  message("Graphviz found: " ${GRAPHVIZ_LIB})
   target_link_libraries(pfnet gvc cgraph)
   target_link_libraries(pfnet_tests gvc cgraph)
   target_link_libraries(pfnet_static_tests gvc cgraph)
 else()
-  message("Graphiz not enabled.")
+  message("Graphviz not enabled.")
 endif()
 
 # add raw-parser if available
-if(EXISTS $ENV{RAW_PARSER}/src/RAW_parser.c)
-  include_directories($ENV{RAW_PARSER}/include)
-  set(raw_parser_source $ENV{RAW_PARSER}/src/RAW_net.c
-                        $ENV{RAW_PARSER}/src/RAW_parser.c)
+if(EXISTS $ENV{PFNET_RAW_PARSER}/src/RAW_parser.c)
+  include_directories($ENV{PFNET_RAW_PARSER}/include)
+  set(raw_parser_source $ENV{PFNET_RAW_PARSER}/src/RAW_net.c
+                        $ENV{PFNET_RAW_PARSER}/src/RAW_parser.c)
   target_sources(pfnet PUBLIC ${raw_parser_source})
   target_sources(pfnet_static PUBLIC ${raw_parser_source})
   message("raw-parser enabled.")
   # install raw-parser headers also
-  install(DIRECTORY $ENV{RAW_PARSER}/include/
+  install(DIRECTORY $ENV{PFNET_RAW_PARSER}/include/
           DESTINATION include
           FILES_MATCHING PATTERN "*.h")
   set(HAVE_RAW_PARSER 1)  # need to set it to 1 so that the dummy parser in pfnet does not conflict
@@ -106,12 +107,16 @@ INCLUDE (CheckLibraryExists)
 
 # Check for include files
 # Checks for graphviz
-CHECK_LIBRARY_EXISTS(gvc gvContext "" HAVE_LIBGVC)
-CHECK_LIBRARY_EXISTS(cgraph agopen "" HAVE_LIBCGRAPH)
-CHECK_INCLUDE_FILES("graphviz/gvc.h"  HAVE_GRAPHVIZ_GVC_H)
+if(GRAPHVIZ_LIB)
+  CHECK_LIBRARY_EXISTS(gvc gvContext "" HAVE_LIBGVC)
+  CHECK_LIBRARY_EXISTS(cgraph agopen "" HAVE_LIBCGRAPH)
+  CHECK_INCLUDE_FILES("graphviz/gvc.h"  HAVE_GRAPHVIZ_GVC_H)
+endif()
 
 # check for line-flow
-CHECK_LIBRARY_EXISTS(line_flow LINE_FLOW_new "${LINE_FLOW}/lib/" HAVE_LINE_FLOW)
+if($ENV{PFNET_LINE_FLOW})
+  CHECK_LIBRARY_EXISTS(line_flow LINE_FLOW_new "${PFNET_LINE_FLOW}/lib/" HAVE_PFNET_LINE_FLOW)
+endif()
 
 # Checks std header files.
 CHECK_INCLUDE_FILES("stddef.h"  HAVE_STDDEF_H)
