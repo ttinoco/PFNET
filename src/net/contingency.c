@@ -253,6 +253,48 @@ int CONT_get_num_branch_outages(Cont* cont) {
     return 0;
 }
 
+int* CONT_get_branch_outages(Cont* cont) {
+
+  // Local variables
+  int* outages;
+  Branch_outage* bo;
+  int i;
+  
+  // Allocate
+  outages = (int*)malloc(sizeof(int)*CONT_get_num_branch_outages(cont));
+  
+  // Fill
+  i = 0;
+  for (bo = cont->br_outage; bo != NULL; bo = bo->next) {
+    outages[i] = bo->br_index;
+    i++;
+  }
+
+  // Return
+  return outages;
+}
+
+int* CONT_get_gen_outages(Cont* cont) {
+
+  // Local variables
+  int* outages;
+  Gen_outage* go;
+  int i;
+  
+  // Allocate
+  outages = (int*)malloc(sizeof(int)*CONT_get_num_gen_outages(cont));
+  
+  // Fill
+  i = 0;
+  for (go = cont->gen_outage; go != NULL; go = go->next) {
+    outages[i] = go->gen_index;
+    i++;
+  }
+
+  // Return
+  return outages;
+}
+
 void CONT_add_gen_outage(Cont* cont, int gen_index) {
   Gen_outage* go;
   if (cont) {

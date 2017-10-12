@@ -41,7 +41,12 @@ class TestContingency(unittest.TestCase):
 
                 contingencies = []
                 for gen in net.generators[:5]:
-                    contingencies.append(pf.Contingency(generators=[gen]))
+                    c = pf.Contingency(generators=[gen])
+                    indices = c.generator_outages
+                    self.assertEqual(indices.size,1)
+                    self.assertEqual(indices[0], gen.index)
+                    self.assertEqual(c.branch_outages.size,0)
+                    contingencies.append(c)
                         
                 pool = multiprocessing.Pool()
                 results = pool.map(ContingencyHandler(),contingencies)
@@ -61,11 +66,33 @@ class TestContingency(unittest.TestCase):
                 cont1.add_branch_outage(net.get_branch(net.num_branches-2))
                 cont1.add_generator_outage(net.get_generator(0))
                 cont1.add_generator_outage(net.get_generator(1))
+                ibr = cont1.branch_outages
+                igen = cont1.generator_outages
+                self.assertEqual(ibr.size, cont1.num_branch_outages)
+                self.assertEqual(ibr.size, 2)
+                self.assertEqual(igen.size, cont1.num_generator_outages)
+                self.assertEqual(igen.size, 2)
+                self.assertTrue(net.get_generator(0).index in igen)
+                self.assertTrue(net.get_generator(1).index in igen)
+                self.assertTrue(net.get_branch(net.num_branches-1).index in ibr)
+                self.assertTrue(net.get_branch(net.num_branches-2).index in ibr)
+
                 pkld_cont = pickle.dumps(cont1,protocol=-1)
                 cont2 = pickle.loads(pkld_cont)
 
                 self.assertEqual(cont1.num_generator_outages,cont2.num_generator_outages)
                 self.assertEqual(cont1.num_branch_outages,cont2.num_branch_outages)
+                iibr = cont2.branch_outages
+                iigen = cont2.generator_outages
+                self.assertEqual(iibr.size, cont2.num_branch_outages)
+                self.assertEqual(iibr.size, 2)
+                self.assertEqual(iigen.size, cont2.num_generator_outages)
+                self.assertEqual(iigen.size, 2)
+                self.assertTrue(net.get_generator(0).index in iigen)
+                self.assertTrue(net.get_generator(1).index in iigen)
+                self.assertTrue(net.get_branch(net.num_branches-1).index in iibr)
+                self.assertTrue(net.get_branch(net.num_branches-2).index in iibr)
+                
                 for branch in net.branches:
                     if cont1.has_branch_outage(branch):
                         self.assertTrue(cont2.has_branch_outage(branch))
@@ -134,6 +161,10 @@ class TestContingency(unittest.TestCase):
                                 [net.get_branch(1)])
             self.assertTrue(c0.has_generator_outage(net.get_generator(0)))
             self.assertTrue(c0.has_branch_outage(net.get_branch(1)))
+            self.assertEqual(c0.generator_outages.size,1)
+            self.assertEqual(c0.generator_outages[0], net.get_generator(0).index)
+            self.assertEqual(c0.branch_outages.size,1)
+            self.assertEqual(c0.branch_outages[0], net.get_branch(1).index)
             c1 = pf.Contingency(generators=[net.get_generator(0)],
                                 branches=[net.get_branch(2)])
             self.assertTrue(c1.has_generator_outage(net.get_generator(0)))

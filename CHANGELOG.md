@@ -45,6 +45,8 @@ Unreleased
 * Added branch "get_rating" method that takes 'A', 'B', or 'C' as argument (done).
 * Eliminated CustomParser and dummy python parser example (done).
 * Fixed bug with treatment of outage branches in PV-PQ switching heuristics (done).
+* Added arrays branch_outages and generator_outages to contingency object to store indices of outage components (done).
+* Add unittests to check that examples run without errors (todo).
 * Update Python wrapper documentation to show how to install with pip or download/run tests (todo).
 * Update examples, documentation and create release (todo).
 * Distribute pfnet python wrapper through pypi (todo).

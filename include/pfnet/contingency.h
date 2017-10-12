@@ -31,6 +31,8 @@ int CONT_get_num_gen_outages(Cont* cont);
 int CONT_get_num_branch_outages(Cont* cont);
 BOOL CONT_has_gen_outage(Cont* cont, int gen_index);
 BOOL CONT_has_branch_outage(Cont* cont, int br_index);
+int* CONT_get_branch_outages(Cont* cont);
+int* CONT_get_gen_outages(Cont* cont);
 void CONT_init(Cont* cont);
 Cont* CONT_new(void);
 void CONT_show(Cont* cont);
