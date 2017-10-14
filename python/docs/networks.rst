@@ -352,8 +352,8 @@ As explained above, once the network variables have been set, a vector with the 
   >>> print net.num_vars, 2*net.num_buses
   28 28
 
-  >>> P1 = net.get_var_projection('bus','voltage magnitude')
-  >>> P2 = net.get_var_projection('bus','voltage angle')
+  >>> P1 = net.get_var_projection('bus', 'any', 'voltage magnitude')
+  >>> P2 = net.get_var_projection('bus', 'any', 'voltage angle')
 
   >>> print type(P1)
   <class 'scipy.sparse.coo.coo_matrix'>
@@ -388,39 +388,39 @@ PFNET provides a convenient way to specify and analyze network contingencies. A 
   >>> gen = net.get_generator(3)
   >>> branch = net.get_branch(2)
 
-  >>> c1 = pf.Contingency(gens=[gen],branches=[branch])
+  >>> c1 = pf.Contingency(generators=[gen],branches=[branch])
 
-  >>> print c1.num_gen_outages, c1.num_branch_outages
+  >>> print c1.num_generator_outages, c1.num_branch_outages
   1 1
 
 Once a contingency has been constructed, it can be applied and later cleared. This is done using the class methods :func:`apply() <pfnet.Contingency.apply>` and :func:`clear() <pfnet.Contingency.clear>`. The :func:`apply() <pfnet.Contingency.apply>` method sets the specified generator and branches on outage and disconnects them from the network. Voltage regulation and other controls provided by generators or transformers on outage are lost. The :func:`clear() <pfnet.Contingency.clear>` method undoes the changes made by the :func:`apply() <pfnet.Contingency.apply>` method. The following example shows how to apply and clear contingencies, and illustrates some of the side effects::
 
-  >>> print c1.has_gen_outage(gen), c1.has_branch_outage(branch)
+  >>> print c1.has_generator_outage(gen), c1.has_branch_outage(branch)
   True True
 
   >>> gen_bus = gen.bus
   >>> branch_bus = branch.bus_k
 
   >>> # generator and branch are connected to buses
-  >>> print gen in gen_bus.gens, branch in branch_bus.branches
+  >>> print gen in gen_bus.generators, branch in branch_bus.branches
   True True
 
-  >>> c1.apply()
+  >>> c1.apply(net)
 
   >>> print gen.is_on_outage(), branch.is_on_outage()
   True True
 
   >>> # generator and branch are disconnected from buses
-  >>> print gen in gen_bus.gens, branch in branch_bus.branches
+  >>> print gen in gen_bus.generators, branch in branch_bus.branches
   False False
 
-  >>> c1.clear()
+  >>> c1.clear(net)
 
   >>> print gen.is_on_outage(), branch.is_on_outage()
   False False
 
   >>> # generator and branch are connected to buses again
-  >>> print gen in gen_bus.gens, branch in branch_bus.branches
+  >>> print gen in gen_bus.generators, branch in branch_bus.branches
   True True
 
 .. _net_multi_period:
@@ -430,7 +430,7 @@ Multiple Time Periods
 
 PFNET can also be used to represent and analyze power networks over multiple time periods. By default, the networks created using the :ref:`parsers <parsers>`, as in all the examples above, are static. To consider multiple time periods, an argument needs to be passed to the :func:`parse <pfnet.Parser>` method of a :class:`Parser <pfnet.ParserBase>`::
 
-  >>> net = pfnet.ParserMAT().parse('ieee14.mat',5)
+  >>> net = pfnet.ParserMAT().parse('ieee14.mat', num_periods=5)
 
   >>> print net.num_periods
   5

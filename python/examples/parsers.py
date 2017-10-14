@@ -1,20 +1,20 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
 # Parsers - Overview
-
+import os
+import sys
 import pfnet
 
-parser = pfnet.Parser("mat")
+parser = pfnet.Parser(sys.argv[1])
 
-network = parser.parse("../../data/ieee14.mat")
+network = parser.parse(sys.argv[1])
 
-pfnet.ParserJSON().write(network,"new_network.json")
+pfnet.ParserJSON().write(network, "new_network.json")
 
-import os
 os.remove("new_network.json")
