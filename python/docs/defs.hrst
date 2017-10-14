@@ -1,0 +1,20 @@
+.. |Array| replace:: :class:`ndarray <numpy.ndarray>`
+
+.. _PFNET: http://pfnet-python.readthedocs.io
+.. |PFNET| replace:: `PFNET`_
+.. |ParserBase| replace:: :class:`ParserBase <pfnet.ParserBase>`
+.. |Network| replace:: :class:`Network <pfnet.Network>`
+.. |Bus| replace:: :class:`Bus <pfnet.Bus>`
+.. |Branch| replace:: :class:`Branch <pfnet.Branch>`
+.. |Generator| replace:: :class:`Generator <pfnet.Generator>`
+.. |Shunt| replace:: :class:`Shunt <pfnet.Shunt>`
+.. |Load| replace:: :class:`Load <pfnet.Load>`
+.. |Contingency| replace:: :class:`Contingency <pfnet.Contingency>`
+.. |CustomFunction| replace:: :class:`CustomFunction <pfnet.CustomFunction>`
+.. |CustomConstraint| replace:: :class:`CustomConstraint <pfnet.CustomConstraint>`
+.. |Problem| replace:: :class:`Problem <pfnet.Problem>`
+
+.. |RefFlags| replace:: :ref:`ref_net_flag`
+.. |RefBatteryQuantities| replace:: :ref:`ref_bat_q`
+
+.. |TrueFalse| replace:: {``True``, ``False``}

@@ -9,6 +9,7 @@
 # Optimization Problems - Functions
 
 import sys
+sys.path.append('.')
 import pfnet
 
 net = pfnet.Parser(sys.argv[1]).parse(sys.argv[1])

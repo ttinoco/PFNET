@@ -90,7 +90,7 @@ cdef class Contingency:
         """
         Applies outages that characterize contingency.
 
-        Paramaters
+        Parameters
         ----------
         network : :class:`Network <pfnet.Network>`
         """
@@ -102,7 +102,7 @@ cdef class Contingency:
         """
         Clears outages that characterize contingency.
 
-        Paramaters
+        Parameters
         ----------
         network : :class:`Network <pfnet.Network>`
         """

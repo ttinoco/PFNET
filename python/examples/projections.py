@@ -9,6 +9,7 @@
 # Power Networks - Projections
 
 import sys
+sys.path.append('.')
 import pfnet
 import numpy as np
 

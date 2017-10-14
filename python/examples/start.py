@@ -6,6 +6,9 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
+import sys
+sys.path.append('.')
+
 # Getting started - Installation
 
 import pfnet
@@ -13,7 +16,6 @@ print(pfnet.info)
 
 # Getting Started - Example
 
-import sys
 import pfnet
 import numpy as np
 

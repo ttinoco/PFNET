@@ -9,6 +9,7 @@
 # Optimization Problems - Problems
 
 import sys
+sys.path.append('.')
 import pfnet
 from power_flow import NRsolve
 

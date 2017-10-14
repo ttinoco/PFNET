@@ -1,26 +1,10 @@
+.. include:: defs.hrst
+
 .. _reference:
 
 *************
 API Reference
 *************
-
-.. _ref_vec:
-
-Vector
-======
-
-.. class:: numpy.ndarray
-
-           See `numpy documentation <http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html>`_.
-
-.. _ref_mat:
-
-Matrix
-======
-
-.. class:: scipy.sparse.coo_matrix
-
-	   See `scipy documentation <http://docs.scipy.org/doc/scipy-0.15.1/reference/generated/scipy.sparse.coo_matrix.html>`_.
 
 .. _ref_parser:
 

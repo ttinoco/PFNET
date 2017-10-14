@@ -9,6 +9,7 @@
 # Power Networks - Multiperiod
 
 import sys
+sys.path.append('.')
 import pfnet
 import numpy as np
 

@@ -10,45 +10,48 @@ Targets
 
 Unreleased
 ----------
-* Moved to setuptools (done).
-* Changed configure.ac to look for raw_parser using RAW_PARSER env variable (done).
-* Removed C library tarball from python/docs/_static (done).
-* Made Python wrapper self-contained, i.e., it contains and installs the C library from a tarball in lib directory (done).
-* Updated travis instructions to directly install python wrapper (done).
-* Removed "build" script for readthedocs since it was no longer needed (done).
-* Removed setup.cfg since it was no longer needed (done).
-* Added property mask to projection operator (done).
-* Added projection getters for network and extra variables of constraints (done).
-* Made generator Qmin, Qmax writable in Python (done).
-* Added routines for extracting constraint row info strings with format (constr_name:obj:obj_id:constr_info:time) (done).
-* Made AC_FLOW_LIM constraint store row info (done).
-* Made LBOUND constraint store row info (done).
-* Updated LOAD_PF (load constant power factor) constraint to maintain sign differences of current P and Q (done).
-* Made load "set_target_power_factor" routine accept negative power factors (done).
-* Fixed memory leaks coming from "VEC_new_from_array" in Python wrapper (done).
-* Add routines for extracting info strings about entries of var values vector (obj:obj_id:quantity:time) (done).
-* Added "v_base" field to bus structure/object to store base voltage in kv and updated all parsers to store this info (done).
-* Made Network object pickle-able (done).
-* Added automatic enforcement of lower-triangularity of Hessian of objective functions (done).
-* Made Contingency object pickle-able (done).
-* Added test utilities in new module pfnet.tests (done).
-* Exposed component flags bit masks in Python for network comparisons (done).
-* Added network "get_copy" and "copy_from_net" routines and enhanced network comparison test utility (done).
-* Made "get_index"-type routines of network components return -1 for NULL pointers to avoid silent errors (done).
-* Changed Contigency class methods to use word "generator" instead of "gen" abbreviation (done).
-* Added network getters for branch current and apparent power magnitudes (done).
-* Added cmake windows build script invokation in setup.py (done).
-* Changed autotools and cmake rules to incoporate raw_parser using conditional joint compilation of sources as opposed to linkage with external library (done).
-* Changed slack limits in branch flow constraints from [0,thermal_rating] to [-thermal_rating,thermal_rating] (done).
-* Improved contingency to disable slack bus if all its generators are on outage (done).
-* Added name attributes to all bus-connected components and removed vargens name hash (done).
-* Added branch "get_rating" method that takes 'A', 'B', or 'C' as argument (done).
-* Eliminated CustomParser and dummy python parser example (done).
-* Fixed bug with treatment of outage branches in PV-PQ switching heuristics (done).
-* Added arrays branch_outages and generator_outages to contingency object to store indices of outage components (done).
-* Add unittests to check that examples run without errors (todo).
+
+Version 1.3.2
+-------------
+* Moved to setuptools.
+* Changed configure.ac to look for raw_parser using RAW_PARSER env variable.
+* Removed C library tarball from python/docs/_static.
+* Made Python wrapper self-contained, i.e., it contains and installs the C library from a tarball in lib directory.
+* Updated travis instructions to directly install python wrapper.
+* Removed "build" script for readthedocs since it was no longer needed.
+* Removed setup.cfg since it was no longer needed.
+* Added property mask to projection operator.
+* Added projection getters for network and extra variables of constraints.
+* Made generator Qmin, Qmax writable in Python.
+* Added routines for extracting constraint row info strings with format (constr_name:obj:obj_id:constr_info:time).
+* Made AC_FLOW_LIM constraint store row info.
+* Made LBOUND constraint store row info.
+* Updated LOAD_PF (load constant power factor) constraint to maintain sign differences of current P and Q.
+* Made load "set_target_power_factor" routine accept negative power factors.
+* Fixed memory leaks coming from "VEC_new_from_array" in Python wrapper.
+* Added routines for extracting info strings about entries of var values vector (obj:obj_id:quantity:time).
+* Added "v_base" field to bus structure/object to store base voltage in kv and updated all parsers to store this info.
+* Made Network object pickle-able.
+* Added automatic enforcement of lower-triangularity of Hessian of objective functions.
+* Made Contingency object pickle-able.
+* Added test utilities in new module pfnet.tests.
+* Exposed component flags bit masks in Python for network comparisons.
+* Added network "get_copy" and "copy_from_net" routines and enhanced network comparison test utility.
+* Made "get_index"-type routines of network components return -1 for NULL pointers to avoid silent errors.
+* Changed Contigency class methods to use word "generator" instead of "gen" abbreviation.
+* Added network getters for branch current and apparent power magnitudes.
+* Added cmake windows build script invokation in setup.py.
+* Changed autotools and cmake rules to incorporate raw_parser using conditional joint compilation of sources as opposed to linkage with external library.
+* Changed slack limits in branch flow constraints from [0,thermal_rating] to [-thermal_rating,thermal_rating].
+* Improved contingency to disable slack bus if all its generators are on outage.
+* Added name attributes to all bus-connected components and removed vargens name hash.
+* Added branch "get_rating" method that takes 'A', 'B', or 'C' as argument.
+* Eliminated CustomParser and dummy python parser example.
+* Fixed bug with treatment of outage branches in PV-PQ switching heuristics.
+* Added arrays branch_outages and generator_outages to contingency object to store indices of outage components.
+* Added unittests to check that examples run without errors.
 * Update Python wrapper documentation to show how to install with pip or download/run tests (todo).
-* Update examples, documentation and create release (todo).
+* Update examples, documentation (macros, intersphinx) and create release (todo).
 * Distribute pfnet python wrapper through pypi (todo).
 
 Version 1.3.1

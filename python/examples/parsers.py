@@ -7,8 +7,10 @@
 #***************************************************#
 
 # Parsers - Overview
+
 import os
 import sys
+sys.path.append('.')
 import pfnet
 
 parser = pfnet.Parser(sys.argv[1])
