@@ -1,4 +1,10 @@
+.. _Numpy: http://docs.scipy.org/doc/numpy/
+.. |Numpy| replace:: `Numpy`_
 .. |Array| replace:: :class:`ndarray <numpy.ndarray>`
+
+.. _Scipy: http://docs.scipy.org/doc/scipy/reference/
+.. |Scipy| replace:: `Scipy`_
+.. |CooMatrix| replace:: :class:`coo_matrix <scipy.sparse.coo_matrix>`
 
 .. _PFNET: http://pfnet-python.readthedocs.io
 .. |PFNET| replace:: `PFNET`_
@@ -15,6 +21,8 @@
 .. |Problem| replace:: :class:`Problem <pfnet.Problem>`
 
 .. |RefFlags| replace:: :ref:`ref_net_flag`
+
 .. |RefBatteryQuantities| replace:: :ref:`ref_bat_q`
+.. |RefBranchQuantities| replace:: :ref:`ref_branch_q`
 
 .. |TrueFalse| replace:: {``True``, ``False``}
