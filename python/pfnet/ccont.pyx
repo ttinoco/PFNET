@@ -27,20 +27,20 @@ cdef class Contingency:
     cdef ccont.Cont* _c_cont
     cdef bint alloc
 
-    def __init__(self,generators=None,branches=None,alloc=True):
+    def __init__(self, generators=None, branches=None, alloc=True):
         """
         Contingency class.
 
         Parameters
         ----------
-        generators : list or :class:`Generators <pfnet.Generator>`
-        branches : list :class:`Branchs <pfnet.Branch>`
-        alloc : {``True``, ``False``}
+        generators : list of |Generator| objects
+        branches : list of |Branch| objects
+        alloc : |TrueFalse|
         """
 
         pass
 
-    def __cinit__(self,generators=None,branches=None,alloc=True):
+    def __cinit__(self, generators=None, branches=None, alloc=True):
 
         cdef Generator g
         cdef Branch br
@@ -88,11 +88,11 @@ cdef class Contingency:
 
     def apply(self, network):
         """
-        Applies outages that characterize contingency.
+        Applies outages that characterize contingency to given network.
 
         Parameters
         ----------
-        network : :class:`Network <pfnet.Network>`
+        network : |Network|
         """
 
         cdef Network n = network
@@ -100,11 +100,11 @@ cdef class Contingency:
 
     def clear(self, network):
         """
-        Clears outages that characterize contingency.
+        Clears outages that characterize contingency from given network.
 
         Parameters
         ----------
-        network : :class:`Network <pfnet.Network>`
+        network : |Network|
         """
 
         cdef Network n = network
@@ -123,7 +123,7 @@ cdef class Contingency:
 
         Parameters
         ----------
-        gen : :class:`Generator <pfnet.Generator>`
+        gen : |Generator|
         """
 
         ccont.CONT_add_gen_outage(self._c_cont, gen.index)
@@ -134,7 +134,7 @@ cdef class Contingency:
 
         Parameters
         ----------
-        br : :class:`Branch <pfnet.Branch>`
+        br : |Branch|
         """
 
         ccont.CONT_add_branch_outage(self._c_cont,br.index)
@@ -145,11 +145,11 @@ cdef class Contingency:
 
         Parameters
         ----------
-        gen : :class:`Generator <pfnet.Generator>`
+        gen : |Generator|
 
         Returns
         -------
-        result : {``True``, ``False``}
+        result : |TrueFalse|
         """
 
         cdef Generator g = gen
@@ -161,34 +161,34 @@ cdef class Contingency:
 
         Parameters
         ----------
-        branch : :class:`Branch <pfnet.Branch>`
+        branch : |Branch|
 
         Returns
         -------
-        result : {``True``, ``False``}
+        result : |TrueFalse|
         """
 
         cdef Branch b = br
         return ccont.CONT_has_branch_outage(self._c_cont,b.index)
 
     property branch_outages:
-       """ Array of outage branch indices. """
+       """ Array of outage branch indices (|Array|). """
        def __get__(self): return IntArray(ccont.CONT_get_branch_outages(self._c_cont),
                                           self.num_branch_outages,
                                           owndata=True)
 
     property generator_outages:
-       """ Array of outage generator indices. """
+       """ Array of outage generator indices (|Array|). """
        def __get__(self): return IntArray(ccont.CONT_get_gen_outages(self._c_cont),
                                           self.num_generator_outages,
                                           owndata=True)
 
     property num_generator_outages:
-        """ Number of generator outages. """
+        """ Number of generator outages (int). """
         def __get__(self): return ccont.CONT_get_num_gen_outages(self._c_cont)
 
     property num_branch_outages:
-        """ Number of branch outages. """
+        """ Number of branch outages (int). """
         def __get__(self): return ccont.CONT_get_num_branch_outages(self._c_cont)
 
     property json_string:
