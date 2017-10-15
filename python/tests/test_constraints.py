@@ -1579,8 +1579,8 @@ class TestConstraints(unittest.TestCase):
                     dQ = f[bus.index_Q+t*2*net.num_buses]
                     dP_list[t].append(dP)
                     dQ_list[t].append(dQ)
-                    self.assertAlmostEqual(dP,bus.P_mis[t])
-                    self.assertAlmostEqual(dQ,bus.Q_mis[t])
+                    self.assertAlmostEqual(dP,bus.P_mismatch[t])
+                    self.assertAlmostEqual(dQ,bus.Q_mismatch[t])
             self.assertAlmostEqual(net.bus_P_mis[t],np.max(np.abs(dP_list[t]))*net.base_power)
             self.assertAlmostEqual(net.bus_Q_mis[t],np.max(np.abs(dQ_list[t]))*net.base_power)
 
@@ -1757,8 +1757,8 @@ class TestConstraints(unittest.TestCase):
                     dQ = f[bus.index_Q+t*2*net.num_buses]
                     dP_list[t].append(dP)
                     dQ_list[t].append(dQ)
-                    self.assertAlmostEqual(dP,bus.P_mis[t])
-                    self.assertAlmostEqual(dQ,bus.Q_mis[t])
+                    self.assertAlmostEqual(dP,bus.P_mismatch[t])
+                    self.assertAlmostEqual(dQ,bus.Q_mismatch[t])
             self.assertAlmostEqual(net.bus_P_mis[t],np.max(np.abs(dP_list[t]))*net.base_power)
             self.assertAlmostEqual(net.bus_Q_mis[t],np.max(np.abs(dQ_list[t]))*net.base_power)
 

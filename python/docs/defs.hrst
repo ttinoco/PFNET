@@ -15,6 +15,8 @@
 .. |Generator| replace:: :class:`Generator <pfnet.Generator>`
 .. |Shunt| replace:: :class:`Shunt <pfnet.Shunt>`
 .. |Load| replace:: :class:`Load <pfnet.Load>`
+.. |VarGenerator| replace:: :class:`VarGenerator <pfnet.VarGenerator>`
+.. |Battery| replace:: :class:`Battery <pfnet.Battery>`
 .. |Contingency| replace:: :class:`Contingency <pfnet.Contingency>`
 .. |CustomFunction| replace:: :class:`CustomFunction <pfnet.CustomFunction>`
 .. |CustomConstraint| replace:: :class:`CustomConstraint <pfnet.CustomConstraint>`
@@ -24,5 +26,10 @@
 
 .. |RefBatteryQuantities| replace:: :ref:`ref_bat_q`
 .. |RefBranchQuantities| replace:: :ref:`ref_branch_q`
+.. |RefBusQuantities| replace:: :ref:`ref_bus_q`
+
+.. |RefBusSensitivities| replace:: :ref:`ref_bus_sens`:
+.. |RefBusMismatches| replace:: :ref:`ref_bus_mis`
+
 
 .. |TrueFalse| replace:: {``True``, ``False``}

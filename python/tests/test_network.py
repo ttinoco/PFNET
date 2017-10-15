@@ -2105,8 +2105,8 @@ class TestNetwork(unittest.TestCase):
                 dQ = f[bus.index_Q]
                 dP_list.append(dP)
                 dQ_list.append(dQ)
-                self.assertLess(np.abs(dP-bus.P_mis),1e-10)
-                self.assertLess(np.abs(dQ-bus.Q_mis),1e-10)
+                self.assertLess(np.abs(dP-bus.P_mismatch),1e-10)
+                self.assertLess(np.abs(dQ-bus.Q_mismatch),1e-10)
             self.assertLess(np.abs(net.bus_P_mis-np.max(np.abs(dP_list))*net.base_power),1e-10)
             self.assertLess(np.abs(net.bus_Q_mis-np.max(np.abs(dQ_list))*net.base_power),1e-10)
 
@@ -2127,8 +2127,8 @@ class TestNetwork(unittest.TestCase):
                     dQ = ft[bus.index_Q]
                     dP_list.append(dP)
                     dQ_list.append(dQ)
-                    self.assertLess(np.abs(dP-bus.P_mis[t]),1e-10)
-                    self.assertLess(np.abs(dQ-bus.Q_mis[t]),1e-10)
+                    self.assertLess(np.abs(dP-bus.P_mismatch[t]),1e-10)
+                    self.assertLess(np.abs(dQ-bus.Q_mismatch[t]),1e-10)
                 self.assertLess(np.abs(netMP.bus_P_mis[t]-np.max(np.abs(dP_list))*netMP.base_power),1e-10)
                 self.assertLess(np.abs(netMP.bus_Q_mis[t]-np.max(np.abs(dQ_list))*netMP.base_power),1e-10)
 
@@ -2144,11 +2144,11 @@ class TestNetwork(unittest.TestCase):
                 self.assertLess(np.abs(fsaved[vargen.bus.index_P]-
                                        f[vargen.bus.index_P]-1.),1e-10)
                 self.assertLess(np.abs(fsaved[vargen.bus.index_P]-
-                                       vargen.bus.P_mis-1.),1e-10)
+                                       vargen.bus.P_mismatch-1.),1e-10)
                 self.assertLess(np.abs(fsaved[vargen.bus.index_Q]-
                                        f[vargen.bus.index_Q]-2.),1e-10)
                 self.assertLess(np.abs(fsaved[vargen.bus.index_Q]-
-                                       vargen.bus.Q_mis-2.),1e-10)
+                                       vargen.bus.Q_mismatch-2.),1e-10)
             for vargen in net.var_generators:
                 self.assertGreater(len(vargen.bus.loads),0)
                 vargen.bus.loads[0].P = vargen.bus.loads[0].P - 1.
@@ -2160,11 +2160,11 @@ class TestNetwork(unittest.TestCase):
                 self.assertLess(np.abs(fsaved[vargen.bus.index_P]-
                                        f[vargen.bus.index_P]),1e-10)
                 self.assertLess(np.abs(fsaved[vargen.bus.index_P]-
-                                       vargen.bus.P_mis),1e-10)
+                                       vargen.bus.P_mismatch),1e-10)
                 self.assertLess(np.abs(fsaved[vargen.bus.index_Q]-
                                        f[vargen.bus.index_Q]),1e-10)
                 self.assertLess(np.abs(fsaved[vargen.bus.index_Q]-
-                                       vargen.bus.Q_mis),1e-10)
+                                       vargen.bus.Q_mismatch),1e-10)
 
             # Mismatches 2 (multiperiod)
             for vargen in netMP.var_generators:
@@ -2180,11 +2180,11 @@ class TestNetwork(unittest.TestCase):
                     self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
                                            f[vargen.bus.index_P+t*2*n]-1.),1e-10)
                     self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
-                                           vargen.bus.P_mis[t]-1.),1e-10)
+                                           vargen.bus.P_mismatch[t]-1.),1e-10)
                     self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
                                            f[vargen.bus.index_Q+t*2*n]-2.),1e-10)
                     self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
-                                           vargen.bus.Q_mis[t]-2.),1e-10)
+                                           vargen.bus.Q_mismatch[t]-2.),1e-10)
             for vargen in netMP.var_generators:
                 self.assertGreater(len(vargen.bus.loads),0)
                 vargen.bus.loads[0].P = vargen.bus.loads[0].P - 1.
@@ -2197,11 +2197,11 @@ class TestNetwork(unittest.TestCase):
                     self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
                                            f[vargen.bus.index_P+t*2*n]),1e-10)
                     self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
-                                           vargen.bus.P_mis[t]),1e-10)
+                                           vargen.bus.P_mismatch[t]),1e-10)
                     self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
                                            f[vargen.bus.index_Q+t*2*n]),1e-10)
                     self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
-                                           vargen.bus.Q_mis[t]),1e-10)
+                                           vargen.bus.Q_mismatch[t]),1e-10)
 
             net.clear_properties()
             netMP.clear_properties()
@@ -2308,8 +2308,8 @@ class TestNetwork(unittest.TestCase):
                 self.assertGreater(sensm,0)
                 self.assertEqual(abs(bus.get_largest_sens()),sensm)
                 self.assertEqual(bus.get_largest_sens_type(),senst)
-                mis = [abs(bus.P_mis),
-                       abs(bus.Q_mis)]
+                mis = [abs(bus.P_mismatch),
+                       abs(bus.Q_mismatch)]
                 mism = max(mis)
                 mist = mis_types[np.argmax(mis)]
                 self.assertEqual(abs(bus.get_largest_mis()),mism)
@@ -2338,9 +2338,9 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(bus.get_quantity(pf.BUS_MIS_LARGEST),
                                  bus.get_largest_mis())
                 self.assertEqual(bus.get_quantity(pf.BUS_MIS_ACTIVE),
-                                 bus.P_mis)
+                                 bus.P_mismatch)
                 self.assertEqual(bus.get_quantity(pf.BUS_MIS_REACTIVE),
-                                 bus.Q_mis)
+                                 bus.Q_mismatch)
                 self.assertEqual(bus.get_quantity(-1),
                                  0.)
 
@@ -2369,7 +2369,7 @@ class TestNetwork(unittest.TestCase):
                     bus2 = bus_list[i]
                     self.assertTrue(isinstance(bus1,pf.Bus))
                     self.assertTrue(isinstance(bus2,pf.Bus))
-                    r1.append(abs(bus1.P_mis) >= abs(bus2.P_mis))
+                    r1.append(abs(bus1.P_mismatch) >= abs(bus2.P_mismatch))
             self.assertTrue(all(r1))
 
             # Sort by largest sensitivity

@@ -45,19 +45,19 @@ cdef class Bus:
 
     cdef cbus.Bus* _c_ptr
 
-    def __init__(self,num_periods=1,alloc=True):
+    def __init__(self, num_periods=1, alloc=True):
         """
         Bus class.
 
         Parameters
         ----------
-        alloc : {``True``, ``False``}
+        alloc : |TrueFalse|
         num_periods : int
         """
 
         pass
 
-    def __cinit__(self,num_periods=1,alloc=True):
+    def __cinit__(self, num_periods=1, alloc=True):
 
         if alloc:
             self._c_ptr = cbus.BUS_new(num_periods)
@@ -68,13 +68,17 @@ cdef class Bus:
 
         return new_CPtr(self._c_ptr)
 
-    def is_equal(self,other):
+    def is_equal(self, other):
         """
-        Determines whether bus is equal to given bus.
+        Determines whether the bus is equal to given bus.
 
         Parameters
         ----------
-        other : :class:`Bus <pfnet.Bus>`
+        other : |Bus|
+
+        Returns
+        -------
+        flag : |TrueFalse|
         """
 
         cdef Bus b_other
@@ -92,7 +96,7 @@ cdef class Bus:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cbus.BUS_is_slack(self._c_ptr)
@@ -103,7 +107,7 @@ cdef class Bus:
         
         Parameters
         ----------
-        bool : {``True``, ``False``}
+        bool : |TrueFalse|
         """
 
         cbus.BUS_set_slack_flag(self._c_ptr, flag)
@@ -114,7 +118,7 @@ cdef class Bus:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cbus.BUS_is_regulated_by_gen(self._c_ptr)
@@ -125,7 +129,7 @@ cdef class Bus:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cbus.BUS_is_regulated_by_tran(self._c_ptr)
@@ -136,24 +140,24 @@ cdef class Bus:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cbus.BUS_is_regulated_by_shunt(self._c_ptr)
 
-    def has_flags(self,flag_type,q):
+    def has_flags(self, flag_type, q):
         """
         Determines whether the bus has the flags associated with
         certain quantities set.
 
         Parameters
         ----------
-        flag_type : string (:ref:`ref_net_flag`)
-        q : string or list of strings (:ref:`ref_bus_q`)
+        flag_type : string (|RefFlags|)
+        q : string or list of strings (|RefBusQuantities|)
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         q = q if isinstance(q,list) else [q]
@@ -183,7 +187,7 @@ cdef class Bus:
         else:
             raise BusError('index does not correspond to any variable')
 
-    def get_largest_sens(self,t=0):
+    def get_largest_sens(self, t=0):
         """
         Gets the bus sensitivity of largest absolute value.
 
@@ -198,7 +202,7 @@ cdef class Bus:
 
         return cbus.BUS_get_largest_sens(self._c_ptr,t)
 
-    def get_largest_sens_type(self,t=0):
+    def get_largest_sens_type(self, t=0):
         """
         Gets the type of bus sensitivity of largest absolute value.
 
@@ -213,7 +217,7 @@ cdef class Bus:
 
         return cbus.BUS_get_largest_sens_type(self._c_ptr,t)
 
-    def get_largest_mis(self,t=0):
+    def get_largest_mis(self, t=0):
         """
         Gets the bus power mismatch of largest absolute value.
 
@@ -228,7 +232,7 @@ cdef class Bus:
 
         return cbus.BUS_get_largest_mis(self._c_ptr,t)
 
-    def get_largest_mis_type(self,t=0):
+    def get_largest_mis_type(self, t=0):
         """
         Gets the type of bus power mismatch of largest absolute value.
 
@@ -243,13 +247,13 @@ cdef class Bus:
 
         return cbus.BUS_get_largest_mis_type(self._c_ptr,t)
 
-    def get_quantity(self,type,t=0):
+    def get_quantity(self,type, t=0):
         """
         Gets the bus quantity of the given type.
 
         Parameters
         ----------
-        type : int (:ref:`ref_bus_sens`:, :ref:`ref_bus_mis`)
+        type : int (|RefBusSensitivities|, |RefBusMismatches|)
         t : int (time period)
 
         Returns
@@ -259,7 +263,7 @@ cdef class Bus:
 
         return cbus.BUS_get_quantity(self._c_ptr,type,t)
 
-    def get_total_gen_P(self,t=0):
+    def get_total_gen_P(self, t=0):
         """
         Gets the total active power injected by generators
         connected to this bus.
@@ -275,7 +279,7 @@ cdef class Bus:
 
         return cbus.BUS_get_total_gen_P(self._c_ptr,t)
 
-    def get_total_gen_Q(self,t=0):
+    def get_total_gen_Q(self, t=0):
         """
         Gets the total reactive power injected by generators
         connected to this bus.
@@ -315,7 +319,7 @@ cdef class Bus:
 
         return cbus.BUS_get_total_gen_Q_min(self._c_ptr)
 
-    def get_total_load_P(self,t=0):
+    def get_total_load_P(self, t=0):
         """
         Gets the total active power consumed by loads
         connected to this bus.
@@ -331,7 +335,7 @@ cdef class Bus:
 
         return cbus.BUS_get_total_load_P(self._c_ptr,t)
 
-    def get_total_load_Q(self,t=0):
+    def get_total_load_Q(self, t=0):
         """
         Gets the total reactive power consumed by loads
         connected to this bus.
@@ -359,7 +363,7 @@ cdef class Bus:
 
         return cbus.BUS_get_total_shunt_g(self._c_ptr)
 
-    def get_total_shunt_b(self,t=0):
+    def get_total_shunt_b(self, t=0):
         """
         Gets the combined susceptance of shunt devices
         connected to this bus.
@@ -375,14 +379,14 @@ cdef class Bus:
 
         return cbus.BUS_get_total_shunt_b(self._c_ptr,t)
 
-    def get_num_vars(self,q,t_start=0,t_end=None):
+    def get_num_vars(self, q, t_start=0, t_end=None):
         """
         Gets number of variables associated with the
-        given quantity.
+        given quantities.
 
         Parameters
         ----------
-        q : string or list of strings (:ref:`ref_bus_q`)
+        q : string or list of strings (|RefBusQuantities|)
         t_start : int
         t_end : int
 
@@ -400,7 +404,7 @@ cdef class Bus:
                                      t_start,
                                      t_end)
 
-    def set_price(self,p,t=0):
+    def set_price(self, p, t=0):
         """
         Sets bus energy price.
 
@@ -412,7 +416,7 @@ cdef class Bus:
 
         cbus.BUS_set_price(self._c_ptr,p,t)
 
-    def set_v_mag(self,v,t=0):
+    def set_v_mag(self, v, t=0):
         """
         Sets bus voltage magnitude.
 
@@ -424,7 +428,7 @@ cdef class Bus:
 
         cbus.BUS_set_v_mag(self._c_ptr,v,t)
 
-    def set_v_ang(self,v,t=0):
+    def set_v_ang(self, v, t=0):
         """
         Sets bus voltage angle.
 
@@ -438,11 +442,11 @@ cdef class Bus:
         
     def add_generator(self, gen):
         """
-        Add a generator connection to this bus.
+        Adds a generator connection to this bus.
         
         Parameters
         ----------
-        gen : :class:`Generator <pfnet.Generator>`
+        gen : |Generator|
         """
         
         cdef Generator cgen
@@ -453,11 +457,11 @@ cdef class Bus:
     
     def add_reg_generator(self, reg_gen):
         """
-        Add a regulating generator connection to this bus.
+        Adds a regulating generator connection to this bus.
         
         Parameters
         ----------
-        reg_gen : :class:`Generator <pfnet.Generator>`
+        reg_gen : |Generator|
         """
         
         cdef Generator creg_gen
@@ -468,11 +472,11 @@ cdef class Bus:
     
     def add_load(self, load):
         """
-        Add a load connection to this bus.
+        Adds a load connection to this bus.
         
         Parameters
         ----------
-        load : :class:`Load <pfnet.Load>`
+        load : |Load|
         """
         
         cdef Load cload
@@ -483,26 +487,26 @@ cdef class Bus:
     
     def add_branch_k(self, branch):
         """
-        Add a 'k' branch connection to this bus.
+        Adds a "k" branch connection to this bus.
         
         Parameters
         ----------
-        branch : :class:`Branch <pfnet.Branch>`
+        branch : |Branch|
         """
         
         cdef Branch cbranch
-        if not isinstance(branch,Branch):
+        if not isinstance(branch, Branch):
             raise BusError('Not a Branch type object')
         cbranch = branch
         cbus.BUS_add_branch_k(self._c_ptr, cbranch._c_ptr)
     
     def add_branch_m(self, branch):
         """
-        Add a 'm' branch connection to this bus.
+        Adds an "m" branch connection to this bus.
         
         Parameters
         ----------
-        branch : :class:`Branch <pfnet.Branch>`
+        branch : |Branch|
         """
         
         cdef Branch cbranch
@@ -513,11 +517,11 @@ cdef class Bus:
     
     def add_reg_tran(self, reg_tran_branch):
         """
-        Add a regulating transformer connection to this bus.
+        Adds a regulating transformer connection to this bus.
         
         Parameters
         ----------
-        reg_tran_branch : :class:`Branch <pfnet.Branch>`
+        reg_tran_branch : |Branch|
         """
         
         cdef Branch cbranch
@@ -528,11 +532,11 @@ cdef class Bus:
     
     def add_shunt(self, shunt):
         """
-        Add a shunt connection to this bus.
+        Adds a shunt connection to this bus.
         
         Parameters
         ----------
-        shunt : :class:`Shunt <pfnet.Shunt>`
+        shunt : |Shunt|
         """
         
         cdef Shunt cshunt
@@ -543,11 +547,11 @@ cdef class Bus:
     
     def add_reg_shunt(self, reg_shunt):
         """
-        Add a regulating shunt connection to this bus.
+        Adds a regulating shunt connection to this bus.
         
         Parameters
         ----------
-        reg_shunt : :class:`Shunt <pfnet.Shunt>`
+        reg_shunt : |Shunt|
         """
         
         cdef Shunt cshunt
@@ -558,11 +562,11 @@ cdef class Bus:
     
     def add_var_generator(self, vargen):
         """
-        Add a variable generator connection to this bus.
+        Adds a variable generator connection to this bus.
         
         Parameters
         ----------
-        vargen : :class:`VarGenerator <pfnet.VarGenerator>`
+        vargen : |VarGenerator|
         """
         
         cdef VarGenerator cvargen
@@ -573,11 +577,11 @@ cdef class Bus:
     
     def add_battery(self, bat):
         """
-        Add a battery connection to this bus.
+        Adds a battery connection to this bus.
         
         Parameters
         ----------
-        bat : :class:`Battery <pfnet.Battery>`
+        bat : |Battery|
         """
         
         cdef Battery cbat
@@ -586,7 +590,7 @@ cdef class Bus:
         cbat = bat
         cbus.BUS_add_bat(self._c_ptr, cbat._c_ptr)
 
-    def show(self,t=0):
+    def show(self, t=0):
         """
         Shows bus properties.
 
@@ -596,18 +600,18 @@ cdef class Bus:
         """
         cbus.BUS_show(self._c_ptr,t)
 
-    def __richcmp__(self,other,op):
+    def __richcmp__(self, other, op):
         """
         Compares two buses.
 
         Parameters
         ----------
-        other : Bus
+        other : |Bus|
         op : comparison type
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         if op == 2:
@@ -630,7 +634,7 @@ cdef class Bus:
         def __get__(self): return cbus.BUS_get_index(self._c_ptr)
 
     property index_v_mag:
-        """ Index of voltage magnitude variable (int or array). """
+        """ Index of voltage magnitude variable (int or |Array|). """
         def __get__(self):
             r = [cbus.BUS_get_index_v_mag(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -639,7 +643,7 @@ cdef class Bus:
                 return np.array(r)
 
     property index_v_ang:
-        """ Index of voltage angle variable (int or array). """
+        """ Index of voltage angle variable (int or |Array|). """
         def __get__(self):
             r = [cbus.BUS_get_index_v_ang(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -656,7 +660,7 @@ cdef class Bus:
         def __get__(self): return cbus.BUS_get_index_Q(self._c_ptr)
 
     property price:
-        """ Bus energy price (float or array) ($ / (hr p.u.)). """
+        """ Bus energy price (float or |Array|) ($ / (hr p.u.)). """
         def __get__(self):
             r = [cbus.BUS_get_price(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -698,14 +702,14 @@ cdef class Bus:
             return cbus.BUS_get_degree(self._c_ptr)
 
     property v_base:
-        """ Bus base voltage (kilovolts) (float). """
+        """ Bus base voltage (kilo-volts) (float). """
         def __get__(self):
             return cbus.BUS_get_v_base(self._c_ptr)
         def __set__(self,value):
             cbus.BUS_set_v_base(self._c_ptr,value)
 
     property v_mag:
-        """ Bus volatge magnitude (p.u. bus base kv) (float or array). """
+        """ Bus volatge magnitude (p.u. bus base kv) (float or |Array|). """
         def __get__(self):
             r = [cbus.BUS_get_v_mag(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -719,7 +723,7 @@ cdef class Bus:
                 cbus.BUS_set_v_mag(self._c_ptr,var[t],t)
 
     property v_ang:
-        """ Bus voltage angle (radians) (float or array). """
+        """ Bus voltage angle (radians) (float or |Array|). """
         def __get__(self):
             r = [cbus.BUS_get_v_ang(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -733,7 +737,7 @@ cdef class Bus:
                 cbus.BUS_set_v_ang(self._c_ptr,var[t],t)
 
     property v_set:
-        """ Bus voltage set point (p.u. bus base kv) (float or array). Equals one if bus is not regulated by a generator. """
+        """ Bus voltage set point (p.u. bus base kv) (float or |Array|). """
         def __get__(self):
             r = [cbus.BUS_get_v_set(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -802,8 +806,8 @@ cdef class Bus:
         def __set__(self,value):
             cbus.BUS_set_v_min_emer(self._c_ptr,value)
 
-    property P_mis:
-        """ Bus active power mismatch (p.u. system base MVA) (float or array). """
+    property P_mismatch:
+        """ Bus active power mismatch (p.u. system base MVA) (float or |Array|). """
         def __get__(self):
             r = [cbus.BUS_get_P_mis(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -811,8 +815,8 @@ cdef class Bus:
             else:
                 return np.array(r)
 
-    property Q_mis:
-        """ Bus reactive power mismatch (p.u. system base MVA) (float or array). """
+    property Q_mismatch:
+        """ Bus reactive power mismatch (p.u. system base MVA) (float or |Array|). """
         def __get__(self):
             r = [cbus.BUS_get_Q_mis(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -821,7 +825,7 @@ cdef class Bus:
                 return np.array(r)
 
     property sens_P_balance:
-        """ Objective function sensitivity with respect to bus active power balance (float or array). """
+        """ Objective function sensitivity with respect to bus active power balance (float or |Array|). """
         def __get__(self):
             r = [cbus.BUS_get_sens_P_balance(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -830,7 +834,7 @@ cdef class Bus:
                 return np.array(r)
 
     property sens_Q_balance:
-        """ Objective function sensitivity with respect to bus reactive power balance (float or array). """
+        """ Objective function sensitivity with respect to bus reactive power balance (float or |Array|). """
         def __get__(self):
             r = [cbus.BUS_get_sens_Q_balance(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -839,7 +843,7 @@ cdef class Bus:
                 return np.array(r)
 
     property sens_v_mag_u_bound:
-        """ Objective function sensitivity with respect to voltage magnitude upper bound (float or array). """
+        """ Objective function sensitivity with respect to voltage magnitude upper bound (float or |Array|). """
         def __get__(self):
             r = [cbus.BUS_get_sens_v_mag_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -848,7 +852,7 @@ cdef class Bus:
                 return np.array(r)
 
     property sens_v_mag_l_bound:
-        """ Objective function sensitivity with respect to voltage magnitude lower bound (float or array). """
+        """ Objective function sensitivity with respect to voltage magnitude lower bound (float or |Array|). """
         def __get__(self):
             r = [cbus.BUS_get_sens_v_mag_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -857,7 +861,7 @@ cdef class Bus:
                 return np.array(r)
 
     property sens_v_ang_u_bound:
-        """ Objective function sensitivity with respect to voltage angle upper bound (float or array). """
+        """ Objective function sensitivity with respect to voltage angle upper bound (float or |Array|). """
         def __get__(self):
             r = [cbus.BUS_get_sens_v_ang_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -866,7 +870,7 @@ cdef class Bus:
                 return np.array(r)
 
     property sens_v_ang_l_bound:
-        """ Objective function sensitivity with respect to voltage angle lower bound (float or array). """
+        """ Objective function sensitivity with respect to voltage angle lower bound (float or |Array|). """
         def __get__(self):
             r = [cbus.BUS_get_sens_v_ang_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -875,7 +879,7 @@ cdef class Bus:
                 return np.array(r)
 
     property sens_v_reg_by_gen:
-        """ Objective function sensitivity with respect to bus voltage regulation by generators (float or array). """
+        """ Objective function sensitivity with respect to bus voltage regulation by generators (float or |Array|). """
         def __get__(self):
             r = [cbus.BUS_get_sens_v_reg_by_gen(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -884,7 +888,7 @@ cdef class Bus:
                 return np.array(r)
 
     property sens_v_reg_by_tran:
-        """ Objective function sensitivity with respect to bus voltage regulation by transformers (float or array). """
+        """ Objective function sensitivity with respect to bus voltage regulation by transformers (float or |Array|). """
         def __get__(self):
             r = [cbus.BUS_get_sens_v_reg_by_tran(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -893,7 +897,7 @@ cdef class Bus:
                 return np.array(r)
 
     property sens_v_reg_by_shunt:
-        """ Objective function sensitivity with respect to bus voltage regulation by shunts (float or array). """
+        """ Objective function sensitivity with respect to bus voltage regulation by shunts (float or |Array|). """
         def __get__(self):
             r = [cbus.BUS_get_sens_v_reg_by_shunt(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -902,7 +906,7 @@ cdef class Bus:
                 return np.array(r)
 
     property generators:
-        """ List of :class:`generators <pfnet.Generator>` connected to this bus (list). """
+        """ List of |Generator| objects connected to this bus (list). """
         def __get__(self):
             gens = []
             cdef cgen.Gen* g = cbus.BUS_get_gen(self._c_ptr)
@@ -912,7 +916,7 @@ cdef class Bus:
             return gens
 
     property reg_generators:
-        """ List of :class:`generators <pfnet.Generator>` regulating the voltage magnitude of this bus (list). """
+        """ List of |Generator| objects regulating the voltage magnitude of this bus (list). """
         def __get__(self):
             reg_gens = []
             cdef cgen.Gen* g = cbus.BUS_get_reg_gen(self._c_ptr)
@@ -921,12 +925,8 @@ cdef class Bus:
                 g = cgen.GEN_get_reg_next(g)
             return reg_gens
 
-    property reg_gens:
-        """ Same as :attr:`reg_generators <pfnet.Bus.reg_generators>`. """
-        def __get__(self): return self.reg_generators
-
     property reg_trans:
-        """ List of :class:`tap-changing transformers <pfnet.Branch>` regulating the voltage magnitude of this bus (list). """
+        """ List of |Branch| objects regulating the voltage magnitude of this bus (list). """
         def __get__(self):
             reg_trans = []
             cdef cbranch.Branch* br = cbus.BUS_get_reg_tran(self._c_ptr)
@@ -936,7 +936,7 @@ cdef class Bus:
             return reg_trans
 
     property shunts:
-        """ List of :class:`shunt devices <pfnet.Shunt>` connected to this bus (list). """
+        """ List of |Shunt| objects connected to this bus (list). """
         def __get__(self):
             shunts = []
             cdef cshunt.Shunt* s = cbus.BUS_get_shunt(self._c_ptr)
@@ -946,7 +946,7 @@ cdef class Bus:
             return shunts
 
     property reg_shunts:
-        """ List of :class:`switched shunt devices <pfnet.Shunt>` regulating the voltage magnitude of this bus (list). """
+        """ List of |Shunt| objects regulating the voltage magnitude of this bus (list). """
         def __get__(self):
             reg_shunts = []
             cdef cshunt.Shunt* s = cbus.BUS_get_reg_shunt(self._c_ptr)
@@ -960,7 +960,7 @@ cdef class Bus:
         def __get__(self): return self.branches_k
 
     property branches_k:
-        """ List of :class:`branches <pfnet.Branch>` that have this bus on the "k" (aka "from" or "i") side (list). """
+        """ List of |Branch| objects that have this bus on the "k" side (list). """
         def __get__(self):
             branches = []
             cdef cbranch.Branch* br = cbus.BUS_get_branch_k(self._c_ptr)
@@ -974,7 +974,7 @@ cdef class Bus:
         def __get__(self): return self.branches_m
 
     property branches_m:
-        """ List of :class:`branches <pfnet.Branch>` that have this bus on the "m" (aka "to" or "j") side (list). """
+        """ List of |Branch| objecs that have this bus on the "m" side (list). """
         def __get__(self):
             branches = []
             cdef cbranch.Branch* br = cbus.BUS_get_branch_m(self._c_ptr)
@@ -984,13 +984,12 @@ cdef class Bus:
             return branches
 
     property branches:
-        """ List of :class:`branches <pfnet.Branch>` incident on this bus (list). """
+        """ List of |Branch| objects incident on this bus (list). """
         def __get__(self):
-            # combine both "k"/"from" and "m"/"to" branches
             return self.branches_k+self.branches_m
 
     property loads:
-        """ List of :class:`loads <pfnet.Load>` connected to this bus (list). """
+        """ List of |Load| objects connected to this bus (list). """
         def __get__(self):
             loads = []
             cdef cload.Load* l = cbus.BUS_get_load(self._c_ptr)
@@ -1000,7 +999,7 @@ cdef class Bus:
             return loads
 
     property var_generators:
-        """ List of :class:`variable generators <pfnet.VarGenerator>` connected to this bus (list). """
+        """ List of |VarGenerator| objects connected to this bus (list). """
         def __get__(self):
             vargens = []
             cdef cvargen.Vargen* g = cbus.BUS_get_vargen(self._c_ptr)
@@ -1009,12 +1008,8 @@ cdef class Bus:
                 g = cvargen.VARGEN_get_next(g)
             return vargens
 
-    property var_gens:
-        """ Same as :attr:`var_generators <pfnet.Bus.var_generators>`. """
-        def __get__(self): return self.var_generators
-
     property batteries:
-        """ List of :class:`batteries <pfnet.Battery>` connected to this bus (list). """
+        """ List of |Battery| objects connected to this bus (list). """
         def __get__(self):
             bats = []
             cdef cbat.Bat* b = cbus.BUS_get_bat(self._c_ptr)
@@ -1023,24 +1018,20 @@ cdef class Bus:
                 b = cbat.BAT_get_next(b)
             return bats
 
-    property bats:
-        """ Same as :attr:`batteries <pfnet.Bus.batteries>`. """
-        def __get__(self): return self.batteries
-
     property flags_vars:
-        """ Flags associated with variable quantities. """
+        """ Flags associated with variable quantities (byte). """
         def __get__(self): return cbus.BUS_get_flags_vars(self._c_ptr)
 
     property flags_fixed:
-        """ Flags associated with fixed quantities. """
+        """ Flags associated with fixed quantities (byte). """
         def __get__(self): return cbus.BUS_get_flags_fixed(self._c_ptr)
 
     property flags_bounded:
-        """ Flags associated with bounded quantities. """
+        """ Flags associated with bounded quantities (byte). """
         def __get__(self): return cbus.BUS_get_flags_bounded(self._c_ptr)
 
     property flags_sparse:
-        """ Flags associated with sparse quantities. """
+        """ Flags associated with sparse quantities (byte). """
         def __get__(self): return cbus.BUS_get_flags_sparse(self._c_ptr)
 
 

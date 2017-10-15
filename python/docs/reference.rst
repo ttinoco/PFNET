@@ -19,7 +19,6 @@ Parser
 .. autoclass:: pfnet.ParserMAT
 .. autoclass:: pfnet.ParserART
 .. autoclass:: pfnet.ParserRAW
-.. autoclass:: pfnet.CustomParser
 
 .. _ref_bus:
 
