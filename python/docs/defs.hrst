@@ -27,6 +27,8 @@
 .. |CustomConstraint| replace:: :class:`CustomConstraint <pfnet.CustomConstraint>`
 .. |Problem| replace:: :class:`Problem <pfnet.Problem>`
 
+.. |RefObjects| replace:: :ref:`ref_net_obj`
+
 .. |RefFlags| replace:: :ref:`ref_net_flag`
 
 .. |RefBatteryQuantities| replace:: :ref:`ref_bat_q`
@@ -34,8 +36,22 @@
 .. |RefBusQuantities| replace:: :ref:`ref_bus_q`
 .. |RefGeneratorQuantities| replace:: :ref:`ref_gen_q`
 .. |RefLoadQuantities| replace:: :ref:`ref_load_q`
+.. |RefShuntQuantities| replace:: :ref:`ref_shunt_q`
+.. |RefVarGeneratorQuantities| replace:: :ref:`ref_vargen_q`
+.. |RefQuantities| replace:: |RefBusQuantities|, |RefBranchQuantities|, |RefGeneratorQuantities|, |RefShuntQuantities|, |RefLoadQuantities|, |RefVarGeneratorQuantities|, |RefBatteryQuantities|
+
+.. |RefBatteryProperties| replace:: :ref:`ref_bat_prop`
+.. |RefBranchProperties| replace:: :ref:`ref_branch_prop`
+.. |RefBusProperties| replace:: :ref:`ref_bus_prop`
+.. |RefGeneratorProperties| replace:: :ref:`ref_gen_prop`
+.. |RefLoadProperties| replace:: :ref:`ref_load_prop`
+.. |RefShuntProperties| replace:: :ref:`ref_shunt_prop`
+.. |RefVarGeneratorProperties| replace:: :ref:`ref_vargen_prop`
+.. |RefProperties| replace:: |RefBusProperties|, |RefBranchProperties|, |RefGeneratorProperties|,  |RefShuntProperties|, |RefLoadProperties|, |RefVarGeneratorProperties|, |RefBatteryProperties| 
 
 .. |RefBusSensitivities| replace:: :ref:`ref_bus_sens`
 .. |RefBusMismatches| replace:: :ref:`ref_bus_mis`
+
+.. |RefVarValueOptions| replace:: :ref:`ref_var_values`
 
 .. |TrueFalse| replace:: {``True``, ``False``}
