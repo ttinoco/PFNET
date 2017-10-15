@@ -49,7 +49,7 @@ cdef class ConstraintBase:
             self._c_constr = NULL
             self._alloc = False
 
-    def allocate_H_array(self,size):
+    def allocate_H_array(self, size):
         """
         Allocates internal array of constraint Hessians.
 
@@ -85,7 +85,7 @@ cdef class ConstraintBase:
 
     def analyze(self):
         """
-        Analyzes constraint and allocates required vectors and matrices.
+        Analyzes constraint structure and allocates required vectors and matrices.
         """
 
         cconstr.CONSTR_del_matvec(self._c_constr)
@@ -95,14 +95,14 @@ cdef class ConstraintBase:
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
 
-    def combine_H(self,coeff,ensure_psd=False):
+    def combine_H(self, coeff, ensure_psd=False):
         """
         Forms and saves a linear combination of the individual constraint Hessians.
 
         Parameters
         ----------
-        coeff : :class:`ndarray <numpy.ndarray>`
-        ensure_psd : {``True``, ``False``}
+        coeff : |Array|
+        ensure_psd : |TrueFalse|
         """
 
         cdef np.ndarray[double,mode='c'] x = coeff
@@ -114,12 +114,12 @@ cdef class ConstraintBase:
 
     def get_var_projection(self):
         """
-        Gets projection matrix P for getting x = P*(x,y), where x are 
-        network variablas and y are extra variables.
+        Gets projection matrix :math:`P` for getting :math:`x = P \, [x \, y]^T`, 
+        where :math:`x` are network variablas and :math:`y` are extra variables.
 
         Returns
         -------
-        P : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        P : |CooMatrix|
         """
 
         return Matrix(cconstr.CONSTR_get_var_projection(self._c_constr),
@@ -127,18 +127,18 @@ cdef class ConstraintBase:
 
     def get_extra_var_projection(self):
         """
-        Gets projection matrix P for getting y = P*(x,y), where x are 
-        network variablas and y are extra variables.
+        Gets projection matrix :math:`P` for getting :math:`y = P \, [x \, y]^T`, 
+        where :math:`x` are network variablas and :math:`y` are extra variables.
 
         Returns
         -------
-        P : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        P : |CooMatrix|
         """
 
         return Matrix(cconstr.CONSTR_get_extra_var_projection(self._c_constr),
                       owndata=True)
 
-    def get_A_row_info_string(self,index):
+    def get_A_row_info_string(self, index):
         """
         Gets info string associated with row of A matrix.
 
@@ -183,14 +183,14 @@ cdef class ConstraintBase:
 
         return cconstr.CONSTR_get_G_row_info_string(self._c_constr,index).decode('UTF-8')
 
-    def eval(self,x,y=None):
+    def eval(self, x, y=None):
         """
         Evaluates constraint violations, Jacobian, and individual Hessian matrices.
 
         Parameters
         ----------
-        x : :class:`ndarray <numpy.ndarray>` (values of variables)
-        y : :class:`ndarray <numpy.ndarray>` (values of constraint extra or auxiliary variables)
+        x : |Array| (values of variables)
+        y : |Array| (values of constraint extra or auxiliary variables)
         """
 
         cdef np.ndarray[double,mode='c'] xx = x
@@ -204,17 +204,17 @@ cdef class ConstraintBase:
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
 
-    def store_sensitivities(self,sA,sf,sGu,sGl):
+    def store_sensitivities(self, sA, sf, sGu, sGl):
         """
         Stores Lagrange multiplier estimates of the constraints in
         the power network components.
 
         Parameters
         ----------
-        sA : :class:`ndarray <numpy.ndarray>` (sensitivities for linear equality constraints (:math:`Ax = b`))
-        sf : :class:`ndarray <numpy.ndarray>` (sensitivities for nonlinear equality constraints (:math:`f(x) = 0`))
-        sGu : :class:`ndarray <numpy.ndarray>` (sensitivities for linear inequality constraints (:math:`Gx \le u`))
-        sGl : :class:`ndarray <numpy.ndarray>` (sensitivities for linear inequality constraints (:math:`l \le Gx`))
+        sA : |Array| (sensitivities for linear equality constraints (:math:`Ax = b`))
+        sf : |Array| (sensitivities for nonlinear equality constraints (:math:`f(x) = 0`))
+        sGu : |Array| (sensitivities for linear inequality constraints (:math:`Gx \le u`))
+        sGl : |Array| (sensitivities for linear inequality constraints (:math:`l \le Gx`))
         """
 
         cdef np.ndarray[double,mode='c'] xA = sA
@@ -237,7 +237,7 @@ cdef class ConstraintBase:
         if cconstr.CONSTR_has_error(self._c_constr):
             raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
 
-    def get_H_single(self,i):
+    def get_H_single(self, i):
         """
         Gets the Hessian matrix (only lower triangular part) of an individual constraint.
 
@@ -247,30 +247,30 @@ cdef class ConstraintBase:
 
         Returns
         -------
-        H : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        H : |CooMatrix|
         """
         return Matrix(cconstr.CONSTR_get_H_single(self._c_constr,i))
 
-    def set_H_nnz(self,H_nnz):
+    def set_H_nnz(self, H_nnz):
         """
         Sets H_nnz array.
 
         Parameters
         ----------
-        H_nnz : :class:`int ndarray <numpy.ndarray>`
+        H_nnz : |Array|
         """
         
         cdef np.ndarray[int,mode='c'] ar = H_nnz
         PyArray_CLEARFLAGS(ar,np.NPY_OWNDATA)
         cconstr.CONSTR_set_H_nnz(self._c_constr,<int*>(ar.data),H_nnz.size)
 
-    def set_b(self,b):
+    def set_b(self, b):
         """
         Sets b vector.
 
         Parameters
         ----------
-        b : :class:`ndarray <numpy.ndarray>`
+        b : |Array|
         """
         
         cdef np.ndarray[double,mode='c'] bb = b
@@ -278,13 +278,13 @@ cdef class ConstraintBase:
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(bb.data),bb.size)
         cconstr.CONSTR_set_b(self._c_constr,v)
 
-    def set_A(self,A):
+    def set_A(self, A):
         """
         Sets A matrix.
 
         Parameters
         ----------
-        A : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        A : |CooMatrix|
         """
         
         cdef np.ndarray[int,mode='c'] row = A.row
@@ -299,14 +299,14 @@ cdef class ConstraintBase:
                                                     <cconstr.REAL*>(data.data))
         cconstr.CONSTR_set_A(self._c_constr,m)
 
-    def set_H_single(self,i,H):
+    def set_H_single(self, i, H):
         """
-        Sets Hessian matrix of an individual cosntraint.
+        Sets Hessian matrix of an individual constraint.
 
         Parameters
         ----------
         i : int
-        H : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        H : |CooMatrix|
         """
         
         cdef np.ndarray[int,mode='c'] row = H.row
@@ -321,13 +321,13 @@ cdef class ConstraintBase:
                                                     <cconstr.REAL*>(data.data))
         cconstr.CONSTR_set_H_single(self._c_constr,i,m)
 
-    def set_l(self,l):
+    def set_l(self, l):
         """
         Sets l vector.
 
         Parameters
         ----------
-        l : :class:`ndarray <numpy.ndarray>`
+        l : |Array|
         """
         
         cdef np.ndarray[double,mode='c'] ll = l
@@ -335,13 +335,13 @@ cdef class ConstraintBase:
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(ll.data),ll.size)
         cconstr.CONSTR_set_l(self._c_constr,v)
 
-    def set_u(self,u):
+    def set_u(self, u):
         """
         Sets u vector.
 
         Parameters
         ----------
-        u : :class:`ndarray <numpy.ndarray>`
+        u : |Array|
         """
         
         cdef np.ndarray[double,mode='c'] uu = u
@@ -349,13 +349,13 @@ cdef class ConstraintBase:
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(uu.data),uu.size)
         cconstr.CONSTR_set_u(self._c_constr,v)
 
-    def set_G(self,G):
+    def set_G(self, G):
         """
         Sets G matrix.
 
         Parameters
         ----------
-        G : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        G : |CooMatrix|
         """
         
         cdef np.ndarray[int,mode='c'] row = G.row
@@ -370,13 +370,13 @@ cdef class ConstraintBase:
                                                     <cconstr.REAL*>(data.data))
         cconstr.CONSTR_set_G(self._c_constr,m)
 
-    def set_f(self,f):
+    def set_f(self, f):
         """
         Sets f vector.
 
         Parameters
         ----------
-        f : :class:`ndarray <numpy.ndarray>`
+        f : |Array|
         """
         
         cdef np.ndarray[double,mode='c'] ff = f
@@ -384,13 +384,13 @@ cdef class ConstraintBase:
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cconstr.REAL*>(ff.data),ff.size)
         cconstr.CONSTR_set_f(self._c_constr,v)
 
-    def set_J(self,J):
+    def set_J(self, J):
         """
         Sets J matrix.
 
         Parameters
         ----------
-        J : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        J : |CooMatrix|
         """
         
         cdef np.ndarray[int,mode='c'] row = J.row
@@ -413,17 +413,17 @@ cdef class ConstraintBase:
             cconstr.CONSTR_set_name(self._c_constr,name)
 
     property A_nnz:
-        """ Number of nonzero entries in the matrix of linear equality constraints (int). """
+        """ Counter of nonzero entries in the matrix of linear equality constraints (int). """
         def __get__(self): return cconstr.CONSTR_get_A_nnz(self._c_constr)
         def __set__(self,nnz): cconstr.CONSTR_set_A_nnz(self._c_constr,nnz)
         
     property G_nnz:
-        """ Number of nonzero entries in the matrix of linear inequality constraints (int). """
+        """ Counter of nonzero entries in the matrix of linear inequality constraints (int). """
         def __get__(self): return cconstr.CONSTR_get_G_nnz(self._c_constr)
         def __set__(self,nnz): cconstr.CONSTR_set_G_nnz(self._c_constr,nnz)
 
     property J_nnz:
-        """ Number of nonzero entries in the Jacobian matrix of the nonlinear equality constraints (int). """
+        """ Counter of nonzero entries in the Jacobian matrix of the nonlinear equality constraints (int). """
         def __get__(self): return cconstr.CONSTR_get_J_nnz(self._c_constr)
         def __set__(self,nnz): cconstr.CONSTR_set_J_nnz(self._c_constr,nnz)
 
@@ -433,62 +433,62 @@ cdef class ConstraintBase:
                                            cconstr.CONSTR_get_H_nnz_size(self._c_constr))
 
     property A_row:
-        """ Number of linear equality constraints (int). """
+        """ Counter of linear equality constraints (int). """
         def __get__(self): return cconstr.CONSTR_get_A_row(self._c_constr)
         def __set__(self,row): cconstr.CONSTR_set_A_row(self._c_constr,row)
 
     property G_row:
-        """ Number of linear ineqquality constraint (int). """
+        """ Counter of linear ineqquality constraint (int). """
         def __get__(self): return cconstr.CONSTR_get_G_row(self._c_constr)
         def __set__(self,row): cconstr.CONSTR_set_G_row(self._c_constr,row)
 
     property J_row:
-        """ Number of nonlinear equality constraint (int). """
+        """ Counter of nonlinear equality constraint (int). """
         def __get__(self): return cconstr.CONSTR_get_J_row(self._c_constr)
         def __set__(self,row): cconstr.CONSTR_set_J_row(self._c_constr,row)
 
     property f:
-        """ Vector of nonlinear equality constraint violations (:class:`ndarray <numpy.ndarray>`). """
+        """ Vector of nonlinear equality constraint violations (|Array|). """
         def __get__(self): return Vector(cconstr.CONSTR_get_f(self._c_constr))
 
     property J:
-        """ Jacobian matrix of nonlinear equality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
+        """ Jacobian matrix of nonlinear equality constraints (|CooMatrix|). """
         def __get__(self): return Matrix(cconstr.CONSTR_get_J(self._c_constr))
 
     property b:
-        """ Right-hand side vector of linear equality constraints (:class:`ndarray <numpy.ndarray>`). """
+        """ Right-hand side vector of linear equality constraints (|Array|). """
         def __get__(self): return Vector(cconstr.CONSTR_get_b(self._c_constr))
 
     property A:
-        """ Matrix for linear equality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
+        """ Matrix for linear equality constraints (|CooMatrix|). """
         def __get__(self): return Matrix(cconstr.CONSTR_get_A(self._c_constr))
 
     property l:
-        """ Lower bound vector of linear inequality constraints (:class:`ndarray <numpy.ndarray>`). """
+        """ Lower bound vector of linear inequality constraints (|Array|). """
         def __get__(self): return Vector(cconstr.CONSTR_get_l(self._c_constr))
 
     property u:
-        """ Upper bound vector of linear inequality constraints (:class:`ndarray <numpy.ndarray>`). """
+        """ Upper bound vector of linear inequality constraints (|Array|). """
         def __get__(self): return Vector(cconstr.CONSTR_get_u(self._c_constr))
 
     property l_extra_vars:
-        """ Lower bound vector of constraint extra variables (:class:`ndarray <numpy.ndarray>`). """
+        """ Lower bound vector of constraint extra variables (|Array|). """
         def __get__(self): return Vector(cconstr.CONSTR_get_l_extra_vars(self._c_constr))
 
     property u_extra_vars:
-        """ Upper bound vector of constraint extra variables (:class:`ndarray <numpy.ndarray>`). """
+        """ Upper bound vector of constraint extra variables (|Array|). """
         def __get__(self): return Vector(cconstr.CONSTR_get_u_extra_vars(self._c_constr))
 
     property init_extra_vars:
-        """ Vector of initial values for constraint extra variables (:class:`ndarray <numpy.ndarray>`). """
+        """ Vector of initial values for constraint extra variables (|Array|). """
         def __get__(self): return Vector(cconstr.CONSTR_get_init_extra_vars(self._c_constr))
 
     property G:
-        """ Matrix for linear inequality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
+        """ Matrix for linear inequality constraints (|CooMatrix|). """
         def __get__(self): return Matrix(cconstr.CONSTR_get_G(self._c_constr))
 
     property H_combined:
-        """ Linear combination of Hessian matrices of individual nonlinear equality constraints (only the lower triangular part) (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
+        """ Linear combination of Hessian matrices of individual nonlinear equality constraints (only the lower triangular part) (|CooMatrix|). """
         def __get__(self): return Matrix(cconstr.CONSTR_get_H_combined(self._c_constr))
 
     property num_extra_vars:
@@ -496,11 +496,11 @@ cdef class ConstraintBase:
             def __get__(self): return cconstr.CONSTR_get_num_extra_vars(self._c_constr)
 
     property network:
-        """ Network associated with constraint. """
+        """ |Network| associated with constraint. """
         def __get__(self): return new_Network(cconstr.CONSTR_get_network(self._c_constr))
 
     property bus_counted:
-        """ Boolean array of flags for processing buses during count/analyze/eval, etc. """
+        """ Boolean |Array| of flags for processing buses during count/analyze/eval, etc. """
         def __get__(self): return BoolArray(cconstr.CONSTR_get_bus_counted(self._c_constr),
                                             cconstr.CONSTR_get_bus_counted_size(self._c_constr))
 
@@ -518,19 +518,19 @@ cdef new_Constraint(cconstr.Constr* c):
 
 cdef class Constraint(ConstraintBase):
     
-    def __init__(self,name,Network net):
+    def __init__(self, name, Network net):
         """
-        Function class.
+        Constraint class.
         
         Parameters
         ----------
         name : string
-        net : :class:`Network <pfnet.Network>`
+        net : |Network|
         """
         
         pass
     
-    def __cinit__(self,name,Network net):
+    def __cinit__(self, name, Network net):
 
         if name == "AC power balance":
             self._c_constr = cconstr.CONSTR_ACPF_new(net._c_net)
@@ -572,13 +572,13 @@ cdef class Constraint(ConstraintBase):
 
 cdef class CustomConstraint(ConstraintBase):
 
-    def __init__(self,Network net):
+    def __init__(self, Network net):
         """
         Custom constraint class.
         
         Parameters
         ----------
-        net : :class:`Network <pfnet.Network>`
+        net : |Network|
         """
 
         pass
@@ -604,13 +604,13 @@ cdef class CustomConstraint(ConstraintBase):
 
         pass
         
-    def count_step(self,branch,t):
+    def count_step(self, branch, t):
         """
         Performs count step.
 
         Parameters
         ----------
-        branch : Branch
+        branch : |Branch|
         t : time period (int)
         """
         
@@ -630,44 +630,44 @@ cdef class CustomConstraint(ConstraintBase):
 
         pass
 
-    def analyze_step(self,branch,t):
+    def analyze_step(self, branch, t):
         """
         Performs analyze step.
        
         Parameters
         ----------
-        branch : Branch
+        branch : |Branch|
         t : time period (int)
         """
         
         pass
 
-    def eval_step(self,branch,t,x,y=None):
+    def eval_step(self, branch, t, x, y=None):
         """
         Performs eval step.
        
         Parameters
         ----------
-        branch : Branch
+        branch : |Branch|
         t : time period (int)
-        x : ndarray
-        y : ndarray
+        x : |Array|
+        y : |Array|
         """
  
         pass
 
-    def store_sens_step(self,branch,t,sA,sf,sGu,sGl):
+    def store_sens_step(self, branch, t, sA, sf, sGu, sGl):
         """
         Performs step for storing sensitivities.
        
         Parameters
         ----------
-        branch : Branch
+        branch : |Branch|
         t : time period (int)
-        sA : ndarray
-        sf : ndarray
-        sGu : ndarray
-        sGl : ndarray
+        sA : |Array|
+        sf : |Array|
+        sGu : |Array|
+        sGl : |Array|
         """
  
         pass
