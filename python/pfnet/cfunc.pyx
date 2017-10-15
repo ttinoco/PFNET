@@ -74,7 +74,7 @@ cdef class FunctionBase:
 
     def analyze(self):
         """
-        Analyzes function and allocates required vectors and matrices.
+        Analyzes the structure of the function and allocates required vectors and matrices.
         """
 
         cfunc.FUNC_del_matvec(self._c_func)
@@ -84,14 +84,14 @@ cdef class FunctionBase:
         if cfunc.FUNC_has_error(self._c_func):
             raise FunctionError(cfunc.FUNC_get_error_string(self._c_func))
 
-    def eval(self,values):
+    def eval(self, values):
         """
         Evaluates function value, gradient, and Hessian using
         the given variable values.
 
         Parameters
         ----------
-        values : :class:`ndarray <numpy.ndarray>`
+        values : |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = values
@@ -101,13 +101,13 @@ cdef class FunctionBase:
         if cfunc.FUNC_has_error(self._c_func):
             raise FunctionError(cfunc.FUNC_get_error_string(self._c_func))
 
-    def set_gphi(self,gphi):
+    def set_gphi(self, gphi):
         """
         Sets gradient vector.
 
         Parameters
         ----------
-        gphi : :class:`ndarray <numpy.ndarray>`
+        gphi : |Array|
         """
         
         cdef np.ndarray[double,mode='c'] g = gphi
@@ -115,13 +115,13 @@ cdef class FunctionBase:
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cfunc.REAL*>(g.data),g.size)
         cfunc.FUNC_set_gphi(self._c_func,v)
 
-    def set_Hphi(self,Hphi):
+    def set_Hphi(self, Hphi):
         """
         Sets Hessian matrix.
 
         Parameters
         ----------
-        Hphi : :class:`coo_matrix <scipy.sparse.coo_matrix>` (lower triangular)
+        Hphi : |CooMatrix| (lower triangular)
         """
         
         cdef np.ndarray[int,mode='c'] row = Hphi.row
@@ -149,11 +149,11 @@ cdef class FunctionBase:
         def __set__(self,phi): cfunc.FUNC_set_phi(self._c_func,phi)
 
     property gphi:
-        """ Function gradient vector (:class:`ndarray <numpy.ndarray>`). """
+        """ Function gradient vector (|Array|). """
         def __get__(self): return Vector(cfunc.FUNC_get_gphi(self._c_func))
 
     property Hphi:
-        """ Function Hessian matrix (only the lower triangular part) (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
+        """ Function Hessian matrix (only the lower triangular part) (|CooMatrix|). """
         def __get__(self): return Matrix(cfunc.FUNC_get_Hphi(self._c_func))
 
     property Hphi_nnz:
@@ -166,11 +166,11 @@ cdef class FunctionBase:
         def __get__(self): return cfunc.FUNC_get_weight(self._c_func)
 
     property network:
-        """ Network associated with function. """
+        """ Network associated with function (|Network|). """
         def __get__(self): return new_Network(cfunc.FUNC_get_network(self._c_func))
 
     property bus_counted:
-        """ Boolean array of flags for processing buses during count/analyze/eval, etc. """
+        """ Boolean array of flags for processing buses during count/analyze/eval, etc (|Array|). """
         def __get__(self): return BoolArray(cfunc.FUNC_get_bus_counted(self._c_func),
                                             cfunc.FUNC_get_bus_counted_size(self._c_func))
 
@@ -184,7 +184,7 @@ cdef new_Function(cfunc.Func* f):
 
 cdef class Function(FunctionBase):
     
-    def __init__(self,name,weight,Network net):
+    def __init__(self, name, weight, Network net):
         """
         Function class.
         
@@ -192,12 +192,12 @@ cdef class Function(FunctionBase):
         ----------
         name : string
         weight : float
-        net : :class:`Network <pfnet.Network>`
+        net : |Network|
         """
         
         pass
     
-    def __cinit__(self,name,weight,Network net):
+    def __cinit__(self, name, weight, Network net):
                 
         if name == "generation cost":
             self._c_func = cfunc.FUNC_GEN_COST_new(weight,net._c_net)
@@ -231,19 +231,19 @@ cdef class CustomFunction(FunctionBase):
     Custom function class.
     """
 
-    def __init__(self,weight,Network net):
+    def __init__(self, weight, Network net):
         """
         Custom function class.
         
         Parameters
         ----------
         weight : float
-        net : :class:`Network <pfnet.Network>`
+        net : |Network|
         """
         
         pass
 
-    def __cinit__(self,weight,Network net):
+    def __cinit__(self, weight, Network net):
         
         self._c_func = cfunc.FUNC_new(weight,net._c_net)
         cfunc.FUNC_set_data(self._c_func,<void*>self)
@@ -257,7 +257,7 @@ cdef class CustomFunction(FunctionBase):
         self._alloc = True
 
     def init(self):
-        """"
+        """
         Performs function initialization.
         """
 
@@ -269,7 +269,7 @@ cdef class CustomFunction(FunctionBase):
 
         Parameters
         ----------
-        branch : Branch
+        branch : |Branch|
         t : time period (int)
         """
         
@@ -289,27 +289,27 @@ cdef class CustomFunction(FunctionBase):
 
         pass
 
-    def analyze_step(self,branch,t):
+    def analyze_step(self, branch, t):
         """
         Performs analyze step.
        
         Parameters
         ----------
-        branch : Branch
+        branch : |Branch|
         t : time period (int)
         """
         
         pass
 
-    def eval_step(self,branch,t,x):
+    def eval_step(self, branch, t, x):
         """
         Performs eval step.
        
         Parameters
         ----------
-        branch : Branch
+        branch : |Branch|
         t : time period (int)
-        x : ndarray
+        x : |Array|
         """
  
         pass
