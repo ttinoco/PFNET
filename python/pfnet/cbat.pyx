@@ -28,14 +28,14 @@ cdef class Battery:
 
     cdef cbat.Bat* _c_ptr
 
-    def __init__(self,num_periods=1, alloc=True):
+    def __init__(self, num_periods=1, alloc=True):
         """
         Battery class.
 
         Parameters
         ----------
-        alloc : |TrueFalse|
         num_periods : int
+        alloc : |TrueFalse|
         """
 
         pass

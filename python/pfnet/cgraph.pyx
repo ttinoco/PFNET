@@ -3,7 +3,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -26,19 +26,19 @@ cdef class Graph:
     cdef cnet.Net* _c_net
     cdef bint alloc
 
-    def __init__(self,net,alloc=True):
+    def __init__(self, net, alloc=True):
         """
         Graph class.
 
         Parameters
         ----------
-        net : :class:`Network <pfnet.Network>`
-        alloc : {``True``, ``False``}
+        net : |Network|
+        alloc : |TrueFalse|
         """
 
         pass
 
-    def __cinit__(self,Network net,alloc=True):
+    def __cinit__(self, Network net, alloc=True):
 
         self._c_net = net._c_net
         if alloc:
@@ -63,7 +63,7 @@ cdef class Graph:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cgraph.GRAPH_can_viz(self._c_graph)
@@ -90,13 +90,13 @@ cdef class Graph:
 
         cgraph.GRAPH_set_layout(self._c_graph)
 
-    def set_node_property(self,bus,prop,value):
+    def set_node_property(self, bus, prop,value):
         """
-        Sets property of node. See `Graphviz documentation <http://www.graphviz.org/Documentation.php>`_.
+        Sets property of node. See |Graphviz|.
 
         Parameters
         ----------
-        bus : :class:`Bus <pfnet.Bus>`
+        bus : |Bus|
         prop : string
         value : string
         """
@@ -106,9 +106,9 @@ cdef class Graph:
         if cgraph.GRAPH_has_error(self._c_graph):
             raise GraphError(cgraph.GRAPH_get_error_string(self._c_graph))
 
-    def set_nodes_property(self,prop,value):
+    def set_nodes_property(self, prop, value):
         """
-        Sets property of nodes. See `Graphviz documentation <http://www.graphviz.org/Documentation.php>`_.
+        Sets property of nodes. See |Graphviz|.
 
         Parameters
         ----------
@@ -120,9 +120,9 @@ cdef class Graph:
         if cgraph.GRAPH_has_error(self._c_graph):
             raise GraphError(cgraph.GRAPH_get_error_string(self._c_graph))
 
-    def set_edges_property(self,prop,value):
+    def set_edges_property(self, prop, value):
         """
-        Sets property of edges. See `Graphviz documentation <http://www.graphviz.org/Documentation.php>`_.
+        Sets property of edges. See |Graphviz|. 
 
         Parameters
         ----------
@@ -134,13 +134,13 @@ cdef class Graph:
         if cgraph.GRAPH_has_error(self._c_graph):
             raise GraphError(cgraph.GRAPH_get_error_string(self._c_graph))
 
-    def color_nodes_by_mismatch(self,mis_type,t=0):
+    def color_nodes_by_mismatch(self, mis_type, t=0):
         """
         Colors the graphs nodes according to their power mismatch.
 
         Parameters
         ----------
-        mis_type : int (:ref:`ref_bus_mis`)
+        mis_type : int (|RefBusMismatches|)
         t : int
         """
 
@@ -148,13 +148,13 @@ cdef class Graph:
         if cgraph.GRAPH_has_error(self._c_graph):
             raise GraphError(cgraph.GRAPH_get_error_string(self._c_graph))
 
-    def color_nodes_by_sensitivity(self,sens_type,t=0):
+    def color_nodes_by_sensitivity(self, sens_type, t=0):
         """
         Colors the graphs nodes according to their sensitivity.
 
         Parameters
         ----------
-        sens_type : int (:ref:`ref_bus_sens`)
+        sens_type : int (|RefBusSensitivities|)
         t : int
         """
 
@@ -165,6 +165,10 @@ cdef class Graph:
     def view(self, inline=False):
         """
         Displays the graph.
+
+        Parameters
+        ----------
+        inline : |TrueFalse|
         """
 
         temp = tempfile.NamedTemporaryFile(delete=True, suffix='.png')
@@ -182,13 +186,13 @@ cdef class Graph:
         finally:
             temp.close()
 
-    def write(self,format,filename):
+    def write(self, format, filename):
         """
         Writes the graph to a file.
 
         Parameters
         ----------
-        format : string (`Graphviz output formats <http://www.graphviz.org/content/output-formats>`_)
+        format : string (see |GraphvizOutputFormats|).
         filename : string
         """
 

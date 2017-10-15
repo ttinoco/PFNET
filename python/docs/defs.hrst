@@ -1,3 +1,8 @@
+.. _Graphviz: http://www.graphviz.org/Documentation.php
+.. _Graphviz Output Formats: http://www.graphviz.org/content/output-formats
+.. |Graphviz| replace:: `Graphviz`_
+.. |GraphvizOutputFormats| replace:: `Graphviz Output Formats`_
+
 .. _Numpy: http://docs.scipy.org/doc/numpy/
 .. |Numpy| replace:: `Numpy`_
 .. |Array| replace:: :class:`ndarray <numpy.ndarray>`
@@ -27,9 +32,9 @@
 .. |RefBatteryQuantities| replace:: :ref:`ref_bat_q`
 .. |RefBranchQuantities| replace:: :ref:`ref_branch_q`
 .. |RefBusQuantities| replace:: :ref:`ref_bus_q`
+.. |RefGeneratorQuantities| replace:: :ref:`ref_gen_q`
 
-.. |RefBusSensitivities| replace:: :ref:`ref_bus_sens`:
+.. |RefBusSensitivities| replace:: :ref:`ref_bus_sens`
 .. |RefBusMismatches| replace:: :ref:`ref_bus_mis`
-
 
 .. |TrueFalse| replace:: {``True``, ``False``}

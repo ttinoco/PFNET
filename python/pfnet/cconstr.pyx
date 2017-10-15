@@ -598,7 +598,7 @@ cdef class CustomConstraint(ConstraintBase):
         self._alloc = True
     
     def init(self):
-        """"
+        """
         Performs constraint initialization.
         """
 

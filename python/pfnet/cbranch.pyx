@@ -34,8 +34,8 @@ cdef class Branch:
 
         Parameters
         ----------
-        alloc : |TrueFalse|
         num_periods : int
+        alloc : |TrueFalse|
         """
 
         pass
@@ -1044,7 +1044,7 @@ cdef class Branch:
                 return np.array(r)
 
     property outage:
-        """ Flag that indicates whether branch is on outage. """
+        """ Flag that indicates whether branch is on outage (boolean). """
         def __get__(self): return cbranch.BRANCH_is_on_outage(self._c_ptr)
 
     property json_string:

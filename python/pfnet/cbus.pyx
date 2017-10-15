@@ -51,8 +51,8 @@ cdef class Bus:
 
         Parameters
         ----------
-        alloc : |TrueFalse|
         num_periods : int
+        alloc : |TrueFalse|
         """
 
         pass

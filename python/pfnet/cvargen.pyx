@@ -94,7 +94,7 @@ cdef class VarGenerator:
             raise VarGeneratorError('index does not correspond to any variable')
 
     def set_P(self,P,t=0):
-        """"
+        """
         Sets active power output.
 
         Parameters
@@ -106,7 +106,7 @@ cdef class VarGenerator:
         cvargen.VARGEN_set_P(self._c_ptr,P,t)
 
     def set_P_ava(self,P,t=0):
-        """"
+        """
         Sets available active power.
 
         Parameters
@@ -118,7 +118,7 @@ cdef class VarGenerator:
         cvargen.VARGEN_set_P_ava(self._c_ptr,P,t)
 
     def set_P_std(self,P,t=0):
-        """"
+        """
         Sets active power standard deviation.
 
         Parameters
@@ -130,7 +130,7 @@ cdef class VarGenerator:
         cvargen.VARGEN_set_P_std(self._c_ptr,P,t)
 
     def set_Q(self,Q,t=0):
-        """"
+        """
         Sets reactive power output.
 
         Parameters
