@@ -31,19 +31,19 @@ cdef class Load:
 
     cdef cload.Load* _c_ptr
 
-    def __init__(self,num_periods=1,alloc=True):
+    def __init__(self, num_periods=1, alloc=True):
         """
         Load class.
 
         Parameters
         ----------
-        alloc : {``True``, ``False``}
         num_periods : int
+        alloc : |TrueFalse|
         """
 
         pass
 
-    def __cinit__(self,num_periods=1,alloc=True):
+    def __cinit__(self, num_periods=1, alloc=True):
 
         if alloc:
             self._c_ptr = cload.LOAD_new(num_periods)
@@ -60,24 +60,24 @@ cdef class Load:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cload.LOAD_is_P_adjustable(self._c_ptr)
 
-    def has_flags(self,flag_type,q):
+    def has_flags(self, flag_type, q):
         """
         Determines whether the load has the flags associated with
         certain quantities set.
 
         Parameters
         ----------
-        flag_type : string (:ref:`ref_net_flag`)
-        q : string or list of strings (:ref:`ref_load_q`)
+        flag_type : string (|RefFlags|)
+        q : string or list of strings (|RefLoadQuantities|)
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         q = q if isinstance(q,list) else [q]
@@ -107,50 +107,50 @@ cdef class Load:
         else:
             raise LoadError('index does not correspond to any variable')
 
-    def set_P(self,P,t=0):
-        """"
+    def set_P(self, P, t=0):
+        """
         Sets active power.
 
         Parameters
         ----------
         P : float
-        t = int
+        t : int
         """
 
         cload.LOAD_set_P(self._c_ptr,P,t)
 
-    def set_P_max(self,P,t=0):
-        """"
+    def set_P_max(self, P, t=0):
+        """
         Sets active power upper limit.
 
         Parameters
         ----------
         P : float
-        t = int
+        t : int
         """
 
         cload.LOAD_set_P_max(self._c_ptr,P,t)
 
-    def set_P_min(self,P,t=0):
-        """"
+    def set_P_min(self, P, t=0):
+        """
         Sets active power lower limit.
 
         Parameters
         ----------
         P : float
-        t = int
+        t : int
         """
 
         cload.LOAD_set_P_min(self._c_ptr,P,t)
 
-    def set_Q(self,Q,t=0):
-        """"
+    def set_Q(self, Q, t=0):
+        """
         Sets reactive power.
 
         Parameters
         ----------
         Q : float
-        t = int
+        t : int
         """
 
         cload.LOAD_set_Q(self._c_ptr,Q,t)
@@ -176,7 +176,7 @@ cdef class Load:
         def __get__(self): return cload.LOAD_get_index(self._c_ptr)
 
     property index_P:
-        """ Index of load active power variable (int or array). """
+        """ Index of load active power variable (int or |Array|). """
         def __get__(self):
             r = [cload.LOAD_get_index_P(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -185,7 +185,7 @@ cdef class Load:
                 return np.array(r)
 
     property index_Q:
-        """ Index of load reactive power variable (int or array). """
+        """ Index of load reactive power variable (int or |Array|). """
         def __get__(self):
             r = [cload.LOAD_get_index_Q(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -194,7 +194,7 @@ cdef class Load:
                 return np.array(r)
 
     property bus:
-        """ :class:`Bus <pfnet.Bus>` to which load is connected. """
+        """ |Bus| to which load is connected. """
         def __get__(self): 
             return new_Bus(cload.LOAD_get_bus(self._c_ptr))
         def __set__(self,bus):
@@ -205,7 +205,7 @@ cdef class Load:
             cload.LOAD_set_bus(self._c_ptr,cbus._c_ptr)
 
     property P:
-        """ Load active power (p.u. system base MVA) (float or array). """
+        """ Load active power (p.u. system base MVA) (float or |Array|). """
         def __get__(self):
             r = [cload.LOAD_get_P(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -219,7 +219,7 @@ cdef class Load:
                 cload.LOAD_set_P(self._c_ptr,Par[t],t)
 
     property P_max:
-        """ Load active power upper limit (p.u. system base MVA) (float or array). """
+        """ Load active power upper limit (p.u. system base MVA) (float or |Array|). """
         def __get__(self):
             r = [cload.LOAD_get_P_max(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -233,7 +233,7 @@ cdef class Load:
                 cload.LOAD_set_P_max(self._c_ptr,Par[t],t)
 
     property P_min:
-        """ Load active power lower limit (p.u. system base MVA) (float or array). """
+        """ Load active power lower limit (p.u. system base MVA) (float or |Array|). """
         def __get__(self):
             r = [cload.LOAD_get_P_min(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -247,7 +247,7 @@ cdef class Load:
                 cload.LOAD_set_P_min(self._c_ptr,Par[t],t)
 
     property Q:
-        """ Load reactive power (p.u. system base MVA) (float or array). """
+        """ Load reactive power (p.u. system base MVA) (float or |Array|). """
         def __get__(self):
             r = [cload.LOAD_get_Q(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -261,7 +261,7 @@ cdef class Load:
                 cload.LOAD_set_Q(self._c_ptr,Qar[t],t)
 
     property P_util:
-        """ Active power load utility ($/hr) (float or array). """
+        """ Active power load utility ($/hr) (float or |Array|). """
         def __get__(self):
             r = [cload.LOAD_get_P_util(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -270,7 +270,7 @@ cdef class Load:
                 return np.array(r)
 
     property power_factor:
-        """ Load power factor (float or array). """
+        """ Load power factor (float or |Array|). """
         def __get__(self):
             r = [cload.LOAD_get_power_factor(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -284,17 +284,17 @@ cdef class Load:
         def __set__(self,pf): cload.LOAD_set_target_power_factor(self._c_ptr,pf)
 
     property util_coeff_Q0:
-        """ Coefficient for consumption utility function (constant term, units of $/hr). """
+        """ Coefficient for consumption utility function (constant term, units of $/hr) (float). """
         def __get__(self): return cload.LOAD_get_util_coeff_Q0(self._c_ptr)
         def __set__(self,c): cload.LOAD_set_util_coeff_Q0(self._c_ptr,c)
 
     property util_coeff_Q1:
-        """ Coefficient for consumption utility function (linear term, units of $/(hr p.u.)). """
+        """ Coefficient for consumption utility function (linear term, units of $/(hr p.u.)) (float). """
         def __get__(self): return cload.LOAD_get_util_coeff_Q1(self._c_ptr)
         def __set__(self,c): cload.LOAD_set_util_coeff_Q1(self._c_ptr,c)
 
     property util_coeff_Q2:
-        """ Coefficient for consumption utility function (quadratic term, units of $/(hr p.u.^2)). """
+        """ Coefficient for consumption utility function (quadratic term, units of $/(hr p.u.^2)) (float). """
         def __get__(self): return cload.LOAD_get_util_coeff_Q2(self._c_ptr)
         def __set__(self,c): cload.LOAD_set_util_coeff_Q2(self._c_ptr,c)
 
@@ -307,7 +307,7 @@ cdef class Load:
             return s
 
     property sens_P_u_bound:
-        """ Objective function sensitivity with respect to active power upper bound (float or array). """
+        """ Objective function sensitivity with respect to active power upper bound (float or |Array|). """
         def __get__(self):
             r = [cload.LOAD_get_sens_P_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -316,7 +316,7 @@ cdef class Load:
                 return np.array(r)
 
     property sens_P_l_bound:
-        """ Objective function sensitivity with respect to active power lower bound (float or array). """
+        """ Objective function sensitivity with respect to active power lower bound (float or |Array|). """
         def __get__(self):
             r = [cload.LOAD_get_sens_P_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -325,19 +325,19 @@ cdef class Load:
                 return np.array(r)
 
     property flags_vars:
-        """ Flags associated with variable quantities. """
+        """ Flags associated with variable quantities (byte). """
         def __get__(self): return cload.LOAD_get_flags_vars(self._c_ptr)
 
     property flags_fixed:
-        """ Flags associated with fixed quantities. """
+        """ Flags associated with fixed quantities (byte). """
         def __get__(self): return cload.LOAD_get_flags_fixed(self._c_ptr)
 
     property flags_bounded:
-        """ Flags associated with bounded quantities. """
+        """ Flags associated with bounded quantities (byte). """
         def __get__(self): return cload.LOAD_get_flags_bounded(self._c_ptr)
 
     property flags_sparse:
-        """ Flags associated with sparse quantities. """
+        """ Flags associated with sparse quantities (byte). """
         def __get__(self): return cload.LOAD_get_flags_sparse(self._c_ptr)
             
 cdef new_Load(cload.Load* l):

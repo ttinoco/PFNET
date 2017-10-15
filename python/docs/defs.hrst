@@ -33,6 +33,7 @@
 .. |RefBranchQuantities| replace:: :ref:`ref_branch_q`
 .. |RefBusQuantities| replace:: :ref:`ref_bus_q`
 .. |RefGeneratorQuantities| replace:: :ref:`ref_gen_q`
+.. |RefLoadQuantities| replace:: :ref:`ref_load_q`
 
 .. |RefBusSensitivities| replace:: :ref:`ref_bus_sens`
 .. |RefBusMismatches| replace:: :ref:`ref_bus_mis`
