@@ -3,7 +3,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -65,7 +65,7 @@ cdef class ParserBase:
 
         Returns
         -------
-        net : :class:`Network <pfnet.Network>`
+        net : |Network|
         """
 
         if num_periods is None:
@@ -78,7 +78,7 @@ cdef class ParserBase:
         pnet.alloc = True
         return pnet
 
-    def set(self,key,value):
+    def set(self, key, value):
         """
         Sets parser parameter.
 
@@ -100,13 +100,13 @@ cdef class ParserBase:
 
         cparser.PARSER_show(self._c_parser)
 
-    def write(self,Network net, filename):
+    def write(self, Network net, filename):
         """
         Writes data to file.
 
         Parameters
         ----------
-        net : :class:`Network <pfnet.Network>`
+        net : |Network|
         filename : string
         """
         

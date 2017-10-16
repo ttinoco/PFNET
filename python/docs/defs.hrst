@@ -23,7 +23,9 @@
 .. |VarGenerator| replace:: :class:`VarGenerator <pfnet.VarGenerator>`
 .. |Battery| replace:: :class:`Battery <pfnet.Battery>`
 .. |Contingency| replace:: :class:`Contingency <pfnet.Contingency>`
+.. |FunctionBase| replace:: :class:`FunctionBase <pfnet.FunctionBase>`
 .. |CustomFunction| replace:: :class:`CustomFunction <pfnet.CustomFunction>`
+.. |ConstraintBase| replace:: :class:`ConstraintBase <pfnet.ConstraintBase>`
 .. |CustomConstraint| replace:: :class:`CustomConstraint <pfnet.CustomConstraint>`
 .. |Problem| replace:: :class:`Problem <pfnet.Problem>`
 
