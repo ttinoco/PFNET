@@ -5,6 +5,7 @@
 *~
 *.out
 *.so.*
+*.dylib
 *.art
 *.dot
 *.prof
