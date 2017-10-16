@@ -12,15 +12,15 @@ from numpy.linalg import norm
 
 def compare_networks(test, net1, net2, check_internals=False):
     """
-    Method for checking if two :class:`Network <pfnet1.Network>` objects are held in different 
+    Method for checking if two |Network| objects are held in different 
     memory locations but are otherwise identical.
 
     Parameters
     ----------
     test : unittest.TestCase
-    net1 : :class:`Network <pfnet1.Network>`
-    net2 : :class:`Network <pfnet1.Network>`
-    check_configuration: {``True``, ``False``}
+    net1 : |Network|
+    net2 : |Network|
+    check_configuration : |TrueFalse|
     """
 
     norminf = lambda x: norm(x,np.inf) if isinstance(x,np.ndarray) else np.abs(x)
