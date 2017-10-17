@@ -1,3 +1,18 @@
+.. _Anaconda: https://www.anaconda.com/
+.. |Anaconda| replace:: `Anaconda`_
+
+.. _CMake: https://cmake.org/
+.. |CMake| replace:: `CMake`_
+
+.. _7-Zip: http://www.7-zip.org/
+.. |7-Zip| replace:: `7-Zip`_
+
+.. _MinGW: http://www.mingw.org/
+.. |MinGW| replace:: `MinGW`_
+
+.. _wget: https://www.gnu.org/software/wget/
+.. |wget| replace:: `wget`_
+
 .. _ieee14: https://github.com/ttinoco/PFNET/tree/master/python/data
 .. |ieee14| replace:: `ieee14`_
 

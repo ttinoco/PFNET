@@ -24,12 +24,29 @@ The PFNET Python module has the following dependencies:
 Installation
 ============
 
-The PFNET Python module can be easily installed using the following commands::
+In order to install the PFNET Python module, the following tools are needed:
+
+* Linux
+
+  * None
+
+* Mac OS X
+
+  * |wget| (can use ``brew install wget`` from the terminal)  
+    
+* Windows
+  
+  * |Anaconda|
+  * |CMake|
+  * |7-Zip|
+  * |MinGW| (can use ``pip install -i https://pypi.anaconda.org/carlkl/simple mingwpy`` from the Anaconda prompt)
+
+After getting these tools, the PFNET Python module can be easily installed by executing the following commands on the terminal or Anaconda prompt::
 
   pip install numpy cython
   pip install pfnet  
 
-After installation, the availability of optional features and the version of PFNET can be checked using::
+After installation, the availability of optional features and the version of PFNET can be checked in Python using::
 
   >>> import pfnet
   >>> pfnet.info
