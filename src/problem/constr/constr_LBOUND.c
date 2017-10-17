@@ -475,6 +475,7 @@ void CONSTR_LBOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* s
   Bus* bus;
   Gen* gen;
   Load* load;
+  Shunt* shunt;
   char* bus_counted;
   int i;
   int T;
@@ -536,6 +537,12 @@ void CONSTR_LBOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* s
 	  GEN_set_sens_P_u_bound(gen,VEC_get(sGu,GEN_get_index_P(gen,t)),t);
 	  GEN_set_sens_P_l_bound(gen,VEC_get(sGl,GEN_get_index_P(gen,t)),t);
 	}
+
+	// Reactive power (Q)
+	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) {
+	  GEN_set_sens_Q_u_bound(gen,VEC_get(sGu,GEN_get_index_Q(gen,t)),t);
+	  GEN_set_sens_Q_l_bound(gen,VEC_get(sGl,GEN_get_index_Q(gen,t)),t);
+	}
       }
 
       // Loads
@@ -547,6 +554,20 @@ void CONSTR_LBOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* s
 	  LOAD_set_sens_P_l_bound(load,VEC_get(sGl,LOAD_get_index_P(load,t)),t);
 	}
       }
+
+      // Variable generators
+
+      // Shunts
+      for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+
+	// Susceptance (b)
+	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
+	  SHUNT_set_sens_b_u_bound(shunt,VEC_get(sGu,SHUNT_get_index_b(shunt,t)),t);
+	  SHUNT_set_sens_b_l_bound(shunt,VEC_get(sGl,SHUNT_get_index_b(shunt,t)),t);
+	}
+      }
+      
+      // Batteries
     }
 
     // Update counted flag

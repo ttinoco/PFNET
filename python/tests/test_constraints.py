@@ -904,9 +904,14 @@ class TestConstraints(unittest.TestCase):
             for gen in net.generators:
                 self.assertEqual(gen.sens_P_u_bound,0.)
                 self.assertEqual(gen.sens_P_l_bound,0.)
+                self.assertEqual(gen.sens_Q_u_bound,0.)
+                self.assertEqual(gen.sens_Q_l_bound,0.)
             for load in net.loads:
                 self.assertEqual(load.sens_P_u_bound,0.)
                 self.assertEqual(load.sens_P_l_bound,0.)
+            for shunt in net.shunts:
+                self.assertEqual(shunt.sens_b_u_bound, 0.)
+                self.assertEqual(shunt.sens_b_l_bound, 0.)
                 
             mu = np.random.randn(net.num_vars)
             pi = np.random.randn(net.num_vars)
@@ -952,11 +957,15 @@ class TestConstraints(unittest.TestCase):
                     self.assertTrue(gen.has_flags('variable','active power'))
                     self.assertNotEqual(gen.sens_P_u_bound,0.)
                     self.assertNotEqual(gen.sens_P_l_bound,0.)
-                    self.assertEqual(gen.sens_P_u_bound,mu[gen.index_P])
-                    self.assertEqual(gen.sens_P_l_bound,pi[gen.index_P])
+                    self.assertEqual(gen.sens_P_u_bound, mu[gen.index_P])
+                    self.assertEqual(gen.sens_P_l_bound, pi[gen.index_P])
+                    self.assertEqual(gen.sens_Q_u_bound, mu[gen.index_Q])
+                    self.assertEqual(gen.sens_Q_l_bound, pi[gen.index_Q])
                 else:
-                    self.assertEqual(gen.sens_P_u_bound,0.)
-                    self.assertEqual(gen.sens_P_l_bound,0.)
+                    self.assertEqual(gen.sens_P_u_bound, 0.)
+                    self.assertEqual(gen.sens_P_l_bound, 0.)
+                    self.assertEqual(gen.sens_Q_u_bound, 0.)
+                    self.assertEqual(gen.sens_Q_l_bound, 0.)
 
             # Load sens
             for load in net.loads:
@@ -965,6 +974,15 @@ class TestConstraints(unittest.TestCase):
                 self.assertNotEqual(load.sens_P_l_bound,0.)
                 self.assertEqual(load.sens_P_u_bound,mu[load.index_P])
                 self.assertEqual(load.sens_P_l_bound,pi[load.index_P])
+
+            # Shunts
+            for shunt in net.shunts:
+                if shunt.is_switched_v():
+                    self.assertEqual(shunt.sens_b_u_bound,mu[shunt.index_b])
+                    self.assertEqual(shunt.sens_b_l_bound,pi[shunt.index_b])
+                else:
+                    self.assertEqual(shunt.sens_b_u_bound, 0.)
+                    self.assertEqual(shunt.sens_b_l_bound, 0.)
 
         # Multi period
         for case in test_cases.CASES:
@@ -1301,11 +1319,19 @@ class TestConstraints(unittest.TestCase):
                 for gen in net.generators:
                     self.assertEqual(gen.sens_P_u_bound[t], mu[gen.index_P[t]])
                     self.assertEqual(gen.sens_P_l_bound[t], pi[gen.index_P[t]])
+                    self.assertEqual(gen.sens_Q_u_bound[t], mu[gen.index_Q[t]])
+                    self.assertEqual(gen.sens_Q_l_bound[t], pi[gen.index_Q[t]])
 
                 # Load sens
                 for load in net.loads:
                     self.assertEqual(load.sens_P_u_bound[t], mu[load.index_P[t]])
                     self.assertEqual(load.sens_P_l_bound[t], pi[load.index_P[t]])
+
+                # Shunts
+                for shunt in net.shunts:
+                    if shunt.is_switched_v():
+                        self.assertEqual(shunt.sens_b_u_bound[t], mu[shunt.index_b[t]])
+                        self.assertEqual(shunt.sens_b_l_bound[t], pi[shunt.index_b[t]])
 
     def test_constr_PAR_GEN_P(self):
 

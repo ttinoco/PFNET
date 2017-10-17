@@ -223,6 +223,24 @@ cdef class Shunt:
             free(json_string)
             return s
 
+    property sens_b_u_bound:
+        """ Objective function sensitivity with respect to susceptance upper bound (float or |Array|). """
+        def __get__(self):
+            r = [cshunt.SHUNT_get_sens_b_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return np.array(r)
+
+    property sens_b_l_bound:
+        """ Objective function sensitivity with respect to susceptance lower bound (float or |Array|). """
+        def __get__(self):
+            r = [cshunt.SHUNT_get_sens_b_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return np.array(r)
+
     property flags_vars:
         """ Flags associated with variable quantities (byte). """
         def __get__(self): return cshunt.SHUNT_get_flags_vars(self._c_ptr)

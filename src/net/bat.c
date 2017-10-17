@@ -101,6 +101,11 @@ void BAT_array_show(Bat* bat_array, int size, int t) {
   }
 }
 
+void BAT_clear_sensitivities(Bat* bat) {
+
+
+}
+
 void BAT_clear_flags(Bat* bat, char flag_type) {
   if (bat) {
     if (flag_type == FLAG_VARS)

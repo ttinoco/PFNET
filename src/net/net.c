@@ -590,10 +590,16 @@ void NET_clear_sensitivities(Net* net) {
     LOAD_clear_sensitivities(LOAD_array_get(net->load,i));
 
   // Vargens
+  for (i = 0; i < net->num_vargens; i++)
+    VARGEN_clear_sensitivities(VARGEN_array_get(net->vargen,i));
 
   // Shunts
+  for (i = 0; i < net->num_shunts; i++)
+    SHUNT_clear_sensitivities(SHUNT_array_get(net->shunt,i));
 
   // Batteries
+  for (i = 0; i < net->num_bats; i++)
+    BAT_clear_sensitivities(BAT_array_get(net->bat,i));
 }
 
 Bus* NET_create_sorted_bus_list(Net* net, int sort_by, int t) {

@@ -57,6 +57,8 @@ struct Gen {
   // Sensitivities
   REAL* sens_P_u_bound;  /**< @brief Sensitivity of active power upper bound. */
   REAL* sens_P_l_bound;  /**< @brief Sensitivity of active power lower bound. */
+  REAL* sens_Q_u_bound;  /**< @brief Sensitivity of reactive power upper bound. */
+  REAL* sens_Q_l_bound;  /**< @brief Sensitivity of reactive power lower bound. */
 
   // List
   Gen* next;     /**< @brief List of generators connected to a bus. */
@@ -82,6 +84,8 @@ void GEN_array_del(Gen* gen_array, int size) {
       free(gen->index_Q);
       free(gen->sens_P_u_bound);
       free(gen->sens_P_l_bound);
+      free(gen->sens_Q_u_bound);
+      free(gen->sens_Q_l_bound);
     }
     free(gen_array);
   }  
@@ -116,6 +120,8 @@ void GEN_clear_sensitivities(Gen* gen) {
     for (t = 0; t < gen->num_periods; t++) {
       gen->sens_P_u_bound[t] = 0;
       gen->sens_P_l_bound[t] = 0;
+      gen->sens_Q_u_bound[t] = 0;
+      gen->sens_Q_l_bound[t] = 0;
     }
   }
 }
@@ -189,6 +195,8 @@ void GEN_copy_from_gen(Gen* gen, Gen* other) {
   // Sensitivities
   memcpy(gen->sens_P_u_bound,other->sens_P_u_bound,num_periods*sizeof(REAL));
   memcpy(gen->sens_P_l_bound,other->sens_P_l_bound,num_periods*sizeof(REAL));
+  memcpy(gen->sens_Q_u_bound,other->sens_Q_u_bound,num_periods*sizeof(REAL));
+  memcpy(gen->sens_Q_l_bound,other->sens_Q_l_bound,num_periods*sizeof(REAL));
 
   // List
   // skip next 
@@ -246,6 +254,20 @@ REAL GEN_get_sens_P_u_bound(Gen* gen, int t) {
 REAL GEN_get_sens_P_l_bound(Gen* gen, int t) {
   if (gen && t >= 0 && t < gen->num_periods)
     return gen->sens_P_l_bound[t];
+  else
+    return 0;
+}
+
+REAL GEN_get_sens_Q_u_bound(Gen* gen, int t) {
+  if (gen && t >= 0 && t < gen->num_periods)
+    return gen->sens_Q_u_bound[t];
+  else
+    return 0;
+}
+
+REAL GEN_get_sens_Q_l_bound(Gen* gen, int t) {
+  if (gen && t >= 0 && t < gen->num_periods)
+    return gen->sens_Q_l_bound[t];
   else
     return 0;
 }
@@ -674,6 +696,8 @@ void GEN_init(Gen* gen, int num_periods) {
   ARRAY_zalloc(gen->index_Q,int,T);
   ARRAY_zalloc(gen->sens_P_u_bound,REAL,T);
   ARRAY_zalloc(gen->sens_P_l_bound,REAL,T);
+  ARRAY_zalloc(gen->sens_Q_u_bound,REAL,T);
+  ARRAY_zalloc(gen->sens_Q_l_bound,REAL,T);
   
   gen->next = NULL;
   gen->reg_next = NULL;
@@ -766,6 +790,16 @@ void GEN_set_sens_P_u_bound(Gen* gen, REAL value, int t) {
 void GEN_set_sens_P_l_bound(Gen* gen, REAL value, int t) {
   if (gen && t >= 0 && t < gen->num_periods)
     gen->sens_P_l_bound[t] = value;
+}
+
+void GEN_set_sens_Q_u_bound(Gen* gen, REAL value, int t) {
+  if (gen && t >= 0 && t < gen->num_periods)
+    gen->sens_Q_u_bound[t] = value;
+}
+
+void GEN_set_sens_Q_l_bound(Gen* gen, REAL value, int t) {
+  if (gen && t >= 0 && t < gen->num_periods)
+    gen->sens_Q_l_bound[t] = value;
 }
 
 void GEN_set_cost_coeff_Q0(Gen* gen, REAL q) {
