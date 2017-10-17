@@ -687,7 +687,7 @@ class TestConstraints(unittest.TestCase):
 
             for branch in net.branches:
                 if branch.is_tap_changer():
-                    self.assertTrue(branch.has_flags('variable','tap ratio'))
+                    self.assertTrue(branch.has_flags('variable','tap ratio')) 
                     self.assertEqual(u[branch.index_ratio],pf.BRANCH_INF_RATIO)
                     self.assertEqual(l[branch.index_ratio],0.)
                 else:
@@ -889,6 +889,11 @@ class TestConstraints(unittest.TestCase):
 
             # Sensitivities
             net.clear_sensitivities()
+            for branch in net.branches:
+                self.assertEqual(branch.sens_ratio_u_bound, 0.)
+                self.assertEqual(branch.sens_ratio_l_bound, 0.)
+                self.assertEqual(branch.sens_phase_u_bound, 0.)
+                self.assertEqual(branch.sens_phase_l_bound, 0.)
             for bus in net.buses:
                 self.assertEqual(bus.sens_P_balance,0.)
                 self.assertEqual(bus.sens_Q_balance,0.)
@@ -902,26 +907,46 @@ class TestConstraints(unittest.TestCase):
             for load in net.loads:
                 self.assertEqual(load.sens_P_u_bound,0.)
                 self.assertEqual(load.sens_P_l_bound,0.)
-
+                
             mu = np.random.randn(net.num_vars)
             pi = np.random.randn(net.num_vars)
 
             constr.store_sensitivities(None,None,mu,pi)
 
+            # Branch sens
+            for branch in net.branches:
+                if branch.is_tap_changer():
+                    self.assertEqual(branch.sens_ratio_u_bound, mu[branch.index_ratio])
+                    self.assertEqual(branch.sens_ratio_l_bound, pi[branch.index_ratio])
+                else:
+                    self.assertEqual(branch.sens_ratio_u_bound, 0.)
+                    self.assertEqual(branch.sens_ratio_l_bound, 0.)
+                if branch.is_phase_shifter():
+                    self.assertEqual(branch.sens_phase_u_bound, mu[branch.index_phase])
+                    self.assertEqual(branch.sens_phase_l_bound, pi[branch.index_phase])
+                else:
+                    self.assertEqual(branch.sens_phase_u_bound, 0.)
+                    self.assertEqual(branch.sens_phase_l_bound, 0.)
+
+            # Bus sens
             for bus in net.buses:
                 self.assertEqual(bus.sens_P_balance,0.)
                 self.assertEqual(bus.sens_Q_balance,0.)
-                self.assertEqual(bus.sens_v_mag_u_bound,0.)
-                self.assertEqual(bus.sens_v_mag_l_bound,0.)
                 if bus.is_regulated_by_gen():
                     self.assertTrue(bus.has_flags('variable','voltage angle'))
                     self.assertNotEqual(bus.sens_v_ang_u_bound,0.)
                     self.assertNotEqual(bus.sens_v_ang_l_bound,0.)
+                    self.assertEqual(bus.sens_v_mag_u_bound,mu[bus.index_v_mag])
+                    self.assertEqual(bus.sens_v_mag_l_bound,pi[bus.index_v_mag])
                     self.assertEqual(bus.sens_v_ang_u_bound,mu[bus.index_v_ang])
                     self.assertEqual(bus.sens_v_ang_l_bound,pi[bus.index_v_ang])
                 else:
+                    self.assertEqual(bus.sens_v_mag_u_bound,0.)
+                    self.assertEqual(bus.sens_v_mag_l_bound,0.)
                     self.assertEqual(bus.sens_v_ang_u_bound,0.)
                     self.assertEqual(bus.sens_v_ang_l_bound,0.)
+
+            # Gen sens
             for gen in net.generators:
                 if gen.is_regulator():
                     self.assertTrue(gen.has_flags('variable','active power'))
@@ -932,6 +957,8 @@ class TestConstraints(unittest.TestCase):
                 else:
                     self.assertEqual(gen.sens_P_u_bound,0.)
                     self.assertEqual(gen.sens_P_l_bound,0.)
+
+            # Load sens
             for load in net.loads:
                 self.assertTrue(load.has_flags('variable','active power'))
                 self.assertNotEqual(load.sens_P_u_bound,0.)
@@ -1235,6 +1262,50 @@ class TestConstraints(unittest.TestCase):
                     if shunt.is_switched_v():
                         self.assertEqual(u[shunt.index_b[t]],shunt.b_max)
                         self.assertEqual(l[shunt.index_b[t]],shunt.b_min)
+
+            # Sensitivities
+            mu = np.random.randn(net.num_vars)
+            pi = np.random.randn(net.num_vars)
+
+            net.clear_sensitivities()
+            
+            constr.store_sensitivities(None,None,mu,pi)
+            
+            for t in range(self.T):
+                        
+                # Branch sens
+                for branch in net.branches:
+                    if branch.is_tap_changer():
+                        self.assertEqual(branch.sens_ratio_u_bound[t], mu[branch.index_ratio[t]])
+                        self.assertEqual(branch.sens_ratio_l_bound[t], pi[branch.index_ratio[t]])
+                    else:
+                        self.assertEqual(branch.sens_ratio_u_bound[t], 0.)
+                        self.assertEqual(branch.sens_ratio_l_bound[t], 0.)
+                    if branch.is_phase_shifter():
+                        self.assertEqual(branch.sens_phase_u_bound[t], mu[branch.index_phase[t]])
+                        self.assertEqual(branch.sens_phase_l_bound[t], pi[branch.index_phase[t]])
+                    else:
+                        self.assertEqual(branch.sens_phase_u_bound[t], 0.)
+                        self.assertEqual(branch.sens_phase_l_bound[t], 0.)
+
+                # Bus sens
+                for bus in net.buses:
+                    self.assertEqual(bus.sens_P_balance[t],0.)
+                    self.assertEqual(bus.sens_Q_balance[t],0.)
+                    self.assertEqual(bus.sens_v_mag_u_bound[t], mu[bus.index_v_mag[t]])
+                    self.assertEqual(bus.sens_v_mag_l_bound[t], pi[bus.index_v_mag[t]])
+                    self.assertEqual(bus.sens_v_ang_u_bound[t], mu[bus.index_v_ang[t]])
+                    self.assertEqual(bus.sens_v_ang_l_bound[t], pi[bus.index_v_ang[t]])
+
+                # Gen sens
+                for gen in net.generators:
+                    self.assertEqual(gen.sens_P_u_bound[t], mu[gen.index_P[t]])
+                    self.assertEqual(gen.sens_P_l_bound[t], pi[gen.index_P[t]])
+
+                # Load sens
+                for load in net.loads:
+                    self.assertEqual(load.sens_P_u_bound[t], mu[load.index_P[t]])
+                    self.assertEqual(load.sens_P_l_bound[t], pi[load.index_P[t]])
 
     def test_constr_PAR_GEN_P(self):
 

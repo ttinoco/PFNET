@@ -1043,6 +1043,42 @@ cdef class Branch:
             else:
                 return np.array(r)
 
+    property sens_ratio_u_bound:
+        """ Objective function sensitivity with respect to tap ratio upper bound (float or |Array|). """
+        def __get__(self):
+            r = [cbranch.BRANCH_get_sens_ratio_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return np.array(r)
+
+    property sens_ratio_l_bound:
+        """ Objective function sensitivity with respect to tap ratio lower bound (float or |Array|). """
+        def __get__(self):
+            r = [cbranch.BRANCH_get_sens_ratio_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return np.array(r)
+
+    property sens_phase_u_bound:
+        """ Objective function sensitivity with respect to phase shift upper bound (float or |Array|). """
+        def __get__(self):
+            r = [cbranch.BRANCH_get_sens_phase_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return np.array(r)
+
+    property sens_phase_l_bound:
+        """ Objective function sensitivity with respect to phase shift lower bound (float or |Array|). """
+        def __get__(self):
+            r = [cbranch.BRANCH_get_sens_phase_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return np.array(r)
+
     property outage:
         """ Flag that indicates whether branch is on outage (boolean). """
         def __get__(self): return cbranch.BRANCH_is_on_outage(self._c_ptr)

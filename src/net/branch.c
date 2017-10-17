@@ -74,8 +74,12 @@ struct Branch {
   int* index_phase;   /**< @brief Phase shift index */
 
   // Sensitivities
-  REAL* sens_P_u_bound;  /**< @brief Sensitivity of active power flow upper bound */
-  REAL* sens_P_l_bound;  /**< @brief Sensitivity of active power flow lower bound */
+  REAL* sens_P_u_bound;     /**< @brief Sensitivity of active power flow upper bound */
+  REAL* sens_P_l_bound;     /**< @brief Sensitivity of active power flow lower bound */
+  REAL* sens_ratio_u_bound; /**< @brief Sensitivity of tap ratio upper bound */
+  REAL* sens_ratio_l_bound; /**< @brief Sensitivity of tap ratio lower bound */
+  REAL* sens_phase_u_bound; /**< @brief Sensitivity of phase shift upper bound */
+  REAL* sens_phase_l_bound; /**< @brief Sensitivity of phase shift lower bound */
 
   // List
   Branch* reg_next;   /**< @brief List of branches regulating a bus voltage magnitude */
@@ -102,6 +106,10 @@ void BRANCH_array_del(Branch* br_array, int size) {
       free(br->index_phase);
       free(br->sens_P_u_bound);
       free(br->sens_P_l_bound);
+      free(br->sens_ratio_u_bound);
+      free(br->sens_ratio_l_bound);
+      free(br->sens_phase_u_bound);
+      free(br->sens_phase_l_bound);
     }
     free(br_array);
   }
@@ -149,6 +157,10 @@ void BRANCH_clear_sensitivities(Branch* br) {
     for (t = 0; t < br->num_periods; t++) {
       br->sens_P_u_bound[t] = 0;
       br->sens_P_l_bound[t] = 0;
+      br->sens_ratio_u_bound[t] = 0;
+      br->sens_ratio_l_bound[t] = 0;
+      br->sens_phase_u_bound[t] = 0;
+      br->sens_phase_l_bound[t] = 0;
     }
   }
 }
@@ -226,6 +238,10 @@ void BRANCH_copy_from_branch(Branch* br, Branch* other) {
   // Sensitivities
   memcpy(br->sens_P_u_bound,other->sens_P_u_bound,num_periods*sizeof(REAL));
   memcpy(br->sens_P_l_bound,other->sens_P_l_bound,num_periods*sizeof(REAL));
+  memcpy(br->sens_ratio_u_bound,other->sens_ratio_u_bound,num_periods*sizeof(REAL));
+  memcpy(br->sens_ratio_l_bound,other->sens_ratio_l_bound,num_periods*sizeof(REAL));
+  memcpy(br->sens_phase_u_bound,other->sens_phase_u_bound,num_periods*sizeof(REAL));
+  memcpy(br->sens_phase_l_bound,other->sens_phase_l_bound,num_periods*sizeof(REAL));
   
   // List
   // skip next
@@ -297,6 +313,34 @@ REAL BRANCH_get_sens_P_u_bound(Branch* br, int t) {
 REAL BRANCH_get_sens_P_l_bound(Branch* br, int t) {
   if (br && t >= 0 && t < br->num_periods)
     return br->sens_P_l_bound[t];
+  else
+    return 0;
+}
+
+REAL BRANCH_get_sens_ratio_u_bound(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->sens_ratio_u_bound[t];
+  else
+    return 0;
+}
+
+REAL BRANCH_get_sens_ratio_l_bound(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->sens_ratio_l_bound[t];
+  else
+    return 0;
+}
+
+REAL BRANCH_get_sens_phase_u_bound(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->sens_phase_u_bound[t];
+  else
+    return 0;
+}
+
+REAL BRANCH_get_sens_phase_l_bound(Branch* br, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    return br->sens_phase_l_bound[t];
   else
     return 0;
 }
@@ -1233,6 +1277,10 @@ void BRANCH_init(Branch* br, int num_periods) {
 
   ARRAY_zalloc(br->sens_P_u_bound,REAL,T);
   ARRAY_zalloc(br->sens_P_l_bound,REAL,T);
+  ARRAY_zalloc(br->sens_ratio_u_bound,REAL,T);
+  ARRAY_zalloc(br->sens_ratio_l_bound,REAL,T);
+  ARRAY_zalloc(br->sens_phase_u_bound,REAL,T);
+  ARRAY_zalloc(br->sens_phase_l_bound,REAL,T);
 
   for (t = 0; t < br->num_periods; t++)
     br->ratio[t] = 1.;
@@ -1366,6 +1414,26 @@ void BRANCH_set_sens_P_u_bound(Branch* br, REAL value, int t) {
 void BRANCH_set_sens_P_l_bound(Branch* br, REAL value, int t) {
   if (br && t >= 0 && t < br->num_periods)
     br->sens_P_l_bound[t] = value;
+}
+
+void BRANCH_set_sens_ratio_u_bound(Branch* br, REAL value, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    br->sens_ratio_u_bound[t] = value;
+}
+
+void BRANCH_set_sens_ratio_l_bound(Branch* br, REAL value, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    br->sens_ratio_l_bound[t] = value;
+}
+
+void BRANCH_set_sens_phase_u_bound(Branch* br, REAL value, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    br->sens_phase_u_bound[t] = value;
+}
+
+void BRANCH_set_sens_phase_l_bound(Branch* br, REAL value, int t) {
+  if (br && t >= 0 && t < br->num_periods)
+    br->sens_phase_l_bound[t] = value;
 }
 
 void BRANCH_set_index(Branch* br, int index) {
