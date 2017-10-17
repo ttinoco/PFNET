@@ -44,14 +44,24 @@ In order to install the PFNET Python module, the following tools are needed:
 After getting these tools, the PFNET Python module can be easily installed by executing the following commands on the terminal or Anaconda prompt::
 
   pip install numpy cython
-  pip install pfnet  
+  pip install pfnet
 
 After installation, the availability of optional features and the version of PFNET can be checked in Python using::
 
   >>> import pfnet
   >>> pfnet.info
   {'line_flow': True, 'raw_parser': True, 'graphviz': True, 'version': '1.3.2'}
-  
+
+To install the module from source, the code can be obtained from `<https://github.com/ttinoco/PFNET>`_, and then the following commands can be executed on the terminal or Anaconda prompt from the ``python`` directory of the package::
+
+    pip install numpy cython
+    python setup.py install
+
+Running the unit tests can be done with::
+
+    python setup.py build_ext --inplace
+    nosetests -s -v
+
 .. _start_example:
 
 Example
