@@ -3434,6 +3434,25 @@ class TestConstraints(unittest.TestCase):
                         mis -= br.P_mk_DC[t]
                     self.assertLess(np.abs(mismatches1[bus.index+t*net.num_buses]-mis),1e-8)
 
+            # Sensitivities
+            net.clear_sensitivities()
+
+            lam = np.random.randn(net.num_buses*net.num_periods)
+            self.assertEqual(lam.size, constr.A.shape[0])
+
+            for t in range(net.num_periods):
+                for bus in net.buses:
+                    self.assertEqual(bus.sens_P_balance[t], 0.)
+                    self.assertEqual(bus.sens_Q_balance[t], 0.)
+
+            constr.store_sensitivities(lam, None, None, None)
+
+            for t in range(net.num_periods):
+                for bus in net.buses:
+                    self.assertEqual(bus.sens_P_balance[t], lam[bus.index+t*net.num_buses])
+                    self.assertNotEqual(bus.sens_P_balance[t], 0.)
+                    self.assertEqual(bus.sens_Q_balance[t], 0.)
+
     def test_constr_DC_FLOW_LIM(self):
 
         # Single period

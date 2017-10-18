@@ -50,6 +50,7 @@ Version 1.3.2
 * Fixed bug with treatment of outage branches in PV-PQ switching heuristics.
 * Added arrays branch_outages and generator_outages to contingency object to store indices of outage components.
 * Added unittests to check that examples run without errors.
+* Extended support for storing and retrieving constraint sensitivity information (done).
 * Update Python wrapper documentation to show how to install with pip or download/run tests (todo).
 * Update examples, documentation (macros, intersphinx) and create release (todo).
 * Distribute pfnet python wrapper through pypi (todo).
