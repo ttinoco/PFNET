@@ -1002,7 +1002,41 @@ void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec
 }
 
 void CONSTR_AC_FLOW_LIM_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
-  // Nothing yet
+
+  // Local variables
+  int* J_row;
+  int k;
+  REAL mu_km;
+
+  // Constr data
+  J_row = CONSTR_get_J_row_ptr(c);
+  
+  // Check pointers
+  if (!J_row)
+    return;
+
+  // Check outage
+  if (BRANCH_is_on_outage(br))
+    return;
+
+  // Check zero rating
+  if (BRANCH_get_ratingA(br) == 0.)
+    return;
+    
+  // Branch
+  //*******
+  
+  for (k = 0; k < 2; k++) {
+
+    mu_km = VEC_get(sGu,*J_row);
+    
+    // Sensitivity
+    if (fabs(mu_km) > fabs(BRANCH_get_sens_i_mag_u_bound(br, t)))
+      BRANCH_set_sens_i_mag_u_bound(br, mu_km, t);
+    
+    // Constraint counter
+    (*J_row)++;
+  }
 }
 
 void CONSTR_AC_FLOW_LIM_free(Constr* c) {

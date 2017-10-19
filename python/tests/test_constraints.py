@@ -4413,7 +4413,24 @@ class TestConstraints(unittest.TestCase):
                                 break
                         self.assertLess((100.*num_bad)/min([net.num_buses,num_max]),1.) # less then 1 %
 
-            
+            # Sensitivities
+            net.clear_sensitivities()
+            for t in range(net.num_periods):
+                for branch in net.branches:
+                    self.assertEqual(branch.sens_i_mag_u_bound[t], 0.)
+
+            mu = np.random.randn(constr.J.shape[0])
+            self.assertEqual(mu.size, constr.G.shape[0])
+
+            constr.store_sensitivities(None, np.zeros(mu.size), mu, np.zeros(mu.size))
+
+            for t in range(net.num_periods):
+                for branch in net.branches:
+                    i = t*net.num_branches*2+2*branch.index
+                    if np.abs(mu[i]) > np.abs(mu[i+1]):
+                        self.assertEqual(branch.sens_i_mag_u_bound[t], mu[i])
+                    else:
+                        self.assertEqual(branch.sens_i_mag_u_bound[t], mu[i+1])
 
         # Single period
         for case in test_cases.CASES:

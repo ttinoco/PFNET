@@ -47,6 +47,7 @@ cdef extern from "pfnet/branch.h":
     REAL BRANCH_get_sens_ratio_l_bound(Branch* br, int t)
     REAL BRANCH_get_sens_phase_u_bound(Branch* br, int t)
     REAL BRANCH_get_sens_phase_l_bound(Branch* br, int t)
+    REAL BRANCH_get_sens_i_mag_u_bound(Branch* br, int t)
     char BRANCH_get_obj_type(void* br)
     int BRANCH_get_num_periods(Branch* br)
     int BRANCH_get_index(Branch* br)
