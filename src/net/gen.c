@@ -251,11 +251,25 @@ REAL GEN_get_sens_P_u_bound(Gen* gen, int t) {
     return 0;
 }
 
+REAL* GEN_get_sens_P_u_bound_array(Gen* gen) {
+  if (gen)
+    return gen->sens_P_u_bound;
+  else
+    return NULL;
+}
+
 REAL GEN_get_sens_P_l_bound(Gen* gen, int t) {
   if (gen && t >= 0 && t < gen->num_periods)
     return gen->sens_P_l_bound[t];
   else
     return 0;
+}
+
+REAL* GEN_get_sens_P_l_bound_array(Gen* gen) {
+  if (gen)
+    return gen->sens_P_l_bound;
+  else
+    return NULL;
 }
 
 REAL GEN_get_sens_Q_u_bound(Gen* gen, int t) {
@@ -265,11 +279,25 @@ REAL GEN_get_sens_Q_u_bound(Gen* gen, int t) {
     return 0;
 }
 
+REAL* GEN_get_sens_Q_u_bound_array(Gen* gen) {
+  if (gen)
+    return gen->sens_Q_u_bound;
+  else
+    return NULL;
+}
+
 REAL GEN_get_sens_Q_l_bound(Gen* gen, int t) {
   if (gen && t >= 0 && t < gen->num_periods)
     return gen->sens_Q_l_bound[t];
   else
     return 0;
+}
+
+REAL* GEN_get_sens_Q_l_bound_array(Gen* gen) {
+  if (gen)
+    return gen->sens_Q_l_bound;
+  else
+    return NULL;
 }
 
 char GEN_get_obj_type(void* gen) {

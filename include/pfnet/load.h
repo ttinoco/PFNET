@@ -68,8 +68,12 @@ char LOAD_get_flags_sparse(Load* load);
 
 char* LOAD_get_name(Load* load);
 int LOAD_get_num_periods(Load* load);
+
 REAL LOAD_get_sens_P_u_bound(Load* load, int t);
+REAL* LOAD_get_sens_P_u_bound_array(Load* load);
 REAL LOAD_get_sens_P_l_bound(Load* load, int t);
+REAL* LOAD_get_sens_P_l_bound_array(Load* load);
+
 char LOAD_get_obj_type(void* load);
 Bus* LOAD_get_bus(Load* load);
 REAL LOAD_get_P_util(Load* load, int t);

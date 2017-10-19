@@ -826,84 +826,66 @@ cdef class Bus:
 
     property sens_P_balance:
         """ Objective function sensitivity with respect to bus active power balance (float or |Array|). """
-        def __get__(self):
-            r = [cbus.BUS_get_sens_P_balance(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        def __get__(self): return DoubleArray(cbus.BUS_get_sens_P_balance_array(self._c_ptr),
+                                              cbus.BUS_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_P_balance[:] = x
 
     property sens_Q_balance:
         """ Objective function sensitivity with respect to bus reactive power balance (float or |Array|). """
-        def __get__(self):
-            r = [cbus.BUS_get_sens_Q_balance(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        def __get__(self): return DoubleArray(cbus.BUS_get_sens_Q_balance_array(self._c_ptr),
+                                              cbus.BUS_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_Q_balance[:] = x
 
     property sens_v_mag_u_bound:
         """ Objective function sensitivity with respect to voltage magnitude upper bound (float or |Array|). """
-        def __get__(self):
-            r = [cbus.BUS_get_sens_v_mag_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        def __get__(self): return DoubleArray(cbus.BUS_get_sens_v_mag_u_bound_array(self._c_ptr),
+                                              cbus.BUS_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_v_mag_u_bound[:] = x
 
     property sens_v_mag_l_bound:
         """ Objective function sensitivity with respect to voltage magnitude lower bound (float or |Array|). """
-        def __get__(self):
-            r = [cbus.BUS_get_sens_v_mag_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        def __get__(self): return DoubleArray(cbus.BUS_get_sens_v_mag_l_bound_array(self._c_ptr),
+                                              cbus.BUS_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_v_mag_l_bound[:] = x
 
     property sens_v_ang_u_bound:
         """ Objective function sensitivity with respect to voltage angle upper bound (float or |Array|). """
-        def __get__(self):
-            r = [cbus.BUS_get_sens_v_ang_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        def __get__(self): return DoubleArray(cbus.BUS_get_sens_v_ang_u_bound_array(self._c_ptr),
+                                              cbus.BUS_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_v_ang_u_bound[:] = x
 
     property sens_v_ang_l_bound:
         """ Objective function sensitivity with respect to voltage angle lower bound (float or |Array|). """
-        def __get__(self):
-            r = [cbus.BUS_get_sens_v_ang_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        def __get__(self): return DoubleArray(cbus.BUS_get_sens_v_ang_l_bound_array(self._c_ptr),
+                                              cbus.BUS_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_v_ang_l_bound[:] = x
 
     property sens_v_reg_by_gen:
         """ Objective function sensitivity with respect to bus voltage regulation by generators (float or |Array|). """
-        def __get__(self):
-            r = [cbus.BUS_get_sens_v_reg_by_gen(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        def __get__(self): return DoubleArray(cbus.BUS_get_sens_v_reg_by_gen_array(self._c_ptr),
+                                              cbus.BUS_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_v_reg_by_gen[:] = x
 
     property sens_v_reg_by_tran:
         """ Objective function sensitivity with respect to bus voltage regulation by transformers (float or |Array|). """
-        def __get__(self):
-            r = [cbus.BUS_get_sens_v_reg_by_tran(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        def __get__(self): return DoubleArray(cbus.BUS_get_sens_v_reg_by_tran_array(self._c_ptr),
+                                              cbus.BUS_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_v_reg_by_tran[:] = x
 
     property sens_v_reg_by_shunt:
         """ Objective function sensitivity with respect to bus voltage regulation by shunts (float or |Array|). """
-        def __get__(self):
-            r = [cbus.BUS_get_sens_v_reg_by_shunt(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        def __get__(self): return DoubleArray(cbus.BUS_get_sens_v_reg_by_shunt_array(self._c_ptr),
+                                              cbus.BUS_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_v_reg_by_shunt[:] = x
 
     property generators:
         """ List of |Generator| objects connected to this bus (list). """

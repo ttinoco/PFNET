@@ -31,8 +31,10 @@ cdef extern from "pfnet/load.h":
     char* LOAD_get_name(Load* load)
     REAL LOAD_get_power_factor(Load* load, int t)
     REAL LOAD_get_target_power_factor(Load* load)
-    REAL LOAD_get_sens_P_u_bound(Load* load, int t)
-    REAL LOAD_get_sens_P_l_bound(Load* load, int t)
+  
+    REAL* LOAD_get_sens_P_u_bound_array(Load* load)
+    REAL* LOAD_get_sens_P_l_bound_array(Load* load)
+  
     REAL LOAD_get_P_util(Load* load, int t)
     REAL LOAD_get_util_coeff_Q0(Load* load)
     REAL LOAD_get_util_coeff_Q1(Load* load)

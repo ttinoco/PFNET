@@ -12,7 +12,7 @@ from numpy.linalg import norm
 
 def compare_networks(test, net1, net2, check_internals=False):
     """
-    Method for checking if two |Network| objects are held in different 
+    Method for checking if two |Network| objects are held in different
     memory locations but are otherwise identical.
 
     Parameters
@@ -90,6 +90,15 @@ def compare_networks(test, net1, net2, check_internals=False):
             test.assertEqual(bus1.flags_fixed,bus2.flags_fixed)
             test.assertEqual(bus1.flags_bounded,bus2.flags_bounded)
             test.assertEqual(bus1.flags_sparse,bus2.flags_sparse)
+            test.assertLess(norminf(bus1.sens_P_balance-bus2.sens_P_balance), eps)
+            test.assertLess(norminf(bus1.sens_Q_balance-bus2.sens_Q_balance), eps)
+            test.assertLess(norminf(bus1.sens_v_mag_u_bound-bus2.sens_v_mag_u_bound), eps)
+            test.assertLess(norminf(bus1.sens_v_mag_l_bound-bus2.sens_v_mag_l_bound), eps)
+            test.assertLess(norminf(bus1.sens_v_ang_u_bound-bus2.sens_v_ang_u_bound), eps)
+            test.assertLess(norminf(bus1.sens_v_ang_l_bound-bus2.sens_v_ang_l_bound), eps)
+            test.assertLess(norminf(bus1.sens_v_reg_by_gen-bus2.sens_v_reg_by_gen), eps)
+            test.assertLess(norminf(bus1.sens_v_reg_by_tran-bus2.sens_v_reg_by_tran), eps)
+            test.assertLess(norminf(bus1.sens_v_reg_by_shunt-bus2.sens_v_reg_by_shunt), eps)
 
     # Branches
     test.assertEqual(net1.num_branches, net2.num_branches)
@@ -133,6 +142,13 @@ def compare_networks(test, net1, net2, check_internals=False):
             test.assertEqual(branch1.flags_fixed,branch2.flags_fixed)
             test.assertEqual(branch1.flags_bounded,branch2.flags_bounded)
             test.assertEqual(branch1.flags_sparse,branch2.flags_sparse)
+            test.assertLess(norminf(branch1.sens_P_u_bound-branch2.sens_P_u_bound), eps)
+            test.assertLess(norminf(branch1.sens_P_l_bound-branch2.sens_P_l_bound), eps)
+            test.assertLess(norminf(branch1.sens_i_mag_u_bound-branch2.sens_i_mag_u_bound), eps)
+            test.assertLess(norminf(branch1.sens_ratio_u_bound-branch2.sens_ratio_u_bound), eps)
+            test.assertLess(norminf(branch1.sens_ratio_l_bound-branch2.sens_ratio_l_bound), eps)
+            test.assertLess(norminf(branch1.sens_phase_u_bound-branch2.sens_phase_u_bound), eps)
+            test.assertLess(norminf(branch1.sens_phase_l_bound-branch2.sens_phase_l_bound), eps)
 
     # Generators
     test.assertEqual(net1.num_generators, net2.num_generators)
@@ -167,7 +183,11 @@ def compare_networks(test, net1, net2, check_internals=False):
             test.assertEqual(gen1.flags_fixed,gen2.flags_fixed)
             test.assertEqual(gen1.flags_bounded,gen2.flags_bounded)
             test.assertEqual(gen1.flags_sparse,gen2.flags_sparse)
-
+            test.assertLess(norminf(gen1.sens_P_u_bound-gen2.sens_P_u_bound), eps)
+            test.assertLess(norminf(gen1.sens_P_l_bound-gen2.sens_P_l_bound), eps)
+            test.assertLess(norminf(gen1.sens_Q_u_bound-gen2.sens_Q_u_bound), eps)
+            test.assertLess(norminf(gen1.sens_Q_l_bound-gen2.sens_Q_l_bound), eps)
+            
     # Var generators
     test.assertEqual(net1.num_var_generators, net2.num_var_generators)
     for i in range(net1.num_var_generators):
@@ -216,6 +236,8 @@ def compare_networks(test, net1, net2, check_internals=False):
             test.assertEqual(shunt1.flags_fixed,shunt2.flags_fixed)
             test.assertEqual(shunt1.flags_bounded,shunt2.flags_bounded)
             test.assertEqual(shunt1.flags_sparse,shunt2.flags_sparse)
+            test.assertLess(norminf(shunt1.sens_b_u_bound-shunt2.sens_b_u_bound), eps)
+            test.assertLess(norminf(shunt1.sens_b_l_bound-shunt2.sens_b_l_bound), eps)
 
     # Loads
     test.assertEqual(net1.num_loads, net2.num_loads)
@@ -241,6 +263,8 @@ def compare_networks(test, net1, net2, check_internals=False):
             test.assertEqual(load1.flags_fixed,load2.flags_fixed)
             test.assertEqual(load1.flags_bounded,load2.flags_bounded)
             test.assertEqual(load1.flags_sparse,load2.flags_sparse)
+            test.assertLess(norminf(load1.sens_P_u_bound-load2.sens_P_u_bound), eps)
+            test.assertLess(norminf(load1.sens_P_l_bound-load2.sens_P_l_bound), eps)
 
     # Batteries
     test.assertEqual(net1.num_batteries, net2.num_batteries)

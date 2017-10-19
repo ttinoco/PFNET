@@ -314,11 +314,25 @@ REAL BRANCH_get_sens_P_u_bound(Branch* br, int t) {
     return 0;
 }
 
+REAL* BRANCH_get_sens_P_u_bound_array(Branch* br) {
+  if (br)
+    return br->sens_P_u_bound;
+  else
+    return NULL;
+}
+
 REAL BRANCH_get_sens_P_l_bound(Branch* br, int t) {
   if (br && t >= 0 && t < br->num_periods)
     return br->sens_P_l_bound[t];
   else
     return 0;
+}
+
+REAL* BRANCH_get_sens_P_l_bound_array(Branch* br) {
+  if (br)
+    return br->sens_P_l_bound;
+  else
+    return NULL;
 }
 
 REAL BRANCH_get_sens_ratio_u_bound(Branch* br, int t) {
@@ -328,11 +342,25 @@ REAL BRANCH_get_sens_ratio_u_bound(Branch* br, int t) {
     return 0;
 }
 
+REAL* BRANCH_get_sens_ratio_u_bound_array(Branch* br) {
+  if (br)
+    return br->sens_ratio_u_bound;
+  else
+    return NULL;
+}
+
 REAL BRANCH_get_sens_ratio_l_bound(Branch* br, int t) {
   if (br && t >= 0 && t < br->num_periods)
     return br->sens_ratio_l_bound[t];
   else
     return 0;
+}
+
+REAL* BRANCH_get_sens_ratio_l_bound_array(Branch* br) {
+  if (br)
+    return br->sens_ratio_l_bound;
+  else
+    return NULL;
 }
 
 REAL BRANCH_get_sens_phase_u_bound(Branch* br, int t) {
@@ -342,6 +370,13 @@ REAL BRANCH_get_sens_phase_u_bound(Branch* br, int t) {
     return 0;
 }
 
+REAL* BRANCH_get_sens_phase_u_bound_array(Branch* br) {
+  if (br)
+    return br->sens_phase_u_bound;
+  else
+    return NULL;
+}
+
 REAL BRANCH_get_sens_phase_l_bound(Branch* br, int t) {
   if (br && t >= 0 && t < br->num_periods)
     return br->sens_phase_l_bound[t];
@@ -349,11 +384,25 @@ REAL BRANCH_get_sens_phase_l_bound(Branch* br, int t) {
     return 0;
 }
 
+REAL* BRANCH_get_sens_phase_l_bound_array(Branch* br) {
+  if (br)
+    return br->sens_phase_l_bound;
+  else
+    return NULL;
+}
+
 REAL BRANCH_get_sens_i_mag_u_bound(Branch* br, int t) {
   if (br && t >= 0 && t < br->num_periods)
     return br->sens_i_mag_u_bound[t];
   else
     return 0;
+}
+
+REAL* BRANCH_get_sens_i_mag_u_bound_array(Branch* br) {
+  if (br)
+    return br->sens_i_mag_u_bound;
+  else
+    return NULL;
 }
 
 int BRANCH_get_index(Branch* br) {

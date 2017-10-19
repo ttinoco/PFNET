@@ -94,13 +94,22 @@ char* BRANCH_get_name(Branch* br);
 int BRANCH_get_num_periods(Branch* br);
 char BRANCH_get_type(Branch* br);
 char BRANCH_get_obj_type(void* br);
+
 REAL BRANCH_get_sens_P_u_bound(Branch* br, int t);
+REAL* BRANCH_get_sens_P_u_bound_array(Branch* br);
 REAL BRANCH_get_sens_P_l_bound(Branch* br, int t);
+REAL* BRANCH_get_sens_P_l_bound_array(Branch* br);
 REAL BRANCH_get_sens_ratio_u_bound(Branch* br, int t);
+REAL* BRANCH_get_sens_ratio_u_bound_array(Branch* br);
 REAL BRANCH_get_sens_ratio_l_bound(Branch* br, int t);
+REAL* BRANCH_get_sens_ratio_l_bound_array(Branch* br);
 REAL BRANCH_get_sens_phase_u_bound(Branch* br, int t);
+REAL* BRANCH_get_sens_phase_u_bound_array(Branch* br);
 REAL BRANCH_get_sens_phase_l_bound(Branch* br, int t);
+REAL* BRANCH_get_sens_phase_l_bound_array(Branch* br);
 REAL BRANCH_get_sens_i_mag_u_bound(Branch* br, int t);
+REAL* BRANCH_get_sens_i_mag_u_bound_array(Branch* br);
+
 int BRANCH_get_index(Branch* br);
 int BRANCH_get_index_ratio(Branch* br, int t);
 int BRANCH_get_index_phase(Branch* br, int t);

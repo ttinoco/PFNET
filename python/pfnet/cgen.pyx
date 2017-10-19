@@ -356,39 +356,31 @@ cdef class Generator:
 
     property sens_P_u_bound:
         """ Objective function sensitivity with respect to active power upper bound (float or |Array|). """
-        def __get__(self):
-            r = [cgen.GEN_get_sens_P_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        def __get__(self): return DoubleArray(cgen.GEN_get_sens_P_u_bound_array(self._c_ptr),
+                                              cgen.GEN_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_P_u_bound[:] = x
 
     property sens_P_l_bound:
         """ Objective function sensitivity with respect to active power lower bound (float or |Array|). """
-        def __get__(self):
-            r = [cgen.GEN_get_sens_P_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        def __get__(self): return DoubleArray(cgen.GEN_get_sens_P_l_bound_array(self._c_ptr),
+                                              cgen.GEN_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_P_l_bound[:] = x
 
     property sens_Q_u_bound:
         """ Objective function sensitivity with respect to reactive power upper bound (float or |Array|). """
-        def __get__(self):
-            r = [cgen.GEN_get_sens_Q_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        def __get__(self): return DoubleArray(cgen.GEN_get_sens_Q_u_bound_array(self._c_ptr),
+                                              cgen.GEN_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_Q_u_bound[:] = x
 
     property sens_Q_l_bound:
         """ Objective function sensitivity with respect to reactive power lower bound (float or |Array|). """
-        def __get__(self):
-            r = [cgen.GEN_get_sens_Q_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        def __get__(self): return DoubleArray(cgen.GEN_get_sens_Q_l_bound_array(self._c_ptr),
+                                              cgen.GEN_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_Q_l_bound[:] = x
 
     property flags_vars:
         """ Flags associated with variable quantities (byte). """

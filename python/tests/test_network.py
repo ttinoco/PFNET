@@ -540,6 +540,12 @@ class TestNetwork(unittest.TestCase):
                 for t in range(self.T):
                     self.assertEqual(bus.price[t],x[t])
 
+                # Sensitivities
+                x = np.random.randn(self.T)
+                bus.sens_P_balance = x
+                for t in range(self.T):
+                    self.assertEqual(bus.sens_P_balance[t],x[t])
+
                 # Set (attribute array)
                 for t in range(self.T):
                     mag = np.random.randn()
@@ -558,6 +564,15 @@ class TestNetwork(unittest.TestCase):
                     ar[t] = mag
                     self.assertEqual(ar[t],mag)
                     self.assertEqual(bus.v_mag[t],mag)
+
+                    # Sensitivities
+                    s = np.random.randn()
+                    bus.sens_P_balance[t] = s
+                    self.assertEqual(bus.sens_P_balance[t], s)
+                    sens = bus.sens_P_balance
+                    ss = np.random.randn()
+                    sens[t] = ss
+                    self.assertEqual(bus.sens_P_balance[t], ss)
 
             # Indexing
             net.set_flags('bus',
@@ -3960,6 +3975,37 @@ class TestNetwork(unittest.TestCase):
             self.assertGreater(net1.num_var_generators,0)
             self.assertGreater(net1.num_batteries,0)
 
+            # Sensitivities
+            for bus in net1.buses:
+                bus.sens_P_balance = np.random.randn(bus.num_periods)
+                bus.sens_Q_balance = np.random.randn(bus.num_periods)
+                bus.sens_v_mag_u_bound = np.random.randn(bus.num_periods)
+                bus.sens_v_mag_l_bound = np.random.randn(bus.num_periods)
+                bus.sens_v_ang_u_bound = np.random.randn(bus.num_periods)
+                bus.sens_v_ang_l_bound = np.random.randn(bus.num_periods)
+                bus.sens_v_reg_by_gen = np.random.randn(bus.num_periods)
+                bus.sens_v_reg_by_tran = np.random.randn(bus.num_periods)
+                bus.sens_v_reg_by_shunt = np.random.randn(bus.num_periods)
+            for branch in net1.branches:
+                branch.sens_P_u_bound = np.random.randn(branch.num_periods)
+                branch.sens_P_l_bound = np.random.randn(branch.num_periods)
+                branch.sens_ratio_u_bound = np.random.randn(branch.num_periods)
+                branch.sens_ratio_l_bound = np.random.randn(branch.num_periods)
+                branch.sens_phase_u_bound = np.random.randn(branch.num_periods)
+                branch.sens_phase_l_bound = np.random.randn(branch.num_periods)
+                branch.sens_i_mag_u_bound = np.random.randn(branch.num_periods)
+            for gen in net1.generators:
+                gen.sens_P_u_bound = np.random.randn(gen.num_periods)
+                gen.sens_P_l_bound = np.random.randn(gen.num_periods)
+                gen.sens_Q_u_bound = np.random.randn(gen.num_periods)
+                gen.sens_Q_l_bound = np.random.randn(gen.num_periods)
+            for load in net1.loads:
+                load.sens_P_u_bound = np.random.randn(gen.num_periods)
+                load.sens_P_l_bound = np.random.randn(gen.num_periods)
+            for shunt in net1.shunts:
+                shunt.sens_b_u_bound = np.random.randn(shunt.num_periods)
+                shunt.sens_b_l_bound = np.random.randn(shunt.num_periods)
+
             # Configure
             net1.set_flags('bus',
                            'variable',
@@ -4030,7 +4076,7 @@ class TestNetwork(unittest.TestCase):
             net1.set_flags('battery',
                            ['variable','fixed','bounded','sparse'],
                            'any',
-                           ['charging power', 'energy level'])                           
+                           ['charging power', 'energy level'])
             
 
             net2 = net1.get_copy()

@@ -225,21 +225,17 @@ cdef class Shunt:
 
     property sens_b_u_bound:
         """ Objective function sensitivity with respect to susceptance upper bound (float or |Array|). """
-        def __get__(self):
-            r = [cshunt.SHUNT_get_sens_b_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        def __get__(self): return DoubleArray(cshunt.SHUNT_get_sens_b_u_bound_array(self._c_ptr),
+                                              cshunt.SHUNT_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_b_u_bound[:] = x
 
     property sens_b_l_bound:
         """ Objective function sensitivity with respect to susceptance lower bound (float or |Array|). """
-        def __get__(self):
-            r = [cshunt.SHUNT_get_sens_b_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        def __get__(self): return DoubleArray(cshunt.SHUNT_get_sens_b_l_bound_array(self._c_ptr),
+                                              cshunt.SHUNT_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_b_l_bound[:] = x
 
     property flags_vars:
         """ Flags associated with variable quantities (byte). """

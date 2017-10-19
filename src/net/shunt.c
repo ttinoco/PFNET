@@ -184,11 +184,25 @@ REAL SHUNT_get_sens_b_u_bound(Shunt* shunt, int t) {
     return 0;
 }
 
+REAL* SHUNT_get_sens_b_u_bound_array(Shunt* shunt) {
+  if (shunt)
+    return shunt->sens_b_u_bound;
+  else
+    return NULL;
+}
+
 REAL SHUNT_get_sens_b_l_bound(Shunt* shunt, int t) {
   if (shunt && t >= 0 && t < shunt->num_periods)
     return shunt->sens_b_l_bound[t];
   else
     return 0;
+}
+
+REAL* SHUNT_get_sens_b_l_bound_array(Shunt* shunt) {
+  if (shunt)
+    return shunt->sens_b_l_bound;
+  else
+    return NULL;
 }
 
 char SHUNT_get_flags_vars(Shunt* shunt) {

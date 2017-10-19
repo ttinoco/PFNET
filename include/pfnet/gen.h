@@ -71,10 +71,16 @@ char GEN_get_flags_sparse(Gen* gen);
 
 char* GEN_get_name(Gen* gen);
 int GEN_get_num_periods(Gen* gen);
+
 REAL GEN_get_sens_P_u_bound(Gen* gen, int t);
+REAL* GEN_get_sens_P_u_bound_array(Gen* gen);
 REAL GEN_get_sens_P_l_bound(Gen* gen, int t);
+REAL* GEN_get_sens_P_l_bound_array(Gen* gen);
 REAL GEN_get_sens_Q_u_bound(Gen* gen, int t);
+REAL* GEN_get_sens_Q_u_bound_array(Gen* gen);
 REAL GEN_get_sens_Q_l_bound(Gen* gen, int t);
+REAL* GEN_get_sens_Q_l_bound_array(Gen* gen);
+
 Bus* GEN_get_bus(Gen* gen);
 Bus* GEN_get_reg_bus(Gen* gen);
 REAL GEN_get_P_cost(Gen* gen, int t);

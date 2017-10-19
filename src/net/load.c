@@ -259,11 +259,25 @@ REAL LOAD_get_sens_P_u_bound(Load* load, int t) {
     return 0;
 }
 
+REAL* LOAD_get_sens_P_u_bound_array(Load* load) {
+  if (load)
+    return load->sens_P_u_bound;
+  else
+    return NULL;
+}
+
 REAL LOAD_get_sens_P_l_bound(Load* load, int t) {
   if (load && t >= 0 && t < load->num_periods)
     return load->sens_P_l_bound[t];
   else
     return 0;
+}
+
+REAL* LOAD_get_sens_P_l_bound_array(Load* load) {
+  if (load)
+    return load->sens_P_l_bound;
+  else
+    return NULL;
 }
 
 char LOAD_get_obj_type(void* load) {
