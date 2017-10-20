@@ -171,6 +171,16 @@ cdef class Contingency:
         cdef Branch b = br
         return ccont.CONT_has_branch_outage(self._c_cont,b.index)
 
+    property outages:
+       """ List of network component outages in the form of pairs of component type (see |RefObjects|) and index. """
+       def __get__(self):
+           outages = []
+           for index in self.branch_outages:
+               outages.append(('branch', index))
+           for index in self.generator_outages:
+               outages.append(('generator', index))
+           return outages
+
     property branch_outages:
        """ Array of outage branch indices (|Array|). """
        def __get__(self): return IntArray(ccont.CONT_get_branch_outages(self._c_cont),

@@ -52,6 +52,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.load_P_vio,0.)
 
             net = pf.Parser(case).parse(case)
+
             self.assertEqual(net.num_periods,1)
 
             self.assertGreater(net.num_buses,0)
@@ -94,6 +95,9 @@ class TestNetwork(unittest.TestCase):
             self.assertRaises(pf.NetworkError,net.get_battery,-1)
             net.clear_error()
 
+            # Show strings
+            self.assertTrue(isinstance(net.show_components_str, unicode))
+            
             # Counters
             self.assertEqual(net.get_num_P_adjust_gens(),
                              len([g for g in net.generators if g.P_min < g.P_max]))

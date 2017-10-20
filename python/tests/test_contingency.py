@@ -170,6 +170,9 @@ class TestContingency(unittest.TestCase):
             self.assertTrue(c1.has_generator_outage(net.get_generator(0)))
             self.assertTrue(c1.has_branch_outage(net.get_branch(2)))
 
+            # list of all outages
+            self.assertEqual(c1.outages, [('branch', 2), ('generator', 0)])
+
             # contingency
             g0 = net.get_generator(0)
             bus0 = g0.bus
