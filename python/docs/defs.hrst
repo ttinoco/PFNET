@@ -22,6 +22,15 @@
 .. _ieee14: https://github.com/ttinoco/PFNET/tree/master/python/data
 .. |ieee14| replace:: `ieee14`_
 
+.. _ARTERE: http://www.montefiore.ulg.ac.be/~vct/software.html
+.. |ARTERE| replace:: `ARTERE`_
+
+.. _MATLAB: http://www.mathworks.com/products/matlab/
+.. |MATLAB| replace:: `MATLAB`_
+
+.. _JSON: http://www.json.org/
+.. |JSON| replace:: `JSON`_
+
 .. _MATPOWER: http://www.pserc.cornell.edu//matpower/
 .. |MATPOWER| replace:: `MATPOWER`_
 
@@ -44,6 +53,11 @@
 .. _PFNET: http://pfnet-python.readthedocs.io
 .. |PFNET| replace:: `PFNET`_
 .. |ParserBase| replace:: :class:`ParserBase <pfnet.ParserBase>`
+.. |Parser| replace:: :class:`Parser <pfnet.Parser>`
+.. |ParserJSON| replace:: :class:`ParserJSON <pfnet.ParserJSON>`
+.. |ParserMAT| replace:: :class:`ParserMAT <pfnet.ParserMAT>`
+.. |ParserART| replace:: :class:`ParserART <pfnet.ParserART>`
+.. |ParserRAW| replace:: :class:`ParserRAW <pfnet.ParserRAW>`
 .. |Network| replace:: :class:`Network <pfnet.Network>`
 .. |Bus| replace:: :class:`Bus <pfnet.Bus>`
 .. |Branch| replace:: :class:`Branch <pfnet.Branch>`
