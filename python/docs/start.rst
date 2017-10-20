@@ -26,20 +26,8 @@ Installation
 
 In order to install the PFNET Python module, the following tools are needed:
 
-* Linux
-
-  * None
-
-* Mac OS X
-
-  * |wget| (can use ``brew install wget`` from the terminal)  
-    
-* Windows
-  
-  * |Anaconda|
-  * |CMake|
-  * |7-Zip|
-  * |MinGW| (can use ``pip install -i https://pypi.anaconda.org/carlkl/simple mingwpy`` from the Anaconda prompt)
+* Linux and Mac OS X: a C compiler, |Make|, |Python| and |pip|.
+* Windows : |Anaconda|, |CMake|, |7-Zip|, and |MinGW|.
 
 After getting these tools, the PFNET Python module can be easily installed by executing the following commands on the terminal or Anaconda prompt::
 

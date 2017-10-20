@@ -1,3 +1,12 @@
+.. _Python: https://www.python.org/
+.. |Python| replace:: `Python`_
+
+.. _pip: https://pip.pypa.io/en/stable/
+.. |pip| replace:: `pip`_
+
+.. _Make: https://www.gnu.org/software/make/
+.. |Make| replace:: `Make`_
+
 .. _Anaconda: https://www.anaconda.com/
 .. |Anaconda| replace:: `Anaconda`_
 
@@ -7,11 +16,8 @@
 .. _7-Zip: http://www.7-zip.org/
 .. |7-Zip| replace:: `7-Zip`_
 
-.. _MinGW: http://www.mingw.org/
+.. _MinGW: https://anaconda.org/carlkl/mingwpy
 .. |MinGW| replace:: `MinGW`_
-
-.. _wget: https://www.gnu.org/software/wget/
-.. |wget| replace:: `wget`_
 
 .. _ieee14: https://github.com/ttinoco/PFNET/tree/master/python/data
 .. |ieee14| replace:: `ieee14`_
