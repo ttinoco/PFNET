@@ -59,14 +59,14 @@ Again, this example assumes that the Python interpreter was started from the ``d
 Buses
 -----
 
-Buses in a power network are objects of type :class:`Bus <pfnet.Bus>`. Each bus has an :data:`index <pfnet.Bus.index>`, a :data:`number <pfnet.Bus.number>`, and a :data:`name <pfnet.Bus.name>` attribute that can be used to identify this bus in a network. The :data:`index <pfnet.Bus.index>` is associated with the location of the bus in the underlying C array of bus structures, while the :data:`number <pfnet.Bus.number>` and :data:`name <pfnet.Bus.name>` attributes are specified in the input data. An :data:`index <pfnet.Bus.index>`, a :data:`number <pfnet.Bus.number>`, or a :data:`name <pfnet.Bus.name>` can be used to extract a specific bus from a network using the :class:`Network <pfnet.Network>` class methods :func:`get_bus() <pfnet.Network.get_bus>`, :func:`get_bus_by_number() <pfnet.Network.get_bus_by_number>`, and :func:`get_bus_by_name() <pfnet.Network.get_bus_by_name>`, respectively::
+Buses in a power network are objects of type :class:`Bus <pfnet.Bus>`. Each bus has an :data:`index <pfnet.Bus.index>`, a :data:`number <pfnet.Bus.number>`, and a :data:`name <pfnet.Bus.name>` attribute that can be used to identify this bus in a network. The :data:`index <pfnet.Bus.index>` is associated with the location of the bus in the underlying C array of bus structures, while the :data:`number <pfnet.Bus.number>` and :data:`name <pfnet.Bus.name>` attributes are specified in the input data. An :data:`index <pfnet.Bus.index>`, a :data:`number <pfnet.Bus.number>`, or a :data:`name <pfnet.Bus.name>` can be used to extract a specific bus from a network using the :class:`Network <pfnet.Network>` class methods :func:`get_bus() <pfnet.Network.get_bus>`, :func:`get_bus_from_number() <pfnet.Network.get_bus_from_number>`, and :func:`get_bus_from_name() <pfnet.Network.get_bus_from_name>`, respectively::
 
   >>> bus = net.get_bus(10)
 
   >>> print bus.index == 10
   True
 
-  >>> other_bus = net.get_bus_by_number(bus.number)
+  >>> other_bus = net.get_bus_from_number(bus.number)
 
   >>> print bus == other_bus
   True

@@ -264,7 +264,7 @@ cdef class Network:
         else:
             raise NetworkError('index does not correspond to any variable')
 
-    def get_bus_by_number(self, number):
+    def get_bus_from_number(self, number):
         """
         Gets bus with the given number.
 
@@ -283,7 +283,7 @@ cdef class Network:
         else:
             raise NetworkError('bus not found')
 
-    def get_bus_by_name(self, name):
+    def get_bus_from_name(self, name):
         """
         Gets bus with the given name.
 
@@ -436,6 +436,139 @@ cdef class Network:
         else:
             raise NetworkError('invalid battery index')
 
+    def get_generator_from_name_and_bus_number(self, name, number):
+        """
+        Gets generator of given name connected to the bus of the 
+        given number.
+
+        Parameters
+        ----------
+        name : string
+        number : integer
+
+        Returns
+        -------
+        gen : |Generator|
+        """
+
+        name = name.encode('UTF-8')
+        ptr = cnet.NET_get_gen_from_name_and_bus_number(self._c_net, name, number)
+        if ptr is not NULL:
+            return new_Generator(ptr)
+        else:
+            raise NetworkError('generator not found')
+
+    def get_branch_from_name_and_bus_numbers(self, name, number1, number2):
+        """
+        Gets branch of given name connected across buss of the 
+        given numbers.
+
+        Parameters
+        ----------
+        name : string
+        number1 : integer
+        number2 : integer
+
+        Returns
+        -------
+        branch : |Branch|
+        """
+
+        name = name.encode('UTF-8')
+        ptr = cnet.NET_get_branch_from_name_and_bus_numbers(self._c_net, name, number1, number2)
+        if ptr is not NULL:
+            return new_Branch(ptr)
+        else:
+            raise NetworkError('branch not found')
+
+    def get_load_from_name_and_bus_number(self, name, number):
+        """
+        Gets load of given name connected to the bus of the 
+        given number.
+
+        Parameters
+        ----------
+        name : string
+        number : integer
+
+        Returns
+        -------
+        load : |Load|
+        """
+
+        name = name.encode('UTF-8')
+        ptr = cnet.NET_get_load_from_name_and_bus_number(self._c_net, name, number)
+        if ptr is not NULL:
+            return new_Load(ptr)
+        else:
+            raise NetworkError('load not found')
+
+    def get_shunt_from_name_and_bus_number(self, name, number):
+        """
+        Gets shunt of given name connected to the bus of the 
+        given number.
+
+        Parameters
+        ----------
+        name : string
+        number : integer
+
+        Returns
+        -------
+        shunt : |Shunt|
+        """
+
+        name = name.encode('UTF-8')
+        ptr = cnet.NET_get_shunt_from_name_and_bus_number(self._c_net, name, number)
+        if ptr is not NULL:
+            return new_Shunt(ptr)
+        else:
+            raise NetworkError('shunt not found')
+
+    def get_var_generator_from_name_and_bus_number(self, name, number):
+        """
+        Gets variable generator of given name connected to the bus of the 
+        given number.
+
+        Parameters
+        ----------
+        name : string
+        number : integer
+
+        Returns
+        -------
+        vargen : |VarGenerator|
+        """
+
+        name = name.encode('UTF-8')
+        ptr = cnet.NET_get_vargen_from_name_and_bus_number(self._c_net, name, number)
+        if ptr is not NULL:
+            return new_VarGenerator(ptr)
+        else:
+            raise NetworkError('variable generator not found')
+
+    def get_battery_from_name_and_bus_number(self, name, number):
+        """
+        Gets battery of given name connected to the bus of the 
+        given number.
+
+        Parameters
+        ----------
+        name : string
+        number : integer
+
+        Returns
+        -------
+        bat : |Battery|
+        """
+
+        name = name.encode('UTF-8')
+        ptr = cnet.NET_get_bat_from_name_and_bus_number(self._c_net, name, number)
+        if ptr is not NULL:
+            return new_Battery(ptr)
+        else:
+            raise NetworkError('battery not found')
+        
     def get_generator_buses(self):
         """
         Gets list of buses where generators are connected.

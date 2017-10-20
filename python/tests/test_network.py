@@ -150,6 +150,53 @@ class TestNetwork(unittest.TestCase):
             self.assertTupleEqual(net.load_P_vio.shape,(self.T,))
             self.assertTupleEqual(net.num_actions.shape,(self.T,))
 
+    def test_component_lookups(self):
+        
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case)
+
+            # Add vargen and battery
+            net.add_var_generators(net.get_load_buses(),100.,50.,30.,5,0.05)
+            net.add_batteries(net.get_generator_buses(),20.,50.)
+            self.assertGreater(net.num_var_generators,0)
+            self.assertGreater(net.num_batteries,0)
+            self.assertGreater(net.num_buses, 0)
+            
+            for bus in net.buses[:10]:
+                self.assertEqual(bus.index, net.get_bus_from_number(bus.number).index)
+                self.assertEqual(bus.name, net.get_bus_from_name(bus.name).name)
+            for gen in net.generators[:10]:
+                self.assertEqual(gen.index,
+                                 net.get_generator_from_name_and_bus_number(gen.name,
+                                                                            gen.bus.number).index)
+            for branch in net.branches[:10]:
+                self.assertEqual(branch.index,
+                                 net.get_branch_from_name_and_bus_numbers(branch.name,
+                                                                          branch.bus_k.number,
+                                                                          branch.bus_m.number).index)
+                self.assertEqual(branch.index,
+                                 net.get_branch_from_name_and_bus_numbers(branch.name,
+                                                                          branch.bus_m.number,
+                                                                          branch.bus_k.number).index)
+            for load in net.loads[:10]:
+                self.assertEqual(load.index,
+                                 net.get_load_from_name_and_bus_number(load.name,
+                                                                       load.bus.number).index)
+            for shunt in net.shunts[:10]:
+                self.assertEqual(shunt.index,
+                                 net.get_shunt_from_name_and_bus_number(shunt.name,
+                                                                        shunt.bus.number).index)
+
+            for vargen in net.var_generators[:10]:
+                self.assertEqual(vargen.index,
+                                 net.get_var_generator_from_name_and_bus_number(vargen.name,
+                                                                                vargen.bus.number).index)
+            for bat in net.batteries[:10]:
+                self.assertEqual(bat.index,
+                                 net.get_battery_from_name_and_bus_number(bat.name,
+                                                                          bat.bus.number).index)
+
     def test_variables(self):
 
         # Single period
@@ -373,10 +420,10 @@ class TestNetwork(unittest.TestCase):
                     self.assertTrue(bus != other_bus)
 
                 # hash table (numbers)
-                self.assertEqual(bus.number,net.get_bus_by_number(bus.number).number)
+                self.assertEqual(bus.number,net.get_bus_from_number(bus.number).number)
 
                 # hash table (names)
-                self.assertEqual(bus.name,net.get_bus_by_name(bus.name).name)
+                self.assertEqual(bus.name,net.get_bus_from_name(bus.name).name)
 
                 # values
                 self.assertGreater(bus.number,0)
@@ -4154,11 +4201,11 @@ class TestNetwork(unittest.TestCase):
 
                 copy_gen.name = orig_gen.name
                 
-                copy_gen.bus = copy_net.get_bus_by_number(orig_gen.bus.number)
+                copy_gen.bus = copy_net.get_bus_from_number(orig_gen.bus.number)
                 copy_gen.bus.add_generator(copy_gen)
                 try:
                     orig_reg_num = orig_gen.reg_bus.number
-                    copy_gen.reg_bus = copy_net.get_bus_by_number(orig_reg_num)
+                    copy_gen.reg_bus = copy_net.get_bus_from_number(orig_reg_num)
                     copy_gen.reg_bus.add_reg_generator(copy_gen)
                 except pf.BusError as e:
                     pass
@@ -4181,7 +4228,7 @@ class TestNetwork(unittest.TestCase):
 
                 copy_load.name = orig_load.name
      
-                copy_load.bus = copy_net.get_bus_by_number(orig_load.bus.number)
+                copy_load.bus = copy_net.get_bus_from_number(orig_load.bus.number)
                 copy_load.bus.add_load(copy_load)
                 
                 copy_load.P = orig_load.P
@@ -4201,11 +4248,11 @@ class TestNetwork(unittest.TestCase):
 
                 copy_shunt.name = orig_shunt.name
                 
-                copy_shunt.bus = copy_net.get_bus_by_number(orig_shunt.bus.number)
+                copy_shunt.bus = copy_net.get_bus_from_number(orig_shunt.bus.number)
                 copy_shunt.bus.add_shunt(copy_shunt)
                 try:
                     orig_reg_num = orig_shunt.reg_bus.number
-                    copy_shunt.reg_bus = copy_net.get_bus_by_number(orig_reg_num)
+                    copy_shunt.reg_bus = copy_net.get_bus_from_number(orig_reg_num)
                     copy_shunt.reg_bus.add_reg_shunt(copy_shunt)
                 except pf.BusError as e:
                     pass
@@ -4225,13 +4272,13 @@ class TestNetwork(unittest.TestCase):
                 copy_branch.name = orig_branch.name
                 copy_branch.set_pos_ratio_v_sens(orig_branch.has_pos_ratio_v_sens())
                 
-                copy_branch.bus_k = copy_net.get_bus_by_number(orig_branch.bus_k.number)
+                copy_branch.bus_k = copy_net.get_bus_from_number(orig_branch.bus_k.number)
                 copy_branch.bus_k.add_branch_k(copy_branch)
-                copy_branch.bus_m = copy_net.get_bus_by_number(orig_branch.bus_m.number)
+                copy_branch.bus_m = copy_net.get_bus_from_number(orig_branch.bus_m.number)
                 copy_branch.bus_m.add_branch_m(copy_branch)
                 try:
                     orig_reg_num = orig_branch.reg_bus.number
-                    copy_branch.reg_bus = copy_net.get_bus_by_number(orig_reg_num)
+                    copy_branch.reg_bus = copy_net.get_bus_from_number(orig_reg_num)
                     copy_branch.reg_bus.add_reg_tran(copy_branch)
                 except pf.BusError as e:
                     pass
@@ -4273,7 +4320,7 @@ class TestNetwork(unittest.TestCase):
 
                 copy_vargen.name = orig_vargen.name
      
-                copy_vargen.bus = copy_net.get_bus_by_number(orig_vargen.bus.number)
+                copy_vargen.bus = copy_net.get_bus_from_number(orig_vargen.bus.number)
                 copy_vargen.bus.add_var_generator(copy_vargen)
                 
                 copy_vargen.P = orig_vargen.P
@@ -4293,7 +4340,7 @@ class TestNetwork(unittest.TestCase):
 
                 copy_bat.name = orig_bat.name
                 
-                copy_bat.bus = copy_net.get_bus_by_number(orig_bat.bus.number)
+                copy_bat.bus = copy_net.get_bus_from_number(orig_bat.bus.number)
                 copy_bat.bus.add_battery(copy_bat)
                 
                 copy_bat.P = orig_bat.P

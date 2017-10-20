@@ -21,7 +21,7 @@ bus = net.get_bus(10)
 
 print(bus.index == 10)
 
-other_bus = net.get_bus_by_number(bus.number)
+other_bus = net.get_bus_from_number(bus.number)
 
 print(bus == other_bus)
 

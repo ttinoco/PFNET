@@ -39,9 +39,10 @@ cdef extern from "pfnet/net.h":
     void NET_del(Net* net)
     Net* NET_get_copy(Net* net)
     REAL NET_get_base_power(Net* net)
+    char* NET_get_error_string(Net* net)
+
     cbus.Bus* NET_get_bus(Net* net, int index)
     cbranch.Branch* NET_get_branch(Net* net, int index)
-    char* NET_get_error_string(Net* net)
     cgen.Gen* NET_get_gen(Net* net, int index)
     cshunt.Shunt* NET_get_shunt(Net* net, int index)
     cload.Load* NET_get_load(Net* net, int index)
@@ -49,6 +50,14 @@ cdef extern from "pfnet/net.h":
     cbat.Bat* NET_get_bat(Net* net, int index)
     cbus.Bus* NET_get_load_buses(Net* net)
     cbus.Bus* NET_get_gen_buses(Net* net)
+
+    cgen.Gen* NET_get_gen_from_name_and_bus_number(Net* net, char* name, int number)
+    cbranch.Branch* NET_get_branch_from_name_and_bus_numbers(Net* net, char* name, int number1, int number2)
+    cshunt.Shunt* NET_get_shunt_from_name_and_bus_number(Net* net, char* name, int number)
+    cload.Load* NET_get_load_from_name_and_bus_number(Net* net, char* name, int number)
+    cvargen.Vargen* NET_get_vargen_from_name_and_bus_number(Net* net, char* name, int number)
+    cbat.Bat* NET_get_bat_from_name_and_bus_number(Net* net, char* name, int number)
+
     REAL NET_get_total_load_P(Net* net, int t)
     int NET_get_num_periods(Net* net)
     int NET_get_num_buses(Net* net)
