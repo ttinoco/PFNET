@@ -23,13 +23,13 @@ Version 1.3.2
 * Added property mask to projection operator.
 * Added projection getters for network and extra variables of constraints.
 * Made generator Qmin, Qmax writable in Python.
-* Added routines for extracting constraint row info strings with format (constr_name:obj:obj_id:constr_info:time).
+* Added routines for extracting constraint row info strings with format (constr_name:obj_type:obj_index:constr_info:time).
 * Made AC_FLOW_LIM constraint store row info.
 * Made LBOUND constraint store row info.
 * Updated LOAD_PF (load constant power factor) constraint to maintain sign differences of current P and Q.
 * Made load "set_target_power_factor" routine accept negative power factors.
 * Fixed memory leaks coming from "VEC_new_from_array" in Python wrapper.
-* Added routines for extracting info strings about entries of var values vector (obj:obj_id:quantity:time).
+* Added routines for extracting info strings about entries of var values vector (obj_type:obj_index:quantity:time).
 * Added "v_base" field to bus structure/object to store base voltage in kv and updated all parsers to store this info.
 * Made Network object pickle-able.
 * Added automatic enforcement of lower-triangularity of Hessian of objective functions.

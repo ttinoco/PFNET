@@ -246,6 +246,7 @@ cdef class Network:
     def get_var_info_string(self, index):
         """
         Gets info string of variable associated with index.
+        The info string has format ``obj_type:obj_index:quantity:time``.
 
         Parameters
         ----------
