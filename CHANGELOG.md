@@ -50,11 +50,11 @@ Version 1.3.2
 * Fixed bug with treatment of outage branches in PV-PQ switching heuristics.
 * Added arrays branch_outages and generator_outages to contingency object to store indices of outage components.
 * Added unittests to check that examples run without errors.
-* Extended support for storing and retrieving constraint sensitivity information (done).
-* Update Python wrapper documentation to show how to install with pip or download/run tests (done).
-* Added routines to network to get bus-connected components from names and bus numbers uses internal hash tables (done).
-* Update examples, documentation (macros, intersphinx) and create release (todo).
-* Distribute pfnet python wrapper through pypi (todo).
+* Extended support for storing and retrieving constraint sensitivity information.
+* Updated Python wrapper documentation to show how to install with pip or download/run tests.
+* Added routines to network to get bus-connected components from names and bus numbers uses internal hash tables.
+* Updated examples, documentation (macros, intersphinx).
+* Distributed pfnet python wrapper through pypi.
 
 Version 1.3.1
 -------------
