@@ -6,7 +6,7 @@
 PFNET C Library Documentation
 =============================
 
-Welcome! This is the documentation for the C library PFNET, last updated |today|.
+Welcome! This is the documentation for the C library PFNET version |version|, last updated |today|.
 
 **What is PFNET?** 
 
@@ -24,22 +24,21 @@ PFNET is released under the BSD 2-clause license.
 
 * `Matlab <https://github.com/ttinoco/PFNET/tree/master/matlab>`_ 
 
-  * just started, help needed
+  * Just started, help needed!
 
-**Documentation Contents**
+**Contents**
 
 .. toctree::
    :numbered:
    :maxdepth: 3
 
    Getting Started<start>
-   Extensions<extensions>
    Source Code Reference (Doxygen) <http://pfnet.readthedocs.io/en/latest/c/>
 
 **Contributors (alphabetical)**
 
 * Martin Baltzinger
-* `Tomas Tinoco De Rubira <http://n.ethz.ch/~tomast/>`_
+* `Tomas Tinoco De Rubira <https://ttinoco.github.io/>`_
 * Adam Wigington
 
 Indices and tables
