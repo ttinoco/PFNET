@@ -141,6 +141,7 @@ cdef class ConstraintBase:
     def get_A_row_info_string(self, index):
         """
         Gets info string associated with row of A matrix.
+        The info string has the format ``constr_name:obj_type:obj_index:constr_info:time``. 
 
         Parameters
         ----------
@@ -156,6 +157,7 @@ cdef class ConstraintBase:
     def get_J_row_info_string(self,index):
         """
         Gets info string associated with row of J matrix.
+        The info string has the format ``constr_name:obj_type:obj_index:constr_info:time``. 
 
         Parameters
         ----------
@@ -171,6 +173,7 @@ cdef class ConstraintBase:
     def get_G_row_info_string(self,index):
         """
         Gets info string associated with row of G matrix.
+        The info string has the format ``constr_name:obj_type:obj_index:constr_info:time``.
 
         Parameters
         ----------

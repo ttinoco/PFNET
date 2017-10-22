@@ -218,11 +218,11 @@ Constraints in PFNET are of the form
 
 .. math::
    
-   & A \left[ \begin{array}{c} x \\ y \end{array} \right] = b, \quad
-   & f(x,y) = 0, \quad
-   & l \le G \left[ \begin{array}{c} x \\ y \end{array} \right] \le u,
+   A \left[ \begin{array}{c} x \\ y \end{array} \right] = b, \quad
+   f(x,y) = 0, \quad
+   l \le G \left[ \begin{array}{c} x \\ y \end{array} \right] \le u,
 
-where :math:`A` and :math:`G`  are sparse matrices, :math:`b`, :math:`l` and :math:`u`  are vectors, :math:`f` is a vector-valued nonlinear function, and :math:`x` and :math:`y` are vectors of network variables and extra or auxiliary constraint variables, respectively. They are represented by objects of type :class:`ConstraintBase <pfnet.ConstraintBase>`. An instance of this type can be constructed from the class :class:`Constraint <pfnet.Constraint>`, whose constructor requires specifying the constraint name and the network to be associated with the constraint. The following example sets all bus voltage magnitudes and angles as variables and constructs the AC power balance constraints::
+where :math:`A` and :math:`G`  are sparse matrices, :math:`b`, :math:`l` and :math:`u`  are vectors, :math:`f` is a vector-valued nonlinear function, and :math:`x` and :math:`y` are vectors of network variables and extra or auxiliary constraint variables, respectively. They are represented by objects of type :class:`ConstraintBase <pfnet.ConstraintBase>`. An instance of this type can be constructed from the class :class:`Constraint <pfnet.Constraint>`, whose constructor requires specifying the constraint name and the |Network| to be associated with the constraint. The following example sets all bus voltage magnitudes and angles as variables and constructs the AC power balance constraints::
 
   >>> import pfnet
 
@@ -252,7 +252,7 @@ Before a :class:`ConstraintBase <pfnet.ConstraintBase>` object can be used, it m
 
   >>> constr.eval(x)
 
-The matrices and vectors associated with the linear constraints can be extracted from the :data:`A <pfnet.ConstraintBase.A>`, :data:`G <pfnet.ConstraintBase.G>`, :data:`b <pfnet.ConstraintBase.b>`, :data:`l <pfnet.ConstraintBase.l>` and :data:`u <pfnet.ConstraintBase.u>` attributes of the :class:`ConstraintBase <pfnet.ConstraintBase>` object. The vector of violations and Jacobian matrix of the nonlinear constraints can be extracted from the attributes :data:`f <pfnet.ConstraintBase.f>` and :data:`J <pfnet.ConstraintBase.J>`, respectively. Also, the Hessian matrix of any individual nonlinear constraint :math:`f_i(x) = 0` can be extracted using the class method :func:`get_H_single() <pfnet.ConstraintBase.get_H_single>`. The following example shows how to extract the largest power flow mismatch in per unit :data:`system base power <pfnet.Network.base_power>` and the Hessian matrix corresponding to the active power balance constraint of a bus::
+The matrices and vectors associated with the linear constraints can be extracted from the :data:`A <pfnet.ConstraintBase.A>`, :data:`G <pfnet.ConstraintBase.G>`, :data:`b <pfnet.ConstraintBase.b>`, :data:`l <pfnet.ConstraintBase.l>` and :data:`u <pfnet.ConstraintBase.u>` attributes of the :class:`ConstraintBase <pfnet.ConstraintBase>` object. The vector of violations and Jacobian matrix of the nonlinear constraints can be extracted from the attributes :data:`f <pfnet.ConstraintBase.f>` and :data:`J <pfnet.ConstraintBase.J>`, respectively. Also, the Hessian matrix of any individual nonlinear constraint function :math:`f_i(x)` can be extracted using the class method :func:`get_H_single() <pfnet.ConstraintBase.get_H_single>`. The following example shows how to extract the largest power flow mismatch in per unit :data:`system base power <pfnet.Network.base_power>` and the Hessian matrix corresponding to the active power balance constraint of a bus::
 
   >>> import numpy as np
 
@@ -280,7 +280,9 @@ As before, all Hessian matrices have stored only the lower triangular part. In a
   >>> print type(H), H.shape, H.nnz
   <class 'scipy.sparse.coo.coo_matrix'> (28, 28) 564
 
-Lastly, Lagrange multiplier estimates of the linear and nonlinear constraints can be used to store sensitivity information in the network components associated with the constraints. This is done using the class method :func:`store_sensitivities() <pfnet.ConstraintBase.store_sensitivities>`. Component-specific attributes that store sensitivity information are described in the :ref:`reference` section.
+Lagrange multiplier estimates of the linear and nonlinear constraints can be used to store sensitivity information in the network components associated with the constraints. This is done using the class method :func:`store_sensitivities() <pfnet.ConstraintBase.store_sensitivities>`. Component-specific attributes that store sensitivity information are described in the :ref:`reference` section.
+
+Lastly, the |ConstraintBase| class provides methods for extracting information about the rows of each linear and nonlinear constraint. These methods are :func:`get_A_row_info_string() <pfnet.ConstraintBase.get_A_row_info_string>`, :func:`get_J_row_info_string() <pfnet.ConstraintBase.get_J_row_info_string>`, and :func:`get_G_row_info_string() <pfnet.ConstraintBase.get_G_row_info_string>`.
 
 Details about each of the different constraints available in PFNET are provided below.
 
