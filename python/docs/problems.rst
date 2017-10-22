@@ -295,9 +295,9 @@ This constraint is associated with the string ``"AC power balance"``. It enforce
 
 .. math:: 
    
-   (P^g_k + j Q^g_k) - (P^l_k + j Q^l_k) - S_k^{sh} - \sum_{m \in [n]} S_{km} = 0, \ \forall \ k \in [n],
+   P^g_k(t) + j Q^g_k(t) - P^l_k(t) - j Q^l_k(t) - S_k^{sh}(t) - \sum_{m \in [n]} S_{km}(t) = 0, \ \forall \ k \in [n], \ t \in [T],
 
-where :math:`P^g` and :math:`Q^g` are generator active and reactive powers, :math:`P^l` and :math:`Q^l` are load active and reactive powers, :math:`S^{sh}` are apparent powers flowing out of buses through shunt devices, :math:`S` are apparent powers flowing out of buses through branches, :math:`n` is the number of buses, and :math:`[n] := \{1,\ldots,n\}`. 
+where :math:`t` are time periods, :math:`P^g` and :math:`Q^g` are generator active and reactive powers, :math:`P^l` and :math:`Q^l` are load active and reactive powers, :math:`S^{sh}` are apparent powers flowing out of buses through shunt devices, :math:`S` are apparent powers flowing out of buses through branches, :math:`n` is the number of buses, :math:`T` is the number of time periods, and :math:`[n] := \{1,\ldots,n\}`. 
 
 .. _prob_constr_DCPF:
 
@@ -308,9 +308,9 @@ This constraint is associated with the string ``"DC power balance"``. It enforce
 
 .. math:: 
    
-   P^g_k - P^l_k + \sum_{m \in [n]} b_{km} \left( \theta_k - \theta_m - \phi_{km} \right) = 0, \ \forall \ k \in [n],
+   P^g_k(t) - P^l_k(t) + \sum_{m \in [n]} b_{km} \left( \theta_k(t) - \theta_m(t) - \phi_{km}(t) \right) = 0, \ \forall \ k \in [n], \ t \in [T], 
 
-where :math:`P^g` are generator active powers, :math:`P^l` are load active powers, :math:`b_{km}` are branch susceptances, :math:`\theta_k` are bus voltage angles, :math:`\phi_{km}` are phase shifts of phase-shifting transformers, :math:`n` is the number of buses, and :math:`[n] := \{1,\ldots,n\}`.
+where :math:`t` are time periods, :math:`P^g` are generator active powers, :math:`P^l` are load active powers, :math:`b_{km}` are branch susceptances, :math:`\theta_k` are bus voltage angles, :math:`\phi_{km}` are phase shifts of phase-shifting transformers, :math:`n` is the number of buses, :math:`T` is the number of time periods, and :math:`[n] := \{1,\ldots,n\}`.
 
 .. _prob_constr_LINPF:
 
@@ -334,16 +334,16 @@ This constraint is associated with the string ``"DC branch flow limits"``. It en
 
 .. math:: 
 
-   -P^{\max}_{km} \le -b_{km} \left( \theta_k - \theta_m - \phi_{km} \right) \le P^{\max}_{km},
+   -P^{\max}_{km} \le -b_{km} \left( \theta_k(t) - \theta_m(t) - \phi_{km}(t) \right) \le P^{\max}_{km},
 
-for each branch :math:`(k,m)`, where :math:`b_{km}` are branch susceptances, :math:`\theta_k` are bus voltage angles, :math:`\phi_{km}` are phase shifts of phase-shifting transformers, and :math:`P^{\max}_{km}` are branch power flow limits. 
+for each branch :math:`(k,m)` and time period :math:`t`, where :math:`b_{km}` are branch susceptances, :math:`\theta_k` are bus voltage angles, :math:`\phi_{km}` are phase shifts of phase-shifting transformers, and :math:`P^{\max}_{km}` are branch power flow limits. 
 
 .. _prob_constr_AC_FLOW_LIM:
 
 AC branch flow limits
 ---------------------
 
-This constraint is associated with the string ``"AC branch flow limits"``. It enforces branch "AC" power flow limits due to thermal ratings based on current magnitudes. It utilizes auxiliary variables (slacks). 
+This constraint is associated with the string ``"AC branch flow limits"``. It enforces branch "AC" power flow limits due to thermal ratings based on current magnitudes. It utilizes auxiliary variables (slacks). It is given by
 
 .. _prob_constr_AC_LIN_FLOW_LIM:
 
@@ -364,28 +364,26 @@ This constraint is associated with the string ``"variable fixing"``. It constrai
 Variable bounds
 ---------------
 
-This constraint is associated with the string ``"variable bounds"``. It constrains specific variables to be inside their bounds. The variables to be bounded are specified using the :class:`Network <pfnet.Network>` class methods :func:`set_flags() <pfnet.Network.set_flags>` or :func:`set_flags_of_component() <pfnet.Network.set_flags_of_component>` with the flag ``"bounded"``. 
-
-Variable bounds can also be expressed as nonlinear equality constraints using the techniques described in Section 4.3.3 of [TT2015]_. The string associated with this constraint type is ``"variable nonlinear bounds"``. 
+This constraint is associated with the string ``"variable bounds"``. It constrains specific variables to be inside their bounds. The variables to be bounded are specified using the :class:`Network <pfnet.Network>` class methods :func:`set_flags() <pfnet.Network.set_flags>` or :func:`set_flags_of_component() <pfnet.Network.set_flags_of_component>` with the flag ``"bounded"``.
 
 .. _prob_constr_PAR_GEN:
 
 Generator participation
 -----------------------
 
-This constraint is associated with the string ``"generator active power participation"`` and ``"generator reactive power participation"``. It enforces specific active power participations among slack generators, or reactive power participations among generators regulating the same bus voltage magnitude. For slack generators, all participate with equal active powers. For voltage regulating generators, each one participates with the same fraction of its total reactive resources. More specifically, this constraint enforces
+This constraint is associated with the string ``"generator active power participation"`` and ``"generator reactive power participation"``. It enforces specific active power participations among slack generators connected to the same bus, or reactive power participations among generators regulating the same bus voltage magnitude. For slack generators, all participate with equal active powers. For voltage-regulating generators, each one participates with the same fraction of its total reactive resources. More specifically, this constraint enforces
 
 .. math:: 
 
-   P^g_k = P^g_m,
+   P^g_k(t) = P^g_m(t),
 
-for all slack generators :math:`k` and :math:`m` connected to the same bus, or
+for all slack generators :math:`k` and :math:`m` connected to the same bus and time period :math:`t`, or
 
 .. math::
 
-   \frac{Q^g_k - Q^{\min}_k}{Q^{\max}_k - Q^{\min}_k} = \frac{Q^g_m - Q^{\min}_m}{Q^{\max}_m - Q^{\min}_m},
+   \frac{Q^g_k(t) - Q^{\min}_k}{Q^{\max}_k - Q^{\min}_k} = \frac{Q^g_m(t) - Q^{\min}_m}{Q^{\max}_m - Q^{\min}_m},
 
-for all generators :math:`k` and :math:`m` regulating the same bus voltage magnitude, where :math:`Q^{\min}` and :math:`Q^{\max}` are generator reactive power limits.
+for all generators :math:`k` and :math:`m` regulating the same bus voltage magnitude and time period :math:`t`, where :math:`Q^{\min}` and :math:`Q^{\max}` are generator reactive power limits.
 
 .. _prob_constr_REG_GEN:
 
@@ -396,11 +394,11 @@ This constraint is associated with the string ``"voltage regulation by generator
 
 .. math:: 
    
-   v_k & = v_k^t + v^y_k - v^z_k \\
-   0 & \le (Q_k - Q^{\min}_k) \perp v^y_k \ge 0 \\
-   0 & \le (Q^{\max}_k - Q_k) \perp v^z_k \ge 0,
+   v_k(t) & = v_k^s(t) + v^y_k(t) - v^z_k(t) \\
+   0 & \le (Q_k(t) - Q^{\min}_k) \perp v^y_k(t) \ge 0 \\
+   0 & \le (Q^{\max}_k - Q_k(t)) \perp v^z_k(t) \ge 0,
 
-for each bus :math:`k` whose voltage is regulated by generators, where :math:`v` are bus voltage magnitudes, :math:`v^t` are their set points, :math:`v^y` and :math:`v^z` are positive and negative deviations of :math:`v` from :math:`v^t`, and :math:`Q`, :math:`Q^{\max}` and :math:`Q^{\min}` are aggregate reactive powers and limits of the generators regulating the same bus voltage magnitude.
+for each time period :math:`t` and bus :math:`k` whose voltage is regulated by generators, where :math:`v` are bus voltage magnitudes, :math:`v^s` are their set points, :math:`v^y` and :math:`v^z` are positive and negative deviations of :math:`v` from :math:`v^s` (auxiliary variables of the constraint), and :math:`Q`, :math:`Q^{\max}` and :math:`Q^{\min}` are aggregate reactive powers and limits of the generators regulating the same bus voltage magnitude.
 
 .. _prob_constr_REG_TRAN:
 
@@ -411,13 +409,13 @@ This constraint is associated with the string ``"voltage regulation by transform
 
 .. math:: 
    
-   t_k & = t_k^0 + t^y_k - t^z_k \\
-   0 & \le (v_k + v^l_k - v^{\min}_k) \perp t^y_k \ge 0 \\
-   0 & \le (v^{\max}_k - v_k + v^h_k) \perp t^z_k \ge 0 \\
-   0 & \le (t^{\max}_k - t_k) \perp v^l_k \ge 0 \\
-   0 & \le (t_k - t^{\min}_k) \perp v^h_k \ge 0,
+   t_k(\tau) & = t_k^0(\tau) + t^y_k(\tau) - t^z_k(\tau) \\
+   0 & \le (v_k(\tau) + v^l_k(\tau) - v^{\min}_k) \perp t^y_k(\tau) \ge 0 \\
+   0 & \le (v^{\max}_k - v_k(\tau) + v^h_k(\tau)) \perp t^z_k(\tau) \ge 0 \\
+   0 & \le (t^{\max}_k - t_k(\tau)) \perp v^l_k(\tau) \ge 0 \\
+   0 & \le (t_k(\tau) - t^{\min}_k) \perp v^h_k(\tau) \ge 0,
 
-for each bus :math:`k` whose voltage is regulated by tap-changing transformers, where :math:`v` are bus voltage magnitudes, :math:`v^{\max}` and :math:`v^{\min}` are their band limits, :math:`v^l` and :math:`v^h` are voltage violations of band lower and upper limits, :math:`t` are transformer tap ratios, :math:`t^0`, :math:`t^{\max}` and :math:`t^{\min}` are their current values and limits, and :math:`t^y` and :math:`t^z` are positive and negative deviations of :math:`t` from :math:`t^0`. The above equations assume that the sensitivity between voltage magnitude and transformer tap ratio is positive. If it is negative, :math:`t^y` and :math:`t^z` are interchanged in the first two complementarity constraints, and :math:`v^l` and :math:`v^h` are interchanged in the bottom two complementarity constraints. 
+for each time period :math:`\tau` and bus :math:`k` whose voltage is regulated by tap-changing transformers, where :math:`v` are bus voltage magnitudes, :math:`v^{\max}` and :math:`v^{\min}` are their band limits, :math:`v^l` and :math:`v^h` are voltage violations of band lower and upper limits (auxiliary variables), :math:`t` are transformer tap ratios, :math:`t^0`, :math:`t^{\max}` and :math:`t^{\min}` are their current values and limits, and :math:`t^y` and :math:`t^z` are positive and negative deviations of :math:`t` from :math:`t^0` (auxiliary variables). The above equations assume that the sensitivity between voltage magnitude and transformer tap ratio is positive. If it is negative, :math:`t^y` and :math:`t^z` are interchanged in the first two complementarity constraints, and :math:`v^l` and :math:`v^h` are interchanged in the bottom two complementarity constraints.
 
 .. _prob_constr_REG_SHUNT:
 
@@ -428,13 +426,13 @@ This constraint is associated with the string ``"voltage regulation by shunts"``
 
 .. math:: 
    
-   b_k & = b_k^0 + b^y_k - b^z_k \\
-   0 & \le (v_k + v^l_k - v^{\min}_k) \perp b^y_k \ge 0 \\
-   0 & \le (v^{\max}_k - v_k + v^h_k) \perp b^z_k \ge 0 \\
-   0 & \le (b^{\max}_k - b_k) \perp v^l_k \ge 0 \\
-   0 & \le (b_k - b^{\min}_k) \perp v^h_k \ge 0,
+   b_k(t) & = b_k^0(t) + b^y_k(t) - b^z_k(t) \\
+   0 & \le (v_k(t) + v^l_k(t) - v^{\min}_k) \perp b^y_k(t) \ge 0 \\
+   0 & \le (v^{\max}_k - v_k(t) + v^h_k(t)) \perp b^z_k(t) \ge 0 \\
+   0 & \le (b^{\max}_k - b_k(t)) \perp v^l_k(t) \ge 0 \\
+   0 & \le (b_k(t) - b^{\min}_k) \perp v^h_k(t) \ge 0,
 
-for each bus :math:`k` whose voltage is regulated by switched shunt devices, where :math:`v` are bus voltage magnitudes, :math:`v^{\max}` and :math:`v^{\min}` are their band limits, :math:`v^l` and :math:`v^h` are voltage violations of band lower and upper limits, :math:`b` are switched shunt susceptances, :math:`b^0`, :math:`b^{\max}` and :math:`b^{\min}` are their current values and limits, and :math:`b^y` and :math:`b^z` are positive and negative deviations of :math:`b` from :math:`b^0` .
+for each time period :math:`t` and bus :math:`k` whose voltage is regulated by switched shunt devices, where :math:`v` are bus voltage magnitudes, :math:`v^{\max}` and :math:`v^{\min}` are their band limits, :math:`v^l` and :math:`v^h` are voltage violations of band lower and upper limits (auxiliary variables), :math:`b` are switched shunt susceptances, :math:`b^0`, :math:`b^{\max}` and :math:`b^{\min}` are their current values and limits, and :math:`b^y` and :math:`b^z` are positive and negative deviations of :math:`b` from :math:`b^0` (auxiliary variables).
 
 .. _prob_constr_GEN_RAMP:
 
@@ -445,9 +443,9 @@ This constraint is associated with the string ``"generator ramp limits"``. It en
 
 .. math:: 
    
-    -\delta P^{\max} \le P(t) - P(t-1) \le \delta P^{\max}
+    -\delta P^{\max}_k \le P^g_k(t) - P^g_k(t-1) \le \delta P^{\max}_k
 
-for each generator and time period :math:`t \in \{1,\ldots,T\}`, where :math:`P(t)` are generator active powers, and :math:`\delta P^{\max}` are generator ramping limits. The ramping limits are defined by the :data:`dP_max <pfnet.Generator.dP_max>` attribute of each :class:`Generator <pfnet.Generator>` object. For :math:`t = 1`, :math:`P(t-1)` is the :data:`P_prev <pfnet.Generator.P_prev>` attribute of a :class:`Generator <pfnet.Generator>`.
+for each generator :math:`k` and time period :math:`t \in \{1,\ldots,T\}`, where :math:`P^g` are generator active powers, and :math:`\delta P^{\max}` are generator ramping limits. The ramping limits are defined by the :data:`dP_max <pfnet.Generator.dP_max>` attribute of each :class:`Generator <pfnet.Generator>` object. For :math:`t = 1`, :math:`P^g_k(t-1)` is the :data:`P_prev <pfnet.Generator.P_prev>` attribute of a :class:`Generator <pfnet.Generator>`.
 
 .. _prob_constr_BAT_DYN:
 
@@ -460,12 +458,12 @@ This constraint is associated with the string ``"battery dynamics"``. It enforce
    :nowrap:
 
    \begin{align*}
-   E(1) &= E_i \\
-   E(T+1) &= E_f \\
-   E(t+1) &= E(t) + \eta_c P_c(t) - \eta_d^{-1} P_d(t), \ \forall t \in \{1,\ldots,T\}
+   E_k(1) &= E_k^i \\
+   E_k(T+1) &= E_k^f \\
+   E_k(t+1) &= E_k(t) + \eta_k^c P_k^c(t) - (\eta_k^d)^{-1} P_k^d(t), \ \forall t \in \{1,\ldots,T\}, 
    \end{align*}
 
-for each battery, where :math:`E_i`, :math:`E_f`, :math:`\eta_c`, and :math:`\eta_d` correspond to the attributes :data:`E_init <pfnet.Battery.E_init>` , :data:`E_final <pfnet.Battery.E_final>`, :data:`eta_c <pfnet.Battery.eta_c>`, and :data:`eta_d <pfnet.Battery.eta_d>` of a :class:`Battery <pfnet.Battery>`, respectively. It is noted here that the units of the charging/discharging powers are p.u. system base power, and the units of the energy levels are p.u. system base power times the duration of a time period.
+for each battery :math:`k`, where :math:`E`, :math:`P^c`, and :math:`P^d` denote battery energy levels and charging and discharging powers, respectively, and :math:`E^i`, :math:`E^f`, :math:`\eta^c`, and :math:`\eta^d` correspond to the attributes :data:`E_init <pfnet.Battery.E_init>` , :data:`E_final <pfnet.Battery.E_final>`, :data:`eta_c <pfnet.Battery.eta_c>`, and :data:`eta_d <pfnet.Battery.eta_d>` of a :class:`Battery <pfnet.Battery>`, respectively. It is noted here that the units of the charging/discharging powers are p.u. system base power, and the units of the energy levels are p.u. system base power times the duration of a time period.
 
 .. _prob_constr_LOAD_PF:
 
@@ -476,9 +474,9 @@ This constraint is associated with the string ``"load constant power factor"``. 
 
 .. math:: 
    
-    Q(t) - P(t) \frac{\sqrt{1-\gamma^2}}{\gamma} = 0
+    Q_k^l(t) - P_k^l(t) \frac{\sqrt{1-\gamma^2}}{|\gamma|} = 0
 
-for each load and time period :math:`t \in \{1,\ldots,T\}`, where :math:`P(t)` is active power, :math:`Q(t)` is reactive power, and :math:`\gamma \in (0,1]` is the load's :data:`target_power_factor <pfnet.Load.target_power_factor>`.
+for each load :math:`k` and time period :math:`t \in \{1,\ldots,T\}`, where :math:`P^l` are active powers, :math:`Q^l` are reactive powers, and :math:`\gamma` is the load's :data:`target_power_factor <pfnet.Load.target_power_factor>`.
 
 .. _prob_prob:
 
