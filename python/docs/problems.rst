@@ -1,3 +1,5 @@
+.. include:: defs.hrst
+
 .. _prob:
 
 *********************
@@ -17,7 +19,7 @@ The objective function :math:`\phi` for a network optimization problem created u
 
    \varphi(x) = \sum_i w_i \varphi_i (x),
 
-where :math:`w_i` are weights, :math:`\varphi_i` are general linear or nonlinear functions, and :math:`x` is a vector of variables. Each weight-function pair in the summation is represented by an object of type :class:`FunctionBase <pfnet.FunctionBase>`. An instance of this type can be constructed from the :class:`Function <pfnet.Function>` class, which requires specifying the function name, weight, and the :class:`Network <pfnet.Network>` object to be associated with the function. The following example sets all bus voltage magnitudes as variables and constructs a function that penalizes voltage magnitude deviations from ideal values::
+where :math:`w_i` are weights, :math:`\varphi_i` are general linear or nonlinear functions, and :math:`x` is a vector of network variables. Each weight-function pair in the summation is represented by an object of type |FunctionBase|. An instance of this type can be constructed from the :class:`Function <pfnet.Function>` class, which requires specifying the function name, weight, and the |Network| object to be associated with the function. The following example sets all bus voltage magnitudes as variables and constructs a function that penalizes voltage magnitude deviations from ideal values::
 
   >>> import pfnet
   
@@ -28,7 +30,7 @@ where :math:`w_i` are weights, :math:`\varphi_i` are general linear or nonlinear
   ...               'any',
   ...               'voltage magnitude')
 
-  >>> func = pfnet.Function('voltage magnitude regularization',0.3,net)
+  >>> func = pfnet.Function('voltage magnitude regularization', 0.3, net)
 
   >>> print func.name == 'voltage magnitude regularization'
   True
@@ -36,7 +38,7 @@ where :math:`w_i` are weights, :math:`\varphi_i` are general linear or nonlinear
   >>> print func.weight
   0.3
 
-After a :class:`FunctionBase <pfnet.FunctionBase>` object is created, its value, gradient and Hessian are zero, an empty vector, and an empty matrix, respectively. Before evaluating the function at a specific vector of values, it must be analyzed using the :class:`FunctionBase <pfnet.FunctionBase>` class method :func:`analyze() <pfnet.FunctionBase.analyze>`. This routine analyzes the function and allocates the required vectors and matrices for storing its gradient and Hessian. After this, the function can be evaluated using the method :func:`eval() <pfnet.FunctionBase.eval>`::
+After a :class:`FunctionBase <pfnet.FunctionBase>` object is created, its value, gradient, and Hessian are zero, an empty vector, and an empty matrix, respectively. Before evaluating the function at a specific vector of values, it must be analyzed using the :class:`FunctionBase <pfnet.FunctionBase>` class method :func:`analyze() <pfnet.FunctionBase.analyze>`. This routine analyzes the function and allocates the required vectors and matrices for storing its gradient and Hessian. After this, the function can be evaluated using the method :func:`eval() <pfnet.FunctionBase.eval>`::
 
   >>> x = net.get_var_values()
 
@@ -44,7 +46,7 @@ After a :class:`FunctionBase <pfnet.FunctionBase>` object is created, its value,
 
   >>> func.eval(x)
 
-The value :math:`\varphi_i(x)`, gradient :math:`\nabla \varphi_i(x)` and Hessian :math:`\nabla^2 \varphi_i(x)` of a function can then be extracted from the :data:`phi <pfnet.FunctionBase.phi>`, :data:`gphi <pfnet.FunctionBase.gphi>` and :data:`Hphi <pfnet.FunctionBase.Hphi>` attributes, respectively::
+The value :math:`\varphi_i(x)`, gradient :math:`\nabla \varphi_i(x)`, and Hessian :math:`\nabla^2 \varphi_i(x)` of a function can then be extracted from the :data:`phi <pfnet.FunctionBase.phi>`, :data:`gphi <pfnet.FunctionBase.gphi>` and :data:`Hphi <pfnet.FunctionBase.Hphi>` attributes, respectively::
 
   >>> print x.shape
   (14,)
@@ -73,7 +75,7 @@ This function is associated with the string ``"generation cost"``. It measures a
 
    \varphi(x) := \sum_t \sum_k q_{k0} + q_{k1} P_k(t) + q_{k2} P_k(t)^2,
 
-where :math:`P_k(t)` are generator active powers in per unit system base power, :math:`t` is the time period, and :math:`q_{k0}`, :math:`q_{k1}`, and :math:`q_{k2}` are constant coefficients. These coefficients correspond to the attributes :data:`cost_coeff_Q0 <pfnet.Generator.cost_coeff_Q0>`, :data:`cost_coeff_Q1 <pfnet.Generator.cost_coeff_Q1>` and :data:`cost_coeff_Q2 <pfnet.Generator.cost_coeff_Q2>` of each :class:`Generator <pfnet.Generator>` object. 
+where :math:`P_k(t)` are generator active powers in per unit system base power, :math:`t` are time periods, and :math:`q_{k0}`, :math:`q_{k1}`, and :math:`q_{k2}` are constant coefficients. These coefficients correspond to the attributes :data:`cost_coeff_Q0 <pfnet.Generator.cost_coeff_Q0>`, :data:`cost_coeff_Q1 <pfnet.Generator.cost_coeff_Q1>`, and :data:`cost_coeff_Q2 <pfnet.Generator.cost_coeff_Q2>` of each :class:`Generator <pfnet.Generator>` object. 
 
 .. _prob_func_LOAD_UTIL:
 
@@ -86,7 +88,7 @@ This function is associated with the string ``"consumption utility"``. It measur
 
    \varphi(x) := \sum_t \sum_k q_{k0} + q_{k1} P_k(t) + q_{k2} P_k(t)^2,
 
-where :math:`P_k(t)` are load active powers in per unit system base power, :math:`t` is the time period, and :math:`q_{k0}`, :math:`q_{k1}`, and :math:`q_{k2}` are constant coefficients. These coefficients correspond to the attributes :data:`util_coeff_Q0 <pfnet.Load.util_coeff_Q0>`, :data:`util_coeff_Q1 <pfnet.Load.util_coeff_Q1>` and :data:`util_coeff_Q2 <pfnet.Load.util_coeff_Q2>` of each :class:`Load <pfnet.Load>` object.
+where :math:`P_k(t)` are load active powers in per unit system base power, :math:`t` are time periods, and :math:`q_{k0}`, :math:`q_{k1}`, and :math:`q_{k2}` are constant coefficients. These coefficients correspond to the attributes :data:`util_coeff_Q0 <pfnet.Load.util_coeff_Q0>`, :data:`util_coeff_Q1 <pfnet.Load.util_coeff_Q1>`, and :data:`util_coeff_Q2 <pfnet.Load.util_coeff_Q2>` of each :class:`Load <pfnet.Load>` object.
 
 .. _prob_func_NETCON_COST:
 
@@ -104,9 +106,9 @@ This function is associated with the string ``"voltage magnitude regularization"
 
 .. math::
 
-   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{v_k - v^t_k}{\Delta v} \Bigg)^2,
+   \varphi(x) := \frac{1}{2} \sum_t \sum_k \Bigg( \frac{v_k(t) - v^s_k(t)}{\Delta v} \Bigg)^2,
 
-where :math:`v` are bus voltage magnitudes, :math:`v^t` are voltage magnitude set points (one for buses not regulated by generators), and :math:`\Delta v` is a normalization factor. 
+where :math:`t` are time periods, :math:`v` are bus voltage magnitudes, :math:`v^s` are voltage magnitude set points (one for buses not regulated by generators), and :math:`\Delta v` is a normalization factor. 
 
 .. _prob_func_REG_ANG:
 
@@ -117,10 +119,10 @@ This function is associated with the string ``"voltage angle regularization"``. 
 
 .. math::
 
-   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{\theta_k}{\Delta \theta} \Bigg)^2 + 
-                 \frac{1}{2} \sum_{(k,m)} \Bigg( \frac{\theta_k - \theta_m - \phi_{km}}{\Delta \theta} \Bigg)^2,
+   \varphi(x) := \frac{1}{2} \sum_t \sum_k \Bigg( \frac{\theta_k(t)}{\Delta \theta} \Bigg)^2 + 
+                 \frac{1}{2} \sum_t \sum_{(k,m)} \Bigg( \frac{\theta_k(t) - \theta_m(t) - \phi_{km}(t)}{\Delta \theta} \Bigg)^2,
 
-where :math:`\theta` are bus voltage angles, :math:`\phi` are branch phase shifts, and :math:`\Delta \theta` is a normalization factor. Only terms that include optimization variables are included in the summation.
+where :math:`t` are time periods, :math:`\theta` are bus voltage angles, :math:`\phi` are branch phase shifts, and :math:`\Delta \theta` is a normalization factor. Only terms that include optimization variables are included in the summation.
 
 .. _prob_func_REG_PQ:
 
@@ -131,10 +133,10 @@ This function is associated with the string ``"generator powers regularization"`
 
 .. math::
 
-   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{P^g_k - \bar{P}_k}{\Delta P} \Bigg)^2 + 
-                 \frac{1}{2} \sum_k \Bigg( \frac{Q^g_k - \bar{Q}_k}{\Delta Q} \Bigg)^2,
+   \varphi(x) := \frac{1}{2} \sum_t \sum_k \Bigg( \frac{P^g_k(t) - \bar{P}_k}{\Delta P} \Bigg)^2 + 
+                 \frac{1}{2} \sum_t \sum_k \Bigg( \frac{Q^g_k(t) - \bar{Q}_k}{\Delta Q} \Bigg)^2,
 
-where :math:`P^g` and :math:`Q^g` are generator active and reactive powers, :math:`\bar{P}` and :math:`\bar{Q}` are midpoints of generator active and reactive power ranges, and :math:`\Delta P = \Delta Q` are normalization factors. Only terms that include optimization variables are included in the summation.
+where :math:`t` are time periods, :math:`P^g` and :math:`Q^g` are generator active and reactive powers, :math:`\bar{P}` and :math:`\bar{Q}` are midpoints of generator active and reactive power ranges, and :math:`\Delta P = \Delta Q` are normalization factors. Only terms that include optimization variables are included in the summation.
 
 .. _prob_func_REG_RATIO:
 
@@ -145,9 +147,9 @@ This function is associated with the string ``"tap ratio regularization"``. It p
 
 .. math::
 
-   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{t_k - t^0_k}{\Delta t} \Bigg)^2,
+   \varphi(x) := \frac{1}{2} \sum_{\tau} \sum_k \Bigg( \frac{t_k(\tau) - t^0_k(\tau)}{\Delta t} \Bigg)^2,
 
-where :math:`t` are tap ratios of tap-changing transformers, :math:`t^0` are their initial values, and :math:`\Delta t` is a normalization factor.
+where :math:`\tau` are time periods, :math:`t` are tap ratios of tap-changing transformers, :math:`t^0` are their initial values, and :math:`\Delta t` is a normalization factor.
 
 .. _prob_func_REG_PHASE:
 
@@ -158,9 +160,9 @@ This function is associated with the string ``"phase shift regularization"``. It
 
 .. math::
 
-   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{\phi_k - \phi^0_k}{\Delta \phi} \Bigg)^2
+   \varphi(x) := \frac{1}{2} \sum_t \sum_k \Bigg( \frac{\phi_k(t) - \phi^0_k(t)}{\Delta \phi} \Bigg)^2
 
-where :math:`\phi` are phase shifts of phase-shifting transformers, :math:`\phi^0` are their initial values, and :math:`\Delta \phi` is a normalization factor. Only terms that include optimization variables are included in the summation.
+where :math:`t` are time periods, :math:`\phi` are phase shifts of phase-shifting transformers, :math:`\phi^0` are their initial values, and :math:`\Delta \phi` is a normalization factor. Only terms that include optimization variables are included in the summation.
 
 .. _prob_func_REG_SUSC:
 
@@ -171,9 +173,9 @@ This function is associated with the string ``"susceptance regularization"``. It
 
 .. math::
 
-   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{b_k - b^0_k}{\Delta b} \Bigg)^2,
+   \varphi(x) := \frac{1}{2} \sum_t \sum_k \Bigg( \frac{b_k(t) - b^0_k(t)}{\Delta b} \Bigg)^2,
 
-where :math:`b` are susceptances of switched shunt devices, :math:`b^0` are their initial values, and :math:`\Delta b` is a normalization factor.
+where :math:`t` are time periods, :math:`b` are susceptances of switched shunt devices, :math:`b^0` are their initial values, and :math:`\Delta b` is a normalization factor. Only terms that include optimization variables are included in the summation.
 
 .. _prob_func_SLIM_VMAG:
 
@@ -184,9 +186,9 @@ This function is associated with the string ``"soft voltage magnitude limits"``.
 
 .. math::
 
-   \varphi(x) := \frac{1}{2} \sum_k \Bigg( \frac{v_k - \bar{v}_k}{\Delta v} \Bigg)^2,
+   \varphi(x) := \frac{1}{2} \sum_t \sum_k \Bigg( \frac{v_k(t) - \bar{v}_k}{\Delta v} \Bigg)^2,
 
-where :math:`v` are bus voltage magnitudes, :math:`\bar{v}` are the mid points of their ranges, and :math:`\Delta v` is a normalization factor. Only terms that include optimization variables are included in the summation.
+where :math:`t` are time periods, :math:`v` are bus voltage magnitudes, :math:`\bar{v}` are the mid points of their ranges, and :math:`\Delta v` is a normalization factor. Only terms that include optimization variables are included in the summation.
 
 .. _prob_func_SP_CONTROLS:
 
@@ -197,9 +199,9 @@ This function is associated with the string ``"sparse controls penalty"``. It en
 
 .. math::
 
-   \varphi(x) := \sum_k \sqrt{ \Bigg( \frac{u_k - u_k^0}{\Delta u_k} \Bigg)^2 + \epsilon },
+   \varphi(x) := \sum_t \sum_k \sqrt{ \Bigg( \frac{u_k(t) - u_k^0(t)}{\Delta u_k} \Bigg)^2 + \epsilon },
 
-where :math:`u` are control quantities, :math:`u^0` are their current values, and :math:`\epsilon` is a small positive scalar. The normalization factors :math:`\Delta u_k` are given by
+where :math:`t` are time periods, :math:`u` are control quantities, :math:`u^0` are their current values, and :math:`\epsilon` is a small positive scalar. The normalization factors :math:`\Delta u_k` are given by
 
 .. math::
 
