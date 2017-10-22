@@ -96,7 +96,10 @@ class TestNetwork(unittest.TestCase):
             net.clear_error()
 
             # Show strings
-            self.assertTrue(isinstance(net.show_components_str, unicode))
+            try:
+                self.assertTrue(isinstance(net.show_components_str, unicode))
+            except NameError:
+                self.assertTrue(isinstance(net.show_components_str, str))
             
             # Counters
             self.assertEqual(net.get_num_P_adjust_gens(),
