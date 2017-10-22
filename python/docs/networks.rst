@@ -397,7 +397,7 @@ As explained above, once the network variables have been set, a vector with the 
 Contingencies
 =============
 
-PFNET provides a convenient way to specify and analyze network contingencies. A contingency is represented by an object of type :class:`Contingency <pfnet.Contingency>`, and is characterized by one or more :class:`generator <pfnet.Generator>` or :class:`branch <pfnet.Branch>` outages. The lists of generator and branch outages of a contingency can be specified at construction, or by using the class methods :func:`add_gen_outage() <pfnet.Contingency.add_gen_outage>` and :func:`add_branch_outage() <pfnet.Contingency.add_branch_outage>`, respectively. The following example shows how to construct a contingency::
+PFNET provides a way to specify and analyze network contingencies. A contingency is represented by an object of type :class:`Contingency <pfnet.Contingency>`, and is characterized by one or more :class:`generator <pfnet.Generator>` or :class:`branch <pfnet.Branch>` outages. The lists of generator and branch outages of a contingency can be specified at construction, or by using the class methods :func:`add_generator_outage() <pfnet.Contingency.add_generator_outage>` and :func:`add_branch_outage() <pfnet.Contingency.add_branch_outage>`, respectively. The following example shows how to construct a contingency::
 
   >>> import pfnet
 
@@ -410,8 +410,11 @@ PFNET provides a convenient way to specify and analyze network contingencies. A 
 
   >>> print c1.num_generator_outages, c1.num_branch_outages
   1 1
+ 
+  >>> print c1.outages
+  [('branch', 2), ('generator', 3)]
 
-Once a contingency has been constructed, it can be applied and later cleared. This is done using the class methods :func:`apply() <pfnet.Contingency.apply>` and :func:`clear() <pfnet.Contingency.clear>`. The :func:`apply() <pfnet.Contingency.apply>` method sets the specified generator and branches on outage and disconnects them from the network. Voltage regulation and other controls provided by generators or transformers on outage are lost. The :func:`clear() <pfnet.Contingency.clear>` method undoes the changes made by the :func:`apply() <pfnet.Contingency.apply>` method. The following example shows how to apply and clear contingencies, and illustrates some of the side effects::
+Once a contingency has been constructed, it can be applied and later cleared. This is done using the class methods :func:`apply() <pfnet.Contingency.apply>` and :func:`clear() <pfnet.Contingency.clear>`. The :func:`apply() <pfnet.Contingency.apply>` method sets the specified generator and branches on outage and **disconnects** them from the network. Voltage regulation and other controls provided by generators or transformers on outage are lost. The :func:`clear() <pfnet.Contingency.clear>` method undoes the changes made by the :func:`apply() <pfnet.Contingency.apply>` method. The following example shows how to apply and clear contingencies, and illustrates some of the side effects::
 
   >>> print c1.has_generator_outage(gen), c1.has_branch_outage(branch)
   True True
@@ -441,19 +444,21 @@ Once a contingency has been constructed, it can be applied and later cleared. Th
   >>> print gen in gen_bus.generators, branch in branch_bus.branches
   True True
 
+More information about network contingencies can be found in the :ref:`API reference <ref_cont>`.
+  
 .. _net_multi_period:
 
 Multiple Time Periods
 =====================
 
-PFNET can also be used to represent and analyze power networks over multiple time periods. By default, the networks created using the :ref:`parsers <parsers>`, as in all the examples above, are static. To consider multiple time periods, an argument needs to be passed to the :func:`parse <pfnet.Parser>` method of a :class:`Parser <pfnet.ParserBase>`::
+PFNET can also be used to represent and analyze power networks over multiple time periods. By default, the networks created using most :ref:`parsers <parsers>`, as in all the examples above, have data corresponding to a single time period. To consider multiple time periods, an argument needs to be passed to the :func:`parse <pfnet.Parser>` method of a :class:`Parser <pfnet.ParserBase>`::
 
   >>> net = pfnet.ParserMAT().parse('ieee14.mat', num_periods=5)
 
   >>> print net.num_periods
   5
 
-In "multi-period" networks, certain quantities vary over time and hence are represented by vectors. Examples of such quantities are the :ref:`network properties <net_properties>`, generators powers, load powers, battery energy levels, bus voltage magnitudes, etc. The example below shows how to set the load profile over the time periods and extract the maximum active power mismatches in the network at each time::
+In "multi-period" networks, certain quantities can vary over time and hence are represented by vectors. Examples of such quantities are the :ref:`network properties <net_properties>`, generators powers, load powers, battery energy levels, bus voltage magnitudes, etc. The example below shows how to set the load profile over the time periods and extract the maximum active power mismatches in the network for each time::
 
   >>> import numpy as np
 
@@ -465,7 +470,7 @@ In "multi-period" networks, certain quantities vary over time and hence are repr
 
   >>> net.update_properties()
 
-  >>> print([net.bus_P_mis[t] for t in range(5)])
+  >>> print [net.bus_P_mis[t] for t in range(5)]
   [81.92, 87.35, 86.71, 93.61, 89.90]
 
 Lastly, for component quantities that can potentially vary over time, setting these quantities to be variables results in one variable for each time. For example, selecting the bus voltage magnitude of a bus to be variable leads to having one variable for each time period::
