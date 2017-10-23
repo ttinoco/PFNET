@@ -185,7 +185,8 @@ cdef class Network:
         """
         
         cdef Network n = net
-        cnet.NET_copy_from_net(self._c_net, n._c_net)
+        if net is not None:
+            cnet.NET_copy_from_net(self._c_net, n._c_net)
 
     def create_sorted_bus_list(self, sort_by, t=0):
         """

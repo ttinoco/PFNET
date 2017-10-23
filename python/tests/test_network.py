@@ -4145,6 +4145,9 @@ class TestNetwork(unittest.TestCase):
             net2.copy_from_network(net1)
 
             pf.tests.utils.compare_networks(self,net1,net2,True)
+
+            # Bad input
+            net2.copy_from_network(None)
             
     def test_python_network_creation(self):
         
