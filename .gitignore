@@ -80,3 +80,7 @@ graph.png
 
 # Mac OSX
 .DS_Store
+
+# Eclipse Stuff
+.project
+.pydevproject
