@@ -2310,7 +2310,7 @@ class TestNetwork(unittest.TestCase):
             self.assertTrue(np.all(netMP.load_P_vio == 0))
             self.assertTrue(np.all(netMP.num_actions == 0))
 
-    def test_bus_sorting(self):
+    def test_bus_mis_and_sens(self):
 
         # Single period
         for case in test_cases.CASES:
@@ -2352,15 +2352,14 @@ class TestNetwork(unittest.TestCase):
                                       None,None)
 
             # Check bus largest mis and sens
-            sens_types = [pf.BUS_SENS_P_BALANCE,
-                          pf.BUS_SENS_Q_BALANCE,
-                          pf.BUS_SENS_V_MAG_U_BOUND,
-                          pf.BUS_SENS_V_MAG_L_BOUND,
-                          pf.BUS_SENS_V_REG_BY_GEN,
-                          pf.BUS_SENS_V_REG_BY_TRAN,
-                          pf.BUS_SENS_V_REG_BY_SHUNT]
-            mis_types = [pf.BUS_MIS_ACTIVE,
-                         pf.BUS_MIS_REACTIVE]
+            sens_types = ['sens_P_balance',
+                          'sens_Q_balance',
+                          'sens_v_mag_u_bound',
+                          'sens_v_mag_l_bound',
+                          'sens_v_reg_by_gen',
+                          'sens_v_reg_by_tran',
+                          'sens_v_reg_by_shunt']
+            mis_types = ['P_mismatch', 'Q_mismatch']
             self.assertEqual(len(sens_types),len(set(sens_types)))
             self.assertEqual(len(mis_types),len(set(mis_types)))
             for i in range(net.num_buses):
@@ -2375,99 +2374,50 @@ class TestNetwork(unittest.TestCase):
                 sensm = max(sens)
                 senst = sens_types[np.argmax(sens)]
                 self.assertGreater(sensm,0)
-                self.assertEqual(abs(bus.get_largest_sens()),sensm)
-                self.assertEqual(bus.get_largest_sens_type(),senst)
+                self.assertEqual(abs(bus.largest_sensitivity),sensm)
+                self.assertEqual(bus.get_largest_sensitivity_type(),senst)
                 mis = [abs(bus.P_mismatch),
                        abs(bus.Q_mismatch)]
                 mism = max(mis)
                 mist = mis_types[np.argmax(mis)]
-                self.assertEqual(abs(bus.get_largest_mis()),mism)
+                self.assertEqual(abs(bus.largest_mismatch),mism)
                 if mis[0] != mis[1]:
-                    self.assertEqual(bus.get_largest_mis_type(),mist)
+                    self.assertEqual(bus.get_largest_mismatch_type(),mist)
 
-            # Check bus quantities
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                self.assertEqual(bus.get_quantity(pf.BUS_SENS_LARGEST),
-                                 bus.get_largest_sens())
-                self.assertEqual(bus.get_quantity(pf.BUS_SENS_P_BALANCE),
-                                 bus.sens_P_balance)
-                self.assertEqual(bus.get_quantity(pf.BUS_SENS_Q_BALANCE),
-                                 bus.sens_Q_balance)
-                self.assertEqual(bus.get_quantity(pf.BUS_SENS_V_MAG_U_BOUND),
-                                 bus.sens_v_mag_u_bound)
-                self.assertEqual(bus.get_quantity(pf.BUS_SENS_V_MAG_L_BOUND),
-                                 bus.sens_v_mag_l_bound)
-                self.assertEqual(bus.get_quantity(pf.BUS_SENS_V_REG_BY_GEN),
-                                 bus.sens_v_reg_by_gen)
-                self.assertEqual(bus.get_quantity(pf.BUS_SENS_V_REG_BY_TRAN),
-                                 bus.sens_v_reg_by_tran)
-                self.assertEqual(bus.get_quantity(pf.BUS_SENS_V_REG_BY_SHUNT),
-                                 bus.sens_v_reg_by_shunt)
-                self.assertEqual(bus.get_quantity(pf.BUS_MIS_LARGEST),
-                                 bus.get_largest_mis())
-                self.assertEqual(bus.get_quantity(pf.BUS_MIS_ACTIVE),
-                                 bus.P_mismatch)
-                self.assertEqual(bus.get_quantity(pf.BUS_MIS_REACTIVE),
-                                 bus.Q_mismatch)
-                self.assertEqual(bus.get_quantity(-1),
-                                 0.)
-
-            # Sort by largest mis
-            bus_list = net.create_sorted_bus_list(pf.BUS_MIS_LARGEST)
-            self.assertTrue(isinstance(bus_list,list))
-            self.assertEqual(len(bus_list),net.num_buses)
-            r1 = []
-            for i in range(len(bus_list)):
-                if i > 0:
-                    bus1 = bus_list[i-1]
-                    bus2 = bus_list[i]
-                    self.assertTrue(isinstance(bus1,pf.Bus))
-                    self.assertTrue(isinstance(bus2,pf.Bus))
-                    r1.append(abs(bus1.get_largest_mis()) >= abs(bus2.get_largest_mis()))
-            self.assertTrue(all(r1))
-
-            # Sort by P mismatch
-            bus_list = net.create_sorted_bus_list(pf.BUS_MIS_ACTIVE)
-            self.assertTrue(isinstance(bus_list,list))
-            self.assertEqual(len(bus_list),net.num_buses)
-            r1 = []
-            for i in range(len(bus_list)):
-                if i > 0:
-                    bus1 = bus_list[i-1]
-                    bus2 = bus_list[i]
-                    self.assertTrue(isinstance(bus1,pf.Bus))
-                    self.assertTrue(isinstance(bus2,pf.Bus))
-                    r1.append(abs(bus1.P_mismatch) >= abs(bus2.P_mismatch))
-            self.assertTrue(all(r1))
-
-            # Sort by largest sensitivity
-            bus_list = net.create_sorted_bus_list(pf.BUS_SENS_LARGEST)
-            self.assertTrue(isinstance(bus_list,list))
-            self.assertEqual(len(bus_list),net.num_buses)
-            r1 = []
-            for i in range(len(bus_list)):
-                if i > 0:
-                    bus1 = bus_list[i-1]
-                    bus2 = bus_list[i]
-                    self.assertTrue(isinstance(bus1,pf.Bus))
-                    self.assertTrue(isinstance(bus2,pf.Bus))
-                    r1.append(abs(bus1.get_largest_sens()) >= abs(bus2.get_largest_sens()))
-            self.assertTrue(all(r1))
-
-            # Sort by v_reg_by_gen sensitivity
-            bus_list = net.create_sorted_bus_list(pf.BUS_SENS_V_REG_BY_GEN)
-            self.assertTrue(isinstance(bus_list,list))
-            self.assertEqual(len(bus_list),net.num_buses)
-            r1 = []
-            for i in range(len(bus_list)):
-                if i > 0:
-                    bus1 = bus_list[i-1]
-                    bus2 = bus_list[i]
-                    self.assertTrue(isinstance(bus1,pf.Bus))
-                    self.assertTrue(isinstance(bus2,pf.Bus))
-                    r1.append(abs(bus1.sens_v_reg_by_gen) >= abs(bus2.sens_v_reg_by_gen))
-            self.assertTrue(all(r1))
+            # Check
+            net.clear_sensitivities()
+            for bus in net.buses:
+                if np.abs(bus.P_mismatch) >= np.abs(bus.Q_mismatch):
+                    self.assertEqual(bus.largest_mismatch, bus.P_mismatch)
+                else:
+                    self.assertEqual(bus.largest_mismatch, bus.Q_mismatch)
+                bus.sens_P_balance = 1.
+                self.assertEqual(bus.largest_sensitivity, bus.sens_P_balance)
+                self.assertEqual(bus.get_largest_sensitivity_type(), 'sens_P_balance')
+                bus.sens_Q_balance = -2.
+                self.assertEqual(bus.largest_sensitivity, bus.sens_Q_balance)
+                self.assertEqual(bus.get_largest_sensitivity_type(), 'sens_Q_balance')
+                bus.sens_v_mag_u_bound = 3.
+                self.assertEqual(bus.largest_sensitivity, bus.sens_v_mag_u_bound)
+                self.assertEqual(bus.get_largest_sensitivity_type(), 'sens_v_mag_u_bound')
+                bus.sens_v_mag_l_bound = -4.
+                self.assertEqual(bus.largest_sensitivity, bus.sens_v_mag_l_bound)
+                self.assertEqual(bus.get_largest_sensitivity_type(), 'sens_v_mag_l_bound')
+                bus.sens_v_ang_u_bound = 5.
+                self.assertEqual(bus.largest_sensitivity, bus.sens_v_ang_u_bound)
+                self.assertEqual(bus.get_largest_sensitivity_type(), 'sens_v_ang_u_bound')
+                bus.sens_v_ang_l_bound = -6.
+                self.assertEqual(bus.largest_sensitivity, bus.sens_v_ang_l_bound)
+                self.assertEqual(bus.get_largest_sensitivity_type(), 'sens_v_ang_l_bound')
+                bus.sens_v_reg_by_gen = 7.
+                self.assertEqual(bus.largest_sensitivity, bus.sens_v_reg_by_gen)
+                self.assertEqual(bus.get_largest_sensitivity_type(), 'sens_v_reg_by_gen')
+                bus.sens_v_reg_by_shunt = -8.
+                self.assertEqual(bus.largest_sensitivity, bus.sens_v_reg_by_shunt)
+                self.assertEqual(bus.get_largest_sensitivity_type(), 'sens_v_reg_by_shunt')
+                bus.sens_v_reg_by_tran = 9.
+                self.assertEqual(bus.largest_sensitivity, bus.sens_v_reg_by_tran)
+                self.assertEqual(bus.get_largest_sensitivity_type(), 'sens_v_reg_by_tran')
 
     def test_set_points(self):
 

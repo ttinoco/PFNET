@@ -188,27 +188,6 @@ cdef class Network:
         if net is not None:
             cnet.NET_copy_from_net(self._c_net, n._c_net)
 
-    def create_sorted_bus_list(self, sort_by, t=0):
-        """
-        Creates list of buses sorted in descending order according to a specific quantity.
-
-        Parameters
-        ----------
-        sort_by : int (|RefBusSensitivities|, |RefBusMismatches|).
-        t : int
-
-        Returns
-        -------
-        buses : list of |Bus| objects
-        """
-
-        buses = []
-        cdef cbus.Bus* b = cnet.NET_create_sorted_bus_list(self._c_net,sort_by,t)
-        while b is not NULL:
-            buses.append(new_Bus(b))
-            b = cbus.BUS_get_next(b)
-        return buses
-
     def create_var_generators_P_sigma(self, spread, corr):
         """
         Creates covariance matrix (lower triangular part) for
@@ -615,7 +594,7 @@ cdef class Network:
         -------
         values : |Array|
         """
-        return Vector(cnet.NET_get_var_values(self._c_net,str2const[option]),owndata=True)
+        return Vector(cnet.NET_get_var_values(self._c_net, str2const[option]), owndata=True)
 
     def get_var_projection(self, obj_type, props, q, t_start=0, t_end=None):
         """
@@ -1154,19 +1133,6 @@ cdef class Network:
         """
 
         print(cnet.NET_get_show_properties_str(self._c_net,t).decode('UTF-8'))
-
-    def show_buses(self, number, sort_by, t=0):
-        """
-        Shows information about the most relevant network buses sorted by a specific quantity.
-
-        Parameters
-        ----------
-        number : int
-        sort_by : int (|RefBusSensitivities|, |RefBusMismatches|)
-        t : int (time period)
-        """
-
-        cnet.NET_show_buses(self._c_net,number,sort_by,t)
 
     def update_properties(self, values=None):
         """

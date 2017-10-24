@@ -95,9 +95,6 @@
 .. |RefVarGeneratorProperties| replace:: :ref:`ref_vargen_prop`
 .. |RefProperties| replace:: |RefBusProperties|, |RefBranchProperties|, |RefGeneratorProperties|,  |RefShuntProperties|, |RefLoadProperties|, |RefVarGeneratorProperties|, |RefBatteryProperties| 
 
-.. |RefBusSensitivities| replace:: :ref:`ref_bus_sens`
-.. |RefBusMismatches| replace:: :ref:`ref_bus_mis`
-
 .. |RefVarValueOptions| replace:: :ref:`ref_var_values`
 
 .. |TrueFalse| replace:: {``True``, ``False``}

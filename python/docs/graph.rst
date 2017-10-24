@@ -27,7 +27,7 @@ The :class:`Graph <pfnet.Graph>` class provides routines for coloring nodes (net
 
   >>> g.set_layout()
 
-  >>> g.color_nodes_by_mismatch(pfnet.BUS_MIS_REACTIVE)
+  >>> g.color_nodes_by_mismatch('Q_mismatch')
 
   >>> g.view()
 

@@ -14,23 +14,6 @@ cimport cbus
 BUS_INF_V_MAG = cbus.BUS_INF_V_MAG
 BUS_INF_V_ANG = cbus.BUS_INF_V_ANG
 
-# Sensitivities
-BUS_SENS_LARGEST = cbus.BUS_SENS_LARGEST
-BUS_SENS_P_BALANCE = cbus.BUS_SENS_P_BALANCE
-BUS_SENS_Q_BALANCE = cbus.BUS_SENS_Q_BALANCE
-BUS_SENS_V_MAG_U_BOUND = cbus.BUS_SENS_V_MAG_U_BOUND
-BUS_SENS_V_MAG_L_BOUND = cbus.BUS_SENS_V_MAG_L_BOUND
-BUS_SENS_V_ANG_U_BOUND = cbus.BUS_SENS_V_ANG_U_BOUND
-BUS_SENS_V_ANG_L_BOUND = cbus.BUS_SENS_V_ANG_L_BOUND
-BUS_SENS_V_REG_BY_GEN = cbus.BUS_SENS_V_REG_BY_GEN
-BUS_SENS_V_REG_BY_TRAN = cbus.BUS_SENS_V_REG_BY_TRAN
-BUS_SENS_V_REG_BY_SHUNT = cbus.BUS_SENS_V_REG_BY_SHUNT
-
-# Mismatches
-BUS_MIS_LARGEST = cbus.BUS_MIS_LARGEST
-BUS_MIS_ACTIVE = cbus.BUS_MIS_ACTIVE
-BUS_MIS_REACTIVE = cbus.BUS_MIS_REACTIVE
-
 class BusError(Exception):
     """
     Bus error exception.
@@ -187,7 +170,7 @@ cdef class Bus:
         else:
             raise BusError('index does not correspond to any variable')
 
-    def get_largest_sens(self, t=0):
+    def get_largest_sensitivity(self, t=0):
         """
         Gets the bus sensitivity of largest absolute value.
 
@@ -202,7 +185,7 @@ cdef class Bus:
 
         return cbus.BUS_get_largest_sens(self._c_ptr,t)
 
-    def get_largest_sens_type(self, t=0):
+    def get_largest_sensitivity_type(self, t=0):
         """
         Gets the type of bus sensitivity of largest absolute value.
 
@@ -212,12 +195,12 @@ cdef class Bus:
 
         Returns
         -------
-        type : int
+        type : string
         """
 
-        return cbus.BUS_get_largest_sens_type(self._c_ptr,t)
+        return sens_bus2str[cbus.BUS_get_largest_sens_type(self._c_ptr,t)]
 
-    def get_largest_mis(self, t=0):
+    def get_largest_mismatch(self, t=0):
         """
         Gets the bus power mismatch of largest absolute value.
 
@@ -232,7 +215,7 @@ cdef class Bus:
 
         return cbus.BUS_get_largest_mis(self._c_ptr,t)
 
-    def get_largest_mis_type(self, t=0):
+    def get_largest_mismatch_type(self, t=0):
         """
         Gets the type of bus power mismatch of largest absolute value.
 
@@ -242,26 +225,10 @@ cdef class Bus:
 
         Returns
         -------
-        type : int
+        type : string
         """
 
-        return cbus.BUS_get_largest_mis_type(self._c_ptr,t)
-
-    def get_quantity(self,type, t=0):
-        """
-        Gets the bus quantity of the given type.
-
-        Parameters
-        ----------
-        type : int (|RefBusSensitivities|, |RefBusMismatches|)
-        t : int (time period)
-
-        Returns
-        -------
-        value : float
-        """
-
-        return cbus.BUS_get_quantity(self._c_ptr,type,t)
+        return mis_bus2str[cbus.BUS_get_largest_mis_type(self._c_ptr,t)]
 
     def get_total_gen_P(self, t=0):
         """
@@ -819,6 +786,24 @@ cdef class Bus:
         """ Bus reactive power mismatch (p.u. system base MVA) (float or |Array|). """
         def __get__(self):
             r = [cbus.BUS_get_Q_mis(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return np.array(r)
+
+    property largest_mismatch:
+        """ Bus largest power mismatch (p.u. system base MVA) (float or |Array|). """
+        def __get__(self):
+            r = [self.get_largest_mismatch(t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return np.array(r)
+
+    property largest_sensitivity:
+        """ Bus largest sensitivity (float or |Array|). """
+        def __get__(self):
+            r = [self.get_largest_sensitivity(t) for t in range(self.num_periods)]
             if self.num_periods == 1:
                 return AttributeFloat(r[0])
             else:

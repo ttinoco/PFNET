@@ -19,7 +19,7 @@ g = pfnet.Graph(net)
 for bus in net.buses:
     g.set_node_property(bus,"label",str(bus.number))
 
-g.color_nodes_by_mismatch(pfnet.BUS_MIS_REACTIVE)
+g.color_nodes_by_mismatch('Q_mismatch')
 
 g.set_layout()
 

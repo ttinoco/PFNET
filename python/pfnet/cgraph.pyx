@@ -140,11 +140,11 @@ cdef class Graph:
 
         Parameters
         ----------
-        mis_type : int (|RefBusMismatches|)
+        mis_type : string (mismatch attribute name)
         t : int
         """
 
-        cgraph.GRAPH_color_nodes_by_mismatch(self._c_graph,mis_type,t)
+        cgraph.GRAPH_color_nodes_by_mismatch(self._c_graph, str2mis_bus[mis_type], t)
         if cgraph.GRAPH_has_error(self._c_graph):
             raise GraphError(cgraph.GRAPH_get_error_string(self._c_graph))
 
@@ -154,11 +154,11 @@ cdef class Graph:
 
         Parameters
         ----------
-        sens_type : int (|RefBusSensitivities|)
+        sens_type : string (sensitivity attribute name)
         t : int
         """
 
-        cgraph.GRAPH_color_nodes_by_sensitivity(self._c_graph,sens_type,t)
+        cgraph.GRAPH_color_nodes_by_sensitivity(self._c_graph, str2sens_bus[sens_type], t)
         if cgraph.GRAPH_has_error(self._c_graph):
             raise GraphError(cgraph.GRAPH_get_error_string(self._c_graph))
 
