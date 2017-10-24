@@ -84,3 +84,6 @@ graph.png
 # Eclipse Stuff
 .project
 .pydevproject
+
+# Distribution
+distribution/
