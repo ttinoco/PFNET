@@ -9,6 +9,7 @@
 *.dot
 *.prof
 *.cfg
+*.m4
 cpfnet.pyd
 cpfnet.c
 cpfnet.h
@@ -43,7 +44,6 @@ tests/test-suite.log
 .deps/
 .dirstamp
 .libs/
-aclocal.m4
 autom4te.cache/
 autoscan.log
 compile
@@ -86,4 +86,4 @@ graph.png
 .pydevproject
 
 # Distribution
-distribution/
+/distribution/
