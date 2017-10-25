@@ -1,16 +1,18 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
 # Power Networks - Variables
 
+import sys
+sys.path.append('.')
 import pfnet
 
-net = pfnet.ParserMAT().parse('../../data/ieee14.mat')
+net = pfnet.Parser(sys.argv[1]).parse(sys.argv[1])
 
 print(net.num_vars)
 

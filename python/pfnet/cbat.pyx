@@ -28,19 +28,19 @@ cdef class Battery:
 
     cdef cbat.Bat* _c_ptr
 
-    def __init__(self,num_periods=1,alloc=True):
+    def __init__(self, num_periods=1, alloc=True):
         """
         Battery class.
 
         Parameters
         ----------
-        alloc : {``True``, ``False``}
         num_periods : int
+        alloc : |TrueFalse|
         """
 
         pass
 
-    def __cinit__(self,num_periods=1,alloc=True):
+    def __cinit__(self, num_periods=1, alloc=True):
 
         if alloc:
             self._c_ptr = cbat.BAT_new(num_periods)
@@ -72,19 +72,19 @@ cdef class Battery:
         else:
             raise BatteryError('index does not correspond to any variable')
 
-    def has_flags(self,flag_type,q):
+    def has_flags(self, flag_type, q):
         """
         Determines whether the battery has the flags associated with
         certain quantities set.
 
         Parameters
         ----------
-        flag_type : string (:ref:`ref_net_flag`)
-        q : string or list of strings (:ref:`ref_bat_q`)
+        flag_type : string (|RefFlags|)
+        q : string or list of strings (|RefBatteryQuantities|)
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         q = q if isinstance(q,list) else [q]
@@ -93,7 +93,7 @@ cdef class Battery:
                                   str2flag[flag_type],
                                   reduce(lambda x,y: x|y,[str2q[self.obj_type][qq] for qq in q],0))
 
-    def set_P(self,P,t=0):
+    def set_P(self, P, t=0):
         """
         Sets battery charging power.
 
@@ -105,7 +105,7 @@ cdef class Battery:
 
         cbat.BAT_set_P(self._c_ptr,P,t)
 
-    def set_E(self,E,t=0):
+    def set_E(self, E, t=0):
         """
         Sets battery energy level.
 
@@ -138,7 +138,7 @@ cdef class Battery:
         def __get__(self): return cbat.BAT_get_index(self._c_ptr)
 
     property index_Pc:
-        """ Index of battery charging power variable (int or array). """
+        """ Index of battery charging power variable (int or |Array|). """
         def __get__(self):
             r = [cbat.BAT_get_index_Pc(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -147,7 +147,7 @@ cdef class Battery:
                 return np.array(r)
 
     property index_Pd:
-        """ Index of battery discharging power variable (int or array). """
+        """ Index of battery discharging power variable (int or |Array|). """
         def __get__(self):
             r = [cbat.BAT_get_index_Pd(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -156,7 +156,7 @@ cdef class Battery:
                 return np.array(r)
 
     property index_E:
-        """ Index of battery energy level variable (int or array). """
+        """ Index of battery energy level variable (int or |Array|). """
         def __get__(self):
             r = [cbat.BAT_get_index_E(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -165,7 +165,7 @@ cdef class Battery:
                 return np.array(r)
 
     property bus:
-        """ :class:`Bus <pfnet.Bus>` to which battery is connected. """
+        """ |Bus| to which battery is connected. """
         def __get__(self):
             return new_Bus(cbat.BAT_get_bus(self._c_ptr))
         def __set__(self, bus):
@@ -176,7 +176,7 @@ cdef class Battery:
             cbat.BAT_set_bus(self._c_ptr,cbus._c_ptr)
 
     property P:
-        """ Battery charging power (p.u. system base MVA) (float or array). """
+        """ Battery charging power (p.u. system base MVA) (float or |Array|). """
         def __get__(self):
             r = [cbat.BAT_get_P(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -200,7 +200,7 @@ cdef class Battery:
         def __set__(self,P): cbat.BAT_set_P_min(self._c_ptr,P)
 
     property E:
-        """ Battery energy level at the beginning of a period (p.u. system base MVA times time unit) (float or array). """
+        """ Battery energy level at the beginning of a time period (p.u. system base MVA times time unit) (float or |Array|). """
         def __get__(self):
             r = [cbat.BAT_get_E(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -219,7 +219,7 @@ cdef class Battery:
         def __set__(self,E): cbat.BAT_set_E_init(self._c_ptr,E)
 
     property E_final:
-        """ Battery energy level at the end of the last period (p.u. system base MVA times time unit) (float). """
+        """ Battery energy level at the end of the last time period (p.u. system base MVA times time unit) (float). """
         def __get__(self): return cbat.BAT_get_E_final(self._c_ptr)
         def __set__(self,E): cbat.BAT_set_E_final(self._c_ptr,E)
 
@@ -247,19 +247,19 @@ cdef class Battery:
             return s
 
     property flags_vars:
-        """ Flags associated with variable quantities. """
+        """ Flags associated with variable quantities (byte). """
         def __get__(self): return cbat.BAT_get_flags_vars(self._c_ptr)
 
     property flags_fixed:
-        """ Flags associated with fixed quantities. """
+        """ Flags associated with fixed quantities (byte). """
         def __get__(self): return cbat.BAT_get_flags_fixed(self._c_ptr)
 
     property flags_bounded:
-        """ Flags associated with bounded quantities. """
+        """ Flags associated with bounded quantities (byte). """
         def __get__(self): return cbat.BAT_get_flags_bounded(self._c_ptr)
 
     property flags_sparse:
-        """ Flags associated with sparse quantities. """
+        """ Flags associated with sparse quantities (byte). """
         def __get__(self): return cbat.BAT_get_flags_sparse(self._c_ptr)
 
 cdef new_Battery(cbat.Bat* b):

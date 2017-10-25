@@ -995,11 +995,25 @@ REAL BUS_get_sens_P_balance(Bus* bus, int t) {
     return 0;
 }
 
+REAL* BUS_get_sens_P_balance_array(Bus* bus) {
+  if (bus)
+    return bus->sens_P_balance;
+  else
+    return NULL;
+}
+
 REAL BUS_get_sens_Q_balance(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     return bus->sens_Q_balance[t];
   else
     return 0;
+}
+
+REAL* BUS_get_sens_Q_balance_array(Bus* bus) {
+  if (bus)
+    return bus->sens_Q_balance;
+  else
+    return NULL;
 }
 
 REAL BUS_get_sens_v_mag_u_bound(Bus* bus, int t) {
@@ -1009,11 +1023,25 @@ REAL BUS_get_sens_v_mag_u_bound(Bus* bus, int t) {
     return 0;
 }
 
+REAL* BUS_get_sens_v_mag_u_bound_array(Bus* bus) {
+  if (bus)
+    return bus->sens_v_mag_u_bound;
+  else
+    return NULL;
+}
+
 REAL BUS_get_sens_v_mag_l_bound(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     return bus->sens_v_mag_l_bound[t];
   else
     return 0;
+}
+
+REAL* BUS_get_sens_v_mag_l_bound_array(Bus* bus) {
+  if (bus)
+    return bus->sens_v_mag_l_bound;
+  else
+    return NULL;
 }
 
 REAL BUS_get_sens_v_ang_u_bound(Bus* bus, int t) {
@@ -1023,11 +1051,25 @@ REAL BUS_get_sens_v_ang_u_bound(Bus* bus, int t) {
     return 0;
 }
 
+REAL* BUS_get_sens_v_ang_u_bound_array(Bus* bus) {
+  if (bus)
+    return bus->sens_v_ang_u_bound;
+  else
+    return NULL;
+}
+
 REAL BUS_get_sens_v_ang_l_bound(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     return bus->sens_v_ang_l_bound[t];
   else
     return 0;
+}
+
+REAL* BUS_get_sens_v_ang_l_bound_array(Bus* bus) {
+  if (bus)
+    return bus->sens_v_ang_l_bound;
+  else
+    return NULL;
 }
 
 REAL BUS_get_sens_v_reg_by_gen(Bus* bus, int t) {
@@ -1037,6 +1079,13 @@ REAL BUS_get_sens_v_reg_by_gen(Bus* bus, int t) {
     return 0;
 }
 
+REAL* BUS_get_sens_v_reg_by_gen_array(Bus* bus) {
+  if (bus)
+    return bus->sens_v_reg_by_gen;
+  else
+    return NULL;
+}
+
 REAL BUS_get_sens_v_reg_by_tran(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     return bus->sens_v_reg_by_tran[t];
@@ -1044,11 +1093,25 @@ REAL BUS_get_sens_v_reg_by_tran(Bus* bus, int t) {
     return 0;
 }
 
+REAL* BUS_get_sens_v_reg_by_tran_array(Bus* bus) {
+  if (bus)
+    return bus->sens_v_reg_by_tran;
+  else
+    return NULL;
+}
+
 REAL BUS_get_sens_v_reg_by_shunt(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     return bus->sens_v_reg_by_shunt[t];
   else
     return 0;
+}
+
+REAL* BUS_get_sens_v_reg_by_shunt_array(Bus* bus) {
+  if (bus)
+    return bus->sens_v_reg_by_shunt;
+  else
+    return NULL;
 }
 
 REAL BUS_get_largest_sens(Bus* bus, int t) {

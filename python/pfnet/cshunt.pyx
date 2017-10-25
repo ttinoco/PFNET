@@ -27,19 +27,19 @@ cdef class Shunt:
 
     cdef cshunt.Shunt* _c_ptr
 
-    def __init__(self,num_periods=1,alloc=True):
+    def __init__(self, num_periods=1, alloc=True):
         """
         Shunt class.
 
         Parameters
         ----------
-        alloc : {``True``, ``False``}
         num_periods : int
+        alloc : |TrueFalse|
         """
 
         pass
 
-    def __cinit__(self,num_periods=1,alloc=True):
+    def __cinit__(self, num_periods=1, alloc=True):
 
         if alloc:
             self._c_ptr = cshunt.SHUNT_new(num_periods)
@@ -52,11 +52,11 @@ cdef class Shunt:
 
     def is_fixed(self):
         """
-        Determines whether the shunt device is fixed (as opposed to switched).
+        Determines whether the shunt device is fixed (as opposed to switching).
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cshunt.SHUNT_is_fixed(self._c_ptr)
@@ -68,24 +68,24 @@ cdef class Shunt:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cshunt.SHUNT_is_switched_v(self._c_ptr)
 
-    def has_flags(self,flag_type,q):
+    def has_flags(self, flag_type, q):
         """
         Determines whether the shunt devices has flags associated with
         certain quantities set.
 
         Parameters
         ----------
-        flag_type : string (:ref:`ref_net_flag`)
-        q : string or list of strings (:ref:`ref_shunt_q`)
+        flag_type : string (|RefFlags|)
+        q : string or list of strings (|RefShuntQuantities|)
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         q = q if isinstance(q,list) else [q]
@@ -115,13 +115,13 @@ cdef class Shunt:
         else:
             raise ShuntError('index does not correspond to any variable')
 
-    def set_b_values(self,values):
+    def set_b_values(self, values):
         """
-        Sets the block susceptance values for :attr:`b_values`.
+        Sets the block susceptance values.
         
         Parameters
         ----------
-        values : :class:`ndarray <numpy.ndarray>`
+        values : |Array|
         """
         
         cdef np.ndarray[double,mode='c'] x = values
@@ -149,7 +149,7 @@ cdef class Shunt:
         def __get__(self): return cshunt.SHUNT_get_index(self._c_ptr)
 
     property index_b:
-        """ Index of shunt susceptance variable (int or array). """
+        """ Index of shunt susceptance variable (int or |Array|). """
         def __get__(self):
             r = [cshunt.SHUNT_get_index_b(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -158,7 +158,7 @@ cdef class Shunt:
                 return np.array(r)
 
     property bus:
-        """ :class:`Bus <pfnet.Bus>` to which the shunt devices is connected. """
+        """ |Bus| to which the shunt devices is connected. """
         def __get__(self):
             return new_Bus(cshunt.SHUNT_get_bus(self._c_ptr))
         def __set__(self,bus):
@@ -169,7 +169,7 @@ cdef class Shunt:
             cshunt.SHUNT_set_bus(self._c_ptr,cbus._c_ptr)
 
     property reg_bus:
-        """ :class:`Bus <pfnet.Bus>` whose voltage magnitude is regulated by this shunt device. """
+        """ |Bus| whose voltage magnitude is regulated by this shunt device. """
         def __get__(self): 
             return new_Bus(cshunt.SHUNT_get_reg_bus(self._c_ptr))
         def __set__(self,bus):
@@ -185,7 +185,7 @@ cdef class Shunt:
         def __set__(self,value): cshunt.SHUNT_set_g(self._c_ptr,value)
 
     property b:
-        """ Shunt susceptance (p.u.) (float or array). """
+        """ Shunt susceptance (p.u.) (float or |Array|). """
         def __get__(self):
             r = [cshunt.SHUNT_get_b(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -209,7 +209,7 @@ cdef class Shunt:
         def __set__(self,value): cshunt.SHUNT_set_b_min(self._c_ptr,value)
         
     property b_values:
-        """ Valid shunt susceptance values if switchable (p.u.) (:class:`ndarray <numpy.ndarray>`). """
+        """ Valid shunt susceptance values if switchable (p.u.) (|Array|). """
         def __get__(self): return DoubleArray(cshunt.SHUNT_get_b_values(self._c_ptr),
                                               cshunt.SHUNT_get_num_b_values(self._c_ptr))
         def __set__(self,x):
@@ -223,20 +223,34 @@ cdef class Shunt:
             free(json_string)
             return s
 
+    property sens_b_u_bound:
+        """ Objective function sensitivity with respect to susceptance upper bound (float or |Array|). """
+        def __get__(self): return DoubleArray(cshunt.SHUNT_get_sens_b_u_bound_array(self._c_ptr),
+                                              cshunt.SHUNT_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_b_u_bound[:] = x
+
+    property sens_b_l_bound:
+        """ Objective function sensitivity with respect to susceptance lower bound (float or |Array|). """
+        def __get__(self): return DoubleArray(cshunt.SHUNT_get_sens_b_l_bound_array(self._c_ptr),
+                                              cshunt.SHUNT_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_b_l_bound[:] = x
+
     property flags_vars:
-        """ Flags associated with variable quantities. """
+        """ Flags associated with variable quantities (byte). """
         def __get__(self): return cshunt.SHUNT_get_flags_vars(self._c_ptr)
 
     property flags_fixed:
-        """ Flags associated with fixed quantities. """
+        """ Flags associated with fixed quantities (byte). """
         def __get__(self): return cshunt.SHUNT_get_flags_fixed(self._c_ptr)
 
     property flags_bounded:
-        """ Flags associated with bounded quantities. """
+        """ Flags associated with bounded quantities (byte). """
         def __get__(self): return cshunt.SHUNT_get_flags_bounded(self._c_ptr)
 
     property flags_sparse:
-        """ Flags associated with sparse quantities. """
+        """ Flags associated with sparse quantities (byte). """
         def __get__(self): return cshunt.SHUNT_get_flags_sparse(self._c_ptr)
 
 cdef new_Shunt(cshunt.Shunt* s):

@@ -28,19 +28,19 @@ cdef class Branch:
 
     cdef cbranch.Branch* _c_ptr
 
-    def __init__(self,num_periods=1,alloc=True):
+    def __init__(self, num_periods=1, alloc=True):
         """
         Branch class.
 
         Parameters
         ----------
-        alloc : {``True``, ``False``}
         num_periods : int
+        alloc : |TrueFalse|
         """
 
         pass
 
-    def __cinit__(self,num_periods=1,alloc=True):
+    def __cinit__(self, num_periods=1, alloc=True):
 
         if alloc:
             self._c_ptr = cbranch.BRANCH_new(num_periods)
@@ -58,18 +58,18 @@ cdef class Branch:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cbranch.BRANCH_has_pos_ratio_v_sens(self._c_ptr)
 
-    def is_equal(self,other):
+    def is_equal(self, other):
         """
         Determines whether branch is equal to given branch.
 
         Parameters
         ----------
-        other : :class:`Branch <pfnet.Branch>`
+        other : |Branch|
         """
 
         cdef Branch b_other
@@ -83,16 +83,16 @@ cdef class Branch:
         
     def set_pos_ratio_v_sens(self, flag):
         """
-        Set the flag for positive ratio-voltage sensitivity.
+        Sets the flag for positive ratio-voltage sensitivity.
         
         Parameters
         ----------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
         
         cbranch.BRANCH_set_pos_ratio_v_sens(self._c_ptr, flag);
 
-    def set_ratio(self,r,t=0):
+    def set_ratio(self, r, t=0):
         """
         Sets branch taps ratio.
         
@@ -107,6 +107,10 @@ cdef class Branch:
     def get_rating(self, code):
         """
         Gets branch thermal rating.
+
+        Returns
+        -------
+        rating : float
         """
 
         if code == 'A':
@@ -164,18 +168,18 @@ cdef class Branch:
 
         cbranch.BRANCH_set_type(self._c_ptr,cbranch.BRANCH_TYPE_TRAN_TAP_Q)
 
-    def __richcmp__(self,other,op):
+    def __richcmp__(self, other, op):
         """
         Compares two branches.
 
         Parameters
         ----------
-        other : Branch
+        other : |Branch|
         op : comparison type
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         if op == 2:
@@ -191,7 +195,7 @@ cdef class Branch:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cbranch.BRANCH_is_on_outage(self._c_ptr)
@@ -202,7 +206,7 @@ cdef class Branch:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cbranch.BRANCH_is_fixed_tran(self._c_ptr)
@@ -213,7 +217,7 @@ cdef class Branch:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cbranch.BRANCH_is_line(self._c_ptr)
@@ -224,7 +228,7 @@ cdef class Branch:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cbranch.BRANCH_is_phase_shifter(self._c_ptr)
@@ -235,7 +239,7 @@ cdef class Branch:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cbranch.BRANCH_is_tap_changer(self._c_ptr)
@@ -247,7 +251,7 @@ cdef class Branch:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cbranch.BRANCH_is_tap_changer_v(self._c_ptr)
@@ -259,24 +263,24 @@ cdef class Branch:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cbranch.BRANCH_is_tap_changer_Q(self._c_ptr)
 
-    def has_flags(self,flag_type,q):
+    def has_flags(self, flag_type, q):
         """
         Determines whether the branch has the flags associated with
         specific quantities set.
 
         Parameters
         ----------
-        flag_type : string (:ref:`ref_net_flag`)
-        q : string or list of strings (:ref:`ref_branch_q`)
+        flag_type : string (|RefFlags|)
+        q : string or list of strings (|RefBranchQuantities|)
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         q = q if isinstance(q,list) else [q]
@@ -312,12 +316,12 @@ cdef class Branch:
         
         Parameters
         ----------
-        var_values : :class:`ndarray <numpy.ndarray>`
+        var_values : |Array|
         eps : float
 
         Returns
         -------
-        i_mag : float or :class:`ndarray <numpy.ndarray>`
+        i_mag : float or |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
@@ -335,12 +339,12 @@ cdef class Branch:
         
         Parameters
         ----------
-        var_values : :class:`ndarray <numpy.ndarray>`
+        var_values : |Array|
         eps : float
 
         Returns
         -------
-        i_mag : float or :class:`ndarray <numpy.ndarray>`
+        i_mag : float or |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
@@ -358,11 +362,11 @@ cdef class Branch:
         
         Parameters
         ----------
-        var_values : :class:`ndarray <numpy.ndarray>`
+        var_values : |Array|
 
         Returns
         -------
-        S_mag : float or :class:`ndarray <numpy.ndarray>`
+        S_mag : float or |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
@@ -380,11 +384,11 @@ cdef class Branch:
         
         Parameters
         ----------
-        var_values : :class:`ndarray <numpy.ndarray>`
+        var_values : |Array|
 
         Returns
         -------
-        S_mag : float or :class:`ndarray <numpy.ndarray>`
+        S_mag : float or |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
@@ -402,11 +406,11 @@ cdef class Branch:
 
         Parameters
         ----------
-        var_values : :class:`ndarray <numpy.ndarray>`
+        var_values : |Array|
 
         Returns
         -------
-        P_km : float or :class:`ndarray <numpy.ndarray>`
+        P_km : float or |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
@@ -424,11 +428,11 @@ cdef class Branch:
 
         Parameters
         ----------
-        var_values : :class:`ndarray <numpy.ndarray>`
+        var_values : |Array|
 
         Returns
         -------
-        Q_km : float or :class:`ndarray <numpy.ndarray>`
+        Q_km : float or |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
@@ -446,11 +450,11 @@ cdef class Branch:
 
         Parameters
         ----------
-        var_values : :class:`ndarray <numpy.ndarray>`
+        var_values : :|Array|
 
         Returns
         -------
-        P_mk : float or :class:`ndarray <numpy.ndarray>`
+        P_mk : float or |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
@@ -468,11 +472,11 @@ cdef class Branch:
 
         Parameters
         ----------
-        var_values : :class:`ndarray <numpy.ndarray>`
+        var_values : |Array|
 
         Returns
         -------
-        Q_mk : float or :class:`ndarray <numpy.ndarray>`
+        Q_mk : float or |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
@@ -490,11 +494,11 @@ cdef class Branch:
 
         Parameters
         ----------
-        var_values : :class:`ndarray <numpy.ndarray>`
+        var_values : |Array|
 
         Returns
         -------
-        P_km_series : float or :class:`ndarray <numpy.ndarray>`
+        P_km_series : float or |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
@@ -512,11 +516,11 @@ cdef class Branch:
 
         Parameters
         ----------
-        var_values : :class:`ndarray <numpy.ndarray>`
+        var_values : |Array|
 
         Returns
         -------
-        Q_km_series : float or :class:`ndarray <numpy.ndarray>`
+        Q_km_series : float or |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
@@ -534,11 +538,11 @@ cdef class Branch:
 
         Parameters
         ----------
-        var_values : :class:`ndarray <numpy.ndarray>`
+        var_values : |Array|
 
         Returns
         -------
-        P_mk_series : float or :class:`ndarray <numpy.ndarray>`
+        P_mk_series : float or |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
@@ -556,11 +560,11 @@ cdef class Branch:
 
         Parameters
         ----------
-        var_values : :class:`ndarray <numpy.ndarray>`
+        var_values : |Array|
 
         Returns
         -------
-        Q_mk_series : float or :class:`ndarray <numpy.ndarray>`
+        Q_mk_series : float or |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
@@ -578,11 +582,11 @@ cdef class Branch:
 
         Parameters
         ----------
-        var_values : :class:`ndarray <numpy.ndarray>`
+        var_values : |Array|
 
         Returns
         -------
-        P_k_shunt : float or :class:`ndarray <numpy.ndarray>`
+        P_k_shunt : float or |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
@@ -600,11 +604,11 @@ cdef class Branch:
 
         Parameters
         ----------
-        var_values : :class:`ndarray <numpy.ndarray>`
+        var_values : |Array|
 
         Returns
         -------
-        Q_k_shunt : float or :class:`ndarray <numpy.ndarray>`
+        Q_k_shunt : float or |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
@@ -622,11 +626,11 @@ cdef class Branch:
 
         Parameters
         ----------
-        var_values : :class:`ndarray <numpy.ndarray>`
+        var_values : |Array|
 
         Returns
         -------
-        P_m_shunt : float or :class:`ndarray <numpy.ndarray>`
+        P_m_shunt : float or |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
@@ -644,11 +648,11 @@ cdef class Branch:
 
         Parameters
         ----------
-        var_values : :class:`ndarray <numpy.ndarray>`
+        var_values : |Array|
 
         Returns
         -------
-        Q_m_shunt : float or :class:`ndarray <numpy.ndarray>`
+        Q_m_shunt : float or |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
@@ -681,7 +685,7 @@ cdef class Branch:
         def __get__(self): return cbranch.BRANCH_get_index(self._c_ptr)
 
     property index_ratio:
-        """ Index of transformer tap ratio variable (int or array). """
+        """ Index of transformer tap ratio variable (int or |Array|). """
         def __get__(self):
             r = [cbranch.BRANCH_get_index_ratio(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -690,7 +694,7 @@ cdef class Branch:
                 return np.array(r)
 
     property index_phase:
-        """ Index of transformer phase shift variable (int or array). """
+        """ Index of transformer phase shift variable (int or |Array|). """
         def __get__(self):
             r = [cbranch.BRANCH_get_index_phase(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -699,7 +703,7 @@ cdef class Branch:
                 return np.array(r)
 
     property ratio:
-        """ Transformer tap ratio (float or array). """
+        """ Transformer tap ratio (float or |Array|). """
         def __get__(self):
             r = [cbranch.BRANCH_get_ratio(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -728,7 +732,7 @@ cdef class Branch:
         def __set__(self,bus): self.bus_k = bus
 
     property bus_k:
-        """ :class:`Bus <pfnet.Bus>` connected to the "k" side. """
+        """ |Bus| connected to the "k" side. """
         def __get__(self):
             return new_Bus(cbranch.BRANCH_get_bus_k(self._c_ptr))
         def __set__(self,bus): 
@@ -744,7 +748,7 @@ cdef class Branch:
         def __set__(self,bus): self.bus_m = bus
 
     property bus_m:
-        """ :class:`Bus <pfnet.Bus>` connected to the "m" side. """
+        """ |Bus| connected to the "m" side. """
         def __get__(self):
             return new_Bus(cbranch.BRANCH_get_bus_m(self._c_ptr))
         def __set__(self,bus): 
@@ -755,7 +759,7 @@ cdef class Branch:
             cbranch.BRANCH_set_bus_m(self._c_ptr,cbus._c_ptr)
 
     property reg_bus:
-        """ :class:`Bus <pfnet.Bus>` whose voltage is regulated by this tap-changing transformer. """
+        """ |Bus| whose voltage is regulated by this tap-changing transformer. """
         def __get__(self):
             return new_Bus(cbranch.BRANCH_get_reg_bus(self._c_ptr))
         def __set__(self,bus): 
@@ -816,7 +820,7 @@ cdef class Branch:
         def __set__(self,value): cbranch.BRANCH_set_g_m(self._c_ptr,value)
 
     property phase:
-        """ Transformer phase shift (radians) (float or array). """
+        """ Transformer phase shift (radians) (float or |Array|). """
         def __get__(self):
             r = [cbranch.BRANCH_get_phase(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -860,82 +864,82 @@ cdef class Branch:
         def __set__(self,value): cbranch.BRANCH_set_Q_min(self._c_ptr,value)
 
     property i_km_mag:
-        """ Branch current magnitude at bus "k" towards bus "m" (p.u.) (float or array). """
+        """ Branch current magnitude at bus "k" towards bus "m" (p.u.) (float or |Array|). """
         def __get__(self):
             return self.get_i_km_mag()
 
     property i_mk_mag:
-        """ Branch current magnitude at bus "m" towards bus "k" (p.u.) (float or array). """
+        """ Branch current magnitude at bus "m" towards bus "k" (p.u.) (float or |Array|). """
         def __get__(self):
             return self.get_i_mk_mag()
 
     property S_km_mag:
-        """ Branch apparent power magnitude at bus "k" towards bus "m" (p.u.) (float or array). """
+        """ Branch apparent power magnitude at bus "k" towards bus "m" (p.u.) (float or |Array|). """
         def __get__(self):
             return self.get_S_km_mag()
 
     property S_mk_mag:
-        """ Branch apparent power magnitude at bus "m" towards bus "k" (p.u.) (float or array). """
+        """ Branch apparent power magnitude at bus "m" towards bus "k" (p.u.) (float or |Array|). """
         def __get__(self):
             return self.get_S_mk_mag()
 
     property P_km:
-        """ Real power flow at bus "k" towards bus "m" (p.u.) (float or array). """
+        """ Real power flow at bus "k" towards bus "m" (p.u.) (float or |Array|). """
         def __get__(self):
             return self.get_P_km()
 
     property Q_km:
-        """ Reactive power flow at bus "k" towards bus "m" (p.u.) (float or array). """
+        """ Reactive power flow at bus "k" towards bus "m" (p.u.) (float or |Array|). """
         def __get__(self):
             return self.get_Q_km()
 
     property P_mk:
-        """ Real power flow at bus "m" towards bus "k" (p.u.) (float or array). """
+        """ Real power flow at bus "m" towards bus "k" (p.u.) (float or |Array|). """
         def __get__(self):
             return self.get_P_mk()
 
     property Q_mk:
-        """ Reactive power flow at bus "m" towards bus "k" (p.u.) (float or array). """
+        """ Reactive power flow at bus "m" towards bus "k" (p.u.) (float or |Array|). """
         def __get__(self):
              return self.get_Q_mk()
 
     property P_km_series:
-        """ Real power flow at bus "k" towards bus "m" over the series impedance of the line (p.u.) (float or array). """
+        """ Real power flow at bus "k" towards bus "m" over the series impedance of the line (p.u.) (float or |Array|). """
         def __get__(self):
             return self.get_P_km_series()
 
     property Q_km_series:
-        """ Reactive power flow at bus "k" towards bus "m" over the series impedance of the line (p.u.) (float or array). """
+        """ Reactive power flow at bus "k" towards bus "m" over the series impedance of the line (p.u.) (float or |Array|). """
         def __get__(self):
             return self.get_Q_km_series()
 
     property P_mk_series:
-        """ Real power flow at bus "m" towards bus "k" over the series impedance of the line (p.u.) (float or array). """
+        """ Real power flow at bus "m" towards bus "k" over the series impedance of the line (p.u.) (float or |Array|). """
         def __get__(self):
             return self.get_P_mk_series()
 
     property Q_mk_series:
-        """ Reactive power flow at bus "m" towards bus "k" over the series impedance of the line (p.u.) (float or array). """
+        """ Reactive power flow at bus "m" towards bus "k" over the series impedance of the line (p.u.) (float or |Array|). """
         def __get__(self):
             return self.get_Q_mk_series()
 
     property P_k_shunt:
-        """ Real power flow into the shunt element at bus "k" (p.u.) (float or array). """
+        """ Real power flow into the shunt element at bus "k" (p.u.) (float or |Array|). """
         def __get__(self):
             return self.get_P_k_shunt()
 
     property Q_k_shunt:
-        """ Reactive power flow into the shunt element bus "k" (p.u.) (float or array). """
+        """ Reactive power flow into the shunt element bus "k" (p.u.) (float or |Array|). """
         def __get__(self):
             return self.get_Q_k_shunt()
 
     property P_m_shunt:
-        """ Real power flow into the shunt element at bus "m" (p.u.) (float or array). """
+        """ Real power flow into the shunt element at bus "m" (p.u.) (float or |Array|). """
         def __get__(self):
             return self.get_P_m_shunt()
 
     property Q_m_shunt:
-        """ Reactive power flow into the shunt element at bus "m" (p.u.) (float or array). """
+        """ Reactive power flow into the shunt element at bus "m" (p.u.) (float or |Array|). """
         def __get__(self):
             return self.get_Q_m_shunt()
 
@@ -1004,7 +1008,7 @@ cdef class Branch:
         def __set__(self,r): cbranch.BRANCH_set_ratingC(self._c_ptr,r)
 
     property P_km_DC:
-        """ Active power flow (DC approx.) from bus "k" to bus "m" (float). """
+        """ Active power flow (DC approx.) from bus "k" to bus "m" (float or |Array|). """
         def __get__(self):
             r = [cbranch.BRANCH_get_P_km_DC(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1013,7 +1017,7 @@ cdef class Branch:
                 return np.array(r)
 
     property P_mk_DC:
-        """ Active power flow (DC approx.) from bus "m" to bus "k" (float). """
+        """ Active power flow (DC approx.) from bus "m" to bus "k" (float or |Array|). """
         def __get__(self):
             r = [cbranch.BRANCH_get_P_mk_DC(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1022,25 +1026,56 @@ cdef class Branch:
                 return np.array(r)
 
     property sens_P_u_bound:
-        """ Objective function sensitivity with respect to active power flow upper bound (float or array). """
-        def __get__(self):
-            r = [cbranch.BRANCH_get_sens_P_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        """ Objective function sensitivity with respect to active power flow upper bound (float or |Array|). """
+        def __get__(self): return DoubleArray(cbranch.BRANCH_get_sens_P_u_bound_array(self._c_ptr),
+                                              cbranch.BRANCH_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_P_u_bound[:] = x
 
     property sens_P_l_bound:
-        """ Objective function sensitivity with respect to active power flow lower bound (float or array). """
-        def __get__(self):
-            r = [cbranch.BRANCH_get_sens_P_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        """ Objective function sensitivity with respect to active power flow lower bound (float or |Array|). """
+        def __get__(self): return DoubleArray(cbranch.BRANCH_get_sens_P_l_bound_array(self._c_ptr),
+                                              cbranch.BRANCH_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_P_l_bound[:] = x
+
+    property sens_ratio_u_bound:
+        """ Objective function sensitivity with respect to tap ratio upper bound (float or |Array|). """
+        def __get__(self): return DoubleArray(cbranch.BRANCH_get_sens_ratio_u_bound_array(self._c_ptr),
+                                              cbranch.BRANCH_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_ratio_u_bound[:] = x
+
+    property sens_ratio_l_bound:
+        """ Objective function sensitivity with respect to tap ratio lower bound (float or |Array|). """
+        def __get__(self): return DoubleArray(cbranch.BRANCH_get_sens_ratio_l_bound_array(self._c_ptr),
+                                              cbranch.BRANCH_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_ratio_l_bound[:] = x
+
+    property sens_phase_u_bound:
+        """ Objective function sensitivity with respect to phase shift upper bound (float or |Array|). """
+        def __get__(self): return DoubleArray(cbranch.BRANCH_get_sens_phase_u_bound_array(self._c_ptr),
+                                              cbranch.BRANCH_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_phase_u_bound[:] = x
+
+    property sens_phase_l_bound:
+        """ Objective function sensitivity with respect to phase shift lower bound (float or |Array|). """
+        def __get__(self): return DoubleArray(cbranch.BRANCH_get_sens_phase_l_bound_array(self._c_ptr),
+                                              cbranch.BRANCH_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_phase_l_bound[:] = x
+
+    property sens_i_mag_u_bound:
+        """ Objective function sensitivity with respect to current magnitude upper bound (float or |Array|). """
+        def __get__(self): return DoubleArray(cbranch.BRANCH_get_sens_i_mag_u_bound_array(self._c_ptr),
+                                              cbranch.BRANCH_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_i_mag_u_bound[:] = x
 
     property outage:
-        """ Flag that indicates whether branch is on outage. """
+        """ Flag that indicates whether branch is on outage (boolean). """
         def __get__(self): return cbranch.BRANCH_is_on_outage(self._c_ptr)
 
     property json_string:
@@ -1052,19 +1087,19 @@ cdef class Branch:
             return s
 
     property flags_vars:
-        """ Flags associated with variable quantities. """
+        """ Flags associated with variable quantities (byte). """
         def __get__(self): return cbranch.BRANCH_get_flags_vars(self._c_ptr)
 
     property flags_fixed:
-        """ Flags associated with fixed quantities. """
+        """ Flags associated with fixed quantities (byte). """
         def __get__(self): return cbranch.BRANCH_get_flags_fixed(self._c_ptr)
 
     property flags_bounded:
-        """ Flags associated with bounded quantities. """
+        """ Flags associated with bounded quantities (byte). """
         def __get__(self): return cbranch.BRANCH_get_flags_bounded(self._c_ptr)
 
     property flags_sparse:
-        """ Flags associated with sparse quantities. """
+        """ Flags associated with sparse quantities (byte). """
         def __get__(self): return cbranch.BRANCH_get_flags_sparse(self._c_ptr)
 
 cdef new_Branch(cbranch.Branch* b):

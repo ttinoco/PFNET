@@ -74,6 +74,14 @@ Vargen* NET_get_vargen(Net* net, int index);
 Bat* NET_get_bat(Net* net, int index);
 Bus* NET_get_gen_buses(Net* net);
 Bus* NET_get_load_buses(Net* net);
+
+Gen* NET_get_gen_from_name_and_bus_number(Net* net, char* name, int number);
+Branch* NET_get_branch_from_name_and_bus_numbers(Net* net, char* name, int number1, int number2);
+Shunt* NET_get_shunt_from_name_and_bus_number(Net* net, char* name, int number);
+Load* NET_get_load_from_name_and_bus_number(Net* net, char* name, int number);
+Vargen* NET_get_vargen_from_name_and_bus_number(Net* net, char* name, int number);
+Bat* NET_get_bat_from_name_and_bus_number(Net* net, char* name, int number);
+
 int NET_get_num_periods(Net* net);
 int NET_get_num_buses(Net* net);
 int NET_get_num_slack_buses(Net* net);

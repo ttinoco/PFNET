@@ -1,16 +1,18 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
 # Power Networks - Components
 
+import sys
+sys.path.append('.')
 import pfnet
 
-net = pfnet.ParserMAT().parse('../../data/ieee14.mat')
+net = pfnet.Parser(sys.argv[1]).parse(sys.argv[1])
 net.show_components()
 
 # Power Networks - Buses 
@@ -19,7 +21,7 @@ bus = net.get_bus(10)
 
 print(bus.index == 10)
 
-other_bus = net.get_bus_by_number(bus.number)
+other_bus = net.get_bus_from_number(bus.number)
 
 print(bus == other_bus)
 

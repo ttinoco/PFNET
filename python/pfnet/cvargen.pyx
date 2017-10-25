@@ -28,19 +28,19 @@ cdef class VarGenerator:
 
     cdef cvargen.Vargen* _c_ptr
 
-    def __init__(self,num_periods=1,alloc=True):
+    def __init__(self, num_periods=1, alloc=True):
         """
         Variable generator class.
 
         Parameters
         ----------
-        alloc : {``True``, ``False``}
         num_periods : int
+        alloc : |TrueFalse|
         """
 
         pass
 
-    def __cinit__(self,num_periods=1,alloc=True):
+    def __cinit__(self, num_periods=1, alloc=True):
 
         if alloc:
             self._c_ptr = cvargen.VARGEN_new(num_periods)
@@ -51,19 +51,19 @@ cdef class VarGenerator:
 
         return new_CPtr(self._c_ptr)
 
-    def has_flags(self,flag_type,q):
+    def has_flags(self, flag_type, q):
         """
         Determines whether the variable generator has the flags associated with
         certain quantities set.
 
         Parameters
         ----------
-        flag_type : string (:ref:`ref_net_flag`)
-        q : string or list of strings (:ref:`ref_vargen_q`)
+        flag_type : string (|RefFlags|)
+        q : string or list of strings (|RefVarGeneratorQuantities|)
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         q = q if isinstance(q,list) else [q]
@@ -93,50 +93,50 @@ cdef class VarGenerator:
         else:
             raise VarGeneratorError('index does not correspond to any variable')
 
-    def set_P(self,P,t=0):
-        """"
+    def set_P(self, P, t=0):
+        """
         Sets active power output.
 
         Parameters
         ----------
         P : float
-        t = int
+        t : int
         """
 
         cvargen.VARGEN_set_P(self._c_ptr,P,t)
 
-    def set_P_ava(self,P,t=0):
-        """"
+    def set_P_ava(self, P, t=0):
+        """
         Sets available active power.
 
         Parameters
         ----------
         P : float
-        t = int
+        t : int
         """
 
         cvargen.VARGEN_set_P_ava(self._c_ptr,P,t)
 
-    def set_P_std(self,P,t=0):
-        """"
+    def set_P_std(self, P, t=0):
+        """
         Sets active power standard deviation.
 
         Parameters
         ----------
         P : float
-        t = int
+        t : int
         """
 
         cvargen.VARGEN_set_P_std(self._c_ptr,P,t)
 
-    def set_Q(self,Q,t=0):
-        """"
+    def set_Q(self, Q, t=0):
+        """
         Sets reactive power output.
 
         Parameters
         ----------
         Q : float
-        t = int
+        t : int
         """
 
         cvargen.VARGEN_set_Q(self._c_ptr,Q,t)
@@ -162,7 +162,7 @@ cdef class VarGenerator:
         def __get__(self): return cvargen.VARGEN_get_index(self._c_ptr)
 
     property index_P:
-        """ Index of variable generator active power variable (int or array). """
+        """ Index of variable generator active power variable (int or |Array|). """
         def __get__(self):
             r = [cvargen.VARGEN_get_index_P(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -171,7 +171,7 @@ cdef class VarGenerator:
                 return np.array(r)
 
     property index_Q:
-        """ Index of variable generator reactive power variable (int or array). """
+        """ Index of variable generator reactive power variable (int or |Array|). """
         def __get__(self):
             r = [cvargen.VARGEN_get_index_Q(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -180,7 +180,7 @@ cdef class VarGenerator:
                 return np.array(r)
 
     property bus:
-        """ :class:`Bus <pfnet.Bus>` to which variable generator is connected. """
+        """ |Bus| to which variable generator is connected. """
         def __get__(self):
             return new_Bus(cvargen.VARGEN_get_bus(self._c_ptr))
         def __set__(self,bus):
@@ -191,7 +191,7 @@ cdef class VarGenerator:
             cvargen.VARGEN_set_bus(self._c_ptr,cbus._c_ptr) 
 
     property P:
-        """ Variable generator active power after curtailments (p.u. system base MVA) (float or array). """
+        """ Variable generator active power after curtailments (p.u. system base MVA) (float or |Array|). """
         def __get__(self):
             r = [cvargen.VARGEN_get_P(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -205,7 +205,7 @@ cdef class VarGenerator:
                 cvargen.VARGEN_set_P(self._c_ptr,Par[t],t)
 
     property P_ava:
-        """ Variable generator available active power (p.u. system base MVA) (float or array). """
+        """ Variable generator available active power (p.u. system base MVA) (float or |Array|). """
         def __get__(self):
             r = [cvargen.VARGEN_get_P_ava(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -229,7 +229,7 @@ cdef class VarGenerator:
         def __set__(self,P): cvargen.VARGEN_set_P_min(self._c_ptr,P)
 
     property P_std:
-        """ Variable generator active power standard deviation (p.u. system base MVA) (float or array). """
+        """ Variable generator active power standard deviation (p.u. system base MVA) (float or |Array|). """
         def __get__(self):
             r = [cvargen.VARGEN_get_P_std(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -243,7 +243,7 @@ cdef class VarGenerator:
                 cvargen.VARGEN_set_P_std(self._c_ptr,Par[t],t)
 
     property Q:
-        """ Variable generator reactive power (p.u. system base MVA) (float or array). """
+        """ Variable generator reactive power (p.u. system base MVA) (float or |Array|). """
         def __get__(self):
             r = [cvargen.VARGEN_get_Q(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -275,19 +275,19 @@ cdef class VarGenerator:
             return s
 
     property flags_vars:
-        """ Flags associated with variable quantities. """
+        """ Flags associated with variable quantities (byte). """
         def __get__(self): return cvargen.VARGEN_get_flags_vars(self._c_ptr)
 
     property flags_fixed:
-        """ Flags associated with fixed quantities. """
+        """ Flags associated with fixed quantities (byte). """
         def __get__(self): return cvargen.VARGEN_get_flags_fixed(self._c_ptr)
 
     property flags_bounded:
-        """ Flags associated with bounded quantities. """
+        """ Flags associated with bounded quantities (byte). """
         def __get__(self): return cvargen.VARGEN_get_flags_bounded(self._c_ptr)
 
     property flags_sparse:
-        """ Flags associated with sparse quantities. """
+        """ Flags associated with sparse quantities (byte). """
         def __get__(self): return cvargen.VARGEN_get_flags_sparse(self._c_ptr)
 
 cdef new_VarGenerator(cvargen.Vargen* g):

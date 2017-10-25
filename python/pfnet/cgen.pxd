@@ -33,8 +33,12 @@ cdef extern from "pfnet/gen.h":
     char GEN_get_flags_sparse(Gen* gen)
 
     char* GEN_get_name(Gen* gen)
-    REAL GEN_get_sens_P_u_bound(Gen* gen, int t)
-    REAL GEN_get_sens_P_l_bound(Gen* gen, int t)
+  
+    REAL* GEN_get_sens_P_u_bound_array(Gen* gen)
+    REAL* GEN_get_sens_P_l_bound_array(Gen* gen)
+    REAL* GEN_get_sens_Q_u_bound_array(Gen* gen)
+    REAL* GEN_get_sens_Q_l_bound_array(Gen* gen)
+
     REAL GEN_get_P_cost(Gen* gen, int t)
     REAL GEN_get_cost_coeff_Q0(Gen* gen)
     REAL GEN_get_cost_coeff_Q1(Gen* gen)

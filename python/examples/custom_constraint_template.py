@@ -41,6 +41,7 @@ class DummyConstraint(CustomConstraint):
                                          shape=(num_vars,num_vars)))
 
     def clear(self):
+
         self.A_nnz = 0
         self.G_nnz = 0
         self.J_nnz = 0

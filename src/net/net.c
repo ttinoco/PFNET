@@ -590,10 +590,16 @@ void NET_clear_sensitivities(Net* net) {
     LOAD_clear_sensitivities(LOAD_array_get(net->load,i));
 
   // Vargens
+  for (i = 0; i < net->num_vargens; i++)
+    VARGEN_clear_sensitivities(VARGEN_array_get(net->vargen,i));
 
   // Shunts
+  for (i = 0; i < net->num_shunts; i++)
+    SHUNT_clear_sensitivities(SHUNT_array_get(net->shunt,i));
 
   // Batteries
+  for (i = 0; i < net->num_bats; i++)
+    BAT_clear_sensitivities(BAT_array_get(net->bat,i));
 }
 
 Bus* NET_create_sorted_bus_list(Net* net, int sort_by, int t) {
@@ -1270,6 +1276,73 @@ Bus* NET_get_load_buses(Net* net) {
       bus_list = BUS_list_add(bus_list,bus);
   }
   return bus_list;
+}
+
+Gen* NET_get_gen_from_name_and_bus_number(Net* net, char* name, int number) {
+  Gen* gen;
+  Bus* bus = NET_bus_hash_number_find(net, number);
+  for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+    if (strcmp(GEN_get_name(gen), name) == 0)
+      return gen;
+  }
+  return NULL;
+}
+
+Branch* NET_get_branch_from_name_and_bus_numbers(Net* net, char* name, int number1, int number2) {
+  Branch* br;
+  Bus* bus1 = NET_bus_hash_number_find(net, number1);
+  Bus* bus2 = NET_bus_hash_number_find(net, number2);
+  for (br = BUS_get_branch_k(bus1); br != NULL; br = BRANCH_get_next_k(br)) {
+    if (bus2 == BRANCH_get_bus_m(br) &&
+	strcmp(BRANCH_get_name(br), name) == 0)
+      return br;
+  }
+  for (br = BUS_get_branch_m(bus1); br != NULL; br = BRANCH_get_next_m(br)) {
+    if (bus2 == BRANCH_get_bus_k(br) &&
+	strcmp(BRANCH_get_name(br), name) == 0)
+      return br;
+  }
+  return NULL;
+}
+
+Shunt* NET_get_shunt_from_name_and_bus_number(Net* net, char* name, int number) {
+  Shunt* shunt;
+  Bus* bus = NET_bus_hash_number_find(net, number);
+  for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+    if (strcmp(SHUNT_get_name(shunt), name) == 0)
+      return shunt;
+  }
+  return NULL;
+}
+
+Load* NET_get_load_from_name_and_bus_number(Net* net, char* name, int number) {
+  Load* load;
+  Bus* bus = NET_bus_hash_number_find(net, number);
+  for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+    if (strcmp(LOAD_get_name(load), name) == 0)
+      return load;
+  }
+  return NULL;
+}
+
+Vargen* NET_get_vargen_from_name_and_bus_number(Net* net, char* name, int number) {
+  Vargen* vargen;
+  Bus* bus = NET_bus_hash_number_find(net, number);
+  for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+    if (strcmp(VARGEN_get_name(vargen), name) == 0)
+      return vargen;
+  }
+  return NULL;
+}
+
+Bat* NET_get_bat_from_name_and_bus_number(Net* net, char* name, int number) {
+  Bat* bat;
+  Bus* bus = NET_bus_hash_number_find(net, number);
+  for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+    if (strcmp(BAT_get_name(bat), name) == 0)
+      return bat;
+  }
+  return NULL;
 }
 
 int NET_get_num_periods(Net* net) {

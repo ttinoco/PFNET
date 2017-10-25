@@ -1,26 +1,10 @@
+.. include:: defs.hrst
+
 .. _reference:
 
 *************
 API Reference
 *************
-
-.. _ref_vec:
-
-Vector
-======
-
-.. class:: numpy.ndarray
-
-           See `numpy documentation <http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html>`_.
-
-.. _ref_mat:
-
-Matrix
-======
-
-.. class:: scipy.sparse.coo_matrix
-
-	   See `scipy documentation <http://docs.scipy.org/doc/scipy-0.15.1/reference/generated/scipy.sparse.coo_matrix.html>`_.
 
 .. _ref_parser:
 
@@ -35,7 +19,6 @@ Parser
 .. autoclass:: pfnet.ParserMAT
 .. autoclass:: pfnet.ParserART
 .. autoclass:: pfnet.ParserRAW
-.. autoclass:: pfnet.CustomParser
 
 .. _ref_bus:
 
@@ -69,68 +52,6 @@ Bus Quantities
 ``"voltage angle"``
 ``"voltage magnitude"``
 ================================= ========
-
-.. _ref_bus_sens:
-
-Bus Sensitivities
------------------
-
-.. data:: pfnet.BUS_SENS_LARGEST
-
-          Largest objective function sensitivity with respect to constraints involving this bus.
-	  
-.. data:: pfnet.BUS_SENS_P_BALANCE
-
-	  Objective function sensitivity with respect to active power balance.
-
-.. data:: pfnet.BUS_SENS_Q_BALANCE
-
-	  Objective function sensitivity with respect to reactive power balance.
-
-.. data:: pfnet.BUS_SENS_V_MAG_U_BOUND
-
-	  Objective function sensitivity with respect to voltage magnitude upper bound.
-
-.. data:: pfnet.BUS_SENS_V_MAG_L_BOUND
-
-	  Objective function sensitivity with respect to voltage magnitude lower bound.
-
-.. data:: pfnet.BUS_SENS_V_ANG_U_BOUND
-
-	  Objective function sensitivity with respect to voltage angle upper bound.
-
-.. data:: pfnet.BUS_SENS_V_ANG_L_BOUND
-
-	  Objective function sensitivity with respect to voltage angle lower bound.
-
-.. data:: pfnet.BUS_SENS_V_REG_BY_GEN
-
-	  Objective function sensitivity with respect to voltage magnitude regulation by generators.
-
-.. data:: pfnet.BUS_SENS_V_REG_BY_TRAN
-
-	  Objective function sensitivity with respect to voltage magnitude regulation by tap-changing transformers.
-
-.. data:: pfnet.BUS_SENS_V_REG_BY_SHUNT
-
-	  Objective function sensitivity with respect to voltage magnitude regulation by switched shunt devices.
-
-.. _ref_bus_mis:
-
-Bus Power Mismatches
---------------------
-
-.. data:: pfnet.BUS_MIS_LARGEST
-
-	  Largest bus power mismatch.
-
-.. data:: pfnet.BUS_MIS_ACTIVE
-
-	  Bus active power mismatch.
-
-.. data:: pfnet.BUS_MIS_REACTIVE
-
-	  Bus reactive power mismatch.
 
 .. _ref_bus_class:
 
@@ -369,7 +290,7 @@ Network
 
 .. _ref_net_obj:
 
-Component Names
+Component Types
 ---------------
 
 ======================== =======
@@ -386,8 +307,8 @@ Component Names
 
 .. _ref_net_flag:
 
-Flags
------
+Flag Types
+----------
 
 ============== ==============================================
 ============== ==============================================

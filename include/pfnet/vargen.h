@@ -58,6 +58,7 @@ void VARGEN_array_del(Vargen* gen_array, int size);
 void* VARGEN_array_get(void* gen_array, int index);
 Vargen* VARGEN_array_new(int size, int num_periods);
 void VARGEN_array_show(Vargen* gen_array, int size, int t);
+void VARGEN_clear_sensitivities(Vargen* vargen);
 void VARGEN_clear_flags(Vargen* gen, char flag_type);
 void VARGEN_copy_from_vargen(Vargen* vargen, Vargen* other);
 

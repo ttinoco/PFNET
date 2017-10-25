@@ -1,3 +1,5 @@
+.. include:: defs.hrst
+
 .. _start:
 
 ***************
@@ -11,47 +13,49 @@ This section describes how to get started with PFNET in Python. In particular, i
 Dependencies
 ============
 
-PFNET for Python has the following dependencies:
+The PFNET Python module has the following dependencies:
 
-* `Numpy <http://www.numpy.org>`_ (>=1.11.2): the fundamental package for scientific computing in Python.
-* `Scipy <http://www.scipy.org>`_ (>=0.18.1): a collection of mathematical algorithms and functions built on top of Numpy.
-* `Cython <http://cython.org>`_ (>=0.20.1): an optimizing static compiler for both Python and the extended Cython programming language.
-* `PFNET <https://github.com/ttinoco/PFNET>`_ (== 1.3.1): underlying C routines wrapped by this package.
-
-.. _start_download:
-
-Download
-========
-
-The latest version of PFNET can be obtained from `<https://github.com/ttinoco/PFNET>`_.
+* |Numpy| (>=1.11.2): the fundamental package for scientific computing in Python.
+* |Scipy| (>=0.18.1): a collection of mathematical algorithms and functions built on top of Numpy.
+* |Cython| (>=0.20.1): an optimizing static compiler for both Python and the extended Cython programming language.
 
 .. _start_installation:
 
 Installation
 ============
 
-After building the C library, the PFNET Python module can be installed using::
+In order to install the PFNET Python module, the following tools are needed:
 
-  sudo pip install -r requirements.txt
-  sudo python setup.py install
+* Linux and Mac OS X: a C compiler, |Make|, |Python| and |pip|.
+* Windows : |Anaconda|, |CMake|, |7-Zip|, and |MinGW|.
 
-from the ``python`` directory of the PFNET library. The module can be tested using::
+After getting these tools, the PFNET Python module can be easily installed by executing the following commands on the terminal or Anaconda prompt::
 
-  python setup.py build_ext --inplace
-  nosetests -s -v
+  pip install numpy cython
+  pip install pfnet
 
-The availability of optional features and version of PFNET can be checked using::
+After installation, the availability of optional features and the version of PFNET can be checked in Python using::
 
   >>> import pfnet
   >>> pfnet.info
-  {'line_flow': True, 'raw_parser': True, 'graphviz': True, 'version': '1.3.1'}
+  {'line_flow': True, 'raw_parser': True, 'graphviz': True, 'version': '1.3.2'}
+
+To install the module from source, the code can be obtained from `<https://github.com/ttinoco/PFNET>`_, and then the following commands can be executed on the terminal or Anaconda prompt from the ``python`` directory of the package::
+
+    pip install numpy cython
+    python setup.py install
+
+Running the unit tests can be done with::
+
+    python setup.py build_ext --inplace
+    nosetests -s -v
 
 .. _start_example:
 
 Example
 =======
 
-As a simple example of how to use the PFNET Python module, consider the task of constructing a power network from a `MATPOWER <http://www.pserc.cornell.edu//matpower/>`_-converted power flow file and computing the average bus degree. This can be done as follows::
+As a simple example of how to use the PFNET Python module, consider the task of constructing a power network from a |MATPOWER|-converted power flow file and computing the average bus degree. This can be done as follows::
 
   >>> import pfnet
   >>> import numpy as np
@@ -61,9 +65,4 @@ As a simple example of how to use the PFNET Python module, consider the task of 
   >>> print np.average([bus.degree for bus in net.buses])
   2.86
 
-In this example, is it assumed that the Python interpreter was started from the ``data`` directory of the PFNET library, where the sample case ``ieee14.mat`` is located.
-
-Documentation
-=============
-
-Building this documentation locally requires `Sphinx <http://www.sphinx-doc.org/>`_ , defining the environment variable ``PFNET_DOCS``, and executing the command ``make html`` from the ``python/docs`` directory of the PFNET library. The generated files will be placed in the directory ``PFNET_DOCS/python``.
+In this example, is it assumed that the Python interpreter was started in a directory where the sample case |ieee14| is located.

@@ -99,9 +99,9 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(net.num_loads,3)
                 self.assertEqual(net.num_branches,3)
 
-                bus1 = net.get_bus_by_number(1)
-                bus2 = net.get_bus_by_number(2)
-                bus3 = net.get_bus_by_number(3)
+                bus1 = net.get_bus_from_number(1)
+                bus2 = net.get_bus_from_number(2)
+                bus3 = net.get_bus_from_number(3)
 
                 for bus in net.buses:
                     self.assertEqual(bus.v_base,220.)
@@ -224,16 +224,16 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(net.num_branches,13)
 
                 # buses
-                bus1 = net.get_bus_by_number(1)
-                bus2 = net.get_bus_by_number(2)
-                bus3 = net.get_bus_by_number(3)
-                bus4 = net.get_bus_by_number(4)
-                bus5 = net.get_bus_by_number(5)
-                bus6 = net.get_bus_by_number(6)
-                bus7 = net.get_bus_by_number(7)
-                bus8 = net.get_bus_by_number(8)
-                bus9 = net.get_bus_by_number(9)
-                bus10 = net.get_bus_by_number(10)
+                bus1 = net.get_bus_from_number(1)
+                bus2 = net.get_bus_from_number(2)
+                bus3 = net.get_bus_from_number(3)
+                bus4 = net.get_bus_from_number(4)
+                bus5 = net.get_bus_from_number(5)
+                bus6 = net.get_bus_from_number(6)
+                bus7 = net.get_bus_from_number(7)
+                bus8 = net.get_bus_from_number(8)
+                bus9 = net.get_bus_from_number(9)
+                bus10 = net.get_bus_from_number(10)
 
                 for bus in net.buses:
                     self.assertEqual(bus.v_base,69.)

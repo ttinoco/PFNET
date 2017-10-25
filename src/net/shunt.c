@@ -45,6 +45,10 @@ struct Shunt {
   int index;      /**< @brief Shunt index */
   int* index_b;    /**< @brief Susceptance index */
 
+  // Sensitivities
+  REAL* sens_b_u_bound; /**< @brief Sensitivity of susceptance upper bound */
+  REAL* sens_b_l_bound; /**< @brief Sensitivity of susceptance lower bound */
+
   // List
   Shunt* next;     /**< @brief List of shunts connceted to a bus */
   Shunt* reg_next; /**< @brief List of shunts regulated the same bus */
@@ -66,6 +70,8 @@ void SHUNT_array_del(Shunt* shunt_array, int size) {
       free(shunt->b_values);
       free(shunt->b);
       free(shunt->index_b);
+      free(shunt->sens_b_u_bound);
+      free(shunt->sens_b_l_bound);
     }
     free(shunt_array);
   }
@@ -91,6 +97,16 @@ void SHUNT_array_show(Shunt* shunt_array, int size, int t) {
   if (shunt_array) {
     for (i = 0; i < size; i++) 
       SHUNT_show(&(shunt_array[i]),t);
+  }
+}
+
+void SHUNT_clear_sensitivities(Shunt* shunt) {
+  int t;
+  if (shunt) {
+    for (t = 0; t < shunt->num_periods; t++) {
+      shunt->sens_b_u_bound[t] = 0;
+      shunt->sens_b_l_bound[t] = 0;
+    }
   }
 }
 
@@ -153,8 +169,40 @@ void SHUNT_copy_from_shunt(Shunt* shunt, Shunt* other) {
   // skip index
   memcpy(shunt->index_b,other->index_b,num_periods*sizeof(int));
 
+  // Sensivitities
+  memcpy(shunt->sens_b_u_bound,other->sens_b_u_bound,num_periods*sizeof(REAL));
+  memcpy(shunt->sens_b_l_bound,other->sens_b_l_bound,num_periods*sizeof(REAL));
+
   // List
   // skip next
+}
+
+REAL SHUNT_get_sens_b_u_bound(Shunt* shunt, int t) {
+  if (shunt && t >= 0 && t < shunt->num_periods)
+    return shunt->sens_b_u_bound[t];
+  else
+    return 0;
+}
+
+REAL* SHUNT_get_sens_b_u_bound_array(Shunt* shunt) {
+  if (shunt)
+    return shunt->sens_b_u_bound;
+  else
+    return NULL;
+}
+
+REAL SHUNT_get_sens_b_l_bound(Shunt* shunt, int t) {
+  if (shunt && t >= 0 && t < shunt->num_periods)
+    return shunt->sens_b_l_bound[t];
+  else
+    return 0;
+}
+
+REAL* SHUNT_get_sens_b_l_bound_array(Shunt* shunt) {
+  if (shunt)
+    return shunt->sens_b_l_bound;
+  else
+    return NULL;
 }
 
 char SHUNT_get_flags_vars(Shunt* shunt) {
@@ -493,6 +541,8 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
 
   ARRAY_zalloc(shunt->b,REAL,T);
   ARRAY_zalloc(shunt->index_b,int,T);
+  ARRAY_zalloc(shunt->sens_b_u_bound,REAL,T);
+  ARRAY_zalloc(shunt->sens_b_l_bound,REAL,T);
 
   shunt->next = NULL;
   shunt->reg_next = NULL;
@@ -546,6 +596,16 @@ Shunt* SHUNT_new(int num_periods) {
   }
   else
     return NULL;
+}
+
+void SHUNT_set_sens_b_u_bound(Shunt* shunt, REAL value, int t) {
+  if (shunt && t >= 0 && t < shunt->num_periods)
+    shunt->sens_b_u_bound[t] = value;
+}
+
+void SHUNT_set_sens_b_l_bound(Shunt* shunt, REAL value, int t) {
+  if (shunt && t >= 0 && t < shunt->num_periods)
+    shunt->sens_b_l_bound[t] = value;
 }
 
 void SHUNT_set_name(Shunt* shunt, char* name) {

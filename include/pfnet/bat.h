@@ -53,6 +53,7 @@ void BAT_array_del(Bat* bat_array, int size);
 void* BAT_array_get(void* bat_array, int index);
 Bat* BAT_array_new(int size, int num_periods);
 void BAT_array_show(Bat* bat_array, int size, int t);
+void BAT_clear_sensitivities(Bat* bat);
 void BAT_clear_flags(Bat* bat, char flag_type);
 void BAT_copy_from_bat(Bat* bat, Bat* other);
 

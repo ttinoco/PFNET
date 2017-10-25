@@ -99,6 +99,11 @@ void VARGEN_array_show(Vargen* gen_array, int size, int t) {
   }
 }
 
+void VARGEN_clear_sensitivities(Vargen* vargen) {
+
+  
+}
+
 void VARGEN_clear_flags(Vargen* gen, char flag_type) {
   if (gen) {
     if (flag_type == FLAG_VARS)         // variables

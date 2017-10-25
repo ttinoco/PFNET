@@ -206,15 +206,26 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code);
 char* BUS_get_var_info_string(Bus* bus, int index);
 int BUS_get_num_vars(void* bus, unsigned char var, int t_start, int t_end);
 Vec* BUS_get_var_indices(void* bus, unsigned char var, int t_start, int t_end);
+
 REAL BUS_get_sens_P_balance(Bus* bus, int t);
+REAL* BUS_get_sens_P_balance_array(Bus* bus);
 REAL BUS_get_sens_Q_balance(Bus* bus, int t);
+REAL* BUS_get_sens_Q_balance_array(Bus* bus);
 REAL BUS_get_sens_v_mag_u_bound(Bus* bus, int t);
+REAL* BUS_get_sens_v_mag_u_bound_array(Bus* bus);
 REAL BUS_get_sens_v_mag_l_bound(Bus* bus, int t);
+REAL* BUS_get_sens_v_mag_l_bound_array(Bus* bus);
 REAL BUS_get_sens_v_ang_u_bound(Bus* bus, int t);
+REAL* BUS_get_sens_v_ang_u_bound_array(Bus* bus);
 REAL BUS_get_sens_v_ang_l_bound(Bus* bus, int t);
+REAL* BUS_get_sens_v_ang_l_bound_array(Bus* bus);
 REAL BUS_get_sens_v_reg_by_gen(Bus* bus, int t);
+REAL* BUS_get_sens_v_reg_by_gen_array(Bus* bus);
 REAL BUS_get_sens_v_reg_by_tran(Bus* bus, int t);
+REAL* BUS_get_sens_v_reg_by_tran_array(Bus* bus);
 REAL BUS_get_sens_v_reg_by_shunt(Bus* bus, int t);
+REAL* BUS_get_sens_v_reg_by_shunt_array(Bus* bus);
+
 REAL BUS_get_largest_sens(Bus* bus, int t);
 int BUS_get_largest_sens_type(Bus* bus, int t);
 REAL BUS_get_largest_mis(Bus* bus, int t);

@@ -1,30 +1,32 @@
+.. include:: defs.hrst
+
 .. _parsers:
 
 ************
 Data Parsers
 ************
 
-This section describes the different data parsers available in PFNET and the supported file types. 
+This section describes the different data parsers available in PFNET. 
 
 .. _parsers_overview:
 
 Overview
 ========
 
-Parsers in PFNET are subclasses of the :class:`ParserBase <pfnet.ParserBase>` class. They can be used to read a power network data file and create a :class:`Power Network <pfnet.Network>`. For convenience, a format-specific parser can be instantiated from the :class:`Parser <pfnet.Parser>` class by specifying the file extension or a sample file name::
+Parsers in PFNET are subclasses of the |ParserBase| class. They can be used to read a power network data file and create a |Network|. For convenience, a format-specific parser can be instantiated from the |Parser| class by specifying the file extension or a sample file name::
 
   >>> import pfnet
   >>> parser = pfnet.Parser("mat")
   >>> network = parser.parse("ieee14.mat")
 
-In this example, is it assumed that the Python interpreter was started from the ``data`` directory of the PFNET library, where the sample case ``ieee14.mat`` is located.
+For this and subsequent examples, is it assumed that the Python interpreter was started in a directory where the sample case |ieee14| can be found.
 
 .. _parsers_json:
 
-JSON Data Files
-===============
+JSON Data Parser
+================
 
-PFNET networks can be constructed from data files in the widely-popular lightweight data-interchange format `JSON`_. These network data files have extension ``.json`` and parsers for them can be instantiated from the class :class:`ParserJSON <pfnet.ParserJSON>`. These JSON parsers also allow writing a given network to file, as the example below shows::
+PFNET networks can be constructed from data files in the widely-popular lightweight data-interchange format |JSON|. These network data files have extension ``.json`` and parsers for them can be instantiated from the class |ParserJSON|. These JSON parsers also allow writing a given network to file, as the example below shows::
 
   >>> pfnet.ParserJSON().write(network,"new_network.json")
 
@@ -37,17 +39,17 @@ In the top-level object of the JSON data, *i.e.*, the network, the field ``versi
   
 .. _parsers_mat:
 
-MATPOWER Data Files
-===================
+MATPOWER Data Parser
+=====================
 
-`MATPOWER`_ is a `MATLAB`_ package for solving power flow and optimal power flow problems. It contains several power flow and optimal power flow cases defined in `MATLAB`_ files. These "m" files can be converted to CSV files using the script :download:`mpc2mat.m <../../tools/mpc2mat.m>`. These MATPOWER-converted CSV files have extension ``.mat`` and can then be used to create power networks in PFNET. A parser for these data files can be constructed from the class :class:`ParserMAT <pfnet.ParserMAT>`.
+|MATPOWER| is a popular |MATLAB| package for solving power flow and optimal power flow problems. It contains several power flow and optimal power flow cases defined in |MATLAB| files. These "m" files can be converted to CSV files using the script :download:`mpc2mat.m <../../tools/mpc2mat.m>`. These MATPOWER-converted CSV files have extension ``.mat`` and can be used to create power networks in PFNET. A parser for these data files can be constructed from the class |ParserMAT|.
 
 .. _parser_artere:
 
-ARTERE Data Files
-=================
+ARTERE Data Parser
+==================
 
-PFNET can construct networks from data files used by `ARTERE`_, which is a software for performing power flow computations using the Newton-Raphson method. These files should have extension ``.art``. Details about these data files can be found in the document `"ARTERE: description of data files" <http://www.montefiore.ulg.ac.be/~vct/software/ARTERE_data.pdf>`_. A parser for these data files can be constructed from the class :class:`ParserART <pfnet.ParserART>`.
+PFNET can construct networks from data files used by |ARTERE|, which is a software for performing power flow computations using the Newton-Raphson method. These files should have extension ``.art``. Details about these data files can be found in the document `"ARTERE: description of data files" <http://www.montefiore.ulg.ac.be/~vct/software/ARTERE_data.pdf>`_. A parser for these data files can be constructed from the class |ParserART|.
 
 Currently, there is limited support for these files. More specifically:
 
@@ -58,14 +60,9 @@ Currently, there is limited support for these files. More specifically:
 
 .. _parser_raw:
 
-RAW Data Files
-==============
+RAW Data Parser
+===============
 
 .. include:: <isonum.txt> 
 
-If built with raw parsing capabilities, PFNET can construct power networks from files with extension ``.raw``. These files are used by the software PSS |reg| E, which is widely used by North American power system operators. A parser for these data files can be constructed from the class :class:`ParserRAW <pfnet.ParserRAW>`.
-
-.. _ARTERE: http://www.montefiore.ulg.ac.be/~vct/software.html
-.. _MATPOWER: http://www.pserc.cornell.edu//matpower/
-.. _MATLAB: http://www.mathworks.com/products/matlab/
-.. _JSON: http://www.json.org/
+If built with "raw" parsing capabilities, PFNET can construct power networks from files with extension ``.raw``. These files are used by the software PSS |reg| E, which is widely used by North American power system operators. A parser for these data files can be constructed from the class |ParserRAW|.

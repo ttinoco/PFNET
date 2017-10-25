@@ -28,14 +28,14 @@ cdef class Generator:
 
     cdef cgen.Gen* _c_ptr
 
-    def __init__(self,num_periods=1,alloc=True):
+    def __init__(self, num_periods=1, alloc=True):
         """
         Generator class.
 
         Parameters
         ----------
-        alloc : {``True``, ``False``}
         num_periods : int
+        alloc : |TrueFalse|
         """
 
         pass
@@ -51,13 +51,13 @@ cdef class Generator:
 
         return new_CPtr(self._c_ptr)
 
-    def is_equal(self,other):
+    def is_equal(self, other):
         """
         Determines whether generator is equal to given generator.
 
         Parameters
         ----------
-        other : :class:`Generator <pfnet.Generator>`
+        other : |Generator|
         """
 
         cdef Generator g_other
@@ -69,13 +69,13 @@ cdef class Generator:
 
         return cgen.GEN_is_equal(self._c_ptr,g_other._c_ptr)
 
-    def __richcmp__(self,other,op):
+    def __richcmp__(self, other, op):
         """
         Compares two generators.
 
         Parameters
         ----------
-        other : Generator
+        other : |Generator|
         op : comparison type
 
         Returns
@@ -96,7 +96,7 @@ cdef class Generator:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cgen.GEN_is_on_outage(self._c_ptr)
@@ -107,7 +107,7 @@ cdef class Generator:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cgen.GEN_is_slack(self._c_ptr)
@@ -118,7 +118,7 @@ cdef class Generator:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cgen.GEN_is_regulator(self._c_ptr)
@@ -129,24 +129,24 @@ cdef class Generator:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cgen.GEN_is_P_adjustable(self._c_ptr)
 
-    def has_flags(self,flag_type,q):
+    def has_flags(self, flag_type, q):
         """
         Determines whether the generator has the flags associated with
         certain quantities set.
 
         Parameters
         ----------
-        flag_type : string (:ref:`ref_net_flag`)
-        q : string or list of strings (:ref:`ref_gen_q`)
+        flag_type : string (|RefFlags|)
+        q : string or list of strings (|RefGeneratorQuantities|)
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         q = q if isinstance(q,list) else [q]
@@ -176,26 +176,26 @@ cdef class Generator:
         else:
             raise GeneratorError('index does not correspond to any variable')
 
-    def set_P(self,P,t=0):
-        """"
+    def set_P(self, P, t=0):
+        """
         Sets active power.
 
         Parameters
         ----------
         P : float
-        t = int
+        t : int
         """
 
         cgen.GEN_set_P(self._c_ptr,P,t)
 
-    def set_Q(self,Q,t=0):
-        """"
+    def set_Q(self, Q, t=0):
+        """
         Sets reactive power.
 
         Parameters
         ----------
         Q : float
-        t = int
+        t : int
         """
 
         cgen.GEN_set_Q(self._c_ptr,Q,t)
@@ -221,7 +221,7 @@ cdef class Generator:
         def __get__(self): return cgen.GEN_get_index(self._c_ptr)
 
     property index_P:
-        """ Index of generator active power variable (int or array). """
+        """ Index of generator active power variable (int or |Array|). """
         def __get__(self):
             r = [cgen.GEN_get_index_P(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -230,7 +230,7 @@ cdef class Generator:
                 return np.array(r)
 
     property index_Q:
-        """ Index of generator reactive power variable (int or array). """
+        """ Index of generator reactive power variable (int or |Array|). """
         def __get__(self):
             r = [cgen.GEN_get_index_Q(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -239,7 +239,7 @@ cdef class Generator:
                 return np.array(r)
 
     property bus:
-        """ :class:`Bus <pfnet.Bus>` to which generator is connected. """
+        """ |Bus| to which generator is connected. """
         def __get__(self):
             return new_Bus(cgen.GEN_get_bus(self._c_ptr))
         def __set__(self,bus):
@@ -250,7 +250,7 @@ cdef class Generator:
             cgen.GEN_set_bus(self._c_ptr,cbus._c_ptr)
 
     property reg_bus:
-        """ :class:`Bus <pfnet.Bus>` whose voltage is regulated by this generator. """
+        """ |Bus| whose voltage is regulated by this generator. """
         def __get__(self):
             return new_Bus(cgen.GEN_get_reg_bus(self._c_ptr))
         def __set__(self,reg_bus):
@@ -261,7 +261,7 @@ cdef class Generator:
             cgen.GEN_set_reg_bus(self._c_ptr,creg_bus._c_ptr) 
 
     property P:
-        """ Generator active power (p.u. system base MVA) (float or array). """
+        """ Generator active power (p.u. system base MVA) (float or |Array|). """
         def __get__(self):
             r = [cgen.GEN_get_P(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -275,7 +275,7 @@ cdef class Generator:
                 cgen.GEN_set_P(self._c_ptr,Par[t],t)
 
     property P_prev:
-        """ Generator active power during the previous time period (p.u. system base MVA) (float or array). """
+        """ Generator active power during the previous time period (p.u. system base MVA) (float). """
         def __get__(self): return cgen.GEN_get_P_prev(self._c_ptr)
         def __set__(self,P): cgen.GEN_set_P_prev(self._c_ptr,P)
 
@@ -295,7 +295,7 @@ cdef class Generator:
         def __set__(self,P): cgen.GEN_set_P_min(self._c_ptr,P)
 
     property Q:
-        """ Generator reactive power (p.u. system base MVA) (float or array). """
+        """ Generator reactive power (p.u. system base MVA) (float or |Array|). """
         def __get__(self):
             r = [cgen.GEN_get_Q(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -319,7 +319,7 @@ cdef class Generator:
         def __set__(self,Q): cgen.GEN_set_Q_min(self._c_ptr,Q)
 
     property P_cost:
-        """ Active power generation cost ($/hr) (float or array). """
+        """ Active power generation cost ($/hr) (float or |Array|). """
         def __get__(self):
             r = [cgen.GEN_get_P_cost(self._c_ptr,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -328,22 +328,22 @@ cdef class Generator:
                 return np.array(r)
 
     property cost_coeff_Q0:
-        """ Coefficient for genertion cost function (constant term, units of $/hr). """
+        """ Coefficient for genertion cost function (constant term, units of $/hr) (float). """
         def __get__(self): return cgen.GEN_get_cost_coeff_Q0(self._c_ptr)
         def __set__(self,c): cgen.GEN_set_cost_coeff_Q0(self._c_ptr,c)
 
     property cost_coeff_Q1:
-        """ Coefficient for genertion cost function (linear term, units of $/(hr p.u.)). """
+        """ Coefficient for genertion cost function (linear term, units of $/(hr p.u.)) (float). """
         def __get__(self): return cgen.GEN_get_cost_coeff_Q1(self._c_ptr)
         def __set__(self,c): cgen.GEN_set_cost_coeff_Q1(self._c_ptr,c)
 
     property cost_coeff_Q2:
-        """ Coefficient for genertion cost function (quadratic term, units of $/(hr p.u.^2)). """
+        """ Coefficient for genertion cost function (quadratic term, units of $/(hr p.u.^2)) (float). """
         def __get__(self): return cgen.GEN_get_cost_coeff_Q2(self._c_ptr)
         def __set__(self,c): cgen.GEN_set_cost_coeff_Q2(self._c_ptr,c)
 
     property outage:
-        """ Flag that indicates whehter generator is on outage. """
+        """ Flag that indicates whehter generator is on outage (boolean). """
         def __get__(self): return cgen.GEN_is_on_outage(self._c_ptr)
 
     property json_string:
@@ -355,37 +355,47 @@ cdef class Generator:
             return s
 
     property sens_P_u_bound:
-        """ Objective function sensitivity with respect to active power upper bound (float or array). """
-        def __get__(self):
-            r = [cgen.GEN_get_sens_P_u_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        """ Objective function sensitivity with respect to active power upper bound (float or |Array|). """
+        def __get__(self): return DoubleArray(cgen.GEN_get_sens_P_u_bound_array(self._c_ptr),
+                                              cgen.GEN_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_P_u_bound[:] = x
 
     property sens_P_l_bound:
-        """ Objective function sensitivity with respect to active power lower bound (float or array). """
-        def __get__(self):
-            r = [cgen.GEN_get_sens_P_l_bound(self._c_ptr,t) for t in range(self.num_periods)]
-            if self.num_periods == 1:
-                return AttributeFloat(r[0])
-            else:
-                return np.array(r)
+        """ Objective function sensitivity with respect to active power lower bound (float or |Array|). """
+        def __get__(self): return DoubleArray(cgen.GEN_get_sens_P_l_bound_array(self._c_ptr),
+                                              cgen.GEN_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_P_l_bound[:] = x
+
+    property sens_Q_u_bound:
+        """ Objective function sensitivity with respect to reactive power upper bound (float or |Array|). """
+        def __get__(self): return DoubleArray(cgen.GEN_get_sens_Q_u_bound_array(self._c_ptr),
+                                              cgen.GEN_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_Q_u_bound[:] = x
+
+    property sens_Q_l_bound:
+        """ Objective function sensitivity with respect to reactive power lower bound (float or |Array|). """
+        def __get__(self): return DoubleArray(cgen.GEN_get_sens_Q_l_bound_array(self._c_ptr),
+                                              cgen.GEN_get_num_periods(self._c_ptr))
+        def __set__(self,x):
+            self.sens_Q_l_bound[:] = x
 
     property flags_vars:
-        """ Flags associated with variable quantities. """
+        """ Flags associated with variable quantities (byte). """
         def __get__(self): return cgen.GEN_get_flags_vars(self._c_ptr)
 
     property flags_fixed:
-        """ Flags associated with fixed quantities. """
+        """ Flags associated with fixed quantities (byte). """
         def __get__(self): return cgen.GEN_get_flags_fixed(self._c_ptr)
 
     property flags_bounded:
-        """ Flags associated with bounded quantities. """
+        """ Flags associated with bounded quantities (byte). """
         def __get__(self): return cgen.GEN_get_flags_bounded(self._c_ptr)
 
     property flags_sparse:
-        """ Flags associated with sparse quantities. """
+        """ Flags associated with sparse quantities (byte). """
         def __get__(self): return cgen.GEN_get_flags_sparse(self._c_ptr)
 
 cdef new_Generator(cgen.Gen* g):
@@ -394,4 +404,4 @@ cdef new_Generator(cgen.Gen* g):
         gen._c_ptr = g
         return gen
     else:
-        raise GeneratorError('no gen data')
+        raise GeneratorError('no generator data')

@@ -3,7 +3,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -122,3 +122,25 @@ str2prop = {'all' : {'any' : cflags.ANY_PROP},
             'load' : str2prop_load,
             'variable generator' : str2prop_vargen,
             'battery' : str2prop_bat}
+
+
+# Bus sensitivities
+str2sens_bus = {'largest_sensitivity' : cbus.BUS_SENS_LARGEST,
+                'sens_P_balance' : cbus.BUS_SENS_P_BALANCE,
+                'sens_Q_balance' : cbus.BUS_SENS_Q_BALANCE,
+                'sens_v_mag_u_bound' : cbus.BUS_SENS_V_MAG_U_BOUND,
+                'sens_v_mag_l_bound' : cbus.BUS_SENS_V_MAG_L_BOUND,
+                'sens_v_ang_u_bound' : cbus.BUS_SENS_V_ANG_U_BOUND,
+                'sens_v_ang_l_bound' : cbus.BUS_SENS_V_ANG_L_BOUND,
+                'sens_v_reg_by_gen' : cbus.BUS_SENS_V_REG_BY_GEN,
+                'sens_v_reg_by_tran' : cbus.BUS_SENS_V_REG_BY_TRAN,
+                'sens_v_reg_by_shunt' : cbus.BUS_SENS_V_REG_BY_SHUNT}
+
+sens_bus2str = dict([(v,k) for k,v in str2sens_bus.items()])
+
+# Bus mismatches
+str2mis_bus = {'largest_mismatch' : cbus.BUS_MIS_LARGEST,
+               'P_mismatch' : cbus.BUS_MIS_ACTIVE,
+               'Q_mismatch' : cbus.BUS_MIS_REACTIVE}
+
+mis_bus2str = dict([(v,k) for k,v in str2mis_bus.items()])

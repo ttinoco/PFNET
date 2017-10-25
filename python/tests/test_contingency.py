@@ -170,6 +170,9 @@ class TestContingency(unittest.TestCase):
             self.assertTrue(c1.has_generator_outage(net.get_generator(0)))
             self.assertTrue(c1.has_branch_outage(net.get_branch(2)))
 
+            # list of all outages
+            self.assertEqual(c1.outages, [('branch', 2), ('generator', 0)])
+
             # contingency
             g0 = net.get_generator(0)
             bus0 = g0.bus
@@ -722,8 +725,8 @@ class TestContingency(unittest.TestCase):
             net.update_properties()
             mismatches = np.zeros(2*net.num_buses)
             for bus in net.buses:
-                mismatches[bus.index_P] = bus.P_mis
-                mismatches[bus.index_Q] = bus.Q_mis
+                mismatches[bus.index_P] = bus.P_mismatch
+                mismatches[bus.index_Q] = bus.Q_mismatch
             constr = pf.Constraint('AC power balance',net)
             constr.analyze()
             constr.eval(net.get_var_values())
@@ -746,20 +749,20 @@ class TestContingency(unittest.TestCase):
 
                 net.update_properties()
 
-                self.assertLess(np.abs(constr.f[bus.index_P]-bus.P_mis),1e-8)
-                self.assertLess(np.abs(constr.f[bus.index_Q]-bus.Q_mis),1e-8)
+                self.assertLess(np.abs(constr.f[bus.index_P]-bus.P_mismatch),1e-8)
+                self.assertLess(np.abs(constr.f[bus.index_Q]-bus.Q_mismatch),1e-8)
                 self.assertLess(np.abs(f[bus.index_P]-constr.f[bus.index_P]-gen.P),1e-8)
                 self.assertLess(np.abs(f[bus.index_Q]-constr.f[bus.index_Q]-gen.Q),1e-8)
-                self.assertLess(np.abs(mismatches[bus.index_P]-bus.P_mis-gen.P),1e-8)
-                self.assertLess(np.abs(mismatches[bus.index_Q]-bus.Q_mis-gen.Q),1e-8)
+                self.assertLess(np.abs(mismatches[bus.index_P]-bus.P_mismatch-gen.P),1e-8)
+                self.assertLess(np.abs(mismatches[bus.index_Q]-bus.Q_mismatch-gen.Q),1e-8)
 
                 counter1 = 0
                 for bus1 in net.buses:
                     if bus != bus1:
                         self.assertLess(np.abs(constr.f[bus1.index_P]-f[bus1.index_P]),1e-8)
                         self.assertLess(np.abs(constr.f[bus1.index_Q]-f[bus1.index_Q]),1e-8)
-                        self.assertLess(np.abs(bus1.P_mis-mismatches[bus1.index_P]),1e-8)
-                        self.assertLess(np.abs(bus1.Q_mis-mismatches[bus1.index_Q]),1e-8)
+                        self.assertLess(np.abs(bus1.P_mismatch-mismatches[bus1.index_P]),1e-8)
+                        self.assertLess(np.abs(bus1.Q_mismatch-mismatches[bus1.index_Q]),1e-8)
                         counter1 += 1
                         if counter1 > TEST_BUSES:
                             break

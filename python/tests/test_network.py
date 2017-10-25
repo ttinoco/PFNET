@@ -52,6 +52,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.load_P_vio,0.)
 
             net = pf.Parser(case).parse(case)
+
             self.assertEqual(net.num_periods,1)
 
             self.assertGreater(net.num_buses,0)
@@ -94,6 +95,12 @@ class TestNetwork(unittest.TestCase):
             self.assertRaises(pf.NetworkError,net.get_battery,-1)
             net.clear_error()
 
+            # Show strings
+            try:
+                self.assertTrue(isinstance(net.show_components_str, unicode))
+            except NameError:
+                self.assertTrue(isinstance(net.show_components_str, str))
+            
             # Counters
             self.assertEqual(net.get_num_P_adjust_gens(),
                              len([g for g in net.generators if g.P_min < g.P_max]))
@@ -149,6 +156,53 @@ class TestNetwork(unittest.TestCase):
             self.assertTupleEqual(net.load_P_util.shape,(self.T,))
             self.assertTupleEqual(net.load_P_vio.shape,(self.T,))
             self.assertTupleEqual(net.num_actions.shape,(self.T,))
+
+    def test_component_lookups(self):
+        
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case)
+
+            # Add vargen and battery
+            net.add_var_generators(net.get_load_buses(),100.,50.,30.,5,0.05)
+            net.add_batteries(net.get_generator_buses(),20.,50.)
+            self.assertGreater(net.num_var_generators,0)
+            self.assertGreater(net.num_batteries,0)
+            self.assertGreater(net.num_buses, 0)
+            
+            for bus in net.buses[:10]:
+                self.assertEqual(bus.index, net.get_bus_from_number(bus.number).index)
+                self.assertEqual(bus.name, net.get_bus_from_name(bus.name).name)
+            for gen in net.generators[:10]:
+                self.assertEqual(gen.index,
+                                 net.get_generator_from_name_and_bus_number(gen.name,
+                                                                            gen.bus.number).index)
+            for branch in net.branches[:10]:
+                self.assertEqual(branch.index,
+                                 net.get_branch_from_name_and_bus_numbers(branch.name,
+                                                                          branch.bus_k.number,
+                                                                          branch.bus_m.number).index)
+                self.assertEqual(branch.index,
+                                 net.get_branch_from_name_and_bus_numbers(branch.name,
+                                                                          branch.bus_m.number,
+                                                                          branch.bus_k.number).index)
+            for load in net.loads[:10]:
+                self.assertEqual(load.index,
+                                 net.get_load_from_name_and_bus_number(load.name,
+                                                                       load.bus.number).index)
+            for shunt in net.shunts[:10]:
+                self.assertEqual(shunt.index,
+                                 net.get_shunt_from_name_and_bus_number(shunt.name,
+                                                                        shunt.bus.number).index)
+
+            for vargen in net.var_generators[:10]:
+                self.assertEqual(vargen.index,
+                                 net.get_var_generator_from_name_and_bus_number(vargen.name,
+                                                                                vargen.bus.number).index)
+            for bat in net.batteries[:10]:
+                self.assertEqual(bat.index,
+                                 net.get_battery_from_name_and_bus_number(bat.name,
+                                                                          bat.bus.number).index)
 
     def test_variables(self):
 
@@ -373,10 +427,10 @@ class TestNetwork(unittest.TestCase):
                     self.assertTrue(bus != other_bus)
 
                 # hash table (numbers)
-                self.assertEqual(bus.number,net.get_bus_by_number(bus.number).number)
+                self.assertEqual(bus.number,net.get_bus_from_number(bus.number).number)
 
                 # hash table (names)
-                self.assertEqual(bus.name,net.get_bus_by_name(bus.name).name)
+                self.assertEqual(bus.name,net.get_bus_from_name(bus.name).name)
 
                 # values
                 self.assertGreater(bus.number,0)
@@ -540,6 +594,12 @@ class TestNetwork(unittest.TestCase):
                 for t in range(self.T):
                     self.assertEqual(bus.price[t],x[t])
 
+                # Sensitivities
+                x = np.random.randn(self.T)
+                bus.sens_P_balance = x
+                for t in range(self.T):
+                    self.assertEqual(bus.sens_P_balance[t],x[t])
+
                 # Set (attribute array)
                 for t in range(self.T):
                     mag = np.random.randn()
@@ -558,6 +618,15 @@ class TestNetwork(unittest.TestCase):
                     ar[t] = mag
                     self.assertEqual(ar[t],mag)
                     self.assertEqual(bus.v_mag[t],mag)
+
+                    # Sensitivities
+                    s = np.random.randn()
+                    bus.sens_P_balance[t] = s
+                    self.assertEqual(bus.sens_P_balance[t], s)
+                    sens = bus.sens_P_balance
+                    ss = np.random.randn()
+                    sens[t] = ss
+                    self.assertEqual(bus.sens_P_balance[t], ss)
 
             # Indexing
             net.set_flags('bus',
@@ -2105,8 +2174,8 @@ class TestNetwork(unittest.TestCase):
                 dQ = f[bus.index_Q]
                 dP_list.append(dP)
                 dQ_list.append(dQ)
-                self.assertLess(np.abs(dP-bus.P_mis),1e-10)
-                self.assertLess(np.abs(dQ-bus.Q_mis),1e-10)
+                self.assertLess(np.abs(dP-bus.P_mismatch),1e-10)
+                self.assertLess(np.abs(dQ-bus.Q_mismatch),1e-10)
             self.assertLess(np.abs(net.bus_P_mis-np.max(np.abs(dP_list))*net.base_power),1e-10)
             self.assertLess(np.abs(net.bus_Q_mis-np.max(np.abs(dQ_list))*net.base_power),1e-10)
 
@@ -2127,8 +2196,8 @@ class TestNetwork(unittest.TestCase):
                     dQ = ft[bus.index_Q]
                     dP_list.append(dP)
                     dQ_list.append(dQ)
-                    self.assertLess(np.abs(dP-bus.P_mis[t]),1e-10)
-                    self.assertLess(np.abs(dQ-bus.Q_mis[t]),1e-10)
+                    self.assertLess(np.abs(dP-bus.P_mismatch[t]),1e-10)
+                    self.assertLess(np.abs(dQ-bus.Q_mismatch[t]),1e-10)
                 self.assertLess(np.abs(netMP.bus_P_mis[t]-np.max(np.abs(dP_list))*netMP.base_power),1e-10)
                 self.assertLess(np.abs(netMP.bus_Q_mis[t]-np.max(np.abs(dQ_list))*netMP.base_power),1e-10)
 
@@ -2144,11 +2213,11 @@ class TestNetwork(unittest.TestCase):
                 self.assertLess(np.abs(fsaved[vargen.bus.index_P]-
                                        f[vargen.bus.index_P]-1.),1e-10)
                 self.assertLess(np.abs(fsaved[vargen.bus.index_P]-
-                                       vargen.bus.P_mis-1.),1e-10)
+                                       vargen.bus.P_mismatch-1.),1e-10)
                 self.assertLess(np.abs(fsaved[vargen.bus.index_Q]-
                                        f[vargen.bus.index_Q]-2.),1e-10)
                 self.assertLess(np.abs(fsaved[vargen.bus.index_Q]-
-                                       vargen.bus.Q_mis-2.),1e-10)
+                                       vargen.bus.Q_mismatch-2.),1e-10)
             for vargen in net.var_generators:
                 self.assertGreater(len(vargen.bus.loads),0)
                 vargen.bus.loads[0].P = vargen.bus.loads[0].P - 1.
@@ -2160,11 +2229,11 @@ class TestNetwork(unittest.TestCase):
                 self.assertLess(np.abs(fsaved[vargen.bus.index_P]-
                                        f[vargen.bus.index_P]),1e-10)
                 self.assertLess(np.abs(fsaved[vargen.bus.index_P]-
-                                       vargen.bus.P_mis),1e-10)
+                                       vargen.bus.P_mismatch),1e-10)
                 self.assertLess(np.abs(fsaved[vargen.bus.index_Q]-
                                        f[vargen.bus.index_Q]),1e-10)
                 self.assertLess(np.abs(fsaved[vargen.bus.index_Q]-
-                                       vargen.bus.Q_mis),1e-10)
+                                       vargen.bus.Q_mismatch),1e-10)
 
             # Mismatches 2 (multiperiod)
             for vargen in netMP.var_generators:
@@ -2180,11 +2249,11 @@ class TestNetwork(unittest.TestCase):
                     self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
                                            f[vargen.bus.index_P+t*2*n]-1.),1e-10)
                     self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
-                                           vargen.bus.P_mis[t]-1.),1e-10)
+                                           vargen.bus.P_mismatch[t]-1.),1e-10)
                     self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
                                            f[vargen.bus.index_Q+t*2*n]-2.),1e-10)
                     self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
-                                           vargen.bus.Q_mis[t]-2.),1e-10)
+                                           vargen.bus.Q_mismatch[t]-2.),1e-10)
             for vargen in netMP.var_generators:
                 self.assertGreater(len(vargen.bus.loads),0)
                 vargen.bus.loads[0].P = vargen.bus.loads[0].P - 1.
@@ -2197,11 +2266,11 @@ class TestNetwork(unittest.TestCase):
                     self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
                                            f[vargen.bus.index_P+t*2*n]),1e-10)
                     self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
-                                           vargen.bus.P_mis[t]),1e-10)
+                                           vargen.bus.P_mismatch[t]),1e-10)
                     self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
                                            f[vargen.bus.index_Q+t*2*n]),1e-10)
                     self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
-                                           vargen.bus.Q_mis[t]),1e-10)
+                                           vargen.bus.Q_mismatch[t]),1e-10)
 
             net.clear_properties()
             netMP.clear_properties()
@@ -2241,7 +2310,7 @@ class TestNetwork(unittest.TestCase):
             self.assertTrue(np.all(netMP.load_P_vio == 0))
             self.assertTrue(np.all(netMP.num_actions == 0))
 
-    def test_bus_sorting(self):
+    def test_bus_mis_and_sens(self):
 
         # Single period
         for case in test_cases.CASES:
@@ -2283,15 +2352,14 @@ class TestNetwork(unittest.TestCase):
                                       None,None)
 
             # Check bus largest mis and sens
-            sens_types = [pf.BUS_SENS_P_BALANCE,
-                          pf.BUS_SENS_Q_BALANCE,
-                          pf.BUS_SENS_V_MAG_U_BOUND,
-                          pf.BUS_SENS_V_MAG_L_BOUND,
-                          pf.BUS_SENS_V_REG_BY_GEN,
-                          pf.BUS_SENS_V_REG_BY_TRAN,
-                          pf.BUS_SENS_V_REG_BY_SHUNT]
-            mis_types = [pf.BUS_MIS_ACTIVE,
-                         pf.BUS_MIS_REACTIVE]
+            sens_types = ['sens_P_balance',
+                          'sens_Q_balance',
+                          'sens_v_mag_u_bound',
+                          'sens_v_mag_l_bound',
+                          'sens_v_reg_by_gen',
+                          'sens_v_reg_by_tran',
+                          'sens_v_reg_by_shunt']
+            mis_types = ['P_mismatch', 'Q_mismatch']
             self.assertEqual(len(sens_types),len(set(sens_types)))
             self.assertEqual(len(mis_types),len(set(mis_types)))
             for i in range(net.num_buses):
@@ -2306,99 +2374,50 @@ class TestNetwork(unittest.TestCase):
                 sensm = max(sens)
                 senst = sens_types[np.argmax(sens)]
                 self.assertGreater(sensm,0)
-                self.assertEqual(abs(bus.get_largest_sens()),sensm)
-                self.assertEqual(bus.get_largest_sens_type(),senst)
-                mis = [abs(bus.P_mis),
-                       abs(bus.Q_mis)]
+                self.assertEqual(abs(bus.largest_sensitivity),sensm)
+                self.assertEqual(bus.get_largest_sensitivity_type(),senst)
+                mis = [abs(bus.P_mismatch),
+                       abs(bus.Q_mismatch)]
                 mism = max(mis)
                 mist = mis_types[np.argmax(mis)]
-                self.assertEqual(abs(bus.get_largest_mis()),mism)
+                self.assertEqual(abs(bus.largest_mismatch),mism)
                 if mis[0] != mis[1]:
-                    self.assertEqual(bus.get_largest_mis_type(),mist)
+                    self.assertEqual(bus.get_largest_mismatch_type(),mist)
 
-            # Check bus quantities
-            for i in range(net.num_buses):
-                bus = net.get_bus(i)
-                self.assertEqual(bus.get_quantity(pf.BUS_SENS_LARGEST),
-                                 bus.get_largest_sens())
-                self.assertEqual(bus.get_quantity(pf.BUS_SENS_P_BALANCE),
-                                 bus.sens_P_balance)
-                self.assertEqual(bus.get_quantity(pf.BUS_SENS_Q_BALANCE),
-                                 bus.sens_Q_balance)
-                self.assertEqual(bus.get_quantity(pf.BUS_SENS_V_MAG_U_BOUND),
-                                 bus.sens_v_mag_u_bound)
-                self.assertEqual(bus.get_quantity(pf.BUS_SENS_V_MAG_L_BOUND),
-                                 bus.sens_v_mag_l_bound)
-                self.assertEqual(bus.get_quantity(pf.BUS_SENS_V_REG_BY_GEN),
-                                 bus.sens_v_reg_by_gen)
-                self.assertEqual(bus.get_quantity(pf.BUS_SENS_V_REG_BY_TRAN),
-                                 bus.sens_v_reg_by_tran)
-                self.assertEqual(bus.get_quantity(pf.BUS_SENS_V_REG_BY_SHUNT),
-                                 bus.sens_v_reg_by_shunt)
-                self.assertEqual(bus.get_quantity(pf.BUS_MIS_LARGEST),
-                                 bus.get_largest_mis())
-                self.assertEqual(bus.get_quantity(pf.BUS_MIS_ACTIVE),
-                                 bus.P_mis)
-                self.assertEqual(bus.get_quantity(pf.BUS_MIS_REACTIVE),
-                                 bus.Q_mis)
-                self.assertEqual(bus.get_quantity(-1),
-                                 0.)
-
-            # Sort by largest mis
-            bus_list = net.create_sorted_bus_list(pf.BUS_MIS_LARGEST)
-            self.assertTrue(isinstance(bus_list,list))
-            self.assertEqual(len(bus_list),net.num_buses)
-            r1 = []
-            for i in range(len(bus_list)):
-                if i > 0:
-                    bus1 = bus_list[i-1]
-                    bus2 = bus_list[i]
-                    self.assertTrue(isinstance(bus1,pf.Bus))
-                    self.assertTrue(isinstance(bus2,pf.Bus))
-                    r1.append(abs(bus1.get_largest_mis()) >= abs(bus2.get_largest_mis()))
-            self.assertTrue(all(r1))
-
-            # Sort by P mismatch
-            bus_list = net.create_sorted_bus_list(pf.BUS_MIS_ACTIVE)
-            self.assertTrue(isinstance(bus_list,list))
-            self.assertEqual(len(bus_list),net.num_buses)
-            r1 = []
-            for i in range(len(bus_list)):
-                if i > 0:
-                    bus1 = bus_list[i-1]
-                    bus2 = bus_list[i]
-                    self.assertTrue(isinstance(bus1,pf.Bus))
-                    self.assertTrue(isinstance(bus2,pf.Bus))
-                    r1.append(abs(bus1.P_mis) >= abs(bus2.P_mis))
-            self.assertTrue(all(r1))
-
-            # Sort by largest sensitivity
-            bus_list = net.create_sorted_bus_list(pf.BUS_SENS_LARGEST)
-            self.assertTrue(isinstance(bus_list,list))
-            self.assertEqual(len(bus_list),net.num_buses)
-            r1 = []
-            for i in range(len(bus_list)):
-                if i > 0:
-                    bus1 = bus_list[i-1]
-                    bus2 = bus_list[i]
-                    self.assertTrue(isinstance(bus1,pf.Bus))
-                    self.assertTrue(isinstance(bus2,pf.Bus))
-                    r1.append(abs(bus1.get_largest_sens()) >= abs(bus2.get_largest_sens()))
-            self.assertTrue(all(r1))
-
-            # Sort by v_reg_by_gen sensitivity
-            bus_list = net.create_sorted_bus_list(pf.BUS_SENS_V_REG_BY_GEN)
-            self.assertTrue(isinstance(bus_list,list))
-            self.assertEqual(len(bus_list),net.num_buses)
-            r1 = []
-            for i in range(len(bus_list)):
-                if i > 0:
-                    bus1 = bus_list[i-1]
-                    bus2 = bus_list[i]
-                    self.assertTrue(isinstance(bus1,pf.Bus))
-                    self.assertTrue(isinstance(bus2,pf.Bus))
-                    r1.append(abs(bus1.sens_v_reg_by_gen) >= abs(bus2.sens_v_reg_by_gen))
-            self.assertTrue(all(r1))
+            # Check
+            net.clear_sensitivities()
+            for bus in net.buses:
+                if np.abs(bus.P_mismatch) >= np.abs(bus.Q_mismatch):
+                    self.assertEqual(bus.largest_mismatch, bus.P_mismatch)
+                else:
+                    self.assertEqual(bus.largest_mismatch, bus.Q_mismatch)
+                bus.sens_P_balance = 1.
+                self.assertEqual(bus.largest_sensitivity, bus.sens_P_balance)
+                self.assertEqual(bus.get_largest_sensitivity_type(), 'sens_P_balance')
+                bus.sens_Q_balance = -2.
+                self.assertEqual(bus.largest_sensitivity, bus.sens_Q_balance)
+                self.assertEqual(bus.get_largest_sensitivity_type(), 'sens_Q_balance')
+                bus.sens_v_mag_u_bound = 3.
+                self.assertEqual(bus.largest_sensitivity, bus.sens_v_mag_u_bound)
+                self.assertEqual(bus.get_largest_sensitivity_type(), 'sens_v_mag_u_bound')
+                bus.sens_v_mag_l_bound = -4.
+                self.assertEqual(bus.largest_sensitivity, bus.sens_v_mag_l_bound)
+                self.assertEqual(bus.get_largest_sensitivity_type(), 'sens_v_mag_l_bound')
+                bus.sens_v_ang_u_bound = 5.
+                self.assertEqual(bus.largest_sensitivity, bus.sens_v_ang_u_bound)
+                self.assertEqual(bus.get_largest_sensitivity_type(), 'sens_v_ang_u_bound')
+                bus.sens_v_ang_l_bound = -6.
+                self.assertEqual(bus.largest_sensitivity, bus.sens_v_ang_l_bound)
+                self.assertEqual(bus.get_largest_sensitivity_type(), 'sens_v_ang_l_bound')
+                bus.sens_v_reg_by_gen = 7.
+                self.assertEqual(bus.largest_sensitivity, bus.sens_v_reg_by_gen)
+                self.assertEqual(bus.get_largest_sensitivity_type(), 'sens_v_reg_by_gen')
+                bus.sens_v_reg_by_shunt = -8.
+                self.assertEqual(bus.largest_sensitivity, bus.sens_v_reg_by_shunt)
+                self.assertEqual(bus.get_largest_sensitivity_type(), 'sens_v_reg_by_shunt')
+                bus.sens_v_reg_by_tran = 9.
+                self.assertEqual(bus.largest_sensitivity, bus.sens_v_reg_by_tran)
+                self.assertEqual(bus.get_largest_sensitivity_type(), 'sens_v_reg_by_tran')
 
     def test_set_points(self):
 
@@ -3960,6 +3979,37 @@ class TestNetwork(unittest.TestCase):
             self.assertGreater(net1.num_var_generators,0)
             self.assertGreater(net1.num_batteries,0)
 
+            # Sensitivities
+            for bus in net1.buses:
+                bus.sens_P_balance = np.random.randn(bus.num_periods)
+                bus.sens_Q_balance = np.random.randn(bus.num_periods)
+                bus.sens_v_mag_u_bound = np.random.randn(bus.num_periods)
+                bus.sens_v_mag_l_bound = np.random.randn(bus.num_periods)
+                bus.sens_v_ang_u_bound = np.random.randn(bus.num_periods)
+                bus.sens_v_ang_l_bound = np.random.randn(bus.num_periods)
+                bus.sens_v_reg_by_gen = np.random.randn(bus.num_periods)
+                bus.sens_v_reg_by_tran = np.random.randn(bus.num_periods)
+                bus.sens_v_reg_by_shunt = np.random.randn(bus.num_periods)
+            for branch in net1.branches:
+                branch.sens_P_u_bound = np.random.randn(branch.num_periods)
+                branch.sens_P_l_bound = np.random.randn(branch.num_periods)
+                branch.sens_ratio_u_bound = np.random.randn(branch.num_periods)
+                branch.sens_ratio_l_bound = np.random.randn(branch.num_periods)
+                branch.sens_phase_u_bound = np.random.randn(branch.num_periods)
+                branch.sens_phase_l_bound = np.random.randn(branch.num_periods)
+                branch.sens_i_mag_u_bound = np.random.randn(branch.num_periods)
+            for gen in net1.generators:
+                gen.sens_P_u_bound = np.random.randn(gen.num_periods)
+                gen.sens_P_l_bound = np.random.randn(gen.num_periods)
+                gen.sens_Q_u_bound = np.random.randn(gen.num_periods)
+                gen.sens_Q_l_bound = np.random.randn(gen.num_periods)
+            for load in net1.loads:
+                load.sens_P_u_bound = np.random.randn(gen.num_periods)
+                load.sens_P_l_bound = np.random.randn(gen.num_periods)
+            for shunt in net1.shunts:
+                shunt.sens_b_u_bound = np.random.randn(shunt.num_periods)
+                shunt.sens_b_l_bound = np.random.randn(shunt.num_periods)
+
             # Configure
             net1.set_flags('bus',
                            'variable',
@@ -4030,7 +4080,7 @@ class TestNetwork(unittest.TestCase):
             net1.set_flags('battery',
                            ['variable','fixed','bounded','sparse'],
                            'any',
-                           ['charging power', 'energy level'])                           
+                           ['charging power', 'energy level'])
             
 
             net2 = net1.get_copy()
@@ -4045,6 +4095,9 @@ class TestNetwork(unittest.TestCase):
             net2.copy_from_network(net1)
 
             pf.tests.utils.compare_networks(self,net1,net2,True)
+
+            # Bad input
+            net2.copy_from_network(None)
             
     def test_python_network_creation(self):
         
@@ -4108,11 +4161,11 @@ class TestNetwork(unittest.TestCase):
 
                 copy_gen.name = orig_gen.name
                 
-                copy_gen.bus = copy_net.get_bus_by_number(orig_gen.bus.number)
+                copy_gen.bus = copy_net.get_bus_from_number(orig_gen.bus.number)
                 copy_gen.bus.add_generator(copy_gen)
                 try:
                     orig_reg_num = orig_gen.reg_bus.number
-                    copy_gen.reg_bus = copy_net.get_bus_by_number(orig_reg_num)
+                    copy_gen.reg_bus = copy_net.get_bus_from_number(orig_reg_num)
                     copy_gen.reg_bus.add_reg_generator(copy_gen)
                 except pf.BusError as e:
                     pass
@@ -4135,7 +4188,7 @@ class TestNetwork(unittest.TestCase):
 
                 copy_load.name = orig_load.name
      
-                copy_load.bus = copy_net.get_bus_by_number(orig_load.bus.number)
+                copy_load.bus = copy_net.get_bus_from_number(orig_load.bus.number)
                 copy_load.bus.add_load(copy_load)
                 
                 copy_load.P = orig_load.P
@@ -4155,11 +4208,11 @@ class TestNetwork(unittest.TestCase):
 
                 copy_shunt.name = orig_shunt.name
                 
-                copy_shunt.bus = copy_net.get_bus_by_number(orig_shunt.bus.number)
+                copy_shunt.bus = copy_net.get_bus_from_number(orig_shunt.bus.number)
                 copy_shunt.bus.add_shunt(copy_shunt)
                 try:
                     orig_reg_num = orig_shunt.reg_bus.number
-                    copy_shunt.reg_bus = copy_net.get_bus_by_number(orig_reg_num)
+                    copy_shunt.reg_bus = copy_net.get_bus_from_number(orig_reg_num)
                     copy_shunt.reg_bus.add_reg_shunt(copy_shunt)
                 except pf.BusError as e:
                     pass
@@ -4179,13 +4232,13 @@ class TestNetwork(unittest.TestCase):
                 copy_branch.name = orig_branch.name
                 copy_branch.set_pos_ratio_v_sens(orig_branch.has_pos_ratio_v_sens())
                 
-                copy_branch.bus_k = copy_net.get_bus_by_number(orig_branch.bus_k.number)
+                copy_branch.bus_k = copy_net.get_bus_from_number(orig_branch.bus_k.number)
                 copy_branch.bus_k.add_branch_k(copy_branch)
-                copy_branch.bus_m = copy_net.get_bus_by_number(orig_branch.bus_m.number)
+                copy_branch.bus_m = copy_net.get_bus_from_number(orig_branch.bus_m.number)
                 copy_branch.bus_m.add_branch_m(copy_branch)
                 try:
                     orig_reg_num = orig_branch.reg_bus.number
-                    copy_branch.reg_bus = copy_net.get_bus_by_number(orig_reg_num)
+                    copy_branch.reg_bus = copy_net.get_bus_from_number(orig_reg_num)
                     copy_branch.reg_bus.add_reg_tran(copy_branch)
                 except pf.BusError as e:
                     pass
@@ -4227,7 +4280,7 @@ class TestNetwork(unittest.TestCase):
 
                 copy_vargen.name = orig_vargen.name
      
-                copy_vargen.bus = copy_net.get_bus_by_number(orig_vargen.bus.number)
+                copy_vargen.bus = copy_net.get_bus_from_number(orig_vargen.bus.number)
                 copy_vargen.bus.add_var_generator(copy_vargen)
                 
                 copy_vargen.P = orig_vargen.P
@@ -4247,7 +4300,7 @@ class TestNetwork(unittest.TestCase):
 
                 copy_bat.name = orig_bat.name
                 
-                copy_bat.bus = copy_net.get_bus_by_number(orig_bat.bus.number)
+                copy_bat.bus = copy_net.get_bus_from_number(orig_bat.bus.number)
                 copy_bat.bus.add_battery(copy_bat)
                 
                 copy_bat.P = orig_bat.P

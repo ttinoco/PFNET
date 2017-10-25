@@ -33,7 +33,7 @@ cdef class Problem:
 
         Parameters
         ----------
-        net : :class:`Network <pfnet.Network>`
+        net : |Network|
         """
 
         pass
@@ -54,13 +54,13 @@ cdef class Problem:
             cprob.PROB_del(self._c_prob)
             self._c_prob = NULL
 
-    def add_constraint(self,ConstraintBase constr):
+    def add_constraint(self, ConstraintBase constr):
         """
         Adds constraint to optimization problem.
 
         Parameters
         ----------
-        constr : ConstraintBase
+        constr : |ConstraintBase|
         """
 
         # Prevent __dealloc__ of function
@@ -76,13 +76,13 @@ cdef class Problem:
         if cprob.PROB_has_error(self._c_prob):
             raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 
-    def add_function(self,FunctionBase func):
+    def add_function(self, FunctionBase func):
         """
         Adds function to optimization problem objective.
 
         Parameters
         ----------
-        func : FunctionBase
+        func : |FunctionBase|
         """
         
         # Prevent __dealloc__ of function
@@ -112,7 +112,15 @@ cdef class Problem:
         if cprob.PROB_has_error(self._c_prob):
             raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 
-    def apply_heuristics(self,var_values):
+    def apply_heuristics(self, var_values):
+        """
+        Applies heuristic.
+
+        Parameters
+        ----------
+        var_values : |Array|
+        """
+        
         cdef np.ndarray[double,mode='c'] x = var_values
         cdef cvec.Vec* v = cvec.VEC_new_from_array(<cprob.REAL*>(x.data),x.size)
         cprob.PROB_apply_heuristics(self._c_prob,v)
@@ -133,14 +141,14 @@ cdef class Problem:
 
         cprob.PROB_clear_error(self._c_prob)
 
-    def combine_H(self,coeff,ensure_psd=False):
+    def combine_H(self, coeff, ensure_psd=False):
         """
         Forms and saves a linear combination of the individual constraint Hessians.
 
         Parameters
         ----------
-        coeff : :class:`ndarray <numpy.ndarray>`
-        ensure_psd : {``True``, ``False``}
+        coeff : |Array|
+        ensure_psd : |TrueFalse|
         """
 
         cdef np.ndarray[double,mode='c'] x = coeff
@@ -157,19 +165,19 @@ cdef class Problem:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cprob.PROB_has_error(self._c_prob)
 
-    def eval(self,var_values):
+    def eval(self, var_values):
         """
         Evaluates objective function and constraints as well as their first and
         second derivatives using the given variable values.
 
         Parameters
         ----------
-        var_values : :class:`ndarray <numpy.ndarray>`
+        var_values : |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = var_values
@@ -179,20 +187,20 @@ cdef class Problem:
         if cprob.PROB_has_error(self._c_prob):
             raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 
-    def store_sensitivities(self,sA,sf,sGu,sGl):
+    def store_sensitivities(self, sA, sf, sGu, sGl):
         """
         Stores Lagrange multiplier estimates of the constraints in
         the power network components.
 
         Parameters
         ----------
-        sA : :class:`ndarray <numpy.ndarray>`
+        sA : |Array|
              sensitivities for linear equality constraints (:math:`Ax = b`)
-        sf : :class:`ndarray <numpy.ndarray>`
+        sf : |Array|
              sensitivities for nonlinear equality constraints (:math:`f(x) = 0`)
-        sGu : :class:`ndarray <numpy.ndarray>`
+        sGu : |Array|
              sensitivities for linear inequality constraints (:math:`Gx \le u`)
-        sGl : :class:`ndarray <numpy.ndarray>`
+        sGl : |Array|
              sensitivities for linear inequality constraints (:math:`l \le Gx`)
         """
 
@@ -216,9 +224,9 @@ cdef class Problem:
         if cprob.PROB_has_error(self._c_prob):
             raise ProblemError(cprob.PROB_get_error_string(self._c_prob))
 
-    def find_constraint(self,name):
+    def find_constraint(self, name):
         """
-        Finds constraint of give type among the constraints of this optimization problem.
+        Finds constraint of given name among the constraints of this optimization problem.
 
         Parameters
         ----------
@@ -226,7 +234,7 @@ cdef class Problem:
 
         Returns
         -------
-        constr : Constraint
+        constr : |ConstraintBase|
         """
 
         name = name.encode('UTF-8')
@@ -242,7 +250,7 @@ cdef class Problem:
 
         Returns
         -------
-        point : :class:`ndarray <numpy.ndarray>`
+        point : |Array|
         """
 
         return Vector(cprob.PROB_get_init_point(self._c_prob),owndata=True)
@@ -253,7 +261,7 @@ cdef class Problem:
 
         Returns
         -------
-        limits : :class:`ndarray <numpy.ndarray>`
+        limits : |Array|
         """
 
         return Vector(cprob.PROB_get_upper_limits(self._c_prob),owndata=True)
@@ -264,7 +272,7 @@ cdef class Problem:
 
         Returns
         -------
-        limits : :class:`ndarray <numpy.ndarray>`
+        limits : |Array|
         """
 
         return Vector(cprob.PROB_get_lower_limits(self._c_prob),owndata=True)
@@ -272,6 +280,10 @@ cdef class Problem:
     def get_network(self):
         """
         Gets the power network associated with this optimization problem.
+
+        Parameters
+        ----------
+        net : |Network|
         """
 
         return new_Network(cprob.PROB_get_network(self._c_prob))
@@ -324,11 +336,11 @@ cdef class Problem:
         return self.num_nonlinear_equality_constraints
 
     property network:
-        """ Power network associated with this optimization problem (:class:`Network <pfnet.Network>`). """
+        """ Power network associated with this optimization problem (|Network|). """
         def __get__(self): return new_Network(cprob.PROB_get_network(self._c_prob))
 
     property constraints:
-        """ List of :class:`constraints <pfnet.Constraint>` of this optimization problem (list). """
+        """ List of |ConstraintBase| objects of this optimization problem (list). """
         def __get__(self):
             clist = []
             cdef cconstr.Constr* c = cprob.PROB_get_constr(self._c_prob)
@@ -338,7 +350,7 @@ cdef class Problem:
             return clist
 
     property functions:
-        """ List of :class:`functions <pfnet.Function>` that form the objective function of this optimization problem (list). """
+        """ List of |FunctionBase| objects that form the objective function of this optimization problem (list). """
         def __get__(self):
             flist = []
             cdef cfunc.Func* f = cprob.PROB_get_func(self._c_prob)
@@ -348,31 +360,31 @@ cdef class Problem:
             return flist
 
     property A:
-        """ Constraint matrix of linear equality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
+        """ Constraint matrix of linear equality constraints (|CooMatrix|). """
         def __get__(self): return Matrix(cprob.PROB_get_A(self._c_prob))
 
     property b:
-        """ Right hand side vectors of the linear equality constraints (:class:`ndarray <numpy.ndarray>`). """
+        """ Right hand side vectors of the linear equality constraints (|Array|). """
         def __get__(self): return Vector(cprob.PROB_get_b(self._c_prob))
 
     property G:
-        """ Constraint matrix of linear inequality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
+        """ Constraint matrix of linear inequality constraints (|CooMatrix|). """
         def __get__(self): return Matrix(cprob.PROB_get_G(self._c_prob))
 
     property l:
-        """ Lower bound for linear inequality constraints (:class:`ndarray <numpy.ndarray>`). """
+        """ Lower bound for linear inequality constraints (|Array|). """
         def __get__(self): return Vector(cprob.PROB_get_l(self._c_prob))
 
     property u:
-        """ Upper bound for linear inequality constraints (:class:`ndarray <numpy.ndarray>`). """
+        """ Upper bound for linear inequality constraints (|Array|). """
         def __get__(self): return Vector(cprob.PROB_get_u(self._c_prob))
 
     property J:
-        """ Jacobian matrix of the nonlinear equality constraints (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
+        """ Jacobian matrix of the nonlinear equality constraints (|CooMatrix|). """
         def __get__(self): return Matrix(cprob.PROB_get_J(self._c_prob))
 
     property f:
-        """ Vector of nonlinear equality constraints violations (:class:`ndarray <numpy.ndarray>`). """
+        """ Vector of nonlinear equality constraints violations (|Array|). """
         def __get__(self): return Vector(cprob.PROB_get_f(self._c_prob))
 
     property phi:
@@ -380,27 +392,27 @@ cdef class Problem:
         def __get__(self): return cprob.PROB_get_phi(self._c_prob)
 
     property gphi:
-        """ Objective function gradient vector (:class:`ndarray <numpy.ndarray>`). """
+        """ Objective function gradient vector (|Array|). """
         def __get__(self): return Vector(cprob.PROB_get_gphi(self._c_prob))
 
     property Hphi:
-        """ Objective function Hessian matrix (only the lower triangular part) (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
+        """ Objective function Hessian matrix (only the lower triangular part) (|CooMatrix|). """
         def __get__(self): return Matrix(cprob.PROB_get_Hphi(self._c_prob))
 
     property H_combined:
-        """ Linear combination of Hessian matrices of individual nonlinear equality constraints (only the lower triangular part) (:class:`coo_matrix <scipy.sparse.coo_matrix>`). """
+        """ Linear combination of Hessian matrices of individual nonlinear equality constraints (only the lower triangular part) (|CooMatrix|). """
         def __get__(self): return Matrix(cprob.PROB_get_H_combined(self._c_prob))
 
     property x:
-        """ Initial primal point (:class:`ndarray <numpy.ndarray>`). """
+        """ Initial primal point (|Array|). """
         def __get__(self): return self.get_init_point()
 
     property lam:
-        """ Initial dual point (:class:`ndarray <numpy.ndarray>`). """
+        """ Initial dual point (|Array|). """
         def __get__(self): return None
 
     property nu:
-        """ Initial dual point (:class:`ndarray <numpy.ndarray>`). """
+        """ Initial dual point (|Array|). """
         def __get__(self): return None
 
     property num_primal_variables:

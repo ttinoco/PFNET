@@ -27,19 +27,19 @@ cdef class Network:
     cdef cnet.Net* _c_net
     cdef bint alloc
 
-    def __init__(self,num_periods=1,alloc=True):
+    def __init__(self, num_periods=1, alloc=True):
         """
         Network class.
 
         Parameters
         ----------
-        alloc : {``True``, ``False``}
         num_periods : int
+        alloc : |TrueFalse|
         """
 
         pass
 
-    def __cinit__(self,num_periods=1,alloc=True):
+    def __cinit__(self, num_periods=1, alloc=True):
 
         if alloc:
             self._c_net = cnet.NET_new(num_periods)
@@ -76,19 +76,19 @@ cdef class Network:
             new_net.alloc = False
             os.remove(f.name)
             
-    def add_var_generators(self,buses,power_capacity,power_base,power_std=0.,corr_radius=0,corr_value=0.):
+    def add_var_generators(self, buses, power_capacity, power_base, power_std=0., corr_radius=0, corr_value=0.):
         """
-        Adds variable generators to the network. The capacities of the generators are divided
-        evenly.
+        Adds variable generators to the network. 
+        The capacities of the generators are divided evenly.
 
         Parameters
         ----------
-        buses : list of :class:`Buses <pfnet.Bus>`
-        power_capacity : float (percentage of max total load power)
-        power_base : float (percentage of power capacity)
-        power_std : float (percentage of power capacity)
-        corr_radius : int (number of branches for correlation radius)
-        corr_value : float (correlation coefficient for correlated generators)
+        buses : list of |Bus| objects
+        power_capacity : percentage of max total load power (float)
+        power_base : percentage of power capacity (float)
+        power_std : percentage of power capacity (float)
+        corr_radius : number of branches for correlation radius (int)
+        corr_value : correlation coefficient for correlated generators (float)
         """
 
         cdef Bus head = buses[0] if buses else None
@@ -108,18 +108,18 @@ cdef class Network:
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
 
-    def add_batteries(self,buses,power_capacity,energy_capacity,eta_c=1.,etc_d=1.):
+    def add_batteries(self, buses, power_capacity, energy_capacity, eta_c=1., etc_d=1.):
         """
-        Adds batteries to the network. The power and energy capacities of the batteries are divided
-        evenly.
+        Adds batteries to the network. 
+        The power and energy capacities of the batteries are divided evenly.
 
         Parameters
         ----------
-        buses : list of :class:`Buses <pfnet.Bus>`
-        power_capacity : float (percentage of max total load power)
-        energy_capacity : float (percentage of max total load energy during one time period)
-        eta_c : float (charging efficiency in (0,1])
-        eta_d : float (discharging efficiency in (0,1])
+        buses : list of |Bus| objects
+        power_capacity : percentage of max total load power (float)
+        energy_capacity : percentage of max total load energy during one time period (float)
+        eta_c : charging efficiency in (0,1] (float)
+        eta_d : discharging efficiency in (0,1] (float)
         """
 
         cdef Bus head = buses[0] if buses else None
@@ -181,46 +181,26 @@ cdef class Network:
 
         Parameters
         ----------
-        net : :class:`Network <pfnet.Network>`
+        net : |Network|
         """
         
         cdef Network n = net
-        cnet.NET_copy_from_net(self._c_net, n._c_net)
+        if net is not None:
+            cnet.NET_copy_from_net(self._c_net, n._c_net)
 
-    def create_sorted_bus_list(self,sort_by,t=0):
-        """
-        Creates list of buses sorted in descending order according to a specific quantity.
-
-        Parameters
-        ----------
-        sort_by : int (:ref:`ref_bus_sens`, :ref:`ref_bus_mis`).
-        t : int
-
-        Returns
-        -------
-        buses : list of :class:`Buses <pfnet.Bus>`
-        """
-
-        buses = []
-        cdef cbus.Bus* b = cnet.NET_create_sorted_bus_list(self._c_net,sort_by,t)
-        while b is not NULL:
-            buses.append(new_Bus(b))
-            b = cbus.BUS_get_next(b)
-        return buses
-
-    def create_var_generators_P_sigma(self,spread,corr):
+    def create_var_generators_P_sigma(self, spread, corr):
         """
         Creates covariance matrix (lower triangular part) for
         active powers of variable generators.
 
         Parameters
         ----------
-        spead : int (correlation neighborhood in terms of number of edges)
-        corr : float (correlation coefficient for neighboring generators)
+        spead : correlation neighborhood in terms of number of edges (int)
+        corr : correlation coefficient for neighboring generators (float)
 
         Returns
         -------
-        sigma : :class:`coo_matrix <scipy.sparse.coo_matrix>`
+        sigma : |CooMatrix|
         """
 
         sigma = Matrix(cnet.NET_create_vargen_P_sigma(self._c_net,spread,corr),
@@ -236,7 +216,7 @@ cdef class Network:
 
         Returns
         -------
-        net : :class:`Network <pfnet.Network>`
+        net : |Network|
         """
 
         cdef Network net = new_Network(cnet.NET_get_copy(self._c_net))
@@ -246,6 +226,7 @@ cdef class Network:
     def get_var_info_string(self, index):
         """
         Gets info string of variable associated with index.
+        The info string has format ``obj_type:obj_index:quantity:time``.
 
         Parameters
         ----------
@@ -264,7 +245,7 @@ cdef class Network:
         else:
             raise NetworkError('index does not correspond to any variable')
 
-    def get_bus_by_number(self,number):
+    def get_bus_from_number(self, number):
         """
         Gets bus with the given number.
 
@@ -274,7 +255,7 @@ cdef class Network:
 
         Returns
         -------
-        bus : :class:`Bus <pfnet.Bus>`
+        bus : |Bus|
         """
 
         ptr = cnet.NET_bus_hash_number_find(self._c_net,number)
@@ -283,7 +264,7 @@ cdef class Network:
         else:
             raise NetworkError('bus not found')
 
-    def get_bus_by_name(self,name):
+    def get_bus_from_name(self, name):
         """
         Gets bus with the given name.
 
@@ -293,7 +274,7 @@ cdef class Network:
 
         Returns
         -------
-        bus : :class:`Bus <pfnet.Bus>`
+        bus : |Bus|
         """
 
         name = name.encode('UTF-8')
@@ -303,7 +284,7 @@ cdef class Network:
         else:
             raise NetworkError('bus not found')
 
-    def get_bus(self,index):
+    def get_bus(self, index):
         """
         Gets bus with the given index.
 
@@ -313,7 +294,7 @@ cdef class Network:
 
         Returns
         -------
-        bus : :class:`Bus <pfnet.Bus>`
+        bus : |Bus|
         """
 
         ptr = cnet.NET_get_bus(self._c_net,index)
@@ -322,7 +303,7 @@ cdef class Network:
         else:
             raise NetworkError('invalid bus index')
 
-    def get_branch(self,index):
+    def get_branch(self, index):
         """
         Gets branch with the given index.
 
@@ -332,7 +313,7 @@ cdef class Network:
 
         Returns
         -------
-        branch : :class:`Branch <pfnet.Branch>`
+        branch : |Branch|
         """
 
         ptr = cnet.NET_get_branch(self._c_net,index)
@@ -351,7 +332,7 @@ cdef class Network:
 
         Returns
         -------
-        gen : :class:`Generator <pfnet.Generator>`
+        gen : |Generator|
         """
 
         ptr = cnet.NET_get_gen(self._c_net,index)
@@ -360,7 +341,7 @@ cdef class Network:
         else:
             raise NetworkError('invalid gen index')
 
-    def get_shunt(self,index):
+    def get_shunt(self, index):
         """
         Gets shunt with the given index.
 
@@ -370,7 +351,7 @@ cdef class Network:
 
         Returns
         -------
-        gen : :class:`Shunt <pfnet.Shunt>`
+        shunt : |Shunt|
         """
 
         ptr = cnet.NET_get_shunt(self._c_net,index)
@@ -379,7 +360,7 @@ cdef class Network:
         else:
             raise NetworkError('invalid shunt index')
 
-    def get_load(self,index):
+    def get_load(self, index):
         """
         Gets load with the given index.
 
@@ -389,7 +370,7 @@ cdef class Network:
 
         Returns
         -------
-        gen : :class:`Load <pfnet.Load>`
+        load : |Load|
         """
 
         ptr = cnet.NET_get_load(self._c_net,index)
@@ -398,7 +379,7 @@ cdef class Network:
         else:
             raise NetworkError('invalid load index')
 
-    def get_var_generator(self,index):
+    def get_var_generator(self, index):
         """
         Gets variable generator with the given index.
 
@@ -408,7 +389,7 @@ cdef class Network:
 
         Returns
         -------
-        vargen : :class:`VarGenerator <pfnet.VarGenerator>`
+        vargen : |VarGenerator|
         """
 
         ptr = cnet.NET_get_vargen(self._c_net,index)
@@ -417,7 +398,7 @@ cdef class Network:
         else:
             raise NetworkError('invalid vargen index')
 
-    def get_battery(self,index):
+    def get_battery(self, index):
         """
         Gets battery with the given index.
 
@@ -427,7 +408,7 @@ cdef class Network:
 
         Returns
         -------
-        bat : :class:`Battery <pfnet.Battery>`
+        bat : |Battery|
         """
 
         ptr = cnet.NET_get_bat(self._c_net,index)
@@ -436,13 +417,146 @@ cdef class Network:
         else:
             raise NetworkError('invalid battery index')
 
+    def get_generator_from_name_and_bus_number(self, name, number):
+        """
+        Gets generator of given name connected to the bus of the 
+        given number.
+
+        Parameters
+        ----------
+        name : string
+        number : integer
+
+        Returns
+        -------
+        gen : |Generator|
+        """
+
+        name = name.encode('UTF-8')
+        ptr = cnet.NET_get_gen_from_name_and_bus_number(self._c_net, name, number)
+        if ptr is not NULL:
+            return new_Generator(ptr)
+        else:
+            raise NetworkError('generator not found')
+
+    def get_branch_from_name_and_bus_numbers(self, name, number1, number2):
+        """
+        Gets branch of given name connected across buss of the 
+        given numbers.
+
+        Parameters
+        ----------
+        name : string
+        number1 : integer
+        number2 : integer
+
+        Returns
+        -------
+        branch : |Branch|
+        """
+
+        name = name.encode('UTF-8')
+        ptr = cnet.NET_get_branch_from_name_and_bus_numbers(self._c_net, name, number1, number2)
+        if ptr is not NULL:
+            return new_Branch(ptr)
+        else:
+            raise NetworkError('branch not found')
+
+    def get_load_from_name_and_bus_number(self, name, number):
+        """
+        Gets load of given name connected to the bus of the 
+        given number.
+
+        Parameters
+        ----------
+        name : string
+        number : integer
+
+        Returns
+        -------
+        load : |Load|
+        """
+
+        name = name.encode('UTF-8')
+        ptr = cnet.NET_get_load_from_name_and_bus_number(self._c_net, name, number)
+        if ptr is not NULL:
+            return new_Load(ptr)
+        else:
+            raise NetworkError('load not found')
+
+    def get_shunt_from_name_and_bus_number(self, name, number):
+        """
+        Gets shunt of given name connected to the bus of the 
+        given number.
+
+        Parameters
+        ----------
+        name : string
+        number : integer
+
+        Returns
+        -------
+        shunt : |Shunt|
+        """
+
+        name = name.encode('UTF-8')
+        ptr = cnet.NET_get_shunt_from_name_and_bus_number(self._c_net, name, number)
+        if ptr is not NULL:
+            return new_Shunt(ptr)
+        else:
+            raise NetworkError('shunt not found')
+
+    def get_var_generator_from_name_and_bus_number(self, name, number):
+        """
+        Gets variable generator of given name connected to the bus of the 
+        given number.
+
+        Parameters
+        ----------
+        name : string
+        number : integer
+
+        Returns
+        -------
+        vargen : |VarGenerator|
+        """
+
+        name = name.encode('UTF-8')
+        ptr = cnet.NET_get_vargen_from_name_and_bus_number(self._c_net, name, number)
+        if ptr is not NULL:
+            return new_VarGenerator(ptr)
+        else:
+            raise NetworkError('variable generator not found')
+
+    def get_battery_from_name_and_bus_number(self, name, number):
+        """
+        Gets battery of given name connected to the bus of the 
+        given number.
+
+        Parameters
+        ----------
+        name : string
+        number : integer
+
+        Returns
+        -------
+        bat : |Battery|
+        """
+
+        name = name.encode('UTF-8')
+        ptr = cnet.NET_get_bat_from_name_and_bus_number(self._c_net, name, number)
+        if ptr is not NULL:
+            return new_Battery(ptr)
+        else:
+            raise NetworkError('battery not found')
+        
     def get_generator_buses(self):
         """
         Gets list of buses where generators are connected.
 
         Returns
         -------
-        buses : list
+        buses : list of |Bus| objects
         """
 
         buses = []
@@ -458,7 +572,7 @@ cdef class Network:
 
         Returns
         -------
-        buses : list
+        buses : list of |Bus| objects
         """
 
         buses = []
@@ -468,31 +582,35 @@ cdef class Network:
             b = cbus.BUS_get_next(b)
         return buses
 
-    def get_var_values(self,option='current'):
+    def get_var_values(self, option='current'):
         """
         Gets network variable values.
 
         Parameters
         ----------
-        option : string (See var values)
+        option : string (|RefVarValueOptions|)
 
         Returns
         -------
-        values : :class:`ndarray <numpy.ndarray>`
+        values : |Array|
         """
-        return Vector(cnet.NET_get_var_values(self._c_net,str2const[option]),owndata=True)
+        return Vector(cnet.NET_get_var_values(self._c_net, str2const[option]), owndata=True)
 
-    def get_var_projection(self,obj_type,props,q,t_start=0,t_end=None):
+    def get_var_projection(self, obj_type, props, q, t_start=0, t_end=None):
         """
         Gets projection matrix for specific object variables.
 
         Parameters
         ----------
-        obj_type : string (:ref:`ref_net_obj`)
-        props : string or list of strings (:ref:`ref_bus_prop`, :ref:`ref_branch_prop`, :ref:`ref_gen_prop`, :ref:`ref_shunt_prop`, :ref:`ref_load_prop`, :ref:`ref_vargen_prop`, :ref:`ref_bat_prop`)
-        q : string or list of strings (:ref:`ref_bus_q`, :ref:`ref_branch_q`, :ref:`ref_gen_q`, :ref:`ref_shunt_q`, :ref:`ref_load_q`, :ref:`ref_vargen_q`, :ref:`ref_bat_q`)
+        obj_type : string (|RefObjects|)
+        props : string or list of strings (|RefProperties|)
+        q : string or list of strings (|RefQuantities|)
         t_start : int
         t_end : int (inclusive)
+
+        Returns
+        -------
+        P : |CooMatrix|
         """
 
         props = props if isinstance(props,list) else [props]
@@ -545,9 +663,13 @@ cdef class Network:
 
         return cnet.NET_get_num_buses_reg_by_gen(self._c_net)
 
-    def get_num_buses_reg_by_tran(self,only=False):
+    def get_num_buses_reg_by_tran(self, only=False):
         """
         Gets number of buses whose voltage magnitudes are regulated by tap-changing transformers.
+
+        Parameters
+        ----------
+        only : |TrueFalse|
 
         Returns
         -------
@@ -559,9 +681,13 @@ cdef class Network:
         else:
             return cnet.NET_get_num_buses_reg_by_tran_only(self._c_net)
 
-    def get_num_buses_reg_by_shunt(self,only=False):
+    def get_num_buses_reg_by_shunt(self, only=False):
         """
         Gets number of buses whose voltage magnitudes are regulated by switched shunt devices.
+
+        Parameters
+        ----------
+        only : |TrueFalse|
 
         Returns
         -------
@@ -826,11 +952,11 @@ cdef class Network:
 
         Parameters
         ----------
-        other : :class:`Buses <pfnet.Bus>`
+        other : |Network|
 
         Returns
         -------
-        flag : {`True`, `False`}
+        flag : |TrueFalse|
         """
 
         return self._c_net == other._c_net
@@ -842,21 +968,21 @@ cdef class Network:
 
         Returns
         -------
-        flag : {``True``, ``False``}
+        flag : |TrueFalse|
         """
 
         return cnet.NET_has_error(self._c_net)
 
-    def set_flags(self,obj_type,flags,props,q):
+    def set_flags(self, obj_type, flags, props, q):
         """
         Sets flags of network components with specific properties.
 
         Parameters
         ----------
-        obj_type : string (:ref:`ref_net_obj`)
-        flags : string or list of strings (:ref:`ref_net_flag`)
-        props : string or list of strings (:ref:`ref_bus_prop`, :ref:`ref_branch_prop`, :ref:`ref_gen_prop`, :ref:`ref_shunt_prop`, :ref:`ref_load_prop`, :ref:`ref_vargen_prop`, :ref:`ref_bat_prop`)
-        q : string or list of strings (:ref:`ref_bus_q`, :ref:`ref_branch_q`, :ref:`ref_gen_q`, :ref:`ref_shunt_q`, :ref:`ref_load_q`, :ref:`ref_vargen_q`, :ref:`ref_bat_q`)
+        obj_type : string (|RefObjects|)
+        flags : string or list of strings (|RefFlags|)
+        props : string or list of strings (|RefProperties|)
+        q : string or list of strings (|RefQuantities|)
         """
 
         flags = flags if isinstance(flags,list) else [flags]
@@ -870,15 +996,15 @@ cdef class Network:
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
 
-    def set_flags_of_component(self,obj,flags,q):
+    def set_flags_of_component(self, obj, flags, q):
         """
         Sets flags of network components with specific properties.
 
         Parameters
         ----------
-        obj : :class:`Bus <pfnet.Bus>`, :class:`Branch <pfnet.Branch>`, :class:`Generator <pfnet.Generator>`, :class:`Load <pfnet.Load>`, :class:`Shunt <pfnet.Shunt>`, :class:`VarGenerator <pfnet.VarGenerator>`, :class:`Battery <pfnet.Battery>`
-        flags : string or list of strings (:ref:`ref_net_flag`)
-        q : string or list of strings (:ref:`ref_bus_q`, :ref:`ref_branch_q`, :ref:`ref_gen_q`, :ref:`ref_shunt_q`, :ref:`ref_load_q`, :ref:`ref_vargen_q`, :ref:`ref_bat_q`)
+        obj : |Bus|, |Branch|, |Generator|, |Load|, |Shunt|, |VarGenerator|, |Battery|
+        flags : string or list of strings (|RefFlags|)
+        q : string or list of strings (|RefQuantities|)
         """
 
         cdef CPtr ptr = obj._get_c_ptr()
@@ -892,7 +1018,7 @@ cdef class Network:
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
 
-    def set_branch_array(self,size):
+    def set_branch_array(self, size):
         """
         Allocates and sets branch array.
 
@@ -904,7 +1030,7 @@ cdef class Network:
         cdef cbranch.Branch* array = cbranch.BRANCH_array_new(size,self.num_periods)
         cnet.NET_set_branch_array(self._c_net,array,size)
 
-    def set_bus_array(self,size):
+    def set_bus_array(self, size):
         """
         Allocates and sets bus array.
 
@@ -916,7 +1042,7 @@ cdef class Network:
         cdef cbus.Bus* array = cbus.BUS_array_new(size,self.num_periods)
         cnet.NET_set_bus_array(self._c_net,array,size)
 
-    def set_gen_array(self,size):
+    def set_gen_array(self, size):
         """
         Allocates and sets generator array.
 
@@ -928,7 +1054,7 @@ cdef class Network:
         cdef cgen.Gen* array = cgen.GEN_array_new(size,self.num_periods)
         cnet.NET_set_gen_array(self._c_net,array,size)
 
-    def set_load_array(self,size):
+    def set_load_array(self, size):
         """
         Allocates and sets load array.
 
@@ -940,7 +1066,7 @@ cdef class Network:
         cdef cload.Load* array = cload.LOAD_array_new(size,self.num_periods)
         cnet.NET_set_load_array(self._c_net,array,size)
 
-    def set_shunt_array(self,size):
+    def set_shunt_array(self, size):
         """
         Allocates and sets shunt array.
 
@@ -952,7 +1078,7 @@ cdef class Network:
         cdef cshunt.Shunt* array = cshunt.SHUNT_array_new(size,self.num_periods)
         cnet.NET_set_shunt_array(self._c_net,array,size)
 
-    def set_vargen_array(self,size):
+    def set_vargen_array(self, size):
         """
         Allocates and sets variable generator array.
 
@@ -964,7 +1090,7 @@ cdef class Network:
         cdef cvargen.Vargen* array = cvargen.VARGEN_array_new(size,self.num_periods)
         cnet.NET_set_vargen_array(self._c_net,array,size)
 
-    def set_battery_array(self,size):
+    def set_battery_array(self, size):
         """
         Allocates and sets battery array.
 
@@ -976,13 +1102,13 @@ cdef class Network:
         cdef cbat.Bat* array = cbat.BAT_array_new(size,self.num_periods)
         cnet.NET_set_bat_array(self._c_net,array,size)
 
-    def set_var_values(self,values):
+    def set_var_values(self, values):
         """
         Sets network variable values.
 
         Parameters
         ----------
-        values : :class:`ndarray <numpy.ndarray>`
+        values : |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = values
@@ -997,31 +1123,18 @@ cdef class Network:
 
         print(cnet.NET_get_show_components_str(self._c_net).decode('UTF-8'))
 
-    def show_properties(self,t=0):
+    def show_properties(self, t=0):
         """
         Shows information about the state of the network component quantities.
 
         Parameters
         ----------
-        t : int (time period)
+        t : time period (int)
         """
 
         print(cnet.NET_get_show_properties_str(self._c_net,t).decode('UTF-8'))
 
-    def show_buses(self,number,sort_by,t=0):
-        """
-        Shows information about the most relevant network buses sorted by a specific quantity.
-
-        Parameters
-        ----------
-        number : int
-        sort_by : int (:ref:`ref_bus_sens`, :ref:`ref_bus_mis`)
-        t : int (time period)
-        """
-
-        cnet.NET_show_buses(self._c_net,number,sort_by,t)
-
-    def update_properties(self,values=None):
+    def update_properties(self, values=None):
         """
         Re-computes the network properties using the given values
         of the network variables. If no values are given, then the
@@ -1029,7 +1142,7 @@ cdef class Network:
 
         Parameters
         ----------
-        values : :class:`ndarray <numpy.ndarray>`
+        values : |Array|
         """
 
         cdef np.ndarray[double,mode='c'] x = values
@@ -1039,7 +1152,8 @@ cdef class Network:
             free(v)
 
     def propogate_data_in_time(self, start, end):
-        """ Propogates data from the first period through time.
+        """ 
+        Propogates data from the first period through time.
 
         Parameters
         ----------
@@ -1058,8 +1172,9 @@ cdef class Network:
 
     def update_hashes(self):
         """
-        Update the bus name and number hash lists.
+        Updates the bus name and number hash lists.
         """
+        
         cdef Bus cb
 
         for bus in self.buses:
@@ -1090,37 +1205,37 @@ cdef class Network:
         def __set__(self,v): cnet.NET_set_base_power(self._c_net, v)
 
     property buses:
-        """ List of network :class:`buses <pfnet.Bus>` (list). """
+        """ List of |Bus| objects. """
         def __get__(self):
             return [self.get_bus(i) for i in range(self.num_buses)]
 
     property branches:
-        """ List of network :class:`branches <pfnet.Branch>` (list). """
+        """ List of |Branch| objects. """
         def __get__(self):
             return [self.get_branch(i) for i in range(self.num_branches)]
 
     property generators:
-        """ List of network :class:`generators <pfnet.Generator>` (list). """
+        """ List of |Generator| objects. """
         def __get__(self):
             return [self.get_generator(i) for i in range(self.num_generators)]
 
     property shunts:
-        """ List of network :class:`shunts <pfnet.Shunt>` (list). """
+        """ List of |Shunt| objects. """
         def __get__(self):
             return [self.get_shunt(i) for i in range(self.num_shunts)]
 
     property loads:
-        """ List of network :class:`loads <pfnet.Load>` (list). """
+        """ List of |Load| objects. """
         def __get__(self):
             return [self.get_load(i) for i in range(self.num_loads)]
 
     property var_generators:
-        """ List of network :class:`variable generators <pfnet.VarGenerator>` (list). """
+        """ List of |VarGenerator| objects. """
         def __get__(self):
             return [self.get_var_generator(i) for i in range(self.num_var_generators)]
 
     property batteries:
-        """ List of network :class:`batteries <pfnet.Battery>` (list). """
+        """ List of |Battery| objects. """
         def __get__(self):
             return [self.get_battery(i) for i in range(self.num_batteries)]
 
@@ -1169,7 +1284,7 @@ cdef class Network:
         def __get__(self): return cnet.NET_get_num_sparse(self._c_net)
 
     property total_load_P:
-        """ Total load active power (MW) (float or array). """
+        """ Total load active power (MW) (float or |Array|). """
         def __get__(self):
             r = [cnet.NET_get_total_load_P(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1178,7 +1293,7 @@ cdef class Network:
                 return np.array(r)
 
     property bus_v_max:
-        """ Maximum bus voltage magnitude (p.u.) (float or array). """
+        """ Maximum bus voltage magnitude (p.u.) (float or |Array|). """
         def __get__(self):
             r = [cnet.NET_get_bus_v_max(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1187,7 +1302,7 @@ cdef class Network:
                 return np.array(r)
 
     property bus_v_min:
-        """ Minimum bus voltage magnitude (p.u.) (float or array). """
+        """ Minimum bus voltage magnitude (p.u.) (float or |Array|). """
         def __get__(self):
             r = [cnet.NET_get_bus_v_min(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1196,7 +1311,7 @@ cdef class Network:
                 return np.array(r)
 
     property bus_v_vio:
-        """ Maximum bus voltage magnitude limit violation (p.u.) (float or array). """
+        """ Maximum bus voltage magnitude limit violation (p.u.) (float or |Array|). """
         def __get__(self):
             r = [cnet.NET_get_bus_v_vio(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1205,7 +1320,7 @@ cdef class Network:
                 return np.array(r)
 
     property bus_P_mis:
-        """ Largest bus active power mismatch in the network (MW) (float or array). """
+        """ Largest bus active power mismatch in the network (MW) (float or |Array|). """
         def __get__(self):
             r = [cnet.NET_get_bus_P_mis(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1214,7 +1329,7 @@ cdef class Network:
                 return np.array(r)
 
     property bus_Q_mis:
-        """ Largest bus reactive power mismatch in the network (MVAr) (float or array). """
+        """ Largest bus reactive power mismatch in the network (MVAr) (float or |Array|). """
         def __get__(self):
             r = [cnet.NET_get_bus_Q_mis(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1223,7 +1338,7 @@ cdef class Network:
                 return np.array(r)
 
     property gen_P_cost:
-        """ Total active power generation cost ($/hr) (float or array). """
+        """ Total active power generation cost ($/hr) (float or |Array|). """
         def __get__(self):
             r = [cnet.NET_get_gen_P_cost(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1232,7 +1347,7 @@ cdef class Network:
                 return np.array(r)
 
     property gen_v_dev:
-        """ Largest voltage magnitude deviation from set point of bus regulated by generator (p.u.) (float or array). """
+        """ Largest voltage magnitude deviation from set point of bus regulated by generator (p.u.) (float or |Array|). """
         def __get__(self):
             r = [cnet.NET_get_gen_v_dev(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1241,7 +1356,7 @@ cdef class Network:
                 return np.array(r)
 
     property gen_Q_vio:
-        """ Largest generator reactive power limit violation (MVAr) (float or array). """
+        """ Largest generator reactive power limit violation (MVAr) (float or |Array|). """
         def __get__(self):
             r = [cnet.NET_get_gen_Q_vio(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1250,7 +1365,7 @@ cdef class Network:
                 return np.array(r)
 
     property gen_P_vio:
-        """ Largest generator active power limit violation (MW) (float or array). """
+        """ Largest generator active power limit violation (MW) (float or |Array|). """
         def __get__(self):
             r = [cnet.NET_get_gen_P_vio(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1259,7 +1374,7 @@ cdef class Network:
                 return np.array(r)
 
     property tran_v_vio:
-        """ Largest voltage magnitude band violation of voltage regulated by transformer (p.u.) (float or array). """
+        """ Largest voltage magnitude band violation of voltage regulated by transformer (p.u.) (float or |Array|). """
         def __get__(self):
             r = [cnet.NET_get_tran_v_vio(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1268,7 +1383,7 @@ cdef class Network:
                 return np.array(r)
 
     property tran_r_vio:
-        """ Largest transformer tap ratio limit violation (float or array). """
+        """ Largest transformer tap ratio limit violation (float or |Array|). """
         def __get__(self):
             r = [cnet.NET_get_tran_r_vio(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1277,7 +1392,7 @@ cdef class Network:
                 return np.array(r)
 
     property tran_p_vio:
-        """ Largest transformer phase shift limit violation (float or array). """
+        """ Largest transformer phase shift limit violation (float or |Array|). """
         def __get__(self):
             r = [cnet.NET_get_tran_p_vio(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1286,7 +1401,7 @@ cdef class Network:
                 return np.array(r)
 
     property shunt_v_vio:
-        """ Largest voltage magnitude band violation of voltage regulated by switched shunt device (p.u.) (float or array). """
+        """ Largest voltage magnitude band violation of voltage regulated by switched shunt device (p.u.) (float or |Array|). """
         def __get__(self):
             r = [cnet.NET_get_shunt_v_vio(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1295,7 +1410,7 @@ cdef class Network:
                 return np.array(r)
 
     property shunt_b_vio:
-        """ Largest switched shunt susceptance limit violation (p.u.) (float or array). """
+        """ Largest switched shunt susceptance limit violation (p.u.) (float or |Array|). """
         def __get__(self):
             r = [cnet.NET_get_shunt_b_vio(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1304,7 +1419,7 @@ cdef class Network:
                 return np.array(r)
 
     property load_P_util:
-        """ Total active power consumption utility ($/hr) (float or array). """
+        """ Total active power consumption utility ($/hr) (float or |Array|). """
         def __get__(self):
             r = [cnet.NET_get_load_P_util(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1313,7 +1428,7 @@ cdef class Network:
                 return np.array(r)
 
     property load_P_vio:
-        """ Largest load active power limit violation (MW) (float or array). """
+        """ Largest load active power limit violation (MW) (float or |Array|). """
         def __get__(self):
             r = [cnet.NET_get_load_P_vio(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1322,7 +1437,7 @@ cdef class Network:
                 return np.array(r)
 
     property num_actions:
-        """ Number of control adjustments (int or array). """
+        """ Number of control adjustments (int or |Array|). """
         def __get__(self):
             r = [cnet.NET_get_num_actions(self._c_net,t) for t in range(self.num_periods)]
             if self.num_periods == 1:
@@ -1337,6 +1452,10 @@ cdef class Network:
     property var_generators_corr_value:
         """ Correlation value (coefficient) of variable generators. """
         def __get__(self): return cnet.NET_get_vargen_corr_value(self._c_net)
+
+    property show_components_str:
+        """ String with information about network components. """
+        def __get__(self): return cnet.NET_get_show_components_str(self._c_net).decode('UTF-8')
 
 cdef public new_Network(cnet.Net* n):
     if n is not NULL:
