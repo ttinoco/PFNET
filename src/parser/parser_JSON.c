@@ -212,10 +212,11 @@ void JSON_PARSER_write(Parser* p, Net* net, char* filename) {
     PARSER_set_error(p,"unable to open file");
     return;
   }
-
+  
   // Write
   json_string = NET_get_json_string(net);
-  fprintf(file,"%s",json_string);
+  if (json_string)
+    fprintf(file,"%s",json_string);
 
   // Clean up
   free(json_string);

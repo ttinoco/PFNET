@@ -109,9 +109,11 @@ cdef class ParserBase:
         net : |Network|
         filename : string
         """
-        
+
         filename = filename.encode('UTF-8')
-        cparser.PARSER_write(self._c_parser,net._c_net,filename)
+        cparser.PARSER_write(self._c_parser,
+                             net._c_net if net is not None else NULL,
+                             filename)
         if cparser.PARSER_has_error(self._c_parser):
             raise ParserError(cparser.PARSER_get_error_string(self._c_parser))
         
