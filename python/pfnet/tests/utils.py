@@ -83,6 +83,15 @@ def compare_networks(test, net1, net2, check_internals=False):
                              set([o.index for o in bus2.var_generators]))
         test.assertEqual(set([o.index for o in bus1.batteries]),
                              set([o.index for o in bus2.batteries]))
+        test.assertLess(norminf(bus1.sens_P_balance-bus2.sens_P_balance), eps)
+        test.assertLess(norminf(bus1.sens_Q_balance-bus2.sens_Q_balance), eps)
+        test.assertLess(norminf(bus1.sens_v_mag_u_bound-bus2.sens_v_mag_u_bound), eps)
+        test.assertLess(norminf(bus1.sens_v_mag_l_bound-bus2.sens_v_mag_l_bound), eps)
+        test.assertLess(norminf(bus1.sens_v_ang_u_bound-bus2.sens_v_ang_u_bound), eps)
+        test.assertLess(norminf(bus1.sens_v_ang_l_bound-bus2.sens_v_ang_l_bound), eps)
+        test.assertLess(norminf(bus1.sens_v_reg_by_gen-bus2.sens_v_reg_by_gen), eps)
+        test.assertLess(norminf(bus1.sens_v_reg_by_tran-bus2.sens_v_reg_by_tran), eps)
+        test.assertLess(norminf(bus1.sens_v_reg_by_shunt-bus2.sens_v_reg_by_shunt), eps)
         if check_internals:
             test.assertLess(norminf(bus1.index_v_mag-bus2.index_v_mag),eps)
             test.assertLess(norminf(bus1.index_v_ang-bus2.index_v_ang),eps)
@@ -90,15 +99,6 @@ def compare_networks(test, net1, net2, check_internals=False):
             test.assertEqual(bus1.flags_fixed,bus2.flags_fixed)
             test.assertEqual(bus1.flags_bounded,bus2.flags_bounded)
             test.assertEqual(bus1.flags_sparse,bus2.flags_sparse)
-            test.assertLess(norminf(bus1.sens_P_balance-bus2.sens_P_balance), eps)
-            test.assertLess(norminf(bus1.sens_Q_balance-bus2.sens_Q_balance), eps)
-            test.assertLess(norminf(bus1.sens_v_mag_u_bound-bus2.sens_v_mag_u_bound), eps)
-            test.assertLess(norminf(bus1.sens_v_mag_l_bound-bus2.sens_v_mag_l_bound), eps)
-            test.assertLess(norminf(bus1.sens_v_ang_u_bound-bus2.sens_v_ang_u_bound), eps)
-            test.assertLess(norminf(bus1.sens_v_ang_l_bound-bus2.sens_v_ang_l_bound), eps)
-            test.assertLess(norminf(bus1.sens_v_reg_by_gen-bus2.sens_v_reg_by_gen), eps)
-            test.assertLess(norminf(bus1.sens_v_reg_by_tran-bus2.sens_v_reg_by_tran), eps)
-            test.assertLess(norminf(bus1.sens_v_reg_by_shunt-bus2.sens_v_reg_by_shunt), eps)
 
     # Branches
     test.assertEqual(net1.num_branches, net2.num_branches)

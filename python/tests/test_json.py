@@ -39,6 +39,15 @@ class TestJSON(unittest.TestCase):
                 self.assertEqual(json_model['index'], bus.index)
                 self.assertEqual(json_model['v_base'], bus.v_base)
                 self.assertEqual(json_model['name'], bus.name)
+                self.assertTrue('sens_P_balance' in json_model)
+                self.assertTrue('sens_Q_balance' in json_model)
+                self.assertTrue('sens_v_mag_u_bound' in json_model)
+                self.assertTrue('sens_v_mag_l_bound' in json_model)
+                self.assertTrue('sens_v_ang_u_bound' in json_model)
+                self.assertTrue('sens_v_ang_l_bound' in json_model)
+                self.assertTrue('sens_v_reg_by_gen' in json_model)
+                self.assertTrue('sens_v_reg_by_tran' in json_model)
+                self.assertTrue('sens_v_reg_by_shunt' in json_model)
                 # Add more
 
     def test_branch_json_string(self):
@@ -214,7 +223,7 @@ class TestJSON(unittest.TestCase):
             self.assertEqual(len(json_model['shunts']),net.num_shunts)
             self.assertEqual(len(json_model['var_generators']),net.num_var_generators)
             self.assertEqual(len(json_model['batteries']),net.num_batteries)
-                
+            
     def tearDown(self):
 
         pass

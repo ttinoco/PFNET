@@ -556,6 +556,18 @@ class TestParser(unittest.TestCase):
                 
             net = pf.Parser(case).parse(case,T)
             self.assertEqual(net.num_periods,T)
+
+            # Bus sens
+            for bus in net.buses:
+                bus.sens_P_balance = np.random.randn(net.num_periods)
+                bus.sens_Q_balance = np.random.randn(net.num_periods)
+                bus.sens_v_mag_u_bound = np.random.randn(net.num_periods)
+                bus.sens_v_mag_l_bound = np.random.randn(net.num_periods)
+                bus.sens_v_ang_u_bound = np.random.randn(net.num_periods)
+                bus.sens_v_ang_l_bound = np.random.randn(net.num_periods)
+                bus.sens_v_reg_by_gen = np.random.randn(net.num_periods)
+                bus.sens_v_reg_by_tran = np.random.randn(net.num_periods)
+                bus.sens_v_reg_by_shunt = np.random.randn(net.num_periods)
             
             # Set flags
             net.set_flags('bus','variable','any','voltage magnitude')

@@ -1323,7 +1323,16 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_list_int(temp,output,"branches_m",bus,Branch,BUS_get_branch_m,BRANCH_get_index,BRANCH_get_next_m,FALSE);
   JSON_list_int(temp,output,"reg_transformers",bus,Branch,BUS_get_reg_tran,BRANCH_get_index,BRANCH_get_reg_next,FALSE);
   JSON_list_int(temp,output,"var_generators",bus,Vargen,BUS_get_vargen,VARGEN_get_index,VARGEN_get_next,FALSE);
-  JSON_list_int(temp,output,"batteries",bus,Bat,BUS_get_bat,BAT_get_index,BAT_get_next,TRUE);
+  JSON_list_int(temp,output,"batteries",bus,Bat,BUS_get_bat,BAT_get_index,BAT_get_next,FALSE);
+  JSON_array_float(temp,output,"sens_P_balance",bus->sens_P_balance,bus->num_periods,FALSE);
+  JSON_array_float(temp,output,"sens_Q_balance",bus->sens_Q_balance,bus->num_periods,FALSE);
+  JSON_array_float(temp,output,"sens_v_mag_u_bound",bus->sens_v_mag_u_bound,bus->num_periods,FALSE);
+  JSON_array_float(temp,output,"sens_v_mag_l_bound",bus->sens_v_mag_l_bound,bus->num_periods,FALSE);
+  JSON_array_float(temp,output,"sens_v_ang_u_bound",bus->sens_v_ang_u_bound,bus->num_periods,FALSE);
+  JSON_array_float(temp,output,"sens_v_ang_l_bound",bus->sens_v_ang_l_bound,bus->num_periods,FALSE);
+  JSON_array_float(temp,output,"sens_v_reg_by_gen",bus->sens_v_reg_by_gen,bus->num_periods,FALSE);
+  JSON_array_float(temp,output,"sens_v_reg_by_tran",bus->sens_v_reg_by_tran,bus->num_periods,FALSE);
+  JSON_array_float(temp,output,"sens_v_reg_by_shunt",bus->sens_v_reg_by_shunt,bus->num_periods,TRUE);
   JSON_end(output);
   
   // Resize

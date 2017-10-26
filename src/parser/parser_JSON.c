@@ -399,6 +399,60 @@ void JSON_PARSER_process_json_bus_array(Parser* p, Net* net, json_value* json_bu
 	for (k = 0; k < val->u.array.length; k++)
 	  BUS_add_bat(bus,NET_get_bat(net,val->u.array.values[k]->u.integer));
       }
+
+      // sens_P_balance
+      else if (strcmp(key,"sens_P_balance") == 0) {
+	for (k = 0; k < imin(BUS_get_num_periods(bus),val->u.array.length); k++)
+	  BUS_set_sens_P_balance(bus,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // sens_Q_balance
+      else if (strcmp(key,"sens_Q_balance") == 0) {
+	for (k = 0; k < imin(BUS_get_num_periods(bus),val->u.array.length); k++)
+	  BUS_set_sens_Q_balance(bus,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // sens_v_mag_u_bound
+      else if (strcmp(key,"sens_v_mag_u_bound") == 0) {
+	for (k = 0; k < imin(BUS_get_num_periods(bus),val->u.array.length); k++)
+	  BUS_set_sens_v_mag_u_bound(bus,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // sens_v_mag_l_bound
+      else if (strcmp(key,"sens_v_mag_l_bound") == 0) {
+	for (k = 0; k < imin(BUS_get_num_periods(bus),val->u.array.length); k++)
+	  BUS_set_sens_v_mag_l_bound(bus,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // sens_v_ang_u_bound
+      else if (strcmp(key,"sens_v_ang_u_bound") == 0) {
+	for (k = 0; k < imin(BUS_get_num_periods(bus),val->u.array.length); k++)
+	  BUS_set_sens_v_ang_u_bound(bus,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // sens_v_ang_l_bound
+      else if (strcmp(key,"sens_v_ang_l_bound") == 0) {
+	for (k = 0; k < imin(BUS_get_num_periods(bus),val->u.array.length); k++)
+	  BUS_set_sens_v_ang_l_bound(bus,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // sens_v_reg_by_gen
+      else if (strcmp(key,"sens_v_reg_by_gen") == 0) {
+	for (k = 0; k < imin(BUS_get_num_periods(bus),val->u.array.length); k++)
+	  BUS_set_sens_v_reg_by_gen(bus,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // sens_v_reg_by_tran
+      else if (strcmp(key,"sens_v_reg_by_tran") == 0) {
+	for (k = 0; k < imin(BUS_get_num_periods(bus),val->u.array.length); k++)
+	  BUS_set_sens_v_reg_by_tran(bus,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // sens_v_reg_by_shunt
+      else if (strcmp(key,"sens_v_reg_by_shunt") == 0) {
+	for (k = 0; k < imin(BUS_get_num_periods(bus),val->u.array.length); k++)
+	  BUS_set_sens_v_reg_by_shunt(bus,val->u.array.values[k]->u.dbl,k);
+      }
     }
   }
 }
