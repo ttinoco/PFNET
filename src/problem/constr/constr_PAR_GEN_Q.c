@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -83,13 +83,16 @@ void CONSTR_PAR_GEN_Q_count_step(Constr* c, Branch* br, int t) {
 
       // Reactive power of regulating generators
       if (BUS_is_regulated_by_gen(bus)) {
-	gen1 = BUS_get_reg_gen(bus);
-	for (gen2 = GEN_get_reg_next(gen1); gen2 != NULL; gen2 = GEN_get_reg_next(gen2)) {
+	for (gen1 = BUS_get_reg_gen(bus); gen1 != NULL; gen1 = GEN_get_reg_next(gen1)) {
 	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q))
+	    break;
+	}
+	for (gen2 = GEN_get_reg_next(gen1); gen2 != NULL; gen2 = GEN_get_reg_next(gen2)) {
+	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q)) {
 	    (*A_nnz)++;
-	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q))
 	    (*A_nnz)++;
-	  (*A_row)++;
+	    (*A_row)++;
+	  }
 	}
       }
     }
@@ -178,34 +181,40 @@ void CONSTR_PAR_GEN_Q_analyze_step(Constr* c, Branch* br, int t) {
 
       // Reactive power of regulating generators
       if (BUS_is_regulated_by_gen(bus)) {
-	gen1 = BUS_get_reg_gen(bus);
-	Qmin1 = GEN_get_Q_min(gen1);
-	dQ1 = GEN_get_Q_max(gen1)-Qmin1;
-	if (dQ1 < CONSTR_PAR_GEN_Q_PARAM)
-	  dQ1 = CONSTR_PAR_GEN_Q_PARAM;
+	
+	for (gen1 = BUS_get_reg_gen(bus); gen1 != NULL; gen1 = GEN_get_reg_next(gen1)) {
+	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q))
+	    break;
+	}
+		
 	for (gen2 = GEN_get_reg_next(gen1); gen2 != NULL; gen2 = GEN_get_reg_next(gen2)) {
-	  Qmin2 = GEN_get_Q_min(gen2);
-	  dQ2 = GEN_get_Q_max(gen2)-Qmin2;
-	  if (dQ2 < CONSTR_PAR_GEN_Q_PARAM)
-	    dQ2 = CONSTR_PAR_GEN_Q_PARAM;
-	  VEC_set(b,*A_row,Qmin1/dQ1-Qmin2/dQ2);
-	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q)) {
+	  
+	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q)) {
+
+	    Qmin1 = GEN_get_Q_min(gen1);
+	    dQ1 = GEN_get_Q_max(gen1)-Qmin1;
+	    if (dQ1 < CONSTR_PAR_GEN_Q_PARAM)
+	      dQ1 = CONSTR_PAR_GEN_Q_PARAM;
+	    
+	    Qmin2 = GEN_get_Q_min(gen2);
+	    dQ2 = GEN_get_Q_max(gen2)-Qmin2;
+	    if (dQ2 < CONSTR_PAR_GEN_Q_PARAM)
+	      dQ2 = CONSTR_PAR_GEN_Q_PARAM;
+	  
+	    VEC_set(b,*A_row,Qmin1/dQ1-Qmin2/dQ2);
+	    
 	    MAT_set_i(A,*A_nnz,*A_row);
 	    MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen1,t));
 	    MAT_set_d(A,*A_nnz,1./dQ1);
 	    (*A_nnz)++;
-	  }
-	  else
-	    VEC_add_to_entry(b,*A_row,-GEN_get_Q(gen1,t)/dQ1);
-	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q)) {
+	    
 	    MAT_set_i(A,*A_nnz,*A_row);
 	    MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen2,t));
 	    MAT_set_d(A,*A_nnz,-1./dQ2);
 	    (*A_nnz)++;
+	    
+	    (*A_row)++;
 	  }
-	  else
-	    VEC_add_to_entry(b,*A_row,GEN_get_Q(gen2,t)/dQ2);
-	  (*A_row)++;
 	}
       }
     }

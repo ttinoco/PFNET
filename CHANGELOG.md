@@ -10,6 +10,8 @@ Targets
 
 Unreleased
 ----------
+* Improved gen Q participation to look exactly at which Qs are vars to add correct number of constraints.
+
 
 Version 1.3.2
 -------------
