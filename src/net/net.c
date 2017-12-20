@@ -239,6 +239,7 @@ void NET_adjust_generators(Net* net) {
   REAL dQ;
   REAL Qmintot;
   REAL frac;
+  REAL SAFEGUARD_PARAM = 1e-4;
   int i;
   int t;
 
@@ -272,16 +273,25 @@ void NET_adjust_generators(Net* net) {
 	Qmintot = 0;
 	for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen)) {
 	  Qtot += GEN_get_Q(gen,t);
-	  dQtot += GEN_get_Q_max(gen)-GEN_get_Q_min(gen);
+	  dQ = GEN_get_Q_max(gen)-GEN_get_Q_min(gen);
+	  if (dQ < SAFEGUARD_PARAM)
+	    dQ = SAFEGUARD_PARAM;
+	  dQtot += dQ;
 	  Qmintot += GEN_get_Q_min(gen);
 	}
 	gen = BUS_get_reg_gen(bus);
 	dQ = GEN_get_Q_max(gen)-GEN_get_Q_min(gen);
+	if (dQ < SAFEGUARD_PARAM)
+	  dQ = SAFEGUARD_PARAM;
 	Q = GEN_get_Q_min(gen)+dQ*(Qtot-Qmintot)/dQtot;
 	frac = (Q-GEN_get_Q_min(gen))/dQ;
 	GEN_set_Q(gen,Q,t);
-	for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen))
-	  GEN_set_Q(gen,GEN_get_Q_min(gen)+frac*(GEN_get_Q_max(gen)-GEN_get_Q_min(gen)),t);
+	for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen)) {
+	  dQ = GEN_get_Q_max(gen)-GEN_get_Q_min(gen);
+	  if (dQ < SAFEGUARD_PARAM)
+	    dQ = SAFEGUARD_PARAM;
+	  GEN_set_Q(gen,GEN_get_Q_min(gen)+frac*dQ,t);
+	}
       }
     }
   }

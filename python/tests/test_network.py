@@ -4315,6 +4315,33 @@ class TestNetwork(unittest.TestCase):
 
             # Compare
             pf.tests.utils.compare_networks(self, orig_net, copy_net)            
+
+    def test_adjust_generators(self):
+        
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case, num_periods=2)
+
+            net.set_flags('generator',
+                          'variable',
+                          'regulator',
+                          'reactive power')
+
+            for gen in net.generators:
+                if gen.is_regulator():
+                    gen.Q_min = 0.
+                    gen.Q_max = 0.
+
+            net.adjust_generators()
+
+            x = net.get_var_values()
+            self.assertFalse(np.any(np.isnan(x)))
+            
+            constr = pf.Constraint('generator reactive power participation', net)
+            constr.analyze()
+            A = constr.A
+            b = constr.b
+            self.assertLess(np.linalg.norm(A*x-b),1e-12)
             
     def tearDown(self):
 

@@ -11,7 +11,7 @@ Targets
 Unreleased
 ----------
 * Improved gen Q participation to look exactly at which Qs are vars to add correct number of constraints.
-
+* Q_min=Q_max safeguards for net.adjust_generators().
 
 Version 1.3.2
 -------------
