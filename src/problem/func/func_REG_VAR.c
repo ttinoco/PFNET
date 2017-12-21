@@ -1,5 +1,5 @@
-/** @file func_REG_VMAG.c
- *  @brief This file defines the data structure and routines associated with the function of type REG_VMAG.
+/** @file func_REG_VAR.c
+ *  @brief This file defines the data structure and routines associated with the function of type REG_VAR.
  *
  * This file is part of PFNET.
  *
@@ -8,27 +8,47 @@
  * PFNET is released under the BSD 2-clause license.
  */
 
-#include <pfnet/func_REG_VMAG.h>
+#include <pfnet/array.h>
+#include <pfnet/func_REG_VAR.h>
 
-Func* FUNC_REG_VMAG_new(REAL weight, Net* net) {
+struct Func_REG_VAR_Data {
+  
+  REAL* x0; // center
+  REAL* w;  // weights
+};
+
+Func* FUNC_REG_VAR_new(REAL weight, Net* net) {
   Func* f = FUNC_new(weight,net);
-  FUNC_set_func_init(f,&FUNC_REG_VMAG_init);
-  FUNC_set_func_count_step(f,&FUNC_REG_VMAG_count_step);
-  FUNC_set_func_allocate(f,&FUNC_REG_VMAG_allocate);
-  FUNC_set_func_clear(f,&FUNC_REG_VMAG_clear);
-  FUNC_set_func_analyze_step(f,&FUNC_REG_VMAG_analyze_step);
-  FUNC_set_func_eval_step(f,&FUNC_REG_VMAG_eval_step);
-  FUNC_set_func_free(f,&FUNC_REG_VMAG_free);
+  FUNC_set_func_init(f,&FUNC_REG_VAR_init);
+  FUNC_set_func_count_step(f,&FUNC_REG_VAR_count_step);
+  FUNC_set_func_allocate(f,&FUNC_REG_VAR_allocate);
+  FUNC_set_func_clear(f,&FUNC_REG_VAR_clear);
+  FUNC_set_func_analyze_step(f,&FUNC_REG_VAR_analyze_step);
+  FUNC_set_func_eval_step(f,&FUNC_REG_VAR_eval_step);
+  FUNC_set_func_free(f,&FUNC_REG_VAR_free);
+  FUNC_set_func_set_parameter(f,&FUNC_REG_VAR_set_parameter);
   FUNC_init(f);
   return f;
 }
 
-void FUNC_REG_VMAG_init(Func* f) {
-  
-  FUNC_set_name(f,"voltage magnitude regularization");
+void FUNC_REG_VAR_init(Func* f) {
+
+  // Local variables
+  Net* net;
+  int num_vars;
+  Func_REG_VAR_Data* data;
+
+  // Init
+  net = FUNC_get_network(f);
+  num_vars = NET_get_num_vars(net);
+  data = (Func_REG_VAR_Data*)malloc(sizeof(Func_REG_VAR_Data));
+  ARRAY_zalloc(data->x0,REAL,num_vars);
+  ARRAY_zalloc(data->w,REAL,num_vars);
+  FUNC_set_name(f,"variable regularization");
+  FUNC_set_data(f,(void*)data);
 }
 
-void FUNC_REG_VMAG_clear(Func* f) {
+void FUNC_REG_VAR_clear(Func* f) {
 
   // phi
   FUNC_set_phi(f,0);
@@ -46,11 +66,16 @@ void FUNC_REG_VMAG_clear(Func* f) {
   FUNC_clear_bus_counted(f);
 }
 
-void FUNC_REG_VMAG_count_step(Func* f, Branch* br, int t) {
+void FUNC_REG_VAR_count_step(Func* f, Branch* br, int t) {
 
   // Local variables
   Bus* buses[2];
   Bus* bus;
+  Gen* gen;
+  Vargen* vargen;
+  Shunt* shunt;
+  Bat* bat;
+  Load* load;
   int bus_index_t[2];
   int* Hphi_nnz;
   char* bus_counted;
@@ -78,6 +103,14 @@ void FUNC_REG_VMAG_count_step(Func* f, Branch* br, int t) {
   for (k = 0; k < 2; k++)
     bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
+  // Tap ratio
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO))
+    (*Hphi_nnz)++;
+
+  // Phase shift
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE))
+    (*Hphi_nnz)++;
+  
   // Buses
   for (k = 0; k < 2; k++) {
 
@@ -85,8 +118,68 @@ void FUNC_REG_VMAG_count_step(Func* f, Branch* br, int t) {
 
     if (!bus_counted[bus_index_t[k]]) {
 
-      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) // v var
+      // Voltage magnitude
+      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG))
 	(*Hphi_nnz)++;
+
+      // Voltage angle
+      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG))
+	(*Hphi_nnz)++;
+
+      // Generators
+      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+
+	// Active power
+	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
+	  (*Hphi_nnz)++;
+
+	// Reactive power
+	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
+	  (*Hphi_nnz)++;
+      }
+
+      // Variable generators
+      for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+
+	// Active power
+	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P))
+	  (*Hphi_nnz)++;
+
+	// Reactive power
+	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q))
+	  (*Hphi_nnz)++;
+	
+      }
+
+      // Shunts
+      for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+
+	// Susceptance
+	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC))
+	  (*Hphi_nnz)++;
+	  
+      }
+
+      // Batteries
+      for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+
+	// Charging/discharging power
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P))
+	  (*Hphi_nnz)++;
+	  
+
+	// Energy level
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_E))
+	  (*Hphi_nnz)++;
+      }
+
+      // Loads
+      for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+
+	// Active power
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P))
+	  (*Hphi_nnz)++;
+      }
     }
 
     // Update counted flag
@@ -94,7 +187,7 @@ void FUNC_REG_VMAG_count_step(Func* f, Branch* br, int t) {
   }
 }
 
-void FUNC_REG_VMAG_allocate(Func* f) {
+void FUNC_REG_VAR_allocate(Func* f) {
 
   // Local variables
   int num_vars;
@@ -112,7 +205,7 @@ void FUNC_REG_VMAG_allocate(Func* f) {
 			  Hphi_nnz));
 }
 
-void FUNC_REG_VMAG_analyze_step(Func* f, Branch* br, int t) {
+void FUNC_REG_VAR_analyze_step(Func* f, Branch* br, int t) {
 
   // Local variables
   Bus* buses[2];
@@ -122,7 +215,7 @@ void FUNC_REG_VMAG_analyze_step(Func* f, Branch* br, int t) {
   char* bus_counted;
   Mat* H;
   int k;
-  REAL dv = FUNC_REG_VMAG_PARAM;
+  REAL dv = 1.;
   int T;
 
   // Num periods
@@ -167,7 +260,7 @@ void FUNC_REG_VMAG_analyze_step(Func* f, Branch* br, int t) {
   }
 }
 
-void FUNC_REG_VMAG_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
+void FUNC_REG_VAR_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
   // Local variables
   Bus* buses[2];
@@ -179,7 +272,7 @@ void FUNC_REG_VMAG_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   int index_v_mag;
   REAL v;
   REAL vt;
-  REAL dv = FUNC_REG_VMAG_PARAM;
+  REAL dv = 1.;
   int k;
   int T;
 
@@ -244,6 +337,26 @@ void FUNC_REG_VMAG_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   }
 }
 
-void FUNC_REG_VMAG_free(Func* f) {
-  // Nothing
+void FUNC_REG_VAR_free(Func* f) {
+
+  // Local variables
+  Func_REG_VAR_Data* data;
+
+  // Get data
+  data = (Func_REG_VAR_Data*)FUNC_get_data(f);
+
+  // Free
+  if (data) {
+    free(data->x0);
+    free(data->w);
+    free(data);
+  }
+
+  // Set data
+  FUNC_set_data(f,NULL);
+}
+
+void FUNC_REG_VAR_set_parameter(Func* f, char* key, void* value) {
+
+
 }

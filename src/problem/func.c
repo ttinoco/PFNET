@@ -48,6 +48,7 @@ struct Func {
   void (*func_analyze_step)(Func* f, Branch* br, int t);         /**< @brief Function for analyzing sparsity pattern */
   void (*func_eval_step)(Func* f, Branch* br, int t, Vec* v);    /**< @brief Function for evaluating function */
   void (*func_free)(Func* f);                                    /**< @brief Function for de-allocating any data used */
+  void (*func_set_parameter)(Func* c, char* key, void* value);   /**< @brief Function for setting function parameter */
 
   // Custom data
   void* data;  /**< @brief Type-dependent function data */
@@ -184,6 +185,13 @@ Func* FUNC_get_next(Func* f) {
     return NULL;
 }
 
+void* FUNC_get_data(Func* f) {
+  if (f)
+    return f->data;
+  else
+    return NULL;
+}
+
 void FUNC_list_clear_error(Func* flist) {
   Func* ff;
   for (ff = flist; ff != NULL; ff = FUNC_get_next(ff))
@@ -293,6 +301,7 @@ Func* FUNC_new(REAL weight, Net* net) {
   f->func_analyze_step = NULL;
   f->func_eval_step = NULL;
   f->func_free = NULL;
+  f->func_set_parameter = NULL;
 
   // Data
   f->data = NULL;
@@ -301,6 +310,18 @@ Func* FUNC_new(REAL weight, Net* net) {
   FUNC_update_network(f);
   
   return f;
+}
+
+void FUNC_set_parameter(Func* f, char* key, void* value) {
+  if (f) {
+    if (f->func_set_parameter)
+      (*(f->func_set_parameter))(f, key, value);
+    else {
+      sprintf(f->error_string,"function does not support setting parameters");
+      f->error_flag = TRUE;
+      return;
+    }
+  }
 }
 
 void FUNC_set_name(Func* f, char* name) {
@@ -335,6 +356,11 @@ void FUNC_set_bus_counted(Func* f, char* bus_counted, int size) {
     f->bus_counted = bus_counted;
     f->bus_counted_size = size;
   }  
+}
+
+void FUNC_set_data(Func* f, void* data) {
+  if (f)
+    f->data = data;
 }
 
 void FUNC_count(Func* f) {
@@ -531,14 +557,7 @@ void FUNC_set_func_free(Func* f, void (*func)(Func* f)) {
     f->func_free = func;
 }
 
-void* FUNC_get_data(Func* f) {
+void FUNC_set_func_set_parameter(Func* f, void (*func)(Func* f, char* key, void* value)) {
   if (f)
-    return f->data;
-  else
-    return NULL;
-}
-
-void FUNC_set_data(Func* f, void* data) {
-  if (f)
-    f->data = data;
+    f->func_set_parameter = func;
 }

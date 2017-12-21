@@ -86,6 +86,7 @@ void CONSTR_list_analyze_step(Constr* clist, Branch* br, int t);
 void CONSTR_list_eval_step(Constr* clist, Branch* br, int t, Vec* v, Vec* ve);
 void CONSTR_list_store_sens_step(Constr* clist, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 Constr* CONSTR_new(Net* net);
+void CONSTR_set_parameter(Constr* c, char* key, void* value);
 void CONSTR_set_name(Constr* c, char* name);
 void CONSTR_set_b(Constr* c, Vec* b);
 void CONSTR_set_A(Constr* c, Mat* A);
@@ -142,5 +143,6 @@ void CONSTR_set_func_analyze_step(Constr* c, void (*func)(Constr* c, Branch* br,
 void CONSTR_set_func_eval_step(Constr* c, void (*func)(Constr* c, Branch* br, int t, Vec* v, Vec* ve));
 void CONSTR_set_func_store_sens_step(Constr* c, void (*func)(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl));
 void CONSTR_set_func_free(Constr* c, void (*func)(Constr* c));
+void CONSTR_set_func_set_parameter(Constr* c, void (*func)(Constr* c, char* key, void* value));
 
 #endif
