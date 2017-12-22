@@ -76,6 +76,7 @@ BOOL FUNC_is_safe_to_eval(Func* f, Vec* values);
 void FUNC_clear_error(Func * f);
 BOOL FUNC_has_error(Func* f);
 char* FUNC_get_error_string(Func* f);
+void FUNC_set_error(Func* f, char* error_string);
 void FUNC_update_network(Func* f);
 Net* FUNC_get_network(Func* f);
 void FUNC_set_func_init(Func* f, void (*func)(Func* f));

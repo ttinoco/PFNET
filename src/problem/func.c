@@ -492,6 +492,13 @@ char* FUNC_get_error_string(Func* f) {
     return NULL;
 }
 
+void FUNC_set_error(Func* f, char* error_string) {
+  if (f) {
+    f->error_flag = TRUE;
+    strcpy(f->error_string,error_string);
+  }
+}
+
 char* FUNC_get_name(Func* f) {
   if (f)
     return f->name;

@@ -57,7 +57,7 @@ void FUNC_REG_VAR_clear(Func* f) {
   VEC_set_zero(FUNC_get_gphi(f));
 
   // Hphi
-  // Constant so not clear it
+  // Constant so don't clear it
 
   // Counter
   FUNC_set_Hphi_nnz(f,0);
@@ -85,7 +85,7 @@ void FUNC_REG_VAR_count_step(Func* f, Branch* br, int t) {
   // Num periods
   T = BRANCH_get_num_periods(br);
 
-  // Constr data
+  // Func data
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
   bus_counted = FUNC_get_bus_counted(f);
 
@@ -147,8 +147,7 @@ void FUNC_REG_VAR_count_step(Func* f, Branch* br, int t) {
 
 	// Reactive power
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q))
-	  (*Hphi_nnz)++;
-	
+	  (*Hphi_nnz)++;	
       }
 
       // Shunts
@@ -157,16 +156,16 @@ void FUNC_REG_VAR_count_step(Func* f, Branch* br, int t) {
 	// Susceptance
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC))
 	  (*Hphi_nnz)++;
-	  
       }
 
       // Batteries
       for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
 
 	// Charging/discharging power
-	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P))
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
 	  (*Hphi_nnz)++;
-	  
+	  (*Hphi_nnz)++;
+	} 
 
 	// Energy level
 	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_E))
@@ -179,6 +178,10 @@ void FUNC_REG_VAR_count_step(Func* f, Branch* br, int t) {
 	// Active power
 	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P))
 	  (*Hphi_nnz)++;
+
+	// Reactive power
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q))
+	  (*Hphi_nnz)++;	
       }
     }
 
@@ -210,24 +213,30 @@ void FUNC_REG_VAR_analyze_step(Func* f, Branch* br, int t) {
   // Local variables
   Bus* buses[2];
   Bus* bus;
+  Gen* gen;
+  Vargen* vargen;
+  Shunt* shunt;
+  Bat* bat;
+  Load* load;
   int bus_index_t[2];
   int* Hphi_nnz;
   char* bus_counted;
+  Func_REG_VAR_Data* data;
   Mat* H;
   int k;
-  REAL dv = 1.;
   int T;
 
   // Num periods
   T = BRANCH_get_num_periods(br);
 
-  // Constr data
+  // Func data
   H = FUNC_get_Hphi(f);
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
   bus_counted = FUNC_get_bus_counted(f);
+  data = (Func_REG_VAR_Data*)FUNC_get_data(f);
 
   // Check pointers
-  if (!Hphi_nnz || !bus_counted)
+  if (!Hphi_nnz || !bus_counted || !data ||!(data->w))
     return;
 
   // Check outage
@@ -240,6 +249,23 @@ void FUNC_REG_VAR_analyze_step(Func* f, Branch* br, int t) {
   for (k = 0; k < 2; k++)
     bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
+  // Tap ratio
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) {
+    MAT_set_i(H,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
+    MAT_set_j(H,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
+    MAT_set_d(H,*Hphi_nnz,2.*data->w[BRANCH_get_index_ratio(br,t)]);
+    (*Hphi_nnz)++;
+    (*Hphi_nnz)++;
+  }
+
+  // Phase shift
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
+    MAT_set_i(H,*Hphi_nnz,BRANCH_get_index_phase(br,t));
+    MAT_set_j(H,*Hphi_nnz,BRANCH_get_index_phase(br,t));
+    MAT_set_d(H,*Hphi_nnz,2.*data->w[BRANCH_get_index_phase(br,t)]);
+    (*Hphi_nnz)++;
+  }
+
   // Buses
   for (k = 0; k < 2; k++) {
 
@@ -247,11 +273,117 @@ void FUNC_REG_VAR_analyze_step(Func* f, Branch* br, int t) {
 
     if (!bus_counted[bus_index_t[k]]) {
 
-      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
+      // Voltage magnitude
+      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
 	MAT_set_i(H,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
 	MAT_set_j(H,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
-	MAT_set_d(H,*Hphi_nnz,1./(dv*dv));
+	MAT_set_d(H,*Hphi_nnz,2.*data->w[BUS_get_index_v_mag(bus,t)]);
 	(*Hphi_nnz)++;
+      }
+
+      // Voltage angle
+      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) {
+	MAT_set_i(H,*Hphi_nnz,BUS_get_index_v_ang(bus,t));
+	MAT_set_j(H,*Hphi_nnz,BUS_get_index_v_ang(bus,t));
+	MAT_set_d(H,*Hphi_nnz,2.*data->w[BUS_get_index_v_ang(bus,t)]);
+	(*Hphi_nnz)++;
+      }
+
+      // Generators
+      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+
+	// Active power
+	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
+	  MAT_set_i(H,*Hphi_nnz,GEN_get_index_P(gen,t));
+	  MAT_set_j(H,*Hphi_nnz,GEN_get_index_P(gen,t));
+	  MAT_set_d(H,*Hphi_nnz,2.*data->w[GEN_get_index_P(gen,t)]);
+	  (*Hphi_nnz)++;
+	}
+
+	// Reactive power
+	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) {
+	  MAT_set_i(H,*Hphi_nnz,GEN_get_index_Q(gen,t));
+	  MAT_set_j(H,*Hphi_nnz,GEN_get_index_Q(gen,t));
+	  MAT_set_d(H,*Hphi_nnz,2.*data->w[GEN_get_index_Q(gen,t)]);
+	  (*Hphi_nnz)++;
+	}
+      }
+
+      // Variable generators
+      for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+
+	// Active power
+	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) {
+	  MAT_set_i(H,*Hphi_nnz,VARGEN_get_index_P(vargen,t));
+	  MAT_set_j(H,*Hphi_nnz,VARGEN_get_index_P(vargen,t));
+	  MAT_set_d(H,*Hphi_nnz,2.*data->w[VARGEN_get_index_P(vargen,t)]);
+	  (*Hphi_nnz)++;
+	}
+
+	// Reactive power
+	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q)) {
+	  MAT_set_i(H,*Hphi_nnz,VARGEN_get_index_Q(vargen,t));
+	  MAT_set_j(H,*Hphi_nnz,VARGEN_get_index_Q(vargen,t));
+	  MAT_set_d(H,*Hphi_nnz,2.*data->w[VARGEN_get_index_Q(vargen,t)]);
+	  (*Hphi_nnz)++;
+	}	
+      }
+
+      // Shunts
+      for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+
+	// Susceptance
+	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
+	  MAT_set_i(H,*Hphi_nnz,SHUNT_get_index_b(shunt,t));
+	  MAT_set_j(H,*Hphi_nnz,SHUNT_get_index_b(shunt,t));
+	  MAT_set_d(H,*Hphi_nnz,2.*data->w[SHUNT_get_index_b(shunt,t)]);
+	  (*Hphi_nnz)++;
+	}
+	  
+      }
+
+      // Batteries
+      for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+
+	// Charging/discharging power
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
+	  MAT_set_i(H,*Hphi_nnz,BAT_get_index_Pc(bat,t));
+	  MAT_set_j(H,*Hphi_nnz,BAT_get_index_Pc(bat,t));
+	  MAT_set_d(H,*Hphi_nnz,2.*data->w[BAT_get_index_Pc(bat,t)]);
+	  (*Hphi_nnz)++;
+	  MAT_set_i(H,*Hphi_nnz,BAT_get_index_Pd(bat,t));
+	  MAT_set_j(H,*Hphi_nnz,BAT_get_index_Pd(bat,t));
+	  MAT_set_d(H,*Hphi_nnz,2.*data->w[BAT_get_index_Pd(bat,t)]);
+	  (*Hphi_nnz)++;
+	} 
+
+	// Energy level
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_E)) {
+	  MAT_set_i(H,*Hphi_nnz,BAT_get_index_E(bat,t));
+	  MAT_set_j(H,*Hphi_nnz,BAT_get_index_E(bat,t));
+	  MAT_set_d(H,*Hphi_nnz,2.*data->w[BAT_get_index_E(bat,t)]);
+	  (*Hphi_nnz)++;
+	}
+      }
+
+      // Loads
+      for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+
+	// Active power
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
+	  MAT_set_i(H,*Hphi_nnz,LOAD_get_index_P(load,t));
+	  MAT_set_j(H,*Hphi_nnz,LOAD_get_index_P(load,t));
+	  MAT_set_d(H,*Hphi_nnz,2.*data->w[LOAD_get_index_P(load,t)]);
+	  (*Hphi_nnz)++;
+	}
+
+	// Reactive power
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) {
+	  MAT_set_i(H,*Hphi_nnz,LOAD_get_index_Q(load,t));
+	  MAT_set_j(H,*Hphi_nnz,LOAD_get_index_Q(load,t));
+	  MAT_set_d(H,*Hphi_nnz,2.*data->w[LOAD_get_index_Q(load,t)]);
+	  (*Hphi_nnz)++;
+	}
       }
     }
 
@@ -265,27 +397,32 @@ void FUNC_REG_VAR_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   // Local variables
   Bus* buses[2];
   Bus* bus;
+  Gen* gen;
+  Vargen* vargen;
+  Shunt* shunt;
+  Bat* bat;
+  Load* load;
   int bus_index_t[2];
   char* bus_counted;
+  Func_REG_VAR_Data* data;
   REAL* phi;
   REAL* gphi;
-  int index_v_mag;
-  REAL v;
-  REAL vt;
-  REAL dv = 1.;
+  int index;
+  REAL x;
   int k;
   int T;
 
   // Num periods
   T = BRANCH_get_num_periods(br);
 
-  // Constr data
+  // Func data
   phi = FUNC_get_phi_ptr(f);
   gphi = VEC_get_data(FUNC_get_gphi(f));
   bus_counted = FUNC_get_bus_counted(f);
+  data = (Func_REG_VAR_Data*)FUNC_get_data(f);
 
   // Check pointers
-  if (!phi || !gphi || !bus_counted)
+  if (!phi || !gphi || !bus_counted || !data || !(data->w) || !(data->x0))
     return;
 
   // Check outage
@@ -298,6 +435,22 @@ void FUNC_REG_VAR_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   for (k = 0; k < 2; k++)
     bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
+  // Tap ratio
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) {
+    index = BRANCH_get_index_ratio(br,t);
+    x = VEC_get(var_values,index);
+    (*phi) += data->w[index]*pow(x-data->x0[index],2.);
+    gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
+  }
+
+  // Phase shift
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
+    index = BRANCH_get_index_phase(br,t);
+    x = VEC_get(var_values,index);
+    (*phi) += data->w[index]*pow(x-data->x0[index],2.);
+    gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
+  }
+  
   // Buses
   for (k = 0; k < 2; k++) {
 
@@ -305,31 +458,117 @@ void FUNC_REG_VAR_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
     if (!bus_counted[bus_index_t[k]]) {
 
-      // Set point
-      vt = BUS_get_v_set(bus,t);
-
-      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
-
-	// Index
-	index_v_mag = BUS_get_index_v_mag(bus,t);
-
-	// v
-	v = VEC_get(var_values,index_v_mag);
-
-	// phi
-	(*phi) += 0.5*pow((v-vt)/dv,2.);
-
-	// gphi
-	gphi[index_v_mag] = (v-vt)/(dv*dv);
+      // Voltage magnitude
+      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
+	index = BUS_get_index_v_mag(bus,t);
+	x = VEC_get(var_values,index);
+	(*phi) += data->w[index]*pow(x-data->x0[index],2.);
+	gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
       }
-      else {
 
-	// v
-	v = BUS_get_v_mag(bus,t);
-
-	// phi
-	(*phi) += 0.5*pow((v-vt)/dv,2.);
+      // Voltage angle
+      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) {
+	index = BUS_get_index_v_ang(bus,t);
+	x = VEC_get(var_values,index);
+	(*phi) += data->w[index]*pow(x-data->x0[index],2.);
+	gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
       }
+
+      // Generators
+      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+
+	// Active power
+	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
+	  index = GEN_get_index_P(gen,t);
+	  x = VEC_get(var_values,index);
+	  (*phi) += data->w[index]*pow(x-data->x0[index],2.);
+	  gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
+	}
+
+	// Reactive power
+	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) {
+	  index = GEN_get_index_Q(gen,t);
+	  x = VEC_get(var_values,index);
+	  (*phi) += data->w[index]*pow(x-data->x0[index],2.);
+	  gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
+	}
+      }
+
+      // Variable generators
+      for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+
+	// Active power
+	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) {
+	  index = VARGEN_get_index_P(vargen,t);
+	  x = VEC_get(var_values,index);
+	  (*phi) += data->w[index]*pow(x-data->x0[index],2.);
+	  gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
+	}
+
+	// Reactive power
+	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q)) {
+	  index = VARGEN_get_index_Q(vargen,t);
+	  x = VEC_get(var_values,index);
+	  (*phi) += data->w[index]*pow(x-data->x0[index],2.);
+	  gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
+	}	
+      }
+
+      // Shunts
+      for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+
+	// Susceptance
+	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
+	  index = SHUNT_get_index_b(shunt,t);
+	  x = VEC_get(var_values,index);
+	  (*phi) += data->w[index]*pow(x-data->x0[index],2.);
+	  gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
+	} 
+      }
+
+      // Batteries
+      for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+
+	// Charging/discharging power
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
+	  index = BAT_get_index_Pc(bat,t);
+	  x = VEC_get(var_values,index);
+	  (*phi) += data->w[index]*pow(x-data->x0[index],2.);
+	  gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
+	  index = BAT_get_index_Pd(bat,t);
+	  x = VEC_get(var_values,index);
+	  (*phi) += data->w[index]*pow(x-data->x0[index],2.);
+	  gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
+	} 
+
+	// Energy level
+	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_E)) {
+	  index = BAT_get_index_E(bat,t);
+	  x = VEC_get(var_values,index);
+	  (*phi) += data->w[index]*pow(x-data->x0[index],2.);
+	  gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
+	}
+      }
+
+      // Loads
+      for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+
+	// Active power
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
+	  index = LOAD_get_index_P(load,t);
+	  x = VEC_get(var_values,index);
+	  (*phi) += data->w[index]*pow(x-data->x0[index],2.);
+	  gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
+	}
+
+	// Reactive power
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) {
+	  index = LOAD_get_index_Q(load,t);
+	  x = VEC_get(var_values,index);
+	  (*phi) += data->w[index]*pow(x-data->x0[index],2.);
+	  gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
+	}
+      }      
     }
 
     // Update counted flag
@@ -347,8 +586,10 @@ void FUNC_REG_VAR_free(Func* f) {
 
   // Free
   if (data) {
-    free(data->x0);
-    free(data->w);
+    if (data->x0)
+      free(data->x0);
+    if (data->w)
+      free(data->w);
     free(data);
   }
 
@@ -358,5 +599,34 @@ void FUNC_REG_VAR_free(Func* f) {
 
 void FUNC_REG_VAR_set_parameter(Func* f, char* key, void* value) {
 
+  // Local variables
+  REAL* w;
+  REAL* x0;
+  Net* net = FUNC_get_network(f);
+  Func_REG_VAR_Data* data = (Func_REG_VAR_Data*)FUNC_get_data(f);
+  int num_vars = NET_get_num_vars(net);
 
+  // Check
+  if (!data)
+    return;
+
+  // Set 
+  if (strcmp(key,"w") == 0) { // w
+    w = (REAL*)value;
+    if (sizeof(w)/sizeof(REAL) == num_vars)
+      memcpy(data->w,w,num_vars*sizeof(REAL));
+    else
+      FUNC_set_error(f,"value of parameter w has incorrect size");
+  }
+	
+  else if (strcmp(key,"x0") == 0) { // x0
+    x0 = (REAL*)value;
+    if (sizeof(x0)/sizeof(REAL) == num_vars)
+      memcpy(data->x0,x0,num_vars*sizeof(REAL));
+    else
+      FUNC_set_error(f,"value of parameter x0 has incorrect size");
+  }
+  
+  else // unknown
+    FUNC_set_error(f,"invalid parameter");
 }
