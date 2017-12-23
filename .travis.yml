@@ -16,9 +16,9 @@ before_install:
   fi
 
 install:
-- sudo pip install --user -r ./python/requirements.txt
+- pip install --user -r ./python/requirements.txt
 
 script: 
 - cd python
-- sudo python setup.py build_ext --inplace
+- python setup.py build_ext --inplace
 - nosetests -s -v
