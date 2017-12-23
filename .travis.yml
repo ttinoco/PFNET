@@ -16,7 +16,7 @@ before_install:
   fi
 
 install:
-- sudo pip install -r ./python/requirements.txt
+- sudo pip install --ignore-installed -r ./python/requirements.txt
 
 script: 
 - cd python
