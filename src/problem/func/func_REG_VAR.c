@@ -255,7 +255,6 @@ void FUNC_REG_VAR_analyze_step(Func* f, Branch* br, int t) {
     MAT_set_j(H,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
     MAT_set_d(H,*Hphi_nnz,2.*data->w[BRANCH_get_index_ratio(br,t)]);
     (*Hphi_nnz)++;
-    (*Hphi_nnz)++;
   }
 
   // Phase shift
@@ -347,10 +346,12 @@ void FUNC_REG_VAR_analyze_step(Func* f, Branch* br, int t) {
 
 	// Charging/discharging power
 	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
+
 	  MAT_set_i(H,*Hphi_nnz,BAT_get_index_Pc(bat,t));
 	  MAT_set_j(H,*Hphi_nnz,BAT_get_index_Pc(bat,t));
 	  MAT_set_d(H,*Hphi_nnz,2.*data->w[BAT_get_index_Pc(bat,t)]);
 	  (*Hphi_nnz)++;
+
 	  MAT_set_i(H,*Hphi_nnz,BAT_get_index_Pd(bat,t));
 	  MAT_set_j(H,*Hphi_nnz,BAT_get_index_Pd(bat,t));
 	  MAT_set_d(H,*Hphi_nnz,2.*data->w[BAT_get_index_Pd(bat,t)]);
@@ -531,10 +532,12 @@ void FUNC_REG_VAR_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
 	// Charging/discharging power
 	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
+
 	  index = BAT_get_index_Pc(bat,t);
 	  x = VEC_get(var_values,index);
 	  (*phi) += data->w[index]*pow(x-data->x0[index],2.);
 	  gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
+
 	  index = BAT_get_index_Pd(bat,t);
 	  x = VEC_get(var_values,index);
 	  (*phi) += data->w[index]*pow(x-data->x0[index],2.);
@@ -613,18 +616,12 @@ void FUNC_REG_VAR_set_parameter(Func* f, char* key, void* value) {
   // Set 
   if (strcmp(key,"w") == 0) { // w
     w = (REAL*)value;
-    if (sizeof(w)/sizeof(REAL) == num_vars)
-      memcpy(data->w,w,num_vars*sizeof(REAL));
-    else
-      FUNC_set_error(f,"value of parameter w has incorrect size");
+    memcpy(data->w,w,num_vars*sizeof(REAL));
   }
 	
   else if (strcmp(key,"x0") == 0) { // x0
     x0 = (REAL*)value;
-    if (sizeof(x0)/sizeof(REAL) == num_vars)
-      memcpy(data->x0,x0,num_vars*sizeof(REAL));
-    else
-      FUNC_set_error(f,"value of parameter x0 has incorrect size");
+    memcpy(data->x0,x0,num_vars*sizeof(REAL));
   }
   
   else // unknown

@@ -12,6 +12,8 @@ Unreleased
 ----------
 * Improved gen Q participation to look exactly at which Qs are vars to add correct number of constraints.
 * Q_min=Q_max safeguards for net.adjust_generators().
+* added support for changing function and constraint parameters.
+* added "variable regularization" function or (FUNC_REG_VAR), which has parameters w and x0 and computes (x-x0)^Tdiag(w)(x-x0).
 
 Version 1.3.2
 -------------

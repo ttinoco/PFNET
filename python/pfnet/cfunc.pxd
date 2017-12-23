@@ -1,7 +1,7 @@
 #***************************************************#
 # This file is part of PFNET.                       #
 #                                                   #
-# Copyright (c) 2015-2017, Tomas Tinoco De Rubira.  #
+# Copyright (c) 2015, Tomas Tinoco De Rubira.       #
 #                                                   #
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
@@ -35,6 +35,7 @@ cdef extern from "pfnet/pfnet.h":
     char* FUNC_get_name(Func* f)
     char* FUNC_get_error_string(Func* f)
     void FUNC_update_network(Func* f)
+    void FUNC_set_parameter(Func* f, char* key, void* value)
     void FUNC_set_name(Func* f, char*)
     void FUNC_set_phi(Func* f, REAL phi)
     void FUNC_set_gphi(Func* f, Vec* gphi)
@@ -59,6 +60,7 @@ cdef extern from "pfnet/pfnet.h":
     Func* FUNC_REG_VMAG_new(REAL w, Net* net)
     Func* FUNC_SLIM_VMAG_new(REAL w, Net* net)
     Func* FUNC_SP_CONTROLS_new(REAL w, Net* net)
+    Func* FUNC_REG_VAR_new(REAL w, Net* net)
 
     void* FUNC_get_data(Func* f)
     void FUNC_set_data(Func* f, void* data)

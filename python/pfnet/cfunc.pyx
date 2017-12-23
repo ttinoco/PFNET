@@ -136,6 +136,40 @@ cdef class FunctionBase:
                                                     <cfunc.REAL*>(data.data))
         cfunc.FUNC_set_Hphi(self._c_func,m)
 
+    def set_parameter(self, key, value):
+        """
+        Sets function parameter.
+
+        Parameters
+        ----------
+        key : string
+        value : object
+        """
+
+        cdef void* cvalue = NULL
+        cdef np.ndarray[double, mode='c'] a
+        key = key.encode('UTF-8')
+
+        # int
+
+        # float
+
+        # ndarray
+        if issubclass(type(value), np.ndarray):
+            a = value
+            cvalue = <void*>a.data
+
+        # Unknown
+        if cvalue == NULL:
+            raise FunctionError('invalid value type')
+
+        # Set parameter
+        cfunc.FUNC_set_parameter(self._c_func, key, cvalue)
+        
+        # Error
+        if cfunc.FUNC_has_error(self._c_func):
+            raise FunctionError(cfunc.FUNC_get_error_string(self._c_func))
+
     property name:
         """ Function name (string). """
         def __get__(self): return cfunc.FUNC_get_name(self._c_func).decode('UTF-8')
@@ -200,27 +234,29 @@ cdef class Function(FunctionBase):
     def __cinit__(self, name, weight, Network net):
                 
         if name == "generation cost":
-            self._c_func = cfunc.FUNC_GEN_COST_new(weight,net._c_net)
+            self._c_func = cfunc.FUNC_GEN_COST_new(weight, net._c_net)
         elif name == "consumption utility":
-            self._c_func = cfunc.FUNC_LOAD_UTIL_new(weight,net._c_net)
+            self._c_func = cfunc.FUNC_LOAD_UTIL_new(weight, net._c_net)
         elif name == "net consumption cost":
-            self._c_func = cfunc.FUNC_NETCON_COST_new(weight,net._c_net)
+            self._c_func = cfunc.FUNC_NETCON_COST_new(weight, net._c_net)
         elif name == "phase shift regularization":
-            self._c_func = cfunc.FUNC_REG_PHASE_new(weight,net._c_net)
+            self._c_func = cfunc.FUNC_REG_PHASE_new(weight, net._c_net)
         elif name == "generator powers regularization":
-            self._c_func = cfunc.FUNC_REG_PQ_new(weight,net._c_net)
+            self._c_func = cfunc.FUNC_REG_PQ_new(weight, net._c_net)
         elif name == "tap ratio regularization":
-            self._c_func = cfunc.FUNC_REG_RATIO_new(weight,net._c_net)
+            self._c_func = cfunc.FUNC_REG_RATIO_new(weight, net._c_net)
         elif name == "susceptance regularization":
-            self._c_func = cfunc.FUNC_REG_SUSC_new(weight,net._c_net)
+            self._c_func = cfunc.FUNC_REG_SUSC_new(weight, net._c_net)
         elif name == "voltage angle regularization":
-            self._c_func = cfunc.FUNC_REG_VANG_new(weight,net._c_net)
+            self._c_func = cfunc.FUNC_REG_VANG_new(weight, net._c_net)
         elif name == "voltage magnitude regularization":
-            self._c_func = cfunc.FUNC_REG_VMAG_new(weight,net._c_net)
+            self._c_func = cfunc.FUNC_REG_VMAG_new(weight, net._c_net)
+        elif name == "variable regularization":
+            self._c_func = cfunc.FUNC_REG_VAR_new(weight, net._c_net)
         elif name == "soft voltage magnitude limits":
-            self._c_func = cfunc.FUNC_SLIM_VMAG_new(weight,net._c_net)
+            self._c_func = cfunc.FUNC_SLIM_VMAG_new(weight, net._c_net)
         elif name == "sparse controls penalty":
-            self._c_func = cfunc.FUNC_SP_CONTROLS_new(weight,net._c_net)
+            self._c_func = cfunc.FUNC_SP_CONTROLS_new(weight, net._c_net)
         else:
             raise FunctionError('invalid function name')
             

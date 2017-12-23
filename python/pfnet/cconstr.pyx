@@ -408,6 +408,40 @@ cdef class ConstraintBase:
                                                     <cconstr.REAL*>(data.data))
         cconstr.CONSTR_set_J(self._c_constr,m)
 
+    def set_parameter(self, key, value):
+        """
+        Sets constraint parameter.
+
+        Parameters
+        ----------
+        key : string
+        value : object
+        """
+
+        cdef void* cvalue = NULL
+        cdef np.ndarray[double, mode='c'] a
+        key = key.encode('UTF-8')
+
+        # int
+
+        # float
+        
+        # ndarray
+        if issubclass(type(value), np.ndarray):
+            a = value
+            cvalue = <void*>a.data
+
+        # Unknown
+        if cvalue == NULL:
+            raise ConstraintError('invalid value type')
+
+        # Set parameter
+        cconstr.CONSTR_set_parameter(self._c_constr, key, cvalue)
+        
+        # Error
+        if cconstr.CONSTR_has_error(self._c_constr):
+            raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
+        
     property name:
         """ Constraint name (string). """
         def __get__(self): return cconstr.CONSTR_get_name(self._c_constr).decode('UTF-8')
