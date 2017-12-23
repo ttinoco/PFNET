@@ -12,13 +12,13 @@ before_install:
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then 
     brew update;
     brew install python;
-    easy_install pip;
+    sudo easy_install pip;
   fi
 
 install:
-- pip install -r ./python/requirements.txt
+- sudo pip install --user -r ./python/requirements.txt
 
 script: 
 - cd python
-- python setup.py build_ext --inplace
+- sudo python setup.py build_ext --inplace
 - nosetests -s -v
