@@ -163,10 +163,10 @@ cdef class Shunt:
             return new_Bus(cshunt.SHUNT_get_bus(self._c_ptr))
         def __set__(self,bus):
             cdef Bus cbus
-            if not isinstance(bus,Bus):
+            if not isinstance(bus,Bus) and bus is not None:
                 raise ShuntError('Not a Bus type object')
             cbus = bus
-            cshunt.SHUNT_set_bus(self._c_ptr,cbus._c_ptr)
+            cshunt.SHUNT_set_bus(self._c_ptr,cbus._c_ptr if bus is not None else NULL)
 
     property reg_bus:
         """ |Bus| whose voltage magnitude is regulated by this shunt device. """
@@ -174,10 +174,10 @@ cdef class Shunt:
             return new_Bus(cshunt.SHUNT_get_reg_bus(self._c_ptr))
         def __set__(self,bus):
             cdef Bus creg_bus
-            if not isinstance(bus,Bus):
+            if not isinstance(bus,Bus) and bus is not None:
                 raise ShuntError('Not a Bus type object')
             creg_bus = bus
-            cshunt.SHUNT_set_reg_bus(self._c_ptr,creg_bus._c_ptr)
+            cshunt.SHUNT_set_reg_bus(self._c_ptr,creg_bus._c_ptr if bus is not None else NULL)
             
     property g:
         """ Shunt conductance (p.u.) (float). """

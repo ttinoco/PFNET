@@ -4342,6 +4342,114 @@ class TestNetwork(unittest.TestCase):
             A = constr.A
             b = constr.b
             self.assertLess(np.linalg.norm(A*x-b),1e-12)
+
+    def test_symmetric_connectors_removers(self):
+
+        # Bus
+        bus = pf.Bus()
+        bus.name = 'foo'
+
+        # Generators
+        gen1 = pf.Generator()
+        gen1.name = 'gen1'
+        self.assertTrue(bus.generators == [])
+        self.assertRaises(pf.BusError, lambda g: g.bus, gen1)
+        bus.add_generator(gen1)
+        self.assertEqual(gen1.bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.generators] == ['gen1'])
+        gen1.bus = bus
+        self.assertEqual(gen1.bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.generators] == ['gen1'])
+        gen2 = pf.Generator()
+        gen2.name = 'gen2'
+        self.assertRaises(pf.BusError, lambda g: g.bus, gen2)
+        gen2.bus = bus
+        self.assertEqual(gen2.bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.generators] == ['gen1', 'gen2'])
+        bus.add_generator(gen2)
+        self.assertEqual(gen2.bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.generators] == ['gen1', 'gen2'])
+        bus.remove_generator(gen2)
+        self.assertEqual(gen1.bus.name,bus.name)
+        self.assertRaises(pf.BusError, lambda g: g.bus, gen2)
+        self.assertTrue([g.name for g in bus.generators] == ['gen1'])
+        gen1.bus = None
+        self.assertRaises(pf.BusError, lambda g: g.bus, gen1)
+        self.assertRaises(pf.BusError, lambda g: g.bus, gen2)
+        self.assertTrue([g.name for g in bus.generators] == [])
+
+        # Reg generators
+
+        # Loads
+        load1 = pf.Load()
+        load1.name = 'load1'
+        self.assertTrue(bus.loads == [])
+        self.assertRaises(pf.BusError, lambda x: x.bus, load1)
+        bus.add_load(load1)
+        self.assertEqual(load1.bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.loads] == ['load1'])
+        load1.bus = bus
+        self.assertEqual(load1.bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.loads] == ['load1'])
+        load2 = pf.Load()
+        load2.name = 'load2'
+        self.assertRaises(pf.BusError, lambda x: x.bus, load2)
+        load2.bus = bus
+        self.assertEqual(load2.bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.loads] == ['load1', 'load2'])
+        bus.add_load(load2)
+        self.assertEqual(load2.bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.loads] == ['load1', 'load2'])
+        bus.remove_load(load2)
+        self.assertEqual(load1.bus.name,bus.name)
+        self.assertRaises(pf.BusError, lambda x: x.bus, load2)
+        self.assertTrue([x.name for x in bus.loads] == ['load1'])
+        load1.bus = None
+        self.assertRaises(pf.BusError, lambda x: x.bus, load1)
+        self.assertRaises(pf.BusError, lambda x: x.bus, load2)
+        self.assertTrue([x.name for x in bus.loads] == [])
+        
+        # Branches k
+
+        # Branches m
+
+        # Reg branches
+
+        # Shunts
+        shunt1 = pf.Shunt()
+        shunt1.name = 'shunt1'
+        self.assertTrue(bus.shunts == [])
+        self.assertRaises(pf.BusError, lambda x: x.bus, shunt1)
+        bus.add_shunt(shunt1)
+        self.assertEqual(shunt1.bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.shunts] == ['shunt1'])
+        shunt1.bus = bus
+        self.assertEqual(shunt1.bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.shunts] == ['shunt1'])
+        shunt2 = pf.Shunt()
+        shunt2.name = 'shunt2'
+        self.assertRaises(pf.BusError, lambda x: x.bus, shunt2)
+        shunt2.bus = bus
+        self.assertEqual(shunt2.bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.shunts] == ['shunt1', 'shunt2'])
+        bus.add_shunt(shunt2)
+        self.assertEqual(shunt2.bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.shunts] == ['shunt1', 'shunt2'])
+        bus.remove_shunt(shunt2)
+        self.assertEqual(shunt1.bus.name,bus.name)
+        self.assertRaises(pf.BusError, lambda x: x.bus, shunt2)
+        self.assertTrue([x.name for x in bus.shunts] == ['shunt1'])
+        shunt1.bus = None
+        self.assertRaises(pf.BusError, lambda x: x.bus, shunt1)
+        self.assertRaises(pf.BusError, lambda x: x.bus, shunt2)
+        self.assertTrue([x.name for x in bus.shunts] == [])
+
+        # Reg shunts
+
+        # Batteries
+
+        # Var generators
+            
             
     def tearDown(self):
 

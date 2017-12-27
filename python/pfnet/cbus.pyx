@@ -421,6 +421,21 @@ cdef class Bus:
             raise BusError('Not a Generator type object')
         cgen = gen
         cbus.BUS_add_gen(self._c_ptr, cgen._c_ptr)
+
+    def remove_generator(self, gen):
+        """
+        Removes a generator connection to this bus.
+        
+        Parameters
+        ----------
+        gen : |Generator|
+        """
+        
+        cdef Generator cgen
+        if not isinstance(gen,Generator):
+            raise BusError('Not a Generator type object')
+        cgen = gen
+        cbus.BUS_del_gen(self._c_ptr, cgen._c_ptr)        
     
     def add_reg_generator(self, reg_gen):
         """
@@ -436,6 +451,21 @@ cdef class Bus:
             raise BusError('Not a Generator type object')
         creg_gen = reg_gen
         cbus.BUS_add_reg_gen(self._c_ptr, creg_gen._c_ptr)
+
+    def remove_reg_generator(self, reg_gen):
+        """
+        Removes a regulating generator connection to this bus.
+        
+        Parameters
+        ----------
+        reg_gen : |Generator|
+        """
+        
+        cdef Generator creg_gen
+        if not isinstance(reg_gen,Generator):
+            raise BusError('Not a Generator type object')
+        creg_gen = reg_gen
+        cbus.BUS_del_reg_gen(self._c_ptr, creg_gen._c_ptr)
     
     def add_load(self, load):
         """
@@ -451,6 +481,21 @@ cdef class Bus:
             raise BusError('Not a Load type object')
         cload = load
         cbus.BUS_add_load(self._c_ptr, cload._c_ptr)
+
+    def remove_load(self, load):
+        """
+        Removes a load connection to this bus.
+        
+        Parameters
+        ----------
+        load : |Load|
+        """
+        
+        cdef Load cload
+        if not isinstance(load,Load):
+            raise BusError('Not a Load type object')
+        cload = load
+        cbus.BUS_del_load(self._c_ptr, cload._c_ptr)
     
     def add_branch_k(self, branch):
         """
@@ -466,6 +511,21 @@ cdef class Bus:
             raise BusError('Not a Branch type object')
         cbranch = branch
         cbus.BUS_add_branch_k(self._c_ptr, cbranch._c_ptr)
+
+    def remove_branch_k(self, branch):
+        """
+        Removes a "k" branch connection to this bus.
+        
+        Parameters
+        ----------
+        branch : |Branch|
+        """
+        
+        cdef Branch cbranch
+        if not isinstance(branch, Branch):
+            raise BusError('Not a Branch type object')
+        cbranch = branch
+        cbus.BUS_del_branch_k(self._c_ptr, cbranch._c_ptr)
     
     def add_branch_m(self, branch):
         """
@@ -481,6 +541,21 @@ cdef class Bus:
             raise BusError('Not a Branch type object')
         cbranch = branch
         cbus.BUS_add_branch_m(self._c_ptr, cbranch._c_ptr)
+
+    def remove_branch_m(self, branch):
+        """
+        Removes an "m" branch connection to this bus.
+        
+        Parameters
+        ----------
+        branch : |Branch|
+        """
+        
+        cdef Branch cbranch
+        if not isinstance(branch,Branch):
+            raise BusError('Not a Branch type object')
+        cbranch = branch
+        cbus.BUS_del_branch_m(self._c_ptr, cbranch._c_ptr)
     
     def add_reg_tran(self, reg_tran_branch):
         """
@@ -496,6 +571,21 @@ cdef class Bus:
             raise BusError('Not a Branch type object')
         cbranch = reg_tran_branch
         cbus.BUS_add_reg_tran(self._c_ptr, cbranch._c_ptr)
+
+    def remove_reg_tran(self, reg_tran_branch):
+        """
+        Removes a regulating transformer connection to this bus.
+        
+        Parameters
+        ----------
+        reg_tran_branch : |Branch|
+        """
+        
+        cdef Branch cbranch
+        if not isinstance(reg_tran_branch,Branch):
+            raise BusError('Not a Branch type object')
+        cbranch = reg_tran_branch
+        cbus.BUS_del_reg_tran(self._c_ptr, cbranch._c_ptr)
     
     def add_shunt(self, shunt):
         """
@@ -511,6 +601,21 @@ cdef class Bus:
             raise BusError('Not a Shunt type object')
         cshunt = shunt
         cbus.BUS_add_shunt(self._c_ptr, cshunt._c_ptr)
+
+    def remove_shunt(self, shunt):
+        """
+        Removes a shunt connection to this bus.
+        
+        Parameters
+        ----------
+        shunt : |Shunt|
+        """
+        
+        cdef Shunt cshunt
+        if not isinstance(shunt,Shunt):
+            raise BusError('Not a Shunt type object')
+        cshunt = shunt
+        cbus.BUS_del_shunt(self._c_ptr, cshunt._c_ptr)
     
     def add_reg_shunt(self, reg_shunt):
         """
@@ -526,6 +631,21 @@ cdef class Bus:
             raise BusError('Not a Shunt type object')
         cshunt = reg_shunt
         cbus.BUS_add_reg_shunt(self._c_ptr, cshunt._c_ptr)
+
+    def remove_reg_shunt(self, reg_shunt):
+        """
+        Removes a regulating shunt connection to this bus.
+        
+        Parameters
+        ----------
+        reg_shunt : |Shunt|
+        """
+        
+        cdef Shunt cshunt
+        if not isinstance(reg_shunt,Shunt):
+            raise BusError('Not a Shunt type object')
+        cshunt = reg_shunt
+        cbus.BUS_del_reg_shunt(self._c_ptr, cshunt._c_ptr)
     
     def add_var_generator(self, vargen):
         """
@@ -541,6 +661,21 @@ cdef class Bus:
             raise BusError('Not a VarGenerator type object')
         cvargen = vargen
         cbus.BUS_add_vargen(self._c_ptr, cvargen._c_ptr)
+
+    def remove_var_generator(self, vargen):
+        """
+        Removes a variable generator connection to this bus.
+        
+        Parameters
+        ----------
+        vargen : |VarGenerator|
+        """
+        
+        cdef VarGenerator cvargen
+        if not isinstance(vargen,VarGenerator):
+            raise BusError('Not a VarGenerator type object')
+        cvargen = vargen
+        cbus.BUS_del_vargen(self._c_ptr, cvargen._c_ptr)
     
     def add_battery(self, bat):
         """
@@ -556,6 +691,21 @@ cdef class Bus:
             raise BusError('Not a Battery type object')
         cbat = bat
         cbus.BUS_add_bat(self._c_ptr, cbat._c_ptr)
+
+    def remove_battery(self, bat):
+        """
+        Removes a battery connection to this bus.
+        
+        Parameters
+        ----------
+        bat : |Battery|
+        """
+        
+        cdef Battery cbat
+        if not isinstance(bat,Battery):
+            raise BusError('Not a Battery type object')
+        cbat = bat
+        cbus.BUS_del_bat(self._c_ptr, cbat._c_ptr)
 
     def show(self, t=0):
         """

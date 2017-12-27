@@ -620,6 +620,11 @@ Bat* BAT_list_add(Bat* bat_list, Bat* bat) {
   return bat_list;
 }
 
+Bat* BAT_list_del(Bat* bat_list, Bat* bat) {
+  LIST_del(Bat,bat_list,bat,next);
+  return bat_list;
+}
+
 int BAT_list_len(Bat* bat_list) {
   int len;
   LIST_len(Bat,bat_list,next,len);
@@ -641,9 +646,15 @@ void BAT_set_name(Bat* bat, char* name) {
     strncpy(bat->name,name,(size_t)(BAT_BUFFER_SIZE-1));
 }
 
-void BAT_set_bus(Bat* bat, Bus* bus) { 
-  if (bat)
-    bat->bus = (Bus*)bus;
+void BAT_set_bus(Bat* bat, Bus* bus) {
+  Bus* old_bus;
+  if (bat) {
+    old_bus = bat->bus;
+    bat->bus = NULL;
+    BUS_del_bat(old_bus,bat);
+    bat->bus = bus;
+    BUS_add_bat(bat->bus,bat);
+  }
 }
 
 void BAT_set_index(Bat* bat, int index) { 

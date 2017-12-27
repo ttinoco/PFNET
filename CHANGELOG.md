@@ -12,8 +12,10 @@ Unreleased
 ----------
 * Improved gen Q participation to look exactly at which Qs are vars to add correct number of constraints.
 * Q_min=Q_max safeguards for net.adjust_generators().
-* added support for changing function and constraint parameters.
-* added "variable regularization" function or (FUNC_REG_VAR), which has parameters w and x0 and computes (x-x0)^Tdiag(w)(x-x0).
+* Added support for changing function and constraint parameters (CONSTR_set_parameter, FUNC_set_parameter).
+* Added "variable regularization" function or FUNC_REG_VAR, which has parameters w and x0 and computes (x-x0)^Tdiag(w)(x-x0).
+* Symmetric connectors/removers for all bus-connected components (connecting A to B also connects B to A).
+* Exposed all obj.set_bus and bus.add/remove_obj routines in Python, and made "obj.bus = None" disconnect obj from bus.
 
 Version 1.3.2
 -------------

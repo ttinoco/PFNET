@@ -244,10 +244,10 @@ cdef class Generator:
             return new_Bus(cgen.GEN_get_bus(self._c_ptr))
         def __set__(self,bus):
             cdef Bus cbus
-            if not isinstance(bus,Bus):
+            if not isinstance(bus,Bus) and bus is not None:
                 raise GeneratorError('Not a Bus type object')
             cbus = bus
-            cgen.GEN_set_bus(self._c_ptr,cbus._c_ptr)
+            cgen.GEN_set_bus(self._c_ptr,cbus._c_ptr if bus is not None else NULL)
 
     property reg_bus:
         """ |Bus| whose voltage is regulated by this generator. """
@@ -255,10 +255,10 @@ cdef class Generator:
             return new_Bus(cgen.GEN_get_reg_bus(self._c_ptr))
         def __set__(self,reg_bus):
             cdef Bus creg_bus
-            if not isinstance(reg_bus,Bus):
+            if not isinstance(reg_bus,Bus) and reg_bus is not None:
                 raise GeneratorError('Not a Bus type object')
             creg_bus = reg_bus
-            cgen.GEN_set_reg_bus(self._c_ptr,creg_bus._c_ptr) 
+            cgen.GEN_set_reg_bus(self._c_ptr,creg_bus._c_ptr if reg_bus is not None else NULL) 
 
     property P:
         """ Generator active power (p.u. system base MVA) (float or |Array|). """

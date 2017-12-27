@@ -657,6 +657,11 @@ Load* LOAD_list_add(Load* load_list, Load* load) {
   return load_list;
 }
 
+Load* LOAD_list_del(Load* load_list, Load* load) {
+  LIST_del(Load,load_list,load,next);
+  return load_list;
+}
+
 int LOAD_list_len(Load* load_list) {
   int len;
   LIST_len(Load,load_list,next,len);
@@ -716,9 +721,15 @@ void LOAD_set_util_coeff_Q2(Load* load, REAL q) {
     load->util_coeff_Q2 = q;
 }
 
-void LOAD_set_bus(Load* load, Bus* bus) { 
-  if (load)
-    load->bus = (Bus*)bus;
+void LOAD_set_bus(Load* load, Bus* bus) {
+  Bus* old_bus;
+  if (load) {
+    old_bus = load->bus;
+    load->bus = NULL;
+    BUS_del_load(old_bus,load);
+    load->bus = bus;
+    BUS_add_load(load->bus,load);
+  }
 }
 
 void LOAD_set_index(Load* load, int index) { 

@@ -185,10 +185,10 @@ cdef class VarGenerator:
             return new_Bus(cvargen.VARGEN_get_bus(self._c_ptr))
         def __set__(self,bus):
             cdef Bus cbus
-            if not isinstance(bus,Bus):
+            if not isinstance(bus,Bus) and bus is not None:
                 raise VarGeneratorError('Not a Bus type object')
             cbus = bus
-            cvargen.VARGEN_set_bus(self._c_ptr,cbus._c_ptr) 
+            cvargen.VARGEN_set_bus(self._c_ptr,cbus._c_ptr if bus is not None else NULL) 
 
     property P:
         """ Variable generator active power after curtailments (p.u. system base MVA) (float or |Array|). """

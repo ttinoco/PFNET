@@ -737,10 +737,10 @@ cdef class Branch:
             return new_Bus(cbranch.BRANCH_get_bus_k(self._c_ptr))
         def __set__(self,bus): 
             cdef Bus cbus
-            if not isinstance(bus,Bus):
+            if not isinstance(bus,Bus) and bus is not None:
                 raise BranchError('Not a Bus type object')
             cbus = bus
-            cbranch.BRANCH_set_bus_k(self._c_ptr,cbus._c_ptr)
+            cbranch.BRANCH_set_bus_k(self._c_ptr,cbus._c_ptr if bus is not None else NULL)
 
     property bus_to:
         """ .. deprecated:: 1.2.5  Same as :attr:`bus_m <pfnet.Branch.bus_m>`. """
@@ -753,10 +753,10 @@ cdef class Branch:
             return new_Bus(cbranch.BRANCH_get_bus_m(self._c_ptr))
         def __set__(self,bus): 
             cdef Bus cbus
-            if not isinstance(bus,Bus):
+            if not isinstance(bus,Bus) and bus is not None:
                 raise BranchError('Not a Bus type object')
             cbus = bus
-            cbranch.BRANCH_set_bus_m(self._c_ptr,cbus._c_ptr)
+            cbranch.BRANCH_set_bus_m(self._c_ptr,cbus._c_ptr if bus is not None else NULL)
 
     property reg_bus:
         """ |Bus| whose voltage is regulated by this tap-changing transformer. """
@@ -764,10 +764,10 @@ cdef class Branch:
             return new_Bus(cbranch.BRANCH_get_reg_bus(self._c_ptr))
         def __set__(self,bus): 
             cdef Bus cbus
-            if not isinstance(bus,Bus):
+            if not isinstance(bus,Bus) and bus is not None:
                 raise BranchError('Not a Bus type object')
             cbus = bus
-            cbranch.BRANCH_set_reg_bus(self._c_ptr,cbus._c_ptr)
+            cbranch.BRANCH_set_reg_bus(self._c_ptr,cbus._c_ptr if bus is not None else NULL)
 
     property b:
         """ Branch series susceptance (p.u.) (float). """

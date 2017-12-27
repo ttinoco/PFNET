@@ -1513,18 +1513,36 @@ void BRANCH_set_type(Branch* br, int type) {
 }
 
 void BRANCH_set_bus_k(Branch* br, Bus* bus_k) {
-  if (br)
+  Bus* old_bus_k;
+  if (br) {
+    old_bus_k = br->bus_k;
+    br->bus_k = NULL;
+    BUS_del_branch_k(old_bus_k,br);
     br->bus_k = bus_k;
+    BUS_add_branch_k(br->bus_k,br);
+  }
 }
 
 void BRANCH_set_bus_m(Branch* br, Bus* bus_m) {
-  if (br)
+  Bus* old_bus_m;
+  if (br) {
+    old_bus_m = br->bus_m;
+    br->bus_m = NULL;
+    BUS_del_branch_m(old_bus_m,br);
     br->bus_m = bus_m;
+    BUS_add_branch_m(br->bus_m,br);
+  }
 }
 
 void BRANCH_set_reg_bus(Branch* br, Bus* reg_bus) {
-  if (br)
+  Bus* old_reg_bus;
+  if (br) {
+    old_reg_bus = br->reg_bus;
+    br->reg_bus = NULL;
+    BUS_del_reg_tran(old_reg_bus,br);
     br->reg_bus = reg_bus;
+    BUS_add_reg_tran(br->reg_bus,br);
+  }
 }
 
 void BRANCH_set_g(Branch* br, REAL g) {

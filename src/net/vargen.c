@@ -589,6 +589,11 @@ Vargen* VARGEN_list_add(Vargen* gen_list, Vargen* gen) {
   return gen_list;
 }
 
+Vargen* VARGEN_list_del(Vargen* gen_list, Vargen* gen) {
+  LIST_del(Vargen,gen_list,gen,next);
+  return gen_list;
+}
+
 int VARGEN_list_len(Vargen* gen_list) {
   int len;
   LIST_len(Vargen,gen_list,next,len);
@@ -611,8 +616,14 @@ void VARGEN_set_name(Vargen* gen, char* name) {
 }
 
 void VARGEN_set_bus(Vargen* gen, Bus* bus) {
-  if (gen)
-    gen->bus = (Bus*)bus;
+  Bus* old_bus;
+  if (gen) {
+    old_bus = gen->bus;
+    gen->bus = NULL;
+    BUS_del_vargen(old_bus,gen);
+    gen->bus = bus;
+    BUS_add_vargen(gen->bus,gen);
+  }
 }
 
 void VARGEN_set_index(Vargen* gen, int index) {

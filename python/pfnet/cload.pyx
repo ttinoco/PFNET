@@ -199,10 +199,10 @@ cdef class Load:
             return new_Bus(cload.LOAD_get_bus(self._c_ptr))
         def __set__(self,bus):
             cdef Bus cbus
-            if not isinstance(bus,Bus):
+            if not isinstance(bus,Bus) and bus is not None:
                 raise LoadError('Not a Bus type object')
             cbus = bus
-            cload.LOAD_set_bus(self._c_ptr,cbus._c_ptr)
+            cload.LOAD_set_bus(self._c_ptr,cbus._c_ptr if bus is not None else NULL)
 
     property P:
         """ Load active power (p.u. system base MVA) (float or |Array|). """

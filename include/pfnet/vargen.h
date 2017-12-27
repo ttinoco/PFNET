@@ -94,6 +94,7 @@ void VARGEN_init(Vargen* gen, int num_periods);
 BOOL VARGEN_is_wind(Vargen* gen);
 BOOL VARGEN_is_solar(Vargen* gen);
 Vargen* VARGEN_list_add(Vargen* gen_list, Vargen* gen);
+Vargen* VARGEN_list_del(Vargen* gen_list, Vargen* gen);
 int VARGEN_list_len(Vargen* gen_list);
 Vargen* VARGEN_new(int num_periods);
 void VARGEN_propagate_data_in_time(Vargen* gen, int start, int end);

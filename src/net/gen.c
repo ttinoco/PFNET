@@ -846,13 +846,25 @@ void GEN_set_cost_coeff_Q2(Gen* gen, REAL q) {
 }
 
 void GEN_set_bus(Gen* gen, Bus* bus) {
-  if (gen)
-    gen->bus = bus;
+  Bus* old_bus;
+  if (gen) {
+    old_bus = gen->bus;
+    gen->bus = NULL;
+    BUS_del_gen(old_bus,gen);  // remove old bus connection
+    gen->bus = bus;            // set new bus
+    BUS_add_gen(bus,gen);      // add new bus connection
+  }
 }
 
 void GEN_set_reg_bus(Gen* gen, Bus* reg_bus) {
-  if (gen)
+  Bus* old_reg_bus;
+  if (gen) {
+    old_reg_bus = gen->reg_bus;
+    gen->reg_bus = NULL;
+    BUS_del_reg_gen(old_reg_bus,gen);
     gen->reg_bus = reg_bus;
+    BUS_add_reg_gen(gen->reg_bus,gen);
+  }
 }
 
 void GEN_set_outage(Gen* gen, BOOL outage) {
