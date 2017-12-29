@@ -89,8 +89,9 @@ struct Net {
 };
 
 void NET_add_gens(Net* net, Gen** gen_ptr_array, int size) {
-  /** Adds generators to the network. The generator array is
-   * relocated, the data is copied, and the bus connections are stolen.
+  /** Adds generators to the network. The entire generator array is
+   * relocated, the data is copied (except flags for the new gens), 
+   * and the bus connections are stolen.
    */
   
   // Local variables
@@ -126,6 +127,7 @@ void NET_add_gens(Net* net, Gen** gen_ptr_array, int size) {
     if (!gen_src)
       continue;
 
+    // Copy data
     GEN_copy_from_gen(gen_dst,gen_src);
 
     // Clear flags
@@ -153,11 +155,113 @@ void NET_add_gens(Net* net, Gen** gen_ptr_array, int size) {
   GEN_array_del(old_gen_array,old_num_gens);
 }
 
+void NET_del_gens(Net* net, Gen** gen_ptr_array, int size) {
+  /** Removes generators from the network. The entire generator array is
+   * relocated, the data is copied, and the bus connections are set.
+   * Network flags are cleared. 
+   */
+  
+  // Local variables
+  Gen* gen_src;
+  Gen* gen_dst;
+  Gen* gen;
+  Gen* old_gen_array;
+  int old_num_gens;
+  char* delete;
+  Bus* bus;
+  Bus* reg_bus;
+  int num;
+  int index;
+  int i;
+
+  // Check
+  if (!net || !gen_ptr_array)
+    return;
+
+  // Old gens
+  old_gen_array = net->gen;
+  old_num_gens = net->num_gens;
+
+  // Count unique and mark for deletion
+  num = 0;
+  ARRAY_zalloc(delete,char,net->num_gens);
+  for (i = 0; i < size; i++) {
+    gen = gen_ptr_array[i];
+    if (gen) {
+      if (gen == NET_get_gen(net,GEN_get_index(gen))) { // gen to delete is present in network
+	if (!delete[GEN_get_index(gen)]) {
+	  delete[GEN_get_index(gen)] = 1;
+	  num++;
+	}
+      }	
+    }
+  }
+
+  // New gens
+  NET_set_gen_array(net,GEN_array_new(net->num_gens-num,net->num_periods),net->num_gens-num);
+
+  // Copy data and set connections
+  index = 0;
+  for (i = 0; i < old_num_gens; i++) {
+
+    // Delete
+    if (delete[i]) {
+
+      gen = GEN_array_get(old_gen_array,i);
+
+      // Clear connections bus - "gen to be deleted"
+      GEN_set_bus(gen,NULL);     // also removes gen from bus->gen list
+      GEN_set_reg_bus(gen,NULL); // also removes gen from bus->reg_gens list
+    }
+
+    // Keep
+    else {
+
+      gen_src = GEN_array_get(old_gen_array,i);
+      gen_dst = NET_get_gen(net,index);
+
+      // Copy data
+      GEN_copy_from_gen(gen_dst,gen_src);
+
+      // Save old connections
+      bus = GEN_get_bus(gen_src);        
+      reg_bus = GEN_get_reg_bus(gen_src);
+      
+      // Clear connections bus - old gen 
+      GEN_set_bus(gen_src,NULL);         // also removes gen from bus->gens list
+      GEN_set_reg_bus(gen_src,NULL);     // also removes gen from bus->reg_gens list
+      
+      // Add connections bus - new gen
+      GEN_set_bus(gen_dst,bus);          // also adds gen to bus->gens list
+      GEN_set_reg_bus(gen_dst,reg_bus);  // also adds gen to bus->reg_gens list
+      
+      index++;
+    }
+  }
+
+  // Delete old gens
+  GEN_array_del(old_gen_array,old_num_gens);
+
+  // Delete delete flags
+  free(delete);
+
+  // Clear flags
+  NET_clear_flags(net);
+}
+
 void NET_add_loads(Net* net, Load** load_ptr_array, int size) {
 
 }
 
+void NET_del_loads(Net* net, Load** load_ptr_array, int size) {
+
+}
+
 void NET_add_shunts(Net* net, Shunt** shunt_ptr_array, int size) {
+
+}
+
+void NET_del_shunts(Net* net, Shunt** shunt_ptr_array, int size) {
 
 }
 

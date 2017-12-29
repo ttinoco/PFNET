@@ -79,6 +79,7 @@ cdef class Network:
     def add_generators(self, generators):
         """
         Adds generators to the network.
+        Flags are not preserved (for now).
 
         Parameters
         ----------
@@ -102,6 +103,34 @@ cdef class Network:
             gen = generators[i]
             cgen.GEN_array_del(gen._c_ptr,1)
             gen._c_ptr = cnet.NET_get_gen(self._c_net, i+old_num_gens)
+            gen.alloc = False
+
+    def remove_generators(self, generators):
+        """
+        Removes generators from the network.
+        All network flags are cleared (for now). 
+
+        Parameters
+        ----------
+        generators : list of |Generator| objects
+        """
+
+        cdef cnet.Gen** array
+        cdef Generator gen
+
+        old_num_gens = self.num_generators
+        array = <cnet.Gen**>malloc(len(generators)*sizeof(cnet.Gen*))
+        for i in range(len(generators)):
+            gen = generators[i]
+            array[i] = gen._c_ptr
+
+        cnet.NET_del_gens(self._c_net, array, len(generators))
+        free(array)
+
+        # Update pointers and alloc flags
+        for i in range(len(generators)):
+            gen = generators[i]
+            gen._c_ptr = NULL
             gen.alloc = False
             
     def add_var_generators_from_parameters(self, buses, power_capacity, power_base, power_std=0., corr_radius=0, corr_value=0.):

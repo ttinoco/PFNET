@@ -171,8 +171,8 @@ class TestFunctions(unittest.TestCase):
             net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
-            net.add_var_generators(net.get_load_buses(),80.,50.,30.,5,0.05)
-            net.add_batteries(net.get_generator_buses(),20.,40.,0.8,0.9)
+            net.add_var_generators_from_parameters(net.get_load_buses(),80.,50.,30.,5,0.05)
+            net.add_batteries_from_parameters(net.get_generator_buses(),20.,40.,0.8,0.9)
             self.assertGreater(net.num_var_generators,0)
             self.assertGreater(net.num_batteries,0)
             
@@ -1852,7 +1852,7 @@ class TestFunctions(unittest.TestCase):
                 bus.price = (bus.index%10)*0.5123
 
             # vargens
-            net.add_var_generators(net.get_load_buses(),80.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(net.get_load_buses(),80.,50.,30.,5,0.05)
             for vargen in net.var_generators:
                 vargen.P = (vargen.index%10)*0.3233+0.1
 
@@ -2025,7 +2025,7 @@ class TestFunctions(unittest.TestCase):
                 bus.price = np.random.rand(self.T)*10.
 
             # vargens
-            net.add_var_generators(net.get_load_buses(),80.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(net.get_load_buses(),80.,50.,30.,5,0.05)
             for vargen in net.var_generators:
                 self.assertEqual(vargen.num_periods,self.T)
                 vargen.P = np.random.randn(self.T)*10.

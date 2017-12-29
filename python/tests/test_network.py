@@ -4459,7 +4459,6 @@ class TestNetwork(unittest.TestCase):
             net = pf.Parser(case).parse(case, num_periods=2)            
             orig_net = net.get_copy()
 
-            # Add gens
             gen1 = pf.Generator(num_periods=2)
             gen2 = pf.Generator(num_periods=2)
 
@@ -4485,6 +4484,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(gen1.index, 0)
             self.assertEqual(gen2.index, 0)
 
+            # Add gens
             net.add_generators([gen1,gen2])
 
             self.assertEqual(net.num_generators, orig_net.num_generators+2)
@@ -4530,7 +4530,19 @@ class TestNetwork(unittest.TestCase):
                                                  orig_net.get_bus(i),
                                                  check_internals=True)
                     
-            # Remove gens            
+            # Remove gens
+            net.remove_generators([gen1, gen2])
+
+            self.assertEqual(net.num_generators, orig_net.num_generators)
+
+            self.assertEqual(gen1.index, -1)
+            self.assertRaises(pf.BusError, lambda g: g.bus, gen1)
+            self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen1)
+            self.assertEqual(gen2.index, -1)
+            self.assertRaises(pf.BusError, lambda g: g.bus, gen2)
+            self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen2)
+
+            pf.tests.utils.compare_networks(self, net, orig_net, check_internals=True)            
             
     def tearDown(self):
 

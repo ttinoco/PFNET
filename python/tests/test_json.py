@@ -146,7 +146,7 @@ class TestJSON(unittest.TestCase):
             net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
-            net.add_var_generators(net.get_load_buses(),100.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(net.get_load_buses(),100.,50.,30.,5,0.05)
             self.assertGreaterEqual(net.num_var_generators,1)
 
             for gen in net.var_generators:
@@ -171,7 +171,7 @@ class TestJSON(unittest.TestCase):
             net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
-            net.add_batteries(net.get_generator_buses(),20.,50.)
+            net.add_batteries_from_parameters(net.get_generator_buses(),20.,50.)
             self.assertGreaterEqual(net.num_batteries,1)
 
             for bat in net.batteries:
@@ -198,8 +198,8 @@ class TestJSON(unittest.TestCase):
             net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
             
-            net.add_batteries(net.get_generator_buses(),20.,50.)
-            net.add_var_generators(net.get_load_buses(),100.,50.,30.,5,0.05)
+            net.add_batteries_from_parameters(net.get_generator_buses(),20.,50.)
+            net.add_var_generators_from_parameters(net.get_load_buses(),100.,50.,30.,5,0.05)
             self.assertGreaterEqual(net.num_batteries,1)
             self.assertGreaterEqual(net.num_var_generators,1)
 
