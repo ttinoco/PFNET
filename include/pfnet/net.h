@@ -41,8 +41,13 @@ typedef struct Net Net;
 /** @brief Adjust generator powers to obtain correct participations without affecting total injections. */
 void NET_adjust_generators(Net* net);
 
-void NET_add_vargens(Net* net, Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value);
-void NET_add_batteries(Net* net, Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d);
+void NET_add_gens(Net* net, Gen** gen_ptr_array, int size);
+void NET_add_loads(Net* net, Load** load_ptr_array, int size);
+void NET_add_shunts(Net* net, Shunt** shunt_ptr_array, int size);
+
+void NET_add_vargens_from_params(Net* net, Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value);
+void NET_add_batteries_from_params(Net* net, Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d);
+
 void NET_bus_hash_number_add(Net* net, Bus* bus);
 Bus* NET_bus_hash_number_find(Net* net, int number);
 void NET_bus_hash_name_add(Net* net, Bus* bus);

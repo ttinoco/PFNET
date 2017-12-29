@@ -88,7 +88,80 @@ struct Net {
   char* bus_counted;  /**< @brief Flags for processing buses */
 };
 
-void NET_add_vargens(Net* net, Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value) {
+void NET_add_gens(Net* net, Gen** gen_ptr_array, int size) {
+  /** Adds generators to the network. The generator array is
+   * relocated, the data is copied, and the bus connections are stolen.
+   */
+  
+  // Local variables
+  Gen* gen_src;
+  Gen* gen_dst;
+  Gen* old_gen_array;
+  int old_num_gens;
+  Bus* bus;
+  Bus* reg_bus;
+  int i;
+
+  // Check
+  if (!net || !gen_ptr_array)
+    return;
+
+  // Old gens
+  old_gen_array = net->gen;
+  old_num_gens = net->num_gens;
+
+  // New gens
+  NET_set_gen_array(net,GEN_array_new(net->num_gens+size,net->num_periods),net->num_gens+size);
+
+  // Copy data and steal connections
+  for (i = 0; i < net->num_gens; i++) {
+
+    if (i < old_num_gens)
+      gen_src = GEN_array_get(old_gen_array,i);
+    else
+      gen_src = gen_ptr_array[i-old_num_gens];
+    gen_dst = NET_get_gen(net,i);
+
+    // Check source
+    if (!gen_src)
+      continue;
+
+    GEN_copy_from_gen(gen_dst,gen_src);
+
+    // Clear flags
+    if (i >= old_num_gens) {
+      GEN_clear_flags(gen_dst,FLAG_VARS);
+      GEN_clear_flags(gen_dst,FLAG_FIXED);
+      GEN_clear_flags(gen_dst,FLAG_BOUNDED);
+      GEN_clear_flags(gen_dst,FLAG_SPARSE);
+    }
+    
+    // Save old connections
+    bus = GEN_get_bus(gen_src);        
+    reg_bus = GEN_get_reg_bus(gen_src);
+
+    // Clear connections bus - old gen 
+    GEN_set_bus(gen_src,NULL);         // also removes gen from bus->gens list
+    GEN_set_reg_bus(gen_src,NULL);     // also removes gen from bus->reg_gens list
+
+    // Add connections bus - new gen
+    GEN_set_bus(gen_dst,bus);          // also adds gen to bus->gens list
+    GEN_set_reg_bus(gen_dst,reg_bus);  // also adds gen to bus->reg_gens list
+  }
+
+  // Delete old gens
+  GEN_array_del(old_gen_array,old_num_gens);
+}
+
+void NET_add_loads(Net* net, Load** load_ptr_array, int size) {
+
+}
+
+void NET_add_shunts(Net* net, Shunt** shunt_ptr_array, int size) {
+
+}
+
+void NET_add_vargens_from_params(Net* net, Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value) {
   
   // Local variables
   REAL total_load_P;
@@ -154,7 +227,7 @@ void NET_add_vargens(Net* net, Bus* bus_list, REAL power_capacity, REAL power_ba
   }
 }
 
-void NET_add_batteries(Net* net, Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d) {
+void NET_add_batteries_from_params(Net* net, Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d) {
   
   // Local variables
   REAL total_load_P;

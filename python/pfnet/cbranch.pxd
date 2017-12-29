@@ -112,6 +112,7 @@ cdef extern from "pfnet/branch.h":
     bint BRANCH_has_flags(Branch* br, char flag_type, char mask)
     Branch* BRANCH_new(int num_periods)
     Branch* BRANCH_array_new(int size, int num_periods)
+    void BRANCH_array_del(Branch* br_array, int size)
     void BRANCH_array_show(Branch* br_array, int size, int t)
     void BRANCH_set_name(Branch* br, char* name)
     void BRANCH_set_type(Branch* br, int type)

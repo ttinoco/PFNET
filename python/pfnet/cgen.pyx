@@ -26,6 +26,7 @@ cdef class Generator:
     Generator class.
     """
 
+    cdef bint alloc
     cdef cgen.Gen* _c_ptr
 
     def __init__(self, num_periods=1, alloc=True):
@@ -45,6 +46,13 @@ cdef class Generator:
         if alloc:
             self._c_ptr = cgen.GEN_new(num_periods)
         else:
+            self._c_ptr = NULL
+        self.alloc = alloc
+
+    def __dealloc__(self):
+
+        if self.alloc:
+            cgen.GEN_array_del(self._c_ptr,1)
             self._c_ptr = NULL
 
     def _get_c_ptr(self):

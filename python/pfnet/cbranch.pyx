@@ -27,6 +27,7 @@ cdef class Branch:
     """
 
     cdef cbranch.Branch* _c_ptr
+    cdef bint alloc
 
     def __init__(self, num_periods=1, alloc=True):
         """
@@ -45,6 +46,13 @@ cdef class Branch:
         if alloc:
             self._c_ptr = cbranch.BRANCH_new(num_periods)
         else:
+            self._c_ptr = NULL
+        self.alloc = alloc
+
+    def __dealloc__(self):
+
+        if self.alloc:
+            cbranch.BRANCH_array_del(self._c_ptr,1)
             self._c_ptr = NULL
 
     def _get_c_ptr(self):

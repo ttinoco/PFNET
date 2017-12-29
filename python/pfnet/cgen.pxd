@@ -70,6 +70,7 @@ cdef extern from "pfnet/gen.h":
     bint GEN_has_flags(Gen* gen, char flag_type, char mask)
     Gen* GEN_new(int num_periods)
     Gen* GEN_array_new(int size, int num_periods)
+    void GEN_array_del(Gen* gen_array, int size)
     void GEN_set_name(Gen* gen, char* name)
     void GEN_set_bus(Gen* gen, Bus* bus)
     void GEN_set_reg_bus(Gen* gen, Bus* reg_bus)

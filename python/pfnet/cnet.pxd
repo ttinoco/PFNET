@@ -20,10 +20,15 @@ cdef extern from "pfnet/net.h":
 
     ctypedef struct Net
     ctypedef struct Bus
+    ctypedef struct Gen
     ctypedef double REAL
- 
-    void NET_add_vargens(Net* net, cbus.Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value)
-    void NET_add_batteries(Net* net, cbus.Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d)        
+
+    void NET_add_gens(Net* net, cgen.Gen** gen_ptr_array, int size)
+    void NET_add_loads(Net* net, cload.Load** load_ptr_array, int size)
+    void NET_add_shunts(Net* net, cshunt.Shunt** shunt_ptr_array, int size)
+
+    void NET_add_vargens_from_params(Net* net, cbus.Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value)
+    void NET_add_batteries_from_params(Net* net, cbus.Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d)        
     void NET_adjust_generators(Net* net)
     cbus.Bus* NET_bus_hash_number_find(Net* net, int number)
     cbus.Bus* NET_bus_hash_name_find(Net* net, char* name)

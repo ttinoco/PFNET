@@ -51,6 +51,7 @@ cdef extern from "pfnet/shunt.h":
     bint SHUNT_has_flags(Shunt* shunt, char flag_type, char mask)
     Shunt* SHUNT_new(int num_periods)
     Shunt* SHUNT_array_new(int size, int num_periods)
+    void SHUNT_array_del(Shunt* shunt_array, int size)
     void SHUNT_set_name(Shunt* shunt, char* name)
     void SHUNT_set_bus(Shunt* shunt, Bus* bus)
     void SHUNT_set_reg_bus(Shunt* shunt, Bus* reg_bus)

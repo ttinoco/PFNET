@@ -10,6 +10,123 @@ import pfnet as pf
 import numpy as np
 from numpy.linalg import norm
 
+norminf = lambda x: norm(x,np.inf) if isinstance(x,np.ndarray) else np.abs(x)
+
+def compare_buses(test, bus1, bus2, check_internals=False, eps=1e-10):
+    """
+    Method for checking if two |Bus| objects are similar.
+    
+    Parameters
+    ----------
+    test : unittest.TestCase
+    bus1 : |Bus|
+    bus2 : |Bus|
+    check_configuration : |TrueFalse|
+    eps : float
+    """
+
+    test.assertTrue(bus1 is not bus2)
+    test.assertEqual(bus1.number, bus2.number)
+    test.assertEqual(bus1.num_periods, bus2.num_periods)
+    test.assertEqual(bus1.name.upper().strip(), bus2.name.upper().strip())
+    test.assertLess(norminf(bus1.v_base-bus2.v_base), eps)
+    test.assertLess(norminf(bus1.v_mag-bus2.v_mag), eps)
+    test.assertLess(norminf(bus1.v_ang-bus2.v_ang), eps)
+    test.assertLess(norminf(bus1.v_set-bus2.v_set), eps)
+    test.assertLess(norminf(bus1.v_max_reg-bus2.v_max_reg), eps)
+    test.assertLess(norminf(bus1.v_min_reg-bus2.v_min_reg), eps)
+    test.assertLess(norminf(bus1.v_max_norm-bus2.v_max_norm), eps)
+    test.assertLess(norminf(bus1.v_min_norm-bus2.v_min_norm), eps)
+    test.assertLess(norminf(bus1.v_max_emer-bus2.v_max_emer), eps)
+    test.assertLess(norminf(bus1.v_min_emer-bus2.v_min_emer), eps)
+    test.assertEqual(bus1.is_slack(), bus2.is_slack())
+    test.assertEqual(bus1.is_regulated_by_gen(),bus2.is_regulated_by_gen())
+    test.assertEqual(bus1.is_regulated_by_tran(),bus2.is_regulated_by_tran())
+    test.assertEqual(bus1.is_regulated_by_shunt(),bus2.is_regulated_by_shunt())
+    test.assertLess(norminf(bus1.price-bus2.price), eps)
+    test.assertEqual(set([o.index for o in bus1.generators]),
+                     set([o.index for o in bus2.generators]))
+    test.assertEqual(set([o.index for o in bus1.reg_generators]),
+                     set([o.index for o in bus2.reg_generators]))
+    test.assertEqual(set([o.index for o in bus1.loads]),
+                     set([o.index for o in bus2.loads]))
+    test.assertEqual(set([o.index for o in bus1.shunts]),
+                     set([o.index for o in bus2.shunts]))
+    test.assertEqual(set([o.index for o in bus1.reg_shunts]),
+                     set([o.index for o in bus2.reg_shunts]))
+    test.assertEqual(set([o.index for o in bus1.branches_k]),
+                     set([o.index for o in bus2.branches_k]))
+    test.assertEqual(set([o.index for o in bus1.branches_m]),
+                     set([o.index for o in bus2.branches_m]))
+    test.assertEqual(set([o.index for o in bus1.reg_trans]),
+                     set([o.index for o in bus2.reg_trans]))
+    test.assertEqual(set([o.index for o in bus1.var_generators]),
+                     set([o.index for o in bus2.var_generators]))
+    test.assertEqual(set([o.index for o in bus1.batteries]),
+                     set([o.index for o in bus2.batteries]))
+    test.assertLess(norminf(bus1.sens_P_balance-bus2.sens_P_balance), eps)
+    test.assertLess(norminf(bus1.sens_Q_balance-bus2.sens_Q_balance), eps)
+    test.assertLess(norminf(bus1.sens_v_mag_u_bound-bus2.sens_v_mag_u_bound), eps)
+    test.assertLess(norminf(bus1.sens_v_mag_l_bound-bus2.sens_v_mag_l_bound), eps)
+    test.assertLess(norminf(bus1.sens_v_ang_u_bound-bus2.sens_v_ang_u_bound), eps)
+    test.assertLess(norminf(bus1.sens_v_ang_l_bound-bus2.sens_v_ang_l_bound), eps)
+    test.assertLess(norminf(bus1.sens_v_reg_by_gen-bus2.sens_v_reg_by_gen), eps)
+    test.assertLess(norminf(bus1.sens_v_reg_by_tran-bus2.sens_v_reg_by_tran), eps)
+    test.assertLess(norminf(bus1.sens_v_reg_by_shunt-bus2.sens_v_reg_by_shunt), eps)
+    if check_internals:
+        test.assertLess(norminf(bus1.index_v_mag-bus2.index_v_mag),eps)
+        test.assertLess(norminf(bus1.index_v_ang-bus2.index_v_ang),eps)
+        test.assertEqual(bus1.flags_vars,bus2.flags_vars)
+        test.assertEqual(bus1.flags_fixed,bus2.flags_fixed)
+        test.assertEqual(bus1.flags_bounded,bus2.flags_bounded)
+        test.assertEqual(bus1.flags_sparse,bus2.flags_sparse)
+
+def compare_generators(test, gen1, gen2, check_internals=False, eps=1e-10):
+    """
+    Method for checking if two |Generator| objects are similar.
+    
+    Parameters
+    ----------
+    test : unittest.TestCase
+    gen1 : |Generator|
+    gen2 : |Generator|
+    check_configuration : |TrueFalse|
+    eps : float
+    """
+    
+    test.assertTrue(gen1 is not gen2)
+    test.assertEqual(gen1.name, gen2.name)
+    test.assertEqual(gen1.num_periods, gen2.num_periods)
+    test.assertEqual(gen1.bus.index, gen2.bus.index)
+    test.assertEqual(gen1.is_on_outage(), gen2.is_on_outage())
+    test.assertEqual(gen1.is_slack(), gen2.is_slack())
+    test.assertEqual(gen1.is_regulator(), gen2.is_regulator())
+    test.assertEqual(gen1.is_P_adjustable(), gen2.is_P_adjustable())
+    if gen1.is_regulator():
+        test.assertEqual(gen1.reg_bus.index, gen2.reg_bus.index)
+    test.assertLess(norminf(gen1.P-gen2.P), eps)
+    test.assertLess(norminf(gen1.P_max-gen2.P_max), eps)
+    test.assertLess(norminf(gen1.P_min-gen2.P_min), eps)
+    test.assertLess(norminf(gen1.dP_max-gen2.dP_max), eps)
+    test.assertLess(norminf(gen1.P_prev-gen2.P_prev), eps)
+    test.assertLess(norminf(gen1.Q-gen2.Q), eps)
+    test.assertLess(norminf(gen1.Q_max-gen2.Q_max), eps)
+    test.assertLess(norminf(gen1.Q_min-gen2.Q_min), eps)
+    test.assertLess(norminf(gen1.cost_coeff_Q0-gen2.cost_coeff_Q0), eps)
+    test.assertLess(norminf(gen1.cost_coeff_Q1-gen2.cost_coeff_Q1), eps)
+    test.assertLess(norminf(gen1.cost_coeff_Q2-gen2.cost_coeff_Q2), eps)
+    if check_internals:
+        test.assertLess(norminf(gen1.index_P-gen2.index_P),eps)
+        test.assertLess(norminf(gen1.index_Q-gen2.index_Q),eps)
+        test.assertEqual(gen1.flags_vars,gen2.flags_vars)
+        test.assertEqual(gen1.flags_fixed,gen2.flags_fixed)
+        test.assertEqual(gen1.flags_bounded,gen2.flags_bounded)
+        test.assertEqual(gen1.flags_sparse,gen2.flags_sparse)
+        test.assertLess(norminf(gen1.sens_P_u_bound-gen2.sens_P_u_bound), eps)
+        test.assertLess(norminf(gen1.sens_P_l_bound-gen2.sens_P_l_bound), eps)
+        test.assertLess(norminf(gen1.sens_Q_u_bound-gen2.sens_Q_u_bound), eps)
+        test.assertLess(norminf(gen1.sens_Q_l_bound-gen2.sens_Q_l_bound), eps)
+
 def compare_networks(test, net1, net2, check_internals=False):
     """
     Method for checking if two |Network| objects are held in different
@@ -23,7 +140,6 @@ def compare_networks(test, net1, net2, check_internals=False):
     check_configuration : |TrueFalse|
     """
 
-    norminf = lambda x: norm(x,np.inf) if isinstance(x,np.ndarray) else np.abs(x)
     eps = 1e-10
 
     # Network
@@ -44,61 +160,7 @@ def compare_networks(test, net1, net2, check_internals=False):
     for i in range(net1.num_buses):
         bus1 = net1.buses[i]
         bus2 = net2.buses[i]
-        test.assertTrue(bus1 is not bus2)
-        test.assertEqual(bus1.number, bus2.number)
-        test.assertEqual(bus1.num_periods, bus2.num_periods)
-        test.assertEqual(bus1.name.upper().strip(), bus2.name.upper().strip())
-        test.assertLess(norminf(bus1.v_base-bus2.v_base), eps)
-        test.assertLess(norminf(bus1.v_mag-bus2.v_mag), eps)
-        test.assertLess(norminf(bus1.v_ang-bus2.v_ang), eps)
-        test.assertLess(norminf(bus1.v_set-bus2.v_set), eps)
-        test.assertLess(norminf(bus1.v_max_reg-bus2.v_max_reg), eps)
-        test.assertLess(norminf(bus1.v_min_reg-bus2.v_min_reg), eps)
-        test.assertLess(norminf(bus1.v_max_norm-bus2.v_max_norm), eps)
-        test.assertLess(norminf(bus1.v_min_norm-bus2.v_min_norm), eps)
-        test.assertLess(norminf(bus1.v_max_emer-bus2.v_max_emer), eps)
-        test.assertLess(norminf(bus1.v_min_emer-bus2.v_min_emer), eps)
-        test.assertEqual(bus1.is_slack(), bus2.is_slack())
-        test.assertEqual(bus1.is_regulated_by_gen(),bus2.is_regulated_by_gen())
-        test.assertEqual(bus1.is_regulated_by_tran(),bus2.is_regulated_by_tran())
-        test.assertEqual(bus1.is_regulated_by_shunt(),bus2.is_regulated_by_shunt())
-        test.assertLess(norminf(bus1.price-bus2.price), eps)
-        test.assertEqual(set([o.index for o in bus1.generators]),
-                             set([o.index for o in bus2.generators]))
-        test.assertEqual(set([o.index for o in bus1.reg_generators]),
-                             set([o.index for o in bus2.reg_generators]))
-        test.assertEqual(set([o.index for o in bus1.loads]),
-                             set([o.index for o in bus2.loads]))
-        test.assertEqual(set([o.index for o in bus1.shunts]),
-                             set([o.index for o in bus2.shunts]))
-        test.assertEqual(set([o.index for o in bus1.reg_shunts]),
-                             set([o.index for o in bus2.reg_shunts]))
-        test.assertEqual(set([o.index for o in bus1.branches_k]),
-                             set([o.index for o in bus2.branches_k]))
-        test.assertEqual(set([o.index for o in bus1.branches_m]),
-                             set([o.index for o in bus2.branches_m]))
-        test.assertEqual(set([o.index for o in bus1.reg_trans]),
-                             set([o.index for o in bus2.reg_trans]))
-        test.assertEqual(set([o.index for o in bus1.var_generators]),
-                             set([o.index for o in bus2.var_generators]))
-        test.assertEqual(set([o.index for o in bus1.batteries]),
-                             set([o.index for o in bus2.batteries]))
-        test.assertLess(norminf(bus1.sens_P_balance-bus2.sens_P_balance), eps)
-        test.assertLess(norminf(bus1.sens_Q_balance-bus2.sens_Q_balance), eps)
-        test.assertLess(norminf(bus1.sens_v_mag_u_bound-bus2.sens_v_mag_u_bound), eps)
-        test.assertLess(norminf(bus1.sens_v_mag_l_bound-bus2.sens_v_mag_l_bound), eps)
-        test.assertLess(norminf(bus1.sens_v_ang_u_bound-bus2.sens_v_ang_u_bound), eps)
-        test.assertLess(norminf(bus1.sens_v_ang_l_bound-bus2.sens_v_ang_l_bound), eps)
-        test.assertLess(norminf(bus1.sens_v_reg_by_gen-bus2.sens_v_reg_by_gen), eps)
-        test.assertLess(norminf(bus1.sens_v_reg_by_tran-bus2.sens_v_reg_by_tran), eps)
-        test.assertLess(norminf(bus1.sens_v_reg_by_shunt-bus2.sens_v_reg_by_shunt), eps)
-        if check_internals:
-            test.assertLess(norminf(bus1.index_v_mag-bus2.index_v_mag),eps)
-            test.assertLess(norminf(bus1.index_v_ang-bus2.index_v_ang),eps)
-            test.assertEqual(bus1.flags_vars,bus2.flags_vars)
-            test.assertEqual(bus1.flags_fixed,bus2.flags_fixed)
-            test.assertEqual(bus1.flags_bounded,bus2.flags_bounded)
-            test.assertEqual(bus1.flags_sparse,bus2.flags_sparse)
+        compare_buses(test, bus1, bus2, check_internals=check_internals, eps=eps)        
 
     # Branches
     test.assertEqual(net1.num_branches, net2.num_branches)
@@ -155,38 +217,7 @@ def compare_networks(test, net1, net2, check_internals=False):
     for i in range(net1.num_generators):
         gen1 = net1.generators[i]
         gen2 = net2.generators[i]
-        test.assertTrue(gen1 is not gen2)
-        test.assertEqual(gen1.name, gen2.name)
-        test.assertEqual(gen1.num_periods, gen2.num_periods)
-        test.assertEqual(gen1.bus.index, gen2.bus.index)
-        test.assertEqual(gen1.is_on_outage(), gen2.is_on_outage())
-        test.assertEqual(gen1.is_slack(), gen2.is_slack())
-        test.assertEqual(gen1.is_regulator(), gen2.is_regulator())
-        test.assertEqual(gen1.is_P_adjustable(), gen2.is_P_adjustable())
-        if gen1.is_regulator():
-            test.assertEqual(gen1.reg_bus.index, gen2.reg_bus.index)
-        test.assertLess(norminf(gen1.P-gen2.P), eps)
-        test.assertLess(norminf(gen1.P_max-gen2.P_max), eps)
-        test.assertLess(norminf(gen1.P_min-gen2.P_min), eps)
-        test.assertLess(norminf(gen1.dP_max-gen2.dP_max), eps)
-        test.assertLess(norminf(gen1.P_prev-gen2.P_prev), eps)
-        test.assertLess(norminf(gen1.Q-gen2.Q), eps)
-        test.assertLess(norminf(gen1.Q_max-gen2.Q_max), eps)
-        test.assertLess(norminf(gen1.Q_min-gen2.Q_min), eps)
-        test.assertLess(norminf(gen1.cost_coeff_Q0-gen2.cost_coeff_Q0), eps)
-        test.assertLess(norminf(gen1.cost_coeff_Q1-gen2.cost_coeff_Q1), eps)
-        test.assertLess(norminf(gen1.cost_coeff_Q2-gen2.cost_coeff_Q2), eps)
-        if check_internals:
-            test.assertLess(norminf(gen1.index_P-gen2.index_P),eps)
-            test.assertLess(norminf(gen1.index_Q-gen2.index_Q),eps)
-            test.assertEqual(gen1.flags_vars,gen2.flags_vars)
-            test.assertEqual(gen1.flags_fixed,gen2.flags_fixed)
-            test.assertEqual(gen1.flags_bounded,gen2.flags_bounded)
-            test.assertEqual(gen1.flags_sparse,gen2.flags_sparse)
-            test.assertLess(norminf(gen1.sens_P_u_bound-gen2.sens_P_u_bound), eps)
-            test.assertLess(norminf(gen1.sens_P_l_bound-gen2.sens_P_l_bound), eps)
-            test.assertLess(norminf(gen1.sens_Q_u_bound-gen2.sens_Q_u_bound), eps)
-            test.assertLess(norminf(gen1.sens_Q_l_bound-gen2.sens_Q_l_bound), eps)
+        compare_generators(test, gen1, gen2, check_internals=check_internals, eps=eps)
             
     # Var generators
     test.assertEqual(net1.num_var_generators, net2.num_var_generators)

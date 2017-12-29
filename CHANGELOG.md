@@ -16,6 +16,8 @@ Unreleased
 * Added "variable regularization" function or FUNC_REG_VAR, which has parameters w and x0 and computes (x-x0)^Tdiag(w)(x-x0).
 * Symmetric connectors/removers for all bus-connected components (connecting A to B also connects B to A).
 * Exposed all obj.set_bus and bus.add/remove_obj routines in Python, and made "obj.bus = None" disconnect obj from bus.
+* Renamed add_batteries/add_var_generators to add_battery_from_parameters/add_var_generators_from_parameters.
+* Added routines for adding generators to the network.
 
 Version 1.3.2
 -------------

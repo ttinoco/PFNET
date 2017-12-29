@@ -27,6 +27,7 @@ cdef class Bus:
     """
 
     cdef cbus.Bus* _c_ptr
+    cdef bint alloc
 
     def __init__(self, num_periods=1, alloc=True):
         """
@@ -46,7 +47,14 @@ cdef class Bus:
             self._c_ptr = cbus.BUS_new(num_periods)
         else:
             self._c_ptr = NULL
+        self.alloc = alloc
 
+    def __dealloc__(self):
+
+        if self.alloc:
+            cbus.BUS_array_del(self._c_ptr,1)
+            self._c_ptr = NULL        
+        
     def _get_c_ptr(self):
 
         return new_CPtr(self._c_ptr)
@@ -1150,7 +1158,6 @@ cdef class Bus:
     property flags_sparse:
         """ Flags associated with sparse quantities (byte). """
         def __get__(self): return cbus.BUS_get_flags_sparse(self._c_ptr)
-
 
 cdef new_Bus(cbus.Bus* b):
     if b is not NULL:

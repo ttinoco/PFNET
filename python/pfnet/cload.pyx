@@ -30,6 +30,7 @@ cdef class Load:
     """
 
     cdef cload.Load* _c_ptr
+    cdef bint alloc
 
     def __init__(self, num_periods=1, alloc=True):
         """
@@ -49,6 +50,13 @@ cdef class Load:
             self._c_ptr = cload.LOAD_new(num_periods)
         else:
             self._c_ptr = NULL
+        self.alloc = alloc
+
+    def __dealloc__(self):
+
+        if self.alloc:
+            cload.LOAD_array_del(self._c_ptr,1)
+            self._c_ptr = NULL    
 
     def _get_c_ptr(self):
 

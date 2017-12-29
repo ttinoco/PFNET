@@ -56,6 +56,7 @@ cdef extern from "pfnet/load.h":
     bint LOAD_has_flags(Load* load, char flag_type, char mask)
     Load* LOAD_new(int num_periods)
     Load* LOAD_array_new(int size, int num_periods)
+    void LOAD_array_del(Load* load_array, int size)
     void LOAD_set_name(Load* load, char* name)
     void LOAD_set_bus(Load* load, Bus* bus)
     void LOAD_set_P(Load* load, REAL P, int t)

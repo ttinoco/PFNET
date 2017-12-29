@@ -75,10 +75,38 @@ cdef class Network:
             self._c_net = new_net._c_net
             new_net.alloc = False
             os.remove(f.name)
-            
-    def add_var_generators(self, buses, power_capacity, power_base, power_std=0., corr_radius=0, corr_value=0.):
+
+    def add_generators(self, generators):
         """
-        Adds variable generators to the network. 
+        Adds generators to the network.
+
+        Parameters
+        ----------
+        generators : list of |Generator| objects
+        """
+
+        cdef cnet.Gen** array
+        cdef Generator gen
+
+        old_num_gens = self.num_generators
+        array = <cnet.Gen**>malloc(len(generators)*sizeof(cnet.Gen*))
+        for i in range(len(generators)):
+            gen = generators[i]
+            array[i] = gen._c_ptr
+
+        cnet.NET_add_gens(self._c_net, array, len(generators))
+        free(array)
+
+        # Update pointers and alloc flags
+        for i in range(len(generators)):
+            gen = generators[i]
+            cgen.GEN_array_del(gen._c_ptr,1)
+            gen._c_ptr = cnet.NET_get_gen(self._c_net, i+old_num_gens)
+            gen.alloc = False
+            
+    def add_var_generators_from_parameters(self, buses, power_capacity, power_base, power_std=0., corr_radius=0, corr_value=0.):
+        """
+        Adds variable generators to the network using the given parameters.
         The capacities of the generators are divided evenly.
 
         Parameters
@@ -102,15 +130,15 @@ cdef class Network:
             cbus.BUS_set_next(prev._c_ptr,NULL)
 
         if head:
-            cnet.NET_add_vargens(self._c_net,head._c_ptr,power_capacity,power_base,power_std,corr_radius,corr_value)
+            cnet.NET_add_vargens_from_params(self._c_net,head._c_ptr,power_capacity,power_base,power_std,corr_radius,corr_value)
         else:
-            cnet.NET_add_vargens(self._c_net,NULL,power_capacity,power_base,power_std,corr_radius,corr_value)
+            cnet.NET_add_vargens_from_params(self._c_net,NULL,power_capacity,power_base,power_std,corr_radius,corr_value)
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
 
-    def add_batteries(self, buses, power_capacity, energy_capacity, eta_c=1., etc_d=1.):
+    def add_batteries_from_parameters(self, buses, power_capacity, energy_capacity, eta_c=1., etc_d=1.):
         """
-        Adds batteries to the network. 
+        Adds batteries to the network using the given parameters. 
         The power and energy capacities of the batteries are divided evenly.
 
         Parameters
@@ -133,9 +161,9 @@ cdef class Network:
             cbus.BUS_set_next(prev._c_ptr,NULL)
 
         if head:
-            cnet.NET_add_batteries(self._c_net,head._c_ptr,power_capacity,energy_capacity,eta_c,etc_d)
+            cnet.NET_add_batteries_from_params(self._c_net,head._c_ptr,power_capacity,energy_capacity,eta_c,etc_d)
         else:
-            cnet.NET_add_batteries(self._c_net,NULL,power_capacity,energy_capacity,eta_c,etc_d)
+            cnet.NET_add_batteries_from_params(self._c_net,NULL,power_capacity,energy_capacity,eta_c,etc_d)
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
 
