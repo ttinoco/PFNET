@@ -4379,6 +4379,36 @@ class TestNetwork(unittest.TestCase):
         self.assertTrue([g.name for g in bus.generators] == [])
 
         # Reg generators
+        gen3 = pf.Generator()
+        gen3.name = 'gen3'
+        self.assertTrue(bus.reg_generators == [])
+        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen3)
+        self.assertFalse(bus.is_regulated_by_gen())
+        bus.add_reg_generator(gen3)
+        self.assertEqual(gen3.reg_bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3'])
+        self.assertTrue(bus.is_regulated_by_gen())
+        gen3.reg_bus = bus
+        self.assertEqual(gen3.reg_bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3'])
+        gen4 = pf.Generator()
+        gen4.name = 'gen4'
+        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen4)
+        gen4.reg_bus = bus
+        self.assertEqual(gen4.reg_bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3', 'gen4'])
+        bus.add_reg_generator(gen4)
+        self.assertEqual(gen4.reg_bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3', 'gen4'])
+        bus.remove_reg_generator(gen4)
+        self.assertEqual(gen3.reg_bus.name,bus.name)
+        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen4)
+        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3'])
+        gen3.reg_bus = None
+        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen3)
+        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen4)
+        self.assertTrue([g.name for g in bus.reg_generators] == [])
+        self.assertFalse(bus.is_regulated_by_gen())
 
         # Loads
         load1 = pf.Load()
@@ -4445,6 +4475,35 @@ class TestNetwork(unittest.TestCase):
         self.assertTrue([x.name for x in bus.shunts] == [])
 
         # Reg shunts
+        shunt3 = pf.Shunt()
+        shunt3.name = 'shunt3'
+        self.assertTrue(bus.reg_shunts == [])
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, shunt3)
+        bus.add_reg_shunt(shunt3)
+        self.assertEqual(shunt3.reg_bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.reg_shunts] == ['shunt3'])
+        self.assertTrue(bus.is_regulated_by_shunt())
+        shunt3.reg_bus = bus
+        self.assertEqual(shunt3.reg_bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.reg_shunts] == ['shunt3'])
+        shunt4 = pf.Shunt()
+        shunt4.name = 'shunt4'
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, shunt4)
+        shunt4.reg_bus = bus
+        self.assertEqual(shunt4.reg_bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.reg_shunts] == ['shunt3', 'shunt4'])
+        bus.add_reg_shunt(shunt4)
+        self.assertEqual(shunt4.reg_bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.reg_shunts] == ['shunt3', 'shunt4'])
+        bus.remove_reg_shunt(shunt4)
+        self.assertEqual(shunt3.reg_bus.name,bus.name)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, shunt4)
+        self.assertTrue([x.name for x in bus.reg_shunts] == ['shunt3'])
+        shunt3.reg_bus = None
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, shunt3)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, shunt4)
+        self.assertTrue([x.name for x in bus.reg_shunts] == [])
+        self.assertFalse(bus.is_regulated_by_shunt())
 
         # Batteries
 
