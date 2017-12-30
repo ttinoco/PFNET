@@ -4573,6 +4573,10 @@ class TestNetwork(unittest.TestCase):
             self.assertTrue(net.get_generator(orig_net.num_generators).is_equal(gen1))
             self.assertTrue(net.get_generator(orig_net.num_generators+1) is not gen2)
             self.assertTrue(net.get_generator(orig_net.num_generators+1).is_equal(gen2))
+            self.assertTrue(net.get_generator(orig_net.num_generators).reg_bus.is_equal(net.buses[0]))
+            self.assertTrue(net.get_generator(orig_net.num_generators+1).reg_bus.is_equal(net.buses[0]))
+            self.assertTrue(net.buses[0].reg_generators[-1].is_equal(gen2))
+            self.assertTrue(net.buses[0].reg_generators[-2].is_equal(gen1))
             self.assertEqual(len(orig_net.buses[0].generators)+2,
                              len(net.buses[0].generators))
             self.assertTrue('gen1' in [g.name for g in net.buses[0].generators])
@@ -4693,6 +4697,96 @@ class TestNetwork(unittest.TestCase):
                     load2 = orig_net.get_load(i)
                     self.assertFalse(load1.is_equal(load2))
                     pf.tests.utils.compare_loads(self, load1, load2, check_internals=True)
+
+    def test_add_remove_shunts(self):
+        
+        for case in test_cases.CASES:
+
+            # Network
+            net = pf.Parser(case).parse(case, num_periods=2)            
+            orig_net = net.get_copy()
+
+            shunt1 = pf.Shunt(num_periods=2)
+            shunt2 = pf.Shunt(num_periods=2)
+
+            shunt1.name = 'shunt1'
+            shunt2.name = 'shunt2'
+
+            b1 = np.random.randn(2)
+            b2 = np.random.randn(2)
+
+            shunt1.bus = net.buses[0]
+            shunt1.reg_bus = net.buses[0]
+            shunt1.b = b1
+            
+            shunt2.bus = net.buses[0]
+            shunt2.reg_bus = net.buses[0]
+            shunt2.b = b2
+
+            self.assertEqual(shunt1.index, 0)
+            self.assertEqual(shunt2.index, 0)
+
+            # Add shunts
+            net.add_shunts([shunt1,shunt2])
+
+            self.assertEqual(net.num_shunts, orig_net.num_shunts+2)
+            for i in range(orig_net.num_shunts):
+                pf.tests.utils.compare_shunts(self,
+                                              net.get_shunt(i),
+                                              orig_net.get_shunt(i),
+                                              check_internals=True)
+
+            self.assertEqual(shunt1.index, orig_net.num_shunts)
+            self.assertEqual(shunt2.index, orig_net.num_shunts+1)
+            self.assertEqual(net.get_shunt(orig_net.num_shunts).bus.index,0)
+            self.assertEqual(net.get_shunt(orig_net.num_shunts+1).bus.index,0)
+            self.assertTrue(np.all(net.get_shunt(orig_net.num_shunts).b == b1))
+            self.assertTrue(np.all(net.get_shunt(orig_net.num_shunts+1).b == b2))
+            pf.tests.utils.compare_shunts(self,
+                                          net.get_shunt(orig_net.num_shunts),
+                                          shunt1,
+                                          check_internals=True)
+            pf.tests.utils.compare_shunts(self,
+                                          net.get_shunt(orig_net.num_shunts+1),
+                                          shunt2,
+                                          check_internals=True)
+            self.assertTrue(net.get_shunt(orig_net.num_shunts) is not shunt1)
+            self.assertTrue(net.get_shunt(orig_net.num_shunts).is_equal(shunt1))
+            self.assertTrue(net.get_shunt(orig_net.num_shunts+1) is not shunt2)
+            self.assertTrue(net.get_shunt(orig_net.num_shunts+1).is_equal(shunt2))
+            self.assertTrue(net.get_shunt(orig_net.num_shunts).reg_bus.is_equal(net.buses[0]))
+            self.assertTrue(net.get_shunt(orig_net.num_shunts+1).reg_bus.is_equal(net.buses[0]))
+            self.assertTrue(net.buses[0].reg_shunts[-1].is_equal(shunt2))
+            self.assertTrue(net.buses[0].reg_shunts[-2].is_equal(shunt1))
+            self.assertEqual(len(orig_net.buses[0].shunts)+2,
+                             len(net.buses[0].shunts))
+            self.assertTrue('shunt1' in [s.name for s in net.buses[0].shunts])
+            self.assertTrue('shunt2' in [s.name for s in net.buses[0].shunts])
+            self.assertTrue(net.buses[0].is_regulated_by_shunt())
+            self.assertTrue('shunt1' in [s.name for s in net.buses[0].reg_shunts])
+            self.assertTrue('shunt2' in [s.name for s in net.buses[0].reg_shunts])
+
+            for i in range(net.num_buses):
+                if i != 0:
+                    self.assertFalse(net.get_bus(i).is_equal(orig_net.get_bus(i)))
+                    pf.tests.utils.compare_buses(self,
+                                                 net.get_bus(i),
+                                                 orig_net.get_bus(i),
+                                                 check_internals=True)
+                    
+            # Remove shunts
+            net.remove_shunts([shunt2, shunt1])
+
+            self.assertEqual(net.num_shunts, orig_net.num_shunts)
+
+            self.assertEqual(shunt1.index, -1)
+            self.assertRaises(pf.BusError, lambda s: s.bus, shunt1)
+            self.assertRaises(pf.BusError, lambda s: s.reg_bus, shunt1)
+            self.assertEqual(shunt2.index, -1)
+            self.assertRaises(pf.BusError, lambda s: s.bus, shunt2)
+            self.assertRaises(pf.BusError, lambda s: s.reg_bus, shunt2)
+
+            pf.tests.utils.compare_networks(self, net, orig_net, check_internals=True)
             
     def tearDown(self):
 

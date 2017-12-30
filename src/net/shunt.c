@@ -548,6 +548,10 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
   shunt->reg_next = NULL;
 }
 
+BOOL SHUNT_is_equal(Shunt* shunt, Shunt* other) {
+  return shunt == other;
+}
+
 BOOL SHUNT_is_fixed(Shunt* shunt) {
   if (!shunt)
     return FALSE;

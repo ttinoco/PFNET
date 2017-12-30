@@ -90,6 +90,7 @@ char* SHUNT_get_json_string(Shunt* shunt, char* output);
 BOOL SHUNT_has_flags(void* shunt, char flag_type, unsigned char mask);
 BOOL SHUNT_has_properties(void* shunt, char prop);
 void SHUNT_init(Shunt* shunt, int num_periods);
+BOOL SHUNT_is_equal(Shunt* shunt, Shunt* other);
 BOOL SHUNT_is_fixed(Shunt* shunt);
 BOOL SHUNT_is_switched(Shunt* shunt);
 BOOL SHUNT_is_switched_v(Shunt* shunt);

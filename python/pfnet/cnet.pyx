@@ -118,7 +118,6 @@ cdef class Network:
         cdef cnet.Gen** array
         cdef Generator gen
 
-        old_num_gens = self.num_generators
         array = <cnet.Gen**>malloc(len(generators)*sizeof(cnet.Gen*))
         for i in range(len(generators)):
             gen = generators[i]
@@ -175,7 +174,6 @@ cdef class Network:
         cdef cnet.Load** array
         cdef Load load
 
-        old_num_loads = self.num_loads
         array = <cnet.Load**>malloc(len(loads)*sizeof(cnet.Load*))
         for i in range(len(loads)):
             load = loads[i]
@@ -189,6 +187,62 @@ cdef class Network:
             load = loads[i]
             load._c_ptr = NULL
             load.alloc = False
+
+    def add_shunts(self, shunts):
+        """
+        Adds shunts to the network.
+        Flags are not preserved (for now).
+
+        Parameters
+        ----------
+        shunts : list of |Shunt| objects
+        """
+
+        cdef cnet.Shunt** array
+        cdef Shunt shunt
+
+        old_num_shunts = self.num_shunts
+        array = <cnet.Shunt**>malloc(len(shunts)*sizeof(cnet.Shunt*))
+        for i in range(len(shunts)):
+            shunt = shunts[i]
+            array[i] = shunt._c_ptr
+
+        cnet.NET_add_shunts(self._c_net, array, len(shunts))
+        free(array)
+
+        # Update pointers and alloc flags
+        for i in range(len(shunts)):
+            shunt = shunts[i]
+            cshunt.SHUNT_array_del(shunt._c_ptr,1)
+            shunt._c_ptr = cnet.NET_get_shunt(self._c_net, i+old_num_shunts)
+            shunt.alloc = False
+
+    def remove_shunts(self, shunts):
+        """
+        Removes shunts from the network.
+        All network flags are cleared (for now). 
+
+        Parameters
+        ----------
+        shunts : list of |Shunt| objects
+        """
+
+        cdef cnet.Shunt** array
+        cdef Shunt shunt
+
+        array = <cnet.Shunt**>malloc(len(shunts)*sizeof(cnet.Shunt*))
+        for i in range(len(shunts)):
+            shunt = shunts[i]
+            array[i] = shunt._c_ptr
+
+        cnet.NET_del_shunts(self._c_net, array, len(shunts))
+        free(array)
+
+        # Update pointers and alloc flags
+        for i in range(len(shunts)):
+            shunt = shunts[i]
+            shunt._c_ptr = NULL
+            shunt.alloc = False
             
     def add_var_generators_from_parameters(self, buses, power_capacity, power_base, power_std=0., corr_radius=0, corr_value=0.):
         """

@@ -17,7 +17,9 @@ Unreleased
 * Symmetric connectors/removers for all bus-connected components (connecting A to B also connects B to A).
 * Exposed all obj.set_bus and bus.add/remove_obj routines in Python, and made "obj.bus = None" disconnect obj from bus.
 * Renamed add_batteries/add_var_generators to add_battery_from_parameters/add_var_generators_from_parameters.
-* Added routines for adding and removing generators from the network.
+* Added net routines for adding and removing generators from the network.
+* Added net routines for adding and removing loads from the network.
+* Added net routines for adding and removing shunts from the network.
 
 Version 1.3.2
 -------------

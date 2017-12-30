@@ -58,6 +58,24 @@ cdef class Shunt:
 
         return new_CPtr(self._c_ptr)
 
+    def is_equal(self, other):
+        """
+        Determines whether shunt is equal to given shunt.
+
+        Parameters
+        ----------
+        other : |Shunt|
+        """
+
+        cdef Shunt s_other
+
+        if not isinstance(other,Shunt):
+            return False
+
+        s_other = other
+
+        return cshunt.SHUNT_is_equal(self._c_ptr, s_other._c_ptr)
+
     def is_fixed(self):
         """
         Determines whether the shunt device is fixed (as opposed to switching).

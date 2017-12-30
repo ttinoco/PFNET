@@ -161,6 +161,40 @@ def compare_loads(test, load1, load2, check_internals=False, eps=1e-10):
         test.assertEqual(load1.flags_sparse,load2.flags_sparse)
         test.assertLess(norminf(load1.sens_P_u_bound-load2.sens_P_u_bound), eps)
         test.assertLess(norminf(load1.sens_P_l_bound-load2.sens_P_l_bound), eps)
+
+def compare_shunts(test, shunt1, shunt2, check_internals=False, eps=1e-10):
+    """
+    Method for checking if two |Shunt| objects are similar.
+    
+    Parameters
+    ----------
+    test : unittest.TestCase
+    shunt1 : |Shunt|
+    shunt2 : |Shunt|
+    check_configuration : |TrueFalse|
+    eps : float
+    """
+
+    test.assertTrue(shunt1 is not shunt2)
+    test.assertEqual(shunt1.name, shunt2.name)
+    test.assertEqual(shunt1.num_periods, shunt2.num_periods)
+    test.assertEqual(shunt1.bus.index, shunt2.bus.index)
+    test.assertEqual(shunt1.is_fixed(), shunt2.is_fixed())
+    test.assertEqual(shunt1.is_switched_v(), shunt2.is_switched_v())
+    if shunt1.is_switched_v():
+        test.assertEqual(shunt1.reg_bus.index, shunt2.reg_bus.index)
+    test.assertLess(norminf(shunt1.g-shunt2.g),eps*(1+norminf(shunt1.g)))
+    test.assertLess(norminf(shunt1.b-shunt2.b),eps*(1+norminf(shunt1.b)))
+    test.assertLess(norminf(shunt1.b_max-shunt2.b_max), eps*(1+norminf(shunt1.b_max)))
+    test.assertLess(norminf(shunt1.b_min-shunt2.b_min), eps*(1+norminf(shunt1.b_min)))
+    if check_internals:
+        test.assertLess(norminf(shunt1.index_b-shunt2.index_b),eps)
+        test.assertEqual(shunt1.flags_vars,shunt2.flags_vars)
+        test.assertEqual(shunt1.flags_fixed,shunt2.flags_fixed)
+        test.assertEqual(shunt1.flags_bounded,shunt2.flags_bounded)
+        test.assertEqual(shunt1.flags_sparse,shunt2.flags_sparse)
+        test.assertLess(norminf(shunt1.sens_b_u_bound-shunt2.sens_b_u_bound), eps)
+        test.assertLess(norminf(shunt1.sens_b_l_bound-shunt2.sens_b_l_bound), eps)
         
 def compare_networks(test, net1, net2, check_internals=False):
     """
@@ -195,7 +229,7 @@ def compare_networks(test, net1, net2, check_internals=False):
     for i in range(net1.num_buses):
         bus1 = net1.buses[i]
         bus2 = net2.buses[i]
-        compare_buses(test, bus1, bus2, check_internals=check_internals, eps=eps)        
+        compare_buses(test, bus1, bus2, check_internals=check_internals, eps=eps) 
 
     # Branches
     test.assertEqual(net1.num_branches, net2.num_branches)
@@ -284,26 +318,7 @@ def compare_networks(test, net1, net2, check_internals=False):
     for i in range(net1.num_shunts):
         shunt1 = net1.shunts[i]
         shunt2 = net2.shunts[i]
-        test.assertTrue(shunt1 is not shunt2)
-        test.assertEqual(shunt1.name, shunt2.name)
-        test.assertEqual(shunt1.num_periods, shunt2.num_periods)
-        test.assertEqual(shunt1.bus.index, shunt2.bus.index)
-        test.assertEqual(shunt1.is_fixed(), shunt2.is_fixed())
-        test.assertEqual(shunt1.is_switched_v(), shunt2.is_switched_v())
-        if shunt1.is_switched_v():
-            test.assertEqual(shunt1.reg_bus.index, shunt2.reg_bus.index)
-        test.assertLess(norminf(shunt1.g-shunt2.g),eps*(1+norminf(shunt1.g)))
-        test.assertLess(norminf(shunt1.b-shunt2.b),eps*(1+norminf(shunt1.b)))
-        test.assertLess(norminf(shunt1.b_max-shunt2.b_max), eps*(1+norminf(shunt1.b_max)))
-        test.assertLess(norminf(shunt1.b_min-shunt2.b_min), eps*(1+norminf(shunt1.b_min)))
-        if check_internals:
-            test.assertLess(norminf(shunt1.index_b-shunt2.index_b),eps)
-            test.assertEqual(shunt1.flags_vars,shunt2.flags_vars)
-            test.assertEqual(shunt1.flags_fixed,shunt2.flags_fixed)
-            test.assertEqual(shunt1.flags_bounded,shunt2.flags_bounded)
-            test.assertEqual(shunt1.flags_sparse,shunt2.flags_sparse)
-            test.assertLess(norminf(shunt1.sens_b_u_bound-shunt2.sens_b_u_bound), eps)
-            test.assertLess(norminf(shunt1.sens_b_l_bound-shunt2.sens_b_l_bound), eps)
+        compare_shunts(test, shunt1, shunt2, check_internals=check_internals, eps=eps) 
 
     # Loads
     test.assertEqual(net1.num_loads, net2.num_loads)

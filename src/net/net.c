@@ -394,11 +394,160 @@ void NET_del_loads(Net* net, Load** load_ptr_array, int size) {
 }
 
 void NET_add_shunts(Net* net, Shunt** shunt_ptr_array, int size) {
+  /** Adds shunts to the network. The entire shunt array is
+   * relocated, the data is copied (except flags for the new shunts), 
+   * and the bus connections are stolen.
+   */
+  
+  // Local variables
+  Shunt* shunt_src;
+  Shunt* shunt_dst;
+  Shunt* old_shunt_array;
+  int old_num_shunts;
+  Bus* bus;
+  Bus* reg_bus;
+  int i;
 
+  // Check
+  if (!net || !shunt_ptr_array)
+    return;
+
+  // Old shunts
+  old_shunt_array = net->shunt;
+  old_num_shunts = net->num_shunts;
+
+  // New shunts
+  NET_set_shunt_array(net,SHUNT_array_new(net->num_shunts+size,net->num_periods),net->num_shunts+size);
+
+  // Copy data and steal connections
+  for (i = 0; i < net->num_shunts; i++) {
+
+    if (i < old_num_shunts)
+      shunt_src = SHUNT_array_get(old_shunt_array,i);
+    else
+      shunt_src = shunt_ptr_array[i-old_num_shunts];
+    shunt_dst = NET_get_shunt(net,i);
+
+    // Copy data
+    SHUNT_copy_from_shunt(shunt_dst,shunt_src);
+
+    // Clear flags
+    if (i >= old_num_shunts) {
+      SHUNT_clear_flags(shunt_dst,FLAG_VARS);
+      SHUNT_clear_flags(shunt_dst,FLAG_FIXED);
+      SHUNT_clear_flags(shunt_dst,FLAG_BOUNDED);
+      SHUNT_clear_flags(shunt_dst,FLAG_SPARSE);
+    }
+    
+    // Save old connections
+    bus = SHUNT_get_bus(shunt_src);        
+    reg_bus = SHUNT_get_reg_bus(shunt_src);
+
+    // Clear connections bus - old shunt 
+    SHUNT_set_bus(shunt_src,NULL);         // also removes shunt from bus->shunts list
+    SHUNT_set_reg_bus(shunt_src,NULL);     // also removes shunt from bus->reg_shunts list
+
+    // Add connections bus - new shunt
+    SHUNT_set_bus(shunt_dst,bus);          // also adds shunt to bus->shunts list
+    SHUNT_set_reg_bus(shunt_dst,reg_bus);  // also adds shunt to bus->reg_shunts list
+  }
+
+  // Delete old shunts
+  SHUNT_array_del(old_shunt_array,old_num_shunts);
 }
 
 void NET_del_shunts(Net* net, Shunt** shunt_ptr_array, int size) {
+  /** Removes shunts from the network. The entire shunt array is
+   * relocated, the data is copied, and the bus connections are set.
+   * Network flags are cleared. 
+   */
+  
+  // Local variables
+  Shunt* shunt_src;
+  Shunt* shunt_dst;
+  Shunt* shunt;
+  Shunt* old_shunt_array;
+  int old_num_shunts;
+  char* delete;
+  Bus* bus;
+  Bus* reg_bus;
+  int num;
+  int index;
+  int i;
 
+  // Check
+  if (!net || !shunt_ptr_array)
+    return;
+
+  // Old shunts
+  old_shunt_array = net->shunt;
+  old_num_shunts = net->num_shunts;
+
+  // Count unique and mark for deletion
+  num = 0;
+  ARRAY_zalloc(delete,char,net->num_shunts);
+  for (i = 0; i < size; i++) {
+    shunt = shunt_ptr_array[i];
+    if (shunt) {
+      if (shunt == NET_get_shunt(net,SHUNT_get_index(shunt))) { // shunt to delete is present in network
+	if (!delete[SHUNT_get_index(shunt)]) {
+	  delete[SHUNT_get_index(shunt)] = 1;
+	  num++;
+	}
+      }	
+    }
+  }
+
+  // New shunts
+  NET_set_shunt_array(net,SHUNT_array_new(net->num_shunts-num,net->num_periods),net->num_shunts-num);
+
+  // Copy data and set connections
+  index = 0;
+  for (i = 0; i < old_num_shunts; i++) {
+
+    // Delete
+    if (delete[i]) {
+
+      shunt = SHUNT_array_get(old_shunt_array,i);
+      
+      // Clear connections bus - "shunt to be deleted"
+      SHUNT_set_bus(shunt,NULL);     // also removes shunt from bus->shunts list
+      SHUNT_set_reg_bus(shunt,NULL); // also removes shunt from bus->reg_shunts list
+    }
+
+    // Keep
+    else {
+
+      shunt_src = SHUNT_array_get(old_shunt_array,i);
+      shunt_dst = NET_get_shunt(net,index);
+
+      // Copy data
+      SHUNT_copy_from_shunt(shunt_dst,shunt_src);
+      
+      // Save old connections
+      bus = SHUNT_get_bus(shunt_src);        
+      reg_bus = SHUNT_get_reg_bus(shunt_src);
+      
+      // Clear connections bus - old shunt 
+      SHUNT_set_bus(shunt_src,NULL);         // also removes shunt from bus->shunts list
+      SHUNT_set_reg_bus(shunt_src,NULL);     // also removes shunt from bus->reg_shunts list
+      
+      // Add connections bus - new shunt
+      SHUNT_set_bus(shunt_dst,bus);          // also adds shunt to bus->shunts list
+      SHUNT_set_reg_bus(shunt_dst,reg_bus);  // also adds shunt to bus->reg_shunts list
+      
+      index++;
+    }
+  }
+
+  // Delete old shunts
+  SHUNT_array_del(old_shunt_array,old_num_shunts);
+
+  // Delete delete flags
+  free(delete);
+
+  // Clear flags
+  NET_clear_flags(net);
 }
 
 void NET_add_vargens_from_params(Net* net, Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value) {
