@@ -41,6 +41,9 @@ typedef struct Net Net;
 /** @brief Adjust generator powers to obtain correct participations without affecting total injections. */
 void NET_adjust_generators(Net* net);
 
+void NET_add_branches(Net* net, Branch** br_ptr_array, int size);
+void NET_del_branches(Net* net, Branch** br_ptr_array, int size);
+
 void NET_add_gens(Net* net, Gen** gen_ptr_array, int size);
 void NET_del_gens(Net* net, Gen** gen_ptr_array, int size);
 

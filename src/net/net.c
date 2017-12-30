@@ -88,6 +88,172 @@ struct Net {
   char* bus_counted;  /**< @brief Flags for processing buses */
 };
 
+void NET_add_branches(Net* net, Branch** br_ptr_array, int size) {
+  /** Adds branches to the network. The entire branch array is
+   * relocated, the data is copied (except flags for the new branches), 
+   * and the bus connections are stolen.
+   */
+  
+  // Local variables
+  Branch* br_src;
+  Branch* br_dst;
+  Branch* old_br_array;
+  int old_num_branches;
+  Bus* bus_k;
+  Bus* bus_m;
+  Bus* reg_bus;
+  int i;
+
+  // Check
+  if (!net || !br_ptr_array)
+    return;
+
+  // Old branches
+  old_br_array = net->branch;
+  old_num_branches = net->num_branches;
+
+  // New branches
+  NET_set_branch_array(net,BRANCH_array_new(net->num_branches+size,net->num_periods),net->num_branches+size);
+
+  // Copy data and steal connections
+  for (i = 0; i < net->num_branches; i++) {
+
+    if (i < old_num_branches)
+      br_src = BRANCH_array_get(old_br_array,i);
+    else
+      br_src = br_ptr_array[i-old_num_branches];
+    br_dst = NET_get_branch(net,i);
+
+    // Copy data
+    BRANCH_copy_from_branch(br_dst,br_src);
+
+    // Clear flags
+    if (i >= old_num_branches) {
+      BRANCH_clear_flags(br_dst,FLAG_VARS);
+      BRANCH_clear_flags(br_dst,FLAG_FIXED);
+      BRANCH_clear_flags(br_dst,FLAG_BOUNDED);
+      BRANCH_clear_flags(br_dst,FLAG_SPARSE);
+    }
+    
+    // Save old connections
+    bus_k = BRANCH_get_bus_k(br_src);
+    bus_m = BRANCH_get_bus_m(br_src);
+    reg_bus = BRANCH_get_reg_bus(br_src);
+
+    // Clear connections bus - old branch 
+    BRANCH_set_bus_k(br_src,NULL);      // also removes branch from bus->branches_k list
+    BRANCH_set_bus_m(br_src,NULL);      // also removes branch from bus->branches_m list
+    BRANCH_set_reg_bus(br_src,NULL);    // also removes branch from bus->reg_trans list
+
+    // Add connections bus - new branch
+    BRANCH_set_bus_k(br_dst,bus_k);      // also adds branch to bus->branches_k list
+    BRANCH_set_bus_m(br_dst,bus_m);      // also adds branch to bus->branches_m list
+    BRANCH_set_reg_bus(br_dst,reg_bus);  // also adds branch to bus->reg_trans list
+  }
+
+  // Delete old branches
+  BRANCH_array_del(old_br_array,old_num_branches);
+}
+
+void NET_del_branches(Net* net, Branch** br_ptr_array, int size) {
+  /** Removes branches from the network. The entire branch array is
+   * relocated, the data is copied, and the bus connections are set.
+   * Network flags are cleared. 
+   */
+  
+  // Local variables
+  Branch* br_src;
+  Branch* br_dst;
+  Branch* br;
+  Branch* old_br_array;
+  int old_num_branches;
+  char* delete;
+  Bus* bus_k;
+  Bus* bus_m;
+  Bus* reg_bus;
+  int num;
+  int index;
+  int i;
+
+  // Check
+  if (!net || !br_ptr_array)
+    return;
+
+  // Old branches
+  old_br_array = net->branch;
+  old_num_branches = net->num_branches;
+
+  // Count unique and mark for deletion
+  num = 0;
+  ARRAY_zalloc(delete,char,net->num_branches);
+  for (i = 0; i < size; i++) {
+    br = br_ptr_array[i];
+    if (br) {
+      if (br == NET_get_branch(net,BRANCH_get_index(br))) { // branch to delete is present in network
+	if (!delete[BRANCH_get_index(br)]) {
+	  delete[BRANCH_get_index(br)] = 1;
+	  num++;
+	}
+      }	
+    }
+  }
+
+  // New branches
+  NET_set_branch_array(net,BRANCH_array_new(net->num_branches-num,net->num_periods),net->num_branches-num);
+
+  // Copy data and set connections
+  index = 0;
+  for (i = 0; i < old_num_branches; i++) {
+
+    // Delete
+    if (delete[i]) {
+
+      br = BRANCH_array_get(old_br_array,i);
+
+      // Clear connections bus - "branch to be deleted"
+      BRANCH_set_bus_k(br,NULL);   // also removes branch from bus->branches_k list
+      BRANCH_set_bus_m(br,NULL);   // also removes branch from bus->branches_m list
+      BRANCH_set_reg_bus(br,NULL); // also removes branch from bus->reg_trans list
+    }
+
+    // Keep
+    else {
+
+      br_src = BRANCH_array_get(old_br_array,i);
+      br_dst = NET_get_branch(net,index);
+
+      // Copy data
+      BRANCH_copy_from_branch(br_dst,br_src);
+
+      // Save old connections
+      bus_k = BRANCH_get_bus_k(br_src);
+      bus_m = BRANCH_get_bus_m(br_src);
+      reg_bus = BRANCH_get_reg_bus(br_src);
+      
+      // Clear connections bus - old branch 
+      BRANCH_set_bus_k(br_src,NULL);   // also removes branch from bus->branches_k list
+      BRANCH_set_bus_m(br_src,NULL);   // also removes branch from bus->branches_m list
+      BRANCH_set_reg_bus(br_src,NULL); // also removes branch from bus->reg_trans list
+      
+      // Add connections bus - new branch
+      BRANCH_set_bus_k(br_dst,bus_k);      // also adds branch to bus->branches_k list
+      BRANCH_set_bus_m(br_dst,bus_m);      // also adds branch to bus->branches_m list
+      BRANCH_set_reg_bus(br_dst,reg_bus);  // also adds branch to bus->reg_trans list
+      
+      index++;
+    }
+  }
+
+  // Delete old branches
+  BRANCH_array_del(old_br_array,old_num_branches);
+
+  // Delete delete flags
+  free(delete);
+
+  // Clear flags
+  NET_clear_flags(net);
+}
+
 void NET_add_gens(Net* net, Gen** gen_ptr_array, int size) {
   /** Adds generators to the network. The entire generator array is
    * relocated, the data is copied (except flags for the new gens), 
