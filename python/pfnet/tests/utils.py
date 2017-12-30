@@ -127,6 +127,41 @@ def compare_generators(test, gen1, gen2, check_internals=False, eps=1e-10):
         test.assertLess(norminf(gen1.sens_Q_u_bound-gen2.sens_Q_u_bound), eps)
         test.assertLess(norminf(gen1.sens_Q_l_bound-gen2.sens_Q_l_bound), eps)
 
+def compare_loads(test, load1, load2, check_internals=False, eps=1e-10):
+    """
+    Method for checking if two |Load| objects are similar.
+    
+    Parameters
+    ----------
+    test : unittest.TestCase
+    load1 : |Load|
+    load2 : |Load|
+    check_configuration : |TrueFalse|
+    eps : float
+    """
+
+    test.assertTrue(load1 is not load2)
+    test.assertEqual(load1.name, load2.name)
+    test.assertEqual(load1.num_periods, load2.num_periods)
+    test.assertEqual(load1.bus.index, load2.bus.index)
+    test.assertLess(norminf(load1.P-load2.P), eps)
+    test.assertLess(norminf(load1.P_max-load2.P_max), eps)
+    test.assertLess(norminf(load1.P_min-load2.P_min), eps)
+    test.assertLess(norminf(load1.Q-load2.Q), eps)
+    test.assertLess(norminf(load1.target_power_factor-load2.target_power_factor), eps)
+    test.assertLess(norminf(load1.util_coeff_Q0-load2.util_coeff_Q0), eps)
+    test.assertLess(norminf(load1.util_coeff_Q1-load2.util_coeff_Q1), eps)
+    test.assertLess(norminf(load1.util_coeff_Q2-load2.util_coeff_Q2), eps)
+    if check_internals:
+        test.assertLess(norminf(load1.index_P-load2.index_P),eps)
+        test.assertLess(norminf(load1.index_Q-load2.index_Q),eps)
+        test.assertEqual(load1.flags_vars,load2.flags_vars)
+        test.assertEqual(load1.flags_fixed,load2.flags_fixed)
+        test.assertEqual(load1.flags_bounded,load2.flags_bounded)
+        test.assertEqual(load1.flags_sparse,load2.flags_sparse)
+        test.assertLess(norminf(load1.sens_P_u_bound-load2.sens_P_u_bound), eps)
+        test.assertLess(norminf(load1.sens_P_l_bound-load2.sens_P_l_bound), eps)
+        
 def compare_networks(test, net1, net2, check_internals=False):
     """
     Method for checking if two |Network| objects are held in different
@@ -218,7 +253,7 @@ def compare_networks(test, net1, net2, check_internals=False):
         gen1 = net1.generators[i]
         gen2 = net2.generators[i]
         compare_generators(test, gen1, gen2, check_internals=check_internals, eps=eps)
-            
+        
     # Var generators
     test.assertEqual(net1.num_var_generators, net2.num_var_generators)
     for i in range(net1.num_var_generators):
@@ -275,28 +310,8 @@ def compare_networks(test, net1, net2, check_internals=False):
     for i in range(net1.num_loads):
         load1 = net1.loads[i]
         load2 = net2.loads[i]
-        test.assertTrue(load1 is not load2)
-        test.assertEqual(load1.name, load2.name)
-        test.assertEqual(load1.num_periods, load2.num_periods)
-        test.assertEqual(load1.bus.index, load2.bus.index)
-        test.assertLess(norminf(load1.P-load2.P), eps)
-        test.assertLess(norminf(load1.P_max-load2.P_max), eps)
-        test.assertLess(norminf(load1.P_min-load2.P_min), eps)
-        test.assertLess(norminf(load1.Q-load2.Q), eps)
-        test.assertLess(norminf(load1.target_power_factor-load2.target_power_factor), eps)
-        test.assertLess(norminf(load1.util_coeff_Q0-load2.util_coeff_Q0), eps)
-        test.assertLess(norminf(load1.util_coeff_Q1-load2.util_coeff_Q1), eps)
-        test.assertLess(norminf(load1.util_coeff_Q2-load2.util_coeff_Q2), eps)
-        if check_internals:
-            test.assertLess(norminf(load1.index_P-load2.index_P),eps)
-            test.assertLess(norminf(load1.index_Q-load2.index_Q),eps)
-            test.assertEqual(load1.flags_vars,load2.flags_vars)
-            test.assertEqual(load1.flags_fixed,load2.flags_fixed)
-            test.assertEqual(load1.flags_bounded,load2.flags_bounded)
-            test.assertEqual(load1.flags_sparse,load2.flags_sparse)
-            test.assertLess(norminf(load1.sens_P_u_bound-load2.sens_P_u_bound), eps)
-            test.assertLess(norminf(load1.sens_P_l_bound-load2.sens_P_l_bound), eps)
-
+        compare_loads(test, load1, load2, check_internals=check_internals, eps=eps)
+        
     # Batteries
     test.assertEqual(net1.num_batteries, net2.num_batteries)
     for i in range(net1.num_batteries):

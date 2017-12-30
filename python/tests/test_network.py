@@ -4542,7 +4542,98 @@ class TestNetwork(unittest.TestCase):
             self.assertRaises(pf.BusError, lambda g: g.bus, gen2)
             self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen2)
 
-            pf.tests.utils.compare_networks(self, net, orig_net, check_internals=True)            
+            pf.tests.utils.compare_networks(self, net, orig_net, check_internals=True)
+
+    def test_add_remove_loads(self):
+        
+        for case in test_cases.CASES:
+
+            # Network
+            net = pf.Parser(case).parse(case, num_periods=2)            
+            orig_net = net.get_copy()
+
+            load1 = pf.Load(num_periods=2)
+            load2 = pf.Load(num_periods=2)
+
+            load1.name = 'load1'
+            load2.name = 'load2'
+
+            P1 = np.random.randn(2)
+            Q1 = np.random.randn(2)
+
+            P2 = np.random.randn(2)
+            Q2 = np.random.randn(2)
+
+            load1.bus = net.buses[0]
+            load1.P = P1
+            load1.Q = Q1
+            
+            load2.bus = net.buses[0]
+            load2.P = P2
+            load2.Q = Q2
+
+            self.assertEqual(load1.index, 0)
+            self.assertEqual(load2.index, 0)
+
+            # Add loads
+            net.add_loads([load1,load2])
+
+            self.assertEqual(net.num_loads, orig_net.num_loads+2)
+            for i in range(orig_net.num_loads):
+                pf.tests.utils.compare_loads(self,
+                                             net.get_load(i),
+                                             orig_net.get_load(i),
+                                             check_internals=True)
+
+            self.assertEqual(load1.index, orig_net.num_loads)
+            self.assertEqual(load2.index, orig_net.num_loads+1)
+            self.assertEqual(net.get_load(orig_net.num_loads).bus.index,0)
+            self.assertEqual(net.get_load(orig_net.num_loads+1).bus.index,0)
+            self.assertTrue(np.all(net.get_load(orig_net.num_loads).P == P1))
+            self.assertTrue(np.all(net.get_load(orig_net.num_loads).Q == Q1))
+            self.assertTrue(np.all(net.get_load(orig_net.num_loads+1).P == P2))
+            self.assertTrue(np.all(net.get_load(orig_net.num_loads+1).Q == Q2))
+            pf.tests.utils.compare_loads(self,
+                                         net.get_load(orig_net.num_loads),
+                                         load1,
+                                         check_internals=True)
+            pf.tests.utils.compare_loads(self,
+                                         net.get_load(orig_net.num_loads+1),
+                                         load2,
+                                         check_internals=True)
+            self.assertTrue(net.get_load(orig_net.num_loads) is not load1)
+            self.assertTrue(net.get_load(orig_net.num_loads).is_equal(load1))
+            self.assertTrue(net.get_load(orig_net.num_loads+1) is not load2)
+            self.assertTrue(net.get_load(orig_net.num_loads+1).is_equal(load2))
+            self.assertEqual(len(orig_net.buses[0].loads)+2,
+                             len(net.buses[0].loads))
+            self.assertTrue('load1' in [g.name for g in net.buses[0].loads])
+            self.assertTrue('load2' in [g.name for g in net.buses[0].loads])
+
+            for i in range(net.num_buses):
+                if i != 0:
+                    self.assertFalse(net.get_bus(i).is_equal(orig_net.get_bus(i)))
+                    pf.tests.utils.compare_buses(self,
+                                                 net.get_bus(i),
+                                                 orig_net.get_bus(i),
+                                                 check_internals=True)
+                    
+            # Remove load
+            del_load = net.loads[0]
+            net.remove_loads([del_load, load1, load2])
+
+            self.assertEqual(net.num_loads, orig_net.num_loads-1)
+
+            for load in [del_load, load1, load2]:
+                self.assertEqual(load.index, -1)
+                self.assertRaises(pf.BusError, lambda l: l.bus, load)
+
+            for i in range(orig_net.num_loads):
+                if i != 0:
+                    load1 = net.get_load(i-1)
+                    load2 = orig_net.get_load(i)
+                    self.assertFalse(load1.is_equal(load2))
+                    pf.tests.utils.compare_loads(self, load1, load2, check_internals=True)
             
     def tearDown(self):
 

@@ -62,6 +62,24 @@ cdef class Load:
 
         return new_CPtr(self._c_ptr)
 
+    def is_equal(self, other):
+        """
+        Determines whether load is equal to given load.
+
+        Parameters
+        ----------
+        other : |Load|
+        """
+
+        cdef Load l_other
+
+        if not isinstance(other,Load):
+            return False
+
+        l_other = other
+
+        return cload.LOAD_is_equal(self._c_ptr, l_other._c_ptr)
+
     def is_P_adjustable(self):
         """
         Determines whether the load has adjustable active power.

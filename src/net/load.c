@@ -639,6 +639,10 @@ void LOAD_init(Load* load, int num_periods) {
   load->next = NULL;
 }
 
+BOOL LOAD_is_equal(Load* load, Load* other) {
+  return load == other;
+}
+
 BOOL LOAD_is_P_adjustable(Load* load) {
   int t;
   if (load) {

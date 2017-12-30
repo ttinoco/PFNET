@@ -123,10 +123,6 @@ void NET_add_gens(Net* net, Gen** gen_ptr_array, int size) {
       gen_src = gen_ptr_array[i-old_num_gens];
     gen_dst = NET_get_gen(net,i);
 
-    // Check source
-    if (!gen_src)
-      continue;
-
     // Copy data
     GEN_copy_from_gen(gen_dst,gen_src);
 
@@ -210,7 +206,7 @@ void NET_del_gens(Net* net, Gen** gen_ptr_array, int size) {
       gen = GEN_array_get(old_gen_array,i);
 
       // Clear connections bus - "gen to be deleted"
-      GEN_set_bus(gen,NULL);     // also removes gen from bus->gen list
+      GEN_set_bus(gen,NULL);     // also removes gen from bus->gens list
       GEN_set_reg_bus(gen,NULL); // also removes gen from bus->reg_gens list
     }
 
@@ -250,11 +246,151 @@ void NET_del_gens(Net* net, Gen** gen_ptr_array, int size) {
 }
 
 void NET_add_loads(Net* net, Load** load_ptr_array, int size) {
+  /** Adds loads to the network. The entire load array is
+   * relocated, the data is copied (except flags for the new loads), 
+   * and the bus connections are stolen.
+   */
+  
+  // Local variables
+  Load* load_src;
+  Load* load_dst;
+  Load* old_load_array;
+  int old_num_loads;
+  Bus* bus;
+  int i;
 
+  // Check
+  if (!net || !load_ptr_array)
+    return;
+
+  // Old loads
+  old_load_array = net->load;
+  old_num_loads = net->num_loads;
+
+  // New loads
+  NET_set_load_array(net,LOAD_array_new(net->num_loads+size,net->num_periods),net->num_loads+size);
+
+  // Copy data and steal connections
+  for (i = 0; i < net->num_loads; i++) {
+
+    if (i < old_num_loads)
+      load_src = LOAD_array_get(old_load_array,i);
+    else
+      load_src = load_ptr_array[i-old_num_loads];
+    load_dst = NET_get_load(net,i);
+
+    // Copy data
+    LOAD_copy_from_load(load_dst,load_src);
+
+    // Clear flags
+    if (i >= old_num_loads) {
+      LOAD_clear_flags(load_dst,FLAG_VARS);
+      LOAD_clear_flags(load_dst,FLAG_FIXED);
+      LOAD_clear_flags(load_dst,FLAG_BOUNDED);
+      LOAD_clear_flags(load_dst,FLAG_SPARSE);
+    }
+    
+    // Save old connections
+    bus = LOAD_get_bus(load_src);
+
+    // Clear connections bus - old load
+    LOAD_set_bus(load_src,NULL);         // also removes load from bus->loads list
+
+    // Add connections bus - new load
+    LOAD_set_bus(load_dst,bus);          // also adds load to bus->loads list
+  }
+
+  // Delete old loads
+  LOAD_array_del(old_load_array,old_num_loads);
 }
 
 void NET_del_loads(Net* net, Load** load_ptr_array, int size) {
+  /** Removes loads from the network. The entire load array is
+   * relocated, the data is copied, and the bus connections are set.
+   * Network flags are cleared. 
+   */
+  
+  // Local variables
+  Load* load_src;
+  Load* load_dst;
+  Load* load;
+  Load* old_load_array;
+  int old_num_loads;
+  char* delete;
+  Bus* bus;
+  int num;
+  int index;
+  int i;
 
+  // Check
+  if (!net || !load_ptr_array)
+    return;
+
+  // Old loads
+  old_load_array = net->load;
+  old_num_loads = net->num_loads;
+
+  // Count unique and mark for deletion
+  num = 0;
+  ARRAY_zalloc(delete,char,net->num_loads);
+  for (i = 0; i < size; i++) {
+    load = load_ptr_array[i];
+    if (load) {
+      if (load == NET_get_load(net,LOAD_get_index(load))) { // load to delete is present in network
+	if (!delete[LOAD_get_index(load)]) {
+	  delete[LOAD_get_index(load)] = 1;
+	  num++;
+	}
+      }	
+    }
+  }
+
+  // New loads
+  NET_set_load_array(net,LOAD_array_new(net->num_loads-num,net->num_periods),net->num_loads-num);
+
+  // Copy data and set connections
+  index = 0;
+  for (i = 0; i < old_num_loads; i++) {
+
+    // Delete
+    if (delete[i]) {
+
+      load = LOAD_array_get(old_load_array,i);
+      
+      // Clear connections bus - "load to be deleted"
+      LOAD_set_bus(load,NULL); // also removes load from bus->loads list
+    }
+
+    // Keep
+    else {
+
+      load_src = LOAD_array_get(old_load_array,i);
+      load_dst = NET_get_load(net,index);
+
+      // Copy data
+      LOAD_copy_from_load(load_dst,load_src);
+
+      // Save old connections
+      bus = LOAD_get_bus(load_src);
+      
+      // Clear connections bus - old load 
+      LOAD_set_bus(load_src,NULL);       // also removes load from bus->loads list
+      
+      // Add connections bus - new load
+      LOAD_set_bus(load_dst,bus);        // also adds load to bus->loads list
+      
+      index++;
+    }
+  }
+
+  // Delete old loads
+  LOAD_array_del(old_load_array,old_num_loads);
+
+  // Delete delete flags
+  free(delete);
+
+  // Clear flags
+  NET_clear_flags(net);
 }
 
 void NET_add_shunts(Net* net, Shunt** shunt_ptr_array, int size) {

@@ -132,6 +132,63 @@ cdef class Network:
             gen = generators[i]
             gen._c_ptr = NULL
             gen.alloc = False
+
+    def add_loads(self, loads):
+        """
+        Adds loads to the network.
+        Flags are not preserved (for now).
+
+        Parameters
+        ----------
+        loads : list of |Load| objects
+        """
+
+        cdef cnet.Load** array
+        cdef Load load
+
+        old_num_loads = self.num_loads
+        array = <cnet.Load**>malloc(len(loads)*sizeof(cnet.Load*))
+        for i in range(len(loads)):
+            load = loads[i]
+            array[i] = load._c_ptr
+
+        cnet.NET_add_loads(self._c_net, array, len(loads))
+        free(array)
+
+        # Update pointers and alloc flags
+        for i in range(len(loads)):
+            load = loads[i]
+            cload.LOAD_array_del(load._c_ptr,1)
+            load._c_ptr = cnet.NET_get_load(self._c_net, i+old_num_loads)
+            load.alloc = False
+
+    def remove_loads(self, loads):
+        """
+        Removes loads from the network.
+        All network flags are cleared (for now). 
+
+        Parameters
+        ----------
+        loads : list of |Load| objects
+        """
+
+        cdef cnet.Load** array
+        cdef Load load
+
+        old_num_loads = self.num_loads
+        array = <cnet.Load**>malloc(len(loads)*sizeof(cnet.Load*))
+        for i in range(len(loads)):
+            load = loads[i]
+            array[i] = load._c_ptr
+
+        cnet.NET_del_loads(self._c_net, array, len(loads))
+        free(array)
+
+        # Update pointers and alloc flags
+        for i in range(len(loads)):
+            load = loads[i]
+            load._c_ptr = NULL
+            load.alloc = False
             
     def add_var_generators_from_parameters(self, buses, power_capacity, power_base, power_std=0., corr_radius=0, corr_value=0.):
         """

@@ -21,6 +21,8 @@ cdef extern from "pfnet/net.h":
     ctypedef struct Net
     ctypedef struct Bus
     ctypedef struct Gen
+    ctypedef struct Load
+    ctypedef struct Shunt
     ctypedef double REAL
 
     void NET_add_gens(Net* net, cgen.Gen** gen_ptr_array, int size)
