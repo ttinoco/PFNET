@@ -715,6 +715,13 @@ cdef class Bus:
         cbat = bat
         cbus.BUS_del_bat(self._c_ptr, cbat._c_ptr)
 
+    def remove_all_connections(self):
+        """
+        Removes all connections to this bus.
+        """
+
+        cbus.BUS_del_all_connections(self._c_ptr)
+
     def show(self, t=0):
         """
         Shows bus properties.

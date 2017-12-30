@@ -23,7 +23,11 @@ cdef extern from "pfnet/net.h":
     ctypedef struct Gen
     ctypedef struct Load
     ctypedef struct Shunt
+    ctypedef struct Branch
     ctypedef double REAL
+
+    void NET_add_branches(Net* net, cbranch.Branch** br_ptr_array, int size)
+    void NET_del_branches(Net* net, cbranch.Branch** br_ptr_array, int size)
 
     void NET_add_gens(Net* net, cgen.Gen** gen_ptr_array, int size)
     void NET_del_gens(Net* net, cgen.Gen** gen_ptr_array, int size)

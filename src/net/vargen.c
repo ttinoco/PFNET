@@ -71,6 +71,7 @@ void VARGEN_array_del(Vargen* gen_array, int size) {
       free(gen->Q);
       free(gen->index_P);
       free(gen->index_Q);
+      VARGEN_set_bus(gen,NULL);
     }
     free(gen_array);
   }  

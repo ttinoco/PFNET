@@ -73,6 +73,7 @@ void BAT_array_del(Bat* bat_array, int size) {
       free(bat->index_Pc);
       free(bat->index_Pd);
       free(bat->index_E);
+      BAT_set_bus(bat,NULL);
     }
     free(bat_array);
   }  

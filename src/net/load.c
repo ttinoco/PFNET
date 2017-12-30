@@ -80,6 +80,7 @@ void LOAD_array_del(Load* load_array, int size) {
       free(load->index_Q);
       free(load->sens_P_u_bound);
       free(load->sens_P_l_bound);
+      LOAD_set_bus(load,NULL);
     }
     free(load_array);
   }  

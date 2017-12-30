@@ -76,6 +76,62 @@ cdef class Network:
             new_net.alloc = False
             os.remove(f.name)
 
+    def add_branches(self, branches):
+        """
+        Adds branches to the network.
+        Flags are not preserved (for now).
+
+        Parameters
+        ----------
+        branches : list of |Branch| objects
+        """
+
+        cdef cnet.Branch** array
+        cdef Branch br
+
+        old_num_branches = self.num_branches
+        array = <cnet.Branch**>malloc(len(branches)*sizeof(cnet.Branch*))
+        for i in range(len(branches)):
+            br = branches[i]
+            array[i] = br._c_ptr
+
+        cnet.NET_add_branches(self._c_net, array, len(branches))
+        free(array)
+
+        # Update pointers and alloc flags
+        for i in range(len(branches)):
+            br = branches[i]
+            cbranch.BRANCH_array_del(br._c_ptr,1)
+            br._c_ptr = cnet.NET_get_branch(self._c_net, i+old_num_branches)
+            br.alloc = False
+
+    def remove_branches(self, branches):
+        """
+        Removes branches from the network.
+        All network flags are cleared (for now). 
+
+        Parameters
+        ----------
+        branches : list of |Branch| objects
+        """
+
+        cdef cnet.Branch** array
+        cdef Branch br
+
+        array = <cnet.Branch**>malloc(len(branches)*sizeof(cnet.Branch*))
+        for i in range(len(branches)):
+            br = branches[i]
+            array[i] = br._c_ptr
+
+        cnet.NET_del_branches(self._c_net, array, len(branches))
+        free(array)
+
+        # Update pointers and alloc flags
+        for i in range(len(branches)):
+            br = branches[i]
+            br._c_ptr = NULL
+            br.alloc = False
+
     def add_generators(self, generators):
         """
         Adds generators to the network.

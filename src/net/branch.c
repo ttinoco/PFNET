@@ -112,6 +112,9 @@ void BRANCH_array_del(Branch* br_array, int size) {
       free(br->sens_phase_u_bound);
       free(br->sens_phase_l_bound);
       free(br->sens_i_mag_u_bound);
+      BRANCH_set_bus_k(br,NULL);
+      BRANCH_set_bus_m(br,NULL);
+      BRANCH_set_reg_bus(br,NULL);
     }
     free(br_array);
   }

@@ -72,6 +72,8 @@ void SHUNT_array_del(Shunt* shunt_array, int size) {
       free(shunt->index_b);
       free(shunt->sens_b_u_bound);
       free(shunt->sens_b_l_bound);
+      SHUNT_set_bus(shunt,NULL);
+      SHUNT_set_reg_bus(shunt,NULL);
     }
     free(shunt_array);
   }

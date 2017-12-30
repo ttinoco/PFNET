@@ -249,6 +249,31 @@ void BUS_del_bat(Bus* bus, Bat* bat) {
   }
 }
 
+void BUS_del_all_connections(Bus* bus) {
+  if (bus) {
+    while (bus->gen)
+      BUS_del_gen(bus,bus->gen);
+    while (bus->reg_gen)
+      BUS_del_reg_gen(bus,bus->reg_gen);
+    while (bus->load)
+      BUS_del_load(bus,bus->load);
+    while (bus->shunt)
+      BUS_del_shunt(bus,bus->shunt);
+    while (bus->reg_shunt)
+      BUS_del_reg_shunt(bus,bus->reg_shunt);
+    while (bus->branch_k)
+      BUS_del_branch_k(bus,bus->branch_k);
+    while (bus->branch_m)
+      BUS_del_branch_m(bus,bus->branch_m);
+    while (bus->reg_tran)
+      BUS_del_reg_tran(bus,bus->reg_tran);
+    while (bus->vargen)
+      BUS_del_vargen(bus,bus->vargen);
+    while (bus->bat)
+      BUS_del_bat(bus,bus->bat);    
+  }
+}
+
 BOOL BUS_array_check(Bus* bus_array, int size, BOOL verbose) {
   int i;
   BOOL bus_ok = TRUE;
@@ -282,6 +307,7 @@ void BUS_array_del(Bus* bus_array, int size) {
       free(bus->sens_v_reg_by_shunt);
       free(bus->P_mis);
       free(bus->Q_mis);
+      BUS_del_all_connections(bus);
     }
     free(bus_array);
   }

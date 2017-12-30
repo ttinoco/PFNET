@@ -4440,10 +4440,96 @@ class TestNetwork(unittest.TestCase):
         self.assertTrue([x.name for x in bus.loads] == [])
         
         # Branches k
-
+        branch1 = pf.Branch()
+        branch1.name = 'branch1'
+        self.assertTrue(bus.branches_k == [])
+        self.assertRaises(pf.BusError, lambda br: br.bus_k, branch1)
+        bus.add_branch_k(branch1)
+        self.assertEqual(branch1.bus_k.name,bus.name)
+        self.assertTrue([br.name for br in bus.branches_k] == ['branch1'])
+        branch1.bus_k = bus
+        self.assertEqual(branch1.bus_k.name,bus.name)
+        self.assertTrue([br.name for br in bus.branches_k] == ['branch1'])
+        branch2 = pf.Branch()
+        branch2.name = 'branch2'
+        self.assertRaises(pf.BusError, lambda br: br.bus_k, branch2)
+        branch2.bus_k = bus
+        self.assertEqual(branch2.bus_k.name,bus.name)
+        self.assertTrue([br.name for br in bus.branches_k] == ['branch1', 'branch2'])
+        bus.add_branch_k(branch2)
+        self.assertEqual(branch2.bus_k.name,bus.name)
+        self.assertTrue([br.name for br in bus.branches_k] == ['branch1', 'branch2'])
+        bus.remove_branch_k(branch2)
+        self.assertEqual(branch1.bus_k.name,bus.name)
+        self.assertRaises(pf.BusError, lambda br: br.bus_k, branch2)
+        self.assertTrue([br.name for br in bus.branches_k] == ['branch1'])
+        branch1.bus_k = None
+        self.assertRaises(pf.BusError, lambda br: br.bus_k, branch1)
+        self.assertRaises(pf.BusError, lambda br: br.bus_k, branch2)
+        self.assertTrue([br.name for br in bus.branches_k] == [])
+        
         # Branches m
+        branch1 = pf.Branch()
+        branch1.name = 'branch1'
+        self.assertTrue(bus.branches_m == [])
+        self.assertRaises(pf.BusError, lambda br: br.bus_m, branch1)
+        bus.add_branch_m(branch1)
+        self.assertEqual(branch1.bus_m.name,bus.name)
+        self.assertTrue([br.name for br in bus.branches_m] == ['branch1'])
+        branch1.bus_m = bus
+        self.assertEqual(branch1.bus_m.name,bus.name)
+        self.assertTrue([br.name for br in bus.branches_m] == ['branch1'])
+        branch2 = pf.Branch()
+        branch2.name = 'branch2'
+        self.assertRaises(pf.BusError, lambda br: br.bus_m, branch2)
+        branch2.bus_m = bus
+        self.assertEqual(branch2.bus_m.name,bus.name)
+        self.assertTrue([br.name for br in bus.branches_m] == ['branch1', 'branch2'])
+        bus.add_branch_m(branch2)
+        self.assertEqual(branch2.bus_m.name,bus.name)
+        self.assertTrue([br.name for br in bus.branches_m] == ['branch1', 'branch2'])
+        bus.remove_branch_m(branch2)
+        self.assertEqual(branch1.bus_m.name,bus.name)
+        self.assertRaises(pf.BusError, lambda br: br.bus_m, branch2)
+        self.assertTrue([br.name for br in bus.branches_m] == ['branch1'])
+        branch1.bus_m = None
+        self.assertRaises(pf.BusError, lambda br: br.bus_m, branch1)
+        self.assertRaises(pf.BusError, lambda br: br.bus_m, branch2)
+        self.assertTrue([br.name for br in bus.branches_m] == [])
 
         # Reg branches
+        """
+        gen3 = pf.Generator()
+        gen3.name = 'gen3'
+        self.assertTrue(bus.reg_generators == [])
+        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen3)
+        self.assertFalse(bus.is_regulated_by_gen())
+        bus.add_reg_generator(gen3)
+        self.assertEqual(gen3.reg_bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3'])
+        self.assertTrue(bus.is_regulated_by_gen())
+        gen3.reg_bus = bus
+        self.assertEqual(gen3.reg_bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3'])
+        gen4 = pf.Generator()
+        gen4.name = 'gen4'
+        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen4)
+        gen4.reg_bus = bus
+        self.assertEqual(gen4.reg_bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3', 'gen4'])
+        bus.add_reg_generator(gen4)
+        self.assertEqual(gen4.reg_bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3', 'gen4'])
+        bus.remove_reg_generator(gen4)
+        self.assertEqual(gen3.reg_bus.name,bus.name)
+        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen4)
+        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3'])
+        gen3.reg_bus = None
+        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen3)
+        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen4)
+        self.assertTrue([g.name for g in bus.reg_generators] == [])
+        self.assertFalse(bus.is_regulated_by_gen())
+        """
 
         # Shunts
         shunt1 = pf.Shunt()
@@ -4509,6 +4595,87 @@ class TestNetwork(unittest.TestCase):
 
         # Var generators
 
+        # Disconnect all
+        bus = pf.Bus()
+        gen = pf.Generator()
+        branch = pf.Branch()
+        shunt = pf.Shunt()
+        bat = pf.Battery()
+        vargen = pf.VarGenerator()
+        load = pf.Load()
+        self.assertEqual(len(bus.generators),0)
+        self.assertEqual(len(bus.reg_generators),0)
+        self.assertEqual(len(bus.branches_k),0)
+        self.assertEqual(len(bus.branches_m),0)
+        self.assertEqual(len(bus.reg_trans),0)
+        self.assertEqual(len(bus.shunts),0)
+        self.assertEqual(len(bus.reg_shunts),0)
+        self.assertEqual(len(bus.batteries),0)
+        self.assertEqual(len(bus.var_generators),0)
+        self.assertEqual(len(bus.loads),0)
+        self.assertRaises(pf.BusError, lambda x: x.bus, gen)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, gen)
+        self.assertRaises(pf.BusError, lambda x: x.bus_k, branch)
+        self.assertRaises(pf.BusError, lambda x: x.bus_m, branch)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch)
+        self.assertRaises(pf.BusError, lambda x: x.bus, shunt)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, shunt)
+        self.assertRaises(pf.BusError, lambda x: x.bus, bat)
+        self.assertRaises(pf.BusError, lambda x: x.bus, vargen)
+        self.assertRaises(pf.BusError, lambda x: x.bus, load)
+        bus.add_generator(gen)
+        bus.add_reg_generator(gen)
+        bus.add_branch_k(branch)
+        bus.add_branch_m(branch)
+        bus.add_reg_tran(branch)
+        bus.add_shunt(shunt)
+        bus.add_reg_shunt(shunt)
+        bus.add_battery(bat)
+        bus.add_var_generator(vargen)
+        bus.add_load(load)
+        self.assertEqual(len(bus.generators),1)
+        self.assertEqual(len(bus.reg_generators),1)
+        self.assertEqual(len(bus.branches_k),1)
+        self.assertEqual(len(bus.branches_m),1)
+        self.assertEqual(len(bus.reg_trans),1)
+        self.assertEqual(len(bus.shunts),1)
+        self.assertEqual(len(bus.reg_shunts),1)
+        self.assertEqual(len(bus.batteries),1)
+        self.assertEqual(len(bus.var_generators),1)
+        self.assertEqual(len(bus.loads),1)
+        self.assertTrue(gen.bus.is_equal(bus))
+        self.assertTrue(gen.reg_bus.is_equal(bus))
+        self.assertTrue(branch.bus_k.is_equal(bus))
+        self.assertTrue(branch.bus_m.is_equal(bus))
+        self.assertTrue(branch.reg_bus.is_equal(bus))
+        self.assertTrue(shunt.bus.is_equal(bus))
+        self.assertTrue(shunt.reg_bus.is_equal(bus))
+        self.assertTrue(bat.bus.is_equal(bus))
+        self.assertTrue(vargen.bus.is_equal(bus))
+        self.assertTrue(load.bus.is_equal(bus))
+        
+        bus.remove_all_connections()
+
+        self.assertEqual(len(bus.generators),0)
+        self.assertEqual(len(bus.reg_generators),0)
+        self.assertEqual(len(bus.branches_k),0)
+        self.assertEqual(len(bus.branches_m),0)
+        self.assertEqual(len(bus.reg_trans),0)
+        self.assertEqual(len(bus.shunts),0)
+        self.assertEqual(len(bus.reg_shunts),0)
+        self.assertEqual(len(bus.batteries),0)
+        self.assertEqual(len(bus.var_generators),0)
+        self.assertEqual(len(bus.loads),0)
+        self.assertRaises(pf.BusError, lambda x: x.bus, gen)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, gen)
+        self.assertRaises(pf.BusError, lambda x: x.bus_k, branch)
+        self.assertRaises(pf.BusError, lambda x: x.bus_m, branch)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch)
+        self.assertRaises(pf.BusError, lambda x: x.bus, shunt)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, shunt)
+        self.assertRaises(pf.BusError, lambda x: x.bus, bat)
+        self.assertRaises(pf.BusError, lambda x: x.bus, vargen)
+        self.assertRaises(pf.BusError, lambda x: x.bus, load)
 
     def test_add_remove_generators(self):
         

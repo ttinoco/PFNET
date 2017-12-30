@@ -86,6 +86,8 @@ void GEN_array_del(Gen* gen_array, int size) {
       free(gen->sens_P_l_bound);
       free(gen->sens_Q_u_bound);
       free(gen->sens_Q_l_bound);
+      GEN_set_bus(gen,NULL);
+      GEN_set_reg_bus(gen,NULL);
     }
     free(gen_array);
   }  

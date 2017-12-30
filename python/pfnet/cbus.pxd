@@ -159,5 +159,6 @@ cdef extern from "pfnet/bus.h":
     void BUS_del_branch_k(Bus* bus, Branch* branch)
     void BUS_add_branch_m(Bus* bus, Branch* branch)
     void BUS_del_branch_m(Bus* bus, Branch* branch)
+    void BUS_del_all_connections(Bus* bus)
 
     void BUS_show(Bus* bus, int t)

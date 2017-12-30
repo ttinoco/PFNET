@@ -136,6 +136,8 @@ void BUS_add_branch_m(Bus* bus, Branch* branch);
 /** @brief Deletes branch from list of branches connected at "m" bus. */
 void BUS_del_branch_m(Bus* bus, Branch* branch);
 
+void BUS_del_all_connections(Bus* bus);
+
 void BUS_array_del(Bus* bus_array, int size);
 BOOL BUS_array_check(Bus* bus_array, int size, BOOL verbose);
 void* BUS_array_get(void* bus_array, int index);
