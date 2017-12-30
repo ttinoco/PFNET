@@ -4498,38 +4498,37 @@ class TestNetwork(unittest.TestCase):
         self.assertTrue([br.name for br in bus.branches_m] == [])
 
         # Reg branches
-        """
-        gen3 = pf.Generator()
-        gen3.name = 'gen3'
-        self.assertTrue(bus.reg_generators == [])
-        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen3)
-        self.assertFalse(bus.is_regulated_by_gen())
-        bus.add_reg_generator(gen3)
-        self.assertEqual(gen3.reg_bus.name,bus.name)
-        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3'])
-        self.assertTrue(bus.is_regulated_by_gen())
-        gen3.reg_bus = bus
-        self.assertEqual(gen3.reg_bus.name,bus.name)
-        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3'])
-        gen4 = pf.Generator()
-        gen4.name = 'gen4'
-        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen4)
-        gen4.reg_bus = bus
-        self.assertEqual(gen4.reg_bus.name,bus.name)
-        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3', 'gen4'])
-        bus.add_reg_generator(gen4)
-        self.assertEqual(gen4.reg_bus.name,bus.name)
-        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3', 'gen4'])
-        bus.remove_reg_generator(gen4)
-        self.assertEqual(gen3.reg_bus.name,bus.name)
-        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen4)
-        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3'])
-        gen3.reg_bus = None
-        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen3)
-        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen4)
-        self.assertTrue([g.name for g in bus.reg_generators] == [])
-        self.assertFalse(bus.is_regulated_by_gen())
-        """
+        branch3 = pf.Branch()
+        branch3.name = 'branch3'
+        self.assertTrue(bus.reg_trans == [])
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch3)
+        self.assertFalse(bus.is_regulated_by_tran())
+        bus.add_reg_tran(branch3)
+        self.assertEqual(branch3.reg_bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.reg_trans] == ['branch3'])
+        self.assertTrue(bus.is_regulated_by_tran())
+        branch3.reg_bus = bus
+        self.assertEqual(branch3.reg_bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.reg_trans] == ['branch3'])
+        branch4 = pf.Branch()
+        branch4.name = 'branch4'
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch4)
+        branch4.reg_bus = bus
+        self.assertTrue(bus.is_regulated_by_tran())
+        self.assertEqual(branch4.reg_bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.reg_trans] == ['branch3', 'branch4'])
+        bus.add_reg_tran(branch4)
+        self.assertEqual(branch4.reg_bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.reg_trans] == ['branch3', 'branch4'])
+        bus.remove_reg_tran(branch4)
+        self.assertEqual(branch3.reg_bus.name,bus.name)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch4)
+        self.assertTrue([x.name for x in bus.reg_trans] == ['branch3'])
+        branch3.reg_bus = None
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch3)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch4)
+        self.assertTrue([x.name for x in bus.reg_trans] == [])
+        self.assertFalse(bus.is_regulated_by_tran())
 
         # Shunts
         shunt1 = pf.Shunt()

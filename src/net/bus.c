@@ -1622,21 +1622,21 @@ BOOL BUS_is_equal(Bus* bus, Bus* other) {
 
 BOOL BUS_is_regulated_by_gen(Bus* bus) {
   if (bus)
-    return GEN_is_regulator(bus->reg_gen);
+    return bus->reg_gen != NULL;
   else
     return FALSE;
 }
 
 BOOL BUS_is_regulated_by_tran(Bus* bus) {
   if (bus)
-    return BRANCH_is_tap_changer_v(bus->reg_tran);
+    return bus->reg_tran != NULL;
   else
     return FALSE;
 }
 
 BOOL BUS_is_regulated_by_shunt(Bus* bus) {
   if (bus)
-    return SHUNT_is_switched_v(bus->reg_shunt);
+    return bus->reg_shunt != NULL;
   else
     return FALSE;
 }
