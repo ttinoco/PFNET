@@ -371,5 +371,5 @@ def compare_networks(test, net1, net2, check_internals=False):
 
     # Hashes                 
     for bus in net1.buses:
-        test.assertEqual(bus.index,net2.get_bus_from_number(bus.number).index)
-        test.assertEqual(bus.name,net2.get_bus_from_name(bus.name).name)
+        test.assertEqual(bus.number,net2.get_bus_from_number(bus.number).number)
+        test.assertEqual(bus.name,net2.get_bus_from_number(bus.number).name)

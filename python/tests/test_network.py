@@ -4702,7 +4702,10 @@ class TestNetwork(unittest.TestCase):
 
             v_mag = [np.random.randn(2), np.random.randn(2)]
             v_ang = [np.random.randn(2), np.random.randn(2)]
+            maxnum = max([bus.number for bus in net.buses])
             for i, bus in enumerate(new_bus):
+                bus.name = 'a new bus %d' %i
+                bus.number = maxnum+1+i
                 bus.v_mag = v_mag[i]
                 bus.v_ang = v_ang[i]
 
@@ -4771,6 +4774,15 @@ class TestNetwork(unittest.TestCase):
             for i in range(2):
                 self.assertTrue(np.all(net.get_bus(orig_net.num_buses+i).v_mag == v_mag[i]))
                 self.assertTrue(np.all(net.get_bus(orig_net.num_buses+i).v_ang == v_ang[i]))
+
+            for i in range(2):
+                self.assertEqual(net.get_bus(orig_net.num_buses+i).name, 'a new bus %d' %i)
+                self.assertEqual(net.get_bus(orig_net.num_buses+i).number, maxnum+1+i)
+
+            for bus in net.buses:
+                self.assertEqual(bus.number, net.get_bus_from_number(bus.number).number)
+                self.assertEqual(bus.name, net.get_bus_from_name(bus.name).name)
+                self.assertTrue(bus.is_equal(net.get_bus_from_number(bus.number)))
 
             # Add all other components
             for i in range(2):

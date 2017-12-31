@@ -181,7 +181,7 @@ void NET_add_buses(Net* net, Bus** bus_ptr_array, int size) {
 }
 
 void NET_del_buses(Net* net, Bus** bus_ptr_array, int size) {
-
+  
 }
 
 void NET_add_branches(Net* net, Branch** br_ptr_array, int size) {
