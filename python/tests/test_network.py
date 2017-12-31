@@ -4953,6 +4953,111 @@ class TestNetwork(unittest.TestCase):
             self.assertRaises(pf.BusError, lambda s: s.reg_bus, shunt2)
 
             pf.tests.utils.compare_networks(self, net, orig_net, check_internals=True)
+
+    def test_add_remove_branches(self):
+        
+        for case in test_cases.CASES:
+
+            # Network
+            net = pf.Parser(case).parse(case, num_periods=2)            
+            orig_net = net.get_copy()
+
+            branch1 = pf.Branch(num_periods=2)
+            branch2 = pf.Branch(num_periods=2)
+
+            branch1.name = 'branch1'
+            branch2.name = 'branch2'
+
+            ratio1 = np.random.randn(2)
+            phase1 = np.random.randn(2)
+
+            ratio2 = np.random.randn(2)
+            phase2 = np.random.randn(2)
+
+            branch1.bus_k = net.buses[0]
+            branch1.bus_m = net.buses[1]
+            branch1.reg_bus = net.buses[0]
+            branch1.ratio = ratio1
+            branch1.phase = phase1
+            
+            branch2.bus_k = net.buses[0]
+            branch2.bus_m = net.buses[1]
+            branch2.reg_bus = net.buses[0]
+            branch2.ratio = ratio2
+            branch2.phase = phase2
+
+            self.assertEqual(branch1.index, 0)
+            self.assertEqual(branch2.index, 0)
+
+            # Add branches
+            net.add_branches([branch1,branch2])
+
+            self.assertEqual(net.num_branches, orig_net.num_branches+2)
+            for i in range(orig_net.num_branches):
+                pf.tests.utils.compare_branches(self,
+                                                net.get_branch(i),
+                                                orig_net.get_branch(i),
+                                                check_internals=True)
+
+            self.assertEqual(branch1.index, orig_net.num_branches)
+            self.assertEqual(branch2.index, orig_net.num_branches+1)
+            self.assertEqual(net.get_branch(orig_net.num_branches).bus_k.index, 0)
+            self.assertEqual(net.get_branch(orig_net.num_branches).bus_m.index, 1)
+            self.assertEqual(net.get_branch(orig_net.num_branches+1).bus_k.index, 0)
+            self.assertEqual(net.get_branch(orig_net.num_branches+1).bus_m.index, 1)
+            self.assertTrue(np.all(net.get_branch(orig_net.num_branches).ratio == ratio1))
+            self.assertTrue(np.all(net.get_branch(orig_net.num_branches).phase == phase1))
+            self.assertTrue(np.all(net.get_branch(orig_net.num_branches+1).ratio == ratio2))
+            self.assertTrue(np.all(net.get_branch(orig_net.num_branches+1).phase == phase2))
+            pf.tests.utils.compare_branches(self,
+                                            net.get_branch(orig_net.num_branches),
+                                            branch1,
+                                            check_internals=True)
+            pf.tests.utils.compare_branches(self,
+                                            net.get_branch(orig_net.num_branches+1),
+                                            branch2,
+                                            check_internals=True)
+            self.assertTrue(net.get_branch(orig_net.num_branches) is not branch1)
+            self.assertTrue(net.get_branch(orig_net.num_branches).is_equal(branch1))
+            self.assertTrue(net.get_branch(orig_net.num_branches+1) is not branch2)
+            self.assertTrue(net.get_branch(orig_net.num_branches+1).is_equal(branch2))
+            self.assertTrue(net.get_branch(orig_net.num_branches).reg_bus.is_equal(net.buses[0]))
+            self.assertTrue(net.get_branch(orig_net.num_branches+1).reg_bus.is_equal(net.buses[0]))
+            self.assertTrue(net.buses[0].reg_trans[-1].is_equal(branch2))
+            self.assertTrue(net.buses[0].reg_trans[-2].is_equal(branch1))
+            self.assertEqual(len(orig_net.buses[0].branches)+2,
+                             len(net.buses[0].branches))
+            self.assertTrue('branch1' in [x.name for x in net.buses[0].branches])
+            self.assertTrue('branch2' in [x.name for x in net.buses[0].branches])
+            self.assertTrue('branch1' in [x.name for x in net.buses[1].branches])
+            self.assertTrue('branch2' in [x.name for x in net.buses[1].branches])
+            self.assertTrue(net.buses[0].is_regulated_by_tran())
+            self.assertTrue('branch1' in [x.name for x in net.buses[0].reg_trans])
+            self.assertTrue('branch2' in [x.name for x in net.buses[0].reg_trans])
+
+            for i in range(net.num_buses):
+                if i > 1:
+                    self.assertFalse(net.get_bus(i).is_equal(orig_net.get_bus(i)))
+                    pf.tests.utils.compare_buses(self,
+                                                 net.get_bus(i),
+                                                 orig_net.get_bus(i),
+                                                 check_internals=True)
+                    
+            # Remove branches
+            net.remove_branches([branch1, branch2])
+
+            self.assertEqual(net.num_branches, orig_net.num_branches)
+
+            self.assertEqual(branch1.index, -1)
+            self.assertRaises(pf.BusError, lambda x: x.bus_k, branch1)
+            self.assertRaises(pf.BusError, lambda x: x.bus_m, branch1)
+            self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch1)
+            self.assertEqual(branch2.index, -1)
+            self.assertRaises(pf.BusError, lambda x: x.bus_k, branch2)
+            self.assertRaises(pf.BusError, lambda x: x.bus_m, branch2)
+            self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch2)
+
+            pf.tests.utils.compare_networks(self, net, orig_net, check_internals=True)
             
     def tearDown(self):
 

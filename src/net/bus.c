@@ -447,16 +447,6 @@ void BUS_clear_mismatches(Bus* bus) {
   }
 }
 
-void BUS_clear_vargen(Bus* bus) {
-  if (bus)
-    bus->vargen = NULL;
-}
-
-void BUS_clear_bat(Bus* bus) {
-  if (bus)
-    bus->bat = NULL;
-}
-
 void BUS_copy_from_bus(Bus* bus, Bus* other) {
   /** Copies data from another bus except
    *  index, hash info, and connections.

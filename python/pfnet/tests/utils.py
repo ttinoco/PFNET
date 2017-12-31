@@ -195,6 +195,64 @@ def compare_shunts(test, shunt1, shunt2, check_internals=False, eps=1e-10):
         test.assertEqual(shunt1.flags_sparse,shunt2.flags_sparse)
         test.assertLess(norminf(shunt1.sens_b_u_bound-shunt2.sens_b_u_bound), eps)
         test.assertLess(norminf(shunt1.sens_b_l_bound-shunt2.sens_b_l_bound), eps)
+
+def compare_branches(test, branch1, branch2, check_internals=False, eps=1e-10):
+    """
+    Method for checking if two |Branch| objects are similar.
+    
+    Parameters
+    ----------
+    test : unittest.TestCase
+    branch1 : |Branch|
+    branch2 : |Branch|
+    check_configuration : |TrueFalse|
+    eps : float
+    """
+
+    test.assertTrue(branch1 is not branch2)
+    test.assertEqual(branch1.name, branch2.name)
+    test.assertEqual(branch1.num_periods, branch2.num_periods)
+    test.assertEqual(branch1.bus_k.index, branch2.bus_k.index)
+    test.assertEqual(branch1.bus_m.index, branch2.bus_m.index)
+    test.assertEqual(branch1.is_fixed_tran(), branch2.is_fixed_tran())
+    test.assertEqual(branch1.is_line(), branch2.is_line())
+    test.assertEqual(branch1.is_phase_shifter(), branch2.is_phase_shifter())
+    test.assertEqual(branch1.is_tap_changer(), branch2.is_tap_changer())
+    test.assertEqual(branch1.is_tap_changer_v(), branch2.is_tap_changer_v())
+    test.assertEqual(branch1.is_tap_changer_Q(), branch2.is_tap_changer_Q())
+    if branch1.is_tap_changer_v():
+        test.assertEqual(branch1.reg_bus.index, branch2.reg_bus.index)
+    test.assertLess(norminf(branch1.g-branch2.g), eps*(1+norminf(branch1.g)))
+    test.assertLess(norminf(branch1.g_k-branch2.g_k), eps*(1+norminf(branch1.g_k)))
+    test.assertLess(norminf(branch1.g_m-branch2.g_m), eps*(1+norminf(branch1.g_m)))
+    test.assertLess(norminf(branch1.b-branch2.b), eps*(1+norminf(branch1.b)))
+    test.assertLess(norminf(branch1.b_k-branch2.b_k), eps*(1+norminf(branch1.b_k)))
+    test.assertLess(norminf(branch1.b_m-branch2.b_m), eps*(1+norminf(branch1.b_m)))
+    test.assertLess(norminf(branch1.ratio-branch2.ratio), eps)
+    test.assertLess(norminf(branch1.ratio_max-branch2.ratio_max), eps)
+    test.assertLess(norminf(branch1.ratio_min-branch2.ratio_min), eps)
+    test.assertLess(norminf(branch1.phase-branch2.phase), eps)
+    test.assertLess(norminf(branch1.phase_max-branch2.phase_max), eps)
+    test.assertLess(norminf(branch1.phase_min-branch2.phase_min), eps)
+    test.assertLess(norminf(branch1.ratingA-branch2.ratingA), eps)
+    test.assertLess(norminf(branch1.ratingB-branch2.ratingB), eps)
+    test.assertLess(norminf(branch1.ratingC-branch2.ratingC), eps)
+    test.assertEqual(branch1.is_on_outage(), branch2.is_on_outage())
+    test.assertEqual(branch1.has_pos_ratio_v_sens(), branch2.has_pos_ratio_v_sens())
+    if check_internals:
+        test.assertLess(norminf(branch1.index_ratio-branch2.index_ratio),eps)
+        test.assertLess(norminf(branch1.index_phase-branch2.index_phase),eps)
+        test.assertEqual(branch1.flags_vars,branch2.flags_vars)
+        test.assertEqual(branch1.flags_fixed,branch2.flags_fixed)
+        test.assertEqual(branch1.flags_bounded,branch2.flags_bounded)
+        test.assertEqual(branch1.flags_sparse,branch2.flags_sparse)
+        test.assertLess(norminf(branch1.sens_P_u_bound-branch2.sens_P_u_bound), eps)
+        test.assertLess(norminf(branch1.sens_P_l_bound-branch2.sens_P_l_bound), eps)
+        test.assertLess(norminf(branch1.sens_i_mag_u_bound-branch2.sens_i_mag_u_bound), eps)
+        test.assertLess(norminf(branch1.sens_ratio_u_bound-branch2.sens_ratio_u_bound), eps)
+        test.assertLess(norminf(branch1.sens_ratio_l_bound-branch2.sens_ratio_l_bound), eps)
+        test.assertLess(norminf(branch1.sens_phase_u_bound-branch2.sens_phase_u_bound), eps)
+        test.assertLess(norminf(branch1.sens_phase_l_bound-branch2.sens_phase_l_bound), eps)
         
 def compare_networks(test, net1, net2, check_internals=False):
     """
@@ -236,50 +294,7 @@ def compare_networks(test, net1, net2, check_internals=False):
     for i in range(net1.num_branches):
         branch1 = net1.branches[i]
         branch2 = net2.branches[i]
-        test.assertTrue(branch1 is not branch2)
-        test.assertEqual(branch1.name, branch2.name)
-        test.assertEqual(branch1.num_periods, branch2.num_periods)
-        test.assertEqual(branch1.bus_k.index, branch2.bus_k.index)
-        test.assertEqual(branch1.bus_m.index, branch2.bus_m.index)
-        test.assertEqual(branch1.is_fixed_tran(), branch2.is_fixed_tran())
-        test.assertEqual(branch1.is_line(), branch2.is_line())
-        test.assertEqual(branch1.is_phase_shifter(), branch2.is_phase_shifter())
-        test.assertEqual(branch1.is_tap_changer(), branch2.is_tap_changer())
-        test.assertEqual(branch1.is_tap_changer_v(), branch2.is_tap_changer_v())
-        test.assertEqual(branch1.is_tap_changer_Q(), branch2.is_tap_changer_Q())
-        if branch1.is_tap_changer_v():
-            test.assertEqual(branch1.reg_bus.index, branch2.reg_bus.index)
-        test.assertLess(norminf(branch1.g-branch2.g), eps*(1+norminf(branch1.g)))
-        test.assertLess(norminf(branch1.g_k-branch2.g_k), eps*(1+norminf(branch1.g_k)))
-        test.assertLess(norminf(branch1.g_m-branch2.g_m), eps*(1+norminf(branch1.g_m)))
-        test.assertLess(norminf(branch1.b-branch2.b), eps*(1+norminf(branch1.b)))
-        test.assertLess(norminf(branch1.b_k-branch2.b_k), eps*(1+norminf(branch1.b_k)))
-        test.assertLess(norminf(branch1.b_m-branch2.b_m), eps*(1+norminf(branch1.b_m)))
-        test.assertLess(norminf(branch1.ratio-branch2.ratio), eps)
-        test.assertLess(norminf(branch1.ratio_max-branch2.ratio_max), eps)
-        test.assertLess(norminf(branch1.ratio_min-branch2.ratio_min), eps)
-        test.assertLess(norminf(branch1.phase-branch2.phase), eps)
-        test.assertLess(norminf(branch1.phase_max-branch2.phase_max), eps)
-        test.assertLess(norminf(branch1.phase_min-branch2.phase_min), eps)
-        test.assertLess(norminf(branch1.ratingA-branch2.ratingA), eps)
-        test.assertLess(norminf(branch1.ratingB-branch2.ratingB), eps)
-        test.assertLess(norminf(branch1.ratingC-branch2.ratingC), eps)
-        test.assertEqual(branch1.is_on_outage(), branch2.is_on_outage())
-        test.assertEqual(branch1.has_pos_ratio_v_sens(), branch2.has_pos_ratio_v_sens())
-        if check_internals:
-            test.assertLess(norminf(branch1.index_ratio-branch2.index_ratio),eps)
-            test.assertLess(norminf(branch1.index_phase-branch2.index_phase),eps)
-            test.assertEqual(branch1.flags_vars,branch2.flags_vars)
-            test.assertEqual(branch1.flags_fixed,branch2.flags_fixed)
-            test.assertEqual(branch1.flags_bounded,branch2.flags_bounded)
-            test.assertEqual(branch1.flags_sparse,branch2.flags_sparse)
-            test.assertLess(norminf(branch1.sens_P_u_bound-branch2.sens_P_u_bound), eps)
-            test.assertLess(norminf(branch1.sens_P_l_bound-branch2.sens_P_l_bound), eps)
-            test.assertLess(norminf(branch1.sens_i_mag_u_bound-branch2.sens_i_mag_u_bound), eps)
-            test.assertLess(norminf(branch1.sens_ratio_u_bound-branch2.sens_ratio_u_bound), eps)
-            test.assertLess(norminf(branch1.sens_ratio_l_bound-branch2.sens_ratio_l_bound), eps)
-            test.assertLess(norminf(branch1.sens_phase_u_bound-branch2.sens_phase_u_bound), eps)
-            test.assertLess(norminf(branch1.sens_phase_l_bound-branch2.sens_phase_l_bound), eps)
+        compare_branches(test, branch1, branch2, check_internals=check_internals, eps=eps)
 
     # Generators
     test.assertEqual(net1.num_generators, net2.num_generators)

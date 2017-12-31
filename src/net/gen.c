@@ -850,11 +850,11 @@ void GEN_set_cost_coeff_Q2(Gen* gen, REAL q) {
 void GEN_set_bus(Gen* gen, Bus* bus) {
   Bus* old_bus;
   if (gen) {
-    old_bus = gen->bus;
-    gen->bus = NULL;
-    BUS_del_gen(old_bus,gen);  // remove old bus connection
-    gen->bus = bus;            // set new bus
-    BUS_add_gen(bus,gen);      // add new bus connection
+    old_bus = gen->bus;        // save old bus
+    gen->bus = NULL;           // disconnect old bus from gen
+    BUS_del_gen(old_bus,gen);  // disconnect gen from old bus
+    gen->bus = bus;            // connect new bus to gen
+    BUS_add_gen(bus,gen);      // connect gen to new bus
   }
 }
 

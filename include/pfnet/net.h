@@ -41,6 +41,9 @@ typedef struct Net Net;
 /** @brief Adjust generator powers to obtain correct participations without affecting total injections. */
 void NET_adjust_generators(Net* net);
 
+void NET_add_buses(Net* net, Bus** bus_ptr_array, int size);
+void NET_del_buses(Net* net, Bus** bus_ptr_array, int size);
+
 void NET_add_branches(Net* net, Branch** br_ptr_array, int size);
 void NET_del_branches(Net* net, Branch** br_ptr_array, int size);
 
@@ -178,5 +181,6 @@ void NET_show_buses(Net* net, int number, int sort_by, int t);
 void NET_update_properties_step(Net* net, Branch* br, int t, Vec* values);
 void NET_update_properties(Net* net, Vec* values);
 void NET_update_set_points(Net* net);
+void NET_update_hash_tables(Net* net);
 
 #endif

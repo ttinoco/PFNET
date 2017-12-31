@@ -20,6 +20,8 @@ Unreleased
 * Added net routines for adding and removing generators from the network.
 * Added net routines for adding and removing loads from the network.
 * Added net routines for adding and removing shunts from the network.
+* Added net routines for adding and removing branches from the network.
+* Added net routines for adding and removing buses from the network.
 
 Version 1.3.2
 -------------

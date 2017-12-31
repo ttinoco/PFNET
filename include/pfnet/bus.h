@@ -148,8 +148,6 @@ BOOL BUS_check(Bus* bus, BOOL verbose);
 void BUS_clear_flags(Bus* bus, char flag_type);
 void BUS_clear_sensitivities(Bus* bus);
 void BUS_clear_mismatches(Bus* bus);
-void BUS_clear_vargen(Bus* bus);
-void BUS_clear_bat(Bus* bus);
 void BUS_copy_from_bus(Bus* bus, Bus* other);
 
 char BUS_get_flags_vars(Bus* bus);
