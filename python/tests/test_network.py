@@ -4797,14 +4797,14 @@ class TestNetwork(unittest.TestCase):
             net.add_branches([new_branch[i][j] for j in range(2) for i in range(2)])
             net.add_shunts([new_shunt[i][j] for j in range(2) for i in range(2)])
             net.add_loads([new_load[i][j] for j in range(2) for i in range(2)])
-            #net.add_batteries([new_bat[i][j] for j in range(2) for i in range(2)])
-            #net.add_var_generators([new_vargen[i][j] for j in range(2) for i in range(2)])
+            net.add_batteries([new_bat[i][j] for j in range(2) for i in range(2)])
+            net.add_var_generators([new_vargen[i][j] for j in range(2) for i in range(2)])
             self.assertEqual(orig_net.num_generators+4, net.num_generators)
             self.assertEqual(orig_net.num_branches+4, net.num_branches)
             self.assertEqual(orig_net.num_shunts+4, net.num_shunts)
             self.assertEqual(orig_net.num_loads+4, net.num_loads)
-            #self.assertEqual(orig_net.num_batteries+4, net.num_batteries)
-            #self.assertEqual(orig_net.num_var_generators+4, net.num_var_generators)
+            self.assertEqual(orig_net.num_batteries+4, net.num_batteries)
+            self.assertEqual(orig_net.num_var_generators+4, net.num_var_generators)
 
             for i in range(2):
                 bus = net.get_bus(orig_net.num_buses+i)
