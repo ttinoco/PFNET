@@ -624,7 +624,7 @@ void LOAD_init(Load* load, int num_periods) {
   load->util_coeff_Q1 = 20000.;
   load->util_coeff_Q2 = -100.;
   
-  load->index = 0;
+  load->index = -1;
 
   ARRAY_zalloc(load->P,REAL,T);
   ARRAY_zalloc(load->P_max,REAL,T);

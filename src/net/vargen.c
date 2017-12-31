@@ -552,7 +552,8 @@ void VARGEN_init(Vargen* gen, int num_periods) {
   gen->P_min = 0;
   gen->Q_max = 0;
   gen->Q_min = 0;
-  gen->index = 0;
+  
+  gen->index = -1;
 
   gen->P = NULL;
   gen->P_ava = NULL;
@@ -583,6 +584,10 @@ BOOL VARGEN_is_solar(Vargen* gen) {
     return gen->type == VARGEN_TYPE_SOLAR;
   else
     return FALSE;
+}
+
+BOOL VARGEN_is_equal(Vargen* gen, Vargen* other) {
+  return gen == other;
 }
 
 Vargen* VARGEN_list_add(Vargen* gen_list, Vargen* gen) {

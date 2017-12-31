@@ -94,6 +94,10 @@ Bat* BAT_array_new(int size, int num_periods) {
     return NULL;
 }
 
+BOOL BAT_is_equal(Bat* bat, Bat* other) {
+  return bat == other;
+}
+
 void BAT_array_show(Bat* bat_array, int size, int t) { 
   int i;
   if (bat_array) {
@@ -605,7 +609,7 @@ void BAT_init(Bat* bat, int num_periods) {
   bat->eta_c = 1.;
   bat->eta_d = 1.;
   
-  bat->index = 0;
+  bat->index = -1;
 
   ARRAY_zalloc(bat->P,REAL,T);
   ARRAY_zalloc(bat->E,REAL,T);

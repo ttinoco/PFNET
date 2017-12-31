@@ -718,7 +718,7 @@ void GEN_init(Gen* gen, int num_periods) {
   gen->cost_coeff_Q1 = 2000.;
   gen->cost_coeff_Q2 = 100.;
   
-  gen->index = 0;
+  gen->index = -1;
 
   ARRAY_zalloc(gen->P,REAL,T);
   ARRAY_zalloc(gen->Q,REAL,T);

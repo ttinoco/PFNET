@@ -93,6 +93,7 @@ BOOL VARGEN_has_properties(void* gen, char prop);
 void VARGEN_init(Vargen* gen, int num_periods);
 BOOL VARGEN_is_wind(Vargen* gen);
 BOOL VARGEN_is_solar(Vargen* gen);
+BOOL VARGEN_is_equal(Vargen* gen, Vargen* other);
 Vargen* VARGEN_list_add(Vargen* gen_list, Vargen* gen);
 Vargen* VARGEN_list_del(Vargen* gen_list, Vargen* gen);
 int VARGEN_list_len(Vargen* gen_list);

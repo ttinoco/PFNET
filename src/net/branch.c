@@ -1330,7 +1330,7 @@ void BRANCH_init(Branch* br, int num_periods) {
   br->bounded = 0x00;
   br->sparse = 0x00;
 
-  br->index = 0;
+  br->index = -1;
 
   ARRAY_zalloc(br->ratio,REAL,T);
   ARRAY_zalloc(br->phase,REAL,T);

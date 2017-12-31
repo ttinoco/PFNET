@@ -44,6 +44,7 @@ cdef extern from "pfnet/vargen.h":
     char* VARGEN_get_json_string(Vargen* gen, char* output)
     char* VARGEN_get_var_info_string(Vargen* gen, int index)
     bint VARGEN_has_flags(Vargen* gen, char flag_type, char mask)
+    bint VARGEN_is_equal(Vargen* gen, Vargen* other)
     Vargen* VARGEN_new(int num_periods)
     Vargen* VARGEN_array_new(int size, int num_periods)
     void VARGEN_array_del(Vargen* gen_array, int size)

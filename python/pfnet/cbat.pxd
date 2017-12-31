@@ -46,6 +46,7 @@ cdef extern from "pfnet/bat.h":
     char* BAT_get_json_string(Bat* bat, char* output)
     char* BAT_get_var_info_string(Bat* bat, int index)
     bint BAT_has_flags(Bat* bat, char flag_type, char mask)
+    bint BAT_is_equal(Bat* bat, Bat* other)
     Bat* BAT_new(int num_periods)
     Bat* BAT_array_new(int size, int num_periods)
     void BAT_array_del(Bat* bat_array, int size)

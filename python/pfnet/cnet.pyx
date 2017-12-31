@@ -76,6 +76,35 @@ cdef class Network:
             new_net.alloc = False
             os.remove(f.name)
 
+    def add_buses(self, buses):
+        """
+        Adds buses to the network.
+        Flags are not preserved (for now).
+
+        Parameters
+        ----------
+        buses : list of |Bus| objects
+        """
+
+        cdef cnet.Bus** array
+        cdef Bus bus
+
+        old_num_buses = self.num_buses
+        array = <cnet.Bus**>malloc(len(buses)*sizeof(cnet.Bus*))
+        for i in range(len(buses)):
+            bus = buses[i]
+            array[i] = bus._c_ptr
+
+        cnet.NET_add_buses(self._c_net, array, len(buses))
+        free(array)
+
+        # Update pointers and alloc flags
+        for i in range(len(buses)):
+            bus = buses[i]
+            cbus.BUS_array_del(bus._c_ptr,1)
+            bus._c_ptr = cnet.NET_get_bus(self._c_net, i+old_num_buses)
+            bus.alloc = False
+            
     def add_branches(self, branches):
         """
         Adds branches to the network.

@@ -26,6 +26,9 @@ cdef extern from "pfnet/net.h":
     ctypedef struct Branch
     ctypedef double REAL
 
+    void NET_add_buses(Net* net, cbus.Bus** br_ptr_array, int size)
+    void NET_del_buses(Net* net, cbus.Bus** br_ptr_array, int size)
+
     void NET_add_branches(Net* net, cbranch.Branch** br_ptr_array, int size)
     void NET_del_branches(Net* net, cbranch.Branch** br_ptr_array, int size)
 

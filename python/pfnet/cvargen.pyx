@@ -80,6 +80,28 @@ cdef class VarGenerator:
                                         str2flag[flag_type],
                                         reduce(lambda x,y: x|y,[str2q[self.obj_type][qq] for qq in q],0))
 
+    def is_equal(self, other):
+        """
+        Determines whether the var generator is equal to given var generator.
+
+        Parameters
+        ----------
+        other : |VarGenerator|
+
+        Returns
+        -------
+        flag : |TrueFalse|
+        """
+
+        cdef VarGenerator g_other
+
+        if not isinstance(other,VarGenerator):
+            return False
+
+        g_other = other
+
+        return cvargen.VARGEN_is_equal(self._c_ptr,g_other._c_ptr)
+
     def get_var_info_string(self, index):
         """
         Gets info string of variable associated with index.

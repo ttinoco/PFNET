@@ -101,6 +101,28 @@ cdef class Battery:
                                   str2flag[flag_type],
                                   reduce(lambda x,y: x|y,[str2q[self.obj_type][qq] for qq in q],0))
 
+    def is_equal(self, other):
+        """
+        Determines whether the battery is equal to given battery.
+
+        Parameters
+        ----------
+        other : |Battery|
+
+        Returns
+        -------
+        flag : |TrueFalse|
+        """
+
+        cdef Battery b_other
+
+        if not isinstance(other,Battery):
+            return False
+
+        b_other = other
+
+        return cbat.BAT_is_equal(self._c_ptr,b_other._c_ptr)
+
     def set_P(self, P, t=0):
         """
         Sets battery charging power.

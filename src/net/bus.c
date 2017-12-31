@@ -1540,7 +1540,7 @@ void BUS_init(Bus* bus, int num_periods) {
 
   bus->v_base = 0.;
 
-  bus->index = 0;
+  bus->index = -1;
 
   bus->v_max_reg = BUS_DEFAULT_V_MAX;
   bus->v_min_reg = BUS_DEFAULT_V_MIN;

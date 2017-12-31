@@ -539,7 +539,7 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
   shunt->fixed = 0x00;
   shunt->bounded = 0x00;
   shunt->sparse = 0x00;
-  shunt->index = 0;
+  shunt->index = -1;
 
   ARRAY_zalloc(shunt->b,REAL,T);
   ARRAY_zalloc(shunt->index_b,int,T);

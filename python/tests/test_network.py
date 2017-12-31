@@ -4676,6 +4676,140 @@ class TestNetwork(unittest.TestCase):
         self.assertRaises(pf.BusError, lambda x: x.bus, vargen)
         self.assertRaises(pf.BusError, lambda x: x.bus, load)
 
+    def test_add_remove_buses(self):
+
+        for case in test_cases.CASES:
+
+            # Network
+            net = pf.Parser(case).parse(case, num_periods=2)
+            orig_net = net.get_copy()
+
+            new_bus = [pf.Bus(num_periods=2), pf.Bus(num_periods=2)]
+            new_gen = [[],[]]
+            new_branch = [[],[]]
+            new_load = [[],[]]
+            new_bat = [[],[]]
+            new_vargen = [[],[]]
+            new_shunt = [[],[]]
+            for i in range(2):
+                for j in range(2):
+                    new_gen[i].append(pf.Generator(num_periods=2)) 
+                    new_branch[i].append(pf.Branch(num_periods=2))
+                    new_load[i].append(pf.Load(num_periods=2))
+                    new_shunt[i].append(pf.Shunt(num_periods=2))
+                    new_bat[i].append(pf.Battery(num_periods=2))
+                    new_vargen[i].append(pf.VarGenerator(num_periods=2))
+
+            v_mag = [np.random.randn(2), np.random.randn(2)]
+            v_ang = [np.random.randn(2), np.random.randn(2)]
+            for i, bus in enumerate(new_bus):
+                bus.v_mag = v_mag[i]
+                bus.v_ang = v_ang[i]
+
+            for i in range(2):
+                for j in range(2):
+                    new_bus[i].add_generator(new_gen[i][j])
+                    new_bus[i].add_reg_generator(new_gen[i][j])
+                    new_bus[i].add_branch_k(new_branch[i][j])
+                    net.buses[0].add_branch_m(new_branch[i][j])
+                    new_bus[i].add_reg_tran(new_branch[i][j])
+                    new_bus[i].add_load(new_load[i][j])
+                    new_bus[i].add_shunt(new_shunt[i][j])
+                    new_bus[i].add_reg_shunt(new_shunt[i][j])
+                    new_bus[i].add_battery(new_bat[i][j])
+                    new_bus[i].add_var_generator(new_vargen[i][j])
+
+            for i in range(2):
+                self.assertEqual(len(new_bus[i].generators),2)
+                self.assertEqual(len(new_bus[i].reg_generators),2)
+                self.assertEqual(len(new_bus[i].branches_k),2)
+                self.assertEqual(len(net.buses[0].branches_m), len(orig_net.buses[0].branches_m)+4)
+                self.assertEqual(len(new_bus[i].reg_trans),2)
+                self.assertEqual(len(new_bus[i].loads),2)
+                self.assertEqual(len(new_bus[i].shunts),2)
+                self.assertEqual(len(new_bus[i].reg_shunts),2)
+                self.assertEqual(len(new_bus[i].batteries),2)
+                self.assertEqual(len(new_bus[i].var_generators),2)
+
+            self.assertEqual(net.num_buses, orig_net.num_buses)
+
+            for i in range(2):
+                self.assertEqual(new_bus[i].index, -1)
+
+            # Add buses
+            net.add_buses(new_bus)
+
+            self.assertEqual(net.num_buses, orig_net.num_buses+2)
+
+            for i in range(2):
+                self.assertEqual(new_bus[i].index, orig_net.num_buses+i)
+
+            for i in range(2):
+                bus = net.get_bus(orig_net.num_buses+i)
+                for j in range(2):
+                    self.assertTrue(bus.generators[j].is_equal(new_gen[i][j]))
+                    self.assertTrue(bus.reg_generators[j].is_equal(new_gen[i][j]))
+                    self.assertTrue(bus.branches_k[j].is_equal(new_branch[i][j]))
+                    self.assertTrue(bus.reg_trans[j].is_equal(new_branch[i][j]))
+                    self.assertTrue(bus.shunts[j].is_equal(new_shunt[i][j]))
+                    self.assertTrue(bus.reg_shunts[j].is_equal(new_shunt[i][j]))
+                    self.assertTrue(bus.loads[j].is_equal(new_load[i][j]))
+                    self.assertTrue(bus.batteries[j].is_equal(new_bat[i][j]))
+                    self.assertTrue(bus.var_generators[j].is_equal(new_vargen[i][j]))
+
+            for i in range(orig_net.num_buses):
+                if i > 0:
+                    bus1 = orig_net.get_bus(i)
+                    bus2 = net.get_bus(i)
+                    pf.tests.utils.compare_buses(self, bus1, bus2, check_internals=True)
+
+            for i in range(2):
+                bus1 = net.get_bus(orig_net.num_buses+i)
+                bus2 = new_bus[i]
+                pf.tests.utils.compare_buses(self, bus1, bus2, check_internals=True)
+
+            for i in range(2):
+                self.assertTrue(np.all(net.get_bus(orig_net.num_buses+i).v_mag == v_mag[i]))
+                self.assertTrue(np.all(net.get_bus(orig_net.num_buses+i).v_ang == v_ang[i]))
+
+            # Add all other components
+            for i in range(2):
+                for j in range(2):
+                    self.assertEqual(new_gen[i][j].index, -1)
+                    self.assertEqual(new_branch[i][j].index, -1)
+                    self.assertEqual(new_shunt[i][j].index, -1)
+                    self.assertEqual(new_load[i][j].index, -1)
+                    self.assertEqual(new_bat[i][j].index, -1)
+                    self.assertEqual(new_vargen[i][j].index, -1)
+            net.add_generators([new_gen[i][j] for j in range(2) for i in range(2)])
+            net.add_branches([new_branch[i][j] for j in range(2) for i in range(2)])
+            net.add_shunts([new_shunt[i][j] for j in range(2) for i in range(2)])
+            net.add_loads([new_load[i][j] for j in range(2) for i in range(2)])
+            #net.add_batteries([new_bat[i][j] for j in range(2) for i in range(2)])
+            #net.add_var_generators([new_vargen[i][j] for j in range(2) for i in range(2)])
+            self.assertEqual(orig_net.num_generators+4, net.num_generators)
+            self.assertEqual(orig_net.num_branches+4, net.num_branches)
+            self.assertEqual(orig_net.num_shunts+4, net.num_shunts)
+            self.assertEqual(orig_net.num_loads+4, net.num_loads)
+            #self.assertEqual(orig_net.num_batteries+4, net.num_batteries)
+            #self.assertEqual(orig_net.num_var_generators+4, net.num_var_generators)
+
+            for i in range(2):
+                bus = net.get_bus(orig_net.num_buses+i)
+                for j in range(2):
+                    self.assertTrue(bus.generators[j].is_equal(new_gen[i][j]))
+                    self.assertTrue(bus.reg_generators[j].is_equal(new_gen[i][j]))
+                    self.assertTrue(bus.branches_k[j].is_equal(new_branch[i][j]))
+                    self.assertTrue(bus.reg_trans[j].is_equal(new_branch[i][j]))
+                    self.assertTrue(bus.shunts[j].is_equal(new_shunt[i][j]))
+                    self.assertTrue(bus.reg_shunts[j].is_equal(new_shunt[i][j]))
+                    self.assertTrue(bus.loads[j].is_equal(new_load[i][j]))
+                    self.assertTrue(bus.batteries[j].is_equal(new_bat[i][j]))
+                    self.assertTrue(bus.var_generators[j].is_equal(new_vargen[i][j]))                    
+                
+            # Remove buses
+            
+
     def test_add_remove_generators(self):
         
         for case in test_cases.CASES:
@@ -4706,8 +4840,8 @@ class TestNetwork(unittest.TestCase):
             gen2.P = P2
             gen2.Q = Q2
 
-            self.assertEqual(gen1.index, 0)
-            self.assertEqual(gen2.index, 0)
+            self.assertEqual(gen1.index, -1)
+            self.assertEqual(gen2.index, -1)
 
             # Add gens
             net.add_generators([gen1,gen2])
@@ -4801,8 +4935,8 @@ class TestNetwork(unittest.TestCase):
             load2.P = P2
             load2.Q = Q2
 
-            self.assertEqual(load1.index, 0)
-            self.assertEqual(load2.index, 0)
+            self.assertEqual(load1.index, -1)
+            self.assertEqual(load2.index, -1)
 
             # Add loads
             net.add_loads([load1,load2])
@@ -4889,8 +5023,8 @@ class TestNetwork(unittest.TestCase):
             shunt2.reg_bus = net.buses[0]
             shunt2.b = b2
 
-            self.assertEqual(shunt1.index, 0)
-            self.assertEqual(shunt2.index, 0)
+            self.assertEqual(shunt1.index, -1)
+            self.assertEqual(shunt2.index, -1)
 
             # Add shunts
             net.add_shunts([shunt1,shunt2])
@@ -4986,8 +5120,8 @@ class TestNetwork(unittest.TestCase):
             branch2.ratio = ratio2
             branch2.phase = phase2
 
-            self.assertEqual(branch1.index, 0)
-            self.assertEqual(branch2.index, 0)
+            self.assertEqual(branch1.index, -1)
+            self.assertEqual(branch2.index, -1)
 
             # Add branches
             net.add_branches([branch1,branch2])
