@@ -815,7 +815,11 @@ cdef class Bus:
     property name:
         """ Bus name (string). """
         def __get__(self):
-            return cbus.BUS_get_name(self._c_ptr).decode('UTF-8')
+            name = cbus.BUS_get_name(self._c_ptr)
+            if name != NULL:
+                return name.decode('UTF-8')
+            else:
+                return ""
         def __set__(self,name):
             name = name.encode('UTF-8')
             cbus.BUS_set_name(self._c_ptr,name)

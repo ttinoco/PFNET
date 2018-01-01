@@ -5328,6 +5328,22 @@ class TestNetwork(unittest.TestCase):
                                             branch2,
                                             net.branches[-1],
                                             check_internals=True)
+
+    def test_add_remove_components_robustness(self):
+
+        for case in test_cases.CASES:
+            
+            net = pf.Parser(case).parse(case, num_periods=2)
+
+            bus1 = net.buses[0]
+            net.remove_buses([bus1])
+            self.assertEqual(bus1.index, -1)
+            self.assertEqual(bus1.name, "")
+
+            gen1 = net.generators[0]
+            net.remove_generators([gen1])
+            self.assertEqual(gen1.index, -1)
+            self.assertEqual(gen1.name, "")
             
     def tearDown(self):
 

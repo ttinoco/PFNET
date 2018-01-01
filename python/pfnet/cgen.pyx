@@ -211,7 +211,11 @@ cdef class Generator:
     property name:
         """ Generator name (string). """
         def __get__(self):
-            return cgen.GEN_get_name(self._c_ptr).decode('UTF-8')
+            name = cgen.GEN_get_name(self._c_ptr)
+            if name != NULL:
+                return name.decode('UTF-8')
+            else:
+                return ""
         def __set__(self,name):
             name = name.encode('UTF-8')
             cgen.GEN_set_name(self._c_ptr,name)
