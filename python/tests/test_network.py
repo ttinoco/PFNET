@@ -4819,8 +4819,47 @@ class TestNetwork(unittest.TestCase):
                     self.assertTrue(bus.batteries[j].is_equal(new_bat[i][j]))
                     self.assertTrue(bus.var_generators[j].is_equal(new_vargen[i][j]))                    
                 
-            # Remove buses          
+            # Remove buses
+            net.remove_buses(new_bus)
+            print 'foo'
+            raw_input()
+            """
 
+            self.assertEqual(orig_net.num_buses, net.num_buses)
+            self.assertEqual(orig_net.num_generators, net.num_generators)
+            self.assertEqual(orig_net.num_branches, net.num_branches)
+            self.assertEqual(orig_net.num_shunts, net.num_shunts)
+            self.assertEqual(orig_net.num_loads, net.num_loads)
+            self.assertEqual(orig_net.num_batteries, net.num_batteries)
+            self.assertEqual(orig_net.num_var_generators, net.num_var_generators)
+
+            for i in range(2):
+                self.assertEqual(new_bus[i].index,-1)
+                for j in range(2):
+                    self.assertEqual(new_gen[i][j].index,-1)
+                    self.assertEqual(new_branch[i][j].index,-1)
+                    self.assertEqual(new_load[i][j].index,-1)
+                    self.assertEqual(new_shunt[i][j].index,-1)
+                    self.assertEqual(new_vargen[i][j].index,-1)
+                    self.assertEqual(new_bat[i][j].index,-1)
+
+            pf.tests.utils.compare_networks(self,
+                                            net,
+                                            orig_net,
+                                            check_internals)
+
+            # Add existing bus
+            bus1 = net.get_bus(0)
+            bus2 = pf.Bus()
+            net.add_buses([bus1,bus2])
+            self.assertEqual(net.num_buses, orig_net.num_buses+1)
+            self.assertEqual(bus2.index, orig_net.num_buses)
+            pf.tests.utils.compare_buses(self,
+                                         bus2,
+                                         net.buses[-1],
+                                         check_internals=True)
+            """
+                    
     def test_add_remove_generators(self):
         
         for case in test_cases.CASES:
@@ -4918,6 +4957,18 @@ class TestNetwork(unittest.TestCase):
 
             pf.tests.utils.compare_networks(self, net, orig_net, check_internals=True)
 
+            # Add existing gen
+            gen1 = net.get_generator(0)
+            gen2 = pf.Generator()
+            gen2.bus = net.buses[0]
+            net.add_generators([gen1,gen2])
+            self.assertEqual(net.num_generators, orig_net.num_generators+1)
+            self.assertEqual(gen2.index, orig_net.num_generators)
+            pf.tests.utils.compare_generators(self,
+                                              gen2,
+                                              net.generators[-1],
+                                              check_internals=True)
+
     def test_add_remove_loads(self):
         
         for case in test_cases.CASES:
@@ -5009,6 +5060,19 @@ class TestNetwork(unittest.TestCase):
                     self.assertFalse(load1.is_equal(load2))
                     pf.tests.utils.compare_loads(self, load1, load2, check_internals=True)
 
+            # Add existing load
+            net = orig_net.get_copy()
+            load1 = net.get_load(0)
+            load2 = pf.Load()
+            load2.bus = net.buses[0]
+            net.add_loads([load1,load2])
+            self.assertEqual(net.num_loads, orig_net.num_loads+1)
+            self.assertEqual(load2.index, orig_net.num_loads)
+            pf.tests.utils.compare_loads(self,
+                                         load2,
+                                         net.loads[-1],
+                                         check_internals=True)
+
     def test_add_remove_shunts(self):
         
         for case in test_cases.CASES:
@@ -5098,6 +5162,18 @@ class TestNetwork(unittest.TestCase):
             self.assertRaises(pf.BusError, lambda s: s.reg_bus, shunt2)
 
             pf.tests.utils.compare_networks(self, net, orig_net, check_internals=True)
+
+            # Add existing shunt
+            shunt1 = net.get_shunt(0)
+            shunt2 = pf.Generator()
+            shunt2.bus = net.buses[0]
+            net.add_shunts([shunt1,shunt2])
+            self.assertEqual(net.num_shunts, orig_net.num_shunts+1)
+            self.assertEqual(shunt2.index, orig_net.num_shunts)
+            pf.tests.utils.compare_shunts(self,
+                                          shunt2,
+                                          net.shunts[-1],
+                                          check_internals=True)
 
     def test_add_remove_branches(self):
         
@@ -5203,6 +5279,19 @@ class TestNetwork(unittest.TestCase):
             self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch2)
 
             pf.tests.utils.compare_networks(self, net, orig_net, check_internals=True)
+
+            # Add existing branch
+            branch1 = net.get_branch(0)
+            branch2 = pf.Branch()
+            branch2.bus_k = net.buses[0]
+            branch2.bus_m = net.buses[1]
+            net.add_branches([branch1,branch2])
+            self.assertEqual(net.num_branches, orig_net.num_branches+1)
+            self.assertEqual(branch2.index, orig_net.num_branches)
+            pf.tests.utils.compare_branches(self,
+                                            branch2,
+                                            net.branches[-1],
+                                            check_internals=True)
             
     def tearDown(self):
 

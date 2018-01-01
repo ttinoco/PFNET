@@ -99,10 +99,44 @@ cdef class Network:
         free(array)
 
         # Update pointers and alloc flags
+        index = 0
         for i in range(len(buses)):
             bus = buses[i]
-            cbus.BUS_array_del(bus._c_ptr,1)
-            bus._c_ptr = cnet.NET_get_bus(self._c_net, i+old_num_buses)
+            if bus.alloc:
+                cbus.BUS_array_del(bus._c_ptr,1)
+                bus._c_ptr = cnet.NET_get_bus(self._c_net, old_num_buses+index)
+                bus.alloc = False
+                index += 1
+
+        # Check
+        if old_num_buses+index != self.num_buses:
+            raise NetworkError('error while adding buses')
+
+    def remove_buses(self, buses):
+        """
+        Removes buses from the network.
+        All network flags are cleared (for now). 
+
+        Parameters
+        ----------
+        buses : list of |Bus| objects
+        """
+
+        cdef cnet.Bus** array
+        cdef Bus bus
+
+        array = <cnet.Bus**>malloc(len(buses)*sizeof(cnet.Bus*))
+        for i in range(len(buses)):
+            bus = buses[i]
+            array[i] = bus._c_ptr
+
+        cnet.NET_del_buses(self._c_net, array, len(buses))
+        free(array)
+
+        # Update pointers and alloc flags
+        for i in range(len(buses)):
+            bus = buses[i]
+            bus._c_ptr = NULL
             bus.alloc = False
             
     def add_branches(self, branches):
@@ -128,11 +162,18 @@ cdef class Network:
         free(array)
 
         # Update pointers and alloc flags
+        index = 0
         for i in range(len(branches)):
             br = branches[i]
-            cbranch.BRANCH_array_del(br._c_ptr,1)
-            br._c_ptr = cnet.NET_get_branch(self._c_net, i+old_num_branches)
-            br.alloc = False
+            if br.alloc:
+                cbranch.BRANCH_array_del(br._c_ptr,1)
+                br._c_ptr = cnet.NET_get_branch(self._c_net, old_num_branches+index)
+                br.alloc = False
+                index += 1
+
+        # Check
+        if old_num_branches+index != self.num_branches:
+            raise NetworkError('error while adding branches')
 
     def remove_branches(self, branches):
         """
@@ -182,13 +223,20 @@ cdef class Network:
 
         cnet.NET_add_gens(self._c_net, array, len(generators))
         free(array)
-
+        
         # Update pointers and alloc flags
+        index = 0
         for i in range(len(generators)):
             gen = generators[i]
-            cgen.GEN_array_del(gen._c_ptr,1)
-            gen._c_ptr = cnet.NET_get_gen(self._c_net, i+old_num_gens)
-            gen.alloc = False
+            if gen.alloc:
+                cgen.GEN_array_del(gen._c_ptr,1)
+                gen._c_ptr = cnet.NET_get_gen(self._c_net, old_num_gens+index)
+                gen.alloc = False
+                index += 1
+
+        # Check
+        if old_num_gens+index != self.num_generators:
+            raise NetworkError('error while adding generators')
 
     def remove_generators(self, generators):
         """
@@ -240,11 +288,18 @@ cdef class Network:
         free(array)
 
         # Update pointers and alloc flags
+        index = 0
         for i in range(len(loads)):
             load = loads[i]
-            cload.LOAD_array_del(load._c_ptr,1)
-            load._c_ptr = cnet.NET_get_load(self._c_net, i+old_num_loads)
-            load.alloc = False
+            if load.alloc:
+                cload.LOAD_array_del(load._c_ptr,1)
+                load._c_ptr = cnet.NET_get_load(self._c_net, old_num_loads+index)
+                load.alloc = False
+                index += 1
+
+        # Check
+        if old_num_loads+index != self.num_loads:
+            raise NetworkError('error while adding loads')
 
     def remove_loads(self, loads):
         """
@@ -296,11 +351,18 @@ cdef class Network:
         free(array)
 
         # Update pointers and alloc flags
+        index = 0
         for i in range(len(shunts)):
             shunt = shunts[i]
-            cshunt.SHUNT_array_del(shunt._c_ptr,1)
-            shunt._c_ptr = cnet.NET_get_shunt(self._c_net, i+old_num_shunts)
-            shunt.alloc = False
+            if shunt.alloc:
+                cshunt.SHUNT_array_del(shunt._c_ptr,1)
+                shunt._c_ptr = cnet.NET_get_shunt(self._c_net, old_num_shunts+index)
+                shunt.alloc = False
+                index += 1
+
+        # Check
+        if old_num_shunts+index != self.num_shunts:
+            raise NetworkError('error while adding shunts')
 
     def remove_shunts(self, shunts):
         """
@@ -352,11 +414,18 @@ cdef class Network:
         free(array)
 
         # Update pointers and alloc flags
+        index = 0
         for i in range(len(batteries)):
             bat = batteries[i]
-            cbat.BAT_array_del(bat._c_ptr,1)
-            bat._c_ptr = cnet.NET_get_bat(self._c_net, i+old_num_bats)
-            bat.alloc = False
+            if bat.alloc:
+                cbat.BAT_array_del(bat._c_ptr,1)
+                bat._c_ptr = cnet.NET_get_bat(self._c_net, old_num_bats+index)
+                bat.alloc = False
+                index += 1
+
+        # Check
+        if old_num_bats+index != self.num_batteries:
+            raise NetworkError('error while adding batteries')
 
     def remove_batteries(self, batteries):
         """
@@ -408,11 +477,18 @@ cdef class Network:
         free(array)
 
         # Update pointers and alloc flags
+        index = 0
         for i in range(len(var_generators)):
             gen = var_generators[i]
-            cvargen.VARGEN_array_del(gen._c_ptr,1)
-            gen._c_ptr = cnet.NET_get_vargen(self._c_net, i+old_num_gens)
-            gen.alloc = False
+            if gen.alloc:
+                cvargen.VARGEN_array_del(gen._c_ptr,1)
+                gen._c_ptr = cnet.NET_get_vargen(self._c_net, old_num_gens+index)
+                gen.alloc = False
+                index += 1
+
+        # Check
+        if old_num_gens+index != self.num_var_generators:
+            raise NetworkError('error while adding var generators')
 
     def remove_var_generators(self, var_generators):
         """
