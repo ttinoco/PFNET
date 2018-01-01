@@ -389,8 +389,8 @@ void NET_del_buses(Net* net, Bus** bus_ptr_array, int size) {
   NET_del_branches(net,brm_ptr_array,num_del_branches_m);
   NET_del_loads(net,load_ptr_array,num_del_loads);
   NET_del_shunts(net,shunt_ptr_array,num_del_shunts);
-  //NET_del_bats(net,bat_ptr_array,num_del_bats);
-  //NET_del_vargens(net,vargen_ptr_array,num_del_vargens);
+  NET_del_bats(net,bat_ptr_array,num_del_bats);
+  NET_del_vargens(net,vargen_ptr_array,num_del_vargens);
 
   // Delete utils array
   free(delete_bus);
@@ -1027,6 +1027,302 @@ void NET_del_shunts(Net* net, Shunt** shunt_ptr_array, int size) {
 
   // Delete old shunts
   SHUNT_array_del(old_shunt_array,old_num_shunts);
+
+  // Delete delete flags
+  free(delete);
+
+  // Clear flags
+  NET_clear_flags(net);
+}
+
+void NET_add_bats(Net* net, Bat** bat_ptr_array, int size) {
+  /** Adds batteries to the network. The entire battery array is
+   * relocated, the data is copied (except flags for the new batteries), 
+   * and the bus connections are stolen.
+   */
+  
+  // Local variables
+  Bat* bat_src;
+  Bat* bat_dst;
+  Bat* old_bat_array;
+  int old_num_bats;
+  Bus* bus;
+  int i;
+
+  // Check
+  if (!net || !bat_ptr_array)
+    return;
+
+  // Old batteries
+  old_bat_array = net->bat;
+  old_num_bats = net->num_bats;
+
+  // New batteries
+  NET_set_bat_array(net,BAT_array_new(net->num_bats+size,net->num_periods),net->num_bats+size);
+
+  // Copy data and steal connections
+  for (i = 0; i < net->num_bats; i++) {
+
+    if (i < old_num_bats)
+      bat_src = BAT_array_get(old_bat_array,i);
+    else
+      bat_src = bat_ptr_array[i-old_num_bats];
+    bat_dst = NET_get_bat(net,i);
+
+    // Copy data
+    BAT_copy_from_bat(bat_dst,bat_src);
+
+    // Clear flags
+    if (i >= old_num_bats) {
+      BAT_clear_flags(bat_dst,FLAG_VARS);
+      BAT_clear_flags(bat_dst,FLAG_FIXED);
+      BAT_clear_flags(bat_dst,FLAG_BOUNDED);
+      BAT_clear_flags(bat_dst,FLAG_SPARSE);
+    }
+    
+    // Save old connections
+    bus = BAT_get_bus(bat_src);
+
+    // Clear connections bus - old bat
+    BAT_set_bus(bat_src,NULL);         // also removes bat from bus->bats list
+
+    // Add connections bus - new bat
+    BAT_set_bus(bat_dst,bus);          // also adds bat to bus->bats list
+  }
+
+  // Delete old bats
+  BAT_array_del(old_bat_array,old_num_bats);
+}
+
+void NET_del_bats(Net* net, Bat** bat_ptr_array, int size) {
+  /** Removes batteries from the network. The entire battery array is
+   * relocated, the data is copied, and the bus connections are set.
+   * Network flags are cleared. 
+   */
+  
+  // Local variables
+  Bat* bat_src;
+  Bat* bat_dst;
+  Bat* bat;
+  Bat* old_bat_array;
+  int old_num_bats;
+  char* delete;
+  Bus* bus;
+  int num;
+  int index;
+  int i;
+
+  // Check
+  if (!net || !bat_ptr_array)
+    return;
+
+  // Old batteries
+  old_bat_array = net->bat;
+  old_num_bats = net->num_bats;
+
+  // Count unique and mark for deletion
+  num = 0;
+  ARRAY_zalloc(delete,char,net->num_bats);
+  for (i = 0; i < size; i++) {
+    bat = bat_ptr_array[i];
+    if (bat) {
+      if (bat == NET_get_bat(net,BAT_get_index(bat))) {
+	if (!delete[BAT_get_index(bat)]) {
+	  delete[BAT_get_index(bat)] = 1;
+	  num++;
+	}
+      }	
+    }
+  }
+
+  // New batteries
+  NET_set_bat_array(net,BAT_array_new(net->num_bats-num,net->num_periods),net->num_bats-num);
+
+  // Copy data and set connections
+  index = 0;
+  for (i = 0; i < old_num_bats; i++) {
+
+    // Delete
+    if (delete[i]) {
+
+      bat = BAT_array_get(old_bat_array,i);
+      
+      // Clear connections bus - "bat to be deleted"
+      BAT_set_bus(bat,NULL); // also removes bat from bus->bats list
+    }
+
+    // Keep
+    else {
+
+      bat_src = BAT_array_get(old_bat_array,i);
+      bat_dst = NET_get_bat(net,index);
+
+      // Copy data
+      BAT_copy_from_bat(bat_dst,bat_src);
+
+      // Save old connections
+      bus = BAT_get_bus(bat_src);
+      
+      // Clear connections bus - old bat 
+      BAT_set_bus(bat_src,NULL);       // also removes bat from bus->bats list
+      
+      // Add connections bus - new bat
+      BAT_set_bus(bat_dst,bus);        // also adds bat to bus->bats list
+      
+      index++;
+    }
+  }
+
+  // Delete old batteries
+  BAT_array_del(old_bat_array,old_num_bats);
+
+  // Delete delete flags
+  free(delete);
+
+  // Clear flags
+  NET_clear_flags(net);
+}
+
+void NET_add_vargens(Net* net, Vargen** gen_ptr_array, int size) {
+  /** Adds var generators to the network. The entire var generator array is
+   * relocated, the data is copied (except flags for the new var generators), 
+   * and the bus connections are stolen.
+   */
+  
+  // Local variables
+  Vargen* gen_src;
+  Vargen* gen_dst;
+  Vargen* old_gen_array;
+  int old_num_vargens;
+  Bus* bus;
+  int i;
+
+  // Check
+  if (!net || !gen_ptr_array)
+    return;
+
+  // Old var generators
+  old_gen_array = net->vargen;
+  old_num_vargens = net->num_vargens;
+
+  // New var generators
+  NET_set_vargen_array(net,VARGEN_array_new(net->num_vargens+size,net->num_periods),net->num_vargens+size);
+
+  // Copy data and steal connections
+  for (i = 0; i < net->num_vargens; i++) {
+
+    if (i < old_num_vargens)
+      gen_src = VARGEN_array_get(old_gen_array,i);
+    else
+      gen_src = gen_ptr_array[i-old_num_vargens];
+    gen_dst = NET_get_vargen(net,i);
+
+    // Copy data
+    VARGEN_copy_from_vargen(gen_dst,gen_src);
+
+    // Clear flags
+    if (i >= old_num_vargens) {
+      VARGEN_clear_flags(gen_dst,FLAG_VARS);
+      VARGEN_clear_flags(gen_dst,FLAG_FIXED);
+      VARGEN_clear_flags(gen_dst,FLAG_BOUNDED);
+      VARGEN_clear_flags(gen_dst,FLAG_SPARSE);
+    }
+    
+    // Save old connections
+    bus = VARGEN_get_bus(gen_src);
+
+    // Clear connections bus - old vargen
+    VARGEN_set_bus(gen_src,NULL);         // also removes vargen from bus->vargens list
+
+    // Add connections bus - new vargens
+    VARGEN_set_bus(gen_dst,bus);          // also adds vargen to bus->vargens list
+  }
+
+  // Delete old vargens
+  VARGEN_array_del(old_gen_array,old_num_vargens);
+}
+
+void NET_del_vargens(Net* net, Vargen** gen_ptr_array, int size) {
+  /** Removes var generators from the network. The entire var generator array is
+   * relocated, the data is copied, and the bus connections are set.
+   * Network flags are cleared. 
+   */
+  
+  // Local variables
+  Vargen* gen_src;
+  Vargen* gen_dst;
+  Vargen* gen;
+  Vargen* old_gen_array;
+  int old_num_vargens;
+  char* delete;
+  Bus* bus;
+  int num;
+  int index;
+  int i;
+
+  // Check
+  if (!net || !gen_ptr_array)
+    return;
+
+  // Old var generators
+  old_gen_array = net->vargen;
+  old_num_vargens = net->num_vargens;
+
+  // Count unique and mark for deletion
+  num = 0;
+  ARRAY_zalloc(delete,char,net->num_vargens);
+  for (i = 0; i < size; i++) {
+    gen = gen_ptr_array[i];
+    if (gen) {
+      if (gen == NET_get_vargen(net,VARGEN_get_index(gen))) {
+	if (!delete[VARGEN_get_index(gen)]) {
+	  delete[VARGEN_get_index(gen)] = 1;
+	  num++;
+	}
+      }	
+    }
+  }
+
+  // New var generators
+  NET_set_vargen_array(net,VARGEN_array_new(net->num_vargens-num,net->num_periods),net->num_vargens-num);
+
+  // Copy data and set connections
+  index = 0;
+  for (i = 0; i < old_num_vargens; i++) {
+
+    // Delete
+    if (delete[i]) {
+
+      gen = VARGEN_array_get(old_gen_array,i);
+      
+      // Clear connections bus - "vargen to be deleted"
+      VARGEN_set_bus(gen,NULL); // also removes vargen from bus->vargens list
+    }
+
+    // Keep
+    else {
+
+      gen_src = VARGEN_array_get(old_gen_array,i);
+      gen_dst = NET_get_vargen(net,index);
+
+      // Copy data
+      VARGEN_copy_from_vargen(gen_dst,gen_src);
+
+      // Save old connections
+      bus = VARGEN_get_bus(gen_src);
+      
+      // Clear connections bus - old vargen 
+      VARGEN_set_bus(gen_src,NULL);       // also removes vargen from bus->vargens list
+      
+      // Add connections bus - new vargen
+      VARGEN_set_bus(gen_dst,bus);        // also adds vargen to bus->vargens list
+      
+      index++;
+    }
+  }
+
+  // Delete old var generators
+  VARGEN_array_del(old_gen_array,old_num_vargens);
 
   // Delete delete flags
   free(delete);

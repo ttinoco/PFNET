@@ -328,6 +328,118 @@ cdef class Network:
             shunt = shunts[i]
             shunt._c_ptr = NULL
             shunt.alloc = False
+
+    def add_batteries(self, batteries):
+        """
+        Adds batteries to the network.
+        Flags are not preserved (for now).
+
+        Parameters
+        ----------
+        batteries : list of |Battery| objects
+        """
+
+        cdef cnet.Bat** array
+        cdef Battery bat
+
+        old_num_bats = self.num_batteries
+        array = <cnet.Bat**>malloc(len(batteries)*sizeof(cnet.Bat*))
+        for i in range(len(batteries)):
+            bat = batteries[i]
+            array[i] = bat._c_ptr
+
+        cnet.NET_add_bats(self._c_net, array, len(batteries))
+        free(array)
+
+        # Update pointers and alloc flags
+        for i in range(len(batteries)):
+            bat = batteries[i]
+            cbat.BAT_array_del(bat._c_ptr,1)
+            bat._c_ptr = cnet.NET_get_bat(self._c_net, i+old_num_bats)
+            bat.alloc = False
+
+    def remove_batteries(self, batteries):
+        """
+        Removes batteries from the network.
+        All network flags are cleared (for now). 
+
+        Parameters
+        ----------
+        batteries : list of |Battery| objects
+        """
+
+        cdef cnet.Bat** array
+        cdef Battery bat
+
+        array = <cnet.Bat**>malloc(len(batteries)*sizeof(cnet.Bat*))
+        for i in range(len(batteries)):
+            bat = batteries[i]
+            array[i] = bat._c_ptr
+
+        cnet.NET_del_bats(self._c_net, array, len(batteries))
+        free(array)
+
+        # Update pointers and alloc flags
+        for i in range(len(batteries)):
+            bat = batteries[i]
+            bat._c_ptr = NULL
+            bat.alloc = False
+
+    def add_var_generators(self, var_generators):
+        """
+        Adds var generators to the network.
+        Flags are not preserved (for now).
+
+        Parameters
+        ----------
+        var_generators : list of |VarGenerator| objects
+        """
+
+        cdef cnet.Vargen** array
+        cdef VarGenerator gen
+
+        old_num_gens = self.num_var_generators
+        array = <cnet.Vargen**>malloc(len(var_generators)*sizeof(cnet.Vargen*))
+        for i in range(len(var_generators)):
+            gen = var_generators[i]
+            array[i] = gen._c_ptr
+
+        cnet.NET_add_vargens(self._c_net, array, len(var_generators))
+        free(array)
+
+        # Update pointers and alloc flags
+        for i in range(len(var_generators)):
+            gen = var_generators[i]
+            cvargen.VARGEN_array_del(gen._c_ptr,1)
+            gen._c_ptr = cnet.NET_get_vargen(self._c_net, i+old_num_gens)
+            gen.alloc = False
+
+    def remove_var_generators(self, var_generators):
+        """
+        Removes var generators from the network.
+        All network flags are cleared (for now). 
+
+        Parameters
+        ----------
+        var_generators : list of |VarGenerator| objects
+        """
+
+        cdef cnet.Vargen** array
+        cdef VarGenerator gen
+
+        array = <cnet.Vargen**>malloc(len(var_generators)*sizeof(cnet.Vargen*))
+        for i in range(len(var_generators)):
+            gen = var_generators[i]
+            array[i] = gen._c_ptr
+
+        cnet.NET_del_vargens(self._c_net, array, len(var_generators))
+        free(array)
+
+        # Update pointers and alloc flags
+        for i in range(len(var_generators)):
+            gen = var_generators[i]
+            gen._c_ptr = NULL
+            gen.alloc = False
             
     def add_var_generators_from_parameters(self, buses, power_capacity, power_base, power_std=0., corr_radius=0, corr_value=0.):
         """

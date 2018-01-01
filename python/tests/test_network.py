@@ -4819,8 +4819,7 @@ class TestNetwork(unittest.TestCase):
                     self.assertTrue(bus.batteries[j].is_equal(new_bat[i][j]))
                     self.assertTrue(bus.var_generators[j].is_equal(new_vargen[i][j]))                    
                 
-            # Remove buses
-            
+            # Remove buses          
 
     def test_add_remove_generators(self):
         

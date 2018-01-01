@@ -56,6 +56,12 @@ void NET_del_loads(Net* net, Load** load_ptr_array, int size);
 void NET_add_shunts(Net* net, Shunt** shunt_ptr_array, int size);
 void NET_del_shunts(Net* net, Shunt** shunt_ptr_array, int size);
 
+void NET_add_bats(Net* net, Bat** bat_ptr_array, int size);
+void NET_del_bats(Net* net, Bat** bat_ptr_array, int size);
+
+void NET_add_vargens(Net* net, Vargen** vargen_ptr_array, int size);
+void NET_del_vargens(Net* net, Vargen** vargen_ptr_array, int size);
+
 void NET_add_vargens_from_params(Net* net, Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value);
 void NET_add_batteries_from_params(Net* net, Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d);
 
