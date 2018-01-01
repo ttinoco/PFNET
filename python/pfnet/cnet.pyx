@@ -96,17 +96,20 @@ cdef class Network:
             array[i] = bus._c_ptr
 
         cnet.NET_add_buses(self._c_net, array, len(buses))
-        free(array)
 
         # Update pointers and alloc flags
         index = 0
         for i in range(len(buses)):
             bus = buses[i]
-            if bus.alloc:
-                cbus.BUS_array_del(bus._c_ptr,1)
+            if array[i] != NULL:
+                if bus.alloc:
+                    cbus.BUS_array_del(bus._c_ptr,1)
                 bus._c_ptr = cnet.NET_get_bus(self._c_net, old_num_buses+index)
                 bus.alloc = False
                 index += 1
+
+        # Clean up
+        free(array)
 
         # Check
         if old_num_buses+index != self.num_buses:
@@ -125,19 +128,29 @@ cdef class Network:
         cdef cnet.Bus** array
         cdef Bus bus
 
+        old_num_buses = self.num_buses
         array = <cnet.Bus**>malloc(len(buses)*sizeof(cnet.Bus*))
         for i in range(len(buses)):
             bus = buses[i]
             array[i] = bus._c_ptr
 
         cnet.NET_del_buses(self._c_net, array, len(buses))
-        free(array)
 
         # Update pointers and alloc flags
+        num = 0
         for i in range(len(buses)):
             bus = buses[i]
-            bus._c_ptr = NULL
-            bus.alloc = False
+            if array[i] != NULL:
+                bus._c_ptr = NULL
+                bus.alloc = False
+                num += 1
+
+        # Clean up
+        free(array)
+
+        # Check
+        if old_num_buses-num != self.num_buses:
+            raise NetworkError('error while removing buses')
             
     def add_branches(self, branches):
         """
@@ -159,17 +172,20 @@ cdef class Network:
             array[i] = br._c_ptr
 
         cnet.NET_add_branches(self._c_net, array, len(branches))
-        free(array)
 
         # Update pointers and alloc flags
         index = 0
         for i in range(len(branches)):
             br = branches[i]
-            if br.alloc:
-                cbranch.BRANCH_array_del(br._c_ptr,1)
+            if array[i] != NULL:
+                if br.alloc:
+                    cbranch.BRANCH_array_del(br._c_ptr,1)
                 br._c_ptr = cnet.NET_get_branch(self._c_net, old_num_branches+index)
                 br.alloc = False
                 index += 1
+
+        # Clean up
+        free(array)
 
         # Check
         if old_num_branches+index != self.num_branches:
@@ -188,19 +204,29 @@ cdef class Network:
         cdef cnet.Branch** array
         cdef Branch br
 
+        old_num_branches = self.num_branches
         array = <cnet.Branch**>malloc(len(branches)*sizeof(cnet.Branch*))
         for i in range(len(branches)):
             br = branches[i]
             array[i] = br._c_ptr
 
         cnet.NET_del_branches(self._c_net, array, len(branches))
-        free(array)
 
         # Update pointers and alloc flags
+        num = 0
         for i in range(len(branches)):
             br = branches[i]
-            br._c_ptr = NULL
-            br.alloc = False
+            if array[i] != NULL:
+                br._c_ptr = NULL
+                br.alloc = False
+                num += 1
+
+        # Clean up
+        free(array)
+
+        # Check
+        if old_num_branches-num != self.num_branches:
+            raise NetworkError('error while removing branches')
 
     def add_generators(self, generators):
         """
@@ -222,17 +248,20 @@ cdef class Network:
             array[i] = gen._c_ptr
 
         cnet.NET_add_gens(self._c_net, array, len(generators))
-        free(array)
         
         # Update pointers and alloc flags
         index = 0
         for i in range(len(generators)):
             gen = generators[i]
-            if gen.alloc:
-                cgen.GEN_array_del(gen._c_ptr,1)
+            if array[i] != NULL:
+                if gen.alloc:
+                    cgen.GEN_array_del(gen._c_ptr,1)
                 gen._c_ptr = cnet.NET_get_gen(self._c_net, old_num_gens+index)
                 gen.alloc = False
                 index += 1
+
+        # Clean up
+        free(array)
 
         # Check
         if old_num_gens+index != self.num_generators:
@@ -251,19 +280,29 @@ cdef class Network:
         cdef cnet.Gen** array
         cdef Generator gen
 
+        old_num_gens = self.num_generators
         array = <cnet.Gen**>malloc(len(generators)*sizeof(cnet.Gen*))
         for i in range(len(generators)):
             gen = generators[i]
             array[i] = gen._c_ptr
 
         cnet.NET_del_gens(self._c_net, array, len(generators))
-        free(array)
 
         # Update pointers and alloc flags
+        num = 0
         for i in range(len(generators)):
             gen = generators[i]
-            gen._c_ptr = NULL
-            gen.alloc = False
+            if array[i] != NULL:
+                gen._c_ptr = NULL
+                gen.alloc = False
+                num += 1
+
+        # Clean up
+        free(array)
+        
+        # Check
+        if old_num_gens-num != self.num_generators:
+            raise NetworkError('error while removing generators')
 
     def add_loads(self, loads):
         """
@@ -285,17 +324,20 @@ cdef class Network:
             array[i] = load._c_ptr
 
         cnet.NET_add_loads(self._c_net, array, len(loads))
-        free(array)
 
         # Update pointers and alloc flags
         index = 0
         for i in range(len(loads)):
             load = loads[i]
-            if load.alloc:
-                cload.LOAD_array_del(load._c_ptr,1)
+            if array[i] != NULL:
+                if load.alloc:
+                    cload.LOAD_array_del(load._c_ptr,1)
                 load._c_ptr = cnet.NET_get_load(self._c_net, old_num_loads+index)
                 load.alloc = False
                 index += 1
+
+        # Clean up
+        free(array)
 
         # Check
         if old_num_loads+index != self.num_loads:
@@ -314,19 +356,29 @@ cdef class Network:
         cdef cnet.Load** array
         cdef Load load
 
+        old_num_loads = self.num_loads
         array = <cnet.Load**>malloc(len(loads)*sizeof(cnet.Load*))
         for i in range(len(loads)):
             load = loads[i]
             array[i] = load._c_ptr
 
         cnet.NET_del_loads(self._c_net, array, len(loads))
-        free(array)
 
         # Update pointers and alloc flags
+        num = 0
         for i in range(len(loads)):
             load = loads[i]
-            load._c_ptr = NULL
-            load.alloc = False
+            if array[i] != NULL:
+                load._c_ptr = NULL
+                load.alloc = False
+                num += 1
+
+        # Clean up
+        free(array)
+
+        # Check
+        if old_num_loads-num != self.num_loads:
+            raise NetworkError('error while removing loads')
 
     def add_shunts(self, shunts):
         """
@@ -348,17 +400,20 @@ cdef class Network:
             array[i] = shunt._c_ptr
 
         cnet.NET_add_shunts(self._c_net, array, len(shunts))
-        free(array)
 
         # Update pointers and alloc flags
         index = 0
         for i in range(len(shunts)):
             shunt = shunts[i]
-            if shunt.alloc:
-                cshunt.SHUNT_array_del(shunt._c_ptr,1)
+            if array[i] != NULL:
+                if shunt.alloc:
+                    cshunt.SHUNT_array_del(shunt._c_ptr,1)
                 shunt._c_ptr = cnet.NET_get_shunt(self._c_net, old_num_shunts+index)
                 shunt.alloc = False
                 index += 1
+
+        # Clean up
+        free(array)
 
         # Check
         if old_num_shunts+index != self.num_shunts:
@@ -377,19 +432,29 @@ cdef class Network:
         cdef cnet.Shunt** array
         cdef Shunt shunt
 
+        old_num_shunts = self.num_shunts
         array = <cnet.Shunt**>malloc(len(shunts)*sizeof(cnet.Shunt*))
         for i in range(len(shunts)):
             shunt = shunts[i]
             array[i] = shunt._c_ptr
 
         cnet.NET_del_shunts(self._c_net, array, len(shunts))
-        free(array)
 
         # Update pointers and alloc flags
+        num = 0
         for i in range(len(shunts)):
             shunt = shunts[i]
-            shunt._c_ptr = NULL
-            shunt.alloc = False
+            if array[i] != NULL:
+                shunt._c_ptr = NULL
+                shunt.alloc = False
+                num += 1
+
+        # Clean up
+        free(array)
+
+        # Check
+        if old_num_shunts-num != self.num_shunts:
+            raise NetworkError('error while removing shunts')
 
     def add_batteries(self, batteries):
         """
@@ -411,17 +476,20 @@ cdef class Network:
             array[i] = bat._c_ptr
 
         cnet.NET_add_bats(self._c_net, array, len(batteries))
-        free(array)
 
         # Update pointers and alloc flags
         index = 0
         for i in range(len(batteries)):
             bat = batteries[i]
-            if bat.alloc:
-                cbat.BAT_array_del(bat._c_ptr,1)
+            if array[i] != NULL:
+                if bat.alloc:
+                    cbat.BAT_array_del(bat._c_ptr,1)
                 bat._c_ptr = cnet.NET_get_bat(self._c_net, old_num_bats+index)
                 bat.alloc = False
                 index += 1
+
+        # Clean up
+        free(array)
 
         # Check
         if old_num_bats+index != self.num_batteries:
@@ -440,19 +508,29 @@ cdef class Network:
         cdef cnet.Bat** array
         cdef Battery bat
 
+        old_num_bats = self.num_batteries
         array = <cnet.Bat**>malloc(len(batteries)*sizeof(cnet.Bat*))
         for i in range(len(batteries)):
             bat = batteries[i]
             array[i] = bat._c_ptr
 
         cnet.NET_del_bats(self._c_net, array, len(batteries))
-        free(array)
 
         # Update pointers and alloc flags
+        num = 0
         for i in range(len(batteries)):
             bat = batteries[i]
-            bat._c_ptr = NULL
-            bat.alloc = False
+            if array[i] != NULL:
+                bat._c_ptr = NULL
+                bat.alloc = False
+                num += 1
+
+        # Clean up
+        free(array)
+
+        # Check
+        if old_num_bats-num != self.num_batteries:
+            raise NetworkError('error while removing batteries')
 
     def add_var_generators(self, var_generators):
         """
@@ -474,17 +552,20 @@ cdef class Network:
             array[i] = gen._c_ptr
 
         cnet.NET_add_vargens(self._c_net, array, len(var_generators))
-        free(array)
 
         # Update pointers and alloc flags
         index = 0
         for i in range(len(var_generators)):
             gen = var_generators[i]
-            if gen.alloc:
-                cvargen.VARGEN_array_del(gen._c_ptr,1)
+            if array[i] != NULL:
+                if gen.alloc:
+                    cvargen.VARGEN_array_del(gen._c_ptr,1)
                 gen._c_ptr = cnet.NET_get_vargen(self._c_net, old_num_gens+index)
                 gen.alloc = False
                 index += 1
+
+        # Clean up
+        free(array)
 
         # Check
         if old_num_gens+index != self.num_var_generators:
@@ -503,19 +584,29 @@ cdef class Network:
         cdef cnet.Vargen** array
         cdef VarGenerator gen
 
+        old_num_gens = self.num_var_generators
         array = <cnet.Vargen**>malloc(len(var_generators)*sizeof(cnet.Vargen*))
         for i in range(len(var_generators)):
             gen = var_generators[i]
             array[i] = gen._c_ptr
 
         cnet.NET_del_vargens(self._c_net, array, len(var_generators))
-        free(array)
 
         # Update pointers and alloc flags
+        num = 0
         for i in range(len(var_generators)):
             gen = var_generators[i]
-            gen._c_ptr = NULL
-            gen.alloc = False
+            if array[i] != NULL:
+                gen._c_ptr = NULL
+                gen.alloc = False
+                num += 1
+
+        # Clean up
+        free(array)
+
+        # Check
+        if old_num_gens-num != self.num_var_generators:
+            raise NetworkError('error while removing var generators')
             
     def add_var_generators_from_parameters(self, buses, power_capacity, power_base, power_std=0., corr_radius=0, corr_value=0.):
         """

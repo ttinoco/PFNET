@@ -231,12 +231,14 @@ void NET_del_buses(Net* net, Bus** bus_ptr_array, int size) {
   for (i = 0; i < size; i++) {
     bus = bus_ptr_array[i];
     if (bus) {
-      if (bus == NET_get_bus(net,BUS_get_index(bus))) {
+      if (bus == NET_get_bus(net,BUS_get_index(bus))) { // bus present in the network
 	if (!delete[BUS_get_index(bus)]) {
 	  delete[BUS_get_index(bus)] = 1;
 	  num++;
 	}
-      }	
+      }
+      else
+	bus_ptr_array[i] = NULL;                        // bus not present in the network
     }
   }
 
@@ -327,6 +329,9 @@ void NET_del_buses(Net* net, Bus** bus_ptr_array, int size) {
       index++;
     }
   }
+
+  // Update hash
+  NET_update_hash_tables(net);
 
   // Delete old buses
   BUS_array_del(old_bus_array,old_num_buses);
@@ -464,7 +469,9 @@ void NET_del_branches(Net* net, Branch** br_ptr_array, int size) {
 	  delete[BRANCH_get_index(br)] = 1;
 	  num++;
 	}
-      }	
+      }
+      else
+	br_ptr_array[i] = NULL;
     }
   }
 
@@ -645,7 +652,9 @@ void NET_del_gens(Net* net, Gen** gen_ptr_array, int size) {
 	  delete[GEN_get_index(gen)] = 1;
 	  num++;
 	}
-      }	
+      }
+      else
+	gen_ptr_array[i] = NULL;
     }
   }
 
@@ -817,7 +826,9 @@ void NET_del_loads(Net* net, Load** load_ptr_array, int size) {
 	  delete[LOAD_get_index(load)] = 1;
 	  num++;
 	}
-      }	
+      }
+      else
+	load_ptr_array[i] = NULL;
     }
   }
 
@@ -990,7 +1001,9 @@ void NET_del_shunts(Net* net, Shunt** shunt_ptr_array, int size) {
 	  delete[SHUNT_get_index(shunt)] = 1;
 	  num++;
 	}
-      }	
+      }
+      else
+	shunt_ptr_array[i] = NULL;
     }
   }
 
@@ -1162,7 +1175,9 @@ void NET_del_bats(Net* net, Bat** bat_ptr_array, int size) {
 	  delete[BAT_get_index(bat)] = 1;
 	  num++;
 	}
-      }	
+      }
+      else
+	bat_ptr_array[i] = NULL;
     }
   }
 
@@ -1330,7 +1345,9 @@ void NET_del_vargens(Net* net, Vargen** gen_ptr_array, int size) {
 	  delete[VARGEN_get_index(gen)] = 1;
 	  num++;
 	}
-      }	
+      }
+      else
+	gen_ptr_array[i] = NULL;
     }
   }
 
