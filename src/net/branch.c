@@ -1545,6 +1545,10 @@ void BRANCH_set_reg_bus(Branch* br, Bus* reg_bus) {
     BUS_del_reg_tran(old_reg_bus,br);
     br->reg_bus = reg_bus;
     BUS_add_reg_tran(br->reg_bus,br);
+    if (reg_bus)
+      br->type = BRANCH_TYPE_TRAN_TAP_V;
+    else if (br->type == BRANCH_TYPE_TRAN_TAP_V)
+      br->type = BRANCH_TYPE_TRAN_FIXED;
   }
 }
 

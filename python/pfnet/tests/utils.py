@@ -12,7 +12,7 @@ from numpy.linalg import norm
 
 norminf = lambda x: norm(x,np.inf) if isinstance(x,np.ndarray) else np.abs(x)
 
-def compare_buses(test, bus1, bus2, check_internals=False, eps=1e-10):
+def compare_buses(test, bus1, bus2, check_internals=False, check_indices=True, eps=1e-10):
     """
     Method for checking if two |Bus| objects are similar.
     
@@ -21,7 +21,8 @@ def compare_buses(test, bus1, bus2, check_internals=False, eps=1e-10):
     test : unittest.TestCase
     bus1 : |Bus|
     bus2 : |Bus|
-    check_configuration : |TrueFalse|
+    check_internals : |TrueFalse|
+    check_indices : |TrueFalse|
     eps : float
     """
 
@@ -44,26 +45,37 @@ def compare_buses(test, bus1, bus2, check_internals=False, eps=1e-10):
     test.assertEqual(bus1.is_regulated_by_tran(),bus2.is_regulated_by_tran())
     test.assertEqual(bus1.is_regulated_by_shunt(),bus2.is_regulated_by_shunt())
     test.assertLess(norminf(bus1.price-bus2.price), eps)
-    test.assertEqual(set([o.index for o in bus1.generators]),
-                     set([o.index for o in bus2.generators]))
-    test.assertEqual(set([o.index for o in bus1.reg_generators]),
-                     set([o.index for o in bus2.reg_generators]))
-    test.assertEqual(set([o.index for o in bus1.loads]),
-                     set([o.index for o in bus2.loads]))
-    test.assertEqual(set([o.index for o in bus1.shunts]),
-                     set([o.index for o in bus2.shunts]))
-    test.assertEqual(set([o.index for o in bus1.reg_shunts]),
-                     set([o.index for o in bus2.reg_shunts]))
-    test.assertEqual(set([o.index for o in bus1.branches_k]),
-                     set([o.index for o in bus2.branches_k]))
-    test.assertEqual(set([o.index for o in bus1.branches_m]),
-                     set([o.index for o in bus2.branches_m]))
-    test.assertEqual(set([o.index for o in bus1.reg_trans]),
-                     set([o.index for o in bus2.reg_trans]))
-    test.assertEqual(set([o.index for o in bus1.var_generators]),
-                     set([o.index for o in bus2.var_generators]))
-    test.assertEqual(set([o.index for o in bus1.batteries]),
-                     set([o.index for o in bus2.batteries]))
+    test.assertEqual(len(bus1.generators),len(bus2.generators))
+    test.assertEqual(len(bus1.reg_generators),len(bus2.reg_generators))
+    test.assertEqual(len(bus1.loads),len(bus2.loads))
+    test.assertEqual(len(bus1.shunts),len(bus2.shunts))
+    test.assertEqual(len(bus1.branches_k),len(bus2.branches_k))
+    test.assertEqual(len(bus1.branches_m),len(bus2.branches_m))
+    test.assertEqual(len(bus1.batteries),len(bus2.batteries))
+    test.assertEqual(len(bus1.var_generators),len(bus2.var_generators))
+    test.assertEqual(len(bus1.reg_trans),len(bus2.reg_trans))
+    test.assertEqual(len(bus1.reg_shunts),len(bus2.reg_shunts))
+    if check_indices:
+        test.assertEqual(set([o.index for o in bus1.generators]),
+                         set([o.index for o in bus2.generators]))
+        test.assertEqual(set([o.index for o in bus1.reg_generators]),
+                         set([o.index for o in bus2.reg_generators]))
+        test.assertEqual(set([o.index for o in bus1.loads]),
+                         set([o.index for o in bus2.loads]))
+        test.assertEqual(set([o.index for o in bus1.shunts]),
+                         set([o.index for o in bus2.shunts]))
+        test.assertEqual(set([o.index for o in bus1.reg_shunts]),
+                         set([o.index for o in bus2.reg_shunts]))
+        test.assertEqual(set([o.index for o in bus1.branches_k]),
+                         set([o.index for o in bus2.branches_k]))
+        test.assertEqual(set([o.index for o in bus1.branches_m]),
+                         set([o.index for o in bus2.branches_m]))
+        test.assertEqual(set([o.index for o in bus1.reg_trans]),
+                         set([o.index for o in bus2.reg_trans]))
+        test.assertEqual(set([o.index for o in bus1.var_generators]),
+                         set([o.index for o in bus2.var_generators]))
+        test.assertEqual(set([o.index for o in bus1.batteries]),
+                         set([o.index for o in bus2.batteries]))
     test.assertLess(norminf(bus1.sens_P_balance-bus2.sens_P_balance), eps)
     test.assertLess(norminf(bus1.sens_Q_balance-bus2.sens_Q_balance), eps)
     test.assertLess(norminf(bus1.sens_v_mag_u_bound-bus2.sens_v_mag_u_bound), eps)
@@ -373,3 +385,91 @@ def compare_networks(test, net1, net2, check_internals=False):
     for bus in net1.buses:
         test.assertEqual(bus.number,net2.get_bus_from_number(bus.number).number)
         test.assertEqual(bus.name,net2.get_bus_from_number(bus.number).name)
+
+def check_network(test, net):
+    """
+    Checks validity of network.
+
+    Parameters
+    ----------
+    test :  unittest.TestCase
+    net : |Network|
+    """
+
+    test.assertTrue(isinstance(net, pf.Network))
+
+    test.assertEqual(len(net.buses), net.num_buses)
+    test.assertEqual(len(net.branches), net.num_branches)
+    test.assertEqual(len(net.generators), net.num_generators)
+    test.assertEqual(len(net.loads), net.num_loads)
+    test.assertEqual(len(net.shunts), net.num_shunts)
+    test.assertEqual(len(net.batteries), net.num_batteries)
+    test.assertEqual(len(net.var_generators), net.num_var_generators)
+    
+    for bus in net.buses:
+        for gen in bus.generators:
+            test.assertTrue(gen.bus.is_equal(bus))
+            test.assertTrue(gen.is_equal(net.get_generator(gen.index)))
+        for reg_gen in bus.reg_generators:
+            test.assertTrue(reg_gen.reg_bus.is_equal(bus))
+            test.assertTrue(reg_gen.is_equal(net.get_generator(reg_gen.index)))
+        for brk in bus.branches_k:
+            test.assertTrue(brk.bus_k.is_equal(bus))
+            test.assertTrue(brk.is_equal(net.get_branch(brk.index)))
+        for brm in bus.branches_m:
+            test.assertTrue(brm.bus_m.is_equal(bus))
+            test.assertTrue(brm.is_equal(net.get_branch(brm.index)))
+        for br in bus.reg_trans:
+            test.assertTrue(br.reg_bus.is_equal(bus))
+            test.assertTrue(br.is_equal(net.get_branch(br.index)))
+        for br in bus.branches:
+            test.assertTrue(br.bus_k.is_equal(bus) or br.bus_m.is_equal(bus))
+            test.assertTrue(br.is_equal(net.get_branch(br.index)))
+        for load in bus.loads:
+            test.assertTrue(load.bus.is_equal(bus))
+            test.assertTrue(load.is_equal(net.get_load(load.index)))
+        for shunt in bus.shunts:
+            test.assertTrue(shunt.bus.is_equal(bus))
+            test.assertTrue(shunt.is_equal(net.get_shunt(shunt.index)))
+        for reg_shunt in bus.reg_shunts:
+            test.assertTrue(reg_shunt.reg_bus.is_equal(bus))
+            test.assertTrue(reg_shunt.is_equal(net.get_shunt(reg_shunt.index)))
+        for bat in bus.batteries:
+            test.assertTrue(bat.bus.is_equal(bus))
+            test.assertTrue(bat.is_equal(net.get_battery(bat.index)))
+        for vargen in bus.var_generators:
+            test.assertTrue(vargen.bus.is_equal(bus))
+            test.assertTrue(vargen.is_equal(net.get_var_generator(vargen.index)))
+
+    for gen in net.generators:
+        test.assertTrue(gen.index in [x.index for x in gen.bus.generators])
+        test.assertTrue(gen.bus.is_equal(net.get_bus(gen.bus.index)))
+        if gen.is_regulator():
+            test.assertTrue(gen.index in [x.index for x in gen.reg_bus.reg_generators])
+    for br in net.branches:
+        test.assertTrue(br.bus_k.is_equal(net.get_bus(br.bus_k.index)))
+        test.assertTrue(br.bus_m.is_equal(net.get_bus(br.bus_m.index)))
+        test.assertTrue(br.index in [x.index for x in br.bus_k.branches_k])
+        test.assertTrue(br.index in [x.index for x in br.bus_m.branches_m])
+        if br.is_tap_changer_v():
+            test.assertTrue(br.index in [x.index for x in br.reg_bus.reg_trans])
+    for load in net.loads:
+        test.assertTrue(load.bus.is_equal(net.get_bus(load.bus.index)))
+        test.assertTrue(load.index in [x.index for x in load.bus.loads])
+    for shunt in net.shunts:
+        test.assertTrue(shunt.bus.is_equal(net.get_bus(shunt.bus.index)))
+        test.assertTrue(shunt.index in [x.index for x in shunt.bus.shunts])
+        if shunt.is_switched_v():
+            test.assertTrue(shunt.index in [x.index for x in shunt.reg_bus.reg_shunts])
+    for bat in net.batteries:
+        test.assertTrue(bat.bus.is_equal(net.get_bus(bat.bus.index)))
+        test.assertTrue(bat.index in [x.index for x in bat.bus.batteries])
+    for gen in net.var_generators:
+        test.assertTrue(gen.bus.is_equal(net.get_bus(gen.bus.index)))
+        test.assertTrue(gen.index in [x.index for x in gen.bus.var_generators])
+
+    for bus in net.buses:
+        test.assertEqual(bus.number, net.get_bus_from_number(bus.number).number)
+        test.assertEqual(bus.name, net.get_bus_from_name(bus.name).name)
+        test.assertTrue(bus.is_equal(net.get_bus_from_number(bus.number)))
+            

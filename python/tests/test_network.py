@@ -5336,14 +5336,81 @@ class TestNetwork(unittest.TestCase):
             net = pf.Parser(case).parse(case, num_periods=2)
 
             bus1 = net.buses[0]
+            bus2 = net.buses[0]
             net.remove_buses([bus1])
             self.assertEqual(bus1.index, -1)
             self.assertEqual(bus1.name, "")
 
             gen1 = net.generators[0]
+            gen2 = net.generators[0]
             net.remove_generators([gen1])
             self.assertEqual(gen1.index, -1)
             self.assertEqual(gen1.name, "")
+
+    def test_extract_subnetwork(self):
+        
+        for case in test_cases.CASES:
+
+            # Network
+            net = pf.Parser(case).parse(case, num_periods=2)
+
+            # Add vargens/batteries
+            net.add_var_generators_from_parameters(net.get_load_buses(),100.,50.,30.,5,0.05)
+            net.add_batteries_from_parameters(net.get_generator_buses(),20.,50.)
+            
+            orig_net = net.get_copy()
+
+            net1 = net.extract_subnetwork(net.buses)
+
+            pf.tests.utils.check_network(self, net1)
+            
+            pf.tests.utils.compare_networks(self, net, orig_net, check_internals=True)
+            pf.tests.utils.compare_networks(self, net1, net, check_internals=True)
+
+            keep = lambda x: x.number % 2 == 0
+            
+            even_buses = [bus for bus in net.buses if keep(bus)]
+            num_buses = len(even_buses)
+            num_gens = len([x for x in net.generators if keep(x.bus)])
+            num_loads = len([x for x in net.loads if keep(x.bus)])
+            num_shunts = len([x for x in net.shunts if keep(x.bus)])
+            num_bats = len([x for x in net.batteries if keep(x.bus)])
+            num_vargens = len([x for x in net.var_generators if keep(x.bus)])
+            num_branches = len([x for x in net.branches if keep(x.bus_k) and keep(x.bus_m)])            
+
+            net2 = net.extract_subnetwork(even_buses)
+
+            self.assertEqual(net2.num_buses, num_buses)
+            self.assertEqual(net2.num_loads, num_loads)
+            self.assertEqual(net2.num_generators, num_gens)
+            self.assertEqual(net2.num_branches, num_branches)
+            self.assertEqual(net2.num_shunts, num_shunts)
+            self.assertEqual(net2.num_batteries, num_bats)
+            self.assertEqual(net2.num_var_generators, num_vargens)
+            
+            pf.tests.utils.compare_networks(self, net, orig_net, check_internals=True)
+            pf.tests.utils.check_network(self, net2)
+
+            for bus in net2.buses:
+                self.assertTrue(keep(bus))
+            for gen in net2.generators:
+                self.assertTrue(keep(gen.bus))
+                if gen.is_regulator():
+                    self.assertTrue(keep(gen.reg_bus))
+            for load in net2.loads:
+                self.assertTrue(keep(load.bus))
+            for shunt in net2.shunts:
+                self.assertTrue(keep(shunt.bus))
+                if shunt.is_switched_v():
+                    self.assertTrue(keep(shunt.reg_bus))
+            for br in net2.branches:
+                self.assertTrue(keep(br.bus_k) and keep(br.bus_m))
+                if br.is_tap_changer_v():
+                    self.assertTrue(keep(br.reg_bus))
+            for bat in net2.batteries:
+                self.assertTrue(keep(bat.bus))
+            for vargen in net2.var_generators:
+                self.assertTrue(keep(vargen.bus))
             
     def tearDown(self):
 

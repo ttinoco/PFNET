@@ -2561,6 +2561,9 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   free(del_bat_ptr_array);
   free(del_vargen_ptr_array);
 
+  // Clear flags
+  NET_clear_flags(net);
+  
   // Return
   return new_net;
 }
