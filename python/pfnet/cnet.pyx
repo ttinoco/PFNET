@@ -76,6 +76,34 @@ cdef class Network:
             new_net.alloc = False
             os.remove(f.name)
 
+    def extract_subnetwork(self, buses):
+        """
+        Extracts subnetwork containig the given buses.
+
+        Parameters
+        ----------
+        buses : list of |Bus| objects
+
+        Returns
+        -------
+        net : |Network|
+        """
+
+        cdef Network net
+        cdef cnet.Bus** array
+        cdef Bus bus
+
+        array = <cnet.Bus**>malloc(len(buses)*sizeof(cnet.Bus*))
+        for i in range(len(buses)):
+            bus = buses[i]
+            array[i] = bus._c_ptr
+
+        net = new_Network(cnet.NET_extract_subnet(self._c_net, array, len(buses)))
+        net.alloc = True
+        free(array)
+
+        return net       
+
     def add_buses(self, buses):
         """
         Adds buses to the network.

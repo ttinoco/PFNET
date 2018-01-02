@@ -22,6 +22,9 @@ Unreleased
 * Added net routines for adding and removing shunts from the network.
 * Added net routines for adding and removing branches from the network.
 * Added net routines for adding and removing buses from the network.
+* Added net routines for adding and removing batteries from the network.
+* Added net routines for adding and removing var generators from the network.
+* Added net routine for extracting subnetwork containing a specific set of buses.
 
 Version 1.3.2
 -------------

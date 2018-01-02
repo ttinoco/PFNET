@@ -63,6 +63,7 @@ cdef extern from "pfnet/net.h":
     cmat.Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr)
     void NET_copy_from_net(Net* net, Net* other_net)
     void NET_del(Net* net)
+    Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size)
     Net* NET_get_copy(Net* net)
     REAL NET_get_base_power(Net* net)
     char* NET_get_error_string(Net* net)

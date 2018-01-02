@@ -2408,6 +2408,163 @@ void NET_del(Net* net) {
   }
 }
 
+Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
+  /** Extracts subnetwork containing the specified buses.
+   */
+
+  // Local variables
+  Net* new_net;
+  Bus* bus;
+  Gen* gen;
+  Branch* br;
+  Shunt* shunt;
+  Load* load;
+  Bat* bat;
+  Vargen* vargen;
+  
+  char* keep_bus;
+  char* delete_br;
+
+  Bus** del_bus_ptr_array;
+  Gen** del_gen_ptr_array;
+  Branch** del_br_ptr_array;
+  Shunt** del_shunt_ptr_array;
+  Load** del_load_ptr_array;
+  Bat** del_bat_ptr_array;
+  Vargen** del_vargen_ptr_array;
+
+  int num_del_bus;
+  int num_del_br;
+  int num_del_gen;
+  int num_del_shunt;
+  int num_del_load;
+  int num_del_bat;
+  int num_del_vargen;
+
+  int i;
+
+  // Check
+  if (!net || !bus_ptr_array)
+    return NULL;
+
+  // Copy
+  new_net = NET_get_copy(net);
+
+  // Flags
+  ARRAY_zalloc(keep_bus,char,net->num_buses);
+  ARRAY_zalloc(delete_br,char,net->num_branches);
+
+  // Del ptr arrays
+  del_bus_ptr_array = (Bus**)malloc(sizeof(Bus*)*net->num_buses);
+  del_br_ptr_array = (Branch**)malloc(sizeof(Branch*)*net->num_branches);
+  del_gen_ptr_array = (Gen**)malloc(sizeof(Gen*)*net->num_gens);
+  del_load_ptr_array = (Load**)malloc(sizeof(Load*)*net->num_loads);
+  del_shunt_ptr_array = (Shunt**)malloc(sizeof(Shunt*)*net->num_shunts);
+  del_bat_ptr_array = (Bat**)malloc(sizeof(Bat*)*net->num_bats);
+  del_vargen_ptr_array = (Vargen**)malloc(sizeof(Vargen*)*net->num_vargens);
+
+  // Mark buses to keep
+  for (i = 0; i < size; i++) {
+    
+    bus = bus_ptr_array[i];
+
+    // No bus
+    if (!bus)
+      continue;
+
+    // Not on network
+    if (bus != NET_get_bus(net, BUS_get_index(bus)))
+      continue;
+    
+    keep_bus[BUS_get_index(bus)] = 1;	
+  }
+
+  // Fill del ptr arrays
+  num_del_bus = 0;
+  num_del_br = 0;
+  num_del_gen = 0;
+  num_del_shunt =0;
+  num_del_load = 0;
+  num_del_bat = 0;
+  num_del_vargen = 0;
+  for (i = 0; i < new_net->num_buses; i++) {
+    
+    bus = NET_get_bus(new_net,i);
+
+    if (keep_bus[BUS_get_index(bus)])
+      continue;
+
+    del_bus_ptr_array[num_del_bus] = bus;
+    num_del_bus++;
+
+    for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+      del_gen_ptr_array[num_del_gen] = gen;
+      num_del_gen++;
+    }
+
+    for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+      del_load_ptr_array[num_del_load] = load;
+      num_del_load++;
+    }
+
+    for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+      del_shunt_ptr_array[num_del_shunt] = shunt;
+      num_del_shunt++;
+    }
+
+    for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+      del_bat_ptr_array[num_del_bat] = bat;
+      num_del_bat++;
+    }
+
+    for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+      del_vargen_ptr_array[num_del_vargen] = vargen;
+      num_del_vargen++;
+    }
+
+    for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
+      if (!delete_br[BRANCH_get_index(br)]) {
+	delete_br[BRANCH_get_index(br)] = 1;
+	del_br_ptr_array[num_del_br] = br;
+	num_del_br++;
+      }
+    }
+
+    for (br = BUS_get_branch_m(bus); br != NULL; br = BRANCH_get_next_m(br)) {
+      if (!delete_br[BRANCH_get_index(br)]) {
+	delete_br[BRANCH_get_index(br)] = 1;
+	del_br_ptr_array[num_del_br] = br;
+	num_del_br++;
+      }
+    }
+  }
+
+  // Delete components
+  NET_del_buses(new_net, del_bus_ptr_array, num_del_bus);
+  NET_del_branches(new_net, del_br_ptr_array, num_del_br);
+  NET_del_gens(new_net, del_gen_ptr_array, num_del_gen);
+  NET_del_loads(new_net, del_load_ptr_array, num_del_load);
+  NET_del_shunts(new_net, del_shunt_ptr_array, num_del_shunt);
+  NET_del_bats(new_net, del_bat_ptr_array, num_del_bat);
+  NET_del_vargens(new_net, del_vargen_ptr_array, num_del_vargen);
+
+  // Clean flag arrays
+  free(keep_bus);
+  free(delete_br);
+
+  // Clean del ptr arrays
+  free(del_bus_ptr_array);
+  free(del_br_ptr_array);
+  free(del_gen_ptr_array);
+  free(del_load_ptr_array);
+  free(del_shunt_ptr_array);
+  free(del_bat_ptr_array);
+  free(del_vargen_ptr_array);
+
+  // Return
+  return new_net;
+}
+
 void NET_init(Net* net, int num_periods) {
 
   // Local vars

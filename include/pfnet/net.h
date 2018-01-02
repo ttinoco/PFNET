@@ -80,6 +80,7 @@ Bus* NET_create_sorted_bus_list(Net* net, int sort_by, int t);
 Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr);
 void NET_copy_from_net(Net* net, Net* other);
 void NET_del(Net* net);
+Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size);
 void NET_init(Net* net, int num_periods);
 Net* NET_get_copy(Net* net);
 int NET_get_bus_neighbors(Net* net, Bus* bus, int spread, int* neighbors, char* queued);
