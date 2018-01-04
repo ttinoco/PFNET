@@ -26,6 +26,7 @@ cdef class FunctionBase:
 
     cdef cfunc.Func* _c_func
     cdef bint _alloc
+    cdef Network _net
 
     def __init__(self):
         """
@@ -38,6 +39,7 @@ cdef class FunctionBase:
 
         self._c_func = NULL
         self._alloc = False
+        self._net = None
 
     def __dealloc__(self):
         """
@@ -48,6 +50,7 @@ cdef class FunctionBase:
             cfunc.FUNC_del(self._c_func)
             self._c_func = NULL
             self._alloc = False
+            self._net = None
             
     def del_matvec(self):
         """
@@ -261,6 +264,7 @@ cdef class Function(FunctionBase):
             raise FunctionError('invalid function name')
             
         self._alloc = True
+        self._net = net
     
 cdef class CustomFunction(FunctionBase):
     """

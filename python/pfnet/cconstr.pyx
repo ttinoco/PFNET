@@ -26,6 +26,7 @@ cdef class ConstraintBase:
 
     cdef cconstr.Constr* _c_constr
     cdef bint _alloc
+    cdef Network _net
 
     def __init__(self):
         """
@@ -38,6 +39,7 @@ cdef class ConstraintBase:
 
         self._c_constr = NULL
         self._alloc = False
+        self._net = None
 
     def __dealloc__(self):
         """
@@ -48,6 +50,7 @@ cdef class ConstraintBase:
             cconstr.CONSTR_del(self._c_constr)
             self._c_constr = NULL
             self._alloc = False
+            self._net = None
 
     def allocate_H_array(self, size):
         """
@@ -604,8 +607,10 @@ cdef class Constraint(ConstraintBase):
         elif name == "load constant power factor":
             self._c_constr = cconstr.CONSTR_LOAD_PF_new(net._c_net)
         else:
-            raise ConstraintError('invalid constraint name')            
+            raise ConstraintError('invalid constraint name')
+        
         self._alloc = True
+        self._net = net
 
 cdef class CustomConstraint(ConstraintBase):
 

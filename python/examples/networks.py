@@ -59,7 +59,8 @@ print(shunt.index == 0)
 
 # Power Networks - Variable Generators
 
-net.add_var_generators(net.get_generator_buses(), 80., 50., 50., 5, 0.05)
+buses = net.get_generator_buses()
+net.add_var_generators_from_parameters(buses, 80., 50., 50., 5, 0.05)
 
 print(net.num_var_generators == len([bus for bus in net.buses if bus.generators]))
 
