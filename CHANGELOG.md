@@ -25,6 +25,7 @@ Unreleased
 * Added net routines for adding and removing batteries from the network.
 * Added net routines for adding and removing var generators from the network.
 * Added net routine for extracting subnetwork containing a specific set of buses.
+* Extended problem.show() to show number of vars and constraints of each type.
 
 Version 1.3.2
 -------------

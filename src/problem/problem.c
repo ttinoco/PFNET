@@ -734,10 +734,15 @@ char* PROB_get_show_str(Prob* p) {
   strcpy(out,"");
 
   sprintf(out+strlen(out),"\nProblem\n");
-  sprintf(out+strlen(out),"functions: %d\n",FUNC_list_len(p->func));
+  sprintf(out+strlen(out),"-------\n");
+  sprintf(out+strlen(out),"variables: %d\n", PROB_get_num_primal_variables(p));
+  sprintf(out+strlen(out),"linear equality constraints: %d\n", PROB_get_num_linear_equality_constraints(p));
+  sprintf(out+strlen(out),"linear inequality constraints: %d\n", PROB_get_num_linear_inequality_constraints(p));
+  sprintf(out+strlen(out),"nonlinear equality constraints: %d\n", PROB_get_num_nonlinear_equality_constraints(p)); 
+  sprintf(out+strlen(out),"functions\n");
   for (f = p->func; f != NULL; f = FUNC_get_next(f))
     sprintf(out+strlen(out),"   %s\n",FUNC_get_name(f));
-  sprintf(out+strlen(out),"constraints: %d\n",CONSTR_list_len(p->constr));  
+  sprintf(out+strlen(out),"constraints\n");  
   for (c = p->constr; c != NULL; c = CONSTR_get_next(c))
     sprintf(out+strlen(out),"   %s\n",CONSTR_get_name(c));
 
@@ -1036,12 +1041,12 @@ int PROB_get_num_primal_variables(Prob* p) {
     return 0;
   if (p->gphi)
     return VEC_get_size(p->gphi);
-  if (p->Hphi)
-    return MAT_get_size1(p->Hphi);
   if (p->A)
     return MAT_get_size2(p->A);
   if (p->J)
     return MAT_get_size2(p->J);
+  if (p->G)
+    return MAT_get_size2(p->G);
   return NET_get_num_vars(p->net)+p->num_extra_vars;
 }
 
@@ -1050,6 +1055,14 @@ int PROB_get_num_linear_equality_constraints(Prob* p) {
     return 0;
   if (p->A)
     return MAT_get_size1(p->A);
+  return 0;
+}
+
+int PROB_get_num_linear_inequality_constraints(Prob* p) {
+  if (!p)
+    return 0;
+  if (p->G)
+    return 2*MAT_get_size1(p->G);
   return 0;
 }
 
