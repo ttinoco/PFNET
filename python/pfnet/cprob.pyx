@@ -26,6 +26,7 @@ cdef class Problem:
     cdef bint alloc
     cdef list _functions
     cdef list _constraints
+    cdef Network _net
 
     def __init__(self, Network net):
         """
@@ -44,6 +45,7 @@ cdef class Problem:
         self.alloc = True
         self._functions = []
         self._constraints = []
+        self._net = net
 
     def __dealloc__(self):
         """
@@ -53,6 +55,9 @@ cdef class Problem:
         if self.alloc:
             cprob.PROB_del(self._c_prob)
             self._c_prob = NULL
+            self._functions = []
+            self._constraints = []
+            self._net = None
 
     def add_constraint(self, ConstraintBase constr):
         """
@@ -131,8 +136,10 @@ cdef class Problem:
         Resets optimization problem data.
         """
 
-        self._functions = []
         cprob.PROB_clear(self._c_prob)
+        self._functions = []
+        self._constraints = []
+        self._net = None
 
     def clear_error(self):
         """

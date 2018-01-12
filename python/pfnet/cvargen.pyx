@@ -27,6 +27,7 @@ cdef class VarGenerator:
     """
 
     cdef cvargen.Vargen* _c_ptr
+    cdef bint alloc
 
     def __init__(self, num_periods=1, alloc=True):
         """
@@ -45,6 +46,13 @@ cdef class VarGenerator:
         if alloc:
             self._c_ptr = cvargen.VARGEN_new(num_periods)
         else:
+            self._c_ptr = NULL
+        self.alloc = alloc
+
+    def __dealloc__(self):
+
+        if self.alloc:
+            cvargen.VARGEN_array_del(self._c_ptr,1)
             self._c_ptr = NULL
 
     def _get_c_ptr(self):
@@ -71,6 +79,28 @@ cdef class VarGenerator:
         return cvargen.VARGEN_has_flags(self._c_ptr,
                                         str2flag[flag_type],
                                         reduce(lambda x,y: x|y,[str2q[self.obj_type][qq] for qq in q],0))
+
+    def is_equal(self, other):
+        """
+        Determines whether the var generator is equal to given var generator.
+
+        Parameters
+        ----------
+        other : |VarGenerator|
+
+        Returns
+        -------
+        flag : |TrueFalse|
+        """
+
+        cdef VarGenerator g_other
+
+        if not isinstance(other,VarGenerator):
+            return False
+
+        g_other = other
+
+        return cvargen.VARGEN_is_equal(self._c_ptr,g_other._c_ptr)
 
     def get_var_info_string(self, index):
         """
@@ -185,10 +215,10 @@ cdef class VarGenerator:
             return new_Bus(cvargen.VARGEN_get_bus(self._c_ptr))
         def __set__(self,bus):
             cdef Bus cbus
-            if not isinstance(bus,Bus):
+            if not isinstance(bus,Bus) and bus is not None:
                 raise VarGeneratorError('Not a Bus type object')
             cbus = bus
-            cvargen.VARGEN_set_bus(self._c_ptr,cbus._c_ptr) 
+            cvargen.VARGEN_set_bus(self._c_ptr,cbus._c_ptr if bus is not None else NULL) 
 
     property P:
         """ Variable generator active power after curtailments (p.u. system base MVA) (float or |Array|). """

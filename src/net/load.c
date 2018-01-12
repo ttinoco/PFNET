@@ -80,6 +80,7 @@ void LOAD_array_del(Load* load_array, int size) {
       free(load->index_Q);
       free(load->sens_P_u_bound);
       free(load->sens_P_l_bound);
+      LOAD_set_bus(load,NULL);
     }
     free(load_array);
   }  
@@ -623,7 +624,7 @@ void LOAD_init(Load* load, int num_periods) {
   load->util_coeff_Q1 = 20000.;
   load->util_coeff_Q2 = -100.;
   
-  load->index = 0;
+  load->index = -1;
 
   ARRAY_zalloc(load->P,REAL,T);
   ARRAY_zalloc(load->P_max,REAL,T);
@@ -637,6 +638,10 @@ void LOAD_init(Load* load, int num_periods) {
   load->target_power_factor = 1.;
   
   load->next = NULL;
+}
+
+BOOL LOAD_is_equal(Load* load, Load* other) {
+  return load == other;
 }
 
 BOOL LOAD_is_P_adjustable(Load* load) {
@@ -654,6 +659,11 @@ BOOL LOAD_is_P_adjustable(Load* load) {
 
 Load* LOAD_list_add(Load* load_list, Load* load) {
   LIST_add(Load,load_list,load,next);
+  return load_list;
+}
+
+Load* LOAD_list_del(Load* load_list, Load* load) {
+  LIST_del(Load,load_list,load,next);
   return load_list;
 }
 
@@ -716,9 +726,15 @@ void LOAD_set_util_coeff_Q2(Load* load, REAL q) {
     load->util_coeff_Q2 = q;
 }
 
-void LOAD_set_bus(Load* load, Bus* bus) { 
-  if (load)
-    load->bus = (Bus*)bus;
+void LOAD_set_bus(Load* load, Bus* bus) {
+  Bus* old_bus;
+  if (load) {
+    old_bus = load->bus;
+    load->bus = NULL;
+    BUS_del_load(old_bus,load);
+    load->bus = bus;
+    BUS_add_load(load->bus,load);
+  }
 }
 
 void LOAD_set_index(Load* load, int index) { 

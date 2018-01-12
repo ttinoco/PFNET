@@ -164,8 +164,8 @@ class TestNetwork(unittest.TestCase):
             net = pf.Parser(case).parse(case)
 
             # Add vargen and battery
-            net.add_var_generators(net.get_load_buses(),100.,50.,30.,5,0.05)
-            net.add_batteries(net.get_generator_buses(),20.,50.)
+            net.add_var_generators_from_parameters(net.get_load_buses(),100.,50.,30.,5,0.05)
+            net.add_batteries_from_parameters(net.get_generator_buses(),20.,50.)
             self.assertGreater(net.num_var_generators,0)
             self.assertGreater(net.num_batteries,0)
             self.assertGreater(net.num_buses, 0)
@@ -305,7 +305,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.num_periods,self.T)
 
             # add vargens
-            net.add_var_generators(net.get_load_buses(),100.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(net.get_load_buses(),100.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
 
             net.set_flags('bus',
@@ -1375,7 +1375,7 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(vg.name,"some vargen")
 
             # Add vargens (defaults)
-            net.add_var_generators(net.get_load_buses(),80.,50.)
+            net.add_var_generators_from_parameters(net.get_load_buses(),80.,50.)
             self.assertEqual(net.var_generators_corr_radius,0)
             self.assertEqual(net.var_generators_corr_value,0.)
             self.assertEqual(net.num_var_generators,len(net.get_load_buses()))
@@ -1388,7 +1388,7 @@ class TestNetwork(unittest.TestCase):
                              len([b for b in net.buses if b.loads]))
             total_load = abs(sum([l.P for l in net.loads]))
 
-            net.add_var_generators(load_buses,80.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(load_buses,80.,50.,30.,5,0.05)
 
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len(load_buses))
@@ -1493,35 +1493,35 @@ class TestNetwork(unittest.TestCase):
             power_std = 30.
             corr_radius = 5
             corr_value = 0.05
-            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,-80.,50.,50.,5,0.05)
+            self.assertRaises(pf.NetworkError,net.add_var_generators_from_parameters,gen_buses,-80.,50.,50.,5,0.05)
             self.assertTrue(net.has_error())
             net.clear_error()
-            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,80.,120.,50.,5,0.05)
+            self.assertRaises(pf.NetworkError,net.add_var_generators_from_parameters,gen_buses,80.,120.,50.,5,0.05)
             self.assertTrue(net.has_error())
             net.clear_error()
-            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,80.,-10,50.,5,0.05)
+            self.assertRaises(pf.NetworkError,net.add_var_generators_from_parameters,gen_buses,80.,-10,50.,5,0.05)
             self.assertTrue(net.has_error())
             net.clear_error()
             self.assertFalse(net.has_error())
-            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,80.,50,-10.,5,0.05)
+            self.assertRaises(pf.NetworkError,net.add_var_generators_from_parameters,gen_buses,80.,50,-10.,5,0.05)
             net.clear_error()
-            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,80.,50,50.,-1,0.05)
+            self.assertRaises(pf.NetworkError,net.add_var_generators_from_parameters,gen_buses,80.,50,50.,-1,0.05)
             net.clear_error()
-            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,80.,50,50.,5,1.05)
+            self.assertRaises(pf.NetworkError,net.add_var_generators_from_parameters,gen_buses,80.,50,50.,5,1.05)
             net.clear_error()
-            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,80.,50,50.,5,-1.05)
+            self.assertRaises(pf.NetworkError,net.add_var_generators_from_parameters,gen_buses,80.,50,50.,5,-1.05)
             net.clear_error()
-            self.assertRaises(pf.NetworkError,net.add_var_generators,gen_buses,80.,-10,50.,5,0.05)
+            self.assertRaises(pf.NetworkError,net.add_var_generators_from_parameters,gen_buses,80.,-10,50.,5,0.05)
             self.assertTrue(net.has_error())
             net.clear_error()
-            net.add_var_generators(gen_buses,80.,50,50.,5,0.05)
+            net.add_var_generators_from_parameters(gen_buses,80.,50,50.,5,0.05)
             self.assertFalse(net.has_error())
             self.assertEqual(net.num_var_generators,len(gen_buses))
-            net.add_var_generators([],power_capacity,power_base,power_std,corr_radius,corr_value)
+            net.add_var_generators_from_parameters([],power_capacity,power_base,power_std,corr_radius,corr_value)
             self.assertEqual(net.num_var_generators,0)
             self.assertEqual(net.var_generators,[])
 
-            net.add_var_generators(gen_buses,power_capacity,power_base,power_std,corr_radius,corr_value)
+            net.add_var_generators_from_parameters(gen_buses,power_capacity,power_base,power_std,corr_radius,corr_value)
             self.assertEqual(net.num_var_generators,len(gen_buses))
             self.assertEqual(len(net.var_generators),len(gen_buses))
 
@@ -1547,7 +1547,7 @@ class TestNetwork(unittest.TestCase):
             net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
 
-            net.add_var_generators(net.get_generator_buses(),80.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(net.get_generator_buses(),80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
 
             for vargen in net.var_generators:
@@ -1616,7 +1616,7 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net.num_periods,1)
            
             # Add batteries (defaults)
-            net.add_batteries(net.get_generator_buses(),20.,50.)
+            net.add_batteries_from_parameters(net.get_generator_buses(),20.,50.)
             self.assertEqual(net.num_batteries,len(net.get_generator_buses()))
             for bat in net.batteries:
                 self.assertEqual(bat.eta_c,1.)
@@ -1625,7 +1625,7 @@ class TestNetwork(unittest.TestCase):
             # Add batteries
             gen_buses = net.get_generator_buses()
             self.assertGreater(len(gen_buses),0)
-            net.add_batteries(gen_buses,20.,50.,0.9,0.8)
+            net.add_batteries_from_parameters(gen_buses,20.,50.,0.9,0.8)
 
             self.assertEqual(net.num_batteries,len(gen_buses))
             self.assertEqual(net.num_batteries,len(net.batteries))
@@ -1689,7 +1689,7 @@ class TestNetwork(unittest.TestCase):
 
             # Add zero batteries
             self.assertEqual(net.num_batteries,len(gen_buses))
-            net.add_batteries([],20.,50.,0.9,0.8)
+            net.add_batteries_from_parameters([],20.,50.,0.9,0.8)
             self.assertEqual(net.num_batteries,0)
 
         # Multi period
@@ -1701,7 +1701,7 @@ class TestNetwork(unittest.TestCase):
             # Add batteries
             gen_buses = net.get_generator_buses()
             self.assertGreater(len(gen_buses),0)
-            net.add_batteries(gen_buses,40.,80.,0.7,0.85)
+            net.add_batteries_from_parameters(gen_buses,40.,80.,0.7,0.85)
 
             self.assertEqual(net.num_batteries,len(gen_buses))
             self.assertEqual(net.num_batteries,len(net.batteries))
@@ -1980,8 +1980,8 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(netMP.num_periods,self.T)
 
             # Add vargens
-            net.add_var_generators(net.get_load_buses(),80.,50.,30.,5,0.05)
-            netMP.add_var_generators(netMP.get_load_buses(),80.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(net.get_load_buses(),80.,50.,30.,5,0.05)
+            netMP.add_var_generators_from_parameters(netMP.get_load_buses(),80.,50.,30.,5,0.05)
             for vargen in net.var_generators:
                 self.assertTrue(isinstance(vargen.name,str) or isinstance(vargen.name,unicode))
                 self.assertEqual(vargen.name,"%d" %(vargen.index))
@@ -2462,7 +2462,7 @@ class TestNetwork(unittest.TestCase):
 
             # Add vargens
             load_buses = net.get_load_buses()
-            net.add_var_generators(load_buses,80.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(load_buses,80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len(load_buses))
 
@@ -2776,7 +2776,7 @@ class TestNetwork(unittest.TestCase):
 
             # Add vargens
             load_buses = net.get_load_buses()
-            net.add_var_generators(load_buses,80.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(load_buses,80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len(load_buses))
 
@@ -3173,7 +3173,7 @@ class TestNetwork(unittest.TestCase):
 
             # Add vargens
             load_buses = net.get_load_buses()
-            net.add_var_generators(load_buses,80.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(load_buses,80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len(load_buses))
 
@@ -3392,13 +3392,13 @@ class TestNetwork(unittest.TestCase):
 
             # Add vargens
             load_buses = net.get_load_buses()
-            net.add_var_generators(load_buses,80.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(load_buses,80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len(load_buses))
 
             # Add batteries
             gen_buses = net.get_generator_buses()
-            net.add_batteries(gen_buses,20.,30.,0.7,0.8)
+            net.add_batteries_from_parameters(gen_buses,20.,30.,0.7,0.8)
             self.assertGreater(net.num_batteries,0)
             self.assertEqual(net.num_batteries,len(gen_buses))
 
@@ -3663,13 +3663,13 @@ class TestNetwork(unittest.TestCase):
 
             # Add vargens
             load_buses = net.get_load_buses()
-            net.add_var_generators(load_buses,80.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(load_buses,80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
             self.assertEqual(net.num_var_generators,len(load_buses))
 
             # Add batteries
             gen_buses = net.get_generator_buses()
-            net.add_batteries(gen_buses,20.,40.,0.7,0.8)
+            net.add_batteries_from_parameters(gen_buses,20.,40.,0.7,0.8)
             self.assertGreater(net.num_batteries,0)
             self.assertEqual(net.num_batteries,len(gen_buses))
 
@@ -3857,7 +3857,7 @@ class TestNetwork(unittest.TestCase):
             # Add renewable sources
             gen_buses = net.get_generator_buses()
             total_load = abs(sum([l.P for l in net.loads]))
-            net.add_var_generators(gen_buses,80.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(gen_buses,80.,50.,30.,5,0.05)
             self.assertEqual(net.num_var_generators,len([b for b in net.buses if b.generators]))
             for vg in net.var_generators:
                 self.assertTrue(isinstance(vg.name,str) or isinstance(vg.name,unicode))
@@ -3923,7 +3923,7 @@ class TestNetwork(unittest.TestCase):
             # Add renewable sources
             gen_buses = net.get_generator_buses()
             total_load = abs(sum([l.P[0] for l in net.loads]))
-            net.add_var_generators(gen_buses,80.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(gen_buses,80.,50.,30.,5,0.05)
             self.assertEqual(net.num_var_generators,len([b for b in net.buses if b.generators]))
             for vg in net.var_generators:
                 self.assertEqual(vg.P_min,0)
@@ -3974,8 +3974,8 @@ class TestNetwork(unittest.TestCase):
             self.assertEqual(net1.num_periods,self.T)
 
             # Add vargen and battery
-            net1.add_var_generators(net1.get_load_buses(),100.,50.,30.,5,0.05)
-            net1.add_batteries(net1.get_generator_buses(),20.,50.)
+            net1.add_var_generators_from_parameters(net1.get_load_buses(),100.,50.,30.,5,0.05)
+            net1.add_batteries_from_parameters(net1.get_generator_buses(),20.,50.)
             self.assertGreater(net1.num_var_generators,0)
             self.assertGreater(net1.num_batteries,0)
 
@@ -4108,8 +4108,8 @@ class TestNetwork(unittest.TestCase):
             orig_net = pf.Parser(case).parse(case, num_periods=2)
 
             # Add vargens and batteries
-            orig_net.add_var_generators(orig_net.get_load_buses(),100.,50.,30.,5,0.05)
-            orig_net.add_batteries(orig_net.get_generator_buses(),20.,50.)
+            orig_net.add_var_generators_from_parameters(orig_net.get_load_buses(),100.,50.,30.,5,0.05)
+            orig_net.add_batteries_from_parameters(orig_net.get_generator_buses(),20.,50.)
             self.assertGreater(orig_net.num_var_generators,0)
             self.assertGreater(orig_net.num_batteries,0)
             
@@ -4342,6 +4342,1075 @@ class TestNetwork(unittest.TestCase):
             A = constr.A
             b = constr.b
             self.assertLess(np.linalg.norm(A*x-b),1e-12)
+
+    def test_symmetric_connectors_removers(self):
+
+        # Bus
+        bus = pf.Bus()
+        bus.name = 'foo'
+
+        # Generators
+        gen1 = pf.Generator()
+        gen1.name = 'gen1'
+        self.assertTrue(bus.generators == [])
+        self.assertRaises(pf.BusError, lambda g: g.bus, gen1)
+        bus.add_generator(gen1)
+        self.assertEqual(gen1.bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.generators] == ['gen1'])
+        gen1.bus = bus
+        self.assertEqual(gen1.bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.generators] == ['gen1'])
+        gen2 = pf.Generator()
+        gen2.name = 'gen2'
+        self.assertRaises(pf.BusError, lambda g: g.bus, gen2)
+        gen2.bus = bus
+        self.assertEqual(gen2.bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.generators] == ['gen1', 'gen2'])
+        bus.add_generator(gen2)
+        self.assertEqual(gen2.bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.generators] == ['gen1', 'gen2'])
+        bus.remove_generator(gen2)
+        self.assertEqual(gen1.bus.name,bus.name)
+        self.assertRaises(pf.BusError, lambda g: g.bus, gen2)
+        self.assertTrue([g.name for g in bus.generators] == ['gen1'])
+        gen1.bus = None
+        self.assertRaises(pf.BusError, lambda g: g.bus, gen1)
+        self.assertRaises(pf.BusError, lambda g: g.bus, gen2)
+        self.assertTrue([g.name for g in bus.generators] == [])
+
+        # Reg generators
+        gen3 = pf.Generator()
+        gen3.name = 'gen3'
+        self.assertTrue(bus.reg_generators == [])
+        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen3)
+        self.assertFalse(bus.is_regulated_by_gen())
+        bus.add_reg_generator(gen3)
+        self.assertEqual(gen3.reg_bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3'])
+        self.assertTrue(bus.is_regulated_by_gen())
+        gen3.reg_bus = bus
+        self.assertEqual(gen3.reg_bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3'])
+        gen4 = pf.Generator()
+        gen4.name = 'gen4'
+        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen4)
+        gen4.reg_bus = bus
+        self.assertEqual(gen4.reg_bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3', 'gen4'])
+        bus.add_reg_generator(gen4)
+        self.assertEqual(gen4.reg_bus.name,bus.name)
+        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3', 'gen4'])
+        bus.remove_reg_generator(gen4)
+        self.assertEqual(gen3.reg_bus.name,bus.name)
+        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen4)
+        self.assertTrue([g.name for g in bus.reg_generators] == ['gen3'])
+        gen3.reg_bus = None
+        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen3)
+        self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen4)
+        self.assertTrue([g.name for g in bus.reg_generators] == [])
+        self.assertFalse(bus.is_regulated_by_gen())
+
+        # Loads
+        load1 = pf.Load()
+        load1.name = 'load1'
+        self.assertTrue(bus.loads == [])
+        self.assertRaises(pf.BusError, lambda x: x.bus, load1)
+        bus.add_load(load1)
+        self.assertEqual(load1.bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.loads] == ['load1'])
+        load1.bus = bus
+        self.assertEqual(load1.bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.loads] == ['load1'])
+        load2 = pf.Load()
+        load2.name = 'load2'
+        self.assertRaises(pf.BusError, lambda x: x.bus, load2)
+        load2.bus = bus
+        self.assertEqual(load2.bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.loads] == ['load1', 'load2'])
+        bus.add_load(load2)
+        self.assertEqual(load2.bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.loads] == ['load1', 'load2'])
+        bus.remove_load(load2)
+        self.assertEqual(load1.bus.name,bus.name)
+        self.assertRaises(pf.BusError, lambda x: x.bus, load2)
+        self.assertTrue([x.name for x in bus.loads] == ['load1'])
+        load1.bus = None
+        self.assertRaises(pf.BusError, lambda x: x.bus, load1)
+        self.assertRaises(pf.BusError, lambda x: x.bus, load2)
+        self.assertTrue([x.name for x in bus.loads] == [])
+        
+        # Branches k
+        branch1 = pf.Branch()
+        branch1.name = 'branch1'
+        self.assertTrue(bus.branches_k == [])
+        self.assertRaises(pf.BusError, lambda br: br.bus_k, branch1)
+        bus.add_branch_k(branch1)
+        self.assertEqual(branch1.bus_k.name,bus.name)
+        self.assertTrue([br.name for br in bus.branches_k] == ['branch1'])
+        branch1.bus_k = bus
+        self.assertEqual(branch1.bus_k.name,bus.name)
+        self.assertTrue([br.name for br in bus.branches_k] == ['branch1'])
+        branch2 = pf.Branch()
+        branch2.name = 'branch2'
+        self.assertRaises(pf.BusError, lambda br: br.bus_k, branch2)
+        branch2.bus_k = bus
+        self.assertEqual(branch2.bus_k.name,bus.name)
+        self.assertTrue([br.name for br in bus.branches_k] == ['branch1', 'branch2'])
+        bus.add_branch_k(branch2)
+        self.assertEqual(branch2.bus_k.name,bus.name)
+        self.assertTrue([br.name for br in bus.branches_k] == ['branch1', 'branch2'])
+        bus.remove_branch_k(branch2)
+        self.assertEqual(branch1.bus_k.name,bus.name)
+        self.assertRaises(pf.BusError, lambda br: br.bus_k, branch2)
+        self.assertTrue([br.name for br in bus.branches_k] == ['branch1'])
+        branch1.bus_k = None
+        self.assertRaises(pf.BusError, lambda br: br.bus_k, branch1)
+        self.assertRaises(pf.BusError, lambda br: br.bus_k, branch2)
+        self.assertTrue([br.name for br in bus.branches_k] == [])
+        
+        # Branches m
+        branch1 = pf.Branch()
+        branch1.name = 'branch1'
+        self.assertTrue(bus.branches_m == [])
+        self.assertRaises(pf.BusError, lambda br: br.bus_m, branch1)
+        bus.add_branch_m(branch1)
+        self.assertEqual(branch1.bus_m.name,bus.name)
+        self.assertTrue([br.name for br in bus.branches_m] == ['branch1'])
+        branch1.bus_m = bus
+        self.assertEqual(branch1.bus_m.name,bus.name)
+        self.assertTrue([br.name for br in bus.branches_m] == ['branch1'])
+        branch2 = pf.Branch()
+        branch2.name = 'branch2'
+        self.assertRaises(pf.BusError, lambda br: br.bus_m, branch2)
+        branch2.bus_m = bus
+        self.assertEqual(branch2.bus_m.name,bus.name)
+        self.assertTrue([br.name for br in bus.branches_m] == ['branch1', 'branch2'])
+        bus.add_branch_m(branch2)
+        self.assertEqual(branch2.bus_m.name,bus.name)
+        self.assertTrue([br.name for br in bus.branches_m] == ['branch1', 'branch2'])
+        bus.remove_branch_m(branch2)
+        self.assertEqual(branch1.bus_m.name,bus.name)
+        self.assertRaises(pf.BusError, lambda br: br.bus_m, branch2)
+        self.assertTrue([br.name for br in bus.branches_m] == ['branch1'])
+        branch1.bus_m = None
+        self.assertRaises(pf.BusError, lambda br: br.bus_m, branch1)
+        self.assertRaises(pf.BusError, lambda br: br.bus_m, branch2)
+        self.assertTrue([br.name for br in bus.branches_m] == [])
+
+        # Reg branches
+        branch3 = pf.Branch()
+        branch3.name = 'branch3'
+        self.assertTrue(bus.reg_trans == [])
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch3)
+        self.assertFalse(bus.is_regulated_by_tran())
+        bus.add_reg_tran(branch3)
+        self.assertEqual(branch3.reg_bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.reg_trans] == ['branch3'])
+        self.assertTrue(bus.is_regulated_by_tran())
+        branch3.reg_bus = bus
+        self.assertEqual(branch3.reg_bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.reg_trans] == ['branch3'])
+        branch4 = pf.Branch()
+        branch4.name = 'branch4'
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch4)
+        branch4.reg_bus = bus
+        self.assertTrue(bus.is_regulated_by_tran())
+        self.assertEqual(branch4.reg_bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.reg_trans] == ['branch3', 'branch4'])
+        bus.add_reg_tran(branch4)
+        self.assertEqual(branch4.reg_bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.reg_trans] == ['branch3', 'branch4'])
+        bus.remove_reg_tran(branch4)
+        self.assertEqual(branch3.reg_bus.name,bus.name)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch4)
+        self.assertTrue([x.name for x in bus.reg_trans] == ['branch3'])
+        branch3.reg_bus = None
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch3)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch4)
+        self.assertTrue([x.name for x in bus.reg_trans] == [])
+        self.assertFalse(bus.is_regulated_by_tran())
+
+        # Shunts
+        shunt1 = pf.Shunt()
+        shunt1.name = 'shunt1'
+        self.assertTrue(bus.shunts == [])
+        self.assertRaises(pf.BusError, lambda x: x.bus, shunt1)
+        bus.add_shunt(shunt1)
+        self.assertEqual(shunt1.bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.shunts] == ['shunt1'])
+        shunt1.bus = bus
+        self.assertEqual(shunt1.bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.shunts] == ['shunt1'])
+        shunt2 = pf.Shunt()
+        shunt2.name = 'shunt2'
+        self.assertRaises(pf.BusError, lambda x: x.bus, shunt2)
+        shunt2.bus = bus
+        self.assertEqual(shunt2.bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.shunts] == ['shunt1', 'shunt2'])
+        bus.add_shunt(shunt2)
+        self.assertEqual(shunt2.bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.shunts] == ['shunt1', 'shunt2'])
+        bus.remove_shunt(shunt2)
+        self.assertEqual(shunt1.bus.name,bus.name)
+        self.assertRaises(pf.BusError, lambda x: x.bus, shunt2)
+        self.assertTrue([x.name for x in bus.shunts] == ['shunt1'])
+        shunt1.bus = None
+        self.assertRaises(pf.BusError, lambda x: x.bus, shunt1)
+        self.assertRaises(pf.BusError, lambda x: x.bus, shunt2)
+        self.assertTrue([x.name for x in bus.shunts] == [])
+
+        # Reg shunts
+        shunt3 = pf.Shunt()
+        shunt3.name = 'shunt3'
+        self.assertTrue(bus.reg_shunts == [])
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, shunt3)
+        bus.add_reg_shunt(shunt3)
+        self.assertEqual(shunt3.reg_bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.reg_shunts] == ['shunt3'])
+        self.assertTrue(bus.is_regulated_by_shunt())
+        shunt3.reg_bus = bus
+        self.assertEqual(shunt3.reg_bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.reg_shunts] == ['shunt3'])
+        shunt4 = pf.Shunt()
+        shunt4.name = 'shunt4'
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, shunt4)
+        shunt4.reg_bus = bus
+        self.assertEqual(shunt4.reg_bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.reg_shunts] == ['shunt3', 'shunt4'])
+        bus.add_reg_shunt(shunt4)
+        self.assertEqual(shunt4.reg_bus.name,bus.name)
+        self.assertTrue([x.name for x in bus.reg_shunts] == ['shunt3', 'shunt4'])
+        bus.remove_reg_shunt(shunt4)
+        self.assertEqual(shunt3.reg_bus.name,bus.name)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, shunt4)
+        self.assertTrue([x.name for x in bus.reg_shunts] == ['shunt3'])
+        shunt3.reg_bus = None
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, shunt3)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, shunt4)
+        self.assertTrue([x.name for x in bus.reg_shunts] == [])
+        self.assertFalse(bus.is_regulated_by_shunt())
+
+        # Batteries
+
+        # Var generators
+
+        # Disconnect all
+        bus = pf.Bus()
+        gen = pf.Generator()
+        branch = pf.Branch()
+        shunt = pf.Shunt()
+        bat = pf.Battery()
+        vargen = pf.VarGenerator()
+        load = pf.Load()
+        self.assertEqual(len(bus.generators),0)
+        self.assertEqual(len(bus.reg_generators),0)
+        self.assertEqual(len(bus.branches_k),0)
+        self.assertEqual(len(bus.branches_m),0)
+        self.assertEqual(len(bus.reg_trans),0)
+        self.assertEqual(len(bus.shunts),0)
+        self.assertEqual(len(bus.reg_shunts),0)
+        self.assertEqual(len(bus.batteries),0)
+        self.assertEqual(len(bus.var_generators),0)
+        self.assertEqual(len(bus.loads),0)
+        self.assertRaises(pf.BusError, lambda x: x.bus, gen)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, gen)
+        self.assertRaises(pf.BusError, lambda x: x.bus_k, branch)
+        self.assertRaises(pf.BusError, lambda x: x.bus_m, branch)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch)
+        self.assertRaises(pf.BusError, lambda x: x.bus, shunt)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, shunt)
+        self.assertRaises(pf.BusError, lambda x: x.bus, bat)
+        self.assertRaises(pf.BusError, lambda x: x.bus, vargen)
+        self.assertRaises(pf.BusError, lambda x: x.bus, load)
+        bus.add_generator(gen)
+        bus.add_reg_generator(gen)
+        bus.add_branch_k(branch)
+        bus.add_branch_m(branch)
+        bus.add_reg_tran(branch)
+        bus.add_shunt(shunt)
+        bus.add_reg_shunt(shunt)
+        bus.add_battery(bat)
+        bus.add_var_generator(vargen)
+        bus.add_load(load)
+        self.assertEqual(len(bus.generators),1)
+        self.assertEqual(len(bus.reg_generators),1)
+        self.assertEqual(len(bus.branches_k),1)
+        self.assertEqual(len(bus.branches_m),1)
+        self.assertEqual(len(bus.reg_trans),1)
+        self.assertEqual(len(bus.shunts),1)
+        self.assertEqual(len(bus.reg_shunts),1)
+        self.assertEqual(len(bus.batteries),1)
+        self.assertEqual(len(bus.var_generators),1)
+        self.assertEqual(len(bus.loads),1)
+        self.assertTrue(gen.bus.is_equal(bus))
+        self.assertTrue(gen.reg_bus.is_equal(bus))
+        self.assertTrue(branch.bus_k.is_equal(bus))
+        self.assertTrue(branch.bus_m.is_equal(bus))
+        self.assertTrue(branch.reg_bus.is_equal(bus))
+        self.assertTrue(shunt.bus.is_equal(bus))
+        self.assertTrue(shunt.reg_bus.is_equal(bus))
+        self.assertTrue(bat.bus.is_equal(bus))
+        self.assertTrue(vargen.bus.is_equal(bus))
+        self.assertTrue(load.bus.is_equal(bus))
+        
+        bus.remove_all_connections()
+
+        self.assertEqual(len(bus.generators),0)
+        self.assertEqual(len(bus.reg_generators),0)
+        self.assertEqual(len(bus.branches_k),0)
+        self.assertEqual(len(bus.branches_m),0)
+        self.assertEqual(len(bus.reg_trans),0)
+        self.assertEqual(len(bus.shunts),0)
+        self.assertEqual(len(bus.reg_shunts),0)
+        self.assertEqual(len(bus.batteries),0)
+        self.assertEqual(len(bus.var_generators),0)
+        self.assertEqual(len(bus.loads),0)
+        self.assertRaises(pf.BusError, lambda x: x.bus, gen)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, gen)
+        self.assertRaises(pf.BusError, lambda x: x.bus_k, branch)
+        self.assertRaises(pf.BusError, lambda x: x.bus_m, branch)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch)
+        self.assertRaises(pf.BusError, lambda x: x.bus, shunt)
+        self.assertRaises(pf.BusError, lambda x: x.reg_bus, shunt)
+        self.assertRaises(pf.BusError, lambda x: x.bus, bat)
+        self.assertRaises(pf.BusError, lambda x: x.bus, vargen)
+        self.assertRaises(pf.BusError, lambda x: x.bus, load)
+
+    def test_add_remove_buses(self):
+
+        for case in test_cases.CASES:
+
+            # Network
+            net = pf.Parser(case).parse(case, num_periods=2)
+            orig_net = net.get_copy()
+            
+            new_bus = [pf.Bus(num_periods=2), pf.Bus(num_periods=2)]
+            new_gen = [[],[]]
+            new_branch = [[],[]]
+            new_load = [[],[]]
+            new_bat = [[],[]]
+            new_vargen = [[],[]]
+            new_shunt = [[],[]]
+            for i in range(2):
+                for j in range(2):
+                    new_gen[i].append(pf.Generator(num_periods=2)) 
+                    new_branch[i].append(pf.Branch(num_periods=2))
+                    new_load[i].append(pf.Load(num_periods=2))
+                    new_shunt[i].append(pf.Shunt(num_periods=2))
+                    new_bat[i].append(pf.Battery(num_periods=2))
+                    new_vargen[i].append(pf.VarGenerator(num_periods=2))
+
+            v_mag = [np.random.randn(2), np.random.randn(2)]
+            v_ang = [np.random.randn(2), np.random.randn(2)]
+            maxnum = max([bus.number for bus in net.buses])
+            for i, bus in enumerate(new_bus):
+                bus.name = 'a new bus %d' %i
+                bus.number = maxnum+1+i
+                bus.v_mag = v_mag[i]
+                bus.v_ang = v_ang[i]
+
+            for i in range(2):
+                for j in range(2):
+                    new_bus[i].add_generator(new_gen[i][j])
+                    new_bus[i].add_reg_generator(new_gen[i][j])
+                    new_bus[i].add_branch_k(new_branch[i][j])
+                    net.buses[0].add_branch_m(new_branch[i][j])
+                    new_bus[i].add_reg_tran(new_branch[i][j])
+                    new_bus[i].add_load(new_load[i][j])
+                    new_bus[i].add_shunt(new_shunt[i][j])
+                    new_bus[i].add_reg_shunt(new_shunt[i][j])
+                    new_bus[i].add_battery(new_bat[i][j])
+                    new_bus[i].add_var_generator(new_vargen[i][j])
+
+            for i in range(2):
+                self.assertEqual(len(new_bus[i].generators),2)
+                self.assertEqual(len(new_bus[i].reg_generators),2)
+                self.assertEqual(len(new_bus[i].branches_k),2)
+                self.assertEqual(len(net.buses[0].branches_m), len(orig_net.buses[0].branches_m)+4)
+                self.assertEqual(len(new_bus[i].reg_trans),2)
+                self.assertEqual(len(new_bus[i].loads),2)
+                self.assertEqual(len(new_bus[i].shunts),2)
+                self.assertEqual(len(new_bus[i].reg_shunts),2)
+                self.assertEqual(len(new_bus[i].batteries),2)
+                self.assertEqual(len(new_bus[i].var_generators),2)
+
+            self.assertEqual(net.num_buses, orig_net.num_buses)
+
+            for i in range(2):
+                self.assertEqual(new_bus[i].index, -1)
+
+            # Add buses
+            net.add_buses(new_bus)
+
+            self.assertEqual(net.num_buses, orig_net.num_buses+2)
+
+            for i in range(2):
+                self.assertEqual(new_bus[i].index, orig_net.num_buses+i)
+
+            for i in range(2):
+                bus = net.get_bus(orig_net.num_buses+i)
+                for j in range(2):
+                    self.assertTrue(bus.generators[j].is_equal(new_gen[i][j]))
+                    self.assertTrue(bus.reg_generators[j].is_equal(new_gen[i][j]))
+                    self.assertTrue(bus.branches_k[j].is_equal(new_branch[i][j]))
+                    self.assertTrue(bus.reg_trans[j].is_equal(new_branch[i][j]))
+                    self.assertTrue(bus.shunts[j].is_equal(new_shunt[i][j]))
+                    self.assertTrue(bus.reg_shunts[j].is_equal(new_shunt[i][j]))
+                    self.assertTrue(bus.loads[j].is_equal(new_load[i][j]))
+                    self.assertTrue(bus.batteries[j].is_equal(new_bat[i][j]))
+                    self.assertTrue(bus.var_generators[j].is_equal(new_vargen[i][j]))
+
+            for i in range(orig_net.num_buses):
+                if i > 0:
+                    bus1 = orig_net.get_bus(i)
+                    bus2 = net.get_bus(i)
+                    pf.tests.utils.compare_buses(self, bus1, bus2, check_internals=True)
+
+            for i in range(2):
+                bus1 = net.get_bus(orig_net.num_buses+i)
+                bus2 = new_bus[i]
+                pf.tests.utils.compare_buses(self, bus1, bus2, check_internals=True)
+
+            for i in range(2):
+                self.assertTrue(np.all(net.get_bus(orig_net.num_buses+i).v_mag == v_mag[i]))
+                self.assertTrue(np.all(net.get_bus(orig_net.num_buses+i).v_ang == v_ang[i]))
+
+            for i in range(2):
+                self.assertEqual(net.get_bus(orig_net.num_buses+i).name, 'a new bus %d' %i)
+                self.assertEqual(net.get_bus(orig_net.num_buses+i).number, maxnum+1+i)
+
+            for bus in net.buses:
+                self.assertEqual(bus.number, net.get_bus_from_number(bus.number).number)
+                self.assertEqual(bus.name, net.get_bus_from_name(bus.name).name)
+                self.assertTrue(bus.is_equal(net.get_bus_from_number(bus.number)))
+
+            # Add all other components
+            for i in range(2):
+                for j in range(2):
+                    self.assertEqual(new_gen[i][j].index, -1)
+                    self.assertEqual(new_branch[i][j].index, -1)
+                    self.assertEqual(new_shunt[i][j].index, -1)
+                    self.assertEqual(new_load[i][j].index, -1)
+                    self.assertEqual(new_bat[i][j].index, -1)
+                    self.assertEqual(new_vargen[i][j].index, -1)
+            net.add_generators([new_gen[i][j] for j in range(2) for i in range(2)])
+            net.add_branches([new_branch[i][j] for j in range(2) for i in range(2)])
+            net.add_shunts([new_shunt[i][j] for j in range(2) for i in range(2)])
+            net.add_loads([new_load[i][j] for j in range(2) for i in range(2)])
+            net.add_batteries([new_bat[i][j] for j in range(2) for i in range(2)])
+            net.add_var_generators([new_vargen[i][j] for j in range(2) for i in range(2)])
+            self.assertEqual(orig_net.num_generators+4, net.num_generators)
+            self.assertEqual(orig_net.num_branches+4, net.num_branches)
+            self.assertEqual(orig_net.num_shunts+4, net.num_shunts)
+            self.assertEqual(orig_net.num_loads+4, net.num_loads)
+            self.assertEqual(orig_net.num_batteries+4, net.num_batteries)
+            self.assertEqual(orig_net.num_var_generators+4, net.num_var_generators)
+
+            for i in range(2):
+                bus = net.get_bus(orig_net.num_buses+i)
+                for j in range(2):
+                    self.assertTrue(bus.generators[j].is_equal(new_gen[i][j]))
+                    self.assertTrue(bus.reg_generators[j].is_equal(new_gen[i][j]))
+                    self.assertTrue(bus.branches_k[j].is_equal(new_branch[i][j]))
+                    self.assertTrue(bus.reg_trans[j].is_equal(new_branch[i][j]))
+                    self.assertTrue(bus.shunts[j].is_equal(new_shunt[i][j]))
+                    self.assertTrue(bus.reg_shunts[j].is_equal(new_shunt[i][j]))
+                    self.assertTrue(bus.loads[j].is_equal(new_load[i][j]))
+                    self.assertTrue(bus.batteries[j].is_equal(new_bat[i][j]))
+                    self.assertTrue(bus.var_generators[j].is_equal(new_vargen[i][j]))                    
+                
+            # Remove buses
+            foo_bus = pf.Bus()
+            foo_bus.name = 'foo_bus'
+            net.remove_buses([foo_bus]+new_bus)
+            self.assertEqual(foo_bus.name, 'foo_bus')
+
+            self.assertEqual(orig_net.num_buses, net.num_buses)
+            
+            for i in range(2):
+                for j in range(2):
+                    self.assertRaises(pf.BusError, lambda x: x.bus, new_gen[i][j])
+                    self.assertRaises(pf.BusError, lambda x: x.reg_bus, new_gen[i][j])
+                    self.assertRaises(pf.BusError, lambda x: x.bus_k, new_branch[i][j])
+                    self.assertRaises(pf.BusError, lambda x: x.reg_bus, new_branch[i][j])
+                    self.assertRaises(pf.BusError, lambda x: x.bus, new_load[i][j])
+                    self.assertRaises(pf.BusError, lambda x: x.bus, new_shunt[i][j])
+                    self.assertRaises(pf.BusError, lambda x: x.bus, new_bat[i][j])
+                    self.assertRaises(pf.BusError, lambda x: x.bus, new_vargen[i][j])
+
+            for bus in net.buses:
+                self.assertEqual(bus.number, net.get_bus_from_number(bus.number).number)
+                self.assertEqual(bus.name, net.get_bus_from_name(bus.name).name)
+                self.assertTrue(bus.is_equal(net.get_bus_from_number(bus.number)))
+
+            net.remove_generators([new_gen[i][j] for i in range(2) for j in range(2)])
+            net.remove_branches([new_branch[i][j] for i in range(2) for j in range(2)])
+            net.remove_loads([new_load[i][j] for i in range(2) for j in range(2)])
+            net.remove_shunts([new_shunt[i][j] for i in range(2) for j in range(2)])
+            net.remove_batteries([new_bat[i][j] for i in range(2) for j in range(2)])
+            net.remove_var_generators([new_vargen[i][j] for i in range(2) for j in range(2)])
+                            
+            self.assertEqual(orig_net.num_generators, net.num_generators)
+            self.assertEqual(orig_net.num_branches, net.num_branches)
+            self.assertEqual(orig_net.num_shunts, net.num_shunts)
+            self.assertEqual(orig_net.num_loads, net.num_loads)
+            self.assertEqual(orig_net.num_batteries, net.num_batteries)
+            self.assertEqual(orig_net.num_var_generators, net.num_var_generators)
+
+            for i in range(2):
+                self.assertEqual(new_bus[i].index,-1)
+                for j in range(2):
+                    self.assertEqual(new_gen[i][j].index,-1)
+                    self.assertEqual(new_branch[i][j].index,-1)
+                    self.assertEqual(new_load[i][j].index,-1)
+                    self.assertEqual(new_shunt[i][j].index,-1)
+                    self.assertEqual(new_vargen[i][j].index,-1)
+                    self.assertEqual(new_bat[i][j].index,-1)
+                
+            pf.tests.utils.compare_networks(self,
+                                            net,
+                                            orig_net,
+                                            check_internals=True)
+
+            # Add existing bus
+            bus1 = net.get_bus(0)
+            bus2 = pf.Bus()
+            net.add_buses([bus1,bus2])
+            self.assertEqual(net.num_buses, orig_net.num_buses+1)
+            self.assertEqual(bus2.index, orig_net.num_buses)
+            pf.tests.utils.compare_buses(self,
+                                         bus2,
+                                         net.buses[-1],
+                                         check_internals=True)
+                    
+    def test_add_remove_generators(self):
+        
+        for case in test_cases.CASES:
+
+            # Network
+            net = pf.Parser(case).parse(case, num_periods=2)            
+            orig_net = net.get_copy()
+
+            gen1 = pf.Generator(num_periods=2)
+            gen2 = pf.Generator(num_periods=2)
+
+            gen1.name = 'gen1'
+            gen2.name = 'gen2'
+
+            P1 = np.random.randn(2)
+            Q1 = np.random.randn(2)
+
+            P2 = np.random.randn(2)
+            Q2 = np.random.randn(2)
+
+            gen1.bus = net.buses[0]
+            gen1.reg_bus = net.buses[0]
+            gen1.P = P1
+            gen1.Q = Q1
+            
+            gen2.bus = net.buses[0]
+            gen2.reg_bus = net.buses[0]
+            gen2.P = P2
+            gen2.Q = Q2
+
+            self.assertEqual(gen1.index, -1)
+            self.assertEqual(gen2.index, -1)
+
+            # Add gens
+            net.add_generators([gen1,gen2])
+
+            self.assertEqual(net.num_generators, orig_net.num_generators+2)
+            for i in range(orig_net.num_generators):
+                pf.tests.utils.compare_generators(self,
+                                                  net.get_generator(i),
+                                                  orig_net.get_generator(i),
+                                                  check_internals=True)
+
+            self.assertEqual(gen1.index, orig_net.num_generators)
+            self.assertEqual(gen2.index, orig_net.num_generators+1)
+            self.assertEqual(net.get_generator(orig_net.num_generators).bus.index,0)
+            self.assertEqual(net.get_generator(orig_net.num_generators+1).bus.index,0)
+            self.assertTrue(np.all(net.get_generator(orig_net.num_generators).P == P1))
+            self.assertTrue(np.all(net.get_generator(orig_net.num_generators).Q == Q1))
+            self.assertTrue(np.all(net.get_generator(orig_net.num_generators+1).P == P2))
+            self.assertTrue(np.all(net.get_generator(orig_net.num_generators+1).Q == Q2))
+            pf.tests.utils.compare_generators(self,
+                                              net.get_generator(orig_net.num_generators),
+                                              gen1,
+                                              check_internals=True)
+            pf.tests.utils.compare_generators(self,
+                                              net.get_generator(orig_net.num_generators+1),
+                                              gen2,
+                                              check_internals=True)
+            self.assertTrue(net.get_generator(orig_net.num_generators) is not gen1)
+            self.assertTrue(net.get_generator(orig_net.num_generators).is_equal(gen1))
+            self.assertTrue(net.get_generator(orig_net.num_generators+1) is not gen2)
+            self.assertTrue(net.get_generator(orig_net.num_generators+1).is_equal(gen2))
+            self.assertTrue(net.get_generator(orig_net.num_generators).reg_bus.is_equal(net.buses[0]))
+            self.assertTrue(net.get_generator(orig_net.num_generators+1).reg_bus.is_equal(net.buses[0]))
+            self.assertTrue(net.buses[0].reg_generators[-1].is_equal(gen2))
+            self.assertTrue(net.buses[0].reg_generators[-2].is_equal(gen1))
+            self.assertEqual(len(orig_net.buses[0].generators)+2,
+                             len(net.buses[0].generators))
+            self.assertTrue('gen1' in [g.name for g in net.buses[0].generators])
+            self.assertTrue('gen2' in [g.name for g in net.buses[0].generators])
+            self.assertTrue(net.buses[0].is_regulated_by_gen())
+            self.assertTrue('gen1' in [g.name for g in net.buses[0].reg_generators])
+            self.assertTrue('gen2' in [g.name for g in net.buses[0].reg_generators])
+
+            for i in range(net.num_buses):
+                if i != 0:
+                    self.assertFalse(net.get_bus(i).is_equal(orig_net.get_bus(i)))
+                    pf.tests.utils.compare_buses(self,
+                                                 net.get_bus(i),
+                                                 orig_net.get_bus(i),
+                                                 check_internals=True)
+                    
+            # Remove gens
+            foo_gen = pf.Generator()
+            foo_gen.name = 'foo_gen'
+            net.remove_generators([foo_gen, gen1, gen2])
+            self.assertEqual(foo_gen.name, 'foo_gen')
+
+            self.assertEqual(net.num_generators, orig_net.num_generators)
+
+            self.assertEqual(gen1.index, -1)
+            self.assertRaises(pf.BusError, lambda g: g.bus, gen1)
+            self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen1)
+            self.assertEqual(gen2.index, -1)
+            self.assertRaises(pf.BusError, lambda g: g.bus, gen2)
+            self.assertRaises(pf.BusError, lambda g: g.reg_bus, gen2)
+
+            pf.tests.utils.compare_networks(self, net, orig_net, check_internals=True)
+
+            # Add existing gen
+            gen1 = net.get_generator(0)
+            gen2 = pf.Generator()
+            gen2.bus = net.buses[0]
+            net.add_generators([gen1,gen2])
+            self.assertEqual(net.num_generators, orig_net.num_generators+1)
+            self.assertEqual(gen2.index, orig_net.num_generators)
+            pf.tests.utils.compare_generators(self,
+                                              gen2,
+                                              net.generators[-1],
+                                              check_internals=True)
+
+    def test_add_remove_loads(self):
+        
+        for case in test_cases.CASES:
+
+            # Network
+            net = pf.Parser(case).parse(case, num_periods=2)            
+            orig_net = net.get_copy()
+
+            load1 = pf.Load(num_periods=2)
+            load2 = pf.Load(num_periods=2)
+
+            load1.name = 'load1'
+            load2.name = 'load2'
+
+            P1 = np.random.randn(2)
+            Q1 = np.random.randn(2)
+
+            P2 = np.random.randn(2)
+            Q2 = np.random.randn(2)
+
+            load1.bus = net.buses[0]
+            load1.P = P1
+            load1.Q = Q1
+            
+            load2.bus = net.buses[0]
+            load2.P = P2
+            load2.Q = Q2
+
+            self.assertEqual(load1.index, -1)
+            self.assertEqual(load2.index, -1)
+
+            # Add loads
+            net.add_loads([load1,load2])
+
+            self.assertEqual(net.num_loads, orig_net.num_loads+2)
+            for i in range(orig_net.num_loads):
+                pf.tests.utils.compare_loads(self,
+                                             net.get_load(i),
+                                             orig_net.get_load(i),
+                                             check_internals=True)
+
+            self.assertEqual(load1.index, orig_net.num_loads)
+            self.assertEqual(load2.index, orig_net.num_loads+1)
+            self.assertEqual(net.get_load(orig_net.num_loads).bus.index,0)
+            self.assertEqual(net.get_load(orig_net.num_loads+1).bus.index,0)
+            self.assertTrue(np.all(net.get_load(orig_net.num_loads).P == P1))
+            self.assertTrue(np.all(net.get_load(orig_net.num_loads).Q == Q1))
+            self.assertTrue(np.all(net.get_load(orig_net.num_loads+1).P == P2))
+            self.assertTrue(np.all(net.get_load(orig_net.num_loads+1).Q == Q2))
+            pf.tests.utils.compare_loads(self,
+                                         net.get_load(orig_net.num_loads),
+                                         load1,
+                                         check_internals=True)
+            pf.tests.utils.compare_loads(self,
+                                         net.get_load(orig_net.num_loads+1),
+                                         load2,
+                                         check_internals=True)
+            self.assertTrue(net.get_load(orig_net.num_loads) is not load1)
+            self.assertTrue(net.get_load(orig_net.num_loads).is_equal(load1))
+            self.assertTrue(net.get_load(orig_net.num_loads+1) is not load2)
+            self.assertTrue(net.get_load(orig_net.num_loads+1).is_equal(load2))
+            self.assertEqual(len(orig_net.buses[0].loads)+2,
+                             len(net.buses[0].loads))
+            self.assertTrue('load1' in [g.name for g in net.buses[0].loads])
+            self.assertTrue('load2' in [g.name for g in net.buses[0].loads])
+
+            for i in range(net.num_buses):
+                if i != 0:
+                    self.assertFalse(net.get_bus(i).is_equal(orig_net.get_bus(i)))
+                    pf.tests.utils.compare_buses(self,
+                                                 net.get_bus(i),
+                                                 orig_net.get_bus(i),
+                                                 check_internals=True)
+                    
+            # Remove load
+            del_load = net.loads[0]
+            foo_load = pf.Load()
+            foo_load.name = 'foo_load'
+            net.remove_loads([foo_load, del_load, load1, load2])
+            self.assertEqual(foo_load.name, 'foo_load')
+
+            self.assertEqual(net.num_loads, orig_net.num_loads-1)
+
+            for load in [del_load, load1, load2]:
+                self.assertEqual(load.index, -1)
+                self.assertRaises(pf.BusError, lambda l: l.bus, load)
+
+            for i in range(orig_net.num_loads):
+                if i != 0:
+                    load1 = net.get_load(i-1)
+                    load2 = orig_net.get_load(i)
+                    self.assertFalse(load1.is_equal(load2))
+                    pf.tests.utils.compare_loads(self, load1, load2, check_internals=True)
+
+            # Add existing load
+            net = orig_net.get_copy()
+            load1 = net.get_load(0)
+            load2 = pf.Load()
+            load2.bus = net.buses[0]
+            net.add_loads([load1,load2])
+            self.assertEqual(net.num_loads, orig_net.num_loads+1)
+            self.assertEqual(load2.index, orig_net.num_loads)
+            pf.tests.utils.compare_loads(self,
+                                         load2,
+                                         net.loads[-1],
+                                         check_internals=True)
+
+    def test_add_remove_shunts(self):
+        
+        for case in test_cases.CASES:
+
+            # Network
+            net = pf.Parser(case).parse(case, num_periods=2)            
+            orig_net = net.get_copy()
+
+            shunt1 = pf.Shunt(num_periods=2)
+            shunt2 = pf.Shunt(num_periods=2)
+
+            shunt1.name = 'shunt1'
+            shunt2.name = 'shunt2'
+
+            b1 = np.random.randn(2)
+            b2 = np.random.randn(2)
+
+            shunt1.bus = net.buses[0]
+            shunt1.reg_bus = net.buses[0]
+            shunt1.b = b1
+            
+            shunt2.bus = net.buses[0]
+            shunt2.reg_bus = net.buses[0]
+            shunt2.b = b2
+
+            self.assertEqual(shunt1.index, -1)
+            self.assertEqual(shunt2.index, -1)
+
+            # Add shunts
+            net.add_shunts([shunt1,shunt2])
+
+            self.assertEqual(net.num_shunts, orig_net.num_shunts+2)
+            for i in range(orig_net.num_shunts):
+                pf.tests.utils.compare_shunts(self,
+                                              net.get_shunt(i),
+                                              orig_net.get_shunt(i),
+                                              check_internals=True)
+
+            self.assertEqual(shunt1.index, orig_net.num_shunts)
+            self.assertEqual(shunt2.index, orig_net.num_shunts+1)
+            self.assertEqual(net.get_shunt(orig_net.num_shunts).bus.index,0)
+            self.assertEqual(net.get_shunt(orig_net.num_shunts+1).bus.index,0)
+            self.assertTrue(np.all(net.get_shunt(orig_net.num_shunts).b == b1))
+            self.assertTrue(np.all(net.get_shunt(orig_net.num_shunts+1).b == b2))
+            pf.tests.utils.compare_shunts(self,
+                                          net.get_shunt(orig_net.num_shunts),
+                                          shunt1,
+                                          check_internals=True)
+            pf.tests.utils.compare_shunts(self,
+                                          net.get_shunt(orig_net.num_shunts+1),
+                                          shunt2,
+                                          check_internals=True)
+            self.assertTrue(net.get_shunt(orig_net.num_shunts) is not shunt1)
+            self.assertTrue(net.get_shunt(orig_net.num_shunts).is_equal(shunt1))
+            self.assertTrue(net.get_shunt(orig_net.num_shunts+1) is not shunt2)
+            self.assertTrue(net.get_shunt(orig_net.num_shunts+1).is_equal(shunt2))
+            self.assertTrue(net.get_shunt(orig_net.num_shunts).reg_bus.is_equal(net.buses[0]))
+            self.assertTrue(net.get_shunt(orig_net.num_shunts+1).reg_bus.is_equal(net.buses[0]))
+            self.assertTrue(net.buses[0].reg_shunts[-1].is_equal(shunt2))
+            self.assertTrue(net.buses[0].reg_shunts[-2].is_equal(shunt1))
+            self.assertEqual(len(orig_net.buses[0].shunts)+2,
+                             len(net.buses[0].shunts))
+            self.assertTrue('shunt1' in [s.name for s in net.buses[0].shunts])
+            self.assertTrue('shunt2' in [s.name for s in net.buses[0].shunts])
+            self.assertTrue(net.buses[0].is_regulated_by_shunt())
+            self.assertTrue('shunt1' in [s.name for s in net.buses[0].reg_shunts])
+            self.assertTrue('shunt2' in [s.name for s in net.buses[0].reg_shunts])
+
+            for i in range(net.num_buses):
+                if i != 0:
+                    self.assertFalse(net.get_bus(i).is_equal(orig_net.get_bus(i)))
+                    pf.tests.utils.compare_buses(self,
+                                                 net.get_bus(i),
+                                                 orig_net.get_bus(i),
+                                                 check_internals=True)
+                    
+            # Remove shunts
+            foo_shunt = pf.Shunt()
+            foo_shunt.name = 'foo_shunt'
+            net.remove_shunts([foo_shunt, shunt2, shunt1])
+            self.assertEqual(foo_shunt.name, 'foo_shunt')
+
+            self.assertEqual(net.num_shunts, orig_net.num_shunts)
+
+            self.assertEqual(shunt1.index, -1)
+            self.assertRaises(pf.BusError, lambda s: s.bus, shunt1)
+            self.assertRaises(pf.BusError, lambda s: s.reg_bus, shunt1)
+            self.assertEqual(shunt2.index, -1)
+            self.assertRaises(pf.BusError, lambda s: s.bus, shunt2)
+            self.assertRaises(pf.BusError, lambda s: s.reg_bus, shunt2)
+
+            pf.tests.utils.compare_networks(self, net, orig_net, check_internals=True)
+
+            # Add existing shunt
+            if net.num_shunts > 0:
+                shunt1 = net.get_shunt(0)
+                shunt2 = pf.Shunt()
+                shunt2.bus = net.buses[0]
+                net.add_shunts([shunt1,shunt2])
+                self.assertEqual(net.num_shunts, orig_net.num_shunts+1)
+                self.assertEqual(shunt2.index, orig_net.num_shunts)
+                pf.tests.utils.compare_shunts(self,
+                                              shunt2,
+                                              net.shunts[-1],
+                                              check_internals=True)
+
+    def test_add_remove_branches(self):
+        
+        for case in test_cases.CASES:
+
+            # Network
+            net = pf.Parser(case).parse(case, num_periods=2)            
+            orig_net = net.get_copy()
+
+            branch1 = pf.Branch(num_periods=2)
+            branch2 = pf.Branch(num_periods=2)
+
+            branch1.name = 'branch1'
+            branch2.name = 'branch2'
+
+            ratio1 = np.random.randn(2)
+            phase1 = np.random.randn(2)
+
+            ratio2 = np.random.randn(2)
+            phase2 = np.random.randn(2)
+
+            branch1.bus_k = net.buses[0]
+            branch1.bus_m = net.buses[1]
+            branch1.reg_bus = net.buses[0]
+            branch1.ratio = ratio1
+            branch1.phase = phase1
+            
+            branch2.bus_k = net.buses[0]
+            branch2.bus_m = net.buses[1]
+            branch2.reg_bus = net.buses[0]
+            branch2.ratio = ratio2
+            branch2.phase = phase2
+
+            self.assertEqual(branch1.index, -1)
+            self.assertEqual(branch2.index, -1)
+
+            # Add branches
+            net.add_branches([branch1,branch2])
+
+            self.assertEqual(net.num_branches, orig_net.num_branches+2)
+            for i in range(orig_net.num_branches):
+                pf.tests.utils.compare_branches(self,
+                                                net.get_branch(i),
+                                                orig_net.get_branch(i),
+                                                check_internals=True)
+
+            self.assertEqual(branch1.index, orig_net.num_branches)
+            self.assertEqual(branch2.index, orig_net.num_branches+1)
+            self.assertEqual(net.get_branch(orig_net.num_branches).bus_k.index, 0)
+            self.assertEqual(net.get_branch(orig_net.num_branches).bus_m.index, 1)
+            self.assertEqual(net.get_branch(orig_net.num_branches+1).bus_k.index, 0)
+            self.assertEqual(net.get_branch(orig_net.num_branches+1).bus_m.index, 1)
+            self.assertTrue(np.all(net.get_branch(orig_net.num_branches).ratio == ratio1))
+            self.assertTrue(np.all(net.get_branch(orig_net.num_branches).phase == phase1))
+            self.assertTrue(np.all(net.get_branch(orig_net.num_branches+1).ratio == ratio2))
+            self.assertTrue(np.all(net.get_branch(orig_net.num_branches+1).phase == phase2))
+            pf.tests.utils.compare_branches(self,
+                                            net.get_branch(orig_net.num_branches),
+                                            branch1,
+                                            check_internals=True)
+            pf.tests.utils.compare_branches(self,
+                                            net.get_branch(orig_net.num_branches+1),
+                                            branch2,
+                                            check_internals=True)
+            self.assertTrue(net.get_branch(orig_net.num_branches) is not branch1)
+            self.assertTrue(net.get_branch(orig_net.num_branches).is_equal(branch1))
+            self.assertTrue(net.get_branch(orig_net.num_branches+1) is not branch2)
+            self.assertTrue(net.get_branch(orig_net.num_branches+1).is_equal(branch2))
+            self.assertTrue(net.get_branch(orig_net.num_branches).reg_bus.is_equal(net.buses[0]))
+            self.assertTrue(net.get_branch(orig_net.num_branches+1).reg_bus.is_equal(net.buses[0]))
+            self.assertTrue(net.buses[0].reg_trans[-1].is_equal(branch2))
+            self.assertTrue(net.buses[0].reg_trans[-2].is_equal(branch1))
+            self.assertEqual(len(orig_net.buses[0].branches)+2,
+                             len(net.buses[0].branches))
+            self.assertTrue('branch1' in [x.name for x in net.buses[0].branches])
+            self.assertTrue('branch2' in [x.name for x in net.buses[0].branches])
+            self.assertTrue('branch1' in [x.name for x in net.buses[1].branches])
+            self.assertTrue('branch2' in [x.name for x in net.buses[1].branches])
+            self.assertTrue(net.buses[0].is_regulated_by_tran())
+            self.assertTrue('branch1' in [x.name for x in net.buses[0].reg_trans])
+            self.assertTrue('branch2' in [x.name for x in net.buses[0].reg_trans])
+
+            for i in range(net.num_buses):
+                if i > 1:
+                    self.assertFalse(net.get_bus(i).is_equal(orig_net.get_bus(i)))
+                    pf.tests.utils.compare_buses(self,
+                                                 net.get_bus(i),
+                                                 orig_net.get_bus(i),
+                                                 check_internals=True)
+                    
+            # Remove branches
+            foo_branch = pf.Branch()
+            foo_branch.name = 'foo_branch'
+            net.remove_branches([foo_branch, branch1, branch2])
+            self.assertEqual(foo_branch.name, 'foo_branch')            
+
+            self.assertEqual(net.num_branches, orig_net.num_branches)
+
+            self.assertEqual(branch1.index, -1)
+            self.assertRaises(pf.BusError, lambda x: x.bus_k, branch1)
+            self.assertRaises(pf.BusError, lambda x: x.bus_m, branch1)
+            self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch1)
+            self.assertEqual(branch2.index, -1)
+            self.assertRaises(pf.BusError, lambda x: x.bus_k, branch2)
+            self.assertRaises(pf.BusError, lambda x: x.bus_m, branch2)
+            self.assertRaises(pf.BusError, lambda x: x.reg_bus, branch2)
+
+            pf.tests.utils.compare_networks(self, net, orig_net, check_internals=True)
+
+            # Add existing branch
+            branch1 = net.get_branch(0)
+            branch2 = pf.Branch()
+            branch2.bus_k = net.buses[0]
+            branch2.bus_m = net.buses[1]
+            net.add_branches([branch1,branch2])
+            self.assertEqual(net.num_branches, orig_net.num_branches+1)
+            self.assertEqual(branch2.index, orig_net.num_branches)
+            pf.tests.utils.compare_branches(self,
+                                            branch2,
+                                            net.branches[-1],
+                                            check_internals=True)
+
+    def test_add_remove_components_robustness(self):
+
+        for case in test_cases.CASES:
+            
+            net = pf.Parser(case).parse(case, num_periods=2)
+
+            bus1 = net.buses[0]
+            bus2 = net.buses[0]
+            net.remove_buses([bus1])
+            self.assertEqual(bus1.index, -1)
+            self.assertEqual(bus1.name, "")
+
+            gen1 = net.generators[0]
+            gen2 = net.generators[0]
+            net.remove_generators([gen1])
+            self.assertEqual(gen1.index, -1)
+            self.assertEqual(gen1.name, "")
+
+    def test_extract_subnetwork(self):
+        
+        for case in test_cases.CASES:
+
+            # Network
+            net = pf.Parser(case).parse(case, num_periods=2)
+
+            # Add vargens/batteries
+            net.add_var_generators_from_parameters(net.get_load_buses(),100.,50.,30.,5,0.05)
+            net.add_batteries_from_parameters(net.get_generator_buses(),20.,50.)
+            
+            orig_net = net.get_copy()
+
+            net1 = net.extract_subnetwork(net.buses)
+
+            pf.tests.utils.check_network(self, net1)
+            
+            pf.tests.utils.compare_networks(self, net, orig_net, check_internals=True)
+            pf.tests.utils.compare_networks(self, net1, net, check_internals=True)
+
+            keep = lambda x: x.number % 2 == 0
+            
+            even_buses = [bus for bus in net.buses if keep(bus)]
+            num_buses = len(even_buses)
+            num_gens = len([x for x in net.generators if keep(x.bus)])
+            num_loads = len([x for x in net.loads if keep(x.bus)])
+            num_shunts = len([x for x in net.shunts if keep(x.bus)])
+            num_bats = len([x for x in net.batteries if keep(x.bus)])
+            num_vargens = len([x for x in net.var_generators if keep(x.bus)])
+            num_branches = len([x for x in net.branches if keep(x.bus_k) and keep(x.bus_m)])            
+
+            net2 = net.extract_subnetwork(even_buses)
+
+            self.assertEqual(net2.num_buses, num_buses)
+            self.assertEqual(net2.num_loads, num_loads)
+            self.assertEqual(net2.num_generators, num_gens)
+            self.assertEqual(net2.num_branches, num_branches)
+            self.assertEqual(net2.num_shunts, num_shunts)
+            self.assertEqual(net2.num_batteries, num_bats)
+            self.assertEqual(net2.num_var_generators, num_vargens)
+            
+            pf.tests.utils.compare_networks(self, net, orig_net, check_internals=True)
+            pf.tests.utils.check_network(self, net2)
+
+            for bus in net2.buses:
+                self.assertTrue(keep(bus))
+            for gen in net2.generators:
+                self.assertTrue(keep(gen.bus))
+                if gen.is_regulator():
+                    self.assertTrue(keep(gen.reg_bus))
+            for load in net2.loads:
+                self.assertTrue(keep(load.bus))
+            for shunt in net2.shunts:
+                self.assertTrue(keep(shunt.bus))
+                if shunt.is_switched_v():
+                    self.assertTrue(keep(shunt.reg_bus))
+            for br in net2.branches:
+                self.assertTrue(keep(br.bus_k) and keep(br.bus_m))
+                if br.is_tap_changer_v():
+                    self.assertTrue(keep(br.reg_bus))
+            for bat in net2.batteries:
+                self.assertTrue(keep(bat.bus))
+            for vargen in net2.var_generators:
+                self.assertTrue(keep(vargen.bus))
             
     def tearDown(self):
 

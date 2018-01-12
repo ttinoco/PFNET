@@ -20,10 +20,37 @@ cdef extern from "pfnet/net.h":
 
     ctypedef struct Net
     ctypedef struct Bus
+    ctypedef struct Gen
+    ctypedef struct Load
+    ctypedef struct Shunt
+    ctypedef struct Branch
+    ctypedef struct Bat
+    ctypedef struct Vargen
     ctypedef double REAL
- 
-    void NET_add_vargens(Net* net, cbus.Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value)
-    void NET_add_batteries(Net* net, cbus.Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d)        
+
+    void NET_add_buses(Net* net, cbus.Bus** br_ptr_array, int size)
+    void NET_del_buses(Net* net, cbus.Bus** br_ptr_array, int size)
+
+    void NET_add_branches(Net* net, cbranch.Branch** br_ptr_array, int size)
+    void NET_del_branches(Net* net, cbranch.Branch** br_ptr_array, int size)
+
+    void NET_add_gens(Net* net, cgen.Gen** gen_ptr_array, int size)
+    void NET_del_gens(Net* net, cgen.Gen** gen_ptr_array, int size)
+
+    void NET_add_loads(Net* net, cload.Load** load_ptr_array, int size)
+    void NET_del_loads(Net* net, cload.Load** load_ptr_array, int size)
+
+    void NET_add_shunts(Net* net, cshunt.Shunt** shunt_ptr_array, int size)
+    void NET_del_shunts(Net* net, cshunt.Shunt** shunt_ptr_array, int size)
+
+    void NET_add_bats(Net* net, cbat.Bat** bat_ptr_array, int size)
+    void NET_del_bats(Net* net, cbat.Bat** bat_ptr_array, int size)
+
+    void NET_add_vargens(Net* net, cvargen.Vargen** vargen_ptr_array, int size)
+    void NET_del_vargens(Net* net, cvargen.Vargen** vargen_ptr_array, int size)
+
+    void NET_add_vargens_from_params(Net* net, cbus.Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value)
+    void NET_add_batteries_from_params(Net* net, cbus.Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d)        
     void NET_adjust_generators(Net* net)
     cbus.Bus* NET_bus_hash_number_find(Net* net, int number)
     cbus.Bus* NET_bus_hash_name_find(Net* net, char* name)
@@ -36,6 +63,7 @@ cdef extern from "pfnet/net.h":
     cmat.Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr)
     void NET_copy_from_net(Net* net, Net* other_net)
     void NET_del(Net* net)
+    Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size)
     Net* NET_get_copy(Net* net)
     REAL NET_get_base_power(Net* net)
     char* NET_get_error_string(Net* net)

@@ -574,8 +574,8 @@ class TestParser(unittest.TestCase):
             self.assertEqual(net.num_vars,net.num_buses*T)
             
             # Add vargens and betteries
-            net.add_var_generators(net.get_load_buses(),100.,50.,30.,5,0.05)
-            net.add_batteries(net.get_generator_buses(),20.,50.)
+            net.add_var_generators_from_parameters(net.get_load_buses(),100.,50.,30.,5,0.05)
+            net.add_batteries_from_parameters(net.get_generator_buses(),20.,50.)
             
             # Some perturbations to reduce luck
             for bus in net.buses:

@@ -73,6 +73,7 @@ void BAT_array_del(Bat* bat_array, int size) {
       free(bat->index_Pc);
       free(bat->index_Pd);
       free(bat->index_E);
+      BAT_set_bus(bat,NULL);
     }
     free(bat_array);
   }  
@@ -91,6 +92,10 @@ Bat* BAT_array_new(int size, int num_periods) {
   }
   else
     return NULL;
+}
+
+BOOL BAT_is_equal(Bat* bat, Bat* other) {
+  return bat == other;
 }
 
 void BAT_array_show(Bat* bat_array, int size, int t) { 
@@ -604,7 +609,7 @@ void BAT_init(Bat* bat, int num_periods) {
   bat->eta_c = 1.;
   bat->eta_d = 1.;
   
-  bat->index = 0;
+  bat->index = -1;
 
   ARRAY_zalloc(bat->P,REAL,T);
   ARRAY_zalloc(bat->E,REAL,T);
@@ -617,6 +622,11 @@ void BAT_init(Bat* bat, int num_periods) {
 
 Bat* BAT_list_add(Bat* bat_list, Bat* bat) {
   LIST_add(Bat,bat_list,bat,next);
+  return bat_list;
+}
+
+Bat* BAT_list_del(Bat* bat_list, Bat* bat) {
+  LIST_del(Bat,bat_list,bat,next);
   return bat_list;
 }
 
@@ -641,9 +651,15 @@ void BAT_set_name(Bat* bat, char* name) {
     strncpy(bat->name,name,(size_t)(BAT_BUFFER_SIZE-1));
 }
 
-void BAT_set_bus(Bat* bat, Bus* bus) { 
-  if (bat)
-    bat->bus = (Bus*)bus;
+void BAT_set_bus(Bat* bat, Bus* bus) {
+  Bus* old_bus;
+  if (bat) {
+    old_bus = bat->bus;
+    bat->bus = NULL;
+    BUS_del_bat(old_bus,bat);
+    bat->bus = bus;
+    BUS_add_bat(bat->bus,bat);
+  }
 }
 
 void BAT_set_index(Bat* bat, int index) { 

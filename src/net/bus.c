@@ -90,78 +90,188 @@ struct Bus {
 };
 
 void BUS_add_gen(Bus* bus, Gen* gen) {
-  if (bus)
+  if (bus) {
     bus->gen = GEN_list_add(bus->gen,gen);
+    if (GEN_get_bus(gen) != bus)
+      GEN_set_bus(gen,bus);
+  }
 }
 
 void BUS_del_gen(Bus* bus, Gen* gen) {
-  if (bus)
+  if (bus) {
     bus->gen = GEN_list_del(bus->gen,gen);
+    if (GEN_get_bus(gen) == bus)
+      GEN_set_bus(gen,NULL);
+  }
 }
 
 void BUS_add_load(Bus* bus, Load* load) {
-  if (bus)
+  if (bus) {
     bus->load = LOAD_list_add(bus->load,load);
+    if (LOAD_get_bus(load) != bus)
+      LOAD_set_bus(load,bus);
+  }
+}
+
+void BUS_del_load(Bus* bus, Load* load) {
+  if (bus) {
+    bus->load = LOAD_list_del(bus->load,load);
+    if (LOAD_get_bus(load) == bus)
+      LOAD_set_bus(load,NULL);
+  }
 }
 
 void BUS_add_reg_gen(Bus* bus, Gen* reg_gen) {
-  if (bus)
+  if (bus) {
     bus->reg_gen = GEN_list_reg_add(bus->reg_gen,reg_gen);
+    if (GEN_get_reg_bus(reg_gen) != bus)
+      GEN_set_reg_bus(reg_gen,bus);
+  }
 }
 
 void BUS_del_reg_gen(Bus* bus, Gen* reg_gen) {
-  if (bus)
+  if (bus) {
     bus->reg_gen = GEN_list_reg_del(bus->reg_gen,reg_gen);
+    if (GEN_get_reg_bus(reg_gen) == bus)
+      GEN_set_reg_bus(reg_gen,NULL);
+  }
 }
 
 void BUS_add_reg_tran(Bus* bus, Branch* reg_tran) {
-  if (bus)
+  if (bus) {
     bus->reg_tran = BRANCH_list_reg_add(bus->reg_tran,reg_tran);
+    if (BRANCH_get_reg_bus(reg_tran) != bus)
+      BRANCH_set_reg_bus(reg_tran,bus);
+  }
 }
 
 void BUS_del_reg_tran(Bus* bus, Branch* reg_tran) {
-  if (bus)
+  if (bus) {
     bus->reg_tran = BRANCH_list_reg_del(bus->reg_tran,reg_tran);
+    if (BRANCH_get_reg_bus(reg_tran) == bus)
+      BRANCH_set_reg_bus(reg_tran,NULL);
+  }
 }
 
 void BUS_add_shunt(Bus* bus, Shunt* shunt) {
-  if (bus)
+  if (bus) {
     bus->shunt = SHUNT_list_add(bus->shunt,shunt);
+    if (SHUNT_get_bus(shunt) != bus)
+      SHUNT_set_bus(shunt,bus);
+  }
+}
+
+void BUS_del_shunt(Bus* bus, Shunt* shunt) {
+  if (bus) {
+    bus->shunt = SHUNT_list_del(bus->shunt,shunt);
+    if (SHUNT_get_bus(shunt) == bus)
+      SHUNT_set_bus(shunt,NULL);
+  }
 }
 
 void BUS_add_reg_shunt(Bus* bus, Shunt* reg_shunt) {
-  if (bus)
+  if (bus) {
     bus->reg_shunt = SHUNT_list_reg_add(bus->reg_shunt,reg_shunt);
+    if (SHUNT_get_reg_bus(reg_shunt) != bus)
+      SHUNT_set_reg_bus(reg_shunt,bus);
+  }
+}
+
+void BUS_del_reg_shunt(Bus* bus, Shunt* reg_shunt) {
+  if (bus) {
+    bus->reg_shunt = SHUNT_list_reg_del(bus->reg_shunt,reg_shunt);
+    if (SHUNT_get_reg_bus(reg_shunt) == bus)
+      SHUNT_set_reg_bus(reg_shunt,NULL);
+  }
 }
 
 void BUS_add_branch_k(Bus* bus, Branch* branch) {
-  if (bus)
+  if (bus) {
     bus->branch_k = BRANCH_list_k_add(bus->branch_k,branch);
+    if (BRANCH_get_bus_k(branch) != bus)
+      BRANCH_set_bus_k(branch,bus);
+  }
 }
 
 void BUS_del_branch_k(Bus* bus, Branch* branch) {
-  if (bus)
+  if (bus) {
     bus->branch_k = BRANCH_list_k_del(bus->branch_k,branch);
+    if (BRANCH_get_bus_k(branch) == bus)
+      BRANCH_set_bus_k(branch,NULL);
+  }
 }
 
 void BUS_add_branch_m(Bus* bus, Branch* branch) {
-  if (bus)
+  if (bus) {
     bus->branch_m = BRANCH_list_m_add(bus->branch_m,branch);
+    if (BRANCH_get_bus_m(branch) != bus)
+      BRANCH_set_bus_m(branch,bus);
+  }
 }
 
 void BUS_del_branch_m(Bus* bus, Branch* branch) {
-  if (bus)
+  if (bus) {
     bus->branch_m = BRANCH_list_m_del(bus->branch_m,branch);
+    if (BRANCH_get_bus_m(branch) == bus)
+      BRANCH_set_bus_m(branch,NULL);
+  }
 }
 
 void BUS_add_vargen(Bus* bus, Vargen* gen) {
-  if (bus)
+  if (bus) {
     bus->vargen = VARGEN_list_add(bus->vargen,gen);
+    if (VARGEN_get_bus(gen) != bus)
+      VARGEN_set_bus(gen,bus);
+  }
+}
+
+void BUS_del_vargen(Bus* bus, Vargen* gen) {
+  if (bus) {
+    bus->vargen = VARGEN_list_del(bus->vargen,gen);
+    if (VARGEN_get_bus(gen) == bus)
+      VARGEN_set_bus(gen,NULL);
+  }
 }
 
 void BUS_add_bat(Bus* bus, Bat* bat) {
-  if (bus)
+  if (bus) {
     bus->bat = BAT_list_add(bus->bat,bat);
+    if (BAT_get_bus(bat) != bus)
+      BAT_set_bus(bat,bus);
+  }
+}
+
+void BUS_del_bat(Bus* bus, Bat* bat) {
+  if (bus) {
+    bus->bat = BAT_list_del(bus->bat,bat);
+    if (BAT_get_bus(bat) == bus)
+      BAT_set_bus(bat,NULL);
+  }
+}
+
+void BUS_del_all_connections(Bus* bus) {
+  if (bus) {
+    while (bus->gen)
+      BUS_del_gen(bus,bus->gen);
+    while (bus->reg_gen)
+      BUS_del_reg_gen(bus,bus->reg_gen);
+    while (bus->load)
+      BUS_del_load(bus,bus->load);
+    while (bus->shunt)
+      BUS_del_shunt(bus,bus->shunt);
+    while (bus->reg_shunt)
+      BUS_del_reg_shunt(bus,bus->reg_shunt);
+    while (bus->branch_k)
+      BUS_del_branch_k(bus,bus->branch_k);
+    while (bus->branch_m)
+      BUS_del_branch_m(bus,bus->branch_m);
+    while (bus->reg_tran)
+      BUS_del_reg_tran(bus,bus->reg_tran);
+    while (bus->vargen)
+      BUS_del_vargen(bus,bus->vargen);
+    while (bus->bat)
+      BUS_del_bat(bus,bus->bat);    
+  }
 }
 
 BOOL BUS_array_check(Bus* bus_array, int size, BOOL verbose) {
@@ -197,6 +307,7 @@ void BUS_array_del(Bus* bus_array, int size) {
       free(bus->sens_v_reg_by_shunt);
       free(bus->P_mis);
       free(bus->Q_mis);
+      BUS_del_all_connections(bus);
     }
     free(bus_array);
   }
@@ -334,16 +445,6 @@ void BUS_clear_mismatches(Bus* bus) {
       bus->Q_mis[t] = 0;
     }
   }
-}
-
-void BUS_clear_vargen(Bus* bus) {
-  if (bus)
-    bus->vargen = NULL;
-}
-
-void BUS_clear_bat(Bus* bus) {
-  if (bus)
-    bus->bat = NULL;
 }
 
 void BUS_copy_from_bus(Bus* bus, Bus* other) {
@@ -1439,7 +1540,7 @@ void BUS_init(Bus* bus, int num_periods) {
 
   bus->v_base = 0.;
 
-  bus->index = 0;
+  bus->index = -1;
 
   bus->v_max_reg = BUS_DEFAULT_V_MAX;
   bus->v_min_reg = BUS_DEFAULT_V_MIN;
@@ -1511,21 +1612,21 @@ BOOL BUS_is_equal(Bus* bus, Bus* other) {
 
 BOOL BUS_is_regulated_by_gen(Bus* bus) {
   if (bus)
-    return GEN_is_regulator(bus->reg_gen);
+    return bus->reg_gen != NULL;
   else
     return FALSE;
 }
 
 BOOL BUS_is_regulated_by_tran(Bus* bus) {
   if (bus)
-    return BRANCH_is_tap_changer_v(bus->reg_tran);
+    return bus->reg_tran != NULL;
   else
     return FALSE;
 }
 
 BOOL BUS_is_regulated_by_shunt(Bus* bus) {
   if (bus)
-    return SHUNT_is_switched_v(bus->reg_shunt);
+    return bus->reg_shunt != NULL;
   else
     return FALSE;
 }

@@ -112,6 +112,9 @@ void BRANCH_array_del(Branch* br_array, int size) {
       free(br->sens_phase_u_bound);
       free(br->sens_phase_l_bound);
       free(br->sens_i_mag_u_bound);
+      BRANCH_set_bus_k(br,NULL);
+      BRANCH_set_bus_m(br,NULL);
+      BRANCH_set_reg_bus(br,NULL);
     }
     free(br_array);
   }
@@ -1327,7 +1330,7 @@ void BRANCH_init(Branch* br, int num_periods) {
   br->bounded = 0x00;
   br->sparse = 0x00;
 
-  br->index = 0;
+  br->index = -1;
 
   ARRAY_zalloc(br->ratio,REAL,T);
   ARRAY_zalloc(br->phase,REAL,T);
@@ -1513,18 +1516,40 @@ void BRANCH_set_type(Branch* br, int type) {
 }
 
 void BRANCH_set_bus_k(Branch* br, Bus* bus_k) {
-  if (br)
+  Bus* old_bus_k;
+  if (br) {
+    old_bus_k = br->bus_k;
+    br->bus_k = NULL;
+    BUS_del_branch_k(old_bus_k,br);
     br->bus_k = bus_k;
+    BUS_add_branch_k(br->bus_k,br);
+  }
 }
 
 void BRANCH_set_bus_m(Branch* br, Bus* bus_m) {
-  if (br)
+  Bus* old_bus_m;
+  if (br) {
+    old_bus_m = br->bus_m;
+    br->bus_m = NULL;
+    BUS_del_branch_m(old_bus_m,br);
     br->bus_m = bus_m;
+    BUS_add_branch_m(br->bus_m,br);
+  }
 }
 
 void BRANCH_set_reg_bus(Branch* br, Bus* reg_bus) {
-  if (br)
+  Bus* old_reg_bus;
+  if (br) {
+    old_reg_bus = br->reg_bus;
+    br->reg_bus = NULL;
+    BUS_del_reg_tran(old_reg_bus,br);
     br->reg_bus = reg_bus;
+    BUS_add_reg_tran(br->reg_bus,br);
+    if (reg_bus)
+      br->type = BRANCH_TYPE_TRAN_TAP_V;
+    else if (br->type == BRANCH_TYPE_TRAN_TAP_V)
+      br->type = BRANCH_TYPE_TRAN_FIXED;
+  }
 }
 
 void BRANCH_set_g(Branch* br, REAL g) {

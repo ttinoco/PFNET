@@ -26,6 +26,7 @@ cdef class ConstraintBase:
 
     cdef cconstr.Constr* _c_constr
     cdef bint _alloc
+    cdef Network _net
 
     def __init__(self):
         """
@@ -38,6 +39,7 @@ cdef class ConstraintBase:
 
         self._c_constr = NULL
         self._alloc = False
+        self._net = None
 
     def __dealloc__(self):
         """
@@ -48,6 +50,7 @@ cdef class ConstraintBase:
             cconstr.CONSTR_del(self._c_constr)
             self._c_constr = NULL
             self._alloc = False
+            self._net = None
 
     def allocate_H_array(self, size):
         """
@@ -408,6 +411,40 @@ cdef class ConstraintBase:
                                                     <cconstr.REAL*>(data.data))
         cconstr.CONSTR_set_J(self._c_constr,m)
 
+    def set_parameter(self, key, value):
+        """
+        Sets constraint parameter.
+
+        Parameters
+        ----------
+        key : string
+        value : object
+        """
+
+        cdef void* cvalue = NULL
+        cdef np.ndarray[double, mode='c'] a
+        key = key.encode('UTF-8')
+
+        # int
+
+        # float
+        
+        # ndarray
+        if issubclass(type(value), np.ndarray):
+            a = value
+            cvalue = <void*>a.data
+
+        # Unknown
+        if cvalue == NULL:
+            raise ConstraintError('invalid value type')
+
+        # Set parameter
+        cconstr.CONSTR_set_parameter(self._c_constr, key, cvalue)
+        
+        # Error
+        if cconstr.CONSTR_has_error(self._c_constr):
+            raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
+        
     property name:
         """ Constraint name (string). """
         def __get__(self): return cconstr.CONSTR_get_name(self._c_constr).decode('UTF-8')
@@ -570,8 +607,10 @@ cdef class Constraint(ConstraintBase):
         elif name == "load constant power factor":
             self._c_constr = cconstr.CONSTR_LOAD_PF_new(net._c_net)
         else:
-            raise ConstraintError('invalid constraint name')            
+            raise ConstraintError('invalid constraint name')
+        
         self._alloc = True
+        self._net = net
 
 cdef class CustomConstraint(ConstraintBase):
 

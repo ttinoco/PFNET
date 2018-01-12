@@ -10,7 +10,7 @@ import pfnet as pf
 import unittest
 from . import test_cases
 import numpy as np
-from scipy.sparse import coo_matrix,triu,tril
+from scipy.sparse import coo_matrix,triu,tril,spdiags
 
 NUM_TRIALS = 25
 EPS = 5. # %
@@ -160,6 +160,194 @@ class TestFunctions(unittest.TestCase):
                     phi += 0.5*(((bus.v_mag[t]-bus.v_set[t])/dv)**2.)
             self.assertLess(np.abs(func.phi-phi),1e-10*(func.phi+1))
 
+    def test_func_REG_VAR(self):
+
+        # Constants
+        h = 1e-8
+
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+
+            net.add_var_generators_from_parameters(net.get_load_buses(),80.,50.,30.,5,0.05)
+            net.add_batteries_from_parameters(net.get_generator_buses(),20.,40.,0.8,0.9)
+            self.assertGreater(net.num_var_generators,0)
+            self.assertGreater(net.num_batteries,0)
+            
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          ['active power', 'reactive power'])
+            net.set_flags('variable generator',
+                          'variable',
+                          'any',
+                          ['active power', 'reactive power'])
+            net.set_flags('load',
+                          'variable',
+                          'any',
+                          ['active power', 'reactive power'])
+            net.set_flags('battery',
+                          'variable',
+                          'any',
+                          ['charging power', 'energy level'])
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+            net.set_flags('shunt',
+                          'variable',
+                          'switching - v',
+                          'susceptance')
+            
+            self.assertEqual(net.num_vars,
+                             (net.num_buses*2+
+                              net.num_generators*2+
+                              net.num_var_generators*2+
+                              net.num_batteries*3+
+                              net.num_loads*2+
+                              net.get_num_phase_shifters()+
+                              net.get_num_tap_changers()+
+                              net.get_num_switched_shunts())*self.T)
+
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+
+            # Perturbation
+            net.set_var_values(x0 + np.random.randn(x0.size))
+            x0 = net.get_var_values()
+
+            # Function
+            func = pf.Function('variable regularization',1.,net)
+
+            self.assertEqual(func.name,'variable regularization')
+
+            self.assertTupleEqual(func.gphi.shape,(0,))
+            self.assertTupleEqual(func.Hphi.shape,(0,0))
+
+            f = func.phi
+            g = func.gphi
+            H = func.Hphi
+
+            # Before
+            self.assertTrue(type(f) is float)
+            self.assertEqual(f,0.)
+            self.assertTrue(type(g) is np.ndarray)
+            self.assertTupleEqual(g.shape,(0,))
+            self.assertTrue(type(H) is coo_matrix)
+            self.assertTupleEqual(H.shape,(0,0))
+            self.assertEqual(H.nnz,0)
+
+            self.assertEqual(func.Hphi_nnz,0)
+
+            func.analyze()
+            self.assertEqual(func.Hphi_nnz,net.num_vars)
+            func.eval(x0)
+            self.assertEqual(func.Hphi_nnz,0)
+
+            f = func.phi
+            g = func.gphi
+            H = func.Hphi
+
+            # After
+            self.assertTrue(type(f) is float)
+            self.assertGreaterEqual(f,0.)
+            self.assertTrue(type(g) is np.ndarray)
+            self.assertTupleEqual(g.shape,(net.num_vars,))
+            self.assertTrue(type(H) is coo_matrix)
+            self.assertTupleEqual(H.shape,(net.num_vars,net.num_vars))
+            self.assertEqual(H.nnz,net.num_vars)
+            self.assertTrue(np.all(H.row == H.col))
+
+            self.assertTrue(not np.any(np.isinf(g)))
+            self.assertTrue(not np.any(np.isnan(g)))
+            self.assertTrue(not np.any(np.isinf(H.data)))
+            self.assertTrue(not np.any(np.isnan(H.data)))
+
+            self.assertEqual(f, 0.)
+            self.assertTrue(np.all(g == 0.))
+            self.assertTrue(np.all(H.data == 0.))
+
+            # Set parameter
+            xc = np.random.randn(net.num_vars)
+            w = np.random.randn(net.num_vars)
+
+            self.assertRaises(pf.FunctionError, func.set_parameter, 'foo', w)
+            func.clear_error()
+            self.assertRaises(pf.FunctionError, func.set_parameter, 'w', ['foo'])
+            func.clear_error()
+            
+            func.set_parameter('w',w)
+            func.set_parameter('x0',xc)
+
+            func.analyze()
+
+            # Value
+            func.eval(x0)
+            phi = np.dot(np.multiply(x0-xc, w), x0-xc)
+            self.assertLess(np.abs(func.phi-phi),1e-10*(np.abs(func.phi)+1))
+
+            # Gradient check
+            func.eval(x0)
+            f0 = func.phi
+            g0 = func.gphi.copy()
+            for i in range(NUM_TRIALS):
+                
+                d = np.random.randn(net.num_vars)
+
+                x = x0 + h*d
+
+                func.eval(x)
+                f1 = func.phi
+
+                gd_exact = np.dot(g0,d)
+                gd_approx = (f1-f0)/h
+                if np.linalg.norm(gd_exact) == 0.:
+                    self.assertLessEqual(np.linalg.norm(gd_approx),2.)
+                else:
+                    error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
+                    self.assertLessEqual(error,EPS)
+
+            # One more gradient check
+            self.assertLess(np.linalg.norm(2.*np.multiply(x0-xc,w)-func.gphi),
+                            1e-8*(np.linalg.norm(func.gphi)+1.))
+
+            # Hessian check
+            func.eval(x0)
+            g0 = func.gphi.copy()
+            H0 = func.Hphi.copy()
+            for i in range(NUM_TRIALS):
+
+                d = np.random.randn(net.num_vars)
+
+                x = x0 + h*d
+
+                func.eval(x)
+
+                g1 = func.gphi.copy()
+
+                Hd_exact = H0*d
+                Hd_approx = (g1-g0)/h
+                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
+                self.assertLessEqual(error,EPS)
+
+            # One more Hessian check
+            Href = spdiags(2.*w,0,net.num_vars,net.num_vars)
+            dH = (Href-H0).tocoo()
+            self.assertLess(np.linalg.norm(dH.data),
+                            1e-8*(np.linalg.norm(H0.data)+1.))
+            
     def test_func_REG_PQ(self):
 
         # Constants
@@ -1664,7 +1852,7 @@ class TestFunctions(unittest.TestCase):
                 bus.price = (bus.index%10)*0.5123
 
             # vargens
-            net.add_var_generators(net.get_load_buses(),80.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(net.get_load_buses(),80.,50.,30.,5,0.05)
             for vargen in net.var_generators:
                 vargen.P = (vargen.index%10)*0.3233+0.1
 
@@ -1837,7 +2025,7 @@ class TestFunctions(unittest.TestCase):
                 bus.price = np.random.rand(self.T)*10.
 
             # vargens
-            net.add_var_generators(net.get_load_buses(),80.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(net.get_load_buses(),80.,50.,30.,5,0.05)
             for vargen in net.var_generators:
                 self.assertEqual(vargen.num_periods,self.T)
                 vargen.P = np.random.randn(self.T)*10.

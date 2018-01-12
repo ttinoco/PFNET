@@ -30,6 +30,7 @@ cdef class Load:
     """
 
     cdef cload.Load* _c_ptr
+    cdef bint alloc
 
     def __init__(self, num_periods=1, alloc=True):
         """
@@ -49,10 +50,35 @@ cdef class Load:
             self._c_ptr = cload.LOAD_new(num_periods)
         else:
             self._c_ptr = NULL
+        self.alloc = alloc
+
+    def __dealloc__(self):
+
+        if self.alloc:
+            cload.LOAD_array_del(self._c_ptr,1)
+            self._c_ptr = NULL    
 
     def _get_c_ptr(self):
 
         return new_CPtr(self._c_ptr)
+
+    def is_equal(self, other):
+        """
+        Determines whether load is equal to given load.
+
+        Parameters
+        ----------
+        other : |Load|
+        """
+
+        cdef Load l_other
+
+        if not isinstance(other,Load):
+            return False
+
+        l_other = other
+
+        return cload.LOAD_is_equal(self._c_ptr, l_other._c_ptr)
 
     def is_P_adjustable(self):
         """
@@ -199,10 +225,10 @@ cdef class Load:
             return new_Bus(cload.LOAD_get_bus(self._c_ptr))
         def __set__(self,bus):
             cdef Bus cbus
-            if not isinstance(bus,Bus):
+            if not isinstance(bus,Bus) and bus is not None:
                 raise LoadError('Not a Bus type object')
             cbus = bus
-            cload.LOAD_set_bus(self._c_ptr,cbus._c_ptr)
+            cload.LOAD_set_bus(self._c_ptr,cbus._c_ptr if bus is not None else NULL)
 
     property P:
         """ Load active power (p.u. system base MVA) (float or |Array|). """

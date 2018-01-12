@@ -12,6 +12,21 @@ Unreleased
 ----------
 * Improved gen Q participation to look exactly at which Qs are vars to add correct number of constraints.
 * Q_min=Q_max safeguards for net.adjust_generators().
+* Added support for changing function and constraint parameters (CONSTR_set_parameter, FUNC_set_parameter).
+* Added "variable regularization" function or FUNC_REG_VAR, which has parameters w and x0 and computes (x-x0)^Tdiag(w)(x-x0).
+* Symmetric connectors/removers for all bus-connected components (connecting A to B also connects B to A).
+* Exposed all obj.set_bus and bus.add/remove_obj routines in Python, and made "obj.bus = None" disconnect obj from bus.
+* Renamed add_batteries/add_var_generators to add_battery_from_parameters/add_var_generators_from_parameters.
+* Added net routines for adding and removing generators from the network.
+* Added net routines for adding and removing loads from the network.
+* Added net routines for adding and removing shunts from the network.
+* Added net routines for adding and removing branches from the network.
+* Added net routines for adding and removing buses from the network.
+* Added net routines for adding and removing batteries from the network.
+* Added net routines for adding and removing var generators from the network.
+* Added net routine for extracting subnetwork containing a specific set of buses.
+* Extended problem.show() to show number of vars and constraints of each type.
+* Fix bug involving problem/constraint/function's network going out of scope in Python.
 
 Version 1.3.2
 -------------

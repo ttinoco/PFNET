@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -60,7 +60,7 @@ void FUNC_REG_VMAG_count_step(Func* f, Branch* br, int t) {
   // Num periods
   T = BRANCH_get_num_periods(br);
 
-  // Constr data
+  // Func data
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
   bus_counted = FUNC_get_bus_counted(f);
 
@@ -128,7 +128,7 @@ void FUNC_REG_VMAG_analyze_step(Func* f, Branch* br, int t) {
   // Num periods
   T = BRANCH_get_num_periods(br);
 
-  // Constr data
+  // Func data
   H = FUNC_get_Hphi(f);
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
   bus_counted = FUNC_get_bus_counted(f);
@@ -186,7 +186,7 @@ void FUNC_REG_VMAG_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   // Num periods
   T = BRANCH_get_num_periods(br);
 
-  // Constr data
+  // Func data
   phi = FUNC_get_phi_ptr(f);
   gphi = VEC_get_data(FUNC_get_gphi(f));
   bus_counted = FUNC_get_bus_counted(f);

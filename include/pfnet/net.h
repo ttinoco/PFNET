@@ -41,8 +41,30 @@ typedef struct Net Net;
 /** @brief Adjust generator powers to obtain correct participations without affecting total injections. */
 void NET_adjust_generators(Net* net);
 
-void NET_add_vargens(Net* net, Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value);
-void NET_add_batteries(Net* net, Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d);
+void NET_add_buses(Net* net, Bus** bus_ptr_array, int size);
+void NET_del_buses(Net* net, Bus** bus_ptr_array, int size);
+
+void NET_add_branches(Net* net, Branch** br_ptr_array, int size);
+void NET_del_branches(Net* net, Branch** br_ptr_array, int size);
+
+void NET_add_gens(Net* net, Gen** gen_ptr_array, int size);
+void NET_del_gens(Net* net, Gen** gen_ptr_array, int size);
+
+void NET_add_loads(Net* net, Load** load_ptr_array, int size);
+void NET_del_loads(Net* net, Load** load_ptr_array, int size);
+
+void NET_add_shunts(Net* net, Shunt** shunt_ptr_array, int size);
+void NET_del_shunts(Net* net, Shunt** shunt_ptr_array, int size);
+
+void NET_add_bats(Net* net, Bat** bat_ptr_array, int size);
+void NET_del_bats(Net* net, Bat** bat_ptr_array, int size);
+
+void NET_add_vargens(Net* net, Vargen** vargen_ptr_array, int size);
+void NET_del_vargens(Net* net, Vargen** vargen_ptr_array, int size);
+
+void NET_add_vargens_from_params(Net* net, Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value);
+void NET_add_batteries_from_params(Net* net, Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d);
+
 void NET_bus_hash_number_add(Net* net, Bus* bus);
 Bus* NET_bus_hash_number_find(Net* net, int number);
 void NET_bus_hash_name_add(Net* net, Bus* bus);
@@ -58,6 +80,7 @@ Bus* NET_create_sorted_bus_list(Net* net, int sort_by, int t);
 Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr);
 void NET_copy_from_net(Net* net, Net* other);
 void NET_del(Net* net);
+Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size);
 void NET_init(Net* net, int num_periods);
 Net* NET_get_copy(Net* net);
 int NET_get_bus_neighbors(Net* net, Bus* bus, int spread, int* neighbors, char* queued);
@@ -165,5 +188,6 @@ void NET_show_buses(Net* net, int number, int sort_by, int t);
 void NET_update_properties_step(Net* net, Branch* br, int t, Vec* values);
 void NET_update_properties(Net* net, Vec* values);
 void NET_update_set_points(Net* net);
+void NET_update_hash_tables(Net* net);
 
 #endif

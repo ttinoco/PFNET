@@ -86,6 +86,8 @@ void GEN_array_del(Gen* gen_array, int size) {
       free(gen->sens_P_l_bound);
       free(gen->sens_Q_u_bound);
       free(gen->sens_Q_l_bound);
+      GEN_set_bus(gen,NULL);
+      GEN_set_reg_bus(gen,NULL);
     }
     free(gen_array);
   }  
@@ -716,7 +718,7 @@ void GEN_init(Gen* gen, int num_periods) {
   gen->cost_coeff_Q1 = 2000.;
   gen->cost_coeff_Q2 = 100.;
   
-  gen->index = 0;
+  gen->index = -1;
 
   ARRAY_zalloc(gen->P,REAL,T);
   ARRAY_zalloc(gen->Q,REAL,T);
@@ -846,13 +848,25 @@ void GEN_set_cost_coeff_Q2(Gen* gen, REAL q) {
 }
 
 void GEN_set_bus(Gen* gen, Bus* bus) {
-  if (gen)
-    gen->bus = bus;
+  Bus* old_bus;
+  if (gen) {
+    old_bus = gen->bus;        // save old bus
+    gen->bus = NULL;           // disconnect old bus from gen
+    BUS_del_gen(old_bus,gen);  // disconnect gen from old bus
+    gen->bus = bus;            // connect new bus to gen
+    BUS_add_gen(bus,gen);      // connect gen to new bus
+  }
 }
 
 void GEN_set_reg_bus(Gen* gen, Bus* reg_bus) {
-  if (gen)
+  Bus* old_reg_bus;
+  if (gen) {
+    old_reg_bus = gen->reg_bus;
+    gen->reg_bus = NULL;
+    BUS_del_reg_gen(old_reg_bus,gen);
     gen->reg_bus = reg_bus;
+    BUS_add_reg_gen(gen->reg_bus,gen);
+  }
 }
 
 void GEN_set_outage(Gen* gen, BOOL outage) {

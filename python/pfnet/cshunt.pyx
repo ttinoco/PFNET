@@ -26,6 +26,7 @@ cdef class Shunt:
     """
 
     cdef cshunt.Shunt* _c_ptr
+    cdef bint alloc
 
     def __init__(self, num_periods=1, alloc=True):
         """
@@ -45,10 +46,35 @@ cdef class Shunt:
             self._c_ptr = cshunt.SHUNT_new(num_periods)
         else:
             self._c_ptr = NULL
+        self.alloc = alloc
+
+    def __dealloc__(self):
+
+        if self.alloc:
+            cshunt.SHUNT_array_del(self._c_ptr,1)
+            self._c_ptr = NULL
 
     def _get_c_ptr(self):
 
         return new_CPtr(self._c_ptr)
+
+    def is_equal(self, other):
+        """
+        Determines whether shunt is equal to given shunt.
+
+        Parameters
+        ----------
+        other : |Shunt|
+        """
+
+        cdef Shunt s_other
+
+        if not isinstance(other,Shunt):
+            return False
+
+        s_other = other
+
+        return cshunt.SHUNT_is_equal(self._c_ptr, s_other._c_ptr)
 
     def is_fixed(self):
         """
@@ -163,10 +189,10 @@ cdef class Shunt:
             return new_Bus(cshunt.SHUNT_get_bus(self._c_ptr))
         def __set__(self,bus):
             cdef Bus cbus
-            if not isinstance(bus,Bus):
+            if not isinstance(bus,Bus) and bus is not None:
                 raise ShuntError('Not a Bus type object')
             cbus = bus
-            cshunt.SHUNT_set_bus(self._c_ptr,cbus._c_ptr)
+            cshunt.SHUNT_set_bus(self._c_ptr,cbus._c_ptr if bus is not None else NULL)
 
     property reg_bus:
         """ |Bus| whose voltage magnitude is regulated by this shunt device. """
@@ -174,10 +200,10 @@ cdef class Shunt:
             return new_Bus(cshunt.SHUNT_get_reg_bus(self._c_ptr))
         def __set__(self,bus):
             cdef Bus creg_bus
-            if not isinstance(bus,Bus):
+            if not isinstance(bus,Bus) and bus is not None:
                 raise ShuntError('Not a Bus type object')
             creg_bus = bus
-            cshunt.SHUNT_set_reg_bus(self._c_ptr,creg_bus._c_ptr)
+            cshunt.SHUNT_set_reg_bus(self._c_ptr,creg_bus._c_ptr if bus is not None else NULL)
             
     property g:
         """ Shunt conductance (p.u.) (float). """

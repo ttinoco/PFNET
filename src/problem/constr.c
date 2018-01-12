@@ -72,6 +72,7 @@ struct Constr {
   void (*func_store_sens_step)(Constr* c, Branch* br, int t,
 			       Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);    /**< @brief Func. for storing sensitivities */
   void (*func_free)(Constr* c);                                          /**< @brief Function for de-allocating any data used */
+  void (*func_set_parameter)(Constr* c, char* key, void* value);         /**< @brief Function for setting constraint parameter */
 
   // Type data
   void* data; /**< @brief Type-dependent constraint data structure */
@@ -792,6 +793,7 @@ Constr* CONSTR_new(Net* net) {
   c->func_eval_step = NULL;
   c->func_store_sens_step = NULL;
   c->func_free = NULL;
+  c->func_set_parameter = NULL;
   
   // Data
   c->data = NULL;
@@ -800,6 +802,18 @@ Constr* CONSTR_new(Net* net) {
   CONSTR_update_network(c);
   
   return c;
+}
+
+void CONSTR_set_parameter(Constr* c, char* key, void* value) {
+  if (c) {
+    if (c->func_set_parameter)
+      (*(c->func_set_parameter))(c, key, value);
+    else {
+      sprintf(c->error_string,"constraint does not support setting parameters");
+      c->error_flag = TRUE;
+      return;
+    }
+  }
 }
 
 void CONSTR_set_name(Constr* c, char* name) {
@@ -1249,4 +1263,9 @@ void CONSTR_set_func_store_sens_step(Constr* c, void (*func)(Constr* c, Branch* 
 void CONSTR_set_func_free(Constr* c, void (*func)(Constr* c)) {
   if (c)
     c->func_free = func;
+}
+
+void CONSTR_set_func_set_parameter(Constr* c, void (*func)(Constr* c, char* key, void* value)) {
+  if (c)
+    c->func_set_parameter = func;
 }

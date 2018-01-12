@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -189,6 +189,13 @@ void CONSTR_FIX_count_step(Constr* c, Branch* br, int t) {
 	// Active power (P)
 	if (LOAD_has_flags(load,FLAG_FIXED,LOAD_VAR_P) &&
 	    LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
+	  (*A_nnz)++;
+	  (*A_row)++;
+	}
+
+	// Reactive power (Q)
+	if (LOAD_has_flags(load,FLAG_FIXED,LOAD_VAR_Q) &&
+	    LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) {
 	  (*A_nnz)++;
 	  (*A_row)++;
 	}
@@ -457,6 +464,17 @@ void CONSTR_FIX_analyze_step(Constr* c, Branch* br, int t) {
 	  VEC_set(b,*A_row,LOAD_get_P(load,t));
 	  MAT_set_i(A,*A_nnz,*A_row);
 	  MAT_set_j(A,*A_nnz,LOAD_get_index_P(load,t));
+	  MAT_set_d(A,*A_nnz,1.);
+	  (*A_nnz)++;
+	  (*A_row)++;
+	}
+
+	// Reactive power (Q)
+	if (LOAD_has_flags(load,FLAG_FIXED,LOAD_VAR_Q) &&
+	    LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) {
+	  VEC_set(b,*A_row,LOAD_get_Q(load,t));
+	  MAT_set_i(A,*A_nnz,*A_row);
+	  MAT_set_j(A,*A_nnz,LOAD_get_index_Q(load,t));
 	  MAT_set_d(A,*A_nnz,1.);
 	  (*A_nnz)++;
 	  (*A_row)++;

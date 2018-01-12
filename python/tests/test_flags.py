@@ -25,10 +25,10 @@ class TestFlags(unittest.TestCase):
             self.assertEqual(net.num_periods,1)
 
             # add vargens
-            net.add_var_generators(net.get_generator_buses(),80.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(net.get_generator_buses(),80.,50.,30.,5,0.05)
 
             # add batteries
-            net.add_batteries(net.get_generator_buses(),20.,50.)            
+            net.add_batteries_from_parameters(net.get_generator_buses(),20.,50.)            
 
             # loads
             lcount = 0
@@ -268,7 +268,7 @@ class TestFlags(unittest.TestCase):
             self.assertEqual(net.num_periods,1)
 
             # add vargens
-            net.add_var_generators(net.get_generator_buses(),80.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(net.get_generator_buses(),80.,50.,30.,5,0.05)
             for vargen in net.var_generators:
                 vargen.P = np.random.rand()
                 vargen.Q = np.random.rand()
@@ -452,7 +452,7 @@ class TestFlags(unittest.TestCase):
             net = pf.Parser(case).parse(case)
             self.assertEqual(net.num_periods,1)
 
-            net.add_var_generators(net.get_generator_buses(),80.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(net.get_generator_buses(),80.,50.,30.,5,0.05)
 
             self.assertEqual(net.num_fixed,0)
 
@@ -562,7 +562,7 @@ class TestFlags(unittest.TestCase):
             self.assertEqual(net.num_periods,1)
 
             # add vargens
-            net.add_var_generators(net.get_generator_buses(),80.,50.,30.,5,0.05)
+            net.add_var_generators_from_parameters(net.get_generator_buses(),80.,50.,30.,5,0.05)
             self.assertGreater(net.num_var_generators,0)
 
             self.assertEqual(net.num_vars,0)
@@ -742,8 +742,8 @@ class TestFlags(unittest.TestCase):
             self.assertEqual(net.num_periods,T)
 
             # Add vargens and batteries
-            net.add_var_generators(net.get_generator_buses(),80.,50.,30.,5,0.05)
-            net.add_batteries(net.get_generator_buses(),20.,50.)
+            net.add_var_generators_from_parameters(net.get_generator_buses(),80.,50.,30.,5,0.05)
+            net.add_batteries_from_parameters(net.get_generator_buses(),20.,50.)
             self.assertGreaterEqual(net.num_var_generators,1)
             self.assertGreaterEqual(net.num_batteries,1)
 

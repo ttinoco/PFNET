@@ -72,6 +72,8 @@ void SHUNT_array_del(Shunt* shunt_array, int size) {
       free(shunt->index_b);
       free(shunt->sens_b_u_bound);
       free(shunt->sens_b_l_bound);
+      SHUNT_set_bus(shunt,NULL);
+      SHUNT_set_reg_bus(shunt,NULL);
     }
     free(shunt_array);
   }
@@ -537,7 +539,7 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
   shunt->fixed = 0x00;
   shunt->bounded = 0x00;
   shunt->sparse = 0x00;
-  shunt->index = 0;
+  shunt->index = -1;
 
   ARRAY_zalloc(shunt->b,REAL,T);
   ARRAY_zalloc(shunt->index_b,int,T);
@@ -546,6 +548,10 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
 
   shunt->next = NULL;
   shunt->reg_next = NULL;
+}
+
+BOOL SHUNT_is_equal(Shunt* shunt, Shunt* other) {
+  return shunt == other;
 }
 
 BOOL SHUNT_is_fixed(Shunt* shunt) {
@@ -571,6 +577,11 @@ Shunt* SHUNT_list_add(Shunt* shunt_list, Shunt* shunt) {
   return shunt_list;
 }
 
+Shunt* SHUNT_list_del(Shunt* shunt_list, Shunt* shunt) {
+  LIST_del(Shunt,shunt_list,shunt,next);
+  return shunt_list;
+}
+
 int SHUNT_list_len(Shunt* shunt_list) {
   int len;
   LIST_len(Shunt,shunt_list,next,len);
@@ -579,6 +590,11 @@ int SHUNT_list_len(Shunt* shunt_list) {
 
 Shunt* SHUNT_list_reg_add(Shunt* reg_shunt_list, Shunt* reg_shunt) {
   LIST_add(Shunt,reg_shunt_list,reg_shunt,reg_next);
+  return reg_shunt_list;
+}
+
+Shunt* SHUNT_list_reg_del(Shunt* reg_shunt_list, Shunt* reg_shunt) {
+  LIST_del(Shunt,reg_shunt_list,reg_shunt,reg_next);
   return reg_shunt_list;
 }
 
@@ -613,14 +629,26 @@ void SHUNT_set_name(Shunt* shunt, char* name) {
     strncpy(shunt->name,name,(size_t)(SHUNT_BUFFER_SIZE-1));
 }
 
-void SHUNT_set_bus(Shunt* shunt, Bus* bus) { 
-  if (shunt)
-    shunt->bus = (Bus*)bus;
+void SHUNT_set_bus(Shunt* shunt, Bus* bus) {
+  Bus* old_bus;
+  if (shunt) {
+    old_bus = shunt->bus;
+    shunt->bus = NULL;
+    BUS_del_shunt(old_bus,shunt);
+    shunt->bus = bus;
+    BUS_add_shunt(shunt->bus,shunt);
+  }
 }
 
-void SHUNT_set_reg_bus(Shunt* shunt, Bus* reg_bus) { 
-  if (shunt)
-    shunt->reg_bus = (Bus*)reg_bus;
+void SHUNT_set_reg_bus(Shunt* shunt, Bus* reg_bus) {
+  Bus* old_reg_bus;
+  if (shunt) {
+    old_reg_bus = shunt->reg_bus;
+    shunt->reg_bus = NULL;
+    BUS_del_reg_shunt(old_reg_bus,shunt);
+    shunt->reg_bus = reg_bus;
+    BUS_add_reg_shunt(shunt->reg_bus,shunt);
+  }
 }
 
 void SHUNT_set_index(Shunt* shunt, int index) { 

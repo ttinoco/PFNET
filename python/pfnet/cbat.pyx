@@ -27,6 +27,7 @@ cdef class Battery:
     """
 
     cdef cbat.Bat* _c_ptr
+    cdef bint alloc
 
     def __init__(self, num_periods=1, alloc=True):
         """
@@ -45,6 +46,13 @@ cdef class Battery:
         if alloc:
             self._c_ptr = cbat.BAT_new(num_periods)
         else:
+            self._c_ptr = NULL
+        self.alloc = alloc
+
+    def __dealloc__(self):
+
+        if self.alloc:
+            cbat.BAT_array_del(self._c_ptr,1)
             self._c_ptr = NULL
 
     def _get_c_ptr(self):
@@ -92,6 +100,28 @@ cdef class Battery:
         return cbat.BAT_has_flags(self._c_ptr,
                                   str2flag[flag_type],
                                   reduce(lambda x,y: x|y,[str2q[self.obj_type][qq] for qq in q],0))
+
+    def is_equal(self, other):
+        """
+        Determines whether the battery is equal to given battery.
+
+        Parameters
+        ----------
+        other : |Battery|
+
+        Returns
+        -------
+        flag : |TrueFalse|
+        """
+
+        cdef Battery b_other
+
+        if not isinstance(other,Battery):
+            return False
+
+        b_other = other
+
+        return cbat.BAT_is_equal(self._c_ptr,b_other._c_ptr)
 
     def set_P(self, P, t=0):
         """
@@ -170,10 +200,10 @@ cdef class Battery:
             return new_Bus(cbat.BAT_get_bus(self._c_ptr))
         def __set__(self, bus):
             cdef Bus cbus
-            if not isinstance(bus,Bus):
+            if not isinstance(bus,Bus) and bus is not None:
                 raise BatteryError('Not a Bus type object')
             cbus = bus
-            cbat.BAT_set_bus(self._c_ptr,cbus._c_ptr)
+            cbat.BAT_set_bus(self._c_ptr,cbus._c_ptr if bus is not None else NULL)
 
     property P:
         """ Battery charging power (p.u. system base MVA) (float or |Array|). """

@@ -98,6 +98,7 @@ void BUS_del_gen(Bus* bus, Gen* gen);
 
 /** @brief Adds load to list of loads connected to bus. */
 void BUS_add_load(Bus* bus, Load* load);
+void BUS_del_load(Bus* bus, Load* load);
 
 /** @brief Adds generator to list of generators regulating bus voltage. */
 void BUS_add_reg_gen(Bus* bus, Gen* reg_gen);
@@ -109,15 +110,19 @@ void BUS_del_reg_tran(Bus* bus, Branch* reg_tran);
 
 /** @brief Adds switched shunt to list of shunts regulating bus voltage. */
 void BUS_add_reg_shunt(Bus* bus, Shunt* reg_shunt);
+void BUS_del_reg_shunt(Bus* bus, Shunt* reg_shunt);
 
 /** @brief Adds shunt to list of shunts connected to bus. */
 void BUS_add_shunt(Bus* bus, Shunt* shunt);
+void BUS_del_shunt(Bus* bus, Shunt* shunt);
 
 /** @brief Adds variable generator to list of variable generators connected to bus. */
 void BUS_add_vargen(Bus* bus, Vargen* gen);
+void BUS_del_vargen(Bus* bus, Vargen* gen);
 
 /** @brief Adds battery to list of batteries connected to bus. */
 void BUS_add_bat(Bus* bus, Bat* bat);
+void BUS_del_bat(Bus* bus, Bat* bat);
 
 /** @brief Adds branch to list of branches connected at "k" bus. */
 void BUS_add_branch_k(Bus* bus, Branch* branch);
@@ -131,6 +136,8 @@ void BUS_add_branch_m(Bus* bus, Branch* branch);
 /** @brief Deletes branch from list of branches connected at "m" bus. */
 void BUS_del_branch_m(Bus* bus, Branch* branch);
 
+void BUS_del_all_connections(Bus* bus);
+
 void BUS_array_del(Bus* bus_array, int size);
 BOOL BUS_array_check(Bus* bus_array, int size, BOOL verbose);
 void* BUS_array_get(void* bus_array, int index);
@@ -141,8 +148,6 @@ BOOL BUS_check(Bus* bus, BOOL verbose);
 void BUS_clear_flags(Bus* bus, char flag_type);
 void BUS_clear_sensitivities(Bus* bus);
 void BUS_clear_mismatches(Bus* bus);
-void BUS_clear_vargen(Bus* bus);
-void BUS_clear_bat(Bus* bus);
 void BUS_copy_from_bus(Bus* bus, Bus* other);
 
 char BUS_get_flags_vars(Bus* bus);

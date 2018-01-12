@@ -113,6 +113,7 @@ problem_func_src = 	problem/func/func_GEN_COST.c \
 			problem/func/func_REG_SUSC.c  \
 			problem/func/func_REG_VANG.c  \
 			problem/func/func_REG_VMAG.c  \
+			problem/func/func_REG_VAR.c  \
 			problem/func/func_SLIM_VMAG.c  \
 			problem/func/func_SP_CONTROLS.c
 
@@ -125,6 +126,7 @@ problem_func_hdr = 	$(inc_path)/func_GEN_COST.h \
 			$(inc_path)/func_REG_SUSC.h \
 			$(inc_path)/func_REG_VANG.h \
 			$(inc_path)/func_REG_VMAG.h \
+			$(inc_path)/func_REG_VAR.h \
 			$(inc_path)/func_SLIM_VMAG.h \
 			$(inc_path)/func_SP_CONTROLS.h
 

@@ -25,7 +25,7 @@ import tempfile
 
 from scipy.sparse import coo_matrix
 
-from libc.stdlib cimport free
+from libc.stdlib cimport free, malloc
 
 np.import_array()
 

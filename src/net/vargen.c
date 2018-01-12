@@ -71,6 +71,7 @@ void VARGEN_array_del(Vargen* gen_array, int size) {
       free(gen->Q);
       free(gen->index_P);
       free(gen->index_Q);
+      VARGEN_set_bus(gen,NULL);
     }
     free(gen_array);
   }  
@@ -551,7 +552,8 @@ void VARGEN_init(Vargen* gen, int num_periods) {
   gen->P_min = 0;
   gen->Q_max = 0;
   gen->Q_min = 0;
-  gen->index = 0;
+  
+  gen->index = -1;
 
   gen->P = NULL;
   gen->P_ava = NULL;
@@ -584,8 +586,17 @@ BOOL VARGEN_is_solar(Vargen* gen) {
     return FALSE;
 }
 
+BOOL VARGEN_is_equal(Vargen* gen, Vargen* other) {
+  return gen == other;
+}
+
 Vargen* VARGEN_list_add(Vargen* gen_list, Vargen* gen) {
   LIST_add(Vargen,gen_list,gen,next);
+  return gen_list;
+}
+
+Vargen* VARGEN_list_del(Vargen* gen_list, Vargen* gen) {
+  LIST_del(Vargen,gen_list,gen,next);
   return gen_list;
 }
 
@@ -611,8 +622,14 @@ void VARGEN_set_name(Vargen* gen, char* name) {
 }
 
 void VARGEN_set_bus(Vargen* gen, Bus* bus) {
-  if (gen)
-    gen->bus = (Bus*)bus;
+  Bus* old_bus;
+  if (gen) {
+    old_bus = gen->bus;
+    gen->bus = NULL;
+    BUS_del_vargen(old_bus,gen);
+    gen->bus = bus;
+    BUS_add_vargen(gen->bus,gen);
+  }
 }
 
 void VARGEN_set_index(Vargen* gen, int index) {
