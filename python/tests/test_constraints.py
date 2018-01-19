@@ -533,7 +533,8 @@ class TestConstraints(unittest.TestCase):
             for load in net.loads:
                 load.P_min = -2.4*(load.index+1)
                 load.P_max = 3.3*(load.index+1)
-                load.Q = 3.5*load.index
+                load.Q_min = 1.2*(load.index+2.)
+                load.Q_max = 5.8*(load.index+3.)
                 
             # Vars
             net.set_flags('bus',
@@ -859,8 +860,8 @@ class TestConstraints(unittest.TestCase):
                 self.assertTrue(load.has_flags('bounded',['active power','reactive power']))
                 self.assertEqual(u[load.index_P],load.P_max)
                 self.assertEqual(l[load.index_P],load.P_min)
-                self.assertEqual(u[load.index_Q],pf.LOAD_INF_Q)
-                self.assertEqual(l[load.index_Q],-pf.LOAD_INF_Q)
+                self.assertEqual(u[load.index_Q],load.Q_max)
+                self.assertEqual(l[load.index_Q],load.Q_min)
 
             for vargen in net.var_generators:
                 self.assertTrue(vargen.has_flags('bounded',['active power','reactive power']))
@@ -1017,6 +1018,8 @@ class TestConstraints(unittest.TestCase):
                 load.P_min = -2.4*(load.index+1)*np.array(range(net.num_periods))
                 load.P_max = 3.3*(load.index+1)*np.array(range(net.num_periods))
                 load.Q = 3.5*load.index*np.array(range(net.num_periods))
+                load.Q_min = 1.2*(load.index+1)*np.array(range(net.num_periods))
+                load.Q_max = 7.5*(load.index+1)*np.array(range(net.num_periods))
 
             # Vars
             net.set_flags('bus',
@@ -1274,8 +1277,8 @@ class TestConstraints(unittest.TestCase):
                     self.assertEqual(l[load.index_P[t]],load.P_min[t])
                     self.assertEqual(u[load.index_P[t]],3.3*(load.index+1)*t)
                     self.assertEqual(l[load.index_P[t]],-2.4*(load.index+1)*t)
-                    self.assertEqual(u[load.index_Q[t]],pf.LOAD_INF_Q)
-                    self.assertEqual(l[load.index_Q[t]],-pf.LOAD_INF_Q)
+                    self.assertEqual(u[load.index_Q[t]],7.5*(load.index+1)*t)
+                    self.assertEqual(l[load.index_Q[t]],1.2*(load.index+1)*t)
                 for shunt in net.shunts:
                     if shunt.is_switched_v():
                         self.assertEqual(u[shunt.index_b[t]],shunt.b_max)

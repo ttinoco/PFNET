@@ -291,8 +291,14 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
 	  MAT_set_i(G,index,index);
 	  MAT_set_j(G,index,index);
 	  MAT_set_d(G,index,1.);
-	  VEC_set(u,index,LOAD_INF_Q);
-	  VEC_set(l,index,-LOAD_INF_Q);
+	  if (LOAD_has_flags(load,FLAG_BOUNDED,LOAD_VAR_Q)) {
+	    VEC_set(u,index,LOAD_get_Q_max(load,t));
+	    VEC_set(l,index,LOAD_get_Q_min(load,t));
+	  }
+	  else {
+	    VEC_set(u,index,LOAD_INF_Q);
+	    VEC_set(l,index,-LOAD_INF_Q);
+	  }
 
 	  // Row info
 	  CONSTR_set_G_row_info_string(c,

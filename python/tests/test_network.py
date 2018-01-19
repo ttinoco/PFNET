@@ -1234,6 +1234,14 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(load.P_min,-1.23)
                 self.assertEqual(load.P_max,2123.)
 
+                # Q limits
+                self.assertEqual(load.Q,load.Q_max)
+                self.assertEqual(load.Q,load.Q_min)
+                load.Q_min = -1.25
+                load.Q_max = 2125.
+                self.assertEqual(load.Q_min,-1.25)
+                self.assertEqual(load.Q_max,2125.)
+
                 # P, Q
                 load.P = 0.3241
                 load.Q = 0.1212
@@ -1313,13 +1321,27 @@ class TestNetwork(unittest.TestCase):
                 load.Q = x
                 for t in range(self.T):
                     self.assertEqual(load.Q[t],x[t])
+                x = np.random.randn(self.T)
+                load.Q_max = x
+                for t in range(self.T):
+                    self.assertEqual(load.Q_max[t],x[t])
+                x = np.random.randn(self.T)
+                load.Q_min = x
+                for t in range(self.T):
+                    self.assertEqual(load.Q_min[t],x[t])
                 load.P = np.random.randn(self.T)
                 load.P_max = load.P*2.
                 load.P_min = load.P*3.
+                load.Q = np.random.randn(self.T)
+                load.Q_max = load.P*8.
+                load.Q_min = load.P*4.
                 for t in range(self.T):
                     self.assertNotEqual(load.P_max[t],load.P[t])
                     self.assertNotEqual(load.P_max[t],load.P_min[t])
                     self.assertNotEqual(load.P_min[t],load.P[t])
+                    self.assertNotEqual(load.Q_max[t],load.Q[t])
+                    self.assertNotEqual(load.Q_max[t],load.Q_min[t])
+                    self.assertNotEqual(load.Q_min[t],load.Q[t])
 
                 # Set (attribute array)
                 for t in range(self.T):
@@ -1335,6 +1357,12 @@ class TestNetwork(unittest.TestCase):
                     q = np.random.randn()
                     load.Q[t] = q
                     self.assertEqual(load.Q[t],q)
+                    q = np.random.randn()
+                    load.Q_max[t] = q
+                    self.assertEqual(load.Q_max[t],q)
+                    q = np.random.randn()
+                    load.Q_min[t] = q
+                    self.assertEqual(load.Q_min[t],q)
 
                 # Power factor
                 load.target_power_factor = 0.932
@@ -3415,6 +3443,8 @@ class TestNetwork(unittest.TestCase):
                 load.P_min = -2.4*(load.index+1)
                 load.P_max = 3.3*(load.index+1)
                 load.Q = 3.5*load.index
+                load.Q_min = 1.2*(load.index+1)
+                load.Q_max = 7.5*(load.index+1)
             self.assertEqual(net.num_loads,net.get_num_P_adjust_loads())
 
             # vars
@@ -3517,7 +3547,7 @@ class TestNetwork(unittest.TestCase):
             for load in net.loads:
                 self.assertEqual(x[load.index_P],load.P_max)
                 self.assertEqual(x[load.index_P],3.3*(load.index+1))
-                self.assertEqual(x[load.index_Q],pf.LOAD_INF_Q)
+                self.assertEqual(x[load.index_Q],7.5*(load.index+1))
             for vargen in net.var_generators:
                 self.assertEqual(x[vargen.index_P],2.5*vargen.index)
                 self.assertEqual(x[vargen.index_P],vargen.P_ava)
@@ -3545,7 +3575,7 @@ class TestNetwork(unittest.TestCase):
             for load in net.loads:
                 self.assertEqual(x[load.index_P],load.P_min)
                 self.assertEqual(x[load.index_P],-2.4*(load.index+1))
-                self.assertEqual(x[load.index_Q],-pf.LOAD_INF_Q)
+                self.assertEqual(x[load.index_Q],1.2*(load.index+1))
             for vargen in net.var_generators:
                 self.assertEqual(x[vargen.index_P],9.*vargen.index)
                 self.assertEqual(x[vargen.index_P],vargen.P_min)
@@ -3693,6 +3723,8 @@ class TestNetwork(unittest.TestCase):
                 load.P_min = -2.4*(load.index+1)*np.array(range(net.num_periods))
                 load.P_max = 3.3*(load.index+1)*np.array(range(net.num_periods))
                 load.Q = 3.5*load.index*np.array(range(net.num_periods))
+                load.Q_min = 1.2*(load.index+1)*np.array(range(net.num_periods))
+                load.Q_max = 7.5*(load.index+1)*np.array(range(net.num_periods))
                 for t in range(net.num_periods):
                     self.assertEqual(load.Q[t],3.5*load.index*t)
             self.assertEqual(net.num_loads,net.get_num_P_adjust_loads())
@@ -3796,7 +3828,7 @@ class TestNetwork(unittest.TestCase):
                 for load in net.loads:
                     self.assertEqual(x[load.index_P[t]],load.P_max[t])
                     self.assertEqual(x[load.index_P[t]],3.3*(load.index+1)*t)
-                    self.assertEqual(x[load.index_Q[t]],pf.LOAD_INF_Q)
+                    self.assertEqual(x[load.index_Q[t]],7.5*(load.index+1)*t)
                 for vargen in net.var_generators:
                     self.assertEqual(x[vargen.index_P[t]],2.5*vargen.index*t)
                     self.assertEqual(x[vargen.index_P[t]],vargen.P_ava[t])
@@ -3825,7 +3857,7 @@ class TestNetwork(unittest.TestCase):
                 for load in net.loads:
                     self.assertEqual(x[load.index_P[t]],load.P_min[t])
                     self.assertEqual(x[load.index_P[t]],-2.4*(load.index+1)*t)
-                    self.assertEqual(x[load.index_Q[t]],-pf.LOAD_INF_Q)
+                    self.assertEqual(x[load.index_Q[t]],1.2*(load.index+1)*t)
                 for vargen in net.var_generators:
                     self.assertEqual(x[vargen.index_P[t]],9.*vargen.index)
                     self.assertEqual(x[vargen.index_P[t]],vargen.P_min)
@@ -5337,15 +5369,15 @@ class TestNetwork(unittest.TestCase):
 
             bus1 = net.buses[0]
             bus2 = net.buses[0]
-            net.remove_buses([bus1])
+            net.remove_buses([bus1, bus1])
             self.assertEqual(bus1.index, -1)
             self.assertEqual(bus1.name, "")
 
             gen1 = net.generators[0]
             gen2 = net.generators[0]
-            net.remove_generators([gen1])
+            net.remove_generators([gen1, gen2])
             self.assertEqual(gen1.index, -1)
-            self.assertEqual(gen1.name, "")
+            self.assertEqual(gen1.name, "")            
 
     def test_extract_subnetwork(self):
         

@@ -181,6 +181,30 @@ cdef class Load:
 
         cload.LOAD_set_Q(self._c_ptr,Q,t)
 
+    def set_Q_max(self, Q, t=0):
+        """
+        Sets reactive power upper limit.
+
+        Parameters
+        ----------
+        Q : float
+        t : int
+        """
+
+        cload.LOAD_set_Q_max(self._c_ptr,Q,t)
+
+    def set_Q_min(self, Q, t=0):
+        """
+        Sets reactive power lower limit.
+
+        Parameters
+        ----------
+        Q : float
+        t : int
+        """
+
+        cload.LOAD_set_Q_min(self._c_ptr,Q,t)
+        
     property name:
         """ Load name (string). """
         def __get__(self):
@@ -286,6 +310,34 @@ cdef class Load:
             for t in range(np.minimum(Qar.size,self.num_periods)):
                 cload.LOAD_set_Q(self._c_ptr,Qar[t],t)
 
+    property Q_max:
+        """ Load reactive power upper limit (p.u. system base MVA) (float or |Array|). """
+        def __get__(self):
+            r = [cload.LOAD_get_Q_max(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return AttributeArray(r,self.set_Q_max)
+        def __set__(self,Q):
+            cdef int t
+            cdef np.ndarray Qar = np.array(Q).flatten()
+            for t in range(np.minimum(Qar.size,self.num_periods)):
+                cload.LOAD_set_Q_max(self._c_ptr,Qar[t],t)
+
+    property Q_min:
+        """ Load reactive power lower limit (p.u. system base MVA) (float or |Array|). """
+        def __get__(self):
+            r = [cload.LOAD_get_Q_min(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeFloat(r[0])
+            else:
+                return AttributeArray(r,self.set_Q_min)
+        def __set__(self,Q):
+            cdef int t
+            cdef np.ndarray Qar = np.array(Q).flatten()
+            for t in range(np.minimum(Qar.size,self.num_periods)):
+                cload.LOAD_set_Q_min(self._c_ptr,Qar[t],t)
+                
     property P_util:
         """ Active power load utility ($/hr) (float or |Array|). """
         def __get__(self):
