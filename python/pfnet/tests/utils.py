@@ -160,6 +160,8 @@ def compare_loads(test, load1, load2, check_internals=False, eps=1e-10):
     test.assertLess(norminf(load1.P_max-load2.P_max), eps)
     test.assertLess(norminf(load1.P_min-load2.P_min), eps)
     test.assertLess(norminf(load1.Q-load2.Q), eps)
+    test.assertLess(norminf(load1.Q_max-load2.Q_max), eps)
+    test.assertLess(norminf(load1.Q_min-load2.Q_min), eps)
     test.assertLess(norminf(load1.target_power_factor-load2.target_power_factor), eps)
     test.assertLess(norminf(load1.util_coeff_Q0-load2.util_coeff_Q0), eps)
     test.assertLess(norminf(load1.util_coeff_Q1-load2.util_coeff_Q1), eps)

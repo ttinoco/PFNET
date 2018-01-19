@@ -4227,6 +4227,8 @@ class TestNetwork(unittest.TestCase):
                 copy_load.P_max = orig_load.P_max
                 copy_load.P_min = orig_load.P_min
                 copy_load.Q = orig_load.Q
+                copy_load.Q_max = orig_load.Q_max
+                copy_load.Q_min = orig_load.Q_min
                 copy_load.target_power_factor = orig_load.target_power_factor
                 copy_load.util_coeff_Q0 = orig_load.util_coeff_Q0
                 copy_load.util_coeff_Q1 = orig_load.util_coeff_Q1

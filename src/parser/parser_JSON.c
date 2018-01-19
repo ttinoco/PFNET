@@ -996,6 +996,18 @@ void JSON_PARSER_process_json_load_array(Parser* p, Net* net, json_value* json_l
 	  LOAD_set_Q(load,val->u.array.values[k]->u.dbl,k);
       }
 
+      // Q max
+      else if (strcmp(key,"Q_max") == 0) {
+	for (k = 0; k < imin(LOAD_get_num_periods(load),val->u.array.length); k++)
+	  LOAD_set_Q_max(load,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // Q min
+      else if (strcmp(key,"Q_min") == 0) {
+	for (k = 0; k < imin(LOAD_get_num_periods(load),val->u.array.length); k++)
+	  LOAD_set_Q_min(load,val->u.array.values[k]->u.dbl,k);
+      }
+
       // target power factor
       else if (strcmp(key,"target_power_factor") == 0)
 	LOAD_set_target_power_factor(load,val->u.dbl);
