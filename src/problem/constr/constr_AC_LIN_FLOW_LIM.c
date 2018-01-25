@@ -11,48 +11,6 @@
 #include <pfnet/array.h>
 #include <pfnet/constr_AC_LIN_FLOW_LIM.h>
 
-#if !HAVE_LINE_FLOW
-
-// Dummies
-void LF_set_branch_parameters(double V_i_min, double V_i_max, double V_j_min, double V_j_max,
-			      double g, double b, double b_sh, double t_ratio, double t_shift,
-			      double I_max, LF_Branch* branch) {
-}
-
-LF_Results* LF_construct(LF_Branch* branch, int flow_side, LF_Options* options) {
-  return NULL;
-}
-
-void LF_free_results(LF_Results* results) {
-
-}
-
-double* LF_get_A_matrix(LF_Results* results) {
-  return NULL;
-}
-
-double* LF_get_b_vector(LF_Results* results) {
-  return NULL;
-}
-
-LF_ResultFlag LF_get_flag(LF_Results* results) {
-  return error_other;
-}
-
-int LF_get_number_constraints(LF_Results* results) {
-  return 0;
-}
-
-double LF_get_error(LF_Results* results) {
-  return 0.;
-}
-
-char* LF_get_message(LF_Results* results) {
-  return "LINE_FLOW library not available";
-}
-
-#endif
-
 // Constraint data
 struct Constr_AC_LIN_FLOW_LIM_Data {
   LF_Results** results; // array of pointers to LF results (1 per branch and time)

@@ -27,7 +27,8 @@ Unreleased
 * Added net routine for extracting subnetwork containing a specific set of buses.
 * Extended problem.show() to show number of vars and constraints of each type.
 * Fix bug involving problem/constraint/function's network going out of scope in Python.
-* Added load reactive power limits. 
+* Added load reactive power limits.
+* Integrated line_flow library source and header for linearized AC branch flow limits.
 
 Version 1.3.2
 -------------

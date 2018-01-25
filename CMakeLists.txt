@@ -15,7 +15,6 @@ set(CMAKE_INSTALL_RPATH "@loader_path")  # for relocatable libraries
 
 option(PFNET_DEBUG "set to ON to enable PFNET debug definition" OFF)
 option(PFNET_GRAPHVIZ "set to ON to enable graphviz addon" ON)
-option(PFNET_LINE_FLOW "set to ON to enable line flow addon" ON)
 
 set(M_LIB,"")
 if (UNIX)
@@ -88,16 +87,6 @@ else()
   set(HAVE_RAW_PARSER 0)
 endif()
 
-# add line-flow if specified
-# if(PFNET_LINE_FLOW)
-#   message("line-flow enabled.")
-#   set(HAVE_LINE_FLOW 1 CACHE INTERNAL "")
-#   # find_library(LINE_FLOW_LIB ?)  # TODO check with tomas
-# else()
-#   message("line-flow not enabled.")
-#   set(HAVE_LINE_FLOW 0 CACHE INTERNAL "")
-# endif()
-
 # add checks needed to produce pfnet_config.h
 INCLUDE (CheckIncludeFiles)
 INCLUDE (CheckTypeSize)
@@ -109,9 +98,6 @@ INCLUDE (CheckLibraryExists)
 CHECK_LIBRARY_EXISTS(gvc gvContext "" HAVE_LIBGVC)
 CHECK_LIBRARY_EXISTS(cgraph agopen "" HAVE_LIBCGRAPH)
 CHECK_INCLUDE_FILES("graphviz/gvc.h"  HAVE_GRAPHVIZ_GVC_H)
-
-# check for line-flow
-CHECK_LIBRARY_EXISTS(line_flow LINE_FLOW_new "${LINE_FLOW}/lib/" HAVE_LINE_FLOW)
 
 # Checks std header files.
 CHECK_INCLUDE_FILES("stddef.h"  HAVE_STDDEF_H)

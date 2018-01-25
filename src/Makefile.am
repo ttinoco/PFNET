@@ -131,11 +131,13 @@ problem_func_hdr = 	$(inc_path)/func_GEN_COST.h \
 			$(inc_path)/func_SP_CONTROLS.h
 
 utils_src = 	utils/utils.c \
-		utils/json.c
+		utils/json.c \
+		utils/line_flow.c 
 
 utils_hdr = 	$(inc_path)/utils.h \
 		$(inc_path)/json_macros.h \
-		$(inc_path)/json.h
+		$(inc_path)/json.h \
+                $(inc_path)/line_flow.h
 
 other_hdr = 	$(inc_path)/array.h $(inc_path)/constants.h $(inc_path)/flag_types.h \
 		$(inc_path)/list.h $(inc_path)/obj_types.h $(inc_path)/types.h \

@@ -13,48 +13,9 @@
 
 #include <math.h>
 #include "constr.h"
-#include "pfnet_config.h"
+#include "line_flow.h"
 
 #define CONSTR_AC_LIN_FLOW_LIM_INF 1e8
-
-// Line flow interface
-typedef struct LF_Results LF_Results;
-typedef struct LF_Options LF_Options;
-
-typedef struct LF_Branch { //contains branch parameters
-  double V_i_min;
-  double V_i_max;
-  double V_j_min;
-  double V_j_max;
-  double g;
-  double b;
-  double b_sh;
-  double t_ratio;
-  double t_shift;
-  double I_max;
-} LF_Branch;
-
-typedef enum LF_ResultFlag {
-  non_binding,
-  infeasible,
-  success,
-  error_branch_data, 
-  error_options,
-  zero_limit,
-  error_other
-} LF_ResultFlag;
-
-void LF_set_branch_parameters(double V_i_min, double V_i_max, double V_j_min, double V_j_max,
-			      double g, double b, double b_sh, double t_ratio, double t_shift,
-			      double I_max, LF_Branch* branch);
-LF_Results* LF_construct(LF_Branch* branch, int flow_side, LF_Options* options);
-void LF_free_results(LF_Results* results);
-double* LF_get_A_matrix(LF_Results* results);
-double* LF_get_b_vector(LF_Results* results);
-LF_ResultFlag LF_get_flag(LF_Results* results);
-int LF_get_number_constraints(LF_Results* results);
-double LF_get_error(LF_Results* results);
-char* LF_get_message(LF_Results* results);
 
 // Data
 typedef struct Constr_AC_LIN_FLOW_LIM_Data Constr_AC_LIN_FLOW_LIM_Data;
