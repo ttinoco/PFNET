@@ -1499,6 +1499,9 @@ class TestConstraints(unittest.TestCase):
                 # Type
                 if constr_type == 2:
                     constr.set_parameter("type",2)
+                    self.assertEqual(constr_type, pf.CONSTR_PAR_GEN_Q_TYPE_FRACTION)
+                else:
+                    self.assertEqual(constr_type, pf.CONSTR_PAR_GEN_Q_TYPE_RANGE)
 
                 f = constr.f
                 J = constr.J
