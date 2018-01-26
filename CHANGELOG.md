@@ -30,6 +30,7 @@ Unreleased
 * Added load reactive power limits.
 * Added Q_par (reactive power participation) field to generator.
 * Added "type" parameter to PAR_GEN_Q constraint that allows gen Q participations to be based on Q_par gen fields.
+* Changed REG_GEN constraint to treat generators separately so that constraint can be used without participations.
 
 Version 1.3.2
 -------------
