@@ -28,6 +28,10 @@ class TestSerialization(unittest.TestCase):
             # Load network
             net1 = pf.Parser(case).parse(case)
 
+            # Some modifications
+            for gen in net1.generators:
+                gen.Q_par = np.random.rand()
+
             # Testing pickle string
             pkld_net_string = pickle.dumps(net1, protocol=-1)
             net2 = pickle.loads(pkld_net_string)

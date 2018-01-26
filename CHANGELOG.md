@@ -27,7 +27,9 @@ Unreleased
 * Added net routine for extracting subnetwork containing a specific set of buses.
 * Extended problem.show() to show number of vars and constraints of each type.
 * Fix bug involving problem/constraint/function's network going out of scope in Python.
-* Added load reactive power limits. 
+* Added load reactive power limits.
+* Added Q_par (reactive power participation) field to generator.
+* Added "type" parameter to PAR_GEN_Q constraint that allows gen Q participations to be based on Q_par gen fields.
 
 Version 1.3.2
 -------------

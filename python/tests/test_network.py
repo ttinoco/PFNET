@@ -4011,6 +4011,10 @@ class TestNetwork(unittest.TestCase):
             self.assertGreater(net1.num_var_generators,0)
             self.assertGreater(net1.num_batteries,0)
 
+            # Some modifications
+            for gen in net1.generators:
+                gen.Q_par = np.random.rand()
+                
             # Sensitivities
             for bus in net1.buses:
                 bus.sens_P_balance = np.random.randn(bus.num_periods)

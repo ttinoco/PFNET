@@ -12,7 +12,8 @@
 
 struct Heur_PVPQ_Data {
 
-  char* reg_flag; // flags for tracking regulation
+  char* reg_flag;   // flags for tracking regulation
+  int* reg_index_Q; // ints for tracking index of fixed Q
 };
 
 void HEUR_PVPQ_init(Heur* h, Net* net) {
@@ -31,6 +32,7 @@ void HEUR_PVPQ_init(Heur* h, Net* net) {
   HEUR_set_bus_counted(h,(char*)calloc(num_buses*num_periods,sizeof(char)));
   data = (Heur_PVPQ_Data*)malloc(sizeof(Heur_PVPQ_Data));
   data->reg_flag = (char*)malloc(sizeof(char)*num_buses*num_periods);
+  data->reg_index_Q = (int*)malloc(sizeof(int)*num_buses*num_periods);
   for (t = 0; t < num_periods; t++) {
     for (i = 0; i < num_buses; i++) {
       bus = NET_get_bus(net,i);
@@ -38,6 +40,7 @@ void HEUR_PVPQ_init(Heur* h, Net* net) {
 	data->reg_flag[i*num_periods+t] = TRUE;
       else
 	data->reg_flag[i*num_periods+t] = FALSE;
+      data->reg_index_Q[i*num_periods+t] = -1;
     }
   }
   HEUR_set_data(h,(void*)data);
@@ -66,6 +69,7 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
   char* bus_counted;
   Heur_PVPQ_Data* data;
   char* reg_flag;
+  int* reg_index_Q;
   int bus_index_t[2];
   int k;
   int i;
@@ -93,6 +97,7 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
   bus_counted = HEUR_get_bus_counted(h);
   data = (Heur_PVPQ_Data*)HEUR_get_data(h);
   reg_flag = data->reg_flag;
+  reg_index_Q = data->reg_index_Q;
 
   // Check outage
   if (BRANCH_is_on_outage(br))
@@ -135,7 +140,7 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 	BUS_is_regulated_by_gen(bus[k]) &&                // regulated
 	BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG) &&   // v mag is variable
 	BUS_has_flags(bus[k],FLAG_FIXED,BUS_VAR_VMAG)) {  // v mag is fixed
-
+      
       // Voltage magnitude
       v = VEC_get(var_values,BUS_get_index_v_mag(bus[k],t));
       v_set = BUS_get_v_set(bus[k],t);
@@ -148,7 +153,7 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 
 	// Generators
 	for (gen = BUS_get_reg_gen(bus[k]); gen != NULL; gen = GEN_get_reg_next(gen)) {
-
+	  
 	  // Q not variable
 	  if (!GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) // reg gen Q is not variable
 	    continue;
@@ -167,17 +172,12 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 	    b_new = Qmax;
 	    switch_flag = TRUE;
 	    reg_flag[bus_index_t[k]] = FALSE;
-
-	    // Update vector of var values
-	    //while (gen) {
-	    //if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
-	    //  VEC_set(var_values,GEN_get_index_Q(gen,t),GEN_get_Q_max(gen));
-	    //gen = GEN_get_reg_next(gen);
-	    //}
+	    reg_index_Q[bus_index_t[k]] = j_new;
+	    break;
 	  }
 
 	  // Violation: Qmin
-	  else if (Q < Qmin) {
+	  if (Q < Qmin) {
 	    
 	    // Set data
 	    j_old = BUS_get_index_v_mag(bus[k],t);
@@ -185,13 +185,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 	    b_new = Qmin;
 	    switch_flag = TRUE;
 	    reg_flag[bus_index_t[k]] = FALSE;
-
-	    // Update vector of var values
-	    //while (gen) {
-	    //  if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
-	    //VEC_set(var_values,GEN_get_index_Q(gen,t),GEN_get_Q_min(gen));
-	    //  gen = GEN_get_reg_next(gen);
-	    //}
+	    reg_index_Q[bus_index_t[k]] = j_new;
+	    break;
 	  }
 	}
       }
@@ -199,77 +194,87 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
       // CASE: Previously regulated
       else {
 
-	// Q at Qmin and v < v_set
-	if (fabs(Q-Qmin) < fabs(Q-Qmax) && v < v_set) {
+	// Generators
+	for (gen = BUS_get_reg_gen(bus[k]); gen != NULL; gen = GEN_get_reg_next(gen)) {
+	  
+	  // Q not variable
+	  if (!GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) // reg gen Q is not variable
+	    continue;
 
-	  Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen))+t*2*num_buses); // per unit (see constr_PF)
+	  // Reg gen data
+	  Q = VEC_get(var_values,GEN_get_index_Q(gen,t)); // per unit
+	  Qmax = GEN_get_Q_max(gen);                      // per unit
+	  Qmin = GEN_get_Q_min(gen);                      // per unit
 
-	  if (Q >= Qmax) {
+	  // Q at Qmin and v < v_set
+	  if (reg_index_Q[bus_index_t[k]] == GEN_get_index_Q(gen,t) &&
+	      fabs(Q-Qmin) < fabs(Q-Qmax) &&
+	      v < v_set) {
+	  
+	    Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen))+t*2*num_buses); // per unit (see constr_PF)
 
-	    // Set data
-	    j_old = GEN_get_index_Q(gen,t);
-	    j_new = GEN_get_index_Q(gen,t);
-	    b_new = Qmax;
-	    switch_flag = TRUE;
+	    if (Q >= Qmax) {
 
-	    // Update vector of var values
-	    while (gen) {
-	      if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
-		VEC_set(var_values,GEN_get_index_Q(gen,t),GEN_get_Q_max(gen));
-	      gen = GEN_get_reg_next(gen);
+	      // Set data
+	      j_old = GEN_get_index_Q(gen,t);
+	      j_new = GEN_get_index_Q(gen,t);
+	      b_new = Qmax;
+	      switch_flag = TRUE;
+	      reg_flag[bus_index_t[k]] = FALSE;
+	      reg_index_Q[bus_index_t[k]] = j_new;
+	      break;
+	    }
+	    
+	    if (Qmin < Q && Q < Qmax) {
+	      
+	      // Set data
+	      j_old = GEN_get_index_Q(gen,t);
+	      j_new = BUS_get_index_v_mag(bus[k],t);
+	      b_new = v_set;
+	      switch_flag = TRUE;
+	      reg_flag[bus_index_t[k]] = TRUE;
+	      reg_index_Q[bus_index_t[k]] = -1;
+	      break;
 	    }
 	  }
-	  else if (Qmin < Q && Q < Qmax) {
 
-	    // Set data
-	    j_old = GEN_get_index_Q(gen,t);
-	    j_new = BUS_get_index_v_mag(bus[k],t);
-	    b_new = v_set;
-	    switch_flag = TRUE;
-	    reg_flag[bus_index_t[k]] = TRUE;
+	  // Q at Qmax and v > v_set
+	  if (reg_index_Q[bus_index_t[k]] == GEN_get_index_Q(gen,t) &&
+	      fabs(Q-Qmax) < fabs(Q-Qmin) &&
+	      v > v_set) {
 
-	    // Udpate vector of var values
-	    VEC_set(var_values,j_new,b_new);
-	  }
-	}
+	    Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen))+t*2*num_buses); // per unit (see constr_PF)
 
-	// Q at Qmax and v > v_set
-	else if (fabs(Q-Qmax) < fabs(Q-Qmin) && v > v_set) {
+	    if (Q <= Qmin) {
 
-	  Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen))+t*2*num_buses); // per unit (see constr_PF)
-
-	  if (Q <= Qmin) {
-
-	    // Set data
-	    j_old = GEN_get_index_Q(gen,t);
-	    j_new = GEN_get_index_Q(gen,t);
-	    b_new = Qmin;
-	    switch_flag = TRUE;
-
-	    // Update vector of var values
-	    while (gen) {
-	      if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
-		VEC_set(var_values,GEN_get_index_Q(gen,t),GEN_get_Q_min(gen));
-	      gen = GEN_get_reg_next(gen);
+	      // Set data
+	      j_old = GEN_get_index_Q(gen,t);
+	      j_new = GEN_get_index_Q(gen,t);
+	      b_new = Qmin;
+	      switch_flag = TRUE;
+	      reg_flag[bus_index_t[k]] = FALSE;
+	      reg_index_Q[bus_index_t[k]] = j_new;
+	      break;
 	    }
-	  }
-	  else if (Qmin < Q && Q < Qmax) {
+	    
+	    if (Qmin < Q && Q < Qmax) {
 
-	    // Set data
-	    j_old = GEN_get_index_Q(gen,t);
-	    j_new = BUS_get_index_v_mag(bus[k],t);
-	    b_new = v_set;
-	    switch_flag = TRUE;
-	    reg_flag[bus_index_t[k]] = TRUE;
-
-	    // Udpate vector of var values
-	    VEC_set(var_values,j_new,b_new);
+	      // Set data
+	      j_old = GEN_get_index_Q(gen,t);
+	      j_new = BUS_get_index_v_mag(bus[k],t);
+	      b_new = v_set;
+	      switch_flag = TRUE;
+	      reg_flag[bus_index_t[k]] = TRUE;
+	      reg_index_Q[bus_index_t[k]] = -1;
+	      break;
+	    }
 	  }
 	}
       }
 
-      // Update fix constraints
+      // Update fix constraints and var_values
       if (switch_flag) {
+	VEC_set(var_values,j_new,b_new);
 	for (i = 0; i < MAT_get_nnz(A); i++) {
 	  if (MAT_get_j(A,i) == j_old)
 	    MAT_set_d(A,i,0.);
@@ -297,6 +302,7 @@ void HEUR_PVPQ_free(Heur* h) {
   // Free
   if (data) {
     free(data->reg_flag);
+    free(data->reg_index_Q);
   }
   free(data);
 
