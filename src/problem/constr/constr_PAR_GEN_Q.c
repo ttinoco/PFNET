@@ -10,6 +10,11 @@
 
 #include <pfnet/constr_PAR_GEN_Q.h>
 
+struct Constr_PAR_GEN_Q_Data {
+
+  int type;
+};
+
 Constr* CONSTR_PAR_GEN_Q_new(Net* net) {
   Constr* c = CONSTR_new(net);
   CONSTR_set_func_init(c, &CONSTR_PAR_GEN_Q_init);
@@ -19,16 +24,24 @@ Constr* CONSTR_PAR_GEN_Q_new(Net* net) {
   CONSTR_set_func_analyze_step(c, &CONSTR_PAR_GEN_Q_analyze_step);
   CONSTR_set_func_eval_step(c, &CONSTR_PAR_GEN_Q_eval_step);
   CONSTR_set_func_store_sens_step(c, &CONSTR_PAR_GEN_Q_store_sens_step);
+  CONSTR_set_func_set_parameter(c, &CONSTR_PAR_GEN_Q_set_parameter);
   CONSTR_set_func_free(c, &CONSTR_PAR_GEN_Q_free);
   CONSTR_init(c);
   return c;
 }
 
 void CONSTR_PAR_GEN_Q_init(Constr* c) {
+  
+  // Local variables
+  Constr_PAR_GEN_Q_Data* data;
+  
+  // Data
+  data = (Constr_PAR_GEN_Q_Data*)malloc(sizeof(Constr_PAR_GEN_Q_Data));
+  data->type = CONSTR_PAR_GEN_Q_TYPE_RANGE;
 
   // Init
   CONSTR_set_name(c,"generator reactive power participation");
-  CONSTR_set_data(c,NULL);
+  CONSTR_set_data(c,data);
 }
 
 void CONSTR_PAR_GEN_Q_clear(Constr* c) {
@@ -51,6 +64,7 @@ void CONSTR_PAR_GEN_Q_count_step(Constr* c, Branch* br, int t) {
   int* A_nnz;
   int* A_row;
   char* bus_counted;
+  Constr_PAR_GEN_Q_Data* data;
   int i;
   int T;
 
@@ -61,9 +75,10 @@ void CONSTR_PAR_GEN_Q_count_step(Constr* c, Branch* br, int t) {
   A_nnz = CONSTR_get_A_nnz_ptr(c);
   A_row = CONSTR_get_A_row_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
+  data = (Constr_PAR_GEN_Q_Data*)CONSTR_get_data(c);
 
   // Check pointer
-  if (!A_nnz || !A_row || !bus_counted)
+  if (!A_nnz || !A_row || !bus_counted || !data)
     return;
 
   // Check outage
@@ -83,15 +98,26 @@ void CONSTR_PAR_GEN_Q_count_step(Constr* c, Branch* br, int t) {
 
       // Reactive power of regulating generators
       if (BUS_is_regulated_by_gen(bus)) {
-	for (gen1 = BUS_get_reg_gen(bus); gen1 != NULL; gen1 = GEN_get_reg_next(gen1)) {
-	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q))
-	    break;
-	}
-	for (gen2 = GEN_get_reg_next(gen1); gen2 != NULL; gen2 = GEN_get_reg_next(gen2)) {
-	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q)) {
-	    (*A_nnz)++;
-	    (*A_nnz)++;
-	    (*A_row)++;
+
+
+	// TYPE: RANGE or FRACTION
+	//************************
+	if (data->type == CONSTR_PAR_GEN_Q_TYPE_RANGE ||
+	    data->type == CONSTR_PAR_GEN_Q_TYPE_FRACTION) {
+
+	  // Reference
+	  for (gen1 = BUS_get_reg_gen(bus); gen1 != NULL; gen1 = GEN_get_reg_next(gen1)) {
+	    if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q))
+	      break;
+	  }
+
+	  // Constraint for each pair
+	  for (gen2 = GEN_get_reg_next(gen1); gen2 != NULL; gen2 = GEN_get_reg_next(gen2)) {
+	    if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q)) {
+	      (*A_nnz)++;
+	      (*A_nnz)++;
+	      (*A_row)++;
+	    }
 	  }
 	}
       }
@@ -141,14 +167,19 @@ void CONSTR_PAR_GEN_Q_analyze_step(Constr* c, Branch* br, int t) {
   int* A_nnz;
   int* A_row;
   char* bus_counted;
+  Constr_PAR_GEN_Q_Data* data;
   Vec* b;
   Mat* A;
   int i;
+  int T;
+  
   REAL Qmin1;
   REAL Qmin2;
   REAL dQ1;
   REAL dQ2;
-  int T;
+
+  REAL alpha1;
+  REAL alpha2;
 
   // Number of periods
   T = BRANCH_get_num_periods(br);
@@ -159,9 +190,10 @@ void CONSTR_PAR_GEN_Q_analyze_step(Constr* c, Branch* br, int t) {
   A_nnz = CONSTR_get_A_nnz_ptr(c);
   A_row = CONSTR_get_A_row_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
+  data = (Constr_PAR_GEN_Q_Data*)CONSTR_get_data(c);
 
   // Check pointer
-  if (!A_nnz || !A_row || !bus_counted)
+  if (!A_nnz || !A_row || !bus_counted || !data)
     return;
 
   // Check outage
@@ -182,39 +214,86 @@ void CONSTR_PAR_GEN_Q_analyze_step(Constr* c, Branch* br, int t) {
       // Reactive power of regulating generators
       if (BUS_is_regulated_by_gen(bus)) {
 	
-	for (gen1 = BUS_get_reg_gen(bus); gen1 != NULL; gen1 = GEN_get_reg_next(gen1)) {
-	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q))
-	    break;
-	}
-		
-	for (gen2 = GEN_get_reg_next(gen1); gen2 != NULL; gen2 = GEN_get_reg_next(gen2)) {
-	  
-	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q)) {
+	// TYPE: RANGE
+	//************
+	if (data->type == CONSTR_PAR_GEN_Q_TYPE_RANGE) {
 
-	    Qmin1 = GEN_get_Q_min(gen1);
-	    dQ1 = GEN_get_Q_max(gen1)-Qmin1;
-	    if (dQ1 < CONSTR_PAR_GEN_Q_PARAM)
-	      dQ1 = CONSTR_PAR_GEN_Q_PARAM;
-	    
-	    Qmin2 = GEN_get_Q_min(gen2);
-	    dQ2 = GEN_get_Q_max(gen2)-Qmin2;
-	    if (dQ2 < CONSTR_PAR_GEN_Q_PARAM)
-	      dQ2 = CONSTR_PAR_GEN_Q_PARAM;
-	  
-	    VEC_set(b,*A_row,Qmin1/dQ1-Qmin2/dQ2);
-	    
-	    MAT_set_i(A,*A_nnz,*A_row);
-	    MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen1,t));
-	    MAT_set_d(A,*A_nnz,1./dQ1);
-	    (*A_nnz)++;
-	    
-	    MAT_set_i(A,*A_nnz,*A_row);
-	    MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen2,t));
-	    MAT_set_d(A,*A_nnz,-1./dQ2);
-	    (*A_nnz)++;
-	    
-	    (*A_row)++;
+	  // Get reference
+	  for (gen1 = BUS_get_reg_gen(bus); gen1 != NULL; gen1 = GEN_get_reg_next(gen1)) {
+	    if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q))
+	      break;
 	  }
+
+	  Qmin1 = GEN_get_Q_min(gen1);
+	  dQ1 = GEN_get_Q_max(gen1)-Qmin1;
+	  if (dQ1 < CONSTR_PAR_GEN_Q_PARAM)
+	    dQ1 = CONSTR_PAR_GEN_Q_PARAM;
+	  
+	  // Add constraint for each pair
+	  for (gen2 = GEN_get_reg_next(gen1); gen2 != NULL; gen2 = GEN_get_reg_next(gen2)) {
+	    
+	    if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q)) {
+	    
+	      Qmin2 = GEN_get_Q_min(gen2);
+	      dQ2 = GEN_get_Q_max(gen2)-Qmin2;
+	      if (dQ2 < CONSTR_PAR_GEN_Q_PARAM)
+		dQ2 = CONSTR_PAR_GEN_Q_PARAM;
+	      
+	      VEC_set(b,*A_row,Qmin1/dQ1-Qmin2/dQ2);
+	      
+	      MAT_set_i(A,*A_nnz,*A_row);
+	      MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen1,t));
+	      MAT_set_d(A,*A_nnz,1./dQ1);
+	      (*A_nnz)++;
+	      
+	      MAT_set_i(A,*A_nnz,*A_row);
+	      MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen2,t));
+	      MAT_set_d(A,*A_nnz,-1./dQ2);
+	      (*A_nnz)++;
+	      
+	      (*A_row)++;
+	    }
+	  }
+	}
+	
+	// TYPE: FRACTION
+	//***************
+	else if (data->type == CONSTR_PAR_GEN_Q_TYPE_FRACTION) {
+
+	  // Get reference
+	  for (gen1 = BUS_get_reg_gen(bus); gen1 != NULL; gen1 = GEN_get_reg_next(gen1)) {
+	    if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q))
+	      break;
+	  }
+
+	  alpha1 = GEN_get_Q_par(gen1);
+	  if (alpha1 < CONSTR_PAR_GEN_Q_PARAM)
+	    alpha1 = CONSTR_PAR_GEN_Q_PARAM;
+	  
+	  // Add constraint for each pair
+	  for (gen2 = GEN_get_reg_next(gen1); gen2 != NULL; gen2 = GEN_get_reg_next(gen2)) {
+	    
+	    if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q)) {
+	    
+	      alpha2 = GEN_get_Q_par(gen2);
+	      if (alpha2 < CONSTR_PAR_GEN_Q_PARAM)
+		alpha2 = CONSTR_PAR_GEN_Q_PARAM;
+	      
+	      VEC_set(b,*A_row,0.);
+	      
+	      MAT_set_i(A,*A_nnz,*A_row);
+	      MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen1,t));
+	      MAT_set_d(A,*A_nnz,alpha2);
+	      (*A_nnz)++;
+	      
+	      MAT_set_i(A,*A_nnz,*A_row);
+	      MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen2,t));
+	      MAT_set_d(A,*A_nnz,-alpha1);
+	      (*A_nnz)++;
+	      
+	      (*A_row)++;
+	    }
+	  }	  
 	}
       }
     }
@@ -232,6 +311,36 @@ void CONSTR_PAR_GEN_Q_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec
   // Nothing
 }
 
+void CONSTR_PAR_GEN_Q_set_parameter(Constr* c, char* key, void* value) {
+
+  // Local variables
+  Constr_PAR_GEN_Q_Data* data = (Constr_PAR_GEN_Q_Data*)CONSTR_get_data(c);
+
+  // Check
+  if (!data)
+    return;
+
+  // Set
+  if (strcmp(key,"type") == 0) {
+    data->type = *((int*)value);
+  }
+
+  else // unknown
+    CONSTR_set_error(c,"invalid parameter");
+}
+
 void CONSTR_PAR_GEN_Q_free(Constr* c) {
-  // Nothing to do
+
+  // Local variables
+  Constr_PAR_GEN_Q_Data* data;
+
+  // Get data
+  data = (Constr_PAR_GEN_Q_Data*)CONSTR_get_data(c);
+
+  // Free
+  if (data)
+    free(data);
+
+  // Set data
+  CONSTR_set_data(c,NULL);  
 }

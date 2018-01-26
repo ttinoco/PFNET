@@ -422,17 +422,23 @@ cdef class ConstraintBase:
         """
 
         cdef void* cvalue = NULL
-        cdef np.ndarray[double, mode='c'] a
+        cdef np.ndarray[double, mode='c'] value_array
+
+        cdef int value_int
+        
         key = key.encode('UTF-8')
 
         # int
+        if issubclass(type(value), int):
+            value_int = value
+            cvalue = <void*>&value_int
 
         # float
         
         # ndarray
         if issubclass(type(value), np.ndarray):
-            a = value
-            cvalue = <void*>a.data
+            value_array = value
+            cvalue = <void*>value_array.data
 
         # Unknown
         if cvalue == NULL:
