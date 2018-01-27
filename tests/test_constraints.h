@@ -2,7 +2,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -329,7 +329,7 @@ static char* test_constr_PAR_GEN_P() {
   return 0;
 }
 
-static char* test_constr_PAR_GEN_Q() {
+static char* test_constr_PVPQ_SWITCHING() {
   
   // Local variables
   Net* net;
@@ -343,7 +343,7 @@ static char* test_constr_PAR_GEN_Q() {
   Bus* bus;
   int i;
 
-  printf("test_constr_PAR_GEN_Q ...");
+  printf("test_constr_PVPQ_SWITCHING ...");
 
   // Load
   parser = PARSER_new_for_file(test_case);
@@ -395,7 +395,7 @@ static char* test_constr_PAR_GEN_Q() {
     }       
   }
 
-  c = CONSTR_PAR_GEN_Q_new(net);
+  c = CONSTR_PVPQ_SWITCHING_new(net);
   Assert("error - unable to create new constraint",c != NULL);
   Assert("error - bad constraint initialization",CONSTR_get_b(c) == NULL);
   Assert("error - bad constraint initialization",CONSTR_get_A(c) == NULL);

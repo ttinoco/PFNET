@@ -2,7 +2,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -59,13 +59,13 @@ static char* test_problem_basic() {
 
   PROB_add_constr(p,CONSTR_ACPF_new(net));
   PROB_add_constr(p,CONSTR_PAR_GEN_P_new(net));
-  PROB_add_constr(p,CONSTR_PAR_GEN_Q_new(net));
+  PROB_add_constr(p,CONSTR_PVPQ_SWITCHING_new(net));
 
   PROB_add_func(p,FUNC_REG_VMAG_new(3.4,net));
 
   Assert("error - cannot find constraint",PROB_find_constr(p,"AC power balance"));
   Assert("error - cannot find constraint",PROB_find_constr(p,"generator active power participation"));
-  Assert("error - cannot find constraint",PROB_find_constr(p,"generator reactive power participation"));
+  Assert("error - cannot find constraint",PROB_find_constr(p,"PVPQ switching"));
   Assert("error - finds nonexisting constraint",!PROB_find_constr(p,"voltage regulation by generators"));
   
   x = PROB_get_init_point(p);

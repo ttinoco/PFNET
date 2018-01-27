@@ -29,9 +29,10 @@ Unreleased
 * Fix bug involving problem/constraint/function's network going out of scope in Python.
 * Added load reactive power limits.
 * Added Q_par (reactive power participation) field to generator.
-* Added "type" parameter to PAR_GEN_Q constraint that allows gen Q participations to be based on Q_par gen fields.
 * Changed REG_GEN constraint to treat generators separately so that constraint can be used without participations.
 * Updated network "adjust generators" to balance bus mismatches with slack and reg generators.
+* Changed PAR_GEN_Q constraint to PVPQ_SWITCHING, which enforces flexible participations based on Q_par and performs all required modifications for PV-PQ switching heuristics.
+* Updated PVPQ switching heuristics to utilize PVPQ_SWITCHING constraint.
 
 Version 1.3.2
 -------------
