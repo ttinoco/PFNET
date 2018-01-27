@@ -194,7 +194,7 @@ static char* test_net_properties() {
 
     gen = NET_get_gen(net,i);
 
-    if (GEN_is_regulator(gen)) {
+    if (GEN_is_regulator(gen) && !GEN_is_slack(gen)) {
       
       dQ = 0;
       if (GEN_get_Q(gen,0) > GEN_get_Q_max(gen))

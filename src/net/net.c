@@ -4398,8 +4398,8 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
       //*****************************
       net->gen_P_cost[t] += GEN_get_P_cost_for(gen,P);
 
-      // Reacive power
-      if (GEN_is_regulator(gen)) { // Should this be done for all generators?
+      // Reacive power of regulator
+      if (GEN_is_regulator(gen) && !GEN_is_slack(gen)) {
 
 	// Reactive power limit violations
 	//********************************
