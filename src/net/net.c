@@ -1532,26 +1532,13 @@ void NET_add_batteries_from_params(Net* net, Bus* bus_list, REAL power_capacity,
 }
 
 void NET_adjust_generators(Net* net) {
-  /** This function adjusts the powers of slack or regulator generators
-   *  connected to the same bus or regulating the same bus voltage magnitude.
-   *  The adjustment is done to obtain specific participations without affecting
-   *  their total power. For active power, the participation is equal for every
-   *  generator. For reactive power, the participaion is proportional to the generator
-   *  reactive power resources.
-   */
-
+  
   // Local variables
   Bus* bus;
   Gen* gen;
-  REAL num;
-  REAL Ptot;
-  REAL Qtot;
-  REAL dQtot;
+  REAL P;
   REAL Q;
-  REAL dQ;
-  REAL Qmintot;
-  REAL frac;
-  REAL SAFEGUARD_PARAM = 1e-4;
+  int num;
   int i;
   int t;
 
@@ -1559,54 +1546,46 @@ void NET_adjust_generators(Net* net) {
   if (!net)
     return;
 
+  // Update properties
+  NET_update_properties(net, NULL);
+
+  // Process buses
   for (i = 0; i < net->num_buses; i++) {
 
     bus = NET_get_bus(net,i);
+    
+    for (t = 0; t < net->num_periods; t++) {
 
-    // Slack gens
-    if (BUS_is_slack(bus)) {
-      for (t = 0; t < net->num_periods; t++) {
-	num = 0;
-	Ptot = 0;
-	for(gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-	  Ptot += GEN_get_P(gen,t);
+      // Active
+      P = BUS_get_total_gen_P(bus, t) - BUS_get_P_mis(bus, t);
+
+      num = 0;
+      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+	if (GEN_is_slack(gen))
 	  num += 1;
-	}
-	for(gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen))
-	  GEN_set_P(gen,Ptot/num,t);
       }
-    }
+      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+	if (GEN_is_slack(gen))
+	  GEN_set_P(gen,P/num,t);
+      }
 
-    // Regulating gens
-    if (BUS_is_regulated_by_gen(bus)) {
-      for (t = 0; t < net->num_periods; t++) {
-	Qtot = 0;
-	dQtot = 0;
-	Qmintot = 0;
-	for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen)) {
-	  Qtot += GEN_get_Q(gen,t);
-	  dQ = GEN_get_Q_max(gen)-GEN_get_Q_min(gen);
-	  if (dQ < SAFEGUARD_PARAM)
-	    dQ = SAFEGUARD_PARAM;
-	  dQtot += dQ;
-	  Qmintot += GEN_get_Q_min(gen);
-	}
-	gen = BUS_get_reg_gen(bus);
-	dQ = GEN_get_Q_max(gen)-GEN_get_Q_min(gen);
-	if (dQ < SAFEGUARD_PARAM)
-	  dQ = SAFEGUARD_PARAM;
-	Q = GEN_get_Q_min(gen)+dQ*(Qtot-Qmintot)/dQtot;
-	frac = (Q-GEN_get_Q_min(gen))/dQ;
-	GEN_set_Q(gen,Q,t);
-	for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen)) {
-	  dQ = GEN_get_Q_max(gen)-GEN_get_Q_min(gen);
-	  if (dQ < SAFEGUARD_PARAM)
-	    dQ = SAFEGUARD_PARAM;
-	  GEN_set_Q(gen,GEN_get_Q_min(gen)+frac*dQ,t);
-	}
+      // Reactive
+      Q = BUS_get_total_gen_Q(bus, t) - BUS_get_Q_mis(bus, t);
+      
+      num = 0;
+      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+	if (GEN_is_regulator(gen))
+	  num += 1;
+      }
+      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+	if (GEN_is_regulator(gen))
+	  GEN_set_Q(gen,Q/num,t);
       }
     }
   }
+
+  // Update properties
+  NET_update_properties(net, NULL);
 }
 
 void NET_bus_hash_number_add(Net* net, Bus* bus) {

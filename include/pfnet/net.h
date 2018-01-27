@@ -38,7 +38,7 @@
 typedef struct Net Net;
 
 // Prototypes
-/** @brief Adjust generator powers to obtain correct participations without affecting total injections. */
+/** @brief Adjusts regulating and slack generators to balance bus power mismatches. */
 void NET_adjust_generators(Net* net);
 
 void NET_add_buses(Net* net, Bus** bus_ptr_array, int size);

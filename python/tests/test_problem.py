@@ -608,7 +608,7 @@ class TestProblem(unittest.TestCase):
             l = p.get_lower_limits()
             u = p.get_upper_limits()
             
-            num_constr = 2*len([b for b in net.buses if b.is_regulated_by_gen() and not b.is_slack()])
+            num_constr = 2*len([g for g in net.generators if g.is_regulator() and not g.is_slack()])
 
             self.assertEqual(p.num_extra_vars,num_constr)
             self.assertEqual(l.size,net.num_vars+p.num_extra_vars)
@@ -623,11 +623,12 @@ class TestProblem(unittest.TestCase):
                 for bus in [branch.bus_k,branch.bus_m]:
                     if not flags[bus.index]:
                         if bus.is_regulated_by_gen() and not bus.is_slack():
-                            self.assertEqual(l[net.num_vars+offset],-INF)
-                            self.assertEqual(l[net.num_vars+offset+1],-INF)
-                            self.assertEqual(u[net.num_vars+offset],INF)
-                            self.assertEqual(u[net.num_vars+offset+1],INF)
-                            offset += 2
+                            for gen in bus.reg_generators:
+                                self.assertEqual(l[net.num_vars+offset],-INF)
+                                self.assertEqual(l[net.num_vars+offset+1],-INF)
+                                self.assertEqual(u[net.num_vars+offset],INF)
+                                self.assertEqual(u[net.num_vars+offset+1],INF)
+                                offset += 2
                     flags[bus.index] = True
             self.assertEqual(offset,p.num_extra_vars)
 
