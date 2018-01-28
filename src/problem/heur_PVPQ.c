@@ -73,11 +73,6 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
   // Bus to data
   bus[1] = BRANCH_get_bus_m(br);
   bus_index_t[1] = BUS_get_index(bus[1])*T+t;
-
-  // DEBUG
-  if (BRANCH_get_index(br) == 0 && t == 0) {
-    printf("HEUR begin\n");
-  }
   
   // Power flow constraint
   for (pf = clist; pf != NULL; pf = CONSTR_get_next(pf)) {
@@ -145,6 +140,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 	      if (Qmin < Q) {
 		fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
 		all_fixed = FALSE;
+		if (HEUR_PVPQ_DEBUG)
+		  printf("HEUR PVPQ: free gen %d from Qmin (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
 	      }
 	    }
 	    
@@ -152,8 +149,10 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 	    else if (fabs(Q-Qmax) < fabs(Q-Qmin) && v > v_set) { 
 	      Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen))+t*2*num_buses); // per unit (see constr_PF)
 	      if (Q < Qmax) {
-	      fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
-	      all_fixed = FALSE;
+		fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
+		all_fixed = FALSE;
+		if (HEUR_PVPQ_DEBUG)
+		  printf("HEUR PVPQ: free gen %d from Qmax (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
 	      }
 	    }	    
 	  }	    
@@ -164,6 +163,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 	    // Switch to Q fixed
 	    GEN_set_Q(gen,Qmax,t);
 	    fix_flag[GEN_get_index_Q(gen,t)] = TRUE;
+	    if (HEUR_PVPQ_DEBUG)
+	      printf("HEUR PVPQ: fix gen %d at Qmax (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
 	  }
 
 	  // Q is free: Qmin violation
@@ -172,6 +173,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 	    // Switch to Q fixed
 	    GEN_set_Q(gen,Qmin,t);
 	    fix_flag[GEN_get_index_Q(gen,t)] = TRUE;
+	    if (HEUR_PVPQ_DEBUG)
+	      printf("HEUR PVPQ: fix gen %d at Qmin (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
 	  }
 
 	  // Q is free: no violation
@@ -184,6 +187,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 
 	  // Switch to v free
 	  fix_flag[BUS_get_index_v_mag(bus[k],t)] = FALSE;
+	  if (HEUR_PVPQ_DEBUG)
+	      printf("HEUR PVPQ: free reg bus %d\n", BUS_get_number(bus[k]));
 	}
       }
 
@@ -217,6 +222,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 	    if (Qmin < Q) {
 	      fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
 	      all_fixed = FALSE;
+	      if (HEUR_PVPQ_DEBUG)
+		  printf("HEUR PVPQ: free gen %d from Qmin (reg bus %d free)\n", GEN_get_index(gen), BUS_get_number(bus[k]));		
 	    }
 	  }
 
@@ -226,6 +233,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 	    if (Q < Qmax) {
 	      fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
 	      all_fixed = FALSE;
+	      if (HEUR_PVPQ_DEBUG)
+		  printf("HEUR PVPQ: free gen %d from Qmax (reg bus %d free)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
 	    }
 	  }
 	}
@@ -235,6 +244,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 
 	  // Switch to v fixed
 	  fix_flag[BUS_get_index_v_mag(bus[k],t)] = TRUE;
+	  if (HEUR_PVPQ_DEBUG)
+	      printf("HEUR PVPQ: fix reg bus %d\n", BUS_get_number(bus[k]));
 	}
       }
     }
@@ -244,10 +255,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
   }
 
   // Update
-  if (BRANCH_get_index(br) == NET_get_num_branches(net)-1 && t == NET_get_num_periods(net)-1) {
-    printf("HEUR done\n");
+  if (BRANCH_get_index(br) == NET_get_num_branches(net)-1 && t == NET_get_num_periods(net)-1)
     CONSTR_analyze(pvpq);
-  }
 }
 
 void HEUR_PVPQ_free(Heur* h) {

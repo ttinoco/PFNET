@@ -15,6 +15,8 @@
 #include "net.h"
 #include "heur.h"
 
+#define HEUR_PVPQ_DEBUG FALSE
+
 // Function prototypes
 void HEUR_PVPQ_init(Heur* h, Net* net);
 void HEUR_PVPQ_clear(Heur* h, Net* net);
