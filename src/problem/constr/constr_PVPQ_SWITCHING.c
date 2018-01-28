@@ -223,7 +223,7 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t) {
 	// v var and fixed
 	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) &&
 	    data->fix_flag[BUS_get_index_v_mag(bus,t)]) {
-	  
+
 	  VEC_set(b,*A_row,BUS_get_v_set(bus,t));
 
 	  // v
@@ -283,13 +283,16 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t) {
 	}
 
 	// Q var and free pairs
-	for (gen1 = BUS_get_reg_gen(bus); gen1 != NULL; gen1 = GEN_get_reg_next(gen1)) {
-	  
+	gen1 = BUS_get_reg_gen(bus);
+	while(gen1) {
+
+	  // Candidate 1
 	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q) &&
 	      !data->fix_flag[GEN_get_index_Q(gen1,t)]) {
 	
 	    for (gen2 = GEN_get_reg_next(gen1); gen2 != NULL; gen2 = GEN_get_reg_next(gen2)) {
-	      
+
+	      // Candidate 2
 	      if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q) &&
 		  !data->fix_flag[GEN_get_index_Q(gen2,t)]) {
 		
@@ -325,8 +328,17 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t) {
 		}
 	    
 		(*A_row)++;
+		break;
 	      }
 	    }
+
+	    // Move forward
+	    gen1 = gen2;
+	  }
+	  else {
+
+	    // Move forward
+	    gen1 = GEN_get_reg_next(gen1);
 	  }
 	}
       }

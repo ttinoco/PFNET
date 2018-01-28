@@ -592,8 +592,8 @@ cdef class Constraint(ConstraintBase):
             self._c_constr = cconstr.CONSTR_LBOUND_new(net._c_net)
         elif name == "generator active power participation":
             self._c_constr = cconstr.CONSTR_PAR_GEN_P_new(net._c_net)
-        elif name == "generator reactive power participation":
-            self._c_constr = cconstr.CONSTR_PAR_GEN_Q_new(net._c_net)
+        elif name == "PVPQ switching":
+            self._c_constr = cconstr.CONSTR_PVPQ_SWITCHING_new(net._c_net)
         elif name == "generator ramp limits":
             self._c_constr = cconstr.CONSTR_GEN_RAMP_new(net._c_net)
         elif name == "voltage regulation by generators":

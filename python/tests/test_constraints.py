@@ -1464,7 +1464,7 @@ class TestConstraints(unittest.TestCase):
             self.assertGreater(norm(x),0)
             self.assertTrue(norm(A*x-b) < 1e-10)
 
-    def test_constr_PAR_GEN_Q(self):
+    def test_constr_PVPQ_SWITCHING(self):
 
         # Multiperiod
         for case in test_cases.CASES:
@@ -1474,6 +1474,10 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(net.num_vars,0)
 
             # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'regulated by generator',
+                          'voltage magnitude')
             net.set_flags('generator',
                           'variable',
                           'slack',
@@ -1483,149 +1487,121 @@ class TestConstraints(unittest.TestCase):
                           'regulator',
                           'reactive power')
             self.assertGreater(net.num_vars,0)
-            self.assertEqual(net.num_vars,(net.get_num_slack_gens()+net.get_num_reg_gens())*self.T)
+            self.assertEqual(net.num_vars,
+                             (net.get_num_buses_reg_by_gen()+net.get_num_slack_gens()+net.get_num_reg_gens())*self.T)
 
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
 
-            # Types
-            for constr_type in [1,2]:
+            # Constraint
+            constr = pf.Constraint('PVPQ switching',net)
+            self.assertEqual(constr.name,'PVPQ switching')
+            
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            
+            # Before
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(0,))
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,0))
+            self.assertEqual(J.nnz,0)
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(0,0))
+            self.assertEqual(A.nnz,0)
+            
+            self.assertEqual(constr.J_nnz,0)
+            self.assertEqual(constr.A_nnz,0)
+            
+            # Manual count
+            nnz = 0
+            num_constr = 0
+            for i in range(net.num_buses):
+                bus = net.get_bus(i)
+                if bus.is_regulated_by_gen():
+                    num_constr += len(bus.reg_generators)
+                    nnz += len(bus.reg_generators)*(len(bus.reg_generators)+1)
 
-                # Constraint
-                constr = pf.Constraint('generator reactive power participation',net)
-                self.assertEqual(constr.name,'generator reactive power participation')
-
-                # Type
-                if constr_type == 2:
-                    constr.set_parameter("type",2)
-                    self.assertEqual(constr_type, pf.CONSTR_PAR_GEN_Q_TYPE_FRACTION)
-                else:
-                    self.assertEqual(constr_type, pf.CONSTR_PAR_GEN_Q_TYPE_RANGE)
-
-                f = constr.f
-                J = constr.J
-                A = constr.A
-                b = constr.b
+            constr.analyze()
+            self.assertEqual(nnz*self.T,constr.A_nnz)
+            constr.eval(x0)
+            self.assertEqual(0,constr.A_nnz)
                 
-                # Before
-                self.assertTrue(type(f) is np.ndarray)
-                self.assertTupleEqual(f.shape,(0,))
-                self.assertTrue(type(b) is np.ndarray)
-                self.assertTupleEqual(b.shape,(0,))
-                self.assertTrue(type(J) is coo_matrix)
-                self.assertTupleEqual(J.shape,(0,0))
-                self.assertEqual(J.nnz,0)
-                self.assertTrue(type(A) is coo_matrix)
-                self.assertTupleEqual(A.shape,(0,0))
-                self.assertEqual(A.nnz,0)
+            f = constr.f
+            J = constr.J
+            A = constr.A
+            b = constr.b
+            
+            # After
+            self.assertTrue(type(b) is np.ndarray)
+            self.assertTupleEqual(b.shape,(num_constr*self.T,))
+            self.assertTrue(type(f) is np.ndarray)
+            self.assertTupleEqual(f.shape,(0,))
+            self.assertTrue(type(A) is coo_matrix)
+            self.assertTupleEqual(A.shape,(num_constr*self.T,net.num_vars))
+            self.assertEqual(A.nnz,nnz*self.T)
+            self.assertTrue(type(J) is coo_matrix)
+            self.assertTupleEqual(J.shape,(0,net.num_vars))
+            self.assertEqual(J.nnz,0)
+            
+            self.assertTrue(not np.any(np.isinf(b)))
+            self.assertTrue(not np.any(np.isnan(b)))
                 
-                self.assertEqual(constr.J_nnz,0)
-                self.assertEqual(constr.A_nnz,0)
-                
-                # Manual count
-                nnz = 0
-                num_constr = 0
-                for i in range(net.num_buses):
-                    bus = net.get_bus(i)
-                    if bus.is_regulated_by_gen():
-                        num_constr += len(bus.reg_generators)-1 # Q participation
-                        nnz += 2*(len(bus.reg_generators)-1)
-
-                constr.analyze()
-                self.assertEqual(nnz*self.T,constr.A_nnz)
-                constr.eval(x0)
-                self.assertEqual(0,constr.A_nnz)
-                
-                f = constr.f
-                J = constr.J
-                A = constr.A
-                b = constr.b
-                
-                # After
-                self.assertTrue(type(b) is np.ndarray)
-                self.assertTupleEqual(b.shape,(num_constr*self.T,))
-                self.assertTrue(type(f) is np.ndarray)
-                self.assertTupleEqual(f.shape,(0,))
-                self.assertTrue(type(A) is coo_matrix)
-                self.assertTupleEqual(A.shape,(num_constr*self.T,net.num_vars))
-                self.assertEqual(A.nnz,nnz*self.T)
-                self.assertTrue(type(J) is coo_matrix)
-                self.assertTupleEqual(J.shape,(0,net.num_vars))
-                self.assertEqual(J.nnz,0)
-                
-                self.assertTrue(not np.any(np.isinf(b)))
-                self.assertTrue(not np.any(np.isnan(b)))
-                
-                # Detailed check
-                Ai = A.row
-                Aj = A.col
-                Ad = A.data
-                self.assertEqual(Ai.size,nnz*self.T)
-                self.assertEqual(Aj.size,nnz*self.T)
-                self.assertEqual(Ad.size,nnz*self.T)
-                i = 0
-                row = 0
-                counted = {}
-                for t in range(self.T):
-                    for k in range(net.num_branches):
-                        br = net.get_branch(k)
-                        for bus in [br.bus_k,br.bus_m]:
-                            if (bus.number,t) in counted:
-                                continue
-                            counted[(bus.number,t)] = True
-                            if bus.is_regulated_by_gen():
-                                reg_gens = bus.reg_generators
-                                self.assertGreater(len(reg_gens),0)
-                                g1 = reg_gens[0]
-                                self.assertGreater(g1.Q_max,g1.Q_min)
-                                for g2 in reg_gens[1:]:
-
-                                    if constr_type == 1: # range
-                                        self.assertTrue(np.abs(b[row]-(g1.Q_min/(g1.Q_max-g1.Q_min)-g2.Q_min/(g2.Q_max-g2.Q_min))) < 1e-10)
-                                        self.assertGreater(g2.Q_max,g2.Q_min)
-                                        self.assertEqual(Ai[i],row)
-                                        self.assertEqual(Aj[i],g1.index_Q[t])
-                                        self.assertTrue(np.abs(Ad[i]-1./(g1.Q_max-g1.Q_min)) < 1e-10)
-                                        i += 1
-                                        self.assertEqual(Ai[i],row)
-                                        self.assertEqual(Aj[i],g2.index_Q[t])
-                                        self.assertTrue(np.abs(Ad[i]+1./(g2.Q_max-g2.Q_min)) < 1e-10)
-                                        i += 1
-                                        row += 1
-
-                                    elif constr_type == 2: # fraction
-                                        self.assertEqual(b[row], 0.)
-                                        self.assertGreater(g2.Q_max,g2.Q_min)
-                                        self.assertEqual(Ai[i],row)
-                                        self.assertEqual(Aj[i],g1.index_Q[t])
-                                        self.assertTrue(np.abs(Ad[i]-np.maximum(g2.Q_par,1e-4)) < 1e-10)
-                                        i += 1
-                                        self.assertEqual(Ai[i],row)
-                                        self.assertEqual(Aj[i],g2.index_Q[t])
-                                        self.assertTrue(np.abs(Ad[i]+np.maximum(g1.Q_par,1e-4)) < 1e-10)
-                                        i += 1
-                                        row += 1
-                                        
-                self.assertEqual(i,nnz*self.T)
-                
-                # Last check
-                x = np.zeros(net.num_vars)
-                for t in range(self.T):
-                    for i in range(net.num_buses):
-                        bus = net.get_bus(i)
+            # Detailed check
+            Ai = A.row
+            Aj = A.col
+            Ad = A.data
+            self.assertEqual(Ai.size,nnz*self.T)
+            self.assertEqual(Aj.size,nnz*self.T)
+            self.assertEqual(Ad.size,nnz*self.T)
+            nnz = 0
+            row = 0
+            counted = {}
+            for t in range(self.T):
+                for k in range(net.num_branches):
+                    br = net.get_branch(k)
+                    for bus in [br.bus_k,br.bus_m]:
+                        if (bus.number,t) in counted:
+                            continue
+                        counted[(bus.number,t)] = True
                         if bus.is_regulated_by_gen():
-                            self.assertGreater(len(bus.reg_generators),0)
-                            for g in bus.reg_generators:
-                                self.assertTrue(g.has_flags('variable','reactive power'))
-
-                                if constr_type == 1: # range
-                                    x[g.index_Q[t]] = (g.Q_max+g.Q_min)/2.
-                                elif constr_type == 2: # fraction
-                                    x[g.index_Q[t]] = g.Q_par*10.
-                                    
-                self.assertTrue(norm(A*x-b) < 1e-10)
-
+                            self.assertEqual(b[row], bus.v_set[t])
+                            self.assertEqual(Ai[nnz], row)
+                            self.assertEqual(Aj[nnz], bus.index_v_mag[t])
+                            self.assertEqual(Ad[nnz], 1.)
+                            nnz += 1
+                            for gen in bus.reg_generators:
+                                self.assertEqual(Ai[nnz], row)
+                                self.assertEqual(Aj[nnz], gen.index_Q[t])
+                                self.assertEqual(Ad[nnz], 0.)
+                                nnz += 1
+                            row += 1
+                            for i in range(len(bus.reg_generators)-1):
+                                gen1 = bus.reg_generators[i]
+                                gen2 = bus.reg_generators[i+1]
+                                self.assertEqual(b[row], 0.)
+                                self.assertEqual(Ai[nnz], row)
+                                self.assertEqual(Aj[nnz], bus.index_v_mag[t])
+                                self.assertEqual(Ad[nnz], 0.)
+                                nnz += 1                                    
+                                for gen3 in bus.reg_generators:
+                                    self.assertEqual(Ai[nnz], row)
+                                    self.assertEqual(Aj[nnz], gen3.index_Q[t])
+                                    if gen3.index == gen1.index:
+                                        self.assertEqual(Ad[nnz], np.maximum(gen2.Q_par,1e-4))
+                                    elif gen3.index == gen2.index:
+                                        self.assertEqual(Ad[nnz], -np.maximum(gen1.Q_par,1e-4))
+                                    else:
+                                        self.assertEqual(Ad[nnz], 0.)
+                                    nnz += 1
+                                row += 1
+            self.assertEqual(nnz,A.nnz)
+                
     def test_constr_ACPF(self):
 
         # Constants

@@ -71,10 +71,6 @@ class TestProblem(unittest.TestCase):
                              net.get_num_switched_shunts())
                              
             # Fixed
-            net.set_flags('bus',
-                          'fixed',
-                          'regulated by generator',
-                          'voltage magnitude')
             net.set_flags('branch',
                           'fixed',
                           'tap changer - v',
@@ -88,7 +84,6 @@ class TestProblem(unittest.TestCase):
                           'switching - v',
                           'susceptance')
             self.assertEqual(net.num_fixed,
-                             net.get_num_buses_reg_by_gen() +
                              net.get_num_tap_changers_v() +
                              net.get_num_phase_shifters() +
                              net.get_num_switched_shunts())
@@ -96,7 +91,7 @@ class TestProblem(unittest.TestCase):
             # Constraints
             p.add_constraint(pf.Constraint('AC power balance',net))
             p.add_constraint(pf.Constraint('generator active power participation',net))
-            p.add_constraint(pf.Constraint('generator reactive power participation',net))
+            p.add_constraint(pf.Constraint('PVPQ switching',net))
             p.add_constraint(pf.Constraint('variable fixing',net))
             self.assertEqual(len(p.constraints),4)
 
@@ -320,16 +315,14 @@ class TestProblem(unittest.TestCase):
                              
             # Constraints
             p.add_constraint(pf.Constraint('AC power balance',net))
-            p.add_constraint(pf.Constraint('generator active power participation',net))
-            p.add_constraint(pf.Constraint('generator reactive power participation',net))
             p.add_constraint(pf.Constraint('voltage regulation by generators',net))
             p.add_constraint(pf.Constraint('voltage regulation by transformers',net))
             p.add_constraint(pf.Constraint('voltage regulation by shunts',net))
-            self.assertEqual(len(p.constraints),6)
+            self.assertEqual(len(p.constraints),4)
 
             # Check adding redundant constraints
             p.add_constraint(pf.Constraint('AC power balance',net))
-            self.assertEqual(len(p.constraints),6)
+            self.assertEqual(len(p.constraints),4)
             
             # Functions
             p.add_function(pf.Function('voltage magnitude regularization',1.,net))

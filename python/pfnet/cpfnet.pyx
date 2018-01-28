@@ -20,8 +20,6 @@ cimport cparser_raw
 cimport cline_flow
 cimport cgraph
 
-cimport cconstr_PAR_GEN_Q
-
 from scipy import misc
 import tempfile
 
@@ -43,9 +41,6 @@ info = {'graphviz': bool(cgraph.HAVE_GRAPHVIZ),
 ###########
 
 PI = cconstants.PI
-
-CONSTR_PAR_GEN_Q_TYPE_RANGE = cconstr_PAR_GEN_Q.CONSTR_PAR_GEN_Q_TYPE_RANGE
-CONSTR_PAR_GEN_Q_TYPE_FRACTION = cconstr_PAR_GEN_Q.CONSTR_PAR_GEN_Q_TYPE_FRACTION
 
 # C pointer
 ###########
