@@ -137,7 +137,7 @@ class TestProblem(unittest.TestCase):
             self.assertEqual(Hphi.nnz,0)
             self.assertTrue(np.all(Hphi.row >= Hphi.col))
             
-            p.analyze()
+            p.analyze()            
             p.eval(x0)
             
             # After

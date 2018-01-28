@@ -56,7 +56,7 @@ void CONSTR_PVPQ_SWITCHING_init(Constr* c) {
   
   // Init constr
   CONSTR_set_name(c,"PVPQ switching");
-  CONSTR_set_data(c,data);
+  CONSTR_set_data(c,(void*)data);
 }
 
 void CONSTR_PVPQ_SWITCHING_clear(Constr* c) {
@@ -260,10 +260,12 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t) {
 	      VEC_set(b,*A_row,Q_max);
 
 	    // v
-	    MAT_set_i(A,*A_nnz,*A_row);
-	    MAT_set_j(A,*A_nnz,BUS_get_index_v_mag(bus,t));
-	    MAT_set_d(A,*A_nnz,0.);
-	    (*A_nnz)++;
+	    if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
+	      MAT_set_i(A,*A_nnz,*A_row);
+	      MAT_set_j(A,*A_nnz,BUS_get_index_v_mag(bus,t));
+	      MAT_set_d(A,*A_nnz,0.);
+	      (*A_nnz)++;
+	    }
 
 	    // Q
 	    for (gen2 = BUS_get_reg_gen(bus); gen2 != NULL; gen2 = GEN_get_reg_next(gen2)) {
@@ -291,7 +293,7 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t) {
 	      !data->fix_flag[GEN_get_index_Q(gen1,t)]) {
 	
 	    for (gen2 = GEN_get_reg_next(gen1); gen2 != NULL; gen2 = GEN_get_reg_next(gen2)) {
-
+	      
 	      // Candidate 2
 	      if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q) &&
 		  !data->fix_flag[GEN_get_index_Q(gen2,t)]) {
@@ -307,10 +309,12 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t) {
 		  alpha2 = CONSTR_PVPQ_SWITCHING_PARAM;
 
 		// v
-		MAT_set_i(A,*A_nnz,*A_row);
-		MAT_set_j(A,*A_nnz,BUS_get_index_v_mag(bus,t));
-		MAT_set_d(A,*A_nnz,0.);
-		(*A_nnz)++;
+		if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
+		  MAT_set_i(A,*A_nnz,*A_row);
+		  MAT_set_j(A,*A_nnz,BUS_get_index_v_mag(bus,t));
+		  MAT_set_d(A,*A_nnz,0.);
+		  (*A_nnz)++;
+		}
 		
 		// Q
 		for (gen3 = BUS_get_reg_gen(bus); gen3 != NULL; gen3 = GEN_get_reg_next(gen3)) {
