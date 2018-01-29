@@ -570,15 +570,17 @@ void CONSTR_REG_GEN_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* va
 
 void CONSTR_REG_GEN_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
-  /*
   // Local variables
   Bus* buses[2];
   Bus* bus;
+  Gen* rg;
+  int* A_row;
   int* J_row;
   char* bus_counted;
   int bus_index_t[2];
   REAL lamCompY;
   REAL lamCompZ;
+  REAL lamA;
   int k;
   int T;
 
@@ -587,10 +589,11 @@ void CONSTR_REG_GEN_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* 
 
   // Constr data
   J_row = CONSTR_get_J_row_ptr(c);
+  A_row = CONSTR_get_A_row_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!J_row || !bus_counted)
+  if (!J_row || !A_row || !bus_counted)
     return;
 
   // Check outage
@@ -607,26 +610,37 @@ void CONSTR_REG_GEN_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* 
 
     bus = buses[k];
 
-    if (!bus_counted[bus_index_t[k]]) { // not counted yet
+    // Bus not counted yet
+    if (!bus_counted[bus_index_t[k]]) {
 
-      if (BUS_is_regulated_by_gen(bus) && !BUS_is_slack(bus)) { // regulator and not slack
+      // Bus regulated and not slack
+      if (BUS_is_regulated_by_gen(bus) && !BUS_is_slack(bus)) {
 
-	lamCompY = VEC_get(sf,*J_row);
-	(*J_row)++; // dCompY
-	lamCompZ = VEC_get(sf,*J_row);
-	(*J_row)++; // dCompZ
+	// Regulating generators
+	for (rg = BUS_get_reg_gen(bus); rg != NULL; rg = GEN_get_reg_next(rg)) {
 
-	if (fabs(lamCompY) > fabs(lamCompZ))
-	  BUS_set_sens_v_reg_by_gen(bus,lamCompY,t);
-	else
-	  BUS_set_sens_v_reg_by_gen(bus,lamCompZ,t);
+	  lamA = VEC_get(sA,*A_row);
+	  (*A_row)++; // Ax-b
+	  
+	  lamCompY = VEC_get(sf,*J_row);
+	  (*J_row)++; // dCompY
+
+	  lamCompZ = VEC_get(sf,*J_row);
+	  (*J_row)++; // dCompZ
+
+	  if (fabs(lamA) > fabs(BUS_get_sens_v_reg_by_gen(bus,t)))
+	    BUS_set_sens_v_reg_by_gen(bus,lamA,t);
+	  if (fabs(lamCompY) > fabs(BUS_get_sens_v_reg_by_gen(bus,t)))
+	    BUS_set_sens_v_reg_by_gen(bus,lamCompY,t);
+	  if (fabs(lamCompZ) > fabs(BUS_get_sens_v_reg_by_gen(bus,t)))
+	    BUS_set_sens_v_reg_by_gen(bus,lamCompZ,t);
+	}
       }
     }
 
     // Update counted flag
     bus_counted[bus_index_t[k]] = TRUE;
   }
-  */
 }
 
 void CONSTR_REG_GEN_free(Constr* c) {

@@ -1107,6 +1107,7 @@ void CONSTR_store_sens(Constr* c, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Clear
   CONSTR_clear(c);
+  NET_clear_sensitivities(c->net);
 
   // Store sensitivities
   for (t = 0; t < NET_get_num_periods(net); t++) {

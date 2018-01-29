@@ -362,6 +362,7 @@ void PROB_store_sens(Prob* p, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Clear
   CONSTR_list_clear(p->constr);
+  NET_clear_sensitivities(p->net);
 
   // Store sens
   for (t = 0; t < NET_get_num_periods(p->net); t++) {

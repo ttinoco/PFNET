@@ -2230,33 +2230,36 @@ class TestConstraints(unittest.TestCase):
                 self.assertLessEqual(error,EPS)
 
             # Sensitivities
-            #net.clear_sensitivities()
-            #for t in range(self.T):
-            #    for i in range(net.num_buses):
-            #        bus = net.get_bus(i)
-            #        self.assertEqual(bus.sens_v_reg_by_gen[t],0.)
-            #sens = np.zeros(constr.f.size)
-            #self.assertEqual(sens.size,rowsJ*self.T)
-            #Ji = constr.J.row
-            #Jj = constr.J.col
+            net.clear_sensitivities()
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    self.assertEqual(bus.sens_v_reg_by_gen[t],0.)
+            sensf = np.zeros(constr.f.size)
+            sensA = np.ones(constr.b.size)*10.5
+            self.assertEqual(sensf.size,rowsJ*self.T)
+            Ji = constr.J.row
+            Jj = constr.J.col
+            Ai = constr.A.row
+            Aj = constr.A.col
             
-            #for t in range(self.T):
-            #    for i in range(net.num_buses):
-            #        bus = net.get_bus(i)
-            #        if bus.is_regulated_by_gen() and not bus.is_slack():
-            #            indices = Ji[np.where(Jj == bus.reg_generators[0].index_Q[t])[0]]
-            #            self.assertEqual(indices.size,2)
-            #            sens[indices[0]] = -bus.index-10
-            #            sens[indices[1]] = bus.index+11*(bus.index % 2)
-            #constr.store_sensitivities(np.zeros(constr.A.shape[0]),sens,None,None)
-            #for t in range(self.T):
-            #    for i in range(net.num_buses):
-            #        bus = net.get_bus(i)
-            #        if bus.is_regulated_by_gen() and not bus.is_slack():
-            #            if bus.index % 2 == 1:
-            #                self.assertEqual(bus.sens_v_reg_by_gen[t],bus.index+11)
-            #            else:
-            #                self.assertEqual(bus.sens_v_reg_by_gen[t],-bus.index-10)
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    if bus.is_regulated_by_gen() and not bus.is_slack():
+                        indices = Ji[np.where(Jj == bus.reg_generators[-1].index_Q[t])[0]]
+                        self.assertEqual(indices.size,2)
+                        sensf[indices[0]] = -bus.index-10
+                        sensf[indices[1]] = bus.index+11*(bus.index % 2)
+            constr.store_sensitivities(sensA,sensf,None,None)
+            for t in range(self.T):
+                for i in range(net.num_buses):
+                    bus = net.get_bus(i)
+                    if bus.is_regulated_by_gen() and not bus.is_slack():
+                        if bus.index % 2 == 1:
+                            self.assertEqual(bus.sens_v_reg_by_gen[t],bus.index+11)
+                        else:
+                            self.assertEqual(bus.sens_v_reg_by_gen[t],-bus.index-10 if bus.index != 0 else 10.5)
 
     def test_constr_NBOUND(self):
 
@@ -2968,7 +2971,7 @@ class TestConstraints(unittest.TestCase):
             constraints = [pf.Constraint('variable nonlinear bounds',net),
                            pf.Constraint('variable fixing',net),
                            pf.Constraint('generator active power participation',net),
-                           pf.Constraint('generator reactive power participation',net),
+                           pf.Constraint('PVPQ switching',net),
                            pf.Constraint('AC power balance',net),
                            pf.Constraint('DC power balance',net),
                            pf.Constraint('voltage regulation by generators',net),
