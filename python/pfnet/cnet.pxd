@@ -51,7 +51,6 @@ cdef extern from "pfnet/net.h":
 
     void NET_add_vargens_from_params(Net* net, cbus.Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value)
     void NET_add_batteries_from_params(Net* net, cbus.Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d)        
-    void NET_adjust_generators(Net* net)
     cbus.Bus* NET_bus_hash_number_find(Net* net, int number)
     cbus.Bus* NET_bus_hash_name_find(Net* net, char* name)
     void NET_bus_hash_number_add(Net* net, cbus.Bus* bus)

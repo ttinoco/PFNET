@@ -4352,40 +4352,7 @@ class TestNetwork(unittest.TestCase):
                 copy_bat.E_max = orig_bat.E_max
 
             # Compare
-            pf.tests.utils.compare_networks(self, orig_net, copy_net)            
-
-    def test_adjust_generators(self):
-        
-        for case in test_cases.CASES:
-
-            import os
-            if os.path.basename(case) in ['sys_problem2.mat', 'sys_problem3.mat']:
-                continue
-
-            net = pf.Parser(case).parse(case, num_periods=2)
-
-            net0 = net.get_copy()
-            net0.update_properties()
-
-            net.adjust_generators()
-
-            net1 = net.get_copy()
-            net1.update_properties()
-
-            for i in range(net.num_buses):
-                for t in range(net.num_periods):
-                    bus0 = net0.get_bus(i)
-                    bus1 = net1.get_bus(i)
-                    if not [g for g in bus0.generators if g.is_slack()]:
-                        self.assertEqual(bus0.P_mismatch[t], bus1.P_mismatch[t])
-                    else:
-                        self.assertNotEqual(bus0.P_mismatch[t], bus1.P_mismatch[t])
-                        self.assertLess(np.abs(bus1.P_mismatch[t]), 1e-10)
-                    if not [g for g in bus0.generators if g.is_regulator()]:
-                        self.assertEqual(bus0.Q_mismatch[t], bus1.Q_mismatch[t])
-                    else:
-                        self.assertNotEqual(bus0.Q_mismatch[t], bus1.Q_mismatch[t])
-                        self.assertLess(np.abs(bus1.Q_mismatch[t]), 1e-10)                    
+            pf.tests.utils.compare_networks(self, orig_net, copy_net)                    
 
     def test_symmetric_connectors_removers(self):
 

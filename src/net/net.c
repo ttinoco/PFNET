@@ -1531,63 +1531,6 @@ void NET_add_batteries_from_params(Net* net, Bus* bus_list, REAL power_capacity,
   }
 }
 
-void NET_adjust_generators(Net* net) {
-  
-  // Local variables
-  Bus* bus;
-  Gen* gen;
-  REAL P;
-  REAL Q;
-  int num;
-  int i;
-  int t;
-
-  // No net
-  if (!net)
-    return;
-
-  // Update properties
-  NET_update_properties(net, NULL);
-
-  // Process buses
-  for (i = 0; i < net->num_buses; i++) {
-
-    bus = NET_get_bus(net,i);
-    
-    for (t = 0; t < net->num_periods; t++) {
-
-      // Active
-      P = BUS_get_total_gen_P(bus, t) - BUS_get_P_mis(bus, t);
-
-      num = 0;
-      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-	if (GEN_is_slack(gen))
-	  num += 1;
-      }
-      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-	if (GEN_is_slack(gen))
-	  GEN_set_P(gen,P/num,t);
-      }
-
-      // Reactive
-      Q = BUS_get_total_gen_Q(bus, t) - BUS_get_Q_mis(bus, t);
-      
-      num = 0;
-      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-	if (GEN_is_regulator(gen))
-	  num += 1;
-      }
-      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-	if (GEN_is_regulator(gen))
-	  GEN_set_Q(gen,Q/num,t);
-      }
-    }
-  }
-
-  // Update properties
-  NET_update_properties(net, NULL);
-}
-
 void NET_bus_hash_number_add(Net* net, Bus* bus) {
   if (net)
     net->bus_hash_number = BUS_hash_number_add(net->bus_hash_number,bus);

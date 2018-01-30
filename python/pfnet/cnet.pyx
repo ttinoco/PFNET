@@ -622,14 +622,6 @@ cdef class Network:
         if cnet.NET_has_error(self._c_net):
             raise NetworkError(cnet.NET_get_error_string(self._c_net))
 
-    def adjust_generators(self):
-        """
-        Adjusts powers of slack and regulator generators connected to or regulating the
-        same bus to correct generator participations without modifying the total power injected.
-        """
-
-        cnet.NET_adjust_generators(self._c_net);
-
     def clear_error(self):
         """
         Clear error flag and message string.
