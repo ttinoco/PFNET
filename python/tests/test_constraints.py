@@ -3016,7 +3016,7 @@ class TestConstraints(unittest.TestCase):
             constraints = [pf.Constraint('variable nonlinear bounds',net),
                            pf.Constraint('variable fixing',net),
                            pf.Constraint('generator active power participation',net),
-                           pf.Constraint('generator reactive power participation',net),
+                           pf.Constraint('PVPQ switching',net),
                            pf.Constraint('AC power balance',net),
                            pf.Constraint('DC power balance',net),
                            pf.Constraint('voltage regulation by generators',net),
@@ -3026,7 +3026,7 @@ class TestConstraints(unittest.TestCase):
 
             # Update network
             list(map(lambda c: c.update_network(),constraints))
-
+            
             # After updating network
             list(map(lambda c: c.analyze(),constraints))
             list(map(lambda c: c.eval(x0),constraints))
@@ -3077,10 +3077,11 @@ class TestConstraints(unittest.TestCase):
             for c in constraints:
                 self.assertRaises(pf.ConstraintError,c.eval,x0)
             list(map(lambda c: c.clear_error(),constraints))
-
+            
             # Do it right
             list(map(lambda c: c.analyze(),constraints))
             list(map(lambda c: c.eval(x0),constraints))
+            
             for c in constraints:
                 self.assertTrue(isinstance(c.b,np.ndarray))
                 self.assertTrue(isinstance(c.A,coo_matrix))

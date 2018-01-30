@@ -158,7 +158,7 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 	  }	    
 	  
 	  // Q is free: Qmax violation
-	  else if (Q > Qmax) {
+	  else if (Q >= Qmax) {
 
 	    // Switch to Q fixed
 	    GEN_set_Q(gen,Qmax,t);
@@ -168,7 +168,7 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 	  }
 
 	  // Q is free: Qmin violation
-	  else if (Q < Qmin) {
+	  else if (Q <= Qmin) {
 	    
 	    // Switch to Q fixed
 	    GEN_set_Q(gen,Qmin,t);
