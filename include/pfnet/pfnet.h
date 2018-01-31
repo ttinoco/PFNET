@@ -47,6 +47,7 @@
 #include <pfnet/constr_PVPQ_SWITCHING.h>
 #include <pfnet/constr_GEN_RAMP.h>
 #include <pfnet/constr_REG_GEN.h>
+#include <pfnet/constr_REG_GEN_EX.h>
 #include <pfnet/constr_REG_TRAN.h>
 #include <pfnet/constr_REG_SHUNT.h>
 #include <pfnet/constr_DC_FLOW_LIM.h>

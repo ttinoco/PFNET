@@ -32,6 +32,7 @@ Unreleased
 * Changed PAR_GEN_Q constraint to PVPQ_SWITCHING, which enforces flexible participations based on Q_par and performs all required modifications for PV-PQ switching heuristics.
 * Updated PVPQ switching heuristics to utilize PVPQ_SWITCHING constraint.
 * Removed net adjust_generators.
+* Added extended voltage regulation constraints by generators.
 
 Version 1.3.2
 -------------
