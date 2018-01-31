@@ -97,7 +97,6 @@ cdef extern from "pfnet/constr.h":
     Constr* CONSTR_PVPQ_SWITCHING_new(Net* net)
     Constr* CONSTR_GEN_RAMP_new(Net* net)
     Constr* CONSTR_REG_GEN_new(Net* net)
-    Constr* CONSTR_REG_GEN_EX_new(Net* net)
     Constr* CONSTR_REG_TRAN_new(Net* net)
     Constr* CONSTR_REG_SHUNT_new(Net* net)
     Constr* CONSTR_DC_FLOW_LIM_new(Net* net)

@@ -82,7 +82,6 @@ problem_constr_src = 	problem/constr/constr_NBOUND.c  \
 			problem/constr/constr_PAR_GEN_P.c \
 			problem/constr/constr_PVPQ_SWITCHING.c \
 			problem/constr/constr_REG_GEN.c \
-			problem/constr/constr_REG_GEN_EX.c \
 			problem/constr/constr_REG_SHUNT.c \
 			problem/constr/constr_REG_TRAN.c \
 			problem/constr/constr_LOAD_PF.c
@@ -101,7 +100,6 @@ problem_constr_hdr = 	$(inc_path)/constr_NBOUND.h \
 			$(inc_path)/constr_PAR_GEN_P.h \
 			$(inc_path)/constr_PVPQ_SWITCHING.h \
 			$(inc_path)/constr_REG_GEN.h \
-			$(inc_path)/constr_REG_GEN_EX.h \
 			$(inc_path)/constr_REG_SHUNT.h \
 			$(inc_path)/constr_REG_TRAN.h \
 			$(inc_path)/constr_LOAD_PF.h

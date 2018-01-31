@@ -598,8 +598,6 @@ cdef class Constraint(ConstraintBase):
             self._c_constr = cconstr.CONSTR_GEN_RAMP_new(net._c_net)
         elif name == "voltage regulation by generators":
             self._c_constr = cconstr.CONSTR_REG_GEN_new(net._c_net)
-        elif name == "extended voltage regulation by generators":
-            self._c_constr = cconstr.CONSTR_REG_GEN_EX_new(net._c_net)
         elif name == "voltage regulation by transformers":
             self._c_constr = cconstr.CONSTR_REG_TRAN_new(net._c_net)
         elif name == "voltage regulation by shunts":
