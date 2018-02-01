@@ -32,31 +32,9 @@ Constr* CONSTR_PVPQ_SWITCHING_new(Net* net) {
 
 void CONSTR_PVPQ_SWITCHING_init(Constr* c) {
 
-  // Local variables
-  Bus* bus;
-  Constr_PVPQ_SWITCHING_Data* data;
-  Net* net = CONSTR_get_network(c);
-  int i;
-  int t;
-
-  // Allocate
-  data = (Constr_PVPQ_SWITCHING_Data*)malloc(sizeof(Constr_PVPQ_SWITCHING_Data));
-  ARRAY_zalloc(data->fix_flag,char,NET_get_num_vars(net));
-
-  // Fill data
-  for (i = 0; i < NET_get_num_buses(net); i++) {
-    bus = NET_get_bus(net,i);
-    if (BUS_is_regulated_by_gen(bus)) { // includes slack bus
-      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
-	for (t = 0; t < NET_get_num_periods(net); t++)
-	  data->fix_flag[BUS_get_index_v_mag(bus,t)] = TRUE; // reg v starts fixed
-      }
-    }
-  }
-  
-  // Init constr
+  // Init
   CONSTR_set_name(c,"PVPQ switching");
-  CONSTR_set_data(c,(void*)data);
+  CONSTR_set_data(c,NULL);
 }
 
 void CONSTR_PVPQ_SWITCHING_clear(Constr* c) {
@@ -142,8 +120,14 @@ void CONSTR_PVPQ_SWITCHING_allocate(Constr* c) {
   int num_constr;
   int num_vars;
   int A_nnz;
+  Bus* bus;
+  Net* net;
+  int i;
+  int t;
+  Constr_PVPQ_SWITCHING_Data* data;
 
-  num_vars = NET_get_num_vars(CONSTR_get_network(c));
+  net = CONSTR_get_network(c);
+  num_vars = NET_get_num_vars(net);
   num_constr = CONSTR_get_A_row(c);
   A_nnz = CONSTR_get_A_nnz(c);
 
@@ -163,6 +147,21 @@ void CONSTR_PVPQ_SWITCHING_allocate(Constr* c) {
   CONSTR_set_A(c,MAT_new(num_constr, // size1 (rows)
 			 num_vars,   // size2 (rows)
 			 A_nnz)); // nnz
+
+  // Data (var-dependent)
+  CONSTR_PVPQ_SWITCHING_free(c);
+  data = (Constr_PVPQ_SWITCHING_Data*)malloc(sizeof(Constr_PVPQ_SWITCHING_Data));
+  ARRAY_zalloc(data->fix_flag,char,num_vars);
+  for (i = 0; i < NET_get_num_buses(net); i++) {
+    bus = NET_get_bus(net,i);
+    if (BUS_is_regulated_by_gen(bus)) { // includes slack bus
+      if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
+	for (t = 0; t < NET_get_num_periods(net); t++)
+	  data->fix_flag[BUS_get_index_v_mag(bus,t)] = TRUE; // reg v starts fixed
+      }
+    }
+  }
+  CONSTR_set_data(c,(void*)data);
 }
 
 void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t) {

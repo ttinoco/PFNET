@@ -2971,7 +2971,7 @@ class TestConstraints(unittest.TestCase):
             constraints = [pf.Constraint('variable nonlinear bounds',net),
                            pf.Constraint('variable fixing',net),
                            pf.Constraint('generator active power participation',net),
-                           #pf.Constraint('PVPQ switching',net),
+                           pf.Constraint('PVPQ switching',net),
                            pf.Constraint('AC power balance',net),
                            pf.Constraint('DC power balance',net),
                            pf.Constraint('voltage regulation by generators',net),
@@ -3016,7 +3016,7 @@ class TestConstraints(unittest.TestCase):
             constraints = [pf.Constraint('variable nonlinear bounds',net),
                            pf.Constraint('variable fixing',net),
                            pf.Constraint('generator active power participation',net),
-                           #pf.Constraint('PVPQ switching',net),
+                           pf.Constraint('PVPQ switching',net),
                            pf.Constraint('AC power balance',net),
                            pf.Constraint('DC power balance',net),
                            pf.Constraint('voltage regulation by generators',net),
@@ -3081,7 +3081,7 @@ class TestConstraints(unittest.TestCase):
             # Do it right
             list(map(lambda c: c.analyze(),constraints))
             list(map(lambda c: c.eval(x0),constraints))
-            
+
             for c in constraints:
                 self.assertTrue(isinstance(c.b,np.ndarray))
                 self.assertTrue(isinstance(c.A,coo_matrix))
