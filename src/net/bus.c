@@ -788,8 +788,10 @@ REAL BUS_get_total_gen_P(Bus* bus, int t) {
   REAL P = 0;
   if (!bus || t < 0 || t >= bus->num_periods)
     return 0;
-  for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen))
-    P += GEN_get_P(gen,t);
+  for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen)) {
+    if (!GEN_is_on_outage(gen))
+      P += GEN_get_P(gen,t);
+  }
   return P;
 }
 
@@ -798,8 +800,10 @@ REAL BUS_get_total_gen_Q(Bus* bus, int t) {
   REAL Q = 0;
   if (!bus || t < 0 || t >= bus->num_periods)
     return 0;
-  for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen))
-    Q += GEN_get_Q(gen,t);
+  for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen)) {
+    if (!GEN_is_on_outage(gen))
+      Q += GEN_get_Q(gen,t);
+  }
   return Q;
 }
 
@@ -808,8 +812,10 @@ REAL BUS_get_total_gen_Q_max(Bus* bus) {
   REAL Qmax = 0;
   if (!bus)
     return 0;
-  for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen))
-    Qmax += GEN_get_Q_max(gen);
+  for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen)) {
+    if (!GEN_is_on_outage(gen))
+      Qmax += GEN_get_Q_max(gen);
+  }
   return Qmax;
 }
 
@@ -818,8 +824,10 @@ REAL BUS_get_total_gen_Q_min(Bus* bus) {
   REAL Qmin = 0;
   if (!bus)
     return 0;
-  for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen))
-    Qmin += GEN_get_Q_min(gen);
+  for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen)) {
+    if (!GEN_is_on_outage(gen))
+      Qmin += GEN_get_Q_min(gen);
+  }
   return Qmin;
 }
 
@@ -828,8 +836,10 @@ REAL BUS_get_total_reg_gen_Qmax(Bus* bus) {
   REAL Qmax = 0;
   if (!bus)
     return 0;
-  for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen))
-    Qmax += GEN_get_Q_max(gen);
+  for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen)) {
+    if (!GEN_is_on_outage(gen))
+      Qmax += GEN_get_Q_max(gen);
+  }
   return Qmax;
 }
 
@@ -838,8 +848,10 @@ REAL BUS_get_total_reg_gen_Qmin(Bus* bus) {
   REAL Qmin = 0;
   if (!bus)
     return 0;
-  for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen))
-    Qmin += GEN_get_Q_min(gen);
+  for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen)) {
+    if (!GEN_is_on_outage(gen))
+      Qmin += GEN_get_Q_min(gen);
+  }
   return Qmin;
 }
 
@@ -1611,17 +1623,25 @@ BOOL BUS_is_equal(Bus* bus, Bus* other) {
 }
 
 BOOL BUS_is_regulated_by_gen(Bus* bus) {
-  if (bus)
-    return bus->reg_gen != NULL;
-  else
-    return FALSE;
+  Gen* gen;
+  if (bus) {
+    for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen)) {
+      if (!GEN_is_on_outage(gen))
+	return TRUE;
+    }
+  }
+  return FALSE;
 }
 
 BOOL BUS_is_regulated_by_tran(Bus* bus) {
-  if (bus)
-    return bus->reg_tran != NULL;
-  else
-    return FALSE;
+  Branch* br;
+  if (bus) {
+    for (br = bus->reg_tran; br != NULL; br = BRANCH_get_reg_next(br)) {
+      if (!BRANCH_is_on_outage(br))
+	return TRUE;
+    }
+  }
+  return FALSE;
 }
 
 BOOL BUS_is_regulated_by_shunt(Bus* bus) {

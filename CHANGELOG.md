@@ -32,6 +32,7 @@ Unreleased
 * Changed PAR_GEN_Q constraint to PVPQ_SWITCHING, which enforces flexible participations based on Q_par and performs all required modifications for PV-PQ switching heuristics.
 * Updated PVPQ switching heuristics to utilize PVPQ_SWITCHING constraint.
 * Removed net adjust_generators.
+* Improved handling of outages: Outages can be enabled by setting the outage flag. Contingencies no longer disconnect components.
 
 Version 1.3.2
 -------------

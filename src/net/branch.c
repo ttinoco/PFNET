@@ -807,7 +807,7 @@ REAL BRANCH_get_S_mk_mag(Branch* br, Vec* var_values, int t) {
 }
 
 REAL BRANCH_get_P_km(Branch* br, Vec* var_values, int t) {
-  /** Get the real power flow measured at bus "k" towards bus "m".
+  /** Gets the real power flow measured at bus "k" towards bus "m".
    *  P_km = P_km_series + P_k_shunt
    */
   
@@ -822,7 +822,7 @@ REAL BRANCH_get_P_km(Branch* br, Vec* var_values, int t) {
 }
 
 REAL BRANCH_get_Q_km(Branch* br, Vec* var_values, int t) {
-  /** Get the reactive power flow measured at bus "k" towards bus "m".
+  /** Gets the reactive power flow measured at bus "k" towards bus "m".
    *  Q_km = Q_km_series + Q_k_shunt
    */
   
@@ -837,7 +837,7 @@ REAL BRANCH_get_Q_km(Branch* br, Vec* var_values, int t) {
 }
 
 REAL BRANCH_get_P_mk(Branch* br, Vec* var_values, int t) {
-  /** Get the real power flow measured at bus "m" towards bus "k".
+  /** Gets the real power flow measured at bus "m" towards bus "k".
    *  P_mk = P_mk_series + P_m_shunt
    */
 
@@ -852,7 +852,7 @@ REAL BRANCH_get_P_mk(Branch* br, Vec* var_values, int t) {
 }
 
 REAL BRANCH_get_Q_mk(Branch* br, Vec* var_values, int t) {
-  /** Get the reactive power flow measured at bus "m" towards bus "k".
+  /** Gets the reactive power flow measured at bus "m" towards bus "k".
    *  Q_mk = Q_mk_series + Q_m_shunt
    */
   
@@ -867,7 +867,7 @@ REAL BRANCH_get_Q_mk(Branch* br, Vec* var_values, int t) {
 }
 
 REAL BRANCH_get_P_km_series(Branch* br, Vec* var_values, int t) {
-  /** Get the real power flow across the series element from bus "k" to bus "m".
+  /** Gets the real power flow across the series element from bus "k" to bus "m".
    *  P_km_series = a_km^2*v_k^2*g_km - a_km*a_mk*v_k*v_m*( g_km*cos(w_k-w_m-phi) + b_km*sin(w_k-w_m-phi))
    */
   
@@ -882,7 +882,7 @@ REAL BRANCH_get_P_km_series(Branch* br, Vec* var_values, int t) {
 }
 
 REAL BRANCH_get_Q_km_series(Branch* br, Vec* var_values, int t) {
-  /** Get the reactive power flow across the series element from bus "k" to bus "m".
+  /** Gets the reactive power flow across the series element from bus "k" to bus "m".
    *  Q_km_series = -a_km^2*v_k^2*b_km - a_km*a_mk*v_k*v_m*( g_km*sin(w_k-w_m-phi) - b_km*cos(w_k-w_m-phi))
    */
   
@@ -897,7 +897,7 @@ REAL BRANCH_get_Q_km_series(Branch* br, Vec* var_values, int t) {
 }
 
 REAL BRANCH_get_P_mk_series(Branch* br, Vec* var_values, int t) {
-  /** Get the real power flow across the series element from bus "m" to bus "k".
+  /** Gets the real power flow across the series element from bus "m" to bus "k".
    *  P_mk_series = -a_mk^2*v_m^2*g_mk - a_mk*a_km*v_k*v_m*( g_mk*cos(w_k-w_m+phi) + b_mk*sin(w_k-w_m+phi))
    */
   
@@ -912,7 +912,7 @@ REAL BRANCH_get_P_mk_series(Branch* br, Vec* var_values, int t) {
 }
 
 REAL BRANCH_get_Q_mk_series(Branch* br, Vec* var_values, int t) {
-  /** Get the real power flow across the series element from bus "m" to bus "k".
+  /** Gets the real power flow across the series element from bus "m" to bus "k".
    *  Q_mk_series = -a_mk^2*v_m^2*b_mk - a_mk*a_km*v_k*v_m*( g_mk*sin(w_k-w_m+phi) - b_mk*cos(w_k-w_m+phi))
    */
   
@@ -927,7 +927,7 @@ REAL BRANCH_get_Q_mk_series(Branch* br, Vec* var_values, int t) {
 }
 
 REAL BRANCH_get_P_k_shunt(Branch* br, Vec* var_values, int t) {
-  /** Get the real power flow to the shunt element from bus "k".
+  /** Gets the real power flow to the shunt element from bus "k".
    *  P_k_shunt = v_k^2*a_km^2*g_k_sh
    */
   
@@ -942,7 +942,7 @@ REAL BRANCH_get_P_k_shunt(Branch* br, Vec* var_values, int t) {
 }
 
 REAL BRANCH_get_Q_k_shunt(Branch* br, Vec* var_values, int t) {
-  /** Get the reactive power flow to the shunt element from bus "k".
+  /** Gets the reactive power flow to the shunt element from bus "k".
    *  Q_k_shunt = v_k^2*a_km^2*b_k_sh
    */
   
@@ -957,7 +957,7 @@ REAL BRANCH_get_Q_k_shunt(Branch* br, Vec* var_values, int t) {
 }
 
 REAL BRANCH_get_P_m_shunt(Branch* br, Vec* var_values, int t) {
-  /** Get the real power flow to the shunt element from bus "m".
+  /** Gets the real power flow to the shunt element from bus "m".
    *  P_m_shunt = v_m^2*a_mk^2*g_m_sh
    */
   
@@ -972,7 +972,7 @@ REAL BRANCH_get_P_m_shunt(Branch* br, Vec* var_values, int t) {
 }
 
 REAL BRANCH_get_Q_m_shunt(Branch* br, Vec* var_values, int t) {
-  /** Get the reactive power flow to the shunt element from bus "m".
+  /** Gets the reactive power flow to the shunt element from bus "m".
    *  Q_m_shunt = v_m^2*a_mk^2*b_m_sh
    */
   
