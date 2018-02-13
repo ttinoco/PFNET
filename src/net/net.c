@@ -4143,10 +4143,6 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
   if (!net || !br)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -4174,7 +4170,7 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
     phi = BRANCH_get_phase(br,t);
 
   // Tap ratios
-  if (BRANCH_is_tap_changer(br)) {
+  if (BRANCH_is_tap_changer(br) && !BRANCH_is_on_outage(br)) {
 
     // Tap ratio limit violations
     //***************************
@@ -4196,7 +4192,7 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
   }
 
   // Phase shifts
-  if (BRANCH_is_phase_shifter(br)) {
+  if (BRANCH_is_phase_shifter(br) && !BRANCH_is_on_outage(br)) {
 
     // Phase shift limit violations
     //*****************************
@@ -4222,6 +4218,10 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
 
     bus = buses[k];
 
+    // Skip if branch on outage
+    if (BRANCH_is_on_outage(br))
+      break;
+
     // Update injected P,Q at buses k and m
     if (k == 0) {
       BUS_inject_P(bus,-BRANCH_get_P_km(br,var_values,t),t);
@@ -4233,7 +4233,7 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
     }
   }
 
-  // Other flows
+  // Other flows and things
   for (k = 0; k < 2; k++) {
 
     bus = buses[k];
@@ -4258,7 +4258,7 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
     }
 
     // Normal voltage magnitude limit violations
-    //************************************
+    //******************************************
     dv = 0;
     if (v[k] > BUS_get_v_max_norm(bus))
       dv = v[k]-BUS_get_v_max_norm(bus);
@@ -4274,7 +4274,7 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
       dv = v[k]-BUS_get_v_max_reg(bus);
     if (v[k] < BUS_get_v_min_reg(bus))
       dv = BUS_get_v_min_reg(bus)-v[k];
-    if (BUS_is_regulated_by_tran(bus)) {
+    if (BUS_is_regulated_by_tran(bus)) { // false if all reg trans are on outage
       if (dv > net->tran_v_vio[t])
 	net->tran_v_vio[t] = dv;
     }
@@ -4284,7 +4284,7 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
     }
 
     // Bus regulated by gen
-    if (BUS_is_regulated_by_gen(bus)) {
+    if (BUS_is_regulated_by_gen(bus)) { // false if all reg gens are on outage
 
       // Voltage set point deviation
       //****************************
@@ -4303,6 +4303,11 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
     // Generators
     for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
 
+      // Skip if gen onoutage
+      if (GEN_is_on_outage(gen))
+	continue;
+      
+      // P Q
       if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) && var_values)
 	P = VEC_get(var_values,GEN_get_index_P(gen,t));
       else

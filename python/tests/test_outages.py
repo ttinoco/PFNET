@@ -40,7 +40,7 @@ class TestOutages(unittest.TestCase):
         # total gen Q
 
         # total gen Qmin
-
+        
         # total gen Qmax
 
         # total reg gen Qmin
@@ -52,4 +52,35 @@ class TestOutages(unittest.TestCase):
         # reg by tran
         
         pass
+    
+    def test_network(self):
+
+        # clear outages
+
+        # num branches not on outage
+
+        # num gens not on outage
+
+        pass
+
+    def test_network_properties(self):
+
+        # tap ratio vio and actions
+
+        # phase shift vio and actions
+
+        # mismatches (branch and gen outages)
+
+        # v reg limit violations
+
+        # v set deviations and actions
+
+        # gen active power cost
+
+        # gen Q vio
+
+        # gen P vio and actions
+
+        pass
+
     
