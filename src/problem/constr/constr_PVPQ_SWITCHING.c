@@ -323,7 +323,7 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t) {
 		    if (gen3 == gen1)
 		      MAT_set_d(A,*A_nnz,alpha2);
 		    else if (gen3 == gen2)
-		      MAT_set_d(A,*A_nnz,-alpha2);
+		      MAT_set_d(A,*A_nnz,-alpha1);
 		    else
 		      MAT_set_d(A,*A_nnz,0.);
 		    (*A_nnz)++;

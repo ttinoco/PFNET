@@ -1395,14 +1395,21 @@ BOOL BRANCH_is_tap_changer(Branch* br) {
 
 BOOL BRANCH_is_tap_changer_v(Branch* br) {
   if (br)
-    return (br->type == BRANCH_TYPE_TRAN_TAP_V);
+    return br->type == BRANCH_TYPE_TRAN_TAP_V;
   else
     return FALSE;
 }
 
 BOOL BRANCH_is_tap_changer_Q(Branch* br) {
   if (br)
-    return (br->type == BRANCH_TYPE_TRAN_TAP_Q);
+    return br->type == BRANCH_TYPE_TRAN_TAP_Q;
+  else
+    return FALSE;
+}
+
+BOOL BRANCH_is_part_of_3_winding_transformer(Branch* br) {
+  if (br)
+    return BUS_is_star(br->bus_k) || BUS_is_star(br->bus_m);
   else
     return FALSE;
 }

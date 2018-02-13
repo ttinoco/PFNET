@@ -1489,11 +1489,15 @@ class TestConstraints(unittest.TestCase):
             self.assertGreater(net.num_vars,0)
             self.assertEqual(net.num_vars,
                              (net.get_num_buses_reg_by_gen()+net.get_num_slack_gens()+net.get_num_reg_gens())*self.T)
-
+            
             x0 = net.get_var_values()
             self.assertTrue(type(x0) is np.ndarray)
             self.assertTupleEqual(x0.shape,(net.num_vars,))
 
+            # Make it iteresting
+            for gen in net.generators:
+                gen.Q_par = np.random.rand()            
+            
             # Constraint
             constr = pf.Constraint('PVPQ switching',net)
             self.assertEqual(constr.name,'PVPQ switching')

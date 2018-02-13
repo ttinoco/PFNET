@@ -1127,6 +1127,17 @@ cdef class Network:
 
         return cnet.NET_get_num_slack_buses(self._c_net)
 
+    def get_num_star_buses(self):
+        """
+        Gets number of star buses in the network.
+
+        Returns
+        -------
+        num : int
+        """
+
+        return cnet.NET_get_num_star_buses(self._c_net)
+
     def get_num_buses_reg_by_gen(self):
         """
         Gets number of buses whose voltage magnitudes are regulated by generators.
