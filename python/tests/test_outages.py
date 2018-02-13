@@ -83,4 +83,36 @@ class TestOutages(unittest.TestCase):
 
         pass
 
+    def test_functions(self):
+
+        # gen cost
+
+        # load util
+
+        # netcon cost
+
+        # reg phase
+
+        # reg pq
+
+        # reg ratio
+
+        # reg susc
+
+        # reg vang
+
+        # reg var
+
+        # reg vmag
+
+        # reg slim vmag
+
+        # sp controls
+
+        pass
+
+    def test_constraints(self):
+
+        pass
+
     

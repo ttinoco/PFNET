@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -91,10 +91,6 @@ void FUNC_NETCON_COST_analyze_step(Func* f, Branch* br, int t) {
   if (!gphi || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -112,7 +108,7 @@ void FUNC_NETCON_COST_analyze_step(Func* f, Branch* br, int t) {
 
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
+	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) && !GEN_is_on_outage(gen))
 	  VEC_set(gphi,GEN_get_index_P(gen,t),-price);
       }
 
@@ -169,10 +165,6 @@ void FUNC_NETCON_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   if (!phi || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -190,6 +182,12 @@ void FUNC_NETCON_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+
+	// Outage
+	if (GEN_is_on_outage(gen))
+	  continue;
+
+	// Phi
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
 	  (*phi) -= price*VEC_get(var_values,GEN_get_index_P(gen,t));
 	else

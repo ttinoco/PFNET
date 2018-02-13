@@ -4315,7 +4315,7 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
     // Generators
     for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
 
-      // Skip if gen onoutage
+      // Skip if gen on outage
       if (GEN_is_on_outage(gen))
 	continue;
       

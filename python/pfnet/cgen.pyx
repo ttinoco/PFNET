@@ -362,6 +362,7 @@ cdef class Generator:
     property outage:
         """ Flag that indicates whehter generator is on outage (boolean). """
         def __get__(self): return cgen.GEN_is_on_outage(self._c_ptr)
+        def __set__(self, o): cgen.GEN_set_outage(self._c_ptr, o);
 
     property json_string:
         """ JSON string (string). """
