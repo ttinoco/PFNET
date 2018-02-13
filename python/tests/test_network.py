@@ -503,6 +503,14 @@ class TestNetwork(unittest.TestCase):
                         self.assertEqual(gen.bus.number,bus.number)
                         self.assertTrue(gen.is_regulator())
 
+                # Star
+                bus.set_star_flag(False)
+                self.assertFalse(bus.is_star())
+                num = net.get_num_star_buses()
+                bus.set_star_flag(True)
+                self.assertTrue(bus.is_star())
+                self.assertEqual(net.get_num_star_buses(), num+1)
+
                 # Regulated by tran
                 if bus.is_regulated_by_tran():
                     self.assertGreater(len(bus.reg_trans),0)
@@ -854,6 +862,18 @@ class TestNetwork(unittest.TestCase):
                 self.assertTrue(branch.bus_k)
                 self.assertTrue(branch.bus_m)
                 self.assertGreater(branch.ratio,0)
+
+                # 3-winding
+                if branch.bus_k.is_star() or branch.bus_m.is_star():
+                    self.assertTrue(branch.is_part_of_3_winding_transformer())
+                else:
+                    self.assertFalse(branch.is_part_of_3_winding_transformer())
+                    branch.bus_k.set_star_flag(True)
+                    self.assertTrue(branch.is_part_of_3_winding_transformer())
+                    branch.bus_k.set_star_flag(False)
+                    self.assertFalse(branch.is_part_of_3_winding_transformer())
+                    branch.bus_m.set_star_flag(True)
+                    self.assertTrue(branch.is_part_of_3_winding_transformer())
 
                 # Rating getters
                 self.assertEqual(branch.ratingA, branch.get_rating('A'))
@@ -4014,6 +4034,9 @@ class TestNetwork(unittest.TestCase):
             # Some modifications
             for gen in net1.generators:
                 gen.Q_par = np.random.rand()
+
+            # Star
+            net1.buses[0].set_star_flag(True)
                 
             # Sensitivities
             for bus in net1.buses:

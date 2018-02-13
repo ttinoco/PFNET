@@ -41,6 +41,7 @@ def compare_buses(test, bus1, bus2, check_internals=False, check_indices=True, e
     test.assertLess(norminf(bus1.v_max_emer-bus2.v_max_emer), eps)
     test.assertLess(norminf(bus1.v_min_emer-bus2.v_min_emer), eps)
     test.assertEqual(bus1.is_slack(), bus2.is_slack())
+    test.assertEqual(bus1.is_star(), bus2.is_star())
     test.assertEqual(bus1.is_regulated_by_gen(),bus2.is_regulated_by_gen())
     test.assertEqual(bus1.is_regulated_by_tran(),bus2.is_regulated_by_tran())
     test.assertEqual(bus1.is_regulated_by_shunt(),bus2.is_regulated_by_shunt())
@@ -235,6 +236,8 @@ def compare_branches(test, branch1, branch2, check_internals=False, eps=1e-10):
     test.assertEqual(branch1.is_tap_changer(), branch2.is_tap_changer())
     test.assertEqual(branch1.is_tap_changer_v(), branch2.is_tap_changer_v())
     test.assertEqual(branch1.is_tap_changer_Q(), branch2.is_tap_changer_Q())
+    test.assertEqual(branch1.is_part_of_3_winding_transformer(),
+                     branch2.is_part_of_3_winding_transformer())
     if branch1.is_tap_changer_v():
         test.assertEqual(branch1.reg_bus.index, branch2.reg_bus.index)
     test.assertLess(norminf(branch1.g-branch2.g), eps*(1+norminf(branch1.g)))

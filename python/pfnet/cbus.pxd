@@ -116,6 +116,7 @@ cdef extern from "pfnet/bus.h":
     char* BUS_get_var_info_string(Bus* bus, int index)  
     bint BUS_is_equal(Bus* bus, Bus* other)
     bint BUS_is_slack(Bus* bus)
+    bint BUS_is_star(Bus* bus)
     bint BUS_is_regulated_by_gen(Bus* bus)
     bint BUS_is_regulated_by_tran(Bus* bus)
     bint BUS_is_regulated_by_shunt(Bus* bus)
@@ -124,6 +125,7 @@ cdef extern from "pfnet/bus.h":
     Bus* BUS_array_new(int size, int num_periods)
     void BUS_array_del(Bus* bus_array, int size)
     void BUS_set_slack_flag(Bus* bus, bint slack);
+    void BUS_set_star_flag(Bus* bus, bint star);
     void BUS_set_next(Bus* bus, Bus* next_bus)
     void BUS_set_number(Bus* bus, REAL num)
     void BUS_set_name(Bus* bus, char* name)

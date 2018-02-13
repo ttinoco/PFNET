@@ -276,6 +276,18 @@ cdef class Branch:
 
         return cbranch.BRANCH_is_tap_changer_Q(self._c_ptr)
 
+    def is_part_of_3_winding_transformer(self):
+        """
+        Determines whether branch is part of 3-winding
+        transformer.
+
+        Returns
+        -------
+        flag : |TrueFalse|
+        """
+
+        return cbranch.BRANCH_is_part_of_3_winding_transformer(self._c_ptr)
+
     def has_flags(self, flag_type, q):
         """
         Determines whether the branch has the flags associated with

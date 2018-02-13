@@ -40,7 +40,8 @@ struct Bus {
   REAL v_min_emer;    /**< @brief Emergency minimum voltage magnitude (p.u.) */
 
   // Flags
-  BOOL slack;        /**< @brief Flag for indicating the the bus is a slack bus */
+  BOOL slack;        /**< @brief Flag for indicating that the bus is a slack bus */
+  BOOL star;         /**< @brief Flag for indicating that the bus is a star bus */
   char fixed;        /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;      /**< @brief Flags for indicating which quantities should be bounded */
   char sparse;       /**< @brief Flags for indicating which control adjustments should be sparse */
@@ -486,6 +487,7 @@ void BUS_copy_from_bus(Bus* bus, Bus* other) {
 
   // Flags
   bus->slack = other->slack;
+  bus->star = other->star;
   bus->fixed = other->fixed;
   bus->bounded = other->bounded;
   bus->sparse = other->sparse;
@@ -1414,6 +1416,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_float(temp,output,"v_max_emer",bus->v_max_emer,FALSE);
   JSON_float(temp,output,"v_min_emer",bus->v_min_emer,FALSE);
   JSON_bool(temp,output,"slack",bus->slack,FALSE);
+  JSON_bool(temp,output,"star",bus->star,FALSE);
   JSON_array_float(temp,output,"price",bus->price,bus->num_periods,FALSE);
   JSON_list_int(temp,output,"generators",bus,Gen,BUS_get_gen,GEN_get_index,GEN_get_next,FALSE);
   JSON_list_int(temp,output,"reg_generators",bus,Gen,BUS_get_reg_gen,GEN_get_index,GEN_get_reg_next,FALSE);
@@ -1550,6 +1553,7 @@ void BUS_init(Bus* bus, int num_periods) {
   bus->v_min_emer = BUS_DEFAULT_V_MIN;
 
   bus->slack = FALSE;
+  bus->star = FALSE;
   bus->fixed = 0x00;
   bus->bounded = 0x00;
   bus->sparse = 0x00;
@@ -1634,6 +1638,13 @@ BOOL BUS_is_regulated_by_shunt(Bus* bus) {
 BOOL BUS_is_slack(Bus* bus) {
   if (bus)
     return bus->slack;
+  else
+    return FALSE;
+}
+
+BOOL BUS_is_star(Bus* bus) {
+  if (bus)
+    return bus->star;
   else
     return FALSE;
 }
@@ -1761,6 +1772,11 @@ void BUS_set_v_min_emer(Bus* bus, REAL v_min_emer) {
 void BUS_set_slack_flag(Bus* bus, BOOL slack) {
   if (bus)
     bus->slack = slack;
+}
+
+void BUS_set_star_flag(Bus* bus, BOOL star) {
+  if (bus)
+    bus->star = star;
 }
 
 void BUS_set_index(Bus* bus, int index) {
