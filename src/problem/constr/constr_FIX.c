@@ -103,10 +103,13 @@ void CONSTR_FIX_count_step(Constr* c, Branch* br, int t) {
 	  BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
 	(*A_nnz)++;
 
-	// Extra nz for regulating generator (for PV-PQ switching?)
-	if (BUS_is_regulated_by_gen(bus) &&
-	    GEN_has_flags(BUS_get_reg_gen(bus),FLAG_VARS,GEN_VAR_Q))
-	  (*A_nnz)++;
+	// Extra nz for regulating generator (for PV-PQ switching without changing nnz pattern)
+	if (BUS_is_regulated_by_gen(bus)) {
+	  for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen)) {
+	    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
+	      (*A_nnz)++;
+	  }
+	}
 
 	(*A_row)++;
       }
@@ -321,12 +324,15 @@ void CONSTR_FIX_analyze_step(Constr* c, Branch* br, int t) {
 	(*A_nnz)++;
 
 	// Extra nz for regulating generator (for PV-PQ switching?)
-	if (BUS_is_regulated_by_gen(bus) &&
-	    GEN_has_flags(BUS_get_reg_gen(bus),FLAG_VARS,GEN_VAR_Q)) {
-	  MAT_set_i(A,*A_nnz,*A_row);
-	  MAT_set_j(A,*A_nnz,GEN_get_index_Q(BUS_get_reg_gen(bus),t));
-	  MAT_set_d(A,*A_nnz,0.); // placeholder
-	  (*A_nnz)++;
+	if (BUS_is_regulated_by_gen(bus)) {
+	  for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen)) {
+	    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) {
+	      MAT_set_i(A,*A_nnz,*A_row);
+	      MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen,t));
+	      MAT_set_d(A,*A_nnz,0.); // placeholder
+	      (*A_nnz)++;
+	    }
+	  }
 	}
 
 	(*A_row)++;

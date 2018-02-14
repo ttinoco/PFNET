@@ -1531,84 +1531,6 @@ void NET_add_batteries_from_params(Net* net, Bus* bus_list, REAL power_capacity,
   }
 }
 
-void NET_adjust_generators(Net* net) {
-  /** This function adjusts the powers of slack or regulator generators
-   *  connected to the same bus or regulating the same bus voltage magnitude.
-   *  The adjustment is done to obtain specific participations without affecting
-   *  their total power. For active power, the participation is equal for every
-   *  generator. For reactive power, the participaion is proportional to the generator
-   *  reactive power resources.
-   */
-
-  // Local variables
-  Bus* bus;
-  Gen* gen;
-  REAL num;
-  REAL Ptot;
-  REAL Qtot;
-  REAL dQtot;
-  REAL Q;
-  REAL dQ;
-  REAL Qmintot;
-  REAL frac;
-  REAL SAFEGUARD_PARAM = 1e-4;
-  int i;
-  int t;
-
-  // No net
-  if (!net)
-    return;
-
-  for (i = 0; i < net->num_buses; i++) {
-
-    bus = NET_get_bus(net,i);
-
-    // Slack gens
-    if (BUS_is_slack(bus)) {
-      for (t = 0; t < net->num_periods; t++) {
-	num = 0;
-	Ptot = 0;
-	for(gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-	  Ptot += GEN_get_P(gen,t);
-	  num += 1;
-	}
-	for(gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen))
-	  GEN_set_P(gen,Ptot/num,t);
-      }
-    }
-
-    // Regulating gens
-    if (BUS_is_regulated_by_gen(bus)) {
-      for (t = 0; t < net->num_periods; t++) {
-	Qtot = 0;
-	dQtot = 0;
-	Qmintot = 0;
-	for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen)) {
-	  Qtot += GEN_get_Q(gen,t);
-	  dQ = GEN_get_Q_max(gen)-GEN_get_Q_min(gen);
-	  if (dQ < SAFEGUARD_PARAM)
-	    dQ = SAFEGUARD_PARAM;
-	  dQtot += dQ;
-	  Qmintot += GEN_get_Q_min(gen);
-	}
-	gen = BUS_get_reg_gen(bus);
-	dQ = GEN_get_Q_max(gen)-GEN_get_Q_min(gen);
-	if (dQ < SAFEGUARD_PARAM)
-	  dQ = SAFEGUARD_PARAM;
-	Q = GEN_get_Q_min(gen)+dQ*(Qtot-Qmintot)/dQtot;
-	frac = (Q-GEN_get_Q_min(gen))/dQ;
-	GEN_set_Q(gen,Q,t);
-	for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen)) {
-	  dQ = GEN_get_Q_max(gen)-GEN_get_Q_min(gen);
-	  if (dQ < SAFEGUARD_PARAM)
-	    dQ = SAFEGUARD_PARAM;
-	  GEN_set_Q(gen,GEN_get_Q_min(gen)+frac*dQ,t);
-	}
-      }
-    }
-  }
-}
-
 void NET_bus_hash_number_add(Net* net, Bus* bus) {
   if (net)
     net->bus_hash_number = BUS_hash_number_add(net->bus_hash_number,bus);
@@ -2850,6 +2772,18 @@ int NET_get_num_slack_buses(Net* net) {
     return 0;
   for (i = 0; i < net->num_buses; i++) {
     if (BUS_is_slack(BUS_array_get(net->bus,i)))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_star_buses(Net* net) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  for (i = 0; i < net->num_buses; i++) {
+    if (BUS_is_star(BUS_array_get(net->bus,i)))
       n++;
   }
   return n;
@@ -4398,8 +4332,8 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
       //*****************************
       net->gen_P_cost[t] += GEN_get_P_cost_for(gen,P);
 
-      // Reacive power
-      if (GEN_is_regulator(gen)) { // Should this be done for all generators?
+      // Reacive power of regulator
+      if (GEN_is_regulator(gen) && !GEN_is_slack(gen)) {
 
 	// Reactive power limit violations
 	//********************************

@@ -711,6 +711,8 @@ void ART_PARSER_load(ART_Parser* parser, Net* net) {
       LOAD_set_Q(load,(art_bus->qload-art_bus->qshunt)/parser->base_power,0); // per unit
       LOAD_set_P_min(load,LOAD_get_P(load,0),0);              // Pmin = P = Pmax
       LOAD_set_P_max(load,LOAD_get_P(load,0),0);              // Pmin = P = Pmax
+      LOAD_set_Q_min(load,LOAD_get_Q(load,0),0);              // Qmin = Q = Qmax
+      LOAD_set_Q_max(load,LOAD_get_Q(load,0),0);              // Qmin = Q = Qmax
       index++;
     }
   }

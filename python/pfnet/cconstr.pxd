@@ -94,7 +94,7 @@ cdef extern from "pfnet/constr.h":
     Constr* CONSTR_LBOUND_new(Net* net)
     Constr* CONSTR_NBOUND_new(Net* net)
     Constr* CONSTR_PAR_GEN_P_new(Net* net)
-    Constr* CONSTR_PAR_GEN_Q_new(Net* net)
+    Constr* CONSTR_PVPQ_SWITCHING_new(Net* net)
     Constr* CONSTR_GEN_RAMP_new(Net* net)
     Constr* CONSTR_REG_GEN_new(Net* net)
     Constr* CONSTR_REG_TRAN_new(Net* net)

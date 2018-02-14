@@ -14,7 +14,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)  # so that cmake builds with rpath alre
 set(CMAKE_INSTALL_RPATH "@loader_path")  # for relocatable libraries
 
 option(PFNET_DEBUG "set to ON to enable PFNET debug definition" OFF)
-option(PFNET_GRAPHVIZ "set to ON to enable graphviz addon" ON)
+option(PFNET_GRAPHVIZ "set to ON to enable graphviz addon" OFF)
 option(PFNET_LINE_FLOW "set to ON to enable line flow addon" ON)
 
 set(M_LIB,"")

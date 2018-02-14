@@ -422,17 +422,23 @@ cdef class ConstraintBase:
         """
 
         cdef void* cvalue = NULL
-        cdef np.ndarray[double, mode='c'] a
+        cdef np.ndarray[double, mode='c'] value_array
+
+        cdef int value_int
+        
         key = key.encode('UTF-8')
 
         # int
+        if issubclass(type(value), int):
+            value_int = value
+            cvalue = <void*>&value_int
 
         # float
         
         # ndarray
         if issubclass(type(value), np.ndarray):
-            a = value
-            cvalue = <void*>a.data
+            value_array = value
+            cvalue = <void*>value_array.data
 
         # Unknown
         if cvalue == NULL:
@@ -586,8 +592,8 @@ cdef class Constraint(ConstraintBase):
             self._c_constr = cconstr.CONSTR_LBOUND_new(net._c_net)
         elif name == "generator active power participation":
             self._c_constr = cconstr.CONSTR_PAR_GEN_P_new(net._c_net)
-        elif name == "generator reactive power participation":
-            self._c_constr = cconstr.CONSTR_PAR_GEN_Q_new(net._c_net)
+        elif name == "PVPQ switching":
+            self._c_constr = cconstr.CONSTR_PVPQ_SWITCHING_new(net._c_net)
         elif name == "generator ramp limits":
             self._c_constr = cconstr.CONSTR_GEN_RAMP_new(net._c_net)
         elif name == "voltage regulation by generators":

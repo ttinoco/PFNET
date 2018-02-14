@@ -91,6 +91,17 @@ cdef class Bus:
         """
 
         return cbus.BUS_is_slack(self._c_ptr)
+
+    def is_star(self):
+        """
+        Determines whether the bus is a star bus.
+
+        Returns
+        -------
+        flag : |TrueFalse|
+        """
+
+        return cbus.BUS_is_star(self._c_ptr)
         
     def set_slack_flag(self, flag):
         """
@@ -102,6 +113,17 @@ cdef class Bus:
         """
 
         cbus.BUS_set_slack_flag(self._c_ptr, flag)
+
+    def set_star_flag(self, flag):
+        """
+        Sets the star flag.
+        
+        Parameters
+        ----------
+        bool : |TrueFalse|
+        """
+
+        cbus.BUS_set_star_flag(self._c_ptr, flag)
 
     def is_regulated_by_gen(self):
         """

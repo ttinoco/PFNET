@@ -707,6 +707,10 @@ void JSON_PARSER_process_json_gen_array(Parser* p, Net* net, json_value* json_ge
       else if (strcmp(key,"Q_min") == 0)
 	GEN_set_Q_min(gen,val->u.dbl);
 
+      // Q_par
+      else if (strcmp(key,"Q_par") == 0)
+	GEN_set_Q_par(gen,val->u.dbl);
+
       // cost_coeff_Q0
       else if (strcmp(key,"cost_coeff_Q0") == 0)
 	GEN_set_cost_coeff_Q0(gen,val->u.dbl);
@@ -994,6 +998,18 @@ void JSON_PARSER_process_json_load_array(Parser* p, Net* net, json_value* json_l
       else if (strcmp(key,"Q") == 0) {
 	for (k = 0; k < imin(LOAD_get_num_periods(load),val->u.array.length); k++)
 	  LOAD_set_Q(load,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // Q max
+      else if (strcmp(key,"Q_max") == 0) {
+	for (k = 0; k < imin(LOAD_get_num_periods(load),val->u.array.length); k++)
+	  LOAD_set_Q_max(load,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // Q min
+      else if (strcmp(key,"Q_min") == 0) {
+	for (k = 0; k < imin(LOAD_get_num_periods(load),val->u.array.length); k++)
+	  LOAD_set_Q_min(load,val->u.array.values[k]->u.dbl,k);
       }
 
       // target power factor

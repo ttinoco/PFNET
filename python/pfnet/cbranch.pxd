@@ -109,6 +109,7 @@ cdef extern from "pfnet/branch.h":
     bint BRANCH_is_tap_changer(Branch* br)
     bint BRANCH_is_tap_changer_v(Branch* br)
     bint BRANCH_is_tap_changer_Q(Branch* br)
+    bint BRANCH_is_part_of_3_winding_transformer(Branch* br)
     bint BRANCH_has_flags(Branch* br, char flag_type, char mask)
     Branch* BRANCH_new(int num_periods)
     Branch* BRANCH_array_new(int size, int num_periods)
