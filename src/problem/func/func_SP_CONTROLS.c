@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -70,10 +70,6 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Branch* br, int t) {
   if (!Hphi_nnz || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -82,12 +78,14 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Branch* br, int t) {
 
   // Tap ratio of tap-changing transformer
   if (BRANCH_is_tap_changer(br) &&
+      !BRANCH_is_on_outage(br) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) &&
       BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_RATIO))
     (*Hphi_nnz)++;
 
   // Phase shift of phase-shifting transformer
   if (BRANCH_is_phase_shifter(br) &&
+      !BRANCH_is_on_outage(br) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) &&
       BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_PHASE))
     (*Hphi_nnz)++;
@@ -107,6 +105,10 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Branch* br, int t) {
 
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+
+	// Outage
+	if (GEN_is_on_outage(gen))
+	  continue;
 
 	// Active power
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) &&
@@ -174,10 +176,6 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
   if (!Hphi_nnz || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -186,6 +184,7 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
 
   // Tap ratio of tap-changing transformer
   if (BRANCH_is_tap_changer(br) &&
+      !BRANCH_is_on_outage(br) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) &&
       BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_RATIO)) {
     MAT_set_i(H,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
@@ -195,6 +194,7 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
 
   // Phase shift of phase-shifting transformer
   if (BRANCH_is_phase_shifter(br) &&
+      !BRANCH_is_on_outage(br) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) &&
       BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_PHASE)) {
     MAT_set_i(H,*Hphi_nnz,BRANCH_get_index_phase(br,t));
@@ -220,6 +220,10 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
 
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+
+	// Outage
+	if (GEN_is_on_outage(gen))
+	  continue;
 
 	// Active power
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) &&
@@ -284,10 +288,6 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   if (!phi || !gphi || !Hd || !Hphi_nnz || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -296,6 +296,7 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
   // Tap ratio of tap-changing transformer
   if (BRANCH_is_tap_changer(br) &&
+      !BRANCH_is_on_outage(br) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) &&
       BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_RATIO)) {
 
@@ -323,6 +324,7 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
   // Phase shift of phase-shifting transformer
   if (BRANCH_is_phase_shifter(br) &&
+      !BRANCH_is_on_outage(br) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) &&
       BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_PHASE)) {
 
@@ -384,6 +386,10 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+
+	// Outage
+	if (GEN_is_on_outage(gen))
+	  continue;
 
 	// Active power
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) &&

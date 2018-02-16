@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -66,10 +66,6 @@ void FUNC_REG_SUSC_count_step(Func* f, Branch* br, int t) {
 
   // Check pointers
   if (!Hphi_nnz || !bus_counted)
-    return;
-
-  // Check outage
-  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data
@@ -139,10 +135,6 @@ void FUNC_REG_SUSC_analyze_step(Func* f, Branch* br, int t) {
   if (!Hphi_nnz || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
@@ -201,10 +193,6 @@ void FUNC_REG_SUSC_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
   // Check pointers
   if (!phi || !gphi || !bus_counted)
-    return;
-
-  // Check outage
-  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data

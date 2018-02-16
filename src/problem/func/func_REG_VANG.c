@@ -68,10 +68,6 @@ void FUNC_REG_VANG_count_step(Func* f, Branch* br, int t) {
   if (!Hphi_nnz || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -146,10 +142,6 @@ void FUNC_REG_VANG_analyze_step(Func* f, Branch* br, int t) {
 
   // Check pointers
   if (!Hphi_nnz || !bus_counted)
-    return;
-
-  // Check outage
-  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data
@@ -229,10 +221,6 @@ void FUNC_REG_VANG_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
   // Check pointers
   if (!phi || !gphi || !bus_counted)
-    return;
-
-  // Check outage
-  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data

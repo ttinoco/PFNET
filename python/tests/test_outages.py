@@ -113,6 +113,40 @@ class TestOutages(unittest.TestCase):
 
     def test_constraints(self):
 
+        # ac flow limit
+
+        # ac branch flow limit
+
+        # ac pf
+
+        # bat dyn
+
+        # dc flow lim
+
+        # dc pf
+
+        # fix
+
+        # gen ramp
+
+        # lbound
+
+        # linpf
+
+        # load pf
+
+        # nbound
+
+        # par gen P
+
+        # PVPQ switching
+
+        # reg gen
+
+        # reg shunt
+
+        # reg tran
+
         pass
 
     

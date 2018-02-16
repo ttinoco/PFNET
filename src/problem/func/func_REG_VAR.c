@@ -93,10 +93,6 @@ void FUNC_REG_VAR_count_step(Func* f, Branch* br, int t) {
   if (!Hphi_nnz || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -104,11 +100,11 @@ void FUNC_REG_VAR_count_step(Func* f, Branch* br, int t) {
     bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Tap ratio
-  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO))
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && !BRANCH_is_on_outage(br))
     (*Hphi_nnz)++;
 
   // Phase shift
-  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE))
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) && !BRANCH_is_on_outage(br))
     (*Hphi_nnz)++;
   
   // Buses
@@ -128,6 +124,10 @@ void FUNC_REG_VAR_count_step(Func* f, Branch* br, int t) {
 
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+
+	// Outage
+	if (GEN_is_on_outage(gen))
+	  continue;
 
 	// Active power
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
@@ -239,10 +239,6 @@ void FUNC_REG_VAR_analyze_step(Func* f, Branch* br, int t) {
   if (!Hphi_nnz || !bus_counted || !data ||!(data->w))
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -250,7 +246,7 @@ void FUNC_REG_VAR_analyze_step(Func* f, Branch* br, int t) {
     bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Tap ratio
-  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) {
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && !BRANCH_is_on_outage(br)) {
     MAT_set_i(H,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
     MAT_set_j(H,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
     MAT_set_d(H,*Hphi_nnz,2.*data->w[BRANCH_get_index_ratio(br,t)]);
@@ -258,7 +254,7 @@ void FUNC_REG_VAR_analyze_step(Func* f, Branch* br, int t) {
   }
 
   // Phase shift
-  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) && !BRANCH_is_on_outage(br)) {
     MAT_set_i(H,*Hphi_nnz,BRANCH_get_index_phase(br,t));
     MAT_set_j(H,*Hphi_nnz,BRANCH_get_index_phase(br,t));
     MAT_set_d(H,*Hphi_nnz,2.*data->w[BRANCH_get_index_phase(br,t)]);
@@ -290,6 +286,10 @@ void FUNC_REG_VAR_analyze_step(Func* f, Branch* br, int t) {
 
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+
+	// Outage
+	if (GEN_is_on_outage(gen))
+	  continue;
 
 	// Active power
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
@@ -426,10 +426,6 @@ void FUNC_REG_VAR_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   if (!phi || !gphi || !bus_counted || !data || !(data->w) || !(data->x0))
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -437,7 +433,7 @@ void FUNC_REG_VAR_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
     bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Tap ratio
-  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) {
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && !BRANCH_is_on_outage(br)) {
     index = BRANCH_get_index_ratio(br,t);
     x = VEC_get(var_values,index);
     (*phi) += data->w[index]*pow(x-data->x0[index],2.);
@@ -445,7 +441,7 @@ void FUNC_REG_VAR_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   }
 
   // Phase shift
-  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
+  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) && !BRANCH_is_on_outage(br)) {
     index = BRANCH_get_index_phase(br,t);
     x = VEC_get(var_values,index);
     (*phi) += data->w[index]*pow(x-data->x0[index],2.);
@@ -477,6 +473,10 @@ void FUNC_REG_VAR_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+
+	// Outage
+	if (GEN_is_on_outage(gen))
+	  continue;
 
 	// Active power
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
