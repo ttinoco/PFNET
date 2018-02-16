@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -65,10 +65,6 @@ void CONSTR_GEN_RAMP_count_step(Constr* c, Branch* br, int t) {
   if (!G_nnz || !G_row || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -82,6 +78,10 @@ void CONSTR_GEN_RAMP_count_step(Constr* c, Branch* br, int t) {
 
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+
+	// Outage
+	if (GEN_is_on_outage(gen))
+	  continue;
 
 	// Variable
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // -dP_max <= P_t - P_{t-1} <= dP_max
@@ -156,10 +156,6 @@ void CONSTR_GEN_RAMP_analyze_step(Constr* c, Branch* br, int t) {
   if (!G_nnz || !G_row || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -173,6 +169,10 @@ void CONSTR_GEN_RAMP_analyze_step(Constr* c, Branch* br, int t) {
 
       // Generators
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+
+	// Outage
+	if (GEN_is_on_outage(gen))
+	  continue;
 
 	// Variables
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // -dP_max <= P_t - P_{t-1} <= dP_max

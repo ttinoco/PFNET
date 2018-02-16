@@ -72,10 +72,6 @@ void CONSTR_PVPQ_SWITCHING_count_step(Constr* c, Branch* br, int t) {
   if (!A_nnz || !A_row || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -98,7 +94,7 @@ void CONSTR_PVPQ_SWITCHING_count_step(Constr* c, Branch* br, int t) {
 	
 	// Q
 	for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen)) {
-	  if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
+	  if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q) && !GEN_is_on_outage(gen))
 	    num += 1;
 	}
 
@@ -201,10 +197,6 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t) {
   if (!A_nnz || !A_row || !bus_counted || !data)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -233,7 +225,7 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t) {
 
 	  // Q
 	  for (gen1 = BUS_get_reg_gen(bus); gen1 != NULL; gen1 = GEN_get_reg_next(gen1)) {
-	    if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q)) {
+	    if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q) && !GEN_is_on_outage(gen1)) {
 	      MAT_set_i(A,*A_nnz,*A_row);
 	      MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen1,t));
 	      MAT_set_d(A,*A_nnz,0.);
@@ -247,6 +239,7 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t) {
 	// Q var and fixed
 	for (gen1 = BUS_get_reg_gen(bus); gen1 != NULL; gen1 = GEN_get_reg_next(gen1)) {
 	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q) &&
+	      !GEN_is_on_outage(gen1) &&
 	      data->fix_flag[GEN_get_index_Q(gen1,t)]) {
 	    
 	    Q = GEN_get_Q(gen1,t);
@@ -268,7 +261,7 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t) {
 
 	    // Q
 	    for (gen2 = BUS_get_reg_gen(bus); gen2 != NULL; gen2 = GEN_get_reg_next(gen2)) {
-	      if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q)) {
+	      if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q) && !GEN_is_on_outage(gen2)) {
 		MAT_set_i(A,*A_nnz,*A_row);
 		MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen2,t));
 		if (gen2 == gen1)
@@ -289,12 +282,14 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t) {
 
 	  // Candidate 1
 	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q) &&
+	      !GEN_is_on_outage(gen1) &&
 	      !data->fix_flag[GEN_get_index_Q(gen1,t)]) {
 	
 	    for (gen2 = GEN_get_reg_next(gen1); gen2 != NULL; gen2 = GEN_get_reg_next(gen2)) {
 	      
 	      // Candidate 2
 	      if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q) &&
+		  !GEN_is_on_outage(gen2) &&
 		  !data->fix_flag[GEN_get_index_Q(gen2,t)]) {
 		
 		VEC_set(b,*A_row,0.);
@@ -317,7 +312,7 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t) {
 		
 		// Q
 		for (gen3 = BUS_get_reg_gen(bus); gen3 != NULL; gen3 = GEN_get_reg_next(gen3)) {
-		  if (GEN_has_flags(gen3,FLAG_VARS,GEN_VAR_Q)) {
+		  if (GEN_has_flags(gen3,FLAG_VARS,GEN_VAR_Q) && !GEN_is_on_outage(gen3)) {
 		    MAT_set_i(A,*A_nnz,*A_row);
 		    MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen3,t));
 		    if (gen3 == gen1)

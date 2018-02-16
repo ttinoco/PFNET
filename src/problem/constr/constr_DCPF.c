@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -66,10 +66,6 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
   if (!A_nnz || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
@@ -80,6 +76,10 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
   //*******
 
   for (k = 0; k < 2; k++) {
+
+    // Outage
+    if (BRANCH_is_on_outage(br))
+      break;
 
     if (k == 0)
       m = 1;
@@ -117,6 +117,10 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
 
       // Generators
       for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
+
+	// Outage
+	if (GEN_is_on_outage(gen))
+	  continue;
 
 	//*****************************
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // P var
@@ -229,10 +233,6 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
   if (!A_nnz || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
@@ -247,6 +247,10 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
   //*******
 
   for (k = 0; k < 2; k++) {
+
+    // Outage
+    if (BRANCH_is_on_outage(br))
+      break;
 
     if (k == 0) {
       m = 1;
@@ -312,6 +316,10 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
 
       // Generators
       for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
+
+	// Outage
+	if (GEN_is_on_outage(gen))
+	  continue;
 
 	//*****************************
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // P var
@@ -419,10 +427,6 @@ void CONSTR_DCPF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf,
 
   // Check pointer
   if (!bus_counted)
-    return;
-
-  // Check outage
-  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data

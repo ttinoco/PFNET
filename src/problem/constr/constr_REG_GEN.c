@@ -91,10 +91,6 @@ void CONSTR_REG_GEN_count_step(Constr* c, Branch* br, int t) {
   if (!A_nnz || !J_nnz || !A_row || !J_row || !H_nnz || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -116,6 +112,10 @@ void CONSTR_REG_GEN_count_step(Constr* c, Branch* br, int t) {
 	
 	// Regulating generators
 	for (rg = BUS_get_reg_gen(bus); rg != NULL; rg = GEN_get_reg_next(rg)) {
+
+	  // Outage
+	  if (GEN_is_on_outage(rg))
+	    continue;
 	
 	  // Linear
 	  //*******
@@ -277,10 +277,6 @@ void CONSTR_REG_GEN_analyze_step(Constr* c, Branch* br, int t) {
   if (!A_nnz || !J_nnz || !A_row || !H_array || !J_row || !H_nnz || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -305,6 +301,10 @@ void CONSTR_REG_GEN_analyze_step(Constr* c, Branch* br, int t) {
 
 	// Regulating generators
 	for (rg = BUS_get_reg_gen(bus); rg != NULL; rg = GEN_get_reg_next(rg)) {
+
+	  // Outage
+	  if (GEN_is_on_outage(rg))
+	    continue;
 	  
 	  // Hessians
 	  Hy = MAT_array_get(H_array,*J_row);
@@ -458,10 +458,6 @@ void CONSTR_REG_GEN_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* va
   if (!f || !J || !J_nnz || !J_row || !H_nnz || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -486,6 +482,10 @@ void CONSTR_REG_GEN_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* va
 
 	// Regulating generators
 	for (rg = BUS_get_reg_gen(bus); rg != NULL; rg = GEN_get_reg_next(rg)) {
+
+	  // Outage
+	  if (GEN_is_on_outage(rg))
+	    continue;
 
 	  // Hessians
 	  Hy = MAT_get_data_array(MAT_array_get(H_array,*J_row));
@@ -596,10 +596,6 @@ void CONSTR_REG_GEN_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* 
   if (!J_row || !A_row || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -618,6 +614,10 @@ void CONSTR_REG_GEN_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* 
 
 	// Regulating generators
 	for (rg = BUS_get_reg_gen(bus); rg != NULL; rg = GEN_get_reg_next(rg)) {
+
+	  // Outage
+	  if (GEN_is_on_outage(rg))
+	    continue;
 
 	  lamA = VEC_get(sA,*A_row);
 	  (*A_row)++; // Ax-b

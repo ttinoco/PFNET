@@ -69,10 +69,6 @@ void CONSTR_FIX_count_step(Constr* c, Branch* br, int t) {
   if (!A_nnz || !A_row || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -272,10 +268,6 @@ void CONSTR_FIX_analyze_step(Constr* c, Branch* br, int t) {
 
   // Check pointers
   if (!A_nnz || !A_row || !bus_counted)
-    return;
-
-  // Check outage
-  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data

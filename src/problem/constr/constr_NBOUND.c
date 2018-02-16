@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -72,10 +72,6 @@ void CONSTR_NBOUND_count_step(Constr* c, Branch* br, int t) {
 
   // Check pointers
   if (!J_nnz || !bus_counted)
-    return;
-
-  // Check outage
-  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data
@@ -221,10 +217,6 @@ void CONSTR_NBOUND_analyze_step(Constr* c, Branch* br, int t) {
 
   // Check pointers
   if (!J_nnz || !bus_counted)
-    return;
-
-  // Check outage
-  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data
@@ -478,10 +470,6 @@ void CONSTR_NBOUND_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* val
 
   // Check pointers
   if (!f || !J || !J_nnz || !bus_counted)
-    return;
-
-  // Check outage
-  if (BRANCH_is_on_outage(br))
     return;
 
   // Param
@@ -779,10 +767,6 @@ void CONSTR_NBOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* s
 
   // Check pointers
   if (!J_nnz || !bus_counted)
-    return;
-
-  // Check outage
-  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data

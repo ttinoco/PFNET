@@ -101,10 +101,6 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
   if (!bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -494,10 +490,6 @@ void CONSTR_LBOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* s
   
   // Check pointer
   if (!bus_counted)
-    return;
-
-  // Check outage
-  if (BRANCH_is_on_outage(br))
     return;
   
   // Branch tap ratio
