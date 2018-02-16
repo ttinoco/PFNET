@@ -128,10 +128,6 @@ void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
   // Check pointers
   if (!J_nnz || !H_nnz || !bus_counted)
     return;
-
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
   
   // Key J indices
   dPdw_indices = data->dPdw_indices;
@@ -161,6 +157,10 @@ void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
   //*******
 
   for (k = 0; k < 2; k++) {
+
+    // Outage
+    if (BRANCH_is_on_outage(br))
+      break;
 
     if (k == 0)
       m = 1;
@@ -307,6 +307,10 @@ void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
 
       // Generators
       for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
+
+	// Outage
+	if (GEN_is_on_outage(gen))
+	  continue;
 
 	//*****************************
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // Pg var
@@ -516,10 +520,6 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
   if (!J_nnz || !H_nnz || !H_array || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
@@ -544,6 +544,10 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
   //*******
 
   for (k = 0; k < 2; k++) {
+
+    // Outage
+    if (BRANCH_is_on_outage(br))
+      break;
 
     if (k == 0)
       m = 1;
@@ -777,6 +781,10 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
       // Generators
       for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
 
+	// Outage
+	if (GEN_is_on_outage(gen))
+	  continue;
+
 	//*****************************
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // Pg var
 
@@ -964,10 +972,6 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
   if (!f || !J || !J_nnz || !H_nnz || !bus_counted || !data)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
@@ -1010,6 +1014,10 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
   // Branch flows
   for (k = 0; k < 2; k++) {
 
+    // Outage
+    if (BRANCH_is_on_outage(br))
+      break;
+
     if (k == 0) {
       m = 1;
       a_temp = a;
@@ -1042,6 +1050,10 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
 
   for (k = 0; k < 2; k++) {
 
+    // Outage
+    if (BRANCH_is_on_outage(br))
+      break;
+
     if (k == 0) {
       m = 1;
       indicator_a = 1.;
@@ -1067,7 +1079,7 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
       J[*J_nnz] = P_km[m];  // dQm/dwk
       (*J_nnz)++;
 
-      J[data->dPdw_indices[bus_index_t[k]]] += Q_km[k];  // dPk/dwk
+      J[data->dPdw_indices[bus_index_t[k]]] += Q_km[k]; // dPk/dwk
       J[data->dQdw_indices[bus_index_t[k]]] -= P_km[k]; // dQk/dwk
 
       // H
@@ -1276,6 +1288,10 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
       // Generators
       for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
 
+	// Outage
+	if (GEN_is_on_outage(gen))
+	  continue;
+
 	// Var values
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
 	  P = VEC_get(values,GEN_get_index_P(gen,t)); // p.u.
@@ -1465,10 +1481,6 @@ void CONSTR_ACPF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf,
 
   // Check pointer
   if (!bus_counted)
-    return;
-
-  // Check outage
-  if (BRANCH_is_on_outage(br))
     return;
 
   // Buses
