@@ -59,7 +59,11 @@ class TestOutages(unittest.TestCase):
 
         # num branches not on outage
 
+        # num branches on outage
+
         # num gens not on outage
+
+        # num gens on outage
 
         pass
 

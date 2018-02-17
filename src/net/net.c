@@ -2864,6 +2864,13 @@ int NET_get_num_branches(Net* net) {
     return 0;
 }
 
+int NET_get_num_branches_on_outage(Net* net) {
+  if (net)
+    return net->num_branches-NET_get_num_branches_not_on_outage(net);
+  else
+    return 0;
+}
+
 int NET_get_num_branches_not_on_outage(Net* net) {
   int i;
   int n = 0;
@@ -2951,6 +2958,13 @@ int NET_get_num_tap_changers_Q(Net* net) {
 int NET_get_num_gens(Net* net) {
   if (net)
     return net->num_gens;
+  else
+    return 0;
+}
+
+int NET_get_num_gens_on_outage(Net* net) {
+  if (net)
+    return net->num_gens-NET_get_num_gens_not_on_outage(net);
   else
     return 0;
 }

@@ -624,10 +624,17 @@ cdef class Network:
 
     def clear_error(self):
         """
-        Clear error flag and message string.
+        Clears error flag and message string.
         """
 
-        cnet.NET_clear_error(self._c_net);
+        cnet.NET_clear_error(self._c_net)
+
+    def clear_outages(self):
+        """
+        Clears all component outages.
+        """
+
+        cnet.NET_clear_outages(self._c_net)
 
     def clear_flags(self):
         """
@@ -1207,6 +1214,17 @@ cdef class Network:
 
         return cnet.NET_get_num_branches_not_on_outage(self._c_net)
 
+    def get_num_branches_on_outage(self):
+        """
+        Gets number of branches in the network that are on outage.
+
+        Returns
+        -------
+        num : int
+        """
+
+        return cnet.NET_get_num_branches_on_outage(self._c_net)
+
     def get_num_fixed_trans(self):
         """
         Gets number of fixed transformers in the network.
@@ -1284,7 +1302,7 @@ cdef class Network:
 
         return cnet.NET_get_num_gens(self._c_net)
 
-    def get_num_gens_not_on_outage(self):
+    def get_num_generators_not_on_outage(self):
         """
         Gets number of generators in the network that are not on outage.
 
@@ -1294,6 +1312,17 @@ cdef class Network:
         """
 
         return cnet.NET_get_num_gens_not_on_outage(self._c_net)
+
+    def get_num_generators_on_outage(self):
+        """
+        Gets number of generators in the network that are on outage.
+
+        Returns
+        -------
+        num : int
+        """
+
+        return cnet.NET_get_num_gens_on_outage(self._c_net)
 
     def get_num_reg_gens(self):
         """
