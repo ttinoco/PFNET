@@ -833,7 +833,19 @@ REAL BUS_get_total_gen_Q_min(Bus* bus) {
   return Qmin;
 }
 
-REAL BUS_get_total_reg_gen_Qmax(Bus* bus) {
+REAL BUS_get_total_reg_gen_Q(Bus* bus, int t) {
+  Gen* gen;
+  REAL Q = 0;
+  if (!bus)
+    return 0;
+  for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen)) {
+    if (!GEN_is_on_outage(gen))
+      Q += GEN_get_Q(gen,t);
+  }
+  return Q;
+}
+
+REAL BUS_get_total_reg_gen_Q_max(Bus* bus) {
   Gen* gen;
   REAL Qmax = 0;
   if (!bus)
@@ -845,7 +857,7 @@ REAL BUS_get_total_reg_gen_Qmax(Bus* bus) {
   return Qmax;
 }
 
-REAL BUS_get_total_reg_gen_Qmin(Bus* bus) {
+REAL BUS_get_total_reg_gen_Q_min(Bus* bus) {
   Gen* gen;
   REAL Qmin = 0;
   if (!bus)

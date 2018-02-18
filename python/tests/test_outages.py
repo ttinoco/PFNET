@@ -18,7 +18,7 @@ class TestOutages(unittest.TestCase):
 
         for case in test_cases.CASES:
             
-            net =pf.Parser(case).parse(case)
+            net = pf.Parser(case).parse(case)
 
             net.clear_outages()
             
@@ -78,7 +78,7 @@ class TestOutages(unittest.TestCase):
 
         for case in test_cases.CASES:
             
-            net =pf.Parser(case).parse(case)
+            net = pf.Parser(case).parse(case)
 
             net.clear_outages()
 
@@ -132,37 +132,144 @@ class TestOutages(unittest.TestCase):
                 
     def test_buses(self):
 
-        # total gen P
+        for case in test_cases.CASES:
+            
+            net = pf.Parser(case).parse(case)
 
-        # total gen Q
+            for bus in net.buses:
 
-        # total gen Qmin
-        
-        # total gen Qmax
+                net.clear_outages()
 
-        # total reg gen Qmin
+                # total gen P
+                total = bus.get_total_gen_P()
+                for gen in bus.generators:
+                    gen.outage = True
+                    new_total = bus.get_total_gen_P()
+                    self.assertLess(np.abs(new_total-(total-gen.P)),1e-8)
+                    total = new_total
+                    
+                net.clear_outages()
+                
+                # total gen Q
+                total = bus.get_total_gen_Q()
+                for gen in bus.generators:
+                    gen.outage = True
+                    new_total = bus.get_total_gen_Q()
+                    self.assertLess(np.abs(new_total-(total-gen.Q)),1e-8)
+                    total = new_total
 
-        # total reg gen Qmax
+                net.clear_outages()
+                
+                # total gen Qmin
+                total = bus.get_total_gen_Q_min()
+                for gen in bus.generators:
+                    gen.outage = True
+                    new_total = bus.get_total_gen_Q_min()
+                    self.assertLess(np.abs(new_total-(total-gen.Q_min)),1e-8)
+                    total = new_total
 
-        # reg by gen
+                net.clear_outages()
+                
+                # total gen Qmax
+                total = bus.get_total_gen_Q_max()
+                for gen in bus.generators:
+                    gen.outage = True
+                    new_total = bus.get_total_gen_Q_max()
+                    self.assertLess(np.abs(new_total-(total-gen.Q_max)),1e-8)
+                    total = new_total
 
-        # reg by tran
-        
-        pass
+                net.clear_outages()
+
+                # toatl reg gen Q
+                total = bus.get_total_reg_gen_Q()
+                self.assertLess(np.abs(total-sum([g.Q for g in bus.reg_generators])), 1e-8)
+                for gen in bus.reg_generators:
+                    gen.outage = True
+                    new_total = bus.get_total_reg_gen_Q()
+                    self.assertLess(np.abs(new_total-(total-gen.Q)),1e-8)
+                    total = new_total
+
+                net.clear_outages()
+                
+                # total reg gen Qmin
+                total = bus.get_total_reg_gen_Q_min()
+                self.assertLess(np.abs(total-sum([g.Q_min for g in bus.reg_generators])), 1e-8)
+                for gen in bus.reg_generators:
+                    gen.outage = True
+                    new_total = bus.get_total_reg_gen_Q_min()
+                    self.assertLess(np.abs(new_total-(total-gen.Q_min)),1e-8)
+                    total = new_total
+
+                net.clear_outages()
+                
+                # total reg gen Qmax
+                total = bus.get_total_reg_gen_Q_max()
+                self.assertLess(np.abs(total-sum([g.Q_max for g in bus.reg_generators])), 1e-8)
+                for gen in bus.reg_generators:
+                    gen.outage = True
+                    new_total = bus.get_total_reg_gen_Q_max()
+                    self.assertLess(np.abs(new_total-(total-gen.Q_max)),1e-8)
+                    total = new_total
+
+                net.clear_outages()
+                
+                # reg by gen
+                if bus.is_regulated_by_gen():
+                    for i in range(len(bus.reg_generators)):
+                        gen = bus.reg_generators[i]
+                        gen.outage = True
+                        if i < len(bus.reg_generators)-1:
+                            self.assertTrue(bus.is_regulated_by_gen())
+                        else:
+                            self.assertFalse(bus.is_regulated_by_gen())
+
+                net.clear_outages()
+                            
+                # reg by tran
+                if bus.is_regulated_by_tran():
+                    for i in range(len(bus.reg_trans)):
+                        br = bus.reg_trans[i]
+                        br.outage = True
+                        if i < len(bus.reg_trans)-1:
+                            self.assertTrue(bus.is_regulated_by_tran())
+                        else:
+                            self.assertFalse(bus.is_regulated_by_tran())
+
+                net.clear_outages()
+                            
+                # slack
+                if bus.is_slack():
+                    for gen in bus.generators:
+                        gen.outage = True
+                        self.assertTrue(gen.is_on_outage())
+                        self.assertTrue(gen.is_slack())
+                        self.assertTrue(bus.is_slack())
     
     def test_network(self):
 
-        # clear outages
+        for case in test_cases.CASES:
+            
+            net = pf.Parser(case).parse(case)
 
-        # num branches not on outage
+            # clear outages
+            net.clear_outages()
 
-        # num branches on outage
-
-        # num gens not on outage
-
-        # num gens on outage
-
-        pass
+            self.assertEqual(net.get_num_branches_not_on_outage(), net.num_branches)
+            self.assertEqual(net.get_num_branches_on_outage(), 0)
+            self.assertEqual(net.get_num_generators_not_on_outage(), net.num_generators)
+            self.assertEqual(net.get_num_generators_on_outage(), 0)
+            
+            # num branches on outage
+            for branch in net.branches:
+                branch.outage = True
+            self.assertEqual(net.get_num_branches_not_on_outage(), 0)
+            self.assertEqual(net.get_num_branches_on_outage(), net.num_branches)
+            
+            # num gens on outage
+            for gen in net.generators:
+                gen.outage = True
+            self.assertEqual(net.get_num_generators_not_on_outage(), 0)
+            self.assertEqual(net.get_num_generators_on_outage(), net.num_generators)
 
     def test_network_properties(self):
 
@@ -187,7 +294,7 @@ class TestOutages(unittest.TestCase):
     def test_functions(self):
 
         # gen cost
-
+        
         # load util
 
         # netcon cost

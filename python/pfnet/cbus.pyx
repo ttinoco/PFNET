@@ -316,6 +316,46 @@ cdef class Bus:
 
         return cbus.BUS_get_total_gen_Q_min(self._c_ptr)
 
+    def get_total_reg_gen_Q(self, t=0):
+        """
+        Gets the total reactive power injected by generators
+        regulating this bus.
+
+        Parameters
+        ----------
+        t : int (time period)
+
+        Returns
+        -------
+        Q : float
+        """
+
+        return cbus.BUS_get_total_reg_gen_Q(self._c_ptr,t)
+
+    def get_total_reg_gen_Q_max(self):
+        """
+        Gets the maximum total reactive power injected by generators
+        regulating this bus.
+
+        Returns
+        -------
+        Q_max : float
+        """
+
+        return cbus.BUS_get_total_reg_gen_Q_max(self._c_ptr)
+
+    def get_total_reg_gen_Q_min(self):
+        """
+        Gets the minimum total reactive power injected by generators
+        regulating this bus.
+
+        Returns
+        -------
+        Q_min : float
+        """
+
+        return cbus.BUS_get_total_reg_gen_Q_min(self._c_ptr)
+
     def get_total_load_P(self, t=0):
         """
         Gets the total active power consumed by loads
