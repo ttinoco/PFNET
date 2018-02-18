@@ -273,23 +273,80 @@ class TestOutages(unittest.TestCase):
 
     def test_network_properties(self):
 
-        # tap ratio vio and actions
+        for case in test_cases.CASES:
+            
+            net = pf.Parser(case).parse(case)
 
-        # phase shift vio and actions
+            net.clear_outages()
+            
+            # tap ratio vio
+            for branch in net.branches:
+                if branch.is_tap_changer():
+                    branch.ratio = branch.ratio_max + 10.
+                    net.update_properties()
+                    self.assertEqual(net.tran_r_vio, 10.)
+                    branch.outage = True
+                    net.update_properties()
+                    self.assertNotEqual(net.tran_r_vio, 10.)
+                    break
 
-        # mismatches (branch and gen outages)
+            net.clear_outages()
+            
+            # phase shift vio
+            for branch in net.branches:
+                if branch.is_phase_shifter():
+                    branch.phase = branch.phase_max + 20.
+                    net.update_properties()
+                    self.assertEqual(net.tran_p_vio, 20.)
+                    branch.outage = True
+                    net.update_properties()
+                    self.assertNotEqual(net.tran_p_vio, 20.)
+                    break
+            
+            # mismatches (branch and gen outages)
+            net.clear_outages()
+            net.update_properties()
+            bus = net.get_bus(0)
+            p_mis = bus.P_mismatch
+            q_mis = bus.Q_mismatch
+            for branch in bus.branches:
+                branch.outage = True
+            for gen in bus.generators:
+                gen.outage = True
+            net.update_properties()
+            self.assertLess(np.abs(p_mis-(bus.P_mismatch + 
+                                          sum([g.P for g in bus.generators]) -
+                                          sum([br.P_km for br in bus.branches_k]) -
+                                          sum([br.P_mk for br in bus.branches_m]))), 1e-8)
+            self.assertLess(np.abs(q_mis-(bus.Q_mismatch +
+                                          sum([g.Q for g in bus.generators]) -
+                                          sum([br.Q_km for br in bus.branches_k]) -
+                                          sum([br.Q_mk for br in bus.branches_m]))), 1e-8)
 
-        # v reg limit violations
-
-        # v set deviations and actions
-
-        # gen active power cost
-
-        # gen Q vio
-
-        # gen P vio and actions
-
-        pass
+            net.clear_outages()
+            
+            # v reg limit violations
+            for bus in net.buses:
+                if bus.is_regulated_by_tran():
+                    net.update_properties()
+                    bus.v_mag = bus.v_max_reg + 15.
+                    net.update_properties()
+                    self.assertLess(np.abs(net.tran_v_vio-15.), 1e-8)
+                    for branch in bus.reg_trans:
+                        branch.outage = True
+                    self.assertFalse(bus.is_regulated_by_tran())
+                    net.update_properties()
+                    self.assertGreater(np.abs(net.tran_v_vio-15.), 1e-8)
+                    net.clear_outages()
+                    break
+                            
+            # v set deviations
+            
+            # gen active power cost
+            
+            # gen Q vio
+            
+            # gen P vio
 
     def test_functions(self):
 
