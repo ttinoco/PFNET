@@ -13,8 +13,8 @@ import numpy as np
 from scipy.sparse import coo_matrix,triu,tril,spdiags
 
 NUM_TRIALS = 25
-EPS = 5. # %
-TOL = 1e-3
+EPS = 3. # %
+TOL = 1e-4
 
 class TestFunctions(unittest.TestCase):
 
@@ -102,26 +102,15 @@ class TestFunctions(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(g)))
             self.assertTrue(not np.any(np.isinf(H.data)))
             self.assertTrue(not np.any(np.isnan(H.data)))
-
+            
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                if np.linalg.norm(gd_exact) == 0.:
-                    self.assertLessEqual(np.linalg.norm(gd_approx),2.)
-                else:
-                    error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                    self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
             func.eval(x0)
@@ -299,25 +288,13 @@ class TestFunctions(unittest.TestCase):
             self.assertLess(np.abs(func.phi-phi),1e-10*(np.abs(func.phi)+1))
 
             # Gradient check
-            func.eval(x0)
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-                
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                if np.linalg.norm(gd_exact) == 0.:
-                    self.assertLessEqual(np.linalg.norm(gd_approx),2.)
-                else:
-                    error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                    self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # One more gradient check
             self.assertLess(np.linalg.norm(2.*np.multiply(x0-xc,w)-func.gphi),
@@ -428,25 +405,13 @@ class TestFunctions(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(H.data)))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-
-                if np.linalg.norm(gd_exact) == 0.:
-                    self.assertLessEqual(np.linalg.norm(gd_approx),2.)
-                else:
-                    error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                    self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
             func.eval(x0)
@@ -573,21 +538,13 @@ class TestFunctions(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(H.data)))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
             func.eval(x0)
@@ -710,21 +667,13 @@ class TestFunctions(unittest.TestCase):
             self.assertLess(np.abs(func.phi-phi_manual),1e-10*(phi_manual+1.))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
             func.eval(x0)
@@ -831,21 +780,13 @@ class TestFunctions(unittest.TestCase):
             self.assertLess(np.abs(func.phi-phi_manual),1e-10*(phi_manual+1.))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
             func.eval(x0)
@@ -936,21 +877,13 @@ class TestFunctions(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(H.data)))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
             func.eval(x0)
@@ -1066,21 +999,13 @@ class TestFunctions(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(H.data)))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
             func.eval(x0)
@@ -1289,21 +1214,13 @@ class TestFunctions(unittest.TestCase):
             self.assertLess(np.abs(f-f_manual),1e-8)
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
             h = 1e-6
@@ -1418,25 +1335,14 @@ class TestFunctions(unittest.TestCase):
             self.assertLess(np.abs(f-f_manual),1e-10*(f_manual+1.))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                if np.linalg.norm(gd_exact) == 0.:
-                    self.assertLessEqual(np.linalg.norm(gd_approx),2.)
-                else:
-                    error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
-
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
+            
             # Hessian check
             func.eval(x0)
             g0 = func.gphi.copy()
@@ -1544,21 +1450,13 @@ class TestFunctions(unittest.TestCase):
             self.assertLess(np.abs(func.phi-phi_manual),1e-10*(phi_manual+1.))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
             func.eval(x0)
@@ -1649,21 +1547,13 @@ class TestFunctions(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(H.data)))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
             func.eval(x0)
@@ -1779,21 +1669,13 @@ class TestFunctions(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(H.data)))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
             func.eval(x0)
@@ -1951,22 +1833,14 @@ class TestFunctions(unittest.TestCase):
             self.assertLess(np.abs(val-f),1e-10*np.abs(f))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
-
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
+            
             # No variables
             net.clear_flags()
             self.assertEqual(net.num_vars,0)
@@ -2135,21 +2009,13 @@ class TestFunctions(unittest.TestCase):
             self.assertLess(np.abs(val-f),1e-10*np.abs(f))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # No variables
             net.clear_flags()

@@ -12,6 +12,38 @@ from numpy.linalg import norm
 
 norminf = lambda x: norm(x,np.inf) if isinstance(x,np.ndarray) else np.abs(x)
 
+def check_function_gradient(test, func, x0, num, tol, eps, h):
+    """
+    Checks function gradient by using finite differences.
+
+    Parameters
+    ----------
+    test: unittest.TestCase
+    func : |Function|
+    x0 : |Array|
+    num : integer
+    tol : float
+    eps : float (percenge)
+    """
+
+    func.eval(x0)
+    
+    f0 = func.phi
+    g0 = func.gphi.copy()
+    for i in range(num):
+
+        d = np.random.randn(x0.size)
+
+        x = x0 + h*d
+
+        func.eval(x)
+        f1 = func.phi
+        
+        gd_exact = np.dot(g0,d)
+        gd_approx = (f1-f0)/h
+        error = 100.*norm(gd_exact-gd_approx)/(norm(gd_exact)+tol)
+        test.assertLessEqual(error,eps)
+
 def compare_buses(test, bus1, bus2, check_internals=False, check_indices=True, eps=1e-10):
     """
     Method for checking if two |Bus| objects are similar.
