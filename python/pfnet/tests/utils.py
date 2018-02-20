@@ -9,8 +9,43 @@
 import pfnet as pf
 import numpy as np
 from numpy.linalg import norm
+from scipy.sparse import coo_matrix, triu, tril, spdiags
 
 norminf = lambda x: norm(x,np.inf) if isinstance(x,np.ndarray) else np.abs(x)
+
+def check_function_hessian(test, func, x0, num, tol, eps, h):
+    """
+    Checks function Hessian by using finite differences.
+
+    Parameters
+    ----------
+    test: unittest.TestCase
+    func : |Function|
+    x0 : |Array|
+    num : integer
+    tol : float
+    eps : float (percentage)
+    """
+
+    func.eval(x0)
+
+    g0 = func.gphi.copy()
+    H0 = func.Hphi.copy()
+    H0 = H0 + H0.T - triu(H0)
+    for i in range(num):
+
+        d = np.random.randn(x0.size)
+        
+        x = x0 + h*d
+        
+        func.eval(x)
+        
+        g1 = func.gphi.copy()
+        
+        Hd_exact = H0*d
+        Hd_approx = (g1-g0)/h
+        error = 100.*norm(Hd_exact-Hd_approx)/(norm(Hd_exact)+tol)
+        test.assertLessEqual(error, eps)
 
 def check_function_gradient(test, func, x0, num, tol, eps, h):
     """
@@ -23,7 +58,7 @@ def check_function_gradient(test, func, x0, num, tol, eps, h):
     x0 : |Array|
     num : integer
     tol : float
-    eps : float (percenge)
+    eps : float (percentage)
     """
 
     func.eval(x0)
@@ -42,7 +77,7 @@ def check_function_gradient(test, func, x0, num, tol, eps, h):
         gd_exact = np.dot(g0,d)
         gd_approx = (f1-f0)/h
         error = 100.*norm(gd_exact-gd_approx)/(norm(gd_exact)+tol)
-        test.assertLessEqual(error,eps)
+        test.assertLessEqual(error, eps)
 
 def compare_buses(test, bus1, bus2, check_internals=False, check_indices=True, eps=1e-10):
     """

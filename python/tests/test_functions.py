@@ -10,7 +10,7 @@ import pfnet as pf
 import unittest
 from . import test_cases
 import numpy as np
-from scipy.sparse import coo_matrix,triu,tril,spdiags
+from scipy.sparse import coo_matrix, triu, tril, spdiags
 
 NUM_TRIALS = 25
 EPS = 3. # %
@@ -113,23 +113,13 @@ class TestFunctions(unittest.TestCase):
                                                    h)
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
             # Value
             dv = 0.2
@@ -301,29 +291,19 @@ class TestFunctions(unittest.TestCase):
                             1e-8*(np.linalg.norm(func.gphi)+1.))
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
             # One more Hessian check
             Href = spdiags(2.*w,0,net.num_vars,net.num_vars)
-            dH = (Href-H0).tocoo()
+            dH = (Href-func.Hphi).tocoo()
             self.assertLess(np.linalg.norm(dH.data),
-                            1e-8*(np.linalg.norm(H0.data)+1.))
+                            1e-8*(np.linalg.norm(func.Hphi.data)+1.))
             
     def test_func_REG_PQ(self):
 
@@ -414,23 +394,13 @@ class TestFunctions(unittest.TestCase):
                                                    h)
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
             # Value
             func.eval(x0)
@@ -547,24 +517,13 @@ class TestFunctions(unittest.TestCase):
                                                    h)
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            H0 = H0 + H0.T - triu(H0)
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
             # Value
             func.eval(net.get_var_values())
@@ -676,24 +635,13 @@ class TestFunctions(unittest.TestCase):
                                                    h)
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            H0 = H0 + H0.T - triu(H0)
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
     def test_func_REG_SUSC(self):
 
@@ -789,24 +737,13 @@ class TestFunctions(unittest.TestCase):
                                                    h)
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            H0 = H0 + H0.T - triu(H0)
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
     def test_func_GEN_COST(self):
 
@@ -886,23 +823,13 @@ class TestFunctions(unittest.TestCase):
                                                    h)
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
             # value check
             val = 0
@@ -1008,23 +935,13 @@ class TestFunctions(unittest.TestCase):
                                                    h)
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
             # value check
             val = 0
@@ -1223,24 +1140,13 @@ class TestFunctions(unittest.TestCase):
                                                    h)
 
             # Hessian check
-            h = 1e-6
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  1e-6)
 
     def test_func_SLIM_VMAG(self):
 
@@ -1344,23 +1250,13 @@ class TestFunctions(unittest.TestCase):
                                                    h)
             
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
     def test_func_REG_PHASE(self):
 
@@ -1459,24 +1355,13 @@ class TestFunctions(unittest.TestCase):
                                                    h)
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            H0 = H0 + H0.T - triu(H0)
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
     def test_func_LOAD_UTIL(self):
 
@@ -1556,23 +1441,13 @@ class TestFunctions(unittest.TestCase):
                                                    h)
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
             # value check
             val = 0
@@ -1678,23 +1553,13 @@ class TestFunctions(unittest.TestCase):
                                                    h)
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
             # value check
             val = 0
