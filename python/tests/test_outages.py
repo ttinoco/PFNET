@@ -276,10 +276,9 @@ class TestOutages(unittest.TestCase):
         for case in test_cases.CASES:
             
             net = pf.Parser(case).parse(case)
-
-            net.clear_outages()
             
             # tap ratio vio
+            net.clear_outages()
             for branch in net.branches:
                 if branch.is_tap_changer():
                     branch.ratio = branch.ratio_max + 10.
@@ -289,10 +288,9 @@ class TestOutages(unittest.TestCase):
                     net.update_properties()
                     self.assertNotEqual(net.tran_r_vio, 10.)
                     break
-
-            net.clear_outages()
             
             # phase shift vio
+            net.clear_outages() 
             for branch in net.branches:
                 if branch.is_phase_shifter():
                     branch.phase = branch.phase_max + 20.
@@ -322,10 +320,9 @@ class TestOutages(unittest.TestCase):
                                           sum([g.Q for g in bus.generators]) -
                                           sum([br.Q_km for br in bus.branches_k]) -
                                           sum([br.Q_mk for br in bus.branches_m]))), 1e-8)
-
-            net.clear_outages()
             
             # v reg limit violations
+            net.clear_outages()
             for bus in net.buses:
                 if bus.is_regulated_by_tran():
                     net.update_properties()
@@ -337,16 +334,54 @@ class TestOutages(unittest.TestCase):
                     self.assertFalse(bus.is_regulated_by_tran())
                     net.update_properties()
                     self.assertGreater(np.abs(net.tran_v_vio-15.), 1e-8)
-                    net.clear_outages()
                     break
                             
             # v set deviations
+            net.clear_outages()
+            for bus in net.buses:
+                if bus.is_regulated_by_gen():
+                    bus.v_mag = bus.v_set + 33.
+                    net.update_properties()
+                    self.assertLess(np.abs(net.gen_v_dev-33.), 1e-8)
+                    for gen in bus.reg_generators:
+                        gen.outage = True
+                    self.assertFalse(bus.is_regulated_by_gen())
+                    net.update_properties()
+                    self.assertGreater(np.abs(net.gen_v_dev-33.), 1e-8)
+                    break
             
             # gen active power cost
+            net.clear_outages()
+            net.update_properties()
+            cost = net.gen_P_cost
+            for gen in net.generators:
+                gen.outage = True
+                net.update_properties()
+                cost -= gen.cost_coeff_Q0 + gen.cost_coeff_Q1*gen.P + gen.cost_coeff_Q2*(gen.P**2.)
+                self.assertLess(np.abs(cost-net.gen_P_cost), 1e-8)
             
             # gen Q vio
+            net.clear_outages()
+            for gen in net.generators:
+                if gen.is_regulator():
+                    gen.Q = gen.Q_max + 340.
+                    net.update_properties()
+                    self.assertLess(np.abs(net.gen_Q_vio-340.*net.base_power), 1e-8)
+                    gen.outage = True
+                    net.update_properties()
+                    self.assertGreater(np.abs(net.gen_Q_vio-340.*net.base_power), 1e-8)
+                    break
             
             # gen P vio
+            net.clear_outages()
+            for gen in net.generators:
+                gen.P = gen.P_min - 540.
+                net.update_properties()
+                self.assertLess(np.abs(net.gen_P_vio-540.*net.base_power), 1e-8)
+                gen.outage = True
+                net.update_properties()
+                self.assertGreater(np.abs(net.gen_P_vio-540.*net.base_power), 1e-8)
+                break
 
     def test_functions(self):
 
