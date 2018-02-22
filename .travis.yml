@@ -10,6 +10,7 @@ before_install:
     sudo apt-get -y purge libgraphviz-dev;
   fi
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    echo nothing;
   fi
 
 install:
