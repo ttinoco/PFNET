@@ -9,11 +9,7 @@ before_install:
     sudo apt-get update;
     sudo apt-get -y purge libgraphviz-dev;
   fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then 
-    brew update;
-    brew install python;
-    sudo easy_install pip;
-    sudo pip install nose;
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
   fi
 
 install:
