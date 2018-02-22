@@ -11,7 +11,8 @@ before_install:
     sudo apt-get -y purge libgraphviz-dev;
   fi
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    echo nothing;
+    pip uninstall -y nose;
+    sudo easy_install nose;
   fi
 
 install:
