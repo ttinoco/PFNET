@@ -19,7 +19,7 @@ install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       sudo easy_install nose;
     fi
-  - sudo pip install -r ./python/requirements.txt
+  - pip install -r ./python/requirements.txt
 
 script: 
   - cd python
