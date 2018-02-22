@@ -9,7 +9,7 @@ before_install:
     sudo apt-get -y purge libgraphviz-dev;
   fi
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    alias pip=pip2
+    alias pip=pip2;
   fi
 
 install:
