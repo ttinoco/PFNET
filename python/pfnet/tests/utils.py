@@ -13,6 +13,39 @@ from scipy.sparse import coo_matrix, triu, tril, spdiags
 
 norminf = lambda x: norm(x,np.inf) if isinstance(x,np.ndarray) else np.abs(x)
 
+def check_constraint_Jacobian(test, constr, x0, y0, num, tol, eps, h):
+    """
+    Checks constraint Jacobian by using finite differences.
+
+    Parameters
+    ----------
+    test: unittest.TestCase
+    func : |Constraint|
+    x0 : |Array|
+    num : integer
+    tol : float
+    eps : float (percentage)
+    """
+    
+    constr.eval(x0, y0)
+
+    f0 = constr.f.copy()
+    J0 = constr.J.copy()
+    for i in range(num):
+
+        d = np.random.randn(x0.size+y0.size)
+        
+        x = x0 + h*d[:x0.size]
+        y = y0 + h*d[x0.size:]
+        
+        constr.eval(x, y)
+        f1 = constr.f
+        
+        Jd_exact = J0*d
+        Jd_approx = (f1-f0)/h
+        error = 100.*norm(Jd_exact-Jd_approx)/(norm(Jd_exact)+tol)
+        test.assertLessEqual(error, eps)
+
 def check_function_hessian(test, func, x0, num, tol, eps, h):
     """
     Checks function Hessian by using finite differences.

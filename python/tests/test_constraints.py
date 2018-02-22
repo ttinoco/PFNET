@@ -7,10 +7,10 @@
 #***************************************************#
 
 import os
-import pfnet as pf
 import unittest
-from . import test_cases
+import pfnet as pf
 import numpy as np
+from . import test_cases
 from numpy.linalg import norm
 from scipy.sparse import coo_matrix,triu,tril,eye
 
@@ -1902,23 +1902,14 @@ class TestConstraints(unittest.TestCase):
                     self.assertLess(norm(H_list[t].data-H_list[t+1].data),1e-12*norm(H_list[t].data))
 
             # Jacobian check
-            x0 = x0.copy()
-            constr.eval(x0)
-            f0 = constr.f.copy()
-            J0 = constr.J.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                constr.eval(x)
-                f1 = constr.f
-
-                Jd_exact = J0*d
-                Jd_approx = (f1-f0)/h
-                error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_constraint_Jacobian(self,
+                                                     constr,
+                                                     x0,
+                                                     np.zeros(0),
+                                                     NUM_TRIALS,
+                                                     TOL,
+                                                     EPS,
+                                                     h)
 
             # Sigle Hessian check
             for i in range(NUM_TRIALS):
@@ -1948,7 +1939,7 @@ class TestConstraints(unittest.TestCase):
                 self.assertLessEqual(error,EPS)
 
             # Combined Hessian check
-            coeff = np.random.randn(f0.shape[0])
+            coeff = np.random.randn(constr.f.shape[0])
             constr.eval(x0)
             constr.combine_H(coeff,False)
             J0 = constr.J
@@ -2156,22 +2147,14 @@ class TestConstraints(unittest.TestCase):
                         flags[(t,bus.index)] = True            
 
             # Jacobian check
-            f0 = f.copy()
-            J0 = J.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars+constr.num_extra_vars)
-
-                x = x0 + h*d[:net.num_vars]
-                y = y0 + h*d[net.num_vars:]
-
-                constr.eval(x,y)
-                f1 = constr.f
-
-                Jd_exact = J0*d
-                Jd_approx = (f1-f0)/h
-                error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_constraint_Jacobian(self,
+                                                     constr,
+                                                     x0,
+                                                     y0,
+                                                     NUM_TRIALS,
+                                                     TOL,
+                                                     EPS,
+                                                     h)
 
             # Sigle Hessian check
             for i in range(NUM_TRIALS):
@@ -2205,7 +2188,7 @@ class TestConstraints(unittest.TestCase):
                 self.assertLessEqual(error,EPS)
 
             # Combined Hessian check
-            coeff = np.random.randn(f0.shape[0])
+            coeff = np.random.randn(constr.f.shape[0])
             constr.eval(x0,y0)
             constr.combine_H(coeff,False)
             J0 = constr.J
@@ -2390,21 +2373,14 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(f)))
 
             # Jacobian check
-            f0 = f.copy()
-            J0 = J.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                constr.eval(x)
-                f1 = constr.f
-
-                Jd_exact = J0*d
-                Jd_approx = (f1-f0)/h
-                error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_constraint_Jacobian(self,
+                                                     constr,
+                                                     x0,
+                                                     np.zeros(0),
+                                                     NUM_TRIALS,
+                                                     TOL,
+                                                     EPS,
+                                                     h)
 
             # Sigle Hessian check
             for i in range(NUM_TRIALS):
@@ -2435,7 +2411,7 @@ class TestConstraints(unittest.TestCase):
                 self.assertLessEqual(error,EPS)
 
             # Combined Hessian check
-            coeff = np.random.randn(f0.shape[0])
+            coeff = np.random.randn(constr.f.shape[0])
             constr.eval(x0)
             constr.combine_H(coeff,False)
             J0 = constr.J
@@ -2619,23 +2595,14 @@ class TestConstraints(unittest.TestCase):
                         index += 4
 
             # Jacobian check
-            constr.eval(x0,y0)
-            f0 = constr.f.copy()
-            J0 = constr.J.copy()            
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars+constr.num_extra_vars)
-
-                x = x0 + h*d[:net.num_vars]
-                y = y0 + h*d[net.num_vars:]
-
-                constr.eval(x,y)
-                f1 = constr.f
-
-                Jd_exact = J0*d
-                Jd_approx = (f1-f0)/h
-                error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_constraint_Jacobian(self,
+                                                     constr,
+                                                     x0,
+                                                     y0,
+                                                     NUM_TRIALS,
+                                                     TOL,
+                                                     EPS,
+                                                     h)
 
             # Sigle Hessian check
             for i in range(NUM_TRIALS):
@@ -2669,7 +2636,7 @@ class TestConstraints(unittest.TestCase):
                 self.assertLessEqual(error,EPS)
 
             # Combined Hessian check
-            coeff = np.random.randn(f0.shape[0])
+            coeff = np.random.randn(constr.f.shape[0])
             constr.eval(x0,y0)
             constr.combine_H(coeff,False)
             J0 = constr.J
@@ -2860,23 +2827,14 @@ class TestConstraints(unittest.TestCase):
                         counted[(bus.index,t)] = True
 
             # Jacobian check
-            constr.eval(x0,y0)
-            f0 = constr.f.copy()
-            J0 = constr.J.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars+constr.num_extra_vars)
-
-                x = x0 + h*d[:net.num_vars]
-                y = y0 + h*d[net.num_vars:]
-
-                constr.eval(x,y)
-                f1 = constr.f
-
-                Jd_exact = J0*d
-                Jd_approx = (f1-f0)/h
-                error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_constraint_Jacobian(self,
+                                                     constr,
+                                                     x0,
+                                                     y0,
+                                                     NUM_TRIALS,
+                                                     TOL,
+                                                     EPS,
+                                                     h)
 
             # Sigle Hessian check
             for i in range(NUM_TRIALS):
@@ -2910,7 +2868,7 @@ class TestConstraints(unittest.TestCase):
                 self.assertLessEqual(error,EPS)
 
             # Combined Hessian check
-            coeff = np.random.randn(f0.shape[0])
+            coeff = np.random.randn(constr.f.shape[0])
             constr.eval(x0,y0)
             constr.combine_H(coeff,False)
             J0 = constr.J
@@ -4222,23 +4180,14 @@ class TestConstraints(unittest.TestCase):
                     J_row += 2
 
             # Jacobian check
-            constr.eval(x0,y0)
-            f0 = constr.f.copy()
-            J0 = constr.J.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars+num_constr)
-
-                x = x0 + h*d[:net.num_vars]
-                y = y0 + h*d[net.num_vars:]
-
-                constr.eval(x,y)
-                f1 = constr.f
-
-                Jd_exact = J0*d
-                Jd_approx = (f1-f0)/h
-                error = 100.*norm(Jd_exact-Jd_approx)/np.maximum(norm(Jd_exact),tol)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_constraint_Jacobian(self,
+                                                     constr,
+                                                     x0,
+                                                     y0,
+                                                     NUM_TRIALS,
+                                                     TOL,
+                                                     EPS,
+                                                     h)
 
             # Sigle Hessian check
             for i in range(NUM_TRIALS):
@@ -4270,7 +4219,7 @@ class TestConstraints(unittest.TestCase):
 
             # Combined Hessian check 1
             h = 1e-12
-            coeff = np.random.randn(f0.shape[0])
+            coeff = np.random.randn(constr.f.shape[0])
             constr.eval(x0,y0)
             constr.combine_H(coeff,False)
             J0 = constr.J
@@ -4297,7 +4246,7 @@ class TestConstraints(unittest.TestCase):
                 self.assertLessEqual(error,EPS)
 
             # Combined Hessian check 2
-            coeff = np.random.randn(f0.shape[0])
+            coeff = np.random.randn(constr.f.shape[0])
             constr.eval(x0,y0)
             constr.combine_H(coeff,False)
             H = constr.H_combined.copy()
@@ -4307,129 +4256,6 @@ class TestConstraints(unittest.TestCase):
                 H_manual = H_manual + coeff[i]*Hi
             diff = coo_matrix(H_manual-H)
             self.assertLess(norm(diff.data)/norm(H.data),1e-12)
-
-            # Slow tests
-            if os.environ.get('TEST_SLOW') == '1':
-
-                # Jacobian check
-                h = 1e-12
-                tol = 1e0
-                eps = 3.0 # %
-                constr.eval(x0,y0)
-                f0 = constr.f.copy()
-                J0 = constr.J.copy()
-                self.assertEqual(constr.num_extra_vars,num_constr)
-                def check_J(index,nnz=None):
-                    e = np.zeros(net.num_vars+constr.num_extra_vars)
-                    e[index] = 1.
-                    x = x0 + h*e[:net.num_vars]
-                    y = y0 + h*e[net.num_vars:]
-                    constr.eval(x,y)
-                    f1 = constr.f
-                    Je_exact = J0*e
-                    Je_approx = (f1-f0)/h
-                    error = 100.*norm(Je_exact-Je_approx)/np.maximum(norm(Je_exact),tol)
-                    self.assertLessEqual(np.sum((f1-f0) != 0.),nnz)
-                    try:
-                        self.assertLessEqual(error,eps)
-                        return True
-                    except AssertionError:
-                        return False
-                for t in range(net.num_periods):
-                    for branch in net.branches:
-                        if branch.is_tap_changer():
-                            self.assertTrue(check_J(branch.index_ratio[t],2))
-                    for branch in net.branches:
-                        if branch.is_phase_shifter():
-                            self.assertTrue(check_J(branch.index_phase[t],2))
-                    num_bad = 0
-                    for bus in net.buses:
-                        if not check_J(bus.index_v_mag[t],2*bus.degree):
-                            num_bad += 1
-                    self.assertLess((100.*num_bad)/net.num_buses,1.) # less then 1 %
-                    num_bad = 0
-                    for bus in net.buses:
-                        if not check_J(bus.index_v_ang[t],2*bus.degree):
-                            num_bad += 1
-                    self.assertLess((100.*num_bad)/net.num_buses,1.) # less then 1 %
-
-                # Sigle Hessian check
-                h = 1e-12
-                tol = 1e0
-                eps = 2.0 # %
-                num_max = 50
-                num_trials = 4
-                counters = [0,0,0]
-                constr_indices = []
-                for t in range(net.num_periods):
-                    for branch in net.branches:
-                        if branch.is_tap_changer() and counters[0] < num_trials:
-                            i = t*net.num_branches*2+2*branch.index
-                            constr_indices += [i,i+1]
-                            counters[0] += 1
-                        elif branch.is_phase_shifter() and counters[1] < num_trials:
-                            i = t*net.num_branches*2+2*branch.index
-                            constr_indices += [i,i+1]
-                            counters[1] += 1
-                        elif counters[2] < num_trials:
-                            i = t*net.num_branches*2+2*branch.index
-                            constr_indices += [i,i+1]
-                            counters[2] += 1
-                self.assertLessEqual(len(constr_indices),24)
-                self.assertEqual(len(constr_indices),len(list(set(constr_indices))))
-                for i in constr_indices:
-                    constr.eval(x0,y0)
-                    g0 = constr.J.tocsr()[i,:].toarray().flatten()
-                    H0 = constr.get_H_single(i)
-                    H0 = (H0 + H0.T) - triu(H0)
-                    def check_H(index):
-                        e = np.zeros(net.num_vars+constr.num_extra_vars)
-                        e[index] = 1.
-                        x = x0 + h*e[:net.num_vars]
-                        y = y0 + h*e[net.num_vars:]
-                        constr.eval(x,y)
-                        g1 = constr.J.tocsr()[i,:].toarray().flatten()
-                        He_exact = H0*e
-                        He_approx = (g1-g0)/h
-                        error = 100.*norm(He_exact-He_approx)/np.maximum(norm(He_exact),tol)
-                        try:
-                            self.assertLessEqual(error,eps)
-                            return True
-                        except AssertionError:
-                            return False
-                    for t in range(net.num_periods):
-                        counter = 0
-                        for branch in net.branches:
-                            if branch.is_tap_changer():
-                                self.assertTrue(check_H(branch.index_ratio[t]))
-                                counter += 1
-                                if counter >= num_max:
-                                    break
-                        counter = 0
-                        for branch in net.branches:
-                            if branch.is_phase_shifter():
-                                self.assertTrue(check_H(branch.index_phase[t]))
-                                counter += 1
-                                if counter >= num_max:
-                                    break
-                        num_bad = 0
-                        counter = 0
-                        for bus in net.buses:
-                            if not check_H(bus.index_v_mag[t]):
-                                num_bad += 1
-                            counter += 1
-                            if counter >= num_max:
-                                break
-                        self.assertLess((100.*num_bad)/min([net.num_buses,num_max]),1.) # less then 1 %
-                        num_bad = 0
-                        counter = 0
-                        for bus in net.buses:
-                            if not check_H(bus.index_v_ang[t]):
-                                num_bad += 1
-                            counter += 1
-                            if counter >= num_max:
-                                break
-                        self.assertLess((100.*num_bad)/min([net.num_buses,num_max]),1.) # less then 1 %
 
             # Sensitivities
             net.clear_sensitivities()

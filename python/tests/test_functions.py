@@ -6,10 +6,10 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
-import pfnet as pf
 import unittest
-from . import test_cases
 import numpy as np
+import pfnet as pf
+from . import test_cases
 from scipy.sparse import coo_matrix, triu, tril, spdiags
 
 NUM_TRIALS = 25

@@ -1,6 +1,5 @@
 Targets
 -------
-* Mechanism for changing constraint parameters.
 * MAT or ART data writer.
 * CIM parser written in python.
 * Rich object comparisons for all network components.
@@ -36,6 +35,7 @@ Unreleased
 * Added bus.is_star(), branch.is_part_of_3_winding_transformer(), and net.get_num_star_buses().
 * Added routines for getting number of gens/branches on outage.
 * Added utility routines to check function gradients and hessians in pfnet.tests.utils.
+* Added utility routines to check constraint Jacobians in pfnet.tests.utils.
 
 Version 1.3.2
 -------------
