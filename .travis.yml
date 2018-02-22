@@ -3,14 +3,12 @@ language: python
 matrix:
   include:
     - os: linux
-      sudo: required
       python: 2.7
     - os: linux
-      sudo: required
       python: 3.5
     - os: osx
-      language: generic
       osx_image: xcode7.3
+      language: generic
 
 install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then 

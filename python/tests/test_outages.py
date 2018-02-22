@@ -66,7 +66,7 @@ class TestOutages(unittest.TestCase):
                 # json
                 json_string = gen.json_string
                 d = json.loads(json_string)
-                self.assertTrue(d.has_key('outage'))
+                self.assertTrue('outage' in d)
                 self.assertTrue(d['outage'])
 
             # copy
@@ -107,9 +107,9 @@ class TestOutages(unittest.TestCase):
                     self.assertTrue(branch.index in [br.index for br in branch.reg_bus.reg_trans])
 
                     if all([br.is_on_outage() for br in branch.reg_bus.reg_trans]):
-                        self.assertFalse(br.reg_bus.is_regulated_by_tran())
+                        self.assertFalse(branch.reg_bus.is_regulated_by_tran())
                     else:
-                        self.assertTrue(br.reg_bus.is_regulated_by_tran())
+                        self.assertTrue(branch.reg_bus.is_regulated_by_tran())
 
                 # clear
                 branch.outage = False
@@ -122,7 +122,7 @@ class TestOutages(unittest.TestCase):
                 # json
                 json_string = branch.json_string
                 d = json.loads(json_string)
-                self.assertTrue(d.has_key('outage'))
+                self.assertTrue('outage' in d)
                 self.assertTrue(d['outage'])
                 
             # copy  

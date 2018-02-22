@@ -34,6 +34,6 @@ net.set_flags_of_component(bus,'variable','voltage magnitude')
 
 print(net.num_vars)
 
-print bus.index_v_mag
+print(bus.index_v_mag)
 
 
