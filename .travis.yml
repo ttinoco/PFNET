@@ -17,10 +17,9 @@ install:
       sudo apt-get -y purge libgraphviz-dev;
     fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-      pip uninstall -y nose;
       sudo easy_install nose;
     fi
-  - pip install --user -r ./python/requirements.txt
+  - sudo pip install -r ./python/requirements.txt
 
 script: 
   - cd python
