@@ -139,6 +139,10 @@ class TestFunctions(unittest.TestCase):
                     phi += 0.5*(((bus.v_mag[t]-bus.v_set[t])/dv)**2.)
             self.assertLess(np.abs(func.phi-phi),1e-10*(func.phi+1))
 
+    def test_func_REG_VMAG_with_outages(self):
+
+        pass
+            
     def test_func_REG_VAR(self):
 
         # Constants
@@ -304,6 +308,10 @@ class TestFunctions(unittest.TestCase):
             dH = (Href-func.Hphi).tocoo()
             self.assertLess(np.linalg.norm(dH.data),
                             1e-8*(np.linalg.norm(func.Hphi.data)+1.))
+
+    def test_func_REG_VAR_with_outages(self):
+
+        pass
             
     def test_func_REG_PQ(self):
 
@@ -420,6 +428,10 @@ class TestFunctions(unittest.TestCase):
             func.eval(np.zeros(0))
             self.assertLess(np.abs(func.phi-phi),1e-10*(func.phi+1.))
 
+    def test_func_REG_PQ_with_outages(self):
+
+        pass
+            
     def test_func_REG_VANG(self):
 
         # Constants
@@ -541,6 +553,10 @@ class TestFunctions(unittest.TestCase):
             func.eval(np.zeros(0))
             self.assertLess(np.abs(func.phi-phi),1e-10*(phi+1.))
 
+    def test_func_REG_VANG_with_outages(self):
+
+        pass
+            
     def test_func_REG_RATIO(self):
 
         # Constants
@@ -643,6 +659,10 @@ class TestFunctions(unittest.TestCase):
                                                   EPS,
                                                   h)
 
+    def test_func_REG_RATIO_with_outages(self):
+
+        pass
+            
     def test_func_REG_SUSC(self):
 
         # Constants
@@ -745,6 +765,10 @@ class TestFunctions(unittest.TestCase):
                                                   EPS,
                                                   h)
 
+    def test_func_REG_SUSC_with_outages(self):
+
+        pass
+            
     def test_func_GEN_COST(self):
 
         # Single period
@@ -967,6 +991,10 @@ class TestFunctions(unittest.TestCase):
                             gen.cost_coeff_Q2*(gen.P[t]**2.))
             self.assertLess(np.abs(val-func.phi),1e-10*np.abs(func.phi))
 
+    def test_func_GEN_COST_with_outages(self):
+
+        pass
+            
     def test_func_SP_CONTROLS(self):
 
         # Constants
@@ -1148,6 +1176,10 @@ class TestFunctions(unittest.TestCase):
                                                   EPS,
                                                   1e-6)
 
+    def test_func_SP_CONTROLS_with_outages(self):
+
+        pass
+
     def test_func_SLIM_VMAG(self):
 
         # Constants
@@ -1257,7 +1289,11 @@ class TestFunctions(unittest.TestCase):
                                                   TOL,
                                                   EPS,
                                                   h)
+            
+    def test_func_SLIM_VMAG_with_outages(self):
 
+        pass            
+            
     def test_func_REG_PHASE(self):
 
         # Constants
@@ -1363,6 +1399,10 @@ class TestFunctions(unittest.TestCase):
                                                   EPS,
                                                   h)
 
+    def test_func_REG_PHASE_with_outages(self):
+
+        pass
+            
     def test_func_LOAD_UTIL(self):
 
         # Single period
@@ -1585,6 +1625,10 @@ class TestFunctions(unittest.TestCase):
                             load.util_coeff_Q2*(load.P[t]**2.))
             self.assertLess(np.abs(val-func.phi),1e-10*np.abs(func.phi))
 
+    def test_func_LOAD_UTIL_with_outages(self):
+
+        pass
+            
     def test_func_NETCON_COST(self):
 
         # Single period
@@ -1917,6 +1961,10 @@ class TestFunctions(unittest.TestCase):
                         self.assertFalse(vargen.has_flags('variable','active power'))
                         val -= bus.price[t]*vargen.P[t]
             self.assertLess(np.abs(val-func.phi),1e-10*np.abs(f))
+
+    def test_func_NETCON_COST_with_outages(self):
+
+        pass
 
     def test_robustness(self):
 

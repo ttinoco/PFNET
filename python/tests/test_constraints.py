@@ -503,6 +503,10 @@ class TestConstraints(unittest.TestCase):
                     self.assertEqual(A.col[ar[0]],load.index_P[t])
                     self.assertEqual(b[A.row[ar[0]]],load.P[t])
 
+    def test_constr_FIX_with_outages(self):
+
+        pass        
+                    
     def test_constr_LBOUND(self):
 
         # Single period
@@ -1334,6 +1338,10 @@ class TestConstraints(unittest.TestCase):
                         self.assertEqual(shunt.sens_b_u_bound[t], mu[shunt.index_b[t]])
                         self.assertEqual(shunt.sens_b_l_bound[t], pi[shunt.index_b[t]])
 
+    def test_constr_LBOUND_with_outages(self):
+
+        pass
+                        
     def test_constr_PAR_GEN_P(self):
 
         # Multiperiod
@@ -1464,6 +1472,10 @@ class TestConstraints(unittest.TestCase):
             self.assertGreater(norm(x),0)
             self.assertTrue(norm(A*x-b) < 1e-10)
 
+    def test_constr_PAR_GEN_P_with_outages(self):
+
+        pass
+            
     def test_constr_PVPQ_SWITCHING(self):
 
         # Multiperiod
@@ -1605,7 +1617,11 @@ class TestConstraints(unittest.TestCase):
                                     nnz += 1
                                 row += 1
             self.assertEqual(nnz,A.nnz)
-                
+
+    def test_constr_PVPQ_SWITCHING_with_outages(self):
+
+        pass
+            
     def test_constr_ACPF(self):
 
         # Constants
@@ -1922,30 +1938,15 @@ class TestConstraints(unittest.TestCase):
                                                            h)
 
             # Combined Hessian check
-            coeff = np.random.randn(constr.f.shape[0])
-            constr.eval(x0)
-            constr.combine_H(coeff,False)
-            J0 = constr.J
-            g0 = J0.T*coeff
-            H0 = constr.H_combined.copy()
-            self.assertTrue(type(H0) is coo_matrix)
-            self.assertTupleEqual(H0.shape,(net.num_vars,net.num_vars))
-            self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
-            H0 = (H0 + H0.T) - triu(H0)
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                constr.eval(x)
-
-                g1 = constr.J.T*coeff
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_constraint_combined_Hessian(self,
+                                                             constr,
+                                                             x0,
+                                                             np.zeros(0),
+                                                             NUM_TRIALS,
+                                                             TOL,
+                                                             EPS,
+                                                             h)
+            
 
             # Sensitivities
             net.clear_sensitivities()
@@ -1969,6 +1970,10 @@ class TestConstraints(unittest.TestCase):
                     self.assertEqual(bus.sens_P_balance[t],3.5*bus.index_P+0.33+t*2*net.num_buses)
                     self.assertEqual(bus.sens_Q_balance[t],3.4*bus.index_Q+0.32+t*2*net.num_buses)
 
+    def test_constr_ACPF_with_outages(self):
+
+        pass
+                    
     def test_constr_REG_GEN(self):
 
         # Constants
@@ -2150,33 +2155,14 @@ class TestConstraints(unittest.TestCase):
                                                            h)
             
             # Combined Hessian check
-            coeff = np.random.randn(constr.f.shape[0])
-            constr.eval(x0,y0)
-            constr.combine_H(coeff,False)
-            J0 = constr.J
-            g0 = J0.T*coeff
-            H0 = constr.H_combined.copy()
-            self.assertTrue(type(H0) is coo_matrix)
-            self.assertTupleEqual(H0.shape,
-                                  (net.num_vars+constr.num_extra_vars,
-                                   net.num_vars+constr.num_extra_vars))
-            self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
-            H0 = (H0 + H0.T) - triu(H0)
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars+constr.num_extra_vars)
-
-                x = x0 + h*d[:net.num_vars]
-                y = y0 + h*d[net.num_vars:]
-
-                constr.eval(x,y)
-                
-                g1 = constr.J.T*coeff
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_constraint_combined_Hessian(self,
+                                                             constr,
+                                                             x0,
+                                                             y0,
+                                                             NUM_TRIALS,
+                                                             TOL,
+                                                             EPS,
+                                                             h)
 
             # Sensitivities
             net.clear_sensitivities()
@@ -2209,6 +2195,10 @@ class TestConstraints(unittest.TestCase):
                             self.assertEqual(bus.sens_v_reg_by_gen[t],bus.index+11)
                         else:
                             self.assertEqual(bus.sens_v_reg_by_gen[t],-bus.index-10 if bus.index != 0 else 10.5)
+
+    def test_constr_REG_GEN_with_outages(self):
+
+        pass
                             
     def test_constr_NBOUND(self):
 
@@ -2355,31 +2345,14 @@ class TestConstraints(unittest.TestCase):
                                                            h)
             
             # Combined Hessian check
-            coeff = np.random.randn(constr.f.shape[0])
-            constr.eval(x0)
-            constr.combine_H(coeff,False)
-            J0 = constr.J
-            g0 = J0.T*coeff
-            H0 = constr.H_combined.copy()
-            self.assertTrue(type(H0) is coo_matrix)
-            self.assertTupleEqual(H0.shape,(net.num_vars,net.num_vars))
-            self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
-            self.assertEqual(H0.nnz,2*net.num_vars)
-            H0 = (H0 + H0.T) - triu(H0)
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                constr.eval(x)
-
-                g1 = constr.J.T*coeff
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_constraint_combined_Hessian(self,
+                                                             constr,
+                                                             x0,
+                                                             np.zeros(0),
+                                                             NUM_TRIALS,
+                                                             TOL,
+                                                             EPS,
+                                                             h)
 
             # Sensitivities
             net.clear_sensitivities()
@@ -2405,6 +2378,10 @@ class TestConstraints(unittest.TestCase):
                     self.assertEqual(bus.sens_v_mag_u_bound[t],bus.index*10.)
                     self.assertEqual(bus.sens_v_mag_l_bound[t],-bus.index*10.)
 
+    def test_constr_NBOUND_with_outages(self):
+
+        pass
+                    
     def test_constr_REG_TRAN(self):
 
         # Constants
@@ -2559,33 +2536,14 @@ class TestConstraints(unittest.TestCase):
                                                            h)
             
             # Combined Hessian check
-            coeff = np.random.randn(constr.f.shape[0])
-            constr.eval(x0,y0)
-            constr.combine_H(coeff,False)
-            J0 = constr.J
-            g0 = J0.T*coeff
-            H0 = constr.H_combined.copy()
-            self.assertTrue(type(H0) is coo_matrix)
-            self.assertTupleEqual(H0.shape,
-                                  (net.num_vars+constr.num_extra_vars,
-                                   net.num_vars+constr.num_extra_vars))
-            self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
-            H0 = (H0 + H0.T) - triu(H0)
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars+constr.num_extra_vars)
-
-                x = x0 + h*d[:net.num_vars]
-                y = y0 + h*d[net.num_vars:]
-
-                constr.eval(x,y)
-
-                g1 = constr.J.T*coeff
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_constraint_combined_Hessian(self,
+                                                             constr,
+                                                             x0,
+                                                             y0,
+                                                             NUM_TRIALS,
+                                                             TOL,
+                                                             EPS,
+                                                             h)
 
             # Sensitivities
             net.clear_sensitivities()
@@ -2607,6 +2565,10 @@ class TestConstraints(unittest.TestCase):
                     if branch.is_tap_changer_v():
                         self.assertEqual(branch.reg_bus.sens_v_reg_by_tran[t],branch.reg_bus.index*t)
 
+    def test_constr_REG_TRAN_with_outages(self):
+
+        pass
+                        
     def test_constr_REG_SHUNT(self):
 
         # Constants
@@ -2770,33 +2732,14 @@ class TestConstraints(unittest.TestCase):
                                                            h)
 
             # Combined Hessian check
-            coeff = np.random.randn(constr.f.shape[0])
-            constr.eval(x0,y0)
-            constr.combine_H(coeff,False)
-            J0 = constr.J
-            g0 = J0.T*coeff
-            H0 = constr.H_combined.copy()
-            self.assertTrue(type(H0) is coo_matrix)
-            self.assertTupleEqual(H0.shape,
-                                  (net.num_vars+constr.num_extra_vars,
-                                   net.num_vars+constr.num_extra_vars))
-            self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
-            H0 = (H0 + H0.T) - triu(H0)
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars+constr.num_extra_vars)
-
-                x = x0 + h*d[:net.num_vars]
-                y = y0 + h*d[net.num_vars:]
-
-                constr.eval(x,y)
-
-                g1 = constr.J.T*coeff
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_constraint_combined_Hessian(self,
+                                                             constr,
+                                                             x0,
+                                                             y0,
+                                                             NUM_TRIALS,
+                                                             TOL,
+                                                             EPS,
+                                                             h)
 
             # Sensitivities
             net.clear_sensitivities()
@@ -2826,6 +2769,10 @@ class TestConstraints(unittest.TestCase):
                                 self.assertEqual(bus.sens_v_reg_by_shunt[t],bus.index*t)
                         flags[(t,bus.index)] = True
 
+    def test_constr_REG_SHUNT_with_outages(self):
+
+        pass
+                        
     def test_robustness(self):
 
         for case in test_cases.CASES:
@@ -3331,6 +3278,10 @@ class TestConstraints(unittest.TestCase):
                     self.assertNotEqual(bus.sens_P_balance[t], 0.)
                     self.assertEqual(bus.sens_Q_balance[t], 0.)
 
+    def test_constr_DCPF_with_outages(self):
+
+        pass
+                    
     def test_constr_DC_FLOW_LIM(self):
 
         # Single period
@@ -3544,6 +3495,10 @@ class TestConstraints(unittest.TestCase):
                 self.assertLessEqual(norm(ls[t]-ls[0]),1e-10*norm(ls[0]))
                 self.assertLessEqual(norm(us[t]-us[0]),1e-10*norm(us[0]))
 
+    def test_constr_DC_FLOW_LIM_with_outages(self):
+
+        pass
+        
     def test_constr_LINPF(self):
 
         # Multiperiod
@@ -3703,6 +3658,10 @@ class TestConstraints(unittest.TestCase):
             self.assertGreater(norm(constr.b),0)
             self.assertLess(norm(constr.b-(constrPF.J*x0-constrPF.f)),1e-10*(norm(b)+1))
 
+    def test_constr_LINPF_with_outages(self):
+
+        pass
+            
     def test_constr_GEN_RAMP(self):
 
         # Multi period
@@ -3856,6 +3815,10 @@ class TestConstraints(unittest.TestCase):
                                                 self.assertEqual(G.col[j],gen.index_P[t-1])
                                                 self.assertEqual(G.data[j],-1.)
 
+    def test_constr_GEN_RAMP_with_outages(self):
+
+        pass
+                                                
     def test_constr_AC_FLOW_LIM(self):
 
         # Constants
@@ -4103,31 +4066,14 @@ class TestConstraints(unittest.TestCase):
 
             # Combined Hessian check 1
             h = 1e-12
-            coeff = np.random.randn(constr.f.shape[0])
-            constr.eval(x0,y0)
-            constr.combine_H(coeff,False)
-            J0 = constr.J
-            g0 = J0.T*coeff
-            H0 = constr.H_combined.copy()
-            self.assertTrue(type(H0) is coo_matrix)
-            self.assertTupleEqual(H0.shape,(net.num_vars+num_constr,net.num_vars+num_constr))
-            self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
-            H0 = (H0 + H0.T) - triu(H0)
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars+num_constr)
-
-                x = x0 + h*d[:net.num_vars]
-                y = y0 + h*d[net.num_vars:]
-
-                constr.eval(x,y)
-
-                g1 = constr.J.T*coeff
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),tol)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_constraint_combined_Hessian(self,
+                                                             constr,
+                                                             x0,
+                                                             y0,
+                                                             NUM_TRIALS,
+                                                             TOL,
+                                                             EPS,
+                                                             h)
 
             # Combined Hessian check 2
             coeff = np.random.randn(constr.f.shape[0])
@@ -4244,7 +4190,11 @@ class TestConstraints(unittest.TestCase):
         
                 self.assertLess(errorJ,EPS)
                 self.assertLess(errorH,EPS)
-                    
+
+    def test_constr_AC_FLOW_LIM_with_outages(self):
+
+        pass
+                
     def test_constr_DUMMY(self):
 
         # Multiperiod
@@ -4524,6 +4474,10 @@ class TestConstraints(unittest.TestCase):
                         self.assertEqual(np.where(A.row == A.row[j])[0].size,3)
                         self.assertEqual(A.row[j],eq_row)
 
+    def test_constr_BAT_DYN_with_outages(self):
+
+        pass
+                        
     def test_constr_LOAD_PF(self):
 
         # Multi period
@@ -4654,6 +4608,10 @@ class TestConstraints(unittest.TestCase):
                 for t in range(net.num_periods):
                     self.assertAlmostEqual(load.power_factor[t],load.target_power_factor)
 
+    def test_constr_LOAD_PF_with_outages(self):
+
+        pass
+                    
     def test_constr_AC_LIN_FLOW_LIM(self):
 
         # Multiperiod
@@ -4793,6 +4751,10 @@ class TestConstraints(unittest.TestCase):
             self.assertTrue(type(l) is np.ndarray)
             self.assertTupleEqual(l.shape,(constr.G_row,))
             self.assertTrue(np.all(l == -1e8))
+
+    def test_constr_AC_LIN_FLOW_LIM_with_outages(self):
+
+        pass
 
     def test_nonlinear_constr_creation(self):
         

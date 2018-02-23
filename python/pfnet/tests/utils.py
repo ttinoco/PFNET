@@ -13,6 +13,47 @@ from scipy.sparse import coo_matrix, triu, tril, spdiags
 
 norminf = lambda x: norm(x,np.inf) if isinstance(x,np.ndarray) else np.abs(x)
 
+def check_constraint_combined_Hessian(test, constr, x0, y0, num, tol, eps, h):
+    """
+    Checks combined constraint Hessian by using finite differences.
+
+    Parameters
+    ----------
+    test: unittest.TestCase
+    func : |Constraint|
+    x0 : |Array|
+    num : integer
+    tol : float
+    eps : float (percentage)
+    """
+    
+    num_vars = x0.size+y0.size
+    coeff = np.random.randn(constr.f.shape[0])
+    constr.eval(x0, y0)
+    constr.combine_H(coeff, False)
+    J0 = constr.J
+    g0 = J0.T*coeff
+    H0 = constr.H_combined.copy()
+    test.assertTrue(type(H0) is coo_matrix)
+    test.assertTupleEqual(H0.shape, (num_vars, num_vars))
+    test.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
+    H0 = (H0 + H0.T) - triu(H0)
+    for i in range(num):
+
+        d = np.random.randn(x0.size+y0.size)
+        
+        x = x0 + h*d[:x0.size]
+        y = y0 + h*d[x0.size:]
+        
+        constr.eval(x, y)
+        
+        g1 = constr.J.T*coeff
+        
+        Hd_exact = H0*d
+        Hd_approx = (g1-g0)/h
+        error = 100.*norm(Hd_exact-Hd_approx)/(norm(Hd_exact)+tol)
+        test.assertLessEqual(error, eps)
+
 def check_constraint_single_Hessian(test, constr, x0, y0, num, tol, eps, h):
     """
     Checks single constraint Hessian by using finite differences.
