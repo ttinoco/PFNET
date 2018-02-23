@@ -13,6 +13,50 @@ from scipy.sparse import coo_matrix, triu, tril, spdiags
 
 norminf = lambda x: norm(x,np.inf) if isinstance(x,np.ndarray) else np.abs(x)
 
+def check_constraint_single_Hessian(test, constr, x0, y0, num, tol, eps, h):
+    """
+    Checks single constraint Hessian by using finite differences.
+
+    Parameters
+    ----------
+    test: unittest.TestCase
+    func : |Constraint|
+    x0 : |Array|
+    num : integer
+    tol : float
+    eps : float (percentage)
+    """
+
+    for i in range(num):
+
+        try:
+            j = np.random.randint(0, constr.f.shape[0])
+        except ValueError:
+            break
+        
+        constr.eval(x0, y0)
+        
+        g0 = constr.J.tocsr()[j,:].toarray().flatten()
+        H0 = constr.get_H_single(j)
+        
+        test.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
+        
+        H0 = (H0 + H0.T) - triu(H0)
+        
+        d = np.random.randn(x0.size+y0.size)
+        
+        x = x0 + h*d[:x0.size]
+        y = y0 + h*d[x0.size:]
+        
+        constr.eval(x, y)
+        
+        g1 = constr.J.tocsr()[j,:].toarray().flatten()
+        
+        Hd_exact = H0*d
+        Hd_approx = (g1-g0)/h
+        error = 100.*norm(Hd_exact-Hd_approx)/(norm(Hd_exact)+tol)
+        test.assertLessEqual(error, eps)
+
 def check_constraint_Jacobian(test, constr, x0, y0, num, tol, eps, h):
     """
     Checks constraint Jacobian by using finite differences.
@@ -28,7 +72,7 @@ def check_constraint_Jacobian(test, constr, x0, y0, num, tol, eps, h):
     """
     
     constr.eval(x0, y0)
-
+    
     f0 = constr.f.copy()
     J0 = constr.J.copy()
     for i in range(num):

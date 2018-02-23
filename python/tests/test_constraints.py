@@ -1912,31 +1912,14 @@ class TestConstraints(unittest.TestCase):
                                                      h)
 
             # Sigle Hessian check
-            for i in range(NUM_TRIALS):
-
-                j = np.random.randint(0,f.shape[0])
-
-                constr.eval(x0)
-
-                g0 = constr.J.tocsr()[j,:].toarray().flatten()
-                H0 = constr.get_H_single(j)
-
-                self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
-
-                H0 = (H0 + H0.T) - triu(H0)
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                constr.eval(x)
-
-                g1 = constr.J.tocsr()[j,:].toarray().flatten()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_constraint_single_Hessian(self,
+                                                           constr,
+                                                           x0,
+                                                           np.zeros(0),
+                                                           NUM_TRIALS,
+                                                           TOL,
+                                                           EPS,
+                                                           h)
 
             # Combined Hessian check
             coeff = np.random.randn(constr.f.shape[0])
@@ -2157,36 +2140,15 @@ class TestConstraints(unittest.TestCase):
                                                      h)
 
             # Sigle Hessian check
-            for i in range(NUM_TRIALS):
-
-                if f.shape[0] == 0:
-                    break
-
-                j = np.random.randint(0,f.shape[0])
-
-                constr.eval(x0,y0)
-
-                g0 = constr.J.tocsr()[j,:].toarray().flatten()
-                H0 = constr.get_H_single(j)
-
-                self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
-
-                H0 = (H0 + H0.T) - triu(H0)
-
-                d = np.random.randn(net.num_vars+constr.num_extra_vars)
-
-                x = x0 + h*d[:net.num_vars]
-                y = y0 + h*d[net.num_vars:]
-
-                constr.eval(x,y)
-
-                g1 = constr.J.tocsr()[j,:].toarray().flatten()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
-
+            pf.tests.utils.check_constraint_single_Hessian(self,
+                                                           constr,
+                                                           x0,
+                                                           y0,
+                                                           NUM_TRIALS,
+                                                           TOL,
+                                                           EPS,
+                                                           h)
+            
             # Combined Hessian check
             coeff = np.random.randn(constr.f.shape[0])
             constr.eval(x0,y0)
@@ -2383,33 +2345,15 @@ class TestConstraints(unittest.TestCase):
                                                      h)
 
             # Sigle Hessian check
-            for i in range(NUM_TRIALS):
-
-                j = np.random.randint(0,f.shape[0])
-
-                constr.eval(x0)
-
-                g0 = constr.J.tocsr()[j,:].toarray().flatten()
-                H0 = constr.get_H_single(j)
-
-                self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
-                self.assertEqual(H0.nnz,1)
-
-                H0 = (H0 + H0.T) - triu(H0)
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                constr.eval(x)
-
-                g1 = constr.J.tocsr()[j,:].toarray().flatten()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
-
+            pf.tests.utils.check_constraint_single_Hessian(self,
+                                                           constr,
+                                                           x0,
+                                                           np.zeros(0),
+                                                           NUM_TRIALS,
+                                                           TOL,
+                                                           EPS,
+                                                           h)
+            
             # Combined Hessian check
             coeff = np.random.randn(constr.f.shape[0])
             constr.eval(x0)
@@ -2605,36 +2549,15 @@ class TestConstraints(unittest.TestCase):
                                                      h)
 
             # Sigle Hessian check
-            for i in range(NUM_TRIALS):
-
-                if not f.size:
-                    continue
-
-                j = np.random.randint(0,f.shape[0])
-
-                constr.eval(x0,y0)
-
-                g0 = constr.J.tocsr()[j,:].toarray().flatten()
-                H0 = constr.get_H_single(j)
-
-                self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
-
-                H0 = (H0 + H0.T) - triu(H0)
-
-                d = np.random.randn(net.num_vars+constr.num_extra_vars)
-
-                x = x0 + h*d[:net.num_vars]
-                y = y0 + h*d[net.num_vars:]
-
-                constr.eval(x,y)
-
-                g1 = constr.J.tocsr()[j,:].toarray().flatten()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
-
+            pf.tests.utils.check_constraint_single_Hessian(self,
+                                                           constr,
+                                                           x0,
+                                                           y0,
+                                                           NUM_TRIALS,
+                                                           TOL,
+                                                           EPS,
+                                                           h)
+            
             # Combined Hessian check
             coeff = np.random.randn(constr.f.shape[0])
             constr.eval(x0,y0)
@@ -2837,35 +2760,14 @@ class TestConstraints(unittest.TestCase):
                                                      h)
 
             # Sigle Hessian check
-            for i in range(NUM_TRIALS):
-
-                if not f.size:
-                    continue
-
-                j = np.random.randint(0,f.shape[0])
-
-                constr.eval(x0,y0)
-
-                g0 = constr.J.tocsr()[j,:].toarray().flatten()
-                H0 = constr.get_H_single(j)
-
-                self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
-
-                H0 = (H0 + H0.T) - triu(H0)
-
-                d = np.random.randn(net.num_vars+constr.num_extra_vars)
-
-                x = x0 + h*d[:net.num_vars]
-                y = y0 + h*d[net.num_vars:]
-
-                constr.eval(x,y)
-
-                g1 = constr.J.tocsr()[j,:].toarray().flatten()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_constraint_single_Hessian(self,
+                                                           constr,
+                                                           x0,
+                                                           y0,
+                                                           NUM_TRIALS,
+                                                           TOL,
+                                                           EPS,
+                                                           h)
 
             # Combined Hessian check
             coeff = np.random.randn(constr.f.shape[0])
@@ -4190,32 +4092,14 @@ class TestConstraints(unittest.TestCase):
                                                      h)
 
             # Sigle Hessian check
-            for i in range(NUM_TRIALS):
-
-                j = np.random.randint(0,f.shape[0])
-
-                constr.eval(x0,y0)
-
-                g0 = constr.J.tocsr()[j,:].toarray().flatten()
-                H0 = constr.get_H_single(j)
-
-                self.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
-                
-                H0 = (H0 + H0.T) - triu(H0)
-
-                d = np.random.randn(net.num_vars+num_constr)
-
-                x = x0 + h*d[:net.num_vars]
-                y = y0 + h*d[net.num_vars:]
-
-                constr.eval(x,y)
-                
-                g1 = constr.J.tocsr()[j,:].toarray().flatten()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*norm(Hd_exact-Hd_approx)/np.maximum(norm(Hd_exact),tol)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_constraint_single_Hessian(self,
+                                                           constr,
+                                                           x0,
+                                                           y0,
+                                                           NUM_TRIALS,
+                                                           TOL,
+                                                           EPS,
+                                                           h)
 
             # Combined Hessian check 1
             h = 1e-12
