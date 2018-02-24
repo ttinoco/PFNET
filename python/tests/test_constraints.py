@@ -505,7 +505,119 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_FIX_with_outages(self):
 
-        pass        
+        # Multiperiod
+        for case in test_cases.CASES:
+            
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+
+            net.clear_outages()
+
+            gen = net.get_generator(0)
+            branch = net.get_branch(0)
+
+            gen.outage = True
+            branch.outage = True
+
+            self.assertTrue(gen.is_on_outage())
+            self.assertTrue(branch.is_on_outage())
+
+            gen.P = np.random.rand(self.T)
+            gen.Q = np.random.rand(self.T)
+            branch.ratio = np.random.randn(self.T)
+            branch.phase = np.random.randn(self.T)
+
+            net.set_flags('generator',
+                          ['variable','fixed'],
+                          'any',
+                          ['active power', 'reactive power'])
+            net.set_flags('branch',
+                          ['variable','fixed'],
+                          'any',
+                          ['tap ratio', 'phase shift'])
+            self.assertEqual(net.num_vars,
+                             self.T*(2*net.num_generators + 2*net.num_branches))
+            self.assertEqual(net.num_vars, net.num_fixed)
+
+            constr = pf.Constraint('variable fixing', net)
+            constr.analyze()
+
+            A = constr.A
+            b = constr.b
+
+            for t in range(self.T):
+
+                # gen P
+                k = np.where(A.col == gen.index_P[t])[0]
+                self.assertEqual(k.size, 1)
+                k = k[0]
+                i = A.row[k]
+                self.assertEqual(A.data[k], 1.)
+                self.assertEqual(b[i], gen.P[t])
+
+                # gen Q
+                k = np.where(A.col == gen.index_Q[t])[0]
+                self.assertEqual(k.size, 1)
+                k = k[0]
+                i = A.row[k]
+                self.assertEqual(A.data[k], 1.)
+                self.assertEqual(b[i], gen.Q[t])
+
+                # branch ratio
+                k = np.where(A.col == branch.index_ratio[t])[0]
+                self.assertEqual(k.size, 1)
+                k = k[0]
+                i = A.row[k]
+                self.assertEqual(A.data[k], 1.)
+                self.assertEqual(b[i], branch.ratio[t])
+
+                # branch phase
+                k = np.where(A.col == branch.index_phase[t])[0]
+                self.assertEqual(k.size, 1)
+                k = k[0]
+                i = A.row[k]
+                self.assertEqual(A.data[k], 1.)
+                self.assertEqual(b[i], branch.phase[t])
+
+            # Disconnect
+            net.clear_outages()
+            net.clear_flags()
+            self.assertEqual(net.num_vars, 0)
+            for bus in net.buses:
+                if bus.degree == 1:
+                    self.assertEqual(len(bus.branches), 1)
+                    bus.branches[0].outage = True
+                    self.assertTrue(bus.branches[0].is_on_outage())
+                    net.set_flags_of_component(bus,
+                                               ['variable', 'fixed'],
+                                               ['voltage magnitude', 'voltage angle'])
+                    self.assertEqual(net.num_vars, 2*self.T)
+                    self.assertEqual(net.num_vars, net.num_fixed)
+                    self.assertTrue(bus.has_flags('variable', ['voltage magnitude',
+                                                               'voltage angle']))
+                    self.assertTrue(bus.has_flags('fixed', ['voltage magnitude',
+                                                            'voltage angle']))
+                    constr = pf.Constraint('variable fixing', net)
+                    constr.analyze()
+                    A = constr.A
+                    b = constr.b
+                    self.assertEqual(A.shape[0], 2*self.T)
+                    for t in range(self.T):
+
+                        # bus v mag
+                        k = np.where(A.col == bus.index_v_mag[t])[0]
+                        self.assertEqual(k.size, 1)
+                        k = k[0]
+                        self.assertEqual(A.data[k], 1.)
+                        self.assertEqual(b[A.row[k]], bus.v_mag[t])
+
+                        # bus v ang
+                        k = np.where(A.col == bus.index_v_ang[t])[0]
+                        self.assertEqual(k.size, 1)
+                        k = k[0]
+                        self.assertEqual(A.data[k], 1.)
+                        self.assertEqual(b[A.row[k]], bus.v_ang[t])
+                    break                                    
                     
     def test_constr_LBOUND(self):
 
@@ -1340,8 +1452,131 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_LBOUND_with_outages(self):
 
-        pass
-                        
+        # Multiperiod
+        for case in test_cases.CASES:
+            
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+
+            net.clear_outages()
+
+            gen = net.get_generator(0)
+            branch = net.get_branch(0)
+
+            gen.outage = True
+            branch.outage = True
+
+            self.assertTrue(gen.is_on_outage())
+            self.assertTrue(branch.is_on_outage())
+
+            gen.P_min = np.random.rand()
+            gen.Q_min = np.random.rand()
+            branch.ratio_min = np.random.randn()
+            branch.phase_min = np.random.randn()
+            gen.P_max = gen.P_min + 3.
+            gen.Q_max = gen.Q_min + 4.
+            branch.ratio_max = branch.ratio_min + 5.
+            branch.phase_max = branch.phase_min + 2.
+            
+            net.set_flags('generator',
+                          ['variable','bounded'],
+                          'any',
+                          ['active power', 'reactive power'])
+            net.set_flags('branch',
+                          ['variable','bounded'],
+                          'any',
+                          ['tap ratio', 'phase shift'])
+            self.assertEqual(net.num_vars,
+                             self.T*(2*net.num_generators + 2*net.num_branches))
+            self.assertEqual(net.num_vars, net.num_bounded)
+
+            constr = pf.Constraint('variable bounds', net)
+            constr.analyze()
+
+            l = constr.l
+            u = constr.u
+            G = constr.G
+
+            for t in range(self.T):
+
+                # gen P
+                k = np.where(G.col == gen.index_P[t])[0]
+                self.assertEqual(k.size, 1)
+                k = k[0]
+                i = G.row[k]
+                self.assertEqual(G.data[k], 1.)
+                self.assertEqual(l[i], gen.P_min)
+                self.assertEqual(u[i], gen.P_max)
+                self.assertEqual(u[i], l[i] + 3.)
+
+                # gen Q
+                k = np.where(G.col == gen.index_Q[t])[0]
+                self.assertEqual(k.size, 1)
+                k = k[0]
+                i = G.row[k]
+                self.assertEqual(G.data[k], 1.)
+                self.assertEqual(l[i], gen.Q_min)
+                self.assertEqual(u[i], gen.Q_max)
+                self.assertEqual(u[i], l[i] + 4.)
+
+                # branch ratio
+                k = np.where(G.col == branch.index_ratio[t])[0]
+                self.assertEqual(k.size, 1)
+                k = k[0]
+                i = G.row[k]
+                self.assertEqual(G.data[k], 1.)
+                self.assertEqual(l[i], branch.ratio_min)
+                self.assertEqual(u[i], branch.ratio_max)
+                self.assertEqual(u[i], l[i] + 5.)
+
+                # branch phase
+                k = np.where(G.col == branch.index_phase[t])[0]
+                self.assertEqual(k.size, 1)
+                k = k[0]
+                i = G.row[k]
+                self.assertEqual(G.data[k], 1.)
+                self.assertEqual(l[i], branch.phase_min)
+                self.assertEqual(u[i], branch.phase_max)
+                self.assertEqual(u[i], l[i] + 2.)
+
+            # Disconnect
+            net.clear_outages()
+            net.clear_flags()
+            self.assertEqual(net.num_vars, 0)
+            for bus in net.buses:
+                if bus.degree == 1:
+                    self.assertEqual(len(bus.branches), 1)
+                    bus.branches[0].outage = True
+                    self.assertTrue(bus.branches[0].is_on_outage())
+                    net.set_flags_of_component(bus,
+                                               ['variable', 'bounded'],
+                                               ['voltage magnitude', 'voltage angle'])
+                    self.assertEqual(net.num_vars, 2*self.T)
+                    self.assertEqual(net.num_vars, net.num_bounded)
+                    self.assertTrue(bus.has_flags('variable', ['voltage magnitude',
+                                                               'voltage angle']))
+                    self.assertTrue(bus.has_flags('bounded', ['voltage magnitude',
+                                                              'voltage angle']))
+                    constr = pf.Constraint('variable bounds', net)
+                    constr.analyze()
+                    G = constr.G
+                    l = constr.l
+                    u = constr.u
+
+                    self.assertEqual(G.shape[0], 2*self.T)
+                    for t in range(self.T):
+                        k = np.where(G.col == bus.index_v_mag[t])[0]
+                        self.assertEqual(k.size, 1)
+                        k = k[0]
+                        self.assertEqual(l[G.row[k]], bus.v_min)
+                        self.assertEqual(u[G.row[k]], bus.v_max)
+                        k = np.where(G.col == bus.index_v_ang[t])[0]
+                        self.assertEqual(k.size, 1)
+                        k = k[0]
+                        self.assertEqual(l[G.row[k]], -100.)
+                        self.assertEqual(u[G.row[k]], 100.)
+                    break                                     
+
     def test_constr_PAR_GEN_P(self):
 
         # Multiperiod
