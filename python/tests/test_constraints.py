@@ -504,7 +504,7 @@ class TestConstraints(unittest.TestCase):
                     self.assertEqual(b[A.row[ar[0]]],load.P[t])
 
     def test_constr_FIX_with_outages(self):
-
+        
         # Multiperiod
         for case in test_cases.CASES:
             
@@ -1897,7 +1897,69 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_PVPQ_SWITCHING_with_outages(self):
 
-        pass
+        # Multiperiod
+        for case in test_cases.CASES:
+            
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+            self.assertEqual(net.num_vars,0)
+
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'regulated by generator',
+                          'voltage magnitude')
+            net.set_flags('generator',
+                          'variable',
+                          'slack',
+                          ['active power','reactive power'])
+            net.set_flags('generator',
+                          'variable',
+                          'regulator',
+                          'reactive power')
+            self.assertGreater(net.num_vars,0)
+            self.assertEqual(net.num_vars,
+                             (net.get_num_buses_reg_by_gen()+net.get_num_slack_gens()+net.get_num_reg_gens())*self.T)
+
+            constr = pf.Constraint('PVPQ switching', net)
+            constr.analyze()
+            A0 = constr.A.copy()
+            b0 = constr.b.copy()
+
+            self.assertEqual(net.get_num_branches_on_outage(), 0)
+            self.assertEqual(net.get_num_generators_on_outage(), 0)
+
+            for bus in net.buses:
+                if bus.is_regulated_by_gen():
+                    for branch in net.branches:
+                        branch.outage = True
+
+            self.assertNotEqual(net.get_num_branches_on_outage(), 0)
+            self.assertEqual(net.get_num_generators_on_outage(), 0)
+
+            constr = pf.Constraint('PVPQ switching', net)
+            constr.analyze()
+            A1 = constr.A.copy()
+            b1 = constr.b.copy()
+
+            self.assertEqual((A1-A0).tocoo().nnz, 0)
+            self.assertLess(norm(b1-b0), 1e-8)
+
+            for bus in net.buses:
+                if bus.is_regulated_by_gen():
+                    for gen in bus.reg_generators:
+                        gen.outage = True
+                    self.assertFalse(bus.is_regulated_by_gen())
+
+            self.assertNotEqual(net.get_num_generators_on_outage(), 0)
+
+            constr = pf.Constraint('PVPQ switching', net)
+            constr.analyze()
+            A2 = constr.A.copy()
+            b2 = constr.b.copy()
+
+            self.assertEqual(A2.shape[0], 0)
+            self.assertEqual(b2.size, 0)
             
     def test_constr_ACPF(self):
 
