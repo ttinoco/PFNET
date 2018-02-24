@@ -1709,7 +1709,49 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_PAR_GEN_P_with_outages(self):
 
-        pass
+        # Multiperiod
+        for case in test_cases.CASES:
+            
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+
+            net.clear_outages()
+            net.clear_flags()
+
+            for bus in net.buses:
+                if bus.is_slack():
+                    for branch in net.branches:
+                        branch.outage = True
+                    for gen in net.generators:
+                        gen.outage = True
+
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          'active power')
+            self.assertEqual(net.num_vars, self.T*net.num_generators)
+
+            constr = pf.Constraint('generator active power participation', net)
+            constr.analyze()
+            A = constr.A
+            b = constr.b
+
+            self.assertEqual(A.shape[0], 0)
+            self.assertEqual(b.shape[0], 0)
+
+            net.clear_outages()
+
+            constr.analyze()
+            A = constr.A
+            b = constr.b
+
+            check = False
+            for bus in net.buses:
+                if bus.is_slack() and len(bus.generators) > 1:
+                    check = True
+            if check:
+                self.assertGreater(A.shape[0], 0)
+                self.assertGreater(b.shape[0], 0)
             
     def test_constr_PVPQ_SWITCHING(self):
 
