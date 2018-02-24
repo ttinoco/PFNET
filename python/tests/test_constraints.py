@@ -2311,7 +2311,141 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_ACPF_with_outages(self):
 
-        pass
+        # Constants
+        h = 1e-10
+
+        # Multiperiods
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+            
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          ['active power','reactive power'])
+            net.set_flags('load',
+                          'variable',
+                          'any',
+                          ['active power','reactive power'])
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+            net.set_flags('shunt',
+                          'variable',
+                          'switching - v',
+                          'susceptance')
+            net.set_flags('variable generator',
+                          'variable',
+                          'any',
+                          ['active power','reactive power'])
+            net.set_flags('battery',
+                          'variable',
+                          'any',
+                          ['charging power','energy level'])
+            self.assertEqual(net.num_vars,
+                             (2*net.num_buses +
+                              2*net.num_generators +
+                              2*net.num_loads +
+                              net.get_num_tap_changers() +
+                              net.get_num_phase_shifters() +
+                              net.get_num_switched_shunts() +
+                              3*net.num_batteries +
+                              net.num_var_generators*2)*self.T)
+
+            x0 = net.get_var_values()
+            
+            constr0 = pf.Constraint('AC power balance', net)
+            constr0.analyze()
+            constr0.eval(x0)
+
+            buses = net.buses[:10]
+            side = []
+            for bus in buses:
+                for gen in bus.generators:
+                    gen.outage = True
+                for br in bus.branches_k:
+                    self.assertTrue(bus.is_equal(br.bus_k))
+                    br.outage = True
+                    side.append(br.bus_m)
+                for br in bus.branches_m:
+                    self.assertTrue(bus.is_equal(br.bus_m))
+                    br.outage = True
+                    side.append(br.bus_k)
+
+            constr1 = pf.Constraint('AC power balance', net)
+            constr1.analyze()
+            constr1.eval(x0)
+
+            f0 = constr0.f
+            f1 = constr1.f
+
+            for bus in net.buses:
+                if bus not in buses+side:
+                    for t in range(self.T):
+                        i = bus.index_P+2*t*net.num_buses
+                        j = bus.index_Q+2*t*net.num_buses
+                        self.assertLess(np.abs(f0[i]-f1[i]), 1e-8)
+                        self.assertLess(np.abs(f0[j]-f1[j]), 1e-8)
+
+            for bus in buses:
+                for t in range(self.T):
+                    i = bus.index_P+2*t*net.num_buses
+                    j = bus.index_Q+2*t*net.num_buses
+                    dp = 0.
+                    dq = 0.
+                    for gen in bus.generators:
+                        self.assertTrue(gen.is_on_outage())
+                        dp += gen.P[t]
+                        dq += gen.Q[t]
+                    for br in bus.branches_k:
+                        dp -= br.P_km[t]
+                        dq -= br.Q_km[t]
+                    for br in bus.branches_m:
+                        dp -= br.P_mk[t]
+                        dq -= br.Q_mk[t]
+                    self.assertLess(np.abs(f1[i]+dp-f0[i]), 1e-8)
+                    self.assertLess(np.abs(f1[j]+dq-f0[j]), 1e-8)                 
+
+            # Jacobian check
+            pf.tests.utils.check_constraint_Jacobian(self,
+                                                     constr1,
+                                                     x0,
+                                                     np.zeros(0),
+                                                     NUM_TRIALS,
+                                                     TOL,
+                                                     EPS,
+                                                     h)
+
+            # Sigle Hessian check
+            pf.tests.utils.check_constraint_single_Hessian(self,
+                                                           constr1,
+                                                           x0,
+                                                           np.zeros(0),
+                                                           NUM_TRIALS,
+                                                           TOL,
+                                                           EPS,
+                                                           h)
+
+            # Combined Hessian check
+            pf.tests.utils.check_constraint_combined_Hessian(self,
+                                                             constr1,
+                                                             x0,
+                                                             np.zeros(0),
+                                                             NUM_TRIALS,
+                                                             TOL,
+                                                             EPS,
+                                                             h)
                     
     def test_constr_REG_GEN(self):
 
