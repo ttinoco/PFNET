@@ -2671,8 +2671,65 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_REG_GEN_with_outages(self):
 
-        pass
-                            
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'not slack',
+                          ['voltage magnitude','voltage angle'])
+            net.set_flags('generator',
+                          'variable',
+                          'slack',
+                          'active power')
+            net.set_flags('generator',
+                          'variable',
+                          'regulator',
+                          'reactive power')
+            self.assertEqual(net.num_vars,
+                             (2*(net.num_buses-net.get_num_slack_buses()) +
+                              net.get_num_slack_gens() +
+                              net.get_num_reg_gens())*self.T)
+
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+
+            constr0 = pf.Constraint('voltage regulation by generators', net)
+            constr0.analyze()
+            constr0.eval(x0)
+            
+            for bus in net.buses:
+                if bus.is_regulated_by_gen():
+                    for branch in bus.branches:
+                        branch.outage = True
+
+            constr1 = pf.Constraint('voltage regulation by generators', net)
+            constr1.analyze()
+            constr1.eval(x0)
+
+            self.assertEqual((constr0.A-constr1.A).tocoo().nnz, 0)
+            self.assertLess(norm(constr0.b-constr1.b), 1e-8)
+            self.assertEqual((constr0.J-constr1.J).tocoo().nnz, 0)
+            self.assertLess(norm(constr0.f-constr1.f), 1e-8)
+
+            for bus in net.buses:
+                if bus.is_regulated_by_gen():
+                    for gen in bus.reg_generators:
+                        gen.outage = True
+                    self.assertFalse(bus.is_regulated_by_gen())
+
+            constr2 = pf.Constraint('voltage regulation by generators', net)
+            constr2.analyze()
+            constr2.eval(x0)
+
+            self.assertEqual(constr2.A.shape[0], 0)
+            self.assertEqual(constr2.J.shape[0], 0)
+             
     def test_constr_NBOUND(self):
 
         # Constants
@@ -2853,7 +2910,78 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_NBOUND_with_outages(self):
 
-        pass
+        # Constants
+        h = 1e-8
+
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+
+            # Vars
+            net.set_flags('bus',
+                          ['variable', 'bounded'],
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+            net.set_flags('generator',
+                          ['variable', 'bounded'],
+                          'any',
+                          ['active power','reactive power'])
+            net.set_flags('branch',
+                          ['variable', 'bounded'],
+                          'tap changer',
+                          'tap ratio')
+            net.set_flags('branch',
+                          ['variable', 'bounded'], 
+                          'phase shifter',
+                          'phase shift')
+            net.set_flags('shunt',
+                          ['variable', 'bounded'],
+                          'switching - v',
+                          'susceptance')
+            self.assertEqual(net.num_vars,
+                             (2*net.num_buses +
+                              2*net.num_generators +
+                              net.get_num_tap_changers() +
+                              net.get_num_phase_shifters() +
+                              net.get_num_switched_shunts())*self.T)
+            self.assertEqual(net.num_vars, net.num_bounded)
+
+            x0 = net.get_var_values()
+
+            constr = pf.Constraint('variable nonlinear bounds',net)
+            constr.analyze()
+
+            # Jacobian check
+            pf.tests.utils.check_constraint_Jacobian(self,
+                                                     constr,
+                                                     x0,
+                                                     np.zeros(0),
+                                                     NUM_TRIALS,
+                                                     TOL,
+                                                     EPS,
+                                                     h)
+
+            # Sigle Hessian check
+            pf.tests.utils.check_constraint_single_Hessian(self,
+                                                           constr,
+                                                           x0,
+                                                           np.zeros(0),
+                                                           NUM_TRIALS,
+                                                           TOL,
+                                                           EPS,
+                                                           h)
+            
+            # Combined Hessian check
+            pf.tests.utils.check_constraint_combined_Hessian(self,
+                                                             constr,
+                                                             x0,
+                                                             np.zeros(0),
+                                                             NUM_TRIALS,
+                                                             TOL,
+                                                             EPS,
+                                                             h)
                     
     def test_constr_REG_TRAN(self):
 
@@ -3040,7 +3168,59 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_REG_TRAN_with_outages(self):
 
-        pass
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'regulated by transformer',
+                          'voltage magnitude')
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer - v',
+                          'tap ratio')
+            self.assertEqual(net.num_vars,
+                             (net.get_num_buses_reg_by_tran() +
+                              net.get_num_tap_changers_v())*self.T)
+
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+
+            constr0 = pf.Constraint('voltage regulation by transformers', net)
+            constr0.analyze()
+            constr0.eval(x0)
+
+            for bus in net.buses:
+                if bus.is_regulated_by_tran():
+                    for gen in bus.generators:
+                        gen.outage = True
+            
+            constr1 = pf.Constraint('voltage regulation by transformers', net)
+            constr1.analyze()
+            constr1.eval(x0)
+
+            self.assertEqual((constr0.A-constr1.A).tocoo().nnz, 0)
+            self.assertLess(norm(constr0.b-constr1.b), 1e-8)
+            self.assertEqual((constr0.J-constr1.J).tocoo().nnz, 0)
+            self.assertLess(norm(constr0.f-constr1.f), 1e-8)
+
+            for bus in net.buses:
+                if bus.is_regulated_by_tran():
+                    for branch in bus.reg_trans:
+                        branch.outage = True
+                    self.assertFalse(bus.is_regulated_by_tran())
+
+            constr2 = pf.Constraint('voltage regulation by transformers', net)
+            constr2.analyze()
+            constr2.eval(x0)
+
+            self.assertEqual(constr2.A.shape[0], 0)
+            self.assertEqual(constr2.J.shape[0], 0)
                         
     def test_constr_REG_SHUNT(self):
 
@@ -3244,7 +3424,46 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_REG_SHUNT_with_outages(self):
 
-        pass
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'regulated by shunt',
+                          'voltage magnitude')
+            net.set_flags('shunt',
+                          'variable',
+                          'switching - v',
+                          'susceptance')
+            self.assertEqual(net.num_vars,
+                             (net.get_num_buses_reg_by_shunt() +
+                              net.get_num_switched_shunts())*self.T)
+
+            x0 = net.get_var_values()
+
+            constr0 = pf.Constraint('voltage regulation by shunts', net)
+            constr0.analyze()
+            constr0.eval(x0)
+
+            for bus in net.buses:
+                if bus.is_regulated_by_shunt():
+                    for gen in bus.generators:
+                        gen.outage = True
+                    for branch in bus.branches:
+                        branch.outage = True
+            
+            constr1 = pf.Constraint('voltage regulation by shunts', net)
+            constr1.analyze()
+            constr1.eval(x0)
+
+            self.assertEqual((constr0.A-constr1.A).tocoo().nnz, 0)
+            self.assertLess(norm(constr0.b-constr1.b), 1e-8)
+            self.assertEqual((constr0.J-constr1.J).tocoo().nnz, 0)
+            self.assertLess(norm(constr0.f-constr1.f), 1e-8)
                         
     def test_robustness(self):
 
