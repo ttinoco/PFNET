@@ -3972,7 +3972,80 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_DCPF_with_outages(self):
 
-        pass
+        # Multiperiods
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+            
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          'voltage angle')
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          'active power')
+            net.set_flags('load',
+                          'variable',
+                          'any',
+                          'active power')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+            self.assertEqual(net.num_vars,
+                             (net.num_buses +
+                              net.num_generators +
+                              net.num_loads +
+                              net.get_num_phase_shifters())*self.T)
+
+            x0 = net.get_var_values()
+            
+            constr0 = pf.Constraint('DC power balance', net)
+            constr0.analyze()
+            constr0.eval(x0)
+
+            buses = net.buses[:10]
+            side = []
+            for bus in buses:
+                for gen in bus.generators:
+                    gen.outage = True
+                for br in bus.branches_k:
+                    self.assertTrue(bus.is_equal(br.bus_k))
+                    br.outage = True
+                    side.append(br.bus_m)
+                for br in bus.branches_m:
+                    self.assertTrue(bus.is_equal(br.bus_m))
+                    br.outage = True
+                    side.append(br.bus_k)
+
+            constr1 = pf.Constraint('DC power balance', net)
+            constr1.analyze()
+            constr1.eval(x0)
+
+            f0 = constr0.A*x0-constr0.b
+            f1 = constr1.A*x0-constr1.b
+
+            for bus in net.buses:
+                if bus not in buses+side:
+                    for t in range(self.T):
+                        i = bus.index+t*net.num_buses
+                        self.assertLess(np.abs(f0[i]-f1[i]), 1e-8)
+
+            for bus in buses:
+                for t in range(self.T):
+                    i = bus.index+t*net.num_buses
+                    dp = 0.
+                    for gen in bus.generators:
+                        self.assertTrue(gen.is_on_outage())
+                        dp += gen.P[t]
+                    for br in bus.branches_k:
+                        dp -= br.P_km_DC[t]
+                    for br in bus.branches_m:
+                        dp -= br.P_mk_DC[t]
+                    self.assertLess(np.abs(f1[i]+dp-f0[i]), 1e-8)
                     
     def test_constr_DC_FLOW_LIM(self):
 
