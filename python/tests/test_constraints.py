@@ -4529,7 +4529,7 @@ class TestConstraints(unittest.TestCase):
 
         # Multi period
         for case in test_cases.CASES:
-
+            
             net = pf.Parser(case).parse(case,self.T)
             self.assertEqual(net.num_periods,self.T)
             self.assertEqual(net.num_vars,0)
@@ -4680,7 +4680,35 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_GEN_RAMP_with_outages(self):
 
-        pass
+        # Multi period
+        for case in test_cases.CASES:
+            
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('generator',
+                          'variable',
+                          'not slack',
+                          'active power')
+            num = net.num_generators-net.get_num_slack_gens()
+            self.assertEqual(net.num_vars,num*self.T)
+
+            x0 = net.get_var_values()
+
+            # Constraint
+            constr = pf.Constraint('generator ramp limits',net)
+            constr.analyze()
+
+            self.assertEqual(constr.A.shape[0], 0)
+            self.assertGreater(constr.G.shape[0], 0)
+
+            for gen in net.generators:
+                gen.outage = True
+
+            constr.analyze()
+
+            self.assertEqual(constr.A.shape[0], 0)
+            self.assertEqual(constr.G.shape[0], 0)
                                                 
     def test_constr_AC_FLOW_LIM(self):
 
