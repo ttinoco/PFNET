@@ -4262,7 +4262,38 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_DC_FLOW_LIM_with_outages(self):
 
-        pass
+        # Multi period
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case, self.T)
+            self.assertEqual(net.num_periods, self.T)
+
+            self.assertEqual(net.num_vars,0)
+
+            # Variables
+            net.set_flags('bus',
+                          'variable',
+                          'not slack',
+                          'voltage angle')
+            self.assertEqual(net.num_vars,(net.num_buses-net.get_num_slack_buses())*self.T)
+
+            x0 = net.get_var_values()
+
+            constr = pf.Constraint('DC branch flow limits', net)
+            constr.analyze()
+            constr.eval(x0)
+
+            num_constr = len([br for br in net.branches if br.ratingA != 0.])*self.T
+
+            self.assertEqual(constr.G.shape[0], num_constr)
+            print 'foo bar'
+
+            for branch in net.branches:
+                branch.outage = True
+
+            constr.analyze()
+
+            self.assertEqual(constr.G.shape[0], 0)
         
     def test_constr_LINPF(self):
 
@@ -4425,7 +4456,74 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_LINPF_with_outages(self):
 
-        pass
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+
+            for gen in net.generators:
+                gen.outage = True
+            for branch in net.branches:
+                branch.outage = True
+
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+            net.set_flags('generator',
+                          'variable',
+                          'slack',
+                          'active power')
+            net.set_flags('generator',
+                          'variable',
+                          'regulator',
+                          'reactive power')
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+            net.set_flags('shunt',
+                          'variable',
+                          'switching - v',
+                          'susceptance')
+            net.set_flags('variable generator',
+                          'variable',
+                          'any',
+                          ['active power','reactive power'])
+            self.assertEqual(net.num_vars,
+                             (2*net.get_num_buses() +
+                              net.get_num_slack_gens() +
+                              net.get_num_reg_gens() +
+                              net.get_num_tap_changers() +
+                              net.get_num_phase_shifters() +
+                              net.get_num_switched_shunts() +
+                              net.num_var_generators*2)*self.T)
+
+            constr = pf.Constraint('linearized AC power balance',net)
+            constr.analyze()
+
+            x0 = net.get_var_values()
+
+            constrPF = pf.Constraint('AC power balance',net)
+            constrPF.analyze()
+            constrPF.eval(x0)
+            
+            self.assertEqual(constr.A.nnz,constrPF.J.nnz)
+            self.assertTrue(np.all(constr.A.row == constrPF.J.row))
+            self.assertTrue(np.all(constr.A.col == constrPF.J.col))
+            self.assertTrue(np.all(constr.A.data == constrPF.J.data))
+            self.assertGreater(norm(constr.A.row),0)
+            self.assertGreater(norm(constr.A.col),0)
+            if net.num_shunts:
+                self.assertGreater(norm(constr.A.data),0)
+            self.assertGreater(norm(constr.b),0)
+            self.assertLess(norm(constr.b-(constrPF.J*x0-constrPF.f)),1e-10*(norm(constr.b)+1))
             
     def test_constr_GEN_RAMP(self):
 
