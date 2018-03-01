@@ -5017,7 +5017,6 @@ class TestConstraints(unittest.TestCase):
             # Single Hessian check
             x0 = net.get_var_values()
             y0 = np.zeros(constr.num_extra_vars)
-            lam = np.random.randn(constr.f.size)
             constr.eval(x0,y0)
             for i in range(10):
                 
@@ -5084,7 +5083,84 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_AC_FLOW_LIM_with_outages(self):
 
-        pass
+        # Constants
+        h = 1e-11
+        tol = 1e-2
+        eps = 1.1 # %
+
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+            self.assertEqual(net.num_periods,self.T)
+
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+            self.assertEqual(net.num_vars,
+                             (2*net.get_num_buses() +
+                              net.get_num_tap_changers() +
+                              net.get_num_phase_shifters())*self.T)
+
+            x0 = net.get_var_values()
+            self.assertTrue(type(x0) is np.ndarray)
+            self.assertTupleEqual(x0.shape,(net.num_vars,))
+
+            for branch in net.branches:
+                branch.outage = True
+
+            # Constr
+            constr = pf.Constraint('AC branch flow limits',net)
+
+            constr.analyze()
+            constr.eval(x0)
+
+            self.assertEqual(constr.f.size, 0)
+            self.assertTupleEqual(constr.J.shape, (0, net.num_vars))
+            self.assertEqual(constr.l.size, 0)
+            self.assertEqual(constr.u.size, 0)
+            self.assertTupleEqual(constr.G.shape, (0, net.num_vars))
+
+            # Jacobian check
+            pf.tests.utils.check_constraint_Jacobian(self,
+                                                     constr,
+                                                     x0,
+                                                     np.zeros(0),
+                                                     NUM_TRIALS,
+                                                     TOL,
+                                                     EPS,
+                                                     h)
+
+            # Sigle Hessian check
+            pf.tests.utils.check_constraint_single_Hessian(self,
+                                                           constr,
+                                                           x0,
+                                                           np.zeros(0),
+                                                           NUM_TRIALS,
+                                                           TOL,
+                                                           EPS,
+                                                           h)
+
+            # Combined Hessian check 1
+            h = 1e-12
+            pf.tests.utils.check_constraint_combined_Hessian(self,
+                                                             constr,
+                                                             x0,
+                                                             np.zeros(0),
+                                                             NUM_TRIALS,
+                                                             TOL,
+                                                             EPS,
+                                                             h)
                 
     def test_constr_DUMMY(self):
 
@@ -5367,7 +5443,43 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_BAT_DYN_with_outages(self):
 
-        pass
+        # Multi period
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,5)
+
+            # Add battries
+            gen_buses = net.get_generator_buses()
+            net.add_batteries_from_parameters(gen_buses,20.,40.,0.8,0.7)
+            self.assertEqual(net.num_batteries,len(gen_buses))
+            self.assertGreater(net.num_batteries,0)
+
+            # Vars
+            net.set_flags('battery',
+                          'variable',
+                          'any',
+                          ['charging power','energy level'])
+            self.assertEqual(net.num_vars,5*3*net.num_batteries)
+
+            x0 = net.get_var_values()
+            
+            # Constraint
+            constr0 = pf.Constraint('battery dynamics',net)
+            constr0.analyze()
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+
+            constr1 = pf.Constraint('battery dynamics',net)
+            constr1.analyze()
+
+            self.assertEqual((constr1.A-constr0.A).tocoo().nnz, 0)
+            self.assertEqual((constr1.G-constr0.G).tocoo().nnz, 0)
+            self.assertLess(norm(constr1.b-constr0.b), 1e-8)
+            self.assertLess(norm(constr1.l-constr0.u), 1e-8)
+            self.assertLess(norm(constr1.l-constr0.u), 1e-8)
                         
     def test_constr_LOAD_PF(self):
 
@@ -5501,7 +5613,36 @@ class TestConstraints(unittest.TestCase):
 
     def test_constr_LOAD_PF_with_outages(self):
 
-        pass
+        # Multi period
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+
+            # Vars
+            net.set_flags('load',
+                          'variable',
+                          'any',
+                          ['active power','reactive power'])
+            self.assertEqual(net.num_vars,2*net.num_loads*self.T)
+
+            # Constraint
+            constr0 = pf.Constraint('load constant power factor',net)
+            constr0.analyze()
+            
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+
+            constr1 = pf.Constraint('load constant power factor',net)
+            constr1.analyze()
+
+            self.assertEqual((constr1.A-constr0.A).tocoo().nnz, 0)
+            self.assertEqual((constr1.G-constr0.G).tocoo().nnz, 0)
+            self.assertLess(norm(constr1.b-constr0.b), 1e-8)
+            self.assertLess(norm(constr1.l-constr0.u), 1e-8)
+            self.assertLess(norm(constr1.l-constr0.u), 1e-8)
                     
     def test_constr_AC_LIN_FLOW_LIM(self):
 
