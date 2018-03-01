@@ -10,6 +10,7 @@ import unittest
 import numpy as np
 import pfnet as pf
 from . import test_cases
+from numpy.linalg import norm
 from scipy.sparse import coo_matrix, triu, tril, spdiags
 
 NUM_TRIALS = 25
@@ -141,7 +142,43 @@ class TestFunctions(unittest.TestCase):
 
     def test_func_REG_VMAG_with_outages(self):
 
-        pass
+        # Constants
+        h = 1e-8
+
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+
+            x0 = net.get_var_values()
+
+            # Perturbation
+            net.set_var_values(x0 + np.random.randn(x0.size))
+            x0 = net.get_var_values()
+
+            # Function
+            func0 = pf.Function('voltage magnitude regularization',1.,net)
+            func0.analyze()
+            func0.eval(x0)
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+
+            func1 = pf.Function('voltage magnitude regularization',1.,net)
+            func1.analyze()
+            func1.eval(x0)
+
+            self.assertLess(np.abs(func1.phi-func0.phi),1e-8)
+            self.assertLess(norm(func1.gphi-func0.gphi),1e-8)
+            self.assertEqual((func1.Hphi-func0.Hphi).tocoo().nnz,0)
             
     def test_func_REG_VAR(self):
 
@@ -311,7 +348,124 @@ class TestFunctions(unittest.TestCase):
 
     def test_func_REG_VAR_with_outages(self):
 
-        pass
+        # Constants
+        h = 1e-8
+
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            net.add_var_generators_from_parameters(net.get_load_buses(),80.,50.,30.,5,0.05)
+            net.add_batteries_from_parameters(net.get_generator_buses(),20.,40.,0.8,0.9)
+            
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          ['active power', 'reactive power'])
+            net.set_flags('variable generator',
+                          'variable',
+                          'any',
+                          ['active power', 'reactive power'])
+            net.set_flags('load',
+                          'variable',
+                          'any',
+                          ['active power', 'reactive power'])
+            net.set_flags('battery',
+                          'variable',
+                          'any',
+                          ['charging power', 'energy level'])
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+            net.set_flags('shunt',
+                          'variable',
+                          'switching - v',
+                          'susceptance')
+            
+            self.assertEqual(net.num_vars,
+                             (net.num_buses*2+
+                              net.num_generators*2+
+                              net.num_var_generators*2+
+                              net.num_batteries*3+
+                              net.num_loads*2+
+                              net.get_num_phase_shifters()+
+                              net.get_num_tap_changers()+
+                              net.get_num_switched_shunts())*self.T)
+
+            x0 = net.get_var_values()
+
+            # Perturbation
+            net.set_var_values(x0 + np.random.randn(x0.size))
+            x0 = net.get_var_values()
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+
+            # Function
+            func = pf.Function('variable regularization',1.,net)
+            
+            # Set parameter
+            xc = np.random.randn(net.num_vars)
+            w = np.random.randn(net.num_vars)
+            
+            func.set_parameter('w',w)
+            func.set_parameter('x0',xc)
+
+            func.analyze()
+
+            # Value
+            func.eval(x0)
+            phi = np.dot(np.multiply(x0-xc, w), x0-xc)
+            self.assertGreater(np.abs(func.phi-phi),1e-10*(np.abs(func.phi)+1))
+
+            for branch in net.branches:
+                if branch.has_flags('variable', 'tap ratio') and branch.is_on_outage():
+                    for t in range(self.T):
+                        w[branch.index_ratio[t]] = 0.
+                if branch.has_flags('variable', 'phase shift') and branch.is_on_outage():
+                    for t in range(self.T):
+                        w[branch.index_phase[t]] = 0.
+            for gen in net.generators:
+                if gen.has_flags('variable', 'active power') and gen.is_on_outage():
+                    for t in range(self.T):
+                        w[gen.index_P[t]] = 0.
+                if gen.has_flags('variable', 'reactive power') and gen.is_on_outage():
+                    for t in range(self.T):
+                        w[gen.index_Q[t]] = 0.
+
+            phi = np.dot(np.multiply(x0-xc, w), x0-xc)
+            self.assertLess(np.abs(func.phi-phi),1e-10*(np.abs(func.phi)+1))
+
+            # Gradient check
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
+
+            # Hessian check
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
             
     def test_func_REG_PQ(self):
 
