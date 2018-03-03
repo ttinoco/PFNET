@@ -665,6 +665,34 @@ class TestContingency(unittest.TestCase):
                 if counter > TEST_BRANCHES:
                     break
 
+    def test_contingency_on_multiple_nets(self):
+
+        for case in test_cases.CASES:
+
+            net1 = pf.Parser(case).parse(case)
+            net2 = net1.get_copy()
+
+            c = pf.Contingency(generators=net1.generators,
+                               branches=net1.branches)
+            self.assertEqual(net1.get_num_generators_on_outage(), 0)
+            self.assertEqual(net1.get_num_branches_on_outage(), 0)
+            self.assertEqual(net2.get_num_generators_on_outage(), 0)
+            self.assertEqual(net2.get_num_branches_on_outage(), 0)
+
+            c.apply(net1)
+
+            self.assertEqual(net1.get_num_generators_on_outage(), net1.num_generators)
+            self.assertEqual(net1.get_num_branches_on_outage(), net1.num_branches)
+            self.assertEqual(net2.get_num_generators_on_outage(), 0)
+            self.assertEqual(net2.get_num_branches_on_outage(), 0)
+
+            c.apply(net2)
+
+            self.assertEqual(net1.get_num_generators_on_outage(), net1.num_generators)
+            self.assertEqual(net1.get_num_branches_on_outage(), net1.num_branches)
+            self.assertEqual(net2.get_num_generators_on_outage(), net2.num_generators)
+            self.assertEqual(net2.get_num_branches_on_outage(), net2.num_branches)
+
     def test_acpf(self):
 
         for case in test_cases.CASES:

@@ -2500,7 +2500,67 @@ class TestFunctions(unittest.TestCase):
 
     def test_func_NETCON_COST_with_outages(self):
 
-        pass
+        # Multi period
+        h = 1e-7
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # prices
+            for bus in net.buses:
+                self.assertEqual(bus.num_periods,self.T)
+                bus.price = np.random.rand(self.T)*10.
+
+            # Vars
+            net.set_flags('load',
+                          'variable',
+                          'any',
+                          'active power')
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          'active power')
+            net.set_flags('variable generator',
+                          'variable',
+                          'any',
+                          'active power')
+            net.set_flags('battery',
+                          'variable',
+                          'any',
+                          'charging power')
+
+            x0 = net.get_var_values()
+            
+            # Function
+            func = pf.Function('net consumption cost',1.,net)
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+
+            func.analyze()
+            func.eval(x0)
+
+            # value and grad check
+            val = 0
+            for t in range(self.T):
+                for bus in net.buses:
+                    for load in bus.loads:
+                        self.assertTrue(load.has_flags('variable','active power'))
+                        self.assertEqual(load.P[t],x0[load.index_P[t]])
+                        self.assertEqual(func.gphi[load.index_P[t]],bus.price[t])
+                        val += bus.price[t]*load.P[t]
+            self.assertLess(np.abs(val-func.phi),1e-10*np.abs(func.phi))
+
+            # Gradient check
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
     def test_robustness(self):
 
@@ -2625,6 +2685,10 @@ class TestFunctions(unittest.TestCase):
                 self.assertGreaterEqual(f.Hphi.nnz,0)
             self.assertTrue(any([f.phi > 0 for f in functions]))
             self.assertTrue(any([f.Hphi.nnz > 0 for f in functions]))
+
+    def test_robustness_with_outages(self):
+
+        pass
             
     def test_func_DUMMY(self):
 
