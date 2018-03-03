@@ -471,7 +471,7 @@ class TestFunctions(unittest.TestCase):
 
         # Constants
         h = 1e-9
-
+        
         # Multiperiod
         for case in test_cases.CASES:
 
@@ -584,7 +584,42 @@ class TestFunctions(unittest.TestCase):
 
     def test_func_REG_PQ_with_outages(self):
 
-        pass
+        # Constants
+        h = 1e-9
+        
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('generator',
+                          'variable',
+                          'slack',
+                          ['active power','reactive power'])
+            net.set_flags('generator',
+                          'variable',
+                          'regulator',
+                          'reactive power')
+
+            x0 = net.get_var_values()
+            net.set_var_values(x0+np.random.randn(x0.size))
+            x0 = net.get_var_values()
+
+            # Function
+            func = pf.Function('generator powers regularization',1.,net)
+
+            for gen in net.generators:
+                gen.outage = True
+            for branch in net.branches:
+                branch.outage = True
+
+            func.analyze()
+            func.eval(x0+np.random.randn(x0.size))
+
+            self.assertEqual(func.phi, 0.)
+            self.assertEqual(norm(func.gphi), 0.)
+            self.assertEqual(func.Hphi.nnz, 0.)
             
     def test_func_REG_VANG(self):
 
@@ -709,8 +744,62 @@ class TestFunctions(unittest.TestCase):
 
     def test_func_REG_VANG_with_outages(self):
 
-        pass
-            
+        # Constants
+        h = 1e-8
+
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'not slack',
+                          ['voltage magnitude','voltage angle'])
+
+            x0 = net.get_var_values()+np.random.randn(net.num_vars)
+            net.set_var_values(x0)
+
+            # Function
+            func = pf.Function('voltage angle regularization',1.,net)
+
+            for gen in net.generators:
+                gen.outage = True
+            for branch in net.branches:
+                branch.outage = True
+
+            func.analyze()
+            func.eval(x0)
+
+            # value
+            phi = 0.
+            dw = 3.1416
+            for bus in net.buses:
+                if bus.is_slack():
+                    continue
+                for t in range(self.T):
+                    phi += 0.5*((x0[bus.index_v_ang[t]]/dw)**2.)
+            self.assertLess(np.abs(phi-func.phi), 1e-8)
+
+            # Gradient check
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
+
+            # Hessian check
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
+                
     def test_func_REG_RATIO(self):
 
         # Constants
@@ -815,7 +904,35 @@ class TestFunctions(unittest.TestCase):
 
     def test_func_REG_RATIO_with_outages(self):
 
-        pass
+        # Constants
+        h = 1e-8
+
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer - v',
+                          ['tap ratio'])
+
+            x0 = net.get_var_values()+np.random.randn(net.num_vars)
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+
+            # Function
+            func = pf.Function('tap ratio regularization',1.,net)
+
+            func.analyze()
+            func.eval(x0)
+            self.assertEqual(func.phi, 0.)
+            self.assertEqual(norm(func.gphi), 0.)
+            self.assertEqual(func.Hphi.nnz, 0)
             
     def test_func_REG_SUSC(self):
 
