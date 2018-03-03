@@ -938,7 +938,7 @@ class TestFunctions(unittest.TestCase):
 
         # Constants
         h = 1e-8
-
+        
         # Multiperiod
         for case in test_cases.CASES:
 
@@ -1038,7 +1038,42 @@ class TestFunctions(unittest.TestCase):
 
     def test_func_REG_SUSC_with_outages(self):
 
-        pass
+        # Constants
+        h = 1e-8
+        
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('shunt',
+                          'variable',
+                          'switching - v',
+                          ['susceptance'])
+
+            x0 = net.get_var_values()+np.random.randn(net.num_vars)
+
+            # Function
+            func = pf.Function('susceptance regularization',1.,net)
+            func.analyze()
+            func.eval(x0)
+
+            phi0 = func.phi
+            gphi0 = func.gphi.copy()
+            Hphi0 = func.Hphi.copy()
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+
+            func.analyze()
+            func.eval(x0)
+
+            self.assertEqual(func.phi, phi0)
+            self.assertEqual(norm(func.gphi-gphi0), 0.)
+            self.assertEqual((func.Hphi-Hphi0).tocoo().nnz, 0)
             
     def test_func_GEN_COST(self):
 
@@ -1264,7 +1299,34 @@ class TestFunctions(unittest.TestCase):
 
     def test_func_GEN_COST_with_outages(self):
 
-        pass
+        # Multi period
+        h = 1e-9
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          ['active power','reactive power'])
+
+            x0 = net.get_var_values()
+
+            # Function
+            func = pf.Function('generation cost',1.,net)
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+
+            func.analyze()
+            func.eval(x0)
+
+            self.assertEqual(func.phi, 0)
+            self.assertEqual(norm(func.gphi), 0)
+            self.assertEqual(func.Hphi.nnz, 0)
             
     def test_func_SP_CONTROLS(self):
 
@@ -1449,7 +1511,107 @@ class TestFunctions(unittest.TestCase):
 
     def test_func_SP_CONTROLS_with_outages(self):
 
-        pass
+        # Constants
+        h = 1e-10
+
+        # Single period
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case)
+
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          'active power')
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+            net.set_flags('shunt',
+                          'variable',
+                          'switching - v',
+                          'susceptance')
+
+            # Sparse
+            net.set_flags('bus',
+                          'sparse',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+            net.set_flags('generator',
+                          'sparse',
+                          'any',
+                          'active power')
+            net.set_flags('branch',
+                          'sparse',
+                          'tap changer',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'sparse',
+                          'phase shifter',
+                          'phase shift')
+            net.set_flags('shunt',
+                          'sparse',
+                          'switching - v',
+                          'susceptance')
+
+            x0 = net.get_var_values() + np.random.randn(net.num_vars)
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+            
+            # Function
+            func = pf.Function('sparse controls penalty',1.,net)
+            func.analyze()
+            func.eval(x0)
+
+            # manual f value
+            eps = 1e-6
+            ceps = 1e-4
+            f_manual = 0
+            for bus in net.buses:
+                if bus.is_regulated_by_gen():
+                    self.assertTrue(bus.has_flags('variable','voltage magnitude'))
+                    val = x0[bus.index_v_mag]
+                    val0 = bus.v_set
+                    dval = np.maximum(bus.v_max_reg-bus.v_min_reg,ceps)
+                    f_manual += np.sqrt(((val-val0)/dval)**2. + eps)
+            for shunt in net.shunts:
+                if shunt.is_switched_v():
+                    self.assertTrue(shunt.has_flags('variable','susceptance'))
+                    val = x0[shunt.index_b]
+                    val0 = shunt.b
+                    dval = np.maximum(shunt.b_max-shunt.b_min,ceps)
+                    f_manual += np.sqrt(((val-val0)/dval)**2. + eps)
+            self.assertLess(np.abs(func.phi-f_manual),1e-8)
+
+            # Gradient check
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
+
+            # Hessian check
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  1e-6)
 
     def test_func_SLIM_VMAG(self):
 
@@ -1563,7 +1725,44 @@ class TestFunctions(unittest.TestCase):
             
     def test_func_SLIM_VMAG_with_outages(self):
 
-        pass            
+        # Constants
+        h = 1e-8
+
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+
+            x0 = net.get_var_values()+np.random.randn(net.num_vars)
+            net.set_var_values(x0)
+
+            # Function
+            func = pf.Function('soft voltage magnitude limits',1.,net)
+
+            func.analyze()
+            func.eval(x0)
+
+            phi0 = func.phi
+            gphi0 = func.gphi.copy()
+            Hphi0 = func.Hphi.copy()
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+
+            func.analyze()
+            func.eval(x0)
+
+            self.assertEqual(func.phi, phi0)
+            self.assertEqual(norm(func.gphi-gphi0), 0.)
+            self.assertEqual((func.Hphi-Hphi0).tocoo().nnz, 0)
             
     def test_func_REG_PHASE(self):
 
@@ -1672,7 +1871,39 @@ class TestFunctions(unittest.TestCase):
 
     def test_func_REG_PHASE_with_outages(self):
 
-        pass
+        # Constants
+        h = 1e-8
+
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+
+            # values
+            x0 = net.get_var_values()+np.random.randn(net.num_vars)
+            net.set_var_values(x0)
+            x0 = net.get_var_values()+np.random.randn(net.num_vars)
+
+            # Function
+            func = pf.Function('phase shift regularization',1.,net)
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+
+            func.analyze()
+            func.eval(x0)
+
+            self.assertEqual(func.phi, 0)
+            self.assertEqual(norm(func.gphi), 0)
+            self.assertEqual(func.Hphi.nnz, 0)
             
     def test_func_LOAD_UTIL(self):
 
@@ -1898,7 +2129,41 @@ class TestFunctions(unittest.TestCase):
 
     def test_func_LOAD_UTIL_with_outages(self):
 
-        pass
+        # Multi period
+        h = 1e-8
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('load',
+                          'variable',
+                          'any',
+                          'active power')
+
+            x0 = net.get_var_values()
+
+            # Function
+            func = pf.Function('consumption utility',1.,net)
+
+            func.analyze()
+            func.eval(x0)
+
+            phi0 = func.phi
+            gphi0 = func.gphi.copy()
+            Hphi0 = func.Hphi.copy()
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+
+            func.analyze()
+            func.eval(x0)
+
+            self.assertEqual(func.phi, phi0)
+            self.assertEqual(norm(func.gphi-gphi0), 0.)
+            self.assertEqual((func.Hphi-Hphi0).tocoo().nnz, 0)
             
     def test_func_NETCON_COST(self):
 
