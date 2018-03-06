@@ -5859,7 +5859,103 @@ class TestConstraints(unittest.TestCase):
                 self.assertEqual(H_nnz[i],0)
             constr.H_nnz[10] = 2
             self.assertEqual(H_nnz[10],2)
-            
+
+    def test_robustness_with_outages(self):
+
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case, self.T)
+
+            constraints = [pf.Constraint('variable nonlinear bounds', net), # nonlinear
+                           pf.Constraint('variable bounds', net),
+                           pf.Constraint('variable fixing', net),
+                           pf.Constraint('battery dynamics', net),
+                           pf.Constraint('generator active power participation', net),
+                           pf.Constraint('PVPQ switching', net),
+                           pf.Constraint('AC power balance', net), # nonlinear
+                           pf.Constraint('DC power balance', net),
+                           pf.Constraint('voltage regulation by generators', net), # nonlinear
+                           pf.Constraint('voltage regulation by transformers', net), # nonlinear
+                           pf.Constraint('voltage regulation by shunts', net), # nonlinear
+                           pf.Constraint('AC branch flow limits', net), # nolinear
+                           pf.Constraint('DC branch flow limits', net),
+                           pf.Constraint('generator ramp limits', net),
+                           pf.Constraint('load constant power factor', net)]
+
+            # Add variables
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          ['active power','reactive power'])
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+            net.set_flags('shunt',
+                          'variable',
+                          'switching - v',
+                          'susceptance')
+            net.set_flags('battery',
+                          'variable',
+                          'any',
+                          ['charging power','energy level'])
+            self.assertEqual(net.num_vars,
+                             (2*net.num_buses +
+                              2*net.num_generators +
+                              net.get_num_tap_changers()+
+                              net.get_num_phase_shifters()+
+                              net.get_num_switched_shunts()+
+                              3*net.num_batteries)*self.T)
+
+            x0 = net.get_var_values()
+
+            net.clear_outages()
+
+            # Analyze without outages
+            for c in constraints:
+                c.analyze()
+
+            # Eval without outages
+            for c in constraints:
+                c.eval(x0)
+
+            for gen in net.generators:
+                gen.outage = True
+            for branch in net.branches:
+                branch.outage = True
+
+            # Eval with outages
+            for c in constraints:
+                print 'constr', c.name
+                c.eval(x0)
+                print 'well done'
+
+            print '***********************'
+
+            # Analyze with outages
+            for c in constraints:
+                c.analyze()
+
+            # Eval with outages
+            for c in constraints:
+                c.eval(x0)
+
+            net.clear_outages()
+
+            # Eval without outages
+            for c in constraints:
+                print 'constr', c.name
+                c.eval(x0)
+                print 'well done'            
+                
     def tearDown(self):
 
         pass

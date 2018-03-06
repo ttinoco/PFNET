@@ -36,6 +36,7 @@ Unreleased
 * Added routines for getting number of gens/branches on outage.
 * Added utility routines to check function gradients and Hessians in pfnet.tests.utils.
 * Added utility routines to check constraint Jacobians and Hessians in pfnet.tests.utils.
+* Created network state tag to track net changes and make constr/funcs robust to net changes like outage flag updates.
 
 Version 1.3.2
 -------------

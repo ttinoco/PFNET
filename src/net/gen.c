@@ -10,6 +10,7 @@
 
 #include <pfnet/gen.h>
 #include <pfnet/bus.h>
+#include <pfnet/net.h>
 #include <pfnet/array.h>
 #include <pfnet/json_macros.h>
 
@@ -61,10 +62,18 @@ struct Gen {
   REAL* sens_Q_u_bound;  /**< @brief Sensitivity of reactive power upper bound. */
   REAL* sens_Q_l_bound;  /**< @brief Sensitivity of reactive power lower bound. */
 
+  // Network
+  Net* net; /**< @brief Network. */
+
   // List
   Gen* next;     /**< @brief List of generators connected to a bus. */
   Gen* reg_next; /**< @brief List of generators regulating a bus. */
 };
+
+void GEN_set_network(Gen* gen, void* net) {
+  if (gen)
+    gen->net = (Net*)net;
+}
 
 void* GEN_array_get(void* gen_array, int index) {
   if (gen_array)
@@ -739,6 +748,8 @@ void GEN_init(Gen* gen, int num_periods) {
   ARRAY_zalloc(gen->sens_P_l_bound,REAL,T);
   ARRAY_zalloc(gen->sens_Q_u_bound,REAL,T);
   ARRAY_zalloc(gen->sens_Q_l_bound,REAL,T);
+
+  gen->net = NULL;
   
   gen->next = NULL;
   gen->reg_next = NULL;

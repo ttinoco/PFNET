@@ -38,6 +38,9 @@
 typedef struct Net Net;
 
 // Prototypes
+void NET_inc_state_tag(Net* net);
+unsigned long int NET_get_state_tag(Net* net);
+
 /** @brief Adjusts regulating and slack generators to balance bus power mismatches. */
 void NET_adjust_generators(Net* net);
 

@@ -77,6 +77,8 @@ typedef struct Bus Bus;
 typedef struct Vec Vec;
 
 // Prototypes
+void BRANCH_set_network(Branch* br, void* net);
+
 void BRANCH_array_del(Branch* br_array, int size);
 void* BRANCH_array_get(void* br, int index);
 Branch* BRANCH_array_new(int size, int num_periods);

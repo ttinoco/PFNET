@@ -10,6 +10,7 @@
 
 #include <pfnet/branch.h>
 #include <pfnet/bus.h>
+#include <pfnet/net.h>
 #include <pfnet/array.h>
 #include <pfnet/json_macros.h>
 
@@ -82,11 +83,19 @@ struct Branch {
   REAL* sens_phase_l_bound; /**< @brief Sensitivity of phase shift lower bound */
   REAL* sens_i_mag_u_bound; /**< @brief Sensitivity of current magnitude upper bound */
 
+  // Network
+  Net* net; /**< @brief Network. */
+
   // List
   Branch* reg_next;   /**< @brief List of branches regulating a bus voltage magnitude */
   Branch* next_k;     /**< @brief List of branches connected to a bus on the "k" side */
   Branch* next_m;     /**< @brief List of branches connected to a bus in the "m" side */
 };
+
+void BRANCH_set_network(Branch* br, void* net) {
+  if (br)
+    br->net = (Net*)net;
+}
 
 void* BRANCH_array_get(void* br_array, int index) {
   if (br_array)
@@ -1348,6 +1357,8 @@ void BRANCH_init(Branch* br, int num_periods) {
 
   for (t = 0; t < br->num_periods; t++)
     br->ratio[t] = 1.;
+
+  br->net = NULL;
 
   br->reg_next = NULL;
   br->next_k = NULL;

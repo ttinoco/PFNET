@@ -56,6 +56,8 @@ typedef struct Gen Gen;
 typedef struct Bus Bus;
 
 // Prototypes
+void GEN_set_network(Gen* gen, void* net);
+
 void GEN_array_del(Gen* gen_array, int size);
 void* GEN_array_get(void* gen_array, int index);
 Gen* GEN_array_new(int size, int num_periods);

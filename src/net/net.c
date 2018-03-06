@@ -81,12 +81,27 @@ struct Net {
   int* num_actions;   /**< @brief Number of control actions. */
 
   // Spatial correlation
-  REAL vargen_corr_radius; /**< @brief Correlation radius for variable generators. **/
-  REAL vargen_corr_value;  /**< @brief Correlation value for variable generators. **/
+  REAL vargen_corr_radius; /**< @brief Correlation radius for variable generators. */
+  REAL vargen_corr_value;  /**< @brief Correlation value for variable generators. */
+
+  // State tag
+  unsigned long int state_tag; /**< @brief State tag. */
 
   // Utils
   char* bus_counted;  /**< @brief Flags for processing buses */
 };
+
+void NET_inc_state_tag(Net* net) {
+  if (net)
+    net->state_tag++;
+}
+
+unsigned long int NET_get_state_tag(Net* net) {
+  if (net)
+    return net->state_tag;
+  else
+    return 0;
+}
 
 void NET_add_buses(Net* net, Bus** bus_ptr_array, int size) {
   /** Adds buses to the network. The entire bus array is
@@ -2569,6 +2584,9 @@ void NET_init(Net* net, int num_periods) {
 
   ARRAY_zalloc(net->num_actions,int,T);
 
+  // State tag
+  net->state_tag = 0;
+
   // Utils
   net->bus_counted = NULL;
 }
@@ -3645,9 +3663,16 @@ void NET_set_base_power(Net* net, REAL base_power) {
 }
 
 void NET_set_branch_array(Net* net, Branch* branch, int num) {
+  int i;
   if (net) {
+
+    // Pointers
     net->branch = branch;
     net->num_branches = num;
+
+    // Network
+    for (i = 0; i < net->num_branches; i++)
+      BRANCH_set_network(BRANCH_array_get(branch,i), net);
   }
 }
 
@@ -3675,9 +3700,16 @@ void NET_set_bus_array(Net* net, Bus* bus, int num) {
 }
 
 void NET_set_gen_array(Net* net, Gen* gen, int num) {
+  int i;
   if (net) {
+
+    // Pointers
     net->gen = gen;
     net->num_gens = num;
+
+    // Network
+    for (i = 0; i < net->num_gens; i++)
+      GEN_set_network(GEN_array_get(gen,i), net);
   }
 }
 
