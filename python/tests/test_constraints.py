@@ -5925,6 +5925,7 @@ class TestConstraints(unittest.TestCase):
 
             # Eval without outages
             for c in constraints:
+                self.assertEqual(c.state_tag, net.state_tag)
                 c.eval(x0)
 
             for gen in net.generators:
@@ -5934,6 +5935,7 @@ class TestConstraints(unittest.TestCase):
 
             # Eval with outages
             for c in constraints:
+                self.assertNotEqual(c.state_tag, net.state_tag)
                 self.assertRaises(pf.ConstraintError,
                                   c.eval,
                                   x0)
@@ -5944,12 +5946,14 @@ class TestConstraints(unittest.TestCase):
 
             # Eval with outages
             for c in constraints:
+                self.assertEqual(c.state_tag, net.state_tag)
                 c.eval(x0)
 
             net.clear_outages()
 
             # Eval without outages
             for c in constraints:
+                self.assertNotEqual(c.state_tag, net.state_tag)
                 self.assertRaises(pf.ConstraintError,
                                   c.eval,
                                   x0)

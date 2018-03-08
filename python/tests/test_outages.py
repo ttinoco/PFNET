@@ -14,6 +14,21 @@ from . import test_cases
 
 class TestOutages(unittest.TestCase):
 
+    def test_state_tag(self):
+
+        for case in test_cases.CASES:
+            
+            net = pf.Parser(case).parse(case)
+
+            self.assertEqual(net.state_tag, 0)
+
+            for gen in net.generators:
+                gen.outage = True
+            for branch in net.branches:
+                branch.outage = True
+
+            self.assertEqual(net.state_tag, net.num_generators+net.num_branches)
+
     def test_generators(self):
 
         for case in test_cases.CASES:

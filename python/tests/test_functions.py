@@ -2687,8 +2687,99 @@ class TestFunctions(unittest.TestCase):
             self.assertTrue(any([f.Hphi.nnz > 0 for f in functions]))
 
     def test_robustness_with_outages(self):
+        
+        for case in test_cases.CASES:
 
-        pass
+            net = pf.Parser(case).parse(case, self.T)
+
+            functions = [pf.Function('generation cost',1.,net),
+                         pf.Function('phase shift regularization',1.,net),
+                         pf.Function('generator powers regularization',1.,net),
+                         pf.Function('tap ratio regularization',1.,net),
+                         pf.Function('susceptance regularization',1.,net),
+                         pf.Function('variable regularization',1.,net),
+                         pf.Function('voltage angle regularization',1.,net),
+                         pf.Function('voltage magnitude regularization',1.,net),
+                         pf.Function('soft voltage magnitude limits',1.,net),
+                         pf.Function('sparse controls penalty',1.,net),
+                         pf.Function('consumption utility',1.,net),
+                         pf.Function('net consumption cost',1.,net)]
+
+            # Add variables
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          ['active power','reactive power'])
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+            net.set_flags('shunt',
+                          'variable',
+                          'switching - v',
+                          'susceptance')
+            net.set_flags('battery',
+                          'variable',
+                          'any',
+                          ['charging power','energy level'])
+            self.assertEqual(net.num_vars,
+                             (2*net.num_buses +
+                              2*net.num_generators +
+                              net.get_num_tap_changers()+
+                              net.get_num_phase_shifters()+
+                              net.get_num_switched_shunts()+
+                              3*net.num_batteries)*self.T)
+
+            x0 = net.get_var_values()
+
+            net.clear_outages()
+
+            # Analyze without outages
+            for f in functions:
+                f.analyze()
+
+            # Eval without outages
+            for f in functions:
+                self.assertEqual(f.state_tag, net.state_tag)
+                f.eval(x0)
+                
+            for gen in net.generators:
+                gen.outage = True
+            for branch in net.branches:
+                branch.outage = True
+                
+            # Eval with outages
+            for f in functions:
+                self.assertNotEqual(f.state_tag, net.state_tag)
+                self.assertRaises(pf.FunctionError,
+                                  f.eval,
+                                  x0)
+
+            # Analyze with outages
+            for f in functions:
+                f.analyze()
+
+            # Eval with outages
+            for f in functions:
+                self.assertEqual(f.state_tag, net.state_tag)
+                f.eval(x0)
+
+            net.clear_outages()
+
+            # Eval without outages
+            for f in functions:
+                self.assertNotEqual(f.state_tag, net.state_tag)
+                self.assertRaises(pf.FunctionError,
+                                  f.eval,
+                                  x0)
             
     def test_func_DUMMY(self):
 

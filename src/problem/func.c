@@ -21,7 +21,8 @@ struct Func {
   char name[FUNC_BUFFER_SIZE]; /**< @brief Name string */
 
   // Network
-  Net* net;    /**< @brief Power network */
+  Net* net;                    /**< @brief Power network */
+  unsigned long int state_tag; /**< @brief Power network state tag */
   
   // Weight
   REAL weight; /**< @brief Function weight for forming an objective function */
@@ -56,6 +57,13 @@ struct Func {
   // List
   Func* next; /**< @brief List of functions for forming objective function */
 };
+
+unsigned long int FUNC_get_state_tag(Func* f) {
+  if (f)
+    return f->state_tag;
+  else
+    return 0;
+}
 
 void FUNC_clear_bus_counted(Func* f) {
   if (f)
@@ -277,6 +285,7 @@ Func* FUNC_new(REAL weight, Net* net) {
 
   // Network
   f->net = net;
+  f->state_tag = NET_get_state_tag(net);
 
   // Name
   strcpy(f->name,"unknown");
@@ -382,6 +391,7 @@ void FUNC_count_step(Func* f, Branch* br, int t) {
 void FUNC_allocate(Func* f) {
   if (f && f->func_allocate && FUNC_is_safe_to_count(f)) {
     FUNC_del_matvec(f);
+    f->state_tag = NET_get_state_tag(f->net);
     (*(f->func_allocate))(f);
   }
 }
@@ -447,7 +457,8 @@ BOOL FUNC_is_safe_to_analyze(Func* f) {
   if (FUNC_get_bus_counted_size(f) == NET_get_num_buses(net)*NET_get_num_periods(net) &&
       VEC_get_size(f->gphi) == NET_get_num_vars(net) && 
       MAT_get_size1(f->Hphi) == NET_get_num_vars(net) &&
-      MAT_get_size2(f->Hphi) == NET_get_num_vars(net))
+      MAT_get_size2(f->Hphi) == NET_get_num_vars(net) &&
+      FUNC_get_state_tag(f) == NET_get_state_tag(net))
     return TRUE;
   else {
     sprintf(f->error_string,"function is not safe to analyze");
@@ -462,7 +473,8 @@ BOOL FUNC_is_safe_to_eval(Func* f, Vec* values) {
       MAT_get_size1(f->Hphi) == NET_get_num_vars(net) &&
       MAT_get_size2(f->Hphi) == NET_get_num_vars(net) &&
       VEC_get_size(f->gphi) == NET_get_num_vars(net) &&
-      VEC_get_size(values) == NET_get_num_vars(net))
+      VEC_get_size(values) == NET_get_num_vars(net) &&
+      FUNC_get_state_tag(f) == NET_get_state_tag(net))
     return TRUE;
   else {
     sprintf(f->error_string,"function is not safe to eval");

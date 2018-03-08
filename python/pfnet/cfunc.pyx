@@ -85,7 +85,9 @@ cdef class FunctionBase:
         cfunc.FUNC_allocate(self._c_func)
         cfunc.FUNC_analyze(self._c_func)
         if cfunc.FUNC_has_error(self._c_func):
-            raise FunctionError(cfunc.FUNC_get_error_string(self._c_func))
+            error_str = cfunc.FUNC_get_error_string(self._c_func).decode('UTF-8')
+            self.clear_error()
+            raise FunctionError(error_str)
 
     def eval(self, values):
         """
@@ -102,7 +104,9 @@ cdef class FunctionBase:
         cfunc.FUNC_eval(self._c_func,v)
         free(v)
         if cfunc.FUNC_has_error(self._c_func):
-            raise FunctionError(cfunc.FUNC_get_error_string(self._c_func))
+            error_str = cfunc.FUNC_get_error_string(self._c_func).decode('UTF-8')
+            self.clear_error()
+            raise FunctionError(error_str)
 
     def set_gphi(self, gphi):
         """
@@ -171,8 +175,15 @@ cdef class FunctionBase:
         
         # Error
         if cfunc.FUNC_has_error(self._c_func):
-            raise FunctionError(cfunc.FUNC_get_error_string(self._c_func))
+            error_str = cfunc.FUNC_get_error_string(self._c_func).decode('UTF-8')
+            self.clear_error()
+            raise FunctionError(error_str)
 
+    property state_tag:
+        """ Network state tag during function allocation. """
+        def __get__(self):
+            return cfunc.FUNC_get_state_tag(self._c_func)
+        
     property name:
         """ Function name (string). """
         def __get__(self): return cfunc.FUNC_get_name(self._c_func).decode('UTF-8')
