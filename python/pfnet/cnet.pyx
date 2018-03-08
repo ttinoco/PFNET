@@ -589,7 +589,9 @@ cdef class Network:
         else:
             cnet.NET_add_vargens_from_params(self._c_net,NULL,power_capacity,power_base,power_std,corr_radius,corr_value)
         if cnet.NET_has_error(self._c_net):
-            raise NetworkError(cnet.NET_get_error_string(self._c_net))
+            error_str = cnet.NET_get_error_string(self._c_net).decode('UTF-8')
+            self.clear_error()
+            raise NetworkError(error_str)
 
     def add_batteries_from_parameters(self, buses, power_capacity, energy_capacity, eta_c=1., etc_d=1.):
         """
@@ -620,7 +622,9 @@ cdef class Network:
         else:
             cnet.NET_add_batteries_from_params(self._c_net,NULL,power_capacity,energy_capacity,eta_c,etc_d)
         if cnet.NET_has_error(self._c_net):
-            raise NetworkError(cnet.NET_get_error_string(self._c_net))
+            error_str = cnet.NET_get_error_string(self._c_net).decode('UTF-8')
+            self.clear_error()
+            raise NetworkError(error_str)
 
     def clear_error(self):
         """
@@ -688,7 +692,9 @@ cdef class Network:
         sigma = Matrix(cnet.NET_create_vargen_P_sigma(self._c_net,spread,corr),
                        owndata=True)
         if cnet.NET_has_error(self._c_net):
-            raise NetworkError(cnet.NET_get_error_string(self._c_net))
+            error_str = cnet.NET_get_error_string(self._c_net).decode('UTF-8')
+            self.clear_error()
+            raise NetworkError(error_str)
         else:
             return sigma
 
@@ -1108,7 +1114,9 @@ cdef class Network:
                                                t_end),
                    owndata=True)
         if cnet.NET_has_error(self._c_net):
-            raise NetworkError(cnet.NET_get_error_string(self._c_net))
+            error_str = cnet.NET_get_error_string(self._c_net).decode('UTF-8')
+            self.clear_error()
+            raise NetworkError(error_str)
         else:
             return m
 
@@ -1509,7 +1517,9 @@ cdef class Network:
                            reduce(lambda x,y: x|y,[str2prop[obj_type][pp] for pp in props],0),
                            reduce(lambda x,y: x|y,[str2q[obj_type][qq] for qq in q],0))
         if cnet.NET_has_error(self._c_net):
-            raise NetworkError(cnet.NET_get_error_string(self._c_net))
+            error_str = cnet.NET_get_error_string(self._c_net).decode('UTF-8')
+            self.clear_error()
+            raise NetworkError(error_str)
 
     def set_flags_of_component(self, obj, flags, q):
         """
@@ -1531,7 +1541,9 @@ cdef class Network:
                                         reduce(lambda x,y: x|y,[str2flag[f] for f in flags],0),
                                         reduce(lambda x,y: x|y,[str2q[obj.obj_type][qq] for qq in q],0))
         if cnet.NET_has_error(self._c_net):
-            raise NetworkError(cnet.NET_get_error_string(self._c_net))
+            error_str = cnet.NET_get_error_string(self._c_net).decode('UTF-8')
+            self.clear_error()
+            raise NetworkError(error_str)
 
     def set_branch_array(self, size):
         """
