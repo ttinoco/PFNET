@@ -4286,7 +4286,6 @@ class TestConstraints(unittest.TestCase):
             num_constr = len([br for br in net.branches if br.ratingA != 0.])*self.T
 
             self.assertEqual(constr.G.shape[0], num_constr)
-            print 'foo bar'
 
             for branch in net.branches:
                 branch.outage = True
@@ -5874,6 +5873,7 @@ class TestConstraints(unittest.TestCase):
                            pf.Constraint('PVPQ switching', net),
                            pf.Constraint('AC power balance', net), # nonlinear
                            pf.Constraint('DC power balance', net),
+                           pf.Constraint('linearized AC power balance', net),
                            pf.Constraint('voltage regulation by generators', net), # nonlinear
                            pf.Constraint('voltage regulation by transformers', net), # nonlinear
                            pf.Constraint('voltage regulation by shunts', net), # nonlinear
@@ -5934,11 +5934,9 @@ class TestConstraints(unittest.TestCase):
 
             # Eval with outages
             for c in constraints:
-                print 'constr', c.name
-                c.eval(x0)
-                print 'well done'
-
-            print '***********************'
+                self.assertRaises(pf.ConstraintError,
+                                  c.eval,
+                                  x0)
 
             # Analyze with outages
             for c in constraints:
@@ -5952,9 +5950,9 @@ class TestConstraints(unittest.TestCase):
 
             # Eval without outages
             for c in constraints:
-                print 'constr', c.name
-                c.eval(x0)
-                print 'well done'            
+                self.assertRaises(pf.ConstraintError,
+                                  c.eval,
+                                  x0)
                 
     def tearDown(self):
 

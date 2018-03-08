@@ -85,6 +85,7 @@ cdef extern from "pfnet/net.h":
     cvargen.Vargen* NET_get_vargen_from_name_and_bus_number(Net* net, char* name, int number)
     cbat.Bat* NET_get_bat_from_name_and_bus_number(Net* net, char* name, int number)
 
+    unsigned long int NET_get_state_tag(Net* net)
     REAL NET_get_total_load_P(Net* net, int t)
     int NET_get_num_periods(Net* net)
     int NET_get_num_buses(Net* net)

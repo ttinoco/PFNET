@@ -1697,6 +1697,11 @@ cdef class Network:
             cnet.NET_bus_hash_number_add(self._c_net,cb._c_ptr)
             cnet.NET_bus_hash_name_add(self._c_net,cb._c_ptr)
 
+    property state_tag:
+        """ State tag. """
+        def __get__(self):
+            return cnet.NET_get_state_tag(self._c_net)
+            
     property error_string:
         """ Error string (string). """
         def __get__(self):

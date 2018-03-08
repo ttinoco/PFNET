@@ -1622,6 +1622,8 @@ void BRANCH_set_pos_ratio_v_sens(Branch* br, BOOL flag) {
 
 void BRANCH_set_outage(Branch* br, BOOL outage) {
   if (br)
+    if (br->outage != outage)
+      NET_inc_state_tag(br->net);
     br->outage = outage;
 }
 

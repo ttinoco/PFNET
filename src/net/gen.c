@@ -893,6 +893,8 @@ void GEN_set_reg_bus(Gen* gen, Bus* reg_bus) {
 
 void GEN_set_outage(Gen* gen, BOOL outage) {
   if (gen)
+    if (gen->outage != outage)
+      NET_inc_state_tag(gen->net);
     gen->outage = outage;
 }
 
