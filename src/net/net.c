@@ -3672,7 +3672,7 @@ void NET_set_branch_array(Net* net, Branch* branch, int num) {
 
     // Network
     for (i = 0; i < net->num_branches; i++)
-      BRANCH_set_network(BRANCH_array_get(branch,i), net);
+      BRANCH_set_network(BRANCH_array_get(net->branch,i), net);
   }
 }
 
@@ -3691,11 +3691,20 @@ void NET_set_shunt_array(Net* net, Shunt* shunt, int num) {
 }
 
 void NET_set_bus_array(Net* net, Bus* bus, int num) {
+  int i;
   if (net) {
+
+    // Pointers
     net->bus = bus;
     net->num_buses = num;
+
+    // Utils
     free(net->bus_counted);
     ARRAY_zalloc(net->bus_counted,char,net->num_buses*net->num_periods);
+
+    // Network
+    for (i = 0; i < net->num_buses; i++)
+      BUS_set_network(BUS_array_get(net->bus,i), net);
   }
 }
 
@@ -3709,7 +3718,7 @@ void NET_set_gen_array(Net* net, Gen* gen, int num) {
 
     // Network
     for (i = 0; i < net->num_gens; i++)
-      GEN_set_network(GEN_array_get(gen,i), net);
+      GEN_set_network(GEN_array_get(net->gen,i), net);
   }
 }
 

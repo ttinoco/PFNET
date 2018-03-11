@@ -53,10 +53,6 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
   int bus_index_t[2];
   int k;
   int m;
-  int num_buses;
-
-  // Num buses
-  num_buses = NET_get_num_buses(CONSTR_get_network(c));
 
   // Constr data
   A_nnz = CONSTR_get_A_nnz_ptr(c);
@@ -70,7 +66,7 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
-    bus_index_t[k] = BUS_get_index(bus[k])+t*num_buses;
+    bus_index_t[k] = BUS_get_index_t(bus[k],t);
 
   // Branch
   //*******
@@ -218,10 +214,6 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
   REAL sign_phi;
   int k;
   int m;
-  int num_buses;
-
-  // Number of buses
-  num_buses = NET_get_num_buses(CONSTR_get_network(c));
 
   // Constr data
   A = CONSTR_get_A(c);
@@ -236,9 +228,8 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
   // Bus data
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
-  for (k = 0; k < 2; k++) {
-    bus_index_t[k] = BUS_get_index(bus[k])+t*num_buses;
-  }
+  for (k = 0; k < 2; k++)
+    bus_index_t[k] = BUS_get_index_t(bus[k],t);
 
   // Branch data
   b = BRANCH_get_b(br);
@@ -417,10 +408,6 @@ void CONSTR_DCPF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf,
   int bus_index_t[2];
   char* bus_counted;
   int k;
-  int num_buses;
-
-  // Number of buses
-  num_buses = NET_get_num_buses(CONSTR_get_network(c));
 
   // Constr data
   bus_counted = CONSTR_get_bus_counted(c);
@@ -432,9 +419,8 @@ void CONSTR_DCPF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf,
   // Bus data
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
-  for (k = 0; k < 2; k++) {
-    bus_index_t[k] = BUS_get_index(bus[k])+t*num_buses;
-  }
+  for (k = 0; k < 2; k++)
+    bus_index_t[k] = BUS_get_index_t(bus[k],t);
 
   // Buses
   for (k = 0; k < 2; k++) {

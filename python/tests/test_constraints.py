@@ -2029,8 +2029,8 @@ class TestConstraints(unittest.TestCase):
                     for shunt in bus.shunts:
                         P_mis -= shunt.g*(bus.v_mag[t]**2.)
                         Q_mis -= -shunt.b[t]*(bus.v_mag[t]**2.)
-                    self.assertAlmostEqual(P_mis,f[bus.index_P+t*2*net.num_buses])
-                    self.assertAlmostEqual(Q_mis,f[bus.index_Q+t*2*net.num_buses])
+                    self.assertAlmostEqual(P_mis,f[bus.index_P[t]])
+                    self.assertAlmostEqual(Q_mis,f[bus.index_Q[t]])
 
             # Cross check mismatches with net properties (no vars)
             net.update_properties()
@@ -2039,8 +2039,8 @@ class TestConstraints(unittest.TestCase):
             for t in range(self.T):
                 for i in range(net.num_buses):
                     bus = net.get_bus(i)
-                    dP = f[bus.index_P+t*2*net.num_buses]
-                    dQ = f[bus.index_Q+t*2*net.num_buses]
+                    dP = f[bus.index_P[t]]
+                    dQ = f[bus.index_Q[t]]
                     dP_list[t].append(dP)
                     dQ_list[t].append(dQ)
                     self.assertAlmostEqual(dP,bus.P_mismatch[t])
@@ -2206,8 +2206,8 @@ class TestConstraints(unittest.TestCase):
                             v = bus.v_mag[t]
                         P_mis -= shunt.g*v*v
                         Q_mis -= -b*v*v
-                    self.assertAlmostEqual(P_mis,f[bus.index_P+t*2*net.num_buses])
-                    self.assertAlmostEqual(Q_mis,f[bus.index_Q+t*2*net.num_buses])
+                    self.assertAlmostEqual(P_mis,f[bus.index_P[t]])
+                    self.assertAlmostEqual(Q_mis,f[bus.index_Q[t]])
 
             # Cross check mismatches with net properties
             constr.eval(x1)
@@ -2217,8 +2217,8 @@ class TestConstraints(unittest.TestCase):
             for t in range(self.T):
                 for i in range(net.num_buses):
                     bus = net.get_bus(i)
-                    dP = f[bus.index_P+t*2*net.num_buses]
-                    dQ = f[bus.index_Q+t*2*net.num_buses]
+                    dP = f[bus.index_P[t]]
+                    dQ = f[bus.index_Q[t]]
                     dP_list[t].append(dP)
                     dQ_list[t].append(dQ)
                     self.assertAlmostEqual(dP,bus.P_mismatch[t])
@@ -2239,22 +2239,31 @@ class TestConstraints(unittest.TestCase):
             P_list = []
             for t in range(self.T):
                 P_list.append(net.get_var_projection('all','any','all',t_start=t,t_end=t))
-            f_list = [f[t*2*net.num_buses:(t+1)*2*net.num_buses] for t in range(self.T)]
+            fp_list = [f[t*net.num_buses:(t+1)*net.num_buses] for t in range(self.T)]
+            fq_list = [f[(t+self.T)*net.num_buses:(t+1+self.T)*net.num_buses] for t in range(self.T)]
             for t in range(self.T-1):
-                self.assertLess(norm(f_list[t]-f_list[t+1]),1e-12*norm(f_list[t]))
+                self.assertLess(norm(fp_list[t]-fp_list[t+1]),1e-12*norm(fp_list[t]))
+                self.assertLess(norm(fq_list[t]-fq_list[t+1]),1e-12*norm(fq_list[t]))
             Jx = J*x0
-            Jx_list = [Jx[t*2*net.num_buses:(t+1)*2*net.num_buses] for t in range(self.T)]
+            Jxp_list = [Jx[t*net.num_buses:(t+1)*net.num_buses] for t in range(self.T)]
+            Jxq_list = [Jx[(t+self.T)*net.num_buses:(t+1+self.T)*net.num_buses] for t in range(self.T)]
             for t in range(self.T-1):
-                self.assertLess(norm(Jx_list[t]-Jx_list[t+1]),1e-12*norm(Jx_list[t]))
+                self.assertLess(norm(Jxp_list[t]-Jxp_list[t+1]),1e-12*norm(Jxp_list[t]))
+                self.assertLess(norm(Jxq_list[t]-Jxq_list[t+1]),1e-12*norm(Jxq_list[t]))
             for i in range(10):
-                H_list = []
-                j = np.random.randint(0,2*net.num_buses)
+                Hp_list = []
+                Hq_list = []
+                j = np.random.randint(0,net.num_buses)
                 for t in range(self.T):
-                    H_list.append(coo_matrix(P_list[t]*constr.get_H_single(t*2*net.num_buses+j)*P_list[t].T))
+                    Hp_list.append(coo_matrix(P_list[t]*constr.get_H_single(t*net.num_buses+j)*P_list[t].T))
+                    Hq_list.append(coo_matrix(P_list[t]*constr.get_H_single((t+self.T)*net.num_buses+j)*P_list[t].T))
                 for t in range(self.T-1):
-                    self.assertTrue(np.all(H_list[t].row == H_list[t+1].row))
-                    self.assertTrue(np.all(H_list[t].col == H_list[t+1].col))
-                    self.assertLess(norm(H_list[t].data-H_list[t+1].data),1e-12*norm(H_list[t].data))
+                    self.assertTrue(np.all(Hp_list[t].row == Hp_list[t+1].row))
+                    self.assertTrue(np.all(Hp_list[t].col == Hp_list[t+1].col))
+                    self.assertLess(norm(Hp_list[t].data-Hp_list[t+1].data),1e-12*norm(Hp_list[t].data))
+                    self.assertTrue(np.all(Hq_list[t].row == Hq_list[t+1].row))
+                    self.assertTrue(np.all(Hq_list[t].col == Hq_list[t+1].col))
+                    self.assertLess(norm(Hq_list[t].data-Hq_list[t+1].data),1e-12*norm(Hq_list[t].data))
 
             # Jacobian check
             pf.tests.utils.check_constraint_Jacobian(self,
@@ -2298,16 +2307,14 @@ class TestConstraints(unittest.TestCase):
             for t in range(self.T):
                 for i in range(net.num_buses):
                     bus = net.get_bus(i)
-                    self.assertEqual(bus.index_P,2*bus.index)
-                    self.assertEqual(bus.index_Q,2*bus.index+1)
-                    sens[bus.index_P+t*2*net.num_buses] = 3.5*bus.index_P+0.33+t*2*net.num_buses
-                    sens[bus.index_Q+t*2*net.num_buses] = 3.4*bus.index_Q+0.32+t*2*net.num_buses
+                    sens[bus.index_P[t]] = 3.5*bus.index_P[t]+0.33+t*2*net.num_buses
+                    sens[bus.index_Q[t]] = 3.4*bus.index_Q[t]+0.32+t*2*net.num_buses
             constr.store_sensitivities(None,sens,None,None)
             for t in range(self.T):
                 for i in range(net.num_buses):
                     bus = net.get_bus(i)
-                    self.assertEqual(bus.sens_P_balance[t],3.5*bus.index_P+0.33+t*2*net.num_buses)
-                    self.assertEqual(bus.sens_Q_balance[t],3.4*bus.index_Q+0.32+t*2*net.num_buses)
+                    self.assertEqual(bus.sens_P_balance[t],3.5*bus.index_P[t]+0.33+t*2*net.num_buses)
+                    self.assertEqual(bus.sens_Q_balance[t],3.4*bus.index_Q[t]+0.32+t*2*net.num_buses)
 
     def test_constr_ACPF_with_outages(self):
 
@@ -2393,15 +2400,15 @@ class TestConstraints(unittest.TestCase):
             for bus in net.buses:
                 if bus not in buses+side:
                     for t in range(self.T):
-                        i = bus.index_P+2*t*net.num_buses
-                        j = bus.index_Q+2*t*net.num_buses
+                        i = bus.index_P[t]
+                        j = bus.index_Q[t]
                         self.assertLess(np.abs(f0[i]-f1[i]), 1e-8)
                         self.assertLess(np.abs(f0[j]-f1[j]), 1e-8)
 
             for bus in buses:
                 for t in range(self.T):
-                    i = bus.index_P+2*t*net.num_buses
-                    j = bus.index_Q+2*t*net.num_buses
+                    i = bus.index_P[t]
+                    j = bus.index_Q[t]
                     dp = 0.
                     dq = 0.
                     for gen in bus.generators:
@@ -3814,7 +3821,7 @@ class TestConstraints(unittest.TestCase):
                     mis -= br.P_km_DC
                 for br in bus.branches_m:
                     mis -= br.P_mk_DC
-                self.assertLess(np.abs(mismatches1[bus.index]-mis),1e-8)
+                self.assertLess(np.abs(mismatches1[bus.index_P]-mis),1e-8)
 
         # Multi period
         for case in test_cases.CASES:
@@ -3921,7 +3928,7 @@ class TestConstraints(unittest.TestCase):
                         mis -= br.P_km_DC[t]
                     for br in bus.branches_m:
                         mis -= br.P_mk_DC[t]
-                    self.assertLess(np.abs(mismatches[bus.index+t*net.num_buses]-mis),1e-8)
+                    self.assertLess(np.abs(mismatches[bus.index_t[t]]-mis),1e-8)
 
             # No variables
             net.clear_flags()
@@ -3949,7 +3956,7 @@ class TestConstraints(unittest.TestCase):
                         mis -= br.P_km_DC[t]
                     for br in bus.branches_m:
                         mis -= br.P_mk_DC[t]
-                    self.assertLess(np.abs(mismatches1[bus.index+t*net.num_buses]-mis),1e-8)
+                    self.assertLess(np.abs(mismatches1[bus.index_P[t]]-mis),1e-8)
 
             # Sensitivities
             net.clear_sensitivities()
@@ -3966,7 +3973,7 @@ class TestConstraints(unittest.TestCase):
 
             for t in range(net.num_periods):
                 for bus in net.buses:
-                    self.assertEqual(bus.sens_P_balance[t], lam[bus.index+t*net.num_buses])
+                    self.assertEqual(bus.sens_P_balance[t], lam[bus.index_P[t]])
                     self.assertNotEqual(bus.sens_P_balance[t], 0.)
                     self.assertEqual(bus.sens_Q_balance[t], 0.)
 
@@ -4031,12 +4038,12 @@ class TestConstraints(unittest.TestCase):
             for bus in net.buses:
                 if bus not in buses+side:
                     for t in range(self.T):
-                        i = bus.index+t*net.num_buses
+                        i = bus.index_P[t]
                         self.assertLess(np.abs(f0[i]-f1[i]), 1e-8)
 
             for bus in buses:
                 for t in range(self.T):
-                    i = bus.index+t*net.num_buses
+                    i = bus.index_P[t]
                     dp = 0.
                     for gen in bus.generators:
                         self.assertTrue(gen.is_on_outage())

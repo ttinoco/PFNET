@@ -114,10 +114,6 @@ void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
   Constr_ACPF_Data* data;
   int k;
   int m;
-  int num_buses;
-
-  // Num buses
-  num_buses = NET_get_num_buses(CONSTR_get_network(c));
 
   // Constr data
   J_nnz = CONSTR_get_J_nnz_ptr(c);
@@ -144,7 +140,7 @@ void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++) {
-    bus_index_t[k] = BUS_get_index(bus[k])+t*num_buses;
+    bus_index_t[k] = BUS_get_index_t(bus[k],t);
     var_v[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG);
     var_w[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG);
   }
@@ -445,9 +441,9 @@ void CONSTR_ACPF_allocate(Constr* c) {
   CONSTR_allocate_H_array(c,num_constr);
   for (t = 0; t < num_periods; t++) {
     for (i = 0; i < num_buses; i++) {
-      bus_index_t = i+t*num_buses;
-      P_index = BUS_get_index_P(NET_get_bus(net,i))+t*2*num_buses;
-      Q_index = BUS_get_index_Q(NET_get_bus(net,i))+t*2*num_buses;
+      bus_index_t = BUS_get_index_t(NET_get_bus(net,i),t);
+      P_index = BUS_get_index_P(NET_get_bus(net,i),t);
+      Q_index = BUS_get_index_Q(NET_get_bus(net,i),t);
       HP = CONSTR_get_H_single(c,P_index);
       HQ = CONSTR_get_H_single(c,Q_index);
       MAT_set_nnz(HP,H_nnz[bus_index_t]);
@@ -504,10 +500,6 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
   int phi_index;
   int k;
   int m;
-  int num_buses;
-
-  // Num buses
-  num_buses = NET_get_num_buses(CONSTR_get_network(c));
 
   // Constr data
   J = CONSTR_get_J(c);
@@ -524,9 +516,9 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++) {
-    bus_index_t[k] = BUS_get_index(bus[k])+t*num_buses;
-    P_index[k] = BUS_get_index_P(bus[k])+t*2*num_buses;
-    Q_index[k] = BUS_get_index_Q(bus[k])+t*2*num_buses;
+    bus_index_t[k] = BUS_get_index_t(bus[k],t);
+    P_index[k] = BUS_get_index_P(bus[k],t);
+    Q_index[k] = BUS_get_index_Q(bus[k],t);
     w_index[k] = BUS_get_index_v_ang(bus[k],t);
     v_index[k] = BUS_get_index_v_mag(bus[k],t);
     var_w[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG);
@@ -954,11 +946,6 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
   REAL indicator_a;
   REAL indicator_phi;
 
-  int num_buses;
-
-  // Num buses
-  num_buses = NET_get_num_buses(CONSTR_get_network(c));
-
   // Constr data
   f = VEC_get_data(CONSTR_get_f(c));
   J = MAT_get_data_array(CONSTR_get_J(c));
@@ -976,9 +963,9 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++) {
-    bus_index_t[k] = BUS_get_index(bus[k])+t*num_buses;
-    P_index[k] = BUS_get_index_P(bus[k])+t*2*num_buses; // index in f for active power mismatch
-    Q_index[k] = BUS_get_index_Q(bus[k])+t*2*num_buses; // index in f for reactive power mismatch
+    bus_index_t[k] = BUS_get_index_t(bus[k],t);
+    P_index[k] = BUS_get_index_P(bus[k],t); // index in f for active power mismatch
+    Q_index[k] = BUS_get_index_Q(bus[k],t); // index in f for reactive power mismatch
     var_w[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG);
     var_v[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG);
     HP[k] = MAT_get_data_array(MAT_array_get(H_array,P_index[k]));
@@ -1471,11 +1458,7 @@ void CONSTR_ACPF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf,
   Bus* bus[2];
   char* bus_counted;
   int k;
-  int num_buses;
-
-  // Num buses
-  num_buses = NET_get_num_buses(CONSTR_get_network(c));
-
+  
   // Constr data
   bus_counted = CONSTR_get_bus_counted(c);
 
@@ -1487,11 +1470,11 @@ void CONSTR_ACPF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf,
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++) {
-    if (!bus_counted[BUS_get_index(bus[k])+t*num_buses]) {
-      BUS_set_sens_P_balance(bus[k],VEC_get(sf,BUS_get_index_P(bus[k])+t*2*num_buses),t); // sens of P balance
-      BUS_set_sens_Q_balance(bus[k],VEC_get(sf,BUS_get_index_Q(bus[k])+t*2*num_buses),t); // sens of Q balance
+    if (!bus_counted[BUS_get_index_t(bus[k],t)]) {
+      BUS_set_sens_P_balance(bus[k],VEC_get(sf,BUS_get_index_P(bus[k],t)),t); // sens of P balance
+      BUS_set_sens_Q_balance(bus[k],VEC_get(sf,BUS_get_index_Q(bus[k],t)),t); // sens of Q balance
     }
-    bus_counted[BUS_get_index(bus[k])+t*num_buses] = TRUE;
+    bus_counted[BUS_get_index_t(bus[k],t)] = TRUE;
   }
 }
 

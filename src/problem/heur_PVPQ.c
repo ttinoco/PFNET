@@ -54,25 +54,17 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
   REAL Q;
   REAL Qmax;
   REAL Qmin;
-  int T;
-  int num_buses;
-
-  // Num periods
-  T = BRANCH_get_num_periods(br);
-
-  // Num buses
-  num_buses = NET_get_num_buses(net);
 
   // Heur data
   bus_counted = HEUR_get_bus_counted(h);
 
   // Bus from data
   bus[0] = BRANCH_get_bus_k(br);
-  bus_index_t[0] = BUS_get_index(bus[0])*T+t;
+  bus_index_t[0] = BUS_get_index_t(bus[0],t);
 
   // Bus to data
   bus[1] = BRANCH_get_bus_m(br);
-  bus_index_t[1] = BUS_get_index(bus[1])*T+t;
+  bus_index_t[1] = BUS_get_index_t(bus[1],t);
   
   // Power flow constraint
   for (pf = clist; pf != NULL; pf = CONSTR_get_next(pf)) {
@@ -136,7 +128,7 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 
 	    // Q at Qmin and v < v_set - check if free Q might help
 	    if (fabs(Q-Qmin) < fabs(Q-Qmax) && v < v_set) {
-	      Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen))+t*2*num_buses); // per unit (see constr_PF)
+	      Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen),t)); // per unit (see constr_PF)
 	      if (Qmin < Q) {
 		fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
 		all_fixed = FALSE;
@@ -147,7 +139,7 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 	    
 	    // Q at Qmax and v > v_set - check if free Q might help
 	    else if (fabs(Q-Qmax) < fabs(Q-Qmin) && v > v_set) { 
-	      Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen))+t*2*num_buses); // per unit (see constr_PF)
+	      Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen),t)); // per unit (see constr_PF)
 	      if (Q < Qmax) {
 		fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
 		all_fixed = FALSE;
@@ -218,7 +210,7 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 
 	  // Q at Qmin and v < v_set - check if free Q might help
 	  if (fabs(Q-Qmin) < fabs(Q-Qmax) && v < v_set) {
-	    Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen))+t*2*num_buses); // per unit (see constr_PF)
+	    Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen),t)); // per unit (see constr_PF)
 	    if (Qmin < Q) {
 	      fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
 	      all_fixed = FALSE;
@@ -229,7 +221,7 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 
 	  // Q at Qmax and v > v_set - check if free Q might help
 	  else if (fabs(Q-Qmax) < fabs(Q-Qmin) && v > v_set) { 
-	    Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen))+t*2*num_buses); // per unit (see constr_PF)
+	    Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen),t)); // per unit (see constr_PF)
 	    if (Q < Qmax) {
 	      fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
 	      all_fixed = FALSE;

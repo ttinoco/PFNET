@@ -15,6 +15,7 @@
 #include <pfnet/shunt.h>
 #include <pfnet/vargen.h>
 #include <pfnet/bat.h>
+#include <pfnet/net.h>
 #include <pfnet/array.h>
 #include <pfnet/json_macros.h>
 
@@ -86,9 +87,17 @@ struct Bus {
   UT_hash_handle hh_number; /**< @brief Handle for bus hash table based on numbers */
   UT_hash_handle hh_name;   /**< @brief Handle for bus hash table based on names */
 
+  // Network
+  Net* net; /**< @brief Network. */
+  
   // List
   Bus* next; /**< @brief List of buses */
 };
+
+void BUS_set_network(Bus* bus, void* net) {
+  if (bus)
+    bus->net = (Net*)net;
+}
 
 void BUS_add_gen(Bus* bus, Gen* gen) {
   if (bus) {
@@ -589,6 +598,13 @@ int BUS_get_index(Bus* bus) {
     return -1;
 }
 
+int BUS_get_index_t(Bus* bus, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    return bus->index+t*NET_get_num_buses(bus->net);
+  else
+    return -1;
+}
+
 int BUS_get_index_v_mag(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     return bus->index_v_mag[t];
@@ -603,16 +619,16 @@ int BUS_get_index_v_ang(Bus* bus, int t) {
     return -1;
 }
 
-int BUS_get_index_P(Bus* bus) {
-  if (bus)
-    return 2*bus->index;
+int BUS_get_index_P(Bus* bus, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    return bus->index + t*NET_get_num_buses(bus->net);
   else
     return -1;
 }
 
-int BUS_get_index_Q(Bus* bus) {
-  if (bus)
-    return 2*bus->index+1;
+int BUS_get_index_Q(Bus* bus, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    return bus->index + (t+bus->num_periods)*NET_get_num_buses(bus->net);
   else
     return -1;
 }
@@ -1616,6 +1632,8 @@ void BUS_init(Bus* bus, int num_periods) {
   ARRAY_zalloc(bus->P_mis,REAL,T);
   ARRAY_zalloc(bus->Q_mis,REAL,T);
 
+  bus->net = NULL;
+  
   for (t = 0; t < bus->num_periods; t++) {
     bus->v_mag[t] = 1.;
     bus->v_set[t] = 1.;

@@ -649,6 +649,31 @@ class TestNetwork(unittest.TestCase):
                 self.assertTrue(np.all(bus.index_v_ang == range(index,index+self.T)))
                 index += self.T
 
+    def test_buses_helper_indices(self):
+
+        for case in test_cases.CASES:
+
+            T = 10
+            
+            # Multi period
+            net = pf.Parser(case).parse(case,T)
+            self.assertEqual(net.num_periods,T)
+
+            for t in range(T):
+                for bus in net.buses:
+                    self.assertEqual(bus.index_t[t], bus.index+t*net.num_buses)
+                    self.assertEqual(bus.index_P[t], bus.index+t*net.num_buses)
+                    self.assertEqual(bus.index_Q[t], bus.index+t*net.num_buses+T*net.num_buses)
+
+            # Single period
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
+
+            for bus in net.buses:
+                self.assertEqual(bus.index_t, bus.index)
+                self.assertEqual(bus.index_P, bus.index)
+                self.assertEqual(bus.index_Q, bus.index+net.num_buses)
+                
     def test_generators(self):
 
         # Single period
@@ -2226,17 +2251,14 @@ class TestNetwork(unittest.TestCase):
             constrMP.analyze()
             constrMP.eval(x0MP)
             fMP = constrMP.f
-            offset = 0
             self.assertEqual(fMP.shape[0],2*netMP.num_buses*netMP.num_periods)
             for t in range(self.T):
                 dP_list = []
                 dQ_list = []
-                ft = fMP[offset:offset+2*netMP.num_buses]
-                offset += 2*netMP.num_buses
                 for i in range(netMP.num_buses):
                     bus = netMP.get_bus(i)
-                    dP = ft[bus.index_P]
-                    dQ = ft[bus.index_Q]
+                    dP = fMP[bus.index_P[t]]
+                    dQ = fMP[bus.index_Q[t]]
                     dP_list.append(dP)
                     dQ_list.append(dQ)
                     self.assertLess(np.abs(dP-bus.P_mismatch[t]),1e-10)
@@ -2289,13 +2311,13 @@ class TestNetwork(unittest.TestCase):
             n = netMP.num_buses
             for vargen in netMP.var_generators:
                 for t in range(self.T):
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
-                                           f[vargen.bus.index_P+t*2*n]-1.),1e-10)
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_P[t]]-
+                                           f[vargen.bus.index_P[t]]-1.),1e-10)
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_P[t]]-
                                            vargen.bus.P_mismatch[t]-1.),1e-10)
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
-                                           f[vargen.bus.index_Q+t*2*n]-2.),1e-10)
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q[t]]-
+                                           f[vargen.bus.index_Q[t]]-2.),1e-10)
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q[t]]-
                                            vargen.bus.Q_mismatch[t]-2.),1e-10)
             for vargen in netMP.var_generators:
                 self.assertGreater(len(vargen.bus.loads),0)
@@ -2306,13 +2328,13 @@ class TestNetwork(unittest.TestCase):
             f = constrMP.f
             for vargen in netMP.var_generators:
                 for t in range(self.T):
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
-                                           f[vargen.bus.index_P+t*2*n]),1e-10)
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_P[t]]-
+                                           f[vargen.bus.index_P[t]]),1e-10)
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_P[t]]-
                                            vargen.bus.P_mismatch[t]),1e-10)
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
-                                           f[vargen.bus.index_Q+t*2*n]),1e-10)
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q[t]]-
+                                           f[vargen.bus.index_Q[t]]),1e-10)
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q[t]]-
                                            vargen.bus.Q_mismatch[t]),1e-10)
 
             net.clear_properties()
