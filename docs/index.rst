@@ -10,7 +10,7 @@ Welcome! This is the documentation for the C library PFNET version |version|, la
 
 **What is PFNET?** 
 
-PFNET is a library for modeling and analyzing electric power networks. It provides data parsers, network visualization routines, and fast and customizable constraint and objective function evaluators for constructing network optimization problems.
+PFNET is a library for modeling and analyzing electric power networks. It provides data parsers, network analysis and manipulation routines, and fast and customizable constraint and objective function evaluators for constructing network optimization problems.
 
 **License**
 
@@ -26,6 +26,10 @@ PFNET is released under the BSD 2-clause license.
 
   * Just started, help needed!
 
+* `Julia <https://github.com/ttinoco/PFNET/issues/170>`_
+
+  * Help needed!
+  
 **Contents**
 
 .. toctree::

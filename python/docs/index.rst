@@ -10,7 +10,7 @@ Welcome! This is the documentation for the Python wrapper of PFNET version |vers
 PFNET is a library for modeling and analyzing electric power networks. It provides the following:
 
 * Data parsers.
-* Network visualization routines.
+* Network analysis and manipulation routines.
 * Fast and customizable constraint and objective function evaluators for constructing network optimization problems.
 
 **License**
@@ -37,7 +37,6 @@ PFNET is released under the BSD 2-clause license.
 * Martin Baltzinger
 * `Tomas Tinoco De Rubira <https://ttinoco.github.io/>`_
 * Adam Wigington
-* Martin Zellner
 
 Indices and tables
 ==================
