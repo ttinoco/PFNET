@@ -589,7 +589,9 @@ cdef class Network:
         else:
             cnet.NET_add_vargens_from_params(self._c_net,NULL,power_capacity,power_base,power_std,corr_radius,corr_value)
         if cnet.NET_has_error(self._c_net):
-            raise NetworkError(cnet.NET_get_error_string(self._c_net))
+            error_str = cnet.NET_get_error_string(self._c_net).decode('UTF-8')
+            self.clear_error()
+            raise NetworkError(error_str)
 
     def add_batteries_from_parameters(self, buses, power_capacity, energy_capacity, eta_c=1., etc_d=1.):
         """
@@ -620,22 +622,23 @@ cdef class Network:
         else:
             cnet.NET_add_batteries_from_params(self._c_net,NULL,power_capacity,energy_capacity,eta_c,etc_d)
         if cnet.NET_has_error(self._c_net):
-            raise NetworkError(cnet.NET_get_error_string(self._c_net))
-
-    def adjust_generators(self):
-        """
-        Adjusts powers of slack and regulator generators connected to or regulating the
-        same bus to correct generator participations without modifying the total power injected.
-        """
-
-        cnet.NET_adjust_generators(self._c_net);
+            error_str = cnet.NET_get_error_string(self._c_net).decode('UTF-8')
+            self.clear_error()
+            raise NetworkError(error_str)
 
     def clear_error(self):
         """
-        Clear error flag and message string.
+        Clears error flag and message string.
         """
 
-        cnet.NET_clear_error(self._c_net);
+        cnet.NET_clear_error(self._c_net)
+
+    def clear_outages(self):
+        """
+        Clears all component outages.
+        """
+
+        cnet.NET_clear_outages(self._c_net)
 
     def clear_flags(self):
         """
@@ -689,7 +692,9 @@ cdef class Network:
         sigma = Matrix(cnet.NET_create_vargen_P_sigma(self._c_net,spread,corr),
                        owndata=True)
         if cnet.NET_has_error(self._c_net):
-            raise NetworkError(cnet.NET_get_error_string(self._c_net))
+            error_str = cnet.NET_get_error_string(self._c_net).decode('UTF-8')
+            self.clear_error()
+            raise NetworkError(error_str)
         else:
             return sigma
 
@@ -1109,7 +1114,9 @@ cdef class Network:
                                                t_end),
                    owndata=True)
         if cnet.NET_has_error(self._c_net):
-            raise NetworkError(cnet.NET_get_error_string(self._c_net))
+            error_str = cnet.NET_get_error_string(self._c_net).decode('UTF-8')
+            self.clear_error()
+            raise NetworkError(error_str)
         else:
             return m
 
@@ -1134,6 +1141,17 @@ cdef class Network:
         """
 
         return cnet.NET_get_num_slack_buses(self._c_net)
+
+    def get_num_star_buses(self):
+        """
+        Gets number of star buses in the network.
+
+        Returns
+        -------
+        num : int
+        """
+
+        return cnet.NET_get_num_star_buses(self._c_net)
 
     def get_num_buses_reg_by_gen(self):
         """
@@ -1203,6 +1221,17 @@ cdef class Network:
         """
 
         return cnet.NET_get_num_branches_not_on_outage(self._c_net)
+
+    def get_num_branches_on_outage(self):
+        """
+        Gets number of branches in the network that are on outage.
+
+        Returns
+        -------
+        num : int
+        """
+
+        return cnet.NET_get_num_branches_on_outage(self._c_net)
 
     def get_num_fixed_trans(self):
         """
@@ -1281,7 +1310,7 @@ cdef class Network:
 
         return cnet.NET_get_num_gens(self._c_net)
 
-    def get_num_gens_not_on_outage(self):
+    def get_num_generators_not_on_outage(self):
         """
         Gets number of generators in the network that are not on outage.
 
@@ -1291,6 +1320,17 @@ cdef class Network:
         """
 
         return cnet.NET_get_num_gens_not_on_outage(self._c_net)
+
+    def get_num_generators_on_outage(self):
+        """
+        Gets number of generators in the network that are on outage.
+
+        Returns
+        -------
+        num : int
+        """
+
+        return cnet.NET_get_num_gens_on_outage(self._c_net)
 
     def get_num_reg_gens(self):
         """
@@ -1477,7 +1517,9 @@ cdef class Network:
                            reduce(lambda x,y: x|y,[str2prop[obj_type][pp] for pp in props],0),
                            reduce(lambda x,y: x|y,[str2q[obj_type][qq] for qq in q],0))
         if cnet.NET_has_error(self._c_net):
-            raise NetworkError(cnet.NET_get_error_string(self._c_net))
+            error_str = cnet.NET_get_error_string(self._c_net).decode('UTF-8')
+            self.clear_error()
+            raise NetworkError(error_str)
 
     def set_flags_of_component(self, obj, flags, q):
         """
@@ -1499,7 +1541,9 @@ cdef class Network:
                                         reduce(lambda x,y: x|y,[str2flag[f] for f in flags],0),
                                         reduce(lambda x,y: x|y,[str2q[obj.obj_type][qq] for qq in q],0))
         if cnet.NET_has_error(self._c_net):
-            raise NetworkError(cnet.NET_get_error_string(self._c_net))
+            error_str = cnet.NET_get_error_string(self._c_net).decode('UTF-8')
+            self.clear_error()
+            raise NetworkError(error_str)
 
     def set_branch_array(self, size):
         """
@@ -1665,6 +1709,11 @@ cdef class Network:
             cnet.NET_bus_hash_number_add(self._c_net,cb._c_ptr)
             cnet.NET_bus_hash_name_add(self._c_net,cb._c_ptr)
 
+    property state_tag:
+        """ State tag. """
+        def __get__(self):
+            return cnet.NET_get_state_tag(self._c_net)
+            
     property error_string:
         """ Error string (string). """
         def __get__(self):

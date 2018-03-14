@@ -3,44 +3,25 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
 
 #include <pfnet/heur_PVPQ.h>
-
-struct Heur_PVPQ_Data {
-
-  char* reg_flag; // flags for tracking regulation
-};
+#include <pfnet/constr_PVPQ_SWITCHING.h>
 
 void HEUR_PVPQ_init(Heur* h, Net* net) {
 
   // Local variables
-  Bus* bus;
   int num_buses;
   int num_periods;
-  Heur_PVPQ_Data* data;
-  int i;
-  int t;
 
   // Init
   num_buses = NET_get_num_buses(net);
   num_periods = NET_get_num_periods(net);
   HEUR_set_bus_counted(h,(char*)calloc(num_buses*num_periods,sizeof(char)));
-  data = (Heur_PVPQ_Data*)malloc(sizeof(Heur_PVPQ_Data));
-  data->reg_flag = (char*)malloc(sizeof(char)*num_buses*num_periods);
-  for (t = 0; t < num_periods; t++) {
-    for (i = 0; i < num_buses; i++) {
-      bus = NET_get_bus(net,i);
-      if (BUS_is_regulated_by_gen(bus))
-	data->reg_flag[i*num_periods+t] = TRUE;
-      else
-	data->reg_flag[i*num_periods+t] = FALSE;
-    }
-  }
-  HEUR_set_data(h,(void*)data);
+  HEUR_set_data(h,NULL);
 }
 
 void HEUR_PVPQ_clear(Heur* h, Net* net) {
@@ -59,54 +40,33 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
 
   // Local variables
   Vec* f;
-  Mat* A;
-  Vec* b;
   Bus* bus[2];
   Gen* gen;
   char* bus_counted;
-  Heur_PVPQ_Data* data;
-  char* reg_flag;
   int bus_index_t[2];
+  char* fix_flag;
+  char all_fixed;
   int k;
-  int i;
   Constr* pf;
-  Constr* fix;
+  Constr* pvpq;
   REAL v;
   REAL v_set;
   REAL Q;
   REAL Qmax;
   REAL Qmin;
-  char switch_flag;
-  int j_old;
-  int j_new;
-  REAL b_new;
-  int T;
-  int num_buses;
-
-  // Num periods
-  T = BRANCH_get_num_periods(br);
-
-  // Num buses
-  num_buses = NET_get_num_buses(net);
 
   // Heur data
   bus_counted = HEUR_get_bus_counted(h);
-  data = (Heur_PVPQ_Data*)HEUR_get_data(h);
-  reg_flag = data->reg_flag;
-
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
 
   // Bus from data
   bus[0] = BRANCH_get_bus_k(br);
-  bus_index_t[0] = BUS_get_index(bus[0])*T+t;
+  bus_index_t[0] = BUS_get_index_t(bus[0],t);
 
   // Bus to data
   bus[1] = BRANCH_get_bus_m(br);
-  bus_index_t[1] = BUS_get_index(bus[1])*T+t;
-
-  // Power flow constraints
+  bus_index_t[1] = BUS_get_index_t(bus[1],t);
+  
+  // Power flow constraint
   for (pf = clist; pf != NULL; pf = CONSTR_get_next(pf)) {
     if (strcmp(CONSTR_get_name(pf),"AC power balance") == 0)
       break;
@@ -114,161 +74,170 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
   if (!pf)
     return;
 
-  // Fix constraints
-  for (fix = clist; fix != NULL; fix = CONSTR_get_next(fix)) {
-    if (strcmp(CONSTR_get_name(fix),"variable fixing") == 0)
+  // PVPQ switching constraint
+  for (pvpq = clist; pvpq != NULL; pvpq = CONSTR_get_next(pvpq)) {
+    if (strcmp(CONSTR_get_name(pvpq),"PVPQ switching") == 0)
       break;
   }
-  if (!fix)
+  if (!pvpq)
+    return;
+
+  // Fix flags
+  fix_flag = CONSTR_PVPQ_SWITCHING_get_flags(pvpq);
+  if (!fix_flag)
     return;
 
   // Constr data
   f = CONSTR_get_f(pf);
-  A = CONSTR_get_A(fix);
-  b = CONSTR_get_b(fix);
 
   // Buses
   for (k = 0; k < 2; k++) {
 
+    // No bus (until I fix outages)
+    if (!bus[k])
+      continue;
+
+    // Candidate bus
     if (!bus_counted[bus_index_t[k]] &&                   // not counted
 	!BUS_is_slack(bus[k]) &&                          // not slack
 	BUS_is_regulated_by_gen(bus[k]) &&                // regulated
-	BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG) &&   // v mag is variable
-	BUS_has_flags(bus[k],FLAG_FIXED,BUS_VAR_VMAG) &&  // v mag is fixed
-	GEN_has_flags(BUS_get_reg_gen(bus[k]),FLAG_VARS,GEN_VAR_Q)) { // reg gen Q is variable
-
-      // Voltage magnitude
+	BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG)) {   // v mag is variable
+      
+      // Voltage magnitude and set point
       v = VEC_get(var_values,BUS_get_index_v_mag(bus[k],t));
       v_set = BUS_get_v_set(bus[k],t);
 
-      // Regulating generator (first one in list of reg gens)
-      gen = BUS_get_reg_gen(bus[k]);
-      Q = VEC_get(var_values,GEN_get_index_Q(gen,t)); // per unit
-      Qmax = GEN_get_Q_max(gen);                      // per unit
-      Qmin = GEN_get_Q_min(gen);                      // per unit
+      // CASE: v fixed
+      if (fix_flag[BUS_get_index_v_mag(bus[k],t)]) {
 
-      // Switch flag
-      switch_flag = FALSE;
+	all_fixed = TRUE;
 
-      // Currently regulated
-      if (reg_flag[bus_index_t[k]]) {
+	// Generators
+	for (gen = BUS_get_reg_gen(bus[k]); gen != NULL; gen = GEN_get_reg_next(gen)) {
+	  
+	  // Q not variable
+	  if (!GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) // reg gen Q is not variable
+	    continue;
+	  
+	  Q = VEC_get(var_values,GEN_get_index_Q(gen,t)); // per unit
+	  Qmax = GEN_get_Q_max(gen);                      // per unit
+	  Qmin = GEN_get_Q_min(gen);                      // per unit
 
-	// Violations
-	if (Q > Qmax) {
+	  // Q is fixed
+	  if (fix_flag[GEN_get_index_Q(gen,t)]) {
 
-	  // Set data
-	  j_old = BUS_get_index_v_mag(bus[k],t);
-	  j_new = GEN_get_index_Q(gen,t);
-	  b_new = Qmax;
-	  switch_flag = TRUE;
-	  reg_flag[bus_index_t[k]] = FALSE;
+	    // Q at Qmin and v < v_set - check if free Q might help
+	    if (fabs(Q-Qmin) < fabs(Q-Qmax) && v < v_set) {
+	      Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen),t)); // per unit (see constr_PF)
+	      if (Qmin < Q) {
+		fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
+		all_fixed = FALSE;
+		if (HEUR_PVPQ_DEBUG)
+		  printf("HEUR PVPQ: free gen %d from Qmin (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
+	      }
+	    }
+	    
+	    // Q at Qmax and v > v_set - check if free Q might help
+	    else if (fabs(Q-Qmax) < fabs(Q-Qmin) && v > v_set) { 
+	      Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen),t)); // per unit (see constr_PF)
+	      if (Q < Qmax) {
+		fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
+		all_fixed = FALSE;
+		if (HEUR_PVPQ_DEBUG)
+		  printf("HEUR PVPQ: free gen %d from Qmax (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
+	      }
+	    }	    
+	  }	    
+	  
+	  // Q is free: Qmax violation
+	  else if (Q >= Qmax) {
 
-	  // Update vector of var values
-	  while (gen) {
-	    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
-	      VEC_set(var_values,GEN_get_index_Q(gen,t),GEN_get_Q_max(gen));
-	    gen = GEN_get_reg_next(gen);
+	    // Switch to Q fixed
+	    GEN_set_Q(gen,Qmax,t);
+	    fix_flag[GEN_get_index_Q(gen,t)] = TRUE;
+	    if (HEUR_PVPQ_DEBUG)
+	      printf("HEUR PVPQ: fix gen %d at Qmax (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
 	  }
+
+	  // Q is free: Qmin violation
+	  else if (Q <= Qmin) {
+	    
+	    // Switch to Q fixed
+	    GEN_set_Q(gen,Qmin,t);
+	    fix_flag[GEN_get_index_Q(gen,t)] = TRUE;
+	    if (HEUR_PVPQ_DEBUG)
+	      printf("HEUR PVPQ: fix gen %d at Qmin (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
+	  }
+
+	  // Q is free: no violation
+	  else
+	    all_fixed = FALSE;
 	}
-	else if (Q < Qmin) {
+	
+	// All gens fixed
+	if (all_fixed) {
 
-	  // Set data
-	  j_old = BUS_get_index_v_mag(bus[k],t);
-	  j_new = GEN_get_index_Q(gen,t);
-	  b_new = Qmin;
-	  switch_flag = TRUE;
-	  reg_flag[bus_index_t[k]] = FALSE;
-
-	  // Update vector of var values
-	  while (gen) {
-	    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
-	      VEC_set(var_values,GEN_get_index_Q(gen,t),GEN_get_Q_min(gen));
-	    gen = GEN_get_reg_next(gen);
-	  }
+	  // Switch to v free
+	  fix_flag[BUS_get_index_v_mag(bus[k],t)] = FALSE;
+	  if (HEUR_PVPQ_DEBUG)
+	      printf("HEUR PVPQ: free reg bus %d\n", BUS_get_number(bus[k]));
 	}
       }
 
-      // Previously regulated
+      // CASE: v free
       else {
 
-	// Q at Qmin and v < v_set
-	if (fabs(Q-Qmin) < fabs(Q-Qmax) && v < v_set) {
+	all_fixed = TRUE;
 
-	  Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen))+t*2*num_buses); // per unit (see constr_PF)
+	// Generators
+	for (gen = BUS_get_reg_gen(bus[k]); gen != NULL; gen = GEN_get_reg_next(gen)) {
+	  
+	  // Q not variable
+	  if (!GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) // reg gen Q is not variable
+	    continue;
 
-	  if (Q >= Qmax) {
+	  // Q is free (should never happen here)
+	  if (!fix_flag[GEN_get_index_Q(gen,t)]) {
+	    fprintf(stderr, "WARNING: PVPQ switching has both v and Q free\n");
+	    all_fixed = FALSE;
+	    continue;
+	  }
 
-	    // Set data
-	    j_old = GEN_get_index_Q(gen,t);
-	    j_new = GEN_get_index_Q(gen,t);
-	    b_new = Qmax;
-	    switch_flag = TRUE;
+	  // Reg gen data
+	  Q = VEC_get(var_values,GEN_get_index_Q(gen,t)); // per unit
+	  Qmax = GEN_get_Q_max(gen);                      // per unit
+	  Qmin = GEN_get_Q_min(gen);                      // per unit
 
-	    // Update vector of var values
-	    while (gen) {
-	      if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
-		VEC_set(var_values,GEN_get_index_Q(gen,t),GEN_get_Q_max(gen));
-	      gen = GEN_get_reg_next(gen);
+	  // Q at Qmin and v < v_set - check if free Q might help
+	  if (fabs(Q-Qmin) < fabs(Q-Qmax) && v < v_set) {
+	    Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen),t)); // per unit (see constr_PF)
+	    if (Qmin < Q) {
+	      fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
+	      all_fixed = FALSE;
+	      if (HEUR_PVPQ_DEBUG)
+		  printf("HEUR PVPQ: free gen %d from Qmin (reg bus %d free)\n", GEN_get_index(gen), BUS_get_number(bus[k]));		
 	    }
 	  }
-	  else if (Qmin < Q && Q < Qmax) {
 
-	    // Set data
-	    j_old = GEN_get_index_Q(gen,t);
-	    j_new = BUS_get_index_v_mag(bus[k],t);
-	    b_new = v_set;
-	    switch_flag = TRUE;
-	    reg_flag[bus_index_t[k]] = TRUE;
-
-	    // Udpate vector of var values
-	    VEC_set(var_values,j_new,b_new);
+	  // Q at Qmax and v > v_set - check if free Q might help
+	  else if (fabs(Q-Qmax) < fabs(Q-Qmin) && v > v_set) { 
+	    Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen),t)); // per unit (see constr_PF)
+	    if (Q < Qmax) {
+	      fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
+	      all_fixed = FALSE;
+	      if (HEUR_PVPQ_DEBUG)
+		  printf("HEUR PVPQ: free gen %d from Qmax (reg bus %d free)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
+	    }
 	  }
 	}
 
-	// Q at Qmax and v > v_set
-	else if (fabs(Q-Qmax) < fabs(Q-Qmin) && v > v_set) {
+	// Not all gens are fixed
+	if (!all_fixed) {
 
-	  Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen))+t*2*num_buses); // per unit (see constr_PF)
-
-	  if (Q <= Qmin) {
-
-	    // Set data
-	    j_old = GEN_get_index_Q(gen,t);
-	    j_new = GEN_get_index_Q(gen,t);
-	    b_new = Qmin;
-	    switch_flag = TRUE;
-
-	    // Update vector of var values
-	    while (gen) {
-	      if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
-		VEC_set(var_values,GEN_get_index_Q(gen,t),GEN_get_Q_min(gen));
-	      gen = GEN_get_reg_next(gen);
-	    }
-	  }
-	  else if (Qmin < Q && Q < Qmax) {
-
-	    // Set data
-	    j_old = GEN_get_index_Q(gen,t);
-	    j_new = BUS_get_index_v_mag(bus[k],t);
-	    b_new = v_set;
-	    switch_flag = TRUE;
-	    reg_flag[bus_index_t[k]] = TRUE;
-
-	    // Udpate vector of var values
-	    VEC_set(var_values,j_new,b_new);
-	  }
-	}
-      }
-
-      // Update fix constraints
-      if (switch_flag) {
-	for (i = 0; i < MAT_get_nnz(A); i++) {
-	  if (MAT_get_j(A,i) == j_old)
-	    MAT_set_d(A,i,0.);
-	  if (MAT_get_j(A,i) == j_new) {
-	    MAT_set_d(A,i,1.);
-	    VEC_set(b,MAT_get_i(A,i),b_new);
-	  }
+	  // Switch to v fixed
+	  fix_flag[BUS_get_index_v_mag(bus[k],t)] = TRUE;
+	  if (HEUR_PVPQ_DEBUG)
+	      printf("HEUR PVPQ: fix reg bus %d\n", BUS_get_number(bus[k]));
 	}
       }
     }
@@ -276,22 +245,12 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
     // Update counted flag
     bus_counted[bus_index_t[k]] = TRUE;
   }
+
+  // Update
+  if (BRANCH_get_index(br) == NET_get_num_branches(net)-1 && t == NET_get_num_periods(net)-1)
+    CONSTR_analyze(pvpq);
 }
 
 void HEUR_PVPQ_free(Heur* h) {
-
-  // Local variables
-  Heur_PVPQ_Data* data;
-
-  // Get data
-  data = (Heur_PVPQ_Data*)HEUR_get_data(h);
-
-  // Free
-  if (data) {
-    free(data->reg_flag);
-  }
-  free(data);
-
-  // Set data
-  HEUR_set_data(h,NULL);
+  // Nothing
 }

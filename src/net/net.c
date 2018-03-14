@@ -81,12 +81,27 @@ struct Net {
   int* num_actions;   /**< @brief Number of control actions. */
 
   // Spatial correlation
-  REAL vargen_corr_radius; /**< @brief Correlation radius for variable generators. **/
-  REAL vargen_corr_value;  /**< @brief Correlation value for variable generators. **/
+  REAL vargen_corr_radius; /**< @brief Correlation radius for variable generators. */
+  REAL vargen_corr_value;  /**< @brief Correlation value for variable generators. */
+
+  // State tag
+  unsigned long int state_tag; /**< @brief State tag. */
 
   // Utils
   char* bus_counted;  /**< @brief Flags for processing buses */
 };
+
+void NET_inc_state_tag(Net* net) {
+  if (net)
+    net->state_tag++;
+}
+
+unsigned long int NET_get_state_tag(Net* net) {
+  if (net)
+    return net->state_tag;
+  else
+    return 0;
+}
 
 void NET_add_buses(Net* net, Bus** bus_ptr_array, int size) {
   /** Adds buses to the network. The entire bus array is
@@ -1531,84 +1546,6 @@ void NET_add_batteries_from_params(Net* net, Bus* bus_list, REAL power_capacity,
   }
 }
 
-void NET_adjust_generators(Net* net) {
-  /** This function adjusts the powers of slack or regulator generators
-   *  connected to the same bus or regulating the same bus voltage magnitude.
-   *  The adjustment is done to obtain specific participations without affecting
-   *  their total power. For active power, the participation is equal for every
-   *  generator. For reactive power, the participaion is proportional to the generator
-   *  reactive power resources.
-   */
-
-  // Local variables
-  Bus* bus;
-  Gen* gen;
-  REAL num;
-  REAL Ptot;
-  REAL Qtot;
-  REAL dQtot;
-  REAL Q;
-  REAL dQ;
-  REAL Qmintot;
-  REAL frac;
-  REAL SAFEGUARD_PARAM = 1e-4;
-  int i;
-  int t;
-
-  // No net
-  if (!net)
-    return;
-
-  for (i = 0; i < net->num_buses; i++) {
-
-    bus = NET_get_bus(net,i);
-
-    // Slack gens
-    if (BUS_is_slack(bus)) {
-      for (t = 0; t < net->num_periods; t++) {
-	num = 0;
-	Ptot = 0;
-	for(gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-	  Ptot += GEN_get_P(gen,t);
-	  num += 1;
-	}
-	for(gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen))
-	  GEN_set_P(gen,Ptot/num,t);
-      }
-    }
-
-    // Regulating gens
-    if (BUS_is_regulated_by_gen(bus)) {
-      for (t = 0; t < net->num_periods; t++) {
-	Qtot = 0;
-	dQtot = 0;
-	Qmintot = 0;
-	for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen)) {
-	  Qtot += GEN_get_Q(gen,t);
-	  dQ = GEN_get_Q_max(gen)-GEN_get_Q_min(gen);
-	  if (dQ < SAFEGUARD_PARAM)
-	    dQ = SAFEGUARD_PARAM;
-	  dQtot += dQ;
-	  Qmintot += GEN_get_Q_min(gen);
-	}
-	gen = BUS_get_reg_gen(bus);
-	dQ = GEN_get_Q_max(gen)-GEN_get_Q_min(gen);
-	if (dQ < SAFEGUARD_PARAM)
-	  dQ = SAFEGUARD_PARAM;
-	Q = GEN_get_Q_min(gen)+dQ*(Qtot-Qmintot)/dQtot;
-	frac = (Q-GEN_get_Q_min(gen))/dQ;
-	GEN_set_Q(gen,Q,t);
-	for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen)) {
-	  dQ = GEN_get_Q_max(gen)-GEN_get_Q_min(gen);
-	  if (dQ < SAFEGUARD_PARAM)
-	    dQ = SAFEGUARD_PARAM;
-	  GEN_set_Q(gen,GEN_get_Q_min(gen)+frac*dQ,t);
-	}
-      }
-    }
-  }
-}
-
 void NET_bus_hash_number_add(Net* net, Bus* bus) {
   if (net)
     net->bus_hash_number = BUS_hash_number_add(net->bus_hash_number,bus);
@@ -2647,6 +2584,9 @@ void NET_init(Net* net, int num_periods) {
 
   ARRAY_zalloc(net->num_actions,int,T);
 
+  // State tag
+  net->state_tag = 0;
+
   // Utils
   net->bus_counted = NULL;
 }
@@ -2855,6 +2795,18 @@ int NET_get_num_slack_buses(Net* net) {
   return n;
 }
 
+int NET_get_num_star_buses(Net* net) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  for (i = 0; i < net->num_buses; i++) {
+    if (BUS_is_star(BUS_array_get(net->bus,i)))
+      n++;
+  }
+  return n;
+}
+
 int NET_get_num_buses_reg_by_gen(Net* net) {
   int i;
   int n = 0;
@@ -2926,6 +2878,13 @@ int NET_get_num_buses_reg_by_shunt_only(Net* net) {
 int NET_get_num_branches(Net* net) {
   if (net)
     return net->num_branches;
+  else
+    return 0;
+}
+
+int NET_get_num_branches_on_outage(Net* net) {
+  if (net)
+    return net->num_branches-NET_get_num_branches_not_on_outage(net);
   else
     return 0;
 }
@@ -3017,6 +2976,13 @@ int NET_get_num_tap_changers_Q(Net* net) {
 int NET_get_num_gens(Net* net) {
   if (net)
     return net->num_gens;
+  else
+    return 0;
+}
+
+int NET_get_num_gens_on_outage(Net* net) {
+  if (net)
+    return net->num_gens-NET_get_num_gens_not_on_outage(net);
   else
     return 0;
 }
@@ -3697,9 +3663,16 @@ void NET_set_base_power(Net* net, REAL base_power) {
 }
 
 void NET_set_branch_array(Net* net, Branch* branch, int num) {
+  int i;
   if (net) {
+
+    // Pointers
     net->branch = branch;
     net->num_branches = num;
+
+    // Network
+    for (i = 0; i < net->num_branches; i++)
+      BRANCH_set_network(BRANCH_array_get(net->branch,i), net);
   }
 }
 
@@ -3718,18 +3691,34 @@ void NET_set_shunt_array(Net* net, Shunt* shunt, int num) {
 }
 
 void NET_set_bus_array(Net* net, Bus* bus, int num) {
+  int i;
   if (net) {
+
+    // Pointers
     net->bus = bus;
     net->num_buses = num;
+
+    // Utils
     free(net->bus_counted);
     ARRAY_zalloc(net->bus_counted,char,net->num_buses*net->num_periods);
+
+    // Network
+    for (i = 0; i < net->num_buses; i++)
+      BUS_set_network(BUS_array_get(net->bus,i), net);
   }
 }
 
 void NET_set_gen_array(Net* net, Gen* gen, int num) {
+  int i;
   if (net) {
+
+    // Pointers
     net->gen = gen;
     net->num_gens = num;
+
+    // Network
+    for (i = 0; i < net->num_gens; i++)
+      GEN_set_network(GEN_array_get(net->gen,i), net);
   }
 }
 
@@ -4221,10 +4210,6 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
   if (!net || !br)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -4252,7 +4237,7 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
     phi = BRANCH_get_phase(br,t);
 
   // Tap ratios
-  if (BRANCH_is_tap_changer(br)) {
+  if (BRANCH_is_tap_changer(br) && !BRANCH_is_on_outage(br)) {
 
     // Tap ratio limit violations
     //***************************
@@ -4274,7 +4259,7 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
   }
 
   // Phase shifts
-  if (BRANCH_is_phase_shifter(br)) {
+  if (BRANCH_is_phase_shifter(br) && !BRANCH_is_on_outage(br)) {
 
     // Phase shift limit violations
     //*****************************
@@ -4300,6 +4285,10 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
 
     bus = buses[k];
 
+    // Skip if branch on outage
+    if (BRANCH_is_on_outage(br))
+      break;
+
     // Update injected P,Q at buses k and m
     if (k == 0) {
       BUS_inject_P(bus,-BRANCH_get_P_km(br,var_values,t),t);
@@ -4311,7 +4300,7 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
     }
   }
 
-  // Other flows
+  // Other flows and things
   for (k = 0; k < 2; k++) {
 
     bus = buses[k];
@@ -4336,7 +4325,7 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
     }
 
     // Normal voltage magnitude limit violations
-    //************************************
+    //******************************************
     dv = 0;
     if (v[k] > BUS_get_v_max_norm(bus))
       dv = v[k]-BUS_get_v_max_norm(bus);
@@ -4352,7 +4341,7 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
       dv = v[k]-BUS_get_v_max_reg(bus);
     if (v[k] < BUS_get_v_min_reg(bus))
       dv = BUS_get_v_min_reg(bus)-v[k];
-    if (BUS_is_regulated_by_tran(bus)) {
+    if (BUS_is_regulated_by_tran(bus)) { // false if all reg trans are on outage
       if (dv > net->tran_v_vio[t])
 	net->tran_v_vio[t] = dv;
     }
@@ -4362,7 +4351,7 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
     }
 
     // Bus regulated by gen
-    if (BUS_is_regulated_by_gen(bus)) {
+    if (BUS_is_regulated_by_gen(bus)) { // false if all reg gens are on outage
 
       // Voltage set point deviation
       //****************************
@@ -4381,6 +4370,11 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
     // Generators
     for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
 
+      // Skip if gen on outage
+      if (GEN_is_on_outage(gen))
+	continue;
+      
+      // P Q
       if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) && var_values)
 	P = VEC_get(var_values,GEN_get_index_P(gen,t));
       else
@@ -4398,8 +4392,8 @@ void NET_update_properties_step(Net* net, Branch* br, int t, Vec* var_values) {
       //*****************************
       net->gen_P_cost[t] += GEN_get_P_cost_for(gen,P);
 
-      // Reacive power
-      if (GEN_is_regulator(gen)) { // Should this be done for all generators?
+      // Reacive power of regulator
+      if (GEN_is_regulator(gen) && !GEN_is_slack(gen)) {
 
 	// Reactive power limit violations
 	//********************************

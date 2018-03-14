@@ -38,7 +38,10 @@
 typedef struct Net Net;
 
 // Prototypes
-/** @brief Adjust generator powers to obtain correct participations without affecting total injections. */
+void NET_inc_state_tag(Net* net);
+unsigned long int NET_get_state_tag(Net* net);
+
+/** @brief Adjusts regulating and slack generators to balance bus power mismatches. */
 void NET_adjust_generators(Net* net);
 
 void NET_add_buses(Net* net, Bus** bus_ptr_array, int size);
@@ -108,6 +111,7 @@ Bat* NET_get_bat_from_name_and_bus_number(Net* net, char* name, int number);
 int NET_get_num_periods(Net* net);
 int NET_get_num_buses(Net* net);
 int NET_get_num_slack_buses(Net* net);
+int NET_get_num_star_buses(Net* net);
 int NET_get_num_buses_reg_by_gen(Net* net);
 int NET_get_num_buses_reg_by_tran(Net* net);
 int NET_get_num_buses_reg_by_tran_only(Net* net);
@@ -115,6 +119,7 @@ int NET_get_num_buses_reg_by_shunt(Net* net);
 int NET_get_num_buses_reg_by_shunt_only(Net* net);
 int NET_get_num_branches(Net* net);
 int NET_get_num_branches_not_on_outage(Net* net);
+int NET_get_num_branches_on_outage(Net* net);
 int NET_get_num_fixed_trans(Net* net);
 int NET_get_num_lines(Net* net);
 int NET_get_num_phase_shifters(Net* net);
@@ -123,6 +128,7 @@ int NET_get_num_tap_changers_v(Net* net);
 int NET_get_num_tap_changers_Q(Net* net);
 int NET_get_num_gens(Net* net);
 int NET_get_num_gens_not_on_outage(Net* net);
+int NET_get_num_gens_on_outage(Net* net);
 int NET_get_num_reg_gens(Net* net);
 int NET_get_num_slack_gens(Net* net);
 int NET_get_num_P_adjust_gens(Net* net);

@@ -77,6 +77,8 @@ typedef struct Bus Bus;
 typedef struct Vec Vec;
 
 // Prototypes
+void BRANCH_set_network(Branch* br, void* net);
+
 void BRANCH_array_del(Branch* br_array, int size);
 void* BRANCH_array_get(void* br, int index);
 Branch* BRANCH_array_new(int size, int num_periods);
@@ -174,6 +176,7 @@ BOOL BRANCH_is_phase_shifter(Branch* br);
 BOOL BRANCH_is_tap_changer(Branch* br);
 BOOL BRANCH_is_tap_changer_v(Branch* br);
 BOOL BRANCH_is_tap_changer_Q(Branch* br);
+BOOL BRANCH_is_part_of_3_winding_transformer(Branch* br);
 Branch* BRANCH_list_reg_add(Branch* reg_br_list, Branch* br);
 Branch* BRANCH_list_reg_del(Branch* reg_br_list, Branch* br);
 int BRANCH_list_reg_len(Branch* reg_br_list);

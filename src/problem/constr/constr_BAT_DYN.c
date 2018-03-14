@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -64,11 +64,7 @@ void CONSTR_BAT_DYN_count_step(Constr* c, Branch* br, int t) {
   // Check pointer
   if (!A_nnz || !A_row || !bus_counted)
     return;
-
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
+  
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -163,10 +159,6 @@ void CONSTR_BAT_DYN_analyze_step(Constr* c, Branch* br, int t) {
 
   // Check pointers
   if (!A_nnz || !A_row || !bus_counted)
-    return;
-
-  // Check outage
-  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data

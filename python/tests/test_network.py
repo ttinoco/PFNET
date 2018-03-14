@@ -503,6 +503,14 @@ class TestNetwork(unittest.TestCase):
                         self.assertEqual(gen.bus.number,bus.number)
                         self.assertTrue(gen.is_regulator())
 
+                # Star
+                bus.set_star_flag(False)
+                self.assertFalse(bus.is_star())
+                num = net.get_num_star_buses()
+                bus.set_star_flag(True)
+                self.assertTrue(bus.is_star())
+                self.assertEqual(net.get_num_star_buses(), num+1)
+
                 # Regulated by tran
                 if bus.is_regulated_by_tran():
                     self.assertGreater(len(bus.reg_trans),0)
@@ -641,6 +649,31 @@ class TestNetwork(unittest.TestCase):
                 self.assertTrue(np.all(bus.index_v_ang == range(index,index+self.T)))
                 index += self.T
 
+    def test_buses_helper_indices(self):
+
+        for case in test_cases.CASES:
+
+            T = 10
+            
+            # Multi period
+            net = pf.Parser(case).parse(case,T)
+            self.assertEqual(net.num_periods,T)
+
+            for t in range(T):
+                for bus in net.buses:
+                    self.assertEqual(bus.index_t[t], bus.index+t*net.num_buses)
+                    self.assertEqual(bus.index_P[t], bus.index+t*net.num_buses)
+                    self.assertEqual(bus.index_Q[t], bus.index+t*net.num_buses+T*net.num_buses)
+
+            # Single period
+            net = pf.Parser(case).parse(case)
+            self.assertEqual(net.num_periods,1)
+
+            for bus in net.buses:
+                self.assertEqual(bus.index_t, bus.index)
+                self.assertEqual(bus.index_P, bus.index)
+                self.assertEqual(bus.index_Q, bus.index+net.num_buses)
+                
     def test_generators(self):
 
         # Single period
@@ -854,6 +887,18 @@ class TestNetwork(unittest.TestCase):
                 self.assertTrue(branch.bus_k)
                 self.assertTrue(branch.bus_m)
                 self.assertGreater(branch.ratio,0)
+
+                # 3-winding
+                if branch.bus_k.is_star() or branch.bus_m.is_star():
+                    self.assertTrue(branch.is_part_of_3_winding_transformer())
+                else:
+                    self.assertFalse(branch.is_part_of_3_winding_transformer())
+                    branch.bus_k.set_star_flag(True)
+                    self.assertTrue(branch.is_part_of_3_winding_transformer())
+                    branch.bus_k.set_star_flag(False)
+                    self.assertFalse(branch.is_part_of_3_winding_transformer())
+                    branch.bus_m.set_star_flag(True)
+                    self.assertTrue(branch.is_part_of_3_winding_transformer())
 
                 # Rating getters
                 self.assertEqual(branch.ratingA, branch.get_rating('A'))
@@ -1522,26 +1567,21 @@ class TestNetwork(unittest.TestCase):
             corr_radius = 5
             corr_value = 0.05
             self.assertRaises(pf.NetworkError,net.add_var_generators_from_parameters,gen_buses,-80.,50.,50.,5,0.05)
-            self.assertTrue(net.has_error())
-            net.clear_error()
+            self.assertFalse(net.has_error())
             self.assertRaises(pf.NetworkError,net.add_var_generators_from_parameters,gen_buses,80.,120.,50.,5,0.05)
-            self.assertTrue(net.has_error())
-            net.clear_error()
+            self.assertFalse(net.has_error())
             self.assertRaises(pf.NetworkError,net.add_var_generators_from_parameters,gen_buses,80.,-10,50.,5,0.05)
-            self.assertTrue(net.has_error())
-            net.clear_error()
             self.assertFalse(net.has_error())
             self.assertRaises(pf.NetworkError,net.add_var_generators_from_parameters,gen_buses,80.,50,-10.,5,0.05)
-            net.clear_error()
+            self.assertFalse(net.has_error())
             self.assertRaises(pf.NetworkError,net.add_var_generators_from_parameters,gen_buses,80.,50,50.,-1,0.05)
-            net.clear_error()
+            self.assertFalse(net.has_error())
             self.assertRaises(pf.NetworkError,net.add_var_generators_from_parameters,gen_buses,80.,50,50.,5,1.05)
-            net.clear_error()
+            self.assertFalse(net.has_error())
             self.assertRaises(pf.NetworkError,net.add_var_generators_from_parameters,gen_buses,80.,50,50.,5,-1.05)
-            net.clear_error()
+            self.assertFalse(net.has_error())
             self.assertRaises(pf.NetworkError,net.add_var_generators_from_parameters,gen_buses,80.,-10,50.,5,0.05)
-            self.assertTrue(net.has_error())
-            net.clear_error()
+            self.assertFalse(net.has_error())
             net.add_var_generators_from_parameters(gen_buses,80.,50,50.,5,0.05)
             self.assertFalse(net.has_error())
             self.assertEqual(net.num_var_generators,len(gen_buses))
@@ -2137,7 +2177,7 @@ class TestNetwork(unittest.TestCase):
                 dP = np.max([gen.P-gen.P_max,gen.P_min-gen.P,0.])
                 if dP > Pvio:
                     Pvio = dP
-                if gen.is_regulator():
+                if gen.is_regulator() and not gen.is_slack():
                     dQ = np.max([gen.Q-gen.Q_max,gen.Q_min-gen.Q,0.])
                     if dQ > Qvio:
                         Qvio = dQ
@@ -2211,17 +2251,14 @@ class TestNetwork(unittest.TestCase):
             constrMP.analyze()
             constrMP.eval(x0MP)
             fMP = constrMP.f
-            offset = 0
             self.assertEqual(fMP.shape[0],2*netMP.num_buses*netMP.num_periods)
             for t in range(self.T):
                 dP_list = []
                 dQ_list = []
-                ft = fMP[offset:offset+2*netMP.num_buses]
-                offset += 2*netMP.num_buses
                 for i in range(netMP.num_buses):
                     bus = netMP.get_bus(i)
-                    dP = ft[bus.index_P]
-                    dQ = ft[bus.index_Q]
+                    dP = fMP[bus.index_P[t]]
+                    dQ = fMP[bus.index_Q[t]]
                     dP_list.append(dP)
                     dQ_list.append(dQ)
                     self.assertLess(np.abs(dP-bus.P_mismatch[t]),1e-10)
@@ -2274,13 +2311,13 @@ class TestNetwork(unittest.TestCase):
             n = netMP.num_buses
             for vargen in netMP.var_generators:
                 for t in range(self.T):
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
-                                           f[vargen.bus.index_P+t*2*n]-1.),1e-10)
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_P[t]]-
+                                           f[vargen.bus.index_P[t]]-1.),1e-10)
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_P[t]]-
                                            vargen.bus.P_mismatch[t]-1.),1e-10)
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
-                                           f[vargen.bus.index_Q+t*2*n]-2.),1e-10)
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q[t]]-
+                                           f[vargen.bus.index_Q[t]]-2.),1e-10)
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q[t]]-
                                            vargen.bus.Q_mismatch[t]-2.),1e-10)
             for vargen in netMP.var_generators:
                 self.assertGreater(len(vargen.bus.loads),0)
@@ -2291,13 +2328,13 @@ class TestNetwork(unittest.TestCase):
             f = constrMP.f
             for vargen in netMP.var_generators:
                 for t in range(self.T):
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
-                                           f[vargen.bus.index_P+t*2*n]),1e-10)
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_P+t*2*n]-
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_P[t]]-
+                                           f[vargen.bus.index_P[t]]),1e-10)
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_P[t]]-
                                            vargen.bus.P_mismatch[t]),1e-10)
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
-                                           f[vargen.bus.index_Q+t*2*n]),1e-10)
-                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q+t*2*n]-
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q[t]]-
+                                           f[vargen.bus.index_Q[t]]),1e-10)
+                    self.assertLess(np.abs(fsaved[vargen.bus.index_Q[t]]-
                                            vargen.bus.Q_mismatch[t]),1e-10)
 
             net.clear_properties()
@@ -4011,6 +4048,13 @@ class TestNetwork(unittest.TestCase):
             self.assertGreater(net1.num_var_generators,0)
             self.assertGreater(net1.num_batteries,0)
 
+            # Some modifications
+            for gen in net1.generators:
+                gen.Q_par = np.random.rand()
+
+            # Star
+            net1.buses[0].set_star_flag(True)
+                
             # Sensitivities
             for bus in net1.buses:
                 bus.sens_P_balance = np.random.randn(bus.num_periods)
@@ -4348,34 +4392,7 @@ class TestNetwork(unittest.TestCase):
                 copy_bat.E_max = orig_bat.E_max
 
             # Compare
-            pf.tests.utils.compare_networks(self, orig_net, copy_net)            
-
-    def test_adjust_generators(self):
-        
-        for case in test_cases.CASES:
-
-            net = pf.Parser(case).parse(case, num_periods=2)
-
-            net.set_flags('generator',
-                          'variable',
-                          'regulator',
-                          'reactive power')
-
-            for gen in net.generators:
-                if gen.is_regulator():
-                    gen.Q_min = 0.
-                    gen.Q_max = 0.
-
-            net.adjust_generators()
-
-            x = net.get_var_values()
-            self.assertFalse(np.any(np.isnan(x)))
-            
-            constr = pf.Constraint('generator reactive power participation', net)
-            constr.analyze()
-            A = constr.A
-            b = constr.b
-            self.assertLess(np.linalg.norm(A*x-b),1e-12)
+            pf.tests.utils.compare_networks(self, orig_net, copy_net)                    
 
     def test_symmetric_connectors_removers(self):
 

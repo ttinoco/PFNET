@@ -15,8 +15,7 @@
 #include "net.h"
 #include "heur.h"
 
-// Data
-typedef struct Heur_PVPQ_Data Heur_PVPQ_Data;
+#define HEUR_PVPQ_DEBUG FALSE
 
 // Function prototypes
 void HEUR_PVPQ_init(Heur* h, Net* net);

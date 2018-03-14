@@ -330,6 +330,11 @@ cdef class Generator:
         def __get__(self): return cgen.GEN_get_Q_min(self._c_ptr)
         def __set__(self,Q): cgen.GEN_set_Q_min(self._c_ptr,Q)
 
+    property Q_par:
+        """ Generator reactive power participating factor (unitless) (float). """
+        def __get__(self): return cgen.GEN_get_Q_par(self._c_ptr)
+        def __set__(self,Q): cgen.GEN_set_Q_par(self._c_ptr,Q)
+
     property P_cost:
         """ Active power generation cost ($/hr) (float or |Array|). """
         def __get__(self):
@@ -357,6 +362,7 @@ cdef class Generator:
     property outage:
         """ Flag that indicates whehter generator is on outage (boolean). """
         def __get__(self): return cgen.GEN_is_on_outage(self._c_ptr)
+        def __set__(self, o): cgen.GEN_set_outage(self._c_ptr, o);
 
     property json_string:
         """ JSON string (string). """

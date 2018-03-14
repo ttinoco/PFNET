@@ -6,30 +6,24 @@
 Getting Started
 ***************
 
-This section describes how to get started with PFNET in Python. In particular, it covers dependencies, installation, and provides a simple example showing how to use this package.
+This section describes how to get started with PFNET in Python. In particular, it covers prerequisites and installation, and provides a simple example that shows how to use this package.
 
-.. _start_dependencies:
+.. _start_prerequisites:
 
-Dependencies
-============
+Prerequisites
+=============
 
-The PFNET Python module has the following dependencies:
+Before installing the PFNET Python module, the following tools are needed:
 
-* |Numpy| (>=1.11.2): the fundamental package for scientific computing in Python.
-* |Scipy| (>=0.18.1): a collection of mathematical algorithms and functions built on top of Numpy.
-* |Cython| (>=0.20.1): an optimizing static compiler for both Python and the extended Cython programming language.
+* Linux and macOS: a C compiler, |Make|, |Python| and |pip|.
+* Windows : |Anaconda| (for Python 2.7), |CMake|, |7-Zip|, and |MinGW|.
 
 .. _start_installation:
 
 Installation
 ============
 
-In order to install the PFNET Python module, the following tools are needed:
-
-* Linux and Mac OS X: a C compiler, |Make|, |Python| and |pip|.
-* Windows : |Anaconda|, |CMake|, |7-Zip|, and |MinGW|.
-
-After getting these tools, the PFNET Python module can be easily installed by executing the following commands on the terminal or Anaconda prompt::
+After the prerequisites for the appropriate operating system have been obtained, the PFNET Python module can be easily installed by executing the following commands on the terminal or Anaconda prompt::
 
   pip install numpy cython
   pip install pfnet
@@ -38,7 +32,7 @@ After installation, the availability of optional features and the version of PFN
 
   >>> import pfnet
   >>> pfnet.info
-  {'line_flow': True, 'raw_parser': True, 'graphviz': True, 'version': '1.3.2'}
+  {'raw_parser': True, 'graphviz': True, 'version': '1.3.3'}
 
 To install the module from source, the code can be obtained from `<https://github.com/ttinoco/PFNET>`_, and then the following commands can be executed on the terminal or Anaconda prompt from the ``python`` directory of the package::
 

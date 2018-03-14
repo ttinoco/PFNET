@@ -35,7 +35,7 @@ def NRsolve(net):
     p = pfnet.Problem(net)
     p.add_constraint(pfnet.Constraint('AC power balance',net))  
     p.add_constraint(pfnet.Constraint('generator active power participation',net))
-    p.add_constraint(pfnet.Constraint('generator reactive power participation',net))
+    p.add_constraint(pfnet.Constraint('PVPQ switching',net))
     p.analyze()
     
     x = p.get_init_point()

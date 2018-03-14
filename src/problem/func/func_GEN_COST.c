@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -69,10 +69,6 @@ void FUNC_GEN_COST_count_step(Func* f, Branch* br, int t) {
   if (!Hphi_nnz || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -86,7 +82,7 @@ void FUNC_GEN_COST_count_step(Func* f, Branch* br, int t) {
 
     if (!bus_counted[bus_index_t[k]]) {
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
+	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) && !GEN_is_on_outage(gen))
 	  (*Hphi_nnz)++;
       }
     }
@@ -139,10 +135,6 @@ void FUNC_GEN_COST_analyze_step(Func* f, Branch* br, int t) {
   if (!Hphi_nnz || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -156,7 +148,7 @@ void FUNC_GEN_COST_analyze_step(Func* f, Branch* br, int t) {
 
     if (!bus_counted[bus_index_t[k]]) {
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
+	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) && !GEN_is_on_outage(gen)) {
 	  MAT_set_i(H,*Hphi_nnz,GEN_get_index_P(gen,t));
 	  MAT_set_j(H,*Hphi_nnz,GEN_get_index_P(gen,t));
 	  MAT_set_d(H,*Hphi_nnz,2.*GEN_get_cost_coeff_Q2(gen));
@@ -200,10 +192,6 @@ void FUNC_GEN_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   if (!phi || !gphi || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -219,6 +207,11 @@ void FUNC_GEN_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
       for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
 
+	// Outage
+	if (GEN_is_on_outage(gen))
+	  continue;
+
+	// Cost coefficients
 	Q0 = GEN_get_cost_coeff_Q0(gen);
 	Q1 = GEN_get_cost_coeff_Q1(gen);
 	Q2 = GEN_get_cost_coeff_Q2(gen);

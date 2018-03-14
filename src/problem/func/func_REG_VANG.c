@@ -68,10 +68,6 @@ void FUNC_REG_VANG_count_step(Func* f, Branch* br, int t) {
   if (!Hphi_nnz || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -79,13 +75,13 @@ void FUNC_REG_VANG_count_step(Func* f, Branch* br, int t) {
     bus_index_t[k] = BUS_get_index(buses[k])*T+t;
 
   // Branch
-  if (BUS_has_flags(buses[0],FLAG_VARS,BUS_VAR_VANG)) { // wk var
+  if (BUS_has_flags(buses[0],FLAG_VARS,BUS_VAR_VANG) && !BRANCH_is_on_outage(br)) { // wk var
     (*Hphi_nnz)++; // wk and wk
 
-    if (BUS_has_flags(buses[1],FLAG_VARS,BUS_VAR_VANG))
+    if (BUS_has_flags(buses[1],FLAG_VARS,BUS_VAR_VANG) && !BRANCH_is_on_outage(br))
       (*Hphi_nnz)++; // wk and wm
   }
-  if (BUS_has_flags(buses[1],FLAG_VARS,BUS_VAR_VANG)) // wm var
+  if (BUS_has_flags(buses[1],FLAG_VARS,BUS_VAR_VANG) && !BRANCH_is_on_outage(br)) // wm var
     (*Hphi_nnz)++; // wm and wm
 
   // Buses
@@ -148,10 +144,6 @@ void FUNC_REG_VANG_analyze_step(Func* f, Branch* br, int t) {
   if (!Hphi_nnz || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -161,20 +153,20 @@ void FUNC_REG_VANG_analyze_step(Func* f, Branch* br, int t) {
   }
 
   // Branch
-  if (BUS_has_flags(buses[0],FLAG_VARS,BUS_VAR_VANG)) { // wk var
+  if (BUS_has_flags(buses[0],FLAG_VARS,BUS_VAR_VANG) && !BRANCH_is_on_outage(br)) { // wk var
     MAT_set_i(H,*Hphi_nnz,index_v_ang[0]);
     MAT_set_j(H,*Hphi_nnz,index_v_ang[0]);
     MAT_set_d(H,*Hphi_nnz,1./(dw*dw));
     (*Hphi_nnz)++; // wk and wk
 
-    if (BUS_has_flags(buses[1],FLAG_VARS,BUS_VAR_VANG)) {
+    if (BUS_has_flags(buses[1],FLAG_VARS,BUS_VAR_VANG) && !BRANCH_is_on_outage(br)) {
       MAT_set_i(H,*Hphi_nnz,index_v_ang[0]);
       MAT_set_j(H,*Hphi_nnz,index_v_ang[1]);
       MAT_set_d(H,*Hphi_nnz,-1./(dw*dw));
       (*Hphi_nnz)++; // wk and wm
     }
   }
-  if (BUS_has_flags(buses[1],FLAG_VARS,BUS_VAR_VANG)) { // wm var
+  if (BUS_has_flags(buses[1],FLAG_VARS,BUS_VAR_VANG) && !BRANCH_is_on_outage(br)) { // wm var
     MAT_set_i(H,*Hphi_nnz,index_v_ang[1]);
     MAT_set_j(H,*Hphi_nnz,index_v_ang[1]);
     MAT_set_d(H,*Hphi_nnz,1./(dw*dw));
@@ -231,10 +223,6 @@ void FUNC_REG_VANG_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   if (!phi || !gphi || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -248,20 +236,24 @@ void FUNC_REG_VANG_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
       w[k] = BUS_get_v_ang(buses[k],t);
   }
 
-  // Branch data
-  shift = BRANCH_get_phase(br,t); // radians
+  // No branch outage
+  if (!BRANCH_is_on_outage(br)) {
 
-  // Difference
-  wdiff = w[0]-w[1]-shift;
+    // Branch data
+    shift = BRANCH_get_phase(br,t); // radians
 
-  // phi
-  (*phi) += 0.5*pow(wdiff/dw,2.);
+    // Difference
+    wdiff = w[0]-w[1]-shift;
 
-  // gphi
-  if (var_w[0]) // wk var
-    gphi[index_v_ang[0]] += wdiff/(dw*dw);
-  if (var_w[1]) // wm var
-    gphi[index_v_ang[1]] -= wdiff/(dw*dw);
+    // phi
+    (*phi) += 0.5*pow(wdiff/dw,2.);
+
+    // gphi
+    if (var_w[0]) // wk var
+      gphi[index_v_ang[0]] += wdiff/(dw*dw);
+    if (var_w[1]) // wm var
+      gphi[index_v_ang[1]] -= wdiff/(dw*dw);
+  }
 
   // Buses
   for (k = 0; k < 2; k++) {

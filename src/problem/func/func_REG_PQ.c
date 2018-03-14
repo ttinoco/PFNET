@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -67,11 +67,7 @@ void FUNC_REG_PQ_count_step(Func* f, Branch* br, int t) {
   // Check pointers
   if (!Hphi_nnz || !bus_counted)
     return;
-
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
+  
   // Bus data
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
@@ -85,6 +81,10 @@ void FUNC_REG_PQ_count_step(Func* f, Branch* br, int t) {
 
       // Generators
       for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
+
+	// Outage
+	if (GEN_is_on_outage(gen))
+	  continue;
 
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) // Q var
 	  (*Hphi_nnz)++;
@@ -142,10 +142,6 @@ void FUNC_REG_PQ_analyze_step(Func* f, Branch* br, int t) {
   if (!Hphi_nnz || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
@@ -159,6 +155,10 @@ void FUNC_REG_PQ_analyze_step(Func* f, Branch* br, int t) {
 
       // Generators
       for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
+
+	// Outage
+	if (GEN_is_on_outage(gen))
+	  continue;
 
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) { // Q var
 
@@ -221,10 +221,6 @@ void FUNC_REG_PQ_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   if (!phi || !gphi || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
@@ -238,6 +234,10 @@ void FUNC_REG_PQ_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 
       // Generators
       for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
+
+	// Outage
+	if (GEN_is_on_outage(gen))
+	  continue;
 
 	// Mid value
 	Qmid = (GEN_get_Q_max(gen)+GEN_get_Q_min(gen))/2.; // p.u.

@@ -11,9 +11,8 @@ Dependencies
 
 The PFNET C library has the following *optional* dependencies:
 
-* `Graphviz`_ (>= 2.38): for creating layouts and visualizations.
-* Raw Parser (== 1.2.5): for parsing PSSE raw files.
-* Line Flow: for constructing linear conservative AC branch flow limits.
+* `graphviz`_ (>= 2.38): for creating layouts and visualizations.
+* raw parser (== 1.2.6): for parsing PSSE raw files.
 
 .. _start_download:
 
@@ -24,10 +23,10 @@ The latest version of PFNET can be obtained from `<https://github.com/ttinoco/PF
 
 .. _start_build:
 
-Build Instructions (Linux and Mac OS X)
-=======================================
+Installation (Linux and macOS)
+==============================
 
-Building PFNET on Linux or Mac OS X requires typing the following commands in the root directory of the library::
+Installing PFNET on Linux or macOS requires typing the following commands in the root directory of the library::
 
   ./autogen.sh
   ./configure --prefix=$PWD/build
@@ -37,14 +36,14 @@ Building PFNET on Linux or Mac OS X requires typing the following commands in th
 
 For executing the command ``./autogen.sh``, Autotools is needed (m4, automake, autoconf, autoconf-archive, etc). 
 
-If ``Raw Parser`` is available, the environment variable ``RAW_PARSER`` should point to the root of the source code. If ``Line Flow`` is available, the environment variable ``LINE_FLOW`` should be defined so that the library can be located in the directory ``$LINE_FLOW/lib``.
+If ``raw parser`` is available, the environment variable ``RAW_PARSER`` should point to the root of the source code.
 
 .. _start_build_win:
 
-Build Instructions (Windows)
-============================
+Installation (Windows)
+======================
 
-Building PFNET on Windows requires `Cmake`_ and `MinGW`_, and typing the following commands in the root directory of the library::
+Installation PFNET on Windows requires `Cmake`_ and `MinGW`_, and typing the following commands in the root directory of the library::
 
   cmake -DCMAKE_INSTALL_PREFIX=.\build -G"MinGW Makefiles" -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=TRUE .
   mingw32-make -j

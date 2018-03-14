@@ -96,7 +96,9 @@ cdef class ConstraintBase:
         cconstr.CONSTR_allocate(self._c_constr)
         cconstr.CONSTR_analyze(self._c_constr)
         if cconstr.CONSTR_has_error(self._c_constr):
-            raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
+            error_str = cconstr.CONSTR_get_error_string(self._c_constr).decode('UTF-8')
+            self.clear_error()
+            raise ConstraintError(error_str)
 
     def combine_H(self, coeff, ensure_psd=False):
         """
@@ -113,7 +115,9 @@ cdef class ConstraintBase:
         cconstr.CONSTR_combine_H(self._c_constr,v,ensure_psd)
         free(v)
         if cconstr.CONSTR_has_error(self._c_constr):
-            raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
+            error_str = cconstr.CONSTR_get_error_string(self._c_constr).decode('UTF-8')
+            self.clear_error()
+            raise ConstraintError(error_str)
 
     def get_var_projection(self):
         """
@@ -208,7 +212,9 @@ cdef class ConstraintBase:
         if ve != NULL:
             free(ve)
         if cconstr.CONSTR_has_error(self._c_constr):
-            raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
+            error_str = cconstr.CONSTR_get_error_string(self._c_constr).decode('UTF-8')
+            self.clear_error()
+            raise ConstraintError(error_str)
 
     def store_sensitivities(self, sA, sf, sGu, sGl):
         """
@@ -241,7 +247,9 @@ cdef class ConstraintBase:
         if vGl != NULL:
             free(vGl)
         if cconstr.CONSTR_has_error(self._c_constr):
-            raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
+            error_str = cconstr.CONSTR_get_error_string(self._c_constr).decode('UTF-8')
+            self.clear_error()
+            raise ConstraintError(error_str)
 
     def get_H_single(self, i):
         """
@@ -422,17 +430,23 @@ cdef class ConstraintBase:
         """
 
         cdef void* cvalue = NULL
-        cdef np.ndarray[double, mode='c'] a
+        cdef np.ndarray[double, mode='c'] value_array
+
+        cdef int value_int
+        
         key = key.encode('UTF-8')
 
         # int
+        if issubclass(type(value), int):
+            value_int = value
+            cvalue = <void*>&value_int
 
         # float
         
         # ndarray
         if issubclass(type(value), np.ndarray):
-            a = value
-            cvalue = <void*>a.data
+            value_array = value
+            cvalue = <void*>value_array.data
 
         # Unknown
         if cvalue == NULL:
@@ -443,7 +457,14 @@ cdef class ConstraintBase:
         
         # Error
         if cconstr.CONSTR_has_error(self._c_constr):
-            raise ConstraintError(cconstr.CONSTR_get_error_string(self._c_constr))
+            error_str = cconstr.CONSTR_get_error_string(self._c_constr).decode('UTF-8')
+            self.clear_error()
+            raise ConstraintError(error_str)
+
+    property state_tag:
+        """ Network state tag during constraint allocation. """
+        def __get__(self):
+            return cconstr.CONSTR_get_state_tag(self._c_constr)
         
     property name:
         """ Constraint name (string). """
@@ -586,8 +607,8 @@ cdef class Constraint(ConstraintBase):
             self._c_constr = cconstr.CONSTR_LBOUND_new(net._c_net)
         elif name == "generator active power participation":
             self._c_constr = cconstr.CONSTR_PAR_GEN_P_new(net._c_net)
-        elif name == "generator reactive power participation":
-            self._c_constr = cconstr.CONSTR_PAR_GEN_Q_new(net._c_net)
+        elif name == "PVPQ switching":
+            self._c_constr = cconstr.CONSTR_PVPQ_SWITCHING_new(net._c_net)
         elif name == "generator ramp limits":
             self._c_constr = cconstr.CONSTR_GEN_RAMP_new(net._c_net)
         elif name == "voltage regulation by generators":

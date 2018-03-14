@@ -21,7 +21,8 @@ struct Constr {
   char name[CONSTR_BUFFER_SIZE]; /**< @brief Name string */
   
   // Network
-  Net* net;    /**< @brief Power network */
+  Net* net;                    /**< @brief Power network */
+  unsigned long int state_tag; /**< @brief Power network state tag */
   
   // Nonlinear (f(x,y) = 0)
   Vec* f;           /**< @brief Vector of nonlinear constraint violations */
@@ -80,6 +81,13 @@ struct Constr {
   // List
   Constr* next; /**< @brief List of constraints */
 };
+
+unsigned long int CONSTR_get_state_tag(Constr* c) {
+  if (c)
+    return c->state_tag;
+  else
+    return 0;
+}
 
 void CONSTR_allocate_H_array(Constr* c, int size) {
   if (c) {
@@ -747,6 +755,7 @@ Constr* CONSTR_new(Net* net) {
 
   // Network
   c->net = net;
+  c->state_tag = NET_get_state_tag(net);
 
   // Vars
   c->num_extra_vars = 0;
@@ -1038,6 +1047,7 @@ void CONSTR_count_step(Constr* c, Branch* br, int t) {
 void CONSTR_allocate(Constr* c) {
   if (c && c->func_allocate && CONSTR_is_safe_to_count(c)) {
     CONSTR_del_matvec(c);
+    c->state_tag = NET_get_state_tag(c->net);
     (*(c->func_allocate))(c);
     CONSTR_allocate_H_combined(c);
     c->A_row_info = (char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->A));
@@ -1140,7 +1150,8 @@ BOOL CONSTR_is_safe_to_analyze(Constr* c) {
       MAT_get_size2(CONSTR_get_J(c)) == num_vars &&
       VEC_get_size(CONSTR_get_l_extra_vars(c)) == CONSTR_get_num_extra_vars(c) &&
       VEC_get_size(CONSTR_get_u_extra_vars(c)) == CONSTR_get_num_extra_vars(c) &&
-      VEC_get_size(CONSTR_get_init_extra_vars(c)) == CONSTR_get_num_extra_vars(c))
+      VEC_get_size(CONSTR_get_init_extra_vars(c)) == CONSTR_get_num_extra_vars(c) &&
+      CONSTR_get_state_tag(c) == NET_get_state_tag(net))
     return TRUE;
   else {
     sprintf(c->error_string,"constraint is not safe to analyze");
@@ -1157,8 +1168,8 @@ BOOL CONSTR_is_safe_to_eval(Constr* c, Vec* v, Vec* ve) {
       MAT_get_size2(CONSTR_get_G(c)) == num_vars &&
       MAT_get_size2(CONSTR_get_J(c)) == num_vars &&
       VEC_get_size(v) == NET_get_num_vars(net) &&
-      (VEC_get_size(ve) == CONSTR_get_num_extra_vars(c) || 
-       VEC_get_size(ve) == 0))
+      (VEC_get_size(ve) == CONSTR_get_num_extra_vars(c) || VEC_get_size(ve) == 0) &&
+      CONSTR_get_state_tag(c) == NET_get_state_tag(net))
     return TRUE;
   else {
     sprintf(c->error_string,"constraint is not safe to eval");

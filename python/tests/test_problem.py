@@ -71,10 +71,6 @@ class TestProblem(unittest.TestCase):
                              net.get_num_switched_shunts())
                              
             # Fixed
-            net.set_flags('bus',
-                          'fixed',
-                          'regulated by generator',
-                          'voltage magnitude')
             net.set_flags('branch',
                           'fixed',
                           'tap changer - v',
@@ -88,7 +84,6 @@ class TestProblem(unittest.TestCase):
                           'switching - v',
                           'susceptance')
             self.assertEqual(net.num_fixed,
-                             net.get_num_buses_reg_by_gen() +
                              net.get_num_tap_changers_v() +
                              net.get_num_phase_shifters() +
                              net.get_num_switched_shunts())
@@ -96,7 +91,7 @@ class TestProblem(unittest.TestCase):
             # Constraints
             p.add_constraint(pf.Constraint('AC power balance',net))
             p.add_constraint(pf.Constraint('generator active power participation',net))
-            p.add_constraint(pf.Constraint('generator reactive power participation',net))
+            p.add_constraint(pf.Constraint('PVPQ switching',net))
             p.add_constraint(pf.Constraint('variable fixing',net))
             self.assertEqual(len(p.constraints),4)
 
@@ -142,7 +137,7 @@ class TestProblem(unittest.TestCase):
             self.assertEqual(Hphi.nnz,0)
             self.assertTrue(np.all(Hphi.row >= Hphi.col))
             
-            p.analyze()
+            p.analyze()            
             p.eval(x0)
             
             # After
@@ -262,8 +257,8 @@ class TestProblem(unittest.TestCase):
             p.store_sensitivities(np.zeros(p.A.shape[0]),sens,None,None)
             for i in range(net.num_buses):
                 bus = net.get_bus(i)
-                self.assertEqual(bus.sens_P_balance,sens[2*bus.index+offset])
-                self.assertEqual(bus.sens_Q_balance,sens[2*bus.index+1+offset])
+                self.assertEqual(bus.sens_P_balance,sens[bus.index_P+offset])
+                self.assertEqual(bus.sens_Q_balance,sens[bus.index_Q+offset])
             self.assertRaises(pf.ProblemError,
                               p.store_sensitivities,
                               np.zeros(p.A.shape[0]),
@@ -320,16 +315,14 @@ class TestProblem(unittest.TestCase):
                              
             # Constraints
             p.add_constraint(pf.Constraint('AC power balance',net))
-            p.add_constraint(pf.Constraint('generator active power participation',net))
-            p.add_constraint(pf.Constraint('generator reactive power participation',net))
             p.add_constraint(pf.Constraint('voltage regulation by generators',net))
             p.add_constraint(pf.Constraint('voltage regulation by transformers',net))
             p.add_constraint(pf.Constraint('voltage regulation by shunts',net))
-            self.assertEqual(len(p.constraints),6)
+            self.assertEqual(len(p.constraints),4)
 
             # Check adding redundant constraints
             p.add_constraint(pf.Constraint('AC power balance',net))
-            self.assertEqual(len(p.constraints),6)
+            self.assertEqual(len(p.constraints),4)
             
             # Functions
             p.add_function(pf.Function('voltage magnitude regularization',1.,net))
@@ -533,8 +526,8 @@ class TestProblem(unittest.TestCase):
             p.store_sensitivities(np.zeros(p.A.shape[0]),sens,None,None)
             for i in range(net.num_buses):
                 bus = net.get_bus(i)
-                self.assertEqual(bus.sens_P_balance,sens[2*bus.index+offset])
-                self.assertEqual(bus.sens_Q_balance,sens[2*bus.index+1+offset])
+                self.assertEqual(bus.sens_P_balance,sens[bus.index_P+offset])
+                self.assertEqual(bus.sens_Q_balance,sens[bus.index_Q+offset])
             self.assertRaises(pf.ProblemError,
                               p.store_sensitivities,
                               np.zeros(p.A.shape[0]),
@@ -608,7 +601,7 @@ class TestProblem(unittest.TestCase):
             l = p.get_lower_limits()
             u = p.get_upper_limits()
             
-            num_constr = 2*len([b for b in net.buses if b.is_regulated_by_gen() and not b.is_slack()])
+            num_constr = 2*len([g for g in net.generators if g.is_regulator() and not g.is_slack()])
 
             self.assertEqual(p.num_extra_vars,num_constr)
             self.assertEqual(l.size,net.num_vars+p.num_extra_vars)
@@ -623,11 +616,12 @@ class TestProblem(unittest.TestCase):
                 for bus in [branch.bus_k,branch.bus_m]:
                     if not flags[bus.index]:
                         if bus.is_regulated_by_gen() and not bus.is_slack():
-                            self.assertEqual(l[net.num_vars+offset],-INF)
-                            self.assertEqual(l[net.num_vars+offset+1],-INF)
-                            self.assertEqual(u[net.num_vars+offset],INF)
-                            self.assertEqual(u[net.num_vars+offset+1],INF)
-                            offset += 2
+                            for gen in bus.reg_generators:
+                                self.assertEqual(l[net.num_vars+offset],-INF)
+                                self.assertEqual(l[net.num_vars+offset+1],-INF)
+                                self.assertEqual(u[net.num_vars+offset],INF)
+                                self.assertEqual(u[net.num_vars+offset+1],INF)
+                                offset += 2
                     flags[bus.index] = True
             self.assertEqual(offset,p.num_extra_vars)
 
@@ -1056,7 +1050,7 @@ class TestProblem(unittest.TestCase):
             HessF0 = problem.H_combined.copy()
             HessF0 = (HessF0 + HessF0.T - triu(HessF0))
             
-            h = 1e-10
+            h = 1e-11
             for i in range(10):
                 
                 d = np.random.randn(x0.size)

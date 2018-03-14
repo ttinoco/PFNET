@@ -91,6 +91,17 @@ cdef class Bus:
         """
 
         return cbus.BUS_is_slack(self._c_ptr)
+
+    def is_star(self):
+        """
+        Determines whether the bus is a star bus.
+
+        Returns
+        -------
+        flag : |TrueFalse|
+        """
+
+        return cbus.BUS_is_star(self._c_ptr)
         
     def set_slack_flag(self, flag):
         """
@@ -102,6 +113,17 @@ cdef class Bus:
         """
 
         cbus.BUS_set_slack_flag(self._c_ptr, flag)
+
+    def set_star_flag(self, flag):
+        """
+        Sets the star flag.
+        
+        Parameters
+        ----------
+        bool : |TrueFalse|
+        """
+
+        cbus.BUS_set_star_flag(self._c_ptr, flag)
 
     def is_regulated_by_gen(self):
         """
@@ -293,6 +315,46 @@ cdef class Bus:
         """
 
         return cbus.BUS_get_total_gen_Q_min(self._c_ptr)
+
+    def get_total_reg_gen_Q(self, t=0):
+        """
+        Gets the total reactive power injected by generators
+        regulating this bus.
+
+        Parameters
+        ----------
+        t : int (time period)
+
+        Returns
+        -------
+        Q : float
+        """
+
+        return cbus.BUS_get_total_reg_gen_Q(self._c_ptr,t)
+
+    def get_total_reg_gen_Q_max(self):
+        """
+        Gets the maximum total reactive power injected by generators
+        regulating this bus.
+
+        Returns
+        -------
+        Q_max : float
+        """
+
+        return cbus.BUS_get_total_reg_gen_Q_max(self._c_ptr)
+
+    def get_total_reg_gen_Q_min(self):
+        """
+        Gets the minimum total reactive power injected by generators
+        regulating this bus.
+
+        Returns
+        -------
+        Q_min : float
+        """
+
+        return cbus.BUS_get_total_reg_gen_Q_min(self._c_ptr)
 
     def get_total_load_P(self, t=0):
         """
@@ -765,6 +827,15 @@ cdef class Bus:
         """ Bus index (int). """
         def __get__(self): return cbus.BUS_get_index(self._c_ptr)
 
+    property index_t:
+        """ Unique indices for bus and time (int). """
+        def __get__(self):
+            r = [cbus.BUS_get_index_t(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
+            else:
+                return np.array(r)
+            
     property index_v_mag:
         """ Index of voltage magnitude variable (int or |Array|). """
         def __get__(self):
@@ -784,12 +855,22 @@ cdef class Bus:
                 return np.array(r)
 
     property index_P:
-        """ Index of bus active power mismatch (int). """
-        def __get__(self): return cbus.BUS_get_index_P(self._c_ptr)
+        """ Index of bus active power mismatch (int or |Array|). """
+        def __get__(self):
+            r = [cbus.BUS_get_index_P(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
+            else:
+                return np.array(r)
 
     property index_Q:
         """ Index for bus reactive power mismatch (int). """
-        def __get__(self): return cbus.BUS_get_index_Q(self._c_ptr)
+        def __get__(self):
+            r = [cbus.BUS_get_index_Q(self._c_ptr,t) for t in range(self.num_periods)]
+            if self.num_periods == 1:
+                return AttributeInt(r[0])
+            else:
+                return np.array(r)
 
     property price:
         """ Bus energy price (float or |Array|) ($ / (hr p.u.)). """

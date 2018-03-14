@@ -9,8 +9,193 @@
 import pfnet as pf
 import numpy as np
 from numpy.linalg import norm
+from scipy.sparse import coo_matrix, triu, tril, spdiags
 
 norminf = lambda x: norm(x,np.inf) if isinstance(x,np.ndarray) else np.abs(x)
+
+def check_constraint_combined_Hessian(test, constr, x0, y0, num, tol, eps, h):
+    """
+    Checks combined constraint Hessian by using finite differences.
+
+    Parameters
+    ----------
+    test: unittest.TestCase
+    func : |Constraint|
+    x0 : |Array|
+    num : integer
+    tol : float
+    eps : float (percentage)
+    """
+    
+    num_vars = x0.size+y0.size
+    coeff = np.random.randn(constr.f.shape[0])
+    constr.eval(x0, y0)
+    constr.combine_H(coeff, False)
+    J0 = constr.J
+    g0 = J0.T*coeff
+    H0 = constr.H_combined.copy()
+    test.assertTrue(type(H0) is coo_matrix)
+    test.assertTupleEqual(H0.shape, (num_vars, num_vars))
+    test.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
+    H0 = (H0 + H0.T) - triu(H0)
+    for i in range(num):
+
+        d = np.random.randn(x0.size+y0.size)
+        
+        x = x0 + h*d[:x0.size]
+        y = y0 + h*d[x0.size:]
+        
+        constr.eval(x, y)
+        
+        g1 = constr.J.T*coeff
+        
+        Hd_exact = H0*d
+        Hd_approx = (g1-g0)/h
+        error = 100.*norm(Hd_exact-Hd_approx)/(norm(Hd_exact)+tol)
+        test.assertLessEqual(error, eps)
+
+def check_constraint_single_Hessian(test, constr, x0, y0, num, tol, eps, h):
+    """
+    Checks single constraint Hessian by using finite differences.
+
+    Parameters
+    ----------
+    test: unittest.TestCase
+    func : |Constraint|
+    x0 : |Array|
+    num : integer
+    tol : float
+    eps : float (percentage)
+    """
+
+    for i in range(num):
+
+        try:
+            j = np.random.randint(0, constr.f.shape[0])
+        except ValueError:
+            break
+        
+        constr.eval(x0, y0)
+        
+        g0 = constr.J.tocsr()[j,:].toarray().flatten()
+        H0 = constr.get_H_single(j)
+        
+        test.assertTrue(np.all(H0.row >= H0.col)) # lower triangular
+        
+        H0 = (H0 + H0.T) - triu(H0)
+        
+        d = np.random.randn(x0.size+y0.size)
+        
+        x = x0 + h*d[:x0.size]
+        y = y0 + h*d[x0.size:]
+        
+        constr.eval(x, y)
+        
+        g1 = constr.J.tocsr()[j,:].toarray().flatten()
+        
+        Hd_exact = H0*d
+        Hd_approx = (g1-g0)/h
+        error = 100.*norm(Hd_exact-Hd_approx)/(norm(Hd_exact)+tol)
+        test.assertLessEqual(error, eps)
+
+def check_constraint_Jacobian(test, constr, x0, y0, num, tol, eps, h):
+    """
+    Checks constraint Jacobian by using finite differences.
+
+    Parameters
+    ----------
+    test: unittest.TestCase
+    func : |Constraint|
+    x0 : |Array|
+    num : integer
+    tol : float
+    eps : float (percentage)
+    """
+    
+    constr.eval(x0, y0)
+    
+    f0 = constr.f.copy()
+    J0 = constr.J.copy()
+    for i in range(num):
+
+        d = np.random.randn(x0.size+y0.size)
+        
+        x = x0 + h*d[:x0.size]
+        y = y0 + h*d[x0.size:]
+        
+        constr.eval(x, y)
+        f1 = constr.f
+        
+        Jd_exact = J0*d
+        Jd_approx = (f1-f0)/h
+        error = 100.*norm(Jd_exact-Jd_approx)/(norm(Jd_exact)+tol)
+        test.assertLessEqual(error, eps)
+
+def check_function_hessian(test, func, x0, num, tol, eps, h):
+    """
+    Checks function Hessian by using finite differences.
+
+    Parameters
+    ----------
+    test: unittest.TestCase
+    func : |Function|
+    x0 : |Array|
+    num : integer
+    tol : float
+    eps : float (percentage)
+    """
+
+    func.eval(x0)
+
+    g0 = func.gphi.copy()
+    H0 = func.Hphi.copy()
+    H0 = H0 + H0.T - triu(H0)
+    for i in range(num):
+
+        d = np.random.randn(x0.size)
+        
+        x = x0 + h*d
+        
+        func.eval(x)
+        
+        g1 = func.gphi.copy()
+        
+        Hd_exact = H0*d
+        Hd_approx = (g1-g0)/h
+        error = 100.*norm(Hd_exact-Hd_approx)/(norm(Hd_exact)+tol)
+        test.assertLessEqual(error, eps)
+
+def check_function_gradient(test, func, x0, num, tol, eps, h):
+    """
+    Checks function gradient by using finite differences.
+
+    Parameters
+    ----------
+    test: unittest.TestCase
+    func : |Function|
+    x0 : |Array|
+    num : integer
+    tol : float
+    eps : float (percentage)
+    """
+
+    func.eval(x0)
+    
+    f0 = func.phi
+    g0 = func.gphi.copy()
+    for i in range(num):
+
+        d = np.random.randn(x0.size)
+
+        x = x0 + h*d
+
+        func.eval(x)
+        f1 = func.phi
+        
+        gd_exact = np.dot(g0,d)
+        gd_approx = (f1-f0)/h
+        error = 100.*norm(gd_exact-gd_approx)/(norm(gd_exact)+tol)
+        test.assertLessEqual(error, eps)
 
 def compare_buses(test, bus1, bus2, check_internals=False, check_indices=True, eps=1e-10):
     """
@@ -41,6 +226,7 @@ def compare_buses(test, bus1, bus2, check_internals=False, check_indices=True, e
     test.assertLess(norminf(bus1.v_max_emer-bus2.v_max_emer), eps)
     test.assertLess(norminf(bus1.v_min_emer-bus2.v_min_emer), eps)
     test.assertEqual(bus1.is_slack(), bus2.is_slack())
+    test.assertEqual(bus1.is_star(), bus2.is_star())
     test.assertEqual(bus1.is_regulated_by_gen(),bus2.is_regulated_by_gen())
     test.assertEqual(bus1.is_regulated_by_tran(),bus2.is_regulated_by_tran())
     test.assertEqual(bus1.is_regulated_by_shunt(),bus2.is_regulated_by_shunt())
@@ -124,6 +310,7 @@ def compare_generators(test, gen1, gen2, check_internals=False, eps=1e-10):
     test.assertLess(norminf(gen1.Q-gen2.Q), eps)
     test.assertLess(norminf(gen1.Q_max-gen2.Q_max), eps)
     test.assertLess(norminf(gen1.Q_min-gen2.Q_min), eps)
+    test.assertLess(norminf(gen1.Q_par-gen2.Q_par), eps)
     test.assertLess(norminf(gen1.cost_coeff_Q0-gen2.cost_coeff_Q0), eps)
     test.assertLess(norminf(gen1.cost_coeff_Q1-gen2.cost_coeff_Q1), eps)
     test.assertLess(norminf(gen1.cost_coeff_Q2-gen2.cost_coeff_Q2), eps)
@@ -234,6 +421,8 @@ def compare_branches(test, branch1, branch2, check_internals=False, eps=1e-10):
     test.assertEqual(branch1.is_tap_changer(), branch2.is_tap_changer())
     test.assertEqual(branch1.is_tap_changer_v(), branch2.is_tap_changer_v())
     test.assertEqual(branch1.is_tap_changer_Q(), branch2.is_tap_changer_Q())
+    test.assertEqual(branch1.is_part_of_3_winding_transformer(),
+                     branch2.is_part_of_3_winding_transformer())
     if branch1.is_tap_changer_v():
         test.assertEqual(branch1.reg_bus.index, branch2.reg_bus.index)
     test.assertLess(norminf(branch1.g-branch2.g), eps*(1+norminf(branch1.g)))

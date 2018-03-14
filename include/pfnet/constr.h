@@ -33,6 +33,7 @@ void CONSTR_clear_bus_counted(Constr* c);
 void CONSTR_combine_H(Constr* c, Vec* coeff, BOOL ensure_psd);
 void CONSTR_del(Constr* constr);
 void CONSTR_del_matvec(Constr* constr);
+unsigned long int CONSTR_get_state_tag(Constr* c);
 char* CONSTR_get_name(Constr* c);
 Vec* CONSTR_get_b(Constr* c);
 Mat* CONSTR_get_A(Constr* c);

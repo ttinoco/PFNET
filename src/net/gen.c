@@ -10,6 +10,7 @@
 
 #include <pfnet/gen.h>
 #include <pfnet/bus.h>
+#include <pfnet/net.h>
 #include <pfnet/array.h>
 #include <pfnet/json_macros.h>
 
@@ -43,6 +44,7 @@ struct Gen {
   REAL* Q;             /**< @brief Generator reactive power production (p.u. system base power). */
   REAL Q_max;          /**< @brief Maximum generator reactive power production (p.u.). */
   REAL Q_min;          /**< @brief Minimum generator reactive power production (p.u.). */
+  REAL Q_par;          /**< @brief Generator reactive power participation factor (unitless). */
 
   // Cost
   REAL cost_coeff_Q0;  /**< @brief Generator cost coefficient (constant term, units of $/hr ). */
@@ -60,10 +62,18 @@ struct Gen {
   REAL* sens_Q_u_bound;  /**< @brief Sensitivity of reactive power upper bound. */
   REAL* sens_Q_l_bound;  /**< @brief Sensitivity of reactive power lower bound. */
 
+  // Network
+  Net* net; /**< @brief Network. */
+
   // List
   Gen* next;     /**< @brief List of generators connected to a bus. */
   Gen* reg_next; /**< @brief List of generators regulating a bus. */
 };
+
+void GEN_set_network(Gen* gen, void* net) {
+  if (gen)
+    gen->net = (Net*)net;
+}
 
 void* GEN_array_get(void* gen_array, int index) {
   if (gen_array)
@@ -183,6 +193,7 @@ void GEN_copy_from_gen(Gen* gen, Gen* other) {
   memcpy(gen->Q,other->Q,num_periods*sizeof(REAL));
   gen->Q_max = other->Q_max;
   gen->Q_min = other->Q_min;
+  gen->Q_par = other->Q_par;
 
   // Cost coefficients
   gen->cost_coeff_Q0 = other->cost_coeff_Q0;
@@ -451,6 +462,13 @@ REAL GEN_get_Q_min(Gen* gen) {
     return 0;
 }
 
+REAL GEN_get_Q_par(Gen* gen) {
+  if (gen)
+    return gen->Q_par;
+  else
+    return 0;
+}
+
 void GEN_get_var_values(Gen* gen, Vec* values, int code) {
 
   // Local vars
@@ -634,6 +652,7 @@ char* GEN_get_json_string(Gen* gen, char* output) {
   JSON_array_float(temp,output,"Q",gen->Q,gen->num_periods,FALSE);
   JSON_float(temp,output,"Q_max",gen->Q_max,FALSE);
   JSON_float(temp,output,"Q_min",gen->Q_min,FALSE);
+  JSON_float(temp,output,"Q_par",gen->Q_par,FALSE);
   JSON_float(temp,output,"cost_coeff_Q0",gen->cost_coeff_Q0,FALSE);
   JSON_float(temp,output,"cost_coeff_Q1",gen->cost_coeff_Q1,FALSE);
   JSON_float(temp,output,"cost_coeff_Q2",gen->cost_coeff_Q2,TRUE);
@@ -713,6 +732,7 @@ void GEN_init(Gen* gen, int num_periods) {
     
   gen->Q_max = 0;
   gen->Q_min = 0;
+  gen->Q_par = 1.;
   
   gen->cost_coeff_Q0 = 0;
   gen->cost_coeff_Q1 = 2000.;
@@ -728,6 +748,8 @@ void GEN_init(Gen* gen, int num_periods) {
   ARRAY_zalloc(gen->sens_P_l_bound,REAL,T);
   ARRAY_zalloc(gen->sens_Q_u_bound,REAL,T);
   ARRAY_zalloc(gen->sens_Q_l_bound,REAL,T);
+
+  gen->net = NULL;
   
   gen->next = NULL;
   gen->reg_next = NULL;
@@ -871,6 +893,8 @@ void GEN_set_reg_bus(Gen* gen, Bus* reg_bus) {
 
 void GEN_set_outage(Gen* gen, BOOL outage) {
   if (gen)
+    if (gen->outage != outage)
+      NET_inc_state_tag(gen->net);
     gen->outage = outage;
 }
 
@@ -917,6 +941,11 @@ void GEN_set_Q_max(Gen* gen, REAL Q_max) {
 void GEN_set_Q_min(Gen* gen, REAL Q_min) {
   if (gen)  
     gen->Q_min = Q_min;
+}
+
+void GEN_set_Q_par(Gen* gen, REAL Q_par) {
+  if (gen)  
+    gen->Q_par = Q_par;
 }
 
 int GEN_set_flags(void* vgen, char flag_type, unsigned char mask, int index) {

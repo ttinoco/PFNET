@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5.0)
 project(PFNET)
 enable_testing()
 
-set(PFNET_VERSION 1.3.2)
+set(PFNET_VERSION 1.3.3)
 set(PFNET_PACKAGE "pfnet")
 set(PFNET_NAME "PFNET")
 set(PFNET_STRING "${PFNET_NAME} ${PFNET_VERSION}")
@@ -14,7 +14,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)  # so that cmake builds with rpath alre
 set(CMAKE_INSTALL_RPATH "@loader_path")  # for relocatable libraries
 
 option(PFNET_DEBUG "set to ON to enable PFNET debug definition" OFF)
-option(PFNET_GRAPHVIZ "set to ON to enable graphviz addon" ON)
+option(PFNET_GRAPHVIZ "set to ON to enable graphviz addon" OFF)
 
 set(M_LIB,"")
 if (UNIX)

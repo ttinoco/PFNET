@@ -17,6 +17,7 @@ cdef extern from "pfnet/pfnet.h":
         
     void FUNC_del(Func* f)
     void FUNC_del_matvec(Func* f)
+    unsigned long int FUNC_get_state_tag(Func* f)
     REAL FUNC_get_weight(Func* f)
     REAL FUNC_get_phi(Func* f)
     Vec* FUNC_get_gphi(Func* f)

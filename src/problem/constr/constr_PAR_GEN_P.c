@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -66,10 +66,6 @@ void CONSTR_PAR_GEN_P_count_step(Constr* c, Branch* br, int t) {
   if (!A_nnz || !A_row || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -83,13 +79,18 @@ void CONSTR_PAR_GEN_P_count_step(Constr* c, Branch* br, int t) {
 
       // Active power of slack generators
       if (BUS_is_slack(bus)) {
-	gen1 = BUS_get_gen(bus);
+	for (gen1 = BUS_get_gen(bus); gen1 != NULL; gen1 = GEN_get_next(gen1)) {
+	  if (!GEN_is_on_outage(gen1) && GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_P))
+	    break;
+	}
 	for (gen2 = GEN_get_next(gen1); gen2 != NULL; gen2 = GEN_get_next(gen2)) {
-	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_P))
+	  if (GEN_is_on_outage(gen2))
+	    continue;
+	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_P)) {
 	    (*A_nnz)++;
-	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_P))
 	    (*A_nnz)++;
-	  (*A_row)++;
+	    (*A_row)++;
+	  }
 	}
       }
     }
@@ -157,10 +158,6 @@ void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t) {
   if (!A_nnz || !A_row || !bus_counted)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
@@ -174,26 +171,25 @@ void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t) {
 
       // Active power of slack generators
       if (BUS_is_slack(bus)) {
-	gen1 = BUS_get_gen(bus);
+	for (gen1 = BUS_get_gen(bus); gen1 != NULL; gen1 = GEN_get_next(gen1)) {
+	  if (!GEN_is_on_outage(gen1) && GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_P))
+	    break;
+	}
 	for (gen2 = GEN_get_next(gen1); gen2 != NULL; gen2 = GEN_get_next(gen2)) {
-	  VEC_set(b,*A_row,0.);
-	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_P)) {
+	  if (GEN_is_on_outage(gen2))
+	    continue;
+	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_P)) {
+	    VEC_set(b,*A_row,0.);
 	    MAT_set_i(A,*A_nnz,*A_row);
 	    MAT_set_j(A,*A_nnz,GEN_get_index_P(gen1,t));
 	    MAT_set_d(A,*A_nnz,1.);
 	    (*A_nnz)++;
-	  }
-	  else
-	    VEC_add_to_entry(b,*A_row,-GEN_get_P(gen1,t));
-	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_P)) {
 	    MAT_set_i(A,*A_nnz,*A_row);
 	    MAT_set_j(A,*A_nnz,GEN_get_index_P(gen2,t));
 	    MAT_set_d(A,*A_nnz,-1.);
 	    (*A_nnz)++;
+	    (*A_row)++;
 	  }
-	  else
-	    VEC_add_to_entry(b,*A_row,GEN_get_P(gen2,t));
-	  (*A_row)++;
 	}
       }
     }

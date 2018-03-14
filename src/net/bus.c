@@ -15,6 +15,7 @@
 #include <pfnet/shunt.h>
 #include <pfnet/vargen.h>
 #include <pfnet/bat.h>
+#include <pfnet/net.h>
 #include <pfnet/array.h>
 #include <pfnet/json_macros.h>
 
@@ -40,7 +41,8 @@ struct Bus {
   REAL v_min_emer;    /**< @brief Emergency minimum voltage magnitude (p.u.) */
 
   // Flags
-  BOOL slack;        /**< @brief Flag for indicating the the bus is a slack bus */
+  BOOL slack;        /**< @brief Flag for indicating that the bus is a slack bus */
+  BOOL star;         /**< @brief Flag for indicating that the bus is a star bus */
   char fixed;        /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;      /**< @brief Flags for indicating which quantities should be bounded */
   char sparse;       /**< @brief Flags for indicating which control adjustments should be sparse */
@@ -85,9 +87,17 @@ struct Bus {
   UT_hash_handle hh_number; /**< @brief Handle for bus hash table based on numbers */
   UT_hash_handle hh_name;   /**< @brief Handle for bus hash table based on names */
 
+  // Network
+  Net* net; /**< @brief Network. */
+  
   // List
   Bus* next; /**< @brief List of buses */
 };
+
+void BUS_set_network(Bus* bus, void* net) {
+  if (bus)
+    bus->net = (Net*)net;
+}
 
 void BUS_add_gen(Bus* bus, Gen* gen) {
   if (bus) {
@@ -486,6 +496,7 @@ void BUS_copy_from_bus(Bus* bus, Bus* other) {
 
   // Flags
   bus->slack = other->slack;
+  bus->star = other->star;
   bus->fixed = other->fixed;
   bus->bounded = other->bounded;
   bus->sparse = other->sparse;
@@ -587,6 +598,13 @@ int BUS_get_index(Bus* bus) {
     return -1;
 }
 
+int BUS_get_index_t(Bus* bus, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    return bus->index+t*NET_get_num_buses(bus->net);
+  else
+    return -1;
+}
+
 int BUS_get_index_v_mag(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     return bus->index_v_mag[t];
@@ -601,16 +619,16 @@ int BUS_get_index_v_ang(Bus* bus, int t) {
     return -1;
 }
 
-int BUS_get_index_P(Bus* bus) {
-  if (bus)
-    return 2*bus->index;
+int BUS_get_index_P(Bus* bus, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    return bus->index + t*NET_get_num_buses(bus->net);
   else
     return -1;
 }
 
-int BUS_get_index_Q(Bus* bus) {
-  if (bus)
-    return 2*bus->index+1;
+int BUS_get_index_Q(Bus* bus, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    return bus->index + (t+bus->num_periods)*NET_get_num_buses(bus->net);
   else
     return -1;
 }
@@ -788,8 +806,10 @@ REAL BUS_get_total_gen_P(Bus* bus, int t) {
   REAL P = 0;
   if (!bus || t < 0 || t >= bus->num_periods)
     return 0;
-  for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen))
-    P += GEN_get_P(gen,t);
+  for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen)) {
+    if (!GEN_is_on_outage(gen))
+      P += GEN_get_P(gen,t);
+  }
   return P;
 }
 
@@ -798,8 +818,10 @@ REAL BUS_get_total_gen_Q(Bus* bus, int t) {
   REAL Q = 0;
   if (!bus || t < 0 || t >= bus->num_periods)
     return 0;
-  for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen))
-    Q += GEN_get_Q(gen,t);
+  for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen)) {
+    if (!GEN_is_on_outage(gen))
+      Q += GEN_get_Q(gen,t);
+  }
   return Q;
 }
 
@@ -808,8 +830,10 @@ REAL BUS_get_total_gen_Q_max(Bus* bus) {
   REAL Qmax = 0;
   if (!bus)
     return 0;
-  for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen))
-    Qmax += GEN_get_Q_max(gen);
+  for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen)) {
+    if (!GEN_is_on_outage(gen))
+      Qmax += GEN_get_Q_max(gen);
+  }
   return Qmax;
 }
 
@@ -818,28 +842,46 @@ REAL BUS_get_total_gen_Q_min(Bus* bus) {
   REAL Qmin = 0;
   if (!bus)
     return 0;
-  for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen))
-    Qmin += GEN_get_Q_min(gen);
+  for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen)) {
+    if (!GEN_is_on_outage(gen))
+      Qmin += GEN_get_Q_min(gen);
+  }
   return Qmin;
 }
 
-REAL BUS_get_total_reg_gen_Qmax(Bus* bus) {
+REAL BUS_get_total_reg_gen_Q(Bus* bus, int t) {
+  Gen* gen;
+  REAL Q = 0;
+  if (!bus)
+    return 0;
+  for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen)) {
+    if (!GEN_is_on_outage(gen))
+      Q += GEN_get_Q(gen,t);
+  }
+  return Q;
+}
+
+REAL BUS_get_total_reg_gen_Q_max(Bus* bus) {
   Gen* gen;
   REAL Qmax = 0;
   if (!bus)
     return 0;
-  for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen))
-    Qmax += GEN_get_Q_max(gen);
+  for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen)) {
+    if (!GEN_is_on_outage(gen))
+      Qmax += GEN_get_Q_max(gen);
+  }
   return Qmax;
 }
 
-REAL BUS_get_total_reg_gen_Qmin(Bus* bus) {
+REAL BUS_get_total_reg_gen_Q_min(Bus* bus) {
   Gen* gen;
   REAL Qmin = 0;
   if (!bus)
     return 0;
-  for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen))
-    Qmin += GEN_get_Q_min(gen);
+  for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen)) {
+    if (!GEN_is_on_outage(gen))
+      Qmin += GEN_get_Q_min(gen);
+  }
   return Qmin;
 }
 
@@ -1414,6 +1456,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_float(temp,output,"v_max_emer",bus->v_max_emer,FALSE);
   JSON_float(temp,output,"v_min_emer",bus->v_min_emer,FALSE);
   JSON_bool(temp,output,"slack",bus->slack,FALSE);
+  JSON_bool(temp,output,"star",bus->star,FALSE);
   JSON_array_float(temp,output,"price",bus->price,bus->num_periods,FALSE);
   JSON_list_int(temp,output,"generators",bus,Gen,BUS_get_gen,GEN_get_index,GEN_get_next,FALSE);
   JSON_list_int(temp,output,"reg_generators",bus,Gen,BUS_get_reg_gen,GEN_get_index,GEN_get_reg_next,FALSE);
@@ -1550,6 +1593,7 @@ void BUS_init(Bus* bus, int num_periods) {
   bus->v_min_emer = BUS_DEFAULT_V_MIN;
 
   bus->slack = FALSE;
+  bus->star = FALSE;
   bus->fixed = 0x00;
   bus->bounded = 0x00;
   bus->sparse = 0x00;
@@ -1588,6 +1632,8 @@ void BUS_init(Bus* bus, int num_periods) {
   ARRAY_zalloc(bus->P_mis,REAL,T);
   ARRAY_zalloc(bus->Q_mis,REAL,T);
 
+  bus->net = NULL;
+  
   for (t = 0; t < bus->num_periods; t++) {
     bus->v_mag[t] = 1.;
     bus->v_set[t] = 1.;
@@ -1611,17 +1657,25 @@ BOOL BUS_is_equal(Bus* bus, Bus* other) {
 }
 
 BOOL BUS_is_regulated_by_gen(Bus* bus) {
-  if (bus)
-    return bus->reg_gen != NULL;
-  else
-    return FALSE;
+  Gen* gen;
+  if (bus) {
+    for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen)) {
+      if (!GEN_is_on_outage(gen))
+	return TRUE;
+    }
+  }
+  return FALSE;
 }
 
 BOOL BUS_is_regulated_by_tran(Bus* bus) {
-  if (bus)
-    return bus->reg_tran != NULL;
-  else
-    return FALSE;
+  Branch* br;
+  if (bus) {
+    for (br = bus->reg_tran; br != NULL; br = BRANCH_get_reg_next(br)) {
+      if (!BRANCH_is_on_outage(br))
+	return TRUE;
+    }
+  }
+  return FALSE;
 }
 
 BOOL BUS_is_regulated_by_shunt(Bus* bus) {
@@ -1634,6 +1688,13 @@ BOOL BUS_is_regulated_by_shunt(Bus* bus) {
 BOOL BUS_is_slack(Bus* bus) {
   if (bus)
     return bus->slack;
+  else
+    return FALSE;
+}
+
+BOOL BUS_is_star(Bus* bus) {
+  if (bus)
+    return bus->star;
   else
     return FALSE;
 }
@@ -1761,6 +1822,11 @@ void BUS_set_v_min_emer(Bus* bus, REAL v_min_emer) {
 void BUS_set_slack_flag(Bus* bus, BOOL slack) {
   if (bus)
     bus->slack = slack;
+}
+
+void BUS_set_star_flag(Bus* bus, BOOL star) {
+  if (bus)
+    bus->star = star;
 }
 
 void BUS_set_index(Bus* bus, int index) {

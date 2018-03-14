@@ -26,7 +26,7 @@ For this and subsequent examples, is it assumed that the Python interpreter was 
 JSON Data Parser
 ================
 
-PFNET networks can be constructed from data files in the widely-popular lightweight data-interchange format |JSON|. These network data files have extension ``.json`` and parsers for them can be instantiated from the class |ParserJSON|. These JSON parsers also allow writing a given network to file, as the example below shows::
+PFNET networks can be constructed from data files in the widely-popular lightweight data-interchange format |JSON|. These network data files have extension ``.json`` and parsers for them can be instantiated from the class |ParserJSON|. These JSON parsers also allow writing a given network to a file, as the example below shows::
 
   >>> pfnet.ParserJSON().write(network,"new_network.json")
 

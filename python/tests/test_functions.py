@@ -6,15 +6,16 @@
 # PFNET is released under the BSD 2-clause license. #
 #***************************************************#
 
-import pfnet as pf
 import unittest
-from . import test_cases
 import numpy as np
-from scipy.sparse import coo_matrix,triu,tril,spdiags
+import pfnet as pf
+from . import test_cases
+from numpy.linalg import norm
+from scipy.sparse import coo_matrix, triu, tril, spdiags
 
 NUM_TRIALS = 25
-EPS = 5. # %
-TOL = 1e-3
+EPS = 3. # %
+TOL = 1e-4
 
 class TestFunctions(unittest.TestCase):
 
@@ -102,45 +103,24 @@ class TestFunctions(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(g)))
             self.assertTrue(not np.any(np.isinf(H.data)))
             self.assertTrue(not np.any(np.isnan(H.data)))
-
+            
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                if np.linalg.norm(gd_exact) == 0.:
-                    self.assertLessEqual(np.linalg.norm(gd_approx),2.)
-                else:
-                    error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                    self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
             # Value
             dv = 0.2
@@ -160,6 +140,46 @@ class TestFunctions(unittest.TestCase):
                     phi += 0.5*(((bus.v_mag[t]-bus.v_set[t])/dv)**2.)
             self.assertLess(np.abs(func.phi-phi),1e-10*(func.phi+1))
 
+    def test_func_REG_VMAG_with_outages(self):
+
+        # Constants
+        h = 1e-8
+
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+
+            x0 = net.get_var_values()
+
+            # Perturbation
+            net.set_var_values(x0 + np.random.randn(x0.size))
+            x0 = net.get_var_values()
+
+            # Function
+            func0 = pf.Function('voltage magnitude regularization',1.,net)
+            func0.analyze()
+            func0.eval(x0)
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+
+            func1 = pf.Function('voltage magnitude regularization',1.,net)
+            func1.analyze()
+            func1.eval(x0)
+
+            self.assertLess(np.abs(func1.phi-func0.phi),1e-8)
+            self.assertLess(norm(func1.gphi-func0.gphi),1e-8)
+            self.assertEqual((func1.Hphi-func0.Hphi).tocoo().nnz,0)
+            
     def test_func_REG_VAR(self):
 
         # Constants
@@ -299,60 +319,159 @@ class TestFunctions(unittest.TestCase):
             self.assertLess(np.abs(func.phi-phi),1e-10*(np.abs(func.phi)+1))
 
             # Gradient check
-            func.eval(x0)
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-                
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                if np.linalg.norm(gd_exact) == 0.:
-                    self.assertLessEqual(np.linalg.norm(gd_approx),2.)
-                else:
-                    error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                    self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # One more gradient check
             self.assertLess(np.linalg.norm(2.*np.multiply(x0-xc,w)-func.gphi),
                             1e-8*(np.linalg.norm(func.gphi)+1.))
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
             # One more Hessian check
             Href = spdiags(2.*w,0,net.num_vars,net.num_vars)
-            dH = (Href-H0).tocoo()
+            dH = (Href-func.Hphi).tocoo()
             self.assertLess(np.linalg.norm(dH.data),
-                            1e-8*(np.linalg.norm(H0.data)+1.))
+                            1e-8*(np.linalg.norm(func.Hphi.data)+1.))
+
+    def test_func_REG_VAR_with_outages(self):
+
+        # Constants
+        h = 1e-8
+
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            net.add_var_generators_from_parameters(net.get_load_buses(),80.,50.,30.,5,0.05)
+            net.add_batteries_from_parameters(net.get_generator_buses(),20.,40.,0.8,0.9)
+            
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          ['active power', 'reactive power'])
+            net.set_flags('variable generator',
+                          'variable',
+                          'any',
+                          ['active power', 'reactive power'])
+            net.set_flags('load',
+                          'variable',
+                          'any',
+                          ['active power', 'reactive power'])
+            net.set_flags('battery',
+                          'variable',
+                          'any',
+                          ['charging power', 'energy level'])
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+            net.set_flags('shunt',
+                          'variable',
+                          'switching - v',
+                          'susceptance')
+            
+            self.assertEqual(net.num_vars,
+                             (net.num_buses*2+
+                              net.num_generators*2+
+                              net.num_var_generators*2+
+                              net.num_batteries*3+
+                              net.num_loads*2+
+                              net.get_num_phase_shifters()+
+                              net.get_num_tap_changers()+
+                              net.get_num_switched_shunts())*self.T)
+
+            x0 = net.get_var_values()
+
+            # Perturbation
+            net.set_var_values(x0 + np.random.randn(x0.size))
+            x0 = net.get_var_values()
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+
+            # Function
+            func = pf.Function('variable regularization',1.,net)
+            
+            # Set parameter
+            xc = np.random.randn(net.num_vars)
+            w = np.random.randn(net.num_vars)
+            
+            func.set_parameter('w',w)
+            func.set_parameter('x0',xc)
+
+            func.analyze()
+
+            # Value
+            func.eval(x0)
+            phi = np.dot(np.multiply(x0-xc, w), x0-xc)
+            self.assertGreater(np.abs(func.phi-phi),1e-10*(np.abs(func.phi)+1))
+
+            for branch in net.branches:
+                if branch.has_flags('variable', 'tap ratio') and branch.is_on_outage():
+                    for t in range(self.T):
+                        w[branch.index_ratio[t]] = 0.
+                if branch.has_flags('variable', 'phase shift') and branch.is_on_outage():
+                    for t in range(self.T):
+                        w[branch.index_phase[t]] = 0.
+            for gen in net.generators:
+                if gen.has_flags('variable', 'active power') and gen.is_on_outage():
+                    for t in range(self.T):
+                        w[gen.index_P[t]] = 0.
+                if gen.has_flags('variable', 'reactive power') and gen.is_on_outage():
+                    for t in range(self.T):
+                        w[gen.index_Q[t]] = 0.
+
+            phi = np.dot(np.multiply(x0-xc, w), x0-xc)
+            self.assertLess(np.abs(func.phi-phi),1e-10*(np.abs(func.phi)+1))
+
+            # Gradient check
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
+
+            # Hessian check
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
             
     def test_func_REG_PQ(self):
 
         # Constants
         h = 1e-9
-
+        
         # Multiperiod
         for case in test_cases.CASES:
 
@@ -428,44 +547,22 @@ class TestFunctions(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(H.data)))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-
-                if np.linalg.norm(gd_exact) == 0.:
-                    self.assertLessEqual(np.linalg.norm(gd_approx),2.)
-                else:
-                    error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                    self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
             # Value
             func.eval(x0)
@@ -485,6 +582,45 @@ class TestFunctions(unittest.TestCase):
             func.eval(np.zeros(0))
             self.assertLess(np.abs(func.phi-phi),1e-10*(func.phi+1.))
 
+    def test_func_REG_PQ_with_outages(self):
+
+        # Constants
+        h = 1e-9
+        
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('generator',
+                          'variable',
+                          'slack',
+                          ['active power','reactive power'])
+            net.set_flags('generator',
+                          'variable',
+                          'regulator',
+                          'reactive power')
+
+            x0 = net.get_var_values()
+            net.set_var_values(x0+np.random.randn(x0.size))
+            x0 = net.get_var_values()
+
+            # Function
+            func = pf.Function('generator powers regularization',1.,net)
+
+            for gen in net.generators:
+                gen.outage = True
+            for branch in net.branches:
+                branch.outage = True
+
+            func.analyze()
+            func.eval(x0+np.random.randn(x0.size))
+
+            self.assertEqual(func.phi, 0.)
+            self.assertEqual(norm(func.gphi), 0.)
+            self.assertEqual(func.Hphi.nnz, 0.)
+            
     def test_func_REG_VANG(self):
 
         # Constants
@@ -573,41 +709,22 @@ class TestFunctions(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(H.data)))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            H0 = H0 + H0.T - triu(H0)
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
             # Value
             func.eval(net.get_var_values())
@@ -625,6 +742,64 @@ class TestFunctions(unittest.TestCase):
             func.eval(np.zeros(0))
             self.assertLess(np.abs(func.phi-phi),1e-10*(phi+1.))
 
+    def test_func_REG_VANG_with_outages(self):
+
+        # Constants
+        h = 1e-8
+
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'not slack',
+                          ['voltage magnitude','voltage angle'])
+
+            x0 = net.get_var_values()+np.random.randn(net.num_vars)
+            net.set_var_values(x0)
+
+            # Function
+            func = pf.Function('voltage angle regularization',1.,net)
+
+            for gen in net.generators:
+                gen.outage = True
+            for branch in net.branches:
+                branch.outage = True
+
+            func.analyze()
+            func.eval(x0)
+
+            # value
+            phi = 0.
+            dw = 3.1416
+            for bus in net.buses:
+                if bus.is_slack():
+                    continue
+                for t in range(self.T):
+                    phi += 0.5*((x0[bus.index_v_ang[t]]/dw)**2.)
+            self.assertLess(np.abs(phi-func.phi), 1e-8)
+
+            # Gradient check
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
+
+            # Hessian check
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
+                
     def test_func_REG_RATIO(self):
 
         # Constants
@@ -710,47 +885,60 @@ class TestFunctions(unittest.TestCase):
             self.assertLess(np.abs(func.phi-phi_manual),1e-10*(phi_manual+1.))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            H0 = H0 + H0.T - triu(H0)
-            for i in range(NUM_TRIALS):
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
-
-    def test_func_REG_SUSC(self):
+    def test_func_REG_RATIO_with_outages(self):
 
         # Constants
         h = 1e-8
 
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer - v',
+                          ['tap ratio'])
+
+            x0 = net.get_var_values()+np.random.randn(net.num_vars)
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+
+            # Function
+            func = pf.Function('tap ratio regularization',1.,net)
+
+            func.analyze()
+            func.eval(x0)
+            self.assertEqual(func.phi, 0.)
+            self.assertEqual(norm(func.gphi), 0.)
+            self.assertEqual(func.Hphi.nnz, 0)
+            
+    def test_func_REG_SUSC(self):
+
+        # Constants
+        h = 1e-8
+        
         # Multiperiod
         for case in test_cases.CASES:
 
@@ -831,42 +1019,62 @@ class TestFunctions(unittest.TestCase):
             self.assertLess(np.abs(func.phi-phi_manual),1e-10*(phi_manual+1.))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
+
+    def test_func_REG_SUSC_with_outages(self):
+
+        # Constants
+        h = 1e-8
+        
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('shunt',
+                          'variable',
+                          'switching - v',
+                          ['susceptance'])
+
+            x0 = net.get_var_values()+np.random.randn(net.num_vars)
+
+            # Function
+            func = pf.Function('susceptance regularization',1.,net)
+            func.analyze()
             func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            H0 = H0 + H0.T - triu(H0)
-            for i in range(NUM_TRIALS):
 
-                d = np.random.randn(net.num_vars)
+            phi0 = func.phi
+            gphi0 = func.gphi.copy()
+            Hphi0 = func.Hphi.copy()
 
-                x = x0 + h*d
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
 
-                func.eval(x)
+            func.analyze()
+            func.eval(x0)
 
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
-
+            self.assertEqual(func.phi, phi0)
+            self.assertEqual(norm(func.gphi-gphi0), 0.)
+            self.assertEqual((func.Hphi-Hphi0).tocoo().nnz, 0)
+            
     def test_func_GEN_COST(self):
 
         # Single period
@@ -936,40 +1144,22 @@ class TestFunctions(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(H.data)))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
             # value check
             val = 0
@@ -1066,40 +1256,22 @@ class TestFunctions(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(H.data)))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
             # value check
             val = 0
@@ -1125,6 +1297,37 @@ class TestFunctions(unittest.TestCase):
                             gen.cost_coeff_Q2*(gen.P[t]**2.))
             self.assertLess(np.abs(val-func.phi),1e-10*np.abs(func.phi))
 
+    def test_func_GEN_COST_with_outages(self):
+
+        # Multi period
+        h = 1e-9
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          ['active power','reactive power'])
+
+            x0 = net.get_var_values()
+
+            # Function
+            func = pf.Function('generation cost',1.,net)
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+
+            func.analyze()
+            func.eval(x0)
+
+            self.assertEqual(func.phi, 0)
+            self.assertEqual(norm(func.gphi), 0)
+            self.assertEqual(func.Hphi.nnz, 0)
+            
     def test_func_SP_CONTROLS(self):
 
         # Constants
@@ -1289,41 +1492,126 @@ class TestFunctions(unittest.TestCase):
             self.assertLess(np.abs(f-f_manual),1e-8)
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
-            h = 1e-6
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  1e-6)
+
+    def test_func_SP_CONTROLS_with_outages(self):
+
+        # Constants
+        h = 1e-10
+
+        # Single period
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case)
+
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          'active power')
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+            net.set_flags('shunt',
+                          'variable',
+                          'switching - v',
+                          'susceptance')
+
+            # Sparse
+            net.set_flags('bus',
+                          'sparse',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+            net.set_flags('generator',
+                          'sparse',
+                          'any',
+                          'active power')
+            net.set_flags('branch',
+                          'sparse',
+                          'tap changer',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'sparse',
+                          'phase shifter',
+                          'phase shift')
+            net.set_flags('shunt',
+                          'sparse',
+                          'switching - v',
+                          'susceptance')
+
+            x0 = net.get_var_values() + np.random.randn(net.num_vars)
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+            
+            # Function
+            func = pf.Function('sparse controls penalty',1.,net)
+            func.analyze()
             func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            for i in range(NUM_TRIALS):
 
-                d = np.random.randn(net.num_vars)
+            # manual f value
+            eps = 1e-6
+            ceps = 1e-4
+            f_manual = 0
+            for bus in net.buses:
+                if bus.is_regulated_by_gen():
+                    self.assertTrue(bus.has_flags('variable','voltage magnitude'))
+                    val = x0[bus.index_v_mag]
+                    val0 = bus.v_set
+                    dval = np.maximum(bus.v_max_reg-bus.v_min_reg,ceps)
+                    f_manual += np.sqrt(((val-val0)/dval)**2. + eps)
+            for shunt in net.shunts:
+                if shunt.is_switched_v():
+                    self.assertTrue(shunt.has_flags('variable','susceptance'))
+                    val = x0[shunt.index_b]
+                    val0 = shunt.b
+                    dval = np.maximum(shunt.b_max-shunt.b_min,ceps)
+                    f_manual += np.sqrt(((val-val0)/dval)**2. + eps)
+            self.assertLess(np.abs(func.phi-f_manual),1e-8)
 
-                x = x0 + h*d
+            # Gradient check
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            # Hessian check
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  1e-6)
 
     def test_func_SLIM_VMAG(self):
 
@@ -1418,44 +1706,64 @@ class TestFunctions(unittest.TestCase):
             self.assertLess(np.abs(f-f_manual),1e-10*(f_manual+1.))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                if np.linalg.norm(gd_exact) == 0.:
-                    self.assertLessEqual(np.linalg.norm(gd_approx),2.)
-                else:
-                    error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
-
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
+            
             # Hessian check
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
+            
+    def test_func_SLIM_VMAG_with_outages(self):
+
+        # Constants
+        h = 1e-8
+
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+
+            x0 = net.get_var_values()+np.random.randn(net.num_vars)
+            net.set_var_values(x0)
+
+            # Function
+            func = pf.Function('soft voltage magnitude limits',1.,net)
+
+            func.analyze()
             func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            for i in range(NUM_TRIALS):
 
-                d = np.random.randn(net.num_vars)
+            phi0 = func.phi
+            gphi0 = func.gphi.copy()
+            Hphi0 = func.Hphi.copy()
 
-                x = x0 + h*d
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
 
-                func.eval(x)
+            func.analyze()
+            func.eval(x0)
 
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
-
+            self.assertEqual(func.phi, phi0)
+            self.assertEqual(norm(func.gphi-gphi0), 0.)
+            self.assertEqual((func.Hphi-Hphi0).tocoo().nnz, 0)
+            
     def test_func_REG_PHASE(self):
 
         # Constants
@@ -1544,42 +1852,59 @@ class TestFunctions(unittest.TestCase):
             self.assertLess(np.abs(func.phi-phi_manual),1e-10*(phi_manual+1.))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
+
+    def test_func_REG_PHASE_with_outages(self):
+
+        # Constants
+        h = 1e-8
+
+        # Multiperiod
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+
+            # values
+            x0 = net.get_var_values()+np.random.randn(net.num_vars)
+            net.set_var_values(x0)
+            x0 = net.get_var_values()+np.random.randn(net.num_vars)
+
+            # Function
+            func = pf.Function('phase shift regularization',1.,net)
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+
+            func.analyze()
             func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            H0 = H0 + H0.T - triu(H0)
-            for i in range(NUM_TRIALS):
 
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
-
+            self.assertEqual(func.phi, 0)
+            self.assertEqual(norm(func.gphi), 0)
+            self.assertEqual(func.Hphi.nnz, 0)
+            
     def test_func_LOAD_UTIL(self):
 
         # Single period
@@ -1649,40 +1974,22 @@ class TestFunctions(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(H.data)))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
             # value check
             val = 0
@@ -1779,40 +2086,22 @@ class TestFunctions(unittest.TestCase):
             self.assertTrue(not np.any(np.isnan(H.data)))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # Hessian check
-            func.eval(x0)
-            g0 = func.gphi.copy()
-            H0 = func.Hphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-
-                g1 = func.gphi.copy()
-
-                Hd_exact = H0*d
-                Hd_approx = (g1-g0)/h
-                error = 100.*np.linalg.norm(Hd_exact-Hd_approx)/np.maximum(np.linalg.norm(Hd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_hessian(self,
+                                                  func,
+                                                  x0,
+                                                  NUM_TRIALS,
+                                                  TOL,
+                                                  EPS,
+                                                  h)
 
             # value check
             val = 0
@@ -1838,6 +2127,44 @@ class TestFunctions(unittest.TestCase):
                             load.util_coeff_Q2*(load.P[t]**2.))
             self.assertLess(np.abs(val-func.phi),1e-10*np.abs(func.phi))
 
+    def test_func_LOAD_UTIL_with_outages(self):
+
+        # Multi period
+        h = 1e-8
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # Vars
+            net.set_flags('load',
+                          'variable',
+                          'any',
+                          'active power')
+
+            x0 = net.get_var_values()
+
+            # Function
+            func = pf.Function('consumption utility',1.,net)
+
+            func.analyze()
+            func.eval(x0)
+
+            phi0 = func.phi
+            gphi0 = func.gphi.copy()
+            Hphi0 = func.Hphi.copy()
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+
+            func.analyze()
+            func.eval(x0)
+
+            self.assertEqual(func.phi, phi0)
+            self.assertEqual(norm(func.gphi-gphi0), 0.)
+            self.assertEqual((func.Hphi-Hphi0).tocoo().nnz, 0)
+            
     def test_func_NETCON_COST(self):
 
         # Single period
@@ -1951,22 +2278,14 @@ class TestFunctions(unittest.TestCase):
             self.assertLess(np.abs(val-f),1e-10*np.abs(f))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
-
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
+            
             # No variables
             net.clear_flags()
             self.assertEqual(net.num_vars,0)
@@ -2135,21 +2454,13 @@ class TestFunctions(unittest.TestCase):
             self.assertLess(np.abs(val-f),1e-10*np.abs(f))
 
             # Gradient check
-            f0 = func.phi
-            g0 = func.gphi.copy()
-            for i in range(NUM_TRIALS):
-
-                d = np.random.randn(net.num_vars)
-
-                x = x0 + h*d
-
-                func.eval(x)
-                f1 = func.phi
-
-                gd_exact = np.dot(g0,d)
-                gd_approx = (f1-f0)/h
-                error = 100.*np.linalg.norm(gd_exact-gd_approx)/np.maximum(np.linalg.norm(gd_exact),TOL)
-                self.assertLessEqual(error,EPS)
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
             # No variables
             net.clear_flags()
@@ -2186,6 +2497,70 @@ class TestFunctions(unittest.TestCase):
                         self.assertFalse(vargen.has_flags('variable','active power'))
                         val -= bus.price[t]*vargen.P[t]
             self.assertLess(np.abs(val-func.phi),1e-10*np.abs(f))
+
+    def test_func_NETCON_COST_with_outages(self):
+
+        # Multi period
+        h = 1e-7
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case,self.T)
+
+            # prices
+            for bus in net.buses:
+                self.assertEqual(bus.num_periods,self.T)
+                bus.price = np.random.rand(self.T)*10.
+
+            # Vars
+            net.set_flags('load',
+                          'variable',
+                          'any',
+                          'active power')
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          'active power')
+            net.set_flags('variable generator',
+                          'variable',
+                          'any',
+                          'active power')
+            net.set_flags('battery',
+                          'variable',
+                          'any',
+                          'charging power')
+
+            x0 = net.get_var_values()
+            
+            # Function
+            func = pf.Function('net consumption cost',1.,net)
+
+            for branch in net.branches:
+                branch.outage = True
+            for gen in net.generators:
+                gen.outage = True
+
+            func.analyze()
+            func.eval(x0)
+
+            # value and grad check
+            val = 0
+            for t in range(self.T):
+                for bus in net.buses:
+                    for load in bus.loads:
+                        self.assertTrue(load.has_flags('variable','active power'))
+                        self.assertEqual(load.P[t],x0[load.index_P[t]])
+                        self.assertEqual(func.gphi[load.index_P[t]],bus.price[t])
+                        val += bus.price[t]*load.P[t]
+            self.assertLess(np.abs(val-func.phi),1e-10*np.abs(func.phi))
+
+            # Gradient check
+            pf.tests.utils.check_function_gradient(self,
+                                                   func,
+                                                   x0,
+                                                   NUM_TRIALS,
+                                                   TOL,
+                                                   EPS,
+                                                   h)
 
     def test_robustness(self):
 
@@ -2310,6 +2685,101 @@ class TestFunctions(unittest.TestCase):
                 self.assertGreaterEqual(f.Hphi.nnz,0)
             self.assertTrue(any([f.phi > 0 for f in functions]))
             self.assertTrue(any([f.Hphi.nnz > 0 for f in functions]))
+
+    def test_robustness_with_outages(self):
+        
+        for case in test_cases.CASES:
+
+            net = pf.Parser(case).parse(case, self.T)
+
+            functions = [pf.Function('generation cost',1.,net),
+                         pf.Function('phase shift regularization',1.,net),
+                         pf.Function('generator powers regularization',1.,net),
+                         pf.Function('tap ratio regularization',1.,net),
+                         pf.Function('susceptance regularization',1.,net),
+                         pf.Function('variable regularization',1.,net),
+                         pf.Function('voltage angle regularization',1.,net),
+                         pf.Function('voltage magnitude regularization',1.,net),
+                         pf.Function('soft voltage magnitude limits',1.,net),
+                         pf.Function('sparse controls penalty',1.,net),
+                         pf.Function('consumption utility',1.,net),
+                         pf.Function('net consumption cost',1.,net)]
+
+            # Add variables
+            net.set_flags('bus',
+                          'variable',
+                          'any',
+                          ['voltage magnitude','voltage angle'])
+            net.set_flags('generator',
+                          'variable',
+                          'any',
+                          ['active power','reactive power'])
+            net.set_flags('branch',
+                          'variable',
+                          'tap changer',
+                          'tap ratio')
+            net.set_flags('branch',
+                          'variable',
+                          'phase shifter',
+                          'phase shift')
+            net.set_flags('shunt',
+                          'variable',
+                          'switching - v',
+                          'susceptance')
+            net.set_flags('battery',
+                          'variable',
+                          'any',
+                          ['charging power','energy level'])
+            self.assertEqual(net.num_vars,
+                             (2*net.num_buses +
+                              2*net.num_generators +
+                              net.get_num_tap_changers()+
+                              net.get_num_phase_shifters()+
+                              net.get_num_switched_shunts()+
+                              3*net.num_batteries)*self.T)
+
+            x0 = net.get_var_values()
+
+            net.clear_outages()
+
+            # Analyze without outages
+            for f in functions:
+                f.analyze()
+
+            # Eval without outages
+            for f in functions:
+                self.assertEqual(f.state_tag, net.state_tag)
+                f.eval(x0)
+                
+            for gen in net.generators:
+                gen.outage = True
+            for branch in net.branches:
+                branch.outage = True
+                
+            # Eval with outages
+            for f in functions:
+                self.assertNotEqual(f.state_tag, net.state_tag)
+                self.assertRaises(pf.FunctionError,
+                                  f.eval,
+                                  x0)
+
+            # Analyze with outages
+            for f in functions:
+                f.analyze()
+
+            # Eval with outages
+            for f in functions:
+                self.assertEqual(f.state_tag, net.state_tag)
+                f.eval(x0)
+
+            net.clear_outages()
+
+            # Eval without outages
+            for f in functions:
+                self.assertNotEqual(f.state_tag, net.state_tag)
+                self.assertRaises(pf.FunctionError,
+                                  f.eval,
+                                  x0)
             
     def test_func_DUMMY(self):
 
