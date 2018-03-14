@@ -26,6 +26,7 @@ Unreleased
 * Extended problem.show() to show number of vars and constraints of each type.
 * Fix bug involving problem/constraint/function's network going out of scope in Python.
 * Added load reactive power limits.
+* Integrated line_flow library source and header for linearized AC branch flow limits.
 * Added Q_par (reactive power participation) field to generator.
 * Changed REG_GEN constraint to treat generators separately so that constraint can be used without participations.
 * Changed PAR_GEN_Q constraint to PVPQ_SWITCHING, which enforces flexible participations based on Q_par and performs all required modifications for PV-PQ switching heuristics.

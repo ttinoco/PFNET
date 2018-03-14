@@ -1279,14 +1279,6 @@ class TestProblem(unittest.TestCase):
                           'any',
                           'voltage magnitude')
 
-            # Library unavailable
-            if not pf.info['line_flow']:
-                self.assertRaisesRegexp(pf.ProblemError,
-                                        "LINE_FLOW library not available",
-                                        p.analyze)
-                p.clear_error()
-                continue
-
             p.analyze()
 
             # Extra vars

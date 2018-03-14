@@ -5747,14 +5747,6 @@ class TestConstraints(unittest.TestCase):
                           'voltage magnitude')
 
             self.assertEqual(net.num_bounded,net.num_buses*self.T)
-
-            # Library unavailable
-            if not pf.info['line_flow']:
-                self.assertRaisesRegexp(pf.ConstraintError,
-                                        "LINE_FLOW library not available",
-                                        constr.analyze)
-                constr.clear_error()
-                continue
         
             constr.analyze()
 
