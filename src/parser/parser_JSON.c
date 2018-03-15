@@ -279,6 +279,14 @@ void JSON_PARSER_process_json_bus_array(Parser* p, Net* net, json_value* json_bu
 	NET_bus_hash_number_add(net,bus);
       }
 
+      // area
+      if (strcmp(key,"area") == 0)
+	BUS_set_area(bus,val->u.integer);
+
+      // zone
+      if (strcmp(key,"zone") == 0)
+	BUS_set_zone(bus,val->u.integer);
+
       // name
       else if (strcmp(key,"name") == 0) {
 	BUS_set_name(bus,val->u.string.ptr);

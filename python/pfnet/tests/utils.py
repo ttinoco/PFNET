@@ -213,6 +213,8 @@ def compare_buses(test, bus1, bus2, check_internals=False, check_indices=True, e
 
     test.assertTrue(bus1 is not bus2)
     test.assertEqual(bus1.number, bus2.number)
+    test.assertEqual(bus1.area, bus2.area)
+    test.assertEqual(bus1.zone, bus2.zone)
     test.assertEqual(bus1.num_periods, bus2.num_periods)
     test.assertEqual(bus1.name.upper().strip(), bus2.name.upper().strip())
     test.assertLess(norminf(bus1.v_base-bus2.v_base), eps)

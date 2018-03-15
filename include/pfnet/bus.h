@@ -155,6 +155,8 @@ char BUS_get_flags_fixed(Bus* bus);
 char BUS_get_flags_bounded(Bus* bus);
 char BUS_get_flags_sparse(Bus* bus);
 
+int BUS_get_area(Bus* bus);
+int BUS_get_zone(Bus* bus);
 char BUS_get_obj_type(void* bus);
 int BUS_get_degree(Bus* bus);
 REAL BUS_get_price(Bus* bus, int t);
@@ -263,6 +265,8 @@ Bus* BUS_list_add_sorting(Bus* bus_list, Bus* bus, int sort_by, int t);
 int BUS_list_len(Bus* bus_list);
 Bus* BUS_new(int num_periods);
 void BUS_propagate_data_in_time(Bus* bus, int start, int end);
+void BUS_set_area(Bus* bus, int area);
+void BUS_set_zone(Bus* bus, int zone);
 void BUS_set_network(Bus* bus, void* net);
 void BUS_set_next(Bus* bus, Bus* next_bus);
 void BUS_set_number(Bus* bus, int number);

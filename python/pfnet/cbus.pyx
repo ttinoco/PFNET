@@ -815,6 +815,16 @@ cdef class Bus:
         else:
             return False
 
+    property area:
+       """ Bus area. """
+       def __get__(self): return cbus.BUS_get_area(self._c_ptr)
+       def __set__(self, a): cbus.BUS_set_area(self._c_ptr, a)
+
+    property zone:
+       """ Bus zone. """
+       def __get__(self): return cbus.BUS_get_zone(self._c_ptr)
+       def __set__(self, z): cbus.BUS_set_zone(self._c_ptr, z)
+        
     property num_periods:
         """ Number of time periods (int). """
         def __get__(self): return cbus.BUS_get_num_periods(self._c_ptr)

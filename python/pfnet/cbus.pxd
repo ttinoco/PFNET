@@ -54,6 +54,8 @@ cdef extern from "pfnet/bus.h":
     char BUS_get_flags_bounded(Bus* bus)
     char BUS_get_flags_sparse(Bus* bus)
 
+    int BUS_get_area(Bus* bus)
+    int BUS_get_zone(Bus* bus)
     char BUS_get_obj_type(void* bus)
     int BUS_get_num_periods(Bus* bus)
     int BUS_get_index(Bus* bus)
@@ -128,6 +130,8 @@ cdef extern from "pfnet/bus.h":
     Bus* BUS_new(int num_periods)
     Bus* BUS_array_new(int size, int num_periods)
     void BUS_array_del(Bus* bus_array, int size)
+    void BUS_set_area(Bus* bus, int area)
+    void BUS_set_zone(Bus* bus, int zone)
     void BUS_set_slack_flag(Bus* bus, bint slack);
     void BUS_set_star_flag(Bus* bus, bint star);
     void BUS_set_next(Bus* bus, Bus* next_bus)

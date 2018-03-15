@@ -379,6 +379,12 @@ class TestNetwork(unittest.TestCase):
                 self.assertEqual(bus.obj_type,'bus')
                 self.assertNotEqual(bus.obj_type,'unknown')
 
+                # area zone
+                bus.area = 10
+                bus.zone = 11
+                self.assertEqual(bus.area, 10)
+                self.assertEqual(bus.zone, 11)
+
                 # vbase
                 self.assertGreaterEqual(bus.v_base,0.)
                 bus.v_base = 110
@@ -4211,6 +4217,8 @@ class TestNetwork(unittest.TestCase):
                 
                 copy_bus.number = orig_bus.number
                 copy_bus.name = orig_bus.name
+                copy_bus.area = orig_bus.area
+                copy_bus.zone = orig_bus.zone
                 copy_bus.price = orig_bus.price
                 copy_bus.v_base = orig_bus.v_base
                 copy_bus.v_mag = orig_bus.v_mag

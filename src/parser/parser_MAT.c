@@ -396,6 +396,8 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
   for (mat_bus = parser->bus_list; mat_bus != NULL; mat_bus = mat_bus->next) {
     bus = NET_get_bus(net,index);             // get bus
     BUS_set_number(bus,mat_bus->number);
+    BUS_set_area(bus,mat_bus->area);
+    BUS_set_zone(bus,mat_bus->zone);
     BUS_set_name(bus,mat_bus->name);
     BUS_set_v_mag(bus,mat_bus->Vm,0);         // per unit
     BUS_set_v_ang(bus,mat_bus->Va*PI/180.,0); // radians

@@ -26,10 +26,14 @@ struct Bus {
   char name[BUS_BUFFER_SIZE]; /**< @brief Bus name */
 
   // Times
-  int num_periods;    /**< @brief Number of time periods. */
+  int num_periods;    /**< @brief Number of time periods */
+
+  // Area, zone
+  int area;           /**< @brief Bus area */
+  int zone;           /**< @brief Bus zone */
 
   // Voltage
-  REAL v_base;       /**< @brief Base voltage (kilovolts) */
+  REAL v_base;        /**< @brief Base voltage (kilovolts) */
   REAL* v_mag;        /**< @brief Voltage magnitude (p.u.) */
   REAL* v_ang;        /**< @brief Voltage angle (radians) */
   REAL* v_set;        /**< @brief Voltage magnitude set point (p.u.) */
@@ -93,11 +97,6 @@ struct Bus {
   // List
   Bus* next; /**< @brief List of buses */
 };
-
-void BUS_set_network(Bus* bus, void* net) {
-  if (bus)
-    bus->net = (Net*)net;
-}
 
 void BUS_add_gen(Bus* bus, Gen* gen) {
   if (bus) {
@@ -479,6 +478,10 @@ void BUS_copy_from_bus(Bus* bus, Bus* other) {
   bus->number = other->number;
   strcpy(bus->name,other->name);
 
+  // Area, zone
+  bus->area = other->area;
+  bus->zone = other->zone;
+
   // Time
   // skip num periods
 
@@ -533,6 +536,20 @@ void BUS_copy_from_bus(Bus* bus, Bus* other) {
 
   // List
   // skip next
+}
+
+int BUS_get_area(Bus* bus) {
+  if (bus)
+    return bus->area;
+  else
+    return 1;
+}
+
+int BUS_get_zone(Bus* bus) {
+  if (bus)
+    return bus->zone;
+  else
+    return 1;
 }
 
 char BUS_get_flags_vars(Bus* bus) {
@@ -1444,6 +1461,8 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_int(temp,output,"index",bus->index,FALSE);
   JSON_int(temp,output,"number",bus->number,FALSE);
   JSON_str(temp,output,"name",bus->name,FALSE);
+  JSON_int(temp,output,"area",bus->area,FALSE);
+  JSON_int(temp,output,"zone",bus->zone,FALSE);
   JSON_int(temp,output,"num_periods",bus->num_periods,FALSE);
   JSON_float(temp,output,"v_base",bus->v_base,FALSE);
   JSON_array_float(temp,output,"v_mag",bus->v_mag,bus->num_periods,FALSE);
@@ -1582,6 +1601,9 @@ void BUS_init(Bus* bus, int num_periods) {
     bus->name[i] = 0;
 
   bus->v_base = 0.;
+
+  bus->area = 1;
+  bus->zone = 1;
 
   bus->index = -1;
 
@@ -1746,6 +1768,21 @@ Bus* BUS_new(int num_periods) {
   }
   else
     return NULL;
+}
+
+void BUS_set_network(Bus* bus, void* net) {
+  if (bus)
+    bus->net = (Net*)net;
+}
+
+void BUS_set_area(Bus* bus, int area) {
+  if (bus)
+    bus->area = area;
+}
+
+void BUS_set_zone(Bus* bus, int zone) {
+  if (bus)
+    bus->zone = zone;
 }
 
 void BUS_set_v_base(Bus* bus, REAL v_base) {
