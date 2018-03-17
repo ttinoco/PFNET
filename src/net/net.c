@@ -3988,6 +3988,7 @@ char* NET_get_show_components_str(Net* net) {
   sprintf(out+strlen(out),"  reg by gen     : %d\n",NET_get_num_buses_reg_by_gen(net));
   sprintf(out+strlen(out),"  reg by tran    : %d\n",NET_get_num_buses_reg_by_tran(net));
   sprintf(out+strlen(out),"  reg by shunt   : %d\n",NET_get_num_buses_reg_by_shunt(net));
+  sprintf(out+strlen(out),"  star           : %d\n",NET_get_num_star_buses(net));
   sprintf(out+strlen(out),"shunts           : %d\n",NET_get_num_shunts(net));
   sprintf(out+strlen(out),"  fixed          : %d\n",NET_get_num_fixed_shunts(net));
   sprintf(out+strlen(out),"  switched v     : %d\n",NET_get_num_switched_shunts(net));

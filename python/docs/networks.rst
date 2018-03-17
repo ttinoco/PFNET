@@ -13,7 +13,7 @@ This section describes how to use and analyze power networks in PFNET.
 Overview
 ========
 
-Power networks in PFNET are represented by objects of type |Network|. These objects are created from power network data files using a :ref:`Parser <parsers>`, as described in the previous section. Once the network is created, it can be analyzed, visualized, and used to construct network optimization problems.
+Power networks in PFNET are represented by objects of type |Network|. These objects are created from power network data files using a :ref:`Parser <parsers>`, as described in the previous section. Once the network is created, it can be analyzed, modified, and used to construct network optimization problems.
 
 An important attribute of the |Network| class is :data:`base_power <pfnet.Network.base_power>`. This quantity, which has units of MVA, is useful for converting power quantities in per unit system base power to MW or MVAr.
 
@@ -36,6 +36,7 @@ Power networks have several components. These are :ref:`buses <net_bus>`, :ref:`
     reg by gen     : 5
     reg by tran    : 0
     reg by shunt   : 0
+    star           : 0
   shunts           : 1
     fixed          : 1
     switched v     : 0
@@ -100,7 +101,7 @@ Branches in a power network are objects of type |Branch| and are represented mat
 
 For convenience, a list of all the branches in the network is contained in the :data:`branches <pfnet.Network.branches>` attribute of the |Network| class.
 
-Branches in a power network can have different properties. For example, some branches can be transmission lines, fixed transformers, tap-changing transformers, or phase-shifting transformers. Tap-changing transformers in turn can control the reactive power flowing through the branch or the voltage magnitude of a bus. The |Branch| class provides methods for checking whether a branch has specific properties. The following example shows how to get a list of all the branches that are transmission lines::
+In PFNET, branches can represent transmission lines, fixed transformers, tap-changing transformers, or phase-shifting transformers. Tap-changing transformers can control the reactive power flowing through the branch or the voltage magnitude of a bus. The |Branch| class provides methods for checking whether a branch has specific properties. The following example shows how to get a list of all the branches that are transmission lines::
 
   >>> lines = [br for br in net.branches if br.is_line()]
 
@@ -392,10 +393,10 @@ As explained above, once the network variables have been set, a vector with the 
   >>> print np.linalg.norm(x - (P1.T*v_mags+P2.T*v_angs))
   0.0
 
-.. _net_cont:
+.. _net_outages:
 
-Contingencies
-=============
+Outages and Contingencies
+=========================
 
 PFNET provides a way to specify and analyze network contingencies. A contingency is represented by an object of type :class:`Contingency <pfnet.Contingency>`, and is characterized by one or more :class:`generator <pfnet.Generator>` or :class:`branch <pfnet.Branch>` outages. The lists of generator and branch outages of a contingency can be specified at construction, or by using the class methods :func:`add_generator_outage() <pfnet.Contingency.add_generator_outage>` and :func:`add_branch_outage() <pfnet.Contingency.add_branch_outage>`, respectively. The following example shows how to construct a contingency::
 
@@ -484,3 +485,15 @@ Lastly, for component quantities that can potentially vary over time, setting th
 
   >>> print bus.index_v_mag
   [0 1 2 3 4]
+
+
+.. _net_modifications:
+
+Network Modifications
+=====================
+
+
+.. _net_subnetworks:
+
+Subnetworks
+===========
