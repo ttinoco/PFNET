@@ -53,9 +53,9 @@ Parser* PARSER_new(void) {
 Parser* PARSER_new_for_file(char* f) {
   char* ext;
   ext = strrchr(f,'.');
-  ext = strtolower(ext);
   if (!ext)
     return NULL;
+  ext = strtolower(ext);
   if (strcmp(ext+1,"raw") == 0)
     return RAW_PARSER_new();
   if (strcmp(ext+1,"mat") == 0)

@@ -7,10 +7,13 @@ else
     error("PFNET is not properly installed. Please run Pkg.build(\"pfnet\")")
 end
 
-export all
-
 # Includes
 include("net.jl")
 include("parser.jl")
+
+# Symbols
+for name in names(pfnet, true)
+    @eval export $(Symbol(name))
+end
 
 end
