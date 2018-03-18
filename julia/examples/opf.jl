@@ -1,16 +1,38 @@
 using pfnet
 
-using pfnet
-
+# Case
 case = ARGS[1]
+
+# Parser
 parser = Parser(case)
 
+# Network
 net = parse_case(parser, case)
 show_components(net)
 
+# Clear flags
 clear_flags(net)
 
+# Voltage magnitudes
+set_flags(net,
+          "bus",
+          ["variable", "bounded"], 
+          "any",
+          "voltage magnitude")
 
+# Voltage angles
+set_flags(net,
+          "bus",
+          "variable",
+          "not slack",
+          "voltage angle")
+
+# Generator powers
+set_flags(net,
+          "generator",
+          ["variable","bounded"],
+          "not on outage",
+          ["active power","reactive power"])
 
 @printf("%d %d\n",
         num_vars(net),

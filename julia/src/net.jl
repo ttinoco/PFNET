@@ -32,7 +32,20 @@ num_slack_buses(net::Network) = ccall((:NET_get_num_slack_buses, libpfnet), Int,
 num_periods(net::Network) = ccall((:NET_get_num_periods, libpfnet), Int, (Ptr{Void},), net.ptr)
 num_vars(net::Network) = ccall((:NET_get_num_vars, libpfnet), Int, (Ptr{Void},), net.ptr)
 
-#function set_flags(net::Network, 
+function set_flags(net::Network, obj_type::String, flags, properties, quantities)
+    flags = typeof(flags) == Array{String,1} ? flags : [flags]
+    properties = typeof(properties) == Array{String,1} ? properties : [properties]
+    quantities = typeof(quantities) == Array{String,1} ? quantities : [quantities]
+    f(x,y) = x | y
+    ccall((:NET_set_flags, libpfnet),
+          Void,
+          (Ptr{Void}, UInt8, UInt8, UInt8, UInt8,),
+          net.ptr,
+          str2obj[obj_type],
+          reduce(f, [str2flag[x] for x in flags]),
+          reduce(f, [str2prop[obj_type][x] for x in properties]),
+          reduce(f, [str2q[obj_type][x] for x in quantities]))
+end
 
 show_components(net::Network) = ccall((:NET_show_components, libpfnet), Void, (Ptr{Void},), net.ptr)
 
