@@ -81,3 +81,8 @@ graph.png
 
 # Mac OSX
 .DS_Store
+
+# Julia
+julia/deps/deps.jl
+julia/deps/usr
+julia/deps/src
