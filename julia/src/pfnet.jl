@@ -7,7 +7,10 @@ else
     error("PFNET is not properly installed. Please run Pkg.build(\"pfnet\")")
 end
 
-# Includes
+export all
 
+# Includes
+include("net.jl")
+include("parser.jl")
 
 end
