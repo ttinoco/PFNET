@@ -37,22 +37,22 @@
 #include "func_SP_CONTROLS.h"
 
 // Constraints
-#include <pfnet/constr_ACPF.h>
-#include <pfnet/constr_DCPF.h>
-#include <pfnet/constr_LINPF.h>
-#include <pfnet/constr_FIX.h>
-#include <pfnet/constr_LBOUND.h>
-#include <pfnet/constr_NBOUND.h>
-#include <pfnet/constr_PAR_GEN_P.h>
-#include <pfnet/constr_PVPQ_SWITCHING.h>
-#include <pfnet/constr_GEN_RAMP.h>
-#include <pfnet/constr_REG_GEN.h>
-#include <pfnet/constr_REG_TRAN.h>
-#include <pfnet/constr_REG_SHUNT.h>
-#include <pfnet/constr_DC_FLOW_LIM.h>
-#include <pfnet/constr_AC_FLOW_LIM.h>
-#include <pfnet/constr_AC_LIN_FLOW_LIM.h>
-#include <pfnet/constr_BAT_DYN.h>
-#include <pfnet/constr_LOAD_PF.h>
+#include "constr_ACPF.h"
+#include "constr_DCPF.h"
+#include "constr_LINPF.h"
+#include "constr_FIX.h"
+#include "constr_LBOUND.h"
+#include "constr_NBOUND.h"
+#include "constr_PAR_GEN_P.h"
+#include "constr_PVPQ_SWITCHING.h"
+#include "constr_GEN_RAMP.h"
+#include "constr_REG_GEN.h"
+#include "constr_REG_TRAN.h"
+#include "constr_REG_SHUNT.h"
+#include "constr_DC_FLOW_LIM.h"
+#include "constr_AC_FLOW_LIM.h"
+#include "constr_AC_LIN_FLOW_LIM.h"
+#include "constr_BAT_DYN.h"
+#include "constr_LOAD_PF.h"
 
 #endif

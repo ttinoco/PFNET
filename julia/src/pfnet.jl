@@ -8,6 +8,7 @@ else
 end
 
 # Includes
+include("strings.jl")
 include("net.jl")
 include("parser.jl")
 
