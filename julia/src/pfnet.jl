@@ -11,6 +11,9 @@ end
 include("strings.jl")
 include("net.jl")
 include("parser.jl")
+include("function.jl")
+include("constraint.jl")
+include("problem.jl")
 
 # Symbols
 for name in names(pfnet, true)

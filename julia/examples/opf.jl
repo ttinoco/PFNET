@@ -34,15 +34,26 @@ set_flags(net,
           "not on outage",
           ["active power","reactive power"])
 
-@printf("%d %d\n",
-        num_vars(net),
-        (2*num_buses(net)-
-         num_slack_buses(net) +
-         2*num_generators_not_on_outage(net))*num_periods(net))
+assert(num_vars(net) == (2*num_buses(net)-
+                         num_slack_buses(net) +
+                         2*num_generators_not_on_outage(net))*num_periods(net))
 
-@printf("%d %d\n",
-        num_bounded(net),
-        (2*num_generators_not_on_outage(net)+
-         num_buses(net))*num_periods(net))
+assert(num_bounded(net) == (2*num_generators_not_on_outage(net)+
+                            num_buses(net))*num_periods(net))
 
+# Objective function
+gen_cost = pfnet.Function("generation cost", 1., net)
 
+# Constaints
+acpf = pfnet.Constraint("AC power balance", net)
+bounds = pfnet.Constraint("variable bounds", net)
+th_limits = pfnet.Constraint("linearized AC branch flow limits", net)
+
+# Problem
+problem = pfnet.Problem(net)
+add_function(problem, gen_cost)
+add_constraint(problem, acpf)
+add_constraint(problem, bounds)
+add_constraint(problem, th_limits)
+analyze(problem)
+show_problem(problem)
