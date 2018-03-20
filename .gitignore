@@ -12,6 +12,7 @@
 *foo*
 build/
 __pycache__/
+*.tar.gz
 
 # PyCharm Project Files
 .idea/*
