@@ -932,6 +932,7 @@ void compute_offsets_of_new_intersection_lines(LF_Workspace* workspace, int N_co
 	double dif_offset = workspace->feas_reg.offset_max - workspace->feas_reg.offset_min;
 	int N_constraints_to_be_constructed = N_constructed_constraints + N_new_constraints;
 	IntersectionLine* lines = workspace->lines;
+	int i;
 	
 	//check if smart splitting is applicable
 	if (N_constraints_to_be_constructed <= 2) {
@@ -947,10 +948,10 @@ void compute_offsets_of_new_intersection_lines(LF_Workspace* workspace, int N_co
 	}
 
 	if (N_new_constraints > 0)
-		for (int i = N_constructed_constraints; i < N_constraints_to_be_constructed; i++)
+		for (i = N_constructed_constraints; i < N_constraints_to_be_constructed; i++)
 			insert_intersection_line(lines, dif_offset, i);
 	else
-		for (int i = N_constructed_constraints; i > N_constraints_to_be_constructed; i--)
+		for (i = N_constructed_constraints; i > N_constraints_to_be_constructed; i--)
 			remove_intersection_line(lines, dif_offset, i);
 }
 
@@ -960,6 +961,7 @@ void insert_intersection_line(IntersectionLine* lines, double dif_offset, int N_
 	double buf1, buf2, buf3, coef, length_new;
 	int N_constraints_to_be_constructed = N_constructed_constraints + 1,
 		index_of_new_constraint = N_constraints_to_be_constructed / 2 - 1; //index of newly created constraint in a list of constraints
+	int i;
 
 	//compute the 'length' of the constraint to be inserted
 	if ((N_constraints_to_be_constructed - 1) % 2 == 0) //if it is even
@@ -973,7 +975,7 @@ void insert_intersection_line(IntersectionLine* lines, double dif_offset, int N_
 	//compute new values of offsets
 	//for constraints that are located in the list before the newly constructed constraint
 	buf1 = lines[0].offset;
-	for (int i = 0; i <= index_of_new_constraint; i++) {
+	for (i = 0; i <= index_of_new_constraint; i++) {
 		buf2 = lines[i + 1].offset;
 		lines[i + 1].offset = lines[i].offset + (buf2 - buf1)*coef;
 		buf1 = buf2;
@@ -982,7 +984,7 @@ void insert_intersection_line(IntersectionLine* lines, double dif_offset, int N_
 	buf2 = lines[index_of_new_constraint + 2].offset;
 	lines[index_of_new_constraint + 2].offset = lines[index_of_new_constraint + 1].offset + length_new*coef;
 	//for constraints that are located in the list after the newly constructed constraint
-	for (int i = index_of_new_constraint + 2; i < N_constraints_to_be_constructed; i++) {
+	for (i = index_of_new_constraint + 2; i < N_constraints_to_be_constructed; i++) {
 		buf3 = lines[i + 1].offset;
 		lines[i + 1].offset = lines[i].offset + (buf2 - buf1)*coef;
 		buf1 = buf2;
@@ -995,7 +997,8 @@ void insert_intersection_line(IntersectionLine* lines, double dif_offset, int N_
 void remove_intersection_line(IntersectionLine* lines, double dif_offset, int N_constructed_constraints) {
 	double length_to_remove, coef, buf1, buf2;
 	int index_constraint_to_remove = (N_constructed_constraints - 1) / 2;
-
+	int i;
+	
 	//compute the 'length' of constraints to be removed
 	length_to_remove = lines[index_constraint_to_remove + 1].offset - lines[index_constraint_to_remove].offset;
 
@@ -1005,14 +1008,14 @@ void remove_intersection_line(IntersectionLine* lines, double dif_offset, int N_
 	//compute new values of offsets
 	//for constraints that are located in the list before the removed constraint
 	buf1 = lines[0].offset;
-	for (int i = 0; i < index_constraint_to_remove; i++) {
+	for (i = 0; i < index_constraint_to_remove; i++) {
 		buf2 = lines[i + 1].offset;
 		lines[i + 1].offset = lines[i].offset + (buf2 - buf1)*coef;
 		buf1 = buf2;
 	}
 	//for constraints that are located in the list after the removed constraint
 	buf1 = lines[index_constraint_to_remove + 1].offset;
-	for (int i = index_constraint_to_remove + 1; i < N_constructed_constraints; i++) {
+	for (i = index_constraint_to_remove + 1; i < N_constructed_constraints; i++) {
 		buf2 = lines[i + 1].offset;
 		lines[i].offset = lines[i - 1].offset + (buf2 - buf1)*coef;
 		buf1 = buf2;
@@ -1025,6 +1028,7 @@ void refine_offsets_of_existing_interseciton_lines(LF_Workspace* workspace,
 	double mean_error, buf1, buf2, buf3, dif_alpha;
 	double *errors = workspace->errors;;
 	IntersectionLine* lines = workspace->lines;
+	int i;
 
 	dif_alpha = workspace->feas_reg.offset_max - workspace->feas_reg.offset_min;
 
@@ -1045,16 +1049,16 @@ void refine_offsets_of_existing_interseciton_lines(LF_Workspace* workspace,
 	if (approximation == conservative) {
 		//compute the mean of errors
 		buf1 = 0.0;
-		for (int i = 0; i < N_constructed_constraints; i++)
+		for (i = 0; i < N_constructed_constraints; i++)
 			buf1 = buf1 + errors[i];
 		mean_error = buf1 / N_constructed_constraints;
 		//compute normalization coefficient
 		buf1 = 0.0;
-		for (int i = 0; i < N_constructed_constraints; i++)
+		for (i = 0; i < N_constructed_constraints; i++)
 			buf1 = buf1 + sqrt(mean_error / errors[i])*(lines[i + 1].offset - lines[i].offset);
 		//refine values of offsets
 		buf2 = lines[0].offset;
-		for (int i = 0; i < N_constructed_constraints; i++) {
+		for (i = 0; i < N_constructed_constraints; i++) {
 			buf3 = lines[i + 1].offset;
 			lines[i + 1].offset = lines[i].offset + dif_alpha*sqrt(mean_error / errors[i])*(buf3 - buf2) / buf1;
 			buf2 = buf3;
@@ -1063,16 +1067,16 @@ void refine_offsets_of_existing_interseciton_lines(LF_Workspace* workspace,
 	else {
 		//compute the mean of errors
 		buf1 = (errors[0] + errors[N_constructed_constraints]) / 2;
-		for (int i = 1; i < N_constructed_constraints; i++)
+		for (i = 1; i < N_constructed_constraints; i++)
 			buf1 = buf1 + errors[i];
 		mean_error = buf1 / N_constructed_constraints;
 		//compute normalization coefficient
 		buf1 = 0.0;
-		for (int i = 0; i < N_constructed_constraints; i++)
+		for (i = 0; i < N_constructed_constraints; i++)
 			buf1 = buf1 + sqrt(2 * mean_error / (errors[i] + errors[i + 1]))*(lines[i + 1].offset - lines[i].offset);
 		//refine values of offsets
 		buf2 = lines[0].offset;
-		for (int i = 0; i < N_constructed_constraints; i++) {
+		for (i = 0; i < N_constructed_constraints; i++) {
 			buf3 = lines[i + 1].offset;
 			lines[i + 1].offset = lines[i].offset + dif_alpha*sqrt(2 * mean_error / (errors[i] + errors[i + 1]))*(buf3 - buf2) / buf1;
 			buf2 = buf3;
@@ -1085,7 +1089,8 @@ void refine_offsets_of_existing_interseciton_lines(LF_Workspace* workspace,
 void distribute_offsets_evenly(LF_Workspace* workspace, int N_constructed_constraints, double dif_alpha) {
 	IntersectionLine* lines = workspace->lines;
 	double alpha_min = workspace->feas_reg.offset_min;
-	for (int i = 0; i <= N_constructed_constraints; i++)
+	int i;
+	for (i = 0; i <= N_constructed_constraints; i++)
 		lines[i].offset = alpha_min + dif_alpha * i / N_constructed_constraints;
 }
 
@@ -1192,8 +1197,9 @@ void construct_intersection_lines(LF_Workspace* workspace, LF_Options* options, 
 		*branch_data = workspace->branch_data;
 	IntersectionLine* lines = workspace->lines;
 	int n_lines_total = max_number_of_intersection_lines(N_constraints);
+	int i;
 
-	for (int i = 0; i < n_lines_total; i++) {
+	for (i = 0; i < n_lines_total; i++) {
 		compute_intersections_of_line_with_Vbox(&lines[i], branch_data[8], &workspace->V_limits);
 
 		//compute the values of delta at both ends of relevant line segment
@@ -1275,9 +1281,10 @@ void shrink_intersection_line_segment(double delta_begin, double delta_end, LF_W
 /*compute the slope that all intersection lines will have in (V_i, delta) plane*/
 double slope_of_intersection_lines(IntersectionLine* lines, int n_lines_total) {
 	double slope_all_lines = 0.0, length_squared, sum_of_line_length_squares = 0.0;
+	int i;
 
 	//different 'outer' intersection lines will have different weights of their slopes, which are made proportional to squares of line lengths
-	for (int i = 1; i < n_lines_total - 1; i++) {
+	for (i = 1; i < n_lines_total - 1; i++) {
 		if (lines[i].slope != 0.0) {
 			length_squared = (lines[i].point_end.V_i - lines[i].point_begin.V_i)*(lines[i].point_end.V_i - lines[i].point_begin.V_i) +
 				(lines[i].point_end.V_j - lines[i].point_begin.V_j)*(lines[i].point_end.V_j - lines[i].point_begin.V_j);
@@ -1297,7 +1304,8 @@ double slope_of_intersection_lines(IntersectionLine* lines, int n_lines_total) {
 void compute_deltas_at_ends_of_intersection_lines(LF_Workspace* workspace, int n_lines_total, LF_Options* options) {
 	IntersectionLine* lines = workspace->lines;
 	double V_i_temp, V_j_temp, delta_temp, *branch_data = workspace->branch_data, slope_all_lines = workspace->slope_all_lines;
-
+	int i;
+	
 	//handle first and last lines separately as they are special cases
 	lines[0].point_end.delta = max_angle_for_given_current(lines[0].point_end.V_i, lines[0].point_end.V_j, branch_data);
 	lines[n_lines_total - 1].point_end.delta = max_angle_for_given_current(lines[n_lines_total - 1].point_end.V_i,
@@ -1314,7 +1322,7 @@ void compute_deltas_at_ends_of_intersection_lines(LF_Workspace* workspace, int n
 	}
 
 	//deltas at end points of all other lines
-	for (int i = 1; i < n_lines_total - 1; i++) {
+	for (i = 1; i < n_lines_total - 1; i++) {
 		if (options->approximation == conservative)
 			V_i_temp = point_on_conservative_intersection_line(&lines[i], branch_data, slope_all_lines, options);
 		else
@@ -1386,10 +1394,12 @@ void compute_plane_normals(LF_Workspace* workspace, int N_constraints, Approxima
 	IntersectionLine* lines = workspace->lines;
 	int counter = workspace->constraint_counter, index_second_line;
 	double coef_normalized, coef_ViVj = workspace->branch_data[8], *plane_normals = workspace->plane_normals,
-		vector_1[3] = { 0 }, vector_2[3] = { 0 }, plane_normal[3] = { 0 };
+	  vector_1[3] = {0,0,0}, vector_2[3] = {0,0,0}, plane_normal[3] = {0,0,0};
+	int i;
+	int j;
 
 	//to find the equation of the plane, we need two vectors and a point that all lie in this plane
-	for (int i = 0; i < N_constraints; i++) {
+	for (i = 0; i < N_constraints; i++) {
 		//determine index of second intersection line that will be used for parameters of current plane
 		if (N_constraints == 1)
 			index_second_line = 2;
@@ -1421,7 +1431,7 @@ void compute_plane_normals(LF_Workspace* workspace, int N_constraints, Approxima
 		coef_normalized = plane_normal[2] * workspace->branch_data[9];
 
 		//normalize plane normal such that coefficient for delta is 1 (for upper part) or -1 (for lower part)
-		for (int j = 0; j < 3; j++)
+		for (j = 0; j < 3; j++)
 			plane_normals[(i + counter) * 3 + j] = plane_normal[j] / coef_normalized;
 	}
 }
@@ -1430,14 +1440,16 @@ void compute_plane_normals(LF_Workspace* workspace, int N_constraints, Approxima
 /*compute the offsets of planes (conservative or relaxed)*/
 void compute_plane_offsets(LF_Workspace* workspace, int N_constraints, LF_Options* options) {
 	IntersectionLine* lines = workspace->lines;
-	double point_on_plane[3] = { 0 }, delta_shift, *plane_normals = workspace->plane_normals, *b_planes = workspace->b_planes;
+	double point_on_plane[3] = {0,0,0}, delta_shift, *plane_normals = workspace->plane_normals, *b_planes = workspace->b_planes;
 	int counter = workspace->constraint_counter, index_last_line;
 	ApproximationType approximation = options->approximation;
+        int i;
+	int j;
 
 	index_last_line = max_number_of_intersection_lines(N_constraints) - 1;
 
 	//to find the equation of the plane, we need two vectors and a point that all lie in this plane
-	for (int i = 0; i < N_constraints; i++) {
+	for (i = 0; i < N_constraints; i++) {
 		//compute parameters of a point on the plane
 		if (approximation == relaxed)
 			delta_shift = delta_shift_plane_relaxed(workspace, i, N_constraints, options);
@@ -1453,7 +1465,7 @@ void compute_plane_offsets(LF_Workspace* workspace, int N_constraints, LF_Option
 
 		//compute value of b in Ax = b for this plane
 		b_planes[i + counter] = 0.0;
-		for (int j = 0; j < 3; j++)
+		for (j = 0; j < 3; j++)
 			b_planes[i + counter] = b_planes[i + counter] + plane_normals[(i + counter) * 3 + j] * point_on_plane[j];
 	}
 }
@@ -1672,7 +1684,8 @@ void update_plane_for_infeasible_box_corner(LF_Workspace *workspace, int index_o
 	int index_inner, ind_line, index, counter = workspace->constraint_counter;
 	IntersectionLine line;
 	Point3D point, point_line;
-
+	int j;
+	
 	//compute necessary indices
 	if (index_outer == 0) {
 		index_inner = 1;
@@ -1718,7 +1731,7 @@ void update_plane_for_infeasible_box_corner(LF_Workspace *workspace, int index_o
 	fill_vector_with_values(point.V_i, point.V_j, point.delta, vector_1);
 	coef_normalized = plane_normal[2] * workspace->branch_data[9];
 	b_planes[index] = 0.0;
-	for (int j = 0; j < 3; j++) {
+	for (j = 0; j < 3; j++) {
 		plane_normals[index * 3 + j] = plane_normal[j] / coef_normalized;
 		b_planes[index] += plane_normals[index * 3 + j] * vector_1[j];
 	}
@@ -1769,7 +1782,8 @@ void obtain_most_distant_point(LF_Workspace *workspace, int index_outer, int ind
 	IntersectionLine line;
 	Point3D point_temp;
 	int N_points = (int)ceil((workspace->V_limits.V_i_max - workspace->V_limits.V_i_min) / 0.02);
-
+	int i;
+	
 	if (N_points < 5)
 		N_points = 5; //check at least five points
 
@@ -1778,7 +1792,7 @@ void obtain_most_distant_point(LF_Workspace *workspace, int index_outer, int ind
 
 	//check points along the line and record the one which is the most distant from the surface and not conservative
 	distance_old = 0.0;
-	for (int i = N_points; i > 0; i--) {
+	for (i = N_points; i > 0; i--) {
 		point_temp.V_i = line.point_begin.V_i + (line.point_end.V_i - line.point_begin.V_i)*i / N_points;
 		point_temp.V_j = line.point_begin.V_j + (line.point_end.V_j - line.point_begin.V_j)*i / N_points;
 		point_temp.delta = line.point_begin.delta + (line.point_end.delta - line.point_begin.delta)*i / N_points;
@@ -1835,12 +1849,13 @@ void estimate_conservative_approximation_errors(LF_Workspace* workspace, int N_c
 	IntersectionLine middle_line, *lines = workspace->lines;
 	double offset_corner_min, offset_corner_max, error_begin, error_end, error_corner, coef_ViVj = workspace->branch_data[8],
 		*errors = workspace->errors;
+	int i;
 
 	//compute offsets of the lines passing through (V_i_min, V_j_min) and (V_i_max, V_j_max) corners
 	offset_corner_min = workspace->V_limits.V_j_min - workspace->branch_data[8] * workspace->V_limits.V_i_min;
 	offset_corner_max = workspace->V_limits.V_j_max - workspace->branch_data[8] * workspace->V_limits.V_i_max;
 
-	for (int i = 0; i < N_constraints; i++) {
+	for (i = 0; i < N_constraints; i++) {
 		//compute the offset of the line that we will use for determining the error 
 		if (N_constraints == 1)
 			middle_line.offset = lines[1].offset;
@@ -1886,7 +1901,8 @@ void estimate_relaxed_approximation_errors(LF_Workspace* workspace, int N_constr
 	double line_slope, coef_ViVj = workspace->branch_data[8], *errors = workspace->errors, *b_planes = workspace->b_planes,
 		abs_slope = fabs(workspace->slope_all_lines), *plane_normals = workspace->plane_normals;
 	int ind_plane, ind_line, counter = workspace->constraint_counter, index;
-
+	int i;
+	
 	//check if we need to compute error in the corner for the case of N_constraints=1
 	if (N_constraints == 1 &&
 		((workspace->feas_reg.bottom_right_corner_feasible && workspace->feas_reg.top_left_corner_feasible) ||
@@ -1895,7 +1911,7 @@ void estimate_relaxed_approximation_errors(LF_Workspace* workspace, int N_constr
 	else 
 		compute_error_at_corners = LF_FALSE;
 	
-	for (int i = 0; i <= N_constraints; i++) {
+	for (i = 0; i <= N_constraints; i++) {
 		if ((i == 0 && workspace->feas_reg.bottom_right_corner_feasible) || compute_error_at_corners)
 			errors[i] = error_value_in_ViVj_point(workspace, workspace->V_limits.V_i_max, workspace->V_limits.V_j_min, 0);
 		else if ((i == N_constraints && workspace->feas_reg.top_left_corner_feasible) || compute_error_at_corners)
@@ -1962,7 +1978,8 @@ double error_value_in_ViVj_point(LF_Workspace* workspace, double V_i, double V_j
 /*compute minimum error among all constructed relaxed constraints*/
 double min_error_relaxed_approximation(double *errors, int N_constraints) {
 	double error_min = 1e6, error_temp;
-	for (int i = 0; i < N_constraints; i++) {
+	int i;
+	for (i = 0; i < N_constraints; i++) {
 		error_temp = fmax(errors[i], errors[i + 1]);
 		if (error_temp < error_min)
 			error_min = error_temp;
@@ -1984,13 +2001,14 @@ BOOL is_approximation_symmetric(LF_Workspace* workspace) {
 void reflect_approximation(LF_Workspace* workspace, int N_constraints_for_upper_part) {
 	int counter_max = workspace->constraint_counter, counter_min = workspace->constraint_counter - N_constraints_for_upper_part;
 	double delta_upper, delta_lower, *plane_normals = workspace->plane_normals, *b_planes = workspace->b_planes;
+	int i;
 	
 	if (N_constraints_for_upper_part > 0) {
 		//compute offset difference
 		delta_upper = max_angle_for_given_current_slow(workspace->V_limits.V_i_max, workspace->V_limits.V_i_max, workspace->branch_data);
 		workspace->branch_data[9] = -1.0;
 		delta_lower = max_angle_for_given_current_slow(workspace->V_limits.V_i_max, workspace->V_limits.V_i_max, workspace->branch_data);
-		for (int i = 0; i < N_constraints_for_upper_part; i++) {
+		for (i = 0; i < N_constraints_for_upper_part; i++) {
 			plane_normals[(i + counter_max) * 3] = plane_normals[(i + counter_min) * 3];
 			plane_normals[(i + counter_max) * 3 + 1] = plane_normals[(i + counter_min) * 3 + 1];
 			plane_normals[(i + counter_max) * 3 + 2] = -plane_normals[(i + counter_min) * 3 + 2];
@@ -2007,9 +2025,10 @@ void record_all_constraints(LF_Workspace* workspace, LF_Branch* branch, LF_Resul
 	int N_constructed_constraints = workspace->constraint_counter;
 	double *plane_normals = workspace->plane_normals, *b_planes = workspace->b_planes, *A_matrix = results->A_matrix,
 		*b_vector = results->b_vector, Kt_shift = branch->t_shift*LF_PI / 180.0, ratio = transformer_ratio(branch);
+	int i;
 
 	//record results in the output structure
-	for (int i = 0; i < N_constructed_constraints; i++) {
+	for (i = 0; i < N_constructed_constraints; i++) {
 		//record constraint normal
 		A_matrix[i * 3] = plane_normals[i * 3] / ratio;
 		A_matrix[i * 3 + 1] = plane_normals[i * 3 + 1];
@@ -2039,10 +2058,12 @@ void record_all_constraints(LF_Workspace* workspace, LF_Branch* branch, LF_Resul
 /*update the values of constraint normals and offsets in case V_i or V_j is fixed*/
 void update_constraints_for_fixed_V(LF_Results *results, LF_Branch *branch, int N_constructed_constraints) {
 	double V_temp;
+	int i;
+	
 	//update values of coefficients in case V_i is fixed
 	if (branch->V_i_min==branch->V_i_max) {
 		V_temp = branch->V_i_min;
-		for (int i = 0; i < N_constructed_constraints; i++) {
+		for (i = 0; i < N_constructed_constraints; i++) {
 			results->b_vector[i] = results->b_vector[i] - results->A_matrix[i * 3] * V_temp;
 			results->A_matrix[i * 3] = 0.0;
 		}
@@ -2051,7 +2072,7 @@ void update_constraints_for_fixed_V(LF_Results *results, LF_Branch *branch, int 
 	//update values of coefficients in case V_i is fixed
 	if (branch->V_j_min == branch->V_j_max) {
 		V_temp = branch->V_j_min;
-		for (int i = 0; i < N_constructed_constraints; i++) {
+		for (i = 0; i < N_constructed_constraints; i++) {
 			results->b_vector[i] = results->b_vector[i] - results->A_matrix[i * 3 + 1] * V_temp;
 			results->A_matrix[i * 3 + 1] = 0.0;
 		}
@@ -2123,8 +2144,8 @@ void compute_surface_intersection_lines(LF_Workspace *workspace, IntersectionLin
 /*compute points at the intersection of two surfaces with the given edge of Vbox*/
 void compute_surface_intersection_points(LF_Workspace *workspace, IntersectionLine *line_lower, IntersectionLine *line_upper,
 	double *coefficients, BOOL line_beginning) {
-	double V_fixed, V_values[2];
-	Point3D points[2] = { 0 };
+        double V_fixed, V_values[2];
+	Point3D points[2] = {{0}};
 	int index_lower, index_upper, counter_points = 0;
 
 	//fix V_i
@@ -2260,7 +2281,8 @@ void change_branch_data_for_flow_side(double *branch_data) {
 /*compute first and last indexes of constraints corresponding to lower and upper part of the approximation*/
 void compute_boundary_indices_of_constraints(LF_Workspace *workspace, int N_constraints_end, int *indexes_lower, int *indexes_upper) {
 	int N_constructed_constraints = workspace->constraint_counter, index_1, index_2;
-
+	int i;
+	
 	//check which planes should be retained from the beginning and end of line limit based on surface intersection
 	if (workspace->branch_data[8] < 1) {
 		index_1 = 0;
@@ -2276,7 +2298,7 @@ void compute_boundary_indices_of_constraints(LF_Workspace *workspace, int N_cons
 	indexes_upper[index_2] = N_constraints_end;
 	indexes_lower[index_2 + 1] = N_constructed_constraints;
 
-	for (int i = 0; i < N_constraints_end; i++) {
+	for (i = 0; i < N_constraints_end; i++) {
 		if (workspace->plane_normals[3 * i + 2] < 0) {
 			indexes_upper[index_1 + 1] = i;
 			indexes_lower[index_1] = i;
@@ -2284,7 +2306,7 @@ void compute_boundary_indices_of_constraints(LF_Workspace *workspace, int N_cons
 		}
 	}
 
-	for (int i = N_constraints_end; i < N_constructed_constraints; i++) {
+	for (i = N_constraints_end; i < N_constructed_constraints; i++) {
 		if (workspace->plane_normals[3 * i + 2] < 0) {
 			indexes_upper[index_2 + 1] = i;
 			indexes_lower[index_2] = i;
@@ -2298,8 +2320,10 @@ void compute_boundary_indices_of_constraints(LF_Workspace *workspace, int N_cons
 void record_desired_approximation_part(LF_Workspace *workspace, LF_Results *results, IntersectionLine *line, 
 	int *indexes, double Kt_shift) {
 	IntersectionLine line_temp;
+	int i;
+	
 	//record constraints before the intersection of surfaces
-	for (int i = indexes[0]; i < indexes[1]; i++) {
+	for (i = indexes[0]; i < indexes[1]; i++) {
 		if (i == indexes[0] || i == indexes[1] - 1) {
 			record_parameters_of_one_constraint(workspace, results, i, Kt_shift);
 			continue;
@@ -2313,7 +2337,7 @@ void record_desired_approximation_part(LF_Workspace *workspace, LF_Results *resu
 		}
 	}
 	//record constraints after the intersection of surfaces
-	for (int i = indexes[2]; i < indexes[3]; i++) {
+	for (i = indexes[2]; i < indexes[3]; i++) {
 		if (i == indexes[3] - 1) {
 			record_parameters_of_one_constraint(workspace, results, i, Kt_shift);
 			break;
@@ -2751,8 +2775,10 @@ int max_number_of_intersection_lines(int N_constraints) {
 /*find value of maximum element in 1D array*/
 double max_element_in_array(double* Array, int Length) {
 	double max_value;
+	int i;
+	
 	max_value = Array[0];
-	for (int i = 1; i < Length; i++)
+	for (i = 1; i < Length; i++)
 		if (Array[i] > max_value)
 			max_value = Array[i];
 	return max_value;
@@ -2762,8 +2788,10 @@ double max_element_in_array(double* Array, int Length) {
 /*find value of minimum element in 1D array*/
 double min_element_in_array(double* Array, int Length) {
 	double min_value;
+	int i;
+	
 	min_value = Array[0];
-	for (int i = 1; i < Length; i++)
+	for (i = 1; i < Length; i++)
 		if (Array[i] < min_value)
 			min_value = Array[i];
 	return min_value;
