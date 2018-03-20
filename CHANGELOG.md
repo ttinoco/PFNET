@@ -7,8 +7,8 @@ Targets
 * Area/zone projections.
 * Variable generator curtailment cost.
 
-Unreleased
-----------
+Version 1.3.3
+-------------
 * Improved gen Q participation to look exactly at which Qs are vars to add correct number of constraints.
 * Added support for changing function and constraint parameters (CONSTR_set_parameter, FUNC_set_parameter).
 * Added "variable regularization" function or FUNC_REG_VAR, which has parameters w and x0 and computes (x-x0)^Tdiag(w)(x-x0).
