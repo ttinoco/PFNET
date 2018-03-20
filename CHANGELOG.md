@@ -42,6 +42,7 @@ Unreleased
 * Added bus.get_index_t for getting unique indices for each bus and time.
 * Added bus area and zone.
 * Started julia wrapper.
+* Moved python and julia wrappers to separate repos.
 
 Version 1.3.2
 -------------
