@@ -1,6 +1,5 @@
 # General
 *.[oa]
-*.pyc
 *.raw
 *~
 *.out
@@ -10,26 +9,12 @@
 *.dot
 *.prof
 *.cfg
-cpfnet.pyd
-cpfnet.c
-cpfnet.h
 *foo*
 build/
 __pycache__/
 
-# JSON
-temp_json.json
-
 # PyCharm Project Files
 .idea/*
-
-# Builds
-*.o
-lib/*
-python/build/*
-python/pfnet/*.so
-python/pfnet/*.dll
-python/lib/pfnet
 
 # Tests
 tests/*.out
@@ -76,13 +61,5 @@ tests/Makefile.in
 # cmake
 /build
 
-# Python examples
-graph.png
-
 # Mac OSX
 .DS_Store
-
-# Julia
-julia/deps/deps.jl
-julia/deps/usr
-julia/deps/src

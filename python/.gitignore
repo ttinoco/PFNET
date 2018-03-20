@@ -1,6 +1,0 @@
-dist/
-foo.dot
-PFNET.egg-info
-
-# ignore cython generated C source
-pfnet/cpfnet.c
