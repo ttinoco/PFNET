@@ -104,6 +104,8 @@ Bus* NET_get_load_buses(Net* net);
 Gen* NET_get_gen_from_name_and_bus_number(Net* net, char* name, int number);
 Branch* NET_get_branch_from_name_and_bus_numbers(Net* net, char* name, int number1, int number2);
 Shunt* NET_get_shunt_from_name_and_bus_number(Net* net, char* name, int number);
+Shunt* NET_get_fixed_shunt_from_name_and_bus_number(Net* net, char* name, int number);
+Shunt* NET_get_switched_shunt_from_name_and_bus_number(Net* net, char* name, int number);
 Load* NET_get_load_from_name_and_bus_number(Net* net, char* name, int number);
 Vargen* NET_get_vargen_from_name_and_bus_number(Net* net, char* name, int number);
 Bat* NET_get_bat_from_name_and_bus_number(Net* net, char* name, int number);

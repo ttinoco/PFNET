@@ -2739,6 +2739,26 @@ Shunt* NET_get_shunt_from_name_and_bus_number(Net* net, char* name, int number) 
   return NULL;
 }
 
+Shunt* NET_get_fixed_shunt_from_name_and_bus_number(Net* net, char* name, int number) {
+  Shunt* shunt;
+  Bus* bus = NET_bus_hash_number_find(net, number);
+  for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+    if (SHUNT_is_fixed(shunt) && strcmp(SHUNT_get_name(shunt), name) == 0)
+      return shunt;
+  }
+  return NULL;
+}
+
+Shunt* NET_get_switched_shunt_from_name_and_bus_number(Net* net, char* name, int number) {
+  Shunt* shunt;
+  Bus* bus = NET_bus_hash_number_find(net, number);
+  for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+    if (SHUNT_is_switched(shunt) && strcmp(SHUNT_get_name(shunt), name) == 0)
+      return shunt;
+  }
+  return NULL;
+}
+
 Load* NET_get_load_from_name_and_bus_number(Net* net, char* name, int number) {
   Load* load;
   Bus* bus = NET_bus_hash_number_find(net, number);
