@@ -16,7 +16,7 @@ Parser* RAW_PARSER_new(void) {
   return NULL;
 }
 
-void RAW_PARSER_init(Parser* p) {
+void RAW_PARSER_init(Parser* p, BOOL params) {
   // pass
 }
 

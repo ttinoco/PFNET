@@ -20,11 +20,11 @@
 
 // Interface
 Parser* RAW_PARSER_new(void);
-void RAW_PARSER_init(Parser* p);
+void RAW_PARSER_init(Parser* p, BOOL init_params);
 Net* RAW_PARSER_parse(Parser* p, char* f, int num_periods);
 void RAW_PARSER_set(Parser* p, char* key, REAL value);
 void RAW_PARSER_show(Parser* p);
 void RAW_PARSER_write(Parser* p, Net* net, char* f);
-void RAW_PARSER_free(Parser* p);
+void RAW_PARSER_free(Parser* p, BOOL del_parser);
 
 #endif

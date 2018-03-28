@@ -7,6 +7,10 @@ Targets
 * Area/zone projections.
 * Variable generator curtailment cost.
 
+Unreleased
+----------
+* Updated parser init/free routines to make parser params work.
+
 Version 1.3.3
 -------------
 * Improved gen Q participation to look exactly at which Qs are vars to add correct number of constraints.

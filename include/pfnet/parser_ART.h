@@ -64,12 +64,12 @@ typedef struct ART_Parser ART_Parser;
 
 // Interface
 Parser* ART_PARSER_new(void);
-void ART_PARSER_init(Parser* p);
+void ART_PARSER_init(Parser* p, BOOL init_params);
 Net* ART_PARSER_parse(Parser* p, char* filename, int num_periods);
 void ART_PARSER_set(Parser* p, char* key, REAL value);
 void ART_PARSER_show(Parser* p);
 void ART_PARSER_write(Parser* p, Net* net, char* f);
-void ART_PARSER_free(Parser* p);
+void ART_PARSER_free(Parser* p, BOOL del_parser);
 
 // ART-specific
 void ART_PARSER_load(ART_Parser* p, Net* net);

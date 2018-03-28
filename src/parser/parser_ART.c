@@ -205,17 +205,23 @@ Parser* ART_PARSER_new(void) {
   PARSER_set_func_show(p,&ART_PARSER_show);
   PARSER_set_func_write(p,&ART_PARSER_write);
   PARSER_set_func_free(p,&ART_PARSER_free);
-  PARSER_init(p);
+  PARSER_init(p,TRUE);
   return p;
 }
 
-void ART_PARSER_init(Parser* p) {
+void ART_PARSER_init(Parser* p, BOOL init_params) {
 
+  // Local variables
+  ART_Parser* parser;
+    
   // No parser
   if (!p)
     return;
 
-  ART_Parser* parser = (ART_Parser*)malloc(sizeof(ART_Parser));
+  // Allocate
+  parser = (ART_Parser*)PARSER_get_data(p);
+  if (!parser)
+    parser = (ART_Parser*)malloc(sizeof(ART_Parser));
 
   // Error
   parser->error_flag = FALSE;
@@ -226,8 +232,10 @@ void ART_PARSER_init(Parser* p) {
   parser->field = 0;
   parser->record = 0;
 
-  // Options
-  parser->output_level = 0;
+  // Parameters
+  if (init_params) {
+    parser->output_level = 0;
+  }
 
   // Base
   parser->base_power = ART_PARSER_BASE_POWER;
@@ -567,7 +575,7 @@ void ART_PARSER_write(Parser* p, Net* net, char* f) {
   // nothing
 }
 
-void ART_PARSER_free(Parser* p) {
+void ART_PARSER_free(Parser* p, BOOL del_parser) {
 
   // Local variables
   ART_Parser* parser = (ART_Parser*)PARSER_get_data(p);
@@ -611,7 +619,8 @@ void ART_PARSER_free(Parser* p) {
   LIST_map(ART_Bat,parser->bat_list,bat,next,{free(bat);});
 
   // Free parser
-  free(parser);
+  if (del_parser)
+    free(parser);
 }
 
 void ART_PARSER_load(ART_Parser* parser, Net* net) {

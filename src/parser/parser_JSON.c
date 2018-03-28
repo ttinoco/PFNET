@@ -18,11 +18,11 @@ Parser* JSON_PARSER_new(void) {
   PARSER_set_func_show(p,&JSON_PARSER_show);
   PARSER_set_func_write(p,&JSON_PARSER_write);
   PARSER_set_func_free(p,&JSON_PARSER_free);
-  PARSER_init(p);
+  PARSER_init(p,TRUE);
   return p;
 }
 
-void JSON_PARSER_init(Parser* p) {
+void JSON_PARSER_init(Parser* p, BOOL init_params) {
   // pass
 }
 
@@ -223,7 +223,7 @@ void JSON_PARSER_write(Parser* p, Net* net, char* filename) {
   fclose(file);
 }
 
-void JSON_PARSER_free(Parser* p) {
+void JSON_PARSER_free(Parser* p, BOOL del_parser) {
   // pass
 }
 

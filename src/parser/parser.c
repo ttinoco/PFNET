@@ -23,12 +23,12 @@ struct Parser {
   void * data; /**< @brief Parser data */
 
   // Functions
-  void (*func_init)(Parser* p);                     /**< @brief Initialization function */
+  void (*func_init)(Parser* p, BOOL init_params);   /**< @brief Initialization function */
   Net* (*func_parse)(Parser* p, char* f, int n);    /**< @brief Parsing function */
   void (*func_set)(Parser* p, char* key, REAL v);   /**< @brief Configuring function */
   void (*func_show)(Parser* p);                     /**< @brief Showing function */
   void (*func_write)(Parser* p, Net* net, char* f); /**< @brief Writing function */
-  void (*func_free)(Parser* p);                     /**< @brief Cleaning function */
+  void (*func_free)(Parser* p, BOOL del_parser);    /**< @brief Cleaning function */
 };
 
 Parser* PARSER_new(void) {
@@ -65,16 +65,16 @@ Parser* PARSER_new_for_file(char* f) {
   return NULL;
 }
 
-void PARSER_init(Parser* p) {
+void PARSER_init(Parser* p, BOOL init_params) {
   if (p && p->func_free)
-    (*(p->func_free))(p);    
+    (*(p->func_free))(p,FALSE);    
   if (p && p->func_init)
-    (*(p->func_init))(p);
+    (*(p->func_init))(p,init_params);
 }
 
 Net* PARSER_parse(Parser* p, char* f, int n) {
   Net* net = NULL;
-  PARSER_init(p);
+  PARSER_init(p,FALSE);
   PARSER_clear_error(p);
   if (p && p->func_parse)
     net = (*(p->func_parse))(p,f,n);
@@ -100,7 +100,7 @@ void PARSER_write(Parser* p, Net* net, char* f) {
 void PARSER_del(Parser* p) {
   if (p) {
     if (p->func_free)
-      (*(p->func_free))(p);    
+      (*(p->func_free))(p,TRUE);    
     free(p);
   }
 }
@@ -145,7 +145,7 @@ void PARSER_set_error(Parser* p, char* string) {
   }
 }
 
-void PARSER_set_func_init(Parser* p, void (*func)(Parser* p)) {
+void PARSER_set_func_init(Parser* p, void (*func)(Parser* p, BOOL params)) {
   if (p)
     p->func_init = func;
 }
@@ -171,7 +171,7 @@ void PARSER_set_func_write(Parser* p, void (*func)(Parser* p, Net* net, char* f)
     p->func_write = func;
 }
 
-void PARSER_set_func_free(Parser* p, void (*func)(Parser* p)) {
+void PARSER_set_func_free(Parser* p, void (*func)(Parser* p, BOOL del_parser)) {
   if (p)
     p->func_free = func;
 }
