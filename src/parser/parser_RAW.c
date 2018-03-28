@@ -36,7 +36,7 @@ void RAW_PARSER_write(Parser* p, Net* net, char* f) {
   // nothing
 }
 
-void RAW_PARSER_free(Parser* p) {
+void RAW_PARSER_free(Parser* p, BOOL del_params) {
   // pass
 }
 
