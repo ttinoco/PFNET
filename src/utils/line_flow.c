@@ -29,7 +29,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "line_flow.h"
+#include <pfnet/line_flow.h>
 
 /*define custom types*/
 struct LF_Options { //contains parameters of the algorithm
