@@ -11,34 +11,31 @@
 #include <pfnet/heur_PVPQ.h>
 #include <pfnet/constr_PVPQ_SWITCHING.h>
 
-void HEUR_PVPQ_init(Heur* h, Net* net) {
-
-  // Local variables
-  int num_buses;
-  int num_periods;
-
-  // Init
-  num_buses = NET_get_num_buses(net);
-  num_periods = NET_get_num_periods(net);
-  HEUR_set_bus_counted(h,(char*)calloc(num_buses*num_periods,sizeof(char)));
-  HEUR_set_data(h,NULL);
+Heur* HEUR_PVPQ_new(Net* net) {
+  Heur* h = HEUR_new(net);
+  HEUR_set_func_init(h, &HEUR_PVPQ_init);
+  HEUR_set_func_clear(h, &HEUR_PVPQ_clear);
+  HEUR_set_func_apply_step(h, &HEUR_PVPQ_apply_step);
+  HEUR_set_func_free(h, &HEUR_PVPQ_free);
+  HEUR_init(h);
+  return h;
 }
 
-void HEUR_PVPQ_clear(Heur* h, Net* net) {
+void HEUR_PVPQ_init(Heur* h) {
 
-  // Local variables
-  int num_buses;
-  int num_periods;
+  HEUR_set_name(h, "PVPQ switching");  
+}
 
+void HEUR_PVPQ_clear(Heur* h) {
+  
   // Clear bus counted flags
-  num_buses = NET_get_num_buses(net);
-  num_periods = NET_get_num_periods(net);
-  HEUR_clear_bus_counted(h,num_buses*num_periods);
+  HEUR_clear_bus_counted(h);
 }
 
-void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, Vec* var_values) {
+void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Branch* br, int t, Vec* var_values) {
 
   // Local variables
+  Net* net;
   Vec* f;
   Bus* bus[2];
   Gen* gen;
@@ -56,8 +53,9 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
   REAL Qmin;
 
   // Heur data
+  net = HEUR_get_network(h);
   bus_counted = HEUR_get_bus_counted(h);
-
+  
   // Bus from data
   bus[0] = BRANCH_get_bus_k(br);
   bus_index_t[0] = BUS_get_index_t(bus[0],t);

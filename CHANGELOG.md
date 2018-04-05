@@ -10,6 +10,9 @@ Targets
 Unreleased
 ----------
 * Updated parser init/free routines to make parser params work.
+* Modularized heuristics.
+* Added constrained function.
+* Added problem num_extra_vars bug fix for constrained functions.
 
 Version 1.3.3
 -------------

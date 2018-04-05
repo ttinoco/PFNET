@@ -78,9 +78,15 @@ void PROB_add_func(Prob* p, Func* f) {
   }
 }
 
-void PROB_add_heur(Prob* p, int type) {
-  if (p)
-    p->heur = HEUR_list_add(p->heur,HEUR_new(type,p->net));
+void PROB_add_heur(Prob* p, Heur* h) {
+  if (p) {
+    if (PROB_get_network(p) != HEUR_get_network(h)) {
+      sprintf(p->error_string,"heuristic is associated with different network");
+      p->error_flag = TRUE;
+      return;
+    }
+    p->heur = HEUR_list_add(p->heur,h);
+  }
 }
 
 void PROB_analyze(Prob* p) {
@@ -134,15 +140,15 @@ void PROB_analyze(Prob* p) {
     }
   }
 
+  // Allocate
+  CONSTR_list_allocate(p->constr);
+  FUNC_list_allocate(p->func);
+
   // Extra vars
   num_extra_vars = 0;
   for (c = p->constr; c != NULL; c = CONSTR_get_next(c))
     num_extra_vars += CONSTR_get_num_extra_vars(c);
   p->num_extra_vars = num_extra_vars;
-
-  // Allocate
-  CONSTR_list_allocate(p->constr);
-  FUNC_list_allocate(p->func);
 
   // Clear
   CONSTR_list_clear(p->constr);
@@ -225,7 +231,6 @@ void PROB_analyze(Prob* p) {
 void PROB_apply_heuristics(Prob* p, Vec* point) {
 
   // Local variables
-  Branch* br;
   int i;
   int t;
   
@@ -234,14 +239,12 @@ void PROB_apply_heuristics(Prob* p, Vec* point) {
     return;
 
   // Clear
-  HEUR_list_clear(p->heur,p->net);
+  HEUR_list_clear(p->heur);
 
   // Apply
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
-    for (i = 0; i < NET_get_num_branches(p->net); i++) {
-      br = NET_get_branch(p->net,i);
-      HEUR_list_apply_step(p->heur,p->constr,p->net,br,t,point);
-    }
+    for (i = 0; i < NET_get_num_branches(p->net); i++)
+      HEUR_list_apply_step(p->heur,p->constr,NET_get_branch(p->net,i),t,point);
   }
   
   // Udpate A and b
@@ -260,6 +263,9 @@ void PROB_clear_error(Prob* p) {
 
     // Functions
     FUNC_list_clear_error(p->func);
+
+    // Heuristics
+    HEUR_list_clear_error(p->heur);
     
     // Network
     NET_clear_error(p->net);
@@ -676,10 +682,10 @@ int PROB_get_num_extra_vars(Prob* p) {
 }
 
 BOOL PROB_has_error(Prob* p) {
-  if (!p)
-    return FALSE;
-  else
+  if (p)
     return p->error_flag;
+  else
+    return FALSE;
 }
 
 void PROB_init(Prob* p) {
@@ -726,6 +732,7 @@ char* PROB_get_show_str(Prob* p) {
 
   Func* f;
   Constr* c;
+  Heur* h;
   char* out;
 
   if (!p)
@@ -746,6 +753,11 @@ char* PROB_get_show_str(Prob* p) {
   sprintf(out+strlen(out),"constraints\n");  
   for (c = p->constr; c != NULL; c = CONSTR_get_next(c))
     sprintf(out+strlen(out),"   %s\n",CONSTR_get_name(c));
+  if (HEUR_list_len(p->heur) > 0) {
+    sprintf(out+strlen(out),"heuristics\n");  
+    for (h = p->heur; h != NULL; h = HEUR_get_next(h))
+      sprintf(out+strlen(out),"   %s\n",HEUR_get_name(h));
+  }
 
   return out;
 }
