@@ -13,6 +13,7 @@ Unreleased
 * Modularized heuristics.
 * Added constrained function.
 * Added problem num_extra_vars bug fix for constrained functions.
+* Added "apply" method to heuristic.
 
 Version 1.3.3
 -------------

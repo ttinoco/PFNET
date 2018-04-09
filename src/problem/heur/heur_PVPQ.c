@@ -32,7 +32,7 @@ void HEUR_PVPQ_clear(Heur* h) {
   HEUR_clear_bus_counted(h);
 }
 
-void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Branch* br, int t, Vec* var_values) {
+void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, Vec* var_values) {
 
   // Local variables
   Net* net;
@@ -51,6 +51,7 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Branch* br, int t, Vec* var_va
   REAL Q;
   REAL Qmax;
   REAL Qmin;
+  int i;
 
   // Heur data
   net = HEUR_get_network(h);
@@ -65,7 +66,9 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Branch* br, int t, Vec* var_va
   bus_index_t[1] = BUS_get_index_t(bus[1],t);
   
   // Power flow constraint
-  for (pf = clist; pf != NULL; pf = CONSTR_get_next(pf)) {
+  pf = NULL;
+  for (i = 0; i < cnum; i++) {
+    pf = cptrs[i];
     if (strcmp(CONSTR_get_name(pf),"AC power balance") == 0)
       break;
   }
@@ -73,7 +76,9 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Branch* br, int t, Vec* var_va
     return;
 
   // PVPQ switching constraint
-  for (pvpq = clist; pvpq != NULL; pvpq = CONSTR_get_next(pvpq)) {
+  pvpq = NULL;
+  for (i = 0; i < cnum; i++) {
+    pvpq = cptrs[i];
     if (strcmp(CONSTR_get_name(pvpq),"PVPQ switching") == 0)
       break;
   }

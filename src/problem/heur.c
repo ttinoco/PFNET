@@ -30,7 +30,7 @@ struct Heur {
   // Type functions
   void (*func_init)(Heur* h);
   void (*func_clear)(Heur* h);
-  void (*func_apply_step)(Heur* h, Constr* clist, Branch* br, int t, Vec* var_values);
+  void (*func_apply_step)(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, Vec* var_values);
   void (*func_free)(Heur* h);
 
   // Type data
@@ -125,11 +125,11 @@ Heur* HEUR_list_add(Heur* hlist, Heur* nh) {
   return hlist;
 }
 
-void HEUR_list_apply_step(Heur* hlist, Constr* clist, Branch* br, int t, Vec* var_values) {
+void HEUR_list_apply_step(Heur* hlist, Constr** cptrs, int cnum, Branch* br, int t, Vec* var_values) {
   Heur* hh;
   if (hlist) {
     for (hh = hlist; hh != NULL; hh = HEUR_get_next(hh))
-      HEUR_apply_step(hh,clist,br,t,var_values);
+      HEUR_apply_step(hh,cptrs,cnum,br,t,var_values);
   }
 }
 
@@ -181,9 +181,29 @@ void HEUR_clear(Heur* h) {
     (*(h->func_clear))(h);
 }
 
-void HEUR_apply_step(Heur* h, Constr* clist, Branch* br, int t, Vec* var_values) {
+void HEUR_apply(Heur* h, Constr** cptrs, int cnum, Vec* var_values) {
+
+  // Local variables
+  int i;
+  int t;
+  
+  // No h
+  if (!h)
+    return;
+
+  // Clear
+  HEUR_clear(h);
+
+  // Apply
+  for (t = 0; t < NET_get_num_periods(h->net); t++) {
+    for (i = 0; i < NET_get_num_branches(h->net); i++)
+      HEUR_apply_step(h,cptrs,cnum,NET_get_branch(h->net,i),t,var_values);
+  }
+}
+
+void HEUR_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, Vec* var_values) {
   if (h && h->func_apply_step)
-    (*(h->func_apply_step))(h,clist,br,t,var_values);
+    (*(h->func_apply_step))(h,cptrs,cnum,br,t,var_values);
 }
 
 void HEUR_clear_error(Heur * h) {
@@ -248,7 +268,7 @@ void HEUR_set_func_clear(Heur* h, void (*func)(Heur* h)) {
     h->func_clear = func;
 }
 
-void HEUR_set_func_apply_step(Heur* h, void (*func)(Heur* h, Constr* clist, Branch* br, int t, Vec* var_values)) {
+void HEUR_set_func_apply_step(Heur* h, void (*func)(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, Vec* var_values)) {
   if (h)
     h->func_apply_step = func;
 }

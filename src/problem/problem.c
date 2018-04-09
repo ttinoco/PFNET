@@ -231,24 +231,45 @@ void PROB_analyze(Prob* p) {
 void PROB_apply_heuristics(Prob* p, Vec* point) {
 
   // Local variables
+  REAL* point_data;
+  Vec* x;
   int i;
   int t;
+  Constr** cptrs;
+  Constr* c;
+  int cnum;
   
   // No p
   if (!p)
     return;
 
+  // Extract x (network)
+  point_data = VEC_get_data(point);
+  x = VEC_new_from_array(&(point_data[0]),NET_get_num_vars(p->net));
+
   // Clear
   HEUR_list_clear(p->heur);
+
+  // Constraint ptrs
+  cnum = CONSTR_list_len(p->constr);
+  cptrs = (Constr**)malloc(cnum*sizeof(Constr*));
+  i = 0;
+  for (c = p->constr; c != NULL; c = CONSTR_get_next(c)) {
+    cptrs[i] = c;
+    i++;
+  }    
 
   // Apply
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
     for (i = 0; i < NET_get_num_branches(p->net); i++)
-      HEUR_list_apply_step(p->heur,p->constr,NET_get_branch(p->net,i),t,point);
+      HEUR_list_apply_step(p->heur,cptrs,cnum,NET_get_branch(p->net,i),t,x);
   }
   
   // Udpate A and b
   PROB_update_lin(p);
+
+  // Clean up
+  free(cptrs);
 }
 
 void PROB_clear_error(Prob* p) {
