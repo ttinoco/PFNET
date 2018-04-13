@@ -264,6 +264,12 @@ void PROB_apply_heuristics(Prob* p, Vec* point) {
     for (i = 0; i < NET_get_num_branches(p->net); i++)
       HEUR_list_apply_step(p->heur,cptrs,cnum,NET_get_branch(p->net,i),t,x);
   }
+
+  // Check errors
+  if (HEUR_list_has_error(p->heur)) {
+    strcpy(p->error_string,HEUR_list_get_error_string(p->heur));
+    p->error_flag = TRUE;
+  }
   
   // Udpate A and b
   PROB_update_lin(p);

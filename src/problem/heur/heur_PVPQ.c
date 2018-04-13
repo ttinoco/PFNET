@@ -72,8 +72,10 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, 
     if (strcmp(CONSTR_get_name(pf),"AC power balance") == 0)
       break;
   }
-  if (!pf)
+  if (!pf) {
+    HEUR_set_error(h, "unable to find power flow constraint");
     return;
+  }
 
   // PVPQ switching constraint
   pvpq = NULL;
@@ -82,8 +84,10 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, 
     if (strcmp(CONSTR_get_name(pvpq),"PVPQ switching") == 0)
       break;
   }
-  if (!pvpq)
+  if (!pvpq) {
+    HEUR_set_error(h, "unable to find PVPQ switching constraint");
     return;
+  }
 
   // Fix flags
   fix_flag = CONSTR_PVPQ_SWITCHING_get_flags(pvpq);

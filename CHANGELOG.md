@@ -14,6 +14,7 @@ Unreleased
 * Added constrained function.
 * Added problem num_extra_vars bug fix for constrained functions.
 * Added "apply" method to heuristic.
+* Made heuristic accept array of constraint pointers instead of linked list of constraints.
 
 Version 1.3.3
 -------------
