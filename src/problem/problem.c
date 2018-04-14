@@ -257,7 +257,7 @@ void PROB_apply_heuristics(Prob* p, Vec* point) {
   for (c = p->constr; c != NULL; c = CONSTR_get_next(c)) {
     cptrs[i] = c;
     i++;
-  }    
+  }
 
   // Apply
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
@@ -266,7 +266,7 @@ void PROB_apply_heuristics(Prob* p, Vec* point) {
   }
 
   // Check errors
-  if (HEUR_list_has_error(p->heur)) {
+  if (HEUR_list_has_error(p->heur)) {    
     strcpy(p->error_string,HEUR_list_get_error_string(p->heur));
     p->error_flag = TRUE;
   }

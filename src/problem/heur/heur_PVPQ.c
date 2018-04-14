@@ -75,6 +75,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, 
   }
   if (!pf) {
     HEUR_set_error(h, "unable to find AC power balance constraint");
+    if (HEUR_PVPQ_DEBUG)
+      printf("HEUR PVPQ: no AC power balance constraint\n");
     return;
   }
 
@@ -88,14 +90,19 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, 
   }
   if (!pvpq) {
     HEUR_set_error(h, "unable to find PVPQ switching constraint");
+    if (HEUR_PVPQ_DEBUG)
+      printf("HEUR PVPQ: no PVPQ switching constraint\n");
     return;
   }
 
   // Fix flags
   fix_flag = CONSTR_PVPQ_SWITCHING_get_flags(pvpq);
-  if (!fix_flag)
+  if (!fix_flag) {
     HEUR_set_error(h, "unable to get PVPQ switching constraint flags");
+    if (HEUR_PVPQ_DEBUG)
+      printf("HEUR PVPQ: no PVPQ switching constraint flags\n");
     return;
+  }
 
   // Constr data
   f = CONSTR_get_f(pf);
