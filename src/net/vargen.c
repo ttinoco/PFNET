@@ -463,7 +463,8 @@ Vec* VARGEN_get_var_indices(void* vgen, unsigned char var, int t_start, int t_en
 char* VARGEN_get_json_string(Vargen* gen, char* output) {
 
   // Local variables
-  char temp[VARGEN_BUFFER_SIZE];
+  int buffer_size = VARGEN_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA;
+  char temp[buffer_size];
   char* output_start;
   BOOL resize;  
 
@@ -475,7 +476,7 @@ char* VARGEN_get_json_string(Vargen* gen, char* output) {
   if (output)
     resize = FALSE;
   else {
-    output = (char*)malloc(sizeof(char)*VARGEN_BUFFER_SIZE*VARGEN_NUM_JSON_FIELDS*gen->num_periods);
+    output = (char*)malloc(sizeof(char)*buffer_size*VARGEN_NUM_JSON_FIELDS*gen->num_periods);
     resize = TRUE;
   }
   output_start = output;

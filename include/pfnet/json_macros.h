@@ -13,6 +13,9 @@
 
 #include <string.h>
 
+// constants
+#define JSON_STR_BUFFER_EXTRA 10
+
 #define JSON_start(output) { \
   strcpy(output,"{");        \
   output += 1;		     \

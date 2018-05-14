@@ -619,7 +619,8 @@ Vec* GEN_get_var_indices(void* vgen, unsigned char var, int t_start, int t_end) 
 char* GEN_get_json_string(Gen* gen, char* output) {
 
   // Local variables
-  char temp[GEN_BUFFER_SIZE];
+  int buffer_size = GEN_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA;
+  char temp[buffer_size];
   char* output_start;
   BOOL resize;
 
@@ -631,7 +632,7 @@ char* GEN_get_json_string(Gen* gen, char* output) {
   if (output)
     resize = FALSE;
   else {
-    output = (char*)malloc(sizeof(char)*GEN_BUFFER_SIZE*GEN_NUM_JSON_FIELDS*gen->num_periods);
+    output = (char*)malloc(sizeof(char)*buffer_size*GEN_NUM_JSON_FIELDS*gen->num_periods);
     resize = TRUE;
   }
   output_start = output;

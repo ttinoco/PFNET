@@ -450,7 +450,8 @@ Vec* SHUNT_get_var_indices(void* vshunt, unsigned char var, int t_start, int t_e
 char* SHUNT_get_json_string(Shunt* shunt, char* output) {
 
   // Local variables
-  char temp[SHUNT_BUFFER_SIZE];
+  int buffer_size = SHUNT_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA;
+  char temp[buffer_size];
   char* output_start;
   BOOL resize;
 
@@ -462,7 +463,7 @@ char* SHUNT_get_json_string(Shunt* shunt, char* output) {
   if (output)
     resize = FALSE;
   else {
-    output = (char*)malloc(sizeof(char)*SHUNT_BUFFER_SIZE*SHUNT_NUM_JSON_FIELDS*shunt->num_periods);
+    output = (char*)malloc(sizeof(char)*buffer_size*SHUNT_NUM_JSON_FIELDS*shunt->num_periods);
     resize = TRUE;
   }
   output_start = output;

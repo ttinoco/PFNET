@@ -257,7 +257,8 @@ char* CONT_get_json_string(Cont* cont) {
   Branch_outage* bo;
   char* output;
   char* output_start;
-  char temp[CONT_BUFFER_SIZE];
+  int buffer_size = CONT_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA;
+  char temp[buffer_size];
   int* indices;
   int num;
 
@@ -266,7 +267,7 @@ char* CONT_get_json_string(Cont* cont) {
     return NULL;
 
   // Output
-  output = (char*)malloc(sizeof(char)*CONT_BUFFER_SIZE*5);
+  output = (char*)malloc(sizeof(char)*buffer_size*5);
   output_start = output;
 
   // Write

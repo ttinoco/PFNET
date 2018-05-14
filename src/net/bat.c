@@ -512,7 +512,8 @@ Vec* BAT_get_var_indices(void* vbat, unsigned char var, int t_start, int t_end) 
 char* BAT_get_json_string(Bat* bat, char* output) {
 
   // Local variables
-  char temp[BAT_BUFFER_SIZE];
+  int buffer_size = BAT_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA;
+  char temp[buffer_size];
   char* output_start;
   BOOL resize;
 
@@ -524,7 +525,7 @@ char* BAT_get_json_string(Bat* bat, char* output) {
   if (output)
     resize = FALSE;
   else {
-    output = (char*)malloc(sizeof(char)*BAT_BUFFER_SIZE*BAT_NUM_JSON_FIELDS*bat->num_periods);
+    output = (char*)malloc(sizeof(char)*buffer_size*BAT_NUM_JSON_FIELDS*bat->num_periods);
     resize = TRUE;
   }
   output_start = output;

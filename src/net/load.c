@@ -559,7 +559,8 @@ Vec* LOAD_get_var_indices(void* vload, unsigned char var, int t_start, int t_end
 char* LOAD_get_json_string(Load* load, char* output) {
 
   // Local variables
-  char temp[LOAD_BUFFER_SIZE];
+  int buffer_size = LOAD_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA;
+  char temp[buffer_size];
   char* output_start;
   BOOL resize;
 
@@ -571,7 +572,7 @@ char* LOAD_get_json_string(Load* load, char* output) {
   if (output)
     resize = FALSE;
   else {
-    output = (char*)malloc(sizeof(char)*LOAD_BUFFER_SIZE*LOAD_NUM_JSON_FIELDS*load->num_periods);
+    output = (char*)malloc(sizeof(char)*buffer_size*LOAD_NUM_JSON_FIELDS*load->num_periods);
     resize = TRUE;
   }
   output_start = output;
