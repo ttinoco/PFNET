@@ -28,7 +28,7 @@ typedef struct Prob Prob;
 // Function prototypes
 void PROB_add_constr(Prob* p, Constr* c);
 void PROB_add_func(Prob* p, Func* f);
-void PROB_add_heur(Prob* p, int type);
+void PROB_add_heur(Prob* p, Heur* h);
 void PROB_analyze(Prob* p);
 void PROB_apply_heuristics(Prob* p, Vec* point);
 void PROB_eval(Prob* p, Vec* point);

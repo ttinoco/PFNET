@@ -59,13 +59,11 @@ parser_hdr = 	$(inc_path)/parser.h \
 problem_src = 	problem/constr.c \
 		problem/func.c \
 		problem/heur.c \
-		problem/heur_PVPQ.c \
 		problem/problem.c
 
 problem_hdr = 	$(inc_path)/constr.h \
 	  	$(inc_path)/func.h \
 		$(inc_path)/heur.h \
-		$(inc_path)/heur_PVPQ.h \
 		$(inc_path)/problem.h
 
 problem_constr_src = 	problem/constr/constr_NBOUND.c  \
@@ -84,7 +82,8 @@ problem_constr_src = 	problem/constr/constr_NBOUND.c  \
 			problem/constr/constr_REG_GEN.c \
 			problem/constr/constr_REG_SHUNT.c \
 			problem/constr/constr_REG_TRAN.c \
-			problem/constr/constr_LOAD_PF.c
+			problem/constr/constr_LOAD_PF.c \
+			problem/constr/constr_CFUNC.c
 
 problem_constr_hdr = 	$(inc_path)/constr_NBOUND.h \
 			$(inc_path)/constr_DC_FLOW_LIM.h \
@@ -102,7 +101,8 @@ problem_constr_hdr = 	$(inc_path)/constr_NBOUND.h \
 			$(inc_path)/constr_REG_GEN.h \
 			$(inc_path)/constr_REG_SHUNT.h \
 			$(inc_path)/constr_REG_TRAN.h \
-			$(inc_path)/constr_LOAD_PF.h
+			$(inc_path)/constr_LOAD_PF.h \
+			$(inc_path)/constr_CFUNC.h
 
 problem_func_src = 	problem/func/func_GEN_COST.c \
 			problem/func/func_LOAD_UTIL.c \
@@ -130,6 +130,10 @@ problem_func_hdr = 	$(inc_path)/func_GEN_COST.h \
 			$(inc_path)/func_SLIM_VMAG.h \
 			$(inc_path)/func_SP_CONTROLS.h
 
+problem_heur_src = problem/heur/heur_PVPQ.c
+
+problem_heur_hdr = $(inc_path)/heur_PVPQ.h
+
 utils_src = 	utils/utils.c \
 		utils/json.c \
 		utils/line_flow.c 
@@ -145,7 +149,8 @@ other_hdr = 	$(inc_path)/array.h $(inc_path)/constants.h $(inc_path)/flag_types.
 
 # All sources 
 libpfnet_la_SOURCES = 	$(graph_src) $(math_src) $(net_src) $(parser_src) \
-		      	$(problem_src) $(problem_constr_src) $(problem_func_src) $(utils_src)
+		      	$(problem_src) $(problem_constr_src) $(problem_func_src) $(problem_heur_src) \
+			$(utils_src)
 
 # Have to move back a directory $PFNET/include/pfnet/*.h
 libpfnet_la_CFLAGS = -I$(inc_path)/..
@@ -154,7 +159,7 @@ libpfnet_la_LIBADD = -lm
 
 # All headers
 pkginclude_HEADERS = 	$(graph_hdr) $(math_hdr) $(net_hdr) $(parser_hdr) \
-			$(problem_hdr) $(problem_constr_hdr) $(problem_func_hdr) \
+			$(problem_hdr) $(problem_constr_hdr) $(problem_func_hdr) $(problem_heur_hdr) \
 			$(utils_hdr) $(other_hdr)
 
 # Raw parser

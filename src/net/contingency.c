@@ -30,6 +30,9 @@ typedef struct Branch_outage Branch_outage;
 // Contingency
 struct Cont {
 
+  // Name
+  char name[CONT_BUFFER_SIZE]; /**< @brief Contingency name */
+
   // Output
   char output_string[CONT_BUFFER_SIZE]; /**< @brief Output string */
 
@@ -91,6 +94,7 @@ void CONT_clear(Cont* cont, Net* net) {
 
 void CONT_init(Cont* cont) {
   if (cont) {
+    strcpy(cont->name,"");
     strcpy(cont->output_string,"");
     cont->gen_outage = NULL;
     cont->br_outage = NULL;
@@ -103,6 +107,13 @@ void CONT_del(Cont* cont) {
     LIST_map(Branch_outage,cont->br_outage,bo,next,{free(bo);});
     free(cont);
   }
+}
+
+char* CONT_get_name(Cont* cont) {
+  if (cont)
+    return cont->name;
+  else
+    return NULL;
 }
 
 int CONT_get_num_gen_outages(Cont* cont) {
@@ -234,7 +245,7 @@ char* CONT_get_show_str(Cont* cont) {
 
   out = cont->output_string;
   strcpy(out,"");
-
+  sprintf(out+strlen(out),"\nName: %s\n",cont->name);
   sprintf(out+strlen(out),"\nGenerator outages\n");
   for (go = cont->gen_outage; go != NULL; go = go->next)
     sprintf(out+strlen(out),"index %d\n",go->gen_index);
@@ -273,6 +284,9 @@ char* CONT_get_json_string(Cont* cont) {
   // Write
   JSON_start(output);
 
+  // Name
+  JSON_str(temp,output,"name",cont->name,FALSE);
+
   // Gen outages
   num = 0;
   for (go = cont->gen_outage; go != NULL; go = go->next)
@@ -307,4 +321,9 @@ char* CONT_get_json_string(Cont* cont) {
 
   // Return
   return output;
+}
+
+void CONT_set_name(Cont* cont, char* name) {
+  if (cont)
+    strncpy(cont->name,name,(size_t)(CONT_BUFFER_SIZE-1));
 }

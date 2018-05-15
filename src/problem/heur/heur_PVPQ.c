@@ -11,34 +11,31 @@
 #include <pfnet/heur_PVPQ.h>
 #include <pfnet/constr_PVPQ_SWITCHING.h>
 
-void HEUR_PVPQ_init(Heur* h, Net* net) {
-
-  // Local variables
-  int num_buses;
-  int num_periods;
-
-  // Init
-  num_buses = NET_get_num_buses(net);
-  num_periods = NET_get_num_periods(net);
-  HEUR_set_bus_counted(h,(char*)calloc(num_buses*num_periods,sizeof(char)));
-  HEUR_set_data(h,NULL);
+Heur* HEUR_PVPQ_new(Net* net) {
+  Heur* h = HEUR_new(net);
+  HEUR_set_func_init(h,&HEUR_PVPQ_init);
+  HEUR_set_func_clear(h,&HEUR_PVPQ_clear);
+  HEUR_set_func_apply_step(h,&HEUR_PVPQ_apply_step);
+  HEUR_set_func_free(h,&HEUR_PVPQ_free);
+  HEUR_init(h);
+  return h;
 }
 
-void HEUR_PVPQ_clear(Heur* h, Net* net) {
+void HEUR_PVPQ_init(Heur* h) {
 
-  // Local variables
-  int num_buses;
-  int num_periods;
+  HEUR_set_name(h, "PVPQ switching");  
+}
 
+void HEUR_PVPQ_clear(Heur* h) {
+  
   // Clear bus counted flags
-  num_buses = NET_get_num_buses(net);
-  num_periods = NET_get_num_periods(net);
-  HEUR_clear_bus_counted(h,num_buses*num_periods);
+  HEUR_clear_bus_counted(h);
 }
 
-void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, Vec* var_values) {
+void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, Vec* var_values) {
 
   // Local variables
+  Net* net;
   Vec* f;
   Bus* bus[2];
   Gen* gen;
@@ -54,10 +51,12 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
   REAL Q;
   REAL Qmax;
   REAL Qmin;
+  int i;
 
   // Heur data
+  net = HEUR_get_network(h);
   bus_counted = HEUR_get_bus_counted(h);
-
+  
   // Bus from data
   bus[0] = BRANCH_get_bus_k(br);
   bus_index_t[0] = BUS_get_index_t(bus[0],t);
@@ -67,25 +66,43 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, V
   bus_index_t[1] = BUS_get_index_t(bus[1],t);
   
   // Power flow constraint
-  for (pf = clist; pf != NULL; pf = CONSTR_get_next(pf)) {
-    if (strcmp(CONSTR_get_name(pf),"AC power balance") == 0)
+  pf = NULL;
+  for (i = 0; i < cnum; i++) {
+    if (strcmp(CONSTR_get_name(cptrs[i]),"AC power balance") == 0) {
+      pf = cptrs[i];
       break;
+    }
   }
-  if (!pf)
+  if (!pf) {
+    HEUR_set_error(h, "unable to find AC power balance constraint");
+    if (HEUR_PVPQ_DEBUG)
+      printf("HEUR PVPQ: no AC power balance constraint\n");
     return;
+  }
 
   // PVPQ switching constraint
-  for (pvpq = clist; pvpq != NULL; pvpq = CONSTR_get_next(pvpq)) {
-    if (strcmp(CONSTR_get_name(pvpq),"PVPQ switching") == 0)
+  pvpq = NULL;
+  for (i = 0; i < cnum; i++) {
+    if (strcmp(CONSTR_get_name(cptrs[i]),"PVPQ switching") == 0) {
+      pvpq = cptrs[i];
       break;
+    }
   }
-  if (!pvpq)
+  if (!pvpq) {
+    HEUR_set_error(h, "unable to find PVPQ switching constraint");
+    if (HEUR_PVPQ_DEBUG)
+      printf("HEUR PVPQ: no PVPQ switching constraint\n");
     return;
+  }
 
   // Fix flags
   fix_flag = CONSTR_PVPQ_SWITCHING_get_flags(pvpq);
-  if (!fix_flag)
+  if (!fix_flag) {
+    HEUR_set_error(h, "unable to get PVPQ switching constraint flags");
+    if (HEUR_PVPQ_DEBUG)
+      printf("HEUR PVPQ: no PVPQ switching constraint flags\n");
     return;
+  }
 
   // Constr data
   f = CONSTR_get_f(pf);

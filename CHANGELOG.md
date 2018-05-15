@@ -10,6 +10,13 @@ Targets
 Unreleased
 ----------
 * Updated parser init/free routines to make parser params work.
+* Modularized heuristics.
+* Added constrained function.
+* Added problem num_extra_vars bug fix for constrained functions.
+* Added "apply" method to heuristic.
+* Made heuristic accept array of constraint pointers instead of linked list of constraints.
+* Added contingency name and corresponding setter/getter.
+* Updated json float sig digits from 11 to 16.
 
 Version 1.3.3
 -------------

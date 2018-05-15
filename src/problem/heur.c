@@ -8,23 +8,29 @@
  * PFNET is released under the BSD 2-clause license.
  */
 
-
 #include <pfnet/array.h>
 #include <pfnet/heur.h>
-#include <pfnet/heur_PVPQ.h>
 
 struct Heur {
 
-  // Type
-  int type;
+  // Error
+  BOOL error_flag;                     /**< @brief Error flag */
+  char error_string[HEUR_BUFFER_SIZE]; /**< @brief Error string */
+  
+  // Name
+  char name[HEUR_BUFFER_SIZE]; /**< @brief Name string */
 
+  // Network
+  Net* net; /**< @brief Power network */
+  
   // Utils
   char* bus_counted;
+  int bus_counted_size;
 
   // Type functions
-  void (*func_init)(Heur* h, Net* net);
-  void (*func_clear)(Heur* h, Net* net);
-  void (*func_apply_step)(Heur* h, Constr* clist, Net* net, Branch* br, int t, Vec* var_values);
+  void (*func_init)(Heur* h);
+  void (*func_clear)(Heur* h);
+  void (*func_apply_step)(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, Vec* var_values);
   void (*func_free)(Heur* h);
 
   // Type data
@@ -34,9 +40,9 @@ struct Heur {
   struct Heur* next;
 };
 
-void HEUR_clear_bus_counted(Heur* h, int num) {
+void HEUR_clear_bus_counted(Heur* h) {
   if (h)
-    ARRAY_clear(h->bus_counted,char,num);
+    ARRAY_clear(h->bus_counted,char,h->bus_counted_size);
 }
 
 void HEUR_del(Heur* h) {
@@ -55,11 +61,18 @@ void HEUR_del(Heur* h) {
   }
 }
 
-int HEUR_get_type(Heur* h) {
+Net* HEUR_get_network(Heur* h) {
   if (h)
-    return h->type;
+    return h->net;
   else
-    return -1;
+    return NULL;
+}
+
+char* HEUR_get_name(Heur* h) {
+  if (h)
+    return h->name;
+  else
+    return NULL;
 }
 
 char* HEUR_get_bus_counted(Heur* h) {
@@ -83,24 +96,48 @@ Heur* HEUR_get_next(Heur* h) {
     return NULL;
 }
 
+void HEUR_list_clear_error(Heur* hlist) {
+  Heur* hh;
+  for (hh = hlist; hh != NULL; hh = HEUR_get_next(hh))
+    HEUR_clear_error(hh);
+}
+
+BOOL HEUR_list_has_error(Heur* hlist) {
+  Heur* hh;
+  for (hh = hlist; hh != NULL; hh = HEUR_get_next(hh)) {
+    if (HEUR_has_error(hh))
+      return TRUE;
+  }
+  return FALSE;
+}
+
+char* HEUR_list_get_error_string(Heur* hlist) {
+  Heur* hh;
+  for (hh = hlist; hh != NULL; hh = HEUR_get_next(hh)) {
+    if (HEUR_has_error(hh))
+      return HEUR_get_error_string(hh);
+  }
+  return "";
+}
+
 Heur* HEUR_list_add(Heur* hlist, Heur* nh) {
   LIST_add(Heur,hlist,nh,next);
   return hlist;
 }
 
-void HEUR_list_apply_step(Heur* hlist, Constr* clist, Net* net, Branch* br, int t, Vec* var_values) {
+void HEUR_list_apply_step(Heur* hlist, Constr** cptrs, int cnum, Branch* br, int t, Vec* var_values) {
   Heur* hh;
-  if (hlist && net) {
+  if (hlist) {
     for (hh = hlist; hh != NULL; hh = HEUR_get_next(hh))
-      HEUR_apply_step(hh,clist,net,br,t,var_values);
+      HEUR_apply_step(hh,cptrs,cnum,br,t,var_values);
   }
 }
 
-void HEUR_list_clear(Heur* hlist, Net* net) {
+void HEUR_list_clear(Heur* hlist) {
   Heur* hh;
-  if (hlist && net) {
+  if (hlist) {
     for (hh = hlist; hh != NULL; hh = HEUR_get_next(hh))
-      HEUR_clear(hh,net);
+      HEUR_clear(hh);
   }
 }
 
@@ -114,39 +151,99 @@ int HEUR_list_len(Heur* hlist) {
   return len;
 }
 
-Heur* HEUR_new(int type, Net* net) {
+Heur* HEUR_new(Net* net) {
   Heur* h = (Heur*)malloc(sizeof(Heur));
 
   // Fields
-  h->type = type;
+  h->error_flag = FALSE;
+  strcpy(h->error_string,"");
+  strcpy(h->name,"unknown");
+  h->net = net;
   h->bus_counted = NULL;
+  h->bus_counted_size = 0;
   h->data = NULL;
   h->next = NULL;
   
   // Functions
-  if (type == HEUR_TYPE_PVPQ) { // PV-PQ switching heuristic
-    h->func_init = HEUR_PVPQ_init;
-    h->func_clear = HEUR_PVPQ_clear;
-    h->func_apply_step = HEUR_PVPQ_apply_step;
-    h->func_free = HEUR_PVPQ_free;
-  }
-  else {
-    h->func_init = NULL;
-    h->func_clear = NULL;
-    h->func_apply_step = NULL;
-    h->func_free = NULL;
-  }
+  h->func_init = NULL;
+  h->func_clear = NULL;
+  h->func_apply_step = NULL;
+  h->func_free = NULL;
 
-  // Type-specific init
-  if (h->func_init)
-    (*(h->func_init))(h,net);
+  // Update network
+  HEUR_update_network(h);
   
   return h;
 }
 
-void HEUR_set_bus_counted(Heur* h, char* counted) {
+void HEUR_clear(Heur* h) {
+  if (h && h->func_clear)
+    (*(h->func_clear))(h);
+}
+
+void HEUR_apply(Heur* h, Constr** cptrs, int cnum, Vec* var_values) {
+
+  // Local variables
+  int i;
+  int t;
+  
+  // No h
+  if (!h)
+    return;
+
+  // Clear
+  HEUR_clear(h);
+
+  // Apply
+  for (t = 0; t < NET_get_num_periods(h->net); t++) {
+    for (i = 0; i < NET_get_num_branches(h->net); i++)
+      HEUR_apply_step(h,cptrs,cnum,NET_get_branch(h->net,i),t,var_values);
+  }
+}
+
+void HEUR_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, Vec* var_values) {
+  if (h && h->func_apply_step)
+    (*(h->func_apply_step))(h,cptrs,cnum,br,t,var_values);
+}
+
+void HEUR_clear_error(Heur * h) {
+  if (h) {
+    h->error_flag = FALSE;
+    strcpy(h->error_string,"");
+  }
+}
+
+void HEUR_init(Heur* h) {
+  if (h && h->func_free)
+    (*(h->func_free))(h);
+  if (h && h->func_init)
+    (*(h->func_init))(h);
+}
+
+BOOL HEUR_has_error(Heur* h) {
   if (h)
+    return h->error_flag;
+  else
+    return FALSE;
+}
+
+char* HEUR_get_error_string(Heur* h) {
+  if (h)
+    return h->error_string;
+  else
+    return NULL;
+}
+
+void HEUR_set_name(Heur* h, char* name) {
+  if (h)
+    strcpy(h->name,name);
+}
+
+void HEUR_set_bus_counted(Heur* h, char* counted, int size) {
+  if (h) {
     h->bus_counted = counted;
+    h->bus_counted_size = size;
+  }
 }
 
 void HEUR_set_data(Heur* h, void* data) {
@@ -154,12 +251,45 @@ void HEUR_set_data(Heur* h, void* data) {
     h->data = data;
 }
 
-void HEUR_clear(Heur* h, Net* net) {
-  if (h && h->func_clear)
-    (*(h->func_clear))(h,net);
+void HEUR_set_error(Heur* h, char* error_string) {
+  if (h) {
+    h->error_flag = TRUE;
+    strcpy(h->error_string,error_string);
+  }
 }
 
-void HEUR_apply_step(Heur* h, Constr* clist, Net* net, Branch* br, int t, Vec* var_values) {
-  if (h && h->func_apply_step)
-    (*(h->func_apply_step))(h,clist,net,br,t,var_values);
+void HEUR_set_func_init(Heur* h, void (*func)(Heur* h)) {
+  if (h)
+    h->func_init = func;
+}
+
+void HEUR_set_func_clear(Heur* h, void (*func)(Heur* h)) {
+  if (h)
+    h->func_clear = func;
+}
+
+void HEUR_set_func_apply_step(Heur* h, void (*func)(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, Vec* var_values)) {
+  if (h)
+    h->func_apply_step = func;
+}
+
+void HEUR_set_func_free(Heur* h, void (*func)(Heur* h)) {
+  if (h)
+    h->func_free = func;
+}
+
+void HEUR_update_network(Heur* h) {
+  
+  // No h
+  if (!h)
+    return;
+ 
+  // Bus counted
+  if (h->bus_counted)
+    free(h->bus_counted);
+  h->bus_counted_size = NET_get_num_buses(h->net)*NET_get_num_periods(h->net);
+  ARRAY_zalloc(h->bus_counted,char,h->bus_counted_size);
+
+  // Init
+  HEUR_init(h);
 }

@@ -60,7 +60,7 @@
 }
 
 #define JSON_float(temp,output,field_name,field,end) {\
-  sprintf(temp,"\"%s\":%.10e",field_name,field);     \
+  sprintf(temp,"\"%s\":%.15e",field_name,field);     \
   strcpy(output,temp);				      \
   output += strlen(temp);			      \
   if (!end) {					      \
@@ -85,7 +85,7 @@
   strcpy(output,temp);						 \
   output += strlen(temp);					 \
   for (i = 0; i < num; i++) {					 \
-    sprintf(temp,"%.10e",field[i]);     			 \
+    sprintf(temp,"%.15e",field[i]);     			 \
     strcpy(output,temp);                                         \
     output += strlen(temp);                                      \
     if (i < num-1) {	                                         \
