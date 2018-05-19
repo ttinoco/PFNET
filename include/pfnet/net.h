@@ -32,7 +32,8 @@
 #define NET_BASE_POWER 100 /**< @brief Default system base power (MVA). */
 
 // Buffer
-#define NET_BUFFER_SIZE 1024 /**< @brief Default network buffer size for strings */
+#define NET_BUFFER_SIZE 1024             /**< @brief Default network buffer size for strings */
+#define NET_SINGLE_JSON_BUFFER_SIZE 200  /**< @brief Default network buffer size for json strings of a single object */
 
 // Net
 typedef struct Net Net;

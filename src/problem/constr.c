@@ -14,8 +14,8 @@
 struct Constr {
 
   // Error
-  BOOL error_flag;                       /**< @brief Error flag */
-  char error_string[CONSTR_BUFFER_SIZE]; /**< @brief Error string */
+  BOOL error_flag;                             /**< @brief Error flag */
+  char error_string[CONSTR_ERROR_BUFFER_SIZE]; /**< @brief Error string */
 
   // Name
   char name[CONSTR_BUFFER_SIZE]; /**< @brief Name string */

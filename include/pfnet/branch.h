@@ -65,8 +65,9 @@
 /** \defgroup branch_const Branch Constants
  *  @{
  */
-#define BRANCH_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
-#define BRANCH_NUM_JSON_FIELDS 30 /**< @brief Constant: max number of json fields */
+#define BRANCH_BUFFER_SIZE 100       /**< @brief Constant: buffer size for strings */
+#define BRANCH_JSON_BUFFER_SIZE 200  /**< @brief Constant: buffer size for json strings */
+#define BRANCH_NUM_JSON_FIELDS 30    /**< @brief Constant: max number of json fields */
 /** @} */
 
 // Branch

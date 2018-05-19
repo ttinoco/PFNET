@@ -1439,8 +1439,7 @@ REAL BUS_get_quantity(Bus* bus, int qtype, int t) {
 char* BUS_get_json_string(Bus* bus, char* output) {
   
   // Local variables
-  int buffer_size = BUS_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA;
-  char temp[buffer_size];
+  char temp[BUS_JSON_BUFFER_SIZE];
   char* output_start;
   BOOL resize;
 
@@ -1452,7 +1451,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   if (output)
     resize = FALSE;
   else {
-    output = (char*)malloc(sizeof(char)*buffer_size*BUS_NUM_JSON_FIELDS*bus->num_periods);
+    output = (char*)malloc(sizeof(char)*BUS_JSON_BUFFER_SIZE*BUS_NUM_JSON_FIELDS*bus->num_periods);
     resize = TRUE;
   }
   output_start = output;

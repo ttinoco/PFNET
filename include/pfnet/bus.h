@@ -75,8 +75,9 @@
 /** \defgroup bus_const Bus Constants
  *  @{
  */
-#define BUS_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
-#define BUS_NUM_JSON_FIELDS 45 /**< @brief Constant: max number of json fields */
+#define BUS_BUFFER_SIZE 100       /**< @brief Constant: buffer size for strings */
+#define BUS_JSON_BUFFER_SIZE 200  /**< @brief Constant: buffer size for json strings */
+#define BUS_NUM_JSON_FIELDS 45    /**< @brief Constant: max number of json fields */
 /** @} */
 
 // Bus

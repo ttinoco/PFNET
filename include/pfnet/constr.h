@@ -18,8 +18,9 @@
 #include "matrix.h"
 
 // Buffer
-#define CONSTR_BUFFER_SIZE 1024     /**< @brief Default constraint buffer size for general strings */
-#define CONSTR_INFO_BUFFER_SIZE 100 /**< @brife Default buffer size for row info strings */
+#define CONSTR_BUFFER_SIZE 100        /**< @brief Default buffer size for general strings */
+#define CONSTR_ERROR_BUFFER_SIZE 1024 /**< @brief Default buffer size for row error strings */
+#define CONSTR_INFO_BUFFER_SIZE 2048  /**< @brief Default buffer size for row error strings */
 
 // Constraint
 typedef struct Constr Constr;

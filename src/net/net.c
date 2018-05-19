@@ -3616,8 +3616,7 @@ REAL NET_get_vargen_corr_value(Net* net) {
 char* NET_get_json_string(Net* net) {
 
   // Local variables
-  int buffer_size = NET_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA;
-  char temp[buffer_size];
+  char temp[NET_SINGLE_JSON_BUFFER_SIZE];
   char* output;
   char* output_start;
   int max_size;
@@ -3627,14 +3626,14 @@ char* NET_get_json_string(Net* net) {
     return NULL;
 
   // Max size
-  max_size = (2*buffer_size +
-	      (BUS_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA)*BUS_NUM_JSON_FIELDS*net->num_buses +
-	      (BRANCH_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA)*BRANCH_NUM_JSON_FIELDS*net->num_branches +
-	      (GEN_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA)*GEN_NUM_JSON_FIELDS*net->num_gens +
-	      (LOAD_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA)*LOAD_NUM_JSON_FIELDS*net->num_loads +
-	      (SHUNT_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA)*SHUNT_NUM_JSON_FIELDS*net->num_shunts +
-	      (VARGEN_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA)*VARGEN_NUM_JSON_FIELDS*net->num_vargens +
-	      (BAT_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA)*BAT_NUM_JSON_FIELDS*net->num_bats)*net->num_periods;
+  max_size = (2*NET_SINGLE_JSON_BUFFER_SIZE +
+	      (BUS_JSON_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA)*BUS_NUM_JSON_FIELDS*net->num_buses +
+	      (BRANCH_JSON_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA)*BRANCH_NUM_JSON_FIELDS*net->num_branches +
+	      (GEN_JSON_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA)*GEN_NUM_JSON_FIELDS*net->num_gens +
+	      (LOAD_JSON_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA)*LOAD_NUM_JSON_FIELDS*net->num_loads +
+	      (SHUNT_JSON_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA)*SHUNT_NUM_JSON_FIELDS*net->num_shunts +
+	      (VARGEN_JSON_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA)*VARGEN_NUM_JSON_FIELDS*net->num_vargens +
+	      (BAT_JSON_BUFFER_SIZE+JSON_STR_BUFFER_EXTRA)*BAT_NUM_JSON_FIELDS*net->num_bats)*net->num_periods;
 
   // Output
   output = (char*)malloc(sizeof(char)*max_size);
