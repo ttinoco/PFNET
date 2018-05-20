@@ -18,6 +18,7 @@ AC_PROG_MAKE_SET
 # Chew flags
 AX_CHECK_COMPILE_FLAG([-Wall], [CFLAGS="$CFLAGS -Wall"], [], [])
 AX_CHECK_COMPILE_FLAG([-Werror], [CFLAGS="$CFLAGS -Werror"], [], [])
+AX_CHECK_COMPILE_FLAG([-fno-strict-aliasing], [CFLAGS="$CFLAGS -fno-strict-aliasing"], [], [])
 
 # Checks for graphviz
 AC_CHECK_LIB(gvc, gvContext)
