@@ -226,4 +226,8 @@ void BRANCH_set_var_values(Branch* br, Vec* values);
 int BRANCH_set_flags(void* vbr, char flag_type, unsigned char mask, int index);
 void BRANCH_show(Branch* br, int t);
 
+void BRANCH_power_flow_count(Branch* br, int* J_nnz, int* H_nnz, int t, BOOL km);
+void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int index_Q, int* H_nnz, Mat* H, int t, BOOL km);
+void BRANCH_power_flow_eval(Branch* br, REAL* P, REAL* Q, int* J_nnz, REAL* JP, REAL* JQ, int* H_nnz, REAL* HP, REAL* HQ, Vec* x, int t, BOOL km);
+
 #endif
