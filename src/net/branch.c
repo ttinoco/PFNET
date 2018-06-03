@@ -1931,8 +1931,6 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
     var_w[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG);
     w_index[k] = BUS_get_index_v_ang(bus[k],t);
     v_index[k] = BUS_get_index_v_mag(bus[k],t);
-    var_w[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG);
-    var_v[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG);
   }
 
   // Branch data
@@ -2135,6 +2133,283 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
   }
 }
 
-void BRANCH_power_flow_eval(Branch* br, REAL* P, REAL* Q, int* J_nnz, REAL* JP, REAL* JQ, int* H_nnz, REAL* HP, REAL* HQ, Vec* x, int t, BOOL km) {
+void BRANCH_power_flow_eval(Branch* br, REAL* P, REAL* Q, int* J_nnz, REAL* J,
+			    int* H_nnz, REAL* HP, REAL* HQ, Vec* values, REAL mul, int t, BOOL km) {
 
+  // Local variables
+  Bus* bus[2];
+  BOOL var_v[2];
+  BOOL var_w[2];
+  BOOL var_a;
+  BOOL var_phi;
+  REAL w[2];
+  REAL v[2];
+  REAL a;
+  REAL a_temp;
+  REAL phi;
+  REAL phi_temp;
+  int k;
+  int m;
+  REAL indicator_a;
+  REAL indicator_phi;
+  REAL b;
+  REAL g;
+  REAL b_sh;
+  REAL g_sh;
+  REAL P_km;
+  REAL P_kk;
+  REAL Q_km;
+  REAL Q_kk;
+
+  // Check
+  if (!br || !P || !Q || !J_nnz || !J || !H_nnz || !HP || !HQ) 
+    return;
+
+  // Outage
+  if (BRANCH_is_on_outage(br))
+    return;
+
+  // Bus data
+  bus[0] = BRANCH_get_bus_k(br);
+  bus[1] = BRANCH_get_bus_m(br);
+  for (k = 0; k < 2; k++) {
+    var_v[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG);
+    var_w[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG);
+    if (var_w[k])
+      w[k] = VEC_get(values,BUS_get_index_v_ang(bus[k],t));
+    else
+      w[k] = BUS_get_v_ang(bus[k],t);
+    if (var_v[k])
+      v[k] = VEC_get(values,BUS_get_index_v_mag(bus[k],t));
+    else
+      v[k] = BUS_get_v_mag(bus[k],t);
+  }
+
+  // Branch data
+  var_a = BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO);
+  var_phi = BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE);
+  g = BRANCH_get_g(br);
+  b = BRANCH_get_b(br);
+  if (var_a)
+    a = VEC_get(values,BRANCH_get_index_ratio(br,t));
+  else
+    a = BRANCH_get_ratio(br,t);
+  if (var_phi)
+    phi = VEC_get(values,BRANCH_get_index_phase(br,t));
+  else
+    phi = BRANCH_get_phase(br,t);
+
+  // Direction
+  if (km) {
+    k = 0;
+    m = 1;
+    a_temp = a;
+    phi_temp = phi;
+    g_sh = BRANCH_get_g_k(br);
+    b_sh = BRANCH_get_b_k(br);
+    indicator_a = 1.;
+    indicator_phi = 1.;
+  }
+  else {
+    k = 1;
+    m = 0;
+    a_temp = 1;
+    phi_temp = -phi;
+    g_sh = BRANCH_get_g_m(br);
+    b_sh = BRANCH_get_b_m(br);
+    indicator_a = 0.;
+    indicator_phi = -1.;
+  }
+
+  /** Branch flow equations for refernce:
+   *  theta = w_k-w_m-theta_km+theta_mk
+   *  P_km =  a_km^2*v_k^2*(g_km + gsh_km) - a_km*a_mk*v_k*v_m*( g_km*cos(theta) + b_km*sin(theta) )
+   *  Q_km = -a_km^2*v_k^2*(b_km + bsh_km) - a_km*a_mk*v_k*v_m*( g_km*sin(theta) - b_km*cos(theta) )
+   */
+  
+  // Parts of the branch flow dependent on both vk, vm and the angles
+  // (note that a == a_mk*a_km regardless of the direction since the other direction will always will always be 1)
+  P_km = -mul*a*v[k]*v[m]*(g*cos(w[k]-w[m]-phi_temp)+b*sin(w[k]-w[m]-phi_temp));
+  Q_km = -mul*a*v[k]*v[m]*(g*sin(w[k]-w[m]-phi_temp)-b*cos(w[k]-w[m]-phi_temp));
+  
+  // Parts of the branch flow dependent on only vk^2
+  P_kk =  mul*a_temp*a_temp*(g_sh+g)*v[k]*v[k];
+  Q_kk = -mul*a_temp*a_temp*(b_sh+b)*v[k]*v[k];
+
+  // Pkm
+  (*P) += P_kk + P_km; // Pkm
+
+  // Qkm
+  (*Q) += Q_kk + Q_km; // Qkm
+
+  //***********
+  if (var_w[k]) { // wk var
+
+    // J
+    J[*J_nnz] = -Q_km;
+    (*J_nnz)++; // Pkm/dwk
+    
+    J[*J_nnz] = P_km;
+    (*J_nnz)++; // Qkm/dwk
+    
+    // H
+    HP[*H_nnz] = -P_km;
+    HQ[*H_nnz] = -Q_km;
+    (*H_nnz)++;   // wk and wk
+    if (var_v[k]) {
+      HP[*H_nnz] = -Q_km/v[k];
+      HQ[*H_nnz] = P_km/v[k];
+      (*H_nnz)++; // wk and vk
+    }
+    if (var_w[m]) {
+      HP[*H_nnz] = P_km;
+      HQ[*H_nnz] = Q_km;
+      (*H_nnz)++; // wk and wm
+    }
+    if (var_v[m]) {
+      HP[*H_nnz] = -Q_km/v[m];
+      HQ[*H_nnz] = P_km/v[m];
+      (*H_nnz)++; // wk and vm
+    }
+    if (var_a) {
+      HP[*H_nnz] = -Q_km/a;
+      HQ[*H_nnz] = P_km/a;
+      (*H_nnz)++; // wk and a
+    }
+    if (var_phi) {
+      HP[*H_nnz] = P_km*indicator_phi;
+      HQ[*H_nnz] = Q_km*indicator_phi;
+      (*H_nnz)++; // wk and phi
+    }
+  }
+
+  //************
+  if (var_v[k]) { // vk var
+    
+    // J
+    J[*J_nnz] = 2.*P_kk/v[k] + P_km/v[k];
+    (*J_nnz)++; // Pkm/dvk
+    
+    J[*J_nnz] = 2.*Q_kk/v[k] + Q_km/v[k];
+    (*J_nnz)++; // Qkm/dvk
+        
+    // H
+    HP[*H_nnz] = 2.*P_kk/(v[k]*v[k]);
+    HQ[*H_nnz] = 2.*Q_kk/(v[k]*v[k]);
+    (*H_nnz)++;   // vk and vk
+    if (var_w[m]) {
+      HP[*H_nnz] = Q_km/v[k];
+      HQ[*H_nnz] = -P_km/v[k];
+      (*H_nnz)++; // vk and wm
+    }
+    if (var_v[m]) {
+      HP[*H_nnz] = P_km/(v[k]*v[m]);
+      HQ[*H_nnz] = Q_km/(v[k]*v[m]);
+      (*H_nnz)++; // vk and vm
+    }
+    if (var_a) {
+      HP[*H_nnz] = indicator_a*P_kk*4./(a*v[k]) + P_km/(a*v[k]);
+      HQ[*H_nnz] = indicator_a*Q_kk*4./(a*v[k]) + Q_km/(a*v[k]);
+      (*H_nnz)++; // vk and a
+    }
+    if (var_phi) {
+      HP[*H_nnz] = indicator_phi*Q_km/v[k];
+      HQ[*H_nnz] = -indicator_phi*P_km/v[k];
+      (*H_nnz)++; // vk and phi
+    }
+  }
+  
+  //***********
+  if (var_w[m]) { // wm var
+    
+    // J
+    J[*J_nnz] = Q_km;
+    (*J_nnz)++; // Pkm/dwm
+    
+    J[*J_nnz] = -P_km;
+    (*J_nnz)++; // Qkm/dwm
+    
+    // H
+    HP[*H_nnz] = -P_km;
+    HQ[*H_nnz] = -Q_km;
+    (*H_nnz)++;   // wm and wm
+    if (var_v[m]) {
+      HP[*H_nnz] = Q_km/v[m];
+      HQ[*H_nnz] = -P_km/v[m];
+      (*H_nnz)++; // wm and vm
+    }
+    if (var_a) {
+      HP[*H_nnz] = Q_km/a;
+      HQ[*H_nnz] = -P_km/a;
+      (*H_nnz)++; // wm and a
+    }
+    if (var_phi) {
+      HP[*H_nnz] = -P_km*indicator_phi;
+      HQ[*H_nnz] = -Q_km*indicator_phi;;
+      (*H_nnz)++; // wm and phi
+    }
+  }
+  
+  //***********
+  if (var_v[m]) { // vm var
+    
+    // J
+    J[*J_nnz] = P_km/v[m];
+    (*J_nnz)++; // dPkm/dvm
+    
+    J[*J_nnz] = Q_km/v[m]; 
+    (*J_nnz)++; // dQkm/dvm
+    
+    // H
+    // no vm and vm
+    if (var_a) {
+      HP[*H_nnz] = P_km/(a*v[m]);
+      HQ[*H_nnz] = Q_km/(a*v[m]);
+      (*H_nnz)++; // vm and a
+    }
+    if (var_phi) {
+      HP[*H_nnz] = indicator_phi*Q_km/v[m];
+      HQ[*H_nnz] = -indicator_phi*P_km/v[m];
+      (*H_nnz)++; // vm and phi
+    }
+  }
+  
+  //********
+  if (var_a) { // a var
+    
+    // J
+    J[*J_nnz] = indicator_a*(2.*P_kk/a) + P_km/a;
+    (*J_nnz)++; // dPkm/da
+    
+    J[*J_nnz] = indicator_a*(2.*Q_kk/a) + Q_km/a;
+    (*J_nnz)++; // dQkm/da
+    
+    // H
+    if (k == 0) {
+      HP[*H_nnz] = P_kk*2./(a*a);
+      HQ[*H_nnz] = Q_kk*2./(a*a);
+      (*H_nnz)++; // a and a (important check k==0)
+    }
+    if (var_phi) {
+      HP[*H_nnz] = indicator_phi*Q_km/a;
+      HQ[*H_nnz] = -indicator_phi*P_km/a;
+      (*H_nnz)++; // a and phi
+    }
+  }
+  
+  //**********
+  if (var_phi) { // phi var
+    
+    // J
+    J[*J_nnz] = indicator_phi*Q_km;
+    (*J_nnz)++; // dPkm/dphi
+    
+    J[*J_nnz] = -indicator_phi*P_km;
+    (*J_nnz)++; // dQkm/dphi
+    
+    // H
+    HP[*H_nnz] = -P_km;
+    HQ[*H_nnz] = -Q_km;
+    (*H_nnz)++; // phi and phi
+  }
 }
