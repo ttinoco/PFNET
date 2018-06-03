@@ -75,6 +75,7 @@ typedef struct Branch Branch;
 // Other
 typedef struct Bus Bus;
 typedef struct Vec Vec;
+typedef struct Mat Mat;
 
 // Prototypes
 void BRANCH_set_network(Branch* br, void* net);
