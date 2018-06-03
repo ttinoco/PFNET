@@ -14,9 +14,6 @@
 #include <math.h>
 #include "constr.h"
 
-// Data
-typedef struct Constr_ACPF_Data Constr_ACPF_Data;
-
 // Function prototypes
 Constr* CONSTR_ACPF_new(Net* net);
 void CONSTR_ACPF_init(Constr* c);
