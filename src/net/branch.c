@@ -1962,8 +1962,8 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
     (*J_nnz)++; // Qkm/dwk
     
     // H
-    MAT_set_i(J,*H_nnz,w_index[k]);
-    MAT_set_j(J,*H_nnz,w_index[k]);
+    MAT_set_i(H,*H_nnz,w_index[k]);
+    MAT_set_j(H,*H_nnz,w_index[k]);
     (*H_nnz)++;    // wk and wk
     if (var_v[k]) { 
       MAT_set_i(H,*H_nnz,w_index[k]);
@@ -2005,8 +2005,8 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
     (*J_nnz)++; // Qkm/dvk
     
     // H
-    MAT_set_i(J,*H_nnz,v_index[k]);
-    MAT_set_j(J,*H_nnz,v_index[k]);
+    MAT_set_i(H,*H_nnz,v_index[k]);
+    MAT_set_j(H,*H_nnz,v_index[k]);
     (*H_nnz)++;    // vk and vk
     if (var_w[m]) { 
       MAT_set_i(H,*H_nnz,v_index[k]);
