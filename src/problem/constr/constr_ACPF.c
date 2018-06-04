@@ -382,18 +382,18 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // Pg var
 	  
 	  // J
-	  MAT_set_i(J,*J_nnz,P_index[k]);             // dPk/dPg
+	  MAT_set_i(J,*J_nnz,P_index[k]);
 	  MAT_set_j(J,*J_nnz,GEN_get_index_P(gen,t));
-	  (*J_nnz)++;
+	  (*J_nnz)++; // dPk/dPg
 	}
 
 	//*****************************
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) { // Qg var
 
 	  // J
-	  MAT_set_i(J,*J_nnz,Q_index[k]);             // dQk/dQg
+	  MAT_set_i(J,*J_nnz,Q_index[k]);
 	  MAT_set_j(J,*J_nnz,GEN_get_index_Q(gen,t));
-	  (*J_nnz)++;
+	  (*J_nnz)++; // dQk/dQg
 	}
       }
 
@@ -404,18 +404,18 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) { // Pg var
 
 	  // J
-	  MAT_set_i(J,*J_nnz,P_index[k]);             // dPk/dPg
+	  MAT_set_i(J,*J_nnz,P_index[k]);
 	  MAT_set_j(J,*J_nnz,VARGEN_get_index_P(vargen,t));
-	  (*J_nnz)++;
+	  (*J_nnz)++; // dPk/dPg
 	}
 
 	//*****************************
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q)) { // Qg var
 
 	  // J
-	  MAT_set_i(J,*J_nnz,Q_index[k]);             // dQk/dQg
+	  MAT_set_i(J,*J_nnz,Q_index[k]);
 	  MAT_set_j(J,*J_nnz,VARGEN_get_index_Q(vargen,t));
-	  (*J_nnz)++;
+	  (*J_nnz)++; // dQk/dQg
 	}
       }
 
@@ -438,7 +438,6 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
 	  MAT_set_i(H[k],*(H_nnz+bus_index_t[k]),v_index[k]);
 	  MAT_set_j(H[k],*(H_nnz+bus_index_t[k]),v_index[k]);
 	  (*(H_nnz+bus_index_t[k]))++; // vk an vk
-	  
 	}
 
 	//**************************************
@@ -453,7 +452,7 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
 	  if (var_v[k]) {
 	    MAT_set_i(H[k],*(H_nnz+bus_index_t[k]),SHUNT_get_index_b(shunt,t));
 	    MAT_set_j(H[k],*(H_nnz+bus_index_t[k]),v_index[k]);
-	    (*(H_nnz+bus_index_t[k]))++; // b and vk 
+	    (*(H_nnz+bus_index_t[k]))++; // b and vk
 	  }
 	}
       }
@@ -465,18 +464,18 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
 	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) { // Pl var
 
 	  // J
-	  MAT_set_i(J,*J_nnz,P_index[k]);                // dPk/dPl
+	  MAT_set_i(J,*J_nnz,P_index[k]);
 	  MAT_set_j(J,*J_nnz,LOAD_get_index_P(load,t));
-	  (*J_nnz)++;
+	  (*J_nnz)++; // dPk/dPl
 	}
 
 	//*****************************
 	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) { // Ql var
 
 	  // J
-	  MAT_set_i(J,*J_nnz,Q_index[k]);                // dQk/dQl
+	  MAT_set_i(J,*J_nnz,Q_index[k]);
 	  MAT_set_j(J,*J_nnz,LOAD_get_index_Q(load,t));
-	  (*J_nnz)++;
+	  (*J_nnz)++; // dQk/dQl
 	}
       }
 
@@ -487,13 +486,13 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
 	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {  // Pc and Pd var
 
 	  // J
-	  MAT_set_i(J,*J_nnz,P_index[k]);              // Pc
+	  MAT_set_i(J,*J_nnz,P_index[k]);
 	  MAT_set_j(J,*J_nnz,BAT_get_index_Pc(bat,t));
-	  (*J_nnz)++;
+	  (*J_nnz)++; // Pc
 
-	  MAT_set_i(J,*J_nnz,P_index[k]);              // Pd
+	  MAT_set_i(J,*J_nnz,P_index[k]);
 	  MAT_set_j(J,*J_nnz,BAT_get_index_Pd(bat,t));
-	  (*J_nnz)++;
+	  (*J_nnz)++; // Pd
 	}
       }
     }
@@ -625,16 +624,16 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // Pg var
 
 	  // J
-	  J[*J_nnz] = 1.; // dPk/dPg
-	  (*J_nnz)++;
+	  J[*J_nnz] = 1.;
+	  (*J_nnz)++; // dPk/dPg
 	}
 
 	//*****************************
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) { // Qg var
 
 	  // J
-	  J[*J_nnz] = 1.; // dQk/dQg
-	  (*J_nnz)++;
+	  J[*J_nnz] = 1.;
+	  (*J_nnz)++; // dQk/dQg
 	}
       }
 
@@ -659,16 +658,16 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) { // Pg var
 
 	  // J
-	  J[*J_nnz] = 1.; // dPk/dPg
-	  (*J_nnz)++;
+	  J[*J_nnz] = 1.;
+	  (*J_nnz)++; // dPk/dPg
 	}
 
 	//*****************************
 	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q)) { // Qg var
 
 	  // J
-	  J[*J_nnz] = 1.; // dQk/dQg
-	  (*J_nnz)++;
+	  J[*J_nnz] = 1.;
+	  (*J_nnz)++; // dQk/dQg
 	}
       }
 
@@ -705,8 +704,8 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
 	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) { // b var
 
 	  // J
-	  J[*J_nnz] = v[k]*v[k]; // dQk/db
-	  (*J_nnz)++;
+	  J[*J_nnz] = v[k]*v[k];
+	  (*J_nnz)++; // dQk/db
 
 	  // H
 	  if (var_v[k]) {

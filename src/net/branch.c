@@ -1867,7 +1867,7 @@ void BRANCH_power_flow_count(Branch* br, int* J_nnz, int* H_nnz, int t, BOOL km)
     (*J_nnz)++; // Qkm/dvm
     
     // H
-    (*H_nnz)++;   // vm and vm
+    // no vm and vm
     if (var_a)   
       (*H_nnz)++; // vm and a
     if (var_phi) 
@@ -1897,7 +1897,7 @@ void BRANCH_power_flow_count(Branch* br, int* J_nnz, int* H_nnz, int t, BOOL km)
     
     // H
     (*H_nnz)++; // phi and phi
-  }  
+  }
 }
 
 void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int index_Q, int* H_nnz, Mat* H, int t, BOOL km) {

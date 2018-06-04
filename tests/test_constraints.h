@@ -145,9 +145,9 @@ static char* test_constr_FIX() {
 		BRANCH_PROP_PHASE_SHIFTER,
 		BRANCH_VAR_PHASE);
   NET_set_flags(net,OBJ_SHUNT,
-		FLAG_VARS|FLAG_FIXED,
-		SHUNT_PROP_SWITCHED_V,
-		SHUNT_VAR_SUSC);
+  FLAG_VARS|FLAG_FIXED,
+  		SHUNT_PROP_SWITCHED_V,
+  		SHUNT_VAR_SUSC);
 
   num = (2*NET_get_num_buses(net) +
 	 2*NET_get_num_gens(net) +
@@ -174,12 +174,12 @@ static char* test_constr_FIX() {
   Assert("error - bad constraint initialization",CONSTR_get_H_combined(c) == NULL);
   
   Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == 0);
-  CONSTR_count(c);
-  Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == num+NET_get_num_buses_reg_by_gen(net));  
+  CONSTR_count(c);  
+  Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == num+NET_get_num_reg_gens(net));  
   CONSTR_allocate(c);
-  Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == num+NET_get_num_buses_reg_by_gen(net));
+  Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == num+NET_get_num_reg_gens(net));
   CONSTR_analyze(c);
-  Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == num+NET_get_num_buses_reg_by_gen(net));
+  Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == num+NET_get_num_reg_gens(net));
   CONSTR_eval(c,x,NULL);
   Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == 0);
   CONSTR_store_sens(c,NULL,NULL,NULL,NULL);
@@ -194,7 +194,7 @@ static char* test_constr_FIX() {
   Assert("error - bad b size", VEC_get_size(b) == num);
   Assert("error - bad A size", MAT_get_size1(A) == num);
   Assert("error - bad A size", MAT_get_size2(A) == NET_get_num_vars(net));
-  Assert("error - bad A size", MAT_get_nnz(A) == num+NET_get_num_buses_reg_by_gen(net));
+  Assert("error - bad A size", MAT_get_nnz(A) == num+NET_get_num_reg_gens(net));
   
   CONSTR_clear(c);
   Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == 0);
@@ -355,7 +355,7 @@ static char* test_constr_PVPQ_SWITCHING() {
   NET_set_flags(net,
 		OBJ_BUS,
 		FLAG_VARS,
-		BUS_PROP_NOT_REG_BY_GEN,
+		BUS_PROP_ANY,
 		BUS_VAR_VMAG);
   NET_set_flags(net,
 		OBJ_BUS,
@@ -375,7 +375,7 @@ static char* test_constr_PVPQ_SWITCHING() {
   
   Assert("error - empty network",NET_get_num_vars(net) > 0);
   Assert("error - wrong number of variables",
-	 NET_get_num_vars(net) == (NET_get_num_buses(net)-NET_get_num_buses_reg_by_gen(net)+
+	 NET_get_num_vars(net) == (NET_get_num_buses(net)+
 				   NET_get_num_buses(net)-NET_get_num_slack_buses(net)+
 				   NET_get_num_slack_gens(net)+
 				   NET_get_num_reg_gens(net)));
@@ -390,8 +390,8 @@ static char* test_constr_PVPQ_SWITCHING() {
   for (i = 0; i < NET_get_num_buses(net); i++) {
     bus = NET_get_bus(net,i);
     if (BUS_is_regulated_by_gen(bus)) {
-      num += BUS_get_num_reg_gens(bus)-1;
-      nnz += 2*(BUS_get_num_reg_gens(bus)-1);
+      num += BUS_get_num_reg_gens(bus);
+      nnz += BUS_get_num_reg_gens(bus)*(BUS_get_num_reg_gens(bus)+1);
     }       
   }
 
@@ -413,7 +413,7 @@ static char* test_constr_PVPQ_SWITCHING() {
   
   Assert("error - wrong A counter",CONSTR_get_A_nnz(c) == 0);
   Assert("error - wrong A counter",CONSTR_get_A_row(c) == 0);
-  CONSTR_count(c);
+  CONSTR_count(c);  
   Assert("error - wrong A counter",CONSTR_get_A_nnz(c) == nnz);
   Assert("error - wrong A counter",CONSTR_get_A_row(c) == num);  
   CONSTR_allocate(c);
@@ -515,12 +515,12 @@ static char* test_constr_ACPF() {
 
   Assert("error - empty network",NET_get_num_vars(net) > 0);
   Assert("error - wrong number of variables",
-	    NET_get_num_vars(net) == (2*NET_get_num_buses(net)+
-				      NET_get_num_slack_gens(net)+
-				      NET_get_num_reg_gens(net)+
-				      NET_get_num_tap_changers(net)+
-				      NET_get_num_phase_shifters(net)+
-				      NET_get_num_switched_shunts(net)));
+	 NET_get_num_vars(net) == (2*NET_get_num_buses(net)+
+				   NET_get_num_slack_gens(net)+
+				   NET_get_num_reg_gens(net)+
+				   NET_get_num_tap_changers(net)+
+				   NET_get_num_phase_shifters(net)+
+				   NET_get_num_switched_shunts(net)));
 
   x = NET_get_var_values(net,CURRENT);
 
@@ -529,19 +529,19 @@ static char* test_constr_ACPF() {
 
   c = CONSTR_ACPF_new(net);
   
-  Jnnz_computed = (NET_get_num_buses(net)*4 +
-		   NET_get_num_branches(net)*8 +
-		   NET_get_num_tap_changers(net)*4 +
+  Jnnz_computed = (NET_get_num_branches(net)*16 +
+		   NET_get_num_shunts(net)*2 + 
+                   NET_get_num_tap_changers(net)*4 +
 		   NET_get_num_phase_shifters(net)*4 +
-		   NET_get_num_switched_shunts(net) +
+		   NET_get_num_switched_shunts(net)*1 +
 		   NET_get_num_slack_gens(net) +
 		   NET_get_num_reg_gens(net));
 
-  Hnnz_computed = (NET_get_num_buses(net)*3 +
-		   NET_get_num_branches(net)*12 +
+  Hnnz_computed = (NET_get_num_branches(net)*18 +
+		   NET_get_num_shunts(net)*1 +
 		   NET_get_num_tap_changers(net)*9 +
                    NET_get_num_phase_shifters(net)*10 +
-		   NET_get_num_switched_shunts(net));
+		   NET_get_num_switched_shunts(net)*1);
 		     
   CONSTR_count(c);
   
@@ -551,8 +551,8 @@ static char* test_constr_ACPF() {
   for (i = 0; i < size; i++)
     Hnnz += H_nnz[i];
   
-  Assert("error - bad Annz counter",CONSTR_get_A_nnz(c) == 0);
-  Assert("error - bad Jnnz counter",Jnnz_computed == CONSTR_get_J_nnz(c));
+  Assert("error - bad Annz counter",CONSTR_get_A_nnz(c) == 0);  
+  Assert("error - bad Jnnz counter",Jnnz_computed == CONSTR_get_J_nnz(c));  
   Assert("error - bad Hnnz counter",Hnnz_computed == Hnnz);
 
   CONSTR_allocate(c);
@@ -630,7 +630,7 @@ static char* test_constr_REG_GEN() {
   NET_set_flags(net,
 		OBJ_BUS,
 		FLAG_VARS,
-		BUS_PROP_NOT_SLACK,
+		BUS_PROP_ANY,
 		BUS_VAR_VMAG);
   NET_set_flags(net,
 		OBJ_BUS,
@@ -648,7 +648,7 @@ static char* test_constr_REG_GEN() {
 		GEN_PROP_REG,
 		GEN_VAR_Q);
   
-  num_vars = (2*(NET_get_num_buses(net)-NET_get_num_slack_buses(net))+
+  num_vars = (2*NET_get_num_buses(net)-NET_get_num_slack_buses(net)+
 	      NET_get_num_slack_gens(net)+
 	      NET_get_num_reg_gens(net));
   Assert("error - invalid number of varibles",num_vars == NET_get_num_vars(net));
@@ -660,13 +660,13 @@ static char* test_constr_REG_GEN() {
 
   c = CONSTR_REG_GEN_new(net);
 
-  num = NET_get_num_buses_reg_by_gen(net)-NET_get_num_slack_buses(net);
+  num = NET_get_num_reg_gens(net)-NET_get_num_slack_gens(net);
   num_Annz = 3*num;
   num_Jnnz = 0;
   for (i = 0; i < NET_get_num_buses(net); i++) {
     bus = NET_get_bus(net,i);
     if (BUS_is_regulated_by_gen(bus) && !BUS_is_slack(bus))
-      num_Jnnz += 2 + 2*BUS_get_num_reg_gens(bus);
+      num_Jnnz += 4*BUS_get_num_reg_gens(bus);
   }
 
   Assert("error - bad Annz counter",CONSTR_get_A_nnz(c) == 0);
