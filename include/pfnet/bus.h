@@ -298,4 +298,20 @@ void BUS_set_sens_v_reg_by_tran(Bus* bus, REAL value, int t);
 void BUS_set_sens_v_reg_by_shunt(Bus* bus, REAL value, int t);
 void BUS_show(Bus* bus, int t);
 
+int BUS_get_dPdw_index(Bus* bus, int t);
+int BUS_get_dQdw_index(Bus* bus, int t);
+int BUS_get_dPdv_index(Bus* bus, int t);
+int BUS_get_dQdv_index(Bus* bus, int t);
+int BUS_get_dwdw_index(Bus* bus, int t);
+int BUS_get_dwdv_index(Bus* bus, int t);
+int BUS_get_dvdv_index(Bus* bus, int t);
+
+void BUS_set_dPdw_index(Bus* bus, int idx, int t);
+void BUS_set_dQdw_index(Bus* bus, int idx, int t);
+void BUS_set_dPdv_index(Bus* bus, int idx, int t);
+void BUS_set_dQdv_index(Bus* bus, int idx, int t);
+void BUS_set_dwdw_index(Bus* bus, int idx, int t);
+void BUS_set_dwdv_index(Bus* bus, int idx, int t);
+void BUS_set_dvdv_index(Bus* bus, int idx, int t);
+
 #endif

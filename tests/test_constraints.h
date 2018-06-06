@@ -529,16 +529,16 @@ static char* test_constr_ACPF() {
 
   c = CONSTR_ACPF_new(net);
   
-  Jnnz_computed = (NET_get_num_branches(net)*16 +
-		   NET_get_num_shunts(net)*2 + 
+  Jnnz_computed = (NET_get_num_buses(net)*4 +
+		   NET_get_num_branches(net)*8 +
                    NET_get_num_tap_changers(net)*4 +
 		   NET_get_num_phase_shifters(net)*4 +
 		   NET_get_num_switched_shunts(net)*1 +
 		   NET_get_num_slack_gens(net) +
 		   NET_get_num_reg_gens(net));
 
-  Hnnz_computed = (NET_get_num_branches(net)*18 +
-		   NET_get_num_shunts(net)*1 +
+  Hnnz_computed = (NET_get_num_buses(net)*3 +
+		   NET_get_num_branches(net)*12 +
 		   NET_get_num_tap_changers(net)*9 +
                    NET_get_num_phase_shifters(net)*10 +
 		   NET_get_num_switched_shunts(net)*1);

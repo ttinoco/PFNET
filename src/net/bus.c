@@ -93,6 +93,15 @@ struct Bus {
 
   // Network
   Net* net; /**< @brief Network. */
+
+  // ACPF helpers
+  int* dPdw_index;
+  int* dQdw_index;
+  int* dPdv_index;
+  int* dQdv_index;
+  int* dwdw_index;
+  int* dwdv_index;
+  int* dvdv_index;
   
   // List
   Bus* next; /**< @brief List of buses */
@@ -316,6 +325,13 @@ void BUS_array_del(Bus* bus_array, int size) {
       free(bus->sens_v_reg_by_shunt);
       free(bus->P_mis);
       free(bus->Q_mis);
+      free(bus->dPdw_index);
+      free(bus->dQdw_index);
+      free(bus->dPdv_index);
+      free(bus->dQdv_index);
+      free(bus->dwdw_index);
+      free(bus->dwdv_index);
+      free(bus->dvdv_index);
       BUS_del_all_connections(bus);
     }
     free(bus_array);
@@ -533,6 +549,12 @@ void BUS_copy_from_bus(Bus* bus, Bus* other) {
 
   // Hash
   // skip hash
+
+  // Network
+  // skip network
+
+  // ACPF helpers
+  // skip helpers
 
   // List
   // skip next
@@ -1655,6 +1677,14 @@ void BUS_init(Bus* bus, int num_periods) {
   ARRAY_zalloc(bus->Q_mis,REAL,T);
 
   bus->net = NULL;
+
+  ARRAY_zalloc(bus->dPdw_index,int,T);
+  ARRAY_zalloc(bus->dQdw_index,int,T);
+  ARRAY_zalloc(bus->dPdv_index,int,T);
+  ARRAY_zalloc(bus->dQdv_index,int,T);
+  ARRAY_zalloc(bus->dwdw_index,int,T);
+  ARRAY_zalloc(bus->dwdv_index,int,T);
+  ARRAY_zalloc(bus->dvdv_index,int,T);
   
   for (t = 0; t < bus->num_periods; t++) {
     bus->v_mag[t] = 1.;
@@ -2003,4 +2033,88 @@ void BUS_propagate_data_in_time(Bus* bus, int start, int end) {
       bus->v_set[t] = bus->v_set[start];
     }
   }
+}
+
+int BUS_get_dPdw_index(Bus* bus, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    return bus->dPdw_index[t];
+  else
+    return -1;
+}
+
+int BUS_get_dQdw_index(Bus* bus, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    return bus->dQdw_index[t];
+  else
+    return -1;
+}
+
+int BUS_get_dPdv_index(Bus* bus, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    return bus->dPdv_index[t];
+  else
+    return -1;
+}
+
+int BUS_get_dQdv_index(Bus* bus, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    return bus->dQdv_index[t];
+  else
+    return -1;
+}
+
+int BUS_get_dwdw_index(Bus* bus, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    return bus->dwdw_index[t];
+  else
+    return -1;
+}
+
+int BUS_get_dwdv_index(Bus* bus, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    return bus->dwdv_index[t];
+  else
+    return -1;
+}
+
+int BUS_get_dvdv_index(Bus* bus, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    return bus->dvdv_index[t];
+  else
+    return -1;
+}
+
+void BUS_set_dPdw_index(Bus* bus, int idx, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    bus->dPdw_index[t] = idx;
+}
+
+void BUS_set_dQdw_index(Bus* bus, int idx, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    bus->dQdw_index[t] = idx;
+}
+
+void BUS_set_dPdv_index(Bus* bus, int idx, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    bus->dPdv_index[t] = idx;
+}
+
+void BUS_set_dQdv_index(Bus* bus, int idx, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    bus->dQdv_index[t] = idx;
+}
+
+void BUS_set_dwdw_index(Bus* bus, int idx, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    bus->dwdw_index[t] = idx;
+}
+
+void BUS_set_dwdv_index(Bus* bus, int idx, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    bus->dwdv_index[t] = idx;
+}
+
+void BUS_set_dvdv_index(Bus* bus, int idx, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    bus->dvdv_index[t] = idx;
 }
