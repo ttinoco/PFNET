@@ -17,7 +17,7 @@ Unreleased
 * Made heuristic accept array of constraint pointers instead of linked list of constraints.
 * Added contingency name and corresponding setter/getter.
 * Updated json float sig digits from 11 to 16.
-* Modular flow routines for branches (in progress).
+* Modular flow routines for branches.
 
 Version 1.3.3
 -------------
