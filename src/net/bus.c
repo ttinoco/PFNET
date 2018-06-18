@@ -630,6 +630,13 @@ REAL BUS_get_price(Bus* bus, int t) {
     return 0;
 }
 
+REAL* BUS_get_price_array(Bus* bus) {
+  if (bus)
+    return bus->price;
+  else
+    return NULL;
+}
+
 int BUS_get_index(Bus* bus) {
   if (bus)
     return bus->index;
@@ -651,11 +658,25 @@ int BUS_get_index_v_mag(Bus* bus, int t) {
     return -1;
 }
 
+int* BUS_get_index_v_mag_array(Bus* bus) {
+  if (bus)
+    return bus->index_v_mag;
+  else
+    return NULL;
+}
+
 int BUS_get_index_v_ang(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     return bus->index_v_ang[t];
   else
     return -1;
+}
+
+int* BUS_get_index_v_ang_array(Bus* bus) {
+  if (bus)
+    return bus->index_v_ang;
+  else
+    return NULL;
 }
 
 int BUS_get_index_P(Bus* bus, int t) {
@@ -971,6 +992,13 @@ REAL BUS_get_v_mag(Bus* bus, int t) {
     return bus->v_mag[t];
 }
 
+REAL* BUS_get_v_mag_array(Bus* bus) {
+  if (bus)
+    return bus->v_mag;
+  else
+    return NULL;
+}
+
 REAL BUS_get_v_ang(Bus* bus, int t) {
   if (!bus || t < 0 || t >= bus->num_periods)
     return 0;
@@ -978,11 +1006,25 @@ REAL BUS_get_v_ang(Bus* bus, int t) {
     return bus->v_ang[t];
 }
 
+REAL* BUS_get_v_ang_array(Bus* bus) {
+  if (bus)
+    return bus->v_ang;
+  else
+    return NULL;
+}
+
 REAL BUS_get_v_set(Bus* bus, int t) {
   if (!bus || t < 0 || t >= bus->num_periods)
     return 0;
   else
     return bus->v_set[t];
+}
+
+REAL* BUS_get_v_set_array(Bus* bus) {
+  if (bus)
+    return bus->v_set;
+  else
+    return NULL;
 }
 
 REAL BUS_get_v_max_reg(Bus* bus) {
