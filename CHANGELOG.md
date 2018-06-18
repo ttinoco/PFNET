@@ -1,12 +1,3 @@
-Targets
--------
-* MAT or ART data writer.
-* CIM parser written in python.
-* Rich object comparisons for all network components.
-* Instructions for adding new functions and constraints in C.
-* Area/zone projections.
-* Variable generator curtailment cost.
-
 Unreleased
 ----------
 * Updated parser init/free routines to make parser params work.
@@ -18,6 +9,7 @@ Unreleased
 * Added contingency name and corresponding setter/getter.
 * Updated json float sig digits from 11 to 16.
 * Modular flow routines for branches.
+* Added array attribute getters for network component structs.
 
 Version 1.3.3
 -------------

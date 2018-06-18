@@ -431,6 +431,13 @@ int BRANCH_get_index_ratio(Branch* br, int t) {
     return -1;
 }
 
+int* BRANCH_get_index_ratio_array(Branch* br) {
+  if (br)
+    return br->index_ratio;
+  else
+    return NULL;
+}
+
 int BRANCH_get_index_phase(Branch* br, int t) {
   if (br && t >= 0 && t < br->num_periods)
     return br->index_phase[t];
@@ -438,11 +445,25 @@ int BRANCH_get_index_phase(Branch* br, int t) {
     return -1;
 }
 
+int* BRANCH_get_index_phase_array(Branch* br) {
+  if (br)
+    return br->index_phase;
+  else
+    return NULL;
+}
+
 REAL BRANCH_get_ratio(Branch* br, int t) {
   if (br && t >= 0 && t < br->num_periods)
     return br->ratio[t];
   else
     return 0;
+}
+
+REAL* BRANCH_get_ratio_array(Branch* br) {
+  if (br)
+    return br->ratio;
+  else
+    return NULL;
 }
 
 REAL BRANCH_get_ratio_max(Branch* br) {
@@ -548,6 +569,13 @@ REAL BRANCH_get_phase(Branch* br, int t) {
     return br->phase[t];
   else
     return 0;
+}
+
+REAL* BRANCH_get_phase_array(Branch* br) {
+  if (br)
+    return br->phase;
+  else
+    return NULL;
 }
 
 REAL BRANCH_get_phase_max(Branch* br) {
