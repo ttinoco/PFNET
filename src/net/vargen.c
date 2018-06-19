@@ -247,6 +247,20 @@ int VARGEN_get_index_Q(Vargen* gen, int t) {
     return -1;
 }
 
+int* VARGEN_get_index_P_array(Vargen* gen) {
+  if (gen)
+    return gen->index_P;
+  else
+    return NULL;
+}
+
+int* VARGEN_get_index_Q_array(Vargen* gen) {
+  if (gen)
+    return gen->index_Q;
+  else
+    return NULL;
+}
+
 Vargen* VARGEN_get_next(Vargen* gen) {
   if (gen)
     return gen->next;
@@ -266,6 +280,34 @@ REAL VARGEN_get_P_ava(Vargen* gen, int t) {
     return gen->P_ava[t];
   else 
     return 0;
+}
+
+REAL* VARGEN_get_P_array(Vargen* gen) {
+  if (gen)
+    return gen->P;
+  else
+    return NULL;
+}
+
+REAL* VARGEN_get_P_ava_array(Vargen* gen) {
+  if (gen)
+    return gen->P_ava;
+  else
+    return NULL;
+}
+
+REAL* VARGEN_get_P_std_array(Vargen* gen) {
+  if (gen)
+    return gen->P_std;
+  else
+    return NULL;
+}
+
+REAL* VARGEN_get_Q_array(Vargen* gen) {
+  if (gen)
+    return gen->Q;
+  else
+    return NULL;
 }
 
 REAL VARGEN_get_P_max(Vargen* gen) {

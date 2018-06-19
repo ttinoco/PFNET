@@ -263,9 +263,44 @@ int BAT_get_index_E(Bat* bat, int t) {
     return -1;
 }
 
+int* BAT_get_index_Pc_array(Bat* bat) {
+  if (bat)
+    return bat->index_Pc;
+  else
+    return NULL;
+}
+
+int* BAT_get_index_Pd_array(Bat* bat) {
+  if (bat)
+    return bat->index_Pd;
+  else
+    return NULL;
+}
+
+int* BAT_get_index_E_array(Bat* bat) {
+  if (bat)
+    return bat->index_E;
+  else
+    return NULL;
+}
+
 Bat* BAT_get_next(Bat* bat) {
   if (bat)
     return bat->next;
+  else
+    return NULL;
+}
+
+REAL* BAT_get_P_array(Bat* bat) {
+  if (bat)
+    return bat->P;
+  else
+    return NULL;
+}
+
+REAL* BAT_get_E_array(Bat* bat) {
+  if (bat)
+    return bat->E;
   else
     return NULL;
 }
