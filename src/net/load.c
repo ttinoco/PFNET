@@ -359,6 +359,20 @@ int LOAD_get_index_Q(Load* load, int t) {
     return -1;
 }
 
+int* LOAD_get_index_P_array(Load* load) {
+  if (load)
+    return load->index_P;
+  else
+    return NULL;
+}
+
+int* LOAD_get_index_Q_array(Load* load) {
+  if (load)
+    return load->index_Q;
+  else
+    return NULL;
+}
+
 Load* LOAD_get_next(Load* load) {
   if (load)
     return load->next;
@@ -406,6 +420,48 @@ REAL LOAD_get_Q_min(Load* load, int t) {
     return load->Q_min[t];
   else
     return 0;
+}
+
+REAL* LOAD_get_P_array(Load* load) {
+  if (load)
+    return load->P;
+  else
+    return NULL;
+}
+
+REAL* LOAD_get_P_max_array(Load* load) {
+  if (load)
+    return load->P_max;
+  else
+    return NULL;
+}
+
+REAL* LOAD_get_P_min_array(Load* load) {
+  if (load)
+    return load->P_min;
+  else
+    return NULL;
+}
+
+REAL* LOAD_get_Q_array(Load* load) {
+  if (load)
+    return load->Q;
+  else
+    return NULL;
+}
+
+REAL* LOAD_get_Q_max_array(Load* load) {
+  if (load)
+    return load->Q_max;
+  else
+    return NULL;
+}
+
+REAL* LOAD_get_Q_min_array(Load* load) {
+  if (load)
+    return load->Q_min;
+  else
+    return NULL;
 }
 
 void LOAD_get_var_values(Load* load, Vec* values, int code) {

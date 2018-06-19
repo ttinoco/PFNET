@@ -270,6 +270,13 @@ int SHUNT_get_index_b(Shunt* shunt, int t) {
     return -1;
 }
 
+int* SHUNT_get_index_b_array(Shunt* shunt) {
+  if (shunt)
+    return shunt->index_b;
+  else
+    return NULL;
+}
+
 Bus* SHUNT_get_bus(Shunt* shunt) {
   if (shunt)
     return shunt->bus;
@@ -295,6 +302,13 @@ REAL SHUNT_get_b(Shunt* shunt, int t) {
     return shunt->b[t];
   else
     return 0;
+}
+
+REAL* SHUNT_get_b_array(Shunt* shunt) {
+  if (shunt)
+    return shunt->b;
+  else
+    return NULL;
 }
 
 REAL SHUNT_get_b_max(Shunt* shunt) {
