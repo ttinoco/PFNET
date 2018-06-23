@@ -18,8 +18,6 @@
 Constr* CONSTR_LBOUND_new(Net* net);
 void CONSTR_LBOUND_init(Constr* c);
 void CONSTR_LBOUND_count_step(Constr* c, Branch* br, int t);
-void CONSTR_LBOUND_allocate(Constr* c);
-void CONSTR_LBOUND_clear(Constr* c);
 void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t);
 void CONSTR_LBOUND_eval_step(Constr* c, Branch* br, int t, Vec* v, Vec* ve);
 void CONSTR_LBOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);

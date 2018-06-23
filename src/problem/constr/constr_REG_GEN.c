@@ -14,8 +14,6 @@ Constr* CONSTR_REG_GEN_new(Net* net) {
   Constr* c = CONSTR_new(net);
   CONSTR_set_func_init(c,&CONSTR_REG_GEN_init);
   CONSTR_set_func_count_step(c,&CONSTR_REG_GEN_count_step);
-  CONSTR_set_func_allocate(c,&CONSTR_REG_GEN_allocate);
-  CONSTR_set_func_clear(c,&CONSTR_REG_GEN_clear);
   CONSTR_set_func_analyze_step(c,&CONSTR_REG_GEN_analyze_step);
   CONSTR_set_func_eval_step(c,&CONSTR_REG_GEN_eval_step);
   CONSTR_set_func_store_sens_step(c,&CONSTR_REG_GEN_store_sens_step);
@@ -36,28 +34,6 @@ void CONSTR_REG_GEN_init(Constr* c) {
   CONSTR_set_H_nnz(c,(int*)calloc(num_Jconstr,sizeof(int)),num_Jconstr);
   CONSTR_set_name(c,"voltage regulation by generators");
   CONSTR_set_data(c,NULL);
-}
-
-void CONSTR_REG_GEN_clear(Constr* c) {
-
-  // f
-  VEC_set_zero(CONSTR_get_f(c));
-
-  // J
-  MAT_set_zero_d(CONSTR_get_J(c));
-
-  // H
-  MAT_array_set_zero_d(CONSTR_get_H_array(c),CONSTR_get_H_array_size(c));
-
-  // Counters
-  CONSTR_set_A_nnz(c,0);
-  CONSTR_set_J_nnz(c,0);
-  CONSTR_set_A_row(c,0);
-  CONSTR_set_J_row(c,0);
-  CONSTR_clear_H_nnz(c);
-
-  // Flags
-  CONSTR_clear_bus_counted(c);
 }
 
 void CONSTR_REG_GEN_count_step(Constr* c, Branch* br, int t) {
@@ -169,66 +145,6 @@ void CONSTR_REG_GEN_count_step(Constr* c, Branch* br, int t) {
 
     // Update counted flag
     bus_counted[bus_index_t[k]] = TRUE;
-  }
-}
-
-void CONSTR_REG_GEN_allocate(Constr* c) {
-
-  // Local variables
-  int A_nnz;
-  int J_nnz;
-  int A_row;
-  int J_row;
-  int* H_nnz;
-  Mat* H;
-  int num_vars;
-  int num_extra_vars;
-  int i;
-
-  A_nnz = CONSTR_get_A_nnz(c);
-  J_nnz = CONSTR_get_J_nnz(c);
-  A_row = CONSTR_get_A_row(c);
-  J_row = CONSTR_get_J_row(c);
-  H_nnz = CONSTR_get_H_nnz(c);
-  num_vars = NET_get_num_vars(CONSTR_get_network(c));
-  num_extra_vars = CONSTR_get_num_extra_vars(c);
-
-  // Extra vars
-  CONSTR_set_l_extra_vars(c,VEC_new(num_extra_vars));
-  CONSTR_set_u_extra_vars(c,VEC_new(num_extra_vars));
-  CONSTR_set_init_extra_vars(c,VEC_new(num_extra_vars));
-
-  // G u l
-  CONSTR_set_G(c,MAT_new(0,num_vars+num_extra_vars,0));
-  CONSTR_set_u(c,VEC_new(0));
-  CONSTR_set_l(c,VEC_new(0));
-  
-  // b
-  CONSTR_set_b(c,VEC_new(A_row));
-
-  // A
-  CONSTR_set_A(c,MAT_new(A_row,                   // size1 (rows)
-			 num_vars+num_extra_vars, // size2 (cols)
-			 A_nnz));                 // nnz
-
-  // f
-  CONSTR_set_f(c,VEC_new(J_row));
-
-  // J
-  CONSTR_set_J(c,MAT_new(J_row,                   // size1 (rows)
-			 num_vars+num_extra_vars, // size2 (cols)
-			 J_nnz));                 // nnz
-
-  // H
-  CONSTR_allocate_H_array(c,J_row);
-  for (i = 0; i < J_row; i++) {
-    H = CONSTR_get_H_single(c,i);
-    MAT_set_nnz(H,H_nnz[i]);
-    MAT_set_size1(H,num_vars+num_extra_vars);
-    MAT_set_size2(H,num_vars+num_extra_vars);
-    MAT_set_row_array(H,(int*)calloc(H_nnz[i],sizeof(int)));
-    MAT_set_col_array(H,(int*)calloc(H_nnz[i],sizeof(int)));
-    MAT_set_data_array(H,(REAL*)calloc(H_nnz[i],sizeof(REAL)));
   }
 }
 

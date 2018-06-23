@@ -10,6 +10,7 @@ Unreleased
 * Updated json float sig digits from 11 to 16.
 * Modular flow routines for branches.
 * Added array attribute getters for network component structs.
+* Moved constr alloc/clear responsibility to "parent" struct.
 
 Version 1.3.3
 -------------

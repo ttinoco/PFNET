@@ -26,8 +26,6 @@ typedef struct Constr_CFUNC_Data Constr_CFUNC_Data;
 Constr* CONSTR_CFUNC_new(Net* net);
 void CONSTR_CFUNC_init(Constr* c);
 void CONSTR_CFUNC_count_step(Constr* c, Branch* br, int t);
-void CONSTR_CFUNC_allocate(Constr* c);
-void CONSTR_CFUNC_clear(Constr* c);
 void CONSTR_CFUNC_analyze_step(Constr* c, Branch* br, int t);
 void CONSTR_CFUNC_eval_step(Constr* c, Branch* br, int t, Vec* v, Vec* ve);
 void CONSTR_CFUNC_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);

@@ -132,7 +132,7 @@ void CONSTR_set_error(Constr* c, char* string);
 void CONSTR_clear_error(Constr* c);
 BOOL CONSTR_has_error(Constr* c);
 char* CONSTR_get_error_string(Constr* c);
-void CONSTR_update_network(Constr* c);
+void CONSTR_update(Constr* c);
 Net* CONSTR_get_network(Constr* c);
 int CONSTR_get_num_extra_vars(Constr* c);
 void CONSTR_set_num_extra_vars(Constr* c, int num);

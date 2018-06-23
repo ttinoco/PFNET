@@ -17,8 +17,6 @@ Constr* CONSTR_AC_FLOW_LIM_new(Net* net) {
   Constr* c = CONSTR_new(net);
   CONSTR_set_func_init(c, &CONSTR_AC_FLOW_LIM_init);
   CONSTR_set_func_count_step(c, &CONSTR_AC_FLOW_LIM_count_step);
-  CONSTR_set_func_allocate(c, &CONSTR_AC_FLOW_LIM_allocate);
-  CONSTR_set_func_clear(c, &CONSTR_AC_FLOW_LIM_clear);
   CONSTR_set_func_analyze_step(c, &CONSTR_AC_FLOW_LIM_analyze_step);
   CONSTR_set_func_eval_step(c, &CONSTR_AC_FLOW_LIM_eval_step);
   CONSTR_set_func_store_sens_step(c, &CONSTR_AC_FLOW_LIM_store_sens_step);
@@ -45,26 +43,11 @@ void CONSTR_AC_FLOW_LIM_init(Constr* c) {
   CONSTR_set_data(c,NULL);
 }
 
-void CONSTR_AC_FLOW_LIM_clear(Constr* c) {
-
-  // f
-  VEC_set_zero(CONSTR_get_f(c));
-  
-  // J
-  MAT_set_zero_d(CONSTR_get_J(c));
-
-  // H
-  MAT_array_set_zero_d(CONSTR_get_H_array(c),CONSTR_get_H_array_size(c));
-
-  // Counters
-  CONSTR_set_J_nnz(c,0);
-  CONSTR_set_J_row(c,0);
-  CONSTR_clear_H_nnz(c);
-}
-
 void CONSTR_AC_FLOW_LIM_count_step(Constr* c, Branch* br, int t) {
 
   // Local variables
+  int* G_nnz;
+  int* G_row;
   int* J_nnz;
   int* H_nnz;
   int H_nnz_val;
@@ -78,12 +61,14 @@ void CONSTR_AC_FLOW_LIM_count_step(Constr* c, Branch* br, int t) {
   int m;
 
   // Constr data
+  G_nnz = CONSTR_get_G_nnz_ptr(c);
+  G_row = CONSTR_get_G_row_ptr(c);
   J_nnz = CONSTR_get_J_nnz_ptr(c);
-  H_nnz = CONSTR_get_H_nnz(c);
   J_row = CONSTR_get_J_row_ptr(c);
-  
+  H_nnz = CONSTR_get_H_nnz(c);
+
   // Check pointers
-  if (!J_nnz || !H_nnz || !J_row)
+  if (!G_nnz || !G_row || !J_nnz || !J_row || !H_nnz )
     return;
 
   // Check outage
@@ -221,73 +206,15 @@ void CONSTR_AC_FLOW_LIM_count_step(Constr* c, Branch* br, int t) {
     //**********
     (*J_nnz)++;  // extra var
     
-    // Constraint counter
+    // Nonlinear constraint counter
     (*J_row)++;
+
+    // G constraint
+    (*G_row)++;
+    (*G_nnz)++;
     
     // Num extra vars
     CONSTR_set_num_extra_vars(c,*J_row);
-  }
-}
-
-void CONSTR_AC_FLOW_LIM_allocate(Constr* c) {
-  
-  // Local variables
-  Net* net;
-  int num_vars;
-  int num_extra_vars;
-  int J_nnz;
-  int* H_nnz;
-  int J_row;
-  Mat* Hi;
-  int* row;
-  int* col;
-  int i;
-
-  // Data
-  net = CONSTR_get_network(c);
-  num_vars = NET_get_num_vars(net);
-  num_extra_vars = CONSTR_get_num_extra_vars(c);
-  J_nnz = CONSTR_get_J_nnz(c);
-  H_nnz = CONSTR_get_H_nnz(c);
-  J_row = CONSTR_get_J_row(c);
-
-  // Extra vars
-  CONSTR_set_l_extra_vars(c,VEC_new(num_extra_vars));
-  CONSTR_set_u_extra_vars(c,VEC_new(num_extra_vars));
-  CONSTR_set_init_extra_vars(c,VEC_new(num_extra_vars));
-
-  // A b
-  CONSTR_set_A(c,MAT_new(0,                       // rows
-			 num_vars+num_extra_vars, // columnes
-			 0));                     // nnz
-  CONSTR_set_b(c,VEC_new(0));
-
-  // G l u
-  CONSTR_set_G(c,MAT_new(J_row,                   // rows
-			 num_vars+num_extra_vars, // columns
-			 J_row));                 // nnz
-  CONSTR_set_l(c,VEC_new(J_row));
-  CONSTR_set_u(c,VEC_new(J_row));
-
-  // f J
-  CONSTR_set_f(c,VEC_new(J_row));
-  CONSTR_set_J(c,MAT_new(J_row,                   // rows
-			 num_vars+num_extra_vars, // cols
-			 J_nnz));                 // nnz
-
-  // H
-  CONSTR_allocate_H_array(c,J_row);
-  for (i = 0; i < J_row; i++) {
-    Hi = CONSTR_get_H_single(c,i);
-    MAT_set_nnz(Hi,H_nnz[i]);
-    MAT_set_size1(Hi,num_vars+num_extra_vars);
-    MAT_set_size2(Hi,num_vars+num_extra_vars);
-    MAT_set_owns_rowcol(Hi,TRUE);
-    ARRAY_zalloc(row,int,H_nnz[i]);
-    ARRAY_zalloc(col,int,H_nnz[i]);
-    MAT_set_row_array(Hi,row);
-    MAT_set_col_array(Hi,col);
-    MAT_set_data_array(Hi,(REAL*)malloc(H_nnz[i]*sizeof(REAL)));
   }
 }
 
@@ -295,6 +222,8 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
 
   // Local variables
   Mat* J;
+  int* G_row;
+  int* G_nnz;
   int* J_row;
   int* J_nnz;
   int* H_nnz;
@@ -327,11 +256,13 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
   u = CONSTR_get_u(c);
   H_array = CONSTR_get_H_array(c);
   J_nnz = CONSTR_get_J_nnz_ptr(c);
-  H_nnz = CONSTR_get_H_nnz(c);
   J_row = CONSTR_get_J_row_ptr(c);
+  G_nnz = CONSTR_get_G_nnz_ptr(c);
+  G_row = CONSTR_get_G_row_ptr(c);
+  H_nnz = CONSTR_get_H_nnz(c);
  
   // Check pointers
-  if (!J_nnz || !H_nnz || !J_row || !J || !H_array || !l || !u)
+  if (!G_nnz || !G_row || !J_nnz || !J_row || !H_nnz || !J || !H_array || !l || !u)
     return;
 
   // Check outage
@@ -553,11 +484,11 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
     (*J_nnz)++;  // extra var
 
     // G, l, u
-    MAT_set_i(G,*J_row,*J_row);
-    MAT_set_j(G,*J_row,num_vars+(*J_row));
-    MAT_set_d(G,*J_row,1.);
-    VEC_set(l,*J_row,-BRANCH_get_ratingA(br));
-    VEC_set(u,*J_row,BRANCH_get_ratingA(br));
+    MAT_set_i(G,*G_nnz,*G_row);
+    MAT_set_j(G,*G_nnz,num_vars+(*G_row));
+    MAT_set_d(G,*G_nnz,1.);
+    VEC_set(l,*G_row,-BRANCH_get_ratingA(br));
+    VEC_set(u,*G_row,BRANCH_get_ratingA(br));
 
     // Row info
     CONSTR_set_J_row_info_string(c,
@@ -567,14 +498,18 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
 				 (k == 0) ? "km" : "mk", // constraint info
 				 t);                     // time
     CONSTR_set_G_row_info_string(c,
-				 *J_row,
+				 *G_row,
 				 "branch",               // object
 				 BRANCH_get_index(br),   // object id
 				 (k == 0) ? "km" : "mk", // constraint info
 				 t);                     // time
     
-    // Constraint counter
+    // Nonlinear onstraint counter
     (*J_row)++;
+
+    // G constraint counters
+    (*G_row)++;
+    (*G_nnz)++;
   }
 }
 

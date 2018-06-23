@@ -66,8 +66,6 @@ struct Constr {
   // Type functions
   void (*func_init)(Constr* c);                                          /**< @brief Initialization function */
   void (*func_count_step)(Constr* c, Branch* br, int t);                 /**< @brief Function for counting nonzero entries */
-  void (*func_allocate)(Constr* c);                                      /**< @brief Function for allocating required arrays */
-  void (*func_clear)(Constr* c);                                         /**< @brief Function for clearing flags, counters, and function values */
   void (*func_analyze_step)(Constr* c, Branch* br, int t);               /**< @brief Function for analyzing sparsity pattern */
   void (*func_eval_step)(Constr* c, Branch* br, int t, Vec* v, Vec* ve); /**< @brief Function for evaluating constraint */
   void (*func_store_sens_step)(Constr* c, Branch* br, int t,
@@ -796,8 +794,6 @@ Constr* CONSTR_new(Net* net) {
   // Methods
   c->func_init = NULL;
   c->func_count_step = NULL;
-  c->func_allocate = NULL;
-  c->func_clear = NULL;
   c->func_analyze_step = NULL;
   c->func_eval_step = NULL;
   c->func_store_sens_step = NULL;
@@ -807,8 +803,8 @@ Constr* CONSTR_new(Net* net) {
   // Data
   c->data = NULL;
 
-  // Update network
-  CONSTR_update_network(c);
+  // Update
+  CONSTR_update(c);
   
   return c;
 }
@@ -1045,20 +1041,118 @@ void CONSTR_count_step(Constr* c, Branch* br, int t) {
 }
 
 void CONSTR_allocate(Constr* c) {
-  if (c && c->func_allocate && CONSTR_is_safe_to_count(c)) {
-    CONSTR_del_matvec(c);
-    c->state_tag = NET_get_state_tag(c->net);
-    (*(c->func_allocate))(c);
-    CONSTR_allocate_H_combined(c);
-    c->A_row_info = (char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->A));
-    c->J_row_info = (char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->J));
-    c->G_row_info = (char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->G));
+
+  // Local vars
+  int A_nnz;
+  int A_row;
+  int G_nnz;
+  int G_row;
+  int J_nnz;
+  int J_row;
+  int* H_nnz;
+  Mat* H;
+  int num_vars;
+  int num_extra_vars;
+  int i;
+  
+  // No c
+  if (!c)
+    return;
+
+  // Clear
+  CONSTR_del_matvec(c);
+  
+  // Save tag
+  c->state_tag = NET_get_state_tag(c->net);
+
+  // Counters
+  A_nnz = CONSTR_get_A_nnz(c);
+  A_row = CONSTR_get_A_row(c);
+  G_nnz = CONSTR_get_G_nnz(c);
+  G_row = CONSTR_get_G_row(c);
+  J_nnz = CONSTR_get_J_nnz(c);
+  J_row = CONSTR_get_J_row(c);
+  H_nnz = CONSTR_get_H_nnz(c);
+
+  // Num vars
+  num_vars = NET_get_num_vars(CONSTR_get_network(c));
+  num_extra_vars = CONSTR_get_num_extra_vars(c);
+
+  // Extra vars
+  CONSTR_set_l_extra_vars(c,VEC_new(num_extra_vars));
+  CONSTR_set_u_extra_vars(c,VEC_new(num_extra_vars));
+  CONSTR_set_init_extra_vars(c,VEC_new(num_extra_vars));
+
+  // G
+  CONSTR_set_G(c,MAT_new(G_row,
+			 num_vars+num_extra_vars,
+			 G_nnz));
+
+  // u
+  CONSTR_set_u(c,VEC_new(G_row));
+
+  // l
+  CONSTR_set_l(c,VEC_new(G_row));
+  
+  // b
+  CONSTR_set_b(c,VEC_new(A_row));
+
+  // A
+  CONSTR_set_A(c,MAT_new(A_row,                   // size1 (rows)
+			 num_vars+num_extra_vars, // size2 (cols)
+			 A_nnz));                 // nnz
+
+  // f
+  CONSTR_set_f(c,VEC_new(J_row));
+
+  // J
+  CONSTR_set_J(c,MAT_new(J_row,                   // size1 (rows)
+			 num_vars+num_extra_vars, // size2 (cols)
+			 J_nnz));                 // nnz
+
+  // H
+  CONSTR_allocate_H_array(c,J_row);
+  for (i = 0; i < J_row; i++) {
+    H = CONSTR_get_H_single(c,i);
+    MAT_set_nnz(H,H_nnz[i]);
+    MAT_set_size1(H,num_vars+num_extra_vars);
+    MAT_set_size2(H,num_vars+num_extra_vars);
+    MAT_set_row_array(H,(int*)calloc(H_nnz[i],sizeof(int)));
+    MAT_set_col_array(H,(int*)calloc(H_nnz[i],sizeof(int)));
+    MAT_set_data_array(H,(REAL*)calloc(H_nnz[i],sizeof(REAL)));
   }
+
+  // H combined
+  CONSTR_allocate_H_combined(c);
+
+  // Info strings
+  c->A_row_info = (char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->A));
+  c->J_row_info = (char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->J));
+  c->G_row_info = (char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->G));
 }
 
 void CONSTR_clear(Constr* c) {
-  if (c && c->func_clear)
-    (*(c->func_clear))(c);
+
+  // f
+  VEC_set_zero(CONSTR_get_f(c));
+
+  // J
+  MAT_set_zero_d(CONSTR_get_J(c));
+
+  // H
+  MAT_array_set_zero_d(CONSTR_get_H_array(c),CONSTR_get_H_array_size(c));
+
+  // Counters
+  CONSTR_set_A_nnz(c,0);
+  CONSTR_set_A_row(c,0);
+  CONSTR_set_G_nnz(c,0);
+  CONSTR_set_G_row(c,0);
+  CONSTR_set_J_nnz(c,0);
+  CONSTR_set_J_row(c,0);
+  CONSTR_clear_H_nnz(c);
+
+  // Flags
+  CONSTR_clear_bus_counted(c);
 }
 
 void CONSTR_analyze(Constr* c) {
@@ -1220,7 +1314,7 @@ Net* CONSTR_get_network(Constr* c) {
     return NULL;
 }
 
-void CONSTR_update_network(Constr* c) {
+void CONSTR_update(Constr* c) {
   
   // No c
   if (!c)
@@ -1244,16 +1338,6 @@ void CONSTR_set_func_init(Constr* c, void (*func)(Constr* c)) {
 void CONSTR_set_func_count_step(Constr* c, void (*func)(Constr* c, Branch* br, int t)) {
   if (c)
     c->func_count_step = func;
-}
-
-void CONSTR_set_func_allocate(Constr* c, void (*func)(Constr* c)) {
-  if (c)
-    c->func_allocate = func;
-}
-
-void CONSTR_set_func_clear(Constr* c, void (*func)(Constr* c)) {
-  if (c)
-    c->func_clear = func;
 }
 
 void CONSTR_set_func_analyze_step(Constr* c, void (*func)(Constr* c, Branch* br, int t)) {

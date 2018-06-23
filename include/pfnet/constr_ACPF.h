@@ -18,8 +18,6 @@
 Constr* CONSTR_ACPF_new(Net* net);
 void CONSTR_ACPF_init(Constr* c);
 void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t);
-void CONSTR_ACPF_allocate(Constr* c);
-void CONSTR_ACPF_clear(Constr* c);
 void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t);
 void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* v, Vec* ve);
 void CONSTR_ACPF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
