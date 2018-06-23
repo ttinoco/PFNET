@@ -392,6 +392,20 @@ int GEN_get_index_Q(Gen* gen, int t) {
     return -1;
 }
 
+int* GEN_get_index_P_array(Gen* gen) {
+  if (gen)
+    return gen->index_P;
+  else
+    return NULL;
+}
+
+int* GEN_get_index_Q_array(Gen* gen) {
+  if (gen)
+    return gen->index_Q;
+  else
+    return NULL;
+}
+
 Gen* GEN_get_next(Gen* gen) {
   if (gen)
     return gen->next;
@@ -467,6 +481,20 @@ REAL GEN_get_Q_par(Gen* gen) {
     return gen->Q_par;
   else
     return 0;
+}
+
+REAL* GEN_get_P_array(Gen* gen) {
+  if (gen)
+    return gen->P;
+  else
+    return NULL;
+}
+
+REAL* GEN_get_Q_array(Gen* gen) {
+  if (gen)
+    return gen->Q;
+  else
+    return NULL;
 }
 
 void GEN_get_var_values(Gen* gen, Vec* values, int code) {
