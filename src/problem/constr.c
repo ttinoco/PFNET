@@ -66,6 +66,8 @@ struct Constr {
   // Type functions
   void (*func_init)(Constr* c);                                          /**< @brief Initialization function */
   void (*func_count_step)(Constr* c, Branch* br, int t);                 /**< @brief Function for counting nonzero entries */
+  void (*func_allocate)(Constr* c);                                      /**< @brief Function for allocating required arrays */
+  void (*func_clear)(Constr* c);                                         /**< @brief Function for clearing flags, counters, and data values */
   void (*func_analyze_step)(Constr* c, Branch* br, int t);               /**< @brief Function for analyzing sparsity pattern */
   void (*func_eval_step)(Constr* c, Branch* br, int t, Vec* v, Vec* ve); /**< @brief Function for evaluating constraint */
   void (*func_store_sens_step)(Constr* c, Branch* br, int t,
@@ -794,6 +796,8 @@ Constr* CONSTR_new(Net* net) {
   // Methods
   c->func_init = NULL;
   c->func_count_step = NULL;
+  c->func_allocate = NULL;
+  c->func_clear = NULL;
   c->func_analyze_step = NULL;
   c->func_eval_step = NULL;
   c->func_store_sens_step = NULL;
@@ -1129,6 +1133,10 @@ void CONSTR_allocate(Constr* c) {
   c->A_row_info = (char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->A));
   c->J_row_info = (char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->J));
   c->G_row_info = (char*)malloc(sizeof(char)*CONSTR_INFO_BUFFER_SIZE*MAT_get_size1(c->G));
+
+  // Additional allocation
+  if (c->func_allocate)
+    (*(c->func_allocate))(c);
 }
 
 void CONSTR_clear(Constr* c) {
@@ -1153,6 +1161,10 @@ void CONSTR_clear(Constr* c) {
 
   // Flags
   CONSTR_clear_bus_counted(c);
+
+  // Additional clear
+  if (c && c->func_clear)
+    (*(c->func_clear))(c);
 }
 
 void CONSTR_analyze(Constr* c) {
@@ -1338,6 +1350,16 @@ void CONSTR_set_func_init(Constr* c, void (*func)(Constr* c)) {
 void CONSTR_set_func_count_step(Constr* c, void (*func)(Constr* c, Branch* br, int t)) {
   if (c)
     c->func_count_step = func;
+}
+
+void CONSTR_set_func_allocate(Constr* c, void (*func)(Constr* c)) {
+  if (c)
+    c->func_allocate = func;
+}
+
+void CONSTR_set_func_clear(Constr* c, void (*func)(Constr* c)) {
+  if (c)
+    c->func_clear = func;
 }
 
 void CONSTR_set_func_analyze_step(Constr* c, void (*func)(Constr* c, Branch* br, int t)) {

@@ -14,8 +14,6 @@ Constr* CONSTR_BAT_DYN_new(Net* net) {
   Constr* c = CONSTR_new(net);
   CONSTR_set_func_init(c, &CONSTR_BAT_DYN_init);
   CONSTR_set_func_count_step(c, &CONSTR_BAT_DYN_count_step);
-  CONSTR_set_func_allocate(c, &CONSTR_BAT_DYN_allocate);
-  CONSTR_set_func_clear(c, &CONSTR_BAT_DYN_clear);
   CONSTR_set_func_analyze_step(c, &CONSTR_BAT_DYN_analyze_step);
   CONSTR_set_func_eval_step(c, &CONSTR_BAT_DYN_eval_step);
   CONSTR_set_func_store_sens_step(c, &CONSTR_BAT_DYN_store_sens_step);
@@ -29,16 +27,6 @@ void CONSTR_BAT_DYN_init(Constr* c) {
   // Init
   CONSTR_set_name(c,"battery dynamics");
   CONSTR_set_data(c,NULL);
-}
-
-void CONSTR_BAT_DYN_clear(Constr* c) {
-
-  // Counters
-  CONSTR_set_A_nnz(c,0);
-  CONSTR_set_A_row(c,0);
-
-  // Flags
-  CONSTR_clear_bus_counted(c);
 }
 
 void CONSTR_BAT_DYN_count_step(Constr* c, Branch* br, int t) {
@@ -102,35 +90,6 @@ void CONSTR_BAT_DYN_count_step(Constr* c, Branch* br, int t) {
     // Update counted flag
     bus_counted[BUS_get_index(bus)*T+t] = TRUE;
   }
-}
-
-void CONSTR_BAT_DYN_allocate(Constr* c) {
-
-  // Local variables
-  int num_constr;
-  int num_vars;
-  int A_nnz;
-
-  num_vars = NET_get_num_vars(CONSTR_get_network(c));
-  num_constr = CONSTR_get_A_row(c);
-  A_nnz = CONSTR_get_A_nnz(c);
-
-  // J f
-  CONSTR_set_J(c,MAT_new(0,num_vars,0));
-  CONSTR_set_f(c,VEC_new(0));
-
-  // A b
-  CONSTR_set_A(c,MAT_new(num_constr,   // size1 (rows)
-			 num_vars,     // size2 (cols)
-			 A_nnz));      // nnz
-  CONSTR_set_b(c,VEC_new(num_constr));
-  
-  // G l u
-  CONSTR_set_l(c,VEC_new(0));
-  CONSTR_set_u(c,VEC_new(0));
-  CONSTR_set_G(c,MAT_new(0,        // size1 (rows)
-			 num_vars, // size2 (cols)
-			 0));      // nnz
 }
 
 void CONSTR_BAT_DYN_analyze_step(Constr* c, Branch* br, int t) {

@@ -21,9 +21,9 @@ Constr* CONSTR_CFUNC_new(Net* net) {
   Constr* c = CONSTR_new(net);
   CONSTR_set_func_init(c, &CONSTR_CFUNC_init);
   CONSTR_set_func_count_step(c, &CONSTR_CFUNC_count_step);
+  CONSTR_set_func_analyze_step(c, &CONSTR_CFUNC_analyze_step);
   CONSTR_set_func_allocate(c, &CONSTR_CFUNC_allocate);
   CONSTR_set_func_clear(c, &CONSTR_CFUNC_clear);
-  CONSTR_set_func_analyze_step(c, &CONSTR_CFUNC_analyze_step);
   CONSTR_set_func_eval_step(c, &CONSTR_CFUNC_eval_step);
   CONSTR_set_func_store_sens_step(c, &CONSTR_CFUNC_store_sens_step);
   CONSTR_set_func_free(c, &CONSTR_CFUNC_free);
@@ -41,6 +41,7 @@ void CONSTR_CFUNC_init(Constr* c) {
   data->func = NULL;
   data->rhs = 0;
   strcpy(data->op,"=");
+  CONSTR_set_H_nnz(c,(int*)calloc(1,sizeof(int)),1);
   CONSTR_set_name(c,"constrained function");
   CONSTR_set_data(c,(void*)data);
 }
@@ -54,15 +55,6 @@ void CONSTR_CFUNC_clear(Constr* c) {
   if (!data)
     return;
 
-  // f
-  VEC_set_zero(CONSTR_get_f(c));
-  
-  // J
-  MAT_set_zero_d(CONSTR_get_J(c));
-  
-  // H
-  MAT_array_set_zero_d(CONSTR_get_H_array(c),CONSTR_get_H_array_size(c));
-
   // Data
   FUNC_clear(data->func);
 }
@@ -71,27 +63,50 @@ void CONSTR_CFUNC_count_step(Constr* c, Branch* br, int t) {
 
   // Local variables
   Constr_CFUNC_Data* data = (Constr_CFUNC_Data*)CONSTR_get_data(c);
+  int num_vars;
+  int num_extra_vars;
+  int* Hnnz;
   
   // Check
   if (!data)
     return;
 
-  // Count step
+  // Function count step
   FUNC_count_step(data->func,br,t);
+
+  // Post-processing
+  if ((t == BRANCH_get_num_periods(br)-1) && (BRANCH_get_index(br) == NET_get_num_branches(net)-1)) {
+
+    // Extra vars
+    if (strcmp(data->op,">=") == 0 || strcmp(data->op,"<=") == 0)
+      CONSTR_set_num_extra_vars(c, 1);
+    else
+      CONSTR_set_num_extra_vars(c, 0);
+
+    num_vars = NET_get_num_vars(CONSTR_get_network(c));
+    num_extra_vars = CONSTR_get_num_extra_vars(c);
+
+    // A
+    // nothing
+
+    // G 
+    CONSTR_set_G_row(c,num_extra_vars);
+    CONSTR_set_G_nnz(c,num_extra_vars);
+
+    // J
+    CONSTR_set_J_row(c,1);
+    CONSTR_set_J_nnz(c,num_vars+num_extra_vars); // dense
+
+    // H
+    H_nnz = CONSTR_get_H_nnz(c);
+    H_nnz[0] = MAT_get_nnz(FUNC_get_Hphi(data->func));
+  }
 }
 
 void CONSTR_CFUNC_allocate(Constr* c) {
 
   // Local variables
   Constr_CFUNC_Data* data = (Constr_CFUNC_Data*)CONSTR_get_data(c);
-  int num_extra_vars;
-  int num_vars;
-  Mat* H;
-  Mat* Hphi;
-  Net* net;
-  int Hnnz;
-  int* row;
-  int* col;
   
   // Check
   if (!data)
@@ -99,54 +114,6 @@ void CONSTR_CFUNC_allocate(Constr* c) {
 
   // Function
   FUNC_allocate(data->func);
-
-  // Data
-  net = CONSTR_get_network(c);
-  num_vars = NET_get_num_vars(net);  
-  Hphi = FUNC_get_Hphi(data->func);
-  Hnnz = MAT_get_nnz(Hphi);
-  if (strcmp(data->op,">=") == 0 || strcmp(data->op,"<=") == 0)
-    num_extra_vars = 1;
-  else
-    num_extra_vars = 0;
-
-  // Extra vars
-  CONSTR_set_l_extra_vars(c,VEC_new(num_extra_vars));
-  CONSTR_set_u_extra_vars(c,VEC_new(num_extra_vars));
-  CONSTR_set_init_extra_vars(c,VEC_new(num_extra_vars));
-  CONSTR_set_num_extra_vars(c,num_extra_vars);
-
-  // A b
-  CONSTR_set_A(c,MAT_new(0,
-			 num_vars+num_extra_vars,
-			 0));
-  CONSTR_set_b(c,VEC_new(0));
-
-  // G l u
-  CONSTR_set_G(c,MAT_new(num_extra_vars,
-			 num_vars+num_extra_vars,
-			 num_extra_vars));
-  CONSTR_set_l(c,VEC_new(num_extra_vars));
-  CONSTR_set_u(c,VEC_new(num_extra_vars)); 
-
-  // f J
-  CONSTR_set_f(c,VEC_new(1));
-  CONSTR_set_J(c,MAT_new(1,
-			 num_vars+num_extra_vars,
-			 num_vars+num_extra_vars));
-
-  // H
-  CONSTR_allocate_H_array(c,1);
-  H = CONSTR_get_H_single(c,0);
-  MAT_set_nnz(H,Hnnz);
-  MAT_set_size1(H,num_vars+num_extra_vars);
-  MAT_set_size2(H,num_vars+num_extra_vars);
-  MAT_set_owns_rowcol(H,TRUE);
-  ARRAY_zalloc(row,int,Hnnz);
-  ARRAY_zalloc(col,int,Hnnz);
-  MAT_set_row_array(H,row);
-  MAT_set_col_array(H,col);
-  MAT_set_data_array(H,(REAL*)malloc(Hnnz*sizeof(REAL)));
 }
 
 void CONSTR_CFUNC_analyze_step(Constr* c, Branch* br, int t) {
