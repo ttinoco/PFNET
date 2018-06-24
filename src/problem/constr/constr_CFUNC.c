@@ -36,12 +36,12 @@ void CONSTR_CFUNC_init(Constr* c) {
   
   // Local variaables
   Constr_CFUNC_Data* data;
-  
+
+  // Init
   data = (Constr_CFUNC_Data*)malloc(sizeof(Constr_CFUNC_Data));
   data->func = NULL;
   data->rhs = 0;
   strcpy(data->op,"=");
-  CONSTR_set_H_nnz(c,(int*)calloc(1,sizeof(int)),1);
   CONSTR_set_name(c,"constrained function");
   CONSTR_set_data(c,(void*)data);
 }

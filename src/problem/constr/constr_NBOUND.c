@@ -14,8 +14,6 @@ Constr* CONSTR_NBOUND_new(Net* net) {
   Constr* c = CONSTR_new(net);
   CONSTR_set_func_init(c, &CONSTR_NBOUND_init);
   CONSTR_set_func_count_step(c, &CONSTR_NBOUND_count_step);
-  CONSTR_set_func_allocate(c, &CONSTR_NBOUND_allocate);
-  CONSTR_set_func_clear(c, &CONSTR_NBOUND_clear);
   CONSTR_set_func_analyze_step(c, &CONSTR_NBOUND_analyze_step);
   CONSTR_set_func_eval_step(c, &CONSTR_NBOUND_eval_step);
   CONSTR_set_func_store_sens_step(c, &CONSTR_NBOUND_store_sens_step);
@@ -30,24 +28,6 @@ void CONSTR_NBOUND_init(Constr* c) {
   CONSTR_set_H_nnz(c,NULL,0);
   CONSTR_set_name(c,"variable nonlinear bounds");
   CONSTR_set_data(c,NULL);
-}
-
-void CONSTR_NBOUND_clear(Constr* c) {
-
-  // f
-  VEC_set_zero(CONSTR_get_f(c));
-
-  // J
-  MAT_set_zero_d(CONSTR_get_J(c));
-
-  // H
-  MAT_array_set_zero_d(CONSTR_get_H_array(c),CONSTR_get_H_array_size(c));
-
-  // Counters
-  CONSTR_set_J_nnz(c,0);
-
-  // Flags
-  CONSTR_clear_bus_counted(c);
 }
 
 void CONSTR_NBOUND_count_step(Constr* c, Branch* br, int t) {
@@ -159,14 +139,6 @@ void CONSTR_NBOUND_allocate(Constr* c) {
   J_nnz = CONSTR_get_J_nnz(c);
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
 
-  // A b
-  CONSTR_set_A(c,MAT_new(0,num_vars,0));
-  CONSTR_set_b(c,VEC_new(0));
-
-  // G u l
-  CONSTR_set_G(c,MAT_new(0,num_vars,0));
-  CONSTR_set_u(c,VEC_new(0));
-  CONSTR_set_l(c,VEC_new(0));
 
   // f
   CONSTR_set_f(c,VEC_new(J_nnz));

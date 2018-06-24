@@ -164,6 +164,13 @@ void CONSTR_set_num_extra_vars(Constr* c, int num) {
     c->num_extra_vars = num;
 }
 
+void CONSTR_resize_H_nnz(Constr* c, int new_size) {
+  if (c) {
+    c->H_nnz = (int*)realloc(c->H_nnz,sizeof(int)*new_size);
+    c->H_nnz_size = new_size;
+  }    
+}
+
 void CONSTR_clear_H_nnz(Constr* c) {
   if (c)
     ARRAY_clear(c->H_nnz,int,c->H_nnz_size);
@@ -1078,6 +1085,13 @@ void CONSTR_allocate(Constr* c) {
   J_row = CONSTR_get_J_row(c);
   H_nnz = CONSTR_get_H_nnz(c);
 
+  // Check
+  if (J_row > CONSTR_get_H_nnz_size(c)) {
+    sprintf(c->error_string,"H_nnz array size is not large enough");
+    c->error_flag = TRUE;
+    return;
+  }
+
   // Num vars
   num_vars = NET_get_num_vars(CONSTR_get_network(c));
   num_extra_vars = CONSTR_get_num_extra_vars(c);
@@ -1116,6 +1130,7 @@ void CONSTR_allocate(Constr* c) {
 
   // H
   CONSTR_allocate_H_array(c,J_row);
+  CONSTR_resize_H_nnz(c,J_row);
   for (i = 0; i < J_row; i++) {
     H = CONSTR_get_H_single(c,i);
     MAT_set_nnz(H,H_nnz[i]);
@@ -1257,6 +1272,7 @@ BOOL CONSTR_is_safe_to_analyze(Constr* c) {
       VEC_get_size(CONSTR_get_l_extra_vars(c)) == CONSTR_get_num_extra_vars(c) &&
       VEC_get_size(CONSTR_get_u_extra_vars(c)) == CONSTR_get_num_extra_vars(c) &&
       VEC_get_size(CONSTR_get_init_extra_vars(c)) == CONSTR_get_num_extra_vars(c) &&
+      MAT_get_size1(CONSTR_get_J(c)) <= CONSTR_get_H_nnz_size(c) &&
       CONSTR_get_state_tag(c) == NET_get_state_tag(net))
     return TRUE;
   else {
@@ -1275,6 +1291,7 @@ BOOL CONSTR_is_safe_to_eval(Constr* c, Vec* v, Vec* ve) {
       MAT_get_size2(CONSTR_get_J(c)) == num_vars &&
       VEC_get_size(v) == NET_get_num_vars(net) &&
       (VEC_get_size(ve) == CONSTR_get_num_extra_vars(c) || VEC_get_size(ve) == 0) &&
+      MAT_get_size1(CONSTR_get_J(c)) <= CONSTR_get_H_nnz_size(c) &&
       CONSTR_get_state_tag(c) == NET_get_state_tag(net))
     return TRUE;
   else {
@@ -1327,6 +1344,9 @@ Net* CONSTR_get_network(Constr* c) {
 }
 
 void CONSTR_update(Constr* c) {
+
+  // Local vars
+  int max_num;
   
   // No c
   if (!c)
@@ -1337,6 +1357,10 @@ void CONSTR_update(Constr* c) {
     free(c->bus_counted);
   c->bus_counted_size = NET_get_num_buses(c->net)*NET_get_num_periods(c->net);
   ARRAY_zalloc(c->bus_counted,char,c->bus_counted_size);
+
+  // H_nnz
+  max_num = CONSTR_H_NNZ_MUL*num_buses*num_periods;
+  CONSTR_set_H_nnz(c,(int*)calloc(max_num,sizeof(int)),max_num);
 
   // Init
   CONSTR_init(c);

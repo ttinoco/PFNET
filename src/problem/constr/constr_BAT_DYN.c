@@ -26,7 +26,6 @@ void CONSTR_BAT_DYN_init(Constr* c) {
 
   // Init
   CONSTR_set_name(c,"battery dynamics");
-  CONSTR_set_data(c,NULL);
 }
 
 void CONSTR_BAT_DYN_count_step(Constr* c, Branch* br, int t) {

@@ -14,8 +14,6 @@ Constr* CONSTR_FIX_new(Net* net) {
   Constr* c = CONSTR_new(net);
   CONSTR_set_func_init(c, &CONSTR_FIX_init);
   CONSTR_set_func_count_step(c, &CONSTR_FIX_count_step);
-  CONSTR_set_func_allocate(c, &CONSTR_FIX_allocate);
-  CONSTR_set_func_clear(c, &CONSTR_FIX_clear);
   CONSTR_set_func_analyze_step(c, &CONSTR_FIX_analyze_step);
   CONSTR_set_func_eval_step(c, &CONSTR_FIX_eval_step);
   CONSTR_set_func_store_sens_step(c, &CONSTR_FIX_store_sens_step);
@@ -28,17 +26,6 @@ void CONSTR_FIX_init(Constr* c) {
 
   // Init
   CONSTR_set_name(c,"variable fixing");
-  CONSTR_set_data(c,NULL);
-}
-
-void CONSTR_FIX_clear(Constr* c) {
-
-  // Counters
-  CONSTR_set_A_nnz(c,0);
-  CONSTR_set_A_row(c,0);
-
-  // Flags
-  CONSTR_clear_bus_counted(c);
 }
 
 void CONSTR_FIX_count_step(Constr* c, Branch* br, int t) {
@@ -204,36 +191,6 @@ void CONSTR_FIX_count_step(Constr* c, Branch* br, int t) {
     // Update counted flag
     bus_counted[BUS_get_index(bus)*T+t] = TRUE;
   }
-}
-
-void CONSTR_FIX_allocate(Constr* c) {
-
-  // Local variables
-  int num_constr;
-  int num_vars;
-  int A_nnz;
-
-  // Constr data
-  num_vars = NET_get_num_vars(CONSTR_get_network(c));
-  num_constr = CONSTR_get_A_row(c);
-  A_nnz = CONSTR_get_A_nnz(c);
-
-  // J f
-  CONSTR_set_J(c,MAT_new(0,num_vars,0));
-  CONSTR_set_f(c,VEC_new(0));
-
-  // G l u
-  CONSTR_set_G(c,MAT_new(0,num_vars,0));
-  CONSTR_set_l(c,VEC_new(0));
-  CONSTR_set_u(c,VEC_new(0));
-
-  // b
-  CONSTR_set_b(c,VEC_new(num_constr));
-
-  // A
-  CONSTR_set_A(c,MAT_new(num_constr, // size1 (rows)
-			 num_vars,   // size2 (cols)
-			 A_nnz)); // nnz
 }
 
 void CONSTR_FIX_analyze_step(Constr* c, Branch* br, int t) {

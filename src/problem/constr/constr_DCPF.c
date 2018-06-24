@@ -14,8 +14,6 @@ Constr* CONSTR_DCPF_new(Net* net) {
   Constr* c = CONSTR_new(net);
   CONSTR_set_func_init(c, &CONSTR_DCPF_init);
   CONSTR_set_func_count_step(c, &CONSTR_DCPF_count_step);
-  CONSTR_set_func_allocate(c, &CONSTR_DCPF_allocate);
-  CONSTR_set_func_clear(c, &CONSTR_DCPF_clear);
   CONSTR_set_func_analyze_step(c, &CONSTR_DCPF_analyze_step);
   CONSTR_set_func_eval_step(c, &CONSTR_DCPF_eval_step);
   CONSTR_set_func_store_sens_step(c, &CONSTR_DCPF_store_sens_step);
@@ -28,16 +26,6 @@ void CONSTR_DCPF_init(Constr* c) {
 
   // Init
   CONSTR_set_name(c,"DC power balance");
-  CONSTR_set_data(c,NULL);
-}
-
-void CONSTR_DCPF_clear(Constr* c) {
-
-  // Counters
-  CONSTR_set_A_nnz(c,0);
-
-  // Flags
-  CONSTR_clear_bus_counted(c);
 }
 
 void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
@@ -49,6 +37,7 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
   Vargen* vargen;
   Bat* bat;
   int* A_nnz;
+  int* A_row;
   char* bus_counted;
   int bus_index_t[2];
   int k;
@@ -56,10 +45,11 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
 
   // Constr data
   A_nnz = CONSTR_get_A_nnz_ptr(c);
+  A_row = CONSTR_get_A_row_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!A_nnz || !bus_counted)
+  if (!A_nnz || !A_row || !bus_counted)
     return;
 
   // Bus data
@@ -159,42 +149,14 @@ void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
 	  (*A_nnz)++; // Pd
 	}
       }
+
+      // Counter constraints
+      (*A_row)++;
     }
 
     // Update counted flag
     bus_counted[bus_index_t[k]] = TRUE;
   }
-}
-
-void CONSTR_DCPF_allocate(Constr* c) {
-
-  // Local variables
-  Net* net;
-  int num_buses;
-  int num_vars;
-  int A_nnz;
-
-  net = CONSTR_get_network(c);
-  num_buses = NET_get_num_buses(net);
-  num_vars = NET_get_num_vars(net);
-  A_nnz = CONSTR_get_A_nnz(c);
-
-  // J f
-  CONSTR_set_J(c,MAT_new(0,num_vars,0));
-  CONSTR_set_f(c,VEC_new(0));
-
-  // G u l
-  CONSTR_set_G(c,MAT_new(0,num_vars,0));
-  CONSTR_set_u(c,VEC_new(0));
-  CONSTR_set_l(c,VEC_new(0));
-
-  // b
-  CONSTR_set_b(c,VEC_new(num_buses*NET_get_num_periods(net)));
-
-  // A
-  CONSTR_set_A(c,MAT_new(num_buses*NET_get_num_periods(net), // size1 (rows)
-			 num_vars,                           // size2 (cols)
-			 A_nnz));                         // nnz
 }
 
 void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {

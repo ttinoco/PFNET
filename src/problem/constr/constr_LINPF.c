@@ -35,44 +35,36 @@ void CONSTR_LINPF_init(Constr* c) {
 
 void CONSTR_LINPF_clear(Constr* c) {
   
-  // ACPF
+  // Local vars
   Constr* acpf = (Constr*)CONSTR_get_data(c);
+
+  // ACPF clear
   CONSTR_clear(acpf);
 }
 
 void CONSTR_LINPF_count_step(Constr* c, Branch* br, int t) {
 
-  // ACPF
+  // Local vars
   Constr* acpf = (Constr*)CONSTR_get_data(c);
+  Network* net = CONSTR_get_network(c);
+
+  // ACPF count
   CONSTR_count_step(acpf,br,t);
+
+  // Done 
+  if ((t == T-1) && (BRANCH_get_index(br) == NET_get_num_branches(net)-1)) {
+    CONSTR_set_A_row(c,CONSTR_get_J_row(acpf));
+    CONSTR_set_A_nnz(c,CONSTR_get_J_nnz(acpf));
+  }
 }
 
 void CONSTR_LINPF_allocate(Constr* c) {
   
-  // Local variables
-  Net* net;
-  int num_vars;
-  Constr* acpf;
+  // Local vars
+  Constr* acpf = (Constr*)CONSTR_get_data(c);
   
-  net = CONSTR_get_network(c);
-  num_vars = NET_get_num_vars(net);
-  acpf = (Constr*)CONSTR_get_data(c);
-
   // ACPF
-  CONSTR_allocate(acpf);
-   
-  // A b (empty)
-  CONSTR_set_A(c,CONSTR_get_J(acpf)); // temporary
-  CONSTR_set_b(c,CONSTR_get_f(acpf)); // temporary
-
-  // J f (empty)
-  CONSTR_set_J(c,MAT_new(0,num_vars,0));
-  CONSTR_set_f(c,VEC_new(0));
-
-  // G l u (empty)
-  CONSTR_set_G(c,MAT_new(0,num_vars,0));
-  CONSTR_set_l(c,VEC_new(0));
-  CONSTR_set_u(c,VEC_new(0));
+  CONSTR_allocate(acpf); 
 }
 
 void CONSTR_LINPF_analyze_step(Constr* c, Branch* br, int t) {
@@ -82,15 +74,18 @@ void CONSTR_LINPF_analyze_step(Constr* c, Branch* br, int t) {
   Net* net;
   Vec* f;
   Mat* J;
+  Mat* A;
   Vec* x0;
   Vec* b;
   int T;
+  int i;
 
   // Number of periods
   T = BRANCH_get_num_periods(br);
 
-  // Net
+  // Data
   net = CONSTR_get_network(c);
+  A = CONSTR_get_A(c);
 
   // ACPF
   acpf = (Constr*)CONSTR_get_data(c);
@@ -105,7 +100,10 @@ void CONSTR_LINPF_analyze_step(Constr* c, Branch* br, int t) {
     b = MAT_rmul_by_vec(J,x0);
     VEC_sub_inplace(b,f);
     CONSTR_set_b(c,b);
-    CONSTR_set_A(c,MAT_copy(J));
+    for (i = 0; i < MAT_get_nnz(J); i++) {
+      MAT_set_i(A,i,MAT_get_i(J,i));
+      MAT_set_j(A,i,MAT_get_j(J,i));
+      MAT_set_d(A,i,MAT_get_d(J,i));
   }
 }
 

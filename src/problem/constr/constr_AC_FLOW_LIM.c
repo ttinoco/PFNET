@@ -26,21 +26,9 @@ Constr* CONSTR_AC_FLOW_LIM_new(Net* net) {
 }
 
 void CONSTR_AC_FLOW_LIM_init(Constr* c) {
-  
-  // Local variables
-  Net* net;
-  int num_branches;
-  int num_periods;
-  int max_num_constr;
-  
+
   // Init
-  net = CONSTR_get_network(c);
-  num_branches = NET_get_num_branches(net);
-  num_periods = NET_get_num_periods(net);
-  max_num_constr = 2*num_branches*num_periods;
-  CONSTR_set_H_nnz(c,(int*)calloc(max_num_constr,sizeof(int)),max_num_constr);
   CONSTR_set_name(c,"AC branch flow limits");
-  CONSTR_set_data(c,NULL);
 }
 
 void CONSTR_AC_FLOW_LIM_count_step(Constr* c, Branch* br, int t) {

@@ -14,8 +14,6 @@ Constr* CONSTR_DC_FLOW_LIM_new(Net* net) {
   Constr* c = CONSTR_new(net);
   CONSTR_set_func_init(c, &CONSTR_DC_FLOW_LIM_init);
   CONSTR_set_func_count_step(c, &CONSTR_DC_FLOW_LIM_count_step);
-  CONSTR_set_func_allocate(c, &CONSTR_DC_FLOW_LIM_allocate);
-  CONSTR_set_func_clear(c, &CONSTR_DC_FLOW_LIM_clear);
   CONSTR_set_func_analyze_step(c, &CONSTR_DC_FLOW_LIM_analyze_step);
   CONSTR_set_func_eval_step(c, &CONSTR_DC_FLOW_LIM_eval_step);
   CONSTR_set_func_store_sens_step(c, &CONSTR_DC_FLOW_LIM_store_sens_step);
@@ -28,14 +26,6 @@ void CONSTR_DC_FLOW_LIM_init(Constr* c) {
 
   // Init
   CONSTR_set_name(c,"DC branch flow limits");
-  CONSTR_set_data(c,NULL);
-}
-
-void CONSTR_DC_FLOW_LIM_clear(Constr* c) {
-
-  // Counters
-  CONSTR_set_G_nnz(c,0);
-  CONSTR_set_G_row(c,0);
 }
 
 void CONSTR_DC_FLOW_LIM_count_step(Constr* c, Branch* br, int t) {
@@ -84,35 +74,6 @@ void CONSTR_DC_FLOW_LIM_count_step(Constr* c, Branch* br, int t) {
 
   // Constraint index
   (*G_row)++;
-}
-
-void CONSTR_DC_FLOW_LIM_allocate(Constr* c) {
-
-  // Local variables
-  Net* net;
-  int num_vars;
-  int G_nnz;
-  int G_row;
-
-  net = CONSTR_get_network(c);
-  num_vars = NET_get_num_vars(net);
-  G_nnz = CONSTR_get_G_nnz(c);
-  G_row = CONSTR_get_G_row(c);
-
-  // J f
-  CONSTR_set_J(c,MAT_new(0,num_vars,0));
-  CONSTR_set_f(c,VEC_new(0));
-
-  // A b
-  CONSTR_set_A(c,MAT_new(0,num_vars,0));
-  CONSTR_set_b(c,VEC_new(0));
-
-  // G l u
-  CONSTR_set_G(c,MAT_new(G_row,    // size1 (rows)
-			 num_vars, // size2 (cols)
-			 G_nnz));  // nnz
-  CONSTR_set_l(c,VEC_new(G_row));
-  CONSTR_set_u(c,VEC_new(G_row));
 }
 
 void CONSTR_DC_FLOW_LIM_analyze_step(Constr* c, Branch* br, int t) {
