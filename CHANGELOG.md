@@ -11,6 +11,8 @@ Unreleased
 * Modular flow routines for branches.
 * Added array attribute getters for network component structs.
 * Moved constr alloc/clear responsibility to "parent" struct.
+* Removed NBOUND constraint.
+* Changed PVPQ switching heuristic to HEUR_PVPQ_SWITCHING for consistency with constraint.
 
 Version 1.3.3
 -------------

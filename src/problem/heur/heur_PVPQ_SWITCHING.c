@@ -1,5 +1,5 @@
-/** @file heur_PVPQ.c
- *  @brief This file defines the data structure and routines associated with the heuristic of type PVPQ.
+/** @file heur_PVPQ_SWITCHING.c
+ *  @brief This file defines the data structure and routines associated with the heuristic of type PVPQ_SWITCHING.
  *
  * This file is part of PFNET.
  *
@@ -8,31 +8,31 @@
  * PFNET is released under the BSD 2-clause license.
  */
 
-#include <pfnet/heur_PVPQ.h>
+#include <pfnet/heur_PVPQ_SWITCHING.h>
 #include <pfnet/constr_PVPQ_SWITCHING.h>
 
-Heur* HEUR_PVPQ_new(Net* net) {
+Heur* HEUR_PVPQ_SWITCHING_new(Net* net) {
   Heur* h = HEUR_new(net);
-  HEUR_set_func_init(h,&HEUR_PVPQ_init);
-  HEUR_set_func_clear(h,&HEUR_PVPQ_clear);
-  HEUR_set_func_apply_step(h,&HEUR_PVPQ_apply_step);
-  HEUR_set_func_free(h,&HEUR_PVPQ_free);
+  HEUR_set_func_init(h,&HEUR_PVPQ_SWITCHING_init);
+  HEUR_set_func_clear(h,&HEUR_PVPQ_SWITCHING_clear);
+  HEUR_set_func_apply_step(h,&HEUR_PVPQ_SWITCHING_apply_step);
+  HEUR_set_func_free(h,&HEUR_PVPQ_SWITCHING_free);
   HEUR_init(h);
   return h;
 }
 
-void HEUR_PVPQ_init(Heur* h) {
+void HEUR_PVPQ_SWITCHING_init(Heur* h) {
 
   HEUR_set_name(h, "PVPQ switching");  
 }
 
-void HEUR_PVPQ_clear(Heur* h) {
+void HEUR_PVPQ_SWITCHING_clear(Heur* h) {
   
   // Clear bus counted flags
   HEUR_clear_bus_counted(h);
 }
 
-void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, Vec* var_values) {
+void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, Vec* var_values) {
 
   // Local variables
   Net* net;
@@ -75,8 +75,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, 
   }
   if (!pf) {
     HEUR_set_error(h, "unable to find AC power balance constraint");
-    if (HEUR_PVPQ_DEBUG)
-      printf("HEUR PVPQ: no AC power balance constraint\n");
+    if (HEUR_PVPQ_SWITCHING_DEBUG)
+      printf("HEUR PVPQ SWITCHING: no AC power balance constraint\n");
     return;
   }
 
@@ -91,7 +91,7 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, 
   if (!pvpq) {
     HEUR_set_error(h, "unable to find PVPQ switching constraint");
     if (HEUR_PVPQ_DEBUG)
-      printf("HEUR PVPQ: no PVPQ switching constraint\n");
+      printf("HEUR PVPQ SWITCHING: no PVPQ switching constraint\n");
     return;
   }
 
@@ -99,8 +99,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, 
   fix_flag = CONSTR_PVPQ_SWITCHING_get_flags(pvpq);
   if (!fix_flag) {
     HEUR_set_error(h, "unable to get PVPQ switching constraint flags");
-    if (HEUR_PVPQ_DEBUG)
-      printf("HEUR PVPQ: no PVPQ switching constraint flags\n");
+    if (HEUR_PVPQ_SWITCHING_DEBUG)
+      printf("HEUR PVPQ SWITCHING: no PVPQ switching constraint flags\n");
     return;
   }
 
@@ -149,8 +149,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, 
 	      if (Qmin < Q) {
 		fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
 		all_fixed = FALSE;
-		if (HEUR_PVPQ_DEBUG)
-		  printf("HEUR PVPQ: free gen %d from Qmin (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
+		if (HEUR_PVPQ_SWITCHING_DEBUG)
+		  printf("HEUR PVPQ SWITCHING: free gen %d from Qmin (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
 	      }
 	    }
 	    
@@ -160,8 +160,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, 
 	      if (Q < Qmax) {
 		fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
 		all_fixed = FALSE;
-		if (HEUR_PVPQ_DEBUG)
-		  printf("HEUR PVPQ: free gen %d from Qmax (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
+		if (HEUR_PVPQ_SWITCHING_DEBUG)
+		  printf("HEUR PVPQ SWITCHING: free gen %d from Qmax (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
 	      }
 	    }	    
 	  }	    
@@ -172,8 +172,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, 
 	    // Switch to Q fixed
 	    GEN_set_Q(gen,Qmax,t);
 	    fix_flag[GEN_get_index_Q(gen,t)] = TRUE;
-	    if (HEUR_PVPQ_DEBUG)
-	      printf("HEUR PVPQ: fix gen %d at Qmax (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
+	    if (HEUR_PVPQ_SWITCHING_DEBUG)
+	      printf("HEUR PVPQ SWITCHING: fix gen %d at Qmax (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
 	  }
 
 	  // Q is free: Qmin violation
@@ -182,8 +182,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, 
 	    // Switch to Q fixed
 	    GEN_set_Q(gen,Qmin,t);
 	    fix_flag[GEN_get_index_Q(gen,t)] = TRUE;
-	    if (HEUR_PVPQ_DEBUG)
-	      printf("HEUR PVPQ: fix gen %d at Qmin (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
+	    if (HEUR_PVPQ_SWITCHING_DEBUG)
+	      printf("HEUR PVPQ SWITCHING: fix gen %d at Qmin (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
 	  }
 
 	  // Q is free: no violation
@@ -196,8 +196,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, 
 
 	  // Switch to v free
 	  fix_flag[BUS_get_index_v_mag(bus[k],t)] = FALSE;
-	  if (HEUR_PVPQ_DEBUG)
-	      printf("HEUR PVPQ: free reg bus %d\n", BUS_get_number(bus[k]));
+	  if (HEUR_PVPQ_SWITCHING_DEBUG)
+	      printf("HEUR PVPQ SWITCHING: free reg bus %d\n", BUS_get_number(bus[k]));
 	}
       }
 
@@ -231,8 +231,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, 
 	    if (Qmin < Q) {
 	      fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
 	      all_fixed = FALSE;
-	      if (HEUR_PVPQ_DEBUG)
-		  printf("HEUR PVPQ: free gen %d from Qmin (reg bus %d free)\n", GEN_get_index(gen), BUS_get_number(bus[k]));		
+	      if (HEUR_PVPQ_SWITCHING_DEBUG)
+		  printf("HEUR PVPQ SWITCHING: free gen %d from Qmin (reg bus %d free)\n", GEN_get_index(gen), BUS_get_number(bus[k]));		
 	    }
 	  }
 
@@ -242,8 +242,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, 
 	    if (Q < Qmax) {
 	      fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
 	      all_fixed = FALSE;
-	      if (HEUR_PVPQ_DEBUG)
-		  printf("HEUR PVPQ: free gen %d from Qmax (reg bus %d free)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
+	      if (HEUR_PVPQ_SWITCHING_DEBUG)
+		  printf("HEUR PVPQ SWITCHING: free gen %d from Qmax (reg bus %d free)\n", GEN_get_index(gen), BUS_get_number(bus[k]));
 	    }
 	  }
 	}
@@ -253,8 +253,8 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, 
 
 	  // Switch to v fixed
 	  fix_flag[BUS_get_index_v_mag(bus[k],t)] = TRUE;
-	  if (HEUR_PVPQ_DEBUG)
-	      printf("HEUR PVPQ: fix reg bus %d\n", BUS_get_number(bus[k]));
+	  if (HEUR_PVPQ_SWITCHING_DEBUG)
+	      printf("HEUR PVPQ SWITCHING: fix reg bus %d\n", BUS_get_number(bus[k]));
 	}
       }
     }
@@ -268,6 +268,6 @@ void HEUR_PVPQ_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, 
     CONSTR_analyze(pvpq);
 }
 
-void HEUR_PVPQ_free(Heur* h) {
+void HEUR_PVPQ_SWITCHING_free(Heur* h) {
   // Nothing
 }
