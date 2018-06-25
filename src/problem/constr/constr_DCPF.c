@@ -12,20 +12,12 @@
 
 Constr* CONSTR_DCPF_new(Net* net) {
   Constr* c = CONSTR_new(net);
-  CONSTR_set_func_init(c, &CONSTR_DCPF_init);
   CONSTR_set_func_count_step(c, &CONSTR_DCPF_count_step);
   CONSTR_set_func_analyze_step(c, &CONSTR_DCPF_analyze_step);
   CONSTR_set_func_eval_step(c, &CONSTR_DCPF_eval_step);
   CONSTR_set_func_store_sens_step(c, &CONSTR_DCPF_store_sens_step);
-  CONSTR_set_func_free(c, &CONSTR_DCPF_free);
-  CONSTR_init(c);
-  return c;
-}
-
-void CONSTR_DCPF_init(Constr* c) {
-
-  // Init
   CONSTR_set_name(c,"DC power balance");
+  return c;
 }
 
 void CONSTR_DCPF_count_step(Constr* c, Branch* br, int t) {
@@ -394,8 +386,4 @@ void CONSTR_DCPF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf,
     // Update counted flag
     bus_counted[bus_index_t[k]] = TRUE;
   }
-}
-
-void CONSTR_DCPF_free(Constr* c) {
-  // Nothing
 }

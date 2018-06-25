@@ -41,7 +41,7 @@
 #include "constr_DCPF.h"
 #include "constr_LINPF.h"
 #include "constr_FIX.h"
-#include "constr_LBOUND.h"
+#include "constr_BOUND.h"
 #include "constr_PAR_GEN_P.h"
 #include "constr_PVPQ_SWITCHING.h"
 #include "constr_GEN_RAMP.h"

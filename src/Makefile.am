@@ -75,7 +75,7 @@ problem_constr_src = problem/constr/constr_DC_FLOW_LIM.c \
 		     problem/constr/constr_FIX.c \
 		     problem/constr/constr_GEN_RAMP.c \
 		     problem/constr/constr_BAT_DYN.c \
-		     problem/constr/constr_LBOUND.c \
+		     problem/constr/constr_BOUND.c \
 		     problem/constr/constr_PAR_GEN_P.c \
 		     problem/constr/constr_PVPQ_SWITCHING.c \
 		     problem/constr/constr_REG_GEN.c \
@@ -93,7 +93,7 @@ problem_constr_hdr = $(inc_path)/constr_DC_FLOW_LIM.h \
 		     $(inc_path)/constr_FIX.h \
 		     $(inc_path)/constr_GEN_RAMP.h \
 		     $(inc_path)/constr_BAT_DYN.h \
-		     $(inc_path)/constr_LBOUND.h \
+		     $(inc_path)/constr_BOUND.h \
 		     $(inc_path)/constr_PAR_GEN_P.h \
 		     $(inc_path)/constr_PVPQ_SWITCHING.h \
 		     $(inc_path)/constr_REG_GEN.h \

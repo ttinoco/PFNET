@@ -21,6 +21,7 @@ Constr* CONSTR_LINPF_new(Net* net) {
   CONSTR_set_func_eval_step(c, &CONSTR_LINPF_eval_step);
   CONSTR_set_func_store_sens_step(c, &CONSTR_LINPF_store_sens_step);
   CONSTR_set_func_free(c, &CONSTR_LINPF_free);
+  CONSTR_set_name(c,"linearized AC power balance");
   CONSTR_init(c);
   return c;
 }
@@ -29,7 +30,6 @@ void CONSTR_LINPF_init(Constr* c) {
 
   // Init
   Constr* acpf = CONSTR_ACPF_new(CONSTR_get_network(c));
-  CONSTR_set_name(c,"linearized AC power balance");
   CONSTR_set_data(c,(void*)acpf);
 }
 

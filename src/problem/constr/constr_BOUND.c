@@ -1,5 +1,5 @@
-/** @file constr_LBOUND.c
- *  @brief This file defines the data structure and routines associated with the constraint of type LBOUND.
+/** @file constr_BOUND.c
+ *  @brief This file defines the data structure and routines associated with the constraint of type BOUND.
  *
  * This file is part of PFNET.
  *
@@ -8,33 +8,25 @@
  * PFNET is released under the BSD 2-clause license.
  */
 
-#include <pfnet/constr_LBOUND.h>
+#include <pfnet/constr_BOUND.h>
 
-Constr* CONSTR_LBOUND_new(Net* net) {
+Constr* CONSTR_BOUND_new(Net* net) {
   Constr* c = CONSTR_new(net);
-  CONSTR_set_func_init(c,&CONSTR_LBOUND_init);
-  CONSTR_set_func_count_step(c,&CONSTR_LBOUND_count_step);
-  CONSTR_set_func_analyze_step(c,&CONSTR_LBOUND_analyze_step);
-  CONSTR_set_func_eval_step(c,&CONSTR_LBOUND_eval_step);
-  CONSTR_set_func_store_sens_step(c,&CONSTR_LBOUND_store_sens_step);
-  CONSTR_set_func_free(c,&CONSTR_LBOUND_free);
-  CONSTR_init(c);
+  CONSTR_set_func_count_step(c,&CONSTR_BOUND_count_step);
+  CONSTR_set_func_analyze_step(c,&CONSTR_BOUND_analyze_step);
+  CONSTR_set_func_eval_step(c,&CONSTR_BOUND_eval_step);
+  CONSTR_set_func_store_sens_step(c,&CONSTR_BOUND_store_sens_step);
+  CONSTR_set_name(c,"variable bounds");
   return c;
 }
 
-void CONSTR_LBOUND_init(Constr* c) {
-
-  // Init
-  CONSTR_set_name(c,"variable bounds");
-}
-
-void CONSTR_LBOUND_count_step(Constr* c, Branch* br, int t) {
+void CONSTR_BOUND_count_step(Constr* c, Branch* br, int t) {
 
   CONSTR_set_G_row(c,NET_get_num_vars(CONSTR_get_network(c)));
   CONSTR_set_G_nnz(c,NET_get_num_vars(CONSTR_get_network(c)));
 }
 
-void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
+void CONSTR_BOUND_analyze_step(Constr* c, Branch* br, int t) {
 
   // Local variables
   Bus* buses[2];
@@ -432,11 +424,11 @@ void CONSTR_LBOUND_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_LBOUND_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
+void CONSTR_BOUND_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
   // Nothing to do
 }
 
-void CONSTR_LBOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_BOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Local variables
   Bus* buses[2];
@@ -537,8 +529,4 @@ void CONSTR_LBOUND_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* s
     // Update counted flag
     bus_counted[BUS_get_index(bus)*T+t] = TRUE;
   }
-}
-
-void CONSTR_LBOUND_free(Constr* c) {
-  // Nothing to do
 }

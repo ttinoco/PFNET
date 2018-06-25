@@ -27,6 +27,7 @@ Constr* CONSTR_AC_LIN_FLOW_LIM_new(Net* net) {
   CONSTR_set_func_eval_step(c,&CONSTR_AC_LIN_FLOW_LIM_eval_step);
   CONSTR_set_func_store_sens_step(c,&CONSTR_AC_LIN_FLOW_LIM_store_sens_step);
   CONSTR_set_func_free(c,&CONSTR_AC_LIN_FLOW_LIM_free);
+  CONSTR_set_name(c,"linearized AC branch flow limits");
   CONSTR_init(c);
   return c;
 }
@@ -34,10 +35,10 @@ Constr* CONSTR_AC_LIN_FLOW_LIM_new(Net* net) {
 void CONSTR_AC_LIN_FLOW_LIM_init(Constr* c) {
     
   // Local variables
-  int i;
-  int num;
-  Net* net;
   Constr_AC_LIN_FLOW_LIM_Data* data;
+  Net* net;
+  int num;
+  int i;
 
   // Init
   net = CONSTR_get_network(c);
@@ -47,7 +48,6 @@ void CONSTR_AC_LIN_FLOW_LIM_init(Constr* c) {
   data->size = num;
   for (i = 0; i < num; i++)
     data->results[i] = NULL;
-  CONSTR_set_name(c,"linearized AC branch flow limits");
   CONSTR_set_data(c,(void*)data);
 }
 

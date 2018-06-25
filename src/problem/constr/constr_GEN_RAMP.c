@@ -12,20 +12,12 @@
 
 Constr* CONSTR_GEN_RAMP_new(Net* net) {
   Constr* c = CONSTR_new(net);
-  CONSTR_set_func_init(c, &CONSTR_GEN_RAMP_init);
   CONSTR_set_func_count_step(c, &CONSTR_GEN_RAMP_count_step);
   CONSTR_set_func_analyze_step(c, &CONSTR_GEN_RAMP_analyze_step);
   CONSTR_set_func_eval_step(c, &CONSTR_GEN_RAMP_eval_step);
   CONSTR_set_func_store_sens_step(c, &CONSTR_GEN_RAMP_store_sens_step);
-  CONSTR_set_func_free(c, &CONSTR_GEN_RAMP_free);
-  CONSTR_init(c);
-  return c;
-}
-
-void CONSTR_GEN_RAMP_init(Constr* c) {
-
-  // Init
   CONSTR_set_name(c,"generator ramp limits");
+  return c;
 }
 
 void CONSTR_GEN_RAMP_count_step(Constr* c, Branch* br, int t) {
@@ -180,8 +172,4 @@ void CONSTR_GEN_RAMP_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* v
 
 void CONSTR_GEN_RAMP_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing for now
-}
-
-void CONSTR_GEN_RAMP_free(Constr* c) {
-  // Nothing to do
 }

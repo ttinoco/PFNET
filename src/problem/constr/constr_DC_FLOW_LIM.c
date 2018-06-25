@@ -12,20 +12,12 @@
 
 Constr* CONSTR_DC_FLOW_LIM_new(Net* net) {
   Constr* c = CONSTR_new(net);
-  CONSTR_set_func_init(c, &CONSTR_DC_FLOW_LIM_init);
   CONSTR_set_func_count_step(c, &CONSTR_DC_FLOW_LIM_count_step);
   CONSTR_set_func_analyze_step(c, &CONSTR_DC_FLOW_LIM_analyze_step);
   CONSTR_set_func_eval_step(c, &CONSTR_DC_FLOW_LIM_eval_step);
   CONSTR_set_func_store_sens_step(c, &CONSTR_DC_FLOW_LIM_store_sens_step);
-  CONSTR_set_func_free(c, &CONSTR_DC_FLOW_LIM_free);
-  CONSTR_init(c);
-  return c;
-}
-
-void CONSTR_DC_FLOW_LIM_init(Constr* c) {
-
-  // Init
   CONSTR_set_name(c,"DC branch flow limits");
+  return c;
 }
 
 void CONSTR_DC_FLOW_LIM_count_step(Constr* c, Branch* br, int t) {
@@ -196,8 +188,4 @@ void CONSTR_DC_FLOW_LIM_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, V
 
   // Constraint index
   (*G_row)++;
-}
-
-void CONSTR_DC_FLOW_LIM_free(Constr* c) {
-  // Nothing
 }

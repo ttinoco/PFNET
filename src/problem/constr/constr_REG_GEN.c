@@ -12,28 +12,12 @@
 
 Constr* CONSTR_REG_GEN_new(Net* net) {
   Constr* c = CONSTR_new(net);
-  CONSTR_set_func_init(c,&CONSTR_REG_GEN_init);
   CONSTR_set_func_count_step(c,&CONSTR_REG_GEN_count_step);
   CONSTR_set_func_analyze_step(c,&CONSTR_REG_GEN_analyze_step);
   CONSTR_set_func_eval_step(c,&CONSTR_REG_GEN_eval_step);
   CONSTR_set_func_store_sens_step(c,&CONSTR_REG_GEN_store_sens_step);
-  CONSTR_set_func_free(c,&CONSTR_REG_GEN_free);
-  CONSTR_init(c);
-  return c;
-}
-
-void CONSTR_REG_GEN_init(Constr* c) {
-
-  // Local variables
-  Net* net;
-  int num_Jconstr;
-
-  // Init
-  net = CONSTR_get_network(c);
-  num_Jconstr = 2*(NET_get_num_reg_gens(net)-NET_get_num_slack_gens(net))*NET_get_num_periods(net);
-  CONSTR_set_H_nnz(c,(int*)calloc(num_Jconstr,sizeof(int)),num_Jconstr);
   CONSTR_set_name(c,"voltage regulation by generators");
-  CONSTR_set_data(c,NULL);
+  return c;
 }
 
 void CONSTR_REG_GEN_count_step(Constr* c, Branch* br, int t) {
@@ -557,8 +541,4 @@ void CONSTR_REG_GEN_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* 
     // Update counted flag
     bus_counted[bus_index_t[k]] = TRUE;
   }
-}
-
-void CONSTR_REG_GEN_free(Constr* c) {
-  // Nothing
 }

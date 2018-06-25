@@ -64,15 +64,15 @@ struct Constr {
   char* G_row_info; /**< @brief Array for info strings of rows of l <= G (x,y) <= u */
   
   // Type functions
-  void (*func_init)(Constr* c);                                          /**< @brief Initialization function */
+  void (*func_init)(Constr* c);                                          /**< @brief Function for network-dependent initialization */
   void (*func_count_step)(Constr* c, Branch* br, int t);                 /**< @brief Function for counting nonzero entries */
-  void (*func_allocate)(Constr* c);                                      /**< @brief Function for allocating required arrays */
-  void (*func_clear)(Constr* c);                                         /**< @brief Function for clearing flags, counters, and data values */
+  void (*func_allocate)(Constr* c);                                      /**< @brief Function for allocating additional data */
+  void (*func_clear)(Constr* c);                                         /**< @brief Function for clearing additional counters or flags */
   void (*func_analyze_step)(Constr* c, Branch* br, int t);               /**< @brief Function for analyzing sparsity pattern */
   void (*func_eval_step)(Constr* c, Branch* br, int t, Vec* v, Vec* ve); /**< @brief Function for evaluating constraint */
   void (*func_store_sens_step)(Constr* c, Branch* br, int t,
 			       Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);    /**< @brief Func. for storing sensitivities */
-  void (*func_free)(Constr* c);                                          /**< @brief Function for de-allocating any data used */
+  void (*func_free)(Constr* c);                                          /**< @brief Function for de-allocating any additional data used */
   void (*func_set_parameter)(Constr* c, char* key, void* value);         /**< @brief Function for setting constraint parameter */
 
   // Type data

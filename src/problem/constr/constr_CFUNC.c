@@ -28,6 +28,7 @@ Constr* CONSTR_CFUNC_new(Net* net) {
   CONSTR_set_func_store_sens_step(c, &CONSTR_CFUNC_store_sens_step);
   CONSTR_set_func_free(c, &CONSTR_CFUNC_free);
   CONSTR_set_func_set_parameter(c, &CONSTR_CFUNC_set_parameter);
+  CONSTR_set_name(c,"constrained function");
   CONSTR_init(c);
   return c;
 }
@@ -42,7 +43,6 @@ void CONSTR_CFUNC_init(Constr* c) {
   data->func = NULL;
   data->rhs = 0;
   strcpy(data->op,"=");
-  CONSTR_set_name(c,"constrained function");
   CONSTR_set_data(c,(void*)data);
 }
 

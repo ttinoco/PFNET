@@ -13,6 +13,7 @@ Unreleased
 * Moved constr alloc/clear responsibility to "parent" struct.
 * Removed NBOUND constraint.
 * Changed PVPQ switching heuristic to HEUR_PVPQ_SWITCHING for consistency with constraint.
+* Renamed LBOUND constraint to BOUND.
 
 Version 1.3.3
 -------------
