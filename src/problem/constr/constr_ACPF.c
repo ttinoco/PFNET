@@ -13,51 +13,12 @@
 
 Constr* CONSTR_ACPF_new(Net* net) {
   Constr* c = CONSTR_new(net);
-  CONSTR_set_func_init(c,&CONSTR_ACPF_init);
   CONSTR_set_func_count_step(c,&CONSTR_ACPF_count_step);
-  CONSTR_set_func_allocate(c,&CONSTR_ACPF_allocate);
-  CONSTR_set_func_clear(c,&CONSTR_ACPF_clear);
   CONSTR_set_func_analyze_step(c,&CONSTR_ACPF_analyze_step);
   CONSTR_set_func_eval_step(c,&CONSTR_ACPF_eval_step);
   CONSTR_set_func_store_sens_step(c,&CONSTR_ACPF_store_sens_step);
-  CONSTR_set_func_free(c,&CONSTR_ACPF_free);
-  CONSTR_init(c);
-  return c;
-}
-
-void CONSTR_ACPF_init(Constr* c) {
-
-  // Local variables
-  Net* net;
-  int num_buses;
-  int num_periods;
-
-  // Init
-  net = CONSTR_get_network(c);
-  num_buses = NET_get_num_buses(net);
-  num_periods = NET_get_num_periods(net);
-  CONSTR_set_H_nnz(c,(int*)calloc(num_buses*num_periods,sizeof(int)),num_buses*num_periods);
   CONSTR_set_name(c,"AC power balance");
-  CONSTR_set_data(c,NULL);
-}
-
-void CONSTR_ACPF_clear(Constr* c) {
-
-  // f
-  VEC_set_zero(CONSTR_get_f(c));
-
-  // J
-  MAT_set_zero_d(CONSTR_get_J(c));
-
-  // H
-  MAT_array_set_zero_d(CONSTR_get_H_array(c),CONSTR_get_H_array_size(c));
-
-  // Counters
-  CONSTR_set_J_nnz(c,0);
-  CONSTR_clear_H_nnz(c);
-  
-  // Flags
-  CONSTR_clear_bus_counted(c);
+  return c;
 }
 
 void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
@@ -69,21 +30,25 @@ void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
   Shunt* shunt;
   Load* load;
   Bat* bat;
+  int* J_row;
   int* J_nnz;
   int* H_nnz;
   char* bus_counted;
   int bus_index_t[2];
+  int* HP_nnz[2];
+  int* HQ_nnz[2];
   BOOL var_v[2];
   BOOL var_w[2];
   int k;
 
   // Constr data
+  J_row = CONSTR_get_J_row_ptr(c);
   J_nnz = CONSTR_get_J_nnz_ptr(c);
   H_nnz = CONSTR_get_H_nnz(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!J_nnz || !H_nnz || !bus_counted)
+  if (!J_row || !J_nnz || !H_nnz || !bus_counted)
     return;
   
   // Bus data
@@ -93,6 +58,8 @@ void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
     bus_index_t[k] = BUS_get_index_t(bus[k],t);
     var_w[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG);
     var_v[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG);
+    HP_nnz[k] = H_nnz+BUS_get_index_P(bus[k],t);
+    HQ_nnz[k] = H_nnz+BUS_get_index_Q(bus[k],t);
   }
 
   // Branch
@@ -100,16 +67,19 @@ void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
 
   BRANCH_power_flow_count(br,
 			  J_nnz,
-			  H_nnz+bus_index_t[0],
+			  HP_nnz[0],
 			  t,
 			  TRUE,  // Pkm, Qkm
 			  TRUE); // ext_idx
+  (*HQ_nnz[0]) = *(HP_nnz[0]);
+  
   BRANCH_power_flow_count(br,
 			  J_nnz,
-			  H_nnz+bus_index_t[1],
+			  HP_nnz[1],
 			  t,
 			  FALSE, // Pmk, Qmk
 			  TRUE); // ext_idx
+  (*HQ_nnz[1]) = *(HP_nnz[1]);
 
   // Buses
   //******
@@ -126,12 +96,14 @@ void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
 	BUS_set_dQdw_index(bus[k],*J_nnz, t);
 	(*J_nnz)++; // dQk/dwk
 
-	BUS_set_dwdw_index(bus[k],*(H_nnz+bus_index_t[k]), t);
-	(*(H_nnz+bus_index_t[k]))++;   // dwkdwk
+	BUS_set_dwdw_index(bus[k],*HP_nnz[k], t);
+	(*HP_nnz[k])++;
+	(*HQ_nnz[k])++; // dwkdwk
 
 	if (var_v[k]) {
-	  BUS_set_dwdv_index(bus[k],*(H_nnz+bus_index_t[k]), t);
-	  (*(H_nnz+bus_index_t[k]))++; // dwkdvk
+	  BUS_set_dwdv_index(bus[k],*HP_nnz[k], t);
+	  (*HP_nnz[k])++;
+	  (*HQ_nnz[k])++; // dwkdvk
 	}
       }
 
@@ -143,8 +115,9 @@ void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
 	BUS_set_dQdv_index(bus[k],*J_nnz, t);
 	(*J_nnz)++; // dQk/dvk
 
-	BUS_set_dvdv_index(bus[k],*(H_nnz+bus_index_t[k]), t);
-	(*(H_nnz+bus_index_t[k]))++;   // dvkdvk
+	BUS_set_dvdv_index(bus[k],*HP_nnz[k], t);
+	(*HP_nnz[k])++;
+	(*HQ_nnz[k])++; // dvkdvk
       }
 
       // Generators
@@ -208,8 +181,10 @@ void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
 	  (*J_nnz)++; // dQk/db
 	  
 	  // H
-	  if (var_v[k])
-	    (*(H_nnz+bus_index_t[k]))++; // b an vk
+	  if (var_v[k]) {
+	    (*HP_nnz[k])++;
+	    (*HQ_nnz[k])++; // b an vk
+	  }
 	}
       }
       
@@ -241,90 +216,15 @@ void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
 	  (*J_nnz)++; // Pc
 	  (*J_nnz)++; // Pd
 	}
-      }  
+      }
+      
+      // Rows
+      (*J_row)++;
+      (*J_row)++;
     }
 
     // Update counted flag
     bus_counted[bus_index_t[k]] = TRUE;
-  }
-}
-
-void CONSTR_ACPF_allocate(Constr* c) {
-
-  // Local variables
-  Net* net;
-  int num_buses;
-  int num_periods;
-  int num_constr;
-  int num_vars;
-  int J_nnz;
-  int* H_nnz;
-  int P_index;
-  int Q_index;
-  Mat* HP;
-  Mat* HQ;
-  int* row;
-  int* col;
-  int i;
-  int t;
-  int bus_index_t;
-
-  net = CONSTR_get_network(c);
-  num_buses = NET_get_num_buses(net);
-  num_periods = NET_get_num_periods(net);
-  num_vars = NET_get_num_vars(net);
-  num_constr = 2*num_buses*num_periods;
-  J_nnz = CONSTR_get_J_nnz(c);
-  H_nnz = CONSTR_get_H_nnz(c);
-
-  // A b
-  CONSTR_set_A(c,MAT_new(0,num_vars,0));
-  CONSTR_set_b(c,VEC_new(0));
-
-  // G l u
-  CONSTR_set_G(c,MAT_new(0,num_vars,0));
-  CONSTR_set_l(c,VEC_new(0));
-  CONSTR_set_u(c,VEC_new(0));
-
-  // f
-  CONSTR_set_f(c,VEC_new(num_constr));
-
-  // J
-  CONSTR_set_J(c,MAT_new(num_constr,  // size1 (rows)
-			 num_vars,    // size2 (cols)
-			 J_nnz));  // nnz
-
-  // H array
-  CONSTR_allocate_H_array(c,num_constr);
-  for (t = 0; t < num_periods; t++) {
-    for (i = 0; i < num_buses; i++) {
-      bus_index_t = BUS_get_index_t(NET_get_bus(net,i),t);
-      P_index = BUS_get_index_P(NET_get_bus(net,i),t);
-      Q_index = BUS_get_index_Q(NET_get_bus(net,i),t);
-      HP = CONSTR_get_H_single(c,P_index);
-      HQ = CONSTR_get_H_single(c,Q_index);
-      MAT_set_nnz(HP,H_nnz[bus_index_t]);
-      MAT_set_nnz(HQ,H_nnz[bus_index_t]);
-      MAT_set_size1(HP,num_vars);
-      MAT_set_size1(HQ,num_vars);
-      MAT_set_size2(HP,num_vars);
-      MAT_set_size2(HQ,num_vars);
-
-      MAT_set_owns_rowcol(HP,TRUE);
-      MAT_set_owns_rowcol(HQ,FALSE);
-
-      ARRAY_zalloc(row,int,H_nnz[bus_index_t]);
-      ARRAY_zalloc(col,int,H_nnz[bus_index_t]);
-
-      MAT_set_row_array(HP,row); // same row array
-      MAT_set_row_array(HQ,row);
-
-      MAT_set_col_array(HP,col); // same col array
-      MAT_set_col_array(HQ,col);
-
-      MAT_set_data_array(HP,(REAL*)malloc(H_nnz[bus_index_t]*sizeof(REAL))); // different data array
-      MAT_set_data_array(HQ,(REAL*)malloc(H_nnz[bus_index_t]*sizeof(REAL)));
-    }
   }
 }
 
@@ -338,16 +238,20 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
   Load* load;
   Bat* bat;
   Mat* J;
+  int* J_row;
   int* J_nnz;
   int* H_nnz;
   char* bus_counted;
   Mat* H_array;
-  Mat* H[2];
+  Mat* HP[2];
+  Mat* HQ[2];
   int bus_index_t[2];
   int v_index[2];
   int w_index[2];
   int P_index[2];
   int Q_index[2];
+  int* HP_nnz[2];
+  int* HQ_nnz[2];
   BOOL var_v[2];
   BOOL var_w[2];
   int k;
@@ -355,12 +259,13 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
   // Constr data
   J = CONSTR_get_J(c);
   H_array = CONSTR_get_H_array(c);
+  J_row = CONSTR_get_J_row_ptr(c);
   J_nnz = CONSTR_get_J_nnz_ptr(c);
   H_nnz = CONSTR_get_H_nnz(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!J_nnz || !H_nnz || !H_array || !bus_counted)
+  if (!J_row || !J_nnz || !H_nnz || !H_array || !bus_counted)
     return;
 
   // Bus data
@@ -374,7 +279,10 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
     v_index[k] = BUS_get_index_v_mag(bus[k],t);
     var_w[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG);
     var_v[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG);
-    H[k] = MAT_array_get(H_array,P_index[k]);
+    HP[k] = MAT_array_get(H_array,P_index[k]);
+    HQ[k] = MAT_array_get(H_array,Q_index[k]);
+    HP_nnz[k] = H_nnz+P_index[k];
+    HQ_nnz[k] = H_nnz+Q_index[k];
   }
 
   // Branch
@@ -385,23 +293,27 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
 			    J,
 			    P_index[0],
 			    Q_index[0],
-			    H_nnz+bus_index_t[0],
-			    H[0],
+			    HP_nnz[0],
+			    HP[0],
+			    HQ[0],
 			    t,
 			    TRUE,  // Pkm, Qkm
-			    TRUE); // ext_idx 
+			    TRUE); // ext_idx
+  (*HQ_nnz[0]) = *(HP_nnz[0]);
 
   BRANCH_power_flow_analyze(br,
 			    J_nnz,
 			    J,
 			    P_index[1],
 			    Q_index[1],
-			    H_nnz+bus_index_t[1],
-			    H[1],
+			    HP_nnz[1],
+			    HP[1],
+			    HQ[1],
 			    t,
 			    FALSE, // Pmk, Qmk
 			    TRUE); // ext_idx
-
+  (*HQ_nnz[1]) = *(HP_nnz[1]);
+  
   // Buses
   //******
 
@@ -419,14 +331,21 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
 	MAT_set_j(J,BUS_get_dQdw_index(bus[k],t),w_index[k]);
 	(*J_nnz)++; // dQk/dwk
 
-	MAT_set_i(H[k],BUS_get_dwdw_index(bus[k],t),w_index[k]);
-	MAT_set_j(H[k],BUS_get_dwdw_index(bus[k],t),w_index[k]);
-	(*(H_nnz+bus_index_t[k]))++;   // dwkdwk
+	MAT_set_i(HP[k],BUS_get_dwdw_index(bus[k],t),w_index[k]);
+	MAT_set_j(HP[k],BUS_get_dwdw_index(bus[k],t),w_index[k]);
+	(*HP_nnz[k])++;
+	MAT_set_i(HQ[k],BUS_get_dwdw_index(bus[k],t),w_index[k]);
+	MAT_set_j(HQ[k],BUS_get_dwdw_index(bus[k],t),w_index[k]);
+	(*HQ_nnz[k])++; // dwkdwk
 
 	if (var_v[k]) {
-	  MAT_set_i(H[k],BUS_get_dwdv_index(bus[k],t),w_index[k]);
-	  MAT_set_j(H[k],BUS_get_dwdv_index(bus[k],t),v_index[k]);
-	  (*(H_nnz+bus_index_t[k]))++; // dwkdvk
+
+	  MAT_set_i(HP[k],BUS_get_dwdv_index(bus[k],t),w_index[k]);
+	  MAT_set_j(HP[k],BUS_get_dwdv_index(bus[k],t),v_index[k]);
+	  (*HP_nnz[k])++;
+	  MAT_set_i(HQ[k],BUS_get_dwdv_index(bus[k],t),w_index[k]);
+	  MAT_set_j(HQ[k],BUS_get_dwdv_index(bus[k],t),v_index[k]);
+	  (*HQ_nnz[k])++; // dwkdvk
 	}
       }
       
@@ -440,9 +359,12 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
 	MAT_set_j(J,BUS_get_dQdv_index(bus[k],t),v_index[k]);
 	(*J_nnz)++; // dQk/dvk
 
-	MAT_set_i(H[k],BUS_get_dvdv_index(bus[k],t),v_index[k]);
-	MAT_set_j(H[k],BUS_get_dvdv_index(bus[k],t),v_index[k]);
-	(*(H_nnz+bus_index_t[k]))++;   // dvkdvk
+	MAT_set_i(HP[k],BUS_get_dvdv_index(bus[k],t),v_index[k]);
+	MAT_set_j(HP[k],BUS_get_dvdv_index(bus[k],t),v_index[k]);
+	(*HP_nnz[k])++;
+	MAT_set_i(HQ[k],BUS_get_dvdv_index(bus[k],t),v_index[k]);
+	MAT_set_j(HQ[k],BUS_get_dvdv_index(bus[k],t),v_index[k]);
+	(*HQ_nnz[k])++; // dvkdvk
       }
 
       // Generators
@@ -517,9 +439,13 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
 
 	  // H
 	  if (var_v[k]) {
-	    MAT_set_i(H[k],*(H_nnz+bus_index_t[k]),SHUNT_get_index_b(shunt,t));
-	    MAT_set_j(H[k],*(H_nnz+bus_index_t[k]),v_index[k]);
-	    (*(H_nnz+bus_index_t[k]))++; // b and vk
+
+	    MAT_set_i(HP[k],*HP_nnz[k],SHUNT_get_index_b(shunt,t));
+	    MAT_set_j(HP[k],*HP_nnz[k],v_index[k]);
+	    (*HP_nnz[k])++;
+	    MAT_set_i(HQ[k],*HQ_nnz[k],SHUNT_get_index_b(shunt,t));
+	    MAT_set_j(HQ[k],*HQ_nnz[k],v_index[k]);
+	    (*HQ_nnz[k])++; // b and vk
 	  }
 	}
       }
@@ -562,6 +488,10 @@ void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
 	  (*J_nnz)++; // Pd
 	}
       }
+
+      // Rows
+      (*J_row)++;
+      (*J_row)++;
     }
 
     // Update counted flag
@@ -580,6 +510,7 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
   Shunt* shunt;
   REAL* f;
   REAL* J;
+  int* J_row;
   int* J_nnz;
   int* H_nnz;
   char* bus_counted;
@@ -592,6 +523,8 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
   BOOL var_w[2];
   int P_index[2];
   int Q_index[2];
+  int* HP_nnz[2];
+  int* HQ_nnz[2];
 
   REAL v[2];
   
@@ -607,12 +540,13 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
   f = VEC_get_data(CONSTR_get_f(c));
   J = MAT_get_data_array(CONSTR_get_J(c));
   H_array = CONSTR_get_H_array(c);
+  J_row = CONSTR_get_J_row_ptr(c);
   J_nnz = CONSTR_get_J_nnz_ptr(c);
   H_nnz = CONSTR_get_H_nnz(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!f || !J || !J_nnz || !H_nnz || !bus_counted)
+  if (!f || !J || !J_row || !J_nnz || !H_nnz || !bus_counted)
     return;
 
   // Bus data
@@ -626,6 +560,8 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
     var_v[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG);
     HP[k] = MAT_get_data_array(MAT_array_get(H_array,P_index[k]));
     HQ[k] = MAT_get_data_array(MAT_array_get(H_array,Q_index[k]));
+    HP_nnz[k] = H_nnz+P_index[k];
+    HQ_nnz[k] = H_nnz+Q_index[k];
     if (var_v[k])
       v[k] = VEC_get(values,BUS_get_index_v_mag(bus[k],t));
     else
@@ -640,7 +576,7 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
 			 f+Q_index[0],
 			 J_nnz,
 			 J,
-			 H_nnz+bus_index_t[0],
+			 HP_nnz[0],
 			 HP[0],
 			 HQ[0],
 			 values,
@@ -648,13 +584,14 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
 			 t,
 			 TRUE,  // Pkm, Qkm
 			 TRUE); // ext_idx
-
+  (*HQ_nnz[0]) = *(HP_nnz[0]);
+  
   BRANCH_power_flow_eval(br,
 			 f+P_index[1],
 			 f+Q_index[1],
 			 J_nnz,
 			 J,
-			 H_nnz+bus_index_t[1],
+			 HP_nnz[1],
 			 HP[1],
 			 HQ[1],
 			 values,
@@ -662,6 +599,7 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
 			 t,
 			 FALSE,  // Pmk, Qmk
 			 TRUE);  // ext_idx
+  (*HQ_nnz[1]) = *(HP_nnz[1]);
   
   // Buses
   //******
@@ -673,14 +611,18 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
       if (var_w[k]) {	
 	(*J_nnz)++; // dPk/dwk
 	(*J_nnz)++; // dQk/dwk
-	(*(H_nnz+bus_index_t[k]))++;   // dwkdwk
-	if (var_v[k])
-	  (*(H_nnz+bus_index_t[k]))++; // dwkdvk
+	(*HP_nnz[k])++;
+	(*HQ_nnz[k])++; // dwkdwk
+	if (var_v[k]) {
+	  (*HP_nnz[k])++;
+	  (*HQ_nnz[k])++; // dwkdvk
+	}
       }
       if (var_v[k]) {
 	(*J_nnz)++; // dPk/dvk
 	(*J_nnz)++; // dQk/dvk
-	(*(H_nnz+bus_index_t[k]))++;   // dvkdvk
+	(*HP_nnz[k])++;
+	(*HQ_nnz[k])++; // dvkdvk
       }
 
       // Generators
@@ -793,9 +735,10 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
 
 	  // H
 	  if (var_v[k]) {
-	    HP[k][*(H_nnz+bus_index_t[k])] = 0;
-	    HQ[k][*(H_nnz+bus_index_t[k])] = 2*v[k];
-	    (*(H_nnz+bus_index_t[k]))++; // b and vk
+	    HP[k][*HP_nnz[k]] = 0;
+	    HQ[k][*HQ_nnz[k]] = 2*v[k];
+	    (*HP_nnz[k])++;
+	    (*HQ_nnz[k])++; // b and vk
 	  }
 	}
       }
@@ -857,6 +800,10 @@ void CONSTR_ACPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* value
 	  (*J_nnz)++;
 	}
       }
+
+      // Rows
+      (*J_row)++;
+      (*J_row)++;
     }
 
     // Update counted flag
@@ -888,8 +835,4 @@ void CONSTR_ACPF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf,
     }
     bus_counted[BUS_get_index_t(bus[k],t)] = TRUE;
   }
-}
-
-void CONSTR_ACPF_free(Constr* c) {
-  // Nothing
 }

@@ -1939,7 +1939,7 @@ void BRANCH_power_flow_count(Branch* br, int* J_nnz, int* H_nnz, int t, BOOL km,
   }
 }
 
-void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int index_Q, int* H_nnz, Mat* H, int t, BOOL km, BOOL ext_idx) {
+void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int index_Q, int* H_nnz, Mat* HP, Mat* HQ, int t, BOOL km, BOOL ext_idx) {
 
   // Local variables
   Bus* bus[2];
@@ -1955,7 +1955,7 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
   int m;
 
   // Check
-  if (!br || !J_nnz || !J || !H_nnz || !H) 
+  if (!br || !J_nnz || !J || !H_nnz || !HP || !HQ) 
     return;
 
   // Outage
@@ -2004,33 +2004,58 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
     
     // H
     if (!ext_idx) {
-      MAT_set_i(H,*H_nnz,w_index[k]);
-      MAT_set_j(H,*H_nnz,w_index[k]);
+
+      MAT_set_i(HP,*H_nnz,w_index[k]);
+      MAT_set_j(HP,*H_nnz,w_index[k]);
+
+      MAT_set_i(HQ,*H_nnz,w_index[k]);
+      MAT_set_j(HQ,*H_nnz,w_index[k]);
       (*H_nnz)++;    // wk and wk
-      if (var_v[k]) { 
-	MAT_set_i(H,*H_nnz,w_index[k]);
-	MAT_set_j(H,*H_nnz,v_index[k]);
+
+      if (var_v[k]) {
+
+	MAT_set_i(HP,*H_nnz,w_index[k]);
+	MAT_set_j(HP,*H_nnz,v_index[k]);
+	
+	MAT_set_i(HQ,*H_nnz,w_index[k]);
+	MAT_set_j(HQ,*H_nnz,v_index[k]);
 	(*H_nnz)++; // wk and vk
       }
     }
-    if (var_w[m]) { 
-      MAT_set_i(H,*H_nnz,w_index[k]);
-      MAT_set_j(H,*H_nnz,w_index[m]);
+    if (var_w[m]) {
+
+      MAT_set_i(HP,*H_nnz,w_index[k]);
+      MAT_set_j(HP,*H_nnz,w_index[m]);
+      
+      MAT_set_i(HQ,*H_nnz,w_index[k]);
+      MAT_set_j(HQ,*H_nnz,w_index[m]);
       (*H_nnz)++; // wk and wm
     }
-    if (var_v[m]) { 
-      MAT_set_i(H,*H_nnz,w_index[k]);
-      MAT_set_j(H,*H_nnz,v_index[m]);
+    if (var_v[m]) {
+
+      MAT_set_i(HP,*H_nnz,w_index[k]);
+      MAT_set_j(HP,*H_nnz,v_index[m]);
+      
+      MAT_set_i(HQ,*H_nnz,w_index[k]);
+      MAT_set_j(HQ,*H_nnz,v_index[m]);
       (*H_nnz)++; // wk and vm
     }
-    if (var_a) {  
-      MAT_set_i(H,*H_nnz,w_index[k]);
-      MAT_set_j(H,*H_nnz,a_index);
+    if (var_a) {
+
+      MAT_set_i(HP,*H_nnz,w_index[k]);
+      MAT_set_j(HP,*H_nnz,a_index);
+      
+      MAT_set_i(HQ,*H_nnz,w_index[k]);
+      MAT_set_j(HQ,*H_nnz,a_index);
       (*H_nnz)++; // wk and a
     }
     if (var_phi) { 
-      MAT_set_i(H,*H_nnz,w_index[k]);
-      MAT_set_j(H,*H_nnz,phi_index);
+
+      MAT_set_i(HP,*H_nnz,w_index[k]);
+      MAT_set_j(HP,*H_nnz,phi_index);
+
+      MAT_set_i(HQ,*H_nnz,w_index[k]);
+      MAT_set_j(HQ,*H_nnz,phi_index);
       (*H_nnz)++; // wk and phi
     }
   }
@@ -2051,28 +2076,48 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
     
     // H
     if (!ext_idx) {
-      MAT_set_i(H,*H_nnz,v_index[k]);
-      MAT_set_j(H,*H_nnz,v_index[k]);
+
+      MAT_set_i(HP,*H_nnz,v_index[k]);
+      MAT_set_j(HP,*H_nnz,v_index[k]);
+
+      MAT_set_i(HQ,*H_nnz,v_index[k]);
+      MAT_set_j(HQ,*H_nnz,v_index[k]);
       (*H_nnz)++;    // vk and vk
     }
     if (var_w[m]) { 
-      MAT_set_i(H,*H_nnz,v_index[k]);
-      MAT_set_j(H,*H_nnz,w_index[m]);
+
+      MAT_set_i(HP,*H_nnz,v_index[k]);
+      MAT_set_j(HP,*H_nnz,w_index[m]);
+
+      MAT_set_i(HQ,*H_nnz,v_index[k]);
+      MAT_set_j(HQ,*H_nnz,w_index[m]);
       (*H_nnz)++; // vk and wm
     }
     if (var_v[m]) {
-      MAT_set_i(H,*H_nnz,v_index[k]);
-      MAT_set_j(H,*H_nnz,v_index[m]);
+
+      MAT_set_i(HP,*H_nnz,v_index[k]);
+      MAT_set_j(HP,*H_nnz,v_index[m]);
+      
+      MAT_set_i(HQ,*H_nnz,v_index[k]);
+      MAT_set_j(HQ,*H_nnz,v_index[m]);
       (*H_nnz)++; // vk and vm
     }
     if (var_a) {
-      MAT_set_i(H,*H_nnz,v_index[k]);
-      MAT_set_j(H,*H_nnz,a_index);
+
+      MAT_set_i(HP,*H_nnz,v_index[k]);
+      MAT_set_j(HP,*H_nnz,a_index);
+      
+      MAT_set_i(HQ,*H_nnz,v_index[k]);
+      MAT_set_j(HQ,*H_nnz,a_index);
       (*H_nnz)++; // vk and a
     }
     if (var_phi) {
-      MAT_set_i(H,*H_nnz,v_index[k]);
-      MAT_set_j(H,*H_nnz,phi_index);
+
+      MAT_set_i(HP,*H_nnz,v_index[k]);
+      MAT_set_j(HP,*H_nnz,phi_index);
+      
+      MAT_set_i(HQ,*H_nnz,v_index[k]);
+      MAT_set_j(HQ,*H_nnz,phi_index);
       (*H_nnz)++; // vk and phi
     }
   }
@@ -2090,22 +2135,38 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
     (*J_nnz)++; // Qkm/dwm
     
     // H
-    MAT_set_i(H,*H_nnz,w_index[m]);
-    MAT_set_j(H,*H_nnz,w_index[m]);
+    MAT_set_i(HP,*H_nnz,w_index[m]);
+    MAT_set_j(HP,*H_nnz,w_index[m]);
+
+    MAT_set_i(HQ,*H_nnz,w_index[m]);
+    MAT_set_j(HQ,*H_nnz,w_index[m]);
     (*H_nnz)++;   // wm and wm
+    
     if (var_v[m]) {
-      MAT_set_i(H,*H_nnz,w_index[m]);
-      MAT_set_j(H,*H_nnz,v_index[m]);
+
+      MAT_set_i(HP,*H_nnz,w_index[m]);
+      MAT_set_j(HP,*H_nnz,v_index[m]);
+
+      MAT_set_i(HQ,*H_nnz,w_index[m]);
+      MAT_set_j(HQ,*H_nnz,v_index[m]);
       (*H_nnz)++; // wm and vm
     }
     if (var_a) {
-      MAT_set_i(H,*H_nnz,w_index[m]);
-      MAT_set_j(H,*H_nnz,a_index);
+
+      MAT_set_i(HP,*H_nnz,w_index[m]);
+      MAT_set_j(HP,*H_nnz,a_index);
+
+      MAT_set_i(HQ,*H_nnz,w_index[m]);
+      MAT_set_j(HQ,*H_nnz,a_index);
       (*H_nnz)++; // wm and a
     }
     if (var_phi) {
-      MAT_set_i(H,*H_nnz,w_index[m]);
-      MAT_set_j(H,*H_nnz,phi_index);
+
+      MAT_set_i(HP,*H_nnz,w_index[m]);
+      MAT_set_j(HP,*H_nnz,phi_index);
+      
+      MAT_set_i(HQ,*H_nnz,w_index[m]);
+      MAT_set_j(HQ,*H_nnz,phi_index);
       (*H_nnz)++; // wm and phi
     }
   }
@@ -2125,13 +2186,21 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
     // H
     // no vm and vm
     if (var_a) {
-      MAT_set_i(H,*H_nnz,v_index[m]);
-      MAT_set_j(H,*H_nnz,a_index);
+
+      MAT_set_i(HP,*H_nnz,v_index[m]);
+      MAT_set_j(HP,*H_nnz,a_index);
+
+      MAT_set_i(HQ,*H_nnz,v_index[m]);
+      MAT_set_j(HQ,*H_nnz,a_index);
       (*H_nnz)++; // vm and a
     }
     if (var_phi) {
-      MAT_set_i(H,*H_nnz,v_index[m]);
-      MAT_set_j(H,*H_nnz,phi_index);
+
+      MAT_set_i(HP,*H_nnz,v_index[m]);
+      MAT_set_j(HP,*H_nnz,phi_index);
+      
+      MAT_set_i(HQ,*H_nnz,v_index[m]);
+      MAT_set_j(HQ,*H_nnz,phi_index);
       (*H_nnz)++; // vm and phi
     }
   }
@@ -2150,13 +2219,21 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
     
     // H
     if (k == 0) {
-      MAT_set_i(H,*H_nnz,a_index);
-      MAT_set_j(H,*H_nnz,a_index);
+
+      MAT_set_i(HP,*H_nnz,a_index);
+      MAT_set_j(HP,*H_nnz,a_index);
+
+      MAT_set_i(HQ,*H_nnz,a_index);
+      MAT_set_j(HQ,*H_nnz,a_index);
       (*H_nnz)++; // a and a (important check k==0)
     }
     if (var_phi) {
-      MAT_set_i(H,*H_nnz,a_index);
-      MAT_set_j(H,*H_nnz,phi_index);
+
+      MAT_set_i(HP,*H_nnz,a_index);
+      MAT_set_j(HP,*H_nnz,phi_index);
+      
+      MAT_set_i(HQ,*H_nnz,a_index);
+      MAT_set_j(HQ,*H_nnz,phi_index);
       (*H_nnz)++; // a and phi
     }
   }
@@ -2174,8 +2251,11 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
     (*J_nnz)++; // Qkm/dphi
     
     // H
-    MAT_set_i(H,*H_nnz,phi_index);
-    MAT_set_j(H,*H_nnz,phi_index);
+    MAT_set_i(HP,*H_nnz,phi_index);
+    MAT_set_j(HP,*H_nnz,phi_index);
+    
+    MAT_set_i(HQ,*H_nnz,phi_index);
+    MAT_set_j(HQ,*H_nnz,phi_index);
     (*H_nnz)++; // phi and phi
   }
 }

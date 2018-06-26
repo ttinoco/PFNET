@@ -1359,7 +1359,7 @@ void CONSTR_update(Constr* c) {
   ARRAY_zalloc(c->bus_counted,char,c->bus_counted_size);
 
   // H_nnz
-  max_num = CONSTR_H_NNZ_MUL*num_buses*num_periods;
+  max_num = CONSTR_H_NNZ_MUL*c->bus_counted_size;
   CONSTR_set_H_nnz(c,(int*)calloc(max_num,sizeof(int)),max_num);
 
   // Init

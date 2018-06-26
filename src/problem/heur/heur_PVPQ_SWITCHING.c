@@ -90,7 +90,7 @@ void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* b
   }
   if (!pvpq) {
     HEUR_set_error(h, "unable to find PVPQ switching constraint");
-    if (HEUR_PVPQ_DEBUG)
+    if (HEUR_PVPQ_SWITCHING_DEBUG)
       printf("HEUR PVPQ SWITCHING: no PVPQ switching constraint\n");
     return;
   }

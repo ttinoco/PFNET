@@ -63,9 +63,10 @@ void CONSTR_CFUNC_count_step(Constr* c, Branch* br, int t) {
 
   // Local variables
   Constr_CFUNC_Data* data = (Constr_CFUNC_Data*)CONSTR_get_data(c);
-  int num_vars;
+  Net* net = CONSTR_get_network(c);
   int num_extra_vars;
-  int* Hnnz;
+  int num_vars;
+  int* H_nnz;
   
   // Check
   if (!data)

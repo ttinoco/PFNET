@@ -28,7 +28,7 @@ void CONSTR_CFUNC_init(Constr* c);
 void CONSTR_CFUNC_count_step(Constr* c, Branch* br, int t);
 void CONSTR_CFUNC_analyze_step(Constr* c, Branch* br, int t);
 void CONSTR_CFUNC_clear(Constr* c);
-void CONSTR_CFUNC_allocate(Constr* c)
+void CONSTR_CFUNC_allocate(Constr* c);
 void CONSTR_CFUNC_eval_step(Constr* c, Branch* br, int t, Vec* v, Vec* ve);
 void CONSTR_CFUNC_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void CONSTR_CFUNC_set_parameter(Constr* c, char* key, void* value);
