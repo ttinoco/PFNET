@@ -10,7 +10,8 @@ Unreleased
 * Updated json float sig digits from 11 to 16.
 * Modular flow routines for branches.
 * Added array attribute getters for network component structs.
-* Moved constr alloc/clear responsibility to "parent" struct.
+* Moved constraint alloc/clear to "parent" struct and advanced custom constraints can extend.
+* Made constraint init/free optional.
 * Removed NBOUND constraint.
 * Changed PVPQ switching heuristic to HEUR_PVPQ_SWITCHING for consistency with constraint.
 * Renamed LBOUND constraint to BOUND.

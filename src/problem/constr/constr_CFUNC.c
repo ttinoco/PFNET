@@ -37,7 +37,7 @@ void CONSTR_CFUNC_init(Constr* c) {
   
   // Local variaables
   Constr_CFUNC_Data* data;
-
+  
   // Init
   data = (Constr_CFUNC_Data*)malloc(sizeof(Constr_CFUNC_Data));
   data->func = NULL;
@@ -84,7 +84,7 @@ void CONSTR_CFUNC_count_step(Constr* c, Branch* br, int t) {
     else
       CONSTR_set_num_extra_vars(c, 0);
 
-    num_vars = NET_get_num_vars(CONSTR_get_network(c));
+    num_vars = NET_get_num_vars(net);
     num_extra_vars = CONSTR_get_num_extra_vars(c);
 
     // A
@@ -100,7 +100,7 @@ void CONSTR_CFUNC_count_step(Constr* c, Branch* br, int t) {
 
     // H
     H_nnz = CONSTR_get_H_nnz(c);
-    H_nnz[0] = MAT_get_nnz(FUNC_get_Hphi(data->func));
+    H_nnz[0] = FUNC_get_Hphi_nnz(data->func);
   }
 }
 
