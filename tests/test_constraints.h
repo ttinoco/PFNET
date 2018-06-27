@@ -10,104 +10,6 @@
 #include "unit.h"
 #include <pfnet/pfnet.h>
 
-static char* test_constr_NBOUND() {
-  
-  // Local variables
-  Parser* parser;
-  Net* net;
-  Vec* x;
-  Constr* c;
-  int num;
-  Vec* f;
-  Mat* J;
-
-  printf("test_constr_NBOUND ...");
-
-  // Load
-  parser = PARSER_new_for_file(test_case);
-  net = PARSER_parse(parser,test_case,1);
-  Assert("error - unable to get parser",parser != NULL);
-  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
-
-  // Set flags
-  NET_set_flags(net,OBJ_BUS,
-		FLAG_VARS|FLAG_BOUNDED,
-		BUS_PROP_ANY,
-		BUS_VAR_VMAG|BUS_VAR_VANG);
-  NET_set_flags(net,OBJ_GEN,
-		FLAG_VARS|FLAG_BOUNDED,
-		GEN_PROP_ANY,
-		GEN_VAR_P|GEN_VAR_Q);
-  NET_set_flags(net,OBJ_BRANCH,
-		FLAG_VARS|FLAG_BOUNDED,
-		BRANCH_PROP_TAP_CHANGER,BRANCH_VAR_RATIO);
-  NET_set_flags(net,OBJ_BRANCH,
-		FLAG_VARS|FLAG_BOUNDED,
-		BRANCH_PROP_PHASE_SHIFTER,
-		BRANCH_VAR_PHASE);
-  NET_set_flags(net,OBJ_SHUNT,
-		FLAG_VARS|FLAG_BOUNDED,
-		SHUNT_PROP_SWITCHED_V,
-		SHUNT_VAR_SUSC);
-  
-  num = (2*NET_get_num_buses(net) +
-	 2*NET_get_num_gens(net) +
-	 NET_get_num_tap_changers(net) +
-	 NET_get_num_phase_shifters(net) +
-	 NET_get_num_switched_shunts(net));
-
-  Assert("error - empty network",num > 0);
-  Assert("error - wrong number of variables",num == NET_get_num_vars(net));
-  Assert("error - wrong number of bounded quantities",num == NET_get_num_bounded(net));
-  
-  x = NET_get_var_values(net,CURRENT);
-
-  Assert("error - NULL vector of var values",x != NULL);
-  Assert("error - vector of var values has wrong shape",VEC_get_size(x) == NET_get_num_vars(net));
-
-  c = CONSTR_NBOUND_new(net);
-  Assert("error - unable to create new constraint",c != NULL);
-  Assert("error - bad constraint initialization",CONSTR_get_b(c) == NULL);
-  Assert("error - bad constraint initialization",CONSTR_get_A(c) == NULL);
-  Assert("error - bad constraint initialization",CONSTR_get_f(c) == NULL);
-  Assert("error - bad constraint initialization",CONSTR_get_J(c) == NULL);
-  Assert("error - bad constraint initialization",CONSTR_get_H_array(c) == NULL);
-  Assert("error - bad constraint initialization",CONSTR_get_H_combined(c) == NULL);
-  
-  Assert("error - wrong Jnnz counter",CONSTR_get_J_nnz(c) == 0);
-  CONSTR_count(c);
-  Assert("error - wrong Jnnz counter",CONSTR_get_J_nnz(c) == 2*num);  
-  CONSTR_allocate(c);
-  Assert("error - wrong Jnnz counter",CONSTR_get_J_nnz(c) == 2*num);
-  CONSTR_analyze(c);
-  Assert("error - wrong Jnnz counter",CONSTR_get_J_nnz(c) == 2*num);
-  CONSTR_eval(c,x,NULL);
-  Assert("error - wrong Jnnz counter",CONSTR_get_J_nnz(c) == 2*num);
-  CONSTR_store_sens(c,NULL,NULL,NULL,NULL);
-  Assert("error - wrong Jnnz counter",CONSTR_get_J_nnz(c) == 2*num);
-  Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == 0);
-
-  f = CONSTR_get_f(c);
-  J = CONSTR_get_J(c);
-
-  Assert("error - NULL f",f != NULL);
-  Assert("error - NULL J",J != NULL);
-  Assert("error - bad f size", VEC_get_size(f) == 2*num);
-  Assert("error - bad J size", MAT_get_size1(J) == 2*num);
-  Assert("error - bad J size", MAT_get_size2(J) == NET_get_num_vars(net));
-  Assert("error - bad J size", MAT_get_nnz(J) == 2*num);
-  
-  CONSTR_clear(c);
-  Assert("error - wrong Jnnz counter",CONSTR_get_J_nnz(c) == 0);
-
-  VEC_del(x);
-  CONSTR_del(c);
-  NET_del(net);
-  PARSER_del(parser);
-  printf("ok\n");
-  return 0;
-}
-
 static char* test_constr_FIX() {
   
   // Local variables
@@ -537,11 +439,11 @@ static char* test_constr_ACPF() {
 		   NET_get_num_slack_gens(net) +
 		   NET_get_num_reg_gens(net));
 
-  Hnnz_computed = (NET_get_num_buses(net)*3 +
-		   NET_get_num_branches(net)*12 +
-		   NET_get_num_tap_changers(net)*9 +
-                   NET_get_num_phase_shifters(net)*10 +
-		   NET_get_num_switched_shunts(net)*1);
+  Hnnz_computed = 2*(NET_get_num_buses(net)*3 +
+		     NET_get_num_branches(net)*12 +
+		     NET_get_num_tap_changers(net)*9 +
+		     NET_get_num_phase_shifters(net)*10 +
+		     NET_get_num_switched_shunts(net)*1);
 		     
   CONSTR_count(c);
   
@@ -552,13 +454,14 @@ static char* test_constr_ACPF() {
     Hnnz += H_nnz[i];
   
   Assert("error - bad Annz counter",CONSTR_get_A_nnz(c) == 0);  
-  Assert("error - bad Jnnz counter",Jnnz_computed == CONSTR_get_J_nnz(c));  
+  Assert("error - bad Jnnz counter",Jnnz_computed == CONSTR_get_J_nnz(c));
   Assert("error - bad Hnnz counter",Hnnz_computed == Hnnz);
 
   CONSTR_allocate(c);
-  
   CONSTR_analyze(c);
 
+  H_nnz = CONSTR_get_H_nnz(c);
+  size = CONSTR_get_H_nnz_size(c);
   Hnnz = 0;
   for (i = 0; i < size; i++)
     Hnnz += H_nnz[i];

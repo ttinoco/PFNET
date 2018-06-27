@@ -2,7 +2,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -32,7 +32,6 @@ static char * all_tests() {
   run_test(test_graph_basic);
 
   // Constraints
-  run_test(test_constr_NBOUND);
   run_test(test_constr_FIX);
   run_test(test_constr_PAR_GEN_P);
   run_test(test_constr_PVPQ_SWITCHING);

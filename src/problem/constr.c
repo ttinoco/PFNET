@@ -1129,8 +1129,8 @@ void CONSTR_allocate(Constr* c) {
 			 J_nnz));                 // nnz
 
   // H
-  CONSTR_allocate_H_array(c,J_row);
-  CONSTR_resize_H_nnz(c,J_row);
+  CONSTR_allocate_H_array(c,J_row);  
+  CONSTR_resize_H_nnz(c,J_row);  
   for (i = 0; i < J_row; i++) {
     H = CONSTR_get_H_single(c,i);
     MAT_set_nnz(H,H_nnz[i]);
