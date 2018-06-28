@@ -12,35 +12,11 @@
 
 Func* FUNC_REG_PHASE_new(REAL weight, Net* net) {
   Func* f = FUNC_new(weight,net);
-  FUNC_set_func_init(f, &FUNC_REG_PHASE_init);
   FUNC_set_func_count_step(f, &FUNC_REG_PHASE_count_step);
-  FUNC_set_func_allocate(f, &FUNC_REG_PHASE_allocate);
-  FUNC_set_func_clear(f, &FUNC_REG_PHASE_clear);
   FUNC_set_func_analyze_step(f, &FUNC_REG_PHASE_analyze_step);
   FUNC_set_func_eval_step(f, &FUNC_REG_PHASE_eval_step);
-  FUNC_set_func_free(f, &FUNC_REG_PHASE_free);
-  FUNC_init(f);
-  return f;
-}
-
-void FUNC_REG_PHASE_init(Func* f) {
-  
   FUNC_set_name(f,"phase shift regularization");
-}
-
-void FUNC_REG_PHASE_clear(Func* f) {
-  
-  // phi
-  FUNC_set_phi(f,0);
-  
-  // gphi
-  VEC_set_zero(FUNC_get_gphi(f));
-  
-  // Hphi
-  // Constant so not clear it
-  
-  // Counter
-  FUNC_set_Hphi_nnz(f,0);
+  return f;
 }
 
 void FUNC_REG_PHASE_count_step(Func* f, Branch* br, int t) {
@@ -61,24 +37,6 @@ void FUNC_REG_PHASE_count_step(Func* f, Branch* br, int t) {
   
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) // phase var
     (*Hphi_nnz)++;
-}
-
-void FUNC_REG_PHASE_allocate(Func* f) {
-  
-  // Local variables
-  int num_vars;
-  int Hphi_nnz;
-  
-  num_vars = NET_get_num_vars(FUNC_get_network(f));
-  Hphi_nnz = FUNC_get_Hphi_nnz(f);
-
-  // gphi
-  FUNC_set_gphi(f,VEC_new(num_vars));
-
-  // Hphi
-  FUNC_set_Hphi(f,MAT_new(num_vars,
-			  num_vars,
-			  Hphi_nnz));
 }
 
 void FUNC_REG_PHASE_analyze_step(Func* f, Branch* br, int t) {
@@ -149,8 +107,4 @@ void FUNC_REG_PHASE_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   else {
     // nothing because p0-p0 = 0
   }
-}
-    
-void FUNC_REG_PHASE_free(Func* f) {
-  // Nothing
 }

@@ -42,13 +42,13 @@ struct Func {
   int bus_counted_size; /**< @brief Size of array of flags for processing buses */
   
   // Functions
-  void (*func_init)(Func* f);                                    /**< @brief Initialization function */
+  void (*func_init)(Func* f);                                    /**< @brief Function for network-dependent initialization */
   void (*func_count_step)(Func* f, Branch* br, int t);           /**< @brief Function for countinng nonzero entries */
-  void (*func_allocate)(Func* f);                                /**< @brief Function for allocating required arrays */
-  void (*func_clear)(Func* f);                                   /**< @brief Function for clearing flags, counters, and function values */
+  void (*func_allocate)(Func* f);                                /**< @brief Function for allocating additional data */
+  void (*func_clear)(Func* f);                                   /**< @brief Function for clearing additional counters or flags */
   void (*func_analyze_step)(Func* f, Branch* br, int t);         /**< @brief Function for analyzing sparsity pattern */
   void (*func_eval_step)(Func* f, Branch* br, int t, Vec* v);    /**< @brief Function for evaluating function */
-  void (*func_free)(Func* f);                                    /**< @brief Function for de-allocating any data used */
+  void (*func_free)(Func* f);                                    /**< @brief Function for de-allocating any additional data used */
   void (*func_set_parameter)(Func* c, char* key, void* value);   /**< @brief Function for setting function parameter */
 
   // Custom data
@@ -389,11 +389,38 @@ void FUNC_count_step(Func* f, Branch* br, int t) {
 }
 
 void FUNC_allocate(Func* f) {
-  if (f && f->func_allocate && FUNC_is_safe_to_count(f)) {
-    FUNC_del_matvec(f);
-    f->state_tag = NET_get_state_tag(f->net);
+
+  // Local vars
+  int num_vars;
+  int Hphi_nnz;
+
+  // No f
+  if (!f)
+    return;
+
+  // Clear
+  FUNC_del_matvec(f);
+
+  // Save tag
+  f->state_tag = NET_get_state_tag(f->net);
+
+  // Num vars
+  num_vars = NET_get_num_vars(FUNC_get_network(f));
+
+  // Counters
+  Hphi_nnz = FUNC_get_Hphi_nnz(f);
+
+  // gphi
+  FUNC_set_gphi(f,VEC_new(num_vars));
+
+  // Hphi
+  FUNC_set_Hphi(f,MAT_new(num_vars,
+			  num_vars,
+			  Hphi_nnz));
+
+  // Additional allocate
+  if (f->func_allocate)
     (*(f->func_allocate))(f);
-  }
 }
 
 void FUNC_init(Func* f) {
@@ -404,6 +431,23 @@ void FUNC_init(Func* f) {
 }
 
 void FUNC_clear(Func* f) {
+
+  // phi
+  FUNC_set_phi(f,0);
+
+  // gphi
+  VEC_set_zero(FUNC_get_gphi(f));
+
+  // Hphi
+  MAT_set_zero_d(FUNC_get_Hphi(f));
+
+  // Counter
+  FUNC_set_Hphi_nnz(f,0);
+
+  // Flags
+  FUNC_clear_bus_counted(f);
+
+  // Additional clear
   if (f && f->func_clear)
     (*(f->func_clear))(f);
 }
