@@ -43,15 +43,15 @@ void FUNC_REG_RATIO_analyze_step(Func* f, Branch* br, int t) {
 
   // Local variables
   int* Hphi_nnz;
-  Mat* H;
+  Mat* Hphi;
   REAL da;
 
   // Constr data
-  H = FUNC_get_Hphi(f);
+  Hphi = FUNC_get_Hphi(f);
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointer
-  if (!Hphi_nnz)
+  if (!Hphi_nnz || !Hphi)
     return;
 
   // Check outage
@@ -64,9 +64,8 @@ void FUNC_REG_RATIO_analyze_step(Func* f, Branch* br, int t) {
     da = FUNC_REG_RATIO_PARAM;
   
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) { // ratio var
-    MAT_set_i(H,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
-    MAT_set_j(H,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
-    MAT_set_d(H,*Hphi_nnz,1./(da*da));
+    MAT_set_i(Hphi,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
+    MAT_set_j(Hphi,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
     (*Hphi_nnz)++;
   }
 }
@@ -76,6 +75,8 @@ void FUNC_REG_RATIO_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   // Local variables
   REAL* phi;
   REAL* gphi;
+  REAL* Hphi;
+  int* Hphi_nnz;
   REAL a;
   REAL da;
   REAL a0;
@@ -83,9 +84,11 @@ void FUNC_REG_RATIO_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   // Constr data
   phi = FUNC_get_phi_ptr(f);
   gphi = VEC_get_data(FUNC_get_gphi(f));
+  Hphi = MAT_get_data_array(FUNC_get_Hphi(f));
+  Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!phi || !gphi)
+  if (!phi || !gphi || !Hphi || !Hphi_nnz)
     return;
 
   // Check outage
@@ -103,6 +106,8 @@ void FUNC_REG_RATIO_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
     a = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
     (*phi) += 0.5*pow((a-a0)/da,2.);
     gphi[BRANCH_get_index_ratio(br,t)] = (a-a0)/(da*da);
+    Hphi[*Hphi_nnz] = 1./(da*da);
+    (*Hphi_nnz)++;
   }
   else {
     // nothing because a0-a0 = 0

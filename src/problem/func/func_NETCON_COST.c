@@ -24,77 +24,7 @@ void FUNC_NETCON_COST_count_step(Func* f, Branch* br, int t) {
 }
 
 void FUNC_NETCON_COST_analyze_step(Func* f, Branch* br, int t) {
-
-  // Local variables
-  Bus* buses[2];
-  Bus* bus;
-  Load* load;
-  Gen* gen;
-  Vargen* vargen;
-  Bat* bat;
-  int bus_index_t[2];
-  char* bus_counted;
-  REAL price;
-  Vec* gphi;
-  int k;
-  int T;
-
-  // Num periods
-  T = BRANCH_get_num_periods(br);
-
-  // Constr data
-  gphi = FUNC_get_gphi(f);
-  bus_counted = FUNC_get_bus_counted(f);
-
-  // Check pointers
-  if (!gphi || !bus_counted)
-    return;
-
-  // Bus data
-  buses[0] = BRANCH_get_bus_k(br);
-  buses[1] = BRANCH_get_bus_m(br);
-  for (k = 0; k < 2; k++)
-    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
-
-  // Buses
-  for (k = 0; k < 2; k++) {
-
-    bus = buses[k];
-    
-    price = BUS_get_price(bus,t);
-
-    if (!bus_counted[bus_index_t[k]]) {
-
-      // Generators
-      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) && !GEN_is_on_outage(gen))
-	  VEC_set(gphi,GEN_get_index_P(gen,t),-price);
-      }
-
-      // Variable generators
-      for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
-	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P))
-	  VEC_set(gphi,VARGEN_get_index_P(vargen,t),-price);
-      }
-
-      // Loads
-      for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
-	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P))
-	  VEC_set(gphi,LOAD_get_index_P(load,t),price);
-      }
-
-      // Battery charging
-      for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
-	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
-	  VEC_set(gphi,BAT_get_index_Pc(bat,t),price);
-	  VEC_set(gphi,BAT_get_index_Pd(bat,t),-price);
-	}
-      }
-    }
-
-    // Update counted flag
-    bus_counted[bus_index_t[k]] = TRUE;
-  }
+  // nothing
 }
 
 void FUNC_NETCON_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
@@ -110,25 +40,23 @@ void FUNC_NETCON_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   char* bus_counted;
   REAL price;
   REAL* phi;
+  REAL* gphi;
   int k;
-  int T;
-
-  // Num periods
-  T = BRANCH_get_num_periods(br);
 
   // Constr data
   phi = FUNC_get_phi_ptr(f);
+  gphi = VEC_get_data(FUNC_get_gphi(f));
   bus_counted = FUNC_get_bus_counted(f);
 
   // Check pointers
-  if (!phi || !bus_counted)
+  if (!phi || !bus_counted || !gphi)
     return;
 
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
-    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
+    bus_index_t[k] = BUS_get_index_t(buses[k],t);
 
   // Buses
   for (k = 0; k < 2; k++) {
@@ -146,25 +74,30 @@ void FUNC_NETCON_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 	if (GEN_is_on_outage(gen))
 	  continue;
 
-	// Phi
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
+	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
 	  (*phi) -= price*VEC_get(var_values,GEN_get_index_P(gen,t));
+	  gphi[GEN_get_index_P(gen,t)] = -price;
+	}
 	else
 	  (*phi) -= price*GEN_get_P(gen,t);
       }
 
       // Variable generators
       for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
-	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P))
+	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) {
 	  (*phi) -= price*VEC_get(var_values,VARGEN_get_index_P(vargen,t));
+	  gphi[VARGEN_get_index_P(vargen,t)] = -price;
+	}
 	else
 	  (*phi) -= price*VARGEN_get_P(vargen,t);
       }
 
       // Loads
       for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
-	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P))
+	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
 	  (*phi) += price*VEC_get(var_values,LOAD_get_index_P(load,t));
+	  gphi[LOAD_get_index_P(load,t)] = price;
+	}
 	else
 	  (*phi) += price*LOAD_get_P(load,t);
       }
@@ -174,6 +107,8 @@ void FUNC_NETCON_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
 	  (*phi) += price*VEC_get(var_values,BAT_get_index_Pc(bat,t));
 	  (*phi) -= price*VEC_get(var_values,BAT_get_index_Pd(bat,t));
+	  gphi[BAT_get_index_Pc(bat,t)] = price;
+	  gphi[BAT_get_index_Pd(bat,t)] = -price;
 	}
 	else {
 	  (*phi) += price*BAT_get_P(bat,t);

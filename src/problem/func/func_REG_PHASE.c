@@ -43,11 +43,11 @@ void FUNC_REG_PHASE_analyze_step(Func* f, Branch* br, int t) {
 
   // Local variables
   int* Hphi_nnz;
-  Mat* H;
+  Mat* Hphi;
   REAL dp;
 
   // Constr data
-  H = FUNC_get_Hphi(f);
+  Hphi = FUNC_get_Hphi(f);
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointer
@@ -64,9 +64,8 @@ void FUNC_REG_PHASE_analyze_step(Func* f, Branch* br, int t) {
     dp = FUNC_REG_PHASE_PARAM;
   
   if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) { // phase var
-    MAT_set_i(H,*Hphi_nnz,BRANCH_get_index_phase(br,t));
-    MAT_set_j(H,*Hphi_nnz,BRANCH_get_index_phase(br,t));
-    MAT_set_d(H,*Hphi_nnz,1./(dp*dp));
+    MAT_set_i(Hphi,*Hphi_nnz,BRANCH_get_index_phase(br,t));
+    MAT_set_j(Hphi,*Hphi_nnz,BRANCH_get_index_phase(br,t));
     (*Hphi_nnz)++;
   }
 }
@@ -76,6 +75,8 @@ void FUNC_REG_PHASE_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   // Local variables
   REAL* phi;
   REAL* gphi;
+  REAL* Hphi;
+  int* Hphi_nnz;
   REAL p;
   REAL dp;
   REAL p0;
@@ -83,9 +84,11 @@ void FUNC_REG_PHASE_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   // Constr data
   phi = FUNC_get_phi_ptr(f);
   gphi = VEC_get_data(FUNC_get_gphi(f));
+  Hphi = MAT_get_data_array(FUNC_get_Hphi(f));
+  Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!phi || !gphi)
+  if (!phi || !gphi || !Hphi || !Hphi_nnz)
     return;
 
   // Check outage
@@ -103,6 +106,8 @@ void FUNC_REG_PHASE_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
     p = VEC_get(var_values,BRANCH_get_index_phase(br,t));
     (*phi) += 0.5*pow((p-p0)/dp,2.);
     gphi[BRANCH_get_index_phase(br,t)] = (p-p0)/(dp*dp);
+    Hphi[*Hphi_nnz] = 1./(dp*dp);
+    (*Hphi_nnz)++;
   }
   else {
     // nothing because p0-p0 = 0
