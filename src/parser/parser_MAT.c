@@ -402,21 +402,23 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
   }
   NET_set_bus_array(net,BUS_array_new(num_buses,num_periods),num_buses); // allocate buses
   for (mat_bus = parser->bus_list; mat_bus != NULL; mat_bus = mat_bus->next) {
-    bus = NET_get_bus(net,index);             // get bus
-    BUS_set_number(bus,mat_bus->number);
-    BUS_set_area(bus,mat_bus->area);
-    BUS_set_zone(bus,mat_bus->zone);
-    BUS_set_name(bus,mat_bus->name);
-    BUS_set_v_mag(bus,mat_bus->Vm,0);         // per unit
-    BUS_set_v_ang(bus,mat_bus->Va*PI/180.,0); // radians
-    BUS_set_v_base(bus,mat_bus->basekv);      // kilovolts
-    BUS_set_v_max_norm(bus,mat_bus->maxVm);   // per unit
-    BUS_set_v_min_norm(bus,mat_bus->minVm);   // per unit
-    if (mat_bus->type == MAT_BUS_TYPE_SL)
-      BUS_set_slack_flag(bus,TRUE);
-    NET_bus_hash_number_add(net,bus);
-    NET_bus_hash_name_add(net,bus);
-    index++;
+    if (mat_bus->type != MAT_BUS_TYPE_IS) {
+      bus = NET_get_bus(net,index);             // get bus
+      BUS_set_number(bus,mat_bus->number);
+      BUS_set_area(bus,mat_bus->area);
+      BUS_set_zone(bus,mat_bus->zone);
+      BUS_set_name(bus,mat_bus->name);
+      BUS_set_v_mag(bus,mat_bus->Vm,0);         // per unit
+      BUS_set_v_ang(bus,mat_bus->Va*PI/180.,0); // radians
+      BUS_set_v_base(bus,mat_bus->basekv);      // kilovolts
+      BUS_set_v_max_norm(bus,mat_bus->maxVm);   // per unit
+      BUS_set_v_min_norm(bus,mat_bus->minVm);   // per unit
+      if (mat_bus->type == MAT_BUS_TYPE_SL)
+	BUS_set_slack_flag(bus,TRUE);
+      NET_bus_hash_number_add(net,bus);
+      NET_bus_hash_name_add(net,bus);
+      index++;
+    }
   }
 
   // Loads
