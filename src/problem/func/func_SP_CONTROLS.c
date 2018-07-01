@@ -30,10 +30,6 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Branch* br, int t) {
   int* Hphi_nnz;
   char* bus_counted;
   int k;
-  int T;
-
-  // Num periods
-  T = BRANCH_get_num_periods(br);
 
   // Constr data
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
@@ -47,7 +43,7 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Branch* br, int t) {
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
-    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
+    bus_index_t[k] = BUS_get_index_t(buses[k],t);
 
   // Tap ratio of tap-changing transformer
   if (BRANCH_is_tap_changer(br) &&
@@ -115,35 +111,31 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
   int bus_index_t[2];
   int* Hphi_nnz;
   char* bus_counted;
-  Mat* H;
+  Mat* Hphi;
   int k;
-  int T;
-
-  // Num periods
-  T = BRANCH_get_num_periods(br);
 
   // Constr data
-  H = FUNC_get_Hphi(f);
+  Hphi = FUNC_get_Hphi(f);
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
   bus_counted = FUNC_get_bus_counted(f);
 
   // Check pointers
-  if (!Hphi_nnz || !bus_counted)
+  if (!Hphi_nnz || !bus_counted || !Hphi)
     return;
 
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
-    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
+    bus_index_t[k] = BUS_get_index_t(buses[k],t);
 
   // Tap ratio of tap-changing transformer
   if (BRANCH_is_tap_changer(br) &&
       !BRANCH_is_on_outage(br) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) &&
       BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_RATIO)) {
-    MAT_set_i(H,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
-    MAT_set_j(H,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
+    MAT_set_i(Hphi,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
+    MAT_set_j(Hphi,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
     (*Hphi_nnz)++;
   }
 
@@ -152,8 +144,8 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
       !BRANCH_is_on_outage(br) &&
       BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) &&
       BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_PHASE)) {
-    MAT_set_i(H,*Hphi_nnz,BRANCH_get_index_phase(br,t));
-    MAT_set_j(H,*Hphi_nnz,BRANCH_get_index_phase(br,t));
+    MAT_set_i(Hphi,*Hphi_nnz,BRANCH_get_index_phase(br,t));
+    MAT_set_j(Hphi,*Hphi_nnz,BRANCH_get_index_phase(br,t));
     (*Hphi_nnz)++;
   }
 
@@ -168,8 +160,8 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
       if (BUS_is_regulated_by_gen(bus) &&
 	  BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) &&
 	  BUS_has_flags(bus,FLAG_SPARSE,BUS_VAR_VMAG)) {
-	MAT_set_i(H,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
-	MAT_set_j(H,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
+	MAT_set_i(Hphi,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
+	MAT_set_j(Hphi,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
 	(*Hphi_nnz)++;
       }
 
@@ -183,8 +175,8 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
 	// Active power
 	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) &&
 	    GEN_has_flags(gen,FLAG_SPARSE,GEN_VAR_P)) {
-	  MAT_set_i(H,*Hphi_nnz,GEN_get_index_P(gen,t));
-	  MAT_set_j(H,*Hphi_nnz,GEN_get_index_P(gen,t));
+	  MAT_set_i(Hphi,*Hphi_nnz,GEN_get_index_P(gen,t));
+	  MAT_set_j(Hphi,*Hphi_nnz,GEN_get_index_P(gen,t));
 	  (*Hphi_nnz)++;
 	}
       }
@@ -196,8 +188,8 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Branch* br, int t) {
 	if (SHUNT_is_switched(shunt) &&
 	    SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) &&
 	    SHUNT_has_flags(shunt,FLAG_SPARSE,SHUNT_VAR_SUSC)) {
-	  MAT_set_i(H,*Hphi_nnz,SHUNT_get_index_b(shunt,t));
-	  MAT_set_j(H,*Hphi_nnz,SHUNT_get_index_b(shunt,t));
+	  MAT_set_i(Hphi,*Hphi_nnz,SHUNT_get_index_b(shunt,t));
+	  MAT_set_j(Hphi,*Hphi_nnz,SHUNT_get_index_b(shunt,t));
 	  (*Hphi_nnz)++;
 	}
       }
@@ -220,34 +212,30 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   char* bus_counted;
   REAL* phi;
   REAL* gphi;
-  REAL* Hd;
+  REAL* Hphi;
   int index_val;
   REAL val;
   REAL val0;
   REAL dval;
   REAL sqrt_term;
   int k;
-  int T;
-
-  // Num periods
-  T = BRANCH_get_num_periods(br);
-
+  
   // Constr data
   phi = FUNC_get_phi_ptr(f);
   gphi = VEC_get_data(FUNC_get_gphi(f));
-  Hd = MAT_get_data_array(FUNC_get_Hphi(f));
+  Hphi = MAT_get_data_array(FUNC_get_Hphi(f));
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
   bus_counted = FUNC_get_bus_counted(f);
 
   // Check pointers
-  if (!phi || !gphi || !Hd || !Hphi_nnz || !bus_counted)
+  if (!phi || !gphi || !Hphi || !Hphi_nnz || !bus_counted)
     return;
 
   // Bus data
   buses[0] = BRANCH_get_bus_k(br);
   buses[1] = BRANCH_get_bus_m(br);
   for (k = 0; k < 2; k++)
-    bus_index_t[k] = BUS_get_index(buses[k])*T+t;
+    bus_index_t[k] = BUS_get_index_t(buses[k],t);
 
   // Tap ratio of tap-changing transformer
   if (BRANCH_is_tap_changer(br) &&
@@ -270,7 +258,7 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
     gphi[index_val] = (1./sqrt_term)*((val-val0)/(dval*dval));
 
     // Hphi
-    Hd[*Hphi_nnz] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
+    Hphi[*Hphi_nnz] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
     (*Hphi_nnz)++;
   }
   else {
@@ -298,7 +286,7 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
     gphi[index_val] = (1./sqrt_term)*((val-val0)/(dval*dval));
 
     // Hphi
-    Hd[*Hphi_nnz] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
+    Hphi[*Hphi_nnz] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
     (*Hphi_nnz)++;
   }
   else {
@@ -332,7 +320,7 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 	gphi[index_val] = (1./sqrt_term)*((val-val0)/(dval*dval));
 
 	// Hphi
-	Hd[*Hphi_nnz] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
+	Hphi[*Hphi_nnz] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
 	(*Hphi_nnz)++;
       }
       else {
@@ -365,7 +353,7 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 	  gphi[index_val] = (1./sqrt_term)*((val-val0)/(dval*dval));
 
 	  // Hphi
-	  Hd[*Hphi_nnz] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
+	  Hphi[*Hphi_nnz] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
 	  (*Hphi_nnz)++;
 	}
 	else {
@@ -396,7 +384,7 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
 	  gphi[index_val] = (1./sqrt_term)*((val-val0)/(dval*dval));
 
 	  // Hphi
-	  Hd[*Hphi_nnz] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
+	  Hphi[*Hphi_nnz] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
 	  (*Hphi_nnz)++;
 	}
 	else {

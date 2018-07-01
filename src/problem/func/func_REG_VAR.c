@@ -15,14 +15,13 @@ struct Func_REG_VAR_Data {
   
   REAL* x0; // center
   REAL* w;  // weights
+  int num_vars;
 };
 
 Func* FUNC_REG_VAR_new(REAL weight, Net* net) {
   Func* f = FUNC_new(weight,net);
   FUNC_set_func_init(f,&FUNC_REG_VAR_init);
   FUNC_set_func_count_step(f,&FUNC_REG_VAR_count_step);
-  FUNC_set_func_allocate(f,&FUNC_REG_VAR_allocate);
-  FUNC_set_func_clear(f,&FUNC_REG_VAR_clear);
   FUNC_set_func_analyze_step(f,&FUNC_REG_VAR_analyze_step);
   FUNC_set_func_eval_step(f,&FUNC_REG_VAR_eval_step);
   FUNC_set_func_free(f,&FUNC_REG_VAR_free);
@@ -36,11 +35,13 @@ void FUNC_REG_VAR_init(Func* f) {
 
   // Local variables
   Func_REG_VAR_Data* data;
-
+  int num_vars = NET_get_num_vars(FUNC_get_network(f));
+  
   // Init
   data = (Func_REG_VAR_Data*)malloc(sizeof(Func_REG_VAR_Data));
-  data->x0 = NULL;
-  data->w = NULL;
+  ARRAY_zalloc(data->x0,REAL,num_vars);
+  ARRAY_zalloc(data->w,REAL,num_vars);
+  data->num_vars = num_vars;
   FUNC_set_data(f,data);
 }
 
@@ -162,17 +163,6 @@ void FUNC_REG_VAR_count_step(Func* f, Branch* br, int t) {
     // Update counted flag
     bus_counted[bus_index_t[k]] = TRUE;
   }
-}
-
-void FUNC_REG_VAR_allocate(Func* f) {
-
-  // Local variables
-  Func_REG_VAR_Data* data = (Func_REG_VAR_Data*)FUNC_get_data(f);
-  int num_vars = NET_get_num_vars(FUNC_get_network(f));
-
-  // Allocate
-  ARRAY_zalloc(data->x0,REAL,num_vars);
-  ARRAY_zalloc(data->w,REAL,num_vars);  
 }
 
 void FUNC_REG_VAR_analyze_step(Func* f, Branch* br, int t) {
@@ -589,6 +579,11 @@ void FUNC_REG_VAR_set_parameter(Func* f, char* key, void* value) {
   // Check
   if (!data)
     return;
+
+  // Bad num vars
+  if (data->num_vars != num_vars) {
+    FUNC_set_error(f,"network num_vars changed");
+  }
 
   // Set 
   if (strcmp(key,"w") == 0) { // w

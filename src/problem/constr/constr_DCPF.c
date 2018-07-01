@@ -162,6 +162,7 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
   Mat* A;
   Vec* rhs;
   int* A_nnz;
+  int* A_row;
   char* bus_counted;
   int bus_index_t[2];
   REAL b;
@@ -173,10 +174,11 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
   A = CONSTR_get_A(c);
   rhs = CONSTR_get_b(c);
   A_nnz = CONSTR_get_A_nnz_ptr(c);
+  A_row = CONSTR_get_A_row_ptr(c);
   bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!A_nnz || !bus_counted)
+  if (!A_nnz || !bus_counted || !A_row)
     return;
 
   // Bus data
@@ -344,6 +346,9 @@ void CONSTR_DCPF_analyze_step(Constr* c, Branch* br, int t) {
 	  VEC_add_to_entry(rhs,bus_index_t[k],BAT_get_P(bat,t));
 	}
       }
+
+      // Counter constraints
+      (*A_row)++;
     }
 
     // Update counted flag
