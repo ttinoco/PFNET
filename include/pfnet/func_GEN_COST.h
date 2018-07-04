@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -16,8 +16,8 @@
 
 // Function prototypes
 Func* FUNC_GEN_COST_new(REAL weight, Net* net);
-void FUNC_GEN_COST_count_step(Func* f, Branch* br, int t);
-void FUNC_GEN_COST_analyze_step(Func* f, Branch* br, int t);
-void FUNC_GEN_COST_eval_step(Func* f, Branch* br, int t, Vec* v);
+void FUNC_GEN_COST_count_step(Func* f, Bus* bus, int t);
+void FUNC_GEN_COST_analyze_step(Func* f, Bus* bus, int t);
+void FUNC_GEN_COST_eval_step(Func* f, Bus* bus, int t, Vec* v);
 
 #endif

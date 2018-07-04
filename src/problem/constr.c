@@ -64,16 +64,16 @@ struct Constr {
   char* G_row_info; /**< @brief Array for info strings of rows of l <= G (x,y) <= u */
   
   // Type functions
-  void (*func_init)(Constr* c);                                          /**< @brief Function for network-dependent initialization */
-  void (*func_count_step)(Constr* c, Branch* br, int t);                 /**< @brief Function for counting nonzero entries */
-  void (*func_allocate)(Constr* c);                                      /**< @brief Function for allocating additional data */
-  void (*func_clear)(Constr* c);                                         /**< @brief Function for clearing additional counters or flags */
-  void (*func_analyze_step)(Constr* c, Branch* br, int t);               /**< @brief Function for analyzing sparsity pattern */
-  void (*func_eval_step)(Constr* c, Branch* br, int t, Vec* v, Vec* ve); /**< @brief Function for evaluating constraint */
-  void (*func_store_sens_step)(Constr* c, Branch* br, int t,
-			       Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);    /**< @brief Func. for storing sensitivities */
-  void (*func_free)(Constr* c);                                          /**< @brief Function for de-allocating any additional data used */
-  void (*func_set_parameter)(Constr* c, char* key, void* value);         /**< @brief Function for setting constraint parameter */
+  void (*func_init)(Constr* c);                                        /**< @brief Function for network-dependent initialization */
+  void (*func_count_step)(Constr* c, Bus* bus, int t);                 /**< @brief Function for counting nonzero entries */
+  void (*func_allocate)(Constr* c);                                    /**< @brief Function for allocating additional data */
+  void (*func_clear)(Constr* c);                                       /**< @brief Function for clearing additional counters or flags */
+  void (*func_analyze_step)(Constr* c, Bus* bus, int t);               /**< @brief Function for analyzing sparsity pattern */
+  void (*func_eval_step)(Constr* c, Bus* bus, int t, Vec* v, Vec* ve); /**< @brief Function for evaluating constraint */
+  void (*func_store_sens_step)(Constr* c, Bus* bus, int t,
+			       Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);  /**< @brief Func. for storing sensitivities */
+  void (*func_free)(Constr* c);                                        /**< @brief Function for de-allocating any additional data used */
+  void (*func_set_parameter)(Constr* c, char* key, void* value);       /**< @brief Function for setting constraint parameter */
 
   // Type data
   void* data; /**< @brief Type-dependent constraint data structure */
@@ -640,10 +640,10 @@ void CONSTR_list_combine_H(Constr* clist, Vec* coeff, BOOL ensure_psd) {
   }
 }
 
-void CONSTR_list_count_step(Constr* clist, Branch* br, int t) {
+void CONSTR_list_count_step(Constr* clist, Bus* bus, int t) {
   Constr* cc;
   for (cc = clist; cc != NULL; cc = CONSTR_get_next(cc))
-    CONSTR_count_step(cc,br,t);
+    CONSTR_count_step(cc,bus,t);
 }
 
 void CONSTR_list_allocate(Constr* clist) {
@@ -658,13 +658,13 @@ void CONSTR_list_clear(Constr* clist) {
     CONSTR_clear(cc);
 }
 
-void CONSTR_list_analyze_step(Constr* clist, Branch* br, int t) {
+void CONSTR_list_analyze_step(Constr* clist, Bus* bus, int t) {
   Constr* cc;
   for (cc = clist; cc != NULL; cc = CONSTR_get_next(cc))
-    CONSTR_analyze_step(cc,br,t);
+    CONSTR_analyze_step(cc,bus,t);
 }
 
-void CONSTR_list_eval_step(Constr* clist, Branch* br, int t, Vec* v, Vec* ve) {
+void CONSTR_list_eval_step(Constr* clist, Bus* bus, int t, Vec* v, Vec* ve) {
   Constr* cc;
   Vec* ve_c;
   int offset = 0;
@@ -674,14 +674,14 @@ void CONSTR_list_eval_step(Constr* clist, Branch* br, int t, Vec* v, Vec* ve) {
       ve_c = VEC_new_from_array(&(ve_data[offset]),CONSTR_get_num_extra_vars(cc));
     else
       ve_c = NULL;
-    CONSTR_eval_step(cc,br,t,v,ve_c);
+    CONSTR_eval_step(cc,bus,t,v,ve_c);
     offset += CONSTR_get_num_extra_vars(cc);
     if (ve_c)
       free(ve_c);
   }
 }
 
-void CONSTR_list_store_sens_step(Constr* clist, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_list_store_sens_step(Constr* clist, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   Constr* cc;
   Vec* vA;
   Vec* vf;
@@ -732,7 +732,7 @@ void CONSTR_list_store_sens_step(Constr* clist, Branch* br, int t, Vec* sA, Vec*
     else
       vGl = NULL;
 
-    CONSTR_store_sens_step(cc,br,t,vA,vf,vGu,vGl);
+    CONSTR_store_sens_step(cc,bus,t,vA,vf,vGu,vGl);
 
     offset_sA += MAT_get_size1(CONSTR_get_A(cc));
     offset_sf += VEC_get_size(CONSTR_get_f(cc));
@@ -1041,14 +1041,14 @@ void CONSTR_count(Constr* c) {
   Net* net = CONSTR_get_network(c);
   CONSTR_clear(c);
   for (t = 0; t < NET_get_num_periods(net); t++) {
-    for (i = 0; i < NET_get_num_branches(net); i++)
-      CONSTR_count_step(c,NET_get_branch(net,i),t);
+    for (i = 0; i < NET_get_num_buses(net); i++)
+      CONSTR_count_step(c,NET_get_bus(net,i),t);
   }
 }
 
-void CONSTR_count_step(Constr* c, Branch* br, int t) {
+void CONSTR_count_step(Constr* c, Bus* bus, int t) {
   if (c && c->func_count_step && CONSTR_is_safe_to_count(c))
-    (*(c->func_count_step))(c,br,t);
+    (*(c->func_count_step))(c,bus,t);
 }
 
 void CONSTR_allocate(Constr* c) {
@@ -1188,15 +1188,15 @@ void CONSTR_analyze(Constr* c) {
   Net* net = CONSTR_get_network(c);
   CONSTR_clear(c);
   for (t = 0; t < NET_get_num_periods(net); t++) {
-    for (i = 0; i < NET_get_num_branches(net); i++)
-      CONSTR_analyze_step(c,NET_get_branch(net,i),t);
+    for (i = 0; i < NET_get_num_buses(net); i++)
+      CONSTR_analyze_step(c,NET_get_bus(net,i),t);
   }
   CONSTR_finalize_structure_of_Hessians(c);
 }
 
-void CONSTR_analyze_step(Constr* c, Branch* br, int t) {
+void CONSTR_analyze_step(Constr* c, Bus* bus, int t) {
   if (c && c->func_analyze_step && CONSTR_is_safe_to_analyze(c))
-    (*(c->func_analyze_step))(c,br,t);
+    (*(c->func_analyze_step))(c,bus,t);
 }
 
 void CONSTR_eval(Constr* c, Vec* v, Vec* ve) {
@@ -1205,14 +1205,14 @@ void CONSTR_eval(Constr* c, Vec* v, Vec* ve) {
   Net* net = CONSTR_get_network(c);
   CONSTR_clear(c);
   for (t = 0; t < NET_get_num_periods(net); t++) {
-    for (i = 0; i < NET_get_num_branches(net); i++)
-      CONSTR_eval_step(c,NET_get_branch(net,i),t,v,ve);
+    for (i = 0; i < NET_get_num_buses(net); i++)
+      CONSTR_eval_step(c,NET_get_bus(net,i),t,v,ve);
   }
 }
 
-void CONSTR_eval_step(Constr* c, Branch* br, int t, Vec* v, Vec* ve) {
+void CONSTR_eval_step(Constr* c, Bus* bus, int t, Vec* v, Vec* ve) {
   if (c && c->func_eval_step && CONSTR_is_safe_to_eval(c,v,ve))
-    (*(c->func_eval_step))(c,br,t,v,ve);
+    (*(c->func_eval_step))(c,bus,t,v,ve);
 }
 
 void CONSTR_store_sens(Constr* c, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
@@ -1241,14 +1241,14 @@ void CONSTR_store_sens(Constr* c, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Store sensitivities
   for (t = 0; t < NET_get_num_periods(net); t++) {
-    for (i = 0; i < NET_get_num_branches(net); i++)
-      CONSTR_store_sens_step(c,NET_get_branch(net,i),t,sA,sf,sGu,sGl);
+    for (i = 0; i < NET_get_num_buses(net); i++)
+      CONSTR_store_sens_step(c,NET_get_bus(net,i),t,sA,sf,sGu,sGl);
   }
 }
 
-void CONSTR_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   if (c && c->func_store_sens_step && CONSTR_is_safe_to_count(c))
-    (*(c->func_store_sens_step))(c,br,t,sA,sf,sGu,sGl);
+    (*(c->func_store_sens_step))(c,bus,t,sA,sf,sGu,sGl);
 }
 
 BOOL CONSTR_is_safe_to_count(Constr* c) {
@@ -1371,7 +1371,7 @@ void CONSTR_set_func_init(Constr* c, void (*func)(Constr* c)) {
     c->func_init = func;
 }
 
-void CONSTR_set_func_count_step(Constr* c, void (*func)(Constr* c, Branch* br, int t)) {
+void CONSTR_set_func_count_step(Constr* c, void (*func)(Constr* c, Bus* bus, int t)) {
   if (c)
     c->func_count_step = func;
 }
@@ -1386,17 +1386,17 @@ void CONSTR_set_func_clear(Constr* c, void (*func)(Constr* c)) {
     c->func_clear = func;
 }
 
-void CONSTR_set_func_analyze_step(Constr* c, void (*func)(Constr* c, Branch* br, int t)) {
+void CONSTR_set_func_analyze_step(Constr* c, void (*func)(Constr* c, Bus* bus, int t)) {
   if (c)
     c->func_analyze_step = func;
 }
 
-void CONSTR_set_func_eval_step(Constr* c, void (*func)(Constr* c, Branch* br, int t, Vec* v, Vec* ve)) {
+void CONSTR_set_func_eval_step(Constr* c, void (*func)(Constr* c, Bus* bus, int t, Vec* v, Vec* ve)) {
   if (c)
     c->func_eval_step = func;
 }
 
-void CONSTR_set_func_store_sens_step(Constr* c, void (*func)(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl)) {
+void CONSTR_set_func_store_sens_step(Constr* c, void (*func)(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl)) {
   if (c)
     c->func_store_sens_step = func;
 }

@@ -19,10 +19,11 @@ Func* FUNC_REG_PHASE_new(REAL weight, Net* net) {
   return f;
 }
 
-void FUNC_REG_PHASE_count_step(Func* f, Branch* br, int t) {
+void FUNC_REG_PHASE_count_step(Func* f, Bus* bus, int t) {
 
   // Local variables
   int* Hphi_nnz;
+  Branch* br;
 
   // Constr data
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
@@ -31,18 +32,23 @@ void FUNC_REG_PHASE_count_step(Func* f, Branch* br, int t) {
   if (!Hphi_nnz)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-  
-  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) // phase var
-    (*Hphi_nnz)++;
+  // Branches
+  for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
+
+    // Check outage
+    if (BRANCH_is_on_outage(br))
+      return;
+    
+    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) // phase var
+      (*Hphi_nnz)++;
+  }
 }
 
-void FUNC_REG_PHASE_analyze_step(Func* f, Branch* br, int t) {
+void FUNC_REG_PHASE_analyze_step(Func* f, Bus* bus, int t) {
 
   // Local variables
   int* Hphi_nnz;
+  Branch* br;
   Mat* Hphi;
   REAL dp;
 
@@ -51,32 +57,37 @@ void FUNC_REG_PHASE_analyze_step(Func* f, Branch* br, int t) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointer
-  if (!Hphi_nnz)
+  if (!Hphi_nnz || !Hphi)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
-  // Normalization factor
-  dp = BRANCH_get_phase_max(br)-BRANCH_get_phase_min(br);
-  if (dp < FUNC_REG_PHASE_PARAM)
-    dp = FUNC_REG_PHASE_PARAM;
+  // Branches
+  for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
+    
+    // Check outage
+    if (BRANCH_is_on_outage(br))
+      return;
+    
+    // Normalization factor
+    dp = BRANCH_get_phase_max(br)-BRANCH_get_phase_min(br);
+    if (dp < FUNC_REG_PHASE_PARAM)
+      dp = FUNC_REG_PHASE_PARAM;
   
-  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) { // phase var
-    MAT_set_i(Hphi,*Hphi_nnz,BRANCH_get_index_phase(br,t));
-    MAT_set_j(Hphi,*Hphi_nnz,BRANCH_get_index_phase(br,t));
-    (*Hphi_nnz)++;
+    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) { // phase var
+      MAT_set_i(Hphi,*Hphi_nnz,BRANCH_get_index_phase(br,t));
+      MAT_set_j(Hphi,*Hphi_nnz,BRANCH_get_index_phase(br,t));
+      (*Hphi_nnz)++;
+    }
   }
 }
 
-void FUNC_REG_PHASE_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
+void FUNC_REG_PHASE_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
 
   // Local variables
+  int* Hphi_nnz;
+  Branch* br;
   REAL* phi;
   REAL* gphi;
   REAL* Hphi;
-  int* Hphi_nnz;
   REAL p;
   REAL dp;
   REAL p0;
@@ -91,25 +102,29 @@ void FUNC_REG_PHASE_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   if (!phi || !gphi || !Hphi || !Hphi_nnz)
     return;
 
-  // Check outage
-  if (BRANCH_is_on_outage(br))
-    return;
-  
-  // Normalizatin factor
-  dp = BRANCH_get_phase_max(br)-BRANCH_get_phase_min(br);
-  if (dp < FUNC_REG_PHASE_PARAM)
-    dp = FUNC_REG_PHASE_PARAM;
-
-  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) { // phase var    
+  // Branches
+  for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
+ 
+    // Check outage
+    if (BRANCH_is_on_outage(br))
+      return;
     
-    p0 = BRANCH_get_phase(br,t);
-    p = VEC_get(var_values,BRANCH_get_index_phase(br,t));
-    (*phi) += 0.5*pow((p-p0)/dp,2.);
-    gphi[BRANCH_get_index_phase(br,t)] = (p-p0)/(dp*dp);
-    Hphi[*Hphi_nnz] = 1./(dp*dp);
-    (*Hphi_nnz)++;
-  }
-  else {
-    // nothing because p0-p0 = 0
+    // Normalizatin factor
+    dp = BRANCH_get_phase_max(br)-BRANCH_get_phase_min(br);
+    if (dp < FUNC_REG_PHASE_PARAM)
+      dp = FUNC_REG_PHASE_PARAM;
+    
+    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) { // phase var    
+      
+      p0 = BRANCH_get_phase(br,t);
+      p = VEC_get(var_values,BRANCH_get_index_phase(br,t));
+      (*phi) += 0.5*pow((p-p0)/dp,2.);
+      gphi[BRANCH_get_index_phase(br,t)] = (p-p0)/(dp*dp);
+      Hphi[*Hphi_nnz] = 1./(dp*dp);
+      (*Hphi_nnz)++;
+    }
+    else {
+      // nothing because p0-p0 = 0
+    }
   }
 }

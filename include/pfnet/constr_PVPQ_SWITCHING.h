@@ -21,11 +21,11 @@ typedef struct Constr_PVPQ_SWITCHING_Data Constr_PVPQ_SWITCHING_Data;
 
 // Function prototypes
 Constr* CONSTR_PVPQ_SWITCHING_new(Net* net);
-void CONSTR_PVPQ_SWITCHING_count_step(Constr* c, Branch* br, int t);
+void CONSTR_PVPQ_SWITCHING_count_step(Constr* c, Bus* bus, int t);
 void CONSTR_PVPQ_SWITCHING_allocate(Constr* c);
-void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t);
-void CONSTR_PVPQ_SWITCHING_eval_step(Constr* c, Branch* br, int t, Vec* v, Vec* ve);
-void CONSTR_PVPQ_SWITCHING_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
+void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Bus* bus, int t);
+void CONSTR_PVPQ_SWITCHING_eval_step(Constr* c, Bus* bus, int t, Vec* v, Vec* ve);
+void CONSTR_PVPQ_SWITCHING_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void CONSTR_PVPQ_SWITCHING_free(Constr* c);
 
 char* CONSTR_PVPQ_SWITCHING_get_flags(Constr* c);

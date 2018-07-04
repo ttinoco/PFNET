@@ -42,14 +42,14 @@ struct Func {
   int bus_counted_size; /**< @brief Size of array of flags for processing buses */
   
   // Functions
-  void (*func_init)(Func* f);                                    /**< @brief Function for network-dependent initialization */
-  void (*func_count_step)(Func* f, Branch* br, int t);           /**< @brief Function for countinng nonzero entries */
-  void (*func_allocate)(Func* f);                                /**< @brief Function for allocating additional data */
-  void (*func_clear)(Func* f);                                   /**< @brief Function for clearing additional counters or flags */
-  void (*func_analyze_step)(Func* f, Branch* br, int t);         /**< @brief Function for analyzing sparsity pattern */
-  void (*func_eval_step)(Func* f, Branch* br, int t, Vec* v);    /**< @brief Function for evaluating function */
-  void (*func_free)(Func* f);                                    /**< @brief Function for de-allocating any additional data used */
-  void (*func_set_parameter)(Func* c, char* key, void* value);   /**< @brief Function for setting function parameter */
+  void (*func_init)(Func* f);                                  /**< @brief Function for network-dependent initialization */
+  void (*func_count_step)(Func* f, Bus* bus, int t);           /**< @brief Function for countinng nonzero entries */
+  void (*func_allocate)(Func* f);                              /**< @brief Function for allocating additional data */
+  void (*func_clear)(Func* f);                                 /**< @brief Function for clearing additional counters or flags */
+  void (*func_analyze_step)(Func* f, Bus* bus, int t);         /**< @brief Function for analyzing sparsity pattern */
+  void (*func_eval_step)(Func* f, Bus* bus, int t, Vec* v);    /**< @brief Function for evaluating function */
+  void (*func_free)(Func* f);                                  /**< @brief Function for de-allocating any additional data used */
+  void (*func_set_parameter)(Func* c, char* key, void* value); /**< @brief Function for setting function parameter */
 
   // Custom data
   void* data;  /**< @brief Type-dependent function data */
@@ -239,10 +239,10 @@ void FUNC_list_del(Func* flist) {
   LIST_map(Func,flist,f,next,{FUNC_del(f);});
 }
 
-void FUNC_list_count_step(Func* flist, Branch* br, int t) {
+void FUNC_list_count_step(Func* flist, Bus* bus, int t) {
   Func* ff;
   for (ff = flist; ff != NULL; ff = FUNC_get_next(ff))
-    FUNC_count_step(ff,br,t);
+    FUNC_count_step(ff,bus,t);
 }
 
 void FUNC_list_allocate(Func* flist) {
@@ -257,16 +257,16 @@ void FUNC_list_clear(Func* flist) {
     FUNC_clear(ff);
 }
 
-void FUNC_list_analyze_step(Func* flist, Branch* br, int t) {
+void FUNC_list_analyze_step(Func* flist, Bus* bus, int t) {
   Func* ff;
   for (ff = flist; ff != NULL; ff = FUNC_get_next(ff))
-    FUNC_analyze_step(ff,br,t);
+    FUNC_analyze_step(ff,bus,t);
 }
 
-void FUNC_list_eval_step(Func* flist, Branch* br, int t, Vec* values) {
+void FUNC_list_eval_step(Func* flist, Bus* bus, int t, Vec* values) {
   Func* ff;
   for (ff = flist; ff != NULL; ff = FUNC_get_next(ff))
-    FUNC_eval_step(ff,br,t,values);
+    FUNC_eval_step(ff,bus,t,values);
 }
 
 void FUNC_list_finalize_structure_of_Hessian(Func* flist) {
@@ -378,14 +378,14 @@ void FUNC_count(Func* f) {
   Net* net = FUNC_get_network(f);
   FUNC_clear(f);
   for (t = 0; t < NET_get_num_periods(net); t++) {
-    for (i = 0; i < NET_get_num_branches(net); i++)
-      FUNC_count_step(f,NET_get_branch(net,i),t);
+    for (i = 0; i < NET_get_num_buses(net); i++)
+      FUNC_count_step(f,NET_get_bus(net,i),t);
   }
 }
 
-void FUNC_count_step(Func* f, Branch* br, int t) {
+void FUNC_count_step(Func* f, Bus* bus, int t) {
   if (f && f->func_count_step && FUNC_is_safe_to_count(f))
-    (*(f->func_count_step))(f,br,t);
+    (*(f->func_count_step))(f,bus,t);
 }
 
 void FUNC_allocate(Func* f) {
@@ -458,15 +458,15 @@ void FUNC_analyze(Func* f) {
   Net* net = FUNC_get_network(f);
   FUNC_clear(f);
   for (t = 0; t < NET_get_num_periods(net); t++) {
-    for (i = 0; i < NET_get_num_branches(net); i++)
-      FUNC_analyze_step(f,NET_get_branch(net,i),t);
+    for (i = 0; i < NET_get_num_buses(net); i++)
+      FUNC_analyze_step(f,NET_get_bus(net,i),t);
   }
   FUNC_finalize_structure_of_Hessian(f);
 }
 
-void FUNC_analyze_step(Func* f, Branch* br, int t) {
+void FUNC_analyze_step(Func* f, Bus* bus, int t) {
   if (f && f->func_analyze_step && FUNC_is_safe_to_analyze(f))
-    (*(f->func_analyze_step))(f,br,t);
+    (*(f->func_analyze_step))(f,bus,t);
 }
 
 void FUNC_eval(Func* f, Vec* values) {
@@ -475,14 +475,14 @@ void FUNC_eval(Func* f, Vec* values) {
   Net* net = FUNC_get_network(f);
   FUNC_clear(f);
   for (t = 0; t < NET_get_num_periods(net); t++) {
-    for (i = 0; i < NET_get_num_branches(net); i++)
-      FUNC_eval_step(f,NET_get_branch(net,i),t,values);
+    for (i = 0; i < NET_get_num_buses(net); i++)
+      FUNC_eval_step(f,NET_get_bus(net,i),t,values);
   }
 }
 
-void FUNC_eval_step(Func* f, Branch* br, int t, Vec* values) {
+void FUNC_eval_step(Func* f, Bus* bus, int t, Vec* values) {
   if (f && f->func_eval_step && FUNC_is_safe_to_eval(f,values))
-    (*(f->func_eval_step))(f,br,t,values);
+    (*(f->func_eval_step))(f,bus,t,values);
 }
 
 BOOL FUNC_is_safe_to_count(Func* f) {
@@ -590,7 +590,7 @@ void FUNC_set_func_init(Func* f, void (*func)(Func* f)) {
     f->func_init = func;
 }
 
-void FUNC_set_func_count_step(Func* f, void (*func)(Func* f, Branch* br, int t)) {
+void FUNC_set_func_count_step(Func* f, void (*func)(Func* f, Bus* bus, int t)) {
   if (f)
     f->func_count_step = func;
 }
@@ -605,12 +605,12 @@ void FUNC_set_func_clear(Func* f, void (*func)(Func* f)) {
     f->func_clear = func;
 }
 
-void FUNC_set_func_analyze_step(Func* f, void (*func)(Func* f, Branch* br, int t)) {
+void FUNC_set_func_analyze_step(Func* f, void (*func)(Func* f, Bus* bus, int t)) {
   if (f)
     f->func_analyze_step = func;
 }
 
-void FUNC_set_func_eval_step(Func* f, void (*func)(Func* f, Branch* br, int t, Vec* v)) {
+void FUNC_set_func_eval_step(Func* f, void (*func)(Func* f, Bus* bus, int t, Vec* v)) {
   if (f)
     f->func_eval_step = func;
 }

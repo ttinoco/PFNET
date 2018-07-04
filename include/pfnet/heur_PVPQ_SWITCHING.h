@@ -20,7 +20,7 @@
 Heur* HEUR_PVPQ_SWITCHING_new(Net* net);
 void HEUR_PVPQ_SWITCHING_init(Heur* h);
 void HEUR_PVPQ_SWITCHING_clear(Heur* h);
-void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Branch* br, int t, Vec* var_values);
+void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus, int t, Vec* var_values);
 void HEUR_PVPQ_SWITCHING_free(Heur* h);
 
 #endif

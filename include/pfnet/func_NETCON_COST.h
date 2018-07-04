@@ -16,8 +16,8 @@
 
 // Function prototypes
 Func* FUNC_NETCON_COST_new(REAL weight, Net* net);
-void FUNC_NETCON_COST_count_step(Func* f, Branch* br, int t);
-void FUNC_NETCON_COST_analyze_step(Func* f, Branch* br, int t);
-void FUNC_NETCON_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values);
+void FUNC_NETCON_COST_count_step(Func* f, Bus* bus, int t);
+void FUNC_NETCON_COST_analyze_step(Func* f, Bus* bus, int t);
+void FUNC_NETCON_COST_eval_step(Func* f, Bus* bus, int t, Vec* var_values);
 
 #endif

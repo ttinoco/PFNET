@@ -18,9 +18,9 @@
 
 // Function prototypes
 Constr* CONSTR_PAR_GEN_P_new(Net* net);
-void CONSTR_PAR_GEN_P_count_step(Constr* c, Branch* br, int t);
-void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Branch* br, int t);
-void CONSTR_PAR_GEN_P_eval_step(Constr* c, Branch* br, int t, Vec* v, Vec* ve);
-void CONSTR_PAR_GEN_P_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
+void CONSTR_PAR_GEN_P_count_step(Constr* c, Bus* bus, int t);
+void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Bus* bus, int t);
+void CONSTR_PAR_GEN_P_eval_step(Constr* c, Bus* bus, int t, Vec* v, Vec* ve);
+void CONSTR_PAR_GEN_P_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 
 #endif

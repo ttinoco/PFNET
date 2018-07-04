@@ -19,56 +19,31 @@ Func* FUNC_GEN_COST_new(REAL weight, Net* net) {
   return f;
 }
 
-void FUNC_GEN_COST_count_step(Func* f, Branch* br, int t) {
+void FUNC_GEN_COST_count_step(Func* f, Bus* bus, int t) {
 
   // Local variables
-  Bus* buses[2];
-  Bus* bus;
   Gen* gen;
-  int bus_index_t[2];
   int* Hphi_nnz;
-  char* bus_counted;
   int k;
 
   // Constr data
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
-  bus_counted = FUNC_get_bus_counted(f);
 
   // Check pointers
-  if (!Hphi_nnz || !bus_counted)
+  if (!Hphi_nnz)
     return;
 
-  // Bus data
-  buses[0] = BRANCH_get_bus_k(br);
-  buses[1] = BRANCH_get_bus_m(br);
-  for (k = 0; k < 2; k++)
-    bus_index_t[k] = BUS_get_index_t(buses[k],t);
-
-  // Buses
-  for (k = 0; k < 2; k++) {
-
-    bus = buses[k];
-
-    if (!bus_counted[bus_index_t[k]]) {
-      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) && !GEN_is_on_outage(gen))
-	  (*Hphi_nnz)++;
-      }
-    }
-
-    // Update counted flag
-    bus_counted[bus_index_t[k]] = TRUE;
+  // Generators
+  for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) && !GEN_is_on_outage(gen))
+      (*Hphi_nnz)++;
   }
 }
 
-void FUNC_GEN_COST_analyze_step(Func* f, Branch* br, int t) {
+void FUNC_GEN_COST_analyze_step(Func* f, Bus* bus, int t) {
 
   // Local variables
-  Bus* buses[2];
-  Bus* bus;
   Gen* gen;
-  int bus_index_t[2];
-  char* bus_counted;
   int* Hphi_nnz;
   Mat* Hphi;
   int k;
@@ -76,46 +51,25 @@ void FUNC_GEN_COST_analyze_step(Func* f, Branch* br, int t) {
   // Constr data
   Hphi = FUNC_get_Hphi(f);
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
-  bus_counted = FUNC_get_bus_counted(f);
 
   // Check pointers
-  if (!Hphi_nnz || !bus_counted)
+  if (!Hphi_nnz || !Hphi)
     return;
 
-  // Bus data
-  buses[0] = BRANCH_get_bus_k(br);
-  buses[1] = BRANCH_get_bus_m(br);
-  for (k = 0; k < 2; k++)
-    bus_index_t[k] = BUS_get_index_t(buses[k],t);
-
-  // Buses
-  for (k = 0; k < 2; k++) {
-
-    bus = buses[k];
-
-    if (!bus_counted[bus_index_t[k]]) {
-      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) && !GEN_is_on_outage(gen)) {
-	  MAT_set_i(Hphi,*Hphi_nnz,GEN_get_index_P(gen,t));
-	  MAT_set_j(Hphi,*Hphi_nnz,GEN_get_index_P(gen,t));
-	  (*Hphi_nnz)++;
-	}
-      }
+  // Generators
+  for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) && !GEN_is_on_outage(gen)) {
+      MAT_set_i(Hphi,*Hphi_nnz,GEN_get_index_P(gen,t));
+      MAT_set_j(Hphi,*Hphi_nnz,GEN_get_index_P(gen,t));
+      (*Hphi_nnz)++;
     }
-
-    // Update counted flag
-    bus_counted[bus_index_t[k]] = TRUE;
   }
 }
 
-void FUNC_GEN_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
+void FUNC_GEN_COST_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
 
   // Local variables
-  Bus* buses[2];
-  Bus* bus;
   Gen* gen;
-  int bus_index_t[2];
-  char* bus_counted;
   REAL* phi;
   REAL* gphi;
   REAL* Hphi;
@@ -132,69 +86,51 @@ void FUNC_GEN_COST_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   gphi = VEC_get_data(FUNC_get_gphi(f));
   Hphi = MAT_get_data_array(FUNC_get_Hphi(f));
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
-  bus_counted = FUNC_get_bus_counted(f);
 
   // Check pointers
-  if (!phi || !gphi || !bus_counted || !Hphi || !Hphi_nnz)
+  if (!phi || !gphi || !Hphi || !Hphi_nnz)
     return;
 
-  // Bus data
-  buses[0] = BRANCH_get_bus_k(br);
-  buses[1] = BRANCH_get_bus_m(br);
-  for (k = 0; k < 2; k++)
-    bus_index_t[k] = BUS_get_index_t(buses[k],t);
+  // Generators
+  for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
 
-  // Buses
-  for (k = 0; k < 2; k++) {
-
-    bus = buses[k];
-
-    if (!bus_counted[bus_index_t[k]]) {
-
-      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-
-	// Outage
-	if (GEN_is_on_outage(gen))
-	  continue;
-
-	// Cost coefficients
-	Q0 = GEN_get_cost_coeff_Q0(gen);
-	Q1 = GEN_get_cost_coeff_Q1(gen);
-	Q2 = GEN_get_cost_coeff_Q2(gen);
-
-	// Variable
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
+    // Outage
+    if (GEN_is_on_outage(gen))
+      continue;
+    
+    // Cost coefficients
+    Q0 = GEN_get_cost_coeff_Q0(gen);
+    Q1 = GEN_get_cost_coeff_Q1(gen);
+    Q2 = GEN_get_cost_coeff_Q2(gen);
+    
+    // Variable
+    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
 	  
-	  // Index
-	  index_P = GEN_get_index_P(gen,t);
-
-	  // P
-	  P = VEC_get(var_values,index_P);
-
-	  // phi
-	  (*phi) += Q0 + Q1*P + Q2*pow(P,2.);
-
-	  // gphi
-	  gphi[index_P] = Q1 + 2.*Q2*P;
-
-	  // Hphi
-	  Hphi[*Hphi_nnz] = 2.*Q2;
-	  (*Hphi_nnz)++;
-	}
-
-	// Constant
-	else {
-
-	  // P
-	  P = GEN_get_P(gen,t);
-
-	  // phi
-	  (*phi) += Q0 + Q1*P + Q2*pow(P,2.);
-	}
-      }
+      // Index
+      index_P = GEN_get_index_P(gen,t);
+      
+      // P
+      P = VEC_get(var_values,index_P);
+      
+      // phi
+      (*phi) += Q0 + Q1*P + Q2*pow(P,2.);
+      
+      // gphi
+      gphi[index_P] = Q1 + 2.*Q2*P;
+      
+      // Hphi
+      Hphi[*Hphi_nnz] = 2.*Q2;
+      (*Hphi_nnz)++;
     }
-
-    // Update counted flag
-    bus_counted[bus_index_t[k]] = TRUE;
+    
+    // Constant
+    else {
+      
+      // P
+      P = GEN_get_P(gen,t);
+      
+      // phi
+      (*phi) += Q0 + Q1*P + Q2*pow(P,2.);
+    }
   }
 }

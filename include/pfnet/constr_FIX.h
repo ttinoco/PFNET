@@ -16,9 +16,9 @@
 
 // Function prototypes
 Constr* CONSTR_FIX_new(Net* net);
-void CONSTR_FIX_count_step(Constr* c, Branch* br, int t);
-void CONSTR_FIX_analyze_step(Constr* c, Branch* br, int t);
-void CONSTR_FIX_eval_step(Constr* c, Branch* br, int t, Vec* v, Vec* ve);
-void CONSTR_FIX_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
+void CONSTR_FIX_count_step(Constr* c, Bus* bus, int t);
+void CONSTR_FIX_analyze_step(Constr* c, Bus* bus, int t);
+void CONSTR_FIX_eval_step(Constr* c, Bus* bus, int t, Vec* v, Vec* ve);
+void CONSTR_FIX_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 
 #endif

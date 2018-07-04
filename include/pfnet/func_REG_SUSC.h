@@ -18,8 +18,8 @@
 
 // Function prototypes
 Func* FUNC_REG_SUSC_new(REAL weight, Net* net);
-void FUNC_REG_SUSC_count_step(Func* f, Branch* br, int t);
-void FUNC_REG_SUSC_analyze_step(Func* f, Branch* br, int t);
-void FUNC_REG_SUSC_eval_step(Func* f, Branch* br, int t, Vec* var_values);
+void FUNC_REG_SUSC_count_step(Func* f, Bus* bus, int t);
+void FUNC_REG_SUSC_analyze_step(Func* f, Bus* bus, int t);
+void FUNC_REG_SUSC_eval_step(Func* f, Bus* bus, int t, Vec* var_values);
 
 #endif

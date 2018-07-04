@@ -92,7 +92,7 @@ void PROB_add_heur(Prob* p, Heur* h) {
 void PROB_analyze(Prob* p) {
 
   // Local variables
-  Branch* br;
+  Bus* bus;
   Constr* c;
   Func* f;
   int Arow;
@@ -118,12 +118,12 @@ void PROB_analyze(Prob* p) {
   
   // Count
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
-    for (k = 0; k < NET_get_num_branches(p->net); k++) {
+    for (k = 0; k < NET_get_num_buses(p->net); k++) {
       
-      br = NET_get_branch(p->net,k);
+      bus = NET_get_bus(p->net,k);
       
       // Constraints
-      CONSTR_list_count_step(p->constr,br,t);
+      CONSTR_list_count_step(p->constr,bus,t);
       if (CONSTR_list_has_error(p->constr)) {
 	strcpy(p->error_string,CONSTR_list_get_error_string(p->constr));
 	p->error_flag = TRUE;
@@ -131,7 +131,7 @@ void PROB_analyze(Prob* p) {
       }
       
       // Functions
-      FUNC_list_count_step(p->func,br,t);
+      FUNC_list_count_step(p->func,bus,t);
       if (FUNC_list_has_error(p->func)) {
 	strcpy(p->error_string,FUNC_list_get_error_string(p->func));
 	p->error_flag = TRUE;
@@ -156,12 +156,12 @@ void PROB_analyze(Prob* p) {
 
   // Analyze
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
-    for (k = 0; k < NET_get_num_branches(p->net); k++) {
+    for (k = 0; k < NET_get_num_buses(p->net); k++) {
       
-      br = NET_get_branch(p->net,k);
+      bus = NET_get_bus(p->net,k);
       
       // Constraints
-      CONSTR_list_analyze_step(p->constr,br,t);
+      CONSTR_list_analyze_step(p->constr,bus,t);
       if (CONSTR_list_has_error(p->constr)) {
 	strcpy(p->error_string,CONSTR_list_get_error_string(p->constr));
 	p->error_flag = TRUE;
@@ -169,7 +169,7 @@ void PROB_analyze(Prob* p) {
       }
 
       // Functions
-      FUNC_list_analyze_step(p->func,br,t);
+      FUNC_list_analyze_step(p->func,bus,t);
       if (FUNC_list_has_error(p->func)) {
 	strcpy(p->error_string,FUNC_list_get_error_string(p->func));
 	p->error_flag = TRUE;
@@ -261,8 +261,8 @@ void PROB_apply_heuristics(Prob* p, Vec* point) {
 
   // Apply
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
-    for (i = 0; i < NET_get_num_branches(p->net); i++)
-      HEUR_list_apply_step(p->heur,cptrs,cnum,NET_get_branch(p->net,i),t,x);
+    for (i = 0; i < NET_get_num_buses(p->net); i++)
+      HEUR_list_apply_step(p->heur,cptrs,cnum,NET_get_bus(p->net,i),t,x);
   }
 
   // Check errors
@@ -303,7 +303,7 @@ void PROB_eval(Prob* p, Vec* point) {
 
   // Local variables
   REAL* point_data;
-  Branch* br;
+  Bus* bus;
   int num_vars;
   Vec* x;
   Vec* y;
@@ -334,12 +334,12 @@ void PROB_eval(Prob* p, Vec* point) {
 
   // Eval
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
-    for (k = 0; k < NET_get_num_branches(p->net); k++) {
+    for (k = 0; k < NET_get_num_buses(p->net); k++) {
       
-      br = NET_get_branch(p->net,k);
+      bus = NET_get_bus(p->net,k);
       
       // Constraints
-      CONSTR_list_eval_step(p->constr,br,t,x,y);
+      CONSTR_list_eval_step(p->constr,bus,t,x,y);
       if (CONSTR_list_has_error(p->constr)) {
       	strcpy(p->error_string,CONSTR_list_get_error_string(p->constr));
 	p->error_flag = TRUE;
@@ -347,7 +347,7 @@ void PROB_eval(Prob* p, Vec* point) {
       }
       
       // Functions
-      FUNC_list_eval_step(p->func,br,t,x);
+      FUNC_list_eval_step(p->func,bus,t,x);
       if (FUNC_list_has_error(p->func)) {
       	strcpy(p->error_string,FUNC_list_get_error_string(p->func));
 	p->error_flag = TRUE;
@@ -355,7 +355,7 @@ void PROB_eval(Prob* p, Vec* point) {
       }
       
       // Network
-      NET_update_properties_step(p->net,br,t,x);
+      NET_update_properties_step(p->net,bus,t,x);
       if (NET_has_error(p->net)) {
 	strcpy(p->error_string,NET_get_error_string(p->net));
 	p->error_flag = TRUE;
@@ -375,7 +375,7 @@ void PROB_eval(Prob* p, Vec* point) {
 void PROB_store_sens(Prob* p, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Local variables
-  Branch* br;
+  Bus* bus;
   int i;
   int t;
   
@@ -399,12 +399,12 @@ void PROB_store_sens(Prob* p, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Store sens
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
-    for (i = 0; i < NET_get_num_branches(p->net); i++) {
+    for (i = 0; i < NET_get_num_buses(p->net); i++) {
 
-      br = NET_get_branch(p->net,i);
+      bus = NET_get_bus(p->net,i);
       
       // Constraints
-      CONSTR_list_store_sens_step(p->constr,br,t,sA,sf,sGu,sGl);
+      CONSTR_list_store_sens_step(p->constr,bus,t,sA,sf,sGu,sGl);
       if (CONSTR_list_has_error(p->constr)) {
 	strcpy(p->error_string,CONSTR_list_get_error_string(p->constr));
 	p->error_flag = TRUE;

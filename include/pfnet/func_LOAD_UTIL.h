@@ -16,8 +16,8 @@
 
 // Function prototypes
 Func* FUNC_LOAD_UTIL_new(REAL weight, Net* net);
-void FUNC_LOAD_UTIL_count_step(Func* f, Branch* br, int t);
-void FUNC_LOAD_UTIL_analyze_step(Func* f, Branch* br, int t);
-void FUNC_LOAD_UTIL_eval_step(Func* f, Branch* br, int t, Vec* var_values);
+void FUNC_LOAD_UTIL_count_step(Func* f, Bus* bus, int t);
+void FUNC_LOAD_UTIL_analyze_step(Func* f, Bus* bus, int t);
+void FUNC_LOAD_UTIL_eval_step(Func* f, Bus* bus, int t, Vec* var_values);
 
 #endif
