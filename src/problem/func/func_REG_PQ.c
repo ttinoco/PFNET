@@ -19,63 +19,40 @@ Func* FUNC_REG_PQ_new(REAL weight, Net* net) {
   return f;
 }
 
-void FUNC_REG_PQ_count_step(Func* f, Branch* br, int t) {
+void FUNC_REG_PQ_count_step(Func* f, Bus* bus, int t) {
 
   // Local variables
-  Bus* bus[2];
   Gen* gen;
-  int bus_index_t[2];
   int* Hphi_nnz;
-  char* bus_counted;
   int k;
 
   // Constr data
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
-  bus_counted = FUNC_get_bus_counted(f);
 
   // Check pointers
-  if (!Hphi_nnz || !bus_counted)
+  if (!Hphi_nnz)
     return;
-  
-  // Bus data
-  bus[0] = BRANCH_get_bus_k(br);
-  bus[1] = BRANCH_get_bus_m(br);
-  for (k = 0; k < 2; k++)
-    bus_index_t[k] = BUS_get_index_t(bus[k],t);
 
-  // Buses
-  for (k = 0; k < 2; k++) {
+  // Generators
+  for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
     
-    if (!bus_counted[bus_index_t[k]]) {
-
-      // Generators
-      for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
-
-	// Outage
-	if (GEN_is_on_outage(gen))
-	  continue;
-
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) // Q var
-	  (*Hphi_nnz)++;
-
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) // P var
-	  (*Hphi_nnz)++;
-      }
-    }
-
-    // Update counted flag
-    bus_counted[bus_index_t[k]] = TRUE;
+    // Outage
+    if (GEN_is_on_outage(gen))
+      continue;
+    
+    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) // Q var
+      (*Hphi_nnz)++;
+    
+    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) // P var
+      (*Hphi_nnz)++;
   }
 }
 
-void FUNC_REG_PQ_analyze_step(Func* f, Branch* br, int t) {
+void FUNC_REG_PQ_analyze_step(Func* f, Bus* bus, int t) {
 
   // Local variables
-  Bus* bus[2];
   Gen* gen;
-  int bus_index_t[2];
   int* Hphi_nnz;
-  char* bus_counted;
   Mat* Hphi;
   int k;
   REAL dv;
@@ -83,66 +60,46 @@ void FUNC_REG_PQ_analyze_step(Func* f, Branch* br, int t) {
   // Constr data
   Hphi = FUNC_get_Hphi(f);
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
-  bus_counted = FUNC_get_bus_counted(f);
 
   // Check pointers
-  if (!Hphi_nnz || !bus_counted)
+  if (!Hphi_nnz || !Hphi)
     return;
 
-  // Bus data
-  bus[0] = BRANCH_get_bus_k(br);
-  bus[1] = BRANCH_get_bus_m(br);
-  for (k = 0; k < 2; k++)
-    bus_index_t[k] = BUS_get_index_t(bus[k],t);
-
-  // Buses
-  for (k = 0; k < 2; k++) {
-
-    if (!bus_counted[bus_index_t[k]]) {
-
-      // Generators
-      for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
-
-	// Outage
-	if (GEN_is_on_outage(gen))
-	  continue;
-
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) { // Q var
-
-	  dv = GEN_get_Q_max(gen)-GEN_get_Q_min(gen); // p.u.
-	  if (dv < FUNC_REG_PQ_PARAM)
-	    dv = FUNC_REG_PQ_PARAM;
-
-	  MAT_set_i(Hphi,*Hphi_nnz,GEN_get_index_Q(gen,t));
-	  MAT_set_j(Hphi,*Hphi_nnz,GEN_get_index_Q(gen,t));
-	  (*Hphi_nnz)++;
-	}
-
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // P var
-
-	  dv = GEN_get_P_max(gen)-GEN_get_P_min(gen); // p.u.
-	  if (dv < FUNC_REG_PQ_PARAM)
-	    dv = FUNC_REG_PQ_PARAM;
-
-	  MAT_set_i(Hphi,*Hphi_nnz,GEN_get_index_P(gen,t));
-	  MAT_set_j(Hphi,*Hphi_nnz,GEN_get_index_P(gen,t));
-	  (*Hphi_nnz)++;
-	}
-      }
+  // Generators
+  for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
+    
+    // Outage
+    if (GEN_is_on_outage(gen))
+      continue;
+    
+    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) { // Q var
+      
+      dv = GEN_get_Q_max(gen)-GEN_get_Q_min(gen); // p.u.
+      if (dv < FUNC_REG_PQ_PARAM)
+	dv = FUNC_REG_PQ_PARAM;
+      
+      MAT_set_i(Hphi,*Hphi_nnz,GEN_get_index_Q(gen,t));
+      MAT_set_j(Hphi,*Hphi_nnz,GEN_get_index_Q(gen,t));
+      (*Hphi_nnz)++;
     }
-
-    // Update counted flag
-    bus_counted[bus_index_t[k]] = TRUE;
+    
+    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // P var
+      
+      dv = GEN_get_P_max(gen)-GEN_get_P_min(gen); // p.u.
+      if (dv < FUNC_REG_PQ_PARAM)
+	dv = FUNC_REG_PQ_PARAM;
+      
+      MAT_set_i(Hphi,*Hphi_nnz,GEN_get_index_P(gen,t));
+      MAT_set_j(Hphi,*Hphi_nnz,GEN_get_index_P(gen,t));
+      (*Hphi_nnz)++;
+    }
   }
 }
 
-void FUNC_REG_PQ_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
+void FUNC_REG_PQ_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
 
   // Local variables
-  Bus* bus[2];
   Gen* gen;
-  int bus_index_t[2];
-  char* bus_counted;
   REAL* phi;
   REAL* gphi;
   REAL* Hphi;
@@ -160,93 +117,76 @@ void FUNC_REG_PQ_eval_step(Func* f, Branch* br, int t, Vec* var_values) {
   gphi = VEC_get_data(FUNC_get_gphi(f));
   Hphi = MAT_get_data_array(FUNC_get_Hphi(f));
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
-  bus_counted = FUNC_get_bus_counted(f);
 
   // Check pointers
-  if (!phi || !gphi || !bus_counted || !Hphi || !Hphi_nnz)
+  if (!phi || !gphi || !Hphi || !Hphi_nnz)
     return;
 
-  // Bus data
-  bus[0] = BRANCH_get_bus_k(br);
-  bus[1] = BRANCH_get_bus_m(br);
-  for (k = 0; k < 2; k++)
-    bus_index_t[k] = BUS_get_index_t(bus[k],t);
-
-  // Buses
-  for (k = 0; k < 2; k++) {
-
-    if (!bus_counted[bus_index_t[k]]) {
-
-      // Generators
-      for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
-
-	// Outage
-	if (GEN_is_on_outage(gen))
-	  continue;
-
-	// Mid value
-	Qmid = (GEN_get_Q_max(gen)+GEN_get_Q_min(gen))/2.; // p.u.
-	Pmid = (GEN_get_P_max(gen)+GEN_get_P_min(gen))/2.; // p.u.
-
-	// Normalization factor
-	dQ = GEN_get_Q_max(gen)-GEN_get_Q_min(gen); // p.u.
-	if (dQ < FUNC_REG_PQ_PARAM)
-	  dQ = FUNC_REG_PQ_PARAM;
-	dP = GEN_get_P_max(gen)-GEN_get_P_min(gen); // p.u.
-	if (dP < FUNC_REG_PQ_PARAM)
-	  dP = FUNC_REG_PQ_PARAM;
-
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) { // Q var
-
-	  // Value
-	  Q = VEC_get(var_values,GEN_get_index_Q(gen,t));
-
-	  // phi
-	  (*phi) += 0.5*pow((Q-Qmid)/dQ,2.);
-
-	  // gphi
-	  gphi[GEN_get_index_Q(gen,t)] = (Q-Qmid)/(dQ*dQ);
-
-	  // Hphi
-	  Hphi[*Hphi_nnz] = 1./(dQ*dQ);
-	  (*Hphi_nnz)++;
-	}
-	else {
-
-	  // Value
-	  Q = GEN_get_Q(gen,t);
-
-	  // phi
-	  (*phi) += 0.5*pow((Q-Qmid)/dQ,2.);
-	}
-
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // P var
-
-	  // Value
-	  P = VEC_get(var_values,GEN_get_index_P(gen,t));
-
-	  // phi
-	  (*phi) += 0.5*pow((P-Pmid)/dP,2.);
-
-	  // gphi
-	  gphi[GEN_get_index_P(gen,t)] = (P-Pmid)/(dP*dP);
-
-	  // Hphi
-	  Hphi[*Hphi_nnz] = 1./(dP*dP);
-	  (*Hphi_nnz)++;
-	}
-	else {
-
-	  // Value
-	  P = GEN_get_P(gen,t);
-
-	  // phi
-	  (*phi) += 0.5*pow((P-Pmid)/dP,2.);
-	}
-      }
+  // Generators
+  for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
+    
+    // Outage
+    if (GEN_is_on_outage(gen))
+      continue;
+    
+    // Mid value
+    Qmid = (GEN_get_Q_max(gen)+GEN_get_Q_min(gen))/2.; // p.u.
+    Pmid = (GEN_get_P_max(gen)+GEN_get_P_min(gen))/2.; // p.u.
+    
+    // Normalization factor
+    dQ = GEN_get_Q_max(gen)-GEN_get_Q_min(gen); // p.u.
+    if (dQ < FUNC_REG_PQ_PARAM)
+      dQ = FUNC_REG_PQ_PARAM;
+    dP = GEN_get_P_max(gen)-GEN_get_P_min(gen); // p.u.
+    if (dP < FUNC_REG_PQ_PARAM)
+      dP = FUNC_REG_PQ_PARAM;
+    
+    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) { // Q var
+      
+      // Value
+      Q = VEC_get(var_values,GEN_get_index_Q(gen,t));
+      
+      // phi
+      (*phi) += 0.5*pow((Q-Qmid)/dQ,2.);
+      
+      // gphi
+      gphi[GEN_get_index_Q(gen,t)] = (Q-Qmid)/(dQ*dQ);
+      
+      // Hphi
+      Hphi[*Hphi_nnz] = 1./(dQ*dQ);
+      (*Hphi_nnz)++;
     }
-
-    // Update counted flag
-    bus_counted[bus_index_t[k]] = TRUE;
+    else {
+      
+      // Value
+      Q = GEN_get_Q(gen,t);
+      
+      // phi
+      (*phi) += 0.5*pow((Q-Qmid)/dQ,2.);
+    }
+    
+    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // P var
+      
+      // Value
+      P = VEC_get(var_values,GEN_get_index_P(gen,t));
+      
+      // phi
+      (*phi) += 0.5*pow((P-Pmid)/dP,2.);
+      
+      // gphi
+      gphi[GEN_get_index_P(gen,t)] = (P-Pmid)/(dP*dP);
+      
+      // Hphi
+      Hphi[*Hphi_nnz] = 1./(dP*dP);
+      (*Hphi_nnz)++;
+    }
+    else {
+      
+      // Value
+      P = GEN_get_P(gen,t);
+      
+      // phi
+      (*phi) += 0.5*pow((P-Pmid)/dP,2.);
+    }
   }
 }
