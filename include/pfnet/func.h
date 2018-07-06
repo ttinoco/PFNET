@@ -24,7 +24,6 @@
 typedef struct Func Func;
 
 // Function prototypes
-void FUNC_clear_bus_counted(Func* f);
 void FUNC_del(Func* f);
 void FUNC_del_matvec(Func* f);
 unsigned long int FUNC_get_state_tag(Func* f);
@@ -36,8 +35,6 @@ Vec* FUNC_get_gphi(Func* f);
 Mat* FUNC_get_Hphi(Func* f);
 int FUNC_get_Hphi_nnz(Func* f);
 int* FUNC_get_Hphi_nnz_ptr(Func* f);
-char* FUNC_get_bus_counted(Func* f);
-int FUNC_get_bus_counted_size(Func* f);
 Func* FUNC_get_next(Func* f);
 void* FUNC_get_data(Func* f);
 void FUNC_list_clear_error(Func * flist);
@@ -60,7 +57,6 @@ void FUNC_set_phi(Func* f, REAL phi);
 void FUNC_set_gphi(Func* f, Vec* gphi);
 void FUNC_set_Hphi(Func* f, Mat* Hphi);
 void FUNC_set_Hphi_nnz(Func* f, int nnz);
-void FUNC_set_bus_counted(Func* f, char* counted, int size);
 void FUNC_set_data(Func* f, void* data);
 void FUNC_init(Func* f);
 void FUNC_count(Func* f);

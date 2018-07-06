@@ -38,8 +38,6 @@ struct Func {
 
   // Counters and flags
   int Hphi_nnz;         /**< @brief Counter of number of nonzero elements of the Hessian matrix */
-  char* bus_counted;    /**< @brief Flags for processing buses */
-  int bus_counted_size; /**< @brief Size of array of flags for processing buses */
   
   // Functions
   void (*func_init)(Func* f);                                  /**< @brief Function for network-dependent initialization */
@@ -65,11 +63,6 @@ unsigned long int FUNC_get_state_tag(Func* f) {
     return 0;
 }
 
-void FUNC_clear_bus_counted(Func* f) {
-  if (f)
-    ARRAY_clear(f->bus_counted,char,f->bus_counted_size);
-}
-
 void FUNC_del_matvec(Func* f) {
   if (f) {
 
@@ -86,10 +79,6 @@ void FUNC_del(Func* f) {
     
     // Mat and vec
     FUNC_del_matvec(f);
-
-    // Utils
-    if (f->bus_counted)
-      free(f->bus_counted);
 
     // Data
     if (f->func_free)
@@ -170,20 +159,6 @@ int* FUNC_get_Hphi_nnz_ptr(Func* f) {
     return &(f->Hphi_nnz);
   else
     return NULL;
-}
-
-char* FUNC_get_bus_counted(Func* f) {
-  if (f)
-    return f->bus_counted;
-  else
-    return NULL;
-}
-
-int FUNC_get_bus_counted_size(Func* f) {
-  if (f)
-    return f->bus_counted_size;
-  else
-    return 0;
 }
 
 Func* FUNC_get_next(Func* f) {
@@ -297,10 +272,6 @@ Func* FUNC_new(REAL weight, Net* net) {
   f->Hphi = NULL;
   f->Hphi_nnz = 0;
   f->next = NULL;
-
-  // Bus counted
-  f->bus_counted_size = 0;
-  f->bus_counted = NULL;
   
   // Methods
   f->func_init = NULL;
@@ -356,15 +327,6 @@ void FUNC_set_Hphi(Func* f, Mat* Hphi) {
 void FUNC_set_Hphi_nnz(Func* f, int nnz) {
   if (f)
     f->Hphi_nnz = nnz;
-}
-
-void FUNC_set_bus_counted(Func* f, char* bus_counted, int size) {
-  if (f) {
-    if (f->bus_counted)
-      free(f->bus_counted);
-    f->bus_counted = bus_counted;
-    f->bus_counted_size = size;
-  }  
 }
 
 void FUNC_set_data(Func* f, void* data) {
@@ -444,9 +406,6 @@ void FUNC_clear(Func* f) {
   // Counter
   FUNC_set_Hphi_nnz(f,0);
 
-  // Flags
-  FUNC_clear_bus_counted(f);
-
   // Additional clear
   if (f && f->func_clear)
     (*(f->func_clear))(f);
@@ -486,20 +445,15 @@ void FUNC_eval_step(Func* f, Bus* bus, int t, Vec* values) {
 }
 
 BOOL FUNC_is_safe_to_count(Func* f) {
-  Net* net = FUNC_get_network(f);
-  if (FUNC_get_bus_counted_size(f) == NET_get_num_buses(net)*NET_get_num_periods(net))
+  if (f)
     return TRUE;
-  else {
-    sprintf(f->error_string,"function is not safe to count");
-    f->error_flag = TRUE;
+  else
     return FALSE;
-  }  
 }
 
 BOOL FUNC_is_safe_to_analyze(Func* f) {
   Net* net = FUNC_get_network(f);
-  if (FUNC_get_bus_counted_size(f) == NET_get_num_buses(net)*NET_get_num_periods(net) &&
-      VEC_get_size(f->gphi) == NET_get_num_vars(net) && 
+  if (VEC_get_size(f->gphi) == NET_get_num_vars(net) && 
       MAT_get_size1(f->Hphi) == NET_get_num_vars(net) &&
       MAT_get_size2(f->Hphi) == NET_get_num_vars(net) &&
       FUNC_get_state_tag(f) == NET_get_state_tag(net))
@@ -513,8 +467,7 @@ BOOL FUNC_is_safe_to_analyze(Func* f) {
 
 BOOL FUNC_is_safe_to_eval(Func* f, Vec* values) {
   Net* net = FUNC_get_network(f);
-  if (FUNC_get_bus_counted_size(f) == NET_get_num_buses(net)*NET_get_num_periods(net) &&
-      MAT_get_size1(f->Hphi) == NET_get_num_vars(net) &&
+  if (MAT_get_size1(f->Hphi) == NET_get_num_vars(net) &&
       MAT_get_size2(f->Hphi) == NET_get_num_vars(net) &&
       VEC_get_size(f->gphi) == NET_get_num_vars(net) &&
       VEC_get_size(values) == NET_get_num_vars(net) &&
@@ -567,12 +520,6 @@ void FUNC_update(Func* f) {
   // No f
   if (!f)
     return;
- 
-  // Bus counted
-  if (f->bus_counted)
-    free(f->bus_counted);
-  f->bus_counted_size = NET_get_num_buses(f->net)*NET_get_num_periods(f->net);
-  ARRAY_zalloc(f->bus_counted,char,f->bus_counted_size);
 
   // Init
   FUNC_init(f);
