@@ -37,7 +37,7 @@ void FUNC_REG_RATIO_count_step(Func* f, Bus* bus, int t) {
 
     // Check outage
     if (BRANCH_is_on_outage(br))
-      return;
+      continue;
   
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) // ratio var
       (*Hphi_nnz)++;
@@ -65,7 +65,7 @@ void FUNC_REG_RATIO_analyze_step(Func* f, Bus* bus, int t) {
 
     // Check outage
     if (BRANCH_is_on_outage(br))
-      return;
+      continue;
     
     // Normalization factor
     da = BRANCH_get_ratio_max(br)-BRANCH_get_ratio_min(br);
@@ -107,7 +107,7 @@ void FUNC_REG_RATIO_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
 
     // Check outage
     if (BRANCH_is_on_outage(br))
-      return;
+      continue;
     
     // Normalizatin factor
     da = BRANCH_get_ratio_max(br)-BRANCH_get_ratio_min(br);

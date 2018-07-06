@@ -24,7 +24,6 @@ void FUNC_REG_SUSC_count_step(Func* f, Bus* bus, int t) {
   // Local variables
   Shunt* shunt;
   int* Hphi_nnz;
-  int k;
 
   // Constr data
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
@@ -47,7 +46,6 @@ void FUNC_REG_SUSC_analyze_step(Func* f, Bus* bus, int t) {
   Shunt* shunt;
   int* Hphi_nnz;
   Mat* Hphi;
-  int k;
   REAL db;
 
   // Constr data
@@ -85,7 +83,6 @@ void FUNC_REG_SUSC_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
   REAL b0;
   REAL b;
   REAL db;
-  int k;
 
   // Constr data
   phi = FUNC_get_phi_ptr(f);

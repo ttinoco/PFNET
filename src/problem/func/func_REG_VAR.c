@@ -48,6 +48,7 @@ void FUNC_REG_VAR_init(Func* f) {
 void FUNC_REG_VAR_count_step(Func* f, Bus* bus, int t) {
 
   // Local variables
+  Branch* br;
   Gen* gen;
   Vargen* vargen;
   Shunt* shunt;
@@ -152,14 +153,15 @@ void FUNC_REG_VAR_count_step(Func* f, Bus* bus, int t) {
 void FUNC_REG_VAR_analyze_step(Func* f, Bus* bus, int t) {
 
   // Local variables
+  Branch* br;
   Gen* gen;
   Vargen* vargen;
   Shunt* shunt;
   Bat* bat;
   Load* load;
   int* Hphi_nnz;
-  Func_REG_VAR_Data* data;
   Mat* Hphi;
+  Func_REG_VAR_Data* data;
 
   // Func data
   Hphi = FUNC_get_Hphi(f);
@@ -305,6 +307,7 @@ void FUNC_REG_VAR_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
 
   // Local variables
   Func_REG_VAR_Data* data;
+  Branch* br;
   Gen* gen;
   Vargen* vargen;
   Shunt* shunt;

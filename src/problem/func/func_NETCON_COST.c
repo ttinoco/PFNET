@@ -37,7 +37,6 @@ void FUNC_NETCON_COST_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
   REAL price;
   REAL* phi;
   REAL* gphi;
-  int k;
 
   // Constr data
   phi = FUNC_get_phi_ptr(f);

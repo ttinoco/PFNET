@@ -24,7 +24,6 @@ void FUNC_LOAD_UTIL_count_step(Func* f, Bus* bus, int t) {
   // Local variables
   Load* load;
   int* Hphi_nnz;
-  int k;
 
   // Constr data
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
@@ -46,7 +45,6 @@ void FUNC_LOAD_UTIL_analyze_step(Func* f, Bus* bus, int t) {
   Load* load;
   int* Hphi_nnz;
   Mat* Hphi;
-  int k;
 
   // Constr data
   Hphi = FUNC_get_Hphi(f);
@@ -79,7 +77,6 @@ void FUNC_LOAD_UTIL_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
   REAL Q0;
   REAL Q1;
   REAL Q2;
-  int k;
 
   // Constr data
   phi = FUNC_get_phi_ptr(f);

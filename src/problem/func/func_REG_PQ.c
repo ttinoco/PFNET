@@ -24,7 +24,6 @@ void FUNC_REG_PQ_count_step(Func* f, Bus* bus, int t) {
   // Local variables
   Gen* gen;
   int* Hphi_nnz;
-  int k;
 
   // Constr data
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
@@ -54,7 +53,6 @@ void FUNC_REG_PQ_analyze_step(Func* f, Bus* bus, int t) {
   Gen* gen;
   int* Hphi_nnz;
   Mat* Hphi;
-  int k;
   REAL dv;
 
   // Constr data
@@ -110,7 +108,6 @@ void FUNC_REG_PQ_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
   REAL Q;
   REAL dP;
   REAL dQ;
-  int k;
 
   // Constr data
   phi = FUNC_get_phi_ptr(f);

@@ -37,7 +37,7 @@ void FUNC_REG_PHASE_count_step(Func* f, Bus* bus, int t) {
 
     // Check outage
     if (BRANCH_is_on_outage(br))
-      return;
+      continue;
     
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) // phase var
       (*Hphi_nnz)++;
@@ -65,7 +65,7 @@ void FUNC_REG_PHASE_analyze_step(Func* f, Bus* bus, int t) {
     
     // Check outage
     if (BRANCH_is_on_outage(br))
-      return;
+      continue;
     
     // Normalization factor
     dp = BRANCH_get_phase_max(br)-BRANCH_get_phase_min(br);
@@ -107,7 +107,7 @@ void FUNC_REG_PHASE_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
  
     // Check outage
     if (BRANCH_is_on_outage(br))
-      return;
+      continue;
     
     // Normalizatin factor
     dp = BRANCH_get_phase_max(br)-BRANCH_get_phase_min(br);
