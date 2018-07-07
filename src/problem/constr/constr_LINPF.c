@@ -42,17 +42,17 @@ void CONSTR_LINPF_clear(Constr* c) {
   CONSTR_clear(acpf);
 }
 
-void CONSTR_LINPF_count_step(Constr* c, Branch* br, int t) {
+void CONSTR_LINPF_count_step(Constr* c, Bus* bus, int t) {
 
   // Local vars
   Constr* acpf = (Constr*)CONSTR_get_data(c);
   Net* net = CONSTR_get_network(c);
 
   // ACPF count
-  CONSTR_count_step(acpf,br,t);
+  CONSTR_count_step(acpf,bus,t);
 
   // Done 
-  if ((t == BRANCH_get_num_periods(br)-1) && (BRANCH_get_index(br) == NET_get_num_branches(net)-1)) {
+  if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net)-1)) {
     CONSTR_set_A_row(c,CONSTR_get_J_row(acpf));
     CONSTR_set_A_nnz(c,CONSTR_get_J_nnz(acpf));
   }
@@ -67,7 +67,7 @@ void CONSTR_LINPF_allocate(Constr* c) {
   CONSTR_allocate(acpf); 
 }
 
-void CONSTR_LINPF_analyze_step(Constr* c, Branch* br, int t) {
+void CONSTR_LINPF_analyze_step(Constr* c, Bus* bus, int t) {
 
   // Local vars
   Constr* acpf;
@@ -85,10 +85,10 @@ void CONSTR_LINPF_analyze_step(Constr* c, Branch* br, int t) {
 
   // ACPF
   acpf = (Constr*)CONSTR_get_data(c);
-  CONSTR_analyze_step(acpf,br,t);
+  CONSTR_analyze_step(acpf,bus,t);
 
   // Done 
-  if ((t == BRANCH_get_num_periods(br)-1) && (BRANCH_get_index(br) == NET_get_num_branches(net)-1)) {
+  if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net)-1)) {
     x0 = NET_get_var_values(net,CURRENT);
     CONSTR_eval(acpf,x0,NULL);
     J = CONSTR_get_J(acpf);
@@ -104,11 +104,11 @@ void CONSTR_LINPF_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_LINPF_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
+void CONSTR_LINPF_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
   // Nothing
 }
 
-void CONSTR_LINPF_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_LINPF_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing for now
 }
  

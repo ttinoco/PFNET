@@ -20,156 +20,106 @@ Constr* CONSTR_GEN_RAMP_new(Net* net) {
   return c;
 }
 
-void CONSTR_GEN_RAMP_count_step(Constr* c, Branch* br, int t) {
+void CONSTR_GEN_RAMP_count_step(Constr* c, Bus* bus, int t) {
 
   // Local variables
-  Bus* buses[2];
-  Bus* bus;
   Gen* gen;
   int* G_nnz;
   int* G_row;
-  char* bus_counted;
-  int i;
-  int T;
-
-  // Number of periods
-  T = BRANCH_get_num_periods(br);
 
   // Constr data
   G_nnz = CONSTR_get_G_nnz_ptr(c);
   G_row = CONSTR_get_G_row_ptr(c);
-  bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointer
-  if (!G_nnz || !G_row || !bus_counted)
+  if (!G_nnz || !G_row)
     return;
 
-  // Bus data
-  buses[0] = BRANCH_get_bus_k(br);
-  buses[1] = BRANCH_get_bus_m(br);
-
-  // Buses
-  for (i = 0; i < 2; i++) {
-
-    bus = buses[i];
-
-    if (!bus_counted[BUS_get_index(bus)*T+t]) {
-
-      // Generators
-      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-
-	// Outage
-	if (GEN_is_on_outage(gen))
-	  continue;
-
-	// Variable
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // -dP_max <= P_t - P_{t-1} <= dP_max
-	  if (t == 0)
-	    (*G_nnz) += 1;
-	  else
-	    (*G_nnz) += 2;
-	  (*G_row)++;
-	}
-      }
+  // Generators
+  for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+    
+    // Outage
+    if (GEN_is_on_outage(gen))
+      continue;
+    
+    // Variable
+    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // -dP_max <= P_t - P_{t-1} <= dP_max
+      if (t == 0)
+	(*G_nnz) += 1;
+      else
+	(*G_nnz) += 2;
+      (*G_row)++;
     }
-
-    // Update counted flag
-    bus_counted[BUS_get_index(bus)*T+t] = TRUE;
   }
 }
 
-void CONSTR_GEN_RAMP_analyze_step(Constr* c, Branch* br, int t) {
+void CONSTR_GEN_RAMP_analyze_step(Constr* c, Bus* bus, int t) {
 
   // Local variables
-  Bus* buses[2];
-  Bus* bus;
   Gen* gen;
   int* G_nnz;
   int* G_row;
-  char* bus_counted;
   Vec* u;
   Vec* l;
   Mat* G;
-  int i;
-  int T;
-
-  // Number of periods
-  T = BRANCH_get_num_periods(br);
-
+  
   // Cosntr data
   l = CONSTR_get_l(c);
   u = CONSTR_get_u(c);
   G = CONSTR_get_G(c);
   G_nnz = CONSTR_get_G_nnz_ptr(c);
   G_row = CONSTR_get_G_row_ptr(c);
-  bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!G_nnz || !G_row || !bus_counted)
+  if (!G_nnz || !G_row)
     return;
 
-  // Bus data
-  buses[0] = BRANCH_get_bus_k(br);
-  buses[1] = BRANCH_get_bus_m(br);
-
-  // Buses
-  for (i = 0; i < 2; i++) {
-
-    bus = buses[i];
-
-    if (!bus_counted[BUS_get_index(bus)*T+t]) {
-
-      // Generators
-      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-
-	// Outage
-	if (GEN_is_on_outage(gen))
-	  continue;
-
-	// Variables
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // -dP_max <= P_t - P_{t-1} <= dP_max
-
-	  // G
-	  MAT_set_i(G,*G_nnz,*G_row);
-	  MAT_set_j(G,*G_nnz,GEN_get_index_P(gen,t));
-	  MAT_set_d(G,*G_nnz,1.);
-
-	  if (t == 0) {
-
-	    // l u
-	    VEC_set(l,*G_row,-GEN_get_dP_max(gen)+GEN_get_P_prev(gen));
-	    VEC_set(u,*G_row,GEN_get_dP_max(gen)+GEN_get_P_prev(gen));
-
-	    (*G_nnz) += 1;
-	  }
-	  else {
-
-	    // l u
-	    VEC_set(l,*G_row,-GEN_get_dP_max(gen));
-	    VEC_set(u,*G_row,GEN_get_dP_max(gen));
-
-	    // G
-	    MAT_set_i(G,*G_nnz+1,*G_row);
-	    MAT_set_j(G,*G_nnz+1,GEN_get_index_P(gen,t-1));
-	    MAT_set_d(G,*G_nnz+1,-1.);
-
-	    (*G_nnz) += 2;
-	  }
-
-	  (*G_row)++;
-	}
+  // Generators
+  for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+    
+    // Outage
+    if (GEN_is_on_outage(gen))
+      continue;
+    
+    // Variables
+    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // -dP_max <= P_t - P_{t-1} <= dP_max
+      
+      // G
+      MAT_set_i(G,*G_nnz,*G_row);
+      MAT_set_j(G,*G_nnz,GEN_get_index_P(gen,t));
+      MAT_set_d(G,*G_nnz,1.);
+      
+      if (t == 0) {
+	
+	// l u
+	VEC_set(l,*G_row,-GEN_get_dP_max(gen)+GEN_get_P_prev(gen));
+	VEC_set(u,*G_row,GEN_get_dP_max(gen)+GEN_get_P_prev(gen));
+	
+	(*G_nnz) += 1;
       }
+      else {
+	
+	// l u
+	VEC_set(l,*G_row,-GEN_get_dP_max(gen));
+	VEC_set(u,*G_row,GEN_get_dP_max(gen));
+	
+	// G
+	MAT_set_i(G,*G_nnz+1,*G_row);
+	MAT_set_j(G,*G_nnz+1,GEN_get_index_P(gen,t-1));
+	MAT_set_d(G,*G_nnz+1,-1.);
+	
+	(*G_nnz) += 2;
+      }
+      
+      (*G_row)++;
     }
-
-    // Update counted flag
-    bus_counted[BUS_get_index(bus)*T+t] = TRUE;
   }
 }
 
-void CONSTR_GEN_RAMP_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
+void CONSTR_GEN_RAMP_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
   // Nothing to do
 }
 
-void CONSTR_GEN_RAMP_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_GEN_RAMP_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing for now
 }

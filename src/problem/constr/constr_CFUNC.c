@@ -59,7 +59,7 @@ void CONSTR_CFUNC_clear(Constr* c) {
   FUNC_clear(data->func);
 }
 
-void CONSTR_CFUNC_count_step(Constr* c, Branch* br, int t) {
+void CONSTR_CFUNC_count_step(Constr* c, Bus* bus, int t) {
 
   // Local variables
   Constr_CFUNC_Data* data = (Constr_CFUNC_Data*)CONSTR_get_data(c);
@@ -73,10 +73,10 @@ void CONSTR_CFUNC_count_step(Constr* c, Branch* br, int t) {
     return;
 
   // Function count step
-  FUNC_count_step(data->func,br,t);
+  FUNC_count_step(data->func,bus,t);
 
   // Post-processing
-  if ((t == BRANCH_get_num_periods(br)-1) && (BRANCH_get_index(br) == NET_get_num_branches(net)-1)) {
+  if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net)-1)) {
 
     // Extra vars
     if (strcmp(data->op,">=") == 0 || strcmp(data->op,"<=") == 0)
@@ -117,7 +117,7 @@ void CONSTR_CFUNC_allocate(Constr* c) {
   FUNC_allocate(data->func);
 }
 
-void CONSTR_CFUNC_analyze_step(Constr* c, Branch* br, int t) {
+void CONSTR_CFUNC_analyze_step(Constr* c, Bus* bus, int t) {
 
   // Local variables
   Constr_CFUNC_Data* data = (Constr_CFUNC_Data*)CONSTR_get_data(c);
@@ -136,10 +136,10 @@ void CONSTR_CFUNC_analyze_step(Constr* c, Branch* br, int t) {
     return;
 
   // Count step
-  FUNC_analyze_step(data->func,br,t);
+  FUNC_analyze_step(data->func,bus,t);
   
   // Post-processing
-  if ((t == BRANCH_get_num_periods(br)-1) && (BRANCH_get_index(br) == NET_get_num_branches(net)-1)) {
+  if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net)-1)) {
 
     G = CONSTR_get_G(c);
     l = CONSTR_get_l(c);
@@ -202,7 +202,7 @@ void CONSTR_CFUNC_analyze_step(Constr* c, Branch* br, int t) {
   }
 }
 
-void CONSTR_CFUNC_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
+void CONSTR_CFUNC_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
   
   // Local variables
   Constr_CFUNC_Data* data = (Constr_CFUNC_Data*)CONSTR_get_data(c);
@@ -222,10 +222,10 @@ void CONSTR_CFUNC_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* valu
     return;
 
   // Count step
-  FUNC_eval_step(data->func,br,t,values);
+  FUNC_eval_step(data->func,bus,t,values);
   
   // Post-processing
-  if ((t == BRANCH_get_num_periods(br)-1) && (BRANCH_get_index(br) == NET_get_num_branches(net)-1)) {
+  if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net)-1)) {
 
     f = VEC_get_data(CONSTR_get_f(c));
     J = MAT_get_data_array(CONSTR_get_J(c));
@@ -260,7 +260,7 @@ void CONSTR_CFUNC_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* valu
   }
 }
 
-void CONSTR_CFUNC_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_CFUNC_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing
 }
 

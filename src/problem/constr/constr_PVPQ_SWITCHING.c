@@ -28,66 +28,41 @@ Constr* CONSTR_PVPQ_SWITCHING_new(Net* net) {
   return c;
 }
 
-void CONSTR_PVPQ_SWITCHING_count_step(Constr* c, Branch* br, int t) {
+void CONSTR_PVPQ_SWITCHING_count_step(Constr* c, Bus* bus, int t) {
 
   // Local variables
-  Bus* buses[2];
-  Bus* bus;
   Gen* gen;
   int* A_nnz;
   int* A_row;
-  char* bus_counted;
   int num;
-  int i;
-  int T;
-
-  // Number of periods
-  T = BRANCH_get_num_periods(br);
 
   // Constr data
   A_nnz = CONSTR_get_A_nnz_ptr(c);
   A_row = CONSTR_get_A_row_ptr(c);
-  bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointer
-  if (!A_nnz || !A_row || !bus_counted)
+  if (!A_nnz || !A_row)
     return;
 
-  // Bus data
-  buses[0] = BRANCH_get_bus_k(br);
-  buses[1] = BRANCH_get_bus_m(br);
-
-  // Buses
-  for (i = 0; i < 2; i++) {
-
-    bus = buses[i];
-
-    if (!bus_counted[BUS_get_index(bus)*T+t]) {
-
-      // Regulated bus (includes slack)
-      if (BUS_is_regulated_by_gen(bus)) {
-	
-	num  = 0;
-	
-	// v
-	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG))
-	  num += 1;
-	
-	// Q
-	for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen)) {
-	  if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q) && !GEN_is_on_outage(gen))
-	    num += 1;
-	}
-
-	if (num > 0) {
-	  (*A_nnz) += num*(num-1);
-	  (*A_row) += num-1;
-	}
-      }
+  // Regulated bus (includes slack)
+  if (BUS_is_regulated_by_gen(bus)) {
+    
+    num  = 0;
+    
+    // v
+    if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG))
+      num += 1;
+    
+    // Q
+    for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen)) {
+      if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q) && !GEN_is_on_outage(gen))
+	num += 1;
     }
-
-    // Update counted flag
-    bus_counted[BUS_get_index(bus)*T+t] = TRUE;
+    
+    if (num > 0) {
+      (*A_nnz) += num*(num-1);
+      (*A_row) += num-1;
+    }
   }
 }
 
@@ -120,21 +95,16 @@ void CONSTR_PVPQ_SWITCHING_allocate(Constr* c) {
   CONSTR_set_data(c,(void*)data);
 }
 
-void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t) {
+void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Bus* bus, int t) {
 
   // Local variables
-  Bus* buses[2];
-  Bus* bus;
   Gen* gen1;
   Gen* gen2;
   Gen* gen3;
   int* A_nnz;
   int* A_row;
-  char* bus_counted;
   Vec* b;
   Mat* A;
-  int i;
-  int T;
   REAL alpha1;
   REAL alpha2;
   REAL Q;
@@ -142,75 +112,111 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t) {
   REAL Q_max;
   Constr_PVPQ_SWITCHING_Data* data;
 
-  // Number of periods
-  T = BRANCH_get_num_periods(br);
-
   // Cosntr data
   b = CONSTR_get_b(c);
   A = CONSTR_get_A(c);
   A_nnz = CONSTR_get_A_nnz_ptr(c);
   A_row = CONSTR_get_A_row_ptr(c);
-  bus_counted = CONSTR_get_bus_counted(c);
   data = (Constr_PVPQ_SWITCHING_Data*)CONSTR_get_data(c);
 
   // Check pointer
-  if (!A_nnz || !A_row || !bus_counted || !data)
+  if (!A_nnz || !A_row || !data)
     return;
 
-  // Bus data
-  buses[0] = BRANCH_get_bus_k(br);
-  buses[1] = BRANCH_get_bus_m(br);
-
-  // Buses
-  for (i = 0; i < 2; i++) {
-
-    bus = buses[i];
-
-    if (!bus_counted[BUS_get_index(bus)*T+t]) {
-
-      // Regulated bus (includes slack)
-      if (BUS_is_regulated_by_gen(bus)) {
+  // Regulated bus (includes slack)
+  if (BUS_is_regulated_by_gen(bus)) {
+    
+    // v var and fixed
+    if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) &&
+	data->fix_flag[BUS_get_index_v_mag(bus,t)]) {
+      
+      VEC_set(b,*A_row,BUS_get_v_set(bus,t));
+      
+      // v
+      MAT_set_i(A,*A_nnz,*A_row);
+      MAT_set_j(A,*A_nnz,BUS_get_index_v_mag(bus,t));
+      MAT_set_d(A,*A_nnz,1.);
+      (*A_nnz)++;
+      
+      // Q
+      for (gen1 = BUS_get_reg_gen(bus); gen1 != NULL; gen1 = GEN_get_reg_next(gen1)) {
+	if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q) && !GEN_is_on_outage(gen1)) {
+	  MAT_set_i(A,*A_nnz,*A_row);
+	  MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen1,t));
+	  MAT_set_d(A,*A_nnz,0.);
+	  (*A_nnz)++;
+	}
+      }
+      
+      (*A_row)++;
+    }
+    
+    // Q var and fixed
+    for (gen1 = BUS_get_reg_gen(bus); gen1 != NULL; gen1 = GEN_get_reg_next(gen1)) {
+      if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q) &&
+	  !GEN_is_on_outage(gen1) &&
+	  data->fix_flag[GEN_get_index_Q(gen1,t)]) {
 	
-	// v var and fixed
-	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) &&
-	    data->fix_flag[BUS_get_index_v_mag(bus,t)]) {
-
-	  VEC_set(b,*A_row,BUS_get_v_set(bus,t));
-
-	  // v
+	Q = GEN_get_Q(gen1,t);
+	Q_max = GEN_get_Q_max(gen1);
+	Q_min = GEN_get_Q_min(gen1);
+	
+	if (fabs(Q-Q_min) < fabs(Q-Q_max))
+	  VEC_set(b,*A_row,Q_min);
+	else
+	  VEC_set(b,*A_row,Q_max);
+	
+	// v
+	if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
 	  MAT_set_i(A,*A_nnz,*A_row);
 	  MAT_set_j(A,*A_nnz,BUS_get_index_v_mag(bus,t));
-	  MAT_set_d(A,*A_nnz,1.);
+	  MAT_set_d(A,*A_nnz,0.);
 	  (*A_nnz)++;
-
-	  // Q
-	  for (gen1 = BUS_get_reg_gen(bus); gen1 != NULL; gen1 = GEN_get_reg_next(gen1)) {
-	    if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q) && !GEN_is_on_outage(gen1)) {
-	      MAT_set_i(A,*A_nnz,*A_row);
-	      MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen1,t));
-	      MAT_set_d(A,*A_nnz,0.);
-	      (*A_nnz)++;
-	    }
-	  }
-	  
-	  (*A_row)++;
 	}
-
-	// Q var and fixed
-	for (gen1 = BUS_get_reg_gen(bus); gen1 != NULL; gen1 = GEN_get_reg_next(gen1)) {
-	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q) &&
-	      !GEN_is_on_outage(gen1) &&
-	      data->fix_flag[GEN_get_index_Q(gen1,t)]) {
-	    
-	    Q = GEN_get_Q(gen1,t);
-	    Q_max = GEN_get_Q_max(gen1);
-	    Q_min = GEN_get_Q_min(gen1);
-	    
-	    if (fabs(Q-Q_min) < fabs(Q-Q_max))
-	      VEC_set(b,*A_row,Q_min);
+	
+	// Q
+	for (gen2 = BUS_get_reg_gen(bus); gen2 != NULL; gen2 = GEN_get_reg_next(gen2)) {
+	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q) && !GEN_is_on_outage(gen2)) {
+	    MAT_set_i(A,*A_nnz,*A_row);
+	    MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen2,t));
+	    if (gen2 == gen1)
+	      MAT_set_d(A,*A_nnz,1.);
 	    else
-	      VEC_set(b,*A_row,Q_max);
-
+	      MAT_set_d(A,*A_nnz,0.);
+	    (*A_nnz)++;
+	  }
+	}
+	
+	(*A_row)++;
+      }
+    }
+    
+    // Q var and free pairs
+    gen1 = BUS_get_reg_gen(bus);
+    while(gen1) {
+      
+      // Candidate 1
+      if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q) &&
+	  !GEN_is_on_outage(gen1) &&
+	  !data->fix_flag[GEN_get_index_Q(gen1,t)]) {
+	
+	for (gen2 = GEN_get_reg_next(gen1); gen2 != NULL; gen2 = GEN_get_reg_next(gen2)) {
+	  
+	  // Candidate 2
+	  if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q) &&
+	      !GEN_is_on_outage(gen2) &&
+	      !data->fix_flag[GEN_get_index_Q(gen2,t)]) {
+	    
+	    VEC_set(b,*A_row,0.);
+	    
+	    alpha1 = GEN_get_Q_par(gen1);
+	    if (alpha1 < CONSTR_PVPQ_SWITCHING_PARAM)
+	      alpha1 = CONSTR_PVPQ_SWITCHING_PARAM;
+	    
+	    alpha2 = GEN_get_Q_par(gen2);
+	    if (alpha2 < CONSTR_PVPQ_SWITCHING_PARAM)
+	      alpha2 = CONSTR_PVPQ_SWITCHING_PARAM;
+	    
 	    // v
 	    if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
 	      MAT_set_i(A,*A_nnz,*A_row);
@@ -218,14 +224,16 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t) {
 	      MAT_set_d(A,*A_nnz,0.);
 	      (*A_nnz)++;
 	    }
-
+	    
 	    // Q
-	    for (gen2 = BUS_get_reg_gen(bus); gen2 != NULL; gen2 = GEN_get_reg_next(gen2)) {
-	      if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q) && !GEN_is_on_outage(gen2)) {
+	    for (gen3 = BUS_get_reg_gen(bus); gen3 != NULL; gen3 = GEN_get_reg_next(gen3)) {
+	      if (GEN_has_flags(gen3,FLAG_VARS,GEN_VAR_Q) && !GEN_is_on_outage(gen3)) {
 		MAT_set_i(A,*A_nnz,*A_row);
-		MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen2,t));
-		if (gen2 == gen1)
-		  MAT_set_d(A,*A_nnz,1.);
+		MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen3,t));
+		if (gen3 == gen1)
+		  MAT_set_d(A,*A_nnz,alpha2);
+		else if (gen3 == gen2)
+		  MAT_set_d(A,*A_nnz,-alpha1);
 		else
 		  MAT_set_d(A,*A_nnz,0.);
 		(*A_nnz)++;
@@ -233,85 +241,27 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Branch* br, int t) {
 	    }
 	    
 	    (*A_row)++;
+	    break;
 	  }
 	}
-
-	// Q var and free pairs
-	gen1 = BUS_get_reg_gen(bus);
-	while(gen1) {
-
-	  // Candidate 1
-	  if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q) &&
-	      !GEN_is_on_outage(gen1) &&
-	      !data->fix_flag[GEN_get_index_Q(gen1,t)]) {
 	
-	    for (gen2 = GEN_get_reg_next(gen1); gen2 != NULL; gen2 = GEN_get_reg_next(gen2)) {
-	      
-	      // Candidate 2
-	      if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_Q) &&
-		  !GEN_is_on_outage(gen2) &&
-		  !data->fix_flag[GEN_get_index_Q(gen2,t)]) {
-		
-		VEC_set(b,*A_row,0.);
-		
-		alpha1 = GEN_get_Q_par(gen1);
-		if (alpha1 < CONSTR_PVPQ_SWITCHING_PARAM)
-		  alpha1 = CONSTR_PVPQ_SWITCHING_PARAM;
-		
-		alpha2 = GEN_get_Q_par(gen2);
-		if (alpha2 < CONSTR_PVPQ_SWITCHING_PARAM)
-		  alpha2 = CONSTR_PVPQ_SWITCHING_PARAM;
-
-		// v
-		if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
-		  MAT_set_i(A,*A_nnz,*A_row);
-		  MAT_set_j(A,*A_nnz,BUS_get_index_v_mag(bus,t));
-		  MAT_set_d(A,*A_nnz,0.);
-		  (*A_nnz)++;
-		}
-		
-		// Q
-		for (gen3 = BUS_get_reg_gen(bus); gen3 != NULL; gen3 = GEN_get_reg_next(gen3)) {
-		  if (GEN_has_flags(gen3,FLAG_VARS,GEN_VAR_Q) && !GEN_is_on_outage(gen3)) {
-		    MAT_set_i(A,*A_nnz,*A_row);
-		    MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen3,t));
-		    if (gen3 == gen1)
-		      MAT_set_d(A,*A_nnz,alpha2);
-		    else if (gen3 == gen2)
-		      MAT_set_d(A,*A_nnz,-alpha1);
-		    else
-		      MAT_set_d(A,*A_nnz,0.);
-		    (*A_nnz)++;
-		  }
-		}
-	    
-		(*A_row)++;
-		break;
-	      }
-	    }
-
-	    // Move forward
-	    gen1 = gen2;
-	  }
-	  else {
-
-	    // Move forward
-	    gen1 = GEN_get_reg_next(gen1);
-	  }
-	}
+	// Move forward
+	gen1 = gen2;
+      }
+      else {
+	
+	// Move forward
+	gen1 = GEN_get_reg_next(gen1);
       }
     }
-
-    // Update counted flag
-    bus_counted[BUS_get_index(bus)*T+t] = TRUE;
   }
 }
 
-void CONSTR_PVPQ_SWITCHING_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
+void CONSTR_PVPQ_SWITCHING_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
   // Nothing to do
 }
 
-void CONSTR_PVPQ_SWITCHING_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_PVPQ_SWITCHING_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing
 }
 

@@ -22,10 +22,6 @@ struct Heur {
 
   // Network
   Net* net; /**< @brief Power network */
-  
-  // Utils
-  char* bus_counted;
-  int bus_counted_size;
 
   // Type functions
   void (*func_init)(Heur* h);
@@ -40,17 +36,8 @@ struct Heur {
   struct Heur* next;
 };
 
-void HEUR_clear_bus_counted(Heur* h) {
-  if (h)
-    ARRAY_clear(h->bus_counted,char,h->bus_counted_size);
-}
-
 void HEUR_del(Heur* h) {
   if (h) {
-
-    // Utils
-    if (h->bus_counted)
-      free(h->bus_counted);
 
     // Data
     if (h->func_free)
@@ -71,13 +58,6 @@ Net* HEUR_get_network(Heur* h) {
 char* HEUR_get_name(Heur* h) {
   if (h)
     return h->name;
-  else
-    return NULL;
-}
-
-char* HEUR_get_bus_counted(Heur* h) {
-  if (h)
-    return h->bus_counted;
   else
     return NULL;
 }
@@ -159,8 +139,6 @@ Heur* HEUR_new(Net* net) {
   strcpy(h->error_string,"");
   strcpy(h->name,"unknown");
   h->net = net;
-  h->bus_counted = NULL;
-  h->bus_counted_size = 0;
   h->data = NULL;
   h->next = NULL;
   
@@ -239,13 +217,6 @@ void HEUR_set_name(Heur* h, char* name) {
     strcpy(h->name,name);
 }
 
-void HEUR_set_bus_counted(Heur* h, char* counted, int size) {
-  if (h) {
-    h->bus_counted = counted;
-    h->bus_counted_size = size;
-  }
-}
-
 void HEUR_set_data(Heur* h, void* data) {
   if (h)
     h->data = data;
@@ -283,12 +254,6 @@ void HEUR_update_network(Heur* h) {
   // No h
   if (!h)
     return;
- 
-  // Bus counted
-  if (h->bus_counted)
-    free(h->bus_counted);
-  h->bus_counted_size = NET_get_num_buses(h->net)*NET_get_num_periods(h->net);
-  ARRAY_zalloc(h->bus_counted,char,h->bus_counted_size);
 
   // Init
   HEUR_init(h);
