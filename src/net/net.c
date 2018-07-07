@@ -4452,82 +4452,71 @@ void NET_update_properties_step(Net* net, Bus* bus, int t, Vec* var_values) {
   }
 
   // Branches
+  for (br = BUS_get_branch_k(br); br != NULL; br = BRANCH_get_next_k(br)) {
   
-
-  // Branch data
-  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
-    a = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
-  else
-    a = BRANCH_get_ratio(br,t);
-  if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) && var_values)
-    phi = VEC_get(var_values,BRANCH_get_index_phase(br,t));
-  else
-    phi = BRANCH_get_phase(br,t);
+    // Branch data
+    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
+      a = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
+    else
+      a = BRANCH_get_ratio(br,t);
+    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) && var_values)
+      phi = VEC_get(var_values,BRANCH_get_index_phase(br,t));
+    else
+      phi = BRANCH_get_phase(br,t);
   
-  // Tap ratios
-  if (BRANCH_is_tap_changer(br) && !BRANCH_is_on_outage(br)) {
+    // Tap ratios
+    if (BRANCH_is_tap_changer(br) && !BRANCH_is_on_outage(br)) {
 
-    // Tap ratio limit violations
-    //***************************
-    da = 0;
-    if (a > BRANCH_get_ratio_max(br))
-      da = (a-BRANCH_get_ratio_max(br));
-    if (a < BRANCH_get_ratio_min(br))
-      da = (BRANCH_get_ratio_min(br)-a);
-    if (da > net->tran_r_vio[t])
-      net->tran_r_vio[t] = da;
-
-    // Tap ratio actions
-    //******************
-    da = BRANCH_get_ratio_max(br)-BRANCH_get_ratio_min(br);
-    if (da < NET_CONTROL_EPS)
-      da = NET_CONTROL_EPS;
-    if (100.*fabs(a-BRANCH_get_ratio(br,t))/da > NET_CONTROL_ACTION_PCT)
-      net->num_actions[t]++;
-  }
-
-  // Phase shifts
-  if (BRANCH_is_phase_shifter(br) && !BRANCH_is_on_outage(br)) {
-
-    // Phase shift limit violations
-    //*****************************
-    dphi = 0;
-    if (phi > BRANCH_get_phase_max(br))
-      dphi = (phi-BRANCH_get_phase_max(br));
-    if (phi < BRANCH_get_phase_min(br))
-      dphi = (BRANCH_get_phase_min(br)-phi);
-    if (dphi > net->tran_p_vio[t])
-      net->tran_p_vio[t] = dphi;
-
-    // Phase shift actions
-    //********************
-    dphi = BRANCH_get_phase_max(br)-BRANCH_get_phase_min(br);
-    if (dphi < NET_CONTROL_EPS)
-      dphi = NET_CONTROL_EPS;
-    if (100.*fabs(phi-BRANCH_get_phase(br,t))/dphi > NET_CONTROL_ACTION_PCT)
-      net->num_actions[t]++;
-  }
-
-  // Branch flows
-  for (k = 0; k < 2; k++) {
-
-    bus = buses[k];
-
-    // Skip if branch on outage
-    if (BRANCH_is_on_outage(br))
-      break;
-
-    // Update injected P,Q at buses k and m
-    if (k == 0) {
-      BUS_inject_P(bus,-BRANCH_get_P_km(br,var_values,t),t);
-      BUS_inject_Q(bus,-BRANCH_get_Q_km(br,var_values,t),t);
+      // Tap ratio limit violations
+      //***************************
+      da = 0;
+      if (a > BRANCH_get_ratio_max(br))
+	da = (a-BRANCH_get_ratio_max(br));
+      if (a < BRANCH_get_ratio_min(br))
+	da = (BRANCH_get_ratio_min(br)-a);
+      if (da > net->tran_r_vio[t])
+	net->tran_r_vio[t] = da;
+      
+      // Tap ratio actions
+      //******************
+      da = BRANCH_get_ratio_max(br)-BRANCH_get_ratio_min(br);
+      if (da < NET_CONTROL_EPS)
+	da = NET_CONTROL_EPS;
+      if (100.*fabs(a-BRANCH_get_ratio(br,t))/da > NET_CONTROL_ACTION_PCT)
+	net->num_actions[t]++;
     }
-    else {
-      BUS_inject_P(bus,-BRANCH_get_P_mk(br,var_values,t),t);
-      BUS_inject_Q(bus,-BRANCH_get_Q_mk(br,var_values,t),t);
+
+    // Phase shifts
+    if (BRANCH_is_phase_shifter(br) && !BRANCH_is_on_outage(br)) {
+      
+      // Phase shift limit violations
+      //*****************************
+      dphi = 0;
+      if (phi > BRANCH_get_phase_max(br))
+	dphi = (phi-BRANCH_get_phase_max(br));
+      if (phi < BRANCH_get_phase_min(br))
+	dphi = (BRANCH_get_phase_min(br)-phi);
+      if (dphi > net->tran_p_vio[t])
+	net->tran_p_vio[t] = dphi;
+      
+      // Phase shift actions
+      //********************
+      dphi = BRANCH_get_phase_max(br)-BRANCH_get_phase_min(br);
+      if (dphi < NET_CONTROL_EPS)
+	dphi = NET_CONTROL_EPS;
+      if (100.*fabs(phi-BRANCH_get_phase(br,t))/dphi > NET_CONTROL_ACTION_PCT)
+	net->num_actions[t]++;
+    }
+
+    // Branch flows
+    if (!BRANCH_is_on_outage(br)) {
+      BUS_inject_P(BRANCH_get_bus_k(br),-BRANCH_get_P_km(br,var_values,t),t);
+      BUS_inject_Q(BRANCH_get_bus_k(br),-BRANCH_get_Q_km(br,var_values,t),t);
+      BUS_inject_P(BRANCH_get_bus_m(br),-BRANCH_get_P_mk(br,var_values,t),t);
+      BUS_inject_Q(BRANCH_get_bus_m(br),-BRANCH_get_Q_mk(br,var_values,t),t);
     }
   }
-
+    
   // Power mismatches
   if (BUS_get_index(bus) == net->num_buses-1) {
     BUS_array_get_max_mismatches(net->bus,
