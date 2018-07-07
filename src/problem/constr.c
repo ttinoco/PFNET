@@ -55,8 +55,6 @@ struct Constr {
   int A_row;             /**< @brief Counter for linear equality constraints */
   int J_row;             /**< @brief Counter for nonlinear constraints */
   int G_row;             /**< @brief Counter for linear inequality constraints */
-  char* bus_counted;     /**< @brief Flag for processing buses */
-  int bus_counted_size;  /**< @brief Size of array of flags for processing buses */
 
   // Row info
   char* A_row_info; /**< @brief Array for info strings of rows of A (x,y) = b */
@@ -176,11 +174,6 @@ void CONSTR_clear_H_nnz(Constr* c) {
     ARRAY_clear(c->H_nnz,int,c->H_nnz_size);
 }
 
-void CONSTR_clear_bus_counted(Constr* c) {
-  if (c)
-    ARRAY_clear(c->bus_counted,char,c->bus_counted_size);
-}
-
 void CONSTR_combine_H(Constr* c, Vec* coeff, BOOL ensure_psd) {
   
   // Local variabels
@@ -259,8 +252,6 @@ void CONSTR_del(Constr* c) {
     CONSTR_del_matvec(c);
 
     // Utils
-    if (c->bus_counted)
-      free(c->bus_counted);
     if (c->H_nnz)
       free(c->H_nnz);
 
@@ -475,20 +466,6 @@ int* CONSTR_get_J_row_ptr(Constr* c) {
     return &(c->J_row);
   else
     return NULL;
-}
-
-char* CONSTR_get_bus_counted(Constr* c) {
-  if (c)
-    return c->bus_counted;
-  else
-    return NULL;
-}
-
-int CONSTR_get_bus_counted_size(Constr* c) {
-  if (c)
-    return c->bus_counted_size;
-  else
-    return 0;
 }
 
 void* CONSTR_get_data(Constr* c) {
@@ -796,10 +773,6 @@ Constr* CONSTR_new(Net* net) {
   c->J_row_info = NULL;
   c->G_row_info = NULL;
 
-  // Bus counted flags
-  c->bus_counted_size = 0;
-  c->bus_counted = NULL;
-
   // Methods
   c->func_init = NULL;
   c->func_count_step = NULL;
@@ -958,15 +931,6 @@ void CONSTR_set_G_row(Constr* c, int index) {
 void CONSTR_set_J_row(Constr* c, int index) {
   if (c)
     c->J_row = index;
-}
-
-void CONSTR_set_bus_counted(Constr* c, char* counted, int size) {
-  if (c) {
-    if (c->bus_counted)
-      free(c->bus_counted);
-    c->bus_counted = counted;
-    c->bus_counted_size = size;
-  }
 }
 
 void CONSTR_set_data(Constr* c, void* data) {
@@ -1174,9 +1138,6 @@ void CONSTR_clear(Constr* c) {
   CONSTR_set_J_row(c,0);
   CONSTR_clear_H_nnz(c);
 
-  // Flags
-  CONSTR_clear_bus_counted(c);
-
   // Additional clear
   if (c && c->func_clear)
     (*(c->func_clear))(c);
@@ -1252,21 +1213,16 @@ void CONSTR_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* s
 }
 
 BOOL CONSTR_is_safe_to_count(Constr* c) {
-  Net* net = CONSTR_get_network(c);
-  if (CONSTR_get_bus_counted_size(c) == NET_get_num_buses(net)*NET_get_num_periods(net))
+  if (c)
     return TRUE;
-  else {
-    sprintf(c->error_string,"constraint is not safe to count");
-    c->error_flag = TRUE;
+  else
     return FALSE;
-  }  
 }
 
 BOOL CONSTR_is_safe_to_analyze(Constr* c) {
   Net* net = CONSTR_get_network(c);
   int num_vars = NET_get_num_vars(net)+CONSTR_get_num_extra_vars(c);
-  if (CONSTR_get_bus_counted_size(c) == NET_get_num_buses(net)*NET_get_num_periods(net) &&
-      MAT_get_size2(CONSTR_get_A(c)) == num_vars &&
+  if (MAT_get_size2(CONSTR_get_A(c)) == num_vars &&
       MAT_get_size2(CONSTR_get_G(c)) == num_vars &&
       MAT_get_size2(CONSTR_get_J(c)) == num_vars &&
       VEC_get_size(CONSTR_get_l_extra_vars(c)) == CONSTR_get_num_extra_vars(c) &&
@@ -1285,8 +1241,7 @@ BOOL CONSTR_is_safe_to_analyze(Constr* c) {
 BOOL CONSTR_is_safe_to_eval(Constr* c, Vec* v, Vec* ve) {
   Net* net = CONSTR_get_network(c);
   int num_vars = NET_get_num_vars(net)+CONSTR_get_num_extra_vars(c);
-  if (CONSTR_get_bus_counted_size(c) == NET_get_num_buses(net)*NET_get_num_periods(net) &&
-      MAT_get_size2(CONSTR_get_A(c)) == num_vars &&
+  if (MAT_get_size2(CONSTR_get_A(c)) == num_vars &&
       MAT_get_size2(CONSTR_get_G(c)) == num_vars &&
       MAT_get_size2(CONSTR_get_J(c)) == num_vars &&
       VEC_get_size(v) == NET_get_num_vars(net) &&
@@ -1352,14 +1307,8 @@ void CONSTR_update(Constr* c) {
   if (!c)
     return;
 
-  // Bus counted
-  if (c->bus_counted)
-    free(c->bus_counted);
-  c->bus_counted_size = NET_get_num_buses(c->net)*NET_get_num_periods(c->net);
-  ARRAY_zalloc(c->bus_counted,char,c->bus_counted_size);
-
   // H_nnz
-  max_num = CONSTR_H_NNZ_MUL*c->bus_counted_size;
+  max_num = CONSTR_H_NNZ_MUL*NET_get_num_buses(c->net)*NET_get_num_periods(c->net);
   CONSTR_set_H_nnz(c,(int*)calloc(max_num,sizeof(int)),max_num);
 
   // Init

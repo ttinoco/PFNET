@@ -86,9 +86,6 @@ struct Net {
 
   // State tag
   unsigned long int state_tag; /**< @brief State tag. */
-
-  // Utils
-  char* bus_counted;  /**< @brief Flags for processing buses */
 };
 
 void NET_inc_state_tag(Net* net) {
@@ -1656,9 +1653,6 @@ void NET_clear_data(Net* net) {
   free(net->load_P_vio);
   free(net->num_actions);
 
-  // Free utils
-  free(net->bus_counted);
-
   // Re-initialize
   NET_init(net,net->num_periods);
 }
@@ -1820,9 +1814,6 @@ void NET_clear_properties(Net* net) {
   // Counters
   for (i = 0; i < net->num_buses; i++)
     BUS_clear_mismatches(BUS_array_get(net->bus,i));
-
-  // Bus counted
-  ARRAY_clear(net->bus_counted,char,net->num_buses*net->num_periods);
 }
 
 void NET_clear_sensitivities(Net* net) {
@@ -2586,9 +2577,6 @@ void NET_init(Net* net, int num_periods) {
 
   // State tag
   net->state_tag = 0;
-
-  // Utils
-  net->bus_counted = NULL;
 }
 
 REAL NET_get_base_power(Net* net) {
@@ -3717,10 +3705,6 @@ void NET_set_bus_array(Net* net, Bus* bus, int num) {
     // Pointers
     net->bus = bus;
     net->num_buses = num;
-
-    // Utils
-    free(net->bus_counted);
-    ARRAY_zalloc(net->bus_counted,char,net->num_buses*net->num_periods);
 
     // Network
     for (i = 0; i < net->num_buses; i++)
