@@ -21,10 +21,10 @@ Constr* CONSTR_ACPF_new(Net* net) {
   return c;
 }
 
-void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
+void CONSTR_ACPF_count_step(Constr* c, Bus* bus, int t) {
 
   // Local variables
-  Bus* bus[2];
+  Branch* br;
   Gen* gen;
   Vargen* vargen;
   Shunt* shunt;
@@ -33,200 +33,185 @@ void CONSTR_ACPF_count_step(Constr* c, Branch* br, int t) {
   int* J_row;
   int* J_nnz;
   int* H_nnz;
-  char* bus_counted;
-  int bus_index_t[2];
-  int* HP_nnz[2];
-  int* HQ_nnz[2];
-  BOOL var_v[2];
-  BOOL var_w[2];
-  int k;
+  int* HP_nnz;
+  int* HQ_nnz;
+  BOOL var_v;
+  BOOL var_w;
 
   // Constr data
   J_row = CONSTR_get_J_row_ptr(c);
   J_nnz = CONSTR_get_J_nnz_ptr(c);
   H_nnz = CONSTR_get_H_nnz(c);
-  bus_counted = CONSTR_get_bus_counted(c);
 
   // Check pointers
-  if (!J_row || !J_nnz || !H_nnz || !bus_counted)
+  if (!J_row || !J_nnz || !H_nnz)
     return;
   
   // Bus data
-  bus[0] = BRANCH_get_bus_k(br);
-  bus[1] = BRANCH_get_bus_m(br);
-  for (k = 0; k < 2; k++) {
-    bus_index_t[k] = BUS_get_index_t(bus[k],t);
-    var_w[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG);
-    var_v[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG);
-    HP_nnz[k] = H_nnz+BUS_get_index_P(bus[k],t);
-    HQ_nnz[k] = H_nnz+BUS_get_index_Q(bus[k],t);
-  }
+  var_w = BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG);
+  var_v = BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG);
+  HP_nnz = H_nnz+BUS_get_index_P(bus,t);
+  HQ_nnz = H_nnz+BUS_get_index_Q(bus,t);
 
-  // Branch
-  //*******
-
-  BRANCH_power_flow_count(br,
-			  J_nnz,
-			  HP_nnz[0],
-			  t,
-			  TRUE,  // Pkm, Qkm
-			  TRUE); // ext_idx
-  (*HQ_nnz[0]) = *(HP_nnz[0]);
-  
-  BRANCH_power_flow_count(br,
-			  J_nnz,
-			  HP_nnz[1],
-			  t,
-			  FALSE, // Pmk, Qmk
-			  TRUE); // ext_idx
-  (*HQ_nnz[1]) = *(HP_nnz[1]);
-
-  // Buses
-  //******
-
-  for (k = 0; k < 2; k++) {
-
-    if (!bus_counted[bus_index_t[k]]) {
-
-      if (var_w[k]) {
-	
-	BUS_set_dPdw_index(bus[k],*J_nnz, t);
-	(*J_nnz)++; // dPk/dwk
-
-	BUS_set_dQdw_index(bus[k],*J_nnz, t);
-	(*J_nnz)++; // dQk/dwk
-
-	BUS_set_dwdw_index(bus[k],*HP_nnz[k], t);
-	(*HP_nnz[k])++;
-	(*HQ_nnz[k])++; // dwkdwk
-
-	if (var_v[k]) {
-	  BUS_set_dwdv_index(bus[k],*HP_nnz[k], t);
-	  (*HP_nnz[k])++;
-	  (*HQ_nnz[k])++; // dwkdvk
-	}
-      }
-
-      if (var_v[k]) {
-
-	BUS_set_dPdv_index(bus[k],*J_nnz, t);
-	(*J_nnz)++; // dPk/dvk
-
-	BUS_set_dQdv_index(bus[k],*J_nnz, t);
-	(*J_nnz)++; // dQk/dvk
-
-	BUS_set_dvdv_index(bus[k],*HP_nnz[k], t);
-	(*HP_nnz[k])++;
-	(*HQ_nnz[k])++; // dvkdvk
-      }
-
-      // Generators
-      for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
-
-	// Outage
-	if (GEN_is_on_outage(gen))
-	  continue;
-
-	//*****************************
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // Pg var
-
-	  // J
-	  (*J_nnz)++; // dPk/dPg
-	}
-
-	//*****************************
-	if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) { // Qg var
-	  
-	  // J
-	  (*J_nnz)++; // dQk/dQg
-	}
-      }
-
-      // Variable generators
-      for (vargen = BUS_get_vargen(bus[k]); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
-
-	//*****************************
-	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) { // Pg var
-
-	  // J
-	  (*J_nnz)++; // dPk/dPg
-	}
-
-	//*****************************
-	if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q)) { // Qg var
-
-	  // J
-	  (*J_nnz)++; // dQk/dQg
-	}
-      }
-
-      // Shunts
-      for (shunt = BUS_get_shunt(bus[k]); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
-
-	//*****************************
-	if (var_v[k]) { // vk var
-
-	  // J
-	  // dPk/dvk
-	  // dQk/dvk
-
-	  // H
-	  // vk an vk
-	}
-
-	//*****************************
-	if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) { // b var
-
-	  // J
-	  (*J_nnz)++; // dQk/db
-	  
-	  // H
-	  if (var_v[k]) {
-	    (*HP_nnz[k])++;
-	    (*HQ_nnz[k])++; // b an vk
-	  }
-	}
-      }
-      
-      // Loads
-      for (load = BUS_get_load(bus[k]); load != NULL; load = LOAD_get_next(load)) {
-
-	//*****************************
-	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) { // Pl var
-
-	  // J
-	  (*J_nnz)++; // dPk/dPl
-	}
-
-	//*****************************
-	if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) { // Ql var
-
-	  // J
-	  (*J_nnz)++; // dQk/dQl
-	}
-      }
-
-      // Batteries
-      for (bat = BUS_get_bat(bus[k]); bat != NULL; bat = BAT_get_next(bat)) {
-
-	//*****************************
-	if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) { // Pc and Pd var
-
-	  // J
-	  (*J_nnz)++; // Pc
-	  (*J_nnz)++; // Pd
-	}
-      }
-      
-      // Rows
-      (*J_row)++;
-      (*J_row)++;
+  if (var_w) {
+    
+    BUS_set_dPdw_index(bus,*J_nnz, t);
+    (*J_nnz)++; // dPk/dwk
+    
+    BUS_set_dQdw_index(bus,*J_nnz, t);
+    (*J_nnz)++; // dQk/dwk
+    
+    BUS_set_dwdw_index(bus,*HP_nnz, t);
+    (*HP_nnz)++;
+    (*HQ_nnz)++; // dwkdwk
+    
+    if (var_v) {
+      BUS_set_dwdv_index(bus,*HP_nnz, t);
+      (*HP_nnz)++;
+      (*HQ_nnz)++; // dwkdvk
     }
-
-    // Update counted flag
-    bus_counted[bus_index_t[k]] = TRUE;
   }
+  
+  if (var_v) {
+    
+    BUS_set_dPdv_index(bus,*J_nnz, t);
+    (*J_nnz)++; // dPk/dvk
+    
+    BUS_set_dQdv_index(bus,*J_nnz, t);
+    (*J_nnz)++; // dQk/dvk
+    
+    BUS_set_dvdv_index(bus,*HP_nnz, t);
+    (*HP_nnz)++;
+    (*HQ_nnz)++; // dvkdvk
+  }
+  
+  // Generators
+  for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+    
+    // Outage
+    if (GEN_is_on_outage(gen))
+      continue;
+    
+    //*****************************
+    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // Pg var
+      
+      // J
+      (*J_nnz)++; // dPk/dPg
+    }
+    
+    //*****************************
+    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) { // Qg var
+      
+      // J
+      (*J_nnz)++; // dQk/dQg
+    }
+  }
+  
+  // Variable generators
+  for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+    
+    //*****************************
+    if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) { // Pg var
+      
+      // J
+      (*J_nnz)++; // dPk/dPg
+    }
+    
+    //*****************************
+    if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q)) { // Qg var
+      
+      // J
+      (*J_nnz)++; // dQk/dQg
+    }
+  }
+  
+  // Shunts
+  for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+    
+    //*****************************
+    if (var_v) { // vk var
+      
+      // J
+      // dPk/dvk
+      // dQk/dvk
+      
+      // H
+      // vk an vk
+    }
+    
+    //*****************************
+    if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) { // b var
+      
+      // J
+      (*J_nnz)++; // dQk/db
+      
+      // H
+      if (var_v) {
+	(*HP_nnz)++;
+	(*HQ_nnz)++; // b an vk
+      }
+    }
+  }
+  
+  // Loads
+  for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+    
+    //*****************************
+    if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) { // Pl var
+      
+      // J
+      (*J_nnz)++; // dPk/dPl
+    }
+    
+    //*****************************
+    if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) { // Ql var
+      
+      // J
+      (*J_nnz)++; // dQk/dQl
+    }
+  }
+  
+  // Batteries
+  for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+    
+    //*****************************
+    if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) { // Pc and Pd var
+      
+      // J
+      (*J_nnz)++; // Pc
+      (*J_nnz)++; // Pd
+    }
+  }
+
+  // Branches
+  for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
+
+    HP_nnz = H_nnz+BUS_get_index_P(BRANCH_get_bus_k(br),t);
+    HQ_nnz = H_nnz+BUS_get_index_Q(BRANCH_get_bus_k(br),t);
+    BRANCH_power_flow_count(br,
+			    J_nnz,
+			    HP_nnz,
+			    t,
+			    TRUE,  // Pkm, Qkm
+			    TRUE); // ext_idx
+    *HQ_nnz = *HP_nnz;
+
+    HP_nnz = H_nnz+BUS_get_index_P(BRANCH_get_bus_m(br),t);
+    HQ_nnz = H_nnz+BUS_get_index_Q(BRANCH_get_bus_m(br),t);
+    BRANCH_power_flow_count(br,
+			    J_nnz,
+			    HP_nnz,
+			    t,
+			    FALSE, // Pmk, Qmk
+			    TRUE); // ext_idx
+    *HQ_nnz = *HP_nnz;
+  }
+    
+  // Rows
+  (*J_row)++;
+  (*J_row)++;  
 }
+
 
 void CONSTR_ACPF_analyze_step(Constr* c, Branch* br, int t) {
 
