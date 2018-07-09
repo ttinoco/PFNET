@@ -76,12 +76,12 @@ static char* test_constr_FIX() {
   Assert("error - bad constraint initialization",CONSTR_get_H_combined(c) == NULL);
   
   Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == 0);
-  CONSTR_count(c);  
-  Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == num+NET_get_num_reg_gens(net));  
+  CONSTR_count(c);
+  Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == num);  
   CONSTR_allocate(c);
-  Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == num+NET_get_num_reg_gens(net));
+  Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == num);
   CONSTR_analyze(c);
-  Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == num+NET_get_num_reg_gens(net));
+  Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == num);
   CONSTR_eval(c,x,NULL);
   Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == 0);
   CONSTR_store_sens(c,NULL,NULL,NULL,NULL);
@@ -96,7 +96,7 @@ static char* test_constr_FIX() {
   Assert("error - bad b size", VEC_get_size(b) == num);
   Assert("error - bad A size", MAT_get_size1(A) == num);
   Assert("error - bad A size", MAT_get_size2(A) == NET_get_num_vars(net));
-  Assert("error - bad A size", MAT_get_nnz(A) == num+NET_get_num_reg_gens(net));
+  Assert("error - bad A size", MAT_get_nnz(A) == num);
   
   CONSTR_clear(c);
   Assert("error - wrong Annz counter",CONSTR_get_A_nnz(c) == 0);
