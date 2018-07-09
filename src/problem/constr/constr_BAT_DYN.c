@@ -73,7 +73,7 @@ void CONSTR_BAT_DYN_analyze_step(Constr* c, Bus* bus, int t) {
   int T;
 
   // Number of periods
-  T = BRANCH_get_num_periods(br);
+  T = BUS_get_num_periods(bus);
 
   // Cosntr data
   b = CONSTR_get_b(c);

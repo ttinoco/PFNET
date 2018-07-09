@@ -40,7 +40,7 @@ void FUNC_REG_VANG_count_step(Func* f, Bus* bus, int t) {
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
     // Outage
-    if (BRANHC_is_on_outage(br))
+    if (BRANCH_is_on_outage(br))
       continue;
   
     if (BUS_has_flags(BRANCH_get_bus_k(br),FLAG_VARS,BUS_VAR_VANG)) {
@@ -83,7 +83,7 @@ void FUNC_REG_VANG_analyze_step(Func* f, Bus* bus, int t) {
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
     // Outage
-    if (BRANHC_is_on_outage(br))
+    if (BRANCH_is_on_outage(br))
       continue;
     
     bus_k = BRANCH_get_bus_k(br);
@@ -112,6 +112,7 @@ void FUNC_REG_VANG_analyze_step(Func* f, Bus* bus, int t) {
 void FUNC_REG_VANG_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
 
   // Local variables
+  Branch* br;
   REAL* phi;
   REAL* gphi;
   REAL* Hphi;
@@ -150,7 +151,7 @@ void FUNC_REG_VANG_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
     // Outage
-    if (BRANHC_is_on_outage(br))
+    if (BRANCH_is_on_outage(br))
       continue;
 
     bus_k = BRANCH_get_bus_k(br);
@@ -175,7 +176,7 @@ void FUNC_REG_VANG_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
       }
     }
     if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VANG)) {
-      gphi[index_v_ang[1]] -= wdiff/(dw*dw);
+      gphi[BUS_get_index_v_ang(bus_m,t)] -= wdiff/(dw*dw);
       Hphi[*Hphi_nnz] = 1./(dw*dw);
       (*Hphi_nnz)++; // wm and wm
     }

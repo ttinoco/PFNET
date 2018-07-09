@@ -33,7 +33,7 @@ void FUNC_REG_SUSC_count_step(Func* f, Bus* bus, int t) {
     return;
 
   // Shunts
-  for (shunt = BUS_get_shunt(bus[k]); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+  for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
     
     if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) // b var
       (*Hphi_nnz)++;
@@ -57,7 +57,7 @@ void FUNC_REG_SUSC_analyze_step(Func* f, Bus* bus, int t) {
     return;
 
   // Shunts
-  for (shunt = BUS_get_shunt(bus[k]); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+  for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
 
     db = SHUNT_get_b_max(shunt)-SHUNT_get_b_min(shunt); // p.u.
     if (db < FUNC_REG_SUSC_PARAM)
@@ -95,7 +95,7 @@ void FUNC_REG_SUSC_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
     return;
   
   // Shunts
-  for (shunt = BUS_get_shunt(bus[k]); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+  for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
     
     // Normalization factor
     db = SHUNT_get_b_max(shunt)-SHUNT_get_b_min(shunt); // p.u.

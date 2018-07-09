@@ -42,6 +42,9 @@ void FUNC_NETCON_COST_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
   phi = FUNC_get_phi_ptr(f);
   gphi = VEC_get_data(FUNC_get_gphi(f));
 
+  // Bus data
+  price = BUS_get_price(bus,t);
+
   // Check pointers
   if (!phi || !gphi)
     return;

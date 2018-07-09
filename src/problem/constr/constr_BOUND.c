@@ -415,7 +415,6 @@ void CONSTR_BOUND_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, 
   Gen* gen;
   Load* load;
   Shunt* shunt;
-  char* bus_counted;
 
   // Voltage magnitude (V_MAG)
   if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {

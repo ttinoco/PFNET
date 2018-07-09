@@ -296,11 +296,11 @@ void CONSTR_AC_LIN_FLOW_LIM_analyze_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_AC_LIN_FLOW_LIM_eval_step(Constr* c, Branch* br, int t, Vec* values, Vec* values_extra) {
+void CONSTR_AC_LIN_FLOW_LIM_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
   // Nothing
 }
 
-void CONSTR_AC_LIN_FLOW_LIM_store_sens_step(Constr* c, Branch* br, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_AC_LIN_FLOW_LIM_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing yet
 }
 

@@ -33,7 +33,7 @@ void FUNC_REG_PQ_count_step(Func* f, Bus* bus, int t) {
     return;
 
   // Generators
-  for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
+  for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
     
     // Outage
     if (GEN_is_on_outage(gen))
@@ -64,7 +64,7 @@ void FUNC_REG_PQ_analyze_step(Func* f, Bus* bus, int t) {
     return;
 
   // Generators
-  for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
+  for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
     
     // Outage
     if (GEN_is_on_outage(gen))
@@ -120,7 +120,7 @@ void FUNC_REG_PQ_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
     return;
 
   // Generators
-  for (gen = BUS_get_gen(bus[k]); gen != NULL; gen = GEN_get_next(gen)) {
+  for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
     
     // Outage
     if (GEN_is_on_outage(gen))

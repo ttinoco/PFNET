@@ -179,7 +179,7 @@ void CONSTR_FIX_analyze_step(Constr* c, Bus* bus, int t) {
   A_row = CONSTR_get_A_row_ptr(c);
 
   // Check pointers
-  if (!A_nnz || !A_row || !bus_counted)
+  if (!A_nnz || !A_row)
     return;
 
   // Voltage magnitude (V_MAG)

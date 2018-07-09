@@ -47,7 +47,7 @@ void CONSTR_LOAD_PF_count_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_LOAD_PF_analyze_step(Constr* c, Bus* bus,, int t) {
+void CONSTR_LOAD_PF_analyze_step(Constr* c, Bus* bus, int t) {
 
   // Local variables
   Load* load;

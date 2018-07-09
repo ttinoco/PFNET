@@ -651,6 +651,7 @@ void CONSTR_REG_TRAN_eval_step(Constr* c, Bus* bus, int tau, Vec* values, Vec* v
 void CONSTR_REG_TRAN_store_sens_step(Constr* c, Bus* bus, int tau, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Local variables
+  Branch* br;
   Bus* reg_bus;
   int* J_row;
   REAL lamCompVmin;

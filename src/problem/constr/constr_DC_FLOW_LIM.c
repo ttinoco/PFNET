@@ -76,6 +76,7 @@ void CONSTR_DC_FLOW_LIM_count_step(Constr* c, Bus* bus, int t) {
 void CONSTR_DC_FLOW_LIM_analyze_step(Constr* c, Bus* bus, int t) {
 
   // Local variables
+  Branch* br;
   Bus* buses[2];
   Mat* G;
   Vec* l;

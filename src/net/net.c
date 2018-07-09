@@ -4208,7 +4208,7 @@ void NET_update_properties_step(Net* net, Bus* bus, int t, Vec* var_values) {
   REAL shunt_g;
 
   // Check pointers
-  if (!net || !us)
+  if (!net || !bus)
     return;
 
   // Voltage magnitude
@@ -4409,8 +4409,8 @@ void NET_update_properties_step(Net* net, Bus* bus, int t, Vec* var_values) {
       shunt_b = SHUNT_get_b(shunt,t);
     
     // Flows
-    BUS_inject_P(bus,-shunt_g*v[k]*v[k],t);
-    BUS_inject_Q(bus,shunt_b*v[k]*v[k],t);
+    BUS_inject_P(bus,-shunt_g*v*v,t);
+    BUS_inject_Q(bus,shunt_b*v*v,t);
     
     // Switched shunts
     if (SHUNT_is_switched_v(shunt)) {
@@ -4436,7 +4436,7 @@ void NET_update_properties_step(Net* net, Bus* bus, int t, Vec* var_values) {
   }
 
   // Branches
-  for (br = BUS_get_branch_k(br); br != NULL; br = BRANCH_get_next_k(br)) {
+  for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
   
     // Branch data
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)

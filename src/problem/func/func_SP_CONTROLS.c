@@ -142,7 +142,7 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Bus* bus, int t) {
   }
 
   // Branches
-  for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_branch_k(br)) {
+  for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
     // Outage
     if (BRANCH_is_on_outage(br))
