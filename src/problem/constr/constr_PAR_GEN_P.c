@@ -43,9 +43,7 @@ void CONSTR_PAR_GEN_P_count_step(Constr* c, Bus* bus, int t) {
 	break;
     }
     for (gen2 = GEN_get_next(gen1); gen2 != NULL; gen2 = GEN_get_next(gen2)) {
-      if (GEN_is_on_outage(gen2))
-	continue;
-      if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_P)) {
+      if (!GEN_is_on_outage(gen2) && GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_P)) {
 	(*A_nnz)++;
 	(*A_nnz)++;
 	(*A_row)++;
@@ -81,9 +79,7 @@ void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Bus* bus, int t) {
 	break;
     }
     for (gen2 = GEN_get_next(gen1); gen2 != NULL; gen2 = GEN_get_next(gen2)) {
-      if (GEN_is_on_outage(gen2))
-	continue;
-      if (GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_P)) {
+      if (!GEN_is_on_outage(gen2) && GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_P)) {
 	VEC_set(b,*A_row,0.);
 	MAT_set_i(A,*A_nnz,*A_row);
 	MAT_set_j(A,*A_nnz,GEN_get_index_P(gen1,t));

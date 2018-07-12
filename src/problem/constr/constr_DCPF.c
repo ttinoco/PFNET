@@ -96,7 +96,7 @@ void CONSTR_DCPF_count_step(Constr* c, Bus* bus, int t) {
 
     // Outage
     if (BRANCH_is_on_outage(br))
-      break;
+      continue;
     
     // Bus data
     buses[0] = BRANCH_get_bus_k(br);
@@ -255,7 +255,7 @@ void CONSTR_DCPF_analyze_step(Constr* c, Bus* bus, int t) {
 
     // Outage
     if (BRANCH_is_on_outage(br))
-      break;
+      continue;
 
     // Bus data
     buses[0] = BRANCH_get_bus_k(br);
