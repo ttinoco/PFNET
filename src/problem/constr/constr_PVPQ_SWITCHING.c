@@ -59,7 +59,7 @@ void CONSTR_PVPQ_SWITCHING_count_step(Constr* c, Bus* bus, int t) {
 	num += 1;
     }
     
-    if (num > 0) {
+    if (num > 1) {
       (*A_nnz) += num*(num-1);
       (*A_row) += num-1;
     }
@@ -110,6 +110,7 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Bus* bus, int t) {
   REAL Q;
   REAL Q_min;
   REAL Q_max;
+  BOOL Q_available;
   Constr_PVPQ_SWITCHING_Data* data;
 
   // Cosntr data
@@ -125,9 +126,18 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Bus* bus, int t) {
 
   // Regulated bus (includes slack)
   if (BUS_is_regulated_by_gen(bus)) {
-    
+
+    // Q available
+    Q_available = FALSE;
+    for (gen1 = BUS_get_reg_gen(bus); gen1 != NULL; gen1 = GEN_get_reg_next(gen1)) {
+      if (GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_Q) && !GEN_is_on_outage(gen1)) {
+	Q_available = TRUE;
+	break;
+      }
+    }
+	  
     // v var and fixed
-    if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) &&
+    if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) && Q_available &&
 	data->fix_flag[BUS_get_index_v_mag(bus,t)]) {
       
       VEC_set(b,*A_row,BUS_get_v_set(bus,t));

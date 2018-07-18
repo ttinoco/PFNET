@@ -18,6 +18,7 @@ Unreleased
 * Moved function alloc/clear to "parent" struct (advanced custom functions can extend).
 * Made function init/free optional.
 * Changed count/analyze/eval/etc loop to be bus-based.
+* Fixed bug with PVPQ switching constraint when no Q vars.
 
 Version 1.3.3
 -------------
