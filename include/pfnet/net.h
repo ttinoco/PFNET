@@ -136,6 +136,7 @@ int NET_get_num_slack_gens(Net* net);
 int NET_get_num_P_adjust_gens(Net* net);
 int NET_get_num_loads(Net* net);
 int NET_get_num_P_adjust_loads(Net* net);
+int NET_get_num_vdep_loads(Net* net);
 int NET_get_num_shunts(Net* net);
 int NET_get_num_fixed_shunts(Net* net);
 int NET_get_num_switched_shunts(Net* net);

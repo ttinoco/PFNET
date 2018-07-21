@@ -1024,6 +1024,38 @@ void JSON_PARSER_process_json_load_array(Parser* p, Net* net, json_value* json_l
 	  LOAD_set_Q_min(load,val->u.array.values[k]->u.dbl,k);
       }
 
+      // comp_cp
+      else if (strcmp(key,"comp_cp") == 0) {
+	for (k = 0; k < imin(LOAD_get_num_periods(load),val->u.array.length); k++)
+	  LOAD_set_comp_cp(load,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // comp_cq
+      else if (strcmp(key,"comp_cq") == 0) {
+	for (k = 0; k < imin(LOAD_get_num_periods(load),val->u.array.length); k++)
+	  LOAD_set_comp_cq(load,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // comp_ci
+      else if (strcmp(key,"comp_ci") == 0) {
+	for (k = 0; k < imin(LOAD_get_num_periods(load),val->u.array.length); k++)
+	  LOAD_set_comp_ci(load,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // comp_cj
+      else if (strcmp(key,"comp_cj") == 0) {
+	for (k = 0; k < imin(LOAD_get_num_periods(load),val->u.array.length); k++)
+	  LOAD_set_comp_cj(load,val->u.array.values[k]->u.dbl,k);
+      }
+
+      // comp_cg
+      else if (strcmp(key,"comp_cg") == 0)
+	LOAD_set_comp_cg(load,val->u.dbl);
+
+      // comp_cb
+      else if (strcmp(key,"comp_cb") == 0)
+	LOAD_set_comp_cb(load,val->u.dbl);
+
       // target power factor
       else if (strcmp(key,"target_power_factor") == 0)
 	LOAD_set_target_power_factor(load,val->u.dbl);

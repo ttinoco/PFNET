@@ -40,6 +40,14 @@ struct Load {
   REAL* Q_max;         /**< @brief Maximum load reactive power consumption (p.u.) */
   REAL* Q_min;         /**< @brief Minimum load reactive power consumption (p.u.) */
 
+  // Load components
+  REAL* comp_cp; /**< @brief Active power part of constant power component of load (S = comp_cp + j*comp_cq) (p.u. system base power) */
+  REAL* comp_cq; /**< @brief Reactive power part of constant power component of load (S = comp_cp + j*comp_cq) (p.u. system base power) */
+  REAL* comp_ci; /**< @brief Active power part of constant current component of load (S = v*comp_ci + j*v*comp_cj) (p.u. base current) */
+  REAL* comp_cj; /**< @brief Reactive power part of constant current component of load (S = v*comp_ci + j*v*comp_cj) (p.u. base current) */
+  REAL comp_cg;  /**< @brief Active power part of constant admittance component of load (S = v^2*comp_cg - j*v^2*comp_cb) (p.u. base admittance) */
+  REAL comp_cb;  /**< @brief Reactive power part of constant admittance component of load (S = v^2*comp_cg - j*v^2*comp_cb) (p.u. base admittance) */
+
   // Power factor
   REAL target_power_factor; /**< @brief Target power factor in (0,1] */
 
@@ -82,6 +90,10 @@ void LOAD_array_del(Load* load_array, int size) {
       free(load->Q_min);
       free(load->index_P);
       free(load->index_Q);
+      free(load->comp_cp);
+      free(load->comp_cq);
+      free(load->comp_ci);
+      free(load->comp_cj);
       free(load->sens_P_u_bound);
       free(load->sens_P_l_bound);
       LOAD_set_bus(load,NULL);
@@ -175,6 +187,14 @@ void LOAD_copy_from_load(Load* load, Load* other) {
   memcpy(load->Q,other->Q,num_periods*sizeof(REAL));
   memcpy(load->Q_max,other->Q_max,num_periods*sizeof(REAL));
   memcpy(load->Q_min,other->Q_min,num_periods*sizeof(REAL));
+
+  // Load components
+  memcpy(load->comp_cp,other->comp_cp,num_periods*sizeof(REAL));
+  memcpy(load->comp_cq,other->comp_cq,num_periods*sizeof(REAL));
+  memcpy(load->comp_ci,other->comp_ci,num_periods*sizeof(REAL));
+  memcpy(load->comp_cj,other->comp_cj,num_periods*sizeof(REAL));
+  load->comp_cg = other->comp_cg;
+  load->comp_cb = other->comp_cb;
 
   // Power factor
   load->target_power_factor = other->target_power_factor;
@@ -464,6 +484,76 @@ REAL* LOAD_get_Q_min_array(Load* load) {
     return NULL;
 }
 
+REAL LOAD_get_comp_cp(Load* load, int t) {
+  if (load && t >= 0 && t < load->num_periods)
+    return load->comp_cp[t];
+  else
+    return 0;
+}
+
+REAL LOAD_get_comp_cq(Load* load, int t) {
+  if (load && t >= 0 && t < load->num_periods)
+    return load->comp_cq[t];
+  else
+    return 0;
+}
+
+REAL LOAD_get_comp_ci(Load* load, int t) {
+  if (load && t >= 0 && t < load->num_periods)
+    return load->comp_ci[t];
+  else
+    return 0;
+}
+
+REAL LOAD_get_comp_cj(Load* load, int t) {
+  if (load && t >= 0 && t < load->num_periods)
+    return load->comp_cj[t];
+  else
+    return 0;
+}
+
+REAL LOAD_get_comp_cg(Load* load) {
+  if (load)
+    return load->comp_cg;
+  else
+    return 0;
+}
+
+REAL LOAD_get_comp_cb(Load* load) {
+  if (load)
+    return load->comp_cb;
+  else
+    return 0;
+}
+
+REAL* LOAD_get_comp_cp_array(Load* load) {
+  if (load)
+    return load->comp_cp;
+  else
+    return NULL;
+}
+
+REAL* LOAD_get_comp_cq_array(Load* load) {
+  if (load)
+    return load->comp_cq;
+  else
+    return NULL;
+}
+
+REAL* LOAD_get_comp_ci_array(Load* load) {
+  if (load)
+    return load->comp_ci;
+  else
+    return NULL;
+}
+
+REAL* LOAD_get_comp_cj_array(Load* load) {
+  if (load)
+    return load->comp_cj;
+  else
+    return NULL;
+}
+
 void LOAD_get_var_values(Load* load, Vec* values, int code) {
  
   // Local vars
@@ -644,6 +734,12 @@ char* LOAD_get_json_string(Load* load, char* output) {
   JSON_array_float(temp,output,"Q",load->Q,load->num_periods,FALSE);
   JSON_array_float(temp,output,"Q_max",load->Q_max,load->num_periods,FALSE);
   JSON_array_float(temp,output,"Q_min",load->Q_min,load->num_periods,FALSE);
+  JSON_array_float(temp,output,"comp_cp",load->comp_cp,load->num_periods,FALSE);
+  JSON_array_float(temp,output,"comp_cq",load->comp_cq,load->num_periods,FALSE);
+  JSON_array_float(temp,output,"comp_ci",load->comp_ci,load->num_periods,FALSE);
+  JSON_array_float(temp,output,"comp_cj",load->comp_cj,load->num_periods,FALSE);
+  JSON_float(temp,output,"comp_cg",load->comp_cg,FALSE);
+  JSON_float(temp,output,"comp_cb",load->comp_cb,FALSE);
   JSON_float(temp,output,"target_power_factor",load->target_power_factor,FALSE);
   JSON_float(temp,output,"util_coeff_Q0",load->util_coeff_Q0,FALSE);
   JSON_float(temp,output,"util_coeff_Q1",load->util_coeff_Q1,FALSE);
@@ -680,6 +776,8 @@ BOOL LOAD_has_properties(void* vload, char prop) {
   if (!load)
     return FALSE;
   if ((prop & LOAD_PROP_P_ADJUST) && !LOAD_is_P_adjustable(load))
+    return FALSE;
+  if ((prop & LOAD_PROP_VDEP) && !LOAD_is_vdep(load))
     return FALSE;
   return TRUE;
 }
@@ -721,6 +819,13 @@ void LOAD_init(Load* load, int num_periods) {
   ARRAY_zalloc(load->sens_P_u_bound,REAL,T);
   ARRAY_zalloc(load->sens_P_l_bound,REAL,T);
 
+  ARRAY_zalloc(load->comp_cp,REAL,T);
+  ARRAY_zalloc(load->comp_cq,REAL,T);
+  ARRAY_zalloc(load->comp_ci,REAL,T);
+  ARRAY_zalloc(load->comp_cj,REAL,T);
+  load->comp_cg = 0.;
+  load->comp_cb = 0.;
+
   load->target_power_factor = 1.;
   
   load->next = NULL;
@@ -741,6 +846,23 @@ BOOL LOAD_is_P_adjustable(Load* load) {
   }    
   else
     return FALSE;
+}
+
+BOOL LOAD_is_vdep(Load* load) {
+  int t;
+  REAL ci;
+  REAL cj;
+  REAL cg;
+  REAL cb;
+  cg = LOAD_get_comp_cg(load);
+  cb = LOAD_get_comp_cb(load);
+  for(t = 0; t < load->num_periods; t++) {
+    ci = LOAD_get_comp_ci(load,t);
+    cj = LOAD_get_comp_cj(load,t);
+    if ((ci != 0.) || (cj != 0.) || (cg != 0.) || (cb != 0.))
+      return TRUE;
+  }
+  return FALSE;
 }
 
 Load* LOAD_list_add(Load* load_list, Load* load) {
@@ -858,6 +980,36 @@ void LOAD_set_Q_min(Load* load, REAL Q_min, int t) {
     load->Q_min[t] = Q_min;
 }
 
+void LOAD_set_comp_cp(Load* load, REAL comp, int t) {
+  if (load && t >= 0 && t < load->num_periods)
+    load->comp_cp[t] = comp;
+}
+
+void LOAD_set_comp_cq(Load* load, REAL comp, int t) {
+  if (load && t >= 0 && t < load->num_periods)
+    load->comp_cq[t] = comp;
+}
+
+void LOAD_set_comp_ci(Load* load, REAL comp, int t) {
+  if (load && t >= 0 && t < load->num_periods)
+    load->comp_ci[t] = comp;
+}
+
+void LOAD_set_comp_cj(Load* load, REAL comp, int t) {
+  if (load && t >= 0 && t < load->num_periods)
+    load->comp_cj[t] = comp;
+}
+
+void LOAD_set_comp_cg(Load* load, REAL comp) {
+  if (load)
+    load->comp_cg = comp;
+}
+
+void LOAD_set_comp_cb(Load* load, REAL comp) {
+  if (load)
+    load->comp_cb = comp;
+}
+
 int LOAD_set_flags(void* vload, char flag_type, unsigned char mask, int index) {
 
   // Local variables
@@ -942,6 +1094,10 @@ void LOAD_propagate_data_in_time(Load* load, int start, int end) {
       load->Q[t] = load->Q[start];
       load->Q_max[t] = load->Q_max[start];
       load->Q_min[t] = load->Q_min[start];
+      load->comp_cp[t] = load->comp_cp[start];
+      load->comp_cq[t] = load->comp_cq[start];
+      load->comp_ci[t] = load->comp_ci[start];
+      load->comp_cj[t] = load->comp_cj[start];
     }
   }
 }

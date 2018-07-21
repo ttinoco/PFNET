@@ -3062,6 +3062,18 @@ int NET_get_num_P_adjust_loads(Net* net) {
   return n;
 }
 
+int NET_get_num_vdep_loads(Net* net) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  for(i = 0; i < net->num_loads; i++) {
+    if (LOAD_is_vdep(LOAD_array_get(net->load,i)))
+      n++;
+  }
+  return n;
+}
+
 int NET_get_num_shunts(Net* net) {
   if (net)
     return net->num_shunts;

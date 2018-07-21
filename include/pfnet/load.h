@@ -37,6 +37,7 @@
  */
 #define LOAD_PROP_ANY 0x00     /**< @brief Property: any */
 #define LOAD_PROP_P_ADJUST 0x1 /**< @brief Property: P adjustable (Pmin < Pmax) */
+#define LOAD_PROP_VDEP 0x2     /**< @brief Property: voltage dependent */
 /** @} */
 
 // Constants
@@ -101,6 +102,18 @@ REAL* LOAD_get_P_min_array(Load* load);
 REAL* LOAD_get_Q_array(Load* load);
 REAL* LOAD_get_Q_max_array(Load* load);
 REAL* LOAD_get_Q_min_array(Load* load);
+
+REAL LOAD_get_comp_cp(Load* load, int t);
+REAL LOAD_get_comp_cq(Load* load, int t);
+REAL LOAD_get_comp_ci(Load* load, int t);
+REAL LOAD_get_comp_cj(Load* load, int t);
+REAL LOAD_get_comp_cg(Load* load);
+REAL LOAD_get_comp_cb(Load* load);
+REAL* LOAD_get_comp_cp_array(Load* load);
+REAL* LOAD_get_comp_cq_array(Load* load);
+REAL* LOAD_get_comp_ci_array(Load* load);
+REAL* LOAD_get_comp_cj_array(Load* load);
+
 void LOAD_get_var_values(Load* load, Vec* values, int code);
 char* LOAD_get_var_info_string(Load* load, int index);
 int LOAD_get_num_vars(void* load, unsigned char var, int t_start, int t_end);
@@ -111,6 +124,7 @@ BOOL LOAD_has_properties(void* load, char prop);
 void LOAD_init(Load* load, int num_periods);
 BOOL LOAD_is_equal(Load* load, Load* other);
 BOOL LOAD_is_P_adjustable(Load* load);
+BOOL LOAD_is_vdep(Load* load);
 Load* LOAD_list_add(Load* load_list, Load* load);
 Load* LOAD_list_del(Load* load_list, Load* load);
 int LOAD_list_len(Load* load_list);
@@ -131,6 +145,14 @@ void LOAD_set_P_min(Load* load, REAL P, int t);
 void LOAD_set_Q(Load* load, REAL Q, int t);
 void LOAD_set_Q_max(Load* load, REAL Q, int t);
 void LOAD_set_Q_min(Load* load, REAL Q, int t);
+
+void LOAD_set_comp_cp(Load* load, REAL comp, int t);
+void LOAD_set_comp_cq(Load* load, REAL comp, int t);
+void LOAD_set_comp_ci(Load* load, REAL comp, int t);
+void LOAD_set_comp_cj(Load* load, REAL comp, int t);
+void LOAD_set_comp_cg(Load* load, REAL comp);
+void LOAD_set_comp_cb(Load* load, REAL comp);
+
 int LOAD_set_flags(void* load, char flag_type, unsigned char mask, int index);
 void LOAD_set_var_values(Load* load, Vec* values);
 void LOAD_show(Load* load, int t);
