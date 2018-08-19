@@ -99,14 +99,14 @@ void CONSTR_AC_LIN_FLOW_LIM_count_step(Constr* c, Bus* bus, int t) {
 
     // Check tap ratio and phase shift
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) ||
-	BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
+        BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
       CONSTR_set_error(c,"AC_LIN_FLOW_LIM constraint does not support tap ratios or phase shifts as variables");
       continue;
     }
     
     // Check voltage angles
     if (!BUS_has_flags(buses[0],FLAG_VARS,BUS_VAR_VANG) &&
-	!BUS_has_flags(buses[1],FLAG_VARS,BUS_VAR_VANG)) {
+        !BUS_has_flags(buses[1],FLAG_VARS,BUS_VAR_VANG)) {
       CONSTR_set_error(c,"AC_LIN_FLOW_LIM constraint requires at least one voltage angle as variable accross branch");
       continue;
     }
@@ -114,31 +114,33 @@ void CONSTR_AC_LIN_FLOW_LIM_count_step(Constr* c, Bus* bus, int t) {
     // Voltage magnitude limits
     for (k = 0; k < 2; k++) {
       if (BUS_has_flags(buses[k],FLAG_VARS,BUS_VAR_VMAG)) {
-	if (!BUS_has_flags(buses[k],FLAG_BOUNDED,BUS_VAR_VMAG)) {
-	  CONSTR_set_error(c,"AC_LIN_FLOW_LIM constraint requires variable voltage magnitudes to be bounded");
-	  continue;
-	}
-	V_min[k] = BUS_get_v_min_norm(buses[k]);
-	V_max[k] = BUS_get_v_max_norm(buses[k]);
+        if (!BUS_has_flags(buses[k],FLAG_BOUNDED,BUS_VAR_VMAG)) {
+          CONSTR_set_error(c,"AC_LIN_FLOW_LIM constraint requires variable voltage magnitudes to be bounded");
+          continue;
+        }
+        V_min[k] = BUS_get_v_min_norm(buses[k]);
+        V_max[k] = BUS_get_v_max_norm(buses[k]);
       }
       else {
-	V_min[k] = BUS_get_v_mag(buses[k],t);
-	V_max[k] = BUS_get_v_mag(buses[k],t);
+        V_min[k] = BUS_get_v_mag(buses[k],t);
+        V_max[k] = BUS_get_v_mag(buses[k],t);
       }
     }
+    if (CONSTR_has_error(c))
+      continue;
     
     // Set parameters of branch structure of Line_Flow library
     LF_set_branch_parameters(V_min[0], 
-			     V_max[0], 
-			     V_min[1], 
-			     V_max[1],
-			     BRANCH_get_g(br), 
-			     BRANCH_get_b(br),
-			     BRANCH_get_b_k(br)+BRANCH_get_b_m(br), // total line charging
-			     1./BRANCH_get_ratio(br,t),
-			     BRANCH_get_phase(br,t)*180./PI, // degrees
-			     BRANCH_get_ratingA(br),
-			     &branch);
+                             V_max[0], 
+                             V_min[1], 
+                             V_max[1],
+                             BRANCH_get_g(br), 
+                             BRANCH_get_b(br),
+                             BRANCH_get_b_k(br)+BRANCH_get_b_m(br), // total line charging
+                             1./BRANCH_get_ratio(br,t),
+                             BRANCH_get_phase(br,t)*180./PI, // degrees
+                             BRANCH_get_ratingA(br),
+                             &branch);
     
     // Construct linear constraints Ikm <= Imax
     results = LF_construct(&branch, 3, NULL);
@@ -158,10 +160,10 @@ void CONSTR_AC_LIN_FLOW_LIM_count_step(Constr* c, Bus* bus, int t) {
     if (LF_get_flag(results) == success) {
       num_constr = LF_get_number_constraints(results);
       for (k = 0; k < 2; k++) {
-	if (BUS_has_flags(buses[k],FLAG_VARS,BUS_VAR_VMAG)) // v_mag variable
-	  (*G_nnz) += num_constr;
-	if (BUS_has_flags(buses[k],FLAG_VARS,BUS_VAR_VANG)) // v_ang variable
-	  (*G_nnz) += num_constr;
+        if (BUS_has_flags(buses[k],FLAG_VARS,BUS_VAR_VMAG)) // v_mag variable
+          (*G_nnz) += num_constr;
+        if (BUS_has_flags(buses[k],FLAG_VARS,BUS_VAR_VANG)) // v_ang variable
+          (*G_nnz) += num_constr;
       }
       (*G_row) += num_constr;
     }
@@ -222,14 +224,14 @@ void CONSTR_AC_LIN_FLOW_LIM_analyze_step(Constr* c, Bus* bus, int t) {
     
     // Check tap ratio and phase shift
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) ||
-	BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
+        BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
       CONSTR_set_error(c,"AC_LIN_FLOW_LIM constraint does not support tap ratios or phase shifts as variables");
       continue;
     }
     
     // Check voltage angles
     if (!BUS_has_flags(buses[0],FLAG_VARS,BUS_VAR_VANG) &&
-	!BUS_has_flags(buses[1],FLAG_VARS,BUS_VAR_VANG)) {
+        !BUS_has_flags(buses[1],FLAG_VARS,BUS_VAR_VANG)) {
       CONSTR_set_error(c,"AC_LIN_FLOW_LIM constraint requires at least one voltage angle as variable accross branch");
       continue;
     }
@@ -237,12 +239,14 @@ void CONSTR_AC_LIN_FLOW_LIM_analyze_step(Constr* c, Bus* bus, int t) {
     // Check voltage magnitudes
     for (k = 0; k < 2; k++) {
       if (BUS_has_flags(buses[k],FLAG_VARS,BUS_VAR_VMAG)) {
-	if (!BUS_has_flags(buses[k],FLAG_BOUNDED,BUS_VAR_VMAG)) {
-	  CONSTR_set_error(c,"AC_LIN_FLOW_LIM constraint requires variable voltage magnitudes to be bounded");
-	  continue;
-	}
+        if (!BUS_has_flags(buses[k],FLAG_BOUNDED,BUS_VAR_VMAG)) {
+          CONSTR_set_error(c,"AC_LIN_FLOW_LIM constraint requires variable voltage magnitudes to be bounded");
+          continue;
+        }
       }
     }
+    if (CONSTR_has_error(c))
+      continue;
     
     
     // Get results
@@ -257,40 +261,40 @@ void CONSTR_AC_LIN_FLOW_LIM_analyze_step(Constr* c, Bus* bus, int t) {
       
       for (j = 0; j < num_constr; j++) {
 	
-	// l and u
-	VEC_set(l,*G_row,-CONSTR_AC_LIN_FLOW_LIM_INF); // lower limit (minus infinity)
-	VEC_set(u,*G_row,b[j]);                        // upper limit
+        // l and u
+        VEC_set(l,*G_row,-CONSTR_AC_LIN_FLOW_LIM_INF); // lower limit (minus infinity)
+        VEC_set(u,*G_row,b[j]);                        // upper limit
 	
-	for (k = 0; k < 2; k++) {
+        for (k = 0; k < 2; k++) {
 	  
-	  if (BUS_has_flags(buses[k],FLAG_VARS,BUS_VAR_VMAG)) { // v_mag variable
+          if (BUS_has_flags(buses[k],FLAG_VARS,BUS_VAR_VMAG)) { // v_mag variable
 	    
-	    // G
-	    MAT_set_i(G,*G_nnz,*G_row);
-	    MAT_set_j(G,*G_nnz,BUS_get_index_v_mag(buses[k],t)); // vk time t
-	    MAT_set_d(G,*G_nnz,A[3*j+k]);                      // k = 0 gives Vi, k = 1 gives Vj
-	    (*G_nnz)++;
-	  }
+            // G
+            MAT_set_i(G,*G_nnz,*G_row);
+            MAT_set_j(G,*G_nnz,BUS_get_index_v_mag(buses[k],t)); // vk time t
+            MAT_set_d(G,*G_nnz,A[3*j+k]);                      // k = 0 gives Vi, k = 1 gives Vj
+            (*G_nnz)++;
+          }
 	  
-	  if (BUS_has_flags(buses[k],FLAG_VARS,BUS_VAR_VANG)) { // v_ang variable
+          if (BUS_has_flags(buses[k],FLAG_VARS,BUS_VAR_VANG)) { // v_ang variable
 	    
-	    // G
-	    MAT_set_i(G,*G_nnz,*G_row);
-	    MAT_set_j(G,*G_nnz,BUS_get_index_v_ang(buses[k],t)); // wk time t
-	    if (k == 0) 
-	      MAT_set_d(G,*G_nnz,A[3*j+2]);                    // theta_i
-	    else
-	      MAT_set_d(G,*G_nnz,-A[3*j+2]);                   // theta_j
-	    (*G_nnz)++;
-	  }
-	  else {
-	    if (k == 0)
-	      VEC_add_to_entry(u,*G_row,-A[3*j+2]*BUS_get_v_ang(buses[k],t));
-	    else
-	      VEC_add_to_entry(u,*G_row,A[3*j+2]*BUS_get_v_ang(buses[k],t));
-	  }
-	}
-	(*G_row)++;
+            // G
+            MAT_set_i(G,*G_nnz,*G_row);
+            MAT_set_j(G,*G_nnz,BUS_get_index_v_ang(buses[k],t)); // wk time t
+            if (k == 0) 
+              MAT_set_d(G,*G_nnz,A[3*j+2]);                    // theta_i
+            else
+              MAT_set_d(G,*G_nnz,-A[3*j+2]);                   // theta_j
+            (*G_nnz)++;
+          }
+          else {
+            if (k == 0)
+              VEC_add_to_entry(u,*G_row,-A[3*j+2]*BUS_get_v_ang(buses[k],t));
+            else
+              VEC_add_to_entry(u,*G_row,A[3*j+2]*BUS_get_v_ang(buses[k],t));
+          }
+        }
+        (*G_row)++;
       }
     }
   }
@@ -317,7 +321,7 @@ void CONSTR_AC_LIN_FLOW_LIM_free(Constr* c) {
   if (data) {
     for (i = 0; i < data->size; i++) {
       if (data->results[i])
-	LF_free_results(data->results[i]);
+        LF_free_results(data->results[i]);
     }
     free(data->results);
     free(data);
