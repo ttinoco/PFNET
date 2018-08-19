@@ -125,17 +125,17 @@ void PROB_analyze(Prob* p) {
       // Constraints
       CONSTR_list_count_step(p->constr,bus,t);
       if (CONSTR_list_has_error(p->constr)) {
-	strcpy(p->error_string,CONSTR_list_get_error_string(p->constr));
-	p->error_flag = TRUE;
-	return;
+        strcpy(p->error_string,CONSTR_list_get_error_string(p->constr));
+        p->error_flag = TRUE;
+        return;
       }
       
       // Functions
       FUNC_list_count_step(p->func,bus,t);
       if (FUNC_list_has_error(p->func)) {
-	strcpy(p->error_string,FUNC_list_get_error_string(p->func));
-	p->error_flag = TRUE;
-	return;
+        strcpy(p->error_string,FUNC_list_get_error_string(p->func));
+        p->error_flag = TRUE;
+        return;
       }
     }
   }
@@ -149,7 +149,7 @@ void PROB_analyze(Prob* p) {
   for (c = p->constr; c != NULL; c = CONSTR_get_next(c))
     num_extra_vars += CONSTR_get_num_extra_vars(c);
   p->num_extra_vars = num_extra_vars;
-
+  
   // Clear
   CONSTR_list_clear(p->constr);
   FUNC_list_clear(p->func);
@@ -163,17 +163,17 @@ void PROB_analyze(Prob* p) {
       // Constraints
       CONSTR_list_analyze_step(p->constr,bus,t);
       if (CONSTR_list_has_error(p->constr)) {
-	strcpy(p->error_string,CONSTR_list_get_error_string(p->constr));
-	p->error_flag = TRUE;
-	return;
+        strcpy(p->error_string,CONSTR_list_get_error_string(p->constr));
+        p->error_flag = TRUE;
+        return;
       }
 
       // Functions
       FUNC_list_analyze_step(p->func,bus,t);
       if (FUNC_list_has_error(p->func)) {
-	strcpy(p->error_string,FUNC_list_get_error_string(p->func));
-	p->error_flag = TRUE;
-	return;
+        strcpy(p->error_string,FUNC_list_get_error_string(p->func));
+        p->error_flag = TRUE;
+        return;
       }
     }
   }

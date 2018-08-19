@@ -20,6 +20,7 @@ Unreleased
 * Changed count/analyze/eval/etc loop to be bus-based.
 * Fixed bug with PVPQ switching constraint when no Q vars.
 * Voltage dependent loads: comp_cp, comp_cq, comp_ci, comp_cg, comp_cb, and comp_cg attributes, is_vdep routine, LOAD_PROP_VDEP property, updated parsers.
+* Added CONSTR_LOAD_VDEP constraint.
 
 Version 1.3.3
 -------------

@@ -53,6 +53,7 @@
 #include "constr_AC_LIN_FLOW_LIM.h"
 #include "constr_BAT_DYN.h"
 #include "constr_LOAD_PF.h"
+#include "constr_LOAD_VDEP.h"
 #include "constr_CFUNC.h"
 
 // Heuristics

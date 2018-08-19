@@ -220,15 +220,15 @@ Net* MAT_PARSER_parse(Parser* p, char* filename, int num_periods) {
   // Parse
   while ((bytes_read=fread(buffer,1,MAT_PARSER_BUFFER_SIZE,file)) > 0) {
     if (CSV_PARSER_parse(csv,
-			 buffer,
-			 bytes_read,
-			 feof(file),
-			 ',',
-			 '\n',
-			 0,
-			 MAT_PARSER_callback_field,
-			 MAT_PARSER_callback_row,
-			 parser) != bytes_read) {
+                         buffer,
+                         bytes_read,
+                         feof(file),
+                         ',',
+                         '\n',
+                         0,
+                         MAT_PARSER_callback_field,
+                         MAT_PARSER_callback_row,
+                         parser) != bytes_read) {
       PARSER_set_error(p,"error parsing buffer");
       break;
     }
@@ -414,7 +414,7 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
       BUS_set_v_max_norm(bus,mat_bus->maxVm);   // per unit
       BUS_set_v_min_norm(bus,mat_bus->minVm);   // per unit
       if (mat_bus->type == MAT_BUS_TYPE_SL)
-	BUS_set_slack_flag(bus,TRUE);
+        BUS_set_slack_flag(bus,TRUE);
       NET_bus_hash_number_add(net,bus);
       NET_bus_hash_name_add(net,bus);
       index++;
@@ -490,18 +490,18 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
       GEN_set_Q_max(gen,mat_gen->Qmax/parser->base_power); // per unit
       GEN_set_Q_min(gen,mat_gen->Qmin/parser->base_power); // per unit
       if (BUS_is_slack(bus))  { // generator provides regulation
-	GEN_set_reg_bus(gen,bus);
-	BUS_add_reg_gen(bus,gen);
-	BUS_set_v_set(bus,mat_gen->Vg,0); // p.u.
+        GEN_set_reg_bus(gen,bus);
+        BUS_add_reg_gen(bus,gen);
+        BUS_set_v_set(bus,mat_gen->Vg,0); // p.u.
       }
       else if (GEN_get_Q_max(gen) > GEN_get_Q_min(gen)) { // generator provides regulation
-	GEN_set_reg_bus(gen,bus);
-	BUS_add_reg_gen(bus,gen);
-	BUS_set_v_set(bus,mat_gen->Vg,0); // p.u.
+        GEN_set_reg_bus(gen,bus);
+        BUS_add_reg_gen(bus,gen);
+        BUS_set_v_set(bus,mat_gen->Vg,0); // p.u.
       }
       else if (GEN_get_Q_max(gen) < GEN_get_Q_min(gen)) {
-	GEN_set_Q_max(gen,mat_gen->Qmin/parser->base_power); // per unit
-	GEN_set_Q_min(gen,mat_gen->Qmax/parser->base_power); // per unit
+        GEN_set_Q_max(gen,mat_gen->Qmin/parser->base_power); // per unit
+        GEN_set_Q_min(gen,mat_gen->Qmax/parser->base_power); // per unit
       }
       index++;
     }
@@ -526,14 +526,14 @@ void MAT_PARSER_load(MAT_Parser* parser, Net* net) {
       g = r/den;
       b = -x/den;
       if (mat_branch->ratio > 0)
-	t = mat_branch->ratio;
+        t = mat_branch->ratio;
       else
-	t = 1.;
+        t = 1.;
       z = mat_branch->angle*PI/180.;
       if (t == 1. && z == 0)
-	BRANCH_set_type(branch,BRANCH_TYPE_LINE);
+        BRANCH_set_type(branch,BRANCH_TYPE_LINE);
       else
-	BRANCH_set_type(branch,BRANCH_TYPE_TRAN_FIXED);
+        BRANCH_set_type(branch,BRANCH_TYPE_TRAN_FIXED);
       BRANCH_set_bus_k(branch,busA);
       BRANCH_set_bus_m(branch,busB);
       BUS_add_branch_k(busA,branch);
@@ -766,7 +766,7 @@ void MAT_PARSER_parse_bus_field(char* s, MAT_Parser* parser) {
     case 0:
       parser->bus->number = atoi(s);
       snprintf(parser->bus->name,(size_t)(MAT_BUS_NAME_BUFFER_SIZE-1),
-	       "BUS %d",parser->bus->number);
+               "BUS %d",parser->bus->number);
       break;
     case 1:
       parser->bus->type = atoi(s);

@@ -82,6 +82,7 @@ problem_constr_src = problem/constr/constr_DC_FLOW_LIM.c \
 		     problem/constr/constr_REG_SHUNT.c \
 		     problem/constr/constr_REG_TRAN.c \
 		     problem/constr/constr_LOAD_PF.c \
+		     problem/constr/constr_LOAD_VDEP.c \
 		     problem/constr/constr_CFUNC.c
 
 problem_constr_hdr = $(inc_path)/constr_DC_FLOW_LIM.h \
@@ -100,6 +101,7 @@ problem_constr_hdr = $(inc_path)/constr_DC_FLOW_LIM.h \
 		     $(inc_path)/constr_REG_SHUNT.h \
 		     $(inc_path)/constr_REG_TRAN.h \
 		     $(inc_path)/constr_LOAD_PF.h \
+		     $(inc_path)/constr_LOAD_VDEP.h \
 	             $(inc_path)/constr_CFUNC.h
 
 problem_func_src = problem/func/func_GEN_COST.c \
