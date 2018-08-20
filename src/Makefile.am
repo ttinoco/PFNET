@@ -30,7 +30,10 @@ net_src = net/bat.c \
 	  net/load.c \
 	  net/net.c \
 	  net/shunt.c \
-	  net/vargen.c
+	  net/vargen.c \
+	  net/bus_dc.c \
+          net/branch_dc.c \
+	  net/conv_vsc.c
 
 net_hdr = $(inc_path)/bat.h \
 	  $(inc_path)/branch.h \
@@ -40,7 +43,10 @@ net_hdr = $(inc_path)/bat.h \
 	  $(inc_path)/load.h \
 	  $(inc_path)/net.h \
 	  $(inc_path)/shunt.h \
-	  $(inc_path)/vargen.h
+	  $(inc_path)/vargen.h \
+	  $(inc_path)/bus_dc.h \
+	  $(inc_path)/branch_dc.h \
+          $(inc_path)/conv_vsc.h
 
 parser_src = parser/parser.c \
 	     parser/parser_ART.c \

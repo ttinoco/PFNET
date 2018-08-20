@@ -33,10 +33,15 @@ struct Net {
   Shunt* shunt;         /**< @brief Shunt array. */
   Vargen* vargen;       /**< @brief Vargen array. */
   Bat* bat;             /**< @brief Bat array. */
+  ConvVSC* vsc_conv;    /**< @brief VSC converter array */
+  BusDC* dc_bus;        /**< @brief DC bus array */
+  BranchDC* dc_branch;  /**< @brief DC branch array */
 
   // Hash tables
-  Bus* bus_hash_number;     /**< @brief Bus hash table indexed by bus numbers. */
-  Bus* bus_hash_name;       /**< @brief Bus hash table indexed by bus names. */
+  Bus* bus_hash_number;      /**< @brief Bus hash table indexed by bus numbers. */
+  Bus* bus_hash_name;        /**< @brief Bus hash table indexed by bus names. */
+  BusDC* dc_bus_hash_number; /**< @brief DC bus hash table indexed by DC bus numbers. */
+  BusDC* dc_bus_hash_name;   /**< @brief DC bus hash table indexed by DC bus names. */
 
   // Number of components
   int num_buses;     /**< @brief Number of buses (size of Bus array). */
@@ -46,6 +51,9 @@ struct Net {
   int num_shunts;    /**< @brief Number of shunts (size of Shunt array). */
   int num_vargens;   /**< @brief Number of variable generators (size of Vargen array). */
   int num_bats;      /**< @brief Number of batteries (size of Bat array). */
+  int num_vsc_convs;   /**< @brief Number of VSC converters (size of ConvVSC array) */
+  int num_dc_buses;    /**< @brief Number of DC buses (size of BusDC array) */
+  int num_dc_branches; /**< @brief Number of DC branches (size of BranchDC array) */
 
   // Number of flags
   int num_vars;      /**< @brief Number of variable quantities. */
@@ -201,6 +209,14 @@ void NET_add_buses(Net* net, Bus** bus_ptr_array, int size) {
     // Connections - bat
     while (BUS_get_bat(bus_src))
       BAT_set_bus(BUS_get_bat(bus_src),bus_dst);
+    
+    // Connections - vsc conv
+    while (BUS_get_vsc_conv(bus_src))
+      CONVVSC_set_ac_bus(BUS_get_vsc_conv(bus_src),bus_dst);
+
+    // Connections - reg vsc conv
+    while (BUS_get_reg_vsc_conv(bus_src))
+      CONVVSC_set_reg_bus(BUS_get_reg_vsc_conv(bus_src),bus_dst);
 
     index++;
   }
@@ -244,13 +260,13 @@ void NET_del_buses(Net* net, Bus** bus_ptr_array, int size) {
     bus = bus_ptr_array[i];
     if (bus) {
       if (bus == NET_get_bus(net,BUS_get_index(bus))) { // bus present in the network
-	if (!delete[BUS_get_index(bus)]) {
-	  delete[BUS_get_index(bus)] = 1;
-	  num++;
-	}
+        if (!delete[BUS_get_index(bus)]) {
+          delete[BUS_get_index(bus)] = 1;
+          num++;
+        }
       }
       else
-	bus_ptr_array[i] = NULL;                        // bus not present in the network
+        bus_ptr_array[i] = NULL;                        // bus not present in the network
     }
   }
 
@@ -268,25 +284,29 @@ void NET_del_buses(Net* net, Bus** bus_ptr_array, int size) {
 
       // Clear connections
       while (BUS_get_gen(bus))
-	GEN_set_bus(BUS_get_gen(bus),NULL);
+        GEN_set_bus(BUS_get_gen(bus),NULL);
       while (BUS_get_reg_gen(bus))
-	GEN_set_reg_bus(BUS_get_reg_gen(bus),NULL);
+        GEN_set_reg_bus(BUS_get_reg_gen(bus),NULL);
       while (BUS_get_branch_k(bus))
-	BRANCH_set_bus_k(BUS_get_branch_k(bus),NULL);
+        BRANCH_set_bus_k(BUS_get_branch_k(bus),NULL);
       while (BUS_get_branch_m(bus))
-	BRANCH_set_bus_m(BUS_get_branch_m(bus),NULL);
+        BRANCH_set_bus_m(BUS_get_branch_m(bus),NULL);
       while (BUS_get_reg_tran(bus))
-	BRANCH_set_reg_bus(BUS_get_reg_tran(bus),NULL);
+        BRANCH_set_reg_bus(BUS_get_reg_tran(bus),NULL);
       while (BUS_get_shunt(bus))
-	SHUNT_set_bus(BUS_get_shunt(bus),NULL);
+        SHUNT_set_bus(BUS_get_shunt(bus),NULL);
       while (BUS_get_reg_shunt(bus))
-	SHUNT_set_reg_bus(BUS_get_reg_shunt(bus),NULL);
+        SHUNT_set_reg_bus(BUS_get_reg_shunt(bus),NULL);
       while (BUS_get_load(bus))
-	LOAD_set_bus(BUS_get_load(bus),NULL);
+        LOAD_set_bus(BUS_get_load(bus),NULL);
       while (BUS_get_vargen(bus))
-	VARGEN_set_bus(BUS_get_vargen(bus),NULL);
+        VARGEN_set_bus(BUS_get_vargen(bus),NULL);
       while (BUS_get_bat(bus))
-	BAT_set_bus(BUS_get_bat(bus),NULL);      
+        BAT_set_bus(BUS_get_bat(bus),NULL);
+      while (BUS_get_vsc_conv(bus))
+        CONVVSC_set_ac_bus(BUS_get_vsc_conv(bus),NULL);
+      while (BUS_get_reg_vsc_conv(bus))
+        CONVVSC_set_reg_bus(BUS_get_reg_vsc_conv(bus),NULL);
     }
 
     // Keep
@@ -300,43 +320,51 @@ void NET_del_buses(Net* net, Bus** bus_ptr_array, int size) {
 
       // Connections - gen
       while (BUS_get_gen(bus_src))
-	GEN_set_bus(BUS_get_gen(bus_src),bus_dst);
+        GEN_set_bus(BUS_get_gen(bus_src),bus_dst);
 
       // Connections - reg gen
       while (BUS_get_reg_gen(bus_src))
-	GEN_set_reg_bus(BUS_get_reg_gen(bus_src),bus_dst);
+        GEN_set_reg_bus(BUS_get_reg_gen(bus_src),bus_dst);
       
       // Connection - branch k
       while (BUS_get_branch_k(bus_src))
-	BRANCH_set_bus_k(BUS_get_branch_k(bus_src),bus_dst);
+        BRANCH_set_bus_k(BUS_get_branch_k(bus_src),bus_dst);
       
       // Connection - branch m
       while (BUS_get_branch_m(bus_src))
-	BRANCH_set_bus_m(BUS_get_branch_m(bus_src),bus_dst);
+        BRANCH_set_bus_m(BUS_get_branch_m(bus_src),bus_dst);
       
       // Connection - reg tran
       while (BUS_get_reg_tran(bus_src))
-	BRANCH_set_reg_bus(BUS_get_reg_tran(bus_src),bus_dst);
+        BRANCH_set_reg_bus(BUS_get_reg_tran(bus_src),bus_dst);
       
       // Connections - shunt
       while (BUS_get_shunt(bus_src))
-	SHUNT_set_bus(BUS_get_shunt(bus_src),bus_dst);
+        SHUNT_set_bus(BUS_get_shunt(bus_src),bus_dst);
       
       // Connections - reg shunt
       while (BUS_get_reg_shunt(bus_src))
-	SHUNT_set_reg_bus(BUS_get_reg_shunt(bus_src),bus_dst);
+        SHUNT_set_reg_bus(BUS_get_reg_shunt(bus_src),bus_dst);
       
       // Connections - Load
       while (BUS_get_load(bus_src))
-	LOAD_set_bus(BUS_get_load(bus_src),bus_dst);
+        LOAD_set_bus(BUS_get_load(bus_src),bus_dst);
       
       // Connections - vargen
       while (BUS_get_vargen(bus_src))
-	VARGEN_set_bus(BUS_get_vargen(bus_src),bus_dst);
+        VARGEN_set_bus(BUS_get_vargen(bus_src),bus_dst);
       
       // Connections - bat
       while (BUS_get_bat(bus_src))
-	BAT_set_bus(BUS_get_bat(bus_src),bus_dst);
+        BAT_set_bus(BUS_get_bat(bus_src),bus_dst);
+
+      // Connections - vsc conv
+      while (BUS_get_vsc_conv(bus_src))
+        CONVVSC_set_ac_bus(BUS_get_vsc_conv(bus_src),bus_dst);
+      
+      // Connections - reg vsc conv
+      while (BUS_get_reg_vsc_conv(bus_src))
+        CONVVSC_set_reg_bus(BUS_get_reg_vsc_conv(bus_src),bus_dst);
       
       index++;
     }
@@ -477,13 +505,13 @@ void NET_del_branches(Net* net, Branch** br_ptr_array, int size) {
     br = br_ptr_array[i];
     if (br) {
       if (br == NET_get_branch(net,BRANCH_get_index(br))) { // branch to delete is present in network
-	if (!delete[BRANCH_get_index(br)]) {
-	  delete[BRANCH_get_index(br)] = 1;
-	  num++;
-	}
+        if (!delete[BRANCH_get_index(br)]) {
+          delete[BRANCH_get_index(br)] = 1;
+          num++;
+        }
       }
       else
-	br_ptr_array[i] = NULL;
+        br_ptr_array[i] = NULL;
     }
   }
 
@@ -660,13 +688,13 @@ void NET_del_gens(Net* net, Gen** gen_ptr_array, int size) {
     gen = gen_ptr_array[i];
     if (gen) {
       if (gen == NET_get_gen(net,GEN_get_index(gen))) { // gen to delete is present in network
-	if (!delete[GEN_get_index(gen)]) {
-	  delete[GEN_get_index(gen)] = 1;
-	  num++;
-	}
+        if (!delete[GEN_get_index(gen)]) {
+          delete[GEN_get_index(gen)] = 1;
+          num++;
+        }
       }
       else
-	gen_ptr_array[i] = NULL;
+        gen_ptr_array[i] = NULL;
     }
   }
 
@@ -834,13 +862,13 @@ void NET_del_loads(Net* net, Load** load_ptr_array, int size) {
     load = load_ptr_array[i];
     if (load) {
       if (load == NET_get_load(net,LOAD_get_index(load))) { // load to delete is present in network
-	if (!delete[LOAD_get_index(load)]) {
-	  delete[LOAD_get_index(load)] = 1;
-	  num++;
-	}
+        if (!delete[LOAD_get_index(load)]) {
+          delete[LOAD_get_index(load)] = 1;
+          num++;
+        }
       }
       else
-	load_ptr_array[i] = NULL;
+        load_ptr_array[i] = NULL;
     }
   }
 
@@ -1009,13 +1037,13 @@ void NET_del_shunts(Net* net, Shunt** shunt_ptr_array, int size) {
     shunt = shunt_ptr_array[i];
     if (shunt) {
       if (shunt == NET_get_shunt(net,SHUNT_get_index(shunt))) { // shunt to delete is present in network
-	if (!delete[SHUNT_get_index(shunt)]) {
-	  delete[SHUNT_get_index(shunt)] = 1;
-	  num++;
-	}
+        if (!delete[SHUNT_get_index(shunt)]) {
+          delete[SHUNT_get_index(shunt)] = 1;
+          num++;
+        }
       }
       else
-	shunt_ptr_array[i] = NULL;
+        shunt_ptr_array[i] = NULL;
     }
   }
 
@@ -1183,13 +1211,13 @@ void NET_del_bats(Net* net, Bat** bat_ptr_array, int size) {
     bat = bat_ptr_array[i];
     if (bat) {
       if (bat == NET_get_bat(net,BAT_get_index(bat))) {
-	if (!delete[BAT_get_index(bat)]) {
-	  delete[BAT_get_index(bat)] = 1;
-	  num++;
-	}
+        if (!delete[BAT_get_index(bat)]) {
+          delete[BAT_get_index(bat)] = 1;
+          num++;
+        }
       }
       else
-	bat_ptr_array[i] = NULL;
+        bat_ptr_array[i] = NULL;
     }
   }
 
@@ -1353,13 +1381,13 @@ void NET_del_vargens(Net* net, Vargen** gen_ptr_array, int size) {
     gen = gen_ptr_array[i];
     if (gen) {
       if (gen == NET_get_vargen(net,VARGEN_get_index(gen))) {
-	if (!delete[VARGEN_get_index(gen)]) {
-	  delete[VARGEN_get_index(gen)] = 1;
-	  num++;
-	}
+        if (!delete[VARGEN_get_index(gen)]) {
+          delete[VARGEN_get_index(gen)] = 1;
+          num++;
+        }
       }
       else
-	gen_ptr_array[i] = NULL;
+        gen_ptr_array[i] = NULL;
     }
   }
 
@@ -1403,6 +1431,541 @@ void NET_del_vargens(Net* net, Vargen** gen_ptr_array, int size) {
 
   // Delete old var generators
   VARGEN_array_del(old_gen_array,old_num_vargens);
+
+  // Delete delete flags
+  free(delete);
+
+  // Clear flags
+  NET_clear_flags(net);
+}
+
+void NET_add_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size) {
+  /** Adds VSC converters to the network. The entire converter array is
+   *  relocated, the data is copied (except flags for the new converters), 
+   *  and the bus connections are stolen.
+   */
+  
+  // Local variables
+  ConvVSC* conv_src;
+  ConvVSC* conv_dst;
+  ConvVSC* conv;
+  ConvVSC* old_conv_array;
+  int old_num_convs;
+  Bus* bus;
+  Bus* reg_bus;
+  int num;
+  int index;
+  int i;
+
+  // Check
+  if (!net || !conv_ptr_array)
+    return;
+
+  // Old converters
+  old_conv_array = net->vsc_conv;
+  old_num_convs = net->num_vsc_convs;
+
+  // Count
+  num = 0;
+  for (i = 0; i < size; i++) {
+    conv = conv_ptr_array[i];
+    if (conv != NET_get_vsc_conv(net,CONVVSC_get_index(conv))) // not in the network
+      num++;
+    else
+      conv_ptr_array[i] = NULL;                         // clear to ignore below
+  }
+
+  // New converters
+  NET_set_vsc_conv_array(net,CONVVSC_array_new(net->num_vsc_convs+num,net->num_periods),net->num_vsc_convs+num);
+
+  // Copy data and steal connections
+  index = 0;
+  for (i = 0; i < old_num_convs+size; i++) {
+
+    if (i < old_num_convs)
+      conv_src = CONVVSC_array_get(old_conv_array,i);
+    else
+      conv_src = conv_ptr_array[i-old_num_convs];
+    conv_dst = NET_get_vsc_conv(net,index);
+
+    // Check
+    if (!conv_src)
+      continue;
+
+    // Copy data
+    CONVVSC_copy_from_conv(conv_dst,conv_src);
+
+    // Clear flags
+    if (i >= old_num_convs) {
+      CONVVSC_clear_flags(conv_dst,FLAG_VARS);
+      CONVVSC_clear_flags(conv_dst,FLAG_FIXED);
+      CONVVSC_clear_flags(conv_dst,FLAG_BOUNDED);
+      CONVVSC_clear_flags(conv_dst,FLAG_SPARSE);
+    }
+    
+    // Save old connections
+    bus = CONVVSC_get_ac_bus(conv_src);
+    reg_bus = CONVVSC_get_reg_bus(conv_src);
+
+    // Clear connections bus - old conv
+    CONVVSC_set_ac_bus(conv_src,NULL);     // also removes conv from bus->convs list
+    CONVVSC_set_reg_bus(conv_src,NULL);
+
+    // Add connections bus - new conv
+    CONVVSC_set_ac_bus(conv_dst,bus);      // also adds conv to bus->convs list
+    CONVVSC_set_reg_bus(conv_dst,reg_bus);
+
+    index++;
+  }
+
+  // Delete old convs
+  CONVVSC_array_del(old_conv_array,old_num_convs);
+}
+
+void NET_del_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size) {
+  /** Removes VSC converters from the network. The entire converter array is
+   *  relocated, the data is copied, and the bus connections are set.
+   *  Network flags are cleared. 
+   */
+  
+  // Local variables
+  ConvVSC* conv_src;
+  ConvVSC* conv_dst;
+  ConvVSC* conv;
+  ConvVSC* old_conv_array;
+  int old_num_convs;
+  char* delete;
+  Bus* bus;
+  Bus* reg_bus;
+  int num;
+  int index;
+  int i;
+
+  // Check
+  if (!net || !conv_ptr_array)
+    return;
+
+  // Old converters
+  old_conv_array = net->vsc_conv;
+  old_num_convs = net->num_vsc_convs;
+
+  // Count unique and mark for deletion
+  num = 0;
+  ARRAY_zalloc(delete,char,net->num_vsc_convs);
+  for (i = 0; i < size; i++) {
+    conv = conv_ptr_array[i];
+    if (conv) {
+      if (conv == NET_get_vsc_conv(net,CONVVSC_get_index(conv))) {
+        if (!delete[CONVVSC_get_index(conv)]) {
+          delete[CONVVSC_get_index(conv)] = 1;
+          num++;
+        }
+      }
+      else
+        conv_ptr_array[i] = NULL;
+    }
+  }
+
+  // New converters
+  NET_set_vsc_conv_array(net,CONVVSC_array_new(net->num_vsc_convs-num,net->num_periods),net->num_vsc_convs-num);
+
+  // Copy data and set connections
+  index = 0;
+  for (i = 0; i < old_num_convs; i++) {
+
+    // Delete
+    if (delete[i]) {
+
+      conv = CONVVSC_array_get(old_conv_array,i);
+      
+      // Clear connections bus - "conv to be deleted"
+      CONVVSC_set_ac_bus(conv,NULL);  // also removes conv from bus->convs list
+      CONVVSC_set_reg_bus(conv,NULL);
+    }
+
+    // Keep
+    else {
+
+      conv_src = CONVVSC_array_get(old_conv_array,i);
+      conv_dst = NET_get_vsc_conv(net,index);
+
+      // Copy data
+      CONVVSC_copy_from_conv(conv_dst,conv_src);
+
+      // Save old connections
+      bus = CONVVSC_get_ac_bus(conv_src);
+      reg_bus = CONVVSC_get_reg_bus(conv_src);
+      
+      // Clear connections bus - old conv 
+      CONVVSC_set_ac_bus(conv_src,NULL);       // also removes conv from bus->convs list
+      CONVVSC_set_reg_bus(conv_src,NULL);
+      
+      // Add connections bus - new conv
+      CONVVSC_set_ac_bus(conv_dst,bus);        // also adds conv to bus->convs list
+      CONVVSC_set_reg_bus(conv_dst,reg_bus);
+      
+      index++;
+    }
+  }
+
+  // Delete old converters
+  CONVVSC_array_del(old_conv_array,old_num_convs);
+
+  // Delete delete flags
+  free(delete);
+
+  // Clear flags
+  NET_clear_flags(net);
+}
+
+void NET_add_dc_buses(Net* net, BusDC** bus_ptr_array, int size) {
+  /** Adds dc buses to the network. The entire bus array is
+   *  relocated, the data is copied (except flags for the new buses), 
+   *  and the bus connections are stolen.
+   */
+  
+  // Local variables
+  BusDC* bus_src;
+  BusDC* bus_dst;
+  BusDC* bus;
+  BusDC* old_bus_array; 
+  int old_num_buses;
+  int num;
+  int index;
+  int i;
+
+  // Check
+  if (!net || !bus_ptr_array)
+    return;
+
+  // Old buses
+  old_bus_array = net->dc_bus;
+  old_num_buses = net->num_dc_buses;
+
+  // Count
+  num = 0;
+  for (i = 0; i < size; i++) {
+    bus = bus_ptr_array[i];
+    if (bus != NET_get_dc_bus(net,BUSDC_get_index(bus))) // not in the network
+      num++;
+    else
+      bus_ptr_array[i] = NULL;                           // clear to ignore below
+  }
+
+  // New buses
+  NET_set_dc_bus_array(net,BUSDC_array_new(net->num_dc_buses+num,net->num_periods),net->num_dc_buses+num);
+
+  // Copy data and steal connections
+  index = 0;
+  for (i = 0; i < old_num_buses+size; i++) {
+
+    if (i < old_num_buses)
+      bus_src = BUSDC_array_get(old_bus_array,i);
+    else
+      bus_src = bus_ptr_array[i-old_num_buses];
+    bus_dst = NET_get_dc_bus(net,index);
+
+    // Check
+    if (!bus_src)
+      continue;
+
+    // Copy data (except index, hash info, and connections)
+    BUSDC_copy_from_dc_bus(bus_dst,bus_src);
+    
+    // Clear flags
+    if (i >= old_num_buses)
+      BUSDC_clear_flags(bus_dst,FLAG_ALL);
+
+    // Connection - branch k
+    while (BUSDC_get_branch_k(bus_src))
+      BRANCHDC_set_bus_k(BUSDC_get_branch_k(bus_src),bus_dst);
+
+    // Connection - branch m
+    while (BUSDC_get_branch_m(bus_src))
+      BRANCHDC_set_bus_m(BUSDC_get_branch_m(bus_src),bus_dst);
+    
+    // Connections - vsc conv
+    while (BUSDC_get_vsc_conv(bus_src))
+      CONVVSC_set_dc_bus(BUSDC_get_vsc_conv(bus_src),bus_dst);
+
+    index++;
+  }
+
+  // Update hash
+  NET_update_hash_tables(net);
+
+  // Delete old buses
+  BUSDC_array_del(old_bus_array,old_num_buses);
+}
+
+void NET_del_dc_buses(Net* net, BusDC** bus_ptr_array, int size) {
+  /** Removes dc buses from the network. The entire bus array is
+   *  relocated, the data is copied, and the bus connections are set.
+   *  Network flags are cleared. 
+   */
+  
+  // Local variables
+  BusDC* bus_src;
+  BusDC* bus_dst;
+  BusDC* bus;
+  BusDC* old_bus_array;
+  int old_num_buses;
+  char* delete;
+  int num;
+  int index;
+  int i;
+
+  // Check
+  if (!net || !bus_ptr_array)
+    return;
+
+  // Old buses
+  old_bus_array = net->dc_bus;
+  old_num_buses = net->num_dc_buses;
+
+  // Count unique and mark for deletion
+  num = 0;
+  ARRAY_zalloc(delete,char,net->num_dc_buses);
+  for (i = 0; i < size; i++) {
+    bus = bus_ptr_array[i];
+    if (bus) {
+      if (bus == NET_get_dc_bus(net,BUSDC_get_index(bus))) { // bus present in the network
+        if (!delete[BUSDC_get_index(bus)]) {
+          delete[BUSDC_get_index(bus)] = 1;
+          num++;
+        }
+      }
+      else
+        bus_ptr_array[i] = NULL;                        // bus not present in the network
+    }
+  }
+
+  // New buses
+  NET_set_dc_bus_array(net,BUSDC_array_new(net->num_dc_buses-num,net->num_periods),net->num_dc_buses-num);
+
+  // Copy data and set connections
+  index = 0;
+  for (i = 0; i < old_num_buses; i++) {
+
+    // Delete
+    if (delete[i]) {
+
+      bus = BUSDC_array_get(old_bus_array,i);
+      
+      // Clear connections
+      while (BUSDC_get_branch_k(bus))
+        BRANCHDC_set_bus_k(BUSDC_get_branch_k(bus),NULL);
+      while (BUSDC_get_branch_m(bus))
+        BRANCHDC_set_bus_m(BUSDC_get_branch_m(bus),NULL);
+      while (BUSDC_get_vsc_conv(bus))
+        CONVVSC_set_dc_bus(BUSDC_get_vsc_conv(bus),NULL);
+    }
+    
+    // Keep
+    else {
+      
+      bus_src = BUSDC_array_get(old_bus_array,i);
+      bus_dst = NET_get_dc_bus(net,index);
+
+      // Copy data (except index, hash info, and connections)
+      BUSDC_copy_from_dc_bus(bus_dst,bus_src);
+      
+      // Connection - branch k
+      while (BUSDC_get_branch_k(bus_src))
+        BRANCHDC_set_bus_k(BUSDC_get_branch_k(bus_src),bus_dst);
+      
+      // Connection - branch m
+      while (BUSDC_get_branch_m(bus_src))
+        BRANCHDC_set_bus_m(BUSDC_get_branch_m(bus_src),bus_dst);
+            
+      // Connections - vsc conv
+      while (BUSDC_get_vsc_conv(bus_src))
+        CONVVSC_set_dc_bus(BUSDC_get_vsc_conv(bus_src),bus_dst);
+      
+      index++;
+    }
+  }
+
+  // Update hash
+  NET_update_hash_tables(net);
+
+  // Delete old buses
+  BUSDC_array_del(old_bus_array,old_num_buses);
+
+  // Delete delete flags
+  free(delete);
+
+  // Clear flags
+  NET_clear_flags(net);
+}
+
+void NET_add_dc_branches(Net* net, BranchDC** br_ptr_array, int size) {
+  /** Adds DC branches to the network. The entire branch array is
+   *  relocated, the data is copied (except flags for the new branches), 
+   *  and the bus connections are stolen.
+   */
+  
+  // Local variables
+  BranchDC* br_src;
+  BranchDC* br_dst;
+  BranchDC* br;
+  BranchDC* old_br_array;
+  int old_num_branches;
+  BusDC* bus_k;
+  BusDC* bus_m;
+  int num;
+  int index;
+  int i;
+
+  // Check
+  if (!net || !br_ptr_array)
+    return;
+
+  // Old branches
+  old_br_array = net->dc_branch;
+  old_num_branches = net->num_dc_branches;
+
+  // Count
+  num = 0;
+  for (i = 0; i < size; i++) {
+    br = br_ptr_array[i];
+    if (br != NET_get_dc_branch(net,BRANCHDC_get_index(br))) // not in the network
+      num++;
+    else
+      br_ptr_array[i] = NULL;                      // clear to ignore below
+  }
+  
+  // New branches
+  NET_set_dc_branch_array(net,BRANCHDC_array_new(net->num_dc_branches+num,net->num_periods),net->num_dc_branches+num);
+
+  // Copy data and steal connections
+  index = 0;
+  for (i = 0; i < old_num_branches+size; i++) {
+
+    if (i < old_num_branches)
+      br_src = BRANCHDC_array_get(old_br_array,i);
+    else
+      br_src = br_ptr_array[i-old_num_branches];
+    br_dst = NET_get_dc_branch(net,index);
+
+    // Check
+    if (!br_src)
+      continue;
+
+    // Copy data
+    BRANCHDC_copy_from_dc_branch(br_dst,br_src);
+
+    // Clear flags
+    if (i >= old_num_branches)
+      BRANCHDC_clear_flags(br_dst,FLAG_ALL);
+    
+    // Save old connections
+    bus_k = BRANCHDC_get_bus_k(br_src);
+    bus_m = BRANCHDC_get_bus_m(br_src);
+
+    // Clear connections bus - old branch 
+    BRANCHDC_set_bus_k(br_src,NULL);      // also removes branch from bus->branches_k list
+    BRANCHDC_set_bus_m(br_src,NULL);      // also removes branch from bus->branches_m list
+
+    // Add connections bus - new branch
+    BRANCHDC_set_bus_k(br_dst,bus_k);      // also adds branch to bus->branches_k list
+    BRANCHDC_set_bus_m(br_dst,bus_m);      // also adds branch to bus->branches_m list
+
+    index++;
+  }
+
+  // Delete old branches
+  BRANCHDC_array_del(old_br_array,old_num_branches);
+}
+
+void NET_del_dc_branches(Net* net, BranchDC** br_ptr_array, int size) {
+  /** Removes DC branches from the network. The entire branch array is
+   *  relocated, the data is copied, and the bus connections are set.
+   *  Network flags are cleared. 
+   */
+  
+  // Local variables
+  BranchDC* br_src;
+  BranchDC* br_dst;
+  BranchDC* br;
+  BranchDC* old_br_array;
+  int old_num_branches;
+  char* delete;
+  BusDC* bus_k;
+  BusDC* bus_m;
+  int num;
+  int index;
+  int i;
+
+  // Check
+  if (!net || !br_ptr_array)
+    return;
+
+  // Old branches
+  old_br_array = net->dc_branch;
+  old_num_branches = net->num_dc_branches;
+
+  // Count unique and mark for deletion
+  num = 0;
+  ARRAY_zalloc(delete,char,net->num_dc_branches);
+  for (i = 0; i < size; i++) {
+    br = br_ptr_array[i];
+    if (br) {
+      if (br == NET_get_dc_branch(net,BRANCHDC_get_index(br))) { // branch to delete is present in network
+        if (!delete[BRANCHDC_get_index(br)]) {
+          delete[BRANCHDC_get_index(br)] = 1;
+          num++;
+        }
+      }
+      else
+        br_ptr_array[i] = NULL;
+    }
+  }
+
+  // New branches
+  NET_set_dc_branch_array(net,BRANCHDC_array_new(net->num_dc_branches-num,net->num_periods),net->num_dc_branches-num);
+
+  // Copy data and set connections
+  index = 0;
+  for (i = 0; i < old_num_branches; i++) {
+
+    // Delete
+    if (delete[i]) {
+
+      br = BRANCHDC_array_get(old_br_array,i);
+
+      // Clear connections bus - "branch to be deleted"
+      BRANCHDC_set_bus_k(br,NULL);   // also removes branch from bus->branches_k list
+      BRANCHDC_set_bus_m(br,NULL);   // also removes branch from bus->branches_m list
+    }
+
+    // Keep
+    else {
+
+      br_src = BRANCHDC_array_get(old_br_array,i);
+      br_dst = NET_get_dc_branch(net,index);
+
+      // Copy data
+      BRANCHDC_copy_from_dc_branch(br_dst,br_src);
+
+      // Save old connections
+      bus_k = BRANCHDC_get_bus_k(br_src);
+      bus_m = BRANCHDC_get_bus_m(br_src);
+      
+      // Clear connections bus - old branch 
+      BRANCHDC_set_bus_k(br_src,NULL);   // also removes branch from bus->branches_k list
+      BRANCHDC_set_bus_m(br_src,NULL);   // also removes branch from bus->branches_m list
+      
+      // Add connections bus - new branch
+      BRANCHDC_set_bus_k(br_dst,bus_k);      // also adds branch to bus->branches_k list
+      BRANCHDC_set_bus_m(br_dst,bus_m);      // also adds branch to bus->branches_m list
+      
+      index++;
+    }
+  }
+
+  // Delete old branches
+  BRANCHDC_array_del(old_br_array,old_num_branches);
 
   // Delete delete flags
   free(delete);
@@ -1567,6 +2130,30 @@ Bus* NET_bus_hash_name_find(Net* net, char* name) {
     return NULL;
 }
 
+void NET_dc_bus_hash_number_add(Net* net, BusDC* bus) {
+  if (net)
+    net->dc_bus_hash_number = BUSDC_hash_number_add(net->dc_bus_hash_number,bus);
+}
+
+BusDC* NET_dc_bus_hash_number_find(Net* net, int number) {
+  if (net)
+    return BUSDC_hash_number_find(net->dc_bus_hash_number,number);
+  else
+    return NULL;
+}
+
+void NET_dc_bus_hash_name_add(Net* net, BusDC* bus) {
+  if (net)
+    net->dc_bus_hash_name = BUSDC_hash_name_add(net->dc_bus_hash_name,bus);
+}
+
+BusDC* NET_dc_bus_hash_name_find(Net* net, char* name) {
+  if (net)
+    return BUSDC_hash_name_find(net->dc_bus_hash_name,name);
+  else
+    return NULL;
+}
+
 BOOL NET_check(Net* net, BOOL verbose) {
 
   // Local variables
@@ -1608,6 +2195,12 @@ BOOL NET_check(Net* net, BOOL verbose) {
 
   // Bats
 
+  // VSC convs
+
+  // DC buses
+
+  // DC branches
+
   // Overall
   return (base_ok & bus_ok);
 
@@ -1622,8 +2215,12 @@ void NET_clear_data(Net* net) {
   // Free hash tables
   BUS_hash_number_del(net->bus_hash_number);
   BUS_hash_name_del(net->bus_hash_name);
+  BUSDC_hash_number_del(net->dc_bus_hash_number);
+  BUSDC_hash_name_del(net->dc_bus_hash_name);
   net->bus_hash_number = NULL;
   net->bus_hash_name = NULL;
+  net->dc_bus_hash_number = NULL;
+  net->dc_bus_hash_name = NULL;
 
   // Free components
   BUS_array_del(net->bus,net->num_buses);
@@ -1633,6 +2230,9 @@ void NET_clear_data(Net* net) {
   LOAD_array_del(net->load,net->num_loads);
   VARGEN_array_del(net->vargen,net->num_vargens);
   BAT_array_del(net->bat,net->num_bats);
+  CONVVSC_array_del(net->vsc_conv,net->num_vsc_convs);
+  BUSDC_array_del(net->dc_bus,net->num_dc_buses);
+  BRANCHDC_array_del(net->dc_branch,net->num_dc_branches);
 
   // Free properties
   free(net->bus_v_max);
@@ -1672,6 +2272,9 @@ void NET_clear_flags(Net* net) {
   Vargen* vargen;
   Load* load;
   Bat* bat;
+  ConvVSC* vsc_conv;
+  BusDC* dc_bus;
+  BranchDC* dc_branch;
   int i;
 
   // Check
@@ -1741,6 +2344,24 @@ void NET_clear_flags(Net* net) {
     BAT_clear_flags(bat,FLAG_SPARSE);
   }
 
+  // VSC convs
+  for (i = 0; i < net->num_vsc_convs; i++) {
+    vsc_conv = CONVVSC_array_get(net->vsc_conv,i);
+    CONVVSC_clear_flags(vsc_conv,FLAG_ALL);
+  }
+
+  // DC buses
+  for (i = 0; i < net->num_dc_buses; i++) {
+    dc_bus = BUSDC_array_get(net->dc_bus,i);
+    BUSDC_clear_flags(dc_bus,FLAG_ALL);
+  }
+
+  // DC branches
+  for (i = 0; i < net->num_dc_branches; i++) {
+    dc_branch = BRANCHDC_array_get(net->dc_branch,i);
+    BRANCHDC_clear_flags(dc_branch,FLAG_ALL);
+  }
+
   // Clear counters
   net->num_vars = 0;
   net->num_fixed = 0;
@@ -1805,15 +2426,25 @@ void NET_clear_properties(Net* net) {
     net->load_P_util[t] = 0;
     net->load_P_vio[t] = 0;
 
+    // Vargen
+
     // Battery
+
+    // VSC converter
+
+    // DC bus
+
+    // DC branch
 
     // Actions
     net->num_actions[t] = 0;
   }
 
-  // Counters
+  // Mismatches
   for (i = 0; i < net->num_buses; i++)
     BUS_clear_mismatches(BUS_array_get(net->bus,i));
+  for (i = 0; i < net->num_dc_buses; i++)
+    BUSDC_clear_mismatches(BUSDC_array_get(net->dc_bus,i));
 }
 
 void NET_clear_sensitivities(Net* net) {
@@ -1852,6 +2483,18 @@ void NET_clear_sensitivities(Net* net) {
   // Batteries
   for (i = 0; i < net->num_bats; i++)
     BAT_clear_sensitivities(BAT_array_get(net->bat,i));
+
+  // VSC converters
+  for (i = 0; i < net->num_vsc_convs; i++)
+    CONVVSC_clear_sensitivities(CONVVSC_array_get(net->vsc_conv,i));
+
+  // DC buses
+  for (i = 0; i < net->num_dc_buses; i++)
+    BUSDC_clear_sensitivities(BUSDC_array_get(net->dc_bus,i));
+
+  // DC branches
+  for (i = 0; i < net->num_dc_branches; i++)
+    BRANCHDC_clear_sensitivities(BRANCHDC_array_get(net->dc_branch,i));
 }
 
 Bus* NET_create_sorted_bus_list(Net* net, int sort_by, int t) {
@@ -1888,6 +2531,12 @@ void NET_copy_from_net(Net* net, Net* other_net) {
   Shunt* other_shunt = NULL;
   Bat* bat = NULL;
   Bat* other_bat = NULL;
+  ConvVSC* vsc_conv = NULL;
+  ConvVSC* other_vsc_conv = NULL;
+  BusDC* dc_bus = NULL;
+  BusDC* other_dc_bus = NULL;
+  BranchDC* dc_branch = NULL;
+  BranchDC* other_dc_branch = NULL;
   int i;
 
   // Check
@@ -1897,8 +2546,12 @@ void NET_copy_from_net(Net* net, Net* other_net) {
   // Free hash tables
   BUS_hash_number_del(net->bus_hash_number);
   BUS_hash_name_del(net->bus_hash_name);
+  BUSDC_hash_number_del(net->dc_bus_hash_number);
+  BUSDC_hash_name_del(net->dc_bus_hash_name);
   net->bus_hash_number = NULL;
   net->bus_hash_name = NULL;
+  net->dc_bus_hash_number = NULL;
+  net->dc_bus_hash_name = NULL;
   
   // Error
   net->error_flag = other_net->error_flag;
@@ -1966,6 +2619,29 @@ void NET_copy_from_net(Net* net, Net* other_net) {
     other_bat = NET_get_bat(other_net,i);
     BAT_copy_from_bat(bat,other_bat);
   }
+
+  // VSC converters
+  for (i = 0; i < net->num_vsc_convs; i++) {
+    vsc_conv = NET_get_vsc_conv(net,i);
+    other_vsc_conv = NET_get_vsc_conv(other_net,i);
+    CONVVSC_copy_from_conv(vsc_conv,other_vsc_conv);
+  }
+
+  // DC buses
+  for (i = 0; i < net->num_dc_buses; i++) {
+    dc_bus = NET_get_dc_bus(net,i);
+    other_dc_bus = NET_get_dc_bus(other_net,i);
+    BUSDC_copy_from_dc_bus(dc_bus,other_dc_bus);
+    NET_dc_bus_hash_number_add(net,dc_bus);
+    NET_dc_bus_hash_name_add(net,dc_bus);
+  }
+
+  // DC branches
+  for (i = 0; i < net->num_dc_branches; i++) {  
+    dc_branch = NET_get_dc_branch(net,i);
+    other_dc_branch = NET_get_dc_branch(other_net,i);
+    BRANCHDC_copy_from_dc_branch(dc_branch,other_dc_branch);
+  }
 }
 
 Net* NET_get_copy(Net* net) {
@@ -1988,6 +2664,12 @@ Net* NET_get_copy(Net* net) {
   Shunt* new_shunt = NULL;
   Bat* bat = NULL;
   Bat* new_bat = NULL;
+  ConvVSC* vsc_conv = NULL;
+  ConvVSC* new_vsc_conv = NULL;
+  BusDC* dc_bus = NULL;
+  BusDC* new_dc_bus = NULL;
+  BranchDC* dc_branch = NULL;
+  BranchDC* new_dc_branch = NULL;
   int i;
 
   // Check
@@ -2003,6 +2685,9 @@ Net* NET_get_copy(Net* net) {
   NET_set_shunt_array(new_net,SHUNT_array_new(net->num_shunts,net->num_periods),net->num_shunts);
   NET_set_load_array(new_net,LOAD_array_new(net->num_loads,net->num_periods),net->num_loads);
   NET_set_bat_array(new_net,BAT_array_new(net->num_bats,net->num_periods),net->num_bats);
+  NET_set_vsc_conv_array(new_net,CONVVSC_array_new(net->num_vsc_convs,net->num_periods),net->num_vsc_convs);
+  NET_set_dc_bus_array(new_net,BUSDC_array_new(net->num_dc_buses,net->num_periods), net->num_dc_buses);
+  NET_set_dc_branch_array(new_net,BRANCHDC_array_new(net->num_dc_branches,net->num_periods), net->num_dc_branches);
   
   // Buses
   for (i = 0; i < net->num_buses; i++) {
@@ -2049,6 +2734,14 @@ Net* NET_get_copy(Net* net) {
     // Connections bat
     for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat))
       BUS_add_bat(new_bus,NET_get_bat(new_net,BAT_get_index(bat)));
+
+    // Connections vsc conv
+    for (vsc_conv = BUS_get_vsc_conv(bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_ac(vsc_conv))
+      BUS_add_vsc_conv(new_bus,NET_get_vsc_conv(new_net,CONVVSC_get_index(vsc_conv)));
+
+    // Connections reg vsc conv
+    for (vsc_conv = BUS_get_reg_vsc_conv(bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_reg_next(vsc_conv))
+      BUS_add_reg_vsc_conv(new_bus,NET_get_vsc_conv(new_net,CONVVSC_get_index(vsc_conv)));
   }
 
   // Branches
@@ -2115,6 +2808,50 @@ Net* NET_get_copy(Net* net) {
     BAT_set_bus(new_bat,NET_get_bus(new_net,BUS_get_index(BAT_get_bus(bat))));
   }
 
+  // VSC converters
+  for (i = 0; i < net->num_vsc_convs; i++) {
+
+    vsc_conv = NET_get_vsc_conv(net,i);
+    new_vsc_conv = NET_get_vsc_conv(new_net,i);
+    
+    // Connections ac bus
+    CONVVSC_set_ac_bus(new_vsc_conv,NET_get_bus(new_net,BUS_get_index(CONVVSC_get_ac_bus(vsc_conv))));
+    CONVVSC_set_reg_bus(new_vsc_conv,NET_get_bus(new_net,BUS_get_index(CONVVSC_get_reg_bus(vsc_conv))));
+    
+    // Connections dc bus
+    CONVVSC_set_dc_bus(new_vsc_conv,NET_get_dc_bus(new_net,BUSDC_get_index(CONVVSC_get_dc_bus(vsc_conv))));
+  }
+
+  // DC buses
+  for (i = 0; i < net->num_dc_buses; i++) {
+
+    dc_bus = NET_get_dc_bus(net,i);
+    new_dc_bus = NET_get_dc_bus(new_net,i);
+
+    // Connections branch_k
+    for (dc_branch = BUSDC_get_branch_k(dc_bus); dc_branch != NULL; dc_branch = BRANCHDC_get_next_k(dc_branch))
+      BUSDC_add_branch_k(new_dc_bus,NET_get_dc_branch(new_net,BRANCHDC_get_index(dc_branch)));
+
+    // Connections branch_m
+    for (dc_branch = BUSDC_get_branch_m(dc_bus); dc_branch != NULL; dc_branch = BRANCHDC_get_next_m(dc_branch))
+      BUSDC_add_branch_m(new_dc_bus,NET_get_dc_branch(new_net,BRANCHDC_get_index(dc_branch)));
+
+    // Connections vsc conv
+    for (vsc_conv = BUSDC_get_vsc_conv(dc_bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_dc(vsc_conv))
+      BUSDC_add_vsc_conv(new_dc_bus,NET_get_vsc_conv(new_net,CONVVSC_get_index(vsc_conv)));
+  }
+
+  // DC branches
+  for (i = 0; i < net->num_dc_branches; i++) {
+
+    dc_branch = NET_get_dc_branch(net,i);
+    new_dc_branch = NET_get_dc_branch(new_net,i);
+    
+    // Connections bus
+    BRANCHDC_set_bus_k(new_dc_branch,NET_get_dc_bus(new_net,BUSDC_get_index(BRANCHDC_get_bus_k(dc_branch))));
+    BRANCHDC_set_bus_m(new_dc_branch,NET_get_dc_bus(new_net,BUSDC_get_index(BRANCHDC_get_bus_m(dc_branch))));
+  }
+  
   // Copy rest of data
   NET_copy_from_net(new_net,net);
     
@@ -2152,28 +2889,28 @@ int NET_get_bus_neighbors(Net* net, Bus* bus, int spread, int* neighbors, char* 
     while (neighbors_curr < neighbors_total) {
       bus1 = NET_get_bus(net,neighbors[neighbors_curr]);
       for (br = BUS_get_branch_k(bus1); br != NULL; br = BRANCH_get_next_k(br)) {
-	if (bus1 != BRANCH_get_bus_k(br)) {
-	  sprintf(net->error_string,"unable to construct covariance matrix");
-	  net->error_flag = TRUE;
-	}
-	bus2 = BRANCH_get_bus_m(br);
-	if (!queued[BUS_get_index(bus2)]) {
-	  neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
-	  queued[BUS_get_index(bus2)] = TRUE;
-	  num_new++;
-	}
+        if (bus1 != BRANCH_get_bus_k(br)) {
+          sprintf(net->error_string,"unable to construct covariance matrix");
+          net->error_flag = TRUE;
+        }
+        bus2 = BRANCH_get_bus_m(br);
+        if (!queued[BUS_get_index(bus2)]) {
+          neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
+          queued[BUS_get_index(bus2)] = TRUE;
+          num_new++;
+        }
       }
       for (br = BUS_get_branch_m(bus1); br != NULL; br = BRANCH_get_next_m(br)) {
-	if (bus1 != BRANCH_get_bus_m(br)) {
-	  sprintf(net->error_string,"unable to construct covariance matrix");
-	  net->error_flag = TRUE;
-	}
-	bus2 = BRANCH_get_bus_k(br);
-	if (!queued[BUS_get_index(bus2)]) {
-	  neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
-	  queued[BUS_get_index(bus2)] = TRUE;
-	  num_new++;
-	}
+        if (bus1 != BRANCH_get_bus_m(br)) {
+          sprintf(net->error_string,"unable to construct covariance matrix");
+          net->error_flag = TRUE;
+        }
+        bus2 = BRANCH_get_bus_k(br);
+        if (!queued[BUS_get_index(bus2)]) {
+          neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
+          queued[BUS_get_index(bus2)] = TRUE;
+          num_new++;
+        }
       }
       neighbors_curr++;
     }
@@ -2248,12 +2985,12 @@ Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
     for (j = 0; j < num_neighbors; j++) {
       bus = NET_get_bus(net,neighbors[j]);
       for (vg = BUS_get_vargen(bus); vg != NULL; vg = VARGEN_get_next(vg)) {
-	for (t = 0; t < net->num_periods; t++) {
-	  if (VARGEN_has_flags(vg,FLAG_VARS,VARGEN_VAR_P) &&
-	      VARGEN_get_index_P(vgen_main,t) > VARGEN_get_index_P(vg,t)) {
-	    nnz_counter++;
-	  }
-	}
+        for (t = 0; t < net->num_periods; t++) {
+          if (VARGEN_has_flags(vg,FLAG_VARS,VARGEN_VAR_P) &&
+              VARGEN_get_index_P(vgen_main,t) > VARGEN_get_index_P(vg,t)) {
+            nnz_counter++;
+          }
+        }
       }
     }
   }
@@ -2261,8 +2998,8 @@ Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
   // Allocate
   //*********
   sigma = MAT_new(net->num_vars,
-		  net->num_vars,
-		  nnz_counter);
+                  net->num_vars,
+                  nnz_counter);
 
   // Fill
   //*****
@@ -2302,15 +3039,15 @@ Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
     for (j = 0; j < num_neighbors; j++) {
       bus = NET_get_bus(net,neighbors[j]);
       for (vg = BUS_get_vargen(bus); vg != NULL; vg = VARGEN_get_next(vg)) {
-	for (t = 0; t < net->num_periods; t++) {
-	  if (VARGEN_has_flags(vg,FLAG_VARS,VARGEN_VAR_P) &&
-	      VARGEN_get_index_P(vgen_main,t) > VARGEN_get_index_P(vg,t)) {
-	    MAT_set_i(sigma,nnz_counter,VARGEN_get_index_P(vgen_main,t));
-	    MAT_set_j(sigma,nnz_counter,VARGEN_get_index_P(vg,t));
-	    MAT_set_d(sigma,nnz_counter,VARGEN_get_P_std(vgen_main,t)*VARGEN_get_P_std(vg,t)*corr);
-	    nnz_counter++;
-	  }
-	}
+        for (t = 0; t < net->num_periods; t++) {
+          if (VARGEN_has_flags(vg,FLAG_VARS,VARGEN_VAR_P) &&
+              VARGEN_get_index_P(vgen_main,t) > VARGEN_get_index_P(vg,t)) {
+            MAT_set_i(sigma,nnz_counter,VARGEN_get_index_P(vgen_main,t));
+            MAT_set_j(sigma,nnz_counter,VARGEN_get_index_P(vg,t));
+            MAT_set_d(sigma,nnz_counter,VARGEN_get_P_std(vgen_main,t)*VARGEN_get_P_std(vg,t)*corr);
+            nnz_counter++;
+          }
+        }
       }
     }
   }
@@ -2338,6 +3075,7 @@ void NET_del(Net* net) {
 
 Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   /** Extracts subnetwork containing the specified buses.
+   *  It does not include any HVDC components.
    */
 
   // Local variables
@@ -2360,6 +3098,9 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   Load** del_load_ptr_array;
   Bat** del_bat_ptr_array;
   Vargen** del_vargen_ptr_array;
+  ConvVSC** del_vsc_conv_ptr_array;
+  BusDC** del_dc_bus_ptr_array;
+  BranchDC** del_dc_br_ptr_array;
 
   int num_del_bus;
   int num_del_br;
@@ -2390,6 +3131,9 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   del_shunt_ptr_array = (Shunt**)malloc(sizeof(Shunt*)*net->num_shunts);
   del_bat_ptr_array = (Bat**)malloc(sizeof(Bat*)*net->num_bats);
   del_vargen_ptr_array = (Vargen**)malloc(sizeof(Vargen*)*net->num_vargens);
+  del_vsc_conv_ptr_array = (ConvVSC**)malloc(sizeof(ConvVSC*)*net->num_vsc_convs);
+  del_dc_bus_ptr_array = (BusDC**)malloc(sizeof(BusDC*)*net->num_dc_buses);
+  del_dc_br_ptr_array = (BranchDC**)malloc(sizeof(BranchDC*)*net->num_dc_branches);
 
   // Mark buses to keep
   for (i = 0; i < size; i++) {
@@ -2422,50 +3166,70 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
     if (keep_bus[BUS_get_index(bus)])
       continue;
 
+    // Bus
     del_bus_ptr_array[num_del_bus] = bus;
     num_del_bus++;
 
+    // Generators
     for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
       del_gen_ptr_array[num_del_gen] = gen;
       num_del_gen++;
     }
 
+    // Loads
     for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
       del_load_ptr_array[num_del_load] = load;
       num_del_load++;
     }
 
+    // Shunts
     for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
       del_shunt_ptr_array[num_del_shunt] = shunt;
       num_del_shunt++;
     }
 
+    // Batteries
     for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
       del_bat_ptr_array[num_del_bat] = bat;
       num_del_bat++;
     }
 
+    // Var generators
     for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
       del_vargen_ptr_array[num_del_vargen] = vargen;
       num_del_vargen++;
     }
-
+   
+    // Branches k
     for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
       if (!delete_br[BRANCH_get_index(br)]) {
-	delete_br[BRANCH_get_index(br)] = 1;
-	del_br_ptr_array[num_del_br] = br;
-	num_del_br++;
+        delete_br[BRANCH_get_index(br)] = 1;
+        del_br_ptr_array[num_del_br] = br;
+        num_del_br++;
       }
     }
 
+    // Branches m
     for (br = BUS_get_branch_m(bus); br != NULL; br = BRANCH_get_next_m(br)) {
       if (!delete_br[BRANCH_get_index(br)]) {
-	delete_br[BRANCH_get_index(br)] = 1;
-	del_br_ptr_array[num_del_br] = br;
-	num_del_br++;
+        delete_br[BRANCH_get_index(br)] = 1;
+        del_br_ptr_array[num_del_br] = br;
+        num_del_br++;
       }
     }
   }
+
+  // Delete all VSC converters
+  for (i = 0; i < new_net->num_vsc_convs; i++)
+    del_vsc_conv_ptr_array[i] = NET_get_vsc_conv(new_net, i);
+
+  // Delete all DC buses
+  for (i = 0; i < new_net->num_dc_buses; i++)
+    del_dc_bus_ptr_array[i] = NET_get_dc_bus(new_net, i);
+
+  // Delete all DC branches
+  for (i = 0; i < new_net->num_dc_branches; i++)
+    del_dc_br_ptr_array[i] = NET_get_dc_branch(new_net, i);
 
   // Delete components
   NET_del_buses(new_net, del_bus_ptr_array, num_del_bus);
@@ -2475,6 +3239,9 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   NET_del_shunts(new_net, del_shunt_ptr_array, num_del_shunt);
   NET_del_bats(new_net, del_bat_ptr_array, num_del_bat);
   NET_del_vargens(new_net, del_vargen_ptr_array, num_del_vargen);
+  NET_del_vsc_convs(new_net,del_vsc_conv_ptr_array,new_net->num_vsc_convs);
+  NET_del_dc_buses(new_net,del_dc_bus_ptr_array,new_net->num_dc_buses);
+  NET_del_dc_branches(new_net,del_dc_br_ptr_array,new_net->num_dc_branches);
 
   // Clean flag arrays
   free(keep_bus);
@@ -2488,6 +3255,9 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   free(del_shunt_ptr_array);
   free(del_bat_ptr_array);
   free(del_vargen_ptr_array);
+  free(del_vsc_conv_ptr_array);
+  free(del_dc_bus_ptr_array);
+  free(del_dc_br_ptr_array);
 
   // Clear flags
   NET_clear_flags(net);
@@ -2524,10 +3294,15 @@ void NET_init(Net* net, int num_periods) {
   net->shunt = NULL;
   net->vargen = NULL;
   net->bat = NULL;
+  net->vsc_conv = NULL;
+  net->dc_bus = NULL;
+  net->dc_branch = NULL;
 
   // Hash tables
   net->bus_hash_number = NULL;
   net->bus_hash_name = NULL;
+  net->dc_bus_hash_number = NULL;
+  net->dc_bus_hash_name = NULL;
 
   // Number of components
   net->num_buses = 0;
@@ -2537,6 +3312,9 @@ void NET_init(Net* net, int num_periods) {
   net->num_shunts = 0;
   net->num_vargens = 0;
   net->num_bats = 0;
+  net->num_vsc_convs = 0;
+  net->num_dc_buses = 0;
+  net->num_dc_branches = 0;
 
   // Number flags
   net->num_vars = 0;
@@ -2614,6 +3392,20 @@ Bus* NET_get_bus_hash_name(Net* net) {
     return net->bus_hash_name;
 }
 
+BusDC* NET_get_dc_bus_hash_number(Net* net) {
+  if (!net)
+    return NULL;
+  else
+    return net->dc_bus_hash_number;
+}
+
+BusDC* NET_get_dc_bus_hash_name(Net* net) {
+  if (!net)
+    return NULL;
+  else
+    return net->dc_bus_hash_name;
+}
+
 char* NET_get_error_string(Net* net) {
   if (!net)
     return NULL;
@@ -2654,6 +3446,27 @@ Bat* NET_get_bat(Net* net, int index) {
     return NULL;
   else
     return BAT_array_get(net->bat,index);
+}
+
+ConvVSC* NET_get_vsc_conv(Net* net, int index) {
+  if (!net || index < 0 || index >= net->num_vsc_convs)
+    return NULL;
+  else
+    return CONVVSC_array_get(net->vsc_conv,index);
+}
+
+BusDC* NET_get_dc_bus(Net* net, int index) {
+  if (!net || index < 0 || index >= net->num_dc_buses)
+    return NULL;
+  else
+    return BUSDC_array_get(net->dc_bus,index);
+}
+
+BranchDC* NET_get_dc_branch(Net* net, int index) {
+  if (!net || index < 0 || index >= net->num_dc_branches)
+    return NULL;
+  else
+    return BRANCHDC_array_get(net->dc_branch,index);
 }
 
 Bus* NET_get_gen_buses(Net* net) {
@@ -2706,12 +3519,12 @@ Branch* NET_get_branch_from_name_and_bus_numbers(Net* net, char* name, int numbe
   Bus* bus2 = NET_bus_hash_number_find(net, number2);
   for (br = BUS_get_branch_k(bus1); br != NULL; br = BRANCH_get_next_k(br)) {
     if (bus2 == BRANCH_get_bus_m(br) &&
-	strcmp(BRANCH_get_name(br), name) == 0)
+        strcmp(BRANCH_get_name(br), name) == 0)
       return br;
   }
   for (br = BUS_get_branch_m(bus1); br != NULL; br = BRANCH_get_next_m(br)) {
     if (bus2 == BRANCH_get_bus_k(br) &&
-	strcmp(BRANCH_get_name(br), name) == 0)
+        strcmp(BRANCH_get_name(br), name) == 0)
       return br;
   }
   return NULL;
@@ -2773,6 +3586,66 @@ Bat* NET_get_bat_from_name_and_bus_number(Net* net, char* name, int number) {
   for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
     if (strcmp(BAT_get_name(bat), name) == 0)
       return bat;
+  }
+  return NULL;
+}
+
+ConvVSC* NET_get_vsc_conv_from_name_and_ac_bus_number(Net* net, char* name, int number) {
+  ConvVSC* conv;
+  Bus* bus = NET_bus_hash_number_find(net, number);
+  for (conv = BUS_get_vsc_conv(bus); conv != NULL; conv = CONVVSC_get_next_ac(conv)) {
+    if (strcmp(CONVVSC_get_name(conv), name) == 0)
+      return conv;
+  }
+  return NULL;
+}
+
+ConvVSC* NET_get_vsc_conv_from_name_and_dc_bus_number(Net* net, char* name, int number) {
+  ConvVSC* conv;
+  BusDC* bus = NET_dc_bus_hash_number_find(net, number);
+  for (conv = BUSDC_get_vsc_conv(bus); conv != NULL; conv = CONVVSC_get_next_dc(conv)) {
+    if (strcmp(CONVVSC_get_name(conv), name) == 0)
+      return conv;
+  }
+  return NULL;
+}
+
+ConvVSC* NET_get_vsc_conv_from_name_and_dc_bus_name(Net* net, char* name, char* bus_name) {
+  ConvVSC* conv;
+  BusDC* bus = NET_dc_bus_hash_name_find(net, bus_name);
+  for (conv = BUSDC_get_vsc_conv(bus); conv != NULL; conv = CONVVSC_get_next_dc(conv)) {
+    if (strcmp(CONVVSC_get_name(conv), name) == 0)
+      return conv;
+  }
+  return NULL;
+}
+
+BranchDC* NET_get_dc_branch_from_name_and_dc_bus_numbers(Net* net, char* name, int number1, int number2) {
+  BranchDC* br;
+  BusDC* bus1 = NET_dc_bus_hash_number_find(net, number1);
+  BusDC* bus2 = NET_dc_bus_hash_number_find(net, number2);
+  for (br = BUSDC_get_branch_k(bus1); br != NULL; br = BRANCHDC_get_next_k(br)) {
+    if (bus2 == BRANCHDC_get_bus_m(br) && strcmp(BRANCHDC_get_name(br), name) == 0)
+      return br;
+  }
+  for (br = BUSDC_get_branch_m(bus1); br != NULL; br = BRANCHDC_get_next_m(br)) {
+    if (bus2 == BRANCHDC_get_bus_k(br) && strcmp(BRANCHDC_get_name(br), name) == 0)
+      return br;
+  }
+  return NULL;
+}
+
+BranchDC* NET_get_dc_branch_from_name_and_dc_bus_names(Net* net, char* name, char* bus1_name, char* bus2_name) {
+  BranchDC* br;
+  BusDC* bus1 = NET_dc_bus_hash_name_find(net, bus1_name);
+  BusDC* bus2 = NET_dc_bus_hash_name_find(net, bus2_name);
+  for (br = BUSDC_get_branch_k(bus1); br != NULL; br = BRANCHDC_get_next_k(br)) {
+    if (bus2 == BRANCHDC_get_bus_m(br) && strcmp(BRANCHDC_get_name(br), name) == 0)
+      return br;
+  }
+  for (br = BUSDC_get_branch_m(bus1); br != NULL; br = BRANCHDC_get_next_m(br)) {
+    if (bus2 == BRANCHDC_get_bus_k(br) && strcmp(BRANCHDC_get_name(br), name) == 0)
+      return br;
   }
   return NULL;
 }
@@ -2848,8 +3721,8 @@ int NET_get_num_buses_reg_by_tran_only(Net* net) {
   for (i = 0; i < net->num_buses; i++) {
     bus = BUS_array_get(net->bus,i);
     if (BUS_is_regulated_by_tran(bus) &&
-	!BUS_is_regulated_by_gen(bus) &&
-	!BUS_is_regulated_by_shunt(bus))
+        !BUS_is_regulated_by_gen(bus) &&
+        !BUS_is_regulated_by_shunt(bus))
       n++;
   }
   return n;
@@ -2876,8 +3749,20 @@ int NET_get_num_buses_reg_by_shunt_only(Net* net) {
   for (i = 0; i < net->num_buses; i++) {
     bus = BUS_array_get(net->bus,i);
     if (BUS_is_regulated_by_shunt(bus) &&
-	!BUS_is_regulated_by_gen(bus) &&
-	!BUS_is_regulated_by_tran(bus))
+        !BUS_is_regulated_by_gen(bus) &&
+        !BUS_is_regulated_by_tran(bus))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_buses_reg_by_vsc_conv(Net* net) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  for (i = 0; i < net->num_buses; i++) {
+    if (BUS_is_regulated_by_vsc_conv(BUS_array_get(net->bus,i)))
       n++;
   }
   return n;
@@ -3119,6 +4004,75 @@ int NET_get_num_bats(Net* net) {
     return 0;
 }
 
+int NET_get_num_vsc_convs(Net* net) {
+  if (net)
+    return net->num_vsc_convs;
+  else
+    return 0;
+}
+
+int NET_get_num_vsc_convs_in_P_dc_mode(Net* net) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  for(i = 0; i < net->num_vsc_convs; i++) {
+    if (CONVVSC_is_in_P_dc_mode(NET_get_vsc_conv(net,i)))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_vsc_convs_in_v_dc_mode(Net* net) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  for(i = 0; i < net->num_vsc_convs; i++) {
+    if (CONVVSC_is_in_v_dc_mode(NET_get_vsc_conv(net,i)))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_vsc_convs_in_v_ac_mode(Net* net) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  for(i = 0; i < net->num_vsc_convs; i++) {
+    if (CONVVSC_is_in_v_ac_mode(NET_get_vsc_conv(net,i)))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_vsc_convs_in_f_ac_mode(Net* net) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  for(i = 0; i < net->num_vsc_convs; i++) {
+    if (CONVVSC_is_in_f_ac_mode(NET_get_vsc_conv(net,i)))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_dc_buses(Net* net) {
+  if (net)
+    return net->num_dc_buses;
+  else
+    return 0;
+}
+
+int NET_get_num_dc_branches(Net* net) {
+  if (net)
+    return net->num_dc_branches;
+  else
+    return 0;
+}
+
 int NET_get_num_bounded(Net* net) {
   if (net)
     return net->num_bounded;
@@ -3232,6 +4186,19 @@ Vec* NET_get_var_values(Net* net, int code) {
   for (i = 0; i < net->num_bats; i++)
     BAT_get_var_values(BAT_array_get(net->bat,i),values,code);
 
+  // VSC converters
+  for (i = 0; i < net->num_vsc_convs; i++)
+    CONVVSC_get_var_values(CONVVSC_array_get(net->vsc_conv,i),values,code);
+
+  // DC buses
+  for (i = 0; i < net->num_dc_buses; i++)
+    BUSDC_get_var_values(BUSDC_array_get(net->dc_bus,i),values,code);
+
+  // DC branches
+  for (i = 0; i < net->num_dc_branches; i++)
+    BRANCHDC_get_var_values(BRANCHDC_array_get(net->dc_branch,i),values,code);
+
+
   // Return
   return values;
 }
@@ -3295,6 +4262,27 @@ char* NET_get_var_info_string(Net* net, int index) {
       return info;
   }
 
+  // VSC converters
+  for (i = 0; i < net->num_vsc_convs; i++) {
+    info = CONVVSC_get_var_info_string(CONVVSC_array_get(net->vsc_conv,i),index);
+    if (info)
+      return info;
+  }
+
+  // DC buses
+  for (i = 0; i < net->num_dc_buses; i++) {
+    info = BUSDC_get_var_info_string(BUSDC_array_get(net->dc_bus,i),index);
+    if (info)
+      return info;
+  }
+
+  // DC branches
+  for (i = 0; i < net->num_dc_branches; i++) {
+    info = BRANCHDC_get_var_info_string(BRANCHDC_array_get(net->dc_branch,i),index);
+    if (info)
+      return info;
+  }
+
   // Return
   return NULL;  
 }
@@ -3327,151 +4315,211 @@ Mat* NET_get_var_projection(Net* net, char obj_type, char prop_mask, unsigned ch
 
   // Count
   num_subvars = 0;
-  if ((obj_type == OBJ_BUS) || (obj_type == OBJ_ALL)) {
+  if ((obj_type == OBJ_BUS) || (obj_type == OBJ_ALL)) { // Bus or all
     for (i = 0; i < net->num_buses; i++) {
       if (BUS_has_properties(NET_get_bus(net,i),prop_mask))
-	num_subvars += BUS_get_num_vars(NET_get_bus(net,i),var,t_start,t_end);
+        num_subvars += BUS_get_num_vars(NET_get_bus(net,i),var,t_start,t_end);
     }
   }
-  if ((obj_type == OBJ_GEN) || (obj_type == OBJ_ALL)) {
+  if ((obj_type == OBJ_GEN) || (obj_type == OBJ_ALL)) { // Gen or all
     for (i = 0; i < net->num_gens; i++) {
       if (GEN_has_properties(NET_get_gen(net,i),prop_mask))
-	num_subvars += GEN_get_num_vars(NET_get_gen(net,i),var,t_start,t_end);
+        num_subvars += GEN_get_num_vars(NET_get_gen(net,i),var,t_start,t_end);
     }
   }
-  if ((obj_type == OBJ_LOAD) || (obj_type == OBJ_ALL)) {
+  if ((obj_type == OBJ_LOAD) || (obj_type == OBJ_ALL)) { // Load or all
     for (i = 0; i < net->num_loads; i++) {
       if (LOAD_has_properties(NET_get_load(net,i),prop_mask))
-	num_subvars += LOAD_get_num_vars(NET_get_load(net,i),var,t_start,t_end);
+        num_subvars += LOAD_get_num_vars(NET_get_load(net,i),var,t_start,t_end);
     }
   }
-  if ((obj_type == OBJ_BRANCH) || (obj_type == OBJ_ALL)) {
+  if ((obj_type == OBJ_BRANCH) || (obj_type == OBJ_ALL)) { // Branch or all
     for (i = 0; i < net->num_branches; i++) {
       if (BRANCH_has_properties(NET_get_branch(net,i),prop_mask))
-	num_subvars += BRANCH_get_num_vars(NET_get_branch(net,i),var,t_start,t_end);
+        num_subvars += BRANCH_get_num_vars(NET_get_branch(net,i),var,t_start,t_end);
     }
   }
-  if ((obj_type == OBJ_SHUNT) || (obj_type == OBJ_ALL)) {
+  if ((obj_type == OBJ_SHUNT) || (obj_type == OBJ_ALL)) { // Shunt or all
     for (i = 0; i < net->num_shunts; i++) {
       if (SHUNT_has_properties(NET_get_shunt(net,i),prop_mask))
-	num_subvars += SHUNT_get_num_vars(NET_get_shunt(net,i),var,t_start,t_end);
+        num_subvars += SHUNT_get_num_vars(NET_get_shunt(net,i),var,t_start,t_end);
     }
   }
-  if ((obj_type == OBJ_VARGEN) || (obj_type == OBJ_ALL)) {
+  if ((obj_type == OBJ_VARGEN) || (obj_type == OBJ_ALL)) { // Vargen or all
     for (i = 0; i < net->num_vargens; i++) {
       if (VARGEN_has_properties(NET_get_vargen(net,i),prop_mask))
-	num_subvars += VARGEN_get_num_vars(NET_get_vargen(net,i),var,t_start,t_end);
+        num_subvars += VARGEN_get_num_vars(NET_get_vargen(net,i),var,t_start,t_end);
     }
   }
-  if ((obj_type == OBJ_BAT) || (obj_type == OBJ_ALL)) {
+  if ((obj_type == OBJ_BAT) || (obj_type == OBJ_ALL)) { // Battery or all
     for (i = 0; i < net->num_bats; i++) {
       if (BAT_has_properties(NET_get_bat(net,i),prop_mask))
-	num_subvars += BAT_get_num_vars(NET_get_bat(net,i),var,t_start,t_end);
+        num_subvars += BAT_get_num_vars(NET_get_bat(net,i),var,t_start,t_end);
+    }
+  }
+   if ((obj_type == OBJ_CONVVSC) || (obj_type == OBJ_ALL)) { // VSC converter or all
+    for (i = 0; i < net->num_vsc_convs; i++) {
+      if (CONVVSC_has_properties(NET_get_vsc_conv(net,i),prop_mask))
+        num_subvars += CONVVSC_get_num_vars(NET_get_vsc_conv(net,i),var,t_start,t_end);
+    }
+  }
+  if ((obj_type == OBJ_BUSDC) || (obj_type == OBJ_ALL)) { // DC bus or all
+    for (i = 0; i < net->num_dc_buses; i++) {
+      if (BUSDC_has_properties(NET_get_dc_bus(net,i),prop_mask))
+        num_subvars += BUSDC_get_num_vars(NET_get_dc_bus(net,i),var,t_start,t_end);
+    }
+  }
+  if ((obj_type == OBJ_BRANCHDC) || (obj_type == OBJ_ALL)) { // DC branch or all
+    for (i = 0; i < net->num_dc_branches; i++) {
+      if (BRANCHDC_has_properties(NET_get_dc_branch(net,i),prop_mask))
+        num_subvars += BRANCHDC_get_num_vars(NET_get_dc_branch(net,i),var,t_start,t_end);
     }
   }
 
   // Allocate
   proj = MAT_new(num_subvars,
-		 net->num_vars,
-		 num_subvars);
+                 net->num_vars,
+                 num_subvars);
 
   // Fill
   num_subvars = 0;
-  if ((obj_type == OBJ_BUS) || (obj_type == OBJ_ALL)) {
+  if ((obj_type == OBJ_BUS) || (obj_type == OBJ_ALL)) { // Bus or all
     for (i = 0; i < net->num_buses; i++) {
       if (BUS_has_properties(NET_get_bus(net,i),prop_mask)) {
-	indices = BUS_get_var_indices(NET_get_bus(net,i),var,t_start,t_end);
-	for (j = 0; j < VEC_get_size(indices); j++) {
-	  MAT_set_i(proj,num_subvars,num_subvars);
-	  MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
-	  MAT_set_d(proj,num_subvars,1.);
-	  num_subvars++;
-	}
-	VEC_del(indices);
+        indices = BUS_get_var_indices(NET_get_bus(net,i),var,t_start,t_end);
+        for (j = 0; j < VEC_get_size(indices); j++) {
+          MAT_set_i(proj,num_subvars,num_subvars);
+          MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+          MAT_set_d(proj,num_subvars,1.);
+          num_subvars++;
+        }
+        VEC_del(indices);
       }
     }
   }
-  if ((obj_type == OBJ_GEN) || (obj_type == OBJ_ALL)) {
+  if ((obj_type == OBJ_GEN) || (obj_type == OBJ_ALL)) { // Gen or all
     for (i = 0; i < net->num_gens; i++) {
       if (GEN_has_properties(NET_get_gen(net,i),prop_mask)) {
-	indices = GEN_get_var_indices(NET_get_gen(net,i),var,t_start,t_end);
-	for (j = 0; j < VEC_get_size(indices); j++) {
-	  MAT_set_i(proj,num_subvars,num_subvars);
-	  MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
-	  MAT_set_d(proj,num_subvars,1.);
-	  num_subvars++;
-	}
-	VEC_del(indices);
+        indices = GEN_get_var_indices(NET_get_gen(net,i),var,t_start,t_end);
+        for (j = 0; j < VEC_get_size(indices); j++) {
+          MAT_set_i(proj,num_subvars,num_subvars);
+          MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+          MAT_set_d(proj,num_subvars,1.);
+          num_subvars++;
+        }
+        VEC_del(indices);
       }
     }
   }
-  if ((obj_type == OBJ_LOAD) || (obj_type == OBJ_ALL)) {
+  if ((obj_type == OBJ_LOAD) || (obj_type == OBJ_ALL)) { // Load or all
     for (i = 0; i < net->num_loads; i++) {
       if (LOAD_has_properties(NET_get_load(net,i),prop_mask)) {
-	indices = LOAD_get_var_indices(NET_get_load(net,i),var,t_start,t_end);
-	for (j = 0; j < VEC_get_size(indices); j++) {
-	  MAT_set_i(proj,num_subvars,num_subvars);
-	  MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
-	  MAT_set_d(proj,num_subvars,1.);
-	  num_subvars++;
-	}
-	VEC_del(indices);
+        indices = LOAD_get_var_indices(NET_get_load(net,i),var,t_start,t_end);
+        for (j = 0; j < VEC_get_size(indices); j++) {
+          MAT_set_i(proj,num_subvars,num_subvars);
+          MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+          MAT_set_d(proj,num_subvars,1.);
+          num_subvars++;
+        }
+        VEC_del(indices);
       }
     }
   }
-  if ((obj_type == OBJ_BRANCH) || (obj_type == OBJ_ALL)) {
+  if ((obj_type == OBJ_BRANCH) || (obj_type == OBJ_ALL)) { // Branch or all
     for (i = 0; i < net->num_branches; i++) {
       if (BRANCH_has_properties(NET_get_branch(net,i),prop_mask)) {
-	indices = BRANCH_get_var_indices(NET_get_branch(net,i),var,t_start,t_end);
-	for (j = 0; j < VEC_get_size(indices); j++) {
-	  MAT_set_i(proj,num_subvars,num_subvars);
-	  MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
-	  MAT_set_d(proj,num_subvars,1.);
-	  num_subvars++;
-	}
-	VEC_del(indices);
+        indices = BRANCH_get_var_indices(NET_get_branch(net,i),var,t_start,t_end);
+        for (j = 0; j < VEC_get_size(indices); j++) {
+          MAT_set_i(proj,num_subvars,num_subvars);
+          MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+          MAT_set_d(proj,num_subvars,1.);
+          num_subvars++;
+        }
+        VEC_del(indices);
       }
     }
   }
-  if ((obj_type == OBJ_SHUNT) || (obj_type == OBJ_ALL)) {
+  if ((obj_type == OBJ_SHUNT) || (obj_type == OBJ_ALL)) { // Shunt or all
     for (i = 0; i < net->num_shunts; i++) {
       if (SHUNT_has_properties(NET_get_shunt(net,i),prop_mask)) {
-	indices = SHUNT_get_var_indices(NET_get_shunt(net,i),var,t_start,t_end);
-	for (j = 0; j < VEC_get_size(indices); j++) {
-	  MAT_set_i(proj,num_subvars,num_subvars);
-	  MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
-	  MAT_set_d(proj,num_subvars,1.);
-	  num_subvars++;
-	}
-	VEC_del(indices);
+        indices = SHUNT_get_var_indices(NET_get_shunt(net,i),var,t_start,t_end);
+        for (j = 0; j < VEC_get_size(indices); j++) {
+          MAT_set_i(proj,num_subvars,num_subvars);
+          MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+          MAT_set_d(proj,num_subvars,1.);
+          num_subvars++;
+        }
+        VEC_del(indices);
       }
     }
   }
-  if ((obj_type == OBJ_VARGEN) || (obj_type == OBJ_ALL)) {
+  if ((obj_type == OBJ_VARGEN) || (obj_type == OBJ_ALL)) { // Vargen or all
     for (i = 0; i < net->num_vargens; i++) {
       if (VARGEN_has_properties(NET_get_vargen(net,i),prop_mask)) {
-	indices = VARGEN_get_var_indices(NET_get_vargen(net,i),var,t_start,t_end);
-	for (j = 0; j < VEC_get_size(indices); j++) {
-	  MAT_set_i(proj,num_subvars,num_subvars);
-	  MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
-	  MAT_set_d(proj,num_subvars,1.);
-	  num_subvars++;
-	}
-	VEC_del(indices);
+        indices = VARGEN_get_var_indices(NET_get_vargen(net,i),var,t_start,t_end);
+        for (j = 0; j < VEC_get_size(indices); j++) {
+          MAT_set_i(proj,num_subvars,num_subvars);
+          MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+          MAT_set_d(proj,num_subvars,1.);
+          num_subvars++;
+        }
+        VEC_del(indices);
       }
     }
   }
-  if ((obj_type == OBJ_BAT) || (obj_type == OBJ_ALL)) {
+  if ((obj_type == OBJ_BAT) || (obj_type == OBJ_ALL)) { // Battery or all
     for (i = 0; i < net->num_bats; i++) {
       if (BAT_has_properties(NET_get_bat(net,i),prop_mask)) {
-	indices = BAT_get_var_indices(NET_get_bat(net,i),var,t_start,t_end);
-	for (j = 0; j < VEC_get_size(indices); j++) {
-	  MAT_set_i(proj,num_subvars,num_subvars);
-	  MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
-	  MAT_set_d(proj,num_subvars,1.);
-	  num_subvars++;
-	}
-	VEC_del(indices);
+        indices = BAT_get_var_indices(NET_get_bat(net,i),var,t_start,t_end);
+        for (j = 0; j < VEC_get_size(indices); j++) {
+          MAT_set_i(proj,num_subvars,num_subvars);
+          MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+          MAT_set_d(proj,num_subvars,1.);
+          num_subvars++;
+        }
+        VEC_del(indices);
+      }
+    }
+  }
+  if ((obj_type == OBJ_CONVVSC) || (obj_type == OBJ_ALL)) { // Converter VSC or all
+    for (i = 0; i < net->num_vsc_convs; i++) {
+      if (CONVVSC_has_properties(NET_get_vsc_conv(net,i),prop_mask)) {
+        indices = CONVVSC_get_var_indices(NET_get_vsc_conv(net,i),var,t_start,t_end);
+        for (j = 0; j < VEC_get_size(indices); j++) {
+          MAT_set_i(proj,num_subvars,num_subvars);
+          MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+          MAT_set_d(proj,num_subvars,1.);
+          num_subvars++;
+        }
+        VEC_del(indices);
+      }
+    }
+  }
+  if ((obj_type == OBJ_BUSDC) || (obj_type == OBJ_ALL)) { // DC bus or all
+    for (i = 0; i < net->num_dc_buses; i++) {
+      if (BUSDC_has_properties(NET_get_dc_bus(net,i),prop_mask)) {
+        indices = BUSDC_get_var_indices(NET_get_dc_bus(net,i),var,t_start,t_end);
+        for (j = 0; j < VEC_get_size(indices); j++) {
+          MAT_set_i(proj,num_subvars,num_subvars);
+          MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+          MAT_set_d(proj,num_subvars,1.);
+          num_subvars++;
+        }
+        VEC_del(indices);
+      }
+    }
+  }
+  if ((obj_type == OBJ_BRANCHDC) || (obj_type == OBJ_ALL)) { // DC branch or all
+    for (i = 0; i < net->num_dc_branches; i++) {
+      if (BRANCHDC_has_properties(NET_get_dc_branch(net,i),prop_mask)) {
+        indices = BRANCHDC_get_var_indices(NET_get_dc_branch(net,i),var,t_start,t_end);
+        for (j = 0; j < VEC_get_size(indices); j++) {
+          MAT_set_i(proj,num_subvars,num_subvars);
+          MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+          MAT_set_d(proj,num_subvars,1.);
+          num_subvars++;
+        }
+        VEC_del(indices);
       }
     }
   }
@@ -3615,7 +4663,7 @@ REAL NET_get_vargen_corr_value(Net* net) {
 
 char* NET_get_json_string(Net* net) {
 
-   // Local variables
+  // Local variables
   char temp[NET_BUFFER_SIZE];
   char* output;
   char* output_start;
@@ -3627,13 +4675,16 @@ char* NET_get_json_string(Net* net) {
 
   // Max size
   max_size = (2*NET_BUFFER_SIZE +
-	      BUS_BUFFER_SIZE*BUS_NUM_JSON_FIELDS*net->num_buses +
-	      BRANCH_BUFFER_SIZE*BRANCH_NUM_JSON_FIELDS*net->num_branches +
-	      GEN_BUFFER_SIZE*GEN_NUM_JSON_FIELDS*net->num_gens +
-	      LOAD_BUFFER_SIZE*LOAD_NUM_JSON_FIELDS*net->num_loads +
-	      SHUNT_BUFFER_SIZE*SHUNT_NUM_JSON_FIELDS*net->num_shunts +
-	      VARGEN_BUFFER_SIZE*VARGEN_NUM_JSON_FIELDS*net->num_vargens +
-	      BAT_BUFFER_SIZE*BAT_NUM_JSON_FIELDS*net->num_bats)*net->num_periods;
+              BUS_BUFFER_SIZE*BUS_NUM_JSON_FIELDS*net->num_buses +
+              BRANCH_BUFFER_SIZE*BRANCH_NUM_JSON_FIELDS*net->num_branches +
+              GEN_BUFFER_SIZE*GEN_NUM_JSON_FIELDS*net->num_gens +
+              LOAD_BUFFER_SIZE*LOAD_NUM_JSON_FIELDS*net->num_loads +
+              SHUNT_BUFFER_SIZE*SHUNT_NUM_JSON_FIELDS*net->num_shunts +
+              VARGEN_BUFFER_SIZE*VARGEN_NUM_JSON_FIELDS*net->num_vargens +
+              BAT_BUFFER_SIZE*BAT_NUM_JSON_FIELDS*net->num_bats +
+              CONVVSC_BUFFER_SIZE*CONVVSC_NUM_JSON_FIELDS*net->num_vsc_convs +
+              BUSDC_BUFFER_SIZE*BUSDC_NUM_JSON_FIELDS*net->num_dc_buses +
+              BRANCHDC_BUFFER_SIZE*BRANCHDC_NUM_JSON_FIELDS*net->num_dc_branches)*net->num_periods;
 
   // Output
   output = (char*)malloc(sizeof(char)*max_size);
@@ -3650,7 +4701,11 @@ char* NET_get_json_string(Net* net) {
   JSON_array_json(temp,output,"loads",net->load,LOAD_array_get,net->num_loads,LOAD_get_json_string,FALSE);
   JSON_array_json(temp,output,"shunts",net->shunt,SHUNT_array_get,net->num_shunts,SHUNT_get_json_string,FALSE);
   JSON_array_json(temp,output,"var_generators",net->vargen,VARGEN_array_get,net->num_vargens,VARGEN_get_json_string,FALSE);
-  JSON_array_json(temp,output,"batteries",net->bat,BAT_array_get,net->num_bats,BAT_get_json_string,TRUE);
+  JSON_array_json(temp,output,"batteries",net->bat,BAT_array_get,net->num_bats,BAT_get_json_string,FALSE);
+  JSON_array_json(temp,output,"vsc_converters",net->vsc_conv,CONVVSC_array_get,net->num_vsc_convs,CONVVSC_get_json_string,FALSE);
+  JSON_array_json(temp,output,"dc_buses",net->dc_bus,BUSDC_array_get,net->num_dc_buses,BUSDC_get_json_string,FALSE);
+  JSON_array_json(temp,output,"dc_branches",net->dc_branch,BRANCHDC_array_get,net->num_dc_branches,BRANCHDC_get_json_string,TRUE);
+
   JSON_end(output);
   
   // Resize
@@ -3749,6 +4804,34 @@ void NET_set_bat_array(Net* net, Bat* bat, int num) {
   if (net) {
     net->bat = bat;
     net->num_bats = num;
+  }
+}
+
+void NET_set_vsc_conv_array(Net* net, ConvVSC* conv, int num) {
+  if (net) {
+    net->vsc_conv = conv;
+    net->num_vsc_convs = num;
+  }
+}
+
+void NET_set_dc_bus_array(Net* net, BusDC* bus, int num) {
+  int i;
+  if (net) {
+
+    // Pointers
+    net->dc_bus = bus;
+    net->num_dc_buses = num;
+
+    // Network
+    for (i = 0; i < net->num_dc_buses; i++)
+      BUSDC_set_network(BUSDC_array_get(net->dc_bus,i), net);
+  }
+}
+
+void NET_set_dc_branch_array(Net* net, BranchDC* branch, int num) {
+  if (net) {
+    net->dc_branch = branch;
+    net->num_dc_branches = num;
   }
 }
 
@@ -3864,6 +4947,27 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsi
     set_flags = &BAT_set_flags;
     has_properties = &BAT_has_properties;
     break;
+  case OBJ_CONVVSC:
+    num = net->num_vsc_convs;
+    array = net->vsc_conv;
+    get_element = &CONVVSC_array_get;
+    set_flags = &CONVVSC_set_flags;
+    has_properties = &CONVVSC_has_properties;
+    break;
+  case OBJ_BUSDC:
+    num = net->num_dc_buses;
+    array = net->dc_bus;
+    get_element = &BUSDC_array_get;
+    set_flags = &BUSDC_set_flags;
+    has_properties = &BUSDC_has_properties;
+    break;
+  case OBJ_BRANCHDC:
+    num = net->num_dc_branches;
+    array = net->dc_branch;
+    get_element = &BRANCHDC_array_get;
+    set_flags = &BRANCHDC_set_flags;
+    has_properties = &BRANCHDC_has_properties;
+    break;
   default:
     sprintf(net->error_string,"invalid object type");
     net->error_flag = TRUE;
@@ -3875,13 +4979,13 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsi
     obj = get_element(array,i);
     if (has_properties(obj,prop_mask)) {
       if (flag_mask & FLAG_VARS)
-	net->num_vars = set_flags(obj,FLAG_VARS,val_mask,net->num_vars);
+        net->num_vars = set_flags(obj,FLAG_VARS,val_mask,net->num_vars);
       if (flag_mask & FLAG_FIXED)
-	net->num_fixed = set_flags(obj,FLAG_FIXED,val_mask,net->num_fixed);
+        net->num_fixed = set_flags(obj,FLAG_FIXED,val_mask,net->num_fixed);
       if (flag_mask & FLAG_BOUNDED)
-	net->num_bounded = set_flags(obj,FLAG_BOUNDED,val_mask,net->num_bounded);
+        net->num_bounded = set_flags(obj,FLAG_BOUNDED,val_mask,net->num_bounded);
       if (flag_mask & FLAG_SPARSE)
-	net->num_sparse = set_flags(obj,FLAG_SPARSE,val_mask,net->num_sparse);
+        net->num_sparse = set_flags(obj,FLAG_SPARSE,val_mask,net->num_sparse);
     }
   }
 }
@@ -3925,6 +5029,18 @@ void NET_set_flags_of_component(Net* net, void* obj, char obj_type, char flag_ma
   case OBJ_BAT:
     set_flags = &BAT_set_flags;
     get_obj_type = &BAT_get_obj_type;
+    break;
+  case OBJ_CONVVSC:
+    set_flags = &CONVVSC_set_flags;
+    get_obj_type = &CONVVSC_get_obj_type;
+    break;
+  case OBJ_BUSDC:
+    set_flags = &BUSDC_set_flags;
+    get_obj_type = &BUSDC_get_obj_type;
+    break;
+  case OBJ_BRANCHDC:
+    set_flags = &BRANCHDC_set_flags;
+    get_obj_type = &BRANCHDC_get_obj_type;
     break;
   default:
     sprintf(net->error_string,"invalid object type");
@@ -3985,6 +5101,18 @@ void NET_set_var_values(Net* net, Vec* values) {
   // Batteries
   for (i = 0; i < net->num_bats; i++)
     BAT_set_var_values(BAT_array_get(net->bat,i),values);
+
+  // VSC converters
+  for (i = 0; i < net->num_vsc_convs; i++)
+    CONVVSC_set_var_values(CONVVSC_array_get(net->vsc_conv,i),values);
+
+  // DC buses
+  for (i = 0; i < net->num_dc_buses; i++)
+    BUSDC_set_var_values(BUSDC_array_get(net->dc_bus,i),values);
+
+  // DC branches
+  for (i = 0; i < net->num_dc_branches; i++)
+    BRANCHDC_set_var_values(BRANCHDC_array_get(net->dc_branch,i),values);
 }
 
 char* NET_get_show_components_str(Net* net) {
@@ -4022,6 +5150,13 @@ char* NET_get_show_components_str(Net* net) {
   sprintf(out+strlen(out),"  P adjust       : %d\n",NET_get_num_P_adjust_loads(net));
   sprintf(out+strlen(out),"vargens          : %d\n",NET_get_num_vargens(net));
   sprintf(out+strlen(out),"batteries        : %d\n",NET_get_num_bats(net));
+  sprintf(out+strlen(out),"vsc converters   : %d\n",NET_get_num_vsc_convs(net));
+  sprintf(out+strlen(out),"  P dc mode      : %d\n",NET_get_num_vsc_convs_in_P_dc_mode(net));
+  sprintf(out+strlen(out),"  v dc mode      : %d\n",NET_get_num_vsc_convs_in_v_dc_mode(net));
+  sprintf(out+strlen(out),"  v ac mode      : %d\n",NET_get_num_vsc_convs_in_v_ac_mode(net));
+  sprintf(out+strlen(out),"  f ac mode      : %d\n",NET_get_num_vsc_convs_in_f_ac_mode(net));
+  sprintf(out+strlen(out),"dc buses         : %d\n",NET_get_num_dc_buses(net));
+  sprintf(out+strlen(out),"dc branches      : %d\n",NET_get_num_dc_branches(net));
 
   return out;
 }
@@ -4107,40 +5242,40 @@ void NET_show_buses(Net* net, int number, int sort_by, int t) {
 
       value = BUS_get_quantity(bus,sort_by,t);
       if (sort_by == BUS_SENS_LARGEST)
-	type = BUS_get_largest_sens_type(bus,t);
+        type = BUS_get_largest_sens_type(bus,t);
       else
-	type = sort_by;
+        type = sort_by;
 
       switch (type) {
       case BUS_SENS_P_BALANCE:
-	printf("%15s ","   P_balance   ");
-	break;
+        printf("%15s ","   P_balance   ");
+        break;
       case BUS_SENS_Q_BALANCE:
-	printf("%15s ","   Q_balance   ");
-	break;
+        printf("%15s ","   Q_balance   ");
+        break;
       case BUS_SENS_V_MAG_U_BOUND:
-	printf("%15s "," v_mag_u_bound ");
-	break;
+        printf("%15s "," v_mag_u_bound ");
+        break;
       case BUS_SENS_V_MAG_L_BOUND:
-	printf("%15s "," v_mag_l_bound ");
-	break;
+        printf("%15s "," v_mag_l_bound ");
+        break;
       case BUS_SENS_V_ANG_U_BOUND:
-	printf("%15s "," v_ang_u_bound ");
-	break;
+        printf("%15s "," v_ang_u_bound ");
+        break;
       case BUS_SENS_V_ANG_L_BOUND:
-	printf("%15s "," v_ang_l_bound ");
-	break;
+        printf("%15s "," v_ang_l_bound ");
+        break;
       case BUS_SENS_V_REG_BY_GEN:
-	printf("%15s ","  v_reg_by_gen ");
-	break;
+        printf("%15s ","  v_reg_by_gen ");
+        break;
       case BUS_SENS_V_REG_BY_TRAN:
-	printf("%15s "," v_reg_by_tran ");
-	break;
+        printf("%15s "," v_reg_by_tran ");
+        break;
       case BUS_SENS_V_REG_BY_SHUNT:
-	printf("%15s "," v_reg_by_shunt");
-	break;
+        printf("%15s "," v_reg_by_shunt");
+        break;
       default:
-	printf("%15s ","    unknown    ");
+        printf("%15s ","    unknown    ");
       }
       printf("% 9.2e ",value);
       printf("%14s\n",units);
@@ -4150,22 +5285,22 @@ void NET_show_buses(Net* net, int number, int sort_by, int t) {
 
       value = BUS_get_quantity(bus,sort_by,t);
       if (sort_by == BUS_MIS_LARGEST)
-	type = BUS_get_largest_mis_type(bus,t);
+        type = BUS_get_largest_mis_type(bus,t);
       else
-	type = sort_by;
+        type = sort_by;
 
       switch (type) {
       case BUS_MIS_ACTIVE:
-	printf("%13s ","    active   ");
-	strcpy(units,"    MW    ");
-	break;
+        printf("%13s ","    active   ");
+        strcpy(units,"    MW    ");
+        break;
       case BUS_MIS_REACTIVE:
-	printf("%13s ","   reactive  ");
-	strcpy(units,"   MVAr   ");
-	break;
+        printf("%13s ","   reactive  ");
+        strcpy(units,"   MVAr   ");
+        break;
       default:
-	printf("%13s ","   unknown   ");
-	strcpy(units,"  unknown ");
+        printf("%13s ","   unknown   ");
+        strcpy(units,"  unknown ");
       }
       printf("% 9.2e ",value);
       printf("%10s\n",units);
@@ -4201,6 +5336,7 @@ void NET_update_properties_step(Net* net, Bus* bus, int t, Vec* var_values) {
   Load* load;
   Shunt* shunt;
   Bat* bat;
+  ConvVSC* vsc_conv;
 
   REAL P;
   REAL Q;
@@ -4234,7 +5370,7 @@ void NET_update_properties_step(Net* net, Bus* bus, int t, Vec* var_values) {
   if (net->bus_v_max[t] == 0 && net->bus_v_min[t] == 0) {
     net->bus_v_max[t] = v;
     net->bus_v_min[t] = v;
-    }
+  }
   else {
     if (v > net->bus_v_max[t])
       net->bus_v_max[t] = v;
@@ -4317,11 +5453,11 @@ void NET_update_properties_step(Net* net, Bus* bus, int t, Vec* var_values) {
       //********************************
       dQ = 0;
       if (Q > GEN_get_Q_max(gen))
-	dQ = (Q-GEN_get_Q_max(gen))*net->base_power; // MVAr
+        dQ = (Q-GEN_get_Q_max(gen))*net->base_power; // MVAr
       if (Q < GEN_get_Q_min(gen))
-	dQ = (GEN_get_Q_min(gen)-Q)*net->base_power; // MVAr
+        dQ = (GEN_get_Q_min(gen)-Q)*net->base_power; // MVAr
       if (dQ > net->gen_Q_vio[t])
-	net->gen_Q_vio[t] = dQ;
+        net->gen_Q_vio[t] = dQ;
     }
     
     // Active power limit violations
@@ -4431,22 +5567,39 @@ void NET_update_properties_step(Net* net, Bus* bus, int t, Vec* var_values) {
       //**************************************
       shunt_db = 0;
       if (shunt_b > SHUNT_get_b_max(shunt))
-	shunt_db = (shunt_b-SHUNT_get_b_max(shunt));
+        shunt_db = (shunt_b-SHUNT_get_b_max(shunt));
       if (shunt_b < SHUNT_get_b_min(shunt))
-	shunt_db = (SHUNT_get_b_min(shunt)-shunt_b);
+        shunt_db = (SHUNT_get_b_min(shunt)-shunt_b);
       if (shunt_db > net->shunt_b_vio[t])
-	net->shunt_b_vio[t] = shunt_db;
+        net->shunt_b_vio[t] = shunt_db;
       
       // Swtiched shunt susceptance actions
       //***********************************
       shunt_db = SHUNT_get_b_max(shunt)-SHUNT_get_b_min(shunt);
       if (shunt_db < NET_CONTROL_EPS)
-	shunt_db = NET_CONTROL_EPS;
+        shunt_db = NET_CONTROL_EPS;
       if (100.*fabs(shunt_b-SHUNT_get_b(shunt,t))/shunt_db > NET_CONTROL_ACTION_PCT)
-	net->num_actions[t]++;
+        net->num_actions[t]++;
     }
   }
 
+  // VSC converters
+  for (vsc_conv = BUS_get_vsc_conv(bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_ac(vsc_conv)) {
+    
+    if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_P) && var_values)
+      P = VEC_get(var_values,CONVVSC_get_index_P(vsc_conv,t));
+    else
+      P = CONVVSC_get_P(vsc_conv,t);
+    if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_Q) && var_values)
+      Q = VEC_get(var_values,CONVVSC_get_index_Q(vsc_conv,t));
+    else
+      Q = CONVVSC_get_Q(vsc_conv,t);
+    
+    // Injections
+    BUS_inject_P(bus,P,t);
+    BUS_inject_Q(bus,Q,t);
+  }
+  
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
   
@@ -4467,19 +5620,19 @@ void NET_update_properties_step(Net* net, Bus* bus, int t, Vec* var_values) {
       //***************************
       da = 0;
       if (a > BRANCH_get_ratio_max(br))
-	da = (a-BRANCH_get_ratio_max(br));
+        da = (a-BRANCH_get_ratio_max(br));
       if (a < BRANCH_get_ratio_min(br))
-	da = (BRANCH_get_ratio_min(br)-a);
+        da = (BRANCH_get_ratio_min(br)-a);
       if (da > net->tran_r_vio[t])
-	net->tran_r_vio[t] = da;
+        net->tran_r_vio[t] = da;
       
       // Tap ratio actions
       //******************
       da = BRANCH_get_ratio_max(br)-BRANCH_get_ratio_min(br);
       if (da < NET_CONTROL_EPS)
-	da = NET_CONTROL_EPS;
+        da = NET_CONTROL_EPS;
       if (100.*fabs(a-BRANCH_get_ratio(br,t))/da > NET_CONTROL_ACTION_PCT)
-	net->num_actions[t]++;
+        net->num_actions[t]++;
     }
 
     // Phase shifts
@@ -4489,19 +5642,19 @@ void NET_update_properties_step(Net* net, Bus* bus, int t, Vec* var_values) {
       //*****************************
       dphi = 0;
       if (phi > BRANCH_get_phase_max(br))
-	dphi = (phi-BRANCH_get_phase_max(br));
+        dphi = (phi-BRANCH_get_phase_max(br));
       if (phi < BRANCH_get_phase_min(br))
-	dphi = (BRANCH_get_phase_min(br)-phi);
+        dphi = (BRANCH_get_phase_min(br)-phi);
       if (dphi > net->tran_p_vio[t])
-	net->tran_p_vio[t] = dphi;
+        net->tran_p_vio[t] = dphi;
       
       // Phase shift actions
       //********************
       dphi = BRANCH_get_phase_max(br)-BRANCH_get_phase_min(br);
       if (dphi < NET_CONTROL_EPS)
-	dphi = NET_CONTROL_EPS;
+        dphi = NET_CONTROL_EPS;
       if (100.*fabs(phi-BRANCH_get_phase(br,t))/dphi > NET_CONTROL_ACTION_PCT)
-	net->num_actions[t]++;
+        net->num_actions[t]++;
     }
 
     // Branch flows
@@ -4516,10 +5669,10 @@ void NET_update_properties_step(Net* net, Bus* bus, int t, Vec* var_values) {
   // Power mismatches
   if (BUS_get_index(bus) == net->num_buses-1) {
     BUS_array_get_max_mismatches(net->bus,
-				 net->num_buses,
-				 &(net->bus_P_mis[t]),
-				 &(net->bus_Q_mis[t]),
-				 t);
+                                 net->num_buses,
+                                 &(net->bus_P_mis[t]),
+                                 &(net->bus_Q_mis[t]),
+                                 t);
     net->bus_P_mis[t] *= net->base_power;
     net->bus_Q_mis[t] *= net->base_power;
   }
@@ -4541,7 +5694,7 @@ void NET_update_set_points(Net* net) {
     bus = BUS_array_get(net->bus,i);
     if (BUS_is_regulated_by_gen(bus)) {
       for (t = 0; t < net->num_periods; t++)
-	BUS_set_v_set(bus,BUS_get_v_mag(bus,t),t);
+        BUS_set_v_set(bus,BUS_get_v_mag(bus,t),t);
     }
   }
 }
@@ -4550,6 +5703,7 @@ void NET_update_hash_tables(Net* net) {
 
   // Local variables
   Bus* bus;
+  BusDC* dc_bus;
   int i;
 
   // Check
@@ -4559,14 +5713,23 @@ void NET_update_hash_tables(Net* net) {
   // Clear
   BUS_hash_number_del(net->bus_hash_number);
   BUS_hash_name_del(net->bus_hash_name);
+  BUSDC_hash_number_del(net->dc_bus_hash_number);
+  BUSDC_hash_name_del(net->dc_bus_hash_name);
   net->bus_hash_number = NULL;
   net->bus_hash_name = NULL;
+  net->dc_bus_hash_number = NULL;
+  net->dc_bus_hash_name = NULL;
 
   // Update
   for (i = 0; i < net->num_buses; i++) {
     bus = NET_get_bus(net,i);
     NET_bus_hash_number_add(net,bus);
     NET_bus_hash_name_add(net,bus);
+  }
+  for (i = 0; i < net->num_dc_buses; i++) {
+    dc_bus = NET_get_dc_bus(net,i);
+    NET_dc_bus_hash_number_add(net,dc_bus);
+    NET_dc_bus_hash_name_add(net,dc_bus);
   }
 }
 
@@ -4606,4 +5769,16 @@ void NET_propagate_data_in_time(Net* net, int start, int end) {
   // Batteries
   for (i = 0; i < net->num_bats; i++)
     BAT_propagate_data_in_time(BAT_array_get(net->bat,i),start,end);
+
+  // VSC converters
+  for (i = 0; i < net->num_vsc_convs; i++)
+    CONVVSC_propagate_data_in_time(CONVVSC_array_get(net->vsc_conv,i),start,end);
+
+  // DC buses
+  for (i = 0; i < net->num_dc_buses; i++)
+    BUSDC_propagate_data_in_time(BUSDC_array_get(net->dc_bus,i),start,end);
+
+  // DC branches
+  for (i = 0; i < net->num_dc_branches; i++)
+    BRANCHDC_propagate_data_in_time(BRANCHDC_array_get(net->dc_branch,i),start,end);
 }

@@ -15,6 +15,7 @@
 #include <pfnet/shunt.h>
 #include <pfnet/vargen.h>
 #include <pfnet/bat.h>
+#include <pfnet/conv_vsc.h>
 #include <pfnet/net.h>
 #include <pfnet/array.h>
 #include <pfnet/json_macros.h>
@@ -61,16 +62,18 @@ struct Bus {
   int* index_v_ang;   /**< @brief Voltage angle index */
 
   // Components
-  Gen* gen;            /**< @brief List of generators connected to bus */
-  Gen* reg_gen;        /**< @brief List of generators regulating the voltage magnitude of bus */
-  Load* load;          /**< @brief List of loads connected to bus */
-  Shunt* shunt;        /**< @brief List of shunt devices connected to bus */
-  Shunt* reg_shunt;    /**< @brief List of shunt devices regulating the voltage magnitude of bus */
-  Branch* branch_k;    /**< @brief List of branches having this bus on the "k" side */
-  Branch* branch_m;    /**< @brief List of branches having this bus on the "m" side */
-  Branch* reg_tran;    /**< @brief List of transformers regulating the voltage magnitude of bus */
-  Vargen* vargen;      /**< @brief List of variable generators connected to bus */
-  Bat* bat;            /**< @brief List of batteries connected to bus */
+  Gen* gen;              /**< @brief List of generators connected to bus */
+  Gen* reg_gen;          /**< @brief List of generators regulating the voltage magnitude of bus */
+  Load* load;            /**< @brief List of loads connected to bus */
+  Shunt* shunt;          /**< @brief List of shunt devices connected to bus */
+  Shunt* reg_shunt;      /**< @brief List of shunt devices regulating the voltage magnitude of bus */
+  Branch* branch_k;      /**< @brief List of branches having this bus on the "k" side */
+  Branch* branch_m;      /**< @brief List of branches having this bus on the "m" side */
+  Branch* reg_tran;      /**< @brief List of transformers regulating the voltage magnitude of bus */
+  Vargen* vargen;        /**< @brief List of variable generators connected to bus */
+  Bat* bat;              /**< @brief List of batteries connected to bus */
+  ConvVSC* vsc_conv;     /**< @brief List of VSC converters connected to bus */
+  ConvVSC* reg_vsc_conv; /**< @brief List of VSC converters regulating the voltage magnitude of bus */
 
   // Sensitivities
   REAL* sens_P_balance;      /**< @brief Sensitivity of active power balance */
@@ -267,6 +270,38 @@ void BUS_del_bat(Bus* bus, Bat* bat) {
   }
 }
 
+void BUS_add_vsc_conv(Bus* bus, ConvVSC* conv) {
+  if (bus) {
+    bus->vsc_conv = CONVVSC_list_ac_add(bus->vsc_conv,conv);
+    if (CONVVSC_get_ac_bus(conv) != bus)
+      CONVVSC_set_ac_bus(conv,bus);
+  }
+}
+
+void BUS_del_vsc_conv(Bus* bus, ConvVSC* conv) {
+  if (bus) {
+    bus->vsc_conv = CONVVSC_list_ac_del(bus->vsc_conv,conv);
+    if (CONVVSC_get_ac_bus(conv) == bus)
+      CONVVSC_set_ac_bus(conv,NULL);
+  }
+}
+
+void BUS_add_reg_vsc_conv(Bus* bus, ConvVSC* reg_conv) {
+  if (bus) {
+    bus->reg_vsc_conv = CONVVSC_list_reg_add(bus->reg_vsc_conv,reg_conv);
+    if (CONVVSC_get_reg_bus(reg_conv) != bus)
+      CONVVSC_set_reg_bus(reg_conv,bus);
+  }
+}
+
+void BUS_del_reg_vsc_conv(Bus* bus, ConvVSC* reg_conv) {
+  if (bus) {
+    bus->reg_vsc_conv = CONVVSC_list_reg_del(bus->reg_vsc_conv,reg_conv);
+    if (CONVVSC_get_reg_bus(reg_conv) == bus)
+      CONVVSC_set_reg_bus(reg_conv,NULL);
+  }
+}
+
 void BUS_del_all_connections(Bus* bus) {
   if (bus) {
     while (bus->gen)
@@ -288,7 +323,11 @@ void BUS_del_all_connections(Bus* bus) {
     while (bus->vargen)
       BUS_del_vargen(bus,bus->vargen);
     while (bus->bat)
-      BUS_del_bat(bus,bus->bat);    
+      BUS_del_bat(bus,bus->bat);
+     while (bus->vsc_conv)
+      BUS_del_vsc_conv(bus,bus->vsc_conv);
+    while (bus->reg_vsc_conv)
+      BUS_del_reg_vsc_conv(bus,bus->reg_vsc_conv);
   }
 }
 
@@ -777,6 +816,20 @@ int BUS_get_num_bats(Bus* bus) {
     return 0;
 }
 
+int BUS_get_num_vsc_convs(Bus* bus) {
+  if (bus)
+    return CONVVSC_list_ac_len(bus->vsc_conv);
+  else
+    return 0;
+}
+
+int BUS_get_num_reg_vsc_convs(Bus* bus) {
+  if (bus)
+    return CONVVSC_list_reg_len(bus->reg_vsc_conv);
+  else
+    return 0;
+}
+
 Gen* BUS_get_gen(Bus* bus) {
   if (bus)
     return bus->gen;
@@ -843,6 +896,20 @@ Vargen* BUS_get_vargen(Bus* bus) {
 Bat* BUS_get_bat(Bus* bus) {
   if (bus)
     return bus->bat;
+  else
+    return NULL;
+}
+
+ConvVSC* BUS_get_vsc_conv(Bus* bus) {
+  if (bus)
+    return bus->vsc_conv;
+  else
+    return NULL;
+}
+
+ConvVSC* BUS_get_reg_vsc_conv(Bus* bus) {
+  if (bus)
+    return bus->reg_vsc_conv;
   else
     return NULL;
 }
@@ -1551,6 +1618,8 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_list_int(temp,output,"reg_transformers",bus,Branch,BUS_get_reg_tran,BRANCH_get_index,BRANCH_get_reg_next,FALSE);
   JSON_list_int(temp,output,"var_generators",bus,Vargen,BUS_get_vargen,VARGEN_get_index,VARGEN_get_next,FALSE);
   JSON_list_int(temp,output,"batteries",bus,Bat,BUS_get_bat,BAT_get_index,BAT_get_next,FALSE);
+  JSON_list_int(temp,output,"vsc_converters",bus,ConvVSC,BUS_get_vsc_conv,CONVVSC_get_index,CONVVSC_get_next_ac,FALSE);
+  JSON_list_int(temp,output,"reg_vsc_converters",bus,ConvVSC,BUS_get_reg_vsc_conv,CONVVSC_get_index,CONVVSC_get_reg_next,FALSE);
   JSON_array_float(temp,output,"sens_P_balance",bus->sens_P_balance,bus->num_periods,FALSE);
   JSON_array_float(temp,output,"sens_Q_balance",bus->sens_Q_balance,bus->num_periods,FALSE);
   JSON_array_float(temp,output,"sens_v_mag_u_bound",bus->sens_v_mag_u_bound,bus->num_periods,FALSE);
@@ -1695,6 +1764,8 @@ void BUS_init(Bus* bus, int num_periods) {
   bus->branch_m = NULL;
   bus->vargen = NULL;
   bus->bat = NULL;
+  bus->vsc_conv = NULL;
+  bus->reg_vsc_conv = NULL;
 
   ARRAY_zalloc(bus->v_mag,REAL,T);
   ARRAY_zalloc(bus->v_ang,REAL,T);
@@ -1777,6 +1848,17 @@ BOOL BUS_is_regulated_by_shunt(Bus* bus) {
     return bus->reg_shunt != NULL;
   else
     return FALSE;
+}
+
+BOOL BUS_is_regulated_by_vsc_conv(Bus* bus) {
+  if (bus)
+    return bus->reg_vsc_conv != NULL;
+  else
+    return FALSE;
+}
+
+BOOL BUS_is_v_set_regulated(Bus* bus) {
+  return BUS_is_regulated_by_gen(bus) || BUS_is_regulated_by_vsc_conv(bus);  
 }
 
 BOOL BUS_is_slack(Bus* bus) {

@@ -39,11 +39,12 @@
  */
 #define BUS_PROP_ANY 0x00            /**< @brief Property: any */
 #define BUS_PROP_SLACK 0x01          /**< @brief Property: slack bus */
-#define BUS_PROP_REG_BY_GEN 0x02     /**< @brief Property: bus regulated by generator */
-#define BUS_PROP_REG_BY_TRAN 0x04    /**< @brief Property: bus regulated by transformer */
-#define BUS_PROP_REG_BY_SHUNT 0x08   /**< @brief Property: bus regualted by shunt device */
-#define BUS_PROP_NOT_REG_BY_GEN 0x10 /**< @brief Property: bus not regulated by generator */
-#define BUS_PROP_NOT_SLACK 0x20      /**< @brief Property: non-slack bus */
+#define BUS_PROP_VSET_REG 0x02       /**< @brief Property: voltage set point regulated */
+#define BUS_PROP_REG_BY_GEN 0x04     /**< @brief Property: bus regulated by generator */
+#define BUS_PROP_REG_BY_TRAN 0x08    /**< @brief Property: bus regulated by transformer */
+#define BUS_PROP_REG_BY_SHUNT 0x10   /**< @brief Property: bus regualted by shunt device */
+#define BUS_PROP_NOT_REG_BY_GEN 0x20 /**< @brief Property: bus not regulated by generator */
+#define BUS_PROP_NOT_SLACK 0x40      /**< @brief Property: non-slack bus */
 /** @} */
 
 // Sensitivities
@@ -88,6 +89,7 @@ typedef struct Load Load;
 typedef struct Branch Branch;
 typedef struct Shunt Shunt;
 typedef struct Vargen Vargen;
+typedef struct ConvVSC ConvVSC;
 typedef struct Bat Bat;
 typedef struct Vec Vec;
 
@@ -136,6 +138,14 @@ void BUS_add_branch_m(Bus* bus, Branch* branch);
 /** @brief Deletes branch from list of branches connected at "m" bus. */
 void BUS_del_branch_m(Bus* bus, Branch* branch);
 
+/** @brief Adds VSC converter to list of VSC converters connected to bus. */
+void BUS_add_vsc_conv(Bus* bus, ConvVSC* conv);
+void BUS_del_vsc_conv(Bus* bus, ConvVSC* conv);
+
+/** @brief Adds VSC converter to list of VSC converters regulating bus. */
+void BUS_add_reg_vsc_conv(Bus* bus, ConvVSC* conv);
+void BUS_del_reg_vsc_conv(Bus* bus, ConvVSC* conv);
+
 void BUS_del_all_connections(Bus* bus);
 
 void BUS_array_del(Bus* bus_array, int size);
@@ -178,9 +188,11 @@ int BUS_get_num_loads(Bus* bus);
 int BUS_get_num_shunts(Bus* bus);
 int BUS_get_num_vargens(Bus* bus);
 int BUS_get_num_bats(Bus* bus);
+int BUS_get_num_vsc_convs(Bus* bus);
 int BUS_get_num_reg_gens(Bus* bus);
 int BUS_get_num_reg_trans(Bus* bus);
 int BUS_get_num_reg_shunts(Bus* bus);
+int BUS_get_num_reg_vsc_convs(Bus* bus);
 Gen* BUS_get_gen(Bus* bus);
 Load* BUS_get_load(Bus* bus);
 Gen* BUS_get_reg_gen(Bus* bus);
@@ -191,6 +203,8 @@ Branch* BUS_get_branch_k(Bus* bus);
 Branch* BUS_get_branch_m(Bus* bus);
 Vargen* BUS_get_vargen(Bus* bus);
 Bat* BUS_get_bat(Bus* bus);
+ConvVSC* BUS_get_vsc_conv(Bus* bus);
+ConvVSC* BUS_get_reg_vsc_conv(Bus* bus);
 REAL BUS_get_P_mis(Bus* bus, int t);
 REAL BUS_get_Q_mis(Bus* bus, int t);
 REAL BUS_get_total_gen_P(Bus* bus, int t);
@@ -264,6 +278,8 @@ BOOL BUS_is_equal(Bus* bus, Bus* other);
 BOOL BUS_is_regulated_by_gen(Bus* bus);
 BOOL BUS_is_regulated_by_tran(Bus* bus);
 BOOL BUS_is_regulated_by_shunt(Bus* bus);
+BOOL BUS_is_regulated_by_vsc_conv(Bus* bus);
+BOOL BUS_is_v_set_regulated(Bus* bus);
 BOOL BUS_is_slack(Bus* bus);
 BOOL BUS_is_star(Bus* bus);
 Bus* BUS_list_add(Bus* bus_list, Bus* bus);

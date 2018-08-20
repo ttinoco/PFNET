@@ -23,6 +23,7 @@
 /** \defgroup flag_types Flag Types
  *  @{
  */
+#define FLAG_ALL 0xFF     /**< @brief Flag type: all */
 #define FLAG_NONE 0x00    /**< @brief Flag type: none */
 #define FLAG_VARS 0x01    /**< @brief Flag type: variable */
 #define FLAG_FIXED 0x02   /**< @brief Flag type: fixed */
