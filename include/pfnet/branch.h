@@ -203,7 +203,7 @@ void BRANCH_set_sens_phase_u_bound(Branch* br, REAL value, int t);
 void BRANCH_set_sens_phase_l_bound(Branch* br, REAL value, int t);
 void BRANCH_set_sens_i_mag_u_bound(Branch* br, REAL value, int t);
 void BRANCH_set_index(Branch* br, int index);
-void BRANCH_set_type(Branch* br, int type);
+void BRANCH_set_type(Branch* br, char type);
 void BRANCH_set_bus_k(Branch* br, Bus* bus_k);
 void BRANCH_set_bus_m(Branch* br, Bus* bus_m);
 void BRANCH_set_reg_bus(Branch* br, Bus* reg_bus);

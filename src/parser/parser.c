@@ -67,7 +67,7 @@ Parser* PARSER_new_for_file(char* f) {
 
 void PARSER_init(Parser* p, BOOL init_params) {
   if (p && p->func_free)
-    (*(p->func_free))(p,FALSE);    
+    (*(p->func_free))(p,FALSE);
   if (p && p->func_init)
     (*(p->func_init))(p,init_params);
 }

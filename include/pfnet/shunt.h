@@ -16,6 +16,11 @@
 #include "vector.h"
 #include "list.h"
 
+// Shunt types
+#define SHUNT_TYPE_FIXED 0       /**< @brief Type: Fixed shunt */
+#define SHUNT_TYPE_SWITCHED 1    /**< @brief Type: Switched shunt that is locked */
+#define SHUNT_TYPE_SWITCHED_V 2  /**< @brief Type: Switched shunt that provides voltage regulation*/
+
 // Variables
 /** \defgroup shunt_vars Shunt Variable Masks
  *  @{
@@ -67,6 +72,7 @@ REAL* SHUNT_get_sens_b_u_bound_array(Shunt* shunt);
 REAL SHUNT_get_sens_b_l_bound(Shunt* shunt, int t);
 REAL* SHUNT_get_sens_b_l_bound_array(Shunt* shunt);
 
+char SHUNT_get_type(Shunt* shunt);
 char* SHUNT_get_name(Shunt* shunt);
 int SHUNT_get_num_periods(Shunt* shunt);
 char SHUNT_get_obj_type(void* shunt);
@@ -96,6 +102,7 @@ BOOL SHUNT_is_equal(Shunt* shunt, Shunt* other);
 BOOL SHUNT_is_fixed(Shunt* shunt);
 BOOL SHUNT_is_switched(Shunt* shunt);
 BOOL SHUNT_is_switched_v(Shunt* shunt);
+BOOL SHUNT_is_switched_locked(Shunt* shunt);
 Shunt* SHUNT_list_add(Shunt* shunt_list, Shunt* shunt);
 Shunt* SHUNT_list_del(Shunt* shunt_list, Shunt* shunt);
 int SHUNT_list_len(Shunt* shunt_list);
@@ -106,6 +113,7 @@ Shunt* SHUNT_new(int num_periods);
 void SHUNT_propagate_data_in_time(Shunt* shunt, int start, int end);
 void SHUNT_set_sens_b_u_bound(Shunt* shunt, REAL value, int t);
 void SHUNT_set_sens_b_l_bound(Shunt* shunt, REAL value, int t);
+void SHUNT_set_type(Shunt* shunt, char type);
 void SHUNT_set_name(Shunt* shunt, char* name);
 void SHUNT_set_bus(Shunt* shunt, Bus* bus);
 void SHUNT_set_reg_bus(Shunt* shunt, Bus* reg_bus);

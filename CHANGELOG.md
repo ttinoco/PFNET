@@ -22,6 +22,7 @@ Unreleased
 * Voltage dependent loads: comp_cp, comp_cq, comp_ci, comp_cg, comp_cb, and comp_cg attributes, is_vdep routine, LOAD_PROP_VDEP property, updated parsers.
 * Added CONSTR_LOAD_VDEP constraint.
 * DC buses, DC branches, and VSC converters for HVDC.
+* Added shunt types and net counters.
 
 Version 1.3.3
 -------------

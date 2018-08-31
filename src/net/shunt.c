@@ -23,6 +23,7 @@ struct Shunt {
   int num_periods;   /**< @brief Number of time periods. */
 
   // Properties
+  char type;                    /**< @brief Shunt type */
   char name[SHUNT_BUFFER_SIZE]; /**< @brief Shunt name */
 
   // Conductance
@@ -147,6 +148,7 @@ void SHUNT_copy_from_shunt(Shunt* shunt, Shunt* other) {
   // skip num periods
 
   // Properties
+  shunt->type = other->type;
   strcpy(shunt->name,other->name);
 
   // Conductance
@@ -233,6 +235,13 @@ char SHUNT_get_flags_sparse(Shunt* shunt) {
     return shunt->sparse;
   else
     return 0;
+}
+
+char SHUNT_get_type(Shunt* shunt) {
+  if (shunt)
+    return shunt->type;
+  else
+    return SHUNT_TYPE_FIXED;
 }
 
 char* SHUNT_get_name(Shunt* shunt) {
@@ -370,21 +379,21 @@ void SHUNT_get_var_values(Shunt* shunt, Vec* values, int code) {
       switch(code) {
 
       case UPPER_LIMITS:
-	if (shunt->bounded & SHUNT_VAR_SUSC)
-	  VEC_set(values,shunt->index_b[t],shunt->b_max);
-	else
-	  VEC_set(values,shunt->index_b[t],SHUNT_INF_SUSC);
-	break;
+        if (shunt->bounded & SHUNT_VAR_SUSC)
+          VEC_set(values,shunt->index_b[t],shunt->b_max);
+        else
+          VEC_set(values,shunt->index_b[t],SHUNT_INF_SUSC);
+        break;
 
       case LOWER_LIMITS:
-	if (shunt->bounded & SHUNT_VAR_SUSC)
-	  VEC_set(values,shunt->index_b[t],shunt->b_min);
-	else
-	  VEC_set(values,shunt->index_b[t],-SHUNT_INF_SUSC);
-	break;
+        if (shunt->bounded & SHUNT_VAR_SUSC)
+          VEC_set(values,shunt->index_b[t],shunt->b_min);
+        else
+          VEC_set(values,shunt->index_b[t],-SHUNT_INF_SUSC);
+        break;
 
       default:
-	VEC_set(values,shunt->index_b[t],shunt->b[t]);
+        VEC_set(values,shunt->index_b[t],shunt->b[t]);
       }
     }
   }
@@ -405,7 +414,7 @@ char* SHUNT_get_var_info_string(Shunt* shunt, int index) {
       index <= shunt->index_b[shunt->num_periods-1]) {
     info = (char*)malloc(SHUNT_BUFFER_SIZE*sizeof(char));
     snprintf(info,SHUNT_BUFFER_SIZE*sizeof(char),
-	     "shunt:%d:susceptance:%d",shunt->index,index-shunt->index_b[0]);
+             "shunt:%d:susceptance:%d",shunt->index,index-shunt->index_b[0]);
     return info;
   }
   // Return
@@ -488,6 +497,7 @@ char* SHUNT_get_json_string(Shunt* shunt, char* output) {
   JSON_obj(temp,output,"reg_bus",shunt->reg_bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",shunt->num_periods,FALSE);
   JSON_str(temp,output,"name",shunt->name,FALSE);
+  JSON_int(temp,output,"type",shunt->type,FALSE);
   JSON_float(temp,output,"g",shunt->g,FALSE);
   JSON_array_float(temp,output,"b",shunt->b,shunt->num_periods,FALSE);
   JSON_float(temp,output,"b_max",shunt->b_max,FALSE);
@@ -540,6 +550,8 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
 
   T = num_periods;
   shunt->num_periods = num_periods;
+
+  shunt->type = SHUNT_TYPE_FIXED;
   ARRAY_clear(shunt->name,char,SHUNT_BUFFER_SIZE);
   
   shunt->bus = NULL;
@@ -569,21 +581,32 @@ BOOL SHUNT_is_equal(Shunt* shunt, Shunt* other) {
 }
 
 BOOL SHUNT_is_fixed(Shunt* shunt) {
-  if (!shunt)
-    return FALSE;
+  if (shunt)
+    return shunt->type == SHUNT_TYPE_FIXED;
   else
-    return !SHUNT_is_switched(shunt);
+    return FALSE;
 }
 
 BOOL SHUNT_is_switched(Shunt* shunt) {
-  return SHUNT_is_switched_v(shunt);
+  if (shunt)
+    return (shunt->type == SHUNT_TYPE_SWITCHED ||
+            shunt->type == SHUNT_TYPE_SWITCHED_V);
+  else
+    return FALSE;
 }
 
 BOOL SHUNT_is_switched_v(Shunt* shunt) {
-  if (!shunt)
-    return FALSE;
+  if (shunt)
+    return shunt->type == SHUNT_TYPE_SWITCHED_V;
   else
-    return shunt->reg_bus != NULL;
+    return FALSE;
+}
+
+BOOL SHUNT_is_switched_locked(Shunt* shunt) {
+  if (shunt)
+    return shunt->type == SHUNT_TYPE_SWITCHED;
+  else
+    return FALSE;
 }
 
 Shunt* SHUNT_list_add(Shunt* shunt_list, Shunt* shunt) {
@@ -638,6 +661,11 @@ void SHUNT_set_sens_b_l_bound(Shunt* shunt, REAL value, int t) {
     shunt->sens_b_l_bound[t] = value;
 }
 
+void SHUNT_set_type(Shunt* shunt, char type) {
+  if (shunt)
+    shunt->type = type;
+}
+
 void SHUNT_set_name(Shunt* shunt, char* name) {
   if (shunt)
     strncpy(shunt->name,name,(size_t)(SHUNT_BUFFER_SIZE-1));
@@ -662,6 +690,10 @@ void SHUNT_set_reg_bus(Shunt* shunt, Bus* reg_bus) {
     BUS_del_reg_shunt(old_reg_bus,shunt);
     shunt->reg_bus = reg_bus;
     BUS_add_reg_shunt(shunt->reg_bus,shunt);
+    if (reg_bus)
+      shunt->type = SHUNT_TYPE_SWITCHED_V;
+    else if (shunt->type == SHUNT_TYPE_SWITCHED_V)
+      shunt->type = SHUNT_TYPE_SWITCHED;
   }
 }
 
@@ -726,7 +758,7 @@ int SHUNT_set_flags(void* vshunt, char flag_type, unsigned char mask, int index)
   if (!((*flags_ptr) & SHUNT_VAR_SUSC) && (mask & SHUNT_VAR_SUSC)) { // shunt susceptance
     if (flag_type == FLAG_VARS) {
       for (t = 0; t < shunt->num_periods; t++)
-	shunt->index_b[t] = index+t;
+        shunt->index_b[t] = index+t;
     }
     (*flags_ptr) |= SHUNT_VAR_SUSC;
     index += shunt->num_periods;
@@ -754,8 +786,8 @@ void SHUNT_set_var_values(Shunt* shunt, Vec* values) {
 void SHUNT_show(Shunt* shunt, int t) { 
   if (shunt)
     printf("shunt %d\t%d\n",
-	   BUS_get_number(shunt->bus),
-	   shunt->index);
+           BUS_get_number(shunt->bus),
+           shunt->index);
 }
 
 void SHUNT_propagate_data_in_time(Shunt* shunt, int start, int end) {

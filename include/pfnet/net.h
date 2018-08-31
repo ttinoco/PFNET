@@ -168,6 +168,7 @@ int NET_get_num_vdep_loads(Net* net);
 int NET_get_num_shunts(Net* net);
 int NET_get_num_fixed_shunts(Net* net);
 int NET_get_num_switched_shunts(Net* net);
+int NET_get_num_switched_v_shunts(Net* net);
 int NET_get_num_vargens(Net* net);
 int NET_get_num_bats(Net* net);
 int NET_get_num_vsc_convs(Net* net);

@@ -3990,6 +3990,18 @@ int NET_get_num_switched_shunts(Net* net) {
   return n;
 }
 
+int NET_get_num_switched_v_shunts(Net* net) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  for (i = 0; i < net->num_shunts; i++) {
+    if (SHUNT_is_switched_v(SHUNT_array_get(net->shunt,i)))
+      n++;
+  }
+  return n;
+}
+
 int NET_get_num_vargens(Net* net) {
   if (net)
     return net->num_vargens;
@@ -5135,7 +5147,7 @@ char* NET_get_show_components_str(Net* net) {
   sprintf(out+strlen(out),"  star           : %d\n",NET_get_num_star_buses(net));
   sprintf(out+strlen(out),"shunts           : %d\n",NET_get_num_shunts(net));
   sprintf(out+strlen(out),"  fixed          : %d\n",NET_get_num_fixed_shunts(net));
-  sprintf(out+strlen(out),"  switched v     : %d\n",NET_get_num_switched_shunts(net));
+  sprintf(out+strlen(out),"  switched       : %d\n",NET_get_num_switched_shunts(net));
   sprintf(out+strlen(out),"branches         : %d\n",NET_get_num_branches(net));
   sprintf(out+strlen(out),"  lines          : %d\n",NET_get_num_lines(net));
   sprintf(out+strlen(out),"  fixed trans    : %d\n",NET_get_num_fixed_trans(net));
