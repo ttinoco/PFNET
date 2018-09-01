@@ -1662,6 +1662,8 @@ BOOL BUS_has_properties(void* vbus, char prop) {
     return FALSE;
   if ((prop & BUS_PROP_SLACK) && !BUS_is_slack(bus))
     return FALSE;
+  if ((prop & BUS_PROP_VSET_REG) && !BUS_is_v_set_regulated(bus))
+    return FALSE;
   if ((prop & BUS_PROP_REG_BY_GEN) && !BUS_is_regulated_by_gen(bus))
     return FALSE;
   if ((prop & BUS_PROP_REG_BY_TRAN) && !BUS_is_regulated_by_tran(bus))

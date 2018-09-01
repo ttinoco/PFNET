@@ -30,6 +30,7 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, int t) {
   Shunt* shunt;
   Load* load;
   Bat* bat;
+  ConvVSC* vsc_conv;
   int* J_row;
   int* J_nnz;
   int* H_nnz;
@@ -183,6 +184,24 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, int t) {
     }
   }
 
+  // VSC converters
+  for (vsc_conv = BUS_get_vsc_conv(bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_ac(vsc_conv)) {
+    
+    //*****************************
+    if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_P)) { // P var
+      
+      // J
+      (*J_nnz)++; // dPk/dP
+    }
+    
+    //*****************************
+    if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_Q)) { // Q var
+      
+      // J
+      (*J_nnz)++; // dQk/dQ
+    }
+  }
+  
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
@@ -222,6 +241,7 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, int t) {
   Shunt* shunt;
   Load* load;
   Bat* bat;
+  ConvVSC* vsc_conv;
   Mat* J;
   int* J_row;
   int* J_nnz;
@@ -428,6 +448,28 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, int t) {
       (*J_nnz)++; // Pd
     }
   }
+
+  // VSC converters
+  for (vsc_conv = BUS_get_vsc_conv(bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_ac(vsc_conv)) {
+    
+    //*****************************
+    if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_P)) { // P var
+      
+      // J
+      MAT_set_i(J,*J_nnz,P_index);
+      MAT_set_j(J,*J_nnz,CONVVSC_get_index_P(vsc_conv,t));
+      (*J_nnz)++; // dPk/dP
+    }
+    
+    //*****************************
+    if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_Q)) { // Q var
+      
+      // J
+      MAT_set_i(J,*J_nnz,Q_index);
+      MAT_set_j(J,*J_nnz,CONVVSC_get_index_Q(vsc_conv,t));
+      (*J_nnz)++; // dQk/dQ
+    }
+  }
   
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
@@ -477,6 +519,7 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_
   Load* load;
   Bat* bat;
   Shunt* shunt;
+  ConvVSC* vsc_conv;
   REAL* f;
   REAL* J;
   int* J_row;
@@ -716,6 +759,40 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_
       (*J_nnz)++;
       
       J[*J_nnz] = 1.; // Pd
+      (*J_nnz)++;
+    }
+  }
+
+  // VSC converters
+  for (vsc_conv = BUS_get_vsc_conv(bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_ac(vsc_conv)) {
+    
+    // Var values
+    if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_P))
+      P = VEC_get(values,CONVVSC_get_index_P(vsc_conv,t)); // p.u.
+    else
+      P = CONVVSC_get_P(vsc_conv,t);                       // p.u.
+    if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_Q))
+      Q = VEC_get(values,CONVVSC_get_index_Q(vsc_conv,t)); // p.u.
+    else
+      Q = CONVVSC_get_Q(vsc_conv,t);                       // p.u.
+    
+    // f
+    f[P_index] += P; // p.u.
+    f[Q_index] += Q; // p.u.
+    
+    //*****************************
+    if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_P)) { // P var
+      
+      // J
+      J[*J_nnz] = 1.; // dPk/dP
+      (*J_nnz)++;
+    }
+    
+    //*****************************
+    if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_Q)) { // Q var
+      
+      // J
+      J[*J_nnz] = 1.; // dQk/dQ
       (*J_nnz)++;
     }
   }

@@ -23,6 +23,7 @@ Unreleased
 * Added CONSTR_LOAD_VDEP constraint.
 * DC buses, DC branches, and VSC converters for HVDC.
 * Added shunt types and net counters.
+* Added bus property BUS_PROP_VSET_REG and "is_v_set_regulated" method.
 
 Version 1.3.3
 -------------
