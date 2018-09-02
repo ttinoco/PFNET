@@ -23,6 +23,7 @@
 #include "bus_dc.h"
 #include "branch_dc.h"
 #include "conv_vsc.h"
+#include "conv_csc.h"
 #include "vector.h"
 #include "matrix.h"
 #include "utils.h"
@@ -71,6 +72,9 @@ void NET_del_vargens(Net* net, Vargen** vargen_ptr_array, int size);
 void NET_add_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size);
 void NET_del_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size);
 
+void NET_add_csc_convs(Net* net, ConvCSC** conv_ptr_array, int size);
+void NET_del_csc_convs(Net* net, ConvCSC** conv_ptr_array, int size);
+
 void NET_add_dc_buses(Net* net, BusDC** bus_ptr_array, int size);
 void NET_del_dc_buses(Net* net, BusDC** bus_ptr_array, int size);
 
@@ -117,6 +121,7 @@ Shunt* NET_get_shunt(Net* net, int index);
 Vargen* NET_get_vargen(Net* net, int index);
 Bat* NET_get_bat(Net* net, int index);
 ConvVSC* NET_get_vsc_conv(Net* net, int index);
+ConvCSC* NET_get_csc_conv(Net* net, int index);
 BusDC* NET_get_dc_bus(Net* net, int index);
 BranchDC* NET_get_dc_branch(Net* net, int index);
 Bus* NET_get_gen_buses(Net* net);
@@ -130,7 +135,9 @@ Shunt* NET_get_switched_shunt_from_name_and_bus_number(Net* net, char* name, int
 Load* NET_get_load_from_name_and_bus_number(Net* net, char* name, int number);
 Vargen* NET_get_vargen_from_name_and_bus_number(Net* net, char* name, int number);
 Bat* NET_get_bat_from_name_and_bus_number(Net* net, char* name, int number);
-
+ConvCSC* NET_get_csc_conv_from_name_and_ac_bus_number(Net* net, char* name, int number);
+ConvCSC* NET_get_csc_conv_from_name_and_dc_bus_number(Net* net, char* name, int number);
+ConvCSC* NET_get_csc_conv_from_name_and_dc_bus_name(Net* net, char* name, char* bus_name);
 ConvVSC* NET_get_vsc_conv_from_name_and_ac_bus_number(Net* net, char* name, int number);
 ConvVSC* NET_get_vsc_conv_from_name_and_dc_bus_number(Net* net, char* name, int number);
 ConvVSC* NET_get_vsc_conv_from_name_and_dc_bus_name(Net* net, char* name, char* bus_name);
@@ -171,6 +178,7 @@ int NET_get_num_switched_shunts(Net* net);
 int NET_get_num_switched_v_shunts(Net* net);
 int NET_get_num_vargens(Net* net);
 int NET_get_num_bats(Net* net);
+int NET_get_num_csc_convs(Net* net);
 int NET_get_num_vsc_convs(Net* net);
 int NET_get_num_vsc_convs_in_P_dc_mode(Net* net);
 int NET_get_num_vsc_convs_in_v_dc_mode(Net* net);
@@ -221,6 +229,7 @@ void NET_set_shunt_array(Net* net, Shunt* shunt, int num);
 void NET_set_vargen_array(Net* net, Vargen* gen, int num);
 void NET_set_bat_array(Net* net, Bat* bat, int num);
 void NET_set_vsc_conv_array(Net* net, ConvVSC* conv, int num);
+void NET_set_csc_conv_array(Net* net, ConvCSC* conv, int num);
 void NET_set_dc_bus_array(Net* net, BusDC* bus, int num);
 void NET_set_dc_branch_array(Net* net, BranchDC* branch, int num);
 void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsigned char val_mask);

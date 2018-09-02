@@ -9,6 +9,7 @@
  */
 
 #include <pfnet/bus_dc.h>
+#include <pfnet/conv_csc.h>
 #include <pfnet/conv_vsc.h>
 #include <pfnet/branch_dc.h>
 #include <pfnet/array.h>
@@ -39,6 +40,7 @@ struct BusDC {
   int* index_v;   /**< @brief Voltage index */
 
   // Componnets
+  ConvCSC* csc_conv;   /**< @brief List of CSC converters connected to bus */
   ConvVSC* vsc_conv;   /**< @brief List of VSC converters connected to bus */
   BranchDC* branch_k;  /**< @brief List of DC branches having this bus on the "k" side */
   BranchDC* branch_m;  /**< @brief List of DC branches having this bus on the "m" side */
@@ -67,6 +69,14 @@ void BUSDC_add_branch_m(BusDC* bus, BranchDC* branch) {
     bus->branch_m = BRANCHDC_list_m_add(bus->branch_m,branch);
     if (BRANCHDC_get_bus_m(branch) != bus)
       BRANCHDC_set_bus_m(branch,bus);
+  }
+}
+
+void BUSDC_add_csc_conv(BusDC* bus, ConvCSC* conv) {
+  if (bus) {
+    bus->csc_conv = CONVCSC_list_dc_add(bus->csc_conv,conv);
+    if (CONVCSC_get_dc_bus(conv) != bus)
+      CONVCSC_set_dc_bus(conv,bus);
   }
 }
 
@@ -201,6 +211,8 @@ void BUSDC_copy_from_dc_bus(BusDC* bus, BusDC* other) {
 
 void BUSDC_del_all_connections(BusDC* bus) {
   if (bus) {
+    while (bus->csc_conv)
+      BUSDC_del_csc_conv(bus,bus->csc_conv);
     while (bus->vsc_conv)
       BUSDC_del_vsc_conv(bus,bus->vsc_conv);
     while (bus->branch_k)
@@ -226,6 +238,14 @@ void BUSDC_del_branch_m(BusDC* bus, BranchDC* branch) {
   }
 }
 
+void BUSDC_del_csc_conv(BusDC* bus, ConvCSC* conv) {
+  if (bus) {
+    bus->csc_conv = CONVCSC_list_dc_del(bus->csc_conv,conv);
+    if (CONVCSC_get_dc_bus(conv) == bus)
+      CONVCSC_set_dc_bus(conv,NULL);
+  }
+}
+
 void BUSDC_del_vsc_conv(BusDC* bus, ConvVSC* conv) {
   if (bus) {
     bus->vsc_conv = CONVVSC_list_dc_del(bus->vsc_conv,conv);
@@ -244,6 +264,13 @@ BranchDC* BUSDC_get_branch_k(BusDC* bus) {
 BranchDC* BUSDC_get_branch_m(BusDC* bus) {
   if (bus)
     return bus->branch_m;
+  else
+    return NULL;
+}
+
+ConvCSC* BUSDC_get_csc_conv(BusDC* bus) {
+  if (bus)
+    return bus->csc_conv;
   else
     return NULL;
 }
@@ -334,6 +361,7 @@ char* BUSDC_get_json_string(BusDC* bus, char* output) {
   JSON_array_float(temp,output,"v",bus->v,bus->num_periods,FALSE);
   JSON_list_int(temp,output,"branches_k",bus,BranchDC,BUSDC_get_branch_k,BRANCHDC_get_index,BRANCHDC_get_next_k,FALSE);
   JSON_list_int(temp,output,"branches_m",bus,BranchDC,BUSDC_get_branch_m,BRANCHDC_get_index,BRANCHDC_get_next_m,FALSE);
+  JSON_list_int(temp,output,"csc_converters",bus,ConvCSC,BUSDC_get_csc_conv,CONVCSC_get_index,CONVCSC_get_next_dc,FALSE);
   JSON_list_int(temp,output,"vsc_converters",bus,ConvVSC,BUSDC_get_vsc_conv,CONVVSC_get_index,CONVVSC_get_next_dc,TRUE);
   JSON_end(output);
   
@@ -343,6 +371,13 @@ char* BUSDC_get_json_string(BusDC* bus, char* output) {
 
   // Return
   return output;
+}
+
+int BUSDC_get_num_csc_convs(BusDC* bus) {
+  if (bus)
+    return CONVCSC_list_dc_len(bus->csc_conv);
+  else
+    return 0;
 }
 
 int BUSDC_get_num_vsc_convs(BusDC* bus) {
@@ -594,6 +629,7 @@ void BUSDC_init(BusDC* bus, int num_periods) {
   bus->sparse = 0x00;
   bus->vars = 0x00;
 
+  bus->csc_conv = NULL;
   bus->vsc_conv = NULL;
   bus->branch_k = NULL;
   bus->branch_m = NULL;

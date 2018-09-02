@@ -46,12 +46,14 @@
 typedef struct BusDC BusDC;
 
 // Others
+typedef struct ConvCSC ConvCSC;
 typedef struct ConvVSC ConvVSC;
 typedef struct BranchDC BranchDC;
 
 void BUSDC_add_branch_k(BusDC* bus, BranchDC* branch);
 void BUSDC_add_branch_m(BusDC* bus, BranchDC* branch);
 void BUSDC_add_vsc_conv(BusDC* bus, ConvVSC* conv);
+void BUSDC_add_csc_conv(BusDC* bus, ConvCSC* conv);
 void BUSDC_array_del(BusDC* bus_array, int size);
 void* BUSDC_array_get(void* bus_array, int index);
 void BUSDC_array_get_max_mismatches(BusDC* bus_array, int size, REAL* P, int t);
@@ -67,10 +69,12 @@ void BUSDC_del_all_connections(BusDC* bus);
 void BUSDC_del_branch_k(BusDC* bus, BranchDC* branch);
 void BUSDC_del_branch_m(BusDC* bus, BranchDC* branch);
 void BUSDC_del_vsc_conv(BusDC* bus, ConvVSC* conv);
+void BUSDC_del_csc_conv(BusDC* bus, ConvCSC* conv);
 
 BranchDC* BUSDC_get_branch_k(BusDC* bus);
 BranchDC* BUSDC_get_branch_m(BusDC* bus);
 ConvVSC* BUSDC_get_vsc_conv(BusDC* bus);
+ConvCSC* BUSDC_get_csc_conv(BusDC* bus);
 char BUSDC_get_flags_vars(BusDC* bus);
 char BUSDC_get_flags_fixed(BusDC* bus);
 char BUSDC_get_flags_bounded(BusDC* bus);
@@ -79,6 +83,7 @@ int BUSDC_get_index(BusDC* bus);
 int BUSDC_get_index_t(BusDC* bus, int t);
 int BUSDC_get_index_v(BusDC* bus, int t);
 char* BUSDC_get_json_string(BusDC* bus, char* output);
+int BUSDC_get_num_csc_convs(BusDC* bus);
 int BUSDC_get_num_vsc_convs(BusDC* bus);
 int BUSDC_get_num_periods(BusDC* bus);
 int BUSDC_get_num_vars(void* bus, unsigned char var, int t_start, int t_end);

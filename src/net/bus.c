@@ -16,6 +16,7 @@
 #include <pfnet/vargen.h>
 #include <pfnet/bat.h>
 #include <pfnet/conv_vsc.h>
+#include <pfnet/conv_csc.h>
 #include <pfnet/net.h>
 #include <pfnet/array.h>
 #include <pfnet/json_macros.h>
@@ -72,6 +73,7 @@ struct Bus {
   Branch* reg_tran;      /**< @brief List of transformers regulating the voltage magnitude of bus */
   Vargen* vargen;        /**< @brief List of variable generators connected to bus */
   Bat* bat;              /**< @brief List of batteries connected to bus */
+  ConvCSC* csc_conv;     /**< @brief List of CSC converters connected to bus */
   ConvVSC* vsc_conv;     /**< @brief List of VSC converters connected to bus */
   ConvVSC* reg_vsc_conv; /**< @brief List of VSC converters regulating the voltage magnitude of bus */
 
@@ -270,6 +272,22 @@ void BUS_del_bat(Bus* bus, Bat* bat) {
   }
 }
 
+void BUS_add_csc_conv(Bus* bus, ConvCSC* conv) {
+  if (bus) {
+    bus->csc_conv = CONVCSC_list_ac_add(bus->csc_conv,conv);
+    if (CONVCSC_get_ac_bus(conv) != bus)
+      CONVCSC_set_ac_bus(conv,bus);
+  }
+}
+
+void BUS_del_csc_conv(Bus* bus, ConvCSC* conv) {
+  if (bus) {
+    bus->csc_conv = CONVCSC_list_ac_del(bus->csc_conv,conv);
+    if (CONVCSC_get_ac_bus(conv) == bus)
+      CONVCSC_set_ac_bus(conv,NULL);
+  }
+}
+
 void BUS_add_vsc_conv(Bus* bus, ConvVSC* conv) {
   if (bus) {
     bus->vsc_conv = CONVVSC_list_ac_add(bus->vsc_conv,conv);
@@ -324,7 +342,9 @@ void BUS_del_all_connections(Bus* bus) {
       BUS_del_vargen(bus,bus->vargen);
     while (bus->bat)
       BUS_del_bat(bus,bus->bat);
-     while (bus->vsc_conv)
+    while (bus->csc_conv)
+      BUS_del_csc_conv(bus,bus->csc_conv);
+    while (bus->vsc_conv)
       BUS_del_vsc_conv(bus,bus->vsc_conv);
     while (bus->reg_vsc_conv)
       BUS_del_reg_vsc_conv(bus,bus->reg_vsc_conv);
@@ -412,9 +432,9 @@ void BUS_array_get_max_mismatches(Bus* bus_array, int size, REAL* P, REAL* Q, in
   if (bus_array && t >= 0 && t < bus_array->num_periods) {
     for (i = 0; i < size; i++) {
       if (fabs(bus_array[i].P_mis[t]) > *P)
-	*P = fabs(bus_array[i].P_mis[t]);
+        *P = fabs(bus_array[i].P_mis[t]);
       if (fabs(bus_array[i].Q_mis[t]) > *Q)
-	*Q = fabs(bus_array[i].Q_mis[t]);
+        *Q = fabs(bus_array[i].Q_mis[t]);
     }
   }
 }
@@ -447,9 +467,9 @@ BOOL BUS_check(Bus* bus, BOOL verbose) {
 
   // Emergency voltage violation limits
   if (bus->v_min_emer > bus->v_max_emer) {
-  bus_ok = FALSE;
-  if (verbose)
-    fprintf(stderr,"bad bus emergency voltage limits\n");
+    bus_ok = FALSE;
+    if (verbose)
+      fprintf(stderr,"bad bus emergency voltage limits\n");
   }
 
   // Reg gen number
@@ -816,6 +836,13 @@ int BUS_get_num_bats(Bus* bus) {
     return 0;
 }
 
+int BUS_get_num_csc_convs(Bus* bus) {
+  if (bus)
+    return CONVCSC_list_ac_len(bus->csc_conv);
+  else
+    return 0;
+}
+
 int BUS_get_num_vsc_convs(Bus* bus) {
   if (bus)
     return CONVVSC_list_ac_len(bus->vsc_conv);
@@ -896,6 +923,13 @@ Vargen* BUS_get_vargen(Bus* bus) {
 Bat* BUS_get_bat(Bus* bus) {
   if (bus)
     return bus->bat;
+  else
+    return NULL;
+}
+
+ConvCSC* BUS_get_csc_conv(Bus* bus) {
+  if (bus)
+    return bus->csc_conv;
   else
     return NULL;
 }
@@ -1152,21 +1186,21 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
       switch (code) {
 
       case UPPER_LIMITS:
-	if (bus->bounded & BUS_VAR_VMAG)
-	  VEC_set(values,bus->index_v_mag[t],bus->v_max_norm);
-	else
-	  VEC_set(values,bus->index_v_mag[t],BUS_INF_V_MAG);
-	break;
+        if (bus->bounded & BUS_VAR_VMAG)
+          VEC_set(values,bus->index_v_mag[t],bus->v_max_norm);
+        else
+          VEC_set(values,bus->index_v_mag[t],BUS_INF_V_MAG);
+        break;
 
       case LOWER_LIMITS:
-	if (bus->bounded & BUS_VAR_VMAG)
-	  VEC_set(values,bus->index_v_mag[t],bus->v_min_norm);
-	else
-	  VEC_set(values,bus->index_v_mag[t],-BUS_INF_V_MAG);
-	break;
+        if (bus->bounded & BUS_VAR_VMAG)
+          VEC_set(values,bus->index_v_mag[t],bus->v_min_norm);
+        else
+          VEC_set(values,bus->index_v_mag[t],-BUS_INF_V_MAG);
+        break;
 
       default:
-	VEC_set(values,bus->index_v_mag[t],bus->v_mag[t]);
+        VEC_set(values,bus->index_v_mag[t],bus->v_mag[t]);
       }
     }
 
@@ -1175,15 +1209,15 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
       switch(code) {
 	
       case UPPER_LIMITS:
-	VEC_set(values,bus->index_v_ang[t],BUS_INF_V_ANG);
-	break;
+        VEC_set(values,bus->index_v_ang[t],BUS_INF_V_ANG);
+        break;
 
       case LOWER_LIMITS:
-	VEC_set(values,bus->index_v_ang[t],-BUS_INF_V_ANG);
-	break;
+        VEC_set(values,bus->index_v_ang[t],-BUS_INF_V_ANG);
+        break;
 
       default:
-	VEC_set(values,bus->index_v_ang[t],bus->v_ang[t]);
+        VEC_set(values,bus->index_v_ang[t],bus->v_ang[t]);
       }
     }
   }
@@ -1204,7 +1238,7 @@ char* BUS_get_var_info_string(Bus* bus, int index) {
       index <= bus->index_v_mag[bus->num_periods-1]) {
     info = (char*)malloc(BUS_BUFFER_SIZE*sizeof(char));
     snprintf(info,BUS_BUFFER_SIZE*sizeof(char),
-	     "bus:%d:voltage magnitude:%d",bus->index,index-bus->index_v_mag[0]);
+             "bus:%d:voltage magnitude:%d",bus->index,index-bus->index_v_mag[0]);
     return info;
   }
 
@@ -1214,7 +1248,7 @@ char* BUS_get_var_info_string(Bus* bus, int index) {
       index <= bus->index_v_ang[bus->num_periods-1]) {
     info = (char*)malloc(BUS_BUFFER_SIZE*sizeof(char));
     snprintf(info,BUS_BUFFER_SIZE*sizeof(char),
-	     "bus:%d:voltage angle:%d",bus->index,index-bus->index_v_ang[0]);
+             "bus:%d:voltage angle:%d",bus->index,index-bus->index_v_ang[0]);
     return info;
   }
 
@@ -1618,6 +1652,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_list_int(temp,output,"reg_transformers",bus,Branch,BUS_get_reg_tran,BRANCH_get_index,BRANCH_get_reg_next,FALSE);
   JSON_list_int(temp,output,"var_generators",bus,Vargen,BUS_get_vargen,VARGEN_get_index,VARGEN_get_next,FALSE);
   JSON_list_int(temp,output,"batteries",bus,Bat,BUS_get_bat,BAT_get_index,BAT_get_next,FALSE);
+  JSON_list_int(temp,output,"csc_converters",bus,ConvCSC,BUS_get_csc_conv,CONVCSC_get_index,CONVCSC_get_next_ac,FALSE);
   JSON_list_int(temp,output,"vsc_converters",bus,ConvVSC,BUS_get_vsc_conv,CONVVSC_get_index,CONVVSC_get_next_ac,FALSE);
   JSON_list_int(temp,output,"reg_vsc_converters",bus,ConvVSC,BUS_get_reg_vsc_conv,CONVVSC_get_index,CONVVSC_get_reg_next,FALSE);
   JSON_array_float(temp,output,"sens_P_balance",bus->sens_P_balance,bus->num_periods,FALSE);
@@ -1766,6 +1801,7 @@ void BUS_init(Bus* bus, int num_periods) {
   bus->branch_m = NULL;
   bus->vargen = NULL;
   bus->bat = NULL;
+  bus->csc_conv = NULL;
   bus->vsc_conv = NULL;
   bus->reg_vsc_conv = NULL;
 
@@ -1828,7 +1864,7 @@ BOOL BUS_is_regulated_by_gen(Bus* bus) {
   if (bus) {
     for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen)) {
       if (!GEN_is_on_outage(gen))
-	return TRUE;
+        return TRUE;
     }
   }
   return FALSE;
@@ -1839,7 +1875,7 @@ BOOL BUS_is_regulated_by_tran(Bus* bus) {
   if (bus) {
     for (br = bus->reg_tran; br != NULL; br = BRANCH_get_reg_next(br)) {
       if (!BRANCH_is_on_outage(br))
-	return TRUE;
+        return TRUE;
     }
   }
   return FALSE;
@@ -2054,7 +2090,7 @@ int BUS_set_flags(void* vbus, char flag_type, unsigned char mask, int index) {
   if (!((*flags_ptr) & BUS_VAR_VMAG) && (mask & BUS_VAR_VMAG)) { // voltage magnitude
     if (flag_type == FLAG_VARS) {
       for (t = 0; t < bus->num_periods; t++)
-	bus->index_v_mag[t] = index+t;
+        bus->index_v_mag[t] = index+t;
     }
     (*flags_ptr) |= BUS_VAR_VMAG;
     index += bus->num_periods;
@@ -2062,7 +2098,7 @@ int BUS_set_flags(void* vbus, char flag_type, unsigned char mask, int index) {
   if (!((*flags_ptr) & BUS_VAR_VANG) && (mask & BUS_VAR_VANG)) { // voltage angle
     if (flag_type == FLAG_VARS) {
       for (t = 0; t < bus->num_periods; t++)
-	bus->index_v_ang[t] = index+t;
+        bus->index_v_ang[t] = index+t;
     }
     (*flags_ptr) |= BUS_VAR_VANG;
     index += bus->num_periods;
@@ -2137,13 +2173,13 @@ void BUS_set_sens_v_reg_by_shunt(Bus* bus, REAL value, int t) {
 
 void BUS_show(Bus* bus, int t) {
   printf("bus %d\t%d\t%d\t%d\t%d\t%d\t%d\n",
-	 BUS_get_number(bus),
-	 BUS_is_slack(bus),
-	 BUS_is_regulated_by_gen(bus),
-	 BUS_get_num_gens(bus),
-	 BUS_get_num_reg_gens(bus),
-	 BUS_get_num_loads(bus),
-	 BUS_get_num_shunts(bus));
+         BUS_get_number(bus),
+         BUS_is_slack(bus),
+         BUS_is_regulated_by_gen(bus),
+         BUS_get_num_gens(bus),
+         BUS_get_num_reg_gens(bus),
+         BUS_get_num_loads(bus),
+         BUS_get_num_shunts(bus));
 }
 
 void BUS_propagate_data_in_time(Bus* bus, int start, int end) {

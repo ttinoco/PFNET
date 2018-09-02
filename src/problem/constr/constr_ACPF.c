@@ -148,8 +148,8 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, int t) {
       
       // H
       if (var_v) {
-	(*HP_nnz)++;
-	(*HQ_nnz)++; // b an vk
+        (*HP_nnz)++;
+        (*HQ_nnz)++; // b an vk
       }
     }
   }
@@ -208,21 +208,21 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, int t) {
     HP_nnz = H_nnz+BUS_get_index_P(BRANCH_get_bus_k(br),t);
     HQ_nnz = H_nnz+BUS_get_index_Q(BRANCH_get_bus_k(br),t);
     BRANCH_power_flow_count(br,
-			    J_nnz,
-			    HP_nnz,
-			    t,
-			    TRUE,  // Pkm, Qkm
-			    TRUE); // ext_idx
+                            J_nnz,
+                            HP_nnz,
+                            t,
+                            TRUE,  // Pkm, Qkm
+                            TRUE); // ext_idx
     *HQ_nnz = *HP_nnz;
     
     HP_nnz = H_nnz+BUS_get_index_P(BRANCH_get_bus_m(br),t);
     HQ_nnz = H_nnz+BUS_get_index_Q(BRANCH_get_bus_m(br),t);
     BRANCH_power_flow_count(br,
-			    J_nnz,
-			    HP_nnz,
-			    t,
-			    FALSE, // Pmk, Qmk
-			    TRUE); // ext_idx
+                            J_nnz,
+                            HP_nnz,
+                            t,
+                            FALSE, // Pmk, Qmk
+                            TRUE); // ext_idx
     *HQ_nnz = *HP_nnz;
   }
     
@@ -400,12 +400,12 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, int t) {
       // H
       if (var_v) {
 	
-	MAT_set_i(HP,*HP_nnz,SHUNT_get_index_b(shunt,t));
-	MAT_set_j(HP,*HP_nnz,v_index);
-	(*HP_nnz)++;
-	MAT_set_i(HQ,*HQ_nnz,SHUNT_get_index_b(shunt,t));
-	MAT_set_j(HQ,*HQ_nnz,v_index);
-	(*HQ_nnz)++; // b and vk
+        MAT_set_i(HP,*HP_nnz,SHUNT_get_index_b(shunt,t));
+        MAT_set_j(HP,*HP_nnz,v_index);
+        (*HP_nnz)++;
+        MAT_set_i(HQ,*HQ_nnz,SHUNT_get_index_b(shunt,t));
+        MAT_set_j(HQ,*HQ_nnz,v_index);
+        (*HQ_nnz)++; // b and vk
       }
     }
   }
@@ -477,31 +477,31 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, int t) {
     P_index = BUS_get_index_P(BRANCH_get_bus_k(br),t);
     Q_index = BUS_get_index_Q(BRANCH_get_bus_k(br),t);
     BRANCH_power_flow_analyze(br,
-			      J_nnz,
-			      J,
-			      P_index,
-			      Q_index,
-			      H_nnz+P_index,
-			      MAT_array_get(H_array,P_index),
-			      MAT_array_get(H_array,Q_index),
-			      t,
-			      TRUE,  // Pkm, Qkm
-			      TRUE); // ext_idx
+                              J_nnz,
+                              J,
+                              P_index,
+                              Q_index,
+                              H_nnz+P_index,
+                              MAT_array_get(H_array,P_index),
+                              MAT_array_get(H_array,Q_index),
+                              t,
+                              TRUE,  // Pkm, Qkm
+                              TRUE); // ext_idx
     *(H_nnz+Q_index) = *(H_nnz+P_index);
 
     P_index = BUS_get_index_P(BRANCH_get_bus_m(br),t);
     Q_index = BUS_get_index_Q(BRANCH_get_bus_m(br),t);
     BRANCH_power_flow_analyze(br,
-			      J_nnz,
-			      J,
-			      P_index,
-			      Q_index,
-			      H_nnz+P_index,
-			      MAT_array_get(H_array,P_index),
-			      MAT_array_get(H_array,Q_index),
-			      t,
-			      FALSE, // Pmk, Qmk
-			      TRUE); // ext_idx
+                              J_nnz,
+                              J,
+                              P_index,
+                              Q_index,
+                              H_nnz+P_index,
+                              MAT_array_get(H_array,P_index),
+                              MAT_array_get(H_array,Q_index),
+                              t,
+                              FALSE, // Pmk, Qmk
+                              TRUE); // ext_idx
     *(H_nnz+Q_index) = *(H_nnz+P_index);
   }
   
@@ -520,6 +520,7 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_
   Bat* bat;
   Shunt* shunt;
   ConvVSC* vsc_conv;
+  ConvCSC* csc_conv;
   REAL* f;
   REAL* J;
   int* J_row;
@@ -697,10 +698,10 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_
       
       // H
       if (var_v) {
-	HP[*HP_nnz] = 0;
-	HQ[*HQ_nnz] = 2*v;
-	(*HP_nnz)++;
-	(*HQ_nnz)++; // b and vk
+        HP[*HP_nnz] = 0;
+        HQ[*HQ_nnz] = 2*v;
+        (*HP_nnz)++;
+        (*HQ_nnz)++; // b and vk
       }
     }
   }
@@ -763,6 +764,14 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_
     }
   }
 
+  // CSC converters
+  for (csc_conv = BUS_get_csc_conv(bus); csc_conv != NULL; csc_conv = CONVCSC_get_next_ac(csc_conv)) {
+    
+    // f
+    f[P_index] += CONVCSC_get_P(csc_conv,t); // p.u.
+    f[Q_index] += CONVCSC_get_Q(csc_conv,t); // p.u.
+  }
+  
   // VSC converters
   for (vsc_conv = BUS_get_vsc_conv(bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_ac(vsc_conv)) {
     
@@ -803,35 +812,35 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_
     P_index = BUS_get_index_P(BRANCH_get_bus_k(br),t);
     Q_index = BUS_get_index_Q(BRANCH_get_bus_k(br),t);
     BRANCH_power_flow_eval(br,
-			   f+P_index,
-			   f+Q_index,
-			   J_nnz,
-			   J,
-			   H_nnz+P_index,
-			   MAT_get_data_array(MAT_array_get(H_array,P_index)),
-			   MAT_get_data_array(MAT_array_get(H_array,Q_index)),
-			   values,
-			   -1.,   // flows leaving bus are negative
-			   t,
-			   TRUE,  // Pkm, Qkm
-			   TRUE); // ext_idx
+                           f+P_index,
+                           f+Q_index,
+                           J_nnz,
+                           J,
+                           H_nnz+P_index,
+                           MAT_get_data_array(MAT_array_get(H_array,P_index)),
+                           MAT_get_data_array(MAT_array_get(H_array,Q_index)),
+                           values,
+                           -1.,   // flows leaving bus are negative
+                           t,
+                           TRUE,  // Pkm, Qkm
+                           TRUE); // ext_idx
     *(H_nnz+Q_index) = *(H_nnz+P_index);
 
     P_index = BUS_get_index_P(BRANCH_get_bus_m(br),t);
     Q_index = BUS_get_index_Q(BRANCH_get_bus_m(br),t);
     BRANCH_power_flow_eval(br,
-			   f+P_index,
-			   f+Q_index,
-			   J_nnz,
-			   J,
-			   H_nnz+P_index,
-			   MAT_get_data_array(MAT_array_get(H_array,P_index)),
-			   MAT_get_data_array(MAT_array_get(H_array,Q_index)),
-			   values,
-			   -1.,    // flows leaving bus are negative
-			   t,
-			   FALSE,  // Pmk, Qmk
-			   TRUE);  // ext_idx
+                           f+P_index,
+                           f+Q_index,
+                           J_nnz,
+                           J,
+                           H_nnz+P_index,
+                           MAT_get_data_array(MAT_array_get(H_array,P_index)),
+                           MAT_get_data_array(MAT_array_get(H_array,Q_index)),
+                           values,
+                           -1.,    // flows leaving bus are negative
+                           t,
+                           FALSE,  // Pmk, Qmk
+                           TRUE);  // ext_idx
     *(H_nnz+Q_index) = *(H_nnz+P_index);
   }
   

@@ -90,6 +90,7 @@ typedef struct Branch Branch;
 typedef struct Shunt Shunt;
 typedef struct Vargen Vargen;
 typedef struct ConvVSC ConvVSC;
+typedef struct ConvCSC ConvCSC;
 typedef struct Bat Bat;
 typedef struct Vec Vec;
 
@@ -146,6 +147,10 @@ void BUS_del_vsc_conv(Bus* bus, ConvVSC* conv);
 void BUS_add_reg_vsc_conv(Bus* bus, ConvVSC* conv);
 void BUS_del_reg_vsc_conv(Bus* bus, ConvVSC* conv);
 
+/** @brief Adds CSC converter to list of CSC converters connected to bus. */
+void BUS_add_csc_conv(Bus* bus, ConvCSC* conv);
+void BUS_del_csc_conv(Bus* bus, ConvCSC* conv);
+
 void BUS_del_all_connections(Bus* bus);
 
 void BUS_array_del(Bus* bus_array, int size);
@@ -188,6 +193,7 @@ int BUS_get_num_loads(Bus* bus);
 int BUS_get_num_shunts(Bus* bus);
 int BUS_get_num_vargens(Bus* bus);
 int BUS_get_num_bats(Bus* bus);
+int BUS_get_num_csc_convs(Bus* bus);
 int BUS_get_num_vsc_convs(Bus* bus);
 int BUS_get_num_reg_gens(Bus* bus);
 int BUS_get_num_reg_trans(Bus* bus);
@@ -203,6 +209,7 @@ Branch* BUS_get_branch_k(Bus* bus);
 Branch* BUS_get_branch_m(Bus* bus);
 Vargen* BUS_get_vargen(Bus* bus);
 Bat* BUS_get_bat(Bus* bus);
+ConvCSC* BUS_get_csc_conv(Bus* bus);
 ConvVSC* BUS_get_vsc_conv(Bus* bus);
 ConvVSC* BUS_get_reg_vsc_conv(Bus* bus);
 REAL BUS_get_P_mis(Bus* bus, int t);

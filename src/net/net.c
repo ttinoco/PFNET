@@ -33,6 +33,7 @@ struct Net {
   Shunt* shunt;         /**< @brief Shunt array. */
   Vargen* vargen;       /**< @brief Vargen array. */
   Bat* bat;             /**< @brief Bat array. */
+  ConvCSC* csc_conv;    /**< @brief CSC converter array */
   ConvVSC* vsc_conv;    /**< @brief VSC converter array */
   BusDC* dc_bus;        /**< @brief DC bus array */
   BranchDC* dc_branch;  /**< @brief DC branch array */
@@ -51,6 +52,7 @@ struct Net {
   int num_shunts;    /**< @brief Number of shunts (size of Shunt array). */
   int num_vargens;   /**< @brief Number of variable generators (size of Vargen array). */
   int num_bats;      /**< @brief Number of batteries (size of Bat array). */
+  int num_csc_convs;   /**< @brief Number of CSC converters (size of ConvCSC array) */
   int num_vsc_convs;   /**< @brief Number of VSC converters (size of ConvVSC array) */
   int num_dc_buses;    /**< @brief Number of DC buses (size of BusDC array) */
   int num_dc_branches; /**< @brief Number of DC branches (size of BranchDC array) */
@@ -209,6 +211,10 @@ void NET_add_buses(Net* net, Bus** bus_ptr_array, int size) {
     // Connections - bat
     while (BUS_get_bat(bus_src))
       BAT_set_bus(BUS_get_bat(bus_src),bus_dst);
+
+    // Connections - csc conv
+    while (BUS_get_csc_conv(bus_src))
+      CONVCSC_set_ac_bus(BUS_get_csc_conv(bus_src),bus_dst);
     
     // Connections - vsc conv
     while (BUS_get_vsc_conv(bus_src))
@@ -303,6 +309,8 @@ void NET_del_buses(Net* net, Bus** bus_ptr_array, int size) {
         VARGEN_set_bus(BUS_get_vargen(bus),NULL);
       while (BUS_get_bat(bus))
         BAT_set_bus(BUS_get_bat(bus),NULL);
+      while (BUS_get_csc_conv(bus))
+        CONVCSC_set_ac_bus(BUS_get_csc_conv(bus),NULL);
       while (BUS_get_vsc_conv(bus))
         CONVVSC_set_ac_bus(BUS_get_vsc_conv(bus),NULL);
       while (BUS_get_reg_vsc_conv(bus))
@@ -357,6 +365,10 @@ void NET_del_buses(Net* net, Bus** bus_ptr_array, int size) {
       // Connections - bat
       while (BUS_get_bat(bus_src))
         BAT_set_bus(BUS_get_bat(bus_src),bus_dst);
+
+      // Connections - csc conv
+      while (BUS_get_csc_conv(bus_src))
+        CONVCSC_set_ac_bus(BUS_get_csc_conv(bus_src),bus_dst);
 
       // Connections - vsc conv
       while (BUS_get_vsc_conv(bus_src))
@@ -1439,6 +1451,176 @@ void NET_del_vargens(Net* net, Vargen** gen_ptr_array, int size) {
   NET_clear_flags(net);
 }
 
+void NET_add_csc_convs(Net* net, ConvCSC** conv_ptr_array, int size) {
+  /** Adds CSC converters to the network. The entire converter array is
+   *  relocated, the data is copied (except flags for the new converters), 
+   *  and the bus connections are stolen.
+   */
+  
+  // Local variables
+  ConvCSC* conv_src;
+  ConvCSC* conv_dst;
+  ConvCSC* conv;
+  ConvCSC* old_conv_array;
+  int old_num_convs;
+  Bus* bus;
+  int num;
+  int index;
+  int i;
+
+  // Check
+  if (!net || !conv_ptr_array)
+    return;
+
+  // Old converters
+  old_conv_array = net->csc_conv;
+  old_num_convs = net->num_csc_convs;
+
+  // Count
+  num = 0;
+  for (i = 0; i < size; i++) {
+    conv = conv_ptr_array[i];
+    if (conv != NET_get_csc_conv(net,CONVCSC_get_index(conv))) // not in the network
+      num++;
+    else
+      conv_ptr_array[i] = NULL;                         // clear to ignore below
+  }
+
+  // New converters
+  NET_set_csc_conv_array(net,CONVCSC_array_new(net->num_csc_convs+num,net->num_periods),net->num_csc_convs+num);
+
+  // Copy data and steal connections
+  index = 0;
+  for (i = 0; i < old_num_convs+size; i++) {
+
+    if (i < old_num_convs)
+      conv_src = CONVCSC_array_get(old_conv_array,i);
+    else
+      conv_src = conv_ptr_array[i-old_num_convs];
+    conv_dst = NET_get_csc_conv(net,index);
+
+    // Check
+    if (!conv_src)
+      continue;
+
+    // Copy data
+    CONVCSC_copy_from_conv(conv_dst,conv_src);
+
+    // Clear flags
+    if (i >= old_num_convs) {
+      CONVCSC_clear_flags(conv_dst,FLAG_VARS);
+      CONVCSC_clear_flags(conv_dst,FLAG_FIXED);
+      CONVCSC_clear_flags(conv_dst,FLAG_BOUNDED);
+      CONVCSC_clear_flags(conv_dst,FLAG_SPARSE);
+    }
+    
+    // Save old connections
+    bus = CONVCSC_get_ac_bus(conv_src);
+
+    // Clear connections bus - old conv
+    CONVCSC_set_ac_bus(conv_src,NULL);     // also removes conv from bus->convs list
+
+    // Add connections bus - new conv
+    CONVCSC_set_ac_bus(conv_dst,bus);      // also adds conv to bus->convs list
+
+    index++;
+  }
+
+  // Delete old convs
+  CONVCSC_array_del(old_conv_array,old_num_convs);
+}
+
+void NET_del_csc_convs(Net* net, ConvCSC** conv_ptr_array, int size) {
+  /** Removes CSC converters from the network. The entire converter array is
+   *  relocated, the data is copied, and the bus connections are set.
+   *  Network flags are cleared. 
+   */
+  
+  // Local variables
+  ConvCSC* conv_src;
+  ConvCSC* conv_dst;
+  ConvCSC* conv;
+  ConvCSC* old_conv_array;
+  int old_num_convs;
+  char* delete;
+  Bus* bus;
+  int num;
+  int index;
+  int i;
+
+  // Check
+  if (!net || !conv_ptr_array)
+    return;
+
+  // Old converters
+  old_conv_array = net->csc_conv;
+  old_num_convs = net->num_csc_convs;
+
+  // Count unique and mark for deletion
+  num = 0;
+  ARRAY_zalloc(delete,char,net->num_csc_convs);
+  for (i = 0; i < size; i++) {
+    conv = conv_ptr_array[i];
+    if (conv) {
+      if (conv == NET_get_csc_conv(net,CONVCSC_get_index(conv))) {
+        if (!delete[CONVCSC_get_index(conv)]) {
+          delete[CONVCSC_get_index(conv)] = 1;
+          num++;
+        }
+      }
+      else
+        conv_ptr_array[i] = NULL;
+    }
+  }
+
+  // New converters
+  NET_set_csc_conv_array(net,CONVCSC_array_new(net->num_csc_convs-num,net->num_periods),net->num_csc_convs-num);
+
+  // Copy data and set connections
+  index = 0;
+  for (i = 0; i < old_num_convs; i++) {
+
+    // Delete
+    if (delete[i]) {
+
+      conv = CONVCSC_array_get(old_conv_array,i);
+      
+      // Clear connections bus - "conv to be deleted"
+      CONVCSC_set_ac_bus(conv,NULL); // also removes conv from bus->convs list
+    }
+
+    // Keep
+    else {
+
+      conv_src = CONVCSC_array_get(old_conv_array,i);
+      conv_dst = NET_get_csc_conv(net,index);
+
+      // Copy data
+      CONVCSC_copy_from_conv(conv_dst,conv_src);
+
+      // Save old connections
+      bus = CONVCSC_get_ac_bus(conv_src);
+      
+      // Clear connections bus - old conv 
+      CONVCSC_set_ac_bus(conv_src,NULL);       // also removes conv from bus->convs list
+      
+      // Add connections bus - new conv
+      CONVCSC_set_ac_bus(conv_dst,bus);        // also adds conv to bus->convs list
+      
+      index++;
+    }
+  }
+
+  // Delete old converters
+  CONVCSC_array_del(old_conv_array,old_num_convs);
+
+  // Delete delete flags
+  free(delete);
+
+  // Clear flags
+  NET_clear_flags(net);
+}
+
 void NET_add_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size) {
   /** Adds VSC converters to the network. The entire converter array is
    *  relocated, the data is copied (except flags for the new converters), 
@@ -1683,6 +1865,10 @@ void NET_add_dc_buses(Net* net, BusDC** bus_ptr_array, int size) {
     // Connection - branch m
     while (BUSDC_get_branch_m(bus_src))
       BRANCHDC_set_bus_m(BUSDC_get_branch_m(bus_src),bus_dst);
+
+    // Connections - csc conv
+    while (BUSDC_get_csc_conv(bus_src))
+      CONVCSC_set_dc_bus(BUSDC_get_csc_conv(bus_src),bus_dst);
     
     // Connections - vsc conv
     while (BUSDC_get_vsc_conv(bus_src))
@@ -1757,6 +1943,8 @@ void NET_del_dc_buses(Net* net, BusDC** bus_ptr_array, int size) {
         BRANCHDC_set_bus_k(BUSDC_get_branch_k(bus),NULL);
       while (BUSDC_get_branch_m(bus))
         BRANCHDC_set_bus_m(BUSDC_get_branch_m(bus),NULL);
+      while (BUSDC_get_csc_conv(bus))
+        CONVCSC_set_dc_bus(BUSDC_get_csc_conv(bus),NULL);
       while (BUSDC_get_vsc_conv(bus))
         CONVVSC_set_dc_bus(BUSDC_get_vsc_conv(bus),NULL);
     }
@@ -1777,6 +1965,10 @@ void NET_del_dc_buses(Net* net, BusDC** bus_ptr_array, int size) {
       // Connection - branch m
       while (BUSDC_get_branch_m(bus_src))
         BRANCHDC_set_bus_m(BUSDC_get_branch_m(bus_src),bus_dst);
+
+      // Connections - csc conv
+      while (BUSDC_get_csc_conv(bus_src))
+        CONVCSC_set_dc_bus(BUSDC_get_csc_conv(bus_src),bus_dst);
             
       // Connections - vsc conv
       while (BUSDC_get_vsc_conv(bus_src))
@@ -2195,6 +2387,8 @@ BOOL NET_check(Net* net, BOOL verbose) {
 
   // Bats
 
+  // CSC convs
+
   // VSC convs
 
   // DC buses
@@ -2230,6 +2424,7 @@ void NET_clear_data(Net* net) {
   LOAD_array_del(net->load,net->num_loads);
   VARGEN_array_del(net->vargen,net->num_vargens);
   BAT_array_del(net->bat,net->num_bats);
+  CONVCSC_array_del(net->csc_conv,net->num_csc_convs);
   CONVVSC_array_del(net->vsc_conv,net->num_vsc_convs);
   BUSDC_array_del(net->dc_bus,net->num_dc_buses);
   BRANCHDC_array_del(net->dc_branch,net->num_dc_branches);
@@ -2272,6 +2467,7 @@ void NET_clear_flags(Net* net) {
   Vargen* vargen;
   Load* load;
   Bat* bat;
+  ConvCSC* csc_conv;
   ConvVSC* vsc_conv;
   BusDC* dc_bus;
   BranchDC* dc_branch;
@@ -2342,6 +2538,12 @@ void NET_clear_flags(Net* net) {
     BAT_clear_flags(bat,FLAG_FIXED);
     BAT_clear_flags(bat,FLAG_BOUNDED);
     BAT_clear_flags(bat,FLAG_SPARSE);
+  }
+
+  // CSC convs
+  for (i = 0; i < net->num_csc_convs; i++) {
+    csc_conv = CONVCSC_array_get(net->csc_conv,i);
+    CONVCSC_clear_flags(csc_conv,FLAG_ALL);
   }
 
   // VSC convs
@@ -2430,6 +2632,8 @@ void NET_clear_properties(Net* net) {
 
     // Battery
 
+    // CSC converter
+
     // VSC converter
 
     // DC bus
@@ -2484,6 +2688,10 @@ void NET_clear_sensitivities(Net* net) {
   for (i = 0; i < net->num_bats; i++)
     BAT_clear_sensitivities(BAT_array_get(net->bat,i));
 
+  // CSC converters
+  for (i = 0; i < net->num_csc_convs; i++)
+    CONVCSC_clear_sensitivities(CONVCSC_array_get(net->csc_conv,i));
+
   // VSC converters
   for (i = 0; i < net->num_vsc_convs; i++)
     CONVVSC_clear_sensitivities(CONVVSC_array_get(net->vsc_conv,i));
@@ -2531,6 +2739,8 @@ void NET_copy_from_net(Net* net, Net* other_net) {
   Shunt* other_shunt = NULL;
   Bat* bat = NULL;
   Bat* other_bat = NULL;
+  ConvCSC* csc_conv = NULL;
+  ConvCSC* other_csc_conv = NULL;
   ConvVSC* vsc_conv = NULL;
   ConvVSC* other_vsc_conv = NULL;
   BusDC* dc_bus = NULL;
@@ -2620,6 +2830,13 @@ void NET_copy_from_net(Net* net, Net* other_net) {
     BAT_copy_from_bat(bat,other_bat);
   }
 
+  // CSC converters
+  for (i = 0; i < net->num_csc_convs; i++) {
+    csc_conv = NET_get_csc_conv(net,i);
+    other_csc_conv = NET_get_csc_conv(other_net,i);
+    CONVCSC_copy_from_conv(csc_conv,other_csc_conv);
+  }
+
   // VSC converters
   for (i = 0; i < net->num_vsc_convs; i++) {
     vsc_conv = NET_get_vsc_conv(net,i);
@@ -2664,6 +2881,8 @@ Net* NET_get_copy(Net* net) {
   Shunt* new_shunt = NULL;
   Bat* bat = NULL;
   Bat* new_bat = NULL;
+  ConvCSC* csc_conv = NULL;
+  ConvCSC* new_csc_conv = NULL;
   ConvVSC* vsc_conv = NULL;
   ConvVSC* new_vsc_conv = NULL;
   BusDC* dc_bus = NULL;
@@ -2685,6 +2904,7 @@ Net* NET_get_copy(Net* net) {
   NET_set_shunt_array(new_net,SHUNT_array_new(net->num_shunts,net->num_periods),net->num_shunts);
   NET_set_load_array(new_net,LOAD_array_new(net->num_loads,net->num_periods),net->num_loads);
   NET_set_bat_array(new_net,BAT_array_new(net->num_bats,net->num_periods),net->num_bats);
+  NET_set_csc_conv_array(new_net,CONVCSC_array_new(net->num_csc_convs,net->num_periods),net->num_csc_convs);
   NET_set_vsc_conv_array(new_net,CONVVSC_array_new(net->num_vsc_convs,net->num_periods),net->num_vsc_convs);
   NET_set_dc_bus_array(new_net,BUSDC_array_new(net->num_dc_buses,net->num_periods), net->num_dc_buses);
   NET_set_dc_branch_array(new_net,BRANCHDC_array_new(net->num_dc_branches,net->num_periods), net->num_dc_branches);
@@ -2734,6 +2954,10 @@ Net* NET_get_copy(Net* net) {
     // Connections bat
     for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat))
       BUS_add_bat(new_bus,NET_get_bat(new_net,BAT_get_index(bat)));
+
+    // Connections csc conv
+    for (csc_conv = BUS_get_csc_conv(bus); csc_conv != NULL; csc_conv = CONVCSC_get_next_ac(csc_conv))
+      BUS_add_csc_conv(new_bus,NET_get_csc_conv(new_net,CONVCSC_get_index(csc_conv)));
 
     // Connections vsc conv
     for (vsc_conv = BUS_get_vsc_conv(bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_ac(vsc_conv))
@@ -2808,6 +3032,19 @@ Net* NET_get_copy(Net* net) {
     BAT_set_bus(new_bat,NET_get_bus(new_net,BUS_get_index(BAT_get_bus(bat))));
   }
 
+  // CSC converters
+  for (i = 0; i < net->num_csc_convs; i++) {
+
+    csc_conv = NET_get_csc_conv(net,i);
+    new_csc_conv = NET_get_csc_conv(new_net,i);
+    
+    // Connections ac bus
+    CONVCSC_set_ac_bus(new_csc_conv,NET_get_bus(new_net,BUS_get_index(CONVCSC_get_ac_bus(csc_conv))));
+
+    // Connections dc bus
+    CONVCSC_set_dc_bus(new_csc_conv,NET_get_dc_bus(new_net,BUSDC_get_index(CONVCSC_get_dc_bus(csc_conv))));
+  }
+
   // VSC converters
   for (i = 0; i < net->num_vsc_convs; i++) {
 
@@ -2835,6 +3072,10 @@ Net* NET_get_copy(Net* net) {
     // Connections branch_m
     for (dc_branch = BUSDC_get_branch_m(dc_bus); dc_branch != NULL; dc_branch = BRANCHDC_get_next_m(dc_branch))
       BUSDC_add_branch_m(new_dc_bus,NET_get_dc_branch(new_net,BRANCHDC_get_index(dc_branch)));
+
+    // Connections csc conv
+    for (csc_conv = BUSDC_get_csc_conv(dc_bus); csc_conv != NULL; csc_conv = CONVCSC_get_next_dc(csc_conv))
+      BUSDC_add_csc_conv(new_dc_bus,NET_get_csc_conv(new_net,CONVCSC_get_index(csc_conv)));
 
     // Connections vsc conv
     for (vsc_conv = BUSDC_get_vsc_conv(dc_bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_dc(vsc_conv))
@@ -3098,6 +3339,7 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   Load** del_load_ptr_array;
   Bat** del_bat_ptr_array;
   Vargen** del_vargen_ptr_array;
+  ConvCSC** del_csc_conv_ptr_array;
   ConvVSC** del_vsc_conv_ptr_array;
   BusDC** del_dc_bus_ptr_array;
   BranchDC** del_dc_br_ptr_array;
@@ -3131,6 +3373,7 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   del_shunt_ptr_array = (Shunt**)malloc(sizeof(Shunt*)*net->num_shunts);
   del_bat_ptr_array = (Bat**)malloc(sizeof(Bat*)*net->num_bats);
   del_vargen_ptr_array = (Vargen**)malloc(sizeof(Vargen*)*net->num_vargens);
+  del_csc_conv_ptr_array = (ConvCSC**)malloc(sizeof(ConvCSC*)*net->num_csc_convs);
   del_vsc_conv_ptr_array = (ConvVSC**)malloc(sizeof(ConvVSC*)*net->num_vsc_convs);
   del_dc_bus_ptr_array = (BusDC**)malloc(sizeof(BusDC*)*net->num_dc_buses);
   del_dc_br_ptr_array = (BranchDC**)malloc(sizeof(BranchDC*)*net->num_dc_branches);
@@ -3219,6 +3462,10 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
     }
   }
 
+  // Delete all CSC converters
+  for (i = 0; i < new_net->num_csc_convs; i++)
+    del_csc_conv_ptr_array[i] = NET_get_csc_conv(new_net, i);
+
   // Delete all VSC converters
   for (i = 0; i < new_net->num_vsc_convs; i++)
     del_vsc_conv_ptr_array[i] = NET_get_vsc_conv(new_net, i);
@@ -3239,6 +3486,7 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   NET_del_shunts(new_net, del_shunt_ptr_array, num_del_shunt);
   NET_del_bats(new_net, del_bat_ptr_array, num_del_bat);
   NET_del_vargens(new_net, del_vargen_ptr_array, num_del_vargen);
+  NET_del_csc_convs(new_net,del_csc_conv_ptr_array,new_net->num_csc_convs);
   NET_del_vsc_convs(new_net,del_vsc_conv_ptr_array,new_net->num_vsc_convs);
   NET_del_dc_buses(new_net,del_dc_bus_ptr_array,new_net->num_dc_buses);
   NET_del_dc_branches(new_net,del_dc_br_ptr_array,new_net->num_dc_branches);
@@ -3255,6 +3503,7 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   free(del_shunt_ptr_array);
   free(del_bat_ptr_array);
   free(del_vargen_ptr_array);
+  free(del_csc_conv_ptr_array);
   free(del_vsc_conv_ptr_array);
   free(del_dc_bus_ptr_array);
   free(del_dc_br_ptr_array);
@@ -3294,6 +3543,7 @@ void NET_init(Net* net, int num_periods) {
   net->shunt = NULL;
   net->vargen = NULL;
   net->bat = NULL;
+  net->csc_conv = NULL;
   net->vsc_conv = NULL;
   net->dc_bus = NULL;
   net->dc_branch = NULL;
@@ -3312,6 +3562,7 @@ void NET_init(Net* net, int num_periods) {
   net->num_shunts = 0;
   net->num_vargens = 0;
   net->num_bats = 0;
+  net->num_csc_convs = 0;
   net->num_vsc_convs = 0;
   net->num_dc_buses = 0;
   net->num_dc_branches = 0;
@@ -3446,6 +3697,13 @@ Bat* NET_get_bat(Net* net, int index) {
     return NULL;
   else
     return BAT_array_get(net->bat,index);
+}
+
+ConvCSC* NET_get_csc_conv(Net* net, int index) {
+  if (!net || index < 0 || index >= net->num_csc_convs)
+    return NULL;
+  else
+    return CONVCSC_array_get(net->csc_conv,index);
 }
 
 ConvVSC* NET_get_vsc_conv(Net* net, int index) {
@@ -3586,6 +3844,36 @@ Bat* NET_get_bat_from_name_and_bus_number(Net* net, char* name, int number) {
   for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
     if (strcmp(BAT_get_name(bat), name) == 0)
       return bat;
+  }
+  return NULL;
+}
+
+ConvCSC* NET_get_csc_conv_from_name_and_ac_bus_number(Net* net, char* name, int number) {
+  ConvCSC* conv;
+  Bus* bus = NET_bus_hash_number_find(net, number);
+  for (conv = BUS_get_csc_conv(bus); conv != NULL; conv = CONVCSC_get_next_ac(conv)) {
+    if (strcmp(CONVCSC_get_name(conv), name) == 0)
+      return conv;
+  }
+  return NULL;
+}
+
+ConvCSC* NET_get_csc_conv_from_name_and_dc_bus_number(Net* net, char* name, int number) {
+  ConvCSC* conv;
+  BusDC* bus = NET_dc_bus_hash_number_find(net, number);
+  for (conv = BUSDC_get_csc_conv(bus); conv != NULL; conv = CONVCSC_get_next_dc(conv)) {
+    if (strcmp(CONVCSC_get_name(conv), name) == 0)
+      return conv;
+  }
+  return NULL;
+}
+
+ConvCSC* NET_get_csc_conv_from_name_and_dc_bus_name(Net* net, char* name, char* bus_name) {
+  ConvCSC* conv;
+  BusDC* bus = NET_dc_bus_hash_name_find(net, bus_name);
+  for (conv = BUSDC_get_csc_conv(bus); conv != NULL; conv = CONVCSC_get_next_dc(conv)) {
+    if (strcmp(CONVCSC_get_name(conv), name) == 0)
+      return conv;
   }
   return NULL;
 }
@@ -4016,6 +4304,13 @@ int NET_get_num_bats(Net* net) {
     return 0;
 }
 
+int NET_get_num_csc_convs(Net* net) {
+  if (net)
+    return net->num_csc_convs;
+  else
+    return 0;
+}
+
 int NET_get_num_vsc_convs(Net* net) {
   if (net)
     return net->num_vsc_convs;
@@ -4198,6 +4493,10 @@ Vec* NET_get_var_values(Net* net, int code) {
   for (i = 0; i < net->num_bats; i++)
     BAT_get_var_values(BAT_array_get(net->bat,i),values,code);
 
+  // CSC converters
+  for (i = 0; i < net->num_csc_convs; i++)
+    CONVCSC_get_var_values(CONVCSC_array_get(net->csc_conv,i),values,code);
+
   // VSC converters
   for (i = 0; i < net->num_vsc_convs; i++)
     CONVVSC_get_var_values(CONVVSC_array_get(net->vsc_conv,i),values,code);
@@ -4270,6 +4569,13 @@ char* NET_get_var_info_string(Net* net, int index) {
   // Batteries
   for (i = 0; i < net->num_bats; i++) {
     info = BAT_get_var_info_string(BAT_array_get(net->bat,i),index);
+    if (info)
+      return info;
+  }
+
+  // CSC converters
+  for (i = 0; i < net->num_csc_convs; i++) {
+    info = CONVCSC_get_var_info_string(CONVCSC_array_get(net->csc_conv,i),index);
     if (info)
       return info;
   }
@@ -4369,7 +4675,13 @@ Mat* NET_get_var_projection(Net* net, char obj_type, char prop_mask, unsigned ch
         num_subvars += BAT_get_num_vars(NET_get_bat(net,i),var,t_start,t_end);
     }
   }
-   if ((obj_type == OBJ_CONVVSC) || (obj_type == OBJ_ALL)) { // VSC converter or all
+  if ((obj_type == OBJ_CONVCSC) || (obj_type == OBJ_ALL)) { // CSC converter or all
+    for (i = 0; i < net->num_csc_convs; i++) {
+      if (CONVCSC_has_properties(NET_get_csc_conv(net,i),prop_mask))
+        num_subvars += CONVCSC_get_num_vars(NET_get_csc_conv(net,i),var,t_start,t_end);
+    }
+  }
+  if ((obj_type == OBJ_CONVVSC) || (obj_type == OBJ_ALL)) { // VSC converter or all
     for (i = 0; i < net->num_vsc_convs; i++) {
       if (CONVVSC_has_properties(NET_get_vsc_conv(net,i),prop_mask))
         num_subvars += CONVVSC_get_num_vars(NET_get_vsc_conv(net,i),var,t_start,t_end);
@@ -4483,6 +4795,20 @@ Mat* NET_get_var_projection(Net* net, char obj_type, char prop_mask, unsigned ch
     for (i = 0; i < net->num_bats; i++) {
       if (BAT_has_properties(NET_get_bat(net,i),prop_mask)) {
         indices = BAT_get_var_indices(NET_get_bat(net,i),var,t_start,t_end);
+        for (j = 0; j < VEC_get_size(indices); j++) {
+          MAT_set_i(proj,num_subvars,num_subvars);
+          MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
+          MAT_set_d(proj,num_subvars,1.);
+          num_subvars++;
+        }
+        VEC_del(indices);
+      }
+    }
+  }
+  if ((obj_type == OBJ_CONVCSC) || (obj_type == OBJ_ALL)) { // Converter CSC or all
+    for (i = 0; i < net->num_csc_convs; i++) {
+      if (CONVCSC_has_properties(NET_get_csc_conv(net,i),prop_mask)) {
+        indices = CONVCSC_get_var_indices(NET_get_csc_conv(net,i),var,t_start,t_end);
         for (j = 0; j < VEC_get_size(indices); j++) {
           MAT_set_i(proj,num_subvars,num_subvars);
           MAT_set_j(proj,num_subvars,(int)VEC_get(indices,j));
@@ -4694,6 +5020,7 @@ char* NET_get_json_string(Net* net) {
               SHUNT_BUFFER_SIZE*SHUNT_NUM_JSON_FIELDS*net->num_shunts +
               VARGEN_BUFFER_SIZE*VARGEN_NUM_JSON_FIELDS*net->num_vargens +
               BAT_BUFFER_SIZE*BAT_NUM_JSON_FIELDS*net->num_bats +
+              CONVCSC_BUFFER_SIZE*CONVCSC_NUM_JSON_FIELDS*net->num_csc_convs +
               CONVVSC_BUFFER_SIZE*CONVVSC_NUM_JSON_FIELDS*net->num_vsc_convs +
               BUSDC_BUFFER_SIZE*BUSDC_NUM_JSON_FIELDS*net->num_dc_buses +
               BRANCHDC_BUFFER_SIZE*BRANCHDC_NUM_JSON_FIELDS*net->num_dc_branches)*net->num_periods;
@@ -4714,6 +5041,7 @@ char* NET_get_json_string(Net* net) {
   JSON_array_json(temp,output,"shunts",net->shunt,SHUNT_array_get,net->num_shunts,SHUNT_get_json_string,FALSE);
   JSON_array_json(temp,output,"var_generators",net->vargen,VARGEN_array_get,net->num_vargens,VARGEN_get_json_string,FALSE);
   JSON_array_json(temp,output,"batteries",net->bat,BAT_array_get,net->num_bats,BAT_get_json_string,FALSE);
+  JSON_array_json(temp,output,"csc_converters",net->csc_conv,CONVCSC_array_get,net->num_csc_convs,CONVCSC_get_json_string,FALSE);
   JSON_array_json(temp,output,"vsc_converters",net->vsc_conv,CONVVSC_array_get,net->num_vsc_convs,CONVVSC_get_json_string,FALSE);
   JSON_array_json(temp,output,"dc_buses",net->dc_bus,BUSDC_array_get,net->num_dc_buses,BUSDC_get_json_string,FALSE);
   JSON_array_json(temp,output,"dc_branches",net->dc_branch,BRANCHDC_array_get,net->num_dc_branches,BRANCHDC_get_json_string,TRUE);
@@ -4816,6 +5144,13 @@ void NET_set_bat_array(Net* net, Bat* bat, int num) {
   if (net) {
     net->bat = bat;
     net->num_bats = num;
+  }
+}
+
+void NET_set_csc_conv_array(Net* net, ConvCSC* conv, int num) {
+  if (net) {
+    net->csc_conv = conv;
+    net->num_csc_convs = num;
   }
 }
 
@@ -4959,6 +5294,13 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsi
     set_flags = &BAT_set_flags;
     has_properties = &BAT_has_properties;
     break;
+  case OBJ_CONVCSC:
+    num = net->num_csc_convs;
+    array = net->csc_conv;
+    get_element = &CONVCSC_array_get;
+    set_flags = &CONVCSC_set_flags;
+    has_properties = &CONVCSC_has_properties;
+    break;
   case OBJ_CONVVSC:
     num = net->num_vsc_convs;
     array = net->vsc_conv;
@@ -5042,6 +5384,10 @@ void NET_set_flags_of_component(Net* net, void* obj, char obj_type, char flag_ma
     set_flags = &BAT_set_flags;
     get_obj_type = &BAT_get_obj_type;
     break;
+  case OBJ_CONVCSC:
+    set_flags = &CONVCSC_set_flags;
+    get_obj_type = &CONVCSC_get_obj_type;
+    break;
   case OBJ_CONVVSC:
     set_flags = &CONVVSC_set_flags;
     get_obj_type = &CONVVSC_get_obj_type;
@@ -5114,6 +5460,10 @@ void NET_set_var_values(Net* net, Vec* values) {
   for (i = 0; i < net->num_bats; i++)
     BAT_set_var_values(BAT_array_get(net->bat,i),values);
 
+  // CSC converters
+  for (i = 0; i < net->num_csc_convs; i++)
+    CONVCSC_set_var_values(CONVCSC_array_get(net->csc_conv,i),values);
+
   // VSC converters
   for (i = 0; i < net->num_vsc_convs; i++)
     CONVVSC_set_var_values(CONVVSC_array_get(net->vsc_conv,i),values);
@@ -5162,6 +5512,7 @@ char* NET_get_show_components_str(Net* net) {
   sprintf(out+strlen(out),"  P adjust       : %d\n",NET_get_num_P_adjust_loads(net));
   sprintf(out+strlen(out),"vargens          : %d\n",NET_get_num_vargens(net));
   sprintf(out+strlen(out),"batteries        : %d\n",NET_get_num_bats(net));
+  sprintf(out+strlen(out),"csc converters   : %d\n",NET_get_num_csc_convs(net));
   sprintf(out+strlen(out),"vsc converters   : %d\n",NET_get_num_vsc_convs(net));
   sprintf(out+strlen(out),"  P dc mode      : %d\n",NET_get_num_vsc_convs_in_P_dc_mode(net));
   sprintf(out+strlen(out),"  v dc mode      : %d\n",NET_get_num_vsc_convs_in_v_dc_mode(net));
@@ -5348,6 +5699,7 @@ void NET_update_properties_step(Net* net, Bus* bus, int t, Vec* var_values) {
   Load* load;
   Shunt* shunt;
   Bat* bat;
+  ConvCSC* csc_conv;
   ConvVSC* vsc_conv;
 
   REAL P;
@@ -5595,6 +5947,14 @@ void NET_update_properties_step(Net* net, Bus* bus, int t, Vec* var_values) {
     }
   }
 
+  // CSC converters
+  for (csc_conv = BUS_get_csc_conv(bus); csc_conv != NULL; csc_conv = CONVCSC_get_next_ac(csc_conv)) {
+    
+    // Injections
+    BUS_inject_P(bus,CONVCSC_get_P(csc_conv,t),t);
+    BUS_inject_Q(bus,CONVCSC_get_Q(csc_conv,t),t);
+  }
+
   // VSC converters
   for (vsc_conv = BUS_get_vsc_conv(bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_ac(vsc_conv)) {
     
@@ -5781,6 +6141,10 @@ void NET_propagate_data_in_time(Net* net, int start, int end) {
   // Batteries
   for (i = 0; i < net->num_bats; i++)
     BAT_propagate_data_in_time(BAT_array_get(net->bat,i),start,end);
+
+  // CSC converters
+  for (i = 0; i < net->num_csc_convs; i++)
+    CONVCSC_propagate_data_in_time(CONVCSC_array_get(net->csc_conv,i),start,end);
 
   // VSC converters
   for (i = 0; i < net->num_vsc_convs; i++)
