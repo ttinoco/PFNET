@@ -16,9 +16,9 @@
 
 // Function prototypes
 Constr* CONSTR_DCPF_new(Net* net);
-void CONSTR_DCPF_count_step(Constr* c, Bus* bus, int t);
-void CONSTR_DCPF_analyze_step(Constr* c, Bus* bus, int t);
-void CONSTR_DCPF_eval_step(Constr* c, Bus* bus, int t, Vec* v, Vec* ve);
-void CONSTR_DCPF_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
+void CONSTR_DCPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t);
+void CONSTR_DCPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t);
+void CONSTR_DCPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* v, Vec* ve);
+void CONSTR_DCPF_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 
 #endif

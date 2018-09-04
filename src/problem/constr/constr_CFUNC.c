@@ -19,15 +19,15 @@ struct Constr_CFUNC_Data {
 
 Constr* CONSTR_CFUNC_new(Net* net) {
   Constr* c = CONSTR_new(net);
-  CONSTR_set_func_init(c, &CONSTR_CFUNC_init);
-  CONSTR_set_func_count_step(c, &CONSTR_CFUNC_count_step);
-  CONSTR_set_func_analyze_step(c, &CONSTR_CFUNC_analyze_step);
-  CONSTR_set_func_allocate(c, &CONSTR_CFUNC_allocate);
-  CONSTR_set_func_clear(c, &CONSTR_CFUNC_clear);
-  CONSTR_set_func_eval_step(c, &CONSTR_CFUNC_eval_step);
-  CONSTR_set_func_store_sens_step(c, &CONSTR_CFUNC_store_sens_step);
-  CONSTR_set_func_free(c, &CONSTR_CFUNC_free);
-  CONSTR_set_func_set_parameter(c, &CONSTR_CFUNC_set_parameter);
+  CONSTR_set_func_init(c,&CONSTR_CFUNC_init);
+  CONSTR_set_func_count_step(c,&CONSTR_CFUNC_count_step);
+  CONSTR_set_func_analyze_step(c,&CONSTR_CFUNC_analyze_step);
+  CONSTR_set_func_allocate(c,&CONSTR_CFUNC_allocate);
+  CONSTR_set_func_clear(c,&CONSTR_CFUNC_clear);
+  CONSTR_set_func_eval_step(c,&CONSTR_CFUNC_eval_step);
+  CONSTR_set_func_store_sens_step(c,&CONSTR_CFUNC_store_sens_step);
+  CONSTR_set_func_free(c,&CONSTR_CFUNC_free);
+  CONSTR_set_func_set_parameter(c,&CONSTR_CFUNC_set_parameter);
   CONSTR_set_name(c,"constrained function");
   CONSTR_init(c);
   return c;
@@ -59,7 +59,7 @@ void CONSTR_CFUNC_clear(Constr* c) {
   FUNC_clear(data->func);
 }
 
-void CONSTR_CFUNC_count_step(Constr* c, Bus* bus, int t) {
+void CONSTR_CFUNC_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Constr_CFUNC_Data* data = (Constr_CFUNC_Data*)CONSTR_get_data(c);
@@ -69,11 +69,11 @@ void CONSTR_CFUNC_count_step(Constr* c, Bus* bus, int t) {
   int* H_nnz;
   
   // Check
-  if (!data)
+  if (!data || !bus)
     return;
 
   // Function count step
-  FUNC_count_step(data->func,bus,t);
+  FUNC_count_step(data->func,bus,busdc,t);
 
   // Post-processing
   if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net)-1)) {
@@ -117,7 +117,7 @@ void CONSTR_CFUNC_allocate(Constr* c) {
   FUNC_allocate(data->func);
 }
 
-void CONSTR_CFUNC_analyze_step(Constr* c, Bus* bus, int t) {
+void CONSTR_CFUNC_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Constr_CFUNC_Data* data = (Constr_CFUNC_Data*)CONSTR_get_data(c);
@@ -132,11 +132,11 @@ void CONSTR_CFUNC_analyze_step(Constr* c, Bus* bus, int t) {
   int i;
   
   // Check
-  if (!data)
+  if (!data || !bus)
     return;
 
   // Count step
-  FUNC_analyze_step(data->func,bus,t);
+  FUNC_analyze_step(data->func,bus,busdc,t);
   
   // Post-processing
   if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net)-1)) {
@@ -202,7 +202,7 @@ void CONSTR_CFUNC_analyze_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_CFUNC_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
+void CONSTR_CFUNC_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values, Vec* values_extra) {
   
   // Local variables
   Constr_CFUNC_Data* data = (Constr_CFUNC_Data*)CONSTR_get_data(c);
@@ -218,11 +218,11 @@ void CONSTR_CFUNC_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values
   int i;
   
   // Check
-  if (!data)
+  if (!data || !bus)
     return;
 
   // Count step
-  FUNC_eval_step(data->func,bus,t,values);
+  FUNC_eval_step(data->func,bus,busdc,t,values);
   
   // Post-processing
   if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net)-1)) {
@@ -239,9 +239,9 @@ void CONSTR_CFUNC_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values
 
       // Extra var
       if (VEC_get_size(values_extra) > 0)
-	extra_var = VEC_get(values_extra,0);
+        extra_var = VEC_get(values_extra,0);
       else
-	extra_var = 0;
+        extra_var = 0;
 
       // J extra vars
       J[num_vars] = -1;
@@ -260,7 +260,7 @@ void CONSTR_CFUNC_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values
   }
 }
 
-void CONSTR_CFUNC_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_CFUNC_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing
 }
 

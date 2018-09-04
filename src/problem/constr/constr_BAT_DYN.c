@@ -20,7 +20,7 @@ Constr* CONSTR_BAT_DYN_new(Net* net) {
   return c;
 }
 
-void CONSTR_BAT_DYN_count_step(Constr* c, Bus* bus, int t) {
+void CONSTR_BAT_DYN_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Bat* bat;
@@ -36,7 +36,7 @@ void CONSTR_BAT_DYN_count_step(Constr* c, Bus* bus, int t) {
   A_row = CONSTR_get_A_row_ptr(c);
 
   // Check pointer
-  if (!A_nnz || !A_row)
+  if (!A_nnz || !A_row || !bus)
     return;
 
   // Batteries
@@ -47,8 +47,8 @@ void CONSTR_BAT_DYN_count_step(Constr* c, Bus* bus, int t) {
       
       // Initial condition (E_0 = E_init)
       if (t == 0) {
-	(*A_nnz)++; // E_0
-	(*A_row)++;
+        (*A_nnz)++; // E_0
+        (*A_row)++;
       }
       
       // Update equation (E_{t+1} - E_t - eta_c Pc_t + (1/eta_d) Pd_t = 0)
@@ -56,13 +56,13 @@ void CONSTR_BAT_DYN_count_step(Constr* c, Bus* bus, int t) {
       (*A_nnz)++;   // Pc_t
       (*A_nnz)++;   // Pd_t
       if (t < T-1)  // t = T-1 is last time period
-	(*A_nnz)++; // E_{t+1}
+        (*A_nnz)++; // E_{t+1}
       (*A_row)++;
     }
   }
 }
 
-void CONSTR_BAT_DYN_analyze_step(Constr* c, Bus* bus, int t) {
+void CONSTR_BAT_DYN_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Bat* bat;
@@ -82,7 +82,7 @@ void CONSTR_BAT_DYN_analyze_step(Constr* c, Bus* bus, int t) {
   A_row = CONSTR_get_A_row_ptr(c);
 
   // Check pointers
-  if (!A_nnz || !A_row)
+  if (!A_nnz || !A_row || !bus)
     return;
       
   // Batteries
@@ -93,12 +93,12 @@ void CONSTR_BAT_DYN_analyze_step(Constr* c, Bus* bus, int t) {
       
       // Initial condition (E_0 = E_init)
       if (t == 0) {
-	VEC_set(b,*A_row,BAT_get_E_init(bat));  
-	MAT_set_i(A,*A_nnz,*A_row);
-	MAT_set_j(A,*A_nnz,BAT_get_index_E(bat,t));
-	MAT_set_d(A,*A_nnz,1.);
-	(*A_nnz)++; // E_0
-	(*A_row)++;
+        VEC_set(b,*A_row,BAT_get_E_init(bat));  
+        MAT_set_i(A,*A_nnz,*A_row);
+        MAT_set_j(A,*A_nnz,BAT_get_index_E(bat,t));
+        MAT_set_d(A,*A_nnz,1.);
+        (*A_nnz)++; // E_0
+        (*A_row)++;
       }
       
       // Update equation (E_{t+1} - E_t - eta_c Pc_t + (1/eta_d) Pd_t = 0)
@@ -118,23 +118,23 @@ void CONSTR_BAT_DYN_analyze_step(Constr* c, Bus* bus, int t) {
       (*A_nnz)++;   // Pd_t
       
       if (t < T-1) {
-	VEC_set(b,*A_row,0.);
-	MAT_set_i(A,*A_nnz,*A_row);
-	MAT_set_j(A,*A_nnz,BAT_get_index_E(bat,t+1));
-	MAT_set_d(A,*A_nnz,1.);
-	(*A_nnz)++; // E_{t+1}
+        VEC_set(b,*A_row,0.);
+        MAT_set_i(A,*A_nnz,*A_row);
+        MAT_set_j(A,*A_nnz,BAT_get_index_E(bat,t+1));
+        MAT_set_d(A,*A_nnz,1.);
+        (*A_nnz)++; // E_{t+1}
       }
       else
-	VEC_set(b,*A_row,-BAT_get_E_final(bat));
+        VEC_set(b,*A_row,-BAT_get_E_final(bat));
       (*A_row)++;
     }
   }      
 }
 
-void CONSTR_BAT_DYN_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
+void CONSTR_BAT_DYN_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values, Vec* values_extra) {
   // Nothing to do
 }
 
-void CONSTR_BAT_DYN_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_BAT_DYN_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing for now
 }

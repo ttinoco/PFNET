@@ -20,7 +20,7 @@ Constr* CONSTR_DC_FLOW_LIM_new(Net* net) {
   return c;
 }
 
-void CONSTR_DC_FLOW_LIM_count_step(Constr* c, Bus* bus, int t) {
+void CONSTR_DC_FLOW_LIM_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Branch* br;
@@ -33,7 +33,7 @@ void CONSTR_DC_FLOW_LIM_count_step(Constr* c, Bus* bus, int t) {
   G_row = CONSTR_get_G_row_ptr(c);
 
   // Check pointer
-  if (!G_nnz || !G_row)
+  if (!G_nnz || !G_row || !bus)
     return;
 
   // Branches
@@ -73,7 +73,7 @@ void CONSTR_DC_FLOW_LIM_count_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_DC_FLOW_LIM_analyze_step(Constr* c, Bus* bus, int t) {
+void CONSTR_DC_FLOW_LIM_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Branch* br;
@@ -94,7 +94,7 @@ void CONSTR_DC_FLOW_LIM_analyze_step(Constr* c, Bus* bus, int t) {
   G_row = CONSTR_get_G_row_ptr(c);
 
   // Check pointer
-  if (!G_nnz || !G_row)
+  if (!G_nnz || !G_row || !bus)
     return;
 
   // Branches
@@ -168,11 +168,11 @@ void CONSTR_DC_FLOW_LIM_analyze_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_DC_FLOW_LIM_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
+void CONSTR_DC_FLOW_LIM_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values, Vec* values_extra) {
   // Nothing
 }
 
-void CONSTR_DC_FLOW_LIM_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_DC_FLOW_LIM_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Local variables
   Branch* br;
@@ -182,7 +182,7 @@ void CONSTR_DC_FLOW_LIM_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec
   G_row = CONSTR_get_G_row_ptr(c);
 
   // Check pointer
-  if (!G_row)
+  if (!G_row || !bus)
     return;
 
   // Branches

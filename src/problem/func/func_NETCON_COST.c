@@ -12,22 +12,22 @@
 
 Func* FUNC_NETCON_COST_new(REAL weight, Net* net) {
   Func* f = FUNC_new(weight,net);
-  FUNC_set_func_count_step(f, &FUNC_NETCON_COST_count_step);
-  FUNC_set_func_analyze_step(f, &FUNC_NETCON_COST_analyze_step);
-  FUNC_set_func_eval_step(f, &FUNC_NETCON_COST_eval_step);
+  FUNC_set_func_count_step(f,&FUNC_NETCON_COST_count_step);
+  FUNC_set_func_analyze_step(f,&FUNC_NETCON_COST_analyze_step);
+  FUNC_set_func_eval_step(f,&FUNC_NETCON_COST_eval_step);
   FUNC_set_name(f,"net consumption cost");
   return f;
 }
 
-void FUNC_NETCON_COST_count_step(Func* f, Bus* bus, int t) {
+void FUNC_NETCON_COST_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   // nothing
 }
 
-void FUNC_NETCON_COST_analyze_step(Func* f, Bus* bus, int t) {
+void FUNC_NETCON_COST_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   // nothing
 }
 
-void FUNC_NETCON_COST_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
+void FUNC_NETCON_COST_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_values) {
 
   // Local variables
   Load* load;
@@ -46,7 +46,7 @@ void FUNC_NETCON_COST_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
   price = BUS_get_price(bus,t);
 
   // Check pointers
-  if (!phi || !gphi)
+  if (!phi || !gphi || !bus)
     return;
 
   // Generators

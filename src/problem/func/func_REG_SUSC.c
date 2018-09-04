@@ -19,7 +19,7 @@ Func* FUNC_REG_SUSC_new(REAL weight, Net* net) {
   return f;
 }
 
-void FUNC_REG_SUSC_count_step(Func* f, Bus* bus, int t) {
+void FUNC_REG_SUSC_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Shunt* shunt;
@@ -29,7 +29,7 @@ void FUNC_REG_SUSC_count_step(Func* f, Bus* bus, int t) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!Hphi_nnz)
+  if (!Hphi_nnz || !bus)
     return;
 
   // Shunts
@@ -40,7 +40,7 @@ void FUNC_REG_SUSC_count_step(Func* f, Bus* bus, int t) {
   }
 }
 
-void FUNC_REG_SUSC_analyze_step(Func* f, Bus* bus, int t) {
+void FUNC_REG_SUSC_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Shunt* shunt;
@@ -53,7 +53,7 @@ void FUNC_REG_SUSC_analyze_step(Func* f, Bus* bus, int t) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!Hphi_nnz || !Hphi)
+  if (!Hphi_nnz || !Hphi || !bus)
     return;
 
   // Shunts
@@ -72,7 +72,7 @@ void FUNC_REG_SUSC_analyze_step(Func* f, Bus* bus, int t) {
   }
 }
 
-void FUNC_REG_SUSC_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
+void FUNC_REG_SUSC_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_values) {
 
   // Local variables
   Shunt* shunt;
@@ -91,7 +91,7 @@ void FUNC_REG_SUSC_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!phi || !gphi || !Hphi || !Hphi_nnz)
+  if (!phi || !gphi || !Hphi || !Hphi_nnz || !bus)
     return;
   
   // Shunts

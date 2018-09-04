@@ -16,8 +16,8 @@
 
 // Function prototypes
 Func* FUNC_GEN_COST_new(REAL weight, Net* net);
-void FUNC_GEN_COST_count_step(Func* f, Bus* bus, int t);
-void FUNC_GEN_COST_analyze_step(Func* f, Bus* bus, int t);
-void FUNC_GEN_COST_eval_step(Func* f, Bus* bus, int t, Vec* v);
+void FUNC_GEN_COST_count_step(Func* f, Bus* bus, BusDC* busdc, int t);
+void FUNC_GEN_COST_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t);
+void FUNC_GEN_COST_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* v);
 
 #endif

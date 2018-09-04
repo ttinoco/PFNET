@@ -18,8 +18,8 @@
 
 // Function prototypes
 Func* FUNC_REG_PQ_new(REAL weight, Net* net);
-void FUNC_REG_PQ_count_step(Func* f, Bus* bus, int t);
-void FUNC_REG_PQ_analyze_step(Func* f, Bus* bus, int t);
-void FUNC_REG_PQ_eval_step(Func* f, Bus* bus, int t, Vec* var_values);
+void FUNC_REG_PQ_count_step(Func* f, Bus* bus, BusDC* busdc, int t);
+void FUNC_REG_PQ_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t);
+void FUNC_REG_PQ_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_values);
 
 #endif

@@ -12,14 +12,14 @@
 
 Func* FUNC_SP_CONTROLS_new(REAL weight, Net* net) {
   Func* f = FUNC_new(weight,net);
-  FUNC_set_func_count_step(f, &FUNC_SP_CONTROLS_count_step);
-  FUNC_set_func_analyze_step(f, &FUNC_SP_CONTROLS_analyze_step);
-  FUNC_set_func_eval_step(f, &FUNC_SP_CONTROLS_eval_step);
+  FUNC_set_func_count_step(f,&FUNC_SP_CONTROLS_count_step);
+  FUNC_set_func_analyze_step(f,&FUNC_SP_CONTROLS_analyze_step);
+  FUNC_set_func_eval_step(f,&FUNC_SP_CONTROLS_eval_step);
   FUNC_set_name(f,"sparse controls penalty");
   return f;
 }
 
-void FUNC_SP_CONTROLS_count_step(Func* f, Bus* bus, int t) {
+void FUNC_SP_CONTROLS_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Branch* br;
@@ -31,7 +31,7 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Bus* bus, int t) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!Hphi_nnz)
+  if (!Hphi_nnz || !bus)
     return;
 
   // Voltage mag of gen-regulated bus
@@ -49,7 +49,7 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Bus* bus, int t) {
     
     // Active power
     if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) &&
-	GEN_has_flags(gen,FLAG_SPARSE,GEN_VAR_P))
+        GEN_has_flags(gen,FLAG_SPARSE,GEN_VAR_P))
       (*Hphi_nnz)++;
   }
   
@@ -58,8 +58,8 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Bus* bus, int t) {
     
     // Susceptance of switched shunt device
     if (SHUNT_is_switched(shunt) &&
-	SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) &&
-	SHUNT_has_flags(shunt,FLAG_SPARSE,SHUNT_VAR_SUSC))
+        SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) &&
+        SHUNT_has_flags(shunt,FLAG_SPARSE,SHUNT_VAR_SUSC))
       (*Hphi_nnz)++;
   }
 
@@ -72,21 +72,21 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Bus* bus, int t) {
     
     // Tap ratio of tap-changing transformer
     if (BRANCH_is_tap_changer(br) &&
-	!BRANCH_is_on_outage(br) &&
-	BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) &&
-	BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_RATIO))
+        !BRANCH_is_on_outage(br) &&
+        BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) &&
+        BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_RATIO))
       (*Hphi_nnz)++;
 
     // Phase shift of phase-shifting transformer
     if (BRANCH_is_phase_shifter(br) &&
-	!BRANCH_is_on_outage(br) &&
-	BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) &&
-	BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_PHASE))
+        !BRANCH_is_on_outage(br) &&
+        BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) &&
+        BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_PHASE))
       (*Hphi_nnz)++;
   }
 }
 
-void FUNC_SP_CONTROLS_analyze_step(Func* f, Bus* bus, int t) {
+void FUNC_SP_CONTROLS_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Branch* br;
@@ -100,7 +100,7 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Bus* bus, int t) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!Hphi_nnz || !Hphi)
+  if (!Hphi_nnz || !Hphi || !bus)
     return;
 
   // Voltage mag of gen-regulated bus
@@ -121,7 +121,7 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Bus* bus, int t) {
     
     // Active power
     if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) &&
-	GEN_has_flags(gen,FLAG_SPARSE,GEN_VAR_P)) {
+        GEN_has_flags(gen,FLAG_SPARSE,GEN_VAR_P)) {
       MAT_set_i(Hphi,*Hphi_nnz,GEN_get_index_P(gen,t));
       MAT_set_j(Hphi,*Hphi_nnz,GEN_get_index_P(gen,t));
       (*Hphi_nnz)++;
@@ -133,8 +133,8 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Bus* bus, int t) {
     
     // Susceptance of switched shunt device
     if (SHUNT_is_switched(shunt) &&
-	SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) &&
-	SHUNT_has_flags(shunt,FLAG_SPARSE,SHUNT_VAR_SUSC)) {
+        SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) &&
+        SHUNT_has_flags(shunt,FLAG_SPARSE,SHUNT_VAR_SUSC)) {
       MAT_set_i(Hphi,*Hphi_nnz,SHUNT_get_index_b(shunt,t));
       MAT_set_j(Hphi,*Hphi_nnz,SHUNT_get_index_b(shunt,t));
       (*Hphi_nnz)++;
@@ -150,9 +150,9 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Bus* bus, int t) {
 
     // Tap ratio of tap-changing transformer
     if (BRANCH_is_tap_changer(br) &&
-	!BRANCH_is_on_outage(br) &&
-	BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) &&
-	BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_RATIO)) {
+        !BRANCH_is_on_outage(br) &&
+        BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) &&
+        BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_RATIO)) {
       MAT_set_i(Hphi,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
       MAT_set_j(Hphi,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
       (*Hphi_nnz)++;
@@ -160,9 +160,9 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Bus* bus, int t) {
     
     // Phase shift of phase-shifting transformer
     if (BRANCH_is_phase_shifter(br) &&
-	!BRANCH_is_on_outage(br) &&
-	BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) &&
-	BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_PHASE)) {
+        !BRANCH_is_on_outage(br) &&
+        BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) &&
+        BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_PHASE)) {
       MAT_set_i(Hphi,*Hphi_nnz,BRANCH_get_index_phase(br,t));
       MAT_set_j(Hphi,*Hphi_nnz,BRANCH_get_index_phase(br,t));
       (*Hphi_nnz)++;
@@ -170,7 +170,7 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Bus* bus, int t) {
   }
 }
 
-void FUNC_SP_CONTROLS_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
+void FUNC_SP_CONTROLS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_values) {
 
   // Local variables
   Branch* br;
@@ -193,7 +193,7 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!phi || !gphi || !Hphi || !Hphi_nnz)
+  if (!phi || !gphi || !Hphi || !Hphi_nnz || !bus)
     return;
 
   // Voltage mag of gen-regulated bus
@@ -232,14 +232,14 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
     
     // Active power
     if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) &&
-	GEN_has_flags(gen,FLAG_SPARSE,GEN_VAR_P)) {
+        GEN_has_flags(gen,FLAG_SPARSE,GEN_VAR_P)) {
       
       index_val = GEN_get_index_P(gen,t);
       val = VEC_get(var_values,index_val);
       val0 = GEN_get_P(gen,t);
       dval = GEN_get_P_max(gen)-GEN_get_P_min(gen);
       if (dval < FUNC_SP_CONTROLS_CEPS)
-	dval = FUNC_SP_CONTROLS_CEPS;
+        dval = FUNC_SP_CONTROLS_CEPS;
       sqrt_term = sqrt( (val-val0)*(val-val0)/(dval*dval) + FUNC_SP_CONTROLS_EPS );
       
       // phi
@@ -250,7 +250,7 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
       
       // Hphi
       Hphi[*Hphi_nnz] = FUNC_SP_CONTROLS_EPS/(dval*dval*sqrt_term*sqrt_term*sqrt_term);
-	  (*Hphi_nnz)++;
+      (*Hphi_nnz)++;
     }
     else {
       // nothing because val0-val0 = 0 for constant val
@@ -262,15 +262,15 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
     
     // Susceptance of switched shunt device
     if (SHUNT_is_switched(shunt) &&
-	SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) &&
-	SHUNT_has_flags(shunt,FLAG_SPARSE,SHUNT_VAR_SUSC)) {
+        SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) &&
+        SHUNT_has_flags(shunt,FLAG_SPARSE,SHUNT_VAR_SUSC)) {
       
       index_val = SHUNT_get_index_b(shunt,t);
       val = VEC_get(var_values,index_val);
       val0 = SHUNT_get_b(shunt,t);
       dval = SHUNT_get_b_max(shunt)-SHUNT_get_b_min(shunt);
       if (dval < FUNC_SP_CONTROLS_CEPS)
-	dval = FUNC_SP_CONTROLS_CEPS;
+        dval = FUNC_SP_CONTROLS_CEPS;
       sqrt_term = sqrt( (val-val0)*(val-val0)/(dval*dval) + FUNC_SP_CONTROLS_EPS );
       
       // phi
@@ -297,16 +297,16 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
 
     // Tap ratio of tap-changing transformer
     if (BRANCH_is_tap_changer(br) &&
-	!BRANCH_is_on_outage(br) &&
-	BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) &&
-	BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_RATIO)) {
+        !BRANCH_is_on_outage(br) &&
+        BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) &&
+        BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_RATIO)) {
       
       index_val = BRANCH_get_index_ratio(br,t);
       val = VEC_get(var_values,index_val);
       val0 = BRANCH_get_ratio(br,t);
       dval = BRANCH_get_ratio_max(br)-BRANCH_get_ratio_min(br);
       if (dval < FUNC_SP_CONTROLS_CEPS)
-	dval = FUNC_SP_CONTROLS_CEPS;
+        dval = FUNC_SP_CONTROLS_CEPS;
       sqrt_term = sqrt( (val-val0)*(val-val0)/(dval*dval) + FUNC_SP_CONTROLS_EPS );
       
       // phi
@@ -325,16 +325,16 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
     
     // Phase shift of phase-shifting transformer
     if (BRANCH_is_phase_shifter(br) &&
-	!BRANCH_is_on_outage(br) &&
-	BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) &&
-	BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_PHASE)) {
+        !BRANCH_is_on_outage(br) &&
+        BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) &&
+        BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_PHASE)) {
       
       index_val = BRANCH_get_index_phase(br,t);
       val = VEC_get(var_values,index_val);
       val0 = BRANCH_get_phase(br,t);
       dval = BRANCH_get_phase_max(br)-BRANCH_get_phase_min(br);
       if (dval < FUNC_SP_CONTROLS_CEPS)
-	dval = FUNC_SP_CONTROLS_CEPS;
+        dval = FUNC_SP_CONTROLS_CEPS;
       sqrt_term = sqrt( (val-val0)*(val-val0)/(dval*dval) + FUNC_SP_CONTROLS_EPS );
       
       // phi

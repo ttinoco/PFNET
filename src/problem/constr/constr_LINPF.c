@@ -14,13 +14,13 @@
 Constr* CONSTR_LINPF_new(Net* net) {
   Constr* c = CONSTR_new(net);
   CONSTR_set_func_init(c, &CONSTR_LINPF_init);
-  CONSTR_set_func_count_step(c, &CONSTR_LINPF_count_step);
-  CONSTR_set_func_allocate(c, &CONSTR_LINPF_allocate);
-  CONSTR_set_func_clear(c, &CONSTR_LINPF_clear);
-  CONSTR_set_func_analyze_step(c, &CONSTR_LINPF_analyze_step);
-  CONSTR_set_func_eval_step(c, &CONSTR_LINPF_eval_step);
-  CONSTR_set_func_store_sens_step(c, &CONSTR_LINPF_store_sens_step);
-  CONSTR_set_func_free(c, &CONSTR_LINPF_free);
+  CONSTR_set_func_count_step(c,&CONSTR_LINPF_count_step);
+  CONSTR_set_func_allocate(c,&CONSTR_LINPF_allocate);
+  CONSTR_set_func_clear(c,&CONSTR_LINPF_clear);
+  CONSTR_set_func_analyze_step(c,&CONSTR_LINPF_analyze_step);
+  CONSTR_set_func_eval_step(c,&CONSTR_LINPF_eval_step);
+  CONSTR_set_func_store_sens_step(c,&CONSTR_LINPF_store_sens_step);
+  CONSTR_set_func_free(c,&CONSTR_LINPF_free);
   CONSTR_set_name(c,"linearized AC power balance");
   CONSTR_init(c);
   return c;
@@ -42,14 +42,14 @@ void CONSTR_LINPF_clear(Constr* c) {
   CONSTR_clear(acpf);
 }
 
-void CONSTR_LINPF_count_step(Constr* c, Bus* bus, int t) {
+void CONSTR_LINPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local vars
   Constr* acpf = (Constr*)CONSTR_get_data(c);
   Net* net = CONSTR_get_network(c);
 
   // ACPF count
-  CONSTR_count_step(acpf,bus,t);
+  CONSTR_count_step(acpf,bus,busdc,t);
 
   // Done 
   if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net)-1)) {
@@ -67,7 +67,7 @@ void CONSTR_LINPF_allocate(Constr* c) {
   CONSTR_allocate(acpf); 
 }
 
-void CONSTR_LINPF_analyze_step(Constr* c, Bus* bus, int t) {
+void CONSTR_LINPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local vars
   Constr* acpf;
@@ -85,7 +85,7 @@ void CONSTR_LINPF_analyze_step(Constr* c, Bus* bus, int t) {
 
   // ACPF
   acpf = (Constr*)CONSTR_get_data(c);
-  CONSTR_analyze_step(acpf,bus,t);
+  CONSTR_analyze_step(acpf,bus,busdc,t);
 
   // Done 
   if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net)-1)) {
@@ -104,11 +104,11 @@ void CONSTR_LINPF_analyze_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_LINPF_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
+void CONSTR_LINPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values, Vec* values_extra) {
   // Nothing
 }
 
-void CONSTR_LINPF_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_LINPF_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing for now
 }
  

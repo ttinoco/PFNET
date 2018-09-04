@@ -20,13 +20,13 @@ Constr* CONSTR_BOUND_new(Net* net) {
   return c;
 }
 
-void CONSTR_BOUND_count_step(Constr* c, Bus* bus, int t) {
+void CONSTR_BOUND_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   CONSTR_set_G_row(c,NET_get_num_vars(CONSTR_get_network(c)));
   CONSTR_set_G_nnz(c,NET_get_num_vars(CONSTR_get_network(c)));
 }
 
-void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, int t) {
+void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Branch* br;
@@ -48,7 +48,7 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, int t) {
   G = CONSTR_get_G(c);
 
   // Check pointer
-  if (!G || !u || !l)
+  if (!G || !u || !l || !bus)
     return;
   
   // Voltage magnitude (V_MAG)
@@ -404,17 +404,21 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_BOUND_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
+void CONSTR_BOUND_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values, Vec* values_extra) {
   // Nothing to do
 }
 
-void CONSTR_BOUND_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_BOUND_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Local variables
   Branch* br;
   Gen* gen;
   Load* load;
   Shunt* shunt;
+
+  // Check
+  if (!bus)
+    return;
 
   // Voltage magnitude (V_MAG)
   if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {

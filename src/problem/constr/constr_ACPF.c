@@ -21,7 +21,7 @@ Constr* CONSTR_ACPF_new(Net* net) {
   return c;
 }
 
-void CONSTR_ACPF_count_step(Constr* c, Bus* bus, int t) {
+void CONSTR_ACPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Branch* br;
@@ -46,7 +46,7 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, int t) {
   H_nnz = CONSTR_get_H_nnz(c);
 
   // Check pointers
-  if (!J_row || !J_nnz || !H_nnz)
+  if (!J_row || !J_nnz || !H_nnz || !bus)
     return;
   
   // Bus data
@@ -267,7 +267,7 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, int t) {
 }
 
 
-void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, int t) {
+void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Branch* br;
@@ -302,7 +302,7 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, int t) {
   H_nnz = CONSTR_get_H_nnz(c);
 
   // Check pointers
-  if (!J_row || !J_nnz || !H_nnz || !H_array)
+  if (!J_row || !J_nnz || !H_nnz || !H_array || !bus)
     return;
 
   // Bus data
@@ -588,7 +588,7 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, int t) {
   (*J_row)++;
 }
 
-void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
+void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values, Vec* values_extra) {
 
   // Local variables
   Branch* br;
@@ -633,7 +633,7 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_
   H_nnz = CONSTR_get_H_nnz(c);
 
   // Check pointers
-  if (!f || !J || !J_row || !J_nnz || !H_nnz)
+  if (!f || !J || !J_row || !J_nnz || !H_nnz || !bus)
     return;
 
   // Bus data
@@ -994,7 +994,7 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_
   (*J_row)++;
 }
 
-void CONSTR_ACPF_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_ACPF_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   
   BUS_set_sens_P_balance(bus,VEC_get(sf,BUS_get_index_P(bus,t)),t); // sens of P balance
   BUS_set_sens_Q_balance(bus,VEC_get(sf,BUS_get_index_Q(bus,t)),t); // sens of Q balance

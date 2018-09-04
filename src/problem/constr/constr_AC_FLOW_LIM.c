@@ -23,7 +23,7 @@ Constr* CONSTR_AC_FLOW_LIM_new(Net* net) {
   return c;
 }
 
-void CONSTR_AC_FLOW_LIM_count_step(Constr* c, Bus* bus, int t) {
+void CONSTR_AC_FLOW_LIM_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Branch* br;
@@ -49,7 +49,7 @@ void CONSTR_AC_FLOW_LIM_count_step(Constr* c, Bus* bus, int t) {
   H_nnz = CONSTR_get_H_nnz(c);
 
   // Check pointers
-  if (!G_nnz || !G_row || !J_nnz || !J_row || !H_nnz )
+  if (!G_nnz || !G_row || !J_nnz || !J_row || !H_nnz || !bus)
     return;
 
   // Branches
@@ -81,110 +81,110 @@ void CONSTR_AC_FLOW_LIM_count_step(Constr* c, Bus* bus, int t) {
     for (k = 0; k < 2; k++) {
       
       if (k == 0)
-	m = 1;
+        m = 1;
       else
-	m = 0;
+        m = 0;
 
       //***********
       if (var_w[k]) { // wk var
       
-	// J 
-	(*J_nnz)++; // d|ikm|/dwk
+        // J 
+        (*J_nnz)++; // d|ikm|/dwk
 	
-	// H
-	H_nnz_val = H_nnz[(*J_row)];
-	H_nnz_val++;   // wk and wk
-	if (var_v[k]) 
-	  H_nnz_val++; // wk and vk
-	if (var_w[m]) 
-	  H_nnz_val++; // wk and wm
-	if (var_v[m]) 
-	  H_nnz_val++; // wk and vm
-	if (var_a)    
-	  H_nnz_val++; // wk and a
-	if (var_phi)  
-	  H_nnz_val++; // wk and phi
-	H_nnz[(*J_row)] = H_nnz_val;
+        // H
+        H_nnz_val = H_nnz[(*J_row)];
+        H_nnz_val++;   // wk and wk
+        if (var_v[k]) 
+          H_nnz_val++; // wk and vk
+        if (var_w[m]) 
+          H_nnz_val++; // wk and wm
+        if (var_v[m]) 
+          H_nnz_val++; // wk and vm
+        if (var_a)    
+          H_nnz_val++; // wk and a
+        if (var_phi)  
+          H_nnz_val++; // wk and phi
+        H_nnz[(*J_row)] = H_nnz_val;
       }
       
       //***********
       if (var_v[k]) { // vk var
 	
-	// J 
-	(*J_nnz)++; // d|ikm|/dvk
+        // J 
+        (*J_nnz)++; // d|ikm|/dvk
 	
-	// H
-	H_nnz_val = H_nnz[(*J_row)];
-	H_nnz_val++;   // vk and vk
-	if (var_w[m]) 
-	  H_nnz_val++; // vk and wm
-	if (var_v[m]) 
-	  H_nnz_val++; // vk and vm
-	if (var_a)    
-	  H_nnz_val++; // vk and a
-	if (var_phi)  
-	  H_nnz_val++; // vk and phi
-	H_nnz[(*J_row)] = H_nnz_val;
+        // H
+        H_nnz_val = H_nnz[(*J_row)];
+        H_nnz_val++;   // vk and vk
+        if (var_w[m]) 
+          H_nnz_val++; // vk and wm
+        if (var_v[m]) 
+          H_nnz_val++; // vk and vm
+        if (var_a)    
+          H_nnz_val++; // vk and a
+        if (var_phi)  
+          H_nnz_val++; // vk and phi
+        H_nnz[(*J_row)] = H_nnz_val;
       }
       
       //***********
       if (var_w[m]) { // wm var
 	
-	// J 
-	(*J_nnz)++; // d|ikm|/dwm
+        // J 
+        (*J_nnz)++; // d|ikm|/dwm
 	
-	// H
-	H_nnz_val = H_nnz[(*J_row)];
-	H_nnz_val++;   // wm and wm
-	if (var_v[m]) 
-	  H_nnz_val++; // wm and vm
-	if (var_a)    
-	  H_nnz_val++; // wm and a
-	if (var_phi)  
-	  H_nnz_val++; // wm and phi
-	H_nnz[(*J_row)] = H_nnz_val;
+        // H
+        H_nnz_val = H_nnz[(*J_row)];
+        H_nnz_val++;   // wm and wm
+        if (var_v[m]) 
+          H_nnz_val++; // wm and vm
+        if (var_a)    
+          H_nnz_val++; // wm and a
+        if (var_phi)  
+          H_nnz_val++; // wm and phi
+        H_nnz[(*J_row)] = H_nnz_val;
       }
       
       //***********
       if (var_v[m]) { // vm var
 	
-	// J 
-	(*J_nnz)++; // d|ikm|/dvm
+        // J 
+        (*J_nnz)++; // d|ikm|/dvm
 	
-	// H
-	H_nnz_val = H_nnz[(*J_row)];
-	H_nnz_val++;   // vm and vm
-	if (var_a)    
-	  H_nnz_val++; // vm and a
-	if (var_phi)  
-	  H_nnz_val++; // vm and phi
-	H_nnz[(*J_row)] = H_nnz_val;
+        // H
+        H_nnz_val = H_nnz[(*J_row)];
+        H_nnz_val++;   // vm and vm
+        if (var_a)    
+          H_nnz_val++; // vm and a
+        if (var_phi)  
+          H_nnz_val++; // vm and phi
+        H_nnz[(*J_row)] = H_nnz_val;
       }
 
       //********
       if (var_a) { // a var
 	
-	// J 
-	(*J_nnz)++; // d|ikm|/da
+        // J 
+        (*J_nnz)++; // d|ikm|/da
 	
-	// H
-	H_nnz_val = H_nnz[(*J_row)];
-	H_nnz_val++;   // a and a
-	if (var_phi)  
-	  H_nnz_val++; // a and phi
-	H_nnz[(*J_row)] = H_nnz_val;
+        // H
+        H_nnz_val = H_nnz[(*J_row)];
+        H_nnz_val++;   // a and a
+        if (var_phi)  
+          H_nnz_val++; // a and phi
+        H_nnz[(*J_row)] = H_nnz_val;
       }
       
       //**********
       if (var_phi) { // phi var
 	
-	// J 
-	(*J_nnz)++; // d|ikm|/dphi
+        // J 
+        (*J_nnz)++; // d|ikm|/dphi
 	
-	// H
-	H_nnz_val = H_nnz[(*J_row)];
-	H_nnz_val++;   // phi and phi
-	H_nnz[(*J_row)] = H_nnz_val;
+        // H
+        H_nnz_val = H_nnz[(*J_row)];
+        H_nnz_val++;   // phi and phi
+        H_nnz[(*J_row)] = H_nnz_val;
       }
       
       //**********
@@ -203,7 +203,7 @@ void CONSTR_AC_FLOW_LIM_count_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Bus* bus, int t) {
+void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Branch* br;
@@ -248,7 +248,7 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Bus* bus, int t) {
   H_nnz = CONSTR_get_H_nnz(c);
  
   // Check pointers
-  if (!G_nnz || !G_row || !J_nnz || !J_row || !H_nnz || !J || !H_array || !l || !u)
+  if (!G_nnz || !G_row || !J_nnz || !J_row || !H_nnz || !J || !H_array || !l || !u || !bus)
     return;
 
   // Branches
@@ -284,181 +284,181 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Bus* bus, int t) {
     for (k = 0; k < 2; k++) {
       
       if (k == 0)
-	m = 1;
+        m = 1;
       else
-	m = 0;
+        m = 0;
       
       H = MAT_array_get(H_array,*J_row);
       
       //***********
       if (var_w[k]) { // wk var
 	
-	// J
-	MAT_set_i(J,*J_nnz,*J_row);
-	MAT_set_j(J,*J_nnz,w_index[k]);
-	(*J_nnz)++; // d|ikm|/dwk
+        // J
+        MAT_set_i(J,*J_nnz,*J_row);
+        MAT_set_j(J,*J_nnz,w_index[k]);
+        (*J_nnz)++; // d|ikm|/dwk
 	
-	// H
-	H_nnz_val = H_nnz[(*J_row)];
-	MAT_set_i(H,H_nnz_val,w_index[k]);
-	MAT_set_j(H,H_nnz_val,w_index[k]);
-	H_nnz_val++;   // wk and wk
-	if (var_v[k]) {
-	  MAT_set_i(H,H_nnz_val,w_index[k]);
-	  MAT_set_j(H,H_nnz_val,v_index[k]);
-	  H_nnz_val++; // wk and vk
-	}
-	if (var_w[m]) {
-	  MAT_set_i(H,H_nnz_val,w_index[k]);
-	  MAT_set_j(H,H_nnz_val,w_index[m]);
-	  H_nnz_val++; // wk and wm
-	}
-	if (var_v[m]) {
-	  MAT_set_i(H,H_nnz_val,w_index[k]);
-	  MAT_set_j(H,H_nnz_val,v_index[m]);
-	  H_nnz_val++; // wk and vm
-	}
-	if (var_a) {
-	  MAT_set_i(H,H_nnz_val,w_index[k]);
-	  MAT_set_j(H,H_nnz_val,a_index);
-	  H_nnz_val++; // wk and a
-	}
-	if (var_phi) {
-	  MAT_set_i(H,H_nnz_val,w_index[k]);
-	  MAT_set_j(H,H_nnz_val,phi_index);
-	  H_nnz_val++; // wk and phi
-	}
-	H_nnz[(*J_row)] = H_nnz_val;
+        // H
+        H_nnz_val = H_nnz[(*J_row)];
+        MAT_set_i(H,H_nnz_val,w_index[k]);
+        MAT_set_j(H,H_nnz_val,w_index[k]);
+        H_nnz_val++;   // wk and wk
+        if (var_v[k]) {
+          MAT_set_i(H,H_nnz_val,w_index[k]);
+          MAT_set_j(H,H_nnz_val,v_index[k]);
+          H_nnz_val++; // wk and vk
+        }
+        if (var_w[m]) {
+          MAT_set_i(H,H_nnz_val,w_index[k]);
+          MAT_set_j(H,H_nnz_val,w_index[m]);
+          H_nnz_val++; // wk and wm
+        }
+        if (var_v[m]) {
+          MAT_set_i(H,H_nnz_val,w_index[k]);
+          MAT_set_j(H,H_nnz_val,v_index[m]);
+          H_nnz_val++; // wk and vm
+        }
+        if (var_a) {
+          MAT_set_i(H,H_nnz_val,w_index[k]);
+          MAT_set_j(H,H_nnz_val,a_index);
+          H_nnz_val++; // wk and a
+        }
+        if (var_phi) {
+          MAT_set_i(H,H_nnz_val,w_index[k]);
+          MAT_set_j(H,H_nnz_val,phi_index);
+          H_nnz_val++; // wk and phi
+        }
+        H_nnz[(*J_row)] = H_nnz_val;
       }
       
       //***********
       if (var_v[k]) { // vk var
 	
-	// J 
-	MAT_set_i(J,*J_nnz,*J_row);
-	MAT_set_j(J,*J_nnz,v_index[k]);
-	(*J_nnz)++; // d|ikm|/dvk
+        // J 
+        MAT_set_i(J,*J_nnz,*J_row);
+        MAT_set_j(J,*J_nnz,v_index[k]);
+        (*J_nnz)++; // d|ikm|/dvk
 	
-	// H
-	H_nnz_val = H_nnz[(*J_row)];
-	MAT_set_i(H,H_nnz_val,v_index[k]);
-	MAT_set_j(H,H_nnz_val,v_index[k]);
-	H_nnz_val++;   // vk and vk
-	if (var_w[m]) {
-	  MAT_set_i(H,H_nnz_val,v_index[k]);
-	  MAT_set_j(H,H_nnz_val,w_index[m]);
-	  H_nnz_val++; // vk and wm
-	}
-	if (var_v[m]) { 
-	  MAT_set_i(H,H_nnz_val,v_index[k]);
-	  MAT_set_j(H,H_nnz_val,v_index[m]);
-	  H_nnz_val++; // vk and vm
-	}
-	if (var_a) {
-	  MAT_set_i(H,H_nnz_val,v_index[k]);
-	  MAT_set_j(H,H_nnz_val,a_index);
-	  H_nnz_val++; // vk and a
-	}
-	if (var_phi) {  
-	  MAT_set_i(H,H_nnz_val,v_index[k]);
-	  MAT_set_j(H,H_nnz_val,phi_index);
-	  H_nnz_val++; // vk and phi
-	}
-	H_nnz[(*J_row)] = H_nnz_val;
+        // H
+        H_nnz_val = H_nnz[(*J_row)];
+        MAT_set_i(H,H_nnz_val,v_index[k]);
+        MAT_set_j(H,H_nnz_val,v_index[k]);
+        H_nnz_val++;   // vk and vk
+        if (var_w[m]) {
+          MAT_set_i(H,H_nnz_val,v_index[k]);
+          MAT_set_j(H,H_nnz_val,w_index[m]);
+          H_nnz_val++; // vk and wm
+        }
+        if (var_v[m]) { 
+          MAT_set_i(H,H_nnz_val,v_index[k]);
+          MAT_set_j(H,H_nnz_val,v_index[m]);
+          H_nnz_val++; // vk and vm
+        }
+        if (var_a) {
+          MAT_set_i(H,H_nnz_val,v_index[k]);
+          MAT_set_j(H,H_nnz_val,a_index);
+          H_nnz_val++; // vk and a
+        }
+        if (var_phi) {  
+          MAT_set_i(H,H_nnz_val,v_index[k]);
+          MAT_set_j(H,H_nnz_val,phi_index);
+          H_nnz_val++; // vk and phi
+        }
+        H_nnz[(*J_row)] = H_nnz_val;
       }
       
       //***********
       if (var_w[m]) { // wm var
 	
-	// J 
-	MAT_set_i(J,*J_nnz,*J_row);
-	MAT_set_j(J,*J_nnz,w_index[m]);
-	(*J_nnz)++; // d|ikm|/dwm
+        // J 
+        MAT_set_i(J,*J_nnz,*J_row);
+        MAT_set_j(J,*J_nnz,w_index[m]);
+        (*J_nnz)++; // d|ikm|/dwm
 	
-	// H
-	H_nnz_val = H_nnz[(*J_row)];
-	MAT_set_i(H,H_nnz_val,w_index[m]);
-	MAT_set_j(H,H_nnz_val,w_index[m]);
-	H_nnz_val++;   // wm and wm
-	if (var_v[m]) {
-	  MAT_set_i(H,H_nnz_val,w_index[m]);
-	  MAT_set_j(H,H_nnz_val,v_index[m]);
-	  H_nnz_val++; // wm and vm
-	}
-	if (var_a) {
-	  MAT_set_i(H,H_nnz_val,w_index[m]);
-	  MAT_set_j(H,H_nnz_val,a_index);
-	  H_nnz_val++; // wm and a
-	}
-	if (var_phi) {
-	  MAT_set_i(H,H_nnz_val,w_index[m]);
-	  MAT_set_j(H,H_nnz_val,phi_index);
-	  H_nnz_val++; // wm and phi
-	}
-	H_nnz[(*J_row)] = H_nnz_val;
+        // H
+        H_nnz_val = H_nnz[(*J_row)];
+        MAT_set_i(H,H_nnz_val,w_index[m]);
+        MAT_set_j(H,H_nnz_val,w_index[m]);
+        H_nnz_val++;   // wm and wm
+        if (var_v[m]) {
+          MAT_set_i(H,H_nnz_val,w_index[m]);
+          MAT_set_j(H,H_nnz_val,v_index[m]);
+          H_nnz_val++; // wm and vm
+        }
+        if (var_a) {
+          MAT_set_i(H,H_nnz_val,w_index[m]);
+          MAT_set_j(H,H_nnz_val,a_index);
+          H_nnz_val++; // wm and a
+        }
+        if (var_phi) {
+          MAT_set_i(H,H_nnz_val,w_index[m]);
+          MAT_set_j(H,H_nnz_val,phi_index);
+          H_nnz_val++; // wm and phi
+        }
+        H_nnz[(*J_row)] = H_nnz_val;
       }
       
       //***********
       if (var_v[m]) { // vm var
 	
-	// J 
-	MAT_set_i(J,*J_nnz,*J_row);
-	MAT_set_j(J,*J_nnz,v_index[m]);
-	(*J_nnz)++; // d|ikm|/dvm
+        // J 
+        MAT_set_i(J,*J_nnz,*J_row);
+        MAT_set_j(J,*J_nnz,v_index[m]);
+        (*J_nnz)++; // d|ikm|/dvm
 	
-	// H
-	H_nnz_val = H_nnz[(*J_row)];
-	MAT_set_i(H,H_nnz_val,v_index[m]);
-	MAT_set_j(H,H_nnz_val,v_index[m]);
-	H_nnz_val++;   // vm and vm
-	if (var_a) {
-	  MAT_set_i(H,H_nnz_val,v_index[m]);
-	  MAT_set_j(H,H_nnz_val,a_index);
-	  H_nnz_val++; // vm and a
-	}
-	if (var_phi) {
-	  MAT_set_i(H,H_nnz_val,v_index[m]);
-	  MAT_set_j(H,H_nnz_val,phi_index);
-	  H_nnz_val++; // vm and phi
-	}
-	H_nnz[(*J_row)] = H_nnz_val;
+        // H
+        H_nnz_val = H_nnz[(*J_row)];
+        MAT_set_i(H,H_nnz_val,v_index[m]);
+        MAT_set_j(H,H_nnz_val,v_index[m]);
+        H_nnz_val++;   // vm and vm
+        if (var_a) {
+          MAT_set_i(H,H_nnz_val,v_index[m]);
+          MAT_set_j(H,H_nnz_val,a_index);
+          H_nnz_val++; // vm and a
+        }
+        if (var_phi) {
+          MAT_set_i(H,H_nnz_val,v_index[m]);
+          MAT_set_j(H,H_nnz_val,phi_index);
+          H_nnz_val++; // vm and phi
+        }
+        H_nnz[(*J_row)] = H_nnz_val;
       }
       
       //********
       if (var_a) { // a var
 	
-	// J 
-	MAT_set_i(J,*J_nnz,*J_row);
-	MAT_set_j(J,*J_nnz,a_index);
-	(*J_nnz)++; // d|ikm|/da
+        // J 
+        MAT_set_i(J,*J_nnz,*J_row);
+        MAT_set_j(J,*J_nnz,a_index);
+        (*J_nnz)++; // d|ikm|/da
 	
-	// H
-	H_nnz_val = H_nnz[(*J_row)];
-	MAT_set_i(H,H_nnz_val,a_index);
-	MAT_set_j(H,H_nnz_val,a_index);
-	H_nnz_val++;   // a and a
-	if (var_phi) {
-	  MAT_set_i(H,H_nnz_val,a_index);
-	  MAT_set_j(H,H_nnz_val,phi_index);
-	  H_nnz_val++; // a and phi
-	}
-	H_nnz[(*J_row)] = H_nnz_val;
+        // H
+        H_nnz_val = H_nnz[(*J_row)];
+        MAT_set_i(H,H_nnz_val,a_index);
+        MAT_set_j(H,H_nnz_val,a_index);
+        H_nnz_val++;   // a and a
+        if (var_phi) {
+          MAT_set_i(H,H_nnz_val,a_index);
+          MAT_set_j(H,H_nnz_val,phi_index);
+          H_nnz_val++; // a and phi
+        }
+        H_nnz[(*J_row)] = H_nnz_val;
       }
       
       //**********
       if (var_phi) { // phi var
 	
-	// J 
-	MAT_set_i(J,*J_nnz,*J_row);
-	MAT_set_j(J,*J_nnz,phi_index);
-	(*J_nnz)++; // d|ikm|/dphi
+        // J 
+        MAT_set_i(J,*J_nnz,*J_row);
+        MAT_set_j(J,*J_nnz,phi_index);
+        (*J_nnz)++; // d|ikm|/dphi
 	
-	// H
-	H_nnz_val = H_nnz[(*J_row)];
-	MAT_set_i(H,H_nnz_val,phi_index);
-	MAT_set_j(H,H_nnz_val,phi_index);
-	H_nnz_val++;   // phi and phi
-	H_nnz[(*J_row)] = H_nnz_val;
+        // H
+        H_nnz_val = H_nnz[(*J_row)];
+        MAT_set_i(H,H_nnz_val,phi_index);
+        MAT_set_j(H,H_nnz_val,phi_index);
+        H_nnz_val++;   // phi and phi
+        H_nnz[(*J_row)] = H_nnz_val;
       }
 
       //**********
@@ -481,17 +481,17 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Bus* bus, int t) {
       
       // Row info
       CONSTR_set_J_row_info_string(c,
-				   *J_row,
-				   "branch",               // object
-				   BRANCH_get_index(br),   // object id
-				   (k == 0) ? "km" : "mk", // constraint info
-				   t);                     // time
+                                   *J_row,
+                                   "branch",               // object
+                                   BRANCH_get_index(br),   // object id
+                                   (k == 0) ? "km" : "mk", // constraint info
+                                   t);                     // time
       CONSTR_set_G_row_info_string(c,
-				   *G_row,
-				   "branch",               // object
-				   BRANCH_get_index(br),   // object id
-				   (k == 0) ? "km" : "mk", // constraint info
-				   t);                     // time
+                                   *G_row,
+                                   "branch",               // object
+                                   BRANCH_get_index(br),   // object id
+                                   (k == 0) ? "km" : "mk", // constraint info
+                                   t);                     // time
       
       // Nonlinear onstraint counter
       (*J_row)++;
@@ -503,7 +503,7 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
+void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values, Vec* values_extra) {
   
   // Local variables
   Branch* br;
@@ -565,7 +565,7 @@ void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* 
   J_row = CONSTR_get_J_row_ptr(c);
  
   // Check pointers
-  if (!J_nnz || !H_nnz || !J_row || !f || !J || !H_array)
+  if (!J_nnz || !H_nnz || !J_row || !f || !J || !H_array || !bus)
     return;
 
   // Branches
@@ -586,13 +586,13 @@ void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* 
       var_v[k] = BUS_has_flags(buses[k],FLAG_VARS,BUS_VAR_VMAG);
       var_w[k] = BUS_has_flags(buses[k],FLAG_VARS,BUS_VAR_VANG);
       if (var_w[k])
-	w[k] = VEC_get(values,BUS_get_index_v_ang(buses[k],t));
+        w[k] = VEC_get(values,BUS_get_index_v_ang(buses[k],t));
       else
-	w[k] = BUS_get_v_ang(buses[k],t);
+        w[k] = BUS_get_v_ang(buses[k],t);
       if (var_v[k])
-	v[k] = VEC_get(values,BUS_get_index_v_mag(buses[k],t));
+        v[k] = VEC_get(values,BUS_get_index_v_mag(buses[k],t));
       else
-	v[k] = BUS_get_v_mag(buses[k],t);
+        v[k] = BUS_get_v_mag(buses[k],t);
     }
     
     // Branch data
@@ -619,18 +619,18 @@ void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* 
     for (k = 0; k < 2; k++) {
       
       if (k == 0) {
-	m = 1;
-	a_temp = a;
-	phi_temp = phi;
-	indicator_a = 1.;
-	indicator_phi = 1.;
+        m = 1;
+        a_temp = a;
+        phi_temp = phi;
+        indicator_a = 1.;
+        indicator_phi = 1.;
       }
       else {
-	m = 0;
-	a_temp = 1;
-	phi_temp = -phi;
-	indicator_a = 0.;
-	indicator_phi = -1.;
+        m = 0;
+        a_temp = 1;
+        phi_temp = -phi;
+        indicator_a = 0.;
+        indicator_phi = -1.;
       }
       
       // Trigs
@@ -651,272 +651,272 @@ void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* 
       //***********
       if (var_w[k]) { // wk var
 	
-	dRdx = -a*v[m]*(g*sintheta+b*costheta);  // dRdwk
-	dIdx = -a*v[m]*(-g*costheta+b*sintheta); // dIdwk 
+        dRdx = -a*v[m]*(g*sintheta+b*costheta);  // dRdwk
+        dIdx = -a*v[m]*(-g*costheta+b*sintheta); // dIdwk 
 	
-	// J
-	J[*J_nnz] = (R*dRdx + I*dIdx)/sqrterm;
-	(*J_nnz)++; // d|ikm|/dwk
+        // J
+        J[*J_nnz] = (R*dRdx + I*dIdx)/sqrterm;
+        (*J_nnz)++; // d|ikm|/dwk
 	
-	// H
-	H_nnz_val = H_nnz[(*J_row)];
+        // H
+        H_nnz_val = H_nnz[(*J_row)];
 	
-	dRdy = dRdx;
-	dIdy = dIdx;
-	d2Rdydx = -a*v[m]*(-g*costheta+b*sintheta);
-	d2Idydx = -a*v[m]*(-g*sintheta-b*costheta);
-	H[H_nnz_val] = HESSIAN_VAL();
-	H_nnz_val++;   // wk and wk
+        dRdy = dRdx;
+        dIdy = dIdx;
+        d2Rdydx = -a*v[m]*(-g*costheta+b*sintheta);
+        d2Idydx = -a*v[m]*(-g*sintheta-b*costheta);
+        H[H_nnz_val] = HESSIAN_VAL();
+        H_nnz_val++;   // wk and wk
 	
-	if (var_v[k]) {
-	  dRdy = a_temp*a_temp*(g_sh[k]+g);
-	  dIdy = a_temp*a_temp*(b_sh[k]+b);
-	  d2Rdydx = 0;
-	  d2Idydx = 0;
-	  H[H_nnz_val] = HESSIAN_VAL();
-	  H_nnz_val++; // wk and vk
-	}
-	if (var_w[m]) {
-	  dRdy = -a*v[m]*(-g*sintheta-b*costheta);
-	  dIdy = -a*v[m]*(g*costheta-b*sintheta);
-	  d2Rdydx = -a*v[m]*(g*costheta-b*sintheta);
-	  d2Idydx = -a*v[m]*(g*sintheta+b*costheta);
-	  H[H_nnz_val] = HESSIAN_VAL();
-	  H_nnz_val++; // wk and wm
-	}
-	if (var_v[m]) {
-	  dRdy = -a*(g*costheta-b*sintheta);
-	  dIdy = -a*(g*sintheta+b*costheta);
-	  d2Rdydx = -a*(g*sintheta+b*costheta);
-	  d2Idydx = -a*(-g*costheta+b*sintheta);
-	  H[H_nnz_val] = HESSIAN_VAL();
-	  H_nnz_val++; // wk and vm
-	}
-	if (var_a) {
-	  dRdy = indicator_a*2.*a_temp*(g_sh[k]+g)*v[k]-v[m]*(g*costheta-b*sintheta);
-	  dIdy = indicator_a*2.*a_temp*(b_sh[k]+b)*v[k]-v[m]*(g*sintheta+b*costheta);
-	  d2Rdydx = -v[m]*(g*sintheta+b*costheta);
-	  d2Idydx = -v[m]*(-g*costheta+b*sintheta);
-	  H[H_nnz_val] = HESSIAN_VAL();
-	  H_nnz_val++; // wk and a
-	}
-	if (var_phi) {
-	  dRdy = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
-	  dIdy = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
-	  d2Rdydx = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
-	  d2Idydx = -indicator_phi*a*v[m]*(g*sintheta+b*costheta);
-	  H[H_nnz_val] = HESSIAN_VAL();
-	  H_nnz_val++; // wk and phi
-	}
-	H_nnz[(*J_row)] = H_nnz_val;
+        if (var_v[k]) {
+          dRdy = a_temp*a_temp*(g_sh[k]+g);
+          dIdy = a_temp*a_temp*(b_sh[k]+b);
+          d2Rdydx = 0;
+          d2Idydx = 0;
+          H[H_nnz_val] = HESSIAN_VAL();
+          H_nnz_val++; // wk and vk
+        }
+        if (var_w[m]) {
+          dRdy = -a*v[m]*(-g*sintheta-b*costheta);
+          dIdy = -a*v[m]*(g*costheta-b*sintheta);
+          d2Rdydx = -a*v[m]*(g*costheta-b*sintheta);
+          d2Idydx = -a*v[m]*(g*sintheta+b*costheta);
+          H[H_nnz_val] = HESSIAN_VAL();
+          H_nnz_val++; // wk and wm
+        }
+        if (var_v[m]) {
+          dRdy = -a*(g*costheta-b*sintheta);
+          dIdy = -a*(g*sintheta+b*costheta);
+          d2Rdydx = -a*(g*sintheta+b*costheta);
+          d2Idydx = -a*(-g*costheta+b*sintheta);
+          H[H_nnz_val] = HESSIAN_VAL();
+          H_nnz_val++; // wk and vm
+        }
+        if (var_a) {
+          dRdy = indicator_a*2.*a_temp*(g_sh[k]+g)*v[k]-v[m]*(g*costheta-b*sintheta);
+          dIdy = indicator_a*2.*a_temp*(b_sh[k]+b)*v[k]-v[m]*(g*sintheta+b*costheta);
+          d2Rdydx = -v[m]*(g*sintheta+b*costheta);
+          d2Idydx = -v[m]*(-g*costheta+b*sintheta);
+          H[H_nnz_val] = HESSIAN_VAL();
+          H_nnz_val++; // wk and a
+        }
+        if (var_phi) {
+          dRdy = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
+          dIdy = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
+          d2Rdydx = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
+          d2Idydx = -indicator_phi*a*v[m]*(g*sintheta+b*costheta);
+          H[H_nnz_val] = HESSIAN_VAL();
+          H_nnz_val++; // wk and phi
+        }
+        H_nnz[(*J_row)] = H_nnz_val;
       }
       
       //***********
       if (var_v[k]) { // vk var
 	
-	dRdx = a_temp*a_temp*(g_sh[k]+g);
-	dIdx = a_temp*a_temp*(b_sh[k]+b);
+        dRdx = a_temp*a_temp*(g_sh[k]+g);
+        dIdx = a_temp*a_temp*(b_sh[k]+b);
 	
-	// J 
-	J[*J_nnz] = (R*dRdx + I*dIdx)/sqrterm;
-	(*J_nnz)++; // d|ikm|/dvk
+        // J 
+        J[*J_nnz] = (R*dRdx + I*dIdx)/sqrterm;
+        (*J_nnz)++; // d|ikm|/dvk
 	
-	// H
-	H_nnz_val = H_nnz[(*J_row)];
+        // H
+        H_nnz_val = H_nnz[(*J_row)];
 	
-	dRdy = dRdx;
-	dIdy = dIdx;
-	d2Rdydx = 0;
-	d2Idydx = 0;
-	H[H_nnz_val] = HESSIAN_VAL();
-	H_nnz_val++;   // vk and vk
+        dRdy = dRdx;
+        dIdy = dIdx;
+        d2Rdydx = 0;
+        d2Idydx = 0;
+        H[H_nnz_val] = HESSIAN_VAL();
+        H_nnz_val++;   // vk and vk
 	
-	if (var_w[m]) {
-	  dRdy = -a*v[m]*(-g*sintheta-b*costheta);
-	  dIdy = -a*v[m]*(g*costheta-b*sintheta);
-	  d2Rdydx = 0;
-	  d2Idydx = 0;
-	  H[H_nnz_val] = HESSIAN_VAL();
-	  H_nnz_val++; // vk and wm
-	}
+        if (var_w[m]) {
+          dRdy = -a*v[m]*(-g*sintheta-b*costheta);
+          dIdy = -a*v[m]*(g*costheta-b*sintheta);
+          d2Rdydx = 0;
+          d2Idydx = 0;
+          H[H_nnz_val] = HESSIAN_VAL();
+          H_nnz_val++; // vk and wm
+        }
 	
-	if (var_v[m]) { 
-	  dRdy = -a*(g*costheta-b*sintheta);
-	  dIdy = -a*(g*sintheta+b*costheta);
-	  d2Rdydx = 0;
-	  d2Idydx = 0;
-	  H[H_nnz_val] = HESSIAN_VAL();
-	  H_nnz_val++; // vk and vm
-	}
+        if (var_v[m]) { 
+          dRdy = -a*(g*costheta-b*sintheta);
+          dIdy = -a*(g*sintheta+b*costheta);
+          d2Rdydx = 0;
+          d2Idydx = 0;
+          H[H_nnz_val] = HESSIAN_VAL();
+          H_nnz_val++; // vk and vm
+        }
 	
-	if (var_a) {
-	  dRdy = indicator_a*2.*a_temp*(g_sh[k]+g)*v[k]-v[m]*(g*costheta-b*sintheta);
-	  dIdy = indicator_a*2.*a_temp*(b_sh[k]+b)*v[k]-v[m]*(g*sintheta+b*costheta);
-	  d2Rdydx = indicator_a*2.*a_temp*(g_sh[k]+g);
-	  d2Idydx = indicator_a*2.*a_temp*(b_sh[k]+b);
-	  H[H_nnz_val] = HESSIAN_VAL();
-	  H_nnz_val++; // vk and a
-	}
+        if (var_a) {
+          dRdy = indicator_a*2.*a_temp*(g_sh[k]+g)*v[k]-v[m]*(g*costheta-b*sintheta);
+          dIdy = indicator_a*2.*a_temp*(b_sh[k]+b)*v[k]-v[m]*(g*sintheta+b*costheta);
+          d2Rdydx = indicator_a*2.*a_temp*(g_sh[k]+g);
+          d2Idydx = indicator_a*2.*a_temp*(b_sh[k]+b);
+          H[H_nnz_val] = HESSIAN_VAL();
+          H_nnz_val++; // vk and a
+        }
 	
-	if (var_phi) {  
-	  dRdy = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
-	  dIdy = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
-	  d2Rdydx = 0;
-	  d2Idydx = 0;
-	  H[H_nnz_val] = HESSIAN_VAL();
-	  H_nnz_val++; // vk and phi
-	}
-	H_nnz[(*J_row)] = H_nnz_val;
+        if (var_phi) {  
+          dRdy = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
+          dIdy = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
+          d2Rdydx = 0;
+          d2Idydx = 0;
+          H[H_nnz_val] = HESSIAN_VAL();
+          H_nnz_val++; // vk and phi
+        }
+        H_nnz[(*J_row)] = H_nnz_val;
       }
       
       //***********
       if (var_w[m]) { // wm var
 	
-	dRdx = -a*v[m]*(-g*sintheta-b*costheta);
-	dIdx = -a*v[m]*(g*costheta-b*sintheta);
+        dRdx = -a*v[m]*(-g*sintheta-b*costheta);
+        dIdx = -a*v[m]*(g*costheta-b*sintheta);
 	
-	// J 
-	J[*J_nnz] = (R*dRdx + I*dIdx)/sqrterm;
-	(*J_nnz)++; // d|ikm|/dwm
+        // J 
+        J[*J_nnz] = (R*dRdx + I*dIdx)/sqrterm;
+        (*J_nnz)++; // d|ikm|/dwm
 	
-	// H
-	H_nnz_val = H_nnz[(*J_row)];
+        // H
+        H_nnz_val = H_nnz[(*J_row)];
 	
-	dRdy = dRdx;
-	dIdy = dIdx;
-	d2Rdydx = -a*v[m]*(-g*costheta+b*sintheta);
-	d2Idydx = -a*v[m]*(-g*sintheta-b*costheta);
-	H[H_nnz_val] = HESSIAN_VAL();
-	H_nnz_val++;   // wm and wm
+        dRdy = dRdx;
+        dIdy = dIdx;
+        d2Rdydx = -a*v[m]*(-g*costheta+b*sintheta);
+        d2Idydx = -a*v[m]*(-g*sintheta-b*costheta);
+        H[H_nnz_val] = HESSIAN_VAL();
+        H_nnz_val++;   // wm and wm
 	
-	if (var_v[m]) {
-	  dRdy = -a*(g*costheta-b*sintheta);
-	  dIdy = -a*(g*sintheta+b*costheta);
-	  d2Rdydx = -a*(-g*sintheta-b*costheta);
-	  d2Idydx = -a*(g*costheta-b*sintheta);
-	  H[H_nnz_val] = HESSIAN_VAL();
-	  H_nnz_val++; // wm and vm
-	}
+        if (var_v[m]) {
+          dRdy = -a*(g*costheta-b*sintheta);
+          dIdy = -a*(g*sintheta+b*costheta);
+          d2Rdydx = -a*(-g*sintheta-b*costheta);
+          d2Idydx = -a*(g*costheta-b*sintheta);
+          H[H_nnz_val] = HESSIAN_VAL();
+          H_nnz_val++; // wm and vm
+        }
 	
-	if (var_a) {
-	  dRdy = indicator_a*2.*a_temp*(g_sh[k]+g)*v[k]-v[m]*(g*costheta-b*sintheta);
-	  dIdy = indicator_a*2.*a_temp*(b_sh[k]+b)*v[k]-v[m]*(g*sintheta+b*costheta);
-	  d2Rdydx = -v[m]*(-g*sintheta-b*costheta);
-	  d2Idydx = -v[m]*(g*costheta-b*sintheta);
-	  H[H_nnz_val] = HESSIAN_VAL();
-	  H_nnz_val++; // wm and a
-	}
+        if (var_a) {
+          dRdy = indicator_a*2.*a_temp*(g_sh[k]+g)*v[k]-v[m]*(g*costheta-b*sintheta);
+          dIdy = indicator_a*2.*a_temp*(b_sh[k]+b)*v[k]-v[m]*(g*sintheta+b*costheta);
+          d2Rdydx = -v[m]*(-g*sintheta-b*costheta);
+          d2Idydx = -v[m]*(g*costheta-b*sintheta);
+          H[H_nnz_val] = HESSIAN_VAL();
+          H_nnz_val++; // wm and a
+        }
 	
-	if (var_phi) {
-	  dRdy = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
-	  dIdy = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
-	  d2Rdydx = -indicator_phi*a*v[m]*(-g*costheta+b*sintheta);
-	  d2Idydx = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
-	  H[H_nnz_val] = HESSIAN_VAL();
-	  H_nnz_val++; // wm and phi
-	}
-	H_nnz[(*J_row)] = H_nnz_val;
+        if (var_phi) {
+          dRdy = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
+          dIdy = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
+          d2Rdydx = -indicator_phi*a*v[m]*(-g*costheta+b*sintheta);
+          d2Idydx = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
+          H[H_nnz_val] = HESSIAN_VAL();
+          H_nnz_val++; // wm and phi
+        }
+        H_nnz[(*J_row)] = H_nnz_val;
       }
       
       //***********
       if (var_v[m]) { // vm var
 	
-	dRdx = -a*(g*costheta-b*sintheta);
-	dIdx = -a*(g*sintheta+b*costheta);
+        dRdx = -a*(g*costheta-b*sintheta);
+        dIdx = -a*(g*sintheta+b*costheta);
 	
-	// J 
-	J[*J_nnz] = (R*dRdx + I*dIdx)/sqrterm;
-	(*J_nnz)++; // d|ikm|/dvm
+        // J 
+        J[*J_nnz] = (R*dRdx + I*dIdx)/sqrterm;
+        (*J_nnz)++; // d|ikm|/dvm
 	
-	// H
-	H_nnz_val = H_nnz[(*J_row)];
+        // H
+        H_nnz_val = H_nnz[(*J_row)];
 	
-	dRdy = dRdx;
-	dIdy = dIdx;
-	d2Rdydx = 0;
-	d2Idydx = 0;
-	H[H_nnz_val] = HESSIAN_VAL();
-	H_nnz_val++;   // vm and vm
+        dRdy = dRdx;
+        dIdy = dIdx;
+        d2Rdydx = 0;
+        d2Idydx = 0;
+        H[H_nnz_val] = HESSIAN_VAL();
+        H_nnz_val++;   // vm and vm
 	
-	if (var_a) {
-	  dRdy = indicator_a*2.*a_temp*(g_sh[k]+g)*v[k]-v[m]*(g*costheta-b*sintheta);
-	  dIdy = indicator_a*2.*a_temp*(b_sh[k]+b)*v[k]-v[m]*(g*sintheta+b*costheta);
-	  d2Rdydx = -(g*costheta-b*sintheta);
-	  d2Idydx = -(g*sintheta+b*costheta);
-	  H[H_nnz_val] = HESSIAN_VAL();
-	  H_nnz_val++; // vm and a
-	}
+        if (var_a) {
+          dRdy = indicator_a*2.*a_temp*(g_sh[k]+g)*v[k]-v[m]*(g*costheta-b*sintheta);
+          dIdy = indicator_a*2.*a_temp*(b_sh[k]+b)*v[k]-v[m]*(g*sintheta+b*costheta);
+          d2Rdydx = -(g*costheta-b*sintheta);
+          d2Idydx = -(g*sintheta+b*costheta);
+          H[H_nnz_val] = HESSIAN_VAL();
+          H_nnz_val++; // vm and a
+        }
 	
-	if (var_phi) {
-	  dRdy = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
-	  dIdy = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
-	  d2Rdydx = -indicator_phi*a*(-g*sintheta-b*costheta);
-	  d2Idydx = -indicator_phi*a*(g*costheta-b*sintheta);
-	  H[H_nnz_val] = HESSIAN_VAL();
-	  H_nnz_val++; // vm and phi
-	}
-	H_nnz[(*J_row)] = H_nnz_val;
+        if (var_phi) {
+          dRdy = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
+          dIdy = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
+          d2Rdydx = -indicator_phi*a*(-g*sintheta-b*costheta);
+          d2Idydx = -indicator_phi*a*(g*costheta-b*sintheta);
+          H[H_nnz_val] = HESSIAN_VAL();
+          H_nnz_val++; // vm and phi
+        }
+        H_nnz[(*J_row)] = H_nnz_val;
       }
       
       //********
       if (var_a) { // a var
 	
-	dRdx = indicator_a*2.*a_temp*(g_sh[k]+g)*v[k]-v[m]*(g*costheta-b*sintheta);
-	dIdx = indicator_a*2.*a_temp*(b_sh[k]+b)*v[k]-v[m]*(g*sintheta+b*costheta);
+        dRdx = indicator_a*2.*a_temp*(g_sh[k]+g)*v[k]-v[m]*(g*costheta-b*sintheta);
+        dIdx = indicator_a*2.*a_temp*(b_sh[k]+b)*v[k]-v[m]*(g*sintheta+b*costheta);
 	
-	// J 
-	J[*J_nnz] = (R*dRdx + I*dIdx)/sqrterm;
-	(*J_nnz)++; // d|ikm|/da
+        // J 
+        J[*J_nnz] = (R*dRdx + I*dIdx)/sqrterm;
+        (*J_nnz)++; // d|ikm|/da
 	
-	// H
-	H_nnz_val = H_nnz[(*J_row)];
+        // H
+        H_nnz_val = H_nnz[(*J_row)];
 	
-	dRdy = dRdx;
-	dIdy = dIdx;
-	d2Rdydx = indicator_a*2.*(g_sh[k]+g)*v[k];
-	d2Idydx = indicator_a*2.*(b_sh[k]+b)*v[k];
-	H[H_nnz_val] = HESSIAN_VAL();
-	H_nnz_val++;   // a and a
+        dRdy = dRdx;
+        dIdy = dIdx;
+        d2Rdydx = indicator_a*2.*(g_sh[k]+g)*v[k];
+        d2Idydx = indicator_a*2.*(b_sh[k]+b)*v[k];
+        H[H_nnz_val] = HESSIAN_VAL();
+        H_nnz_val++;   // a and a
 	
-	if (var_phi) {
-	  dRdy = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
-	  dIdy = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
-	  d2Rdydx = -indicator_phi*v[m]*(-g*sintheta-b*costheta);
-	  d2Idydx = -indicator_phi*v[m]*(g*costheta-b*sintheta);
-	  H[H_nnz_val] = HESSIAN_VAL();
-	  H_nnz_val++; // a and phi
-	}
-	H_nnz[(*J_row)] = H_nnz_val;
+        if (var_phi) {
+          dRdy = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
+          dIdy = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
+          d2Rdydx = -indicator_phi*v[m]*(-g*sintheta-b*costheta);
+          d2Idydx = -indicator_phi*v[m]*(g*costheta-b*sintheta);
+          H[H_nnz_val] = HESSIAN_VAL();
+          H_nnz_val++; // a and phi
+        }
+        H_nnz[(*J_row)] = H_nnz_val;
       }
       
       //**********
       if (var_phi) { // phi var
 	
-	dRdx = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
-	dIdx = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
+        dRdx = -indicator_phi*a*v[m]*(-g*sintheta-b*costheta);
+        dIdx = -indicator_phi*a*v[m]*(g*costheta-b*sintheta);
 	
-	// J 
-	J[*J_nnz] = (R*dRdx + I*dIdx)/sqrterm;
-	(*J_nnz)++; // d|ikm|/dphi
+        // J 
+        J[*J_nnz] = (R*dRdx + I*dIdx)/sqrterm;
+        (*J_nnz)++; // d|ikm|/dphi
 	
-	// H
-	H_nnz_val = H_nnz[(*J_row)];
+        // H
+        H_nnz_val = H_nnz[(*J_row)];
 	
-	dRdy = dRdx;
-	dIdy = dIdx;
-	d2Rdydx = -a*v[m]*(-g*costheta+b*sintheta);
-	d2Idydx = -a*v[m]*(-g*sintheta-b*costheta);
-	H[H_nnz_val] = HESSIAN_VAL();
-	H_nnz_val++;   // phi and phi
-	H_nnz[(*J_row)] = H_nnz_val;
+        dRdy = dRdx;
+        dIdy = dIdx;
+        d2Rdydx = -a*v[m]*(-g*costheta+b*sintheta);
+        d2Idydx = -a*v[m]*(-g*sintheta-b*costheta);
+        H[H_nnz_val] = HESSIAN_VAL();
+        H_nnz_val++;   // phi and phi
+        H_nnz[(*J_row)] = H_nnz_val;
       }
       
       //**********
       
       if (VEC_get_size(values_extra) > 0)
-	extra_var = VEC_get(values_extra,*J_row);
+        extra_var = VEC_get(values_extra,*J_row);
       else
-	extra_var = 0;
+        extra_var = 0;
       
       // f
       f[*J_row] -= extra_var;
@@ -931,7 +931,7 @@ void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* 
   }  
 }
 
-void CONSTR_AC_FLOW_LIM_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_AC_FLOW_LIM_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Local variables
   Branch* br;
@@ -943,7 +943,7 @@ void CONSTR_AC_FLOW_LIM_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec
   J_row = CONSTR_get_J_row_ptr(c);
   
   // Check pointers
-  if (!J_row)
+  if (!J_row || !bus)
     return;
 
   // Branches
@@ -966,7 +966,7 @@ void CONSTR_AC_FLOW_LIM_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec
       
       // Sensitivity
       if (fabs(mu_km) > fabs(BRANCH_get_sens_i_mag_u_bound(br, t)))
-	BRANCH_set_sens_i_mag_u_bound(br, mu_km, t);
+        BRANCH_set_sens_i_mag_u_bound(br, mu_km, t);
       
       // Constraint counter
       (*J_row)++;

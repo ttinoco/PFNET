@@ -20,7 +20,7 @@ Constr* CONSTR_REG_SHUNT_new(Net* net) {
   return c;
 }
 
-void CONSTR_REG_SHUNT_count_step(Constr* c, Bus* bus, int t) {
+void CONSTR_REG_SHUNT_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Shunt* shunt;
@@ -38,7 +38,7 @@ void CONSTR_REG_SHUNT_count_step(Constr* c, Bus* bus, int t) {
   H_nnz = CONSTR_get_H_nnz(c);
 
   // Check pointers
-  if (!A_nnz || !J_nnz || !A_row || !J_row || !H_nnz)
+  if (!A_nnz || !J_nnz || !A_row || !J_row || !H_nnz || !bus)
     return;
 
   // Shunts
@@ -130,7 +130,7 @@ void CONSTR_REG_SHUNT_count_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_REG_SHUNT_analyze_step(Constr* c, Bus* bus, int t) {
+void CONSTR_REG_SHUNT_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Shunt* shunt;
@@ -170,7 +170,7 @@ void CONSTR_REG_SHUNT_analyze_step(Constr* c, Bus* bus, int t) {
   H_nnz = CONSTR_get_H_nnz(c);
 
   // Check pointers
-  if (!A_nnz || !J_nnz || !A_row || !H_array || !J_row || !H_nnz)
+  if (!A_nnz || !J_nnz || !A_row || !H_array || !J_row || !H_nnz || !bus)
     return;
 
   // Shunts
@@ -375,7 +375,7 @@ void CONSTR_REG_SHUNT_analyze_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_REG_SHUNT_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
+void CONSTR_REG_SHUNT_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values, Vec* values_extra) {
 
   // Local variables
   Shunt* shunt;
@@ -414,7 +414,7 @@ void CONSTR_REG_SHUNT_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* va
   H_nnz = CONSTR_get_H_nnz(c);
 
   // Check pointers
-  if (!f || !J || !J_nnz || !J_row || !H_nnz)
+  if (!f || !J || !J_nnz || !J_row || !H_nnz || !bus)
     return;
   
   // Shunts
@@ -588,7 +588,7 @@ void CONSTR_REG_SHUNT_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* va
   }
 }
 
-void CONSTR_REG_SHUNT_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_REG_SHUNT_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Local variables
   Shunt* shunt;
@@ -602,7 +602,7 @@ void CONSTR_REG_SHUNT_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* 
   J_row = CONSTR_get_J_row_ptr(c);
 
   // Check pointers
-  if (!J_row)
+  if (!J_row || !bus)
     return;
       
   // Shunts

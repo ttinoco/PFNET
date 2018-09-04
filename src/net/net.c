@@ -6111,11 +6111,13 @@ void NET_update_properties(Net* net, Vec* values) {
   // Update
   for (t = 0; t < NET_get_num_periods(net); t++) {
     for (i = 0; i < NET_get_num_buses(net); i++)
-      NET_update_properties_step(net,NET_get_bus(net,i),t,values);
+      NET_update_properties_step(net,NET_get_bus(net,i),NULL,t,values);
+    for (i = 0; i < NET_get_num_dc_buses(net); i++)
+      NET_update_properties_step(net,NULL,NET_get_dc_bus(net,i),t,values);
   }
 }
 
-void NET_update_properties_step(Net* net, Bus* bus, int t, Vec* var_values) {
+void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* var_values) {
 
   // Local variables
   Branch* br;

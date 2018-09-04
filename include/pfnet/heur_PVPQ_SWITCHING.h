@@ -18,6 +18,6 @@
 
 // Function prototypes
 Heur* HEUR_PVPQ_SWITCHING_new(Net* net);
-void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus, int t, Vec* var_values);
+void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus, BusDC* busdc, int t, Vec* var_values);
 
 #endif

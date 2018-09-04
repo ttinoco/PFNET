@@ -20,7 +20,7 @@ Constr* CONSTR_LOAD_PF_new(Net* net) {
   return c;
 }
 
-void CONSTR_LOAD_PF_count_step(Constr* c, Bus* bus, int t) {
+void CONSTR_LOAD_PF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Load* load;
@@ -32,7 +32,7 @@ void CONSTR_LOAD_PF_count_step(Constr* c, Bus* bus, int t) {
   A_row = CONSTR_get_A_row_ptr(c);
 
   // Check pointer
-  if (!A_nnz || !A_row)
+  if (!A_nnz || !A_row || !bus)
     return;
 
   // Loads
@@ -47,7 +47,7 @@ void CONSTR_LOAD_PF_count_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_LOAD_PF_analyze_step(Constr* c, Bus* bus, int t) {
+void CONSTR_LOAD_PF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Load* load;
@@ -65,7 +65,7 @@ void CONSTR_LOAD_PF_analyze_step(Constr* c, Bus* bus, int t) {
   A_row = CONSTR_get_A_row_ptr(c);
 
   // Check pointers
-  if (!A_nnz || !A_row)
+  if (!A_nnz || !A_row || !bus)
     return;
 
   // Loads
@@ -100,10 +100,10 @@ void CONSTR_LOAD_PF_analyze_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_LOAD_PF_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
+void CONSTR_LOAD_PF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values, Vec* values_extra) {
   // Nothing to do
 }
 
-void CONSTR_LOAD_PF_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_LOAD_PF_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing for now
 }

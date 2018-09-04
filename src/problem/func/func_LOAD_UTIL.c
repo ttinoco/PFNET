@@ -12,14 +12,14 @@
 
 Func* FUNC_LOAD_UTIL_new(REAL weight, Net* net) {
   Func* f = FUNC_new(weight,net);
-  FUNC_set_func_count_step(f, &FUNC_LOAD_UTIL_count_step);
-  FUNC_set_func_analyze_step(f, &FUNC_LOAD_UTIL_analyze_step);
-  FUNC_set_func_eval_step(f, &FUNC_LOAD_UTIL_eval_step);
+  FUNC_set_func_count_step(f,&FUNC_LOAD_UTIL_count_step);
+  FUNC_set_func_analyze_step(f,&FUNC_LOAD_UTIL_analyze_step);
+  FUNC_set_func_eval_step(f,&FUNC_LOAD_UTIL_eval_step);
   FUNC_set_name(f,"consumption utility");
   return f;
 }
 
-void FUNC_LOAD_UTIL_count_step(Func* f, Bus* bus, int t) {
+void FUNC_LOAD_UTIL_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Load* load;
@@ -29,7 +29,7 @@ void FUNC_LOAD_UTIL_count_step(Func* f, Bus* bus, int t) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!Hphi_nnz)
+  if (!Hphi_nnz || !bus)
     return;
 
   // Locas
@@ -39,7 +39,7 @@ void FUNC_LOAD_UTIL_count_step(Func* f, Bus* bus, int t) {
   }
 }
 
-void FUNC_LOAD_UTIL_analyze_step(Func* f, Bus* bus, int t) {
+void FUNC_LOAD_UTIL_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Load* load;
@@ -51,7 +51,7 @@ void FUNC_LOAD_UTIL_analyze_step(Func* f, Bus* bus, int t) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!Hphi_nnz || !Hphi)
+  if (!Hphi_nnz || !Hphi || !bus)
     return;
 
   // Loads
@@ -64,7 +64,7 @@ void FUNC_LOAD_UTIL_analyze_step(Func* f, Bus* bus, int t) {
   }
 }
 
-void FUNC_LOAD_UTIL_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
+void FUNC_LOAD_UTIL_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_values) {
 
   // Local variables
   Load* load;
@@ -85,7 +85,7 @@ void FUNC_LOAD_UTIL_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!phi || !gphi || !Hphi || !Hphi_nnz)
+  if (!phi || !gphi || !Hphi || !Hphi_nnz || !bus)
     return;
 
   // Loads

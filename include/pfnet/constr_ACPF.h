@@ -16,9 +16,9 @@
 
 // Function prototypes
 Constr* CONSTR_ACPF_new(Net* net);
-void CONSTR_ACPF_count_step(Constr* c, Bus* bus, int t);
-void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, int t);
-void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, int t, Vec* v, Vec* ve);
-void CONSTR_ACPF_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
+void CONSTR_ACPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t);
+void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t);
+void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* v, Vec* ve);
+void CONSTR_ACPF_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 
 #endif

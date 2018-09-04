@@ -45,7 +45,7 @@ void FUNC_REG_VAR_init(Func* f) {
   FUNC_set_data(f,data);
 }
 
-void FUNC_REG_VAR_count_step(Func* f, Bus* bus, int t) {
+void FUNC_REG_VAR_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Branch* br;
@@ -60,7 +60,7 @@ void FUNC_REG_VAR_count_step(Func* f, Bus* bus, int t) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!Hphi_nnz)
+  if (!Hphi_nnz || !bus)
     return;
   
   // Voltage magnitude
@@ -150,7 +150,7 @@ void FUNC_REG_VAR_count_step(Func* f, Bus* bus, int t) {
   }
 }
 
-void FUNC_REG_VAR_analyze_step(Func* f, Bus* bus, int t) {
+void FUNC_REG_VAR_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Branch* br;
@@ -169,7 +169,7 @@ void FUNC_REG_VAR_analyze_step(Func* f, Bus* bus, int t) {
   data = (Func_REG_VAR_Data*)FUNC_get_data(f);
 
   // Check pointers
-  if (!Hphi_nnz || !data || !(data->w) || !Hphi)
+  if (!Hphi_nnz || !data || !(data->w) || !Hphi || !bus)
     return;
   
   // Voltage magnitude
@@ -303,7 +303,7 @@ void FUNC_REG_VAR_analyze_step(Func* f, Bus* bus, int t) {
 }
 
 
-void FUNC_REG_VAR_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
+void FUNC_REG_VAR_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_values) {
 
   // Local variables
   Func_REG_VAR_Data* data;
@@ -328,7 +328,7 @@ void FUNC_REG_VAR_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
   data = (Func_REG_VAR_Data*)FUNC_get_data(f);
 
   // Check pointers
-  if (!phi || !gphi || !data || !(data->w) || !(data->x0) || !Hphi || !Hphi_nnz)
+  if (!phi || !gphi || !data || !(data->w) || !(data->x0) || !Hphi || !Hphi_nnz || !bus)
     return;
 
   // Voltage magnitude

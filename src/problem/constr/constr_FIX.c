@@ -20,7 +20,7 @@ Constr* CONSTR_FIX_new(Net* net) {
   return c;
 }
 
-void CONSTR_FIX_count_step(Constr* c, Bus* bus, int t) {
+void CONSTR_FIX_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Branch* br;
@@ -37,7 +37,7 @@ void CONSTR_FIX_count_step(Constr* c, Bus* bus, int t) {
   A_row = CONSTR_get_A_row_ptr(c);
 
   // Check pointers
-  if (!A_nnz || !A_row)
+  if (!A_nnz || !A_row || !bus)
     return;
 
   // Voltage magnitude (V_MAG)
@@ -59,14 +59,14 @@ void CONSTR_FIX_count_step(Constr* c, Bus* bus, int t) {
     
     // Active power (P)
     if (GEN_has_flags(gen,FLAG_FIXED,GEN_VAR_P) &&
-	GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
+        GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
       (*A_nnz)++;
       (*A_row)++;
     }
     
     // Reactive power (Q)
     if (GEN_has_flags(gen,FLAG_FIXED,GEN_VAR_Q) &&
-	GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) {
+        GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) {
       (*A_nnz)++;
       (*A_row)++;
     }
@@ -77,14 +77,14 @@ void CONSTR_FIX_count_step(Constr* c, Bus* bus, int t) {
     
     // Active power (P)
     if (VARGEN_has_flags(vargen,FLAG_FIXED,VARGEN_VAR_P) &&
-	VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) {
+        VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) {
       (*A_nnz)++;
       (*A_row)++;
     }
     
     // Reactive power (Q)
     if (VARGEN_has_flags(vargen,FLAG_FIXED,VARGEN_VAR_Q) &&
-	VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q)) {
+        VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q)) {
       (*A_nnz)++;
       (*A_row)++;
     }
@@ -95,7 +95,7 @@ void CONSTR_FIX_count_step(Constr* c, Bus* bus, int t) {
     
     // Susceptance (b)
     if (SHUNT_has_flags(shunt,FLAG_FIXED,SHUNT_VAR_SUSC) &&
-	SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
+        SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
       (*A_nnz)++;
       (*A_row)++;
     }
@@ -106,14 +106,14 @@ void CONSTR_FIX_count_step(Constr* c, Bus* bus, int t) {
     
     // Charging/discharging power (P)
     if (BAT_has_flags(bat,FLAG_FIXED,BAT_VAR_P) &&
-	BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
+        BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
       (*A_nnz) += 2;
       (*A_row) += 2;
     }
     
     // Energy level (E)
     if (BAT_has_flags(bat,FLAG_FIXED,BAT_VAR_E) &&
-	BAT_has_flags(bat,FLAG_VARS,BAT_VAR_E)) {
+        BAT_has_flags(bat,FLAG_VARS,BAT_VAR_E)) {
       (*A_nnz)++;
       (*A_row)++;
     }
@@ -124,14 +124,14 @@ void CONSTR_FIX_count_step(Constr* c, Bus* bus, int t) {
     
     // Active power (P)
     if (LOAD_has_flags(load,FLAG_FIXED,LOAD_VAR_P) &&
-	LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
+        LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
       (*A_nnz)++;
       (*A_row)++;
     }
     
     // Reactive power (Q)
     if (LOAD_has_flags(load,FLAG_FIXED,LOAD_VAR_Q) &&
-	LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) {
+        LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) {
       (*A_nnz)++;
       (*A_row)++;
     }
@@ -142,21 +142,21 @@ void CONSTR_FIX_count_step(Constr* c, Bus* bus, int t) {
     
     // Tap ratio
     if (BRANCH_has_flags(br,FLAG_FIXED,BRANCH_VAR_RATIO) &&
-	BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) {
+        BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) {
       (*A_nnz)++;
       (*A_row)++;
     }
     
     // Phase shift
     if (BRANCH_has_flags(br,FLAG_FIXED,BRANCH_VAR_PHASE) &&
-	BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
+        BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
       (*A_nnz)++;
       (*A_row)++;
     }
   }
 }
 
-void CONSTR_FIX_analyze_step(Constr* c, Bus* bus, int t) {
+void CONSTR_FIX_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Branch* br;
@@ -179,7 +179,7 @@ void CONSTR_FIX_analyze_step(Constr* c, Bus* bus, int t) {
   A_row = CONSTR_get_A_row_ptr(c);
 
   // Check pointers
-  if (!A_nnz || !A_row)
+  if (!A_nnz || !A_row || !bus)
     return;
 
   // Voltage magnitude (V_MAG)
@@ -212,7 +212,7 @@ void CONSTR_FIX_analyze_step(Constr* c, Bus* bus, int t) {
     
     // Active power (P)
     if (GEN_has_flags(gen,FLAG_FIXED,GEN_VAR_P) &&
-	GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
+        GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
       VEC_set(b,*A_row,GEN_get_P(gen,t));
       MAT_set_i(A,*A_nnz,*A_row);
       MAT_set_j(A,*A_nnz,GEN_get_index_P(gen,t));
@@ -223,7 +223,7 @@ void CONSTR_FIX_analyze_step(Constr* c, Bus* bus, int t) {
     
     // Reactive power (Q)
     if (GEN_has_flags(gen,FLAG_FIXED,GEN_VAR_Q) &&
-	GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) {
+        GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) {
       VEC_set(b,*A_row,GEN_get_Q(gen,t));
       MAT_set_i(A,*A_nnz,*A_row);
       MAT_set_j(A,*A_nnz,GEN_get_index_Q(gen,t));
@@ -238,7 +238,7 @@ void CONSTR_FIX_analyze_step(Constr* c, Bus* bus, int t) {
     
     // Active power (P)
     if (VARGEN_has_flags(vargen,FLAG_FIXED,VARGEN_VAR_P) &&
-	VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) {
+        VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) {
       VEC_set(b,*A_row,VARGEN_get_P(vargen,t));
       MAT_set_i(A,*A_nnz,*A_row);
       MAT_set_j(A,*A_nnz,VARGEN_get_index_P(vargen,t));
@@ -249,7 +249,7 @@ void CONSTR_FIX_analyze_step(Constr* c, Bus* bus, int t) {
     
     // Reactive power (Q)
     if (VARGEN_has_flags(vargen,FLAG_FIXED,VARGEN_VAR_Q) &&
-	VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q)) {
+        VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q)) {
       VEC_set(b,*A_row,VARGEN_get_Q(vargen,t));
       MAT_set_i(A,*A_nnz,*A_row);
       MAT_set_j(A,*A_nnz,VARGEN_get_index_Q(vargen,t));
@@ -264,7 +264,7 @@ void CONSTR_FIX_analyze_step(Constr* c, Bus* bus, int t) {
     
     // Susceptance (b)
     if (SHUNT_has_flags(shunt,FLAG_FIXED,SHUNT_VAR_SUSC) &&
-	SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
+        SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
       VEC_set(b,*A_row,SHUNT_get_b(shunt,t));
       MAT_set_i(A,*A_nnz,*A_row);
       MAT_set_j(A,*A_nnz,SHUNT_get_index_b(shunt,t));
@@ -279,15 +279,15 @@ void CONSTR_FIX_analyze_step(Constr* c, Bus* bus, int t) {
     
     // Charging/discharging power (P)
     if (BAT_has_flags(bat,FLAG_FIXED,BAT_VAR_P) &&
-	BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
+        BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
       
       if (BAT_get_P(bat,t) >= 0) {
-	Pc = BAT_get_P(bat,t);
-	Pd = 0.;
+        Pc = BAT_get_P(bat,t);
+        Pd = 0.;
       }
       else {
-	Pc = 0.;
-	Pd = -BAT_get_P(bat,t);
+        Pc = 0.;
+        Pd = -BAT_get_P(bat,t);
       }
       
       // Pc
@@ -309,7 +309,7 @@ void CONSTR_FIX_analyze_step(Constr* c, Bus* bus, int t) {
     
     // Energy level (E)
     if (BAT_has_flags(bat,FLAG_FIXED,BAT_VAR_E) &&
-	BAT_has_flags(bat,FLAG_VARS,BAT_VAR_E)) {
+        BAT_has_flags(bat,FLAG_VARS,BAT_VAR_E)) {
       VEC_set(b,*A_row,BAT_get_E(bat,t));
       MAT_set_i(A,*A_nnz,*A_row);
       MAT_set_j(A,*A_nnz,BAT_get_index_E(bat,t));
@@ -324,7 +324,7 @@ void CONSTR_FIX_analyze_step(Constr* c, Bus* bus, int t) {
     
     // Active power (P)
     if (LOAD_has_flags(load,FLAG_FIXED,LOAD_VAR_P) &&
-	LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
+        LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
       VEC_set(b,*A_row,LOAD_get_P(load,t));
       MAT_set_i(A,*A_nnz,*A_row);
       MAT_set_j(A,*A_nnz,LOAD_get_index_P(load,t));
@@ -335,7 +335,7 @@ void CONSTR_FIX_analyze_step(Constr* c, Bus* bus, int t) {
     
     // Reactive power (Q)
     if (LOAD_has_flags(load,FLAG_FIXED,LOAD_VAR_Q) &&
-	LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) {
+        LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) {
       VEC_set(b,*A_row,LOAD_get_Q(load,t));
       MAT_set_i(A,*A_nnz,*A_row);
       MAT_set_j(A,*A_nnz,LOAD_get_index_Q(load,t));
@@ -350,7 +350,7 @@ void CONSTR_FIX_analyze_step(Constr* c, Bus* bus, int t) {
     
     // Tap ratio
     if (BRANCH_has_flags(br,FLAG_FIXED,BRANCH_VAR_RATIO) &&
-	BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) {
+        BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) {
       VEC_set(b,*A_row,BRANCH_get_ratio(br,t));
       MAT_set_i(A,*A_nnz,*A_row);
       MAT_set_j(A,*A_nnz,BRANCH_get_index_ratio(br,t));
@@ -361,7 +361,7 @@ void CONSTR_FIX_analyze_step(Constr* c, Bus* bus, int t) {
     
     // Phase shift
     if (BRANCH_has_flags(br,FLAG_FIXED,BRANCH_VAR_PHASE) &&
-	BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
+        BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
       VEC_set(b,*A_row,BRANCH_get_phase(br,t));
       MAT_set_i(A,*A_nnz,*A_row);
       MAT_set_j(A,*A_nnz,BRANCH_get_index_phase(br,t));
@@ -372,10 +372,10 @@ void CONSTR_FIX_analyze_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_FIX_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
+void CONSTR_FIX_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values, Vec* values_extra) {
   // Nothing to do
 }
 
-void CONSTR_FIX_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_FIX_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing
 }

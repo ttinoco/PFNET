@@ -12,14 +12,14 @@
 
 Func* FUNC_REG_VANG_new(REAL weight, Net* net) {
   Func* f = FUNC_new(weight,net);
-  FUNC_set_func_count_step(f, &FUNC_REG_VANG_count_step);
-  FUNC_set_func_analyze_step(f, &FUNC_REG_VANG_analyze_step);
-  FUNC_set_func_eval_step(f, &FUNC_REG_VANG_eval_step);
+  FUNC_set_func_count_step(f,&FUNC_REG_VANG_count_step);
+  FUNC_set_func_analyze_step(f,&FUNC_REG_VANG_analyze_step);
+  FUNC_set_func_eval_step(f,&FUNC_REG_VANG_eval_step);
   FUNC_set_name(f,"voltage angle regularization");
   return f;
 }
 
-void FUNC_REG_VANG_count_step(Func* f, Bus* bus, int t) {
+void FUNC_REG_VANG_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   int* Hphi_nnz;
@@ -29,7 +29,7 @@ void FUNC_REG_VANG_count_step(Func* f, Bus* bus, int t) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!Hphi_nnz)
+  if (!Hphi_nnz || !bus)
     return;
 
   // Bus
@@ -47,7 +47,7 @@ void FUNC_REG_VANG_count_step(Func* f, Bus* bus, int t) {
       (*Hphi_nnz)++; // wk and wk
 
       if (BUS_has_flags(BRANCH_get_bus_m(br),FLAG_VARS,BUS_VAR_VANG))
-	(*Hphi_nnz)++; // wk and wm
+        (*Hphi_nnz)++; // wk and wm
     }
     
     if (BUS_has_flags(BRANCH_get_bus_m(br),FLAG_VARS,BUS_VAR_VANG))
@@ -55,7 +55,7 @@ void FUNC_REG_VANG_count_step(Func* f, Bus* bus, int t) {
   }
 }
 
-void FUNC_REG_VANG_analyze_step(Func* f, Bus* bus, int t) {
+void FUNC_REG_VANG_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   int* Hphi_nnz;
@@ -69,7 +69,7 @@ void FUNC_REG_VANG_analyze_step(Func* f, Bus* bus, int t) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!Hphi_nnz || !Hphi)
+  if (!Hphi_nnz || !Hphi || !bus)
     return;
 
   // Bus
@@ -95,9 +95,9 @@ void FUNC_REG_VANG_analyze_step(Func* f, Bus* bus, int t) {
       (*Hphi_nnz)++; // wk and wk
       
       if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VANG)) {
-	MAT_set_i(Hphi,*Hphi_nnz,BUS_get_index_v_ang(bus_k,t));
-	MAT_set_j(Hphi,*Hphi_nnz,BUS_get_index_v_ang(bus_m,t));
-	(*Hphi_nnz)++; // wk and wm
+        MAT_set_i(Hphi,*Hphi_nnz,BUS_get_index_v_ang(bus_k,t));
+        MAT_set_j(Hphi,*Hphi_nnz,BUS_get_index_v_ang(bus_m,t));
+        (*Hphi_nnz)++; // wk and wm
       }
     }
     
@@ -109,7 +109,7 @@ void FUNC_REG_VANG_analyze_step(Func* f, Bus* bus, int t) {
   }
 }
 
-void FUNC_REG_VANG_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
+void FUNC_REG_VANG_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_values) {
 
   // Local variables
   Branch* br;
@@ -131,7 +131,7 @@ void FUNC_REG_VANG_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
   
   // Check pointers
-  if (!phi || !gphi || !Hphi || !Hphi_nnz)
+  if (!phi || !gphi || !Hphi || !Hphi_nnz || !bus)
     return;
 
   // Bus
@@ -171,8 +171,8 @@ void FUNC_REG_VANG_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
       Hphi[*Hphi_nnz] = 1./(dw*dw);
       (*Hphi_nnz)++; // wk and wk
       if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VANG)) {
-	Hphi[*Hphi_nnz] = -1./(dw*dw);
-	(*Hphi_nnz)++; // wk and wm
+        Hphi[*Hphi_nnz] = -1./(dw*dw);
+        (*Hphi_nnz)++; // wk and wm
       }
     }
     if (BUS_has_flags(bus_m,FLAG_VARS,BUS_VAR_VANG)) {

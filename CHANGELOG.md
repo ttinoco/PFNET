@@ -26,6 +26,7 @@ Unreleased
 * Added bus property BUS_PROP_VSET_REG and "is_v_set_regulated" method.
 * CSC converters for HVDC.
 * FACTS devices.
+* Extended count/analyze/eval framework (and added safeguards to existing constr/func/heur) to loop through ac and then dc buses. 
 
 Version 1.3.3
 -------------

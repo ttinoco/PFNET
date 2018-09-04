@@ -26,7 +26,7 @@ struct Heur {
   // Type functions
   void (*func_init)(Heur* h);
   void (*func_clear)(Heur* h);
-  void (*func_apply_step)(Heur* h, Constr** cptrs, int cnum, Bus* bus, int t, Vec* var_values);
+  void (*func_apply_step)(Heur* h, Constr** cptrs, int cnum, Bus* bus, BusDC* busdc, int t, Vec* var_values);
   void (*func_free)(Heur* h);
 
   // Type data
@@ -105,11 +105,11 @@ Heur* HEUR_list_add(Heur* hlist, Heur* nh) {
   return hlist;
 }
 
-void HEUR_list_apply_step(Heur* hlist, Constr** cptrs, int cnum, Bus* bus, int t, Vec* var_values) {
+void HEUR_list_apply_step(Heur* hlist, Constr** cptrs, int cnum, Bus* bus, BusDC* busdc, int t, Vec* var_values) {
   Heur* hh;
   if (hlist) {
     for (hh = hlist; hh != NULL; hh = HEUR_get_next(hh))
-      HEUR_apply_step(hh,cptrs,cnum,bus,t,var_values);
+      HEUR_apply_step(hh,cptrs,cnum,bus,busdc,t,var_values);
   }
 }
 
@@ -175,13 +175,15 @@ void HEUR_apply(Heur* h, Constr** cptrs, int cnum, Vec* var_values) {
   // Apply
   for (t = 0; t < NET_get_num_periods(h->net); t++) {
     for (i = 0; i < NET_get_num_buses(h->net); i++)
-      HEUR_apply_step(h,cptrs,cnum,NET_get_bus(h->net,i),t,var_values);
+      HEUR_apply_step(h,cptrs,cnum,NET_get_bus(h->net,i),NULL,t,var_values);
+    for (i = 0; i < NET_get_num_dc_buses(h->net); i++)
+      HEUR_apply_step(h,cptrs,cnum,NULL,NET_get_dc_bus(h->net,i),t,var_values);
   }
 }
 
-void HEUR_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus, int t, Vec* var_values) {
+void HEUR_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus, BusDC* busdc, int t, Vec* var_values) {
   if (h && h->func_apply_step)
-    (*(h->func_apply_step))(h,cptrs,cnum,bus,t,var_values);
+    (*(h->func_apply_step))(h,cptrs,cnum,bus,busdc,t,var_values);
 }
 
 void HEUR_clear_error(Heur * h) {
@@ -239,7 +241,7 @@ void HEUR_set_func_clear(Heur* h, void (*func)(Heur* h)) {
     h->func_clear = func;
 }
 
-void HEUR_set_func_apply_step(Heur* h, void (*func)(Heur* h, Constr** cptrs, int cnum, Bus* bus, int t, Vec* var_values)) {
+void HEUR_set_func_apply_step(Heur* h, void (*func)(Heur* h, Constr** cptrs, int cnum, Bus* bus, BusDC* busdc, int t, Vec* var_values)) {
   if (h)
     h->func_apply_step = func;
 }

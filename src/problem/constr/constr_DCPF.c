@@ -20,7 +20,7 @@ Constr* CONSTR_DCPF_new(Net* net) {
   return c;
 }
 
-void CONSTR_DCPF_count_step(Constr* c, Bus* bus, int t) {
+void CONSTR_DCPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Branch* br;
@@ -39,7 +39,7 @@ void CONSTR_DCPF_count_step(Constr* c, Bus* bus, int t) {
   A_row = CONSTR_get_A_row_ptr(c);
 
   // Check pointers
-  if (!A_nnz || !A_row)
+  if (!A_nnz || !A_row || !bus)
     return;
 
   // Generators
@@ -105,29 +105,29 @@ void CONSTR_DCPF_count_step(Constr* c, Bus* bus, int t) {
     for (k = 0; k < 2; k++) {
 
       if (k == 0)
-	m = 1;
+        m = 1;
       else
-	m = 0;
+        m = 0;
 
       //***********
       if (BUS_has_flags(buses[k],FLAG_VARS,BUS_VAR_VANG)) { // wk var
 	
-	// A
-	(*A_nnz)++; // Pk
+        // A
+        (*A_nnz)++; // Pk
       }
       
       //***********
       if (BUS_has_flags(buses[m],FLAG_VARS,BUS_VAR_VANG)) { // wm var
 	
-	// A
-	(*A_nnz)++; // Pk
+        // A
+        (*A_nnz)++; // Pk
       }
       
       //**********
       if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) { // phi var
 	
-	// A
-	(*A_nnz)++; // Pk
+        // A
+        (*A_nnz)++; // Pk
       }
     }
   }
@@ -136,7 +136,7 @@ void CONSTR_DCPF_count_step(Constr* c, Bus* bus, int t) {
   (*A_row)++;
 }
 
-void CONSTR_DCPF_analyze_step(Constr* c, Bus* bus, int t) {
+void CONSTR_DCPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Branch* br;
@@ -161,7 +161,7 @@ void CONSTR_DCPF_analyze_step(Constr* c, Bus* bus, int t) {
   A_row = CONSTR_get_A_row_ptr(c);
 
   // Check pointers
-  if (!A_nnz || !A_row)
+  if (!A_nnz || !A_row || !bus)
     return;
 
   // Generators
@@ -267,57 +267,57 @@ void CONSTR_DCPF_analyze_step(Constr* c, Bus* bus, int t) {
     for (k = 0; k < 2; k++) {
       
       if (k == 0) {
-	m = 1;
-	sign_phi = 1;
+        m = 1;
+        sign_phi = 1;
       }
       else {
-	m = 0;
-	sign_phi = -1;
+        m = 0;
+        sign_phi = -1;
       }
       
       //***********
       if (BUS_has_flags(buses[k],FLAG_VARS,BUS_VAR_VANG)) { // wk var
 	
-	// A
-	MAT_set_i(A,*A_nnz,BUS_get_index_P(buses[k],t)); // Pk
-	MAT_set_j(A,*A_nnz,BUS_get_index_v_ang(buses[k],t)); // wk
-	MAT_set_d(A,*A_nnz,b);
-	(*A_nnz)++;
+        // A
+        MAT_set_i(A,*A_nnz,BUS_get_index_P(buses[k],t)); // Pk
+        MAT_set_j(A,*A_nnz,BUS_get_index_v_ang(buses[k],t)); // wk
+        MAT_set_d(A,*A_nnz,b);
+        (*A_nnz)++;
       }
       else {
 	
-	// b
-	VEC_add_to_entry(rhs,BUS_get_index_P(buses[k],t),-b*BUS_get_v_ang(buses[k],t));
+        // b
+        VEC_add_to_entry(rhs,BUS_get_index_P(buses[k],t),-b*BUS_get_v_ang(buses[k],t));
       }
       
       //***********
       if (BUS_has_flags(buses[m],FLAG_VARS,BUS_VAR_VANG)) { // wm var
 	
-	// A
-	MAT_set_i(A,*A_nnz,BUS_get_index_P(buses[k],t)); // Pk
-	MAT_set_j(A,*A_nnz,BUS_get_index_v_ang(buses[m],t)); // wk
-	MAT_set_d(A,*A_nnz,-b);
-	(*A_nnz)++;
+        // A
+        MAT_set_i(A,*A_nnz,BUS_get_index_P(buses[k],t)); // Pk
+        MAT_set_j(A,*A_nnz,BUS_get_index_v_ang(buses[m],t)); // wk
+        MAT_set_d(A,*A_nnz,-b);
+        (*A_nnz)++;
       }
       else {
 	
-	// b
-	VEC_add_to_entry(rhs,BUS_get_index_P(buses[k],t),b*BUS_get_v_ang(buses[m],t));
+        // b
+        VEC_add_to_entry(rhs,BUS_get_index_P(buses[k],t),b*BUS_get_v_ang(buses[m],t));
       }
       
       //**********
       if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) { // phi var
 	
-	// A
-	MAT_set_i(A,*A_nnz,BUS_get_index_P(buses[k],t)); // Pk
-	MAT_set_j(A,*A_nnz,BRANCH_get_index_phase(br,t)); // phi
-	MAT_set_d(A,*A_nnz,-b*sign_phi);
-	(*A_nnz)++;
+        // A
+        MAT_set_i(A,*A_nnz,BUS_get_index_P(buses[k],t)); // Pk
+        MAT_set_j(A,*A_nnz,BRANCH_get_index_phase(br,t)); // phi
+        MAT_set_d(A,*A_nnz,-b*sign_phi);
+        (*A_nnz)++;
       }
       else {
 
-	// b
-	VEC_add_to_entry(rhs,BUS_get_index_P(buses[k],t),b*BRANCH_get_phase(br,t)*sign_phi);
+        // b
+        VEC_add_to_entry(rhs,BUS_get_index_P(buses[k],t),b*BRANCH_get_phase(br,t)*sign_phi);
       }
     }
   }
@@ -326,11 +326,15 @@ void CONSTR_DCPF_analyze_step(Constr* c, Bus* bus, int t) {
   (*A_row)++;
 }
 
-void CONSTR_DCPF_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
+void CONSTR_DCPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values, Vec* values_extra) {
   // Nothing
 }
 
-void CONSTR_DCPF_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_DCPF_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
+  // Check
+  if (!bus)
+    return;
+  
   BUS_set_sens_P_balance(bus,VEC_get(sA,BUS_get_index_P(bus,t)),t);
 }

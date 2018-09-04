@@ -12,14 +12,14 @@
 
 Func* FUNC_SLIM_VMAG_new(REAL weight, Net* net) {
   Func* f = FUNC_new(weight,net);
-  FUNC_set_func_count_step(f, &FUNC_SLIM_VMAG_count_step);
-  FUNC_set_func_analyze_step(f, &FUNC_SLIM_VMAG_analyze_step);
-  FUNC_set_func_eval_step(f, &FUNC_SLIM_VMAG_eval_step);
+  FUNC_set_func_count_step(f,&FUNC_SLIM_VMAG_count_step);
+  FUNC_set_func_analyze_step(f,&FUNC_SLIM_VMAG_analyze_step);
+  FUNC_set_func_eval_step(f,&FUNC_SLIM_VMAG_eval_step);
   FUNC_set_name(f,"soft voltage magnitude limits");
   return f;
 }
 
-void FUNC_SLIM_VMAG_count_step(Func* f, Bus* bus, int t) {
+void FUNC_SLIM_VMAG_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   int* Hphi_nnz;
@@ -28,14 +28,14 @@ void FUNC_SLIM_VMAG_count_step(Func* f, Bus* bus, int t) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!Hphi_nnz)
+  if (!Hphi_nnz || !bus)
     return;
 
   if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) // v var
     (*Hphi_nnz)++;
 }
 
-void FUNC_SLIM_VMAG_analyze_step(Func* f, Bus* bus, int t) {
+void FUNC_SLIM_VMAG_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   int* Hphi_nnz;
@@ -47,7 +47,7 @@ void FUNC_SLIM_VMAG_analyze_step(Func* f, Bus* bus, int t) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!Hphi_nnz || !Hphi)
+  if (!Hphi_nnz || !Hphi || !bus)
     return;
 
   dv = BUS_get_v_max_norm(bus)-BUS_get_v_min_norm(bus);
@@ -61,7 +61,7 @@ void FUNC_SLIM_VMAG_analyze_step(Func* f, Bus* bus, int t) {
   }
 }
 
-void FUNC_SLIM_VMAG_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
+void FUNC_SLIM_VMAG_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_values) {
 
   // Local variables
   REAL* phi;
@@ -80,7 +80,7 @@ void FUNC_SLIM_VMAG_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!phi || !gphi || !Hphi || !Hphi_nnz)
+  if (!phi || !gphi || !Hphi || !Hphi_nnz || !bus)
     return;
 
   dv = BUS_get_v_max_norm(bus)-BUS_get_v_min_norm(bus);

@@ -25,12 +25,12 @@ typedef struct Constr_CFUNC_Data Constr_CFUNC_Data;
 // Function prototypes
 Constr* CONSTR_CFUNC_new(Net* net);
 void CONSTR_CFUNC_init(Constr* c);
-void CONSTR_CFUNC_count_step(Constr* c, Bus* bus, int t);
-void CONSTR_CFUNC_analyze_step(Constr* c, Bus* bus, int t);
+void CONSTR_CFUNC_count_step(Constr* c, Bus* bus, BusDC* busdc, int t);
+void CONSTR_CFUNC_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t);
 void CONSTR_CFUNC_clear(Constr* c);
 void CONSTR_CFUNC_allocate(Constr* c);
-void CONSTR_CFUNC_eval_step(Constr* c, Bus* bus, int t, Vec* v, Vec* ve);
-void CONSTR_CFUNC_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
+void CONSTR_CFUNC_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* v, Vec* ve);
+void CONSTR_CFUNC_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl);
 void CONSTR_CFUNC_set_parameter(Constr* c, char* key, void* value);
 void CONSTR_CFUNC_free(Constr* c);
 

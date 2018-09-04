@@ -93,6 +93,7 @@ void PROB_analyze(Prob* p) {
 
   // Local variables
   Bus* bus;
+  BusDC* busdc;
   Constr* c;
   Func* f;
   int Arow;
@@ -118,12 +119,19 @@ void PROB_analyze(Prob* p) {
   
   // Count
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
-    for (k = 0; k < NET_get_num_buses(p->net); k++) {
-      
-      bus = NET_get_bus(p->net,k);
+    for (k = 0; k < NET_get_num_buses(p->net)+NET_get_num_dc_buses(p->net); k++) {
+
+      if (k < NET_get_num_buses(p->net)) {
+        bus = NET_get_bus(p->net,k);
+        busdc = NULL;
+      }
+      else {
+        bus = NULL;
+        busdc = NET_get_dc_bus(p->net,k-NET_get_num_buses(p->net));
+      }        
       
       // Constraints
-      CONSTR_list_count_step(p->constr,bus,t);
+      CONSTR_list_count_step(p->constr,bus,busdc,t);
       if (CONSTR_list_has_error(p->constr)) {
         strcpy(p->error_string,CONSTR_list_get_error_string(p->constr));
         p->error_flag = TRUE;
@@ -131,7 +139,7 @@ void PROB_analyze(Prob* p) {
       }
       
       // Functions
-      FUNC_list_count_step(p->func,bus,t);
+      FUNC_list_count_step(p->func,bus,busdc,t);
       if (FUNC_list_has_error(p->func)) {
         strcpy(p->error_string,FUNC_list_get_error_string(p->func));
         p->error_flag = TRUE;
@@ -156,12 +164,19 @@ void PROB_analyze(Prob* p) {
 
   // Analyze
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
-    for (k = 0; k < NET_get_num_buses(p->net); k++) {
+    for (k = 0; k < NET_get_num_buses(p->net)+NET_get_num_dc_buses(p->net); k++) {
       
-      bus = NET_get_bus(p->net,k);
+      if (k < NET_get_num_buses(p->net)) {
+        bus = NET_get_bus(p->net,k);
+        busdc = NULL;
+      }
+      else {
+        bus = NULL;
+        busdc = NET_get_dc_bus(p->net,k-NET_get_num_buses(p->net));
+      }
       
       // Constraints
-      CONSTR_list_analyze_step(p->constr,bus,t);
+      CONSTR_list_analyze_step(p->constr,bus,busdc,t);
       if (CONSTR_list_has_error(p->constr)) {
         strcpy(p->error_string,CONSTR_list_get_error_string(p->constr));
         p->error_flag = TRUE;
@@ -169,7 +184,7 @@ void PROB_analyze(Prob* p) {
       }
 
       // Functions
-      FUNC_list_analyze_step(p->func,bus,t);
+      FUNC_list_analyze_step(p->func,bus,busdc,t);
       if (FUNC_list_has_error(p->func)) {
         strcpy(p->error_string,FUNC_list_get_error_string(p->func));
         p->error_flag = TRUE;
@@ -262,7 +277,9 @@ void PROB_apply_heuristics(Prob* p, Vec* point) {
   // Apply
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
     for (i = 0; i < NET_get_num_buses(p->net); i++)
-      HEUR_list_apply_step(p->heur,cptrs,cnum,NET_get_bus(p->net,i),t,x);
+      HEUR_list_apply_step(p->heur,cptrs,cnum,NET_get_bus(p->net,i),NULL,t,x);
+    for (i = 0; i < NET_get_num_dc_buses(p->net); i++)
+      HEUR_list_apply_step(p->heur,cptrs,cnum,NULL,NET_get_dc_bus(p->net,i),t,x);
   }
 
   // Check errors
@@ -304,6 +321,7 @@ void PROB_eval(Prob* p, Vec* point) {
   // Local variables
   REAL* point_data;
   Bus* bus;
+  BusDC* busdc;
   int num_vars;
   Vec* x;
   Vec* y;
@@ -334,32 +352,39 @@ void PROB_eval(Prob* p, Vec* point) {
 
   // Eval
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
-    for (k = 0; k < NET_get_num_buses(p->net); k++) {
+    for (k = 0; k < NET_get_num_buses(p->net)+NET_get_num_dc_buses(p->net); k++) {
       
-      bus = NET_get_bus(p->net,k);
+      if (k < NET_get_num_buses(p->net)) {
+        bus = NET_get_bus(p->net,k);
+        busdc = NULL;
+      }
+      else {
+        bus = NULL;
+        busdc = NET_get_dc_bus(p->net,k-NET_get_num_buses(p->net));
+      }
       
       // Constraints
-      CONSTR_list_eval_step(p->constr,bus,t,x,y);
+      CONSTR_list_eval_step(p->constr,bus,busdc,t,x,y);
       if (CONSTR_list_has_error(p->constr)) {
       	strcpy(p->error_string,CONSTR_list_get_error_string(p->constr));
-	p->error_flag = TRUE;
-	return;
+        p->error_flag = TRUE;
+        return;
       }
       
       // Functions
-      FUNC_list_eval_step(p->func,bus,t,x);
+      FUNC_list_eval_step(p->func,bus,busdc,t,x);
       if (FUNC_list_has_error(p->func)) {
       	strcpy(p->error_string,FUNC_list_get_error_string(p->func));
-	p->error_flag = TRUE;
-	return;
+        p->error_flag = TRUE;
+        return;
       }
       
       // Network
-      NET_update_properties_step(p->net,bus,t,x);
+      NET_update_properties_step(p->net,bus,busdc,t,x);
       if (NET_has_error(p->net)) {
-	strcpy(p->error_string,NET_get_error_string(p->net));
-	p->error_flag = TRUE;
-	return;
+        strcpy(p->error_string,NET_get_error_string(p->net));
+        p->error_flag = TRUE;
+        return;
       }
     }
   }
@@ -376,7 +401,8 @@ void PROB_store_sens(Prob* p, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Local variables
   Bus* bus;
-  int i;
+  BusDC* busdc;
+  int k;
   int t;
   
   // No p
@@ -399,16 +425,23 @@ void PROB_store_sens(Prob* p, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Store sens
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
-    for (i = 0; i < NET_get_num_buses(p->net); i++) {
+    for (k = 0; k < NET_get_num_buses(p->net)+NET_get_num_dc_buses(p->net); k++) {
 
-      bus = NET_get_bus(p->net,i);
+      if (k < NET_get_num_buses(p->net)) {
+        bus = NET_get_bus(p->net,k);
+        busdc = NULL;
+      }
+      else {
+        bus = NULL;
+        busdc = NET_get_dc_bus(p->net,k-NET_get_num_buses(p->net));
+      }
       
       // Constraints
-      CONSTR_list_store_sens_step(p->constr,bus,t,sA,sf,sGu,sGl);
+      CONSTR_list_store_sens_step(p->constr,bus,busdc,t,sA,sf,sGu,sGl);
       if (CONSTR_list_has_error(p->constr)) {
-	strcpy(p->error_string,CONSTR_list_get_error_string(p->constr));
-	p->error_flag = TRUE;
-	return;
+        strcpy(p->error_string,CONSTR_list_get_error_string(p->constr));
+        p->error_flag = TRUE;
+        return;
       }
     }
   }
@@ -506,7 +539,7 @@ Constr* PROB_find_constr(Prob* p, char* name) {
   if (p) {
     for (cc = p->constr; cc != NULL; cc = CONSTR_get_next(cc)) {
       if (strcmp(name,CONSTR_get_name(cc)) == 0)
-	return cc;
+        return cc;
     }
     return NULL;
   }
@@ -854,9 +887,9 @@ void PROB_update_nonlin_struc(Prob* p) {
     for (k = 0; k < MAT_get_nnz(CONSTR_get_J(c)); k++) {
       Ji[Jnnz] = Jrow+Ji_constr[k];
       if (Jj_constr[k] < num_vars)
-	Jj[Jnnz] = Jj_constr[k];                 // x var
+        Jj[Jnnz] = Jj_constr[k];                 // x var
       else
-	Jj[Jnnz] = offset+Jj_constr[k]-num_vars; // y var
+        Jj[Jnnz] = offset+Jj_constr[k]-num_vars; // y var
       Jnnz++;
     }
     Jrow += MAT_get_size1(CONSTR_get_J(c));
@@ -866,13 +899,13 @@ void PROB_update_nonlin_struc(Prob* p) {
     Hcomb_j_constr = MAT_get_col_array(CONSTR_get_H_combined(c));
     for (k = 0; k < MAT_get_nnz(CONSTR_get_H_combined(c)); k++) {
       if (Hcomb_i_constr[k] < num_vars)
-	Hcomb_i[Hcombnnz] = Hcomb_i_constr[k];                 // x var
+        Hcomb_i[Hcombnnz] = Hcomb_i_constr[k];                 // x var
       else
-	Hcomb_i[Hcombnnz] = offset+Hcomb_i_constr[k]-num_vars; // y var
+        Hcomb_i[Hcombnnz] = offset+Hcomb_i_constr[k]-num_vars; // y var
       if (Hcomb_j_constr[k] < num_vars)
-	Hcomb_j[Hcombnnz] = Hcomb_j_constr[k];                 // x var
+        Hcomb_j[Hcombnnz] = Hcomb_j_constr[k];                 // x var
       else
-	Hcomb_j[Hcombnnz] = offset+Hcomb_j_constr[k]-num_vars; // y var
+        Hcomb_j[Hcombnnz] = offset+Hcomb_j_constr[k]-num_vars; // y var
       Hcombnnz++;
     }
 
@@ -1040,9 +1073,9 @@ void PROB_update_lin(Prob* p) {
     for (k = 0; k < MAT_get_nnz(CONSTR_get_A(c)); k++) {
       Ai[Annz] = Arow+Ai_constr[k];
       if (Aj_constr[k] < num_vars)
-	Aj[Annz] = Aj_constr[k];                 // x var
+        Aj[Annz] = Aj_constr[k];                 // x var
       else
-	Aj[Annz] = offset+Aj_constr[k]-num_vars; // y var
+        Aj[Annz] = offset+Aj_constr[k]-num_vars; // y var
       Ad[Annz] = Ad_constr[k];
       Annz++;
     }
@@ -1057,9 +1090,9 @@ void PROB_update_lin(Prob* p) {
     for (k = 0; k < MAT_get_nnz(CONSTR_get_G(c)); k++) {
       Gi[Gnnz] = Grow+Gi_constr[k];
       if (Gj_constr[k] < num_vars)
-	Gj[Gnnz] = Gj_constr[k];                 // x var
+        Gj[Gnnz] = Gj_constr[k];                 // x var
       else
-	Gj[Gnnz] = offset+Gj_constr[k]-num_vars; // y var
+        Gj[Gnnz] = offset+Gj_constr[k]-num_vars; // y var
       Gd[Gnnz] = Gd_constr[k];
       Gnnz++;
     }

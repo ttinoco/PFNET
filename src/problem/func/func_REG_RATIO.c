@@ -19,7 +19,7 @@ Func* FUNC_REG_RATIO_new(REAL weight, Net* net) {
   return f;
 }
 
-void FUNC_REG_RATIO_count_step(Func* f, Bus* bus, int t) {
+void FUNC_REG_RATIO_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   int* Hphi_nnz;
@@ -29,7 +29,7 @@ void FUNC_REG_RATIO_count_step(Func* f, Bus* bus, int t) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!Hphi_nnz)
+  if (!Hphi_nnz || !bus)
     return;
 
   // Branches
@@ -44,7 +44,7 @@ void FUNC_REG_RATIO_count_step(Func* f, Bus* bus, int t) {
   }
 }
 
-void FUNC_REG_RATIO_analyze_step(Func* f, Bus* bus, int t) {
+void FUNC_REG_RATIO_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Branch* br;
@@ -57,7 +57,7 @@ void FUNC_REG_RATIO_analyze_step(Func* f, Bus* bus, int t) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointer
-  if (!Hphi_nnz || !Hphi)
+  if (!Hphi_nnz || !Hphi || !bus)
     return;
 
   // Branches
@@ -80,7 +80,7 @@ void FUNC_REG_RATIO_analyze_step(Func* f, Bus* bus, int t) {
   }
 }
 
-void FUNC_REG_RATIO_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
+void FUNC_REG_RATIO_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_values) {
 
   // Local variables
   Branch* br;
@@ -99,7 +99,7 @@ void FUNC_REG_RATIO_eval_step(Func* f, Bus* bus, int t, Vec* var_values) {
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
   // Check pointers
-  if (!phi || !gphi || !Hphi || !Hphi_nnz)
+  if (!phi || !gphi || !Hphi || !Hphi_nnz || !bus)
     return;
 
   // Branches

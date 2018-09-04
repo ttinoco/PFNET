@@ -12,15 +12,15 @@
 
 Constr* CONSTR_GEN_RAMP_new(Net* net) {
   Constr* c = CONSTR_new(net);
-  CONSTR_set_func_count_step(c, &CONSTR_GEN_RAMP_count_step);
-  CONSTR_set_func_analyze_step(c, &CONSTR_GEN_RAMP_analyze_step);
-  CONSTR_set_func_eval_step(c, &CONSTR_GEN_RAMP_eval_step);
-  CONSTR_set_func_store_sens_step(c, &CONSTR_GEN_RAMP_store_sens_step);
+  CONSTR_set_func_count_step(c,&CONSTR_GEN_RAMP_count_step);
+  CONSTR_set_func_analyze_step(c,&CONSTR_GEN_RAMP_analyze_step);
+  CONSTR_set_func_eval_step(c,&CONSTR_GEN_RAMP_eval_step);
+  CONSTR_set_func_store_sens_step(c,&CONSTR_GEN_RAMP_store_sens_step);
   CONSTR_set_name(c,"generator ramp limits");
   return c;
 }
 
-void CONSTR_GEN_RAMP_count_step(Constr* c, Bus* bus, int t) {
+void CONSTR_GEN_RAMP_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Gen* gen;
@@ -32,7 +32,7 @@ void CONSTR_GEN_RAMP_count_step(Constr* c, Bus* bus, int t) {
   G_row = CONSTR_get_G_row_ptr(c);
 
   // Check pointer
-  if (!G_nnz || !G_row)
+  if (!G_nnz || !G_row || !bus)
     return;
 
   // Generators
@@ -45,15 +45,15 @@ void CONSTR_GEN_RAMP_count_step(Constr* c, Bus* bus, int t) {
     // Variable
     if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // -dP_max <= P_t - P_{t-1} <= dP_max
       if (t == 0)
-	(*G_nnz) += 1;
+        (*G_nnz) += 1;
       else
-	(*G_nnz) += 2;
+        (*G_nnz) += 2;
       (*G_row)++;
     }
   }
 }
 
-void CONSTR_GEN_RAMP_analyze_step(Constr* c, Bus* bus, int t) {
+void CONSTR_GEN_RAMP_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Gen* gen;
@@ -71,7 +71,7 @@ void CONSTR_GEN_RAMP_analyze_step(Constr* c, Bus* bus, int t) {
   G_row = CONSTR_get_G_row_ptr(c);
 
   // Check pointers
-  if (!G_nnz || !G_row)
+  if (!G_nnz || !G_row || !bus)
     return;
 
   // Generators
@@ -91,24 +91,24 @@ void CONSTR_GEN_RAMP_analyze_step(Constr* c, Bus* bus, int t) {
       
       if (t == 0) {
 	
-	// l u
-	VEC_set(l,*G_row,-GEN_get_dP_max(gen)+GEN_get_P_prev(gen));
-	VEC_set(u,*G_row,GEN_get_dP_max(gen)+GEN_get_P_prev(gen));
+        // l u
+        VEC_set(l,*G_row,-GEN_get_dP_max(gen)+GEN_get_P_prev(gen));
+        VEC_set(u,*G_row,GEN_get_dP_max(gen)+GEN_get_P_prev(gen));
 	
-	(*G_nnz) += 1;
+        (*G_nnz) += 1;
       }
       else {
 	
-	// l u
-	VEC_set(l,*G_row,-GEN_get_dP_max(gen));
-	VEC_set(u,*G_row,GEN_get_dP_max(gen));
+        // l u
+        VEC_set(l,*G_row,-GEN_get_dP_max(gen));
+        VEC_set(u,*G_row,GEN_get_dP_max(gen));
 	
-	// G
-	MAT_set_i(G,*G_nnz+1,*G_row);
-	MAT_set_j(G,*G_nnz+1,GEN_get_index_P(gen,t-1));
-	MAT_set_d(G,*G_nnz+1,-1.);
+        // G
+        MAT_set_i(G,*G_nnz+1,*G_row);
+        MAT_set_j(G,*G_nnz+1,GEN_get_index_P(gen,t-1));
+        MAT_set_d(G,*G_nnz+1,-1.);
 	
-	(*G_nnz) += 2;
+        (*G_nnz) += 2;
       }
       
       (*G_row)++;
@@ -116,10 +116,10 @@ void CONSTR_GEN_RAMP_analyze_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_GEN_RAMP_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
+void CONSTR_GEN_RAMP_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values, Vec* values_extra) {
   // Nothing to do
 }
 
-void CONSTR_GEN_RAMP_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_GEN_RAMP_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing for now
 }

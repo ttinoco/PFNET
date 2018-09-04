@@ -51,7 +51,7 @@ void CONSTR_AC_LIN_FLOW_LIM_init(Constr* c) {
   CONSTR_set_data(c,(void*)data);
 }
 
-void CONSTR_AC_LIN_FLOW_LIM_count_step(Constr* c, Bus* bus, int t) {
+void CONSTR_AC_LIN_FLOW_LIM_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Branch* br;
@@ -78,8 +78,7 @@ void CONSTR_AC_LIN_FLOW_LIM_count_step(Constr* c, Bus* bus, int t) {
   offset = NET_get_num_branches(net)*t;
   
   // Check pointer
-  if (!G_nnz || !G_row || !data) {
-    CONSTR_set_error(c,"AC_LIN_FLOW_LIM constraint has undefined pointers");  
+  if (!G_nnz || !G_row || !data || !bus) {
     return;
   }
 
@@ -170,7 +169,7 @@ void CONSTR_AC_LIN_FLOW_LIM_count_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_AC_LIN_FLOW_LIM_analyze_step(Constr* c, Bus* bus, int t) {
+void CONSTR_AC_LIN_FLOW_LIM_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Branch* br;
@@ -203,8 +202,7 @@ void CONSTR_AC_LIN_FLOW_LIM_analyze_step(Constr* c, Bus* bus, int t) {
   offset = NET_get_num_branches(net)*t;
   
   // Check pointer
-  if (!G_nnz || !G_row || !data) {
-    CONSTR_set_error(c,"AC_LIN_FLOW_LIM constraint has undefined pointers");  
+  if (!G_nnz || !G_row || !data || !bus) {
     return;
   }
 
@@ -300,11 +298,11 @@ void CONSTR_AC_LIN_FLOW_LIM_analyze_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_AC_LIN_FLOW_LIM_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
+void CONSTR_AC_LIN_FLOW_LIM_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values, Vec* values_extra) {
   // Nothing
 }
 
-void CONSTR_AC_LIN_FLOW_LIM_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_AC_LIN_FLOW_LIM_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing yet
 }
 

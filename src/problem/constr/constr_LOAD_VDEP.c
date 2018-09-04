@@ -20,7 +20,7 @@ Constr* CONSTR_LOAD_VDEP_new(Net* net) {
   return c;
 }
 
-void CONSTR_LOAD_VDEP_count_step(Constr* c, Bus* bus, int t) {
+void CONSTR_LOAD_VDEP_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Load* load;
@@ -34,7 +34,7 @@ void CONSTR_LOAD_VDEP_count_step(Constr* c, Bus* bus, int t) {
   H_nnz = CONSTR_get_H_nnz(c);
 
   // Check pointers
-  if (!J_nnz || !J_row || !H_nnz)
+  if (!J_nnz || !J_row || !H_nnz || !bus)
     return;
 
   // Loads
@@ -65,7 +65,7 @@ void CONSTR_LOAD_VDEP_count_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_LOAD_VDEP_analyze_step(Constr* c, Bus* bus, int t) {
+void CONSTR_LOAD_VDEP_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   Load* load;
@@ -85,7 +85,7 @@ void CONSTR_LOAD_VDEP_analyze_step(Constr* c, Bus* bus, int t) {
   H_nnz = CONSTR_get_H_nnz(c);
 
   // Check pointers
-  if (!J || !J_nnz || !H_array || !J_row || !H_nnz)
+  if (!J || !J_nnz || !H_array || !J_row || !H_nnz || !bus)
     return;
 
   // Loads
@@ -134,7 +134,7 @@ void CONSTR_LOAD_VDEP_analyze_step(Constr* c, Bus* bus, int t) {
   }
 }
 
-void CONSTR_LOAD_VDEP_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_extra) {
+void CONSTR_LOAD_VDEP_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values, Vec* values_extra) {
 
   // Local variables
   Load* load;
@@ -165,7 +165,7 @@ void CONSTR_LOAD_VDEP_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* va
   H_nnz = CONSTR_get_H_nnz(c);
 
   // Check pointers
-  if (!H_array || !f || !J || !J_nnz || !J_row || !H_nnz)
+  if (!H_array || !f || !J || !J_nnz || !J_row || !H_nnz || !bus)
     return;
 
   // Loads
@@ -226,6 +226,6 @@ void CONSTR_LOAD_VDEP_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* va
   }      
 }
 
-void CONSTR_LOAD_VDEP_store_sens_step(Constr* c, Bus* bus, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+void CONSTR_LOAD_VDEP_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
   // Nothing
 }
