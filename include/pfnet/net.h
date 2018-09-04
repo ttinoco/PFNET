@@ -24,6 +24,7 @@
 #include "branch_dc.h"
 #include "conv_vsc.h"
 #include "conv_csc.h"
+#include "facts.h"
 #include "vector.h"
 #include "matrix.h"
 #include "utils.h"
@@ -81,6 +82,9 @@ void NET_del_dc_buses(Net* net, BusDC** bus_ptr_array, int size);
 void NET_add_dc_branches(Net* net, BranchDC** br_ptr_array, int size);
 void NET_del_dc_branches(Net* net, BranchDC** br_ptr_array, int size);
 
+void NET_add_facts(Net* net, Facts** facts_ptr_array, int size);
+void NET_del_facts(Net* net, Facts** facts_ptr_array, int size);
+
 void NET_add_vargens_from_params(Net* net, Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value);
 void NET_add_batteries_from_params(Net* net, Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d);
 
@@ -124,6 +128,7 @@ ConvVSC* NET_get_vsc_conv(Net* net, int index);
 ConvCSC* NET_get_csc_conv(Net* net, int index);
 BusDC* NET_get_dc_bus(Net* net, int index);
 BranchDC* NET_get_dc_branch(Net* net, int index);
+Facts* NET_get_facts(Net* net, int index);
 Bus* NET_get_gen_buses(Net* net);
 Bus* NET_get_load_buses(Net* net);
 
@@ -143,6 +148,7 @@ ConvVSC* NET_get_vsc_conv_from_name_and_dc_bus_number(Net* net, char* name, int 
 ConvVSC* NET_get_vsc_conv_from_name_and_dc_bus_name(Net* net, char* name, char* bus_name);
 BranchDC* NET_get_dc_branch_from_name_and_dc_bus_numbers(Net* net, char* name, int number1, int number2);
 BranchDC* NET_get_dc_branch_from_name_and_dc_bus_names(Net* net, char* name, char* bus1_name, char* bus2_name);
+Facts* NET_get_facts_from_name_and_bus_numbers(Net* net, char* name, int number1, int number2);
 
 int NET_get_num_periods(Net* net);
 int NET_get_num_buses(Net* net);
@@ -154,6 +160,7 @@ int NET_get_num_buses_reg_by_tran_only(Net* net);
 int NET_get_num_buses_reg_by_shunt(Net* net);
 int NET_get_num_buses_reg_by_shunt_only(Net* net);
 int NET_get_num_buses_reg_by_vsc_conv(Net* net);
+int NET_get_num_buses_reg_by_facts(Net* net);
 int NET_get_num_branches(Net* net);
 int NET_get_num_branches_not_on_outage(Net* net);
 int NET_get_num_branches_on_outage(Net* net);
@@ -186,6 +193,9 @@ int NET_get_num_vsc_convs_in_v_ac_mode(Net* net);
 int NET_get_num_vsc_convs_in_f_ac_mode(Net* net);
 int NET_get_num_dc_buses(Net* net);
 int NET_get_num_dc_branches(Net* net);
+int NET_get_num_facts(Net* net);
+int NET_get_num_facts_in_normal_series_mode(Net* net);
+int NET_get_num_reg_facts(Net* net);
 int NET_get_num_vars(Net* net);
 int NET_get_num_fixed(Net* net);
 int NET_get_num_bounded(Net* net);
@@ -220,6 +230,7 @@ char* NET_get_json_string(Net* net);
 BOOL NET_has_error(Net* net);
 void NET_propagate_data_in_time(Net* net, int start, int end);
 Net* NET_new(int num_periods);
+
 void NET_set_base_power(Net* net, REAL base_power);
 void NET_set_branch_array(Net* net, Branch* branch, int num);
 void NET_set_bus_array(Net* net, Bus* bus, int num);
@@ -232,6 +243,7 @@ void NET_set_vsc_conv_array(Net* net, ConvVSC* conv, int num);
 void NET_set_csc_conv_array(Net* net, ConvCSC* conv, int num);
 void NET_set_dc_bus_array(Net* net, BusDC* bus, int num);
 void NET_set_dc_branch_array(Net* net, BranchDC* branch, int num);
+void NET_set_facts_array(Net* net, Facts* facts, int num);
 void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsigned char val_mask);
 void NET_set_flags_of_component(Net* net, void* obj, char obj_type, char flag_mask, unsigned char val_mask);
 void NET_set_var_values(Net* net, Vec* values);

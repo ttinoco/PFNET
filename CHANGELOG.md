@@ -25,6 +25,7 @@ Unreleased
 * Added shunt types and net counters.
 * Added bus property BUS_PROP_VSET_REG and "is_v_set_regulated" method.
 * CSC converters for HVDC.
+* FACTS devices.
 
 Version 1.3.3
 -------------

@@ -31,6 +31,7 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, int t) {
   Load* load;
   Bat* bat;
   ConvVSC* vsc_conv;
+  Facts* facts;
   int* J_row;
   int* J_nnz;
   int* H_nnz;
@@ -201,6 +202,40 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, int t) {
       (*J_nnz)++; // dQk/dQ
     }
   }
+
+  // FACTS
+  for (facts = BUS_get_facts_k(bus); facts != NULL; facts = FACTS_get_next_k(facts)) {
+    
+    //*****************************
+    if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P)) { // P var
+      
+      // J
+      (*J_nnz)++; // dPk/dP
+    }
+    
+    //*****************************
+    if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_Q)) { // Q var
+      
+      // J
+      (*J_nnz)++; // dQk/dQ
+    }
+  }
+  for (facts = BUS_get_facts_m(bus); facts != NULL; facts = FACTS_get_next_m(facts)) {
+    
+    //*****************************
+    if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P)) { // P var
+      
+      // J
+      (*J_nnz)++; // dPk/dP
+    }
+    
+    //*****************************
+    if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_Q)) { // Q var
+      
+      // J
+      (*J_nnz)++; // dQk/dQ
+    }
+  }
   
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
@@ -242,6 +277,7 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, int t) {
   Load* load;
   Bat* bat;
   ConvVSC* vsc_conv;
+  Facts* facts;
   Mat* J;
   int* J_row;
   int* J_nnz;
@@ -470,6 +506,48 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, int t) {
       (*J_nnz)++; // dQk/dQ
     }
   }
+
+  // FACTS
+  for (facts = BUS_get_facts_k(bus); facts != NULL; facts = FACTS_get_next_k(facts)) {
+    
+    //*****************************
+    if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P)) { // P var
+      
+      // J
+      MAT_set_i(J,*J_nnz,P_index);
+      MAT_set_j(J,*J_nnz,FACTS_get_index_P_k(facts,t));
+      (*J_nnz)++; // dPk/dP
+    }
+    
+    //*****************************
+    if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_Q)) { // Q var
+      
+      // J
+      MAT_set_i(J,*J_nnz,Q_index);
+      MAT_set_j(J,*J_nnz,FACTS_get_index_Q_k(facts,t));
+      (*J_nnz)++; // dQk/dQ
+    }
+  }
+  for (facts = BUS_get_facts_m(bus); facts != NULL; facts = FACTS_get_next_m(facts)) {
+    
+    //*****************************
+    if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P)) { // P var
+      
+      // J
+      MAT_set_i(J,*J_nnz,P_index);
+      MAT_set_j(J,*J_nnz,FACTS_get_index_P_m(facts,t));
+      (*J_nnz)++; // dPk/dP
+    }
+    
+    //*****************************
+    if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_Q)) { // Q var
+      
+      // J
+      MAT_set_i(J,*J_nnz,Q_index);
+      MAT_set_j(J,*J_nnz,FACTS_get_index_Q_m(facts,t));
+      (*J_nnz)++; // dQk/dQ
+    }
+  }
   
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
@@ -521,6 +599,7 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_
   Shunt* shunt;
   ConvVSC* vsc_conv;
   ConvCSC* csc_conv;
+  Facts* facts;
   REAL* f;
   REAL* J;
   int* J_row;
@@ -806,6 +885,72 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, int t, Vec* values, Vec* values_
     }
   }
 
+  // FACTS
+  for (facts = BUS_get_facts_k(bus); facts != NULL; facts = FACTS_get_next_k(facts)) {
+    
+    // Var values
+    if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P))
+      P = VEC_get(values,FACTS_get_index_P_k(facts,t)); // p.u.
+    else
+      P = FACTS_get_P_k(facts,t);                       // p.u.
+    if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_Q))
+      Q = VEC_get(values,FACTS_get_index_Q_k(facts,t)); // p.u.
+    else
+      Q = FACTS_get_Q_k(facts,t);                       // p.u.
+    
+    // f
+    f[P_index] += P; // p.u.
+    f[Q_index] += Q; // p.u.
+    
+    //*****************************
+    if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P)) { // P var
+      
+      // J
+      J[*J_nnz] = 1.;
+      (*J_nnz)++; // dPk/dP
+    }
+    
+    //*****************************
+    if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_Q)) { // Q var
+      
+      // J
+      J[*J_nnz] = 1.;
+      (*J_nnz)++; // dQk/dQ
+    }
+  }
+  for (facts = BUS_get_facts_m(bus); facts != NULL; facts = FACTS_get_next_m(facts)) {
+    
+    // Var values
+    if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P))
+      P = VEC_get(values,FACTS_get_index_P_m(facts,t)); // p.u.
+    else
+      P = FACTS_get_P_m(facts,t);                       // p.u.
+    if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_Q))
+      Q = VEC_get(values,FACTS_get_index_Q_m(facts,t)); // p.u.
+    else
+      Q = FACTS_get_Q_m(facts,t);                       // p.u.
+    
+    // f
+    f[P_index] += P; // p.u.
+    f[Q_index] += Q; // p.u.
+    
+    //*****************************
+    if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P)) { // P var
+      
+      // J
+      J[*J_nnz] = 1.;
+      (*J_nnz)++; // dPk/dP
+    }
+    
+    //*****************************
+    if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_Q)) { // Q var
+      
+      // J
+      J[*J_nnz] = 1.;
+      (*J_nnz)++; // dQk/dQ
+    }
+  }
+  
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
     

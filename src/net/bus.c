@@ -17,6 +17,7 @@
 #include <pfnet/bat.h>
 #include <pfnet/conv_vsc.h>
 #include <pfnet/conv_csc.h>
+#include <pfnet/facts.h>
 #include <pfnet/net.h>
 #include <pfnet/array.h>
 #include <pfnet/json_macros.h>
@@ -76,6 +77,9 @@ struct Bus {
   ConvCSC* csc_conv;     /**< @brief List of CSC converters connected to bus */
   ConvVSC* vsc_conv;     /**< @brief List of VSC converters connected to bus */
   ConvVSC* reg_vsc_conv; /**< @brief List of VSC converters regulating the voltage magnitude of bus */
+  Facts* facts_k;        /**< @brief List of FACTS devices having this bus connected to the "k" side */
+  Facts* facts_m;        /**< @brief List of FACTS devices having this bus connected tot he "m" side */
+  Facts* reg_facts;      /**< @brief List of FACTS devices regulating the voltage magnitude of bus */
 
   // Sensitivities
   REAL* sens_P_balance;      /**< @brief Sensitivity of active power balance */
@@ -320,6 +324,54 @@ void BUS_del_reg_vsc_conv(Bus* bus, ConvVSC* reg_conv) {
   }
 }
 
+void BUS_add_facts_k(Bus* bus, Facts* facts) {
+  if (bus) {
+    bus->facts_k = FACTS_list_k_add(bus->facts_k,facts);
+    if (FACTS_get_bus_k(facts) != bus)
+      FACTS_set_bus_k(facts,bus);
+  }
+}
+
+void BUS_del_facts_k(Bus* bus, Facts* facts) {
+  if (bus) {
+    bus->facts_k = FACTS_list_k_del(bus->facts_k,facts);
+    if (FACTS_get_bus_k(facts) == bus)
+      FACTS_set_bus_k(facts,NULL);
+  }
+}
+
+void BUS_add_facts_m(Bus* bus, Facts* facts) {
+  if (bus) {
+    bus->facts_m = FACTS_list_m_add(bus->facts_m,facts);
+    if (FACTS_get_bus_m(facts) != bus)
+      FACTS_set_bus_m(facts,bus);
+  }
+}
+
+void BUS_del_facts_m(Bus* bus, Facts* facts) {
+  if (bus) {
+    bus->facts_m = FACTS_list_m_del(bus->facts_m,facts);
+    if (FACTS_get_bus_m(facts) == bus)
+      FACTS_set_bus_m(facts,NULL);
+  }
+}
+
+void BUS_add_reg_facts(Bus* bus, Facts* facts) {
+  if (bus) {
+    bus->reg_facts = FACTS_list_reg_add(bus->reg_facts,facts);
+    if (FACTS_get_reg_bus(facts) != bus)
+      FACTS_set_reg_bus(facts,bus);
+  }
+}
+
+void BUS_del_reg_facts(Bus* bus, Facts* facts) {
+  if (bus) {
+    bus->reg_facts = FACTS_list_reg_del(bus->reg_facts,facts);
+    if (FACTS_get_reg_bus(facts) == bus)
+      FACTS_set_reg_bus(facts,NULL);
+  }
+}
+
 void BUS_del_all_connections(Bus* bus) {
   if (bus) {
     while (bus->gen)
@@ -348,6 +400,12 @@ void BUS_del_all_connections(Bus* bus) {
       BUS_del_vsc_conv(bus,bus->vsc_conv);
     while (bus->reg_vsc_conv)
       BUS_del_reg_vsc_conv(bus,bus->reg_vsc_conv);
+    while (bus->facts_k)
+      BUS_del_facts_k(bus,bus->facts_k);
+    while (bus->facts_m)
+      BUS_del_facts_m(bus,bus->facts_m);
+    while (bus->reg_facts)
+      BUS_del_reg_facts(bus,bus->reg_facts);
   }
 }
 
@@ -857,6 +915,13 @@ int BUS_get_num_reg_vsc_convs(Bus* bus) {
     return 0;
 }
 
+int BUS_get_num_reg_facts(Bus* bus) {
+  if (bus)
+    return FACTS_list_reg_len(bus->reg_facts);
+  else
+    return 0;
+}
+
 Gen* BUS_get_gen(Bus* bus) {
   if (bus)
     return bus->gen;
@@ -944,6 +1009,27 @@ ConvVSC* BUS_get_vsc_conv(Bus* bus) {
 ConvVSC* BUS_get_reg_vsc_conv(Bus* bus) {
   if (bus)
     return bus->reg_vsc_conv;
+  else
+    return NULL;
+}
+
+Facts* BUS_get_facts_k(Bus* bus) {
+  if (bus)
+    return bus->facts_k;
+  else
+    return NULL;
+}
+
+Facts* BUS_get_facts_m(Bus* bus) {
+  if (bus)
+    return bus->facts_m;
+  else
+    return NULL;
+}
+
+Facts* BUS_get_reg_facts(Bus* bus) {
+  if (bus)
+    return bus->reg_facts;
   else
     return NULL;
 }
@@ -1655,6 +1741,9 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_list_int(temp,output,"csc_converters",bus,ConvCSC,BUS_get_csc_conv,CONVCSC_get_index,CONVCSC_get_next_ac,FALSE);
   JSON_list_int(temp,output,"vsc_converters",bus,ConvVSC,BUS_get_vsc_conv,CONVVSC_get_index,CONVVSC_get_next_ac,FALSE);
   JSON_list_int(temp,output,"reg_vsc_converters",bus,ConvVSC,BUS_get_reg_vsc_conv,CONVVSC_get_index,CONVVSC_get_reg_next,FALSE);
+  JSON_list_int(temp,output,"facts_k",bus,Facts,BUS_get_facts_k,FACTS_get_index,FACTS_get_next_k,FALSE);
+  JSON_list_int(temp,output,"facts_m",bus,Facts,BUS_get_facts_m,FACTS_get_index,FACTS_get_next_m,FALSE);
+  JSON_list_int(temp,output,"reg_facts",bus,Facts,BUS_get_reg_facts,FACTS_get_index,FACTS_get_reg_next,FALSE);
   JSON_array_float(temp,output,"sens_P_balance",bus->sens_P_balance,bus->num_periods,FALSE);
   JSON_array_float(temp,output,"sens_Q_balance",bus->sens_Q_balance,bus->num_periods,FALSE);
   JSON_array_float(temp,output,"sens_v_mag_u_bound",bus->sens_v_mag_u_bound,bus->num_periods,FALSE);
@@ -1804,6 +1893,9 @@ void BUS_init(Bus* bus, int num_periods) {
   bus->csc_conv = NULL;
   bus->vsc_conv = NULL;
   bus->reg_vsc_conv = NULL;
+  bus->facts_k = NULL;
+  bus->facts_m = NULL;
+  bus->reg_facts = NULL;
 
   ARRAY_zalloc(bus->v_mag,REAL,T);
   ARRAY_zalloc(bus->v_ang,REAL,T);
@@ -1895,8 +1987,17 @@ BOOL BUS_is_regulated_by_vsc_conv(Bus* bus) {
     return FALSE;
 }
 
+BOOL BUS_is_regulated_by_facts(Bus* bus) {
+  if (bus)
+    return bus->reg_facts != NULL;
+  else
+    return FALSE;
+}
+
 BOOL BUS_is_v_set_regulated(Bus* bus) {
-  return BUS_is_regulated_by_gen(bus) || BUS_is_regulated_by_vsc_conv(bus);  
+  return (BUS_is_regulated_by_gen(bus) ||
+          BUS_is_regulated_by_vsc_conv(bus) ||
+          BUS_is_regulated_by_facts(bus));
 }
 
 BOOL BUS_is_slack(Bus* bus) {

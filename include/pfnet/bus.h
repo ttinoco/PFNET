@@ -89,9 +89,10 @@ typedef struct Load Load;
 typedef struct Branch Branch;
 typedef struct Shunt Shunt;
 typedef struct Vargen Vargen;
+typedef struct Bat Bat;
 typedef struct ConvVSC ConvVSC;
 typedef struct ConvCSC ConvCSC;
-typedef struct Bat Bat;
+typedef struct Facts Facts;
 typedef struct Vec Vec;
 
 // Prototypes
@@ -151,6 +152,13 @@ void BUS_del_reg_vsc_conv(Bus* bus, ConvVSC* conv);
 void BUS_add_csc_conv(Bus* bus, ConvCSC* conv);
 void BUS_del_csc_conv(Bus* bus, ConvCSC* conv);
 
+void BUS_add_facts_k(Bus* bus, Facts* facts);
+void BUS_del_facts_k(Bus* bus, Facts* facts);
+void BUS_add_facts_m(Bus* bus, Facts* facts);
+void BUS_del_facts_m(Bus* bus, Facts* facts);
+void BUS_add_reg_facts(Bus* bus, Facts* facts);
+void BUS_del_reg_facts(Bus* bus, Facts* facts);
+
 void BUS_del_all_connections(Bus* bus);
 
 void BUS_array_del(Bus* bus_array, int size);
@@ -199,6 +207,7 @@ int BUS_get_num_reg_gens(Bus* bus);
 int BUS_get_num_reg_trans(Bus* bus);
 int BUS_get_num_reg_shunts(Bus* bus);
 int BUS_get_num_reg_vsc_convs(Bus* bus);
+int BUS_get_num_reg_facts(Bus* bus);
 Gen* BUS_get_gen(Bus* bus);
 Load* BUS_get_load(Bus* bus);
 Gen* BUS_get_reg_gen(Bus* bus);
@@ -212,6 +221,9 @@ Bat* BUS_get_bat(Bus* bus);
 ConvCSC* BUS_get_csc_conv(Bus* bus);
 ConvVSC* BUS_get_vsc_conv(Bus* bus);
 ConvVSC* BUS_get_reg_vsc_conv(Bus* bus);
+Facts* BUS_get_facts_k(Bus* bus);
+Facts* BUS_get_facts_m(Bus* bus);
+Facts* BUS_get_reg_facts(Bus* bus);
 REAL BUS_get_P_mis(Bus* bus, int t);
 REAL BUS_get_Q_mis(Bus* bus, int t);
 REAL BUS_get_total_gen_P(Bus* bus, int t);
@@ -286,6 +298,7 @@ BOOL BUS_is_regulated_by_gen(Bus* bus);
 BOOL BUS_is_regulated_by_tran(Bus* bus);
 BOOL BUS_is_regulated_by_shunt(Bus* bus);
 BOOL BUS_is_regulated_by_vsc_conv(Bus* bus);
+BOOL BUS_is_regulated_by_facts(Bus* bus);
 BOOL BUS_is_v_set_regulated(Bus* bus);
 BOOL BUS_is_slack(Bus* bus);
 BOOL BUS_is_star(Bus* bus);
