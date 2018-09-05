@@ -58,7 +58,7 @@
 #define BUS_SENS_V_MAG_L_BOUND 4  /**< @brief Sensitivity: voltage magnitude lower bound */
 #define BUS_SENS_V_ANG_U_BOUND 5  /**< @brief Sensitivity: voltage angle upper bound */
 #define BUS_SENS_V_ANG_L_BOUND 6  /**< @brief Sensitivity: voltage angle lower bound */
-#define BUS_SENS_V_REG_BY_GEN 7   /**< @brief Sensitivity: voltage magnitude regulation by generator */
+#define BUS_SENS_V_SET_REG 7      /**< @brief Sensitivity: voltage set point regulation */
 #define BUS_SENS_V_REG_BY_TRAN 8  /**< @brief Sensitivity: voltage magnitude regulation by transformer */
 #define BUS_SENS_V_REG_BY_SHUNT 9 /**< @brief Sensitivity: voltage magnitude regulation by shunt device */
 /** @} */
@@ -267,8 +267,8 @@ REAL BUS_get_sens_v_ang_u_bound(Bus* bus, int t);
 REAL* BUS_get_sens_v_ang_u_bound_array(Bus* bus);
 REAL BUS_get_sens_v_ang_l_bound(Bus* bus, int t);
 REAL* BUS_get_sens_v_ang_l_bound_array(Bus* bus);
-REAL BUS_get_sens_v_reg_by_gen(Bus* bus, int t);
-REAL* BUS_get_sens_v_reg_by_gen_array(Bus* bus);
+REAL BUS_get_sens_v_set_reg(Bus* bus, int t);
+REAL* BUS_get_sens_v_set_reg_array(Bus* bus);
 REAL BUS_get_sens_v_reg_by_tran(Bus* bus, int t);
 REAL* BUS_get_sens_v_reg_by_tran_array(Bus* bus);
 REAL BUS_get_sens_v_reg_by_shunt(Bus* bus, int t);
@@ -335,7 +335,7 @@ void BUS_set_sens_v_mag_u_bound(Bus* bus, REAL value, int t);
 void BUS_set_sens_v_mag_l_bound(Bus* bus, REAL value, int t);
 void BUS_set_sens_v_ang_u_bound(Bus* bus, REAL value, int t);
 void BUS_set_sens_v_ang_l_bound(Bus* bus, REAL value, int t);
-void BUS_set_sens_v_reg_by_gen(Bus* bus, REAL value, int t);
+void BUS_set_sens_v_set_reg(Bus* bus, REAL value, int t);
 void BUS_set_sens_v_reg_by_tran(Bus* bus, REAL value, int t);
 void BUS_set_sens_v_reg_by_shunt(Bus* bus, REAL value, int t);
 void BUS_show(Bus* bus, int t);

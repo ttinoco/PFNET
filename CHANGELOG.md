@@ -27,6 +27,23 @@ Unreleased
 * CSC converters for HVDC.
 * FACTS devices.
 * Extended count/analyze/eval framework (and added safeguards to existing constr/func/heur) to loop through ac and then dc buses. 
+* Added regulating object interface.
+* Added constraint for VSC DC voltage control (CONSTR_VSC_DC_VSET).
+* Added constraint for VSC DC power control (CONSTR_VSC_DC_PSET).
+* Added constraint for HVDC power balance (CONSTR_HVDCPF).
+* Added constraint for VSC equations (CONSTR_VSC_EQ).
+* Updated PVPQ switching constraints to use reg object interface.
+* Updated PVPQ switching heuristic to use reg object interface.
+* Added function for encouraging VSC DC power control (FUNC_VSC_DC_PSET).
+* Changed CONSTR_REG_GEN to CONSTR_REG_VSET and made it use the reg object interface and changed name to "voltage set point regulation".
+* Changed bus sens_v_reg_by_gen to sens_v_set_reg.
+* Made PVPQ switching heuristic consider reg buses that are slack (to be consistent with constr_REG_VSET).
+* Added switching constraint for power factor regulation (CONSTR_REG_PF_SWITCH).
+* Added switching heuristic for power factor regulation (HEUR_REG_PF_SWITCH).
+* Added smooth constraint for power factor regulation (CONSTR_REG_PF).
+* Added switching constraints for FACTS active/reactive power control (CONSTR_FACTS_PSET_SWITCH and CONSTR_FACTS_QSET_SWITCH).
+* Added functions for FACTS active/reactive power control (FUNC_FACTS_PSET and FUNC_FACTS_QSET).
+* Added constraint for FACTS equations (CONSTR_FACTS_EQ).
 
 Version 1.3.3
 -------------

@@ -285,9 +285,6 @@ Func* FUNC_new(REAL weight, Net* net) {
 
   // Data
   f->data = NULL;
-
-  // Update
-  FUNC_update(f);
   
   return f;
 }
@@ -519,16 +516,6 @@ char* FUNC_get_name(Func* f) {
     return f->name;
   else
     return NULL;
-}
-
-void FUNC_update(Func* f) {
-  
-  // No f
-  if (!f)
-    return;
-
-  // Init
-  FUNC_init(f);
 }
 
 Net* FUNC_get_network(Func* f) {

@@ -35,6 +35,9 @@
 #include "func_REG_VAR.h"
 #include "func_SLIM_VMAG.h"
 #include "func_SP_CONTROLS.h"
+#include "func_VSC_DC_PSET.h"
+#include "func_FACTS_PSET.h"
+#include "func_FACTS_QSET.h"
 
 // Constraints
 #include "constr_ACPF.h"
@@ -45,7 +48,7 @@
 #include "constr_PAR_GEN_P.h"
 #include "constr_PVPQ_SWITCHING.h"
 #include "constr_GEN_RAMP.h"
-#include "constr_REG_GEN.h"
+#include "constr_REG_VSET.h"
 #include "constr_REG_TRAN.h"
 #include "constr_REG_SHUNT.h"
 #include "constr_DC_FLOW_LIM.h"
@@ -55,8 +58,18 @@
 #include "constr_LOAD_PF.h"
 #include "constr_LOAD_VDEP.h"
 #include "constr_CFUNC.h"
+#include "constr_VSC_DC_VSET.h"
+#include "constr_VSC_DC_PSET.h"
+#include "constr_VSC_EQ.h"
+#include "constr_HVDCPF.h"
+#include "constr_REG_PF_SWITCH.h"
+#include "constr_REG_PF.h"
+#include "constr_FACTS_EQ.h"
+#include "constr_FACTS_PSET_SWITCH.h"
+#include "constr_FACTS_QSET_SWITCH.h"
 
 // Heuristics
 #include "heur_PVPQ_SWITCHING.h"
+#include "heur_REG_PF_SWITCH.h"
 
 #endif

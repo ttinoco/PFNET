@@ -36,7 +36,7 @@ static char * all_tests() {
   run_test(test_constr_PAR_GEN_P);
   run_test(test_constr_PVPQ_SWITCHING);
   run_test(test_constr_ACPF);
-  run_test(test_constr_REG_GEN);
+  run_test(test_constr_REG_VSET);
   run_test(test_constr_REG_TRAN);
   run_test(test_constr_REG_SHUNT);
 

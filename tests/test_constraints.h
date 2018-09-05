@@ -31,31 +31,31 @@ static char* test_constr_FIX() {
 
   // Set flags
   NET_set_flags(net,OBJ_BUS,
-		FLAG_VARS|FLAG_FIXED,
-		BUS_PROP_ANY,
-		BUS_VAR_VMAG|BUS_VAR_VANG);
+                FLAG_VARS|FLAG_FIXED,
+                BUS_PROP_ANY,
+                BUS_VAR_VMAG|BUS_VAR_VANG);
   NET_set_flags(net,OBJ_GEN,
-		FLAG_VARS|FLAG_FIXED,
-		GEN_PROP_ANY,
-		GEN_VAR_P|GEN_VAR_Q);
+                FLAG_VARS|FLAG_FIXED,
+                GEN_PROP_ANY,
+                GEN_VAR_P|GEN_VAR_Q);
   NET_set_flags(net,OBJ_BRANCH,
-		FLAG_VARS|FLAG_FIXED,
-		BRANCH_PROP_TAP_CHANGER,
-		BRANCH_VAR_RATIO);
+                FLAG_VARS|FLAG_FIXED,
+                BRANCH_PROP_TAP_CHANGER,
+                BRANCH_VAR_RATIO);
   NET_set_flags(net,OBJ_BRANCH,
-		FLAG_VARS|FLAG_FIXED,
-		BRANCH_PROP_PHASE_SHIFTER,
-		BRANCH_VAR_PHASE);
+                FLAG_VARS|FLAG_FIXED,
+                BRANCH_PROP_PHASE_SHIFTER,
+                BRANCH_VAR_PHASE);
   NET_set_flags(net,OBJ_SHUNT,
-  FLAG_VARS|FLAG_FIXED,
-  		SHUNT_PROP_SWITCHED_V,
-  		SHUNT_VAR_SUSC);
+                FLAG_VARS|FLAG_FIXED,
+                SHUNT_PROP_SWITCHED_V,
+                SHUNT_VAR_SUSC);
 
   num = (2*NET_get_num_buses(net) +
-	 2*NET_get_num_gens(net) +
-	 NET_get_num_tap_changers(net) +
-	 NET_get_num_phase_shifters(net) +
-	 NET_get_num_switched_shunts(net));
+         2*NET_get_num_gens(net) +
+         NET_get_num_tap_changers(net) +
+         NET_get_num_phase_shifters(net) +
+         NET_get_num_switched_shunts(net));
 
   Assert("error - empty network",num > 0);
   Assert("error - wrong number of variables",num == NET_get_num_vars(net));
@@ -133,32 +133,32 @@ static char* test_constr_PAR_GEN_P() {
 
   // Set flags
   NET_set_flags(net,
-		OBJ_BUS,
-		FLAG_VARS,
-		BUS_PROP_NOT_REG_BY_GEN,
-		BUS_VAR_VMAG);
+                OBJ_BUS,
+                FLAG_VARS,
+                BUS_PROP_NOT_REG_BY_GEN,
+                BUS_VAR_VMAG);
   NET_set_flags(net,
-		OBJ_BUS,
-		FLAG_VARS,
-		BUS_PROP_NOT_SLACK,
-		BUS_VAR_VANG);
+                OBJ_BUS,
+                FLAG_VARS,
+                BUS_PROP_NOT_SLACK,
+                BUS_VAR_VANG);
   NET_set_flags(net,
-		OBJ_GEN,
-		FLAG_VARS,
-		GEN_PROP_SLACK,
-		GEN_VAR_P|GEN_VAR_Q);
+                OBJ_GEN,
+                FLAG_VARS,
+                GEN_PROP_SLACK,
+                GEN_VAR_P|GEN_VAR_Q);
   NET_set_flags(net,
-		OBJ_GEN,
-		FLAG_VARS,
-		GEN_PROP_REG,
-		GEN_VAR_Q);
+                OBJ_GEN,
+                FLAG_VARS,
+                GEN_PROP_REG,
+                GEN_VAR_Q);
   
   Assert("error - empty network",NET_get_num_vars(net) > 0);
   Assert("error - wrong number of variables",
-	 NET_get_num_vars(net) == (NET_get_num_buses(net)-NET_get_num_buses_reg_by_gen(net)+
-				   NET_get_num_buses(net)-NET_get_num_slack_buses(net)+
-				   NET_get_num_slack_gens(net)+
-				   NET_get_num_reg_gens(net)));
+         NET_get_num_vars(net) == (NET_get_num_buses(net)-NET_get_num_buses_reg_by_gen(net)+
+                                   NET_get_num_buses(net)-NET_get_num_slack_buses(net)+
+                                   NET_get_num_slack_gens(net)+
+                                   NET_get_num_reg_gens(net)));
 
   x = NET_get_var_values(net,CURRENT);
 
@@ -255,32 +255,32 @@ static char* test_constr_PVPQ_SWITCHING() {
 
   // Set flags
   NET_set_flags(net,
-		OBJ_BUS,
-		FLAG_VARS,
-		BUS_PROP_ANY,
-		BUS_VAR_VMAG);
+                OBJ_BUS,
+                FLAG_VARS,
+                BUS_PROP_ANY,
+                BUS_VAR_VMAG);
   NET_set_flags(net,
-		OBJ_BUS,
-		FLAG_VARS,
-		BUS_PROP_NOT_SLACK,
-		BUS_VAR_VANG);
+                OBJ_BUS,
+                FLAG_VARS,
+                BUS_PROP_NOT_SLACK,
+                BUS_VAR_VANG);
   NET_set_flags(net,
-		OBJ_GEN,
-		FLAG_VARS,
-		GEN_PROP_SLACK,
-		GEN_VAR_P|GEN_VAR_Q);
+                OBJ_GEN,
+                FLAG_VARS,
+                GEN_PROP_SLACK,
+                GEN_VAR_P|GEN_VAR_Q);
   NET_set_flags(net,
-		OBJ_GEN,
-		FLAG_VARS,
-		GEN_PROP_REG,
-		GEN_VAR_Q);
+                OBJ_GEN,
+                FLAG_VARS,
+                GEN_PROP_REG,
+                GEN_VAR_Q);
   
   Assert("error - empty network",NET_get_num_vars(net) > 0);
   Assert("error - wrong number of variables",
-	 NET_get_num_vars(net) == (NET_get_num_buses(net)+
-				   NET_get_num_buses(net)-NET_get_num_slack_buses(net)+
-				   NET_get_num_slack_gens(net)+
-				   NET_get_num_reg_gens(net)));
+         NET_get_num_vars(net) == (NET_get_num_buses(net)+
+                                   NET_get_num_buses(net)-NET_get_num_slack_buses(net)+
+                                   NET_get_num_slack_gens(net)+
+                                   NET_get_num_reg_gens(net)));
 
   x = NET_get_var_values(net,CURRENT);
 
@@ -380,49 +380,49 @@ static char* test_constr_ACPF() {
 
   // Set variables
   NET_set_flags(net,
-		OBJ_BUS,
-		FLAG_VARS,
-		BUS_PROP_ANY,
-		BUS_VAR_VMAG);
+                OBJ_BUS,
+                FLAG_VARS,
+                BUS_PROP_ANY,
+                BUS_VAR_VMAG);
   NET_set_flags(net,
-		OBJ_BUS,
-		FLAG_VARS,
-		BUS_PROP_ANY,
-		BUS_VAR_VANG);
+                OBJ_BUS,
+                FLAG_VARS,
+                BUS_PROP_ANY,
+                BUS_VAR_VANG);
   NET_set_flags(net,
-		OBJ_GEN,
-		FLAG_VARS,
-		GEN_PROP_SLACK,
-		GEN_VAR_P|GEN_VAR_Q);
+                OBJ_GEN,
+                FLAG_VARS,
+                GEN_PROP_SLACK,
+                GEN_VAR_P|GEN_VAR_Q);
   NET_set_flags(net,
-		OBJ_GEN,
-		FLAG_VARS,
-		GEN_PROP_REG,
-		GEN_VAR_Q);
+                OBJ_GEN,
+                FLAG_VARS,
+                GEN_PROP_REG,
+                GEN_VAR_Q);
   NET_set_flags(net,
-		OBJ_BRANCH,
-		FLAG_VARS,
-		BRANCH_PROP_TAP_CHANGER,
-		BRANCH_VAR_RATIO);
+                OBJ_BRANCH,
+                FLAG_VARS,
+                BRANCH_PROP_TAP_CHANGER,
+                BRANCH_VAR_RATIO);
   NET_set_flags(net,
-		OBJ_BRANCH,
-		FLAG_VARS,
-		BRANCH_PROP_PHASE_SHIFTER,
-		BRANCH_VAR_PHASE);
+                OBJ_BRANCH,
+                FLAG_VARS,
+                BRANCH_PROP_PHASE_SHIFTER,
+                BRANCH_VAR_PHASE);
   NET_set_flags(net,
-		OBJ_SHUNT,
-		FLAG_VARS,
-		SHUNT_PROP_SWITCHED_V,
-		SHUNT_VAR_SUSC);
+                OBJ_SHUNT,
+                FLAG_VARS,
+                SHUNT_PROP_SWITCHED_V,
+                SHUNT_VAR_SUSC);
 
   Assert("error - empty network",NET_get_num_vars(net) > 0);
   Assert("error - wrong number of variables",
-	 NET_get_num_vars(net) == (2*NET_get_num_buses(net)+
-				   NET_get_num_slack_gens(net)+
-				   NET_get_num_reg_gens(net)+
-				   NET_get_num_tap_changers(net)+
-				   NET_get_num_phase_shifters(net)+
-				   NET_get_num_switched_shunts(net)));
+         NET_get_num_vars(net) == (2*NET_get_num_buses(net)+
+                                   NET_get_num_slack_gens(net)+
+                                   NET_get_num_reg_gens(net)+
+                                   NET_get_num_tap_changers(net)+
+                                   NET_get_num_phase_shifters(net)+
+                                   NET_get_num_switched_shunts(net)));
 
   x = NET_get_var_values(net,CURRENT);
 
@@ -432,18 +432,18 @@ static char* test_constr_ACPF() {
   c = CONSTR_ACPF_new(net);
   
   Jnnz_computed = (NET_get_num_buses(net)*4 +
-		   NET_get_num_branches(net)*8 +
+                   NET_get_num_branches(net)*8 +
                    NET_get_num_tap_changers(net)*4 +
-		   NET_get_num_phase_shifters(net)*4 +
-		   NET_get_num_switched_shunts(net)*1 +
-		   NET_get_num_slack_gens(net) +
-		   NET_get_num_reg_gens(net));
+                   NET_get_num_phase_shifters(net)*4 +
+                   NET_get_num_switched_shunts(net)*1 +
+                   NET_get_num_slack_gens(net) +
+                   NET_get_num_reg_gens(net));
 
   Hnnz_computed = 2*(NET_get_num_buses(net)*3 +
-		     NET_get_num_branches(net)*12 +
-		     NET_get_num_tap_changers(net)*9 +
-		     NET_get_num_phase_shifters(net)*10 +
-		     NET_get_num_switched_shunts(net)*1);
+                     NET_get_num_branches(net)*12 +
+                     NET_get_num_tap_changers(net)*9 +
+                     NET_get_num_phase_shifters(net)*10 +
+                     NET_get_num_switched_shunts(net)*1);
 		     
   CONSTR_count(c);
   
@@ -503,7 +503,7 @@ static char* test_constr_ACPF() {
   return 0;
 }
 
-static char* test_constr_REG_GEN() {
+static char* test_constr_REG_VSET() {
   
   // Local variables
   Net* net;
@@ -521,7 +521,7 @@ static char* test_constr_REG_GEN() {
   int i;
   Bus* bus;
 
-  printf("test_constr_REG_GEN ...");
+  printf("test_constr_REG_VSET ...");
 
   // Load
   parser = PARSER_new_for_file(test_case);
@@ -531,29 +531,29 @@ static char* test_constr_REG_GEN() {
 
   // Set variables
   NET_set_flags(net,
-		OBJ_BUS,
-		FLAG_VARS,
-		BUS_PROP_ANY,
-		BUS_VAR_VMAG);
+                OBJ_BUS,
+                FLAG_VARS,
+                BUS_PROP_ANY,
+                BUS_VAR_VMAG);
   NET_set_flags(net,
-		OBJ_BUS,
-		FLAG_VARS,
-		BUS_PROP_NOT_SLACK,
-		BUS_VAR_VANG);
+                OBJ_BUS,
+                FLAG_VARS,
+                BUS_PROP_NOT_SLACK,
+                BUS_VAR_VANG);
   NET_set_flags(net,
-		OBJ_GEN,
-		FLAG_VARS,
-		GEN_PROP_SLACK,
-		GEN_VAR_P|GEN_VAR_Q);
+                OBJ_GEN,
+                FLAG_VARS,
+                GEN_PROP_SLACK,
+                GEN_VAR_P|GEN_VAR_Q);
   NET_set_flags(net,
-		OBJ_GEN,
-		FLAG_VARS,
-		GEN_PROP_REG,
-		GEN_VAR_Q);
+                OBJ_GEN,
+                FLAG_VARS,
+                GEN_PROP_REG,
+                GEN_VAR_Q);
   
   num_vars = (2*NET_get_num_buses(net)-NET_get_num_slack_buses(net)+
-	      NET_get_num_slack_gens(net)+
-	      NET_get_num_reg_gens(net));
+              NET_get_num_slack_gens(net)+
+              NET_get_num_reg_gens(net));
   Assert("error - invalid number of varibles",num_vars == NET_get_num_vars(net));
 
   x = NET_get_var_values(net,CURRENT);
@@ -561,14 +561,14 @@ static char* test_constr_REG_GEN() {
   Assert("error - NULL vector of var values",x != NULL);
   Assert("error - vector of var values has wrong shape",VEC_get_size(x) == NET_get_num_vars(net));
 
-  c = CONSTR_REG_GEN_new(net);
+  c = CONSTR_REG_VSET_new(net);
 
-  num = NET_get_num_reg_gens(net)-NET_get_num_slack_gens(net);
+  num = NET_get_num_reg_gens(net);
   num_Annz = 3*num;
   num_Jnnz = 0;
   for (i = 0; i < NET_get_num_buses(net); i++) {
     bus = NET_get_bus(net,i);
-    if (BUS_is_regulated_by_gen(bus) && !BUS_is_slack(bus))
+    if (BUS_is_regulated_by_gen(bus))
       num_Jnnz += 4*BUS_get_num_reg_gens(bus);
   }
 
@@ -649,15 +649,15 @@ static char* test_constr_REG_TRAN() {
 
   // Set variables
   NET_set_flags(net,
-		OBJ_BUS,
-		FLAG_VARS,
-		BUS_PROP_REG_BY_TRAN,
-		BUS_VAR_VMAG);
+                OBJ_BUS,
+                FLAG_VARS,
+                BUS_PROP_REG_BY_TRAN,
+                BUS_VAR_VMAG);
   NET_set_flags(net,
-		OBJ_BRANCH,
-		FLAG_VARS,
-		BRANCH_PROP_TAP_CHANGER_V,
-		BRANCH_VAR_RATIO);
+                OBJ_BRANCH,
+                FLAG_VARS,
+                BRANCH_PROP_TAP_CHANGER_V,
+                BRANCH_VAR_RATIO);
   
   num_vars = (NET_get_num_buses_reg_by_tran(net)+NET_get_num_tap_changers_v(net));
   Assert("error - invalid number of varibles",num_vars == NET_get_num_vars(net));
@@ -755,15 +755,15 @@ static char* test_constr_REG_SHUNT() {
 
   // Set variables
   NET_set_flags(net,
-		OBJ_BUS,
-		FLAG_VARS,
-		BUS_PROP_REG_BY_SHUNT,
-		BUS_VAR_VMAG);
+                OBJ_BUS,
+                FLAG_VARS,
+                BUS_PROP_REG_BY_SHUNT,
+                BUS_VAR_VMAG);
   NET_set_flags(net,
-		OBJ_SHUNT,
-		FLAG_VARS,
-		SHUNT_PROP_SWITCHED_V,
-		SHUNT_VAR_SUSC);
+                OBJ_SHUNT,
+                FLAG_VARS,
+                SHUNT_PROP_SWITCHED_V,
+                SHUNT_VAR_SUSC);
   
   num_vars = (NET_get_num_buses_reg_by_shunt(net)+NET_get_num_switched_shunts(net));
   Assert("error - invalid number of varibles",num_vars == NET_get_num_vars(net));

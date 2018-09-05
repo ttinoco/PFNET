@@ -449,10 +449,10 @@ void JSON_PARSER_process_json_bus_array(Parser* p, Net* net, json_value* json_bu
           BUS_set_sens_v_ang_l_bound(bus,val->u.array.values[k]->u.dbl,k);
       }
 
-      // sens_v_reg_by_gen
-      else if (strcmp(key,"sens_v_reg_by_gen") == 0) {
+      // sens_v_set_reg
+      else if (strcmp(key,"sens_v_set_reg") == 0) {
         for (k = 0; k < imin(BUS_get_num_periods(bus),val->u.array.length); k++)
-          BUS_set_sens_v_reg_by_gen(bus,val->u.array.values[k]->u.dbl,k);
+          BUS_set_sens_v_set_reg(bus,val->u.array.values[k]->u.dbl,k);
       }
 
       // sens_v_reg_by_tran

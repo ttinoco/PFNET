@@ -6053,8 +6053,8 @@ void NET_show_buses(Net* net, int number, int sort_by, int t) {
       case BUS_SENS_V_ANG_L_BOUND:
         printf("%15s "," v_ang_l_bound ");
         break;
-      case BUS_SENS_V_REG_BY_GEN:
-        printf("%15s ","  v_reg_by_gen ");
+      case BUS_SENS_V_SET_REG:
+        printf("%15s ","  v_set_reg ");
         break;
       case BUS_SENS_V_REG_BY_TRAN:
         printf("%15s "," v_reg_by_tran ");

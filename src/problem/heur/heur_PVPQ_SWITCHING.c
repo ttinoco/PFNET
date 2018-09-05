@@ -8,6 +8,7 @@
  * PFNET is released under the BSD 2-clause license.
  */
 
+#include <pfnet/reg_obj.h>
 #include <pfnet/heur_PVPQ_SWITCHING.h>
 #include <pfnet/constr_PVPQ_SWITCHING.h>
 
@@ -24,7 +25,6 @@ void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus,
   // Local variables
   Net* net;
   Vec* f;
-  Gen* gen;
   char* fix_flag;
   char all_fixed;
   Constr* pf;
@@ -36,9 +36,12 @@ void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus,
   REAL Qmin;
   int i;
 
+  char obj_type;
+  void* obj;
+
   // Heur data
   net = HEUR_get_network(h);
-    
+  
   // Power flow constraint
   pf = NULL;
   for (i = 0; i < cnum; i++) {
@@ -49,8 +52,6 @@ void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus,
   }
   if (!pf) {
     HEUR_set_error(h, "unable to find AC power balance constraint");
-    if (HEUR_PVPQ_SWITCHING_DEBUG)
-      printf("HEUR PVPQ SWITCHING: no AC power balance constraint\n");
     return;
   }
 
@@ -64,17 +65,13 @@ void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus,
   }
   if (!pvpq) {
     HEUR_set_error(h, "unable to find PVPQ switching constraint");
-    if (HEUR_PVPQ_SWITCHING_DEBUG)
-      printf("HEUR PVPQ SWITCHING: no PVPQ switching constraint\n");
     return;
-  }
+  }  
 
   // Fix flags
   fix_flag = CONSTR_PVPQ_SWITCHING_get_flags(pvpq);
   if (!fix_flag) {
     HEUR_set_error(h, "unable to get PVPQ switching constraint flags");
-    if (HEUR_PVPQ_SWITCHING_DEBUG)
-      printf("HEUR PVPQ SWITCHING: no PVPQ switching constraint flags\n");
     return;
   }
 
@@ -82,150 +79,149 @@ void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus,
   f = CONSTR_get_f(pf);
 
   // Candidate bus
-  if (!BUS_is_slack(bus) &&                          // not slack
-      BUS_is_regulated_by_gen(bus) &&                // regulated
+  if (BUS_is_v_set_regulated(bus) &&                 // regulated
       BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {   // v mag is variable
       
     // Voltage magnitude and set point
     v = VEC_get(var_values,BUS_get_index_v_mag(bus,t));
     v_set = BUS_get_v_set(bus,t);
-    
+      
     // CASE: v fixed
     if (fix_flag[BUS_get_index_v_mag(bus,t)]) {
-      
+        
       all_fixed = TRUE;
-      
-      // Generators
-      for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen)) {
-	
-        // Q not variable
-        if (!GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) // reg gen Q is not variable
+        
+      // Regulating objects
+      for (REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus)) {
+          
+        // Check candidacy
+        if (!REG_OBJ_is_candidate(obj_type,obj))
           continue;
-	
-        Q = VEC_get(var_values,GEN_get_index_Q(gen,t)); // per unit
-        Qmax = GEN_get_Q_max(gen);                      // per unit
-        Qmin = GEN_get_Q_min(gen);                      // per unit
-	
+          
+        Q = VEC_get(var_values,REG_OBJ_get_index_Q(obj_type,obj,t)); // per unit
+        Qmax = REG_OBJ_get_Q_max(obj_type,obj);                      // per unit
+        Qmin = REG_OBJ_get_Q_min(obj_type,obj);                      // per unit
+          
         // Q is fixed
-        if (fix_flag[GEN_get_index_Q(gen,t)]) {
-	  
+        if (fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)]) {
+            
           // Q at Qmin and v < v_set - check if free Q might help
           if (fabs(Q-Qmin) < fabs(Q-Qmax) && v < v_set) {
-            Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen),t)); // per unit (see constr_PF)
+            Q = Q - VEC_get(f,BUS_get_index_Q(REG_OBJ_get_bus(obj_type,obj),t)); // per unit (see constr_PF)
             if (Qmin < Q) {
-              fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
+              fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] = FALSE; // Switch to Q free
               all_fixed = FALSE;
               if (HEUR_PVPQ_SWITCHING_DEBUG)
-                printf("HEUR PVPQ SWITCHING: free gen %d from Qmin (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus));
+                printf("HEUR PVPQ: free reg obj from Qmin (reg bus %d fixed)\n", BUS_get_number(bus));
             }
           }
-	  
+            
           // Q at Qmax and v > v_set - check if free Q might help
           else if (fabs(Q-Qmax) < fabs(Q-Qmin) && v > v_set) { 
-            Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen),t)); // per unit (see constr_PF)
+            Q = Q - VEC_get(f,BUS_get_index_Q(REG_OBJ_get_bus(obj_type,obj),t)); // per unit (see constr_PF)
             if (Q < Qmax) {
-              fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
+              fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] = FALSE; // Switch to Q free
               all_fixed = FALSE;
               if (HEUR_PVPQ_SWITCHING_DEBUG)
-                printf("HEUR PVPQ SWITCHING: free gen %d from Qmax (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus));
+                printf("HEUR PVPQ: free reg obj from Qmax (reg bus %d fixed)\n", BUS_get_number(bus));
             }
           }	    
         }	    
-	
+          
         // Q is free: Qmax violation
         else if (Q >= Qmax) {
-	  
+            
           // Switch to Q fixed
-          GEN_set_Q(gen,Qmax,t);
-          fix_flag[GEN_get_index_Q(gen,t)] = TRUE;
+          REG_OBJ_set_Q(obj_type,obj,Qmax,t);
+          fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] = TRUE;
           if (HEUR_PVPQ_SWITCHING_DEBUG)
-            printf("HEUR PVPQ SWITCHING: fix gen %d at Qmax (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus));
+            printf("HEUR PVPQ: fix reg obj at Qmax (reg bus %d fixed)\n", BUS_get_number(bus));
         }
-	
+          
         // Q is free: Qmin violation
         else if (Q <= Qmin) {
-	  
+            
           // Switch to Q fixed
-          GEN_set_Q(gen,Qmin,t);
-          fix_flag[GEN_get_index_Q(gen,t)] = TRUE;
+          REG_OBJ_set_Q(obj_type,obj,Qmin,t);
+          fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] = TRUE;
           if (HEUR_PVPQ_SWITCHING_DEBUG)
-            printf("HEUR PVPQ SWITCHING: fix gen %d at Qmin (reg bus %d fixed)\n", GEN_get_index(gen), BUS_get_number(bus));
+            printf("HEUR PVPQ: fix reg obj at Qmin (reg bus %d fixed)\n", BUS_get_number(bus));
         }
-	
+          
         // Q is free: no violation
         else
           all_fixed = FALSE;
       }
-      
-      // All gens fixed
+        
+      // All reg objs fixed
       if (all_fixed) {
-	
+          
         // Switch to v free
         fix_flag[BUS_get_index_v_mag(bus,t)] = FALSE;
         if (HEUR_PVPQ_SWITCHING_DEBUG)
-          printf("HEUR PVPQ SWITCHING: free reg bus %d\n", BUS_get_number(bus));
+          printf("HEUR PVPQ: free reg bus %d\n", BUS_get_number(bus));
       }
     }
-    
+      
     // CASE: v free
     else {
-      
+        
       all_fixed = TRUE;
-      
-      // Generators
-      for (gen = BUS_get_reg_gen(bus); gen != NULL; gen = GEN_get_reg_next(gen)) {
-	
-        // Q not variable
-        if (!GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) // reg gen Q is not variable
+        
+      // Regulating objects
+      for (REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus)) {
+          
+        // Check candidacy
+        if (!REG_OBJ_is_candidate(obj_type,obj))
           continue;
-	
+          
         // Q is free (should never happen here)
-        if (!fix_flag[GEN_get_index_Q(gen,t)]) {
+        if (!fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)]) {
           fprintf(stderr, "WARNING: PVPQ switching has both v and Q free\n");
           all_fixed = FALSE;
           continue;
         }
-	
-        // Reg gen data
-        Q = VEC_get(var_values,GEN_get_index_Q(gen,t)); // per unit
-        Qmax = GEN_get_Q_max(gen);                      // per unit
-        Qmin = GEN_get_Q_min(gen);                      // per unit
-	
+          
+        // Reg obj data
+        Q = VEC_get(var_values,REG_OBJ_get_index_Q(obj_type,obj,t)); // per unit
+        Qmax = REG_OBJ_get_Q_max(obj_type,obj);                      // per unit
+        Qmin = REG_OBJ_get_Q_min(obj_type,obj);                      // per unit
+          
         // Q at Qmin and v < v_set - check if free Q might help
         if (fabs(Q-Qmin) < fabs(Q-Qmax) && v < v_set) {
-          Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen),t)); // per unit (see constr_PF)
+          Q = Q - VEC_get(f,BUS_get_index_Q(REG_OBJ_get_bus(obj_type,obj),t)); // per unit (see constr_PF)
           if (Qmin < Q) {
-            fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
+            fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] = FALSE; // Switch to Q free
             all_fixed = FALSE;
             if (HEUR_PVPQ_SWITCHING_DEBUG)
-              printf("HEUR PVPQ SWITCHING: free gen %d from Qmin (reg bus %d free)\n", GEN_get_index(gen), BUS_get_number(bus));		
+              printf("HEUR PVPQ: free reg obj from Qmin (reg bus %d free)\n", BUS_get_number(bus));		
           }
         }
-	
+          
         // Q at Qmax and v > v_set - check if free Q might help
         else if (fabs(Q-Qmax) < fabs(Q-Qmin) && v > v_set) { 
-          Q = Q - VEC_get(f,BUS_get_index_Q(GEN_get_bus(gen),t)); // per unit (see constr_PF)
+          Q = Q - VEC_get(f,BUS_get_index_Q(REG_OBJ_get_bus(obj_type,obj),t)); // per unit (see constr_PF)
           if (Q < Qmax) {
-            fix_flag[GEN_get_index_Q(gen,t)] = FALSE; // Switch to Q free
+            fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] = FALSE; // Switch to Q free
             all_fixed = FALSE;
             if (HEUR_PVPQ_SWITCHING_DEBUG)
-              printf("HEUR PVPQ SWITCHING: free gen %d from Qmax (reg bus %d free)\n", GEN_get_index(gen), BUS_get_number(bus));
+              printf("HEUR PVPQ: free reg obj from Qmax (reg bus %d free)\n", BUS_get_number(bus));
           }
         }
       }
-      
-      // Not all gens are fixed
+        
+      // Not all reg objs are fixed
       if (!all_fixed) {
-	
+          
         // Switch to v fixed
         fix_flag[BUS_get_index_v_mag(bus,t)] = TRUE;
         if (HEUR_PVPQ_SWITCHING_DEBUG)
-          printf("HEUR PVPQ SWITCHING: fix reg bus %d\n", BUS_get_number(bus));
+          printf("HEUR PVPQ: fix reg bus %d\n", BUS_get_number(bus));
       }
     }
   }
-  
+      
   // Update
-  if (BUS_get_index(bus) == NET_get_num_buses(net)-1 && t == BUS_get_num_periods(bus)-1)
+  if (BUS_get_index(bus) == NET_get_num_buses(net)-1 && t == NET_get_num_periods(net)-1)
     CONSTR_analyze(pvpq);
 }

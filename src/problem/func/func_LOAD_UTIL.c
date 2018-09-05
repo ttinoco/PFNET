@@ -32,7 +32,7 @@ void FUNC_LOAD_UTIL_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   if (!Hphi_nnz || !bus)
     return;
 
-  // Locas
+  // Loads
   for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
     if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P))
       (*Hphi_nnz)++;

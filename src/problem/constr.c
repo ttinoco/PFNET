@@ -213,6 +213,20 @@ void CONSTR_combine_H(Constr* c, Vec* coeff, BOOL ensure_psd) {
   }
 }
 
+void CONSTR_del_infos(Constr* c) {
+  if (c) {
+    if (c->A_row_info)
+      free(c->A_row_info);
+    if (c->J_row_info)
+      free(c->J_row_info);
+    if (c->G_row_info)
+      free(c->G_row_info);
+    c->A_row_info = NULL;
+    c->J_row_info = NULL;
+    c->G_row_info = NULL;
+  }
+}
+
 void CONSTR_del_matvec(Constr* c) {
   if (c) {
 
@@ -251,18 +265,13 @@ void CONSTR_del(Constr* c) {
     // Mat and vec
     CONSTR_del_matvec(c);
 
+    // Row infos
+    CONSTR_del_infos(c);
+    
     // Utils
     if (c->H_nnz)
       free(c->H_nnz);
-
-    // Row infos
-    if (c->A_row_info)
-      free(c->A_row_info);
-    if (c->J_row_info)
-      free(c->J_row_info);
-    if (c->G_row_info)
-      free(c->G_row_info);
-
+    
     // Data
     if (c->func_free)
       (*(c->func_free))(c);
@@ -728,7 +737,12 @@ void CONSTR_list_store_sens_step(Constr* clist, Bus* bus, BusDC* busdc, int t, V
 
 Constr* CONSTR_new(Net* net) {
 
-  Constr* c = (Constr*)malloc(sizeof(Constr));
+  // Local vars
+  int max_num;
+  Constr* c;
+
+  // Constraint
+  c = (Constr*)malloc(sizeof(Constr));
 
   // Error
   c->error_flag = FALSE;
@@ -787,8 +801,9 @@ Constr* CONSTR_new(Net* net) {
   // Data
   c->data = NULL;
 
-  // Update
-  CONSTR_update(c);
+  // H_nnz
+  max_num = CONSTR_H_NNZ_MUL*NET_get_num_buses(c->net)*NET_get_num_periods(c->net);
+  CONSTR_set_H_nnz(c,(int*)calloc(max_num,sizeof(int)),max_num);
   
   return c;
 }
@@ -1038,6 +1053,7 @@ void CONSTR_allocate(Constr* c) {
 
   // Clear
   CONSTR_del_matvec(c);
+  CONSTR_del_infos(c);
   
   // Save tag
   c->state_tag = NET_get_state_tag(c->net);
@@ -1095,8 +1111,7 @@ void CONSTR_allocate(Constr* c) {
                          J_nnz));                 // nnz
 
   // H
-  CONSTR_allocate_H_array(c,J_row);  
-  CONSTR_resize_H_nnz(c,J_row);  
+  CONSTR_allocate_H_array(c,J_row);
   for (i = 0; i < J_row; i++) {
     H = CONSTR_get_H_single(c,i);
     MAT_set_nnz(H,H_nnz[i]);
@@ -1304,23 +1319,6 @@ Net* CONSTR_get_network(Constr* c) {
     return c->net;
   else
     return NULL;
-}
-
-void CONSTR_update(Constr* c) {
-
-  // Local vars
-  int max_num;
-  
-  // No c
-  if (!c)
-    return;
-
-  // H_nnz
-  max_num = CONSTR_H_NNZ_MUL*NET_get_num_buses(c->net)*NET_get_num_periods(c->net);
-  CONSTR_set_H_nnz(c,(int*)calloc(max_num,sizeof(int)),max_num);
-
-  // Init
-  CONSTR_init(c);
 }
 
 void CONSTR_set_func_init(Constr* c, void (*func)(Constr* c)) {

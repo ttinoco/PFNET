@@ -284,7 +284,7 @@ void CONSTR_CFUNC_set_parameter(Constr* c, char* key, void* value) {
     strncpy(data->op,(char*)value,CONSTR_CFUNC_BUFFER_SIZE);
   
   else // unknown
-    CONSTR_set_error(c,"invalid parameter");  
+    CONSTR_set_error(c,"invalid parameter");
 }
 
 void CONSTR_CFUNC_free(Constr* c) {

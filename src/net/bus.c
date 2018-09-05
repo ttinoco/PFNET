@@ -88,7 +88,7 @@ struct Bus {
   REAL* sens_v_mag_l_bound;  /**< @brief Sensitivity of voltage magnitude lower bound */
   REAL* sens_v_ang_u_bound;  /**< @brief Sensitivity of voltage angle upper bound */
   REAL* sens_v_ang_l_bound;  /**< @brief Sensitivity of voltage angle lower bound */
-  REAL* sens_v_reg_by_gen;   /**< @brief Sensitivity of voltage regulation by generator */
+  REAL* sens_v_set_reg;      /**< @brief Sensitivity of voltage set point regulation */
   REAL* sens_v_reg_by_tran;  /**< @brief Sensitivity of voltage regulation by transformer */
   REAL* sens_v_reg_by_shunt; /**< @brief Sensitivity of voltage regulation by shunt device */
 
@@ -437,7 +437,7 @@ void BUS_array_del(Bus* bus_array, int size) {
       free(bus->sens_v_mag_l_bound);
       free(bus->sens_v_ang_u_bound);
       free(bus->sens_v_ang_l_bound);
-      free(bus->sens_v_reg_by_gen);
+      free(bus->sens_v_set_reg);
       free(bus->sens_v_reg_by_tran);
       free(bus->sens_v_reg_by_shunt);
       free(bus->P_mis);
@@ -572,7 +572,7 @@ void BUS_clear_sensitivities(Bus* bus) {
       bus->sens_v_mag_l_bound[t] = 0;
       bus->sens_v_ang_u_bound[t] = 0;
       bus->sens_v_ang_l_bound[t] = 0;
-      bus->sens_v_reg_by_gen[t] = 0;
+      bus->sens_v_set_reg[t] = 0;
       bus->sens_v_reg_by_tran[t] = 0;
       bus->sens_v_reg_by_shunt[t] = 0;
     }
@@ -656,7 +656,7 @@ void BUS_copy_from_bus(Bus* bus, Bus* other) {
   memcpy(bus->sens_v_mag_l_bound,other->sens_v_mag_l_bound,num_periods*sizeof(REAL));
   memcpy(bus->sens_v_ang_u_bound,other->sens_v_ang_u_bound,num_periods*sizeof(REAL));
   memcpy(bus->sens_v_ang_l_bound,other->sens_v_ang_l_bound,num_periods*sizeof(REAL));
-  memcpy(bus->sens_v_reg_by_gen,other->sens_v_reg_by_gen,num_periods*sizeof(REAL));
+  memcpy(bus->sens_v_set_reg,other->sens_v_set_reg,num_periods*sizeof(REAL));
   memcpy(bus->sens_v_reg_by_tran,other->sens_v_reg_by_tran,num_periods*sizeof(REAL));
   memcpy(bus->sens_v_reg_by_shunt,other->sens_v_reg_by_shunt,num_periods*sizeof(REAL));
 
@@ -1483,16 +1483,16 @@ REAL* BUS_get_sens_v_ang_l_bound_array(Bus* bus) {
     return NULL;
 }
 
-REAL BUS_get_sens_v_reg_by_gen(Bus* bus, int t) {
+REAL BUS_get_sens_v_set_reg(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
-    return bus->sens_v_reg_by_gen[t];
+    return bus->sens_v_set_reg[t];
   else
     return 0;
 }
 
-REAL* BUS_get_sens_v_reg_by_gen_array(Bus* bus) {
+REAL* BUS_get_sens_v_set_reg_array(Bus* bus) {
   if (bus)
-    return bus->sens_v_reg_by_gen;
+    return bus->sens_v_set_reg;
   else
     return NULL;
 }
@@ -1547,8 +1547,8 @@ REAL BUS_get_largest_sens(Bus* bus, int t) {
     if (fabs(bus->sens_v_ang_l_bound[t]) >= fabs(sens))
       sens = bus->sens_v_ang_l_bound[t];
 
-    if (fabs(bus->sens_v_reg_by_gen[t]) >= fabs(sens))
-      sens = bus->sens_v_reg_by_gen[t];
+    if (fabs(bus->sens_v_set_reg[t]) >= fabs(sens))
+      sens = bus->sens_v_set_reg[t];
 
     if (fabs(bus->sens_v_reg_by_tran[t]) >= fabs(sens))
       sens = bus->sens_v_reg_by_tran[t];
@@ -1594,9 +1594,9 @@ int BUS_get_largest_sens_type(Bus* bus, int t) {
       type = BUS_SENS_V_ANG_L_BOUND;
     }
 
-    if (fabs(bus->sens_v_reg_by_gen[t]) >= fabs(sens)) {
-      sens = bus->sens_v_reg_by_gen[t];
-      type = BUS_SENS_V_REG_BY_GEN;
+    if (fabs(bus->sens_v_set_reg[t]) >= fabs(sens)) {
+      sens = bus->sens_v_set_reg[t];
+      type = BUS_SENS_V_SET_REG;
     }
 
     if (fabs(bus->sens_v_reg_by_tran[t]) >= fabs(sens)) {
@@ -1664,8 +1664,8 @@ REAL BUS_get_quantity(Bus* bus, int qtype, int t) {
   case BUS_SENS_V_ANG_L_BOUND:
     return BUS_get_sens_v_ang_l_bound(bus,t);
 
-  case BUS_SENS_V_REG_BY_GEN:
-    return BUS_get_sens_v_reg_by_gen(bus,t);
+  case BUS_SENS_V_SET_REG:
+    return BUS_get_sens_v_set_reg(bus,t);
 
   case BUS_SENS_V_REG_BY_TRAN:
     return BUS_get_sens_v_reg_by_tran(bus,t);
@@ -1750,7 +1750,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_array_float(temp,output,"sens_v_mag_l_bound",bus->sens_v_mag_l_bound,bus->num_periods,FALSE);
   JSON_array_float(temp,output,"sens_v_ang_u_bound",bus->sens_v_ang_u_bound,bus->num_periods,FALSE);
   JSON_array_float(temp,output,"sens_v_ang_l_bound",bus->sens_v_ang_l_bound,bus->num_periods,FALSE);
-  JSON_array_float(temp,output,"sens_v_reg_by_gen",bus->sens_v_reg_by_gen,bus->num_periods,FALSE);
+  JSON_array_float(temp,output,"sens_v_set_reg",bus->sens_v_set_reg,bus->num_periods,FALSE);
   JSON_array_float(temp,output,"sens_v_reg_by_tran",bus->sens_v_reg_by_tran,bus->num_periods,FALSE);
   JSON_array_float(temp,output,"sens_v_reg_by_shunt",bus->sens_v_reg_by_shunt,bus->num_periods,TRUE);
   JSON_end(output);
@@ -1912,7 +1912,7 @@ void BUS_init(Bus* bus, int num_periods) {
   ARRAY_zalloc(bus->sens_v_mag_l_bound,REAL,T);
   ARRAY_zalloc(bus->sens_v_ang_u_bound,REAL,T);
   ARRAY_zalloc(bus->sens_v_ang_l_bound,REAL,T);
-  ARRAY_zalloc(bus->sens_v_reg_by_gen,REAL,T);
+  ARRAY_zalloc(bus->sens_v_set_reg,REAL,T);
   ARRAY_zalloc(bus->sens_v_reg_by_tran,REAL,T);
   ARRAY_zalloc(bus->sens_v_reg_by_shunt,REAL,T);
 
@@ -2257,9 +2257,9 @@ void BUS_set_sens_v_ang_l_bound(Bus* bus, REAL value, int t) {
     bus->sens_v_ang_l_bound[t] = value;
 }
 
-void BUS_set_sens_v_reg_by_gen(Bus* bus, REAL value, int t) {
+void BUS_set_sens_v_set_reg(Bus* bus, REAL value, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
-    bus->sens_v_reg_by_gen[t] = value;
+    bus->sens_v_set_reg[t] = value;
 }
 
 void BUS_set_sens_v_reg_by_tran(Bus* bus, REAL value, int t) {
