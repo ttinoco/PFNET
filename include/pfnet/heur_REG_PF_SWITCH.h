@@ -18,7 +18,7 @@
 #define HEUR_REG_PF_SWITCH_DEBUG FALSE
 
 // Function prototypes
-void HEUR_REG_PF_SWITCH_init(Heur* h, Net* net);
+Heur* HEUR_REG_PF_SWITCH_new(Net* net);
 void HEUR_REG_PF_SWITCH_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus, BusDC* busdc, int t, Vec* var_values);
 
 #endif

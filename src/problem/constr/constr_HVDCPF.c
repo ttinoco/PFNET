@@ -69,7 +69,6 @@ void CONSTR_HVDCPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Rows
   (*A_row)++;
-  (*A_row)++;
 }
 
 void CONSTR_HVDCPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
@@ -164,7 +163,6 @@ void CONSTR_HVDCPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   }
 
   // Rows
-  (*A_row)++;
   (*A_row)++;
 }
 
