@@ -122,6 +122,7 @@ char* LOAD_get_json_string(Load* load, char* output);
 BOOL LOAD_has_flags(void* load, char flag_type, unsigned char mask);
 BOOL LOAD_has_properties(void* load, char prop);
 void LOAD_init(Load* load, int num_periods);
+BOOL LOAD_is_in_service(Load* load);
 BOOL LOAD_is_equal(Load* load, Load* other);
 BOOL LOAD_is_P_adjustable(Load* load);
 BOOL LOAD_is_vdep(Load* load);
@@ -131,6 +132,7 @@ int LOAD_list_len(Load* load_list);
 Load* LOAD_new(int num_periods);
 void LOAD_propagate_data_in_time(Load* load, int start, int end);
 void LOAD_set_name(Load* load, char* name);
+void LOAD_set_in_service(Load* load, BOOL in_service);
 void LOAD_set_target_power_factor(Load* load, REAL pf);
 void LOAD_set_sens_P_u_bound(Load* load, REAL value, int t);
 void LOAD_set_sens_P_l_bound(Load* load, REAL value, int t);
@@ -156,5 +158,7 @@ void LOAD_set_comp_cb(Load* load, REAL comp);
 int LOAD_set_flags(void* load, char flag_type, unsigned char mask, int index);
 void LOAD_set_var_values(Load* load, Vec* values);
 void LOAD_show(Load* load, int t);
+void LOAD_update_P_components(Load* load, REAL weight_cp, REAL weight_ci, REAL weight_cg, int t);
+void LOAD_update_Q_components(Load* load, REAL weight_cq, REAL weight_cj, REAL weight_cb, int t);
 
 #endif

@@ -25,6 +25,7 @@ struct Load {
   char name[LOAD_BUFFER_SIZE]; /**< @brief Load name */
   
   // Flags
+  BOOL in_service;     /**< @brief Flag for indicating whether load is in service */
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
   char vars;           /**< @brief Flags for indicating which quantities should be treated as variables */
@@ -173,6 +174,7 @@ void LOAD_copy_from_load(Load* load, Load* other) {
   strcpy(load->name,other->name);
 
   // Flags
+  load->in_service = other->in_service;
   load->fixed = other->fixed;
   load->bounded = other->bounded;
   load->sparse = other->sparse;
@@ -331,8 +333,8 @@ REAL LOAD_get_P_util(Load* load, int t) {
 REAL LOAD_get_P_util_for(Load* load, REAL P) {
   if (load)
     return (load->util_coeff_Q0 + 
-	    load->util_coeff_Q1*P +
-	    load->util_coeff_Q2*pow(P,2.)); // $/hr
+            load->util_coeff_Q1*P +
+            load->util_coeff_Q2*pow(P,2.)); // $/hr
   else
     return 0;
 }
@@ -570,21 +572,21 @@ void LOAD_get_var_values(Load* load, Vec* values, int code) {
       switch(code) {
  
       case UPPER_LIMITS:
-	if (load->bounded & LOAD_VAR_P)
-	  VEC_set(values,load->index_P[t],load->P_max[t]);
-	else
-	  VEC_set(values,load->index_P[t],LOAD_INF_P);
-	break;
+        if (load->bounded & LOAD_VAR_P)
+          VEC_set(values,load->index_P[t],load->P_max[t]);
+        else
+          VEC_set(values,load->index_P[t],LOAD_INF_P);
+        break;
 
       case LOWER_LIMITS:
-	if (load->bounded & LOAD_VAR_P)
-	  VEC_set(values,load->index_P[t],load->P_min[t]);
-	else
-	  VEC_set(values,load->index_P[t],-LOAD_INF_P);
-	break;
+        if (load->bounded & LOAD_VAR_P)
+          VEC_set(values,load->index_P[t],load->P_min[t]);
+        else
+          VEC_set(values,load->index_P[t],-LOAD_INF_P);
+        break;
 
       default:
-	VEC_set(values,load->index_P[t],load->P[t]);
+        VEC_set(values,load->index_P[t],load->P[t]);
       }
     }
 
@@ -592,21 +594,21 @@ void LOAD_get_var_values(Load* load, Vec* values, int code) {
       switch(code) {
 
       case UPPER_LIMITS:
-	if (load->bounded & LOAD_VAR_Q)
-	  VEC_set(values,load->index_Q[t],load->Q_max[t]);
-	else
-	  VEC_set(values,load->index_Q[t],LOAD_INF_Q);
-	break;
+        if (load->bounded & LOAD_VAR_Q)
+          VEC_set(values,load->index_Q[t],load->Q_max[t]);
+        else
+          VEC_set(values,load->index_Q[t],LOAD_INF_Q);
+        break;
 
       case LOWER_LIMITS:
-	if (load->bounded & LOAD_VAR_Q)
-	  VEC_set(values,load->index_Q[t],load->Q_min[t]);
-	else
-	  VEC_set(values,load->index_Q[t],-LOAD_INF_Q);
-	break;
+        if (load->bounded & LOAD_VAR_Q)
+          VEC_set(values,load->index_Q[t],load->Q_min[t]);
+        else
+          VEC_set(values,load->index_Q[t],-LOAD_INF_Q);
+        break;
 
       default:
-	VEC_set(values,load->index_Q[t],load->Q[t]);
+        VEC_set(values,load->index_Q[t],load->Q[t]);
       }
     }
   }
@@ -627,7 +629,7 @@ char* LOAD_get_var_info_string(Load* load, int index) {
       index <= load->index_P[load->num_periods-1]) {
     info = (char*)malloc(LOAD_BUFFER_SIZE*sizeof(char));
     snprintf(info,LOAD_BUFFER_SIZE*sizeof(char),
-	     "load:%d:active power:%d",load->index,index-load->index_P[0]);
+             "load:%d:active power:%d",load->index,index-load->index_P[0]);
     return info;
   }
 
@@ -637,7 +639,7 @@ char* LOAD_get_var_info_string(Load* load, int index) {
       index <= load->index_Q[load->num_periods-1]) {
     info = (char*)malloc(LOAD_BUFFER_SIZE*sizeof(char));
     snprintf(info,LOAD_BUFFER_SIZE*sizeof(char),
-	     "load:%d:reactive power:%d",load->index,index-load->index_Q[0]);
+             "load:%d:reactive power:%d",load->index,index-load->index_Q[0]);
     return info;
   }
 
@@ -728,6 +730,7 @@ char* LOAD_get_json_string(Load* load, char* output) {
   JSON_obj(temp,output,"bus",load->bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",load->num_periods,FALSE);
   JSON_str(temp,output,"name",load->name,FALSE);
+  JSON_bool(temp,output,"in_service",load->in_service,FALSE);
   JSON_array_float(temp,output,"P",load->P,load->num_periods,FALSE);
   JSON_array_float(temp,output,"P_max",load->P_max,load->num_periods,FALSE);
   JSON_array_float(temp,output,"P_min",load->P_min,load->num_periods,FALSE);
@@ -796,7 +799,8 @@ void LOAD_init(Load* load, int num_periods) {
   ARRAY_clear(load->name,char,LOAD_BUFFER_SIZE);
   
   load->bus = NULL;
-  
+
+  load->in_service = TRUE;
   load->fixed = 0x00;
   load->bounded = 0x00;
   load->sparse = 0x00;
@@ -835,12 +839,19 @@ BOOL LOAD_is_equal(Load* load, Load* other) {
   return load == other;
 }
 
+BOOL LOAD_is_in_service(Load* load) {
+  if (load)
+    return load->in_service;
+  else
+    return FALSE;
+}
+
 BOOL LOAD_is_P_adjustable(Load* load) {
   int t;
   if (load) {
     for (t = 0; t < load->num_periods; t++) {
       if (load->P_min[t] < load->P_max[t])
-	return TRUE;
+        return TRUE;
     }
     return FALSE;
   }    
@@ -945,6 +956,11 @@ void LOAD_set_bus(Load* load, Bus* bus) {
   }
 }
 
+void LOAD_set_in_service(Load* load, BOOL in_service) {
+  if (load)
+    load->in_service = in_service;
+}
+
 void LOAD_set_index(Load* load, int index) { 
   if (load)
     load->index = index;
@@ -1037,7 +1053,7 @@ int LOAD_set_flags(void* vload, char flag_type, unsigned char mask, int index) {
   if (!((*flags_ptr) & LOAD_VAR_P) && (mask & LOAD_VAR_P)) { // active power
     if (flag_type == FLAG_VARS) {
       for (t = 0; t < load->num_periods; t++)
-	load->index_P[t] = index+t;
+        load->index_P[t] = index+t;
     }
     (*flags_ptr) |= LOAD_VAR_P;
     index += load->num_periods;
@@ -1045,7 +1061,7 @@ int LOAD_set_flags(void* vload, char flag_type, unsigned char mask, int index) {
   if (!((*flags_ptr) & LOAD_VAR_Q) && (mask & LOAD_VAR_Q)) { // reactive power
     if (flag_type == FLAG_VARS) {
       for (t = 0; t < load->num_periods; t++)
-	load->index_Q[t] = index+t;
+        load->index_Q[t] = index+t;
     }
     (*flags_ptr) |= LOAD_VAR_Q;
     index += load->num_periods;
@@ -1057,7 +1073,7 @@ void LOAD_set_var_values(Load* load, Vec* values) {
 
   // Local vars
   int t;
-
+  
   // No load
   if (!load)
     return;
@@ -1076,8 +1092,8 @@ void LOAD_set_var_values(Load* load, Vec* values) {
 void LOAD_show(Load* load, int t) { 
   if (load)
     printf("load %d\t%d\n",
-	   BUS_get_number(load->bus),
-	   load->index);
+           BUS_get_number(load->bus),
+           load->index);
 }
 
 void LOAD_propagate_data_in_time(Load* load, int start, int end) {
@@ -1099,6 +1115,32 @@ void LOAD_propagate_data_in_time(Load* load, int start, int end) {
       load->comp_ci[t] = load->comp_ci[start];
       load->comp_cj[t] = load->comp_cj[start];
     }
+  }
+}
+
+void LOAD_update_P_components(Load* load, REAL weight_cp, REAL weight_ci, REAL weight_cg, int t) {
+  REAL v;
+  REAL total = weight_cp + weight_ci + weight_cg;
+  if (load) {
+   
+    v = BUS_get_v_mag(load->bus,t);
+    
+    load->comp_cp[t] = load->P[t]*weight_cp/total;
+    load->comp_ci[t] = load->P[t]*weight_ci/(total*v);
+    load->comp_cg = load->P[t]*weight_cg/(total*v*v);
+  }
+}
+
+void LOAD_update_Q_components(Load* load, REAL weight_cq, REAL weight_cj, REAL weight_cb, int t) {
+  REAL v;
+  REAL total = weight_cq + weight_cj + weight_cb;
+  if (load) {
+   
+    v = BUS_get_v_mag(load->bus,t);
+    
+    load->comp_cq[t] = load->Q[t]*weight_cq/total;
+    load->comp_cj[t] = load->Q[t]*weight_cj/(total*v);
+    load->comp_cb = -load->Q[t]*weight_cb/(total*v*v);
   }
 }
 

@@ -991,6 +991,10 @@ void JSON_PARSER_process_json_load_array(Parser* p, Net* net, json_value* json_l
       else if (strcmp(key,"name") == 0)
         LOAD_set_name(load,val->u.string.ptr);
 
+      // in_service
+      else if (strcmp(key,"in_service") == 0)
+        LOAD_set_in_service(load,val->u.boolean);
+
       // P
       else if (strcmp(key,"P") == 0) {
         for (k = 0; k < imin(LOAD_get_num_periods(load),val->u.array.length); k++)

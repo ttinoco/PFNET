@@ -44,6 +44,8 @@ Unreleased
 * Added switching constraints for FACTS active/reactive power control (CONSTR_FACTS_PSET_SWITCH and CONSTR_FACTS_QSET_SWITCH).
 * Added functions for FACTS active/reactive power control (FUNC_FACTS_PSET and FUNC_FACTS_QSET).
 * Added constraint for FACTS equations (CONSTR_FACTS_EQ).
+* Added load "in_service" field, getter and setter. Not used anywhere.
+* Added routines for updating PQ components of load according to provided weights.
 
 Version 1.3.3
 -------------
