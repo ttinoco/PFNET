@@ -36,5 +36,10 @@ void JSON_PARSER_process_json_vargen_array(Parser* p, Net* net, json_value* json
 void JSON_PARSER_process_json_shunt_array(Parser* p, Net* net, json_value* json_shunt_array);
 void JSON_PARSER_process_json_load_array(Parser* p, Net* net, json_value* json_load_array);
 void JSON_PARSER_process_json_bat_array(Parser* p, Net* net, json_value* json_bat_array);
+void JSON_PARSER_process_json_bus_dc_array(Parser* p, Net* net, json_value* json_bus_dc_array);
+void JSON_PARSER_process_json_branch_dc_array(Parser* p, Net* net, json_value* json_branch_dc_array);
+void JSON_PARSER_process_json_conv_csc_array(Parser* p, Net* net, json_value* json_conv_csc_array);
+void JSON_PARSER_process_json_conv_vsc_array(Parser* p, Net* net, json_value* json_conv_vsc_array);
+void JSON_PARSER_process_json_facts_array(Parser* p, Net* net, json_value* json_facts_array);
 
 #endif

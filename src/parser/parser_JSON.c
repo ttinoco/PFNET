@@ -45,6 +45,11 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
   json_value* json_shunt_array = NULL;
   json_value* json_load_array = NULL;
   json_value* json_bat_array = NULL;
+  json_value* json_bus_dc_array = NULL;
+  json_value* json_branch_dc_array = NULL;
+  json_value* json_conv_vsc_array = NULL;
+  json_value* json_conv_csc_array = NULL;
+  json_value* json_facts_array = NULL;
   json_value* val;
   char* key;
   REAL data_num_periods;
@@ -55,6 +60,11 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
   int num_shunts;
   int num_loads;
   int num_bats;
+  int num_dc_buses;
+  int num_dc_branches;
+  int num_csc_convs;
+  int num_vsc_convs;
+  int num_facts;
   int i;
 	
   // Check extension
@@ -127,7 +137,17 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
     else if (strcmp(key,"loads") == 0)
       json_load_array = val;
     else if (strcmp(key,"batteries") == 0)
-      json_bat_array = val;   
+      json_bat_array = val;
+    else if (strcmp(key,"dc_buses") == 0)
+      json_bus_dc_array = val;
+   else if (strcmp(key,"dc_branches") == 0)
+     json_branch_dc_array = val;
+   else if (strcmp(key,"csc_converters") == 0)
+     json_conv_csc_array = val;
+   else if (strcmp(key,"vsc_converters") == 0)
+     json_conv_vsc_array = val;
+   else if (strcmp(key,"facts") == 0)
+     json_facts_array = val;
   }
 
   // Check data
@@ -139,7 +159,12 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
       (!json_vargen_array || json_vargen_array->type != json_array) ||
       (!json_shunt_array || json_shunt_array->type != json_array) ||
       (!json_load_array || json_load_array->type != json_array) ||
-      (!json_bat_array || json_bat_array->type != json_array)) {
+      (!json_bat_array || json_bat_array->type != json_array) ||
+      (!json_bus_dc_array || json_bus_dc_array->type != json_array) ||
+      (!json_branch_dc_array || json_branch_dc_array->type != json_array) ||
+      (!json_conv_vsc_array || json_conv_vsc_array->type != json_array) ||
+      (!json_conv_csc_array || json_conv_csc_array->type != json_array) ||
+      (!json_facts_array || json_facts_array->type != json_array)) {
     PARSER_set_error(p,"Bad json data");
     json_value_free(value);
     free(file_contents);
@@ -152,7 +177,7 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
 
   // Network
   net = NET_new(num_periods);
-
+  
   // Base power
   NET_set_base_power(net,json_base_power->u.dbl);
 
@@ -163,7 +188,13 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
   num_vargens = json_vargen_array->u.array.length;
   num_shunts = json_shunt_array->u.array.length;
   num_loads = json_load_array->u.array.length;
-  num_bats = json_bat_array->u.array.length;  
+  num_bats = json_bat_array->u.array.length;
+  num_dc_buses = json_bus_dc_array->u.array.length;
+  num_dc_branches = json_branch_dc_array->u.array.length;
+  num_vsc_convs = json_conv_vsc_array->u.array.length;
+  num_csc_convs = json_conv_csc_array->u.array.length;
+  num_facts = json_facts_array->u.array.length;
+  
   NET_set_bus_array(net,BUS_array_new(num_buses,num_periods),num_buses);
   NET_set_branch_array(net,BRANCH_array_new(num_branches,num_periods),num_branches);
   NET_set_gen_array(net,GEN_array_new(num_gens,num_periods),num_gens);
@@ -171,6 +202,11 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
   NET_set_shunt_array(net,SHUNT_array_new(num_shunts,num_periods),num_shunts);
   NET_set_load_array(net,LOAD_array_new(num_loads,num_periods),num_loads);
   NET_set_bat_array(net,BAT_array_new(num_bats,num_periods),num_bats);
+  NET_set_dc_bus_array(net,BUSDC_array_new(num_dc_buses,num_periods),num_dc_buses);
+  NET_set_dc_branch_array(net,BRANCHDC_array_new(num_dc_branches,num_periods),num_dc_branches);
+  NET_set_vsc_conv_array(net,CONVVSC_array_new(num_vsc_convs,num_periods),num_vsc_convs);
+  NET_set_csc_conv_array(net,CONVCSC_array_new(num_csc_convs,num_periods),num_csc_convs);
+  NET_set_facts_array(net,FACTS_array_new(num_facts,num_periods),num_facts);
 
   // Process arrays
   JSON_PARSER_process_json_bus_array(p,net,json_bus_array);
@@ -180,6 +216,11 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
   JSON_PARSER_process_json_shunt_array(p,net,json_shunt_array);
   JSON_PARSER_process_json_load_array(p,net,json_load_array);
   JSON_PARSER_process_json_bat_array(p,net,json_bat_array);
+  JSON_PARSER_process_json_bus_dc_array(p,net,json_bus_dc_array);
+  JSON_PARSER_process_json_branch_dc_array(p,net,json_branch_dc_array);
+  JSON_PARSER_process_json_conv_csc_array(p,net,json_conv_csc_array);
+  JSON_PARSER_process_json_conv_vsc_array(p,net,json_conv_vsc_array);
+  JSON_PARSER_process_json_facts_array(p,net,json_facts_array);
 
   // Propagate in time
   NET_propagate_data_in_time(net,data_num_periods-1,num_periods);
@@ -1178,6 +1219,419 @@ void JSON_PARSER_process_json_bat_array(Parser* p, Net* net, json_value* json_ba
       // E_max
       else if (strcmp(key,"E_max") == 0)
         BAT_set_E_max(bat,val->u.dbl);
+    }
+  }
+}
+
+
+void JSON_PARSER_process_json_bus_dc_array(Parser* p, Net* net, json_value* json_bus_dc_array) {
+
+  // Local variables
+  BusDC* bus;
+  json_value* json_bus;
+  json_value* val;
+  char* key;  
+  int i;
+  int j;
+  //int k;
+
+  // Processs bus array
+  for (i = 0; i < json_bus_dc_array->u.array.length; i++) {
+
+    // Json bus
+    json_bus = json_bus_dc_array->u.array.values[i];
+    
+    // Check
+    if (!json_bus || json_bus->type != json_object) {
+      PARSER_set_error(p,"Bad json dc bus array");
+      continue;
+    }
+    
+    // Get dc bus
+    bus = NULL;
+    for (j = 0; j < json_bus->u.object.length; j++) {
+      key = json_bus->u.object.values[j].name;
+      val = json_bus->u.object.values[j].value;
+      if (strcmp(key,"index") == 0) {
+        bus = NET_get_dc_bus(net,val->u.integer);
+        break;
+      }
+    }
+    
+    // Check
+    if (!bus) {
+      PARSER_set_error(p,"Bad json dc bus data");
+      continue;
+    }
+
+    // Fill
+    for (j = 0; j < json_bus->u.object.length; j++) {
+
+      key = json_bus->u.object.values[j].name;
+      val = json_bus->u.object.values[j].value;
+
+      // number
+
+      // name
+
+      // v_base
+
+      // v
+
+      // csc_converters
+
+      // vsc_converters
+
+      // branches_m
+
+      // branches_m
+    }
+  }
+}
+
+void JSON_PARSER_process_json_branch_dc_array(Parser* p, Net* net, json_value* json_branch_dc_array) {
+
+  // Local variables
+  BranchDC* br;
+  json_value* json_br;
+  json_value* val;
+  char* key;  
+  int i;
+  int j;
+  //int k;
+
+  // Processs branch array
+  for (i = 0; i < json_branch_dc_array->u.array.length; i++) {
+
+    // Json br
+    json_br = json_branch_dc_array->u.array.values[i];
+    
+    // Check
+    if (!json_br || json_br->type != json_object) {
+      PARSER_set_error(p,"Bad json dc branch array");
+      continue;
+    }
+    
+    // Get dc branch
+    br = NULL;
+    for (j = 0; j < json_br->u.object.length; j++) {
+      key = json_br->u.object.values[j].name;
+      val = json_br->u.object.values[j].value;
+      if (strcmp(key,"index") == 0) {
+        br = NET_get_dc_branch(net,val->u.integer);
+        break;
+      }
+    }
+    
+    // Check
+    if (!br) {
+      PARSER_set_error(p,"Bad json dc branch data");
+      continue;
+    }
+
+    // Fill
+    for (j = 0; j < json_br->u.object.length; j++) {
+
+      key = json_br->u.object.values[j].name;
+      val = json_br->u.object.values[j].value;
+
+      // name
+
+      // bus_k
+
+      // bus_m
+
+      // r
+    }
+  }
+}
+
+void JSON_PARSER_process_json_conv_csc_array(Parser* p, Net* net, json_value* json_conv_csc_array) {
+
+  // Local variables
+  ConvCSC* conv;
+  json_value* json_conv;
+  json_value* val;
+  char* key;  
+  int i;
+  int j;
+  //int k;
+
+  // Processs conv array
+  for (i = 0; i < json_conv_csc_array->u.array.length; i++) {
+
+    // Json conv
+    json_conv = json_conv_csc_array->u.array.values[i];
+    
+    // Check
+    if (!json_conv || json_conv->type != json_object) {
+      PARSER_set_error(p,"Bad json csc converter array");
+      continue;
+    }
+    
+    // Get conv csc
+    conv = NULL;
+    for (j = 0; j < json_conv->u.object.length; j++) {
+      key = json_conv->u.object.values[j].name;
+      val = json_conv->u.object.values[j].value;
+      if (strcmp(key,"index") == 0) {
+        conv = NET_get_csc_conv(net,val->u.integer);
+        break;
+      }
+    }
+    
+    // Check
+    if (!conv) {
+      PARSER_set_error(p,"Bad json csc converter data");
+      continue;
+    }
+
+    // Fill
+    for (j = 0; j < json_conv->u.object.length; j++) {
+
+      key = json_conv->u.object.values[j].name;
+      val = json_conv->u.object.values[j].value;
+
+      // type
+
+      // name
+
+      // ac_bus
+
+      // dc_bus
+
+      // mode_dc
+
+      // P_dc_set
+
+      // i_dc_set
+
+      // v_dc_set
+
+      // P
+
+      // Q
+
+      // P_dc
+
+      // num_bridges
+
+      // x_cap
+
+      // x
+
+      // r
+
+      // ratio
+
+      // ratio_max
+
+      // ratio_min
+
+      // angle
+
+      // angle_max
+
+      // angle_min
+
+      // v_base_p
+
+      // v_base_s
+    }
+  }
+}
+
+void JSON_PARSER_process_json_conv_vsc_array(Parser* p, Net* net, json_value* json_conv_vsc_array) {
+
+  // Local variables
+  ConvVSC* conv;
+  json_value* json_conv;
+  json_value* val;
+  char* key;  
+  int i;
+  int j;
+  //int k;
+
+  // Processs conv array
+  for (i = 0; i < json_conv_vsc_array->u.array.length; i++) {
+
+    // Json conv
+    json_conv = json_conv_vsc_array->u.array.values[i];
+    
+    // Check
+    if (!json_conv || json_conv->type != json_object) {
+      PARSER_set_error(p,"Bad json vsc converter array");
+      continue;
+    }
+    
+    // Get conv vsc
+    conv = NULL;
+    for (j = 0; j < json_conv->u.object.length; j++) {
+      key = json_conv->u.object.values[j].name;
+      val = json_conv->u.object.values[j].value;
+      if (strcmp(key,"index") == 0) {
+        conv = NET_get_vsc_conv(net,val->u.integer);
+        break;
+      }
+    }
+    
+    // Check
+    if (!conv) {
+      PARSER_set_error(p,"Bad json vsc converter data");
+      continue;
+    }
+
+    // Fill
+    for (j = 0; j < json_conv->u.object.length; j++) {
+
+      key = json_conv->u.object.values[j].name;
+      val = json_conv->u.object.values[j].value;
+
+      // name
+
+      // ac_bus
+
+      // dc_bus
+
+      // reg_bus
+
+      // mode_ac
+
+      // mode_dc
+
+      // P_dc_set
+
+      // v_dc_set
+
+      // P
+
+      // Q
+
+      // loss_coeff_A
+
+      // loss_coeff_B
+
+      // P_max
+
+      // P_min
+
+      // Q_max
+
+      // Q_min
+
+      // Q_par
+
+      // target_power_factor
+
+      // P_dc
+    }
+  }
+}
+
+void JSON_PARSER_process_json_facts_array(Parser* p, Net* net, json_value* json_facts_array) {
+
+  // Local variables
+  Facts* facts;
+  json_value* json_facts;
+  json_value* val;
+  char* key;  
+  int i;
+  int j;
+  //int k;
+
+  // Processs facts array
+  for (i = 0; i < json_facts_array->u.array.length; i++) {
+
+    // Json facts
+    json_facts = json_facts_array->u.array.values[i];
+    
+    // Check
+    if (!json_facts || json_facts->type != json_object) {
+      PARSER_set_error(p,"Bad json facts array");
+      continue;
+    }
+    
+    // Get facts
+    facts = NULL;
+    for (j = 0; j < json_facts->u.object.length; j++) {
+      key = json_facts->u.object.values[j].name;
+      val = json_facts->u.object.values[j].value;
+      if (strcmp(key,"index") == 0) {
+        facts = NET_get_facts(net,val->u.integer);
+        break;
+      }
+    }
+    
+    // Check
+    if (!facts) {
+      PARSER_set_error(p,"Bad json facts data");
+      continue;
+    }
+
+    // Fill
+    for (j = 0; j < json_facts->u.object.length; j++) {
+
+      key = json_facts->u.object.values[j].name;
+      val = json_facts->u.object.values[j].value;
+
+      // bus_k
+
+      // bus_m
+
+      // reg_bus
+
+      // name
+
+      // mode_s
+
+      // P_k
+
+      // Q_k
+
+      // P_m
+
+      // Q_m
+
+      // Q_sh
+
+      // Q_s
+
+      // P_dc
+
+      // Q_par
+
+      // P_set
+
+      // Q_set
+
+      // Q_max_s
+
+      // Q_min_s
+
+      // Q_max_sh
+
+      // Q_min_sh
+
+      // i_max_s
+
+      // i_max_sh
+
+      // P_max_dc
+
+      // v_min_m
+
+      // v_max_m
+
+      // v_mag_s
+
+      // v_ang_s
+
+      // v_max_s
+
+      // g
+
+      // b
+
     }
   }
 }
