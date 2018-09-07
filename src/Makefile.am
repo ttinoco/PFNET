@@ -104,7 +104,10 @@ problem_constr_src = problem/constr/constr_DC_FLOW_LIM.c \
                      problem/constr/constr_REG_PF.c \
                      problem/constr/constr_FACTS_EQ.c \
                      problem/constr/constr_FACTS_PSET_SWITCH.c \
-                     problem/constr/constr_FACTS_QSET_SWITCH.c
+                     problem/constr/constr_FACTS_QSET_SWITCH.c \
+                     problem/constr/constr_CSC_DC_VSET.c \
+                     problem/constr/constr_CSC_DC_PSET.c \
+                     problem/constr/constr_CSC_EQ.c
 
 problem_constr_hdr = $(inc_path)/constr_DC_FLOW_LIM.h \
                      $(inc_path)/constr_AC_FLOW_LIM.h \
@@ -132,7 +135,10 @@ problem_constr_hdr = $(inc_path)/constr_DC_FLOW_LIM.h \
 		     $(inc_path)/constr_REG_PF.h \
 		     $(inc_path)/constr_FACTS_EQ.h \
 		     $(inc_path)/constr_FACTS_PSET_SWITCH.h \
-		     $(inc_path)/constr_FACTS_QSET_SWITCH.h
+		     $(inc_path)/constr_FACTS_QSET_SWITCH.h \
+                     $(inc_path)/constr_CSC_DC_VSET.h \
+		     $(inc_path)/constr_CSC_DC_PSET.h \
+		     $(inc_path)/constr_CSC_EQ.h
 
 problem_func_src = problem/func/func_GEN_COST.c \
                    problem/func/func_LOAD_UTIL.c \
@@ -147,6 +153,7 @@ problem_func_src = problem/func/func_GEN_COST.c \
                    problem/func/func_SLIM_VMAG.c  \
                    problem/func/func_SP_CONTROLS.c \
                    problem/func/func_VSC_DC_PSET.c \
+		   problem/func/func_CSC_DC_PSET.c \
 	           problem/func/func_FACTS_PSET.c \
 		   problem/func/func_FACTS_QSET.c
 
@@ -163,6 +170,7 @@ problem_func_hdr = $(inc_path)/func_GEN_COST.h \
                    $(inc_path)/func_SLIM_VMAG.h \
                    $(inc_path)/func_SP_CONTROLS.h \
                    $(inc_path)/func_VSC_DC_PSET.h \
+                   $(inc_path)/func_CSC_DC_PSET.h \
 		   $(inc_path)/func_FACTS_PSET.h \
 		   $(inc_path)/func_FACTS_QSET.h
 

@@ -40,12 +40,11 @@ void CONSTR_VSC_DC_PSET_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   for (conv = BUS_get_vsc_conv(bus); conv !=NULL; conv = CONVVSC_get_next_ac(conv)) {
     
     // VSC converter with DC Power mode
-    if (CONVVSC_is_in_P_dc_mode(conv)) {
+    if (CONVVSC_is_in_P_dc_mode(conv) && CONVVSC_has_flags(conv,FLAG_VARS,CONVVSC_VAR_P)) {
+
+      (*A_nnz) += 1;
       
-      if (CONVVSC_has_flags(conv,FLAG_VARS,CONVVSC_VAR_P))
-        (*A_nnz) += 1;
-      
-      // update rows
+      // Update rows
       (*A_row) += 1;
     }
   }
@@ -74,22 +73,17 @@ void CONSTR_VSC_DC_PSET_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   for (conv = BUS_get_vsc_conv(bus); conv !=NULL; conv = CONVVSC_get_next_ac(conv)) {
 
     // VSC converter with DC Power mode
-    if (CONVVSC_is_in_P_dc_mode(conv)) {
-      
-      if (CONVVSC_has_flags(conv,FLAG_VARS,CONVVSC_VAR_P)) {
+    if (CONVVSC_is_in_P_dc_mode(conv) && CONVVSC_has_flags(conv,FLAG_VARS,CONVVSC_VAR_P)) {
         
-        VEC_set(b,*A_row,CONVVSC_get_P_dc_set(conv,t));
-        
-        // v
-        MAT_set_i(A,*A_nnz,*A_row);
-        MAT_set_j(A,*A_nnz,CONVVSC_get_index_P(conv,t));
-        MAT_set_d(A,*A_nnz,-1.);	    
-        (*A_nnz)++;
-      }
-      else
-        VEC_set(b,*A_row,CONVVSC_get_P_dc_set(conv,t)-CONVVSC_get_P(conv,t));
+      VEC_set(b,*A_row,CONVVSC_get_P_dc_set(conv,t));
       
-      // update rows
+      // v
+      MAT_set_i(A,*A_nnz,*A_row);
+      MAT_set_j(A,*A_nnz,CONVVSC_get_index_P(conv,t));
+      MAT_set_d(A,*A_nnz,-1.);	    
+      (*A_nnz)++;
+      
+      // Update rows
       (*A_row)++;
     }
   }

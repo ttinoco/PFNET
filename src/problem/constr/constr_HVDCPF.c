@@ -23,7 +23,8 @@ Constr* CONSTR_HVDCPF_new(Net* net) {
 void CONSTR_HVDCPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   
   // Local variables
-  ConvVSC* conv;
+  ConvVSC* vsc_conv;
+  ConvCSC* csc_conv;
   BranchDC* br;
   int* A_nnz;
   int* A_row;
@@ -37,10 +38,21 @@ void CONSTR_HVDCPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
     return;
 
   // VSC converters
-  for (conv = BUSDC_get_vsc_conv(busdc); conv != NULL; conv = CONVVSC_get_next_dc(conv)) {
+  for (vsc_conv = BUSDC_get_vsc_conv(busdc); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_dc(vsc_conv)) {
     
     //*****************************
-    if (CONVVSC_has_flags(conv,FLAG_VARS,CONVVSC_VAR_PDC)) { // P_dc var
+    if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_PDC)) { // P_dc var
+      
+      // A
+      (*A_nnz)++;
+    }
+  }
+
+  // CSC converters
+  for (csc_conv = BUSDC_get_csc_conv(busdc); csc_conv != NULL; csc_conv = CONVCSC_get_next_dc(csc_conv)) {
+    
+    //*****************************
+    if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_PDC)) { // P_dc var
       
       // A
       (*A_nnz)++;
@@ -75,7 +87,8 @@ void CONSTR_HVDCPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   BranchDC* br;
-  ConvVSC* conv;
+  ConvVSC* vsc_conv;
+  ConvCSC* csc_conv;
   Mat* A;
   Vec* b;
   int* A_nnz;
@@ -93,21 +106,40 @@ void CONSTR_HVDCPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
     return;
 
   // VSC
-  for (conv = BUSDC_get_vsc_conv(busdc); conv != NULL; conv = CONVVSC_get_next_dc(conv)) {
+  for (vsc_conv = BUSDC_get_vsc_conv(busdc); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_dc(vsc_conv)) {
     
     //*****************************
-    if (CONVVSC_has_flags(conv,FLAG_VARS,CONVVSC_VAR_PDC)) { // P_dc var
+    if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_PDC)) { // P_dc var
       
       // A
       MAT_set_i(A,*A_nnz,BUSDC_get_index_t(busdc,t));
-      MAT_set_j(A,*A_nnz,CONVVSC_get_index_i_dc(conv,t)); // i_dc
+      MAT_set_j(A,*A_nnz,CONVVSC_get_index_i_dc(vsc_conv,t)); // i_dc
       MAT_set_d(A,*A_nnz,1.);
       (*A_nnz)++;
     }
     else {
       
       // b
-      VEC_add_to_entry(b,BUSDC_get_index_t(busdc,t),-CONVVSC_get_i_dc(conv,t));
+      VEC_add_to_entry(b,BUSDC_get_index_t(busdc,t),-CONVVSC_get_i_dc(vsc_conv,t));
+    }
+  }
+
+  // CSC
+  for (csc_conv = BUSDC_get_csc_conv(busdc); csc_conv != NULL; csc_conv = CONVCSC_get_next_dc(csc_conv)) {
+    
+    //*****************************
+    if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_PDC)) { // P_dc var
+      
+      // A
+      MAT_set_i(A,*A_nnz,BUSDC_get_index_t(busdc,t));
+      MAT_set_j(A,*A_nnz,CONVCSC_get_index_i_dc(csc_conv,t)); // i_dc
+      MAT_set_d(A,*A_nnz,1.);
+      (*A_nnz)++;
+    }
+    else {
+      
+      // b
+      VEC_add_to_entry(b,BUSDC_get_index_t(busdc,t),-CONVCSC_get_i_dc(csc_conv,t));
     }
   }
 

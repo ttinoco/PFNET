@@ -73,6 +73,7 @@ struct ConvCSC {
   int* index_P;        /**< @brief Active power injection index */
   int* index_Q;        /**< @brief Reactive power injection index */
   int* index_P_dc;     /**< @brief DC power injection index */
+  int* index_i_dc;     /**< @brief DC current injection index */
   int* index_ratio;    /**< @brief Commutating transformer turns ratio index */
   int* index_angle;    /**< @brief Ignition delay or extinction advance angle index */
   
@@ -98,6 +99,7 @@ void CONVCSC_array_del(ConvCSC* conv_array, int size) {
       free(conv->index_P);
       free(conv->index_Q);
       free(conv->index_P_dc);
+      free(conv->index_i_dc);
       free(conv->index_ratio);
       free(conv->index_angle);
       CONVCSC_set_ac_bus(conv,NULL);
@@ -220,6 +222,7 @@ void CONVCSC_copy_from_conv(ConvCSC* conv, ConvCSC* other) {
   memcpy(conv->index_P,other->index_P,num_periods*sizeof(int));
   memcpy(conv->index_Q,other->index_Q,num_periods*sizeof(int));
   memcpy(conv->index_P_dc,other->index_P_dc,num_periods*sizeof(int));
+  memcpy(conv->index_i_dc,other->index_i_dc,num_periods*sizeof(int));
   memcpy(conv->index_ratio,other->index_ratio,num_periods*sizeof(int));
   memcpy(conv->index_angle,other->index_angle,num_periods*sizeof(int));
     
@@ -321,6 +324,13 @@ int CONVCSC_get_index_Q(ConvCSC* conv, int t) {
 int CONVCSC_get_index_P_dc(ConvCSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
     return conv->index_P_dc[t];
+  else
+    return -1;
+}
+
+int CONVCSC_get_index_i_dc(ConvCSC* conv, int t) {
+  if (conv && t >= 0 && t < conv->num_periods)
+    return conv->index_i_dc[t];
   else
     return -1;
 }
@@ -470,6 +480,13 @@ REAL CONVCSC_get_P_dc(ConvCSC* conv, int t) {
     return 0;
 }
 
+REAL CONVCSC_get_i_dc(ConvCSC* conv, int t) {
+  if (conv && t >= 0 && t < conv->num_periods)
+    return conv->P_dc[t]/(BUSDC_get_v(conv->dc_bus,t));
+  else 
+    return 0;
+}
+
 REAL CONVCSC_get_P_dc_set(ConvCSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
     return conv->P_dc_set[t];
@@ -559,7 +576,8 @@ Vec* CONVCSC_get_var_indices(void* vconv, unsigned char var, int t_start, int t_
   if ((var & CONVCSC_VAR_PDC) && (conv->vars & CONVCSC_VAR_PDC)) { // DC power
     for (t = t_start; t <= t_end; t++) {
       VEC_set(indices,offset,conv->index_P_dc[t]);
-      offset++;
+      VEC_set(indices,offset+1,conv->index_i_dc[t]);
+      offset += 2;
     }
   }
   if ((var & CONVCSC_VAR_RATIO) && (conv->vars & CONVCSC_VAR_RATIO)) { // taps ratio
@@ -593,7 +611,7 @@ char* CONVCSC_get_var_info_string(ConvCSC* conv, int index) {
       index <= conv->index_P[conv->num_periods-1]) {
     info = (char*)malloc(CONVCSC_BUFFER_SIZE*sizeof(char));
     snprintf(info,CONVCSC_BUFFER_SIZE*sizeof(char),
-	     "csc_conv:%d:active power:%d",conv->index,index-conv->index_P[0]);
+             "csc_conv:%d:active power:%d",conv->index,index-conv->index_P[0]);
     return info;
   }
 
@@ -603,7 +621,7 @@ char* CONVCSC_get_var_info_string(ConvCSC* conv, int index) {
       index <= conv->index_Q[conv->num_periods-1]) {
     info = (char*)malloc(CONVCSC_BUFFER_SIZE*sizeof(char));
     snprintf(info,CONVCSC_BUFFER_SIZE*sizeof(char),
-	     "csc_conv:%d:reactive power:%d",conv->index,index-conv->index_Q[0]);
+             "csc_conv:%d:reactive power:%d",conv->index,index-conv->index_Q[0]);
     return info;
   }
 
@@ -613,7 +631,17 @@ char* CONVCSC_get_var_info_string(ConvCSC* conv, int index) {
       index <= conv->index_P_dc[conv->num_periods-1]) {
     info = (char*)malloc(CONVCSC_BUFFER_SIZE*sizeof(char));
     snprintf(info,CONVCSC_BUFFER_SIZE*sizeof(char),
-	     "csc_conv:%d:dc power:%d",conv->index,index-conv->index_P_dc[0]);
+             "csc_conv:%d:dc power:%d",conv->index,index-conv->index_P_dc[0]);
+    return info;
+  }
+
+  // DC current
+  if ((conv->vars & CONVCSC_VAR_PDC) &&
+      index >= conv->index_i_dc[0] &&
+      index <= conv->index_i_dc[conv->num_periods-1]) {
+    info = (char*)malloc(CONVCSC_BUFFER_SIZE*sizeof(char));
+    snprintf(info,CONVCSC_BUFFER_SIZE*sizeof(char),
+             "csc_conv:%d:dc current:%d",conv->index,index-conv->index_i_dc[0]);
     return info;
   }
 
@@ -623,7 +651,7 @@ char* CONVCSC_get_var_info_string(ConvCSC* conv, int index) {
       index <= conv->index_ratio[conv->num_periods-1]) {
     info = (char*)malloc(CONVCSC_BUFFER_SIZE*sizeof(char));
     snprintf(info,CONVCSC_BUFFER_SIZE*sizeof(char),
-	     "csc_conv:%d:tap ratio:%d",conv->index,index-conv->index_ratio[0]);
+             "csc_conv:%d:tap ratio:%d",conv->index,index-conv->index_ratio[0]);
     return info;
   }
 
@@ -633,7 +661,7 @@ char* CONVCSC_get_var_info_string(ConvCSC* conv, int index) {
       index <= conv->index_angle[conv->num_periods-1]) {
     info = (char*)malloc(CONVCSC_BUFFER_SIZE*sizeof(char));
     snprintf(info,CONVCSC_BUFFER_SIZE*sizeof(char),
-	     "csc_conv:%d:angle:%d",conv->index,index-conv->index_angle[0]);
+             "csc_conv:%d:angle:%d",conv->index,index-conv->index_angle[0]);
     return info;
   }
 
@@ -656,65 +684,68 @@ void CONVCSC_get_var_values(ConvCSC* conv, Vec* values, int code) {
     if (conv->vars & CONVCSC_VAR_P) { // active power
       switch(code) {
       case UPPER_LIMITS:
-	VEC_set(values,conv->index_P[t],CONVCSC_INF_P);
-	break;
+        VEC_set(values,conv->index_P[t],CONVCSC_INF_P);
+        break;
       case LOWER_LIMITS:
-	VEC_set(values,conv->index_P[t],-CONVCSC_INF_P);
-	break;
+        VEC_set(values,conv->index_P[t],-CONVCSC_INF_P);
+        break;
       default:
-	VEC_set(values,conv->index_P[t],conv->P[t]);
+        VEC_set(values,conv->index_P[t],conv->P[t]);
       }
     }
 
     if (conv->vars & CONVCSC_VAR_Q) { // reactive power
       switch(code) {
       case UPPER_LIMITS:
-	VEC_set(values,conv->index_Q[t],CONVCSC_INF_Q);
-	break;
+        VEC_set(values,conv->index_Q[t],CONVCSC_INF_Q);
+        break;
       case LOWER_LIMITS:
-	VEC_set(values,conv->index_Q[t],-CONVCSC_INF_Q);
-	break;
+        VEC_set(values,conv->index_Q[t],-CONVCSC_INF_Q);
+        break;
       default:
-	VEC_set(values,conv->index_Q[t],conv->Q[t]);
+        VEC_set(values,conv->index_Q[t],conv->Q[t]);
       }
     }
 
     if (conv->vars & CONVCSC_VAR_PDC) { // DC power
       switch(code) {
       case UPPER_LIMITS:
-	VEC_set(values,conv->index_P_dc[t],CONVCSC_INF_PDC);
-	break;
+        VEC_set(values,conv->index_P_dc[t],CONVCSC_INF_PDC);
+        VEC_set(values,conv->index_i_dc[t],CONVCSC_INF_PDC);
+        break;
       case LOWER_LIMITS:
-	VEC_set(values,conv->index_P_dc[t],-CONVCSC_INF_PDC);
-	break;
+        VEC_set(values,conv->index_P_dc[t],-CONVCSC_INF_PDC);
+        VEC_set(values,conv->index_i_dc[t],-CONVCSC_INF_PDC);
+        break;
       default:
-	VEC_set(values,conv->index_P_dc[t],conv->P_dc[t]);
+        VEC_set(values,conv->index_P_dc[t],conv->P_dc[t]);
+        VEC_set(values,conv->index_i_dc[t],conv->P_dc[t]/(BUSDC_get_v(conv->dc_bus,t)));
       }
     }
 
     if (conv->vars & CONVCSC_VAR_RATIO) { // tap ratio
       switch(code) {
       case UPPER_LIMITS:
-	VEC_set(values,conv->index_ratio[t],CONVCSC_INF_RATIO);
-	break;
+        VEC_set(values,conv->index_ratio[t],CONVCSC_INF_RATIO);
+        break;
       case LOWER_LIMITS:
-	VEC_set(values,conv->index_ratio[t],-CONVCSC_INF_RATIO);
-	break;
+        VEC_set(values,conv->index_ratio[t],-CONVCSC_INF_RATIO);
+        break;
       default:
-	VEC_set(values,conv->index_ratio[t],conv->ratio[t]);
+        VEC_set(values,conv->index_ratio[t],conv->ratio[t]);
       }
     }
 
     if (conv->vars & CONVCSC_VAR_ANGLE) { // ignition or extinction angle
       switch(code) {
       case UPPER_LIMITS:
-	VEC_set(values,conv->index_angle[t],CONVCSC_INF_ANGLE);
-	break;
+        VEC_set(values,conv->index_angle[t],CONVCSC_INF_ANGLE);
+        break;
       case LOWER_LIMITS:
-	VEC_set(values,conv->index_angle[t],-CONVCSC_INF_ANGLE);
-	break;
+        VEC_set(values,conv->index_angle[t],-CONVCSC_INF_ANGLE);
+        break;
       default:
-	VEC_set(values,conv->index_angle[t],conv->angle[t]);
+        VEC_set(values,conv->index_angle[t],conv->angle[t]);
       }
     }
   }
@@ -796,6 +827,7 @@ void CONVCSC_init(ConvCSC* conv, int num_periods) {
   ARRAY_zalloc(conv->index_P,int,T);
   ARRAY_zalloc(conv->index_Q,int,T);
   ARRAY_zalloc(conv->index_P_dc,int,T);
+  ARRAY_zalloc(conv->index_i_dc,int,T);
   ARRAY_zalloc(conv->index_ratio,int,T);
   ARRAY_zalloc(conv->index_angle,int,T);
   
@@ -992,7 +1024,7 @@ int CONVCSC_set_flags(void* vconv, char flag_type, unsigned char mask, int index
   if (!((*flags_ptr) & CONVCSC_VAR_P) && (mask & CONVCSC_VAR_P)) { // active power
     if (flag_type == FLAG_VARS) {
       for (t = 0; t < conv->num_periods; t++)
-	conv->index_P[t] = index+t;
+        conv->index_P[t] = index+t;
     }
     (*flags_ptr) |= CONVCSC_VAR_P;
     index += conv->num_periods;
@@ -1000,7 +1032,7 @@ int CONVCSC_set_flags(void* vconv, char flag_type, unsigned char mask, int index
   if (!((*flags_ptr) & CONVCSC_VAR_Q) && (mask & CONVCSC_VAR_Q)) { // reactive power
     if (flag_type == FLAG_VARS) {
       for (t = 0; t < conv->num_periods; t++)
-	conv->index_Q[t] = index+t;
+        conv->index_Q[t] = index+t;
     }
     (*flags_ptr) |= CONVCSC_VAR_Q;
     index += conv->num_periods;
@@ -1008,15 +1040,17 @@ int CONVCSC_set_flags(void* vconv, char flag_type, unsigned char mask, int index
   if (!((*flags_ptr) & CONVCSC_VAR_PDC) && (mask & CONVCSC_VAR_PDC)) { // DC power
     if (flag_type == FLAG_VARS) {
       for (t = 0; t < conv->num_periods; t++)
-	conv->index_P_dc[t] = index+t;
+        conv->index_P_dc[t] = index+t;
+      for (t = 0; t < conv->num_periods; t++)
+        conv->index_i_dc[t] = index+conv->num_periods+t;
     }
     (*flags_ptr) |= CONVCSC_VAR_PDC;
-    index += conv->num_periods;
+    index += 2*conv->num_periods;
   }
   if (!((*flags_ptr) & CONVCSC_VAR_RATIO) && (mask & CONVCSC_VAR_RATIO)) { // tap ratio
     if (flag_type == FLAG_VARS) {
       for (t = 0; t < conv->num_periods; t++)
-	conv->index_ratio[t] = index+t;
+        conv->index_ratio[t] = index+t;
     }
     (*flags_ptr) |= CONVCSC_VAR_RATIO;
     index += conv->num_periods;
@@ -1024,7 +1058,7 @@ int CONVCSC_set_flags(void* vconv, char flag_type, unsigned char mask, int index
   if (!((*flags_ptr) & CONVCSC_VAR_ANGLE) && (mask & CONVCSC_VAR_ANGLE)) { // angle
     if (flag_type == FLAG_VARS) {
       for (t = 0; t < conv->num_periods; t++)
-	conv->index_angle[t] = index+t;
+        conv->index_angle[t] = index+t;
     }
     (*flags_ptr) |= CONVCSC_VAR_ANGLE;
     index += conv->num_periods;

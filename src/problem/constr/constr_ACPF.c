@@ -31,6 +31,7 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   Load* load;
   Bat* bat;
   ConvVSC* vsc_conv;
+  ConvCSC* csc_conv;
   Facts* facts;
   int* J_row;
   int* J_nnz;
@@ -203,6 +204,24 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
     }
   }
 
+  // CSC converters
+  for (csc_conv = BUS_get_csc_conv(bus); csc_conv != NULL; csc_conv = CONVCSC_get_next_ac(csc_conv)) {
+    
+    //*****************************
+    if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_P)) { // P var
+      
+      // J
+      (*J_nnz)++; // dPk/dP
+    }
+    
+    //*****************************
+    if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_Q)) { // Q var
+      
+      // J
+      (*J_nnz)++; // dQk/dQ
+    }
+  }
+
   // FACTS
   for (facts = BUS_get_facts_k(bus); facts != NULL; facts = FACTS_get_next_k(facts)) {
     
@@ -277,6 +296,7 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   Load* load;
   Bat* bat;
   ConvVSC* vsc_conv;
+  ConvCSC* csc_conv;
   Facts* facts;
   Mat* J;
   int* J_row;
@@ -503,6 +523,28 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       // J
       MAT_set_i(J,*J_nnz,Q_index);
       MAT_set_j(J,*J_nnz,CONVVSC_get_index_Q(vsc_conv,t));
+      (*J_nnz)++; // dQk/dQ
+    }
+  }
+
+  // CSC converters
+  for (csc_conv = BUS_get_csc_conv(bus); csc_conv != NULL; csc_conv = CONVCSC_get_next_ac(csc_conv)) {
+    
+    //*****************************
+    if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_P)) { // P var
+      
+      // J
+      MAT_set_i(J,*J_nnz,P_index);
+      MAT_set_j(J,*J_nnz,CONVCSC_get_index_P(csc_conv,t));
+      (*J_nnz)++; // dPk/dP
+    }
+    
+    //*****************************
+    if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_Q)) { // Q var
+      
+      // J
+      MAT_set_i(J,*J_nnz,Q_index);
+      MAT_set_j(J,*J_nnz,CONVCSC_get_index_Q(csc_conv,t));
       (*J_nnz)++; // dQk/dQ
     }
   }
@@ -842,14 +884,6 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values
       (*J_nnz)++;
     }
   }
-
-  // CSC converters
-  for (csc_conv = BUS_get_csc_conv(bus); csc_conv != NULL; csc_conv = CONVCSC_get_next_ac(csc_conv)) {
-    
-    // f
-    f[P_index] += CONVCSC_get_P(csc_conv,t); // p.u.
-    f[Q_index] += CONVCSC_get_Q(csc_conv,t); // p.u.
-  }
   
   // VSC converters
   for (vsc_conv = BUS_get_vsc_conv(bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_ac(vsc_conv)) {
@@ -878,6 +912,40 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values
     
     //*****************************
     if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_Q)) { // Q var
+      
+      // J
+      J[*J_nnz] = 1.; // dQk/dQ
+      (*J_nnz)++;
+    }
+  }
+
+  // CSC converters
+  for (csc_conv = BUS_get_csc_conv(bus); csc_conv != NULL; csc_conv = CONVCSC_get_next_ac(csc_conv)) {
+    
+    // Var values
+    if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_P))
+      P = VEC_get(values,CONVCSC_get_index_P(csc_conv,t)); // p.u.
+    else
+      P = CONVCSC_get_P(csc_conv,t);                       // p.u.
+    if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_Q))
+      Q = VEC_get(values,CONVCSC_get_index_Q(csc_conv,t)); // p.u.
+    else
+      Q = CONVCSC_get_Q(csc_conv,t);                       // p.u.
+    
+    // f
+    f[P_index] += P; // p.u.
+    f[Q_index] += Q; // p.u.
+    
+    //*****************************
+    if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_P)) { // P var
+      
+      // J
+      J[*J_nnz] = 1.; // dPk/dP
+      (*J_nnz)++;
+    }
+    
+    //*****************************
+    if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_Q)) { // Q var
       
       // J
       J[*J_nnz] = 1.; // dQk/dQ

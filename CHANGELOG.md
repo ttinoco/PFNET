@@ -46,6 +46,7 @@ Unreleased
 * Added constraint for FACTS equations (CONSTR_FACTS_EQ).
 * Added load "in_service" field, getter and setter. Not used anywhere.
 * Added routines for updating PQ components of load according to provided weights.
+* Added very basic CSC constraints and functions (CONSTR_CSC_EQ, CONSTR_CSC_DC_PSET, CONSTR_CSC_DC_VSET, FUNC_CSC_DC_PSET).
 
 Version 1.3.3
 -------------

@@ -6375,14 +6375,6 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
     }
   }
 
-  // CSC converters
-  for (csc_conv = BUS_get_csc_conv(bus); csc_conv != NULL; csc_conv = CONVCSC_get_next_ac(csc_conv)) {
-    
-    // Injections
-    BUS_inject_P(bus,CONVCSC_get_P(csc_conv,t),t);
-    BUS_inject_Q(bus,CONVCSC_get_Q(csc_conv,t),t);
-  }
-
   // VSC converters
   for (vsc_conv = BUS_get_vsc_conv(bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_ac(vsc_conv)) {
     
@@ -6394,6 +6386,23 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
       Q = VEC_get(var_values,CONVVSC_get_index_Q(vsc_conv,t));
     else
       Q = CONVVSC_get_Q(vsc_conv,t);
+    
+    // Injections
+    BUS_inject_P(bus,P,t);
+    BUS_inject_Q(bus,Q,t);
+  }
+
+  // CSC converters
+  for (csc_conv = BUS_get_csc_conv(bus); csc_conv != NULL; csc_conv = CONVCSC_get_next_ac(csc_conv)) {
+    
+    if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_P) && var_values)
+      P = VEC_get(var_values,CONVCSC_get_index_P(csc_conv,t));
+    else
+      P = CONVCSC_get_P(csc_conv,t);
+    if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_Q) && var_values)
+      Q = VEC_get(var_values,CONVCSC_get_index_Q(csc_conv,t));
+    else
+      Q = CONVCSC_get_Q(csc_conv,t);
     
     // Injections
     BUS_inject_P(bus,P,t);

@@ -36,6 +36,7 @@
 #include "func_SLIM_VMAG.h"
 #include "func_SP_CONTROLS.h"
 #include "func_VSC_DC_PSET.h"
+#include "func_CSC_DC_PSET.h"
 #include "func_FACTS_PSET.h"
 #include "func_FACTS_QSET.h"
 
@@ -67,6 +68,9 @@
 #include "constr_FACTS_EQ.h"
 #include "constr_FACTS_PSET_SWITCH.h"
 #include "constr_FACTS_QSET_SWITCH.h"
+#include "constr_CSC_DC_VSET.h"
+#include "constr_CSC_DC_PSET.h"
+#include "constr_CSC_EQ.h"
 
 // Heuristics
 #include "heur_PVPQ_SWITCHING.h"
