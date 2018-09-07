@@ -849,14 +849,41 @@ char* FACTS_get_json_string(Facts* facts, char* output) {
   // Write
   JSON_start(output);
   JSON_int(temp,output,"index",facts->index,FALSE);
+  JSON_int(temp,output,"num_periods",facts->num_periods,FALSE);
+  JSON_str(temp,output,"name",facts->name,FALSE);
   JSON_obj(temp,output,"bus_k",facts->bus_k,BUS_get_index,FALSE);
   JSON_obj(temp,output,"bus_m",facts->bus_m,BUS_get_index,FALSE);
   JSON_obj(temp,output,"reg_bus",facts->reg_bus,BUS_get_index,FALSE);
-  JSON_int(temp,output,"num_periods",facts->num_periods,FALSE);
-  JSON_str(temp,output,"name",facts->name,FALSE);
+  JSON_int(temp,output,"mode_s",facts->mode_s,FALSE);
+
+  JSON_array_float(temp,output,"P_k",facts->P_k,facts->num_periods,FALSE);
+  JSON_array_float(temp,output,"Q_k",facts->Q_k,facts->num_periods,FALSE);
+  JSON_array_float(temp,output,"P_m",facts->P_m,facts->num_periods,FALSE);
+  JSON_array_float(temp,output,"Q_m",facts->Q_m,facts->num_periods,FALSE);
+  JSON_array_float(temp,output,"Q_sh",facts->Q_sh,facts->num_periods,FALSE);
+  JSON_array_float(temp,output,"Q_s",facts->Q_s,facts->num_periods,FALSE);
+  JSON_array_float(temp,output,"P_dc",facts->P_dc,facts->num_periods,FALSE);
+  JSON_float(temp,output,"Q_par",facts->Q_par,FALSE);
+  JSON_array_float(temp,output,"P_set",facts->P_set,facts->num_periods,FALSE);
+  JSON_array_float(temp,output,"Q_set",facts->Q_set,facts->num_periods,FALSE);
+
+  JSON_float(temp,output,"Q_max_s",facts->Q_max_s,FALSE);
+  JSON_float(temp,output,"Q_min_s",facts->Q_min_s,FALSE);
+  JSON_float(temp,output,"Q_max_sh",facts->Q_max_sh,FALSE);
+  JSON_float(temp,output,"Q_min_sh",facts->Q_min_sh,FALSE);
+  JSON_float(temp,output,"i_max_s",facts->i_max_s,FALSE);
+  JSON_float(temp,output,"i_max_sh",facts->i_max_sh,FALSE);
+  JSON_float(temp,output,"P_max_dc",facts->P_max_dc,FALSE);
+  JSON_float(temp,output,"v_max_m",facts->v_max_m,FALSE);
+  JSON_float(temp,output,"v_min_m",facts->v_min_m,FALSE);
+
   JSON_array_float(temp,output,"v_mag_s",facts->v_mag_s,facts->num_periods,FALSE);
   JSON_array_float(temp,output,"v_ang_s",facts->v_ang_s,facts->num_periods,FALSE);
-  JSON_float(temp,output,"v_max_s",facts->v_max_s,TRUE);
+  JSON_float(temp,output,"v_max_s",facts->v_max_s,FALSE);
+
+  JSON_float(temp,output,"g",facts->g,FALSE);
+  JSON_float(temp,output,"b",facts->b,TRUE);
+  
   JSON_end(output);
   
   // Resize

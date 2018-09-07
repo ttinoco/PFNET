@@ -372,11 +372,30 @@ char* CONVCSC_get_json_string(ConvCSC* conv, char* output) {
   // Write
   JSON_start(output);
   JSON_int(temp,output,"index",conv->index,FALSE);
+  JSON_int(temp,output,"type",conv->type,FALSE);
+  JSON_str(temp,output,"name",conv->name,FALSE);
+  JSON_int(temp,output,"num_periods",conv->num_periods,FALSE);
   JSON_obj(temp,output,"ac_bus",conv->ac_bus,BUS_get_index,FALSE);
   JSON_obj(temp,output,"dc_bus",conv->dc_bus,BUSDC_get_index,FALSE);
-  JSON_int(temp,output,"num_periods",conv->num_periods,FALSE);
-  JSON_str(temp,output,"name",conv->name,FALSE);
-  JSON_int(temp,output,"type",conv->type,TRUE);
+  JSON_int(temp,output,"mode_dc",conv->mode_dc,FALSE);
+  JSON_array_float(temp,output,"P_dc_set",conv->P_dc_set,conv->num_periods,FALSE);
+  JSON_array_float(temp,output,"i_dc_set",conv->i_dc_set,conv->num_periods,FALSE);
+  JSON_array_float(temp,output,"v_dc_set",conv->v_dc_set,conv->num_periods,FALSE);
+  JSON_array_float(temp,output,"P",conv->P,conv->num_periods,FALSE);
+  JSON_array_float(temp,output,"Q",conv->Q,conv->num_periods,FALSE);
+  JSON_array_float(temp,output,"P_dc",conv->P_dc,conv->num_periods,FALSE);
+  JSON_int(temp,output,"num_bridges",conv->num_bridges,FALSE);
+  JSON_float(temp,output,"x_cap",conv->x_cap,FALSE);
+  JSON_float(temp,output,"x",conv->x,FALSE);
+  JSON_float(temp,output,"r",conv->r,FALSE);
+  JSON_array_float(temp,output,"ratio",conv->ratio,conv->num_periods,FALSE);
+  JSON_float(temp,output,"ratio_max",conv->ratio_max,FALSE);
+  JSON_float(temp,output,"ratio_min",conv->ratio_min,FALSE);
+  JSON_array_float(temp,output,"angle",conv->angle,conv->num_periods,FALSE);
+  JSON_float(temp,output,"angle_max",conv->angle_max,FALSE);
+  JSON_float(temp,output,"angle_min",conv->angle_min,FALSE);
+  JSON_float(temp,output,"v_base_p",conv->v_base_p,FALSE);
+  JSON_float(temp,output,"v_base_s",conv->v_base_s,TRUE);
   JSON_end(output);
   
   // Resize

@@ -351,11 +351,26 @@ char* CONVVSC_get_json_string(ConvVSC* conv, char* output) {
   // Write
   JSON_start(output);
   JSON_int(temp,output,"index",conv->index,FALSE);
+  JSON_str(temp,output,"name",conv->name,FALSE);
+  JSON_int(temp,output,"num_periods",conv->num_periods,FALSE);
   JSON_obj(temp,output,"ac_bus",conv->ac_bus,BUS_get_index,FALSE);
   JSON_obj(temp,output,"dc_bus",conv->dc_bus,BUSDC_get_index,FALSE);
   JSON_obj(temp,output,"reg_bus",conv->reg_bus,BUS_get_index,FALSE);
-  JSON_int(temp,output,"num_periods",conv->num_periods,FALSE);
-  JSON_str(temp,output,"name",conv->name,TRUE);
+  JSON_int(temp,output,"mode_ac",conv->mode_ac,FALSE);
+  JSON_int(temp,output,"mode_dc",conv->mode_dc,FALSE);
+  JSON_array_float(temp,output,"P_dc_set",conv->P_dc_set,conv->num_periods,FALSE);
+  JSON_array_float(temp,output,"v_dc_set",conv->v_dc_set,conv->num_periods,FALSE);
+  JSON_array_float(temp,output,"P",conv->P,conv->num_periods,FALSE);
+  JSON_array_float(temp,output,"Q",conv->Q,conv->num_periods,FALSE);
+  JSON_array_float(temp,output,"P_dc",conv->P_dc,conv->num_periods,FALSE);
+  JSON_float(temp,output,"loss_coeff_A",conv->loss_coeff_A,FALSE);
+  JSON_float(temp,output,"loss_coeff_B",conv->loss_coeff_B,FALSE);
+  JSON_float(temp,output,"P_max",conv->P_max,FALSE);
+  JSON_float(temp,output,"P_min",conv->P_min,FALSE);
+  JSON_float(temp,output,"Q_max",conv->Q_max,FALSE);
+  JSON_float(temp,output,"Q_min",conv->Q_min,FALSE);
+  JSON_float(temp,output,"Q_par",conv->Q_par,FALSE);
+  JSON_float(temp,output,"target_power_factor",conv->target_power_factor,TRUE);
   JSON_end(output);
   
   // Resize

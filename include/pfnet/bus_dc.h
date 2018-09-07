@@ -39,7 +39,7 @@
  *  @{
  */
 #define BUSDC_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
-#define BUSDC_NUM_JSON_FIELDS 10 /**< @brief Constant: max number of json fields */
+#define BUSDC_NUM_JSON_FIELDS 12 /**< @brief Constant: max number of json fields */
 /** @} */
 
 // BusDC
