@@ -1233,7 +1233,7 @@ void JSON_PARSER_process_json_bus_dc_array(Parser* p, Net* net, json_value* json
   char* key;  
   int i;
   int j;
-  //int k;
+  int k;
 
   // Processs bus array
   for (i = 0; i < json_bus_dc_array->u.array.length; i++) {
@@ -1269,22 +1269,52 @@ void JSON_PARSER_process_json_bus_dc_array(Parser* p, Net* net, json_value* json
 
       key = json_bus->u.object.values[j].name;
       val = json_bus->u.object.values[j].value;
-
+      
       // number
-
+      if (strcmp(key,"number") == 0) {
+        BUSDC_set_number(bus,val->u.integer);
+        NET_dc_bus_hash_number_add(net,bus);
+      }
+      
       // name
+      else if (strcmp(key,"name") == 0) {
+        BUSDC_set_name(bus,val->u.string.ptr);
+        NET_dc_bus_hash_name_add(net,bus);
+      }
 
       // v_base
+      else if (strcmp(key,"v_base") == 0)
+        BUSDC_set_v_base(bus,val->u.dbl);
 
       // v
+      else if (strcmp(key,"v") == 0) {
+        for (k = 0; k < imin(BUSDC_get_num_periods(bus),val->u.array.length); k++)
+          BUSDC_set_v(bus,val->u.array.values[k]->u.dbl,k);
+      }
 
       // csc_converters
-
+      else if (strcmp(key,"csc_converters") == 0) {
+        for (k = 0; k < val->u.array.length; k++)
+          BUSDC_add_csc_conv(bus,NET_get_csc_conv(net,val->u.array.values[k]->u.integer));
+      }
+      
       // vsc_converters
+      else if (strcmp(key,"vsc_converters") == 0) {
+        for (k = 0; k < val->u.array.length; k++)
+          BUSDC_add_vsc_conv(bus,NET_get_vsc_conv(net,val->u.array.values[k]->u.integer));
+      }
+
+      // branches_k
+      else if (strcmp(key,"branches_k") == 0) {
+        for (k = 0; k < val->u.array.length; k++)
+          BUSDC_add_branch_k(bus,NET_get_dc_branch(net,val->u.array.values[k]->u.integer));
+      }
 
       // branches_m
-
-      // branches_m
+      else if (strcmp(key,"branches_m") == 0) {
+        for (k = 0; k < val->u.array.length; k++)
+          BUSDC_add_branch_m(bus,NET_get_dc_branch(net,val->u.array.values[k]->u.integer));
+      }
     }
   }
 }
@@ -1298,7 +1328,6 @@ void JSON_PARSER_process_json_branch_dc_array(Parser* p, Net* net, json_value* j
   char* key;  
   int i;
   int j;
-  //int k;
 
   // Processs branch array
   for (i = 0; i < json_branch_dc_array->u.array.length; i++) {
@@ -1336,12 +1365,24 @@ void JSON_PARSER_process_json_branch_dc_array(Parser* p, Net* net, json_value* j
       val = json_br->u.object.values[j].value;
 
       // name
+      if (strcmp(key,"name") == 0)
+        BRANCHDC_set_name(br,val->u.string.ptr);
 
       // bus_k
+      else if (strcmp(key,"bus_k") == 0) {
+        if (val->type == json_integer)
+          BRANCHDC_set_bus_k(br,NET_get_dc_bus(net,val->u.integer));
+      }
 
       // bus_m
+      else if (strcmp(key,"bus_m") == 0) {
+        if (val->type == json_integer)
+          BRANCHDC_set_bus_m(br,NET_get_dc_bus(net,val->u.integer));
+      }
 
       // r
+      else if (strcmp(key,"r") == 0)
+        BRANCHDC_set_r(br,val->u.dbl);
     }
   }
 }
@@ -1355,7 +1396,7 @@ void JSON_PARSER_process_json_conv_csc_array(Parser* p, Net* net, json_value* js
   char* key;  
   int i;
   int j;
-  //int k;
+  int k;
 
   // Processs conv array
   for (i = 0; i < json_conv_csc_array->u.array.length; i++) {
@@ -1393,50 +1434,116 @@ void JSON_PARSER_process_json_conv_csc_array(Parser* p, Net* net, json_value* js
       val = json_conv->u.object.values[j].value;
 
       // type
+      if (strcmp(key,"type") == 0)
+        CONVCSC_set_type(conv,val->u.integer);
 
       // name
+      else if (strcmp(key,"name") == 0)
+        CONVCSC_set_name(conv,val->u.string.ptr);
 
       // ac_bus
+      else if (strcmp(key,"ac_bus") == 0) {
+        if (val->type == json_integer)
+          CONVCSC_set_ac_bus(conv,NET_get_bus(net,val->u.integer));
+      }
 
       // dc_bus
+      else if (strcmp(key,"dc_bus") == 0) {
+        if (val->type == json_integer)
+          CONVCSC_set_dc_bus(conv,NET_get_dc_bus(net,val->u.integer));
+      }
 
       // mode_dc
+      else if (strcmp(key,"mode_dc") == 0)
+        CONVCSC_set_mode_dc(conv,val->u.integer);
 
       // P_dc_set
+      else if (strcmp(key,"P_dc_set") == 0) {
+        for (k = 0; k < imin(CONVCSC_get_num_periods(conv),val->u.array.length); k++)
+          CONVCSC_set_P_dc_set(conv,val->u.array.values[k]->u.dbl,k);
+      }
 
       // i_dc_set
+      else if (strcmp(key,"i_dc_set") == 0) {
+        for (k = 0; k < imin(CONVCSC_get_num_periods(conv),val->u.array.length); k++)
+          CONVCSC_set_i_dc_set(conv,val->u.array.values[k]->u.dbl,k);
+      }
 
       // v_dc_set
+      else if (strcmp(key,"v_dc_set") == 0) {
+        for (k = 0; k < imin(CONVCSC_get_num_periods(conv),val->u.array.length); k++)
+          CONVCSC_set_v_dc_set(conv,val->u.array.values[k]->u.dbl,k);
+      }
 
       // P
+      else if (strcmp(key,"P") == 0) {
+        for (k = 0; k < imin(CONVCSC_get_num_periods(conv),val->u.array.length); k++)
+          CONVCSC_set_P(conv,val->u.array.values[k]->u.dbl,k);
+      }
 
       // Q
+      else if (strcmp(key,"Q") == 0) {
+        for (k = 0; k < imin(CONVCSC_get_num_periods(conv),val->u.array.length); k++)
+          CONVCSC_set_Q(conv,val->u.array.values[k]->u.dbl,k);
+      }
 
       // P_dc
+      else if (strcmp(key,"P_dc") == 0) {
+        for (k = 0; k < imin(CONVCSC_get_num_periods(conv),val->u.array.length); k++)
+          CONVCSC_set_P_dc(conv,val->u.array.values[k]->u.dbl,k);
+      }
 
       // num_bridges
+      if (strcmp(key,"num_bridges") == 0)
+        CONVCSC_set_num_bridges(conv,val->u.integer);
 
       // x_cap
+      else if (strcmp(key,"x_cap") == 0)
+        CONVCSC_set_x_cap(conv,val->u.dbl);
 
       // x
+      else if (strcmp(key,"x") == 0)
+        CONVCSC_set_x(conv,val->u.dbl);
 
       // r
+      else if (strcmp(key,"r") == 0)
+        CONVCSC_set_r(conv,val->u.dbl);
 
       // ratio
+      else if (strcmp(key,"ratio") == 0) {
+        for (k = 0; k < imin(CONVCSC_get_num_periods(conv),val->u.array.length); k++)
+          CONVCSC_set_ratio(conv,val->u.array.values[k]->u.dbl,k);
+      }
 
       // ratio_max
+      else if (strcmp(key,"ratio_max") == 0)
+        CONVCSC_set_ratio_max(conv,val->u.dbl);
 
       // ratio_min
+      else if (strcmp(key,"ratio_min") == 0)
+        CONVCSC_set_ratio_min(conv,val->u.dbl);
 
       // angle
+      else if (strcmp(key,"angle") == 0) {
+        for (k = 0; k < imin(CONVCSC_get_num_periods(conv),val->u.array.length); k++)
+          CONVCSC_set_angle(conv,val->u.array.values[k]->u.dbl,k);
+      }
 
       // angle_max
+      else if (strcmp(key,"angle_max") == 0)
+        CONVCSC_set_angle_max(conv,val->u.dbl);
 
       // angle_min
+      else if (strcmp(key,"angle_min") == 0)
+        CONVCSC_set_angle_min(conv,val->u.dbl);
 
       // v_base_p
+      else if (strcmp(key,"v_base_p") == 0)
+        CONVCSC_set_v_base_p(conv,val->u.dbl);
 
       // v_base_s
+      else if (strcmp(key,"v_base_s") == 0)
+        CONVCSC_set_v_base_s(conv,val->u.dbl);
     }
   }
 }
@@ -1450,7 +1557,7 @@ void JSON_PARSER_process_json_conv_vsc_array(Parser* p, Net* net, json_value* js
   char* key;  
   int i;
   int j;
-  //int k;
+  int k;
 
   // Processs conv array
   for (i = 0; i < json_conv_vsc_array->u.array.length; i++) {
@@ -1488,42 +1595,96 @@ void JSON_PARSER_process_json_conv_vsc_array(Parser* p, Net* net, json_value* js
       val = json_conv->u.object.values[j].value;
 
       // name
-
+      if (strcmp(key,"name") == 0)
+        CONVVSC_set_name(conv,val->u.string.ptr);
+      
       // ac_bus
+      else if (strcmp(key,"ac_bus") == 0) {
+        if (val->type == json_integer)
+          CONVVSC_set_ac_bus(conv,NET_get_bus(net,val->u.integer));
+      }
 
       // dc_bus
+      else if (strcmp(key,"dc_bus") == 0) {
+        if (val->type == json_integer)
+          CONVVSC_set_dc_bus(conv,NET_get_dc_bus(net,val->u.integer));
+      }
 
       // reg_bus
+      else if (strcmp(key,"reg_bus") == 0) {
+        if (val->type == json_integer)
+          CONVVSC_set_reg_bus(conv,NET_get_bus(net,val->u.integer));
+      }
 
       // mode_ac
+      else if (strcmp(key,"mode_ac") == 0)
+        CONVVSC_set_mode_ac(conv,val->u.integer);
 
       // mode_dc
+      else if (strcmp(key,"mode_dc") == 0)
+        CONVVSC_set_mode_dc(conv,val->u.integer);
 
       // P_dc_set
+      else if (strcmp(key,"P_dc_set") == 0) {
+        for (k = 0; k < imin(CONVVSC_get_num_periods(conv),val->u.array.length); k++)
+          CONVVSC_set_P_dc_set(conv,val->u.array.values[k]->u.dbl,k);
+      }
 
       // v_dc_set
-
+      else if (strcmp(key,"v_dc_set") == 0) {
+        for (k = 0; k < imin(CONVVSC_get_num_periods(conv),val->u.array.length); k++)
+          CONVVSC_set_v_dc_set(conv,val->u.array.values[k]->u.dbl,k);
+      }
+      
       // P
+      else if (strcmp(key,"P") == 0) {
+        for (k = 0; k < imin(CONVVSC_get_num_periods(conv),val->u.array.length); k++)
+          CONVVSC_set_P(conv,val->u.array.values[k]->u.dbl,k);
+      }
 
       // Q
+      else if (strcmp(key,"Q") == 0) {
+        for (k = 0; k < imin(CONVVSC_get_num_periods(conv),val->u.array.length); k++)
+          CONVVSC_set_Q(conv,val->u.array.values[k]->u.dbl,k);
+      }
 
       // loss_coeff_A
+      else if (strcmp(key,"loss_coeff_A") == 0)
+        CONVVSC_set_loss_coeff_A(conv,val->u.dbl);
 
       // loss_coeff_B
+      else if (strcmp(key,"loss_coeff_B") == 0)
+        CONVVSC_set_loss_coeff_B(conv,val->u.dbl);
 
       // P_max
+      else if (strcmp(key,"P_max") == 0)
+        CONVVSC_set_P_max(conv,val->u.dbl);
 
       // P_min
+      else if (strcmp(key,"P_min") == 0)
+        CONVVSC_set_P_min(conv,val->u.dbl);
 
       // Q_max
+      else if (strcmp(key,"Q_max") == 0)
+        CONVVSC_set_Q_max(conv,val->u.dbl);
 
       // Q_min
+      else if (strcmp(key,"Q_min") == 0)
+        CONVVSC_set_Q_min(conv,val->u.dbl);
 
       // Q_par
+      else if (strcmp(key,"Q_par") == 0)
+        CONVVSC_set_Q_par(conv,val->u.dbl);
 
       // target_power_factor
+      else if (strcmp(key,"target_power_factor") == 0)
+        CONVVSC_set_target_power_factor(conv,val->u.dbl);
 
       // P_dc
+      else if (strcmp(key,"P_dc") == 0) {
+        for (k = 0; k < imin(CONVVSC_get_num_periods(conv),val->u.array.length); k++)
+          CONVVSC_set_P_dc(conv,val->u.array.values[k]->u.dbl,k);
+      }
     }
   }
 }
@@ -1537,7 +1698,7 @@ void JSON_PARSER_process_json_facts_array(Parser* p, Net* net, json_value* json_
   char* key;  
   int i;
   int j;
-  //int k;
+  int k;
 
   // Processs facts array
   for (i = 0; i < json_facts_array->u.array.length; i++) {
@@ -1575,63 +1736,148 @@ void JSON_PARSER_process_json_facts_array(Parser* p, Net* net, json_value* json_
       val = json_facts->u.object.values[j].value;
 
       // bus_k
-
+      if (strcmp(key,"bus_k") == 0) {
+        if (val->type == json_integer)
+          FACTS_set_bus_k(facts,NET_get_bus(net,val->u.integer));
+      }
+      
       // bus_m
+      else if (strcmp(key,"bus_m") == 0) {
+        if (val->type == json_integer)
+          FACTS_set_bus_m(facts,NET_get_bus(net,val->u.integer));
+      }
 
       // reg_bus
+      else if (strcmp(key,"reg_bus") == 0) {
+        if (val->type == json_integer)
+          FACTS_set_reg_bus(facts,NET_get_bus(net,val->u.integer));
+      }
 
       // name
+      else if (strcmp(key,"name") == 0)
+        FACTS_set_name(facts,val->u.string.ptr);
 
       // mode_s
+      else if (strcmp(key,"mode_s") == 0)
+        FACTS_set_mode_s(facts,val->u.integer);
 
       // P_k
+      else if (strcmp(key,"P_k") == 0) {
+        for (k = 0; k < imin(FACTS_get_num_periods(facts),val->u.array.length); k++)
+          FACTS_set_P_k(facts,val->u.array.values[k]->u.dbl,k);
+      }
 
       // Q_k
+      else if (strcmp(key,"Q_k") == 0) {
+        for (k = 0; k < imin(FACTS_get_num_periods(facts),val->u.array.length); k++)
+          FACTS_set_Q_k(facts,val->u.array.values[k]->u.dbl,k);
+      }
 
       // P_m
+      else if (strcmp(key,"P_m") == 0) {
+        for (k = 0; k < imin(FACTS_get_num_periods(facts),val->u.array.length); k++)
+          FACTS_set_P_m(facts,val->u.array.values[k]->u.dbl,k);
+      }
 
       // Q_m
+      else if (strcmp(key,"Q_m") == 0) {
+        for (k = 0; k < imin(FACTS_get_num_periods(facts),val->u.array.length); k++)
+          FACTS_set_Q_m(facts,val->u.array.values[k]->u.dbl,k);
+      }
 
       // Q_sh
+      else if (strcmp(key,"Q_sh") == 0) {
+        for (k = 0; k < imin(FACTS_get_num_periods(facts),val->u.array.length); k++)
+          FACTS_set_Q_sh(facts,val->u.array.values[k]->u.dbl,k);
+      }
 
       // Q_s
+      else if (strcmp(key,"Q_s") == 0) {
+        for (k = 0; k < imin(FACTS_get_num_periods(facts),val->u.array.length); k++)
+          FACTS_set_Q_s(facts,val->u.array.values[k]->u.dbl,k);
+      }
 
       // P_dc
+      else if (strcmp(key,"P_dc") == 0) {
+        for (k = 0; k < imin(FACTS_get_num_periods(facts),val->u.array.length); k++)
+          FACTS_set_P_dc(facts,val->u.array.values[k]->u.dbl,k);
+      }
 
       // Q_par
+      else if (strcmp(key,"Q_par") == 0)
+        FACTS_set_Q_par(facts,val->u.dbl);
 
       // P_set
+      else if (strcmp(key,"P_set") == 0) {
+        for (k = 0; k < imin(FACTS_get_num_periods(facts),val->u.array.length); k++)
+          FACTS_set_P_set(facts,val->u.array.values[k]->u.dbl,k);
+      }
 
       // Q_set
+      else if (strcmp(key,"Q_set") == 0) {
+        for (k = 0; k < imin(FACTS_get_num_periods(facts),val->u.array.length); k++)
+          FACTS_set_Q_set(facts,val->u.array.values[k]->u.dbl,k);
+      }
 
       // Q_max_s
+      else if (strcmp(key,"Q_max_s") == 0)
+        FACTS_set_Q_max_s(facts,val->u.dbl);
 
       // Q_min_s
+      else if (strcmp(key,"Q_min_s") == 0)
+        FACTS_set_Q_min_s(facts,val->u.dbl);
 
       // Q_max_sh
+      else if (strcmp(key,"Q_max_sh") == 0)
+        FACTS_set_Q_max_sh(facts,val->u.dbl);
 
       // Q_min_sh
+      else if (strcmp(key,"Q_min_sh") == 0)
+        FACTS_set_Q_min_sh(facts,val->u.dbl);
 
       // i_max_s
+      else if (strcmp(key,"i_max_s") == 0)
+        FACTS_set_i_max_s(facts,val->u.dbl);
 
       // i_max_sh
+      else if (strcmp(key,"i_max_sh") == 0)
+        FACTS_set_i_max_sh(facts,val->u.dbl);
 
       // P_max_dc
+      else if (strcmp(key,"P_max_dc") == 0)
+        FACTS_set_P_max_dc(facts,val->u.dbl);
 
       // v_min_m
+      else if (strcmp(key,"v_min_m") == 0)
+        FACTS_set_v_min_m(facts,val->u.dbl);
 
       // v_max_m
+      else if (strcmp(key,"v_max_m") == 0)
+        FACTS_set_v_max_m(facts,val->u.dbl);
 
       // v_mag_s
+      else if (strcmp(key,"v_mag_s") == 0) {
+        for (k = 0; k < imin(FACTS_get_num_periods(facts),val->u.array.length); k++)
+          FACTS_set_v_mag_s(facts,val->u.array.values[k]->u.dbl,k);
+      }
 
       // v_ang_s
+      else if (strcmp(key,"v_ang_s") == 0) {
+        for (k = 0; k < imin(FACTS_get_num_periods(facts),val->u.array.length); k++)
+          FACTS_set_v_ang_s(facts,val->u.array.values[k]->u.dbl,k);
+      }
 
       // v_max_s
+      else if (strcmp(key,"v_min_s") == 0)
+        FACTS_set_v_max_s(facts,val->u.dbl);
 
       // g
+      else if (strcmp(key,"g") == 0)
+        FACTS_set_g(facts,val->u.dbl);
 
       // b
-
+      else if (strcmp(key,"b") == 0)
+        FACTS_set_b(facts,val->u.dbl);
     }
   }
 }

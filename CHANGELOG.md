@@ -47,6 +47,7 @@ Unreleased
 * Added load "in_service" field, getter and setter. Not used anywhere.
 * Added routines for updating PQ components of load according to provided weights.
 * Added very basic CSC constraints and functions (CONSTR_CSC_EQ, CONSTR_CSC_DC_PSET, CONSTR_CSC_DC_VSET, FUNC_CSC_DC_PSET).
+* Added JSON support (read/write) for new components (vdep loads, csc, vsc, facts, dc bus, dc branch).
 
 Version 1.3.3
 -------------
