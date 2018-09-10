@@ -193,7 +193,7 @@ void CONVVSC_copy_from_conv(ConvVSC* conv, ConvVSC* other) {
   conv->Q_par = other->Q_par;
 
   // Power factor
-  conv->target_power_factor = conv->target_power_factor;
+  conv->target_power_factor = other->target_power_factor;
 
   // DC injection
   memcpy(conv->P_dc,other->P_dc,num_periods*sizeof(REAL));
