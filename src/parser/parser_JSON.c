@@ -1868,7 +1868,7 @@ void JSON_PARSER_process_json_facts_array(Parser* p, Net* net, json_value* json_
       }
 
       // v_max_s
-      else if (strcmp(key,"v_min_s") == 0)
+      else if (strcmp(key,"v_max_s") == 0)
         FACTS_set_v_max_s(facts,val->u.dbl);
 
       // g
