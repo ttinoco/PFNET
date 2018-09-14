@@ -1202,7 +1202,7 @@ REAL* BUS_get_v_ang_array(Bus* bus) {
 
 REAL BUS_get_v_set(Bus* bus, int t) {
   if (!bus || t < 0 || t >= bus->num_periods)
-    return 0;
+    return 1.;
   else
     return bus->v_set[t];
 }
