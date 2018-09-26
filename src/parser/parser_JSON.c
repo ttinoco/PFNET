@@ -942,6 +942,10 @@ void JSON_PARSER_process_json_shunt_array(Parser* p, Net* net, json_value* json_
       if (strcmp(key,"type") == 0)
         SHUNT_set_type(shunt,val->u.integer);
 
+      // mode
+      if (strcmp(key,"mode") == 0)
+        SHUNT_set_mode(shunt,val->u.integer);
+
       // name
       else if (strcmp(key,"name") == 0)
         SHUNT_set_name(shunt,val->u.string.ptr);

@@ -23,7 +23,8 @@ struct Shunt {
   int num_periods;   /**< @brief Number of time periods. */
 
   // Properties
-  char type;                    /**< @brief Shunt type */
+  char type;                    /**< @brief Shunt type (fixed, switched, switched_v) */
+  char mode;                    /**< @brief Shunt mode (discrete, continuous) */
   char name[SHUNT_BUFFER_SIZE]; /**< @brief Shunt name */
 
   // Conductance
@@ -149,6 +150,7 @@ void SHUNT_copy_from_shunt(Shunt* shunt, Shunt* other) {
 
   // Properties
   shunt->type = other->type;
+  shunt->mode = other->mode;
   strcpy(shunt->name,other->name);
 
   // Conductance
@@ -242,6 +244,13 @@ char SHUNT_get_type(Shunt* shunt) {
     return shunt->type;
   else
     return SHUNT_TYPE_FIXED;
+}
+
+char SHUNT_get_mode(Shunt* shunt) {
+  if (shunt)
+    return shunt->mode;
+  else
+    return SHUNT_MODE_CONT;
 }
 
 char* SHUNT_get_name(Shunt* shunt) {
@@ -498,6 +507,7 @@ char* SHUNT_get_json_string(Shunt* shunt, char* output) {
   JSON_int(temp,output,"num_periods",shunt->num_periods,FALSE);
   JSON_str(temp,output,"name",shunt->name,FALSE);
   JSON_int(temp,output,"type",shunt->type,FALSE);
+  JSON_int(temp,output,"mode",shunt->mode,FALSE);
   JSON_float(temp,output,"g",shunt->g,FALSE);
   JSON_array_float(temp,output,"b",shunt->b,shunt->num_periods,FALSE);
   JSON_float(temp,output,"b_max",shunt->b_max,FALSE);
@@ -552,6 +562,7 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
   shunt->num_periods = num_periods;
 
   shunt->type = SHUNT_TYPE_FIXED;
+  shunt->mode = SHUNT_MODE_CONT;
   ARRAY_clear(shunt->name,char,SHUNT_BUFFER_SIZE);
   
   shunt->bus = NULL;
@@ -609,6 +620,20 @@ BOOL SHUNT_is_switched_locked(Shunt* shunt) {
     return FALSE;
 }
 
+BOOL SHUNT_is_continuous(Shunt* shunt) {
+  if (shunt)
+    return shunt->mode == SHUNT_MODE_CONT;
+  else
+    return FALSE;
+}
+
+BOOL SHUNT_is_discrete(Shunt* shunt) {
+  if (shunt)
+    return shunt->mode == SHUNT_MODE_DIS;
+  else
+    return FALSE;
+}
+
 Shunt* SHUNT_list_add(Shunt* shunt_list, Shunt* shunt) {
   LIST_add(Shunt,shunt_list,shunt,next);
   return shunt_list;
@@ -651,6 +676,23 @@ Shunt* SHUNT_new(int num_periods) {
     return NULL;
 }
 
+void SHUNT_round_b(Shunt* shunt, int t) {
+  int i;
+  int ibest;
+  REAL db;
+  if (shunt && shunt->b_values && shunt->num_b_values > 0) {
+    ibest = 0;
+    db = fabs(SHUNT_get_b(shunt,t)-shunt->b_values[0]);
+    for (i = 1; i < shunt->num_b_values; i++) {
+      if (fabs(SHUNT_get_b(shunt,t)-shunt->b_values[i]) <= db) {
+        ibest = i;
+        db = fabs(SHUNT_get_b(shunt,t)-shunt->b_values[i]);
+      }
+    }
+    SHUNT_set_b(shunt,shunt->b_values[ibest],t);
+  }
+}
+
 void SHUNT_set_sens_b_u_bound(Shunt* shunt, REAL value, int t) {
   if (shunt && t >= 0 && t < shunt->num_periods)
     shunt->sens_b_u_bound[t] = value;
@@ -664,6 +706,11 @@ void SHUNT_set_sens_b_l_bound(Shunt* shunt, REAL value, int t) {
 void SHUNT_set_type(Shunt* shunt, char type) {
   if (shunt)
     shunt->type = type;
+}
+
+void SHUNT_set_mode(Shunt* shunt, char mode) {
+  if (shunt)
+    shunt->mode = mode;
 }
 
 void SHUNT_set_name(Shunt* shunt, char* name) {
