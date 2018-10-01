@@ -5474,6 +5474,20 @@ Net* NET_new(int num_periods) {
     return NULL;
 }
 
+int NET_round_discrete_switched_shunts_b(Net* net, int t) {
+  int i;
+  Shunt* s;
+  int num = 0;
+  if (!net)
+    return num;
+  for (i = 0; i < net->num_shunts; i++) {
+    s = NET_get_shunt(net,i);
+    if (SHUNT_is_switched(s) && SHUNT_is_discrete(s))
+      num += SHUNT_round_b(s,t);
+  }
+  return num;
+}
+
 void NET_set_base_power(Net* net, REAL base_power) {
   if (net)
     net->base_power = base_power;

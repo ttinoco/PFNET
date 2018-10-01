@@ -49,6 +49,7 @@ Unreleased
 * Added very basic CSC constraints and functions (CONSTR_CSC_EQ, CONSTR_CSC_DC_PSET, CONSTR_CSC_DC_VSET, FUNC_CSC_DC_PSET).
 * Added JSON support (read/write) for new components (vdep loads, csc, vsc, facts, dc bus, dc branch).
 * Addded switched shunt control mode (discrete, continuous) and rounding capability.
+* Added network routing for rounding susceptance of discrete switched shunts and count.
 
 Version 1.3.3
 -------------

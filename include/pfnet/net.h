@@ -231,6 +231,8 @@ BOOL NET_has_error(Net* net);
 void NET_propagate_data_in_time(Net* net, int start, int end);
 Net* NET_new(int num_periods);
 
+int NET_round_discrete_switched_shunts_b(Net* net, int t);
+
 void NET_set_base_power(Net* net, REAL base_power);
 void NET_set_branch_array(Net* net, Branch* branch, int num);
 void NET_set_bus_array(Net* net, Bus* bus, int num);

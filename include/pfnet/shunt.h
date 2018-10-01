@@ -47,8 +47,9 @@
 /** \defgroup shunt_const Shunt Constants
  *  @{
  */
-#define SHUNT_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
-#define SHUNT_NUM_JSON_FIELDS 15 /**< @brief Constant: max number of json fields */
+#define SHUNT_BUFFER_SIZE 100       /**< @brief Constant: buffer size for strings */
+#define SHUNT_NUM_JSON_FIELDS 15    /**< @brief Constant: max number of json fields */
+#define SHUNT_ROUND_THRESHOLD 1e-10 /**< @brief Constant: threshold for counting susceptance rounding as significant */
 /** @} */
 
 // Struct
@@ -118,7 +119,7 @@ Shunt* SHUNT_list_reg_del(Shunt* reg_shunt_list, Shunt* reg_shunt);
 int SHUNT_list_reg_len(Shunt* reg_shunt_list);
 Shunt* SHUNT_new(int num_periods);
 void SHUNT_propagate_data_in_time(Shunt* shunt, int start, int end);
-void SHUNT_round_b(Shunt* shunt, int t);
+int SHUNT_round_b(Shunt* shunt, int t);
 void SHUNT_set_sens_b_u_bound(Shunt* shunt, REAL value, int t);
 void SHUNT_set_sens_b_l_bound(Shunt* shunt, REAL value, int t);
 void SHUNT_set_type(Shunt* shunt, char type);

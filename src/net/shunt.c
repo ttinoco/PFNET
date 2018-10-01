@@ -676,10 +676,10 @@ Shunt* SHUNT_new(int num_periods) {
     return NULL;
 }
 
-void SHUNT_round_b(Shunt* shunt, int t) {
+int SHUNT_round_b(Shunt* shunt, int t) {
   int i;
   int ibest;
-  REAL db;
+  REAL db = 0;
   if (shunt && shunt->b_values && shunt->num_b_values > 0) {
     ibest = 0;
     db = fabs(SHUNT_get_b(shunt,t)-shunt->b_values[0]);
@@ -691,6 +691,7 @@ void SHUNT_round_b(Shunt* shunt, int t) {
     }
     SHUNT_set_b(shunt,shunt->b_values[ibest],t);
   }
+  return (db > SHUNT_ROUND_THRESHOLD) ? 1 : 0;
 }
 
 void SHUNT_set_sens_b_u_bound(Shunt* shunt, REAL value, int t) {
