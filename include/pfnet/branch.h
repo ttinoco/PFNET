@@ -233,8 +233,9 @@ void BRANCH_show(Branch* br, int t);
 
 void BRANCH_power_flow_count(Branch* br, int* J_nnz, int* H_nnz, int t, BOOL km, BOOL ext_idx);
 void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int index_Q,
-			       int* H_nnz, Mat* HP, Mat* HQ, int t, BOOL km, BOOL ext_idx);
+                               int* H_nnz, Mat* HP, Mat* HQ, int t, BOOL km, BOOL ext_idx);
 void BRANCH_power_flow_eval(Branch* br, REAL* P, REAL* Q, int* J_nnz, REAL* J, int* H_nnz,
-			    REAL* HP, REAL* HQ, Vec* x, REAL mul, int t, BOOL km, BOOL ext_idx);
+                            REAL* HP, REAL* HQ, Vec* x, REAL mul, int t, BOOL km, BOOL ext_idx);
+Mat* BRANCH_power_flow_Jacobian(Branch* br, Vec* x, int t, BOOL km);
 
 #endif

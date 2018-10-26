@@ -2577,3 +2577,49 @@ void BRANCH_power_flow_eval(Branch* br, REAL* P, REAL* Q, int* J_nnz, REAL* J, i
     (*H_nnz)++; // phi and phi
   }
 }
+
+Mat* BRANCH_power_flow_Jacobian(Branch* br, Vec* x, int t, BOOL km) {
+  
+  int J_nnz;
+  int H_nnz;
+  int num_vars = 0;
+  Mat* J;
+  Mat* HP;
+  Mat* HQ;
+  REAL P;
+  REAL Q;
+
+  if (br)
+    num_vars = NET_get_num_vars(br->net);
+
+  J_nnz = 0;
+  H_nnz = 0;
+  BRANCH_power_flow_count(br, &J_nnz, &H_nnz, t, km, FALSE);
+
+  J = MAT_new(2,
+              num_vars,
+              J_nnz);
+
+  HP = MAT_new(num_vars,
+               num_vars,
+               H_nnz);
+
+  HQ = MAT_new(num_vars,
+               num_vars,
+               H_nnz);
+
+  J_nnz = 0;
+  H_nnz = 0;
+  BRANCH_power_flow_analyze(br, &J_nnz, J, 0, 1, &H_nnz, HP, HQ, t, km, FALSE);
+  
+  J_nnz = 0;
+  H_nnz = 0;
+  BRANCH_power_flow_eval(br, &P, &Q, &J_nnz, MAT_get_data_array(J), &H_nnz,
+                         MAT_get_data_array(HP), MAT_get_data_array(HQ),
+                         x, 1., t, km, FALSE);
+
+  MAT_del(HP);
+  MAT_del(HQ);
+
+  return J;  
+}

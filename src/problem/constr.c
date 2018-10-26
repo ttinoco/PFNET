@@ -526,7 +526,7 @@ Mat* CONSTR_get_extra_var_projection(Constr* c) {
   // Check
   if (!c)
     return NULL;
-
+  
   // Allocate
   P = MAT_new(c->num_extra_vars,
               NET_get_num_vars(c->net)+c->num_extra_vars,
