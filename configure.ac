@@ -19,11 +19,6 @@ AC_PROG_MAKE_SET
 AX_CHECK_COMPILE_FLAG([-Wall], [CFLAGS="$CFLAGS -Wall"], [], [])
 AX_CHECK_COMPILE_FLAG([-Werror], [CFLAGS="$CFLAGS -Werror"], [], [])
 
-# Checks for graphviz
-AC_CHECK_LIB(gvc, gvContext)
-AC_CHECK_LIB(cgraph, agopen)
-AC_CHECK_HEADERS(graphviz/gvc.h)
-
 # Checks for raw parser
 AC_SUBST(rawtop_srcdir,$RAW_PARSER)
 AC_CHECK_FILES([$RAW_PARSER/src/RAW_parser.c],

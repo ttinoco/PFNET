@@ -12,10 +12,6 @@ nobase_nodist_include_HEADERS = $(inc_path)/pfnet_config.h
 lib_LTLIBRARIES = libpfnet.la
 
 # PFNET sources and headers (note all headers are in $PFNET/include/pfnet)
-graph_src = graph/graph.c 
-
-graph_hdr = $(inc_path)/graph.h
-
 math_src = math/matrix.c \
            math/vector.c
 
@@ -194,8 +190,8 @@ other_hdr = $(inc_path)/array.h $(inc_path)/constants.h $(inc_path)/flag_types.h
             $(inc_path)/uthash.h $(inc_path)/pfnet.h
 
 # All sources 
-libpfnet_la_SOURCES = $(graph_src) $(math_src) $(net_src) $(parser_src) \
-                      $(problem_src) $(problem_constr_src) $(problem_func_src) $(problem_heur_src) \
+libpfnet_la_SOURCES = $(math_src) $(net_src) $(parser_src) $(problem_src) \
+                      $(problem_constr_src) $(problem_func_src) $(problem_heur_src) \
                       $(utils_src)
 
 # Have to move back a directory $PFNET/include/pfnet/*.h
@@ -204,8 +200,8 @@ libpfnet_la_LDFLAGS = -shared
 libpfnet_la_LIBADD = -lm
 
 # All headers
-pkginclude_HEADERS = $(graph_hdr) $(math_hdr) $(net_hdr) $(parser_hdr) \
-                     $(problem_hdr) $(problem_constr_hdr) $(problem_func_hdr) $(problem_heur_hdr) \
+pkginclude_HEADERS = $(math_hdr) $(net_hdr) $(parser_hdr) $(problem_hdr) \
+                     $(problem_constr_hdr) $(problem_func_hdr) $(problem_heur_hdr) \
                      $(utils_hdr) $(other_hdr)
 
 # Raw parser

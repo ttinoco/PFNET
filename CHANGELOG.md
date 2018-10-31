@@ -51,6 +51,7 @@ Unreleased
 * Addded switched shunt control mode (discrete, continuous) and rounding capability.
 * Added network routing for rounding susceptance of discrete switched shunts and count.
 * Added branch routine for using power flow count/analyze/eval subroutines to construct Jacobian of (P_km, Q_km) or (P_mk, Q_mk).
+* Removed graphviz interface and dependency.
 
 Version 1.3.3
 -------------

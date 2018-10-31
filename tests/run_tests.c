@@ -9,7 +9,6 @@
 
 #include "unit.h"
 #include "test_network.h"
-#include "test_graph.h"
 #include "test_constraints.h"
 #include "test_functions.h"
 #include "test_problem.h"
@@ -27,9 +26,6 @@ static char * all_tests() {
   run_test(test_net_fixed);
   run_test(test_net_properties);
   run_test(test_net_init_point);
-
-  // Graph
-  run_test(test_graph_basic);
 
   // Constraints
   run_test(test_constr_FIX);

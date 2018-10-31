@@ -14,7 +14,6 @@
 #include "parser.h"
 #include "net.h"
 #include "problem.h"
-#include "graph.h"
 
 // Parsers
 #include "parser_MAT.h"

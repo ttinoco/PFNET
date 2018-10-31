@@ -14,7 +14,6 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)  # so that cmake builds with rpath alre
 set(CMAKE_INSTALL_RPATH "@loader_path")  # for relocatable libraries
 
 option(PFNET_DEBUG "set to ON to enable PFNET debug definition" OFF)
-option(PFNET_GRAPHVIZ "set to ON to enable graphviz addon" OFF)
 
 set(M_LIB,"")
 if (UNIX)
@@ -23,53 +22,37 @@ if (UNIX)
   set(CMAKE_REQUIRED_LIBRARIES m)
 endif (UNIX)
 
-# find PFNET source files
+# Find PFNET source files
 file(GLOB_RECURSE pfnet_source src/*.c)
 
-# add shared library target
+# Add shared library target
 add_library(pfnet SHARED ${pfnet_source})
 
-# add static library target
+# Add static library target
 add_library(pfnet_static STATIC ${pfnet_source})
 set_property(TARGET pfnet_static PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-# pfnet tests
+# PFNET tests
 file(GLOB_RECURSE pfnet_test_source tests/*.c)
 
-# test dynamic library
+# Test dynamic library
 add_executable(pfnet_tests ${pfnet_test_source})
 add_test(run_pfnet_tests pfnet_tests ${PFNET_SOURCE_DIR}/data/ieee14.mat)
 #target_link_libraries(pfnet_tests pfnet m)
 target_link_libraries(pfnet_tests pfnet ${M_LIB})
 
-# test static library
+# Test static library
 add_executable(pfnet_static_tests ${pfnet_test_source})
 add_test(run_pfnet_static_tests pfnet_static_tests ${PFNET_SOURCE_DIR}/data/ieee14.mat)
 #target_link_libraries(pfnet_static_tests pfnet_static m)
 target_link_libraries(pfnet_static_tests pfnet_static ${M_LIB})
 
-# set the debug flag
+# Set the debug flag
 if(PFNET_DEBUG)
   add_definitions(-DDEBUG)
 endif()
 
-# find graphviz
-if(PFNET_GRAPHVIZ)
-  find_library(GRAPHVIZ_LIB gvc)
-else()
-  set(GRAPHVIZ_LIB "")
-endif()
-
-if(GRAPHVIZ_LIB)
-  message("Graphiz found: " ${GRAPHVIZ_LIB})
-  target_link_libraries(pfnet gvc cgraph)
-  target_link_libraries(pfnet_tests gvc cgraph)
-  target_link_libraries(pfnet_static_tests gvc cgraph)
-else()
-  message("Graphiz not enabled.")
-endif()
-
-# add raw-parser if available
+# Add raw-parser if available
 if(EXISTS $ENV{RAW_PARSER}/src/RAW_parser.c)
   include_directories($ENV{RAW_PARSER}/include)
   set(raw_parser_source $ENV{RAW_PARSER}/src/RAW_net.c
@@ -87,17 +70,11 @@ else()
   set(HAVE_RAW_PARSER 0)
 endif()
 
-# add checks needed to produce pfnet_config.h
+# Add checks needed to produce pfnet_config.h
 INCLUDE (CheckIncludeFiles)
 INCLUDE (CheckTypeSize)
 INCLUDE (CheckFunctionExists)
 INCLUDE (CheckLibraryExists)
-
-# Check for include files
-# Checks for graphviz
-CHECK_LIBRARY_EXISTS(gvc gvContext "" HAVE_LIBGVC)
-CHECK_LIBRARY_EXISTS(cgraph agopen "" HAVE_LIBCGRAPH)
-CHECK_INCLUDE_FILES("graphviz/gvc.h"  HAVE_GRAPHVIZ_GVC_H)
 
 # Checks std header files.
 CHECK_INCLUDE_FILES("stddef.h"  HAVE_STDDEF_H)
@@ -125,18 +102,18 @@ CHECK_FUNCTION_EXISTS(strchr HAVE_STRCHR)
 CHECK_FUNCTION_EXISTS(strdup HAVE_STRDUP)
 CHECK_FUNCTION_EXISTS(strstr HAVE_STRSTR)
 
-# create pfnet_config.h file
+# Create pfnet_config.h file
 configure_file(${PFNET_SOURCE_DIR}/include/pfnet/pfnet_config.cmake.in ${PFNET_SOURCE_DIR}/include/pfnet/pfnet_config.h)
 
-# add include directory
+# Add include directory
 include_directories(${PFNET_SOURCE_DIR}/include)
 
-# install library to <prefix>/lib
+# Install library to <prefix>/lib
 install(TARGETS pfnet pfnet_static
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         RUNTIME DESTINATION lib)
-# install header files
+# Install header files
 install(DIRECTORY include/
         DESTINATION include
         FILES_MATCHING PATTERN "*.h")
