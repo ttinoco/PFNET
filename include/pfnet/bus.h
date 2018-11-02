@@ -313,6 +313,8 @@ void BUS_set_network(Bus* bus, void* net);
 void BUS_set_next(Bus* bus, Bus* next_bus);
 void BUS_set_number(Bus* bus, int number);
 void BUS_set_name(Bus* bus, char* name);
+void BUS_set_alt_number(Bus* bus, int number);
+void BUS_set_alt_name(Bus* bus, char* name);
 void BUS_set_price(Bus* bus, REAL price, int t);
 void BUS_set_v_base(Bus* bus, REAL v_base);
 void BUS_set_v_mag(Bus* bus, REAL v_mag, int t);
