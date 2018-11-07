@@ -837,6 +837,20 @@ char* BUS_get_name(Bus* bus) {
     return NULL;
 }
 
+int BUS_get_alt_number(Bus* bus) {
+  if (bus)
+    return bus->alt_number;
+  else
+    return 0;
+}
+
+char* BUS_get_alt_name(Bus* bus) {
+  if (bus)
+    return bus->alt_name;
+  else
+    return NULL;
+}
+
 int BUS_get_num_periods(Bus* bus) {
   if (bus)
     return bus->num_periods;
@@ -1864,7 +1878,7 @@ void BUS_init(Bus* bus, int num_periods) {
   bus->num_periods = num_periods;
 
   bus->number = 0;
-  bus->alt_number = 0;
+  bus->alt_number = -1;
   for (i = 0; i < BUS_BUFFER_SIZE; i++) {
     bus->name[i] = 0;
     bus->alt_name[i] = 0;
@@ -2025,6 +2039,13 @@ BOOL BUS_is_star(Bus* bus) {
     return FALSE;
 }
 
+BOOL BUS_is_redundant(Bus* bus) {
+  if (bus)
+    return bus->alt_number >= 0;
+  else
+    return FALSE;
+}
+
 Bus* BUS_list_add(Bus* bus_list, Bus* bus_new) {
   LIST_add(Bus,bus_list,bus_new,next);
   return bus_list;
@@ -2056,6 +2077,10 @@ Bus* BUS_list_add_sorting(Bus* bus_list, Bus* bus_new, int sort_by, int t) {
   else
     bus_list = bus_new;
   return bus_list;
+}
+
+void BUS_list_del(Bus* bus_list) {
+  LIST_map(Bus,bus_list,bus,next,{BUS_array_del(bus,1);});
 }
 
 int BUS_list_len(Bus* bus_list) {

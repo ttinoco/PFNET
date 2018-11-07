@@ -90,11 +90,12 @@ struct Net {
   REAL* load_P_util;  /**< @brief Total active power consumption utility ($/hr). */
   REAL* load_P_vio;   /**< @brief Maximum load active power limit violation (MW). */
 
-  int* num_actions;   /**< @brief Number of control actions. */
-
   // Spatial correlation
   REAL vargen_corr_radius; /**< @brief Correlation radius for variable generators. */
   REAL vargen_corr_value;  /**< @brief Correlation value for variable generators. */
+
+  // Redundant buses
+  Bus* red_bus; /**< @brief List of redundant buses */
 
   // State tag
   unsigned long int state_tag; /**< @brief State tag. */
@@ -243,7 +244,7 @@ void NET_add_buses(Net* net, Bus** bus_ptr_array, int size) {
 
   // Update hash
   NET_update_hash_tables(net);
-
+  
   // Delete old buses
   BUS_array_del(old_bus_array,old_num_buses);
 }
@@ -2386,6 +2387,14 @@ void NET_del_facts(Net* net, Facts** f_ptr_array, int size) {
   NET_clear_flags(net);
 }
 
+void NET_add_red_bus(Net* net, Bus* bus) {
+  if (net) {
+    net->red_bus = BUS_list_add(net->red_bus,bus);
+    NET_bus_hash_number_add(net,bus);
+    NET_bus_hash_name_add(net,bus);
+  }
+}
+
 void NET_add_vargens_from_params(Net* net, Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value) {
   
   // Local variables
@@ -2524,8 +2533,14 @@ void NET_bus_hash_number_add(Net* net, Bus* bus) {
 }
 
 Bus* NET_bus_hash_number_find(Net* net, int number) {
-  if (net)
-    return BUS_hash_number_find(net->bus_hash_number,number);
+  Bus* bus;
+  if (net) {
+    bus = BUS_hash_number_find(net->bus_hash_number,number);
+    if (BUS_is_redundant(bus))
+      return BUS_hash_number_find(net->bus_hash_number,BUS_get_alt_number(bus));
+    else
+      return bus;
+  }
   else
     return NULL;
 }
@@ -2536,8 +2551,14 @@ void NET_bus_hash_name_add(Net* net, Bus* bus) {
 }
 
 Bus* NET_bus_hash_name_find(Net* net, char* name) {
-  if (net)
-    return BUS_hash_name_find(net->bus_hash_name,name);
+  Bus* bus;
+  if (net) {
+    bus = BUS_hash_name_find(net->bus_hash_name,name);
+    if (BUS_is_redundant(bus))
+      return BUS_hash_name_find(net->bus_hash_name,BUS_get_alt_name(bus));
+    else
+      return bus;
+  }
   else
     return NULL;
 }
@@ -2652,6 +2673,9 @@ void NET_clear_data(Net* net) {
   BRANCHDC_array_del(net->dc_branch,net->num_dc_branches);
   FACTS_array_del(net->facts,net->num_facts);
 
+  // Free red buses
+  BUS_list_del(net->red_bus);
+
   // Free properties
   free(net->bus_v_max);
   free(net->bus_v_min);
@@ -2669,7 +2693,6 @@ void NET_clear_data(Net* net) {
   free(net->shunt_b_vio);
   free(net->load_P_util);
   free(net->load_P_vio);
-  free(net->num_actions);
 
   // Re-initialize
   NET_init(net,net->num_periods);
@@ -2872,8 +2895,6 @@ void NET_clear_properties(Net* net) {
 
     // Facts
 
-    // Actions
-    net->num_actions[t] = 0;
   }
 
   // Mismatches
@@ -3103,6 +3124,14 @@ void NET_copy_from_net(Net* net, Net* other_net) {
     facts = NET_get_facts(net,i);
     other_facts = NET_get_facts(other_net,i);
     FACTS_copy_from_facts(facts,other_facts);
+  }
+
+  // Red buses
+  BUS_list_del(net->red_bus);
+  for(other_bus = other_net->red_bus; other_bus != NULL; other_bus = BUS_get_next(other_bus)) {
+    bus = BUS_new(BUS_get_num_periods(other_bus));
+    BUS_copy_from_bus(bus,other_bus);
+    NET_add_red_bus(net,bus); // handles hash tables
   }
 }
 
@@ -3904,7 +3933,8 @@ void NET_init(Net* net, int num_periods) {
   ARRAY_zalloc(net->load_P_util,REAL,T);
   ARRAY_zalloc(net->load_P_vio,REAL,T);
 
-  ARRAY_zalloc(net->num_actions,int,T);
+  // Red buses
+  net->red_bus = NULL;
 
   // State tag
   net->state_tag = 0;
@@ -4392,6 +4422,13 @@ int NET_get_num_buses_reg_by_facts(Net* net) {
       n++;
   }
   return n;
+}
+
+int NET_get_num_red_buses(Net* net) {
+  if (net)
+    return BUS_list_len(net->red_bus);
+  else
+    return 0;
 }
 
 int NET_get_num_branches(Net* net) {
@@ -5378,13 +5415,6 @@ REAL NET_get_load_P_vio(Net* net, int t) {
     return 0;
 }
 
-int NET_get_num_actions(Net* net, int t) {
-  if (net && t >= 0 && t < net->num_periods)
-    return net->num_actions[t];
-  else
-    return 0;
-}
-
 REAL NET_get_vargen_corr_radius(Net* net) {
   if (net)
     return net->vargen_corr_radius;
@@ -5915,7 +5945,7 @@ void NET_set_var_values(Net* net, Vec* values) {
     FACTS_set_var_values(FACTS_array_get(net->facts,i),values);
 }
 
-char* NET_get_show_components_str(Net* net) {
+char* NET_get_show_components_str(Net* net, int output_level) {
 
   char* out;
 
@@ -5927,45 +5957,64 @@ char* NET_get_show_components_str(Net* net) {
 
   sprintf(out+strlen(out),"\nNetwork Components\n");
   sprintf(out+strlen(out),"------------------\n");
+
   sprintf(out+strlen(out),"buses            : %d\n",NET_get_num_buses(net));
-  sprintf(out+strlen(out),"  slack          : %d\n",NET_get_num_slack_buses(net));
-  sprintf(out+strlen(out),"  reg by gen     : %d\n",NET_get_num_buses_reg_by_gen(net));
-  sprintf(out+strlen(out),"  reg by tran    : %d\n",NET_get_num_buses_reg_by_tran(net));
-  sprintf(out+strlen(out),"  reg by shunt   : %d\n",NET_get_num_buses_reg_by_shunt(net));
-  sprintf(out+strlen(out),"  star           : %d\n",NET_get_num_star_buses(net));
+  if (output_level > 1) {
+    sprintf(out+strlen(out),"  slack          : %d\n",NET_get_num_slack_buses(net));
+    sprintf(out+strlen(out),"  reg by gen     : %d\n",NET_get_num_buses_reg_by_gen(net));
+    sprintf(out+strlen(out),"  reg by tran    : %d\n",NET_get_num_buses_reg_by_tran(net));
+    sprintf(out+strlen(out),"  reg by shunt   : %d\n",NET_get_num_buses_reg_by_shunt(net));
+    sprintf(out+strlen(out),"  star           : %d\n",NET_get_num_star_buses(net));
+  }
+
   sprintf(out+strlen(out),"shunts           : %d\n",NET_get_num_shunts(net));
-  sprintf(out+strlen(out),"  fixed          : %d\n",NET_get_num_fixed_shunts(net));
-  sprintf(out+strlen(out),"  switched       : %d\n",NET_get_num_switched_shunts(net));
+  if (output_level > 1) {
+    sprintf(out+strlen(out),"  fixed          : %d\n",NET_get_num_fixed_shunts(net));
+    sprintf(out+strlen(out),"  switched       : %d\n",NET_get_num_switched_shunts(net));
+  }
+
   sprintf(out+strlen(out),"branches         : %d\n",NET_get_num_branches(net));
-  sprintf(out+strlen(out),"  lines          : %d\n",NET_get_num_lines(net));
-  sprintf(out+strlen(out),"  fixed trans    : %d\n",NET_get_num_fixed_trans(net));
-  sprintf(out+strlen(out),"  phase shifters : %d\n",NET_get_num_phase_shifters(net));
-  sprintf(out+strlen(out),"  tap changers v : %d\n",NET_get_num_tap_changers_v(net));
-  sprintf(out+strlen(out),"  tap changers Q : %d\n",NET_get_num_tap_changers_Q(net));
+  if (output_level > 1) {
+    sprintf(out+strlen(out),"  lines          : %d\n",NET_get_num_lines(net));
+    sprintf(out+strlen(out),"  fixed trans    : %d\n",NET_get_num_fixed_trans(net));
+    sprintf(out+strlen(out),"  phase shifters : %d\n",NET_get_num_phase_shifters(net));
+    sprintf(out+strlen(out),"  tap changers v : %d\n",NET_get_num_tap_changers_v(net));
+    sprintf(out+strlen(out),"  tap changers Q : %d\n",NET_get_num_tap_changers_Q(net));
+  }
+
   sprintf(out+strlen(out),"generators       : %d\n",NET_get_num_gens(net));
-  sprintf(out+strlen(out),"  slack          : %d\n",NET_get_num_slack_gens(net));
-  sprintf(out+strlen(out),"  reg            : %d\n",NET_get_num_reg_gens(net));
-  sprintf(out+strlen(out),"  P adjust       : %d\n",NET_get_num_P_adjust_gens(net));
+  if (output_level > 1) {
+    sprintf(out+strlen(out),"  slack          : %d\n",NET_get_num_slack_gens(net));
+    sprintf(out+strlen(out),"  reg            : %d\n",NET_get_num_reg_gens(net));
+    sprintf(out+strlen(out),"  P adjust       : %d\n",NET_get_num_P_adjust_gens(net));
+  }
+  
   sprintf(out+strlen(out),"loads            : %d\n",NET_get_num_loads(net));
-  sprintf(out+strlen(out),"  P adjust       : %d\n",NET_get_num_P_adjust_loads(net));
+  if (output_level > 1) {
+    sprintf(out+strlen(out),"  P adjust       : %d\n",NET_get_num_P_adjust_loads(net));
+  }
+  
   sprintf(out+strlen(out),"vargens          : %d\n",NET_get_num_vargens(net));
   sprintf(out+strlen(out),"batteries        : %d\n",NET_get_num_bats(net));
   sprintf(out+strlen(out),"facts            : %d\n",NET_get_num_facts(net));
   sprintf(out+strlen(out),"csc converters   : %d\n",NET_get_num_csc_convs(net));
+
   sprintf(out+strlen(out),"vsc converters   : %d\n",NET_get_num_vsc_convs(net));
-  sprintf(out+strlen(out),"  P dc mode      : %d\n",NET_get_num_vsc_convs_in_P_dc_mode(net));
-  sprintf(out+strlen(out),"  v dc mode      : %d\n",NET_get_num_vsc_convs_in_v_dc_mode(net));
-  sprintf(out+strlen(out),"  v ac mode      : %d\n",NET_get_num_vsc_convs_in_v_ac_mode(net));
-  sprintf(out+strlen(out),"  f ac mode      : %d\n",NET_get_num_vsc_convs_in_f_ac_mode(net));
+  if (output_level > 1) {
+    sprintf(out+strlen(out),"  P dc mode      : %d\n",NET_get_num_vsc_convs_in_P_dc_mode(net));
+    sprintf(out+strlen(out),"  v dc mode      : %d\n",NET_get_num_vsc_convs_in_v_dc_mode(net));
+    sprintf(out+strlen(out),"  v ac mode      : %d\n",NET_get_num_vsc_convs_in_v_ac_mode(net));
+    sprintf(out+strlen(out),"  f ac mode      : %d\n",NET_get_num_vsc_convs_in_f_ac_mode(net));
+  }
+  
   sprintf(out+strlen(out),"dc buses         : %d\n",NET_get_num_dc_buses(net));
   sprintf(out+strlen(out),"dc branches      : %d\n",NET_get_num_dc_branches(net));
 
   return out;
 }
 
-void NET_show_components(Net* net) {
-
-  printf("%s",NET_get_show_components_str(net));
+void NET_show_components(Net* net, int output_level) {
+  printf("%s",NET_get_show_components_str(net,output_level));
 }
 
 char* NET_get_show_properties_str(Net* net, int t) {
@@ -5996,7 +6045,6 @@ char* NET_get_show_properties_str(Net* net, int t) {
   sprintf(out+strlen(out),"shunt b vio : %.2e (p.u.)\n",NET_get_shunt_b_vio(net,t));
   sprintf(out+strlen(out),"load P util : %.2e ($/hr)\n",NET_get_load_P_util(net,t));
   sprintf(out+strlen(out),"load P vio  : %.2e (MW)\n",NET_get_load_P_vio(net,t));
-  sprintf(out+strlen(out),"num actions : %d\n",NET_get_num_actions(net,t));
 
   return out;
 }
@@ -6217,14 +6265,6 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
     //****************************
     if (fabs(v-BUS_get_v_set(bus,t)) > net->gen_v_dev[t])
       net->gen_v_dev[t] = fabs(v-BUS_get_v_set(bus,t));
-    
-    // Voltage set point action
-    //*************************
-    dv = BUS_get_v_max_reg(bus)-BUS_get_v_min_reg(bus);
-    if (dv < NET_CONTROL_EPS)
-      dv = NET_CONTROL_EPS;
-    if (100.*fabs(v-BUS_get_v_set(bus,t))/dv > NET_CONTROL_ACTION_PCT)
-      net->num_actions[t]++;
   }
 
   // Generators
@@ -6275,14 +6315,6 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
       dP = (GEN_get_P_min(gen)-P)*net->base_power; // MW
     if (dP > net->gen_P_vio[t])
       net->gen_P_vio[t] = dP;
-    
-    // Active power actions
-    //*********************
-    dP = GEN_get_P_max(gen)-GEN_get_P_min(gen);
-    if (dP < NET_CONTROL_EPS)
-      dP = NET_CONTROL_EPS;
-    if (100.*fabs(P-GEN_get_P(gen,t))/dP > NET_CONTROL_ACTION_PCT)
-      net->num_actions[t]++;
   }
 
   // Loads
@@ -6314,14 +6346,6 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
       dP = (LOAD_get_P_min(load,t)-P)*net->base_power; // MW
     if (dP > net->load_P_vio[t])
       net->load_P_vio[t] = dP;
-    
-    // Active power actions
-    //*********************
-    dP = LOAD_get_P_max(load,t)-LOAD_get_P_min(load,t);
-    if (dP < NET_CONTROL_EPS)
-      dP = NET_CONTROL_EPS;
-    if (100.*fabs(P-LOAD_get_P(load,t))/dP > NET_CONTROL_ACTION_PCT)
-      net->num_actions[t]++;
   }
   
   // Batteries
@@ -6378,14 +6402,6 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
         shunt_db = (SHUNT_get_b_min(shunt)-shunt_b);
       if (shunt_db > net->shunt_b_vio[t])
         net->shunt_b_vio[t] = shunt_db;
-      
-      // Swtiched shunt susceptance actions
-      //***********************************
-      shunt_db = SHUNT_get_b_max(shunt)-SHUNT_get_b_min(shunt);
-      if (shunt_db < NET_CONTROL_EPS)
-        shunt_db = NET_CONTROL_EPS;
-      if (100.*fabs(shunt_b-SHUNT_get_b(shunt,t))/shunt_db > NET_CONTROL_ACTION_PCT)
-        net->num_actions[t]++;
     }
   }
 
@@ -6480,14 +6496,6 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
         da = (BRANCH_get_ratio_min(br)-a);
       if (da > net->tran_r_vio[t])
         net->tran_r_vio[t] = da;
-      
-      // Tap ratio actions
-      //******************
-      da = BRANCH_get_ratio_max(br)-BRANCH_get_ratio_min(br);
-      if (da < NET_CONTROL_EPS)
-        da = NET_CONTROL_EPS;
-      if (100.*fabs(a-BRANCH_get_ratio(br,t))/da > NET_CONTROL_ACTION_PCT)
-        net->num_actions[t]++;
     }
 
     // Phase shifts
@@ -6502,14 +6510,6 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
         dphi = (BRANCH_get_phase_min(br)-phi);
       if (dphi > net->tran_p_vio[t])
         net->tran_p_vio[t] = dphi;
-      
-      // Phase shift actions
-      //********************
-      dphi = BRANCH_get_phase_max(br)-BRANCH_get_phase_min(br);
-      if (dphi < NET_CONTROL_EPS)
-        dphi = NET_CONTROL_EPS;
-      if (100.*fabs(phi-BRANCH_get_phase(br,t))/dphi > NET_CONTROL_ACTION_PCT)
-        net->num_actions[t]++;
     }
 
     // Branch flows
@@ -6585,6 +6585,10 @@ void NET_update_hash_tables(Net* net) {
     dc_bus = NET_get_dc_bus(net,i);
     NET_dc_bus_hash_number_add(net,dc_bus);
     NET_dc_bus_hash_name_add(net,dc_bus);
+  }
+  for (bus = net->red_bus; bus != NULL; bus = BUS_get_next(bus)) {
+    NET_bus_hash_number_add(net,bus);
+    NET_bus_hash_name_add(net,bus);
   }
 }
 
