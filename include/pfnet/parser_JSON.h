@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -41,5 +41,6 @@ void JSON_PARSER_process_json_branch_dc_array(Parser* p, Net* net, json_value* j
 void JSON_PARSER_process_json_conv_csc_array(Parser* p, Net* net, json_value* json_conv_csc_array);
 void JSON_PARSER_process_json_conv_vsc_array(Parser* p, Net* net, json_value* json_conv_vsc_array);
 void JSON_PARSER_process_json_facts_array(Parser* p, Net* net, json_value* json_facts_array);
+void JSON_PARSER_process_json_red_bus_array(Parser* p, Net* net, json_value* json_red_bus_array);
 
 #endif

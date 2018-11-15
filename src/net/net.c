@@ -2654,10 +2654,6 @@ void NET_clear_data(Net* net) {
   BUS_hash_name_del(net->bus_hash_name);
   BUSDC_hash_number_del(net->dc_bus_hash_number);
   BUSDC_hash_name_del(net->dc_bus_hash_name);
-  net->bus_hash_number = NULL;
-  net->bus_hash_name = NULL;
-  net->dc_bus_hash_number = NULL;
-  net->dc_bus_hash_name = NULL;
 
   // Free components
   BUS_array_del(net->bus,net->num_buses);
@@ -3128,6 +3124,7 @@ void NET_copy_from_net(Net* net, Net* other_net) {
 
   // Red buses
   BUS_list_del(net->red_bus);
+  net->red_bus = NULL;
   for(other_bus = other_net->red_bus; other_bus != NULL; other_bus = BUS_get_next(other_bus)) {
     bus = BUS_new(BUS_get_num_periods(other_bus));
     BUS_copy_from_bus(bus,other_bus);
@@ -3138,7 +3135,7 @@ void NET_copy_from_net(Net* net, Net* other_net) {
 Net* NET_get_copy(Net* net) {
   /** Gets deep copy of network.
    */
-
+  
   // Local variables
   Net* new_net = NULL;
   Bus* bus = NULL;
@@ -5454,7 +5451,8 @@ char* NET_get_json_string(Net* net) {
               CONVVSC_BUFFER_SIZE*CONVVSC_NUM_JSON_FIELDS*net->num_vsc_convs +
               BUSDC_BUFFER_SIZE*BUSDC_NUM_JSON_FIELDS*net->num_dc_buses +
               BRANCHDC_BUFFER_SIZE*BRANCHDC_NUM_JSON_FIELDS*net->num_dc_branches +
-              FACTS_BUFFER_SIZE*FACTS_NUM_JSON_FIELDS*net->num_facts)*net->num_periods;
+              FACTS_BUFFER_SIZE*FACTS_NUM_JSON_FIELDS*net->num_facts +
+              BUS_BUFFER_SIZE*BUS_NUM_JSON_FIELDS*NET_get_num_red_buses(net))*net->num_periods;
 
   // Output
   output = (char*)malloc(sizeof(char)*max_size);
@@ -5476,7 +5474,8 @@ char* NET_get_json_string(Net* net) {
   JSON_array_json(temp,output,"vsc_converters",net->vsc_conv,CONVVSC_array_get,net->num_vsc_convs,CONVVSC_get_json_string,FALSE);
   JSON_array_json(temp,output,"dc_buses",net->dc_bus,BUSDC_array_get,net->num_dc_buses,BUSDC_get_json_string,FALSE);
   JSON_array_json(temp,output,"dc_branches",net->dc_branch,BRANCHDC_array_get,net->num_dc_branches,BRANCHDC_get_json_string,FALSE);
-  JSON_array_json(temp,output,"facts",net->facts,FACTS_array_get,net->num_facts,FACTS_get_json_string,TRUE);
+  JSON_array_json(temp,output,"facts",net->facts,FACTS_array_get,net->num_facts,FACTS_get_json_string,FALSE);
+  JSON_list_json(temp,output,"redundant_buses",net->red_bus,Bus,BUS_get_json_string,BUS_get_next,TRUE);
 
   JSON_end(output);
   
