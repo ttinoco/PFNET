@@ -634,12 +634,21 @@ void CONVVSC_get_var_values(ConvVSC* conv, Vec* values, int code) {
 
     if (conv->vars & CONVVSC_VAR_P) { // active power
       switch(code) {
+      
       case UPPER_LIMITS:
-        VEC_set(values,conv->index_P[t],CONVVSC_INF_P);
+        if (conv->bounded & CONVVSC_VAR_P)
+          VEC_set(values,conv->index_P[t],conv->P_max);
+        else
+          VEC_set(values,conv->index_P[t],CONVVSC_INF_P);
         break;
+      
       case LOWER_LIMITS:
-        VEC_set(values,conv->index_P[t],-CONVVSC_INF_P);
+        if (conv->bounded & CONVVSC_VAR_P)
+          VEC_set(values,conv->index_P[t],conv->P_min);
+        else
+          VEC_set(values,conv->index_P[t],-CONVVSC_INF_P);
         break;
+      
       default:
         VEC_set(values,conv->index_P[t],conv->P[t]);
       }
@@ -647,12 +656,21 @@ void CONVVSC_get_var_values(ConvVSC* conv, Vec* values, int code) {
 
     if (conv->vars & CONVVSC_VAR_Q) { // reactive power
       switch(code) {
+      
       case UPPER_LIMITS:
-        VEC_set(values,conv->index_Q[t],CONVVSC_INF_Q);
+        if (conv->bounded & CONVVSC_VAR_Q)
+          VEC_set(values,conv->index_Q[t],conv->Q_max);
+        else
+          VEC_set(values,conv->index_Q[t],CONVVSC_INF_Q);
         break;
+      
       case LOWER_LIMITS:
-        VEC_set(values,conv->index_Q[t],-CONVVSC_INF_Q);
+        if (conv->bounded & CONVVSC_VAR_Q)
+          VEC_set(values,conv->index_Q[t],conv->Q_min);
+        else
+          VEC_set(values,conv->index_Q[t],-CONVVSC_INF_Q);
         break;
+      
       default:
         VEC_set(values,conv->index_Q[t],conv->Q[t]);
       }
