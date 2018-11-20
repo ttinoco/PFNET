@@ -148,7 +148,9 @@ void NET_add_buses(Net* net, Bus** bus_ptr_array, int size) {
   }
 
   // New buses
-  NET_set_bus_array(net,BUS_array_new(net->num_buses+num,net->num_periods),net->num_buses+num);
+  net->bus = NULL;
+  net->num_buses = 0;
+  NET_set_bus_array(net,BUS_array_new(old_num_buses+num,net->num_periods),old_num_buses+num);
 
   // Copy data and steal connections
   index = 0;
@@ -292,7 +294,9 @@ void NET_del_buses(Net* net, Bus** bus_ptr_array, int size) {
   }
 
   // New buses
-  NET_set_bus_array(net,BUS_array_new(net->num_buses-num,net->num_periods),net->num_buses-num);
+  net->bus = NULL;
+  net->num_buses = 0;
+  NET_set_bus_array(net,BUS_array_new(old_num_buses-num,net->num_periods),old_num_buses-num);
 
   // Copy data and set connections
   index = 0;
@@ -466,7 +470,9 @@ void NET_add_branches(Net* net, Branch** br_ptr_array, int size) {
   }
   
   // New branches
-  NET_set_branch_array(net,BRANCH_array_new(net->num_branches+num,net->num_periods),net->num_branches+num);
+  net->branch = NULL;
+  net->num_branches = 0;
+  NET_set_branch_array(net,BRANCH_array_new(old_num_branches+num,net->num_periods),old_num_branches+num);
 
   // Copy data and steal connections
   index = 0;
@@ -561,7 +567,9 @@ void NET_del_branches(Net* net, Branch** br_ptr_array, int size) {
   }
 
   // New branches
-  NET_set_branch_array(net,BRANCH_array_new(net->num_branches-num,net->num_periods),net->num_branches-num);
+  net->branch = NULL;
+  net->num_branches = 0;
+  NET_set_branch_array(net,BRANCH_array_new(old_num_branches-num,net->num_periods),old_num_branches-num);
 
   // Copy data and set connections
   index = 0;
@@ -653,7 +661,9 @@ void NET_add_gens(Net* net, Gen** gen_ptr_array, int size) {
   }    
   
   // New gens
-  NET_set_gen_array(net,GEN_array_new(net->num_gens+num,net->num_periods),net->num_gens+num);
+  net->gen = NULL;
+  net->num_gens = 0;
+  NET_set_gen_array(net,GEN_array_new(old_num_gens+num,net->num_periods),old_num_gens+num);
 
   // Copy data and steal connections
   index = 0;
@@ -744,7 +754,9 @@ void NET_del_gens(Net* net, Gen** gen_ptr_array, int size) {
   }
 
   // New gens
-  NET_set_gen_array(net,GEN_array_new(net->num_gens-num,net->num_periods),net->num_gens-num);
+  net->gen = NULL;
+  net->num_gens = 0;
+  NET_set_gen_array(net,GEN_array_new(old_num_gens-num,net->num_periods),old_num_gens-num);
 
   // Copy data and set connections
   index = 0;
@@ -831,7 +843,9 @@ void NET_add_loads(Net* net, Load** load_ptr_array, int size) {
   }
 
   // New loads
-  NET_set_load_array(net,LOAD_array_new(net->num_loads+num,net->num_periods),net->num_loads+num);
+  net->load = NULL;
+  net->num_loads = 0;
+  NET_set_load_array(net,LOAD_array_new(old_num_loads+num,net->num_periods),old_num_loads+num);
 
   // Copy data and steal connections
   index = 0;
@@ -918,7 +932,9 @@ void NET_del_loads(Net* net, Load** load_ptr_array, int size) {
   }
 
   // New loads
-  NET_set_load_array(net,LOAD_array_new(net->num_loads-num,net->num_periods),net->num_loads-num);
+  net->load = NULL;
+  net->num_loads = 0;
+  NET_set_load_array(net,LOAD_array_new(old_num_loads-num,net->num_periods),old_num_loads-num);
 
   // Copy data and set connections
   index = 0;
@@ -1002,7 +1018,9 @@ void NET_add_shunts(Net* net, Shunt** shunt_ptr_array, int size) {
   }
 
   // New shunts
-  NET_set_shunt_array(net,SHUNT_array_new(net->num_shunts+num,net->num_periods),net->num_shunts+num);
+  net->shunt = NULL;
+  net->num_shunts = 0;
+  NET_set_shunt_array(net,SHUNT_array_new(old_num_shunts+num,net->num_periods),old_num_shunts+num);
 
   // Copy data and steal connections
   index = 0;
@@ -1093,7 +1111,9 @@ void NET_del_shunts(Net* net, Shunt** shunt_ptr_array, int size) {
   }
 
   // New shunts
-  NET_set_shunt_array(net,SHUNT_array_new(net->num_shunts-num,net->num_periods),net->num_shunts-num);
+  net->shunt = NULL;
+  net->num_shunts = 0;
+  NET_set_shunt_array(net,SHUNT_array_new(old_num_shunts-num,net->num_periods),old_num_shunts-num);
 
   // Copy data and set connections
   index = 0;
@@ -1180,7 +1200,9 @@ void NET_add_bats(Net* net, Bat** bat_ptr_array, int size) {
   }
 
   // New batteries
-  NET_set_bat_array(net,BAT_array_new(net->num_bats+num,net->num_periods),net->num_bats+num);
+  net->bat = NULL;
+  net->num_bats = 0;
+  NET_set_bat_array(net,BAT_array_new(old_num_bats+num,net->num_periods),old_num_bats+num);
 
   // Copy data and steal connections
   index = 0;
@@ -1267,7 +1289,9 @@ void NET_del_bats(Net* net, Bat** bat_ptr_array, int size) {
   }
 
   // New batteries
-  NET_set_bat_array(net,BAT_array_new(net->num_bats-num,net->num_periods),net->num_bats-num);
+  net->bat = NULL;
+  net->num_bats = 0;
+  NET_set_bat_array(net,BAT_array_new(old_num_bats-num,net->num_periods),old_num_bats-num);
 
   // Copy data and set connections
   index = 0;
@@ -1350,7 +1374,9 @@ void NET_add_vargens(Net* net, Vargen** gen_ptr_array, int size) {
   }
 
   // New var generators
-  NET_set_vargen_array(net,VARGEN_array_new(net->num_vargens+num,net->num_periods),net->num_vargens+num);
+  net->vargen = NULL;
+  net->num_vargens = 0;
+  NET_set_vargen_array(net,VARGEN_array_new(old_num_vargens+num,net->num_periods),old_num_vargens+num);
 
   // Copy data and steal connections
   index = 0;
@@ -1437,7 +1463,9 @@ void NET_del_vargens(Net* net, Vargen** gen_ptr_array, int size) {
   }
 
   // New var generators
-  NET_set_vargen_array(net,VARGEN_array_new(net->num_vargens-num,net->num_periods),net->num_vargens-num);
+  net->vargen = NULL;
+  net->num_vargens = 0;
+  NET_set_vargen_array(net,VARGEN_array_new(old_num_vargens-num,net->num_periods),old_num_vargens-num);
 
   // Copy data and set connections
   index = 0;
@@ -1520,7 +1548,9 @@ void NET_add_csc_convs(Net* net, ConvCSC** conv_ptr_array, int size) {
   }
 
   // New converters
-  NET_set_csc_conv_array(net,CONVCSC_array_new(net->num_csc_convs+num,net->num_periods),net->num_csc_convs+num);
+  net->csc_conv = NULL;
+  net->num_csc_convs = 0;
+  NET_set_csc_conv_array(net,CONVCSC_array_new(old_num_convs+num,net->num_periods),old_num_convs+num);
 
   // Copy data and steal connections
   index = 0;
@@ -1607,7 +1637,9 @@ void NET_del_csc_convs(Net* net, ConvCSC** conv_ptr_array, int size) {
   }
 
   // New converters
-  NET_set_csc_conv_array(net,CONVCSC_array_new(net->num_csc_convs-num,net->num_periods),net->num_csc_convs-num);
+  net->csc_conv = NULL;
+  net->num_csc_convs = 0;
+  NET_set_csc_conv_array(net,CONVCSC_array_new(old_num_convs-num,net->num_periods),old_num_convs-num);
 
   // Copy data and set connections
   index = 0;
@@ -1691,7 +1723,9 @@ void NET_add_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size) {
   }
 
   // New converters
-  NET_set_vsc_conv_array(net,CONVVSC_array_new(net->num_vsc_convs+num,net->num_periods),net->num_vsc_convs+num);
+  net->vsc_conv = NULL;
+  net->num_vsc_convs = 0;
+  NET_set_vsc_conv_array(net,CONVVSC_array_new(old_num_convs+num,net->num_periods),old_num_convs+num);
 
   // Copy data and steal connections
   index = 0;
@@ -1782,7 +1816,9 @@ void NET_del_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size) {
   }
 
   // New converters
-  NET_set_vsc_conv_array(net,CONVVSC_array_new(net->num_vsc_convs-num,net->num_periods),net->num_vsc_convs-num);
+  net->vsc_conv = NULL;
+  net->num_vsc_convs = 0;
+  NET_set_vsc_conv_array(net,CONVVSC_array_new(old_num_convs-num,net->num_periods),old_num_convs-num);
 
   // Copy data and set connections
   index = 0;
@@ -1868,7 +1904,9 @@ void NET_add_dc_buses(Net* net, BusDC** bus_ptr_array, int size) {
   }
 
   // New buses
-  NET_set_dc_bus_array(net,BUSDC_array_new(net->num_dc_buses+num,net->num_periods),net->num_dc_buses+num);
+  net->dc_bus = NULL;
+  net->num_dc_buses = 0;
+  NET_set_dc_bus_array(net,BUSDC_array_new(old_num_buses+num,net->num_periods),old_num_buses+num);
 
   // Copy data and steal connections
   index = 0;
@@ -1960,7 +1998,9 @@ void NET_del_dc_buses(Net* net, BusDC** bus_ptr_array, int size) {
   }
 
   // New buses
-  NET_set_dc_bus_array(net,BUSDC_array_new(net->num_dc_buses-num,net->num_periods),net->num_dc_buses-num);
+  net->dc_bus = NULL;
+  net->num_dc_buses = 0;
+  NET_set_dc_bus_array(net,BUSDC_array_new(old_num_buses-num,net->num_periods),old_num_buses-num);
 
   // Copy data and set connections
   index = 0;
@@ -2061,7 +2101,9 @@ void NET_add_dc_branches(Net* net, BranchDC** br_ptr_array, int size) {
   }
   
   // New branches
-  NET_set_dc_branch_array(net,BRANCHDC_array_new(net->num_dc_branches+num,net->num_periods),net->num_dc_branches+num);
+  net->dc_branch = NULL;
+  net->num_dc_branches = 0;
+  NET_set_dc_branch_array(net,BRANCHDC_array_new(old_num_branches+num,net->num_periods),old_num_branches+num);
 
   // Copy data and steal connections
   index = 0;
@@ -2148,7 +2190,9 @@ void NET_del_dc_branches(Net* net, BranchDC** br_ptr_array, int size) {
   }
 
   // New branches
-  NET_set_dc_branch_array(net,BRANCHDC_array_new(net->num_dc_branches-num,net->num_periods),net->num_dc_branches-num);
+  net->dc_branch = NULL;
+  net->num_dc_branches = 0;
+  NET_set_dc_branch_array(net,BRANCHDC_array_new(old_num_branches-num,net->num_periods),old_num_branches-num);
 
   // Copy data and set connections
   index = 0;
@@ -2237,7 +2281,9 @@ void NET_add_facts(Net* net, Facts** f_ptr_array, int size) {
   }
   
   // New facts
-  NET_set_facts_array(net,FACTS_array_new(net->num_facts+num,net->num_periods),net->num_facts+num);
+  net->facts = NULL;
+  net->num_facts = 0;
+  NET_set_facts_array(net,FACTS_array_new(old_num_facts+num,net->num_periods),old_num_facts+num);
 
   // Copy data and steal connections
   index = 0;
@@ -2332,7 +2378,9 @@ void NET_del_facts(Net* net, Facts** f_ptr_array, int size) {
   }
   
   // New facts
-  NET_set_facts_array(net,FACTS_array_new(net->num_facts-num,net->num_periods),net->num_facts-num);
+  net->facts = NULL;
+  net->num_facts = 0;
+  NET_set_facts_array(net,FACTS_array_new(old_num_facts-num,net->num_periods),old_num_facts-num);
 
   // Copy data and set connections
   index = 0;
@@ -2443,8 +2491,7 @@ void NET_add_vargens_from_params(Net* net, Bus* bus_list, REAL power_capacity, R
   num = BUS_list_len(bus_list);
 
   // Allocate
-  VARGEN_array_del(net->vargen,net->num_vargens);
-  NET_set_vargen_array(net,VARGEN_array_new(num,net->num_periods),num);
+  NET_set_vargen_array(net,VARGEN_array_new(num,net->num_periods),num); // cleans existing
 
   // Set buses
   NET_set_vargen_buses(net,bus_list);
@@ -2505,7 +2552,7 @@ void NET_add_batteries_from_params(Net* net, Bus* bus_list, REAL power_capacity,
   num = BUS_list_len(bus_list);
 
   // Allocate
-  NET_set_bat_array(net,BAT_array_new(num,net->num_periods),num);
+  NET_set_bat_array(net,BAT_array_new(num,net->num_periods),num); // cleans existing
 
   // Set buses
   NET_set_bat_buses(net,bus_list);
@@ -5526,7 +5573,10 @@ void NET_set_branch_array(Net* net, Branch* branch, int num) {
   int i;
   if (net) {
 
-    // Pointers
+    // Clear
+    BRANCH_array_del(net->branch, net->num_branches);
+    
+    // Set
     net->branch = branch;
     net->num_branches = num;
 
@@ -5538,6 +5588,11 @@ void NET_set_branch_array(Net* net, Branch* branch, int num) {
 
 void NET_set_load_array(Net* net, Load* load, int num) {
   if (net) {
+
+    // Clear
+    LOAD_array_del(net->load, net->num_loads);
+
+    // Set
     net->load = load;
     net->num_loads = num;
   }
@@ -5545,6 +5600,11 @@ void NET_set_load_array(Net* net, Load* load, int num) {
 
 void NET_set_shunt_array(Net* net, Shunt* shunt, int num) {
   if (net) {
+
+    // Clear
+    SHUNT_array_del(net->shunt, net->num_shunts);
+
+    // Set
     net->shunt = shunt;
     net->num_shunts = num;
   }
@@ -5554,7 +5614,10 @@ void NET_set_bus_array(Net* net, Bus* bus, int num) {
   int i;
   if (net) {
 
-    // Pointers
+    // Clear
+    BUS_array_del(net->bus, net->num_buses);
+
+    // Set
     net->bus = bus;
     net->num_buses = num;
 
@@ -5568,7 +5631,10 @@ void NET_set_gen_array(Net* net, Gen* gen, int num) {
   int i;
   if (net) {
 
-    // Pointers
+    // Clear
+    GEN_array_del(net->gen, net->num_gens);
+
+    // Set
     net->gen = gen;
     net->num_gens = num;
 
@@ -5580,6 +5646,11 @@ void NET_set_gen_array(Net* net, Gen* gen, int num) {
 
 void NET_set_vargen_array(Net* net, Vargen* gen, int num) {
   if (net) {
+
+    // Clear
+    VARGEN_array_del(net->vargen, net->num_vargens);
+
+    // Set
     net->vargen = gen;
     net->num_vargens = num;
   }
@@ -5587,6 +5658,11 @@ void NET_set_vargen_array(Net* net, Vargen* gen, int num) {
 
 void NET_set_bat_array(Net* net, Bat* bat, int num) {
   if (net) {
+
+    // Clear
+    BAT_array_del(net->bat, net->num_bats);
+    
+    // Set
     net->bat = bat;
     net->num_bats = num;
   }
@@ -5594,6 +5670,11 @@ void NET_set_bat_array(Net* net, Bat* bat, int num) {
 
 void NET_set_csc_conv_array(Net* net, ConvCSC* conv, int num) {
   if (net) {
+
+    // Clear
+    CONVCSC_array_del(net->csc_conv, net->num_csc_convs);
+
+    // Set
     net->csc_conv = conv;
     net->num_csc_convs = num;
   }
@@ -5601,6 +5682,11 @@ void NET_set_csc_conv_array(Net* net, ConvCSC* conv, int num) {
 
 void NET_set_vsc_conv_array(Net* net, ConvVSC* conv, int num) {
   if (net) {
+
+    // Clear
+    CONVVSC_array_del(net->vsc_conv, net->num_vsc_convs);
+
+    // Set
     net->vsc_conv = conv;
     net->num_vsc_convs = num;
   }
@@ -5610,7 +5696,10 @@ void NET_set_dc_bus_array(Net* net, BusDC* bus, int num) {
   int i;
   if (net) {
 
-    // Pointers
+    // Clear
+    BUSDC_array_del(net->dc_bus, net->num_dc_buses);
+
+    // Set
     net->dc_bus = bus;
     net->num_dc_buses = num;
 
@@ -5622,6 +5711,11 @@ void NET_set_dc_bus_array(Net* net, BusDC* bus, int num) {
 
 void NET_set_dc_branch_array(Net* net, BranchDC* branch, int num) {
   if (net) {
+
+    // Clear
+    BRANCHDC_array_del(net->dc_branch, net->num_dc_branches);
+
+    // Set
     net->dc_branch = branch;
     net->num_dc_branches = num;
   }
@@ -5629,6 +5723,11 @@ void NET_set_dc_branch_array(Net* net, BranchDC* branch, int num) {
 
 void NET_set_facts_array(Net* net, Facts* facts, int num) {
   if (net) {
+
+    // Clear
+    FACTS_array_del(net->facts, net->num_facts);
+
+    // Set
     net->facts = facts;
     net->num_facts = num;
   }

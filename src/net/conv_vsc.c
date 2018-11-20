@@ -321,6 +321,34 @@ int CONVVSC_get_index_i_dc(ConvVSC* conv, int t) {
     return -1;
 }
 
+int* CONVVSC_get_index_P_array(ConvVSC* conv) {
+  if (conv)
+    return conv->index_P;
+  else
+    return NULL;
+}
+
+int* CONVVSC_get_index_Q_array(ConvVSC* conv) {
+  if (conv)
+    return conv->index_Q;
+  else
+    return NULL;
+}
+
+int* CONVVSC_get_index_P_dc_array(ConvVSC* conv) {
+  if (conv)
+    return conv->index_P_dc;
+  else
+    return NULL;
+}
+
+int* CONVVSC_get_index_i_dc_array(ConvVSC* conv) {
+  if (conv)
+    return conv->index_i_dc;
+  else
+    return NULL;
+}
+
 REAL CONVVSC_get_target_power_factor(ConvVSC* conv) {
   if (conv)
     return conv->target_power_factor;
@@ -524,6 +552,41 @@ REAL CONVVSC_get_Q_par(ConvVSC* conv) {
     return conv->Q_par;
   else
     return 0;
+}
+
+REAL* CONVVSC_get_P_array(ConvVSC* conv) {
+  if (conv)
+    return conv->P;
+  else
+    return NULL;
+}
+
+REAL* CONVVSC_get_P_dc_array(ConvVSC* conv) {
+  if (conv)
+    return conv->P_dc;
+  else
+    return NULL;
+}
+
+REAL* CONVVSC_get_Q_array(ConvVSC* conv) {
+  if (conv)
+    return conv->Q;
+  else
+    return NULL;
+}
+
+REAL* CONVVSC_get_v_dc_set_array(ConvVSC* conv) {
+  if (conv)
+    return conv->v_dc_set;
+  else
+    return NULL;
+}
+
+REAL* CONVVSC_get_P_dc_set_array(ConvVSC* conv) {
+  if (conv)
+    return conv->P_dc_set;
+  else
+    return NULL;
 }
 
 Vec* CONVVSC_get_var_indices(void* vconv, unsigned char var, int t_start, int t_end) {
