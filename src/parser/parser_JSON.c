@@ -50,6 +50,7 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
   json_value* json_conv_vsc_array = NULL;
   json_value* json_conv_csc_array = NULL;
   json_value* json_facts_array = NULL;
+  json_value* json_red_bus_array = NULL;
   json_value* val;
   char* key;
   REAL data_num_periods;
@@ -148,6 +149,8 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
      json_conv_vsc_array = val;
    else if (strcmp(key,"facts") == 0)
      json_facts_array = val;
+   else if (strcmp(key,"redundant_buses") == 0)
+     json_red_bus_array = val;
   }
 
   // Check data
@@ -164,7 +167,8 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
       (!json_branch_dc_array || json_branch_dc_array->type != json_array) ||
       (!json_conv_vsc_array || json_conv_vsc_array->type != json_array) ||
       (!json_conv_csc_array || json_conv_csc_array->type != json_array) ||
-      (!json_facts_array || json_facts_array->type != json_array)) {
+      (!json_facts_array || json_facts_array->type != json_array) ||
+      (!json_red_bus_array || json_red_bus_array->type != json_array)) {
     PARSER_set_error(p,"Bad json data");
     json_value_free(value);
     free(file_contents);
@@ -221,6 +225,7 @@ Net* JSON_PARSER_parse(Parser* p, char* filename, int num_periods) {
   JSON_PARSER_process_json_conv_csc_array(p,net,json_conv_csc_array);
   JSON_PARSER_process_json_conv_vsc_array(p,net,json_conv_vsc_array);
   JSON_PARSER_process_json_facts_array(p,net,json_facts_array);
+  JSON_PARSER_process_json_red_bus_array(p,net,json_red_bus_array);
 
   // Propagate in time
   NET_propagate_data_in_time(net,data_num_periods-1,num_periods);
@@ -1883,5 +1888,58 @@ void JSON_PARSER_process_json_facts_array(Parser* p, Net* net, json_value* json_
       else if (strcmp(key,"b") == 0)
         FACTS_set_b(facts,val->u.dbl);
     }
+  }
+}
+
+void JSON_PARSER_process_json_red_bus_array(Parser* p, Net* net, json_value* json_red_bus_array) {
+
+  // Local variables
+  Bus* bus;
+  json_value* json_bus;
+  json_value* val;
+  char* key;  
+  int i;
+  int j;
+
+  // Processs red bus array
+  for (i = 0; i < json_red_bus_array->u.array.length; i++) {
+
+    // Json bus
+    json_bus = json_red_bus_array->u.array.values[i];
+
+    // Check
+    if (!json_bus || json_bus->type != json_object) {
+      PARSER_set_error(p,"Bad json red bus array");
+      continue;
+    }
+    
+    // Create bus
+    bus = BUS_new(NET_get_num_periods(net));
+   
+    // Fill
+    for (j = 0; j < json_bus->u.object.length; j++) {
+      
+      key = json_bus->u.object.values[j].name;
+      val = json_bus->u.object.values[j].value;
+
+      // number
+      if (strcmp(key,"number") == 0)
+        BUS_set_number(bus,val->u.integer);
+
+      // name
+      else if (strcmp(key,"name") == 0)
+        BUS_set_name(bus,val->u.string.ptr);
+
+      // alt_number
+      if (strcmp(key,"alt_number") == 0)
+        BUS_set_alt_number(bus,val->u.integer);
+
+      // alt_name
+      else if (strcmp(key,"alt_name") == 0)
+        BUS_set_alt_name(bus,val->u.string.ptr);
+    }
+
+    // Add bus
+    NET_add_red_bus(net,bus);
   }
 }

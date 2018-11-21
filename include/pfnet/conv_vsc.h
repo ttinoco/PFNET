@@ -86,8 +86,10 @@ int CONVVSC_get_index_Q(ConvVSC* conv, int t);
 int CONVVSC_get_index_P_dc(ConvVSC* conv, int t);
 int CONVVSC_get_index_i_dc(ConvVSC* conv, int t);
 
-REAL CONVVSC_get_v_dc_set(ConvVSC* conv, int t);
-REAL CONVVSC_get_P_dc_set(ConvVSC* conv, int t);
+int* CONVVSC_get_index_P_array(ConvVSC* conv);
+int* CONVVSC_get_index_Q_array(ConvVSC* conv);
+int* CONVVSC_get_index_P_dc_array(ConvVSC* conv);
+int* CONVVSC_get_index_i_dc_array(ConvVSC* conv);
   
 char* CONVVSC_get_json_string(ConvVSC* conv, char* output);
 char CONVVSC_get_mode_ac(ConvVSC* conv);
@@ -111,6 +113,15 @@ REAL CONVVSC_get_Q_par(ConvVSC* conv);
 REAL CONVVSC_get_loss_coeff_A(ConvVSC* conv);
 REAL CONVVSC_get_loss_coeff_B(ConvVSC* conv);
 REAL CONVVSC_get_target_power_factor(ConvVSC* conv);
+REAL CONVVSC_get_v_dc_set(ConvVSC* conv, int t);
+REAL CONVVSC_get_P_dc_set(ConvVSC* conv, int t);
+
+REAL* CONVVSC_get_P_array(ConvVSC* conv);
+REAL* CONVVSC_get_P_dc_array(ConvVSC* conv);
+REAL* CONVVSC_get_Q_array(ConvVSC* conv);
+REAL* CONVVSC_get_v_dc_set_array(ConvVSC* conv);
+REAL* CONVVSC_get_P_dc_set_array(ConvVSC* conv);
+
 Vec* CONVVSC_get_var_indices(void* conv, unsigned char var, int t_start, int t_end);
 char* CONVVSC_get_var_info_string(ConvVSC* conv, int index);
 void CONVVSC_get_var_values(ConvVSC* conv, Vec* values, int code);

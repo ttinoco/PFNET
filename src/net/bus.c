@@ -28,6 +28,9 @@ struct Bus {
   int number;                 /**< @brief Bus number */
   char name[BUS_BUFFER_SIZE]; /**< @brief Bus name */
 
+  int alt_number;                 /**< @brief Alternate bus number */
+  char alt_name[BUS_BUFFER_SIZE]; /**< @brief Alternate bus name */
+
   // Times
   int num_periods;    /**< @brief Number of time periods */
 
@@ -611,6 +614,9 @@ void BUS_copy_from_bus(Bus* bus, Bus* other) {
   bus->number = other->number;
   strcpy(bus->name,other->name);
 
+  bus->alt_number = other->alt_number;
+  strcpy(bus->alt_name,other->alt_name);
+
   // Area, zone
   bus->area = other->area;
   bus->zone = other->zone;
@@ -827,6 +833,20 @@ int BUS_get_number(Bus* bus) {
 char* BUS_get_name(Bus* bus) {
   if (bus)
     return bus->name;
+  else
+    return NULL;
+}
+
+int BUS_get_alt_number(Bus* bus) {
+  if (bus)
+    return bus->alt_number;
+  else
+    return 0;
+}
+
+char* BUS_get_alt_name(Bus* bus) {
+  if (bus)
+    return bus->alt_name;
   else
     return NULL;
 }
@@ -1712,6 +1732,8 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_int(temp,output,"index",bus->index,FALSE);
   JSON_int(temp,output,"number",bus->number,FALSE);
   JSON_str(temp,output,"name",bus->name,FALSE);
+  JSON_int(temp,output,"alt_number",bus->alt_number,FALSE);
+  JSON_str(temp,output,"alt_name",bus->alt_name,FALSE);
   JSON_int(temp,output,"area",bus->area,FALSE);
   JSON_int(temp,output,"zone",bus->zone,FALSE);
   JSON_int(temp,output,"num_periods",bus->num_periods,FALSE);
@@ -1856,8 +1878,11 @@ void BUS_init(Bus* bus, int num_periods) {
   bus->num_periods = num_periods;
 
   bus->number = 0;
-  for (i = 0; i < BUS_BUFFER_SIZE; i++)
+  bus->alt_number = -1;
+  for (i = 0; i < BUS_BUFFER_SIZE; i++) {
     bus->name[i] = 0;
+    bus->alt_name[i] = 0;
+  }
 
   bus->v_base = 0.;
 
@@ -2014,6 +2039,13 @@ BOOL BUS_is_star(Bus* bus) {
     return FALSE;
 }
 
+BOOL BUS_is_redundant(Bus* bus) {
+  if (bus)
+    return bus->alt_number >= 0;
+  else
+    return FALSE;
+}
+
 Bus* BUS_list_add(Bus* bus_list, Bus* bus_new) {
   LIST_add(Bus,bus_list,bus_new,next);
   return bus_list;
@@ -2045,6 +2077,10 @@ Bus* BUS_list_add_sorting(Bus* bus_list, Bus* bus_new, int sort_by, int t) {
   else
     bus_list = bus_new;
   return bus_list;
+}
+
+void BUS_list_del(Bus* bus_list) {
+  LIST_map(Bus,bus_list,bus,next,{BUS_array_del(bus,1);});
 }
 
 int BUS_list_len(Bus* bus_list) {
@@ -2097,6 +2133,16 @@ void BUS_set_number(Bus* bus, int number) {
 void BUS_set_name(Bus* bus, char* name) {
   if (bus)
     strncpy(bus->name,name,(size_t)(BUS_BUFFER_SIZE-1));
+}
+
+void BUS_set_alt_number(Bus* bus, int number) {
+  if (bus)
+    bus->alt_number = number;
+}
+
+void BUS_set_alt_name(Bus* bus, char* name) {
+  if (bus)
+    strncpy(bus->alt_name,name,(size_t)(BUS_BUFFER_SIZE-1));
 }
 
 void BUS_set_price(Bus* bus, REAL price, int t) {

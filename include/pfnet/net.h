@@ -29,10 +29,6 @@
 #include "matrix.h"
 #include "utils.h"
 
-// Controls
-#define NET_CONTROL_EPS 1e-4      /**< @brief Safeguard for small control ranges (p.u.). */
-#define NET_CONTROL_ACTION_PCT 2. /**< @brief Percent threshold for counting control actions (%). */
-
 // Base power
 #define NET_BASE_POWER 100 /**< @brief Default system base power (MVA). */
 
@@ -87,6 +83,8 @@ void NET_del_facts(Net* net, Facts** facts_ptr_array, int size);
 
 void NET_add_vargens_from_params(Net* net, Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value);
 void NET_add_batteries_from_params(Net* net, Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d);
+
+void NET_add_red_bus(Net* net, Bus* bus);
 
 void NET_bus_hash_number_add(Net* net, Bus* bus);
 Bus* NET_bus_hash_number_find(Net* net, int number);
@@ -161,6 +159,7 @@ int NET_get_num_buses_reg_by_shunt(Net* net);
 int NET_get_num_buses_reg_by_shunt_only(Net* net);
 int NET_get_num_buses_reg_by_vsc_conv(Net* net);
 int NET_get_num_buses_reg_by_facts(Net* net);
+int NET_get_num_red_buses(Net* net);
 int NET_get_num_branches(Net* net);
 int NET_get_num_branches_not_on_outage(Net* net);
 int NET_get_num_branches_on_outage(Net* net);
@@ -223,7 +222,6 @@ REAL NET_get_shunt_v_vio(Net* net, int t);
 REAL NET_get_shunt_b_vio(Net* net, int t);
 REAL NET_get_load_P_util(Net* net, int t);
 REAL NET_get_load_P_vio(Net* net, int t);
-int NET_get_num_actions(Net* net, int t);
 REAL NET_get_vargen_corr_radius(Net* net);
 REAL NET_get_vargen_corr_value(Net* net);
 char* NET_get_json_string(Net* net);
@@ -251,8 +249,8 @@ void NET_set_flags_of_component(Net* net, void* obj, char obj_type, char flag_ma
 void NET_set_var_values(Net* net, Vec* values);
 void NET_set_vargen_buses(Net* net, Bus* bus_list);
 void NET_set_bat_buses(Net* net, Bus* bus_list);
-void NET_show_components(Net* net);
-char* NET_get_show_components_str(Net* net);
+void NET_show_components(Net* net, int output_level);
+char* NET_get_show_components_str(Net* net, int output_level);
 void NET_show_properties(Net* net, int t);
 char* NET_get_show_properties_str(Net* net, int t);
 void NET_show_buses(Net* net, int number, int sort_by, int t);
