@@ -80,6 +80,7 @@ Bus* FACTS_get_reg_bus(Facts* facts);
 Bus* FACTS_get_bus_k(Facts* facts);
 Bus* FACTS_get_bus_m(Facts* facts);
 int FACTS_get_index(Facts* facts);
+
 int FACTS_get_index_v_mag_s(Facts* facts, int t);
 int FACTS_get_index_v_ang_s(Facts* facts, int t);
 int FACTS_get_index_P_k(Facts* facts, int t);
@@ -89,26 +90,26 @@ int FACTS_get_index_Q_m(Facts* facts, int t);
 int FACTS_get_index_P_dc(Facts* facts, int t);
 int FACTS_get_index_Q_s(Facts* facts, int t);
 int FACTS_get_index_Q_sh(Facts* facts, int t);
+
+int* FACTS_get_index_v_mag_s_array(Facts* facts);
+int* FACTS_get_index_v_ang_s_array(Facts* facts);
+int* FACTS_get_index_P_k_array(Facts* facts);
+int* FACTS_get_index_P_m_array(Facts* facts);
+int* FACTS_get_index_Q_k_array(Facts* facts);
+int* FACTS_get_index_Q_m_array(Facts* facts);
+int* FACTS_get_index_P_dc_array(Facts* facts);
+int* FACTS_get_index_Q_s_array(Facts* facts);
+int* FACTS_get_index_Q_sh_array(Facts* facts);
+
 Facts* FACTS_get_reg_next(Facts* facts);
 Facts* FACTS_get_next_k(Facts* facts);
 Facts* FACTS_get_next_m(Facts* facts);
+
 REAL FACTS_get_v_max_s(Facts* facts);
-REAL FACTS_get_v_mag_s(Facts* facts, int t);
-REAL FACTS_get_v_ang_s(Facts* facts, int t);
 REAL FACTS_get_g(Facts* facts);
 REAL FACTS_get_b(Facts* facts);
-
 char FACTS_get_mode_s(Facts* facts);
-REAL FACTS_get_P_k(Facts* facts, int t);
-REAL FACTS_get_P_m(Facts* facts, int t);
-REAL FACTS_get_Q_k(Facts* facts, int t);
-REAL FACTS_get_Q_m(Facts* facts, int t);
-REAL FACTS_get_Q_sh(Facts* facts, int t);
-REAL FACTS_get_Q_s(Facts* facts, int t);
-REAL FACTS_get_P_dc(Facts* facts, int t);
 REAL FACTS_get_Q_par(Facts* facts);
-REAL FACTS_get_P_set(Facts* facts, int t);
-REAL FACTS_get_Q_set(Facts* facts, int t);
 REAL FACTS_get_Q_max_s(Facts* facts);
 REAL FACTS_get_Q_max_sh(Facts* facts);
 REAL FACTS_get_Q_min_s(Facts* facts);
@@ -119,6 +120,30 @@ REAL FACTS_get_P_max_dc(Facts* facts);
 REAL FACTS_get_v_min_m(Facts* facts);
 REAL FACTS_get_v_max_m(Facts* facts);
 
+REAL FACTS_get_v_mag_s(Facts* facts, int t);
+REAL FACTS_get_v_ang_s(Facts* facts, int t);
+REAL FACTS_get_P_k(Facts* facts, int t);
+REAL FACTS_get_P_m(Facts* facts, int t);
+REAL FACTS_get_Q_k(Facts* facts, int t);
+REAL FACTS_get_Q_m(Facts* facts, int t);
+REAL FACTS_get_Q_sh(Facts* facts, int t);
+REAL FACTS_get_Q_s(Facts* facts, int t);
+REAL FACTS_get_P_dc(Facts* facts, int t);
+REAL FACTS_get_P_set(Facts* facts, int t);
+REAL FACTS_get_Q_set(Facts* facts, int t);
+
+REAL* FACTS_get_v_mag_s_array(Facts* facts);
+REAL* FACTS_get_v_ang_s_array(Facts* facts);
+REAL* FACTS_get_P_k_array(Facts* facts);
+REAL* FACTS_get_P_m_array(Facts* facts);
+REAL* FACTS_get_Q_k_array(Facts* facts);
+REAL* FACTS_get_Q_m_array(Facts* facts);
+REAL* FACTS_get_Q_sh_array(Facts* facts);
+REAL* FACTS_get_Q_s_array(Facts* facts);
+REAL* FACTS_get_P_dc_array(Facts* facts);
+REAL* FACTS_get_P_set_array(Facts* facts);
+REAL* FACTS_get_Q_set_array(Facts* facts);
+
 void FACTS_get_var_values(Facts* facts, Vec* values, int code);
 char* FACTS_get_var_info_string(Facts* facts, int index);
 int FACTS_get_num_vars(void* facts, unsigned char var, int t_start, int t_end);
@@ -127,8 +152,8 @@ char* FACTS_get_json_string(Facts* facts, char* output);
 BOOL FACTS_has_flags(void* facts, char flag_type, unsigned char mask);
 BOOL FACTS_has_properties(void* facts, char prop);
 void FACTS_init(Facts* facts, int num_periods);
-BOOL FACTS_is_equal(Facts* facts, Facts* other);
 
+BOOL FACTS_is_equal(Facts* facts, Facts* other);
 BOOL FACTS_is_regulator(Facts* facts);
 BOOL FACTS_is_STATCOM(Facts* facts);
 BOOL FACTS_is_SSSC(Facts* facts);
@@ -148,8 +173,10 @@ int FACTS_list_m_len(Facts* facts_list);
 Facts* FACTS_list_reg_add(Facts* facts_list, Facts* facts);
 Facts* FACTS_list_reg_del(Facts* facts_list, Facts* facts);
 int FACTS_list_reg_len(Facts* facts_list);
+
 Facts* FACTS_new(int num_periods);
 void FACTS_propagate_data_in_time(Facts* facts, int start, int end);
+
 void FACTS_set_name(Facts* facts, char* name);
 void FACTS_set_reg_bus(Facts* facts, Bus* bus);
 void FACTS_set_bus_k(Facts* facts, Bus* bus);
@@ -158,7 +185,6 @@ void FACTS_set_index(Facts* facts, int index);
 void FACTS_set_v_mag_s(Facts* facts, REAL v_mag_s, int t);
 void FACTS_set_v_ang_s(Facts* facts, REAL v_ang_s, int t);
 void FACTS_set_v_max_s(Facts* facts, REAL v_max);
-
 void FACTS_set_mode_s(Facts* facts, char mode);
 void FACTS_set_P_k(Facts* facts, REAL P, int t);
 void FACTS_set_P_m(Facts* facts, REAL P, int t);

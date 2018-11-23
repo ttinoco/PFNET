@@ -244,27 +244,6 @@ BusDC* CONVCSC_get_dc_bus(ConvCSC* conv) {
     return NULL;
 }
 
-REAL CONVCSC_get_angle(ConvCSC* conv, int t) {
-  if (conv && t >= 0 && t < conv->num_periods)
-    return conv->angle[t];
-  else 
-    return 0;
-}
-
-REAL CONVCSC_get_angle_max(ConvCSC* conv) {
-  if (conv)
-    return conv->angle_max;
-  else
-    return 0;
-}
-
-REAL CONVCSC_get_angle_min(ConvCSC* conv) {
-  if (conv)
-    return conv->angle_min;
-  else
-    return 0;
-}
-
 char CONVCSC_get_flags_vars(ConvCSC* conv) {
   if (conv)
     return conv->vars;
@@ -290,13 +269,6 @@ char CONVCSC_get_flags_sparse(ConvCSC* conv) {
   if (conv)
     return conv->sparse;
   else
-    return 0;
-}
-
-REAL CONVCSC_get_i_dc_set(ConvCSC* conv, int t) {
-  if (conv && t >= 0 && t < conv->num_periods)
-    return conv->i_dc_set[t];
-  else 
     return 0;
 }
 
@@ -347,6 +319,48 @@ int CONVCSC_get_index_angle(ConvCSC* conv, int t) {
     return conv->index_ratio[t];
   else
     return -1;
+}
+
+int* CONVCSC_get_index_P_array(ConvCSC* conv) {
+  if (conv)
+    return conv->index_P;
+  else
+    return NULL;
+}
+
+int* CONVCSC_get_index_Q_array(ConvCSC* conv) {
+  if (conv)
+    return conv->index_Q;
+  else
+    return NULL;
+}
+
+int* CONVCSC_get_index_P_dc_array(ConvCSC* conv) {
+  if (conv)
+    return conv->index_P_dc;
+  else
+    return NULL;
+}
+
+int* CONVCSC_get_index_i_dc_array(ConvCSC* conv) {
+  if (conv)
+    return conv->index_i_dc;
+  else
+    return NULL;
+}
+
+int* CONVCSC_get_index_ratio_array(ConvCSC* conv) {
+  if (conv)
+    return conv->index_ratio;
+  else
+    return NULL;
+}
+
+int* CONVCSC_get_index_angle_array(ConvCSC* conv) {
+  if (conv)
+    return conv->index_angle;
+  else
+    return NULL;
 }
 
 char* CONVCSC_get_json_string(ConvCSC* conv, char* output) {
@@ -513,6 +527,20 @@ REAL CONVCSC_get_P_dc_set(ConvCSC* conv, int t) {
     return 0;
 }
 
+REAL CONVCSC_get_v_dc_set(ConvCSC* conv, int t) {
+  if (conv && t >= 0 && t < conv->num_periods)
+    return conv->v_dc_set[t];
+  else 
+    return 0;
+}
+
+REAL CONVCSC_get_i_dc_set(ConvCSC* conv, int t) {
+  if (conv && t >= 0 && t < conv->num_periods)
+    return conv->i_dc_set[t];
+  else 
+    return 0;
+}
+
 REAL CONVCSC_get_Q(ConvCSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
     return conv->Q[t];
@@ -526,6 +554,84 @@ REAL CONVCSC_get_ratio(ConvCSC* conv, int t) {
   else 
     return 0;
 }
+
+REAL CONVCSC_get_angle(ConvCSC* conv, int t) {
+  if (conv && t >= 0 && t < conv->num_periods)
+    return conv->angle[t];
+  else 
+    return 0;
+}
+
+REAL* CONVCSC_get_P_array(ConvCSC* conv) {
+  if (conv)
+    return conv->P;
+  else
+    return NULL;
+}
+
+REAL* CONVCSC_get_P_dc_array(ConvCSC* conv) {
+  if (conv)
+    return conv->P_dc;
+  else
+    return NULL;
+}
+
+REAL* CONVCSC_get_P_dc_set_array(ConvCSC* conv) {
+  if (conv)
+    return conv->P_dc_set;
+  else
+    return NULL;
+}
+
+REAL* CONVCSC_get_v_dc_set_array(ConvCSC* conv) {
+  if (conv)
+    return conv->v_dc_set;
+  else
+    return NULL;
+}
+
+REAL* CONVCSC_get_i_dc_set_array(ConvCSC* conv) {
+  if (conv)
+    return conv->i_dc_set;
+  else
+    return NULL;
+}
+
+REAL* CONVCSC_get_Q_array(ConvCSC* conv) {
+  if (conv)
+    return conv->Q;
+  else
+    return NULL;
+}
+
+REAL* CONVCSC_get_ratio_array(ConvCSC* conv) {
+  if (conv)
+    return conv->ratio;
+  else
+    return NULL;
+}
+
+REAL* CONVCSC_get_angle_array(ConvCSC* conv) {
+  if (conv)
+    return conv->angle;
+  else
+    return NULL;
+}
+
+REAL CONVCSC_get_angle_max(ConvCSC* conv) {
+  if (conv)
+    return conv->angle_max;
+  else
+    return 0;
+}
+
+REAL CONVCSC_get_angle_min(ConvCSC* conv) {
+  if (conv)
+    return conv->angle_min;
+  else
+    return 0;
+}
+
 
 REAL CONVCSC_get_ratio_max(ConvCSC* conv) {
   if (conv)
@@ -552,13 +658,6 @@ REAL CONVCSC_get_v_base_s(ConvCSC* conv) {
   if (conv)
     return conv->v_base_s;
   else
-    return 0;
-}
-
-REAL CONVCSC_get_v_dc_set(ConvCSC* conv, int t) {
-  if (conv && t >= 0 && t < conv->num_periods)
-    return conv->v_dc_set[t];
-  else 
     return 0;
 }
 

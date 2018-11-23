@@ -398,6 +398,70 @@ int FACTS_get_index_P_dc(Facts* facts, int t) {
     return -1;
 }
 
+
+int* FACTS_get_index_v_mag_s_array(Facts* facts) {
+  if (facts)
+    return facts->index_v_mag_s;
+  else
+    return NULL;
+}
+
+int* FACTS_get_index_v_ang_s_array(Facts* facts) {
+  if (facts)
+    return facts->index_v_ang_s;
+  else
+    return NULL;
+}
+
+int* FACTS_get_index_P_k_array(Facts* facts) {
+  if (facts)
+    return facts->index_P_k;
+  else
+    return NULL;
+}
+
+int* FACTS_get_index_P_m_array(Facts* facts) {
+  if (facts)
+    return facts->index_P_m;
+  else
+    return NULL;
+}
+
+int* FACTS_get_index_Q_k_array(Facts* facts) {
+  if (facts)
+    return facts->index_Q_k;
+  else
+    return NULL;
+}
+
+int* FACTS_get_index_Q_m_array(Facts* facts) {
+  if (facts)
+    return facts->index_Q_m;
+  else
+    return NULL;
+}
+
+int* FACTS_get_index_P_dc_array(Facts* facts) {
+  if (facts)
+    return facts->index_P_dc;
+  else
+    return NULL;
+}
+
+int* FACTS_get_index_Q_s_array(Facts* facts) {
+  if (facts)
+    return facts->index_Q_s;
+  else
+    return NULL;
+}
+
+int* FACTS_get_index_Q_sh_array(Facts* facts) {
+  if (facts)
+    return facts->index_Q_sh;
+  else
+    return NULL;
+}
+
 Facts* FACTS_get_next_k(Facts* facts) {
   if (facts)
     return facts->next_k;
@@ -417,20 +481,6 @@ Facts* FACTS_get_reg_next(Facts* facts) {
     return facts->reg_next;
   else
     return NULL;
-}
-
-REAL FACTS_get_v_mag_s(Facts* facts, int t) {
-  if (facts && t >= 0 && t < facts->num_periods)
-    return facts->v_mag_s[t];
-  else
-    return 0;
-}
-
-REAL FACTS_get_v_ang_s(Facts* facts, int t) {
-  if (facts && t >= 0 && t < facts->num_periods)
-    return facts->v_ang_s[t];
-  else
-    return 0;
 }
 
 REAL FACTS_get_v_max_s(Facts* facts) {
@@ -459,6 +509,20 @@ char FACTS_get_mode_s(Facts* facts) {
     return facts->mode_s;
   else
     return FACTS_SERIES_MODE_DISABLED;
+}
+
+REAL FACTS_get_v_mag_s(Facts* facts, int t) {
+  if (facts && t >= 0 && t < facts->num_periods)
+    return facts->v_mag_s[t];
+  else
+    return 0;
+}
+
+REAL FACTS_get_v_ang_s(Facts* facts, int t) {
+  if (facts && t >= 0 && t < facts->num_periods)
+    return facts->v_ang_s[t];
+  else
+    return 0;
 }
 
 REAL FACTS_get_P_k(Facts* facts, int t) {
@@ -510,13 +574,6 @@ REAL FACTS_get_P_dc(Facts* facts, int t) {
     return 0;
 }
 
-REAL FACTS_get_Q_par(Facts* facts) {
-  if (facts)
-    return facts->Q_par;
-  else
-    return 0;
-}
-
 REAL FACTS_get_P_set(Facts* facts, int t) {
   if (facts && t >= 0 && t < facts->num_periods)
     return facts->P_set[t];
@@ -527,6 +584,90 @@ REAL FACTS_get_P_set(Facts* facts, int t) {
 REAL FACTS_get_Q_set(Facts* facts, int t) {
   if (facts && t >= 0 && t < facts->num_periods)
     return facts->Q_set[t];
+  else
+    return 0;
+}
+
+REAL* FACTS_get_v_mag_s_array(Facts* facts) {
+  if (facts)
+    return facts->v_mag_s;
+  else
+    return NULL;
+}
+
+REAL* FACTS_get_v_ang_s_array(Facts* facts) {
+  if (facts)
+    return facts->v_ang_s;
+  else
+    return NULL;
+}
+
+REAL* FACTS_get_P_k_array(Facts* facts) {
+  if (facts)
+    return facts->P_k;
+  else
+    return NULL;
+}
+
+REAL* FACTS_get_P_m_array(Facts* facts) {
+  if (facts)
+    return facts->P_m;
+  else
+    return NULL;
+}
+
+REAL* FACTS_get_Q_k_array(Facts* facts) {
+  if (facts)
+    return facts->Q_k;
+  else
+    return NULL;
+}
+
+REAL* FACTS_get_Q_m_array(Facts* facts) {
+  if (facts)
+    return facts->Q_m;
+  else
+    return NULL;
+}
+
+REAL* FACTS_get_Q_sh_array(Facts* facts) {
+  if (facts)
+    return facts->Q_sh;
+  else
+    return NULL;
+}
+
+REAL* FACTS_get_Q_s_array(Facts* facts) {
+  if (facts)
+    return facts->Q_s;
+  else
+    return NULL;
+}
+
+REAL* FACTS_get_P_dc_array(Facts* facts) {
+  if (facts)
+    return facts->P_dc;
+  else
+    return NULL;
+}
+
+REAL* FACTS_get_P_set_array(Facts* facts) {
+  if (facts)
+    return facts->P_set;
+  else
+    return NULL;
+}
+
+REAL* FACTS_get_Q_set_array(Facts* facts) {
+  if (facts)
+    return facts->Q_set;
+  else
+    return NULL;
+}
+
+REAL FACTS_get_Q_par(Facts* facts) {
+  if (facts)
+    return facts->Q_par;
   else
     return 0;
 }
