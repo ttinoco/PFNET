@@ -39,8 +39,9 @@
 /** \defgroup bat_const Bat Constants
  *  @{
  */
-#define BAT_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
-#define BAT_NUM_JSON_FIELDS 15 /**< @brief Constant: max number of json fields */
+#define BAT_BUFFER_SIZE 100      /**< @brief Constant: buffer size for strings */
+#define BAT_JSON_BUFFER_SIZE 200 /**< @brief Constant: buffer size for json strings */
+#define BAT_NUM_JSON_FIELDS 15   /**< @brief Constant: max number of json fields */
 /** @} */
 
 // Battery

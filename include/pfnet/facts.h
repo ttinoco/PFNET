@@ -50,8 +50,9 @@
 /** \defgroup facts_const Facts Constants
  *  @{
  */
-#define FACTS_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
-#define FACTS_NUM_JSON_FIELDS 30 /**< @brief Constant: max number of json fields */
+#define FACTS_BUFFER_SIZE 100      /**< @brief Constant: buffer size for strings */
+#define FACTS_JSON_BUFFER_SIZE 200 /**< @brief Constant: buffer size for json strings */
+#define FACTS_NUM_JSON_FIELDS 30   /**< @brief Constant: max number of json fields */
 /** @} */
 
 // Facts

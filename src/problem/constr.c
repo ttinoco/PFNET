@@ -18,7 +18,7 @@ struct Constr {
   char error_string[CONSTR_BUFFER_SIZE]; /**< @brief Error string */
 
   // Name
-  char name[CONSTR_BUFFER_SIZE]; /**< @brief Name string */
+  char name[CONSTR_INFO_BUFFER_SIZE]; /**< @brief Name string */
   
   // Network
   Net* net;                    /**< @brief Power network */
@@ -954,10 +954,10 @@ void CONSTR_set_data(Constr* c, void* data) {
 }
 
 void CONSTR_set_A_row_info_string(Constr* c, int index, char* obj, int obj_id, char* constr_info, int time) {
-  char info[CONSTR_INFO_BUFFER_SIZE];
+  char info[CONSTR_BUFFER_SIZE];
   if (c && c->A_row_info && 0 <= index && index < MAT_get_size1(c->A)) {
     snprintf(info,
-             CONSTR_INFO_BUFFER_SIZE*sizeof(char),
+             CONSTR_BUFFER_SIZE*sizeof(char),
              "%s:%s:%d:%s:%d",
              c->name,
              obj,
@@ -972,10 +972,10 @@ void CONSTR_set_A_row_info_string(Constr* c, int index, char* obj, int obj_id, c
 }
 
 void CONSTR_set_J_row_info_string(Constr* c, int index, char* obj, int obj_id, char* constr_info, int time) {
-  char info[CONSTR_INFO_BUFFER_SIZE];
+  char info[CONSTR_BUFFER_SIZE];
   if (c && c->J_row_info && 0 <= index && index < MAT_get_size1(c->J)) {
     snprintf(info,
-             CONSTR_INFO_BUFFER_SIZE*sizeof(char),
+             CONSTR_BUFFER_SIZE*sizeof(char),
              "%s:%s:%d:%s:%d",
              c->name,
              obj,
@@ -990,10 +990,10 @@ void CONSTR_set_J_row_info_string(Constr* c, int index, char* obj, int obj_id, c
 }
 
 void CONSTR_set_G_row_info_string(Constr* c, int index, char* obj, int obj_id, char* constr_info, int time) {
-  char info[CONSTR_INFO_BUFFER_SIZE];
+  char info[CONSTR_BUFFER_SIZE];
   if (c && c->G_row_info && 0 <= index && index < MAT_get_size1(c->G)) {
     snprintf(info,
-             CONSTR_INFO_BUFFER_SIZE*sizeof(char),
+             CONSTR_BUFFER_SIZE*sizeof(char),
              "%s:%s:%d:%s:%d",
              c->name,
              obj,

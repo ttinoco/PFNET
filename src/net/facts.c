@@ -970,7 +970,7 @@ Vec* FACTS_get_var_indices(void* vfacts, unsigned char var, int t_start, int t_e
 char* FACTS_get_json_string(Facts* facts, char* output) {
 
   // Local variables
-  char temp[FACTS_BUFFER_SIZE];
+  char temp[FACTS_JSON_BUFFER_SIZE];
   char* output_start;
   BOOL resize;
 

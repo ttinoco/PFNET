@@ -43,8 +43,9 @@
 /** \defgroup vargen_const Variable Generator Constants
  *  @{
  */
-#define VARGEN_BUFFER_SIZE 100    /**< @brief Constant: buffer size for name */
-#define VARGEN_NUM_JSON_FIELDS 15 /**< @brief Constant: max number of json fields */
+#define VARGEN_BUFFER_SIZE 100      /**< @brief Constant: buffer size for strings */
+#define VARGEN_JSON_BUFFER_SIZE 200 /**< @brief Constant: buffer size for json strings */
+#define VARGEN_NUM_JSON_FIELDS 15   /**< @brief Constant: max number of json fields */
 /** @} */
 
 // Variable generator

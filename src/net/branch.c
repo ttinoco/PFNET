@@ -1223,7 +1223,7 @@ Vec* BRANCH_get_var_indices(void* vbr, unsigned char var, int t_start, int t_end
 char* BRANCH_get_json_string(Branch* branch, char* output) {
 
   // Local variables
-  char temp[BRANCH_BUFFER_SIZE];
+  char temp[BRANCH_JSON_BUFFER_SIZE];
   char* output_start;
   BOOL resize;
 
@@ -1649,10 +1649,11 @@ void BRANCH_set_pos_ratio_v_sens(Branch* br, BOOL flag) {
 }
 
 void BRANCH_set_outage(Branch* br, BOOL outage) {
-  if (br)
+  if (br) {
     if (br->outage != outage)
       NET_inc_state_tag(br->net);
-  br->outage = outage;
+    br->outage = outage;
+  }
 }
 
 void BRANCH_set_phase(Branch* br, REAL phase, int t) {

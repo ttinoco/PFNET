@@ -38,8 +38,9 @@
 /** \defgroup bus_dc_const BusDC Constants
  *  @{
  */
-#define BUSDC_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
-#define BUSDC_NUM_JSON_FIELDS 12 /**< @brief Constant: max number of json fields */
+#define BUSDC_BUFFER_SIZE 100      /**< @brief Constant: buffer size for strings */
+#define BUSDC_JSON_BUFFER_SIZE 200 /**< @brief Constant: buffer size for json strings */
+#define BUSDC_NUM_JSON_FIELDS 12   /**< @brief Constant: max number of json fields */
 /** @} */
 
 // BusDC

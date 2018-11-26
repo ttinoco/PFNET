@@ -45,8 +45,9 @@
 /** \defgroup gen_const Gen Constants
  *  @{
  */
-#define GEN_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
-#define GEN_NUM_JSON_FIELDS 20 /**< @brief Constant: max number of json fields */
+#define GEN_BUFFER_SIZE 100      /**< @brief Constant: buffer size for strings */
+#define GEN_JSON_BUFFER_SIZE 200 /**< @brief Constant: buffer size for json strings */
+#define GEN_NUM_JSON_FIELDS 20   /**< @brief Constant: max number of json fields */
 /** @} */
 
 // Generator

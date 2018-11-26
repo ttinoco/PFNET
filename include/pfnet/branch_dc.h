@@ -26,8 +26,9 @@
 /** \defgroup branch_dc_const BranchDC Constants
  *  @{
  */
-#define BRANCHDC_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
-#define BRANCHDC_NUM_JSON_FIELDS 10 /**< @brief Constant: max number of json fields */
+#define BRANCHDC_BUFFER_SIZE 100      /**< @brief Constant: buffer size for strings */
+#define BRANCHDC_JSON_BUFFER_SIZE 200 /**< @brief Constant: buffer size for json strings */
+#define BRANCHDC_NUM_JSON_FIELDS 10   /**< @brief Constant: max number of json fields */
 /** @} */
 
 // BranchDC

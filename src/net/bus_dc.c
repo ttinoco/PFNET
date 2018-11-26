@@ -334,7 +334,7 @@ int BUSDC_get_index_v(BusDC* bus, int t) {
 char* BUSDC_get_json_string(BusDC* bus, char* output) {
   
   // Local variables
-  char temp[BUSDC_BUFFER_SIZE];
+  char temp[BUSDC_JSON_BUFFER_SIZE];
   char* output_start;
   BOOL resize;
 

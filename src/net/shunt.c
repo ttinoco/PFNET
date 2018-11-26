@@ -482,7 +482,7 @@ Vec* SHUNT_get_var_indices(void* vshunt, unsigned char var, int t_start, int t_e
 char* SHUNT_get_json_string(Shunt* shunt, char* output) {
 
   // Local variables
-  char temp[SHUNT_BUFFER_SIZE];
+  char temp[SHUNT_JSON_BUFFER_SIZE];
   char* output_start;
   BOOL resize;
 

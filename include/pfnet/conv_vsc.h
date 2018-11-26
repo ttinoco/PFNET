@@ -51,9 +51,10 @@
 /** \defgroup conv_vsc_const ConvVSC Constants
  *  @{
  */
-#define CONVVSC_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
-#define CONVVSC_NUM_JSON_FIELDS 25 /**< @brief Constant: max number of json fields */
-#define CONVVSC_MIN_TARGET_PF 1e-4 /**< @brief Minimum target power factor */
+#define CONVVSC_BUFFER_SIZE 100      /**< @brief Constant: buffer size for strings */
+#define CONVVSC_JSON_BUFFER_SIZE 200 /**< @brief Constant: buffer size for json strings */
+#define CONVVSC_NUM_JSON_FIELDS 25   /**< @brief Constant: max number of json fields */
+#define CONVVSC_MIN_TARGET_PF 1e-4   /**< @brief Minimum target power factor */
 /** @} */
 
 // ConvVSC

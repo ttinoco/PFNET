@@ -20,7 +20,7 @@
 // Buffer
 #define CONSTR_H_NNZ_MUL 100        /**< @brief Factor for determining max size of H_nnz array */
 #define CONSTR_BUFFER_SIZE 1024     /**< @brief Default constraint buffer size for general strings */
-#define CONSTR_INFO_BUFFER_SIZE 100 /**< @brife Default buffer size for row info strings */
+#define CONSTR_INFO_BUFFER_SIZE 200 /**< @brife Default buffer size for row info strings */
 
 // Constraint
 typedef struct Constr Constr;

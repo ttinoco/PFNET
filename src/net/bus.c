@@ -1710,7 +1710,7 @@ REAL BUS_get_quantity(Bus* bus, int qtype, int t) {
 char* BUS_get_json_string(Bus* bus, char* output) {
   
   // Local variables
-  char temp[BUS_BUFFER_SIZE];
+  char temp[BUS_JSON_BUFFER_SIZE];
   char* output_start;
   BOOL resize;
 
