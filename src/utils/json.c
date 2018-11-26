@@ -141,7 +141,7 @@ static int new_value (json_state * state,
                return 0;
             }
 
-            value->_reserved.object_mem = (*(char **) &value->u.object.values) + values_size;
+            value->_reserved.object_mem = ((char*)*(json_object_entry**) &value->u.object.values) + values_size; // PFNET: changed char cast to combination of char and json_object_array
 
             value->u.object.length = 0;
             break;
@@ -403,7 +403,7 @@ json_value * json_parse_ex (json_settings * settings,
                   case json_object:
 
                      if (state.first_pass)
-                        (*(json_char **) &top->u.object.values) += string_length + 1;
+		       (*(json_object_entry**) &top->u.object.values) += string_length + 1; // PFNET: changed char to json_object_array
                      else
                      {  
                         top->u.object.values [top->u.object.length].name

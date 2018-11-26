@@ -707,7 +707,7 @@ Vec* LOAD_get_var_indices(void* vload, unsigned char var, int t_start, int t_end
 char* LOAD_get_json_string(Load* load, char* output) {
 
   // Local variables
-  char temp[LOAD_BUFFER_SIZE];
+  char temp[LOAD_JSON_BUFFER_SIZE];
   char* output_start;
   BOOL resize;
 

@@ -258,7 +258,7 @@ int BRANCHDC_get_index(BranchDC* br) {
 char* BRANCHDC_get_json_string(BranchDC* branch, char* output) {
 
   // Local variables
-  char temp[BRANCHDC_BUFFER_SIZE];
+  char temp[BRANCHDC_JSON_BUFFER_SIZE];
   char* output_start;
   BOOL resize;
 

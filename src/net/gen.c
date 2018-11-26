@@ -647,7 +647,7 @@ Vec* GEN_get_var_indices(void* vgen, unsigned char var, int t_start, int t_end) 
 char* GEN_get_json_string(Gen* gen, char* output) {
 
   // Local variables
-  char temp[GEN_BUFFER_SIZE];
+  char temp[GEN_JSON_BUFFER_SIZE];
   char* output_start;
   BOOL resize;
 
@@ -920,10 +920,11 @@ void GEN_set_reg_bus(Gen* gen, Bus* reg_bus) {
 }
 
 void GEN_set_outage(Gen* gen, BOOL outage) {
-  if (gen)
+  if (gen) {
     if (gen->outage != outage)
       NET_inc_state_tag(gen->net);
     gen->outage = outage;
+  }
 }
 
 void GEN_set_index(Gen* gen, int index) {

@@ -366,7 +366,7 @@ int* CONVCSC_get_index_angle_array(ConvCSC* conv) {
 char* CONVCSC_get_json_string(ConvCSC* conv, char* output) {
 
   // Local variables
-  char temp[CONVCSC_BUFFER_SIZE];
+  char temp[CONVCSC_JSON_BUFFER_SIZE];
   char* output_start;
   BOOL resize;
 

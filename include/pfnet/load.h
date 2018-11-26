@@ -44,8 +44,9 @@
 /** \defgroup load_const Load Constants
  *  @{
  */
-#define LOAD_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
-#define LOAD_NUM_JSON_FIELDS 15 /**< @brief Constant: max number of json fields */
+#define LOAD_BUFFER_SIZE 100      /**< @brief Constant: buffer size for strings */
+#define LOAD_JSON_BUFFER_SIZE 200 /**< @brief Constant: buffer size for json strings */
+#define LOAD_NUM_JSON_FIELDS 15   /**< @brief Constant: max number of json fields */
 /** @} */
 
 // Load

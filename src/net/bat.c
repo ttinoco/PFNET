@@ -547,7 +547,7 @@ Vec* BAT_get_var_indices(void* vbat, unsigned char var, int t_start, int t_end) 
 char* BAT_get_json_string(Bat* bat, char* output) {
 
   // Local variables
-  char temp[BAT_BUFFER_SIZE];
+  char temp[BAT_JSON_BUFFER_SIZE];
   char* output_start;
   BOOL resize;
 

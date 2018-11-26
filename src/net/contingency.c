@@ -268,7 +268,7 @@ char* CONT_get_json_string(Cont* cont) {
   Branch_outage* bo;
   char* output;
   char* output_start;
-  char temp[CONT_BUFFER_SIZE];
+  char temp[CONT_JSON_BUFFER_SIZE];
   int* indices;
   int num;
 

@@ -56,8 +56,9 @@
 /** \defgroup conv_csc_const ConvCSC Constants
  *  @{
  */
-#define CONVCSC_BUFFER_SIZE 100    /**< @brief Constant: buffer size for strings */
-#define CONVCSC_NUM_JSON_FIELDS 25 /**< @brief Constant: max number of json fields */
+#define CONVCSC_BUFFER_SIZE 100      /**< @brief Constant: buffer size for strings */
+#define CONVCSC_JSON_BUFFER_SIZE 200 /**< @brief Constant: buffer size for json strings */
+#define CONVCSC_NUM_JSON_FIELDS 25   /**< @brief Constant: max number of json fields */
 /** @} */
 
 // ConvCSC

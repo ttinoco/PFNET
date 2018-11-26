@@ -505,7 +505,7 @@ Vec* VARGEN_get_var_indices(void* vgen, unsigned char var, int t_start, int t_en
 char* VARGEN_get_json_string(Vargen* gen, char* output) {
 
   // Local variables
-  char temp[VARGEN_BUFFER_SIZE];
+  char temp[VARGEN_JSON_BUFFER_SIZE];
   char* output_start;
   BOOL resize;  
 

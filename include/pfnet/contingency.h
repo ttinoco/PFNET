@@ -17,7 +17,8 @@
 #include "net.h"
 
 // Buffer
-#define CONT_BUFFER_SIZE 100 /**< @brief Default contingency buffer size for strings */
+#define CONT_BUFFER_SIZE 100      /**< @brief Default contingency buffer size for strings */
+#define CONT_JSON_BUFFER_SIZE 200 /**< @brief Default contingency buffer size for json strings */
 
 // Contingency
 typedef struct Cont Cont;

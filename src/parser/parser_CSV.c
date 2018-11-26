@@ -59,7 +59,7 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
     if (buffer[buffer_index] == '\'' && !p->in_string_double && !p->in_comment) {
       if (!p->in_string_single)
         p->in_string_single = TRUE;
-      else
+      else {
         p->in_string_single = FALSE;
         // account for quote within a quote
         lookahead_index = buffer_index+1;
@@ -73,13 +73,14 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
           else
             lookahead_index++;
         }
+      }
     }
 
     // Double quote
     else if (buffer[buffer_index] == '"' && !p->in_string_single && !p->in_comment) {
       if (!p->in_string_double)
         p->in_string_double = TRUE;
-      else
+      else {
         p->in_string_double = FALSE;
         // account for quote within a quote
         lookahead_index = buffer_index+1;
@@ -93,6 +94,7 @@ size_t CSV_PARSER_parse(CSV_Parser* p,
           else
             lookahead_index++;
         }
+      }
     }
 
     // Comment

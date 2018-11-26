@@ -359,7 +359,7 @@ REAL CONVVSC_get_target_power_factor(ConvVSC* conv) {
 char* CONVVSC_get_json_string(ConvVSC* conv, char* output) {
 
   // Local variables
-  char temp[CONVVSC_BUFFER_SIZE];
+  char temp[CONVVSC_JSON_BUFFER_SIZE];
   char* output_start;
   BOOL resize;
 
