@@ -741,14 +741,17 @@ void CONVVSC_get_var_values(ConvVSC* conv, Vec* values, int code) {
 
     if (conv->vars & CONVVSC_VAR_PDC) { // DC power
       switch(code) {
+        
       case UPPER_LIMITS:
         VEC_set(values,conv->index_P_dc[t],CONVVSC_INF_PDC);
         VEC_set(values,conv->index_i_dc[t],CONVVSC_INF_PDC);
         break;
+        
       case LOWER_LIMITS:
         VEC_set(values,conv->index_P_dc[t],-CONVVSC_INF_PDC);
         VEC_set(values,conv->index_i_dc[t],-CONVVSC_INF_PDC);
         break;
+        
       default:
         VEC_set(values,conv->index_P_dc[t],conv->P_dc[t]);
         VEC_set(values,conv->index_i_dc[t],conv->P_dc[t]/(BUSDC_get_v(conv->dc_bus,t)));

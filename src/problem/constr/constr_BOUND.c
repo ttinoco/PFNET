@@ -35,7 +35,7 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   Vargen* vargen;
   Shunt* shunt;
   Bat* bat;
-  ConvVSC* conv;
+  ConvVSC* vsc_conv;
   Facts* facts;
   Vec* l;
   Vec* u;
@@ -44,6 +44,7 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   int index1;
   int index2;
   int index3;
+  int index4;
 
   // Cosntr data
   l = CONSTR_get_l(c);
@@ -71,11 +72,11 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
     
     // Row info
     CONSTR_set_G_row_info_string(c,
-				 index,
-				 "bus",
-				 BUS_get_index(bus),
-				 "voltage magnitude",
-				 t);
+                                 index,
+                                 "bus",
+                                 BUS_get_index(bus),
+                                 "voltage magnitude",
+                                 t);
   }
   
   // Voltage angle (V_ANG)
@@ -89,11 +90,11 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
     
     // Row info
     CONSTR_set_G_row_info_string(c,
-				 index,
-				 "bus",
-				 BUS_get_index(bus),
-				 "voltage angle",
-				 t);
+                                 index,
+                                 "bus",
+                                 BUS_get_index(bus),
+                                 "voltage angle",
+                                 t);
   }
   
   // Generators
@@ -106,21 +107,21 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       MAT_set_j(G,index,index);
       MAT_set_d(G,index,1.);
       if (GEN_has_flags(gen,FLAG_BOUNDED,GEN_VAR_P)) {
-	VEC_set(u,index,GEN_get_P_max(gen));
-	VEC_set(l,index,GEN_get_P_min(gen));
+        VEC_set(u,index,GEN_get_P_max(gen));
+        VEC_set(l,index,GEN_get_P_min(gen));
       }
       else {
-	VEC_set(u,index,GEN_INF_P);
-	VEC_set(l,index,-GEN_INF_P);
+        VEC_set(u,index,GEN_INF_P);
+        VEC_set(l,index,-GEN_INF_P);
       }
       
       // Row info
       CONSTR_set_G_row_info_string(c,
-				   index,
-				   "generator",
-				   GEN_get_index(gen),
-				   "active power",
-				   t);
+                                   index,
+                                   "generator",
+                                   GEN_get_index(gen),
+                                   "active power",
+                                   t);
     }
     
     // Reactive power (Q)
@@ -130,21 +131,21 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       MAT_set_j(G,index,index);
       MAT_set_d(G,index,1.);
       if (GEN_has_flags(gen,FLAG_BOUNDED,GEN_VAR_Q)) {
-	VEC_set(u,index,GEN_get_Q_max(gen));
-	VEC_set(l,index,GEN_get_Q_min(gen));
+        VEC_set(u,index,GEN_get_Q_max(gen));
+        VEC_set(l,index,GEN_get_Q_min(gen));
       }
       else {
-	VEC_set(u,index,GEN_INF_Q);
-	VEC_set(l,index,-GEN_INF_Q);
+        VEC_set(u,index,GEN_INF_Q);
+        VEC_set(l,index,-GEN_INF_Q);
       }
       
       // Row info
       CONSTR_set_G_row_info_string(c,
-				   index,
-				   "generator",
-				   GEN_get_index(gen),
-				   "reactive power",
-				   t);
+                                   index,
+                                   "generator",
+                                   GEN_get_index(gen),
+                                   "reactive power",
+                                   t);
     }
   }
 
@@ -158,21 +159,21 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       MAT_set_j(G,index,index);
       MAT_set_d(G,index,1.);
       if (LOAD_has_flags(load,FLAG_BOUNDED,LOAD_VAR_P)) {
-	VEC_set(u,index,LOAD_get_P_max(load,t));
-	VEC_set(l,index,LOAD_get_P_min(load,t));
+        VEC_set(u,index,LOAD_get_P_max(load,t));
+        VEC_set(l,index,LOAD_get_P_min(load,t));
       }
       else {
-	VEC_set(u,index,LOAD_INF_P);
-	VEC_set(l,index,-LOAD_INF_P);
+        VEC_set(u,index,LOAD_INF_P);
+        VEC_set(l,index,-LOAD_INF_P);
       }
       
       // Row info
       CONSTR_set_G_row_info_string(c,
-				   index,
-				   "load",
-				   LOAD_get_index(load),
-				   "active power",
-				   t);
+                                   index,
+                                   "load",
+                                   LOAD_get_index(load),
+                                   "active power",
+                                   t);
     }
     
     // Rective power (Q)
@@ -182,21 +183,21 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       MAT_set_j(G,index,index);
       MAT_set_d(G,index,1.);
       if (LOAD_has_flags(load,FLAG_BOUNDED,LOAD_VAR_Q)) {
-	VEC_set(u,index,LOAD_get_Q_max(load,t));
-	VEC_set(l,index,LOAD_get_Q_min(load,t));
+        VEC_set(u,index,LOAD_get_Q_max(load,t));
+        VEC_set(l,index,LOAD_get_Q_min(load,t));
       }
       else {
-	VEC_set(u,index,LOAD_INF_Q);
-	VEC_set(l,index,-LOAD_INF_Q);
+        VEC_set(u,index,LOAD_INF_Q);
+        VEC_set(l,index,-LOAD_INF_Q);
       }
       
       // Row info
       CONSTR_set_G_row_info_string(c,
-				   index,
-				   "load",
-				   LOAD_get_index(load),
-				   "reactive power",
-				   t);
+                                   index,
+                                   "load",
+                                   LOAD_get_index(load),
+                                   "reactive power",
+                                   t);
     }
   }
   
@@ -210,21 +211,21 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       MAT_set_j(G,index,index);
       MAT_set_d(G,index,1.);
       if (VARGEN_has_flags(vargen,FLAG_BOUNDED,VARGEN_VAR_P)) {
-	VEC_set(u,index,VARGEN_get_P_ava(vargen,t));
-	VEC_set(l,index,VARGEN_get_P_min(vargen));
+        VEC_set(u,index,VARGEN_get_P_ava(vargen,t));
+        VEC_set(l,index,VARGEN_get_P_min(vargen));
       }
       else {
-	VEC_set(u,index,VARGEN_INF_P);
-	VEC_set(l,index,-VARGEN_INF_P);
+        VEC_set(u,index,VARGEN_INF_P);
+        VEC_set(l,index,-VARGEN_INF_P);
       }
       
       // Row info
       CONSTR_set_G_row_info_string(c,
-				   index,
-				   "variable generator",
-				   VARGEN_get_index(vargen),
-				   "active power",
-				   t);
+                                   index,
+                                   "variable generator",
+                                   VARGEN_get_index(vargen),
+                                   "active power",
+                                   t);
     }
     
     // Reactive power (Q)
@@ -234,21 +235,21 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       MAT_set_j(G,index,index);
       MAT_set_d(G,index,1.);
       if (VARGEN_has_flags(vargen,FLAG_BOUNDED,VARGEN_VAR_Q)) {
-	VEC_set(u,index,VARGEN_get_Q_max(vargen));
-	VEC_set(l,index,VARGEN_get_Q_min(vargen));
+        VEC_set(u,index,VARGEN_get_Q_max(vargen));
+        VEC_set(l,index,VARGEN_get_Q_min(vargen));
       }
       else {
-	VEC_set(u,index,VARGEN_INF_Q);
-	VEC_set(l,index,-VARGEN_INF_Q);
+        VEC_set(u,index,VARGEN_INF_Q);
+        VEC_set(l,index,-VARGEN_INF_Q);
       }
       
       // Row info
       CONSTR_set_G_row_info_string(c,
-				   index,
-				   "variable generator",
-				   VARGEN_get_index(vargen),
-				   "reactive power",
-				   t);
+                                   index,
+                                   "variable generator",
+                                   VARGEN_get_index(vargen),
+                                   "reactive power",
+                                   t);
     }
   }
   
@@ -262,21 +263,21 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       MAT_set_j(G,index,index);
       MAT_set_d(G,index,1.);
       if (SHUNT_has_flags(shunt,FLAG_BOUNDED,SHUNT_VAR_SUSC)) {
-	VEC_set(u,index,SHUNT_get_b_max(shunt));
-	VEC_set(l,index,SHUNT_get_b_min(shunt));
+        VEC_set(u,index,SHUNT_get_b_max(shunt));
+        VEC_set(l,index,SHUNT_get_b_min(shunt));
       }
       else {
-	VEC_set(u,index,SHUNT_INF_SUSC);
-	VEC_set(l,index,-SHUNT_INF_SUSC);
+        VEC_set(u,index,SHUNT_INF_SUSC);
+        VEC_set(l,index,-SHUNT_INF_SUSC);
       }
       
       // Row info
       CONSTR_set_G_row_info_string(c,
-				   index,
-				   "shunt",
-				   SHUNT_get_index(shunt),
-				   "susceptance",
-				   t);
+                                   index,
+                                   "shunt",
+                                   SHUNT_get_index(shunt),
+                                   "susceptance",
+                                   t);
     }
   }
   
@@ -299,34 +300,34 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       
       if (BAT_has_flags(bat,FLAG_BOUNDED,BAT_VAR_P)) {
 	
-	VEC_set(u,index1,BAT_get_P_max(bat));
-	VEC_set(l,index1,0.);
+        VEC_set(u,index1,BAT_get_P_max(bat));
+        VEC_set(l,index1,0.);
 	
-	VEC_set(u,index2,-BAT_get_P_min(bat));
-	VEC_set(l,index2,0.);
+        VEC_set(u,index2,-BAT_get_P_min(bat));
+        VEC_set(l,index2,0.);
       }
       else {
 	
-	VEC_set(u,index1,BAT_INF_P);
-	VEC_set(l,index1,0.);
+        VEC_set(u,index1,BAT_INF_P);
+        VEC_set(l,index1,0.);
 	
-	VEC_set(u,index2,BAT_INF_P);
-	VEC_set(l,index2,0.);
+        VEC_set(u,index2,BAT_INF_P);
+        VEC_set(l,index2,0.);
       }
       
       // Row info
       CONSTR_set_G_row_info_string(c,
-				   index1,
-				   "battery",
-				   BAT_get_index(bat),
-				   "charging power",
-				   t);
+                                   index1,
+                                   "battery",
+                                   BAT_get_index(bat),
+                                   "charging power",
+                                   t);
       CONSTR_set_G_row_info_string(c,
-				   index2,
-				   "battery",
-				   BAT_get_index(bat),
-				   "discharging power",
-				   t);
+                                   index2,
+                                   "battery",
+                                   BAT_get_index(bat),
+                                   "discharging power",
+                                   t);
     }
     
     // Energy level (E)
@@ -336,21 +337,21 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       MAT_set_j(G,index,index);
       MAT_set_d(G,index,1.);
       if (BAT_has_flags(bat,FLAG_BOUNDED,BAT_VAR_E)) {
-	VEC_set(u,index,BAT_get_E_max(bat));
-	VEC_set(l,index,0.);
+        VEC_set(u,index,BAT_get_E_max(bat));
+        VEC_set(l,index,0.);
       }
       else {
-	VEC_set(u,index,BAT_INF_E);
-	VEC_set(l,index,0.);
+        VEC_set(u,index,BAT_INF_E);
+        VEC_set(l,index,0.);
       }
       
       // Row info
       CONSTR_set_G_row_info_string(c,
-				   index,
-				   "battery",
-				   BAT_get_index(bat),
-				   "energy level",
-				   t);
+                                   index,
+                                   "battery",
+                                   BAT_get_index(bat),
+                                   "energy level",
+                                   t);
     }
   }
 
@@ -364,21 +365,21 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       MAT_set_j(G,index,index);
       MAT_set_d(G,index,1.);
       if (BRANCH_has_flags(br,FLAG_BOUNDED,BRANCH_VAR_RATIO)) {
-	VEC_set(u,index,BRANCH_get_ratio_max(br));
-	VEC_set(l,index,BRANCH_get_ratio_min(br));
+        VEC_set(u,index,BRANCH_get_ratio_max(br));
+        VEC_set(l,index,BRANCH_get_ratio_min(br));
       }
       else {
-	VEC_set(u,index,BRANCH_INF_RATIO);
-	VEC_set(l,index,0.);
+        VEC_set(u,index,BRANCH_INF_RATIO);
+        VEC_set(l,index,0.);
       }
       
       // Row info
       CONSTR_set_G_row_info_string(c,
-				   index,
-				   "branch",
-				   BRANCH_get_index(br),
-				   "tap ratio",
-				   t);
+                                   index,
+                                   "branch",
+                                   BRANCH_get_index(br),
+                                   "tap ratio",
+                                   t);
     }
     
     // Phase shift
@@ -388,36 +389,36 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       MAT_set_j(G,index,index);
       MAT_set_d(G,index,1.);
       if (BRANCH_has_flags(br,FLAG_BOUNDED,BRANCH_VAR_PHASE)) {
-	VEC_set(u,index,BRANCH_get_phase_max(br));
-	VEC_set(l,index,BRANCH_get_phase_min(br));
+        VEC_set(u,index,BRANCH_get_phase_max(br));
+        VEC_set(l,index,BRANCH_get_phase_min(br));
       }
       else {
-	VEC_set(u,index,2*PI);
-	VEC_set(l,index,-2*PI);
+        VEC_set(u,index,2*PI);
+        VEC_set(l,index,-2*PI);
       }
       
       // Row info
       CONSTR_set_G_row_info_string(c,
-				   index,
-				   "branch",
-				   BRANCH_get_index(br),
-				   "phase shift",
-				   t);
+                                   index,
+                                   "branch",
+                                   BRANCH_get_index(br),
+                                   "phase shift",
+                                   t);
     }
   }
   
   // VSC Converters
-  for (conv = BUS_get_vsc_conv(bus); conv != NULL; conv = CONVVSC_get_next_ac(conv)) {
+  for (vsc_conv = BUS_get_vsc_conv(bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_ac(vsc_conv)) {
     
     // Active Power (P)
-    if (CONVVSC_has_flags(conv,FLAG_VARS,CONVVSC_VAR_P)) {
-      index = CONVVSC_get_index_Q(conv,t);
+    if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_P)) {
+      index = CONVVSC_get_index_P(vsc_conv,t);
       MAT_set_i(G,index,index);
       MAT_set_j(G,index,index);
       MAT_set_d(G,index,1.);
-      if (CONVVSC_has_flags(conv,FLAG_BOUNDED,CONVVSC_VAR_P)) {
-      	VEC_set(u,index,CONVVSC_get_P_max(conv));
-      	VEC_set(l,index,CONVVSC_get_P_min(conv));
+      if (CONVVSC_has_flags(vsc_conv,FLAG_BOUNDED,CONVVSC_VAR_P)) {
+      	VEC_set(u,index,CONVVSC_get_P_max(vsc_conv));
+      	VEC_set(l,index,CONVVSC_get_P_min(vsc_conv));
       }
       else {
       	VEC_set(u,index,CONVVSC_INF_P);
@@ -426,22 +427,22 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       
       // Row info
       CONSTR_set_G_row_info_string(c,
-  				   index,
-  				   "vsc converter",
-  				   CONVVSC_get_index(conv),
-  				   "active power",
-  				   t);
+                                   index,
+                                   "vsc converter",
+                                   CONVVSC_get_index(vsc_conv),
+                                   "active power",
+                                   t);
     }
     
     // Reactive Power (Q)
-    if (CONVVSC_has_flags(conv,FLAG_VARS,CONVVSC_VAR_Q)) {
-      index = CONVVSC_get_index_Q(conv,t);
+    if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_Q)) {
+      index = CONVVSC_get_index_Q(vsc_conv,t);
       MAT_set_i(G,index,index);
       MAT_set_j(G,index,index);
       MAT_set_d(G,index,1.);
-      if (CONVVSC_has_flags(conv,FLAG_BOUNDED,CONVVSC_VAR_Q)) {
-      	VEC_set(u,index,CONVVSC_get_Q_max(conv));
-      	VEC_set(l,index,CONVVSC_get_Q_min(conv));
+      if (CONVVSC_has_flags(vsc_conv,FLAG_BOUNDED,CONVVSC_VAR_Q)) {
+      	VEC_set(u,index,CONVVSC_get_Q_max(vsc_conv));
+      	VEC_set(l,index,CONVVSC_get_Q_min(vsc_conv));
       }
       else {
       	VEC_set(u,index,CONVVSC_INF_Q);
@@ -450,43 +451,45 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       
       // Row info
       CONSTR_set_G_row_info_string(c,
-  				   index,
-  				   "vsc converter",
-  				   CONVVSC_get_index(conv),
-  				   "reactive power",
-  				   t);
+                                   index,
+                                   "vsc converter",
+                                   CONVVSC_get_index(vsc_conv),
+                                   "reactive power",
+                                   t);
     }
     
     // DC Power (P_dc)
-    if (CONVVSC_has_flags(conv,FLAG_VARS,CONVVSC_VAR_PDC)) {
-      index1 = CONVVSC_get_index_P_dc(conv,t);
-      index2 = CONVVSC_get_index_i_dc(conv,t);
+    if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_PDC)) {
+      index1 = CONVVSC_get_index_P_dc(vsc_conv,t);
+      index2 = CONVVSC_get_index_i_dc(vsc_conv,t);
       
       MAT_set_i(G,index1,index1);
       MAT_set_j(G,index1,index1);
       MAT_set_d(G,index1,1.);
+      
       MAT_set_i(G,index2,index2);
       MAT_set_j(G,index2,index2);
       MAT_set_d(G,index2,1.);
       
       VEC_set(u,index1,CONVVSC_INF_PDC);
       VEC_set(l,index1,-CONVVSC_INF_PDC);
+      
       VEC_set(u,index2,CONVVSC_INF_PDC);
       VEC_set(l,index2,-CONVVSC_INF_PDC);
       
       // Row info
       CONSTR_set_G_row_info_string(c,
-  				   index1,
-  				   "vsc converter",
-  				   CONVVSC_get_index(conv),
-  				   "dc power",
-  				   t);
+                                   index1,
+                                   "vsc converter",
+                                   CONVVSC_get_index(vsc_conv),
+                                   "dc power",
+                                   t);
       CONSTR_set_G_row_info_string(c,
-  				   index2,
-  				   "vsc converter",
-  				   CONVVSC_get_index(conv),
-  				   "dc current",
-  				   t);
+                                   index2,
+                                   "vsc converter",
+                                   CONVVSC_get_index(vsc_conv),
+                                   "dc current",
+                                   t);
     }
   }
   
@@ -499,7 +502,7 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       MAT_set_i(G,index,index);
       MAT_set_j(G,index,index);
       MAT_set_d(G,index,1.);
-      if (FACTS_has_flags(conv,FLAG_BOUNDED,FACTS_VAR_VMAG_S)) {
+      if (FACTS_has_flags(facts,FLAG_BOUNDED,FACTS_VAR_VMAG_S)) {
       	VEC_set(u,index,FACTS_get_v_max_s(facts));
       	VEC_set(l,index,0.);
       }
@@ -510,16 +513,16 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       
       // Row info
       CONSTR_set_G_row_info_string(c,
-  				   index,
-  				   "facts",
-  				   FACTS_get_index(facts),
-  				   "series voltage magnitude",
-  				   t);
+                                   index,
+                                   "facts",
+                                   FACTS_get_index(facts),
+                                   "series voltage magnitude",
+                                   t);
     }
     
     // Series Voltage Angle (v_ang_s)
     if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_VANG_S)) {
-      index = FACTS_get_index_v_mag_s(facts,t);
+      index = FACTS_get_index_v_ang_s(facts,t);
       MAT_set_i(G,index,index);
       MAT_set_j(G,index,index);
       MAT_set_d(G,index,1.);
@@ -529,103 +532,134 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       
       // Row info
       CONSTR_set_G_row_info_string(c,
-  				   index,
-  				   "facts",
-  				   FACTS_get_index(facts),
-  				   "series voltage angle",
-  				   t);
+                                   index,
+                                   "facts",
+                                   FACTS_get_index(facts),
+                                   "series voltage angle",
+                                   t);
     }
     
     // Active Power (P)
     if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P)) {
       index1 = FACTS_get_index_P_k(facts,t);
-      index2 = FACTS_get_index_P_dc(facts,t);
+      index2 = FACTS_get_index_P_m(facts,t);
+      index3 = FACTS_get_index_P_dc(facts,t);
       
       MAT_set_i(G,index1,index1);
       MAT_set_j(G,index1,index1);
       MAT_set_d(G,index1,1.);
+
       MAT_set_i(G,index2,index2);
       MAT_set_j(G,index2,index2);
       MAT_set_d(G,index2,1.);
+
+      MAT_set_i(G,index3,index3);
+      MAT_set_j(G,index3,index3);
+      MAT_set_d(G,index3,1.);
       
       VEC_set(u,index1,FACTS_INF_P);
-      VEC_set(u,index1,-FACTS_INF_P);
+      VEC_set(l,index1,-FACTS_INF_P);
+      
+      VEC_set(u,index2,FACTS_INF_P);
+      VEC_set(l,index2,-FACTS_INF_P);
 
-      if (FACTS_has_flags(conv,FLAG_BOUNDED,FACTS_VAR_P)) {
-      	VEC_set(u,index2,FACTS_get_P_max_dc(facts));
-      	VEC_set(l,index2,-FACTS_get_P_max_dc(facts));
+      if (FACTS_has_flags(facts,FLAG_BOUNDED,FACTS_VAR_P)) {
+      	VEC_set(u,index3,FACTS_get_P_max_dc(facts));
+      	VEC_set(l,index3,-FACTS_get_P_max_dc(facts));
       }
       else {
-      	VEC_set(u,index2,FACTS_INF_P);
-      	VEC_set(l,index2,-FACTS_INF_P);
+      	VEC_set(u,index3,FACTS_INF_P);
+      	VEC_set(l,index3,-FACTS_INF_P);
       }
       
       // Row info
       CONSTR_set_G_row_info_string(c,
-  				   index1,
-  				   "facts",
-  				   FACTS_get_index(facts),
-  				   "active power",
-  				   t);
+                                   index1,
+                                   "facts",
+                                   FACTS_get_index(facts),
+                                   "active power k",
+                                   t);
       CONSTR_set_G_row_info_string(c,
-  				   index2,
-  				   "facts",
-  				   FACTS_get_index(facts),
-  				   "dc power",
-  				   t);
+                                   index2,
+                                   "facts",
+                                   FACTS_get_index(facts),
+                                   "active power m",
+                                   t);
+      CONSTR_set_G_row_info_string(c,
+                                   index3,
+                                   "facts",
+                                   FACTS_get_index(facts),
+                                   "dc power",
+                                   t);
     }
     
     // Reactive Powers
     if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_Q)) {
       index1 = FACTS_get_index_Q_k(facts,t);
-      index2 = FACTS_get_index_Q_s(facts,t);
-      index3 = FACTS_get_index_Q_sh(facts,t);
+      index2 = FACTS_get_index_Q_m(facts,t);
+      index3 = FACTS_get_index_Q_s(facts,t);
+      index4 = FACTS_get_index_Q_sh(facts,t);
       
       MAT_set_i(G,index1,index1);
       MAT_set_j(G,index1,index1);
       MAT_set_d(G,index1,1.);
+      
       MAT_set_i(G,index2,index2);
       MAT_set_j(G,index2,index2);
       MAT_set_d(G,index2,1.);
+      
       MAT_set_i(G,index3,index3);
       MAT_set_j(G,index3,index3);
       MAT_set_d(G,index3,1.);
+
+      MAT_set_i(G,index4,index4);
+      MAT_set_j(G,index4,index4);
+      MAT_set_d(G,index4,1.);
       
       VEC_set(u,index1,FACTS_INF_Q);
       VEC_set(l,index1,-FACTS_INF_Q);
+
+      VEC_set(u,index2,FACTS_INF_Q);
+      VEC_set(l,index2,-FACTS_INF_Q);
       
-      if (FACTS_has_flags(conv,FLAG_BOUNDED,FACTS_VAR_Q)) {
-      	VEC_set(u,index2,FACTS_get_Q_max_s(facts));
-      	VEC_set(l,index2,FACTS_get_Q_min_s(facts));
-      	VEC_set(u,index3,FACTS_get_Q_max_sh(facts));
-      	VEC_set(l,index3,FACTS_get_Q_min_sh(facts));
+      if (FACTS_has_flags(facts,FLAG_BOUNDED,FACTS_VAR_Q)) {
+      	VEC_set(u,index3,FACTS_get_Q_max_s(facts));
+      	VEC_set(l,index3,FACTS_get_Q_min_s(facts));
+      	VEC_set(u,index4,FACTS_get_Q_max_sh(facts));
+      	VEC_set(l,index4,FACTS_get_Q_min_sh(facts));
       }
       else {
-      	VEC_set(u,index2,FACTS_INF_Q);
-      	VEC_set(l,index2,-FACTS_INF_Q);
       	VEC_set(u,index3,FACTS_INF_Q);
       	VEC_set(l,index3,-FACTS_INF_Q);
+      	VEC_set(u,index4,FACTS_INF_Q);
+      	VEC_set(l,index4,-FACTS_INF_Q);
       }
       
       // Row info
       CONSTR_set_G_row_info_string(c,
-  				   index1,
-  				   "facts",
-  				   FACTS_get_index(facts),
-  				   "ac reactive power",
-  				   t);
+                                   index1,
+                                   "facts",
+                                   FACTS_get_index(facts),
+                                   "reactive power k",
+                                   t);
       CONSTR_set_G_row_info_string(c,
-  				   index2,
-  				   "facts",
-  				   FACTS_get_index(facts),
-  				   "series reactive power",
-  				   t);
+                                   index2,
+                                   "facts",
+                                   FACTS_get_index(facts),
+                                   "reactive power m",
+                                   t);
       CONSTR_set_G_row_info_string(c,
-  				   index3,
-  				   "facts",
-  				   FACTS_get_index(facts),
-  				   "shunt reactive power",
-  				   t);
+                                   index3,
+                                   "facts",
+                                   FACTS_get_index(facts),
+                                   "series reactive power",
+                                   t);
+      CONSTR_set_G_row_info_string(c,
+                                   index4,
+                                   "facts",
+                                   FACTS_get_index(facts),
+                                   "shunt reactive power",
+                                   t);
     }
   }
 
