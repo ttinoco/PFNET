@@ -52,7 +52,7 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   G = CONSTR_get_G(c);
 
   // Check pointer
-  if (!G || !u || !l || !bus)
+  if (!G || !u || !l)
     return;
   
   // Voltage magnitude (V_MAG)
@@ -405,6 +405,24 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
                                    "phase shift",
                                    t);
     }
+  }
+
+  // DC voltages (v)
+  if (BUSDC_has_flags(busdc,FLAG_VARS,BUSDC_VAR_V)) {
+    index = BUSDC_get_index_v(busdc,t);
+    MAT_set_i(G,index,index);
+    MAT_set_j(G,index,index);
+    MAT_set_d(G,index,1.);
+    VEC_set(u,index,BUSDC_INF_V);
+    VEC_set(l,index,-BUSDC_INF_V);
+
+    // Row info
+    CONSTR_set_G_row_info_string(c,
+                                 index,
+                                 "dc bus",
+                                 BUSDC_get_index(busdc),
+                                 "voltage",
+                                 t);
   }
   
   // VSC Converters
