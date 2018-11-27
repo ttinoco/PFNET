@@ -316,7 +316,7 @@ int CONVCSC_get_index_ratio(ConvCSC* conv, int t) {
 
 int CONVCSC_get_index_angle(ConvCSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
-    return conv->index_ratio[t];
+    return conv->index_angle[t];
   else
     return -1;
 }
@@ -792,7 +792,7 @@ void CONVCSC_get_var_values(ConvCSC* conv, Vec* values, int code) {
   // Local vars
   int t;
  
-  // No laod
+  // No conv
   if (!conv)
     return;
 

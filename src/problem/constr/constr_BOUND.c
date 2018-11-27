@@ -36,6 +36,7 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   Shunt* shunt;
   Bat* bat;
   ConvVSC* vsc_conv;
+  ConvCSC* csc_conv;
   Facts* facts;
   Vec* l;
   Vec* u;
@@ -507,6 +508,116 @@ void CONSTR_BOUND_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
                                    "vsc converter",
                                    CONVVSC_get_index(vsc_conv),
                                    "dc current",
+                                   t);
+    }
+  }
+
+  // CSC Converters
+  for (csc_conv = BUS_get_csc_conv(bus); csc_conv != NULL; csc_conv = CONVCSC_get_next_ac(csc_conv)) {
+    
+    // Active Power (P)
+    if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_P)) {
+      index = CONVCSC_get_index_P(csc_conv,t);
+      MAT_set_i(G,index,index);
+      MAT_set_j(G,index,index);
+      MAT_set_d(G,index,1.);
+      VEC_set(u,index,CONVCSC_INF_P);
+      VEC_set(l,index,-CONVCSC_INF_P);
+      
+      // Row info
+      CONSTR_set_G_row_info_string(c,
+                                   index,
+                                   "csc converter",
+                                   CONVCSC_get_index(csc_conv),
+                                   "active power",
+                                   t);
+    }
+    
+    // Reactive Power (Q)
+    if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_Q)) {
+      index = CONVCSC_get_index_Q(csc_conv,t);
+      MAT_set_i(G,index,index);
+      MAT_set_j(G,index,index);
+      MAT_set_d(G,index,1.);
+      VEC_set(u,index,CONVCSC_INF_Q);
+      VEC_set(l,index,-CONVCSC_INF_Q);
+      
+      // Row info
+      CONSTR_set_G_row_info_string(c,
+                                   index,
+                                   "csc converter",
+                                   CONVCSC_get_index(csc_conv),
+                                   "reactive power",
+                                   t);
+    }
+    
+    // DC Power (P_dc)
+    if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_PDC)) {
+      index1 = CONVCSC_get_index_P_dc(csc_conv,t);
+      index2 = CONVCSC_get_index_i_dc(csc_conv,t);
+      
+      MAT_set_i(G,index1,index1);
+      MAT_set_j(G,index1,index1);
+      MAT_set_d(G,index1,1.);
+      
+      MAT_set_i(G,index2,index2);
+      MAT_set_j(G,index2,index2);
+      MAT_set_d(G,index2,1.);
+      
+      VEC_set(u,index1,CONVCSC_INF_PDC);
+      VEC_set(l,index1,-CONVCSC_INF_PDC);
+      
+      VEC_set(u,index2,CONVCSC_INF_PDC);
+      VEC_set(l,index2,-CONVCSC_INF_PDC);
+      
+      // Row info
+      CONSTR_set_G_row_info_string(c,
+                                   index1,
+                                   "csc converter",
+                                   CONVCSC_get_index(csc_conv),
+                                   "dc power",
+                                   t);
+      CONSTR_set_G_row_info_string(c,
+                                   index2,
+                                   "csc converter",
+                                   CONVCSC_get_index(csc_conv),
+                                   "dc current",
+                                   t);
+    }
+
+    // Angle
+    if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_ANGLE)) {
+      index = CONVCSC_get_index_angle(csc_conv,t);
+      MAT_set_i(G,index,index);
+      MAT_set_j(G,index,index);
+      MAT_set_d(G,index,1.);
+      VEC_set(u,index,CONVCSC_INF_ANGLE);
+      VEC_set(l,index,-CONVCSC_INF_ANGLE);
+      
+      // Row info
+      CONSTR_set_G_row_info_string(c,
+                                   index,
+                                   "csc converter",
+                                   CONVCSC_get_index(csc_conv),
+                                   "angle",
+                                   t);
+    }
+
+    // Ratio
+    if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_RATIO)) {
+      index = CONVCSC_get_index_ratio(csc_conv,t);
+      MAT_set_i(G,index,index);
+      MAT_set_j(G,index,index);
+      MAT_set_d(G,index,1.);
+      VEC_set(u,index,CONVCSC_INF_RATIO);
+      VEC_set(l,index,-CONVCSC_INF_RATIO);
+      
+      // Row info
+      CONSTR_set_G_row_info_string(c,
+                                   index,
+                                   "csc converter",
+                                   CONVCSC_get_index(csc_conv),
+                                   "tap ratio",
                                    t);
     }
   }
