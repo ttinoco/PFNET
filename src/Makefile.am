@@ -32,7 +32,8 @@ net_src = net/bat.c \
           net/conv_vsc.c \
           net/conv_csc.c \
           net/facts.c \
-          net/reg_obj.c
+          net/reg_obj.c \
+          net/brycor.c
 
 net_hdr = $(inc_path)/bat.h \
           $(inc_path)/branch.h \
@@ -48,7 +49,8 @@ net_hdr = $(inc_path)/bat.h \
           $(inc_path)/conv_vsc.h \
           $(inc_path)/conv_csc.h \
           $(inc_path)/facts.h \
-          $(inc_path)/reg_obj.h
+          $(inc_path)/reg_obj.h \
+          $(inc_path)/brycor.h
 
 parser_src = parser/parser.c \
              parser/parser_ART.c \

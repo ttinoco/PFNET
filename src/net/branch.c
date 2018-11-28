@@ -50,6 +50,9 @@ struct Branch {
   REAL phase_max;    /**< @brief Maximum transformer phase shift (radians) */
   REAL phase_min;    /**< @brief Minimum transformer phase shift (radians) */
 
+  // Admittance correction
+  BrYCor* y_correction; /**< @brief Branch admittance correction table */
+
   // Flow bounds
   REAL P_max;        /**< @brief Maximum active power flow (p.u.) */
   REAL P_min;        /**< @brief Minimum active power flow (p.u.) */
@@ -121,6 +124,8 @@ void BRANCH_array_del(Branch* br_array, int size) {
       free(br->sens_phase_u_bound);
       free(br->sens_phase_l_bound);
       free(br->sens_i_mag_u_bound);
+      if (br->y_correction)
+        free(br->y_correction);
       BRANCH_set_bus_k(br,NULL);
       BRANCH_set_bus_m(br,NULL);
       BRANCH_set_reg_bus(br,NULL);
@@ -226,6 +231,9 @@ void BRANCH_copy_from_branch(Branch* br, Branch* other) {
   br->phase_max = other->phase_max;
   br->phase_min = other->phase_min;
 
+  // Admittance correction
+  //br->y_correction = BRYCOR_get_copy(other->y_correction);
+
   // Flow bounds
   br->P_max = other->P_max;
   br->P_min = other->P_min;
@@ -317,6 +325,13 @@ char BRANCH_get_obj_type(void* br) {
     return OBJ_BRANCH;
   else
     return OBJ_UNKNOWN;
+}
+
+BrYCor* BRANCH_get_y_correction(Branch* br) {
+  if (br)
+    return br->y_correction;
+  else
+    return NULL;
 }
 
 REAL BRANCH_get_sens_P_u_bound(Branch* br, int t) {
@@ -1261,6 +1276,7 @@ char* BRANCH_get_json_string(Branch* branch, char* output) {
   JSON_array_float(temp,output,"phase",branch->phase,branch->num_periods,FALSE);
   JSON_float(temp,output,"phase_max",branch->phase_max,FALSE);
   JSON_float(temp,output,"phase_min",branch->phase_min,FALSE);
+  //JSON_json(temp,output,"y_correction",branch->y_correction,BRYCOR_get_json_string,FALSE);
   JSON_float(temp,output,"ratingA",branch->ratingA,FALSE);
   JSON_float(temp,output,"ratingB",branch->ratingB,FALSE);
   JSON_float(temp,output,"ratingC",branch->ratingC,FALSE);
@@ -1317,6 +1333,13 @@ BOOL BRANCH_has_properties(void* vbr, char prop) {
   return TRUE;
 }
 
+BOOL BRANCH_has_y_correction(Branch* br) {
+  if (br)
+    return br->y_correction != NULL;
+  else
+    return FALSE;
+}
+
 void BRANCH_init(Branch* br, int num_periods) {
 
   // Local vars
@@ -1350,6 +1373,8 @@ void BRANCH_init(Branch* br, int num_periods) {
 
   br->phase_max = 0;
   br->phase_min = 0;
+
+  br->y_correction = NULL;
 
   br->P_max = 0;
   br->P_min = 0;
@@ -1559,6 +1584,11 @@ void BRANCH_set_index(Branch* br, int index) {
 void BRANCH_set_type(Branch* br, char type) {
   if (br)
     br->type = type;
+}
+
+void BRANCH_set_y_correction(Branch* br, BrYCor* y_corr) {
+  if (br)
+    br->y_correction = y_corr;
 }
 
 void BRANCH_set_bus_k(Branch* br, Bus* bus_k) {

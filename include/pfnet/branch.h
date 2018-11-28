@@ -14,6 +14,7 @@
 #include "types.h"
 #include "list.h"
 #include "vector.h"
+#include "brycor.h"
 
 // Branch types
 #define BRANCH_TYPE_LINE 0       /**< @brief Type: transmission line */
@@ -98,6 +99,7 @@ char* BRANCH_get_name(Branch* br);
 int BRANCH_get_num_periods(Branch* br);
 char BRANCH_get_type(Branch* br);
 char BRANCH_get_obj_type(void* br);
+BrYCor* BRANCH_get_y_correction(Branch* br);
 
 REAL BRANCH_get_sens_P_u_bound(Branch* br, int t);
 REAL* BRANCH_get_sens_P_u_bound_array(Branch* br);
@@ -170,9 +172,12 @@ char* BRANCH_get_var_info_string(Branch* br, int index);
 int BRANCH_get_num_vars(void* br, unsigned char var, int t_start, int t_end);
 Vec* BRANCH_get_var_indices(void* br, unsigned char var, int t_start, int t_end);
 char* BRANCH_get_json_string(Branch* br, char* output);
+
 BOOL BRANCH_has_flags(void* br, char flag_type, unsigned char mask);
 BOOL BRANCH_has_pos_ratio_v_sens(Branch* br);
 BOOL BRANCH_has_properties(void* br, char prop);
+BOOL BRANCH_has_y_correction(Branch* br);
+
 void BRANCH_init(Branch* br, int num_periods);
 BOOL BRANCH_is_equal(Branch* br, Branch* other);
 BOOL BRANCH_is_on_outage(Branch* br);
@@ -228,6 +233,7 @@ void BRANCH_set_Q_min(Branch* br, REAL Q_min);
 void BRANCH_set_ratingA(Branch* br, REAL r);
 void BRANCH_set_ratingB(Branch* br, REAL r);
 void BRANCH_set_ratingC(Branch* br, REAL r);
+void BRANCH_set_y_correction(Branch* br, BrYCor* y_corr);
 void BRANCH_set_var_values(Branch* br, Vec* values);
 int BRANCH_set_flags(void* vbr, char flag_type, unsigned char mask, int index);
 void BRANCH_show(Branch* br, int t);
