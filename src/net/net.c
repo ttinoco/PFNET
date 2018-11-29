@@ -3660,8 +3660,8 @@ void NET_del(Net* net) {
 }
 
 Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
-  /** Extracts subnetwork containing the specified buses.
-   *  It does not include any HVDC components.
+  /** Extracts subnetwork containing the specified AC buses, 
+   *  and any embedded HVDC components and net. 
    */
 
   // Local variables
@@ -3674,10 +3674,20 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   Bat* bat;
   Vargen* vargen;
   Facts* facts;
+  ConvCSC* csc_conv;
+  ConvVSC* vsc_conv;
+  ConvCSC* csc_conv1;
+  ConvVSC* vsc_conv1;
+  BusDC* dc_bus;
+  BranchDC* dc_br;
   
   char* keep_bus;
+  char* keep_dc_bus;
   char* delete_br;
   char* delete_facts;
+  char* delete_csc;
+  char* delete_vsc;
+  char* delete_dc_br;
 
   Bus** del_bus_ptr_array;
   Gen** del_gen_ptr_array;
@@ -3686,11 +3696,11 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   Load** del_load_ptr_array;
   Bat** del_bat_ptr_array;
   Vargen** del_vargen_ptr_array;
+  Facts** del_facts_ptr_array;
   ConvCSC** del_csc_conv_ptr_array;
   ConvVSC** del_vsc_conv_ptr_array;
   BusDC** del_dc_bus_ptr_array;
   BranchDC** del_dc_br_ptr_array;
-  Facts** del_facts_ptr_array;
   
   int num_del_bus;
   int num_del_br;
@@ -3700,8 +3710,17 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   int num_del_bat;
   int num_del_vargen;
   int num_del_facts;
+  int num_del_csc_conv;
+  int num_del_vsc_conv;
+  int num_del_dc_bus;
+  int num_del_dc_br;
+
+  char* reachable_dc_bus;
 
   int i;
+  int j;
+
+  BOOL keep;
 
   // Check
   if (!net || !bus_ptr_array)
@@ -3712,8 +3731,12 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
 
   // Flags
   ARRAY_zalloc(keep_bus,char,net->num_buses);
+  ARRAY_zalloc(keep_dc_bus,char,net->num_dc_buses);
   ARRAY_zalloc(delete_br,char,net->num_branches);
   ARRAY_zalloc(delete_facts,char,net->num_facts);
+  ARRAY_zalloc(delete_csc,char,net->num_csc_convs);
+  ARRAY_zalloc(delete_vsc,char,net->num_vsc_convs);
+  ARRAY_zalloc(delete_dc_br,char,net->num_dc_branches);
 
   // Del ptr arrays
   del_bus_ptr_array = (Bus**)malloc(sizeof(Bus*)*net->num_buses);
@@ -3723,11 +3746,11 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   del_shunt_ptr_array = (Shunt**)malloc(sizeof(Shunt*)*net->num_shunts);
   del_bat_ptr_array = (Bat**)malloc(sizeof(Bat*)*net->num_bats);
   del_vargen_ptr_array = (Vargen**)malloc(sizeof(Vargen*)*net->num_vargens);
+  del_facts_ptr_array = (Facts**)malloc(sizeof(Facts*)*net->num_facts);
   del_csc_conv_ptr_array = (ConvCSC**)malloc(sizeof(ConvCSC*)*net->num_csc_convs);
   del_vsc_conv_ptr_array = (ConvVSC**)malloc(sizeof(ConvVSC*)*net->num_vsc_convs);
   del_dc_bus_ptr_array = (BusDC**)malloc(sizeof(BusDC*)*net->num_dc_buses);
   del_dc_br_ptr_array = (BranchDC**)malloc(sizeof(BranchDC*)*net->num_dc_branches);
-  del_facts_ptr_array = (Facts**)malloc(sizeof(Facts*)*net->num_facts);
 
   // Mark buses to keep
   for (i = 0; i < size; i++) {
@@ -3745,7 +3768,7 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
     keep_bus[BUS_get_index(bus)] = 1;	
   }
 
-  // Fill del ptr arrays
+  // Fill del ptr arrays (AC)
   num_del_bus = 0;
   num_del_br = 0;
   num_del_gen = 0;
@@ -3754,6 +3777,8 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   num_del_bat = 0;
   num_del_vargen = 0;
   num_del_facts = 0;
+  num_del_csc_conv = 0;
+  num_del_vsc_conv = 0;
   for (i = 0; i < new_net->num_buses; i++) {
     
     bus = NET_get_bus(new_net,i);
@@ -3830,24 +3855,143 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
         num_del_facts++;
       }
     }
+
+    // CSC 
+    for (csc_conv = BUS_get_csc_conv(bus); csc_conv != NULL; csc_conv = CONVCSC_get_next_ac(csc_conv)) {
+      delete_csc[CONVCSC_get_index(csc_conv)] = 1;
+      del_csc_conv_ptr_array[num_del_csc_conv] = csc_conv;
+      num_del_csc_conv++;
+    }
+
+    // VSC
+    for (vsc_conv = BUS_get_vsc_conv(bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_ac(vsc_conv)) {
+      delete_vsc[CONVVSC_get_index(vsc_conv)] = 1;
+      del_vsc_conv_ptr_array[num_del_vsc_conv] = vsc_conv;
+      num_del_vsc_conv++;
+    }
   }
 
-  // Delete all CSC converters
-  for (i = 0; i < new_net->num_csc_convs; i++)
-    del_csc_conv_ptr_array[i] = NET_get_csc_conv(new_net, i);
+  // More CSC to del
+  for (i = 0; i < new_net->num_csc_convs; i++) {
+    
+    csc_conv = NET_get_csc_conv(new_net,i);
 
-  // Delete all VSC converters
-  for (i = 0; i < new_net->num_vsc_convs; i++)
-    del_vsc_conv_ptr_array[i] = NET_get_vsc_conv(new_net, i);
+    // Known to be deleted
+    if (delete_csc[CONVCSC_get_index(csc_conv)])
+      continue;
 
-  // Delete all DC buses
-  for (i = 0; i < new_net->num_dc_buses; i++)
-    del_dc_bus_ptr_array[i] = NET_get_dc_bus(new_net, i);
+    // Known to be kept
+    if (keep_dc_bus[BUSDC_get_index(CONVCSC_get_dc_bus(csc_conv))])
+      continue;
 
-  // Delete all DC branches
-  for (i = 0; i < new_net->num_dc_branches; i++)
-    del_dc_br_ptr_array[i] = NET_get_dc_branch(new_net, i);
+    keep = FALSE;
+    reachable_dc_bus = NET_mark_reachable_dc_buses(new_net,CONVCSC_get_dc_bus(csc_conv));
+    for (j = 0; j < new_net->num_dc_buses; j++) {
+      dc_bus = NET_get_dc_bus(new_net,j);
+      if (!reachable_dc_bus[j])
+        continue;
+      for (csc_conv1 = BUSDC_get_csc_conv(dc_bus); csc_conv1 != NULL; csc_conv1 = CONVCSC_get_next_dc(csc_conv1)) {
+        if (csc_conv1 != csc_conv && keep_bus[BUS_get_index(CONVCSC_get_ac_bus(csc_conv1))])
+          keep = TRUE;
+      }
+      for (vsc_conv1 = BUSDC_get_vsc_conv(dc_bus); vsc_conv1 != NULL; vsc_conv1 = CONVVSC_get_next_dc(vsc_conv1)) {
+        if (keep_bus[BUS_get_index(CONVVSC_get_ac_bus(vsc_conv1))])
+          keep = TRUE;
+      }
+      if (keep)
+        break;
+    }
+    if (!keep) {
+      delete_csc[CONVCSC_get_index(csc_conv)] = 1;
+      del_csc_conv_ptr_array[num_del_csc_conv] = csc_conv;
+      num_del_csc_conv++;
+    }
+    else {
+      for (j = 0; j < new_net->num_dc_buses; j++) {
+        if (reachable_dc_bus[j])
+          keep_dc_bus[BUSDC_get_index(NET_get_dc_bus(new_net,j))] = 1;
+      }
+    }
+    free(reachable_dc_bus);
+  }
 
+  // More VSC to del
+  for (i = 0; i < new_net->num_vsc_convs; i++) {
+    
+    vsc_conv = NET_get_vsc_conv(new_net,i);
+
+    // Known to be deleted
+    if (delete_vsc[CONVVSC_get_index(vsc_conv)])
+      continue;
+
+    // Known to be kept
+    if (keep_dc_bus[BUSDC_get_index(CONVVSC_get_dc_bus(vsc_conv))])
+      continue;
+
+    keep = FALSE;
+    reachable_dc_bus = NET_mark_reachable_dc_buses(new_net,CONVVSC_get_dc_bus(vsc_conv));
+    for (j = 0; j < new_net->num_dc_buses; j++) {
+      dc_bus = NET_get_dc_bus(new_net,j);
+      if (!reachable_dc_bus[j])
+        continue;
+      for (csc_conv1 = BUSDC_get_csc_conv(dc_bus); csc_conv1 != NULL; csc_conv1 = CONVCSC_get_next_dc(csc_conv1)) {
+        if (keep_bus[BUS_get_index(CONVCSC_get_ac_bus(csc_conv1))])
+          keep = TRUE;
+      }
+      for (vsc_conv1 = BUSDC_get_vsc_conv(dc_bus); vsc_conv1 != NULL; vsc_conv1 = CONVVSC_get_next_dc(vsc_conv1)) {
+        if (vsc_conv1 != vsc_conv && keep_bus[BUS_get_index(CONVVSC_get_ac_bus(vsc_conv1))])
+          keep = TRUE;
+      }
+      if (keep)
+        break;
+    }
+    if (!keep) {
+      delete_vsc[CONVVSC_get_index(vsc_conv)] = 1;
+      del_vsc_conv_ptr_array[num_del_vsc_conv] = vsc_conv;
+      num_del_vsc_conv++;
+    }
+    else {
+      for (j = 0; j < new_net->num_dc_buses; j++) {
+        if (reachable_dc_bus[j])
+          keep_dc_bus[BUSDC_get_index(NET_get_dc_bus(new_net,j))] = 1;
+      }
+    }
+    free(reachable_dc_bus);
+  }
+
+  // Fill del array ptrs (DC)
+  num_del_dc_bus = 0;
+  num_del_dc_br = 0;
+  for (i = 0; i < new_net->num_dc_buses; i++) {
+    
+    dc_bus = NET_get_dc_bus(new_net,i);
+
+    if (keep_dc_bus[BUSDC_get_index(dc_bus)])
+      continue;
+
+    // DC bus
+    del_dc_bus_ptr_array[num_del_dc_bus] = dc_bus;
+    num_del_dc_bus++;
+
+    // DC branches k
+    for (dc_br = BUSDC_get_branch_k(dc_bus); dc_br != NULL; dc_br = BRANCHDC_get_next_k(dc_br)) {
+      if (!delete_dc_br[BRANCHDC_get_index(dc_br)]) {
+        delete_dc_br[BRANCHDC_get_index(dc_br)] = 1;
+        del_dc_br_ptr_array[num_del_dc_br] = dc_br;
+        num_del_dc_br++;
+      }
+    }
+
+    // DC branches m
+    for (dc_br = BUSDC_get_branch_m(dc_bus); dc_br != NULL; dc_br = BRANCHDC_get_next_m(dc_br)) {
+      if (!delete_dc_br[BRANCHDC_get_index(dc_br)]) {
+        delete_dc_br[BRANCHDC_get_index(dc_br)] = 1;
+        del_dc_br_ptr_array[num_del_dc_br] = dc_br;
+        num_del_dc_br++;
+      }
+    }
+  }
+  
   // Delete components
   NET_del_buses(new_net, del_bus_ptr_array, num_del_bus);
   NET_del_branches(new_net, del_br_ptr_array, num_del_br);
@@ -3856,16 +4000,20 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   NET_del_shunts(new_net, del_shunt_ptr_array, num_del_shunt);
   NET_del_bats(new_net, del_bat_ptr_array, num_del_bat);
   NET_del_vargens(new_net, del_vargen_ptr_array, num_del_vargen);
-  NET_del_csc_convs(new_net,del_csc_conv_ptr_array,new_net->num_csc_convs);
-  NET_del_vsc_convs(new_net,del_vsc_conv_ptr_array,new_net->num_vsc_convs);
-  NET_del_dc_buses(new_net,del_dc_bus_ptr_array,new_net->num_dc_buses);
-  NET_del_dc_branches(new_net,del_dc_br_ptr_array,new_net->num_dc_branches);
   NET_del_facts(new_net,del_facts_ptr_array,num_del_facts);
+  NET_del_csc_convs(new_net,del_csc_conv_ptr_array,num_del_csc_conv);
+  NET_del_vsc_convs(new_net,del_vsc_conv_ptr_array,num_del_vsc_conv);
+  NET_del_dc_buses(new_net,del_dc_bus_ptr_array,num_del_dc_bus);
+  NET_del_dc_branches(new_net,del_dc_br_ptr_array,num_del_dc_br);
 
   // Clean flag arrays
   free(keep_bus);
+  free(keep_dc_bus);
   free(delete_br);
   free(delete_facts);
+  free(delete_csc);
+  free(delete_vsc);
+  free(delete_dc_br);
 
   // Clean del ptr arrays
   free(del_bus_ptr_array);
@@ -3875,11 +4023,11 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   free(del_shunt_ptr_array);
   free(del_bat_ptr_array);
   free(del_vargen_ptr_array);
+  free(del_facts_ptr_array);
   free(del_csc_conv_ptr_array);
   free(del_vsc_conv_ptr_array);
   free(del_dc_bus_ptr_array);
   free(del_dc_br_ptr_array);
-  free(del_facts_ptr_array);
   
   // Clear flags
   NET_clear_flags(net);
@@ -5486,7 +5634,7 @@ char* NET_get_json_string(Net* net) {
     return NULL;
 
   // Max size
-  max_size = (2*NET_BUFFER_SIZE +
+  max_size = (3*NET_BUFFER_SIZE +
               BUS_BUFFER_SIZE*BUS_NUM_JSON_FIELDS*net->num_buses +
               BRANCH_BUFFER_SIZE*BRANCH_NUM_JSON_FIELDS*net->num_branches +
               GEN_BUFFER_SIZE*GEN_NUM_JSON_FIELDS*net->num_gens +
@@ -5538,6 +5686,20 @@ BOOL NET_has_error(Net* net) {
     return net->error_flag;
   else
     return FALSE;
+}
+
+char* NET_mark_reachable_dc_buses(Net* net, BusDC* dc_bus) {
+
+  char* reachable;
+
+  if (!net)
+    return NULL;
+
+  ARRAY_zalloc(reachable,char,net->num_dc_buses);
+
+  printf("NEEDS TO BE IMPLEMENTED\n");
+
+  return reachable;  
 }
 
 Net* NET_new(int num_periods) {
