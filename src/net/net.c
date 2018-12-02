@@ -1444,7 +1444,7 @@ void NET_del_vargens(Net* net, Vargen** gen_ptr_array, int size) {
   // Old var generators
   old_gen_array = net->vargen;
   old_num_vargens = net->num_vargens;
-
+  
   // Count unique and mark for deletion
   num = 0;
   ARRAY_zalloc(delete,char,net->num_vargens);
@@ -1525,6 +1525,7 @@ void NET_add_csc_convs(Net* net, ConvCSC** conv_ptr_array, int size) {
   ConvCSC* old_conv_array;
   int old_num_convs;
   Bus* bus;
+  BusDC* dc_bus;
   int num;
   int index;
   int i;
@@ -1579,12 +1580,15 @@ void NET_add_csc_convs(Net* net, ConvCSC** conv_ptr_array, int size) {
     
     // Save old connections
     bus = CONVCSC_get_ac_bus(conv_src);
+    dc_bus = CONVCSC_get_dc_bus(conv_src);
 
     // Clear connections bus - old conv
     CONVCSC_set_ac_bus(conv_src,NULL);     // also removes conv from bus->convs list
+    CONVCSC_set_dc_bus(conv_src,NULL);
 
     // Add connections bus - new conv
     CONVCSC_set_ac_bus(conv_dst,bus);      // also adds conv to bus->convs list
+    CONVCSC_set_dc_bus(conv_dst,dc_bus);
 
     index++;
   }
@@ -1607,6 +1611,7 @@ void NET_del_csc_convs(Net* net, ConvCSC** conv_ptr_array, int size) {
   int old_num_convs;
   char* delete;
   Bus* bus;
+  BusDC* dc_bus;
   int num;
   int index;
   int i;
@@ -1651,7 +1656,8 @@ void NET_del_csc_convs(Net* net, ConvCSC** conv_ptr_array, int size) {
       conv = CONVCSC_array_get(old_conv_array,i);
       
       // Clear connections bus - "conv to be deleted"
-      CONVCSC_set_ac_bus(conv,NULL); // also removes conv from bus->convs list
+      CONVCSC_set_ac_bus(conv,NULL); // also removes conv from bus->conv list
+      CONVCSC_set_dc_bus(conv,NULL); // also removes conv from dc_bus->conv list
     }
 
     // Keep
@@ -1665,12 +1671,15 @@ void NET_del_csc_convs(Net* net, ConvCSC** conv_ptr_array, int size) {
 
       // Save old connections
       bus = CONVCSC_get_ac_bus(conv_src);
+      dc_bus = CONVCSC_get_dc_bus(conv_src);
       
       // Clear connections bus - old conv 
       CONVCSC_set_ac_bus(conv_src,NULL);       // also removes conv from bus->convs list
+      CONVCSC_set_dc_bus(conv_src,NULL);
       
       // Add connections bus - new conv
       CONVCSC_set_ac_bus(conv_dst,bus);        // also adds conv to bus->convs list
+      CONVCSC_set_dc_bus(conv_dst,dc_bus);
       
       index++;
     }
@@ -1700,6 +1709,7 @@ void NET_add_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size) {
   int old_num_convs;
   Bus* bus;
   Bus* reg_bus;
+  BusDC* dc_bus;
   int num;
   int index;
   int i;
@@ -1755,14 +1765,17 @@ void NET_add_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size) {
     // Save old connections
     bus = CONVVSC_get_ac_bus(conv_src);
     reg_bus = CONVVSC_get_reg_bus(conv_src);
+    dc_bus = CONVVSC_get_dc_bus(conv_src);
 
     // Clear connections bus - old conv
     CONVVSC_set_ac_bus(conv_src,NULL);     // also removes conv from bus->convs list
     CONVVSC_set_reg_bus(conv_src,NULL);
+    CONVVSC_set_dc_bus(conv_src,NULL);
 
     // Add connections bus - new conv
     CONVVSC_set_ac_bus(conv_dst,bus);      // also adds conv to bus->convs list
     CONVVSC_set_reg_bus(conv_dst,reg_bus);
+    CONVVSC_set_dc_bus(conv_dst,dc_bus);
 
     index++;
   }
@@ -1786,6 +1799,7 @@ void NET_del_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size) {
   char* delete;
   Bus* bus;
   Bus* reg_bus;
+  BusDC* dc_bus;
   int num;
   int index;
   int i;
@@ -1832,6 +1846,7 @@ void NET_del_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size) {
       // Clear connections bus - "conv to be deleted"
       CONVVSC_set_ac_bus(conv,NULL);  // also removes conv from bus->convs list
       CONVVSC_set_reg_bus(conv,NULL);
+      CONVVSC_set_dc_bus(conv,NULL);
     }
 
     // Keep
@@ -1846,14 +1861,17 @@ void NET_del_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size) {
       // Save old connections
       bus = CONVVSC_get_ac_bus(conv_src);
       reg_bus = CONVVSC_get_reg_bus(conv_src);
+      dc_bus = CONVVSC_get_dc_bus(conv_src);
       
       // Clear connections bus - old conv 
       CONVVSC_set_ac_bus(conv_src,NULL);       // also removes conv from bus->convs list
       CONVVSC_set_reg_bus(conv_src,NULL);
+      CONVVSC_set_dc_bus(conv_src,NULL);
       
       // Add connections bus - new conv
       CONVVSC_set_ac_bus(conv_dst,bus);        // also adds conv to bus->convs list
       CONVVSC_set_reg_bus(conv_dst,reg_bus);
+      CONVVSC_set_dc_bus(conv_dst,dc_bus);
       
       index++;
     }
@@ -3756,7 +3774,7 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   for (i = 0; i < size; i++) {
     
     bus = bus_ptr_array[i];
-
+    
     // No bus
     if (!bus)
       continue;
@@ -5688,16 +5706,53 @@ BOOL NET_has_error(Net* net) {
     return FALSE;
 }
 
-char* NET_mark_reachable_dc_buses(Net* net, BusDC* dc_bus) {
+char* NET_mark_reachable_dc_buses(Net* net, BusDC* seed_bus) {
 
+  BusDC* bus;
+  BusDC* adj_bus;
+  BranchDC* br;
   char* reachable;
+  char* processed;
+  BOOL done = FALSE;
+  int i;
 
   if (!net)
     return NULL;
 
   ARRAY_zalloc(reachable,char,net->num_dc_buses);
+  ARRAY_zalloc(processed,char,net->num_dc_buses);
 
-  printf("NEEDS TO BE IMPLEMENTED\n");
+  reachable[BUSDC_get_index(seed_bus)] = 1; // seed
+  
+  while (!done) {
+
+    done = TRUE;
+    for (i = 0; i < net->num_dc_buses; i++) { // inefficient - use queue
+
+      if (reachable[i] && !processed[i]) {
+        
+        bus = NET_get_dc_bus(net, i);
+
+        processed[i] = 1;
+        for (br = BUSDC_get_branch_k(bus); br != NULL; br = BRANCHDC_get_next_k(br)) {
+          adj_bus = BRANCHDC_get_bus_m(br);
+          if (!reachable[BUSDC_get_index(adj_bus)]) {
+            reachable[BUSDC_get_index(adj_bus)] = 1;
+            done = FALSE;
+          }          
+        }
+        for (br = BUSDC_get_branch_m(bus); br != NULL; br = BRANCHDC_get_next_m(br)) {
+          adj_bus = BRANCHDC_get_bus_k(br);
+          if (!reachable[BUSDC_get_index(adj_bus)]) {
+            reachable[BUSDC_get_index(adj_bus)] = 1;
+            done = FALSE;
+          }          
+        }
+      }      
+    }    
+  }
+
+  free(processed);
 
   return reachable;  
 }
