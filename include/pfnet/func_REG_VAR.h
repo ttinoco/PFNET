@@ -21,6 +21,7 @@ typedef struct Func_REG_VAR_Data Func_REG_VAR_Data;
 Func* FUNC_REG_VAR_new(REAL weight, Net* net);
 void FUNC_REG_VAR_init(Func* f);
 void FUNC_REG_VAR_count_step(Func* f, Bus* bus, BusDC* busdc, int t);
+void FUNC_REG_VAR_allocate(Func* f);
 void FUNC_REG_VAR_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t);
 void FUNC_REG_VAR_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_values);
 void FUNC_REG_VAR_free(Func* f);

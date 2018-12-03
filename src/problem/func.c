@@ -376,8 +376,8 @@ void FUNC_allocate(Func* f) {
 
   // Hphi
   FUNC_set_Hphi(f,MAT_new(num_vars,
-			  num_vars,
-			  Hphi_nnz));
+                          num_vars,
+                          Hphi_nnz));
 
   // Additional allocate
   if (f->func_allocate)
