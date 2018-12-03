@@ -51,106 +51,20 @@ void FUNC_REG_VAR_init(Func* f) {
 void FUNC_REG_VAR_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
-  Branch* br;
-  Gen* gen;
-  Vargen* vargen;
-  Shunt* shunt;
-  Bat* bat;
-  Load* load;
   int* Hphi_nnz;
+  Func_REG_VAR_Data* data;
   
   // Func data
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
+  data = (Func_REG_VAR_Data*)FUNC_get_data(f);
 
   // Check pointers
-  if (!Hphi_nnz || !bus)
+  if (!Hphi_nnz || !data)
     return;
   
-  // Voltage magnitude
-  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG))
-    (*Hphi_nnz)++;
-  
-  // Voltage angle
-  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG))
-    (*Hphi_nnz)++;
-  
-  // Generators
-  for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-    
-    // Outage
-    if (GEN_is_on_outage(gen))
-      continue;
-    
-    // Active power
-    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P))
-      (*Hphi_nnz)++;
-    
-    // Reactive power
-    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q))
-      (*Hphi_nnz)++;
-  }
-  
-  // Variable generators
-  for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
-    
-    // Active power
-    if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P))
-      (*Hphi_nnz)++;
-    
-    // Reactive power
-    if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q))
-      (*Hphi_nnz)++;	
-  }
-  
-  // Shunts
-  for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
-    
-    // Susceptance
-    if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC))
-      (*Hphi_nnz)++;
-  }
-  
-  // Batteries
-  for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
-    
-    // Charging/discharging power
-    if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
-      (*Hphi_nnz)++;
-      (*Hphi_nnz)++;
-    } 
-    
-    // Energy level
-    if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_E))
-      (*Hphi_nnz)++;
-  }
-  
-  // Loads
-  for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
-    
-    // Active power
-    if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P))
-      (*Hphi_nnz)++;
-    
-    // Reactive power
-    if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q))
-      (*Hphi_nnz)++;	
-  }
-
-  // Branches
-  for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
-    
-    // Outage
-    if (BRANCH_is_on_outage(br))
-      continue;
-    
-    // Tap ratio
-    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO))
-      (*Hphi_nnz)++;
-
-    // Phase shift
-    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE))
-      (*Hphi_nnz)++;
-  }
+  // Count
+  if (BUS_get_index(bus) == 0 && !busdc && t == 0)
+    (*Hphi_nnz) += NET_get_num_vars(FUNC_get_network(f));
 }
 
 void FUNC_REG_VAR_allocate(Func* f) {
@@ -178,150 +92,25 @@ void FUNC_REG_VAR_allocate(Func* f) {
 void FUNC_REG_VAR_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
-  Branch* br;
-  Gen* gen;
-  Vargen* vargen;
-  Shunt* shunt;
-  Bat* bat;
-  Load* load;
   int* Hphi_nnz;
   Mat* Hphi;
   Func_REG_VAR_Data* data;
-
+  int i;
+  
   // Func data
   Hphi = FUNC_get_Hphi(f);
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
   data = (Func_REG_VAR_Data*)FUNC_get_data(f);
 
   // Check pointers
-  if (!Hphi_nnz || !data || !(data->w) || !Hphi || !bus)
+  if (!Hphi_nnz || !data || !(data->w) || !Hphi)
     return;
-  
-  // Voltage magnitude
-  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
-    MAT_set_i(Hphi,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
-    MAT_set_j(Hphi,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
-    (*Hphi_nnz)++;
-  }
-  
-  // Voltage angle
-  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) {
-    MAT_set_i(Hphi,*Hphi_nnz,BUS_get_index_v_ang(bus,t));
-    MAT_set_j(Hphi,*Hphi_nnz,BUS_get_index_v_ang(bus,t));
-    (*Hphi_nnz)++;
-  }
-  
-  // Generators
-  for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-    
-    // Outage
-    if (GEN_is_on_outage(gen))
-      continue;
-    
-    // Active power
-    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
-      MAT_set_i(Hphi,*Hphi_nnz,GEN_get_index_P(gen,t));
-      MAT_set_j(Hphi,*Hphi_nnz,GEN_get_index_P(gen,t));
-      (*Hphi_nnz)++;
-    }
-    
-    // Reactive power
-    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) {
-      MAT_set_i(Hphi,*Hphi_nnz,GEN_get_index_Q(gen,t));
-      MAT_set_j(Hphi,*Hphi_nnz,GEN_get_index_Q(gen,t));
-      (*Hphi_nnz)++;
-    }
-  }
-  
-  // Variable generators
-  for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
-    
-    // Active power
-    if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) {
-      MAT_set_i(Hphi,*Hphi_nnz,VARGEN_get_index_P(vargen,t));
-      MAT_set_j(Hphi,*Hphi_nnz,VARGEN_get_index_P(vargen,t));
-      (*Hphi_nnz)++;
-    }
-    
-    // Reactive power
-    if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q)) {
-      MAT_set_i(Hphi,*Hphi_nnz,VARGEN_get_index_Q(vargen,t));
-      MAT_set_j(Hphi,*Hphi_nnz,VARGEN_get_index_Q(vargen,t));
-      (*Hphi_nnz)++;
-    }	
-  }
-  
-  // Shunts
-  for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
-    
-    // Susceptance
-    if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
-      MAT_set_i(Hphi,*Hphi_nnz,SHUNT_get_index_b(shunt,t));
-      MAT_set_j(Hphi,*Hphi_nnz,SHUNT_get_index_b(shunt,t));
-      (*Hphi_nnz)++;
-    }
-    
-  }
-  
-  // Batteries
-  for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
-    
-    // Charging/discharging power
-    if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
-      
-      MAT_set_i(Hphi,*Hphi_nnz,BAT_get_index_Pc(bat,t));
-      MAT_set_j(Hphi,*Hphi_nnz,BAT_get_index_Pc(bat,t));
-      (*Hphi_nnz)++;
-      
-      MAT_set_i(Hphi,*Hphi_nnz,BAT_get_index_Pd(bat,t));
-      MAT_set_j(Hphi,*Hphi_nnz,BAT_get_index_Pd(bat,t));
-      (*Hphi_nnz)++;
-    } 
-    
-    // Energy level
-    if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_E)) {
-      MAT_set_i(Hphi,*Hphi_nnz,BAT_get_index_E(bat,t));
-      MAT_set_j(Hphi,*Hphi_nnz,BAT_get_index_E(bat,t));
-      (*Hphi_nnz)++;
-    }
-  }
-  
-  // Loads
-  for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
-    
-    // Active power
-    if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
-      MAT_set_i(Hphi,*Hphi_nnz,LOAD_get_index_P(load,t));
-      MAT_set_j(Hphi,*Hphi_nnz,LOAD_get_index_P(load,t));
-      (*Hphi_nnz)++;
-    }
-    
-    // Reactive power
-    if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) {
-      MAT_set_i(Hphi,*Hphi_nnz,LOAD_get_index_Q(load,t));
-      MAT_set_j(Hphi,*Hphi_nnz,LOAD_get_index_Q(load,t));
-      (*Hphi_nnz)++;
-    }
-  }
 
-  // Branches
-  for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
-    
-    // Outage
-    if (BRANCH_is_on_outage(br))
-      continue;
-  
-    // Tap ratio
-    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) {
-      MAT_set_i(Hphi,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
-      MAT_set_j(Hphi,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
-      (*Hphi_nnz)++;
-    }
-    
-    // Phase shift
-    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
-      MAT_set_i(Hphi,*Hphi_nnz,BRANCH_get_index_phase(br,t));
-      MAT_set_j(Hphi,*Hphi_nnz,BRANCH_get_index_phase(br,t));
+  // Analyze
+  if (BUS_get_index(bus) == 0 && !busdc && t == 0) {
+    for (i = 0; i < NET_get_num_vars(FUNC_get_network(f)); i++) {
+      MAT_set_i(Hphi,*Hphi_nnz,i);
+      MAT_set_j(Hphi,*Hphi_nnz,i);
       (*Hphi_nnz)++;
     }
   }
@@ -332,17 +121,11 @@ void FUNC_REG_VAR_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_val
 
   // Local variables
   Func_REG_VAR_Data* data;
-  Branch* br;
-  Gen* gen;
-  Vargen* vargen;
-  Shunt* shunt;
-  Bat* bat;
-  Load* load;
   REAL* phi;
   REAL* gphi;
   REAL* Hphi;
   int* Hphi_nnz;
-  int index;
+  int i;
   REAL x;
   
   // Func data
@@ -353,175 +136,16 @@ void FUNC_REG_VAR_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_val
   data = (Func_REG_VAR_Data*)FUNC_get_data(f);
 
   // Check pointers
-  if (!phi || !gphi || !data || !(data->w) || !(data->x0) || !Hphi || !Hphi_nnz || !bus)
+  if (!phi || !gphi || !data || !(data->w) || !(data->x0) || !Hphi || !Hphi_nnz)
     return;
 
-  // Voltage magnitude
-  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
-    index = BUS_get_index_v_mag(bus,t);
-    x = VEC_get(var_values,index);
-    (*phi) += data->w[index]*pow(x-data->x0[index],2.);
-    gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
-    Hphi[*Hphi_nnz] = 2.*data->w[BUS_get_index_v_mag(bus,t)];
-    (*Hphi_nnz)++;
-  }
-  
-  // Voltage angle
-  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG)) {
-    index = BUS_get_index_v_ang(bus,t);
-    x = VEC_get(var_values,index);
-    (*phi) += data->w[index]*pow(x-data->x0[index],2.);
-    gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
-    Hphi[*Hphi_nnz] = 2.*data->w[BUS_get_index_v_ang(bus,t)];
-    (*Hphi_nnz)++;
-  }
-  
-  // Generators
-  for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-    
-    // Outage
-    if (GEN_is_on_outage(gen))
-      continue;
-    
-    // Active power
-    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
-      index = GEN_get_index_P(gen,t);
-      x = VEC_get(var_values,index);
-      (*phi) += data->w[index]*pow(x-data->x0[index],2.);
-      gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
-      Hphi[*Hphi_nnz] = 2.*data->w[GEN_get_index_P(gen,t)];
-      (*Hphi_nnz)++;
-    }
-    
-    // Reactive power
-    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) {
-      index = GEN_get_index_Q(gen,t);
-      x = VEC_get(var_values,index);
-      (*phi) += data->w[index]*pow(x-data->x0[index],2.);
-      gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
-      Hphi[*Hphi_nnz] = 2.*data->w[GEN_get_index_Q(gen,t)];
-      (*Hphi_nnz)++;
-    }
-  }
-  
-  // Variable generators
-  for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
-    
-    // Active power
-    if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) {
-      index = VARGEN_get_index_P(vargen,t);
-      x = VEC_get(var_values,index);
-      (*phi) += data->w[index]*pow(x-data->x0[index],2.);
-      gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
-      Hphi[*Hphi_nnz] = 2.*data->w[VARGEN_get_index_P(vargen,t)];
-      (*Hphi_nnz)++;
-    }
-    
-    // Reactive power
-    if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_Q)) {
-      index = VARGEN_get_index_Q(vargen,t);
-      x = VEC_get(var_values,index);
-      (*phi) += data->w[index]*pow(x-data->x0[index],2.);
-      gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
-      Hphi[*Hphi_nnz] = 2.*data->w[VARGEN_get_index_Q(vargen,t)];
-      (*Hphi_nnz)++;
-    }	
-  }
-  
-  // Shunts
-  for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
-    
-    // Susceptance
-    if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
-      index = SHUNT_get_index_b(shunt,t);
-      x = VEC_get(var_values,index);
-      (*phi) += data->w[index]*pow(x-data->x0[index],2.);
-      gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
-      Hphi[*Hphi_nnz] = 2.*data->w[SHUNT_get_index_b(shunt,t)];
-      (*Hphi_nnz)++;
-    } 
-  }
-  
-  // Batteries
-  for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
-    
-    // Charging/discharging power
-    if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
-      
-      index = BAT_get_index_Pc(bat,t);
-      x = VEC_get(var_values,index);
-      (*phi) += data->w[index]*pow(x-data->x0[index],2.);
-      gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
-      Hphi[*Hphi_nnz] = 2.*data->w[BAT_get_index_Pc(bat,t)];
-      (*Hphi_nnz)++;
-      
-      index = BAT_get_index_Pd(bat,t);
-      x = VEC_get(var_values,index);
-      (*phi) += data->w[index]*pow(x-data->x0[index],2.);
-      gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
-      Hphi[*Hphi_nnz] = 2.*data->w[BAT_get_index_Pd(bat,t)];
-      (*Hphi_nnz)++;
-    } 
-    
-    // Energy level
-    if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_E)) {
-      index = BAT_get_index_E(bat,t);
-      x = VEC_get(var_values,index);
-      (*phi) += data->w[index]*pow(x-data->x0[index],2.);
-      gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
-      Hphi[*Hphi_nnz] = 2.*data->w[BAT_get_index_E(bat,t)];
-      (*Hphi_nnz)++;
-    }
-  }
-
-  // Loads
-  for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
-    
-    // Active power
-    if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
-      index = LOAD_get_index_P(load,t);
-      x = VEC_get(var_values,index);
-      (*phi) += data->w[index]*pow(x-data->x0[index],2.);
-      gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
-      Hphi[*Hphi_nnz] = 2.*data->w[LOAD_get_index_P(load,t)];
-      (*Hphi_nnz)++;
-    }
-    
-    // Reactive power
-    if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) {
-      index = LOAD_get_index_Q(load,t);
-      x = VEC_get(var_values,index);
-      (*phi) += data->w[index]*pow(x-data->x0[index],2.);
-      gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
-      Hphi[*Hphi_nnz] = 2.*data->w[LOAD_get_index_Q(load,t)];
-      (*Hphi_nnz)++;
-    }
-  }
-
-  // Branches
-  for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
-    
-    // Outage
-    if (BRANCH_is_on_outage(br))
-      continue;
-  
-    // Tap ratio
-    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO)) {
-      index = BRANCH_get_index_ratio(br,t);
-      x = VEC_get(var_values,index);
-      (*phi) += data->w[index]*pow(x-data->x0[index],2.);
-      gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
-      Hphi[*Hphi_nnz] = 2.*data->w[BRANCH_get_index_ratio(br,t)];
-      (*Hphi_nnz)++;
-    }
-    
-    // Phase shift
-    if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) {
-      index = BRANCH_get_index_phase(br,t);
-      x = VEC_get(var_values,index);
-      (*phi) += data->w[index]*pow(x-data->x0[index],2.);
-      gphi[index] = 2.*data->w[index]*(x-data->x0[index]);
-      Hphi[*Hphi_nnz] = 2.*data->w[BRANCH_get_index_phase(br,t)];
+  // Eval
+  if (BUS_get_index(bus) == 0 && !busdc && t == 0) {
+    for (i = 0; i < NET_get_num_vars(FUNC_get_network(f)); i++) {
+      x = VEC_get(var_values,i);
+      (*phi) += data->w[i]*pow(x-data->x0[i],2.);
+      gphi[i] = 2.*data->w[i]*(x-data->x0[i]);
+      Hphi[*Hphi_nnz] = 2.*data->w[i];
       (*Hphi_nnz)++;
     }
   }
