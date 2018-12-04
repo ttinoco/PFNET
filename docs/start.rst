@@ -4,16 +4,6 @@
 Getting Started
 ***************
 
-.. _start_requirements:
-
-Dependencies
-============
-
-The PFNET C library has the following *optional* dependencies:
-
-* `graphviz`_ (>= 2.38): for creating layouts and visualizations.
-* raw parser (== 1.2.6): for parsing PSSE raw files.
-
 .. _start_download:
 
 Download
@@ -21,10 +11,15 @@ Download
 
 The latest version of PFNET can be obtained from `<https://github.com/ttinoco/PFNET>`_.
 
-.. _start_build:
+.. _start_install:
 
-Installation (Linux and macOS)
-==============================
+Installation
+============
+
+.. _start_install_unix:
+
+Linux and macOS
+---------------
 
 Installing PFNET on Linux or macOS requires typing the following commands in the root directory of the library::
 
@@ -36,12 +31,10 @@ Installing PFNET on Linux or macOS requires typing the following commands in the
 
 For executing the command ``./autogen.sh``, Autotools is needed (m4, automake, autoconf, autoconf-archive, etc). 
 
-If ``raw parser`` is available, the environment variable ``RAW_PARSER`` should point to the root of the source code.
+.. _start_install_win:
 
-.. _start_build_win:
-
-Installation (Windows)
-======================
+Windows
+-------
 
 Installation PFNET on Windows requires `Cmake`_ and `MinGW`_, and typing the following commands in the root directory of the library::
 

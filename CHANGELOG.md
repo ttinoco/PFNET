@@ -1,5 +1,5 @@
-Unreleased
-----------
+Version 1.3.4
+-------------
 * Updated parser init/free routines to make parser params work.
 * Modularized heuristics.
 * Added constrained function.
@@ -19,7 +19,7 @@ Unreleased
 * Made function init/free optional.
 * Changed count/analyze/eval/etc loop to be bus-based.
 * Fixed bug with PVPQ switching constraint when no Q vars.
-* Voltage dependent loads: comp_cp, comp_cq, comp_ci, comp_cg, comp_cb, and comp_cg attributes, is_vdep routine, LOAD_PROP_VDEP property, updated parsers.
+* Voltage dependent loads: comp_cp, comp_cq, comp_ci, comp_cj, comp_cg, and comp_cb attributes, is_vdep routine, LOAD_PROP_VDEP property, updated parsers.
 * Added CONSTR_LOAD_VDEP constraint.
 * DC buses, DC branches, and VSC converters for HVDC.
 * Added shunt types and net counters.
@@ -48,7 +48,7 @@ Unreleased
 * Added routines for updating PQ components of load according to provided weights.
 * Added very basic CSC constraints and functions (CONSTR_CSC_EQ, CONSTR_CSC_DC_PSET, CONSTR_CSC_DC_VSET, FUNC_CSC_DC_PSET).
 * Added JSON support (read/write) for new components (vdep loads, csc, vsc, facts, dc bus, dc branch).
-* Addded switched shunt control mode (discrete, continuous) and rounding capability.
+* Added switched shunt control mode (discrete, continuous) and rounding capability.
 * Added network routing for rounding susceptance of discrete switched shunts and count.
 * Added branch routine for using power flow count/analyze/eval subroutines to construct Jacobian of (P_km, Q_km) or (P_mk, Q_mk).
 * Removed graphviz interface and dependency.

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5.0)
 project(PFNET)
 enable_testing()
 
-set(PFNET_VERSION 1.3.3)
+set(PFNET_VERSION 1.3.4)
 set(PFNET_PACKAGE "pfnet")
 set(PFNET_NAME "PFNET")
 set(PFNET_STRING "${PFNET_NAME} ${PFNET_VERSION}")

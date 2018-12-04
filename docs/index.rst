@@ -18,8 +18,8 @@ PFNET is released under the BSD 2-clause license.
 
 **Interfaces**
 
-* `Python <https://github.com/ttinoco/PFNET.py>`_
-* `Julia <https://github.com/ttinoco/PFNET.jl>`_
+* `Python <https://github.com/ttinoco/PFNET.py>`_ (complete)
+* `Julia <https://github.com/ttinoco/PFNET.jl>`_ (early stage)
   
 **Contents**
 
@@ -29,12 +29,6 @@ PFNET is released under the BSD 2-clause license.
 
    Getting Started<start>
    Source Code Reference (Doxygen) <http://pfnet.readthedocs.io/en/latest/c/>
-
-**Contributors (alphabetical)**
-
-* Martin Baltzinger
-* `Tomas Tinoco De Rubira <https://ttinoco.github.io/>`_
-* Adam Wigington
 
 Indices and tables
 ==================
