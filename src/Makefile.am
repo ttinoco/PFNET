@@ -105,7 +105,8 @@ problem_constr_src = problem/constr/constr_DC_FLOW_LIM.c \
                      problem/constr/constr_FACTS_QSET_SWITCH.c \
                      problem/constr/constr_CSC_DC_VSET.c \
                      problem/constr/constr_CSC_DC_PSET.c \
-                     problem/constr/constr_CSC_EQ.c
+                     problem/constr/constr_CSC_DC_ISET.c \
+                     problem/constr/constr_CSC_EQ.c 
 
 problem_constr_hdr = $(inc_path)/constr_DC_FLOW_LIM.h \
                      $(inc_path)/constr_AC_FLOW_LIM.h \
@@ -136,6 +137,7 @@ problem_constr_hdr = $(inc_path)/constr_DC_FLOW_LIM.h \
 		     $(inc_path)/constr_FACTS_QSET_SWITCH.h \
                      $(inc_path)/constr_CSC_DC_VSET.h \
 		     $(inc_path)/constr_CSC_DC_PSET.h \
+		     $(inc_path)/constr_CSC_DC_ISET.h \
 		     $(inc_path)/constr_CSC_EQ.h
 
 problem_func_src = problem/func/func_GEN_COST.c \

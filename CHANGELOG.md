@@ -1,3 +1,7 @@
+Unreleased
+----------
+* Constant current constraint for CSC HVDC.
+
 Version 1.3.4
 -------------
 * Updated parser init/free routines to make parser params work.

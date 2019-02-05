@@ -69,6 +69,7 @@
 #include "constr_FACTS_QSET_SWITCH.h"
 #include "constr_CSC_DC_VSET.h"
 #include "constr_CSC_DC_PSET.h"
+#include "constr_CSC_DC_ISET.h"
 #include "constr_CSC_EQ.h"
 
 // Heuristics

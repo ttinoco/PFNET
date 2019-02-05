@@ -1,5 +1,5 @@
 /** @file constr_CSC_DC_PSET.c
- *  @brief This file defines the data structure and routines associated with the constraint of type dc_vset.
+ *  @brief This file defines the data structure and routines associated with the constraint of type dc_pset.
  *
  * This file is part of PFNET.
  *
