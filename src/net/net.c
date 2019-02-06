@@ -6862,9 +6862,49 @@ void NET_update_set_points(Net* net) {
   // Update
   for (i = 0; i < net->num_buses; i++) {
     bus = BUS_array_get(net->bus,i);
-    if (BUS_is_regulated_by_gen(bus)) {
+    if (BUS_is_v_set_regulated(bus)) {
       for (t = 0; t < net->num_periods; t++)
         BUS_set_v_set(bus,BUS_get_v_mag(bus,t),t);
+    }
+  }
+}
+
+void NET_update_reg_Q_participations(Net* net, int t) {
+
+  void* obj;
+  char obj_type;
+  REAL Q_total;
+  REAL Q;
+  Bus* bus;
+  int i;
+  REAL eps = 1e-4;
+  
+  // Check
+  if (!net)
+    return;
+
+  for (i = 0; i < net->num_buses; i++) {
+
+    bus = NET_get_bus(net, i);
+
+    if (BUS_is_v_set_regulated(bus)) {
+
+      Q_total = 0;
+      for (REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus))
+        Q_total += REG_OBJ_get_Q(obj_type, obj, t);
+
+      if (0 < Q_total && Q_total < eps)
+        Q_total = eps;
+      if (0 > Q_total && Q_total > -eps)
+        Q_total = -eps;
+
+      for (REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus)) {
+        Q = REG_OBJ_get_Q(obj_type, obj, t);
+        if (Q_total > 0)
+          REG_OBJ_set_Q_par(obj_type,obj,(Q > eps? Q : eps)/Q_total);
+        else
+          REG_OBJ_set_Q_par(obj_type,obj,(-Q > eps? -Q : eps)/Q_total);        
+      }
     }
   }
 }

@@ -93,6 +93,25 @@ void REG_OBJ_set_Q(char obj_type, void* obj, REAL Q, int t) {
     FACTS_set_Q_sh((Facts*)obj,Q,t);
 }
 
+void REG_OBJ_set_Q_par(char obj_type, void* obj, REAL Q_par) {
+
+  // Check
+  if (!obj)
+    return;
+  
+  // Gen
+  if (obj_type == OBJ_GEN)
+    GEN_set_Q_par((Gen*)obj,Q_par);
+      
+  // VSC
+  else if (obj_type == OBJ_CONVVSC)
+    CONVVSC_set_Q_par((ConvVSC*)obj,Q_par);
+
+  // FACTS
+  else if (obj_type == OBJ_FACTS)
+    FACTS_set_Q_par((Facts*)obj,Q_par);
+}
+
 void REG_OBJ_show(char obj_type, void* obj) {
 
   // Check

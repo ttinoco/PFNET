@@ -25,6 +25,7 @@
 #include "conv_vsc.h"
 #include "conv_csc.h"
 #include "facts.h"
+#include "reg_obj.h"
 #include "vector.h"
 #include "matrix.h"
 #include "utils.h"
@@ -256,6 +257,7 @@ char* NET_get_show_properties_str(Net* net, int t);
 void NET_show_buses(Net* net, int number, int sort_by, int t);
 void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* values);
 void NET_update_properties(Net* net, Vec* values);
+void NET_update_reg_Q_participations(Net* net, int t);
 void NET_update_set_points(Net* net);
 void NET_update_hash_tables(Net* net);
 
