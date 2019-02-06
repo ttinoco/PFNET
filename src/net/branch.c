@@ -43,7 +43,7 @@ struct Branch {
   REAL* ratio;       /**< @brief Transformer taps ratio (p.u.) */
   REAL ratio_max;    /**< @brief Maximum transformer taps ratio (p.u.) */
   REAL ratio_min;    /**< @brief Minimum transformer taps ratio (p.u.) */
-  char num_ratios;   /**< @brief Number of tap positions */
+  int num_ratios;   /**< @brief Number of tap positions */
 
   // Phase shift
   REAL* phase;       /**< @brief Transformer phase shift (radians) */
@@ -491,6 +491,13 @@ REAL BRANCH_get_ratio_max(Branch* br) {
 REAL BRANCH_get_ratio_min(Branch* br) {
   if (br)
     return br->ratio_min;
+  else
+    return 0;
+}
+
+int BRANCH_get_num_ratios(Branch* br) {
+  if (br)
+    return br->num_ratios;
   else
     return 0;
 }
@@ -1273,6 +1280,7 @@ char* BRANCH_get_json_string(Branch* branch, char* output) {
   JSON_array_float(temp,output,"ratio",branch->ratio,branch->num_periods,FALSE);
   JSON_float(temp,output,"ratio_max",branch->ratio_max,FALSE);
   JSON_float(temp,output,"ratio_min",branch->ratio_min,FALSE);
+  JSON_int(temp,output,"num_ratios",branch->num_ratios,FALSE);
   JSON_array_float(temp,output,"phase",branch->phase,branch->num_periods,FALSE);
   JSON_float(temp,output,"phase_max",branch->phase_max,FALSE);
   JSON_float(temp,output,"phase_min",branch->phase_min,FALSE);
@@ -1369,7 +1377,7 @@ void BRANCH_init(Branch* br, int num_periods) {
 
   br->ratio_max = 1;
   br->ratio_min = 1;
-  br->num_ratios = 1;
+  br->num_ratios = 33;
 
   br->phase_max = 0;
   br->phase_min = 0;
@@ -1671,6 +1679,11 @@ void BRANCH_set_ratio_max(Branch* br, REAL ratio) {
 void BRANCH_set_ratio_min(Branch* br, REAL ratio) {
   if (br)
     br->ratio_min = ratio;
+}
+
+void BRANCH_set_num_ratios(Branch* br, int num) {
+  if (br)
+    br->num_ratios = num;
 }
 
 void BRANCH_set_pos_ratio_v_sens(Branch* br, BOOL flag) {

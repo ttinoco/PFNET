@@ -626,6 +626,12 @@ void JSON_PARSER_process_json_branch_array(Parser* p, Net* net, json_value* json
       else if (strcmp(key,"ratio_min") == 0)
         BRANCH_set_ratio_min(branch,val->u.dbl);
 
+      // num_ratios
+      else if (strcmp(key,"num_ratios") == 0) {
+        if (val->type == json_integer)
+          BRANCH_set_num_ratios(branch,val->u.integer);
+      }
+
       // phase
       else if (strcmp(key,"phase") == 0) {
         for (k = 0; k < imin(BRANCH_get_num_periods(branch),val->u.array.length); k++)
