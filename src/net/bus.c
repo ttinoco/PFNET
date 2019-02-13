@@ -115,8 +115,9 @@ struct Bus {
   int* dwdv_index;
   int* dvdv_index;
   
-  // List
-  Bus* next; /**< @brief List of buses */
+  // Lists
+  Bus* next;   /**< @brief List of buses */
+  Node* equiv; /**< @brief List of equivalent buses */
 };
 
 void BUS_add_gen(Bus* bus, Gen* gen) {
@@ -452,6 +453,7 @@ void BUS_array_del(Bus* bus_array, int size) {
       free(bus->dwdw_index);
       free(bus->dwdv_index);
       free(bus->dvdv_index);
+      NODE_list_del(bus->equiv);
       BUS_del_all_connections(bus);
     }
     free(bus_array);
@@ -1960,6 +1962,7 @@ void BUS_init(Bus* bus, int num_periods) {
   }
 
   bus->next = NULL;
+  bus->equiv = NULL;
 }
 
 void BUS_inject_P(Bus* bus, REAL P, int t) {

@@ -182,12 +182,14 @@ problem_heur_hdr = $(inc_path)/heur_PVPQ_SWITCHING.h \
 
 utils_src = utils/utils.c \
             utils/json.c \
-            utils/line_flow.c 
+            utils/line_flow.c \
+            utils/node.c
 
 utils_hdr = $(inc_path)/utils.h \
             $(inc_path)/json_macros.h \
             $(inc_path)/json.h \
-            $(inc_path)/line_flow.h
+            $(inc_path)/line_flow.h \
+            $(inc_path)/node.h
 
 other_hdr = $(inc_path)/array.h $(inc_path)/constants.h $(inc_path)/flag_types.h \
             $(inc_path)/list.h $(inc_path)/obj_types.h $(inc_path)/types.h \

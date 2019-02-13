@@ -14,6 +14,7 @@
 #include "stdio.h"
 #include "types.h"
 #include "list.h"
+#include "node.h"
 #include "vector.h"
 #include "uthash.h"
 

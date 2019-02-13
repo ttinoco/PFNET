@@ -3458,7 +3458,7 @@ Net* NET_get_copy(Net* net) {
   
   // Copy rest of data
   NET_copy_from_net(new_net,net);
-    
+  
   // Return
   return new_net;
 }
@@ -6828,7 +6828,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
     }
 
     // Branch flows
-    if (!BRANCH_is_on_outage(br)) {
+    if (!BRANCH_is_on_outage(br) && !BRANCH_is_zero_impedance(br)) {
       BUS_inject_P(BRANCH_get_bus_k(br),-BRANCH_get_P_km(br,var_values,t),t);
       BUS_inject_Q(BRANCH_get_bus_k(br),-BRANCH_get_Q_km(br,var_values,t),t);
       BUS_inject_P(BRANCH_get_bus_m(br),-BRANCH_get_P_mk(br,var_values,t),t);
