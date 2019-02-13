@@ -69,6 +69,7 @@
 #define BRANCH_BUFFER_SIZE 100      /**< @brief Constant: buffer size for strings */
 #define BRANCH_JSON_BUFFER_SIZE 200 /**< @brief Constant: buffer size for json strings */
 #define BRANCH_NUM_JSON_FIELDS 30   /**< @brief Constant: max number of json fields */
+#define BRANCH_ZERO_IMPEDANCE 1e-4  /**< @brief Constant: zero impedance thershold */
 /** @} */
 
 // Branch
@@ -189,6 +190,7 @@ BOOL BRANCH_is_tap_changer(Branch* br);
 BOOL BRANCH_is_tap_changer_v(Branch* br);
 BOOL BRANCH_is_tap_changer_Q(Branch* br);
 BOOL BRANCH_is_part_of_3_winding_transformer(Branch* br);
+BOOL BRANCH_is_zero_impedance(Branch* br);
 Branch* BRANCH_list_reg_add(Branch* reg_br_list, Branch* br);
 Branch* BRANCH_list_reg_del(Branch* reg_br_list, Branch* br);
 int BRANCH_list_reg_len(Branch* reg_br_list);

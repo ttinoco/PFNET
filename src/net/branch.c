@@ -1486,6 +1486,13 @@ BOOL BRANCH_is_part_of_3_winding_transformer(Branch* br) {
     return FALSE;
 }
 
+BOOL BRANCH_is_zero_impedance(Branch* br) {
+  if (br)
+    return (br->g == 0 && fabs(br->b) >= 1./BRANCH_ZERO_IMPEDANCE);
+  else
+    return FALSE;
+}
+
 Branch* BRANCH_list_reg_add(Branch* reg_br_list, Branch* reg_br) {
   LIST_add(Branch,reg_br_list,reg_br,reg_next);
   return reg_br_list;
