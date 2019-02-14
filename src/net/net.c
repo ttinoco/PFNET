@@ -3272,6 +3272,8 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
       branch_index_map[i] = new_num_branches;
       new_num_branches++;
     }
+    else
+      branch_index_map[i] = -1;
   }
   
   // Allocate

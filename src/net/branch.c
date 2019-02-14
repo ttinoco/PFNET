@@ -1488,7 +1488,7 @@ BOOL BRANCH_is_part_of_3_winding_transformer(Branch* br) {
 
 BOOL BRANCH_is_zero_impedance(Branch* br) {
   if (br)
-    return (br->g == 0 && fabs(br->b) >= 1./BRANCH_ZERO_IMPEDANCE);
+    return (BRANCH_is_line(br) && br->g == 0 && fabs(br->b) >= 1./BRANCH_ZERO_IMPEDANCE);
   else
     return FALSE;
 }

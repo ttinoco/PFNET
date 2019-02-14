@@ -601,6 +601,7 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, BOOL equiv_slack) {
 
   // Local variables
   int num_periods;
+  Gen* gen;
 
   // Check
   if (!bus || !other)
@@ -630,7 +631,8 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, BOOL equiv_slack) {
   bus->v_base = other->v_base;
   memcpy(bus->v_mag,other->v_mag,num_periods*sizeof(REAL));
   memcpy(bus->v_ang,other->v_ang,num_periods*sizeof(REAL));
-  memcpy(bus->v_set,other->v_set,num_periods*sizeof(REAL));
+  if (BUS_is_v_set_regulated(other) || !BUS_is_v_set_regulated(bus))
+    memcpy(bus->v_set,other->v_set,num_periods*sizeof(REAL));
   bus->v_max_reg = other->v_max_reg;
   bus->v_min_reg = other->v_min_reg;
   bus->v_max_norm = other->v_max_norm;
@@ -639,7 +641,7 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, BOOL equiv_slack) {
   bus->v_min_emer = other->v_min_emer;
 
   // Flags
-  bus->slack = (other->slack || (equiv_slack && BUS_equiv_has_slack(bus)));
+  bus->slack = (other->slack || (equiv_slack && BUS_equiv_has_slack(other)));
   bus->star = other->star;
   bus->fixed = other->fixed;
   bus->bounded = other->bounded;
@@ -683,6 +685,12 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, BOOL equiv_slack) {
 
   // List
   // skip next
+
+  // Slack regulation fix
+  if (bus->slack) {
+    for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen))
+      GEN_set_reg_bus(gen,bus);
+  }    
 }
 
 int BUS_get_area(Bus* bus) {
