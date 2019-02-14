@@ -173,7 +173,9 @@ BOOL BUS_check(Bus* bus, BOOL verbose);
 void BUS_clear_flags(Bus* bus, char flag_type);
 void BUS_clear_sensitivities(Bus* bus);
 void BUS_clear_mismatches(Bus* bus);
-void BUS_copy_from_bus(Bus* bus, Bus* other);
+void BUS_copy_from_bus(Bus* bus, Bus* other, BOOL equiv_slack);
+
+
 
 char BUS_get_flags_vars(Bus* bus);
 char BUS_get_flags_fixed(Bus* bus);
@@ -195,6 +197,7 @@ int* BUS_get_index_v_ang_array(Bus* bus);
 int BUS_get_index_P(Bus* bus, int t);
 int BUS_get_index_Q(Bus* bus, int t);
 Bus* BUS_get_next(Bus* bus);
+Node* BUS_get_equiv(Bus* bus);
 int BUS_get_number(Bus* bus);
 char* BUS_get_name(Bus* bus);
 int BUS_get_alt_number(Bus* bus);
@@ -307,10 +310,20 @@ BOOL BUS_is_v_set_regulated(Bus* bus);
 BOOL BUS_is_slack(Bus* bus);
 BOOL BUS_is_star(Bus* bus);
 BOOL BUS_is_redundant(Bus* bus);
+
+void BUS_equiv_add(Bus* bus, Bus* other_bus);
+BOOL BUS_equiv_has(Bus* bus, Bus* other_bus);
+BOOL BUS_equiv_has_slack(Bus* bus);
+void BUS_equiv_make(Bus* bus1, Bus* bus2);
+void BUS_equiv_del(Bus* bus);
+int BUS_equiv_len(Bus* bus);
+void BUS_equiv_show(Bus* bus);
+
 Bus* BUS_list_add(Bus* bus_list, Bus* bus);
 Bus* BUS_list_add_sorting(Bus* bus_list, Bus* bus, int sort_by, int t);
 int BUS_list_len(Bus* bus_list);
 void BUS_list_del(Bus* bus_list);
+
 Bus* BUS_new(int num_periods);
 void BUS_propagate_data_in_time(Bus* bus, int start, int end);
 void BUS_set_area(Bus* bus, int area);

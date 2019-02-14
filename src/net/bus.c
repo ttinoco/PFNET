@@ -453,7 +453,7 @@ void BUS_array_del(Bus* bus_array, int size) {
       free(bus->dwdw_index);
       free(bus->dwdv_index);
       free(bus->dvdv_index);
-      NODE_list_del(bus->equiv);
+      BUS_equiv_del(bus);
       BUS_del_all_connections(bus);
     }
     free(bus_array);
@@ -594,7 +594,7 @@ void BUS_clear_mismatches(Bus* bus) {
   }
 }
 
-void BUS_copy_from_bus(Bus* bus, Bus* other) {
+void BUS_copy_from_bus(Bus* bus, Bus* other, BOOL equiv_slack) {
   /** Copies data from another bus except
    *  index, hash info, and connections.
    */
@@ -639,7 +639,7 @@ void BUS_copy_from_bus(Bus* bus, Bus* other) {
   bus->v_min_emer = other->v_min_emer;
 
   // Flags
-  bus->slack = other->slack;
+  bus->slack = (other->slack || (equiv_slack && BUS_equiv_has_slack(bus)));
   bus->star = other->star;
   bus->fixed = other->fixed;
   bus->bounded = other->bounded;
@@ -821,6 +821,13 @@ int BUS_get_index_Q(Bus* bus, int t) {
 Bus* BUS_get_next(Bus* bus) {
   if (bus)
     return bus->next;
+  else
+    return NULL;
+}
+
+Node* BUS_get_equiv(Bus* bus) {
+  if (bus)
+    return bus->equiv;
   else
     return NULL;
 }
@@ -2047,6 +2054,83 @@ BOOL BUS_is_redundant(Bus* bus) {
     return bus->alt_number >= 0;
   else
     return FALSE;
+}
+
+void BUS_equiv_add(Bus* bus, Bus* other_bus) {
+  Node* node;
+  if (!BUS_equiv_has(bus,other_bus)) {
+    node = NODE_new();
+    NODE_set_item(node,(void*)other_bus);
+    bus->equiv = NODE_list_add(bus->equiv,node);
+  }
+}
+
+BOOL BUS_equiv_has(Bus* bus, Bus* other_bus) {
+  Node* node;
+  if (bus == other_bus)
+    return TRUE;
+  for (node = bus->equiv; node != NULL; node = NODE_get_next(node)) {
+    if ((Bus*)NODE_get_item(node) == other_bus)
+      return TRUE;
+  }
+  return FALSE;
+}
+
+BOOL BUS_equiv_has_slack(Bus* bus) {
+  Node* node;
+  if (!bus)
+    return FALSE;
+  for (node = bus->equiv; node != NULL; node = NODE_get_next(node)) {
+    if (BUS_is_slack((Bus*)NODE_get_item(node)))
+      return TRUE;
+  }
+  return FALSE;
+}
+
+void BUS_equiv_make(Bus* bus1, Bus* bus2) {
+  Node* node;
+  Node* n;
+  if (!bus1 || !bus2 || (bus1 == bus2))
+    return;
+  for (node = bus2->equiv; node != NULL; node = NODE_get_next(node)) {
+    BUS_equiv_add(bus1,(Bus*)NODE_get_item(node));
+    BUS_equiv_add((Bus*)NODE_get_item(node),bus1);
+  }
+  for (node = bus1->equiv; node != NULL; node = NODE_get_next(node)) {
+    BUS_equiv_add(bus2,(Bus*)NODE_get_item(node));
+    BUS_equiv_add((Bus*)NODE_get_item(node),bus2);
+  }
+  BUS_equiv_add(bus1,bus2);
+  BUS_equiv_add(bus2,bus1);
+  for (node = bus1->equiv; node != NULL; node = NODE_get_next(node)) {
+    for (n = bus1->equiv; n != NULL; n = NODE_get_next(n))
+      BUS_equiv_add((Bus*)NODE_get_item(node),(Bus*)NODE_get_item(n));
+  }
+}
+
+void BUS_equiv_del(Bus* bus) {
+  if (bus) {
+    NODE_list_del(bus->equiv);
+    bus->equiv = NULL;
+  }
+}
+
+int BUS_equiv_len(Bus* bus) {
+  return NODE_list_len(bus->equiv);
+}
+
+void BUS_equiv_show(Bus* bus) {
+  Node* node;
+  if (bus && bus->equiv) {
+    printf("Bus %d == (", bus->number);
+    for (node = bus->equiv; node != NULL; node = NODE_get_next(node)) {
+      printf("%d", ((Bus*)NODE_get_item(node))->number);
+      if (NODE_get_next(node))
+        printf(", ");
+      else
+        printf(")\n");
+    }
+  }
 }
 
 Bus* BUS_list_add(Bus* bus_list, Bus* bus_new) {

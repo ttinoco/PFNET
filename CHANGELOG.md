@@ -5,6 +5,7 @@ Unreleased
 * In update set points, changed reg_by_gen to v_set_regulated.
 * Branch num ratios.
 * Branch method to check whether it has zero impedance.
+* Ability to detect equivalent buses and merge them. 
 
 Version 1.3.4
 -------------

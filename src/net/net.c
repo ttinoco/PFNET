@@ -167,7 +167,7 @@ void NET_add_buses(Net* net, Bus** bus_ptr_array, int size) {
       continue;
 
     // Copy data (except index, hash info, and connections)
-    BUS_copy_from_bus(bus_dst,bus_src);
+    BUS_copy_from_bus(bus_dst,bus_src,FALSE);
     
     // Clear flags
     if (i >= old_num_buses) {
@@ -349,7 +349,7 @@ void NET_del_buses(Net* net, Bus** bus_ptr_array, int size) {
       bus_dst = NET_get_bus(net,index);
 
       // Copy data (except index, hash info, and connections)
-      BUS_copy_from_bus(bus_dst,bus_src);
+      BUS_copy_from_bus(bus_dst,bus_src,FALSE);
 
       // Connections - gen
       while (BUS_get_gen(bus_src))
@@ -3023,21 +3023,7 @@ void NET_clear_sensitivities(Net* net) {
     FACTS_clear_sensitivities(FACTS_array_get(net->facts,i));
 }
 
-Bus* NET_create_sorted_bus_list(Net* net, int sort_by, int t) {
-
-  // Local variables
-  Bus* bus_list = NULL;
-  int i;
-
-  if (!net || t < 0 || t >= net->num_periods)
-    return bus_list;
-
-  for (i = 0; i < net->num_buses; i++)
-    bus_list = BUS_list_add_sorting(bus_list,BUS_array_get(net->bus,i),sort_by,t);
-  return bus_list;
-}
-
-void NET_copy_from_net(Net* net, Net* other_net) {
+void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch_index_map, BOOL equiv_slack) {
   /** Copies data from another network except
    *  topological information.
    */
@@ -3067,12 +3053,28 @@ void NET_copy_from_net(Net* net, Net* other_net) {
   BranchDC* other_dc_branch = NULL;
   Facts* facts = NULL;
   Facts* other_facts = NULL;
+  BOOL cleanup_bus_im = FALSE;
+  BOOL cleanup_br_im = FALSE;
   int i;
 
   // Check
   if (!net || !other_net)
     return;
 
+  // Check maps
+  if (!bus_index_map) {
+    ARRAY_alloc(bus_index_map,int,other_net->num_buses);
+    cleanup_bus_im = TRUE;
+    for (i = 0; i < other_net->num_buses; i++)
+      bus_index_map[i] = i;
+  }
+  if (!branch_index_map) {
+    ARRAY_alloc(branch_index_map,int,other_net->num_branches);
+    cleanup_br_im = TRUE;
+    for (i = 0; i < other_net->num_branches; i++)
+      branch_index_map[i] = i;
+  }
+  
   // Free hash tables
   BUS_hash_number_del(net->bus_hash_number);
   BUS_hash_name_del(net->bus_hash_name);
@@ -3100,17 +3102,15 @@ void NET_copy_from_net(Net* net, Net* other_net) {
   net->num_sparse = other_net->num_sparse;  
 
   // Buses
-  for (i = 0; i < net->num_buses; i++) {
-    bus = NET_get_bus(net,i);
+  for (i = 0; i < other_net->num_buses; i++) {    
+    bus = NET_get_bus(net,bus_index_map[i]);
     other_bus = NET_get_bus(other_net,i);
-    BUS_copy_from_bus(bus,other_bus);
-    NET_bus_hash_number_add(net,bus);
-    NET_bus_hash_name_add(net,bus);
+    BUS_copy_from_bus(bus,other_bus,equiv_slack);
   }
 
   // Branches
-  for (i = 0; i < net->num_branches; i++) {  
-    branch = NET_get_branch(net,i);
+  for (i = 0; i < other_net->num_branches; i++) {  
+    branch = NET_get_branch(net,branch_index_map[i]);
     other_branch = NET_get_branch(other_net,i);
     BRANCH_copy_from_branch(branch,other_branch);
   }
@@ -3187,17 +3187,30 @@ void NET_copy_from_net(Net* net, Net* other_net) {
     FACTS_copy_from_facts(facts,other_facts);
   }
 
+  // Hashes
+  for (i = 0; i < net->num_buses; i++) {
+    bus = NET_get_bus(net,i);
+    NET_bus_hash_number_add(net,bus);
+    NET_bus_hash_name_add(net,bus);
+  }
+
   // Red buses
   BUS_list_del(net->red_bus);
   net->red_bus = NULL;
   for(other_bus = other_net->red_bus; other_bus != NULL; other_bus = BUS_get_next(other_bus)) {
     bus = BUS_new(BUS_get_num_periods(other_bus));
-    BUS_copy_from_bus(bus,other_bus);
+    BUS_copy_from_bus(bus,other_bus,FALSE);
     NET_add_red_bus(net,bus); // handles hash tables
   }
+
+  // Clean up
+  if (cleanup_bus_im)
+    free(bus_index_map);
+  if (cleanup_br_im)
+    free(branch_index_map);
 }
 
-Net* NET_get_copy(Net* net) {
+Net* NET_get_copy(Net* net, BOOL merge_buses) {
   /** Gets deep copy of network.
    */
   
@@ -3206,37 +3219,65 @@ Net* NET_get_copy(Net* net) {
   Bus* bus = NULL;
   Bus* new_bus = NULL;
   Branch* branch = NULL;
-  Branch* new_branch = NULL;
   Gen* gen = NULL;
-  Gen* new_gen = NULL;
   Vargen* vargen = NULL;
-  Vargen* new_vargen = NULL;
   Load* load = NULL;
-  Load* new_load = NULL;
   Shunt* shunt = NULL;
-  Shunt* new_shunt = NULL;
   Bat* bat = NULL;
-  Bat* new_bat = NULL;
   ConvCSC* csc_conv = NULL;
-  ConvCSC* new_csc_conv = NULL;
   ConvVSC* vsc_conv = NULL;
-  ConvVSC* new_vsc_conv = NULL;
   BusDC* dc_bus = NULL;
   BusDC* new_dc_bus = NULL;
   BranchDC* dc_branch = NULL;
-  BranchDC* new_dc_branch = NULL;
   Facts* facts = NULL;
-  Facts* new_facts = NULL;
   int i;
+
+  int* bus_index_map;    // original net to new net
+  int* branch_index_map; // original net to new net 
+  int new_num_buses;
+  int new_num_branches;
+  Node* node;
 
   // Check
   if (!net)
     return new_net;
+  
+  // Equiv buses
+  if (merge_buses)
+    NET_set_equiv_buses(net);
 
+  // Bus index map
+  new_num_buses = 0;
+  ARRAY_alloc(bus_index_map,int,net->num_buses);
+  for (i = 0; i < net->num_buses; i++)
+    bus_index_map[i] = -1;
+  for (i = 0; i < net->num_buses; i++) {
+    bus = NET_get_bus(net,i);
+    if (bus_index_map[i] < 0) {
+      bus_index_map[i] = new_num_buses;
+      if (merge_buses) {
+        for (node = BUS_get_equiv(bus); node != NULL; node = NODE_get_next(node))
+          bus_index_map[BUS_get_index((Bus*)NODE_get_item(node))] = new_num_buses;
+      }
+      new_num_buses++;
+    }
+  }
+
+  // Branch index map
+  new_num_branches = 0;
+  ARRAY_alloc(branch_index_map,int,net->num_branches);
+  for (i = 0; i < net->num_branches; i++) {
+    branch = NET_get_branch(net,i);
+    if (!merge_buses || !BRANCH_is_zero_impedance(branch)) {
+      branch_index_map[i] = new_num_branches;
+      new_num_branches++;
+    }
+  }
+  
   // Allocate
   new_net = NET_new(net->num_periods);
-  NET_set_bus_array(new_net,BUS_array_new(net->num_buses,net->num_periods), net->num_buses);
-  NET_set_branch_array(new_net,BRANCH_array_new(net->num_branches,net->num_periods),net->num_branches);
+  NET_set_bus_array(new_net,BUS_array_new(new_num_buses,net->num_periods),new_num_buses);
+  NET_set_branch_array(new_net,BRANCH_array_new(new_num_branches,net->num_periods),new_num_branches);
   NET_set_gen_array(new_net,GEN_array_new(net->num_gens,net->num_periods),net->num_gens);
   NET_set_vargen_array(new_net,VARGEN_array_new(net->num_vargens,net->num_periods),net->num_vargens);
   NET_set_shunt_array(new_net,SHUNT_array_new(net->num_shunts,net->num_periods),net->num_shunts);
@@ -3250,10 +3291,10 @@ Net* NET_get_copy(Net* net) {
   
   // Buses
   for (i = 0; i < net->num_buses; i++) {
-
+    
     bus = NET_get_bus(net,i);
-    new_bus = NET_get_bus(new_net,i);
-
+    new_bus = NET_get_bus(new_net,bus_index_map[i]);
+    
     // Connections gen
     for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen))
       BUS_add_gen(new_bus,NET_get_gen(new_net,GEN_get_index(gen)));
@@ -3275,16 +3316,22 @@ Net* NET_get_copy(Net* net) {
       BUS_add_reg_shunt(new_bus,NET_get_shunt(new_net,SHUNT_get_index(shunt)));
 
     // Connections branch_k
-    for (branch = BUS_get_branch_k(bus); branch != NULL; branch = BRANCH_get_next_k(branch))
-      BUS_add_branch_k(new_bus,NET_get_branch(new_net,BRANCH_get_index(branch)));
+    for (branch = BUS_get_branch_k(bus); branch != NULL; branch = BRANCH_get_next_k(branch)) {
+      if (!merge_buses || !BRANCH_is_zero_impedance(branch))
+        BUS_add_branch_k(new_bus,NET_get_branch(new_net,branch_index_map[BRANCH_get_index(branch)]));
+    }
 
     // Connections branch_m
-    for (branch = BUS_get_branch_m(bus); branch != NULL; branch = BRANCH_get_next_m(branch))
-      BUS_add_branch_m(new_bus,NET_get_branch(new_net,BRANCH_get_index(branch)));
+    for (branch = BUS_get_branch_m(bus); branch != NULL; branch = BRANCH_get_next_m(branch)) {
+      if (!merge_buses || !BRANCH_is_zero_impedance(branch))
+        BUS_add_branch_m(new_bus,NET_get_branch(new_net,branch_index_map[BRANCH_get_index(branch)]));
+    }
 
     // Connections reg_tran
-    for (branch = BUS_get_reg_tran(bus); branch != NULL; branch = BRANCH_get_reg_next(branch))
-      BUS_add_reg_tran(new_bus,NET_get_branch(new_net,BRANCH_get_index(branch)));
+    for (branch = BUS_get_reg_tran(bus); branch != NULL; branch = BRANCH_get_reg_next(branch)) {
+      if (!merge_buses || !BRANCH_is_zero_impedance(branch))
+        BUS_add_reg_tran(new_bus,NET_get_branch(new_net,branch_index_map[BRANCH_get_index(branch)]));
+    }
 
     // Connections vargen
     for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen))
@@ -3319,97 +3366,6 @@ Net* NET_get_copy(Net* net) {
       BUS_add_reg_facts(new_bus,NET_get_facts(new_net,FACTS_get_index(facts)));
   }
 
-  // Branches
-  for (i = 0; i < net->num_branches; i++) {
-
-    branch = NET_get_branch(net,i);
-    new_branch = NET_get_branch(new_net,i);
-    
-    // Connections bus
-    BRANCH_set_bus_k(new_branch,NET_get_bus(new_net,BUS_get_index(BRANCH_get_bus_k(branch))));
-    BRANCH_set_bus_m(new_branch,NET_get_bus(new_net,BUS_get_index(BRANCH_get_bus_m(branch))));
-    BRANCH_set_reg_bus(new_branch,NET_get_bus(new_net,BUS_get_index(BRANCH_get_reg_bus(branch))));
-  }
-
-  // Generators
-  for (i = 0; i < net->num_gens; i++) {
-
-    gen = NET_get_gen(net,i);
-    new_gen = NET_get_gen(new_net,i);
-    
-    // Connections bus
-    GEN_set_bus(new_gen,NET_get_bus(new_net,BUS_get_index(GEN_get_bus(gen))));
-    GEN_set_reg_bus(new_gen,NET_get_bus(new_net,BUS_get_index(GEN_get_reg_bus(gen))));
-  }
-
-  // Var generators
-  for (i = 0; i < net->num_vargens; i++) {
-
-    vargen = NET_get_vargen(net,i);
-    new_vargen = NET_get_vargen(new_net,i);
-
-    // Connections bus
-    VARGEN_set_bus(new_vargen,NET_get_bus(new_net,BUS_get_index(VARGEN_get_bus(vargen))));
-  }
-
-  // Shunts
-  for (i = 0; i < net->num_shunts; i++) {
-
-    shunt = NET_get_shunt(net,i);
-    new_shunt = NET_get_shunt(new_net,i);
-
-    // Connections bus
-    SHUNT_set_bus(new_shunt,NET_get_bus(new_net,BUS_get_index(SHUNT_get_bus(shunt))));
-    SHUNT_set_reg_bus(new_shunt,NET_get_bus(new_net,BUS_get_index(SHUNT_get_reg_bus(shunt))));
-  }
-
-  // Loads
-  for (i = 0; i < net->num_loads; i++) {
-
-    load = NET_get_load(net,i);
-    new_load = NET_get_load(new_net,i);
-    
-    // Connections bus
-    LOAD_set_bus(new_load,NET_get_bus(new_net,BUS_get_index(LOAD_get_bus(load))));
-  }
-
-  // Batteries
-  for (i = 0; i < net->num_bats; i++) {
-
-    bat = NET_get_bat(net,i);
-    new_bat = NET_get_bat(new_net,i);
-    
-    // Connections bus
-    BAT_set_bus(new_bat,NET_get_bus(new_net,BUS_get_index(BAT_get_bus(bat))));
-  }
-
-  // CSC converters
-  for (i = 0; i < net->num_csc_convs; i++) {
-
-    csc_conv = NET_get_csc_conv(net,i);
-    new_csc_conv = NET_get_csc_conv(new_net,i);
-    
-    // Connections ac bus
-    CONVCSC_set_ac_bus(new_csc_conv,NET_get_bus(new_net,BUS_get_index(CONVCSC_get_ac_bus(csc_conv))));
-
-    // Connections dc bus
-    CONVCSC_set_dc_bus(new_csc_conv,NET_get_dc_bus(new_net,BUSDC_get_index(CONVCSC_get_dc_bus(csc_conv))));
-  }
-
-  // VSC converters
-  for (i = 0; i < net->num_vsc_convs; i++) {
-
-    vsc_conv = NET_get_vsc_conv(net,i);
-    new_vsc_conv = NET_get_vsc_conv(new_net,i);
-    
-    // Connections ac bus
-    CONVVSC_set_ac_bus(new_vsc_conv,NET_get_bus(new_net,BUS_get_index(CONVVSC_get_ac_bus(vsc_conv))));
-    CONVVSC_set_reg_bus(new_vsc_conv,NET_get_bus(new_net,BUS_get_index(CONVVSC_get_reg_bus(vsc_conv))));
-    
-    // Connections dc bus
-    CONVVSC_set_dc_bus(new_vsc_conv,NET_get_dc_bus(new_net,BUSDC_get_index(CONVVSC_get_dc_bus(vsc_conv))));
-  }
-
   // DC buses
   for (i = 0; i < net->num_dc_buses; i++) {
 
@@ -3432,32 +3388,13 @@ Net* NET_get_copy(Net* net) {
     for (vsc_conv = BUSDC_get_vsc_conv(dc_bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_dc(vsc_conv))
       BUSDC_add_vsc_conv(new_dc_bus,NET_get_vsc_conv(new_net,CONVVSC_get_index(vsc_conv)));
   }
-
-  // DC branches
-  for (i = 0; i < net->num_dc_branches; i++) {
-
-    dc_branch = NET_get_dc_branch(net,i);
-    new_dc_branch = NET_get_dc_branch(new_net,i);
-    
-    // Connections bus
-    BRANCHDC_set_bus_k(new_dc_branch,NET_get_dc_bus(new_net,BUSDC_get_index(BRANCHDC_get_bus_k(dc_branch))));
-    BRANCHDC_set_bus_m(new_dc_branch,NET_get_dc_bus(new_net,BUSDC_get_index(BRANCHDC_get_bus_m(dc_branch))));
-  }
-
-  // Facts
-  for (i = 0; i < net->num_facts; i++) {
-
-    facts = NET_get_facts(net,i);
-    new_facts = NET_get_facts(new_net,i);
-    
-    // Connections bus
-    FACTS_set_bus_k(new_facts,NET_get_bus(new_net,BUS_get_index(FACTS_get_bus_k(facts))));
-    FACTS_set_bus_m(new_facts,NET_get_bus(new_net,BUS_get_index(FACTS_get_bus_m(facts))));
-    FACTS_set_reg_bus(new_facts,NET_get_bus(new_net,BUS_get_index(FACTS_get_reg_bus(facts))));
-  }
   
   // Copy rest of data
-  NET_copy_from_net(new_net,net);
+  NET_copy_from_net(new_net,net,bus_index_map,branch_index_map,TRUE);
+
+  // Clean up
+  free(bus_index_map);
+  free(branch_index_map);
   
   // Return
   return new_net;
@@ -3745,7 +3682,7 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
     return NULL;
 
   // Copy
-  new_net = NET_get_copy(net);
+  new_net = NET_get_copy(net, FALSE);
 
   // Flags
   ARRAY_zalloc(keep_bus,char,net->num_buses);
@@ -6260,6 +6197,31 @@ void NET_set_var_values(Net* net, Vec* values) {
     FACTS_set_var_values(FACTS_array_get(net->facts,i),values);
 }
 
+void NET_set_equiv_buses(Net* net) {
+
+  // Local variables
+  Branch* branch;
+  Bus* bus;
+  int i;
+
+  // Check
+  if (!net)
+    return;
+
+  // Clean up
+  for (i = 0; i < net->num_buses; i++) {
+    bus = NET_get_bus(net,i);
+    BUS_equiv_del(bus);
+  }
+
+  // Set
+  for (i = 0; i < net->num_branches; i++) {
+    branch = NET_get_branch(net,i);
+    if (BRANCH_is_zero_impedance(branch))
+      BUS_equiv_make(BRANCH_get_bus_k(branch), BRANCH_get_bus_m(branch));
+  }
+}
+
 char* NET_get_show_components_str(Net* net, int output_level) {
 
   char* out;
@@ -6365,115 +6327,21 @@ char* NET_get_show_properties_str(Net* net, int t) {
 }
 
 void NET_show_properties(Net* net, int t) {
-
-  printf("%s",NET_get_show_properties_str(net,t));
+  if (net)
+    printf("%s",NET_get_show_properties_str(net,t));
 }
 
-void NET_show_buses(Net* net, int number, int sort_by, int t) {
+void NET_show_equiv_buses(Net* net) {
 
-  // Local variables
-  Bus* bus;
-  int type;
-  REAL value;
-  int counter;
-  char type_string[100];
-  char units[100];
+  int i;
 
-  printf("\nTop Buses\n");
-  printf("---------\n");
-
-  if (BUS_SENS_LARGEST <= sort_by && sort_by <= BUS_SENS_V_REG_BY_SHUNT) { // sensitivity
-    strcpy(type_string,"  sensitivity  ");
-    strcpy(units,"  normalized  ");
-    printf("%7s %7s %15s %9s %14s\n","  index"," number",type_string,"   value ","     units    ");
-  }
-  else if (BUS_MIS_LARGEST <= sort_by && sort_by <= BUS_MIS_REACTIVE) { // mismatch
-    strcpy(type_string,"   mismatch  ");
-    printf("%7s %7s %13s %9s %10s\n","  index"," number",type_string,"   value ","   units  ");
-  }
-  else {
-    printf("invalid sort option\n");
+  if (!net)
     return;
-  }
 
-  counter = 0;
-  bus = NET_create_sorted_bus_list(net,sort_by,t);
-  while (bus != NULL && counter < number) {
+  NET_set_equiv_buses(net);
 
-    printf("%7d ",BUS_get_index(bus));
-    printf("%7d ",BUS_get_number(bus));
-
-    if (BUS_SENS_LARGEST <= sort_by && sort_by <= BUS_SENS_V_REG_BY_SHUNT) { // sensitivity
-
-      value = BUS_get_quantity(bus,sort_by,t);
-      if (sort_by == BUS_SENS_LARGEST)
-        type = BUS_get_largest_sens_type(bus,t);
-      else
-        type = sort_by;
-
-      switch (type) {
-      case BUS_SENS_P_BALANCE:
-        printf("%15s ","   P_balance   ");
-        break;
-      case BUS_SENS_Q_BALANCE:
-        printf("%15s ","   Q_balance   ");
-        break;
-      case BUS_SENS_V_MAG_U_BOUND:
-        printf("%15s "," v_mag_u_bound ");
-        break;
-      case BUS_SENS_V_MAG_L_BOUND:
-        printf("%15s "," v_mag_l_bound ");
-        break;
-      case BUS_SENS_V_ANG_U_BOUND:
-        printf("%15s "," v_ang_u_bound ");
-        break;
-      case BUS_SENS_V_ANG_L_BOUND:
-        printf("%15s "," v_ang_l_bound ");
-        break;
-      case BUS_SENS_V_SET_REG:
-        printf("%15s ","  v_set_reg ");
-        break;
-      case BUS_SENS_V_REG_BY_TRAN:
-        printf("%15s "," v_reg_by_tran ");
-        break;
-      case BUS_SENS_V_REG_BY_SHUNT:
-        printf("%15s "," v_reg_by_shunt");
-        break;
-      default:
-        printf("%15s ","    unknown    ");
-      }
-      printf("% 9.2e ",value);
-      printf("%14s\n",units);
-    }
-
-    else if (BUS_MIS_LARGEST <= sort_by && sort_by <= BUS_MIS_REACTIVE) { // mismatch
-
-      value = BUS_get_quantity(bus,sort_by,t);
-      if (sort_by == BUS_MIS_LARGEST)
-        type = BUS_get_largest_mis_type(bus,t);
-      else
-        type = sort_by;
-
-      switch (type) {
-      case BUS_MIS_ACTIVE:
-        printf("%13s ","    active   ");
-        strcpy(units,"    MW    ");
-        break;
-      case BUS_MIS_REACTIVE:
-        printf("%13s ","   reactive  ");
-        strcpy(units,"   MVAr   ");
-        break;
-      default:
-        printf("%13s ","   unknown   ");
-        strcpy(units,"  unknown ");
-      }
-      printf("% 9.2e ",value);
-      printf("%10s\n",units);
-    }
-
-    bus = BUS_get_next(bus);
-    counter++;
-  }
+  for (i = 0; i < net->num_buses; i++)
+    BUS_equiv_show(NET_get_bus(net,i));
 }
 
 void NET_update_properties(Net* net, Vec* values) {
