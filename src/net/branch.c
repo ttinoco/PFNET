@@ -77,6 +77,8 @@ struct Branch {
   int* index_ratio;   /**< @brief Taps ratio index */
   int* index_phase;   /**< @brief Phase shift index */
 
+  int oindex;
+
   // Sensitivities
   REAL* sens_P_u_bound;     /**< @brief Sensitivity of active power flow upper bound */
   REAL* sens_P_l_bound;     /**< @brief Sensitivity of active power flow lower bound */
@@ -1402,6 +1404,8 @@ void BRANCH_init(Branch* br, int num_periods) {
 
   br->index = -1;
 
+  br->oindex = -1;
+
   ARRAY_zalloc(br->ratio,REAL,T);
   ARRAY_zalloc(br->phase,REAL,T);
 
@@ -1486,7 +1490,7 @@ BOOL BRANCH_is_part_of_3_winding_transformer(Branch* br) {
     return FALSE;
 }
 
-BOOL BRANCH_is_zero_impedance(Branch* br) {
+BOOL BRANCH_is_zero_impedance_line(Branch* br) {
   if (br)
     return (BRANCH_is_line(br) && br->g == 0 && fabs(br->b) >= 1./BRANCH_ZERO_IMPEDANCE);
   else
@@ -2673,4 +2677,16 @@ Mat* BRANCH_power_flow_Jacobian(Branch* br, Vec* x, int t, BOOL km) {
   MAT_del(HQ);
 
   return J;  
+}
+
+int BRANCH_get_oindex(Branch* br) {
+  if (br)
+    return br->oindex;
+  else
+    return -1;
+}
+
+void BRANCH_set_oindex(Branch* br, int oindex) {
+  if (br)
+    br->oindex = oindex;
 }

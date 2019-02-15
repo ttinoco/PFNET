@@ -167,7 +167,7 @@ void NET_add_buses(Net* net, Bus** bus_ptr_array, int size) {
       continue;
 
     // Copy data (except index, hash info, and connections)
-    BUS_copy_from_bus(bus_dst,bus_src,FALSE);
+    BUS_copy_from_bus(bus_dst,bus_src,0,FALSE);
     
     // Clear flags
     if (i >= old_num_buses) {
@@ -349,7 +349,7 @@ void NET_del_buses(Net* net, Bus** bus_ptr_array, int size) {
       bus_dst = NET_get_bus(net,index);
 
       // Copy data (except index, hash info, and connections)
-      BUS_copy_from_bus(bus_dst,bus_src,FALSE);
+      BUS_copy_from_bus(bus_dst,bus_src,0,FALSE);
 
       // Connections - gen
       while (BUS_get_gen(bus_src))
@@ -3023,9 +3023,12 @@ void NET_clear_sensitivities(Net* net) {
     FACTS_clear_sensitivities(FACTS_array_get(net->facts,i));
 }
 
-void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch_index_map, BOOL equiv_slack) {
-  /** Copies data from another network except
-   *  topological information.
+void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch_index_map, int mode) {
+  /** Copies data from another network except topological information.
+   *  
+   *  Parameters
+   *  ----------
+   *  mode : -1 (to merged), 0 (standard), 1 (from merged)
    */
   
   // Local variables
@@ -3102,16 +3105,22 @@ void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch
   net->num_sparse = other_net->num_sparse;  
 
   // Buses
-  for (i = 0; i < other_net->num_buses; i++) {    
-    bus = NET_get_bus(net,bus_index_map[i]);
+  for (i = 0; i < other_net->num_buses; i++) {
     other_bus = NET_get_bus(other_net,i);
-    BUS_copy_from_bus(bus,other_bus,equiv_slack);
+    if (mode == 1 && BUS_get_oindex(other_bus) >= 0)
+      bus = NET_get_bus(net,BUS_get_oindex(other_bus));
+    else
+      bus = NET_get_bus(net,bus_index_map[i]);
+    BUS_copy_from_bus(bus,other_bus,mode, mode == 1? TRUE : FALSE);
   }
 
   // Branches
-  for (i = 0; i < other_net->num_branches; i++) {  
-    branch = NET_get_branch(net,branch_index_map[i]);
+  for (i = 0; i < other_net->num_branches; i++) {
     other_branch = NET_get_branch(other_net,i);
+    if (mode == 1 && BRANCH_get_oindex(other_branch) >= 0)
+      branch = NET_get_branch(net,BRANCH_get_oindex(other_branch));
+    else
+      branch = NET_get_branch(net,branch_index_map[i]);
     BRANCH_copy_from_branch(branch,other_branch);
   }
 
@@ -3199,10 +3208,14 @@ void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch
   net->red_bus = NULL;
   for(other_bus = other_net->red_bus; other_bus != NULL; other_bus = BUS_get_next(other_bus)) {
     bus = BUS_new(BUS_get_num_periods(other_bus));
-    BUS_copy_from_bus(bus,other_bus,FALSE);
+    BUS_copy_from_bus(bus,other_bus,0,FALSE);
     NET_add_red_bus(net,bus); // handles hash tables
   }
 
+  // Clear flags
+  if (mode == 1)
+    NET_clear_flags(net);
+    
   // Clean up
   if (cleanup_bus_im)
     free(bus_index_map);
@@ -3219,6 +3232,7 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
   Bus* bus = NULL;
   Bus* new_bus = NULL;
   Branch* branch = NULL;
+  Branch* new_branch = NULL;
   Gen* gen = NULL;
   Vargen* vargen = NULL;
   Load* load = NULL;
@@ -3268,7 +3282,7 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
   ARRAY_alloc(branch_index_map,int,net->num_branches);
   for (i = 0; i < net->num_branches; i++) {
     branch = NET_get_branch(net,i);
-    if (!merge_buses || !BRANCH_is_zero_impedance(branch)) {
+    if (!merge_buses || !BRANCH_is_zero_impedance_line(branch)) {
       branch_index_map[i] = new_num_branches;
       new_num_branches++;
     }
@@ -3296,6 +3310,9 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
     
     bus = NET_get_bus(net,i);
     new_bus = NET_get_bus(new_net,bus_index_map[i]);
+
+    if (BUS_get_index(bus) != BUS_get_index(new_bus) && BUS_get_oindex(new_bus) < 0)
+      BUS_set_oindex(new_bus, BUS_get_index(bus));
     
     // Connections gen
     for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen))
@@ -3319,19 +3336,27 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
 
     // Connections branch_k
     for (branch = BUS_get_branch_k(bus); branch != NULL; branch = BRANCH_get_next_k(branch)) {
-      if (!merge_buses || !BRANCH_is_zero_impedance(branch))
-        BUS_add_branch_k(new_bus,NET_get_branch(new_net,branch_index_map[BRANCH_get_index(branch)]));
+      if (!merge_buses || !BRANCH_is_zero_impedance_line(branch)) {
+        new_branch = NET_get_branch(new_net,branch_index_map[BRANCH_get_index(branch)]);
+        if (BRANCH_get_index(branch) != BRANCH_get_index(new_branch))
+          BRANCH_set_oindex(new_branch, BRANCH_get_index(branch));
+        BUS_add_branch_k(new_bus,new_branch);
+      }
     }
 
     // Connections branch_m
     for (branch = BUS_get_branch_m(bus); branch != NULL; branch = BRANCH_get_next_m(branch)) {
-      if (!merge_buses || !BRANCH_is_zero_impedance(branch))
-        BUS_add_branch_m(new_bus,NET_get_branch(new_net,branch_index_map[BRANCH_get_index(branch)]));
+      if (!merge_buses || !BRANCH_is_zero_impedance_line(branch)) {
+        new_branch = NET_get_branch(new_net,branch_index_map[BRANCH_get_index(branch)]);
+        if (BRANCH_get_index(branch) != BRANCH_get_index(new_branch))
+          BRANCH_set_oindex(new_branch, BRANCH_get_index(branch));
+        BUS_add_branch_m(new_bus,new_branch);
+      }
     }
 
     // Connections reg_tran
     for (branch = BUS_get_reg_tran(bus); branch != NULL; branch = BRANCH_get_reg_next(branch)) {
-      if (!merge_buses || !BRANCH_is_zero_impedance(branch))
+      if (!merge_buses || !BRANCH_is_zero_impedance_line(branch))
         BUS_add_reg_tran(new_bus,NET_get_branch(new_net,branch_index_map[BRANCH_get_index(branch)]));
     }
 
@@ -3392,7 +3417,11 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
   }
   
   // Copy rest of data
-  NET_copy_from_net(new_net,net,bus_index_map,branch_index_map,TRUE);
+  NET_copy_from_net(new_net,
+                    net,
+                    bus_index_map,
+                    branch_index_map,
+                    merge_buses ? -1 : 0); // to merged, or standard
 
   // Clean up
   free(bus_index_map);
@@ -4625,6 +4654,18 @@ int NET_get_num_lines(Net* net) {
     return 0;
   for (i = 0; i < net->num_branches; i++) {
     if (BRANCH_is_line(BRANCH_array_get(net->branch,i)))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_zero_impedance_lines(Net* net) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  for (i = 0; i < net->num_branches; i++) {
+    if (BRANCH_is_zero_impedance_line(BRANCH_array_get(net->branch,i)))
       n++;
   }
   return n;
@@ -6219,7 +6260,7 @@ void NET_set_equiv_buses(Net* net) {
   // Set
   for (i = 0; i < net->num_branches; i++) {
     branch = NET_get_branch(net,i);
-    if (BRANCH_is_zero_impedance(branch))
+    if (BRANCH_is_zero_impedance_line(branch))
       BUS_equiv_make(BRANCH_get_bus_k(branch), BRANCH_get_bus_m(branch));
   }
 }
@@ -6255,6 +6296,7 @@ char* NET_get_show_components_str(Net* net, int output_level) {
   sprintf(out+strlen(out),"branches         : %d\n",NET_get_num_branches(net));
   if (output_level > 1) {
     sprintf(out+strlen(out),"  lines          : %d\n",NET_get_num_lines(net));
+    sprintf(out+strlen(out),"  zi lines       : %d\n",NET_get_num_zero_impedance_lines(net));
     sprintf(out+strlen(out),"  fixed trans    : %d\n",NET_get_num_fixed_trans(net));
     sprintf(out+strlen(out),"  phase shifters : %d\n",NET_get_num_phase_shifters(net));
     sprintf(out+strlen(out),"  tap changers v : %d\n",NET_get_num_tap_changers_v(net));
@@ -6265,7 +6307,6 @@ char* NET_get_show_components_str(Net* net, int output_level) {
   if (output_level > 1) {
     sprintf(out+strlen(out),"  slack          : %d\n",NET_get_num_slack_gens(net));
     sprintf(out+strlen(out),"  reg            : %d\n",NET_get_num_reg_gens(net));
-    sprintf(out+strlen(out),"  P adjust       : %d\n",NET_get_num_P_adjust_gens(net));
   }
   
   sprintf(out+strlen(out),"loads            : %d\n",NET_get_num_loads(net));
@@ -6393,6 +6434,9 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
   REAL shunt_b;
   REAL shunt_db;
   REAL shunt_g;
+
+  int i;
+  Node* node;
 
   // Check pointers
   if (!net || !bus)
@@ -6698,7 +6742,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
     }
 
     // Branch flows
-    if (!BRANCH_is_on_outage(br) && !BRANCH_is_zero_impedance(br)) {
+    if (!BRANCH_is_on_outage(br) && !BRANCH_is_zero_impedance_line(br)) {
       BUS_inject_P(BRANCH_get_bus_k(br),-BRANCH_get_P_km(br,var_values,t),t);
       BUS_inject_Q(BRANCH_get_bus_k(br),-BRANCH_get_Q_km(br,var_values,t),t);
       BUS_inject_P(BRANCH_get_bus_m(br),-BRANCH_get_P_mk(br,var_values,t),t);
@@ -6708,6 +6752,26 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
     
   // Power mismatches
   if (BUS_get_index(bus) == net->num_buses-1) {
+
+    // Propagate through equivalent buses
+    NET_set_equiv_buses(net);
+    for (i = 0; i < net->num_buses; i++) {
+      bus = NET_get_bus(net,i);
+      P = BUS_get_P_mis(bus,t);
+      Q = BUS_get_Q_mis(bus,t);
+      for (node = BUS_get_equiv(bus); node != NULL; node = NODE_get_next(node)) {
+        P += BUS_get_P_mis((Bus*)NODE_get_item(node),t);
+        Q += BUS_get_Q_mis((Bus*)NODE_get_item(node),t);
+      }
+      BUS_set_P_mis(bus,P,t);
+      BUS_set_Q_mis(bus,Q,t);
+      for (node = BUS_get_equiv(bus); node != NULL; node = NODE_get_next(node)) {
+        BUS_set_P_mis((Bus*)NODE_get_item(node),P,t);
+        BUS_set_Q_mis((Bus*)NODE_get_item(node),Q,t);
+      }      
+    }
+    
+    // Max mismatches
     BUS_array_get_max_mismatches(net->bus,
                                  net->num_buses,
                                  &(net->bus_P_mis[t]),

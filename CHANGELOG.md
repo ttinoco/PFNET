@@ -6,6 +6,7 @@ Unreleased
 * Branch num ratios.
 * Branch method to check whether it has zero impedance.
 * Ability to detect equivalent buses and merge them. 
+* Ability to update original network using merged network.
 
 Version 1.3.4
 -------------

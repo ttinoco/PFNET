@@ -173,9 +173,7 @@ BOOL BUS_check(Bus* bus, BOOL verbose);
 void BUS_clear_flags(Bus* bus, char flag_type);
 void BUS_clear_sensitivities(Bus* bus);
 void BUS_clear_mismatches(Bus* bus);
-void BUS_copy_from_bus(Bus* bus, Bus* other, BOOL equiv_slack);
-
-
+void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate);
 
 char BUS_get_flags_vars(Bus* bus);
 char BUS_get_flags_fixed(Bus* bus);
@@ -359,6 +357,8 @@ void BUS_set_sens_v_ang_l_bound(Bus* bus, REAL value, int t);
 void BUS_set_sens_v_set_reg(Bus* bus, REAL value, int t);
 void BUS_set_sens_v_reg_by_tran(Bus* bus, REAL value, int t);
 void BUS_set_sens_v_reg_by_shunt(Bus* bus, REAL value, int t);
+void BUS_set_P_mis(Bus* bus, REAL mis, int t);
+void BUS_set_Q_mis(Bus* bus, REAL mis, int t);
 void BUS_show(Bus* bus, int t);
 
 int BUS_get_dPdw_index(Bus* bus, int t);
@@ -376,5 +376,8 @@ void BUS_set_dQdv_index(Bus* bus, int idx, int t);
 void BUS_set_dwdw_index(Bus* bus, int idx, int t);
 void BUS_set_dwdv_index(Bus* bus, int idx, int t);
 void BUS_set_dvdv_index(Bus* bus, int idx, int t);
+
+int BUS_get_oindex(Bus* bus);
+void BUS_set_oindex(Bus* bus, int oindex);
 
 #endif

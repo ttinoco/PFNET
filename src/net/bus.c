@@ -66,6 +66,8 @@ struct Bus {
   int* index_v_mag;   /**< @brief Voltage magnitude index */
   int* index_v_ang;   /**< @brief Voltage angle index */
 
+  int oindex;
+
   // Components
   Gen* gen;              /**< @brief List of generators connected to bus */
   Gen* reg_gen;          /**< @brief List of generators regulating the voltage magnitude of bus */
@@ -594,14 +596,19 @@ void BUS_clear_mismatches(Bus* bus) {
   }
 }
 
-void BUS_copy_from_bus(Bus* bus, Bus* other, BOOL equiv_slack) {
-  /** Copies data from another bus except
-   *  index, hash info, and connections.
+void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate) {
+  /** Copies data from another bus except index, hash info, and connections.
+   * 
+   *  Parameters
+   *  -----------
+   *  mode: -1 (to merged), 0 (standard), 1 (from merged)
+   *  propagate: flag for progagating copy to equiv buses
    */
 
   // Local variables
   int num_periods;
   Gen* gen;
+  Node* node;
 
   // Check
   if (!bus || !other)
@@ -614,50 +621,74 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, BOOL equiv_slack) {
     num_periods = other->num_periods;
 
   // Properties
-  bus->number = other->number;
-  strcpy(bus->name,other->name);
+  if (mode != 1) { // not from merged
 
-  bus->alt_number = other->alt_number;
-  strcpy(bus->alt_name,other->alt_name);
+    bus->number = other->number;
+    strcpy(bus->name,other->name);
+    
+    bus->alt_number = other->alt_number;
+    strcpy(bus->alt_name,other->alt_name);
+    
+    bus->area = other->area;
+    bus->zone = other->zone;
 
-  // Area, zone
-  bus->area = other->area;
-  bus->zone = other->zone;
+    // Voltage
+    bus->v_base = other->v_base;
 
-  // Time
-  // skip num periods
+    if (BUS_is_v_set_regulated(other) || !BUS_is_v_set_regulated(bus))
+      memcpy(bus->v_set,other->v_set,num_periods*sizeof(REAL));
+    
+    bus->v_max_reg = other->v_max_reg;
+    bus->v_min_reg = other->v_min_reg;
+    bus->v_max_norm = other->v_max_norm;
+    bus->v_min_norm = other->v_min_norm;
+    bus->v_max_emer = other->v_max_emer;
+    bus->v_min_emer = other->v_min_emer;
 
-  // Voltage
-  bus->v_base = other->v_base;
+    // Flags
+    bus->slack = (other->slack || (mode == -1 && BUS_equiv_has_slack(other)));
+    bus->star = other->star;
+    bus->fixed = other->fixed;
+    bus->bounded = other->bounded;
+    bus->sparse = other->sparse;
+    bus->vars = other->vars;
+
+    // Price
+    memcpy(bus->price,other->price,num_periods*sizeof(REAL));
+
+    // Indices
+    // skip index
+    memcpy(bus->index_v_mag,other->index_v_mag,num_periods*sizeof(int));
+    memcpy(bus->index_v_ang,other->index_v_ang,num_periods*sizeof(int));
+
+    // Slack regulation fix
+    if (mode == -1 && bus->slack) { // to merged
+      for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen))
+        GEN_set_reg_bus(gen,bus);
+    }
+
+    // Time
+    // skip num periods
+
+    // Connections
+    // skip connections
+
+    // Hash
+    // skip hash
+    
+    // Network
+    // skip network
+    
+    // ACPF helpers
+    // skip helpers
+    
+    // List
+    // skip next
+  }
+
+  // State
   memcpy(bus->v_mag,other->v_mag,num_periods*sizeof(REAL));
   memcpy(bus->v_ang,other->v_ang,num_periods*sizeof(REAL));
-  if (BUS_is_v_set_regulated(other) || !BUS_is_v_set_regulated(bus))
-    memcpy(bus->v_set,other->v_set,num_periods*sizeof(REAL));
-  bus->v_max_reg = other->v_max_reg;
-  bus->v_min_reg = other->v_min_reg;
-  bus->v_max_norm = other->v_max_norm;
-  bus->v_min_norm = other->v_min_norm;
-  bus->v_max_emer = other->v_max_emer;
-  bus->v_min_emer = other->v_min_emer;
-
-  // Flags
-  bus->slack = (other->slack || (equiv_slack && BUS_equiv_has_slack(other)));
-  bus->star = other->star;
-  bus->fixed = other->fixed;
-  bus->bounded = other->bounded;
-  bus->sparse = other->sparse;
-  bus->vars = other->vars;
-
-  // Price
-  memcpy(bus->price,other->price,num_periods*sizeof(REAL));
-
-  // Indices
-  // skip index
-  memcpy(bus->index_v_mag,other->index_v_mag,num_periods*sizeof(int));
-  memcpy(bus->index_v_ang,other->index_v_ang,num_periods*sizeof(int));
-
-  // Connections
-  // skip connections
 
   // Sensitivities
   memcpy(bus->sens_P_balance,other->sens_P_balance,num_periods*sizeof(REAL));
@@ -674,23 +705,11 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, BOOL equiv_slack) {
   memcpy(bus->P_mis,other->P_mis,num_periods*sizeof(REAL));
   memcpy(bus->Q_mis,other->Q_mis,num_periods*sizeof(REAL));
 
-  // Hash
-  // skip hash
-
-  // Network
-  // skip network
-
-  // ACPF helpers
-  // skip helpers
-
-  // List
-  // skip next
-
-  // Slack regulation fix
-  if (bus->slack) {
-    for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen))
-      GEN_set_reg_bus(gen,bus);
-  }    
+  // Equiv buses
+  if (propagate) {
+    for (node = bus->equiv; node != NULL; node = NODE_get_next(node))
+      BUS_copy_from_bus((Bus*)NODE_get_item(node),bus,mode,FALSE);
+  }
 }
 
 int BUS_get_area(Bus* bus) {
@@ -1908,6 +1927,8 @@ void BUS_init(Bus* bus, int num_periods) {
 
   bus->index = -1;
 
+  bus->oindex = -1;
+
   bus->v_max_reg = BUS_DEFAULT_V_MAX;
   bus->v_min_reg = BUS_DEFAULT_V_MIN;
   bus->v_max_norm = BUS_DEFAULT_V_MAX;
@@ -2521,4 +2542,26 @@ void BUS_set_dwdv_index(Bus* bus, int idx, int t) {
 void BUS_set_dvdv_index(Bus* bus, int idx, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     bus->dvdv_index[t] = idx;
+}
+
+int BUS_get_oindex(Bus* bus) {
+  if (bus)
+    return bus->oindex;
+  else
+    return -1;
+}
+
+void BUS_set_oindex(Bus* bus, int oindex) {
+  if (bus)
+    bus->oindex = oindex;
+}
+
+void BUS_set_P_mis(Bus* bus, REAL mis, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    bus->P_mis[t] = mis;
+}
+
+void BUS_set_Q_mis(Bus* bus, REAL mis, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    bus->Q_mis[t] = mis;
 }
