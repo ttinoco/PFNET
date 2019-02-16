@@ -325,12 +325,16 @@ void JSON_PARSER_process_json_bus_array(Parser* p, Net* net, json_value* json_bu
         NET_bus_hash_number_add(net,bus);
       }
 
+      // oindex
+      else if (strcmp(key,"oindex") == 0)
+        BUS_set_oindex(bus,val->u.integer);
+
       // area
-      if (strcmp(key,"area") == 0)
+      else if (strcmp(key,"area") == 0)
         BUS_set_area(bus,val->u.integer);
 
       // zone
-      if (strcmp(key,"zone") == 0)
+      else if (strcmp(key,"zone") == 0)
         BUS_set_zone(bus,val->u.integer);
 
       // name
@@ -565,6 +569,10 @@ void JSON_PARSER_process_json_branch_array(Parser* p, Net* net, json_value* json
       // type
       if (strcmp(key,"type") == 0)
         BRANCH_set_type(branch,val->u.integer);
+
+      // oindex
+      else if (strcmp(key,"oindex") == 0)
+        BRANCH_set_oindex(branch,val->u.integer);
 
       // name
       else if (strcmp(key,"name") == 0)
@@ -944,17 +952,17 @@ void JSON_PARSER_process_json_shunt_array(Parser* p, Net* net, json_value* json_
       }
 
       // reg_bus
-      if (strcmp(key,"reg_bus") == 0) {
+      else if (strcmp(key,"reg_bus") == 0) {
         if (val->type == json_integer)
           SHUNT_set_reg_bus(shunt,NET_get_bus(net,val->u.integer));
       }
 
       // type
-      if (strcmp(key,"type") == 0)
+      else if (strcmp(key,"type") == 0)
         SHUNT_set_type(shunt,val->u.integer);
 
       // mode
-      if (strcmp(key,"mode") == 0)
+      else if (strcmp(key,"mode") == 0)
         SHUNT_set_mode(shunt,val->u.integer);
 
       // name

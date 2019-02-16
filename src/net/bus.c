@@ -601,7 +601,7 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate) {
    * 
    *  Parameters
    *  -----------
-   *  mode: -1 (to merged), 0 (standard), 1 (from merged)
+   *  mode: -1 (to merged), 0 (one-to-one), 1 (from merged)
    *  propagate: flag for progagating copy to equiv buses
    */
 
@@ -628,6 +628,10 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate) {
     
     bus->alt_number = other->alt_number;
     strcpy(bus->alt_name,other->alt_name);
+
+    // Oindex
+    if (mode == 0)
+      bus->oindex = other->oindex;
     
     bus->area = other->area;
     bus->zone = other->zone;
@@ -1766,6 +1770,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   // Write
   JSON_start(output);
   JSON_int(temp,output,"index",bus->index,FALSE);
+  JSON_int(temp,output,"oindex",bus->oindex,FALSE);
   JSON_int(temp,output,"number",bus->number,FALSE);
   JSON_str(temp,output,"name",bus->name,FALSE);
   JSON_int(temp,output,"alt_number",bus->alt_number,FALSE);
@@ -2083,6 +2088,23 @@ BOOL BUS_is_redundant(Bus* bus) {
     return bus->alt_number >= 0;
   else
     return FALSE;
+}
+
+void BUS_equiv_add_to_net(Bus* bus, Net* net) {
+  Node* node;
+  Bus* equiv_bus;
+  Bus* new_bus;
+  if (bus) {
+    for (node = bus->equiv; node != NULL; node = NODE_get_next(node)) {
+      equiv_bus = (Bus*)NODE_get_item(node);
+      new_bus = BUS_new(NET_get_num_periods(net));
+      BUS_set_number(new_bus, BUS_get_number(equiv_bus));
+      BUS_set_name(new_bus, BUS_get_name(equiv_bus));
+      BUS_set_alt_number(new_bus, BUS_get_number(bus));
+      BUS_set_alt_name(new_bus, BUS_get_name(bus));
+      NET_add_red_bus(net,new_bus);
+    }
+  }
 }
 
 void BUS_equiv_add(Bus* bus, Bus* other_bus) {

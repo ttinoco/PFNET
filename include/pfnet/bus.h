@@ -96,6 +96,7 @@ typedef struct ConvVSC ConvVSC;
 typedef struct ConvCSC ConvCSC;
 typedef struct Facts Facts;
 typedef struct Vec Vec;
+typedef struct Net Net;
 
 // Prototypes
 /** @brief Adds generator to list of generators connected to bus. */
@@ -309,6 +310,7 @@ BOOL BUS_is_slack(Bus* bus);
 BOOL BUS_is_star(Bus* bus);
 BOOL BUS_is_redundant(Bus* bus);
 
+void BUS_equiv_add_to_net(Bus* bus, Net* net);
 void BUS_equiv_add(Bus* bus, Bus* other_bus);
 BOOL BUS_equiv_has(Bus* bus, Bus* other_bus);
 BOOL BUS_equiv_has_slack(Bus* bus);

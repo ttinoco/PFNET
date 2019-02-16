@@ -489,7 +489,7 @@ void NET_add_branches(Net* net, Branch** br_ptr_array, int size) {
       continue;
 
     // Copy data
-    BRANCH_copy_from_branch(br_dst,br_src);
+    BRANCH_copy_from_branch(br_dst,br_src,0);
 
     // Clear flags
     if (i >= old_num_branches) {
@@ -593,7 +593,7 @@ void NET_del_branches(Net* net, Branch** br_ptr_array, int size) {
       br_dst = NET_get_branch(net,index);
 
       // Copy data
-      BRANCH_copy_from_branch(br_dst,br_src);
+      BRANCH_copy_from_branch(br_dst,br_src,0);
 
       // Save old connections
       bus_k = BRANCH_get_bus_k(br_src);
@@ -3028,7 +3028,7 @@ void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch
    *  
    *  Parameters
    *  ----------
-   *  mode : -1 (to merged), 0 (standard), 1 (from merged)
+   *  mode : -1 (copy to merged net), 0 (one-to-one copy), 1 (copy from merged net)
    */
   
   // Local variables
@@ -3078,36 +3078,10 @@ void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch
       branch_index_map[i] = i;
   }
   
-  // Free hash tables
-  BUS_hash_number_del(net->bus_hash_number);
-  BUS_hash_name_del(net->bus_hash_name);
-  BUSDC_hash_number_del(net->dc_bus_hash_number);
-  BUSDC_hash_name_del(net->dc_bus_hash_name);
-  net->bus_hash_number = NULL;
-  net->bus_hash_name = NULL;
-  net->dc_bus_hash_number = NULL;
-  net->dc_bus_hash_name = NULL;
-  
-  // Error
-  net->error_flag = other_net->error_flag;
-  strcpy(net->error_string, other_net->error_string);
-
-  // Output
-  strcpy(net->output_string, other_net->output_string);
-
-  // Base power
-  net->base_power = other_net->base_power;
-
-  // Num flags
-  net->num_vars = other_net->num_vars;
-  net->num_fixed = other_net->num_fixed;
-  net->num_bounded = other_net->num_bounded;
-  net->num_sparse = other_net->num_sparse;  
-
   // Buses
   for (i = 0; i < other_net->num_buses; i++) {
     other_bus = NET_get_bus(other_net,i);
-    if (mode == 1 && BUS_get_oindex(other_bus) >= 0)
+    if (mode == 1) // from merged
       bus = NET_get_bus(net,BUS_get_oindex(other_bus));
     else
       bus = NET_get_bus(net,bus_index_map[i]);
@@ -3117,11 +3091,11 @@ void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch
   // Branches
   for (i = 0; i < other_net->num_branches; i++) {
     other_branch = NET_get_branch(other_net,i);
-    if (mode == 1 && BRANCH_get_oindex(other_branch) >= 0)
+    if (mode == 1) // from merged
       branch = NET_get_branch(net,BRANCH_get_oindex(other_branch));
     else
       branch = NET_get_branch(net,branch_index_map[i]);
-    BRANCH_copy_from_branch(branch,other_branch);
+    BRANCH_copy_from_branch(branch,other_branch, mode);
   }
 
   // Generators
@@ -3178,8 +3152,6 @@ void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch
     dc_bus = NET_get_dc_bus(net,i);
     other_dc_bus = NET_get_dc_bus(other_net,i);
     BUSDC_copy_from_dc_bus(dc_bus,other_dc_bus);
-    NET_dc_bus_hash_number_add(net,dc_bus);
-    NET_dc_bus_hash_name_add(net,dc_bus);
   }
 
   // DC branches
@@ -3196,24 +3168,63 @@ void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch
     FACTS_copy_from_facts(facts,other_facts);
   }
 
-  // Hashes
-  for (i = 0; i < net->num_buses; i++) {
-    bus = NET_get_bus(net,i);
-    NET_bus_hash_number_add(net,bus);
-    NET_bus_hash_name_add(net,bus);
+  // One-to-one
+  if (mode == 0) {
+
+    // Free hash tables
+    BUS_hash_number_del(net->bus_hash_number);
+    BUS_hash_name_del(net->bus_hash_name);
+    BUSDC_hash_number_del(net->dc_bus_hash_number);
+    BUSDC_hash_name_del(net->dc_bus_hash_name);
+    net->bus_hash_number = NULL;
+    net->bus_hash_name = NULL;
+    net->dc_bus_hash_number = NULL;
+    net->dc_bus_hash_name = NULL;
+    
+    // Error
+    net->error_flag = other_net->error_flag;
+    strcpy(net->error_string, other_net->error_string);
+    
+    // Output
+    strcpy(net->output_string, other_net->output_string);
+    
+    // Base power
+    net->base_power = other_net->base_power;
+    
+    // Num flags
+    net->num_vars = other_net->num_vars;
+    net->num_fixed = other_net->num_fixed;
+    net->num_bounded = other_net->num_bounded;
+    net->num_sparse = other_net->num_sparse;  
+
+    // Red buses
+    BUS_list_del(net->red_bus);
+    net->red_bus = NULL;
+    for(other_bus = other_net->red_bus; other_bus != NULL; other_bus = BUS_get_next(other_bus)) {
+      bus = BUS_new(BUS_get_num_periods(other_bus));
+      BUS_copy_from_bus(bus,other_bus,0,FALSE);
+      NET_add_red_bus(net,bus); // handles hash tables
+    }
   }
 
-  // Red buses
-  BUS_list_del(net->red_bus);
-  net->red_bus = NULL;
-  for(other_bus = other_net->red_bus; other_bus != NULL; other_bus = BUS_get_next(other_bus)) {
-    bus = BUS_new(BUS_get_num_periods(other_bus));
-    BUS_copy_from_bus(bus,other_bus,0,FALSE);
-    NET_add_red_bus(net,bus); // handles hash tables
+  // Hashes and red
+  if (mode != 1) { // not from merged
+    for (i = 0; i < net->num_buses; i++) {
+      bus = NET_get_bus(net,i);
+      NET_bus_hash_number_add(net,bus);
+      NET_bus_hash_name_add(net,bus);
+      if (mode == -1)
+        BUS_equiv_add_to_net(NET_bus_hash_number_find(other_net,BUS_get_number(bus)),net);
+    }
+    for (i = 0; i < net->num_dc_buses; i++) {
+      dc_bus = NET_get_dc_bus(net,i);
+      NET_dc_bus_hash_number_add(net,dc_bus);
+      NET_dc_bus_hash_name_add(net,dc_bus);
+    }
   }
 
   // Clear flags
-  if (mode == 1)
+  if (mode != 0) // from merged or to merged
     NET_clear_flags(net);
     
   // Clean up
@@ -3309,9 +3320,10 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
   for (i = 0; i < net->num_buses; i++) {
     
     bus = NET_get_bus(net,i);
-    new_bus = NET_get_bus(new_net,bus_index_map[i]);
+    new_bus = NET_get_bus(new_net,bus_index_map[i]); // possibly namy bus point to the same new_bus
 
-    if (BUS_get_index(bus) != BUS_get_index(new_bus) && BUS_get_oindex(new_bus) < 0)
+    // Oindex
+    if (merge_buses)
       BUS_set_oindex(new_bus, BUS_get_index(bus));
     
     // Connections gen
@@ -3338,7 +3350,7 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
     for (branch = BUS_get_branch_k(bus); branch != NULL; branch = BRANCH_get_next_k(branch)) {
       if (!merge_buses || !BRANCH_is_zero_impedance_line(branch)) {
         new_branch = NET_get_branch(new_net,branch_index_map[BRANCH_get_index(branch)]);
-        if (BRANCH_get_index(branch) != BRANCH_get_index(new_branch))
+        if (merge_buses)
           BRANCH_set_oindex(new_branch, BRANCH_get_index(branch));
         BUS_add_branch_k(new_bus,new_branch);
       }
@@ -3348,7 +3360,7 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
     for (branch = BUS_get_branch_m(bus); branch != NULL; branch = BRANCH_get_next_m(branch)) {
       if (!merge_buses || !BRANCH_is_zero_impedance_line(branch)) {
         new_branch = NET_get_branch(new_net,branch_index_map[BRANCH_get_index(branch)]);
-        if (BRANCH_get_index(branch) != BRANCH_get_index(new_branch))
+        if (merge_buses)
           BRANCH_set_oindex(new_branch, BRANCH_get_index(branch));
         BUS_add_branch_m(new_bus,new_branch);
       }
@@ -3421,7 +3433,7 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
                     net,
                     bus_index_map,
                     branch_index_map,
-                    merge_buses ? -1 : 0); // to merged, or standard
+                    merge_buses ? -1 : 0); // to merged, or one-to-one
 
   // Clean up
   free(bus_index_map);
@@ -6387,6 +6399,20 @@ void NET_show_equiv_buses(Net* net) {
     BUS_equiv_show(NET_get_bus(net,i));
 }
 
+void NET_show_red_buses(Net* net) {
+
+  if (!net)
+    return;
+
+  Bus* bus;
+  for (bus = net->red_bus; bus != NULL; bus = BUS_get_next(bus))
+    printf("red bus num %d name %s altnum %d altname %s\n",
+           BUS_get_number(bus),
+           BUS_get_name(bus),
+           BUS_get_alt_number(bus),
+           BUS_get_alt_name(bus));
+}
+
 void NET_update_properties(Net* net, Vec* values) {
 
   // Local variables
@@ -6437,6 +6463,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
 
   int i;
   Node* node;
+  BOOL selected;
 
   // Check pointers
   if (!net || !bus)
@@ -6756,18 +6783,23 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
     // Propagate through equivalent buses
     NET_set_equiv_buses(net);
     for (i = 0; i < net->num_buses; i++) {
+      selected = TRUE;
       bus = NET_get_bus(net,i);
       P = BUS_get_P_mis(bus,t);
       Q = BUS_get_Q_mis(bus,t);
       for (node = BUS_get_equiv(bus); node != NULL; node = NODE_get_next(node)) {
+        if (BUS_get_index((Bus*)NODE_get_item(node)) < BUS_get_index(bus)) // bus has equiv bus with smaller index
+          selected = FALSE;
         P += BUS_get_P_mis((Bus*)NODE_get_item(node),t);
         Q += BUS_get_Q_mis((Bus*)NODE_get_item(node),t);
       }
-      BUS_set_P_mis(bus,P,t);
-      BUS_set_Q_mis(bus,Q,t);
-      for (node = BUS_get_equiv(bus); node != NULL; node = NODE_get_next(node)) {
-        BUS_set_P_mis((Bus*)NODE_get_item(node),P,t);
-        BUS_set_Q_mis((Bus*)NODE_get_item(node),Q,t);
+      if (selected) {
+        BUS_set_P_mis(bus,P,t);
+        BUS_set_Q_mis(bus,Q,t);
+        for (node = BUS_get_equiv(bus); node != NULL; node = NODE_get_next(node)) {
+          BUS_set_P_mis((Bus*)NODE_get_item(node),P,t);
+          BUS_set_Q_mis((Bus*)NODE_get_item(node),Q,t);
+        }
       }      
     }
     

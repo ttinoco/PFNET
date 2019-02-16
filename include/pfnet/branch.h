@@ -89,7 +89,7 @@ Branch* BRANCH_array_new(int size, int num_periods);
 void BRANCH_array_show(Branch* br, int size, int t);
 void BRANCH_clear_sensitivities(Branch* br);
 void BRANCH_clear_flags(Branch* br, char flag_type);
-void BRANCH_copy_from_branch(Branch* br, Branch* other);
+void BRANCH_copy_from_branch(Branch* br, Branch* other, int mode);
 
 char BRANCH_get_flags_vars(Branch* br);
 char BRANCH_get_flags_fixed(Branch* br);

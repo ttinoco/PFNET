@@ -187,8 +187,14 @@ void BRANCH_clear_sensitivities(Branch* br) {
   }
 }
 
-void BRANCH_copy_from_branch(Branch* br, Branch* other) {
-
+void BRANCH_copy_from_branch(Branch* br, Branch* other, int mode) {
+  /** Copies data from another branch except index and connections.
+   * 
+   *  Parameters
+   *  -----------
+   *  mode: -1 (to merged), 0 (one-to-one), 1 (from merged)
+   */
+  
   // Local variables
   int num_periods;
 
@@ -205,6 +211,10 @@ void BRANCH_copy_from_branch(Branch* br, Branch* other) {
   // Properties
   br->type = other->type;
   strcpy(br->name,other->name);
+
+  // Oindex
+  if (mode == 0) // one-to-one
+    br->oindex = other->oindex;
 
   // Time
   // skip time
@@ -1267,6 +1277,7 @@ char* BRANCH_get_json_string(Branch* branch, char* output) {
   // Write
   JSON_start(output);
   JSON_int(temp,output,"index",branch->index,FALSE);
+  JSON_int(temp,output,"oindex",branch->oindex,FALSE);
   JSON_int(temp,output,"type",branch->type,FALSE);
   JSON_int(temp,output,"num_periods",branch->num_periods,FALSE);
   JSON_str(temp,output,"name",branch->name,FALSE);

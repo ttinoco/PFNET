@@ -255,6 +255,7 @@ void NET_show_components(Net* net, int output_level);
 char* NET_get_show_components_str(Net* net, int output_level);
 void NET_show_properties(Net* net, int t);
 void NET_show_equiv_buses(Net* net);
+void NET_show_red_buses(Net* net);
 char* NET_get_show_properties_str(Net* net, int t);
 void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* values);
 void NET_update_properties(Net* net, Vec* values);
