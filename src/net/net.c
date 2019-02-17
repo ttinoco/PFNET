@@ -6829,8 +6829,15 @@ void NET_update_set_points(Net* net) {
   for (i = 0; i < net->num_buses; i++) {
     bus = BUS_array_get(net->bus,i);
     if (BUS_is_v_set_regulated(bus)) {
-      for (t = 0; t < net->num_periods; t++)
+      for (t = 0; t < net->num_periods; t++) {
         BUS_set_v_set(bus,BUS_get_v_mag(bus,t),t);
+        if (BUS_is_regulated_by_shunt(bus) || BUS_is_regulated_by_tran(bus)) {
+          if (BUS_get_v_set(bus,t) > BUS_get_v_max_reg(bus))
+            BUS_set_v_max_reg(bus, BUS_get_v_set(bus,t));
+          if (BUS_get_v_set(bus,t) < BUS_get_v_min_reg(bus))
+            BUS_set_v_min_reg(bus, BUS_get_v_set(bus,t));
+        }
+      }
     }
   }
 }
@@ -6838,7 +6845,9 @@ void NET_update_set_points(Net* net) {
 void NET_update_reg_Q_participations(Net* net, int t) {
 
   void* obj;
+  void* temp_obj;
   char obj_type;
+  char temp_obj_type;
   REAL Q_total;
   REAL Q;
   Bus* bus;
@@ -6852,24 +6861,67 @@ void NET_update_reg_Q_participations(Net* net, int t) {
   for (i = 0; i < net->num_buses; i++) {
 
     bus = NET_get_bus(net, i);
-
+    
     if (BUS_is_v_set_regulated(bus)) {
+      
+      // Total
+      Q_total = 0;
+      for (REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus)) 
+        Q_total += REG_OBJ_get_Q(obj_type, obj, t);
 
+      // Safeguard
+      if (0 <= Q_total && Q_total < eps)
+        Q_total = eps;
+      if (0 >= Q_total && Q_total > -eps)
+        Q_total = -eps;
+      
+      // Mark the non-local ones in disagreement
+      for (REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus)) {
+        if (bus == REG_OBJ_get_bus(obj_type,obj)) // local
+          continue;
+        Q = REG_OBJ_get_Q(obj_type,obj,t);
+        if (Q_total > 0) {
+          if (Q <= 0)
+            REG_OBJ_set_Q_par(obj_type,obj,0.);
+        }
+        else if (Q_total < 0) {
+          if (Q >= 0)
+            REG_OBJ_set_Q_par(obj_type,obj,0.);
+        }
+        else
+          REG_OBJ_set_Q_par(obj_type,obj,0.);
+      }
+
+      // Disable the marked ones
+      REG_OBJ_init(&obj_type,&obj,bus);
+      while (obj != NULL) {
+        temp_obj = obj;
+        temp_obj_type = obj_type;
+        REG_OBJ_next(&obj_type,&obj,bus);
+        if (REG_OBJ_get_Q_par(temp_obj_type,temp_obj) == 0.) {
+          REG_OBJ_set_Q_par(temp_obj_type,temp_obj,1.);
+          REG_OBJ_disable(temp_obj_type,temp_obj);
+        }
+      }
+
+      // Recompute total
       Q_total = 0;
       for (REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus))
         Q_total += REG_OBJ_get_Q(obj_type, obj, t);
 
-      if (0 < Q_total && Q_total < eps)
+      // Safeguard
+      if (0 <= Q_total && Q_total < eps)
         Q_total = eps;
-      if (0 > Q_total && Q_total > -eps)
+      if (0 >= Q_total && Q_total > -eps)
         Q_total = -eps;
-
+      
+      // Find good participations
       for (REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus)) {
         Q = REG_OBJ_get_Q(obj_type, obj, t);
-        if (Q_total > 0)
-          REG_OBJ_set_Q_par(obj_type,obj,(Q > eps? Q : eps)/Q_total);
+        if (Q/Q_total > 0.)
+          REG_OBJ_set_Q_par(obj_type,obj,Q/Q_total > 1.? 1. : Q/Q_total);
         else
-          REG_OBJ_set_Q_par(obj_type,obj,(-Q > eps? -Q : eps)/Q_total);        
+          REG_OBJ_set_Q_par(obj_type,obj,eps);
       }
     }
   }

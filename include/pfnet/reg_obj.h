@@ -20,6 +20,7 @@
 
 void REG_OBJ_next(char* obj_type, void** obj, Bus* bus);
 void REG_OBJ_init(char* obj_type, void** obj, Bus* bus);
+void REG_OBJ_disable(char obj_type, void* obj);
 void REG_OBJ_set_Q(char obj_type, void* obj, REAL Q, int t);
 void REG_OBJ_set_Q_par(char obj_type, void* obj, REAL Q_par);
 void REG_OBJ_show(char obj_type, void* obj);

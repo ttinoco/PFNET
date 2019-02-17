@@ -74,6 +74,25 @@ void REG_OBJ_init(char* obj_type, void** obj, Bus* bus) {
   }
 }
 
+void REG_OBJ_disable(char obj_type, void* obj) {
+
+  // Check
+  if (!obj)
+    return;
+
+  // Gen
+  if (obj_type == OBJ_GEN)
+    GEN_set_reg_bus((Gen*)obj,NULL);
+      
+  // VSC
+  else if (obj_type == OBJ_CONVVSC)
+    CONVVSC_set_reg_bus((ConvVSC*)obj,NULL);
+
+  // FACTS
+  else if (obj_type == OBJ_FACTS)
+    FACTS_set_reg_bus((Facts*)obj,NULL);
+}
+
 void REG_OBJ_set_Q(char obj_type, void* obj, REAL Q, int t) {
 
   // Check
