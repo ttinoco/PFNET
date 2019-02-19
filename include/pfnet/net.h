@@ -262,5 +262,6 @@ void NET_update_properties(Net* net, Vec* values);
 void NET_update_reg_Q_participations(Net* net, int t);
 void NET_update_set_points(Net* net);
 void NET_update_hash_tables(Net* net);
+void NET_localize_gen_regulation(Net* net, int max_dist);
 
 #endif

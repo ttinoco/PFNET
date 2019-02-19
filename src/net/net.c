@@ -3455,46 +3455,59 @@ int NET_get_bus_neighbors(Net* net, Bus* bus, int spread, int* neighbors, char* 
   int neighbors_total;
   int neighbors_curr;
   int num_new;
-  int i;
+  int* distances;
+  int dist;
 
   // Check
   if (!neighbors || !queued)
     return -1;
 
+  // Distances
+  ARRAY_alloc(distances,int,net->num_buses);
+
   // Add self to be processed
   neighbors_total = 1;
   neighbors[0] = BUS_get_index(bus);
+  distances[BUS_get_index(bus)] = 0;
   queued[BUS_get_index(bus)] = TRUE;
 
   // Neighbors
   neighbors_curr = 0;
-  for (i = 0; i < spread; i++) {
+  while (TRUE) {
     num_new = 0;
     while (neighbors_curr < neighbors_total) {
       bus1 = NET_get_bus(net,neighbors[neighbors_curr]);
       for (br = BUS_get_branch_k(bus1); br != NULL; br = BRANCH_get_next_k(br)) {
         if (bus1 != BRANCH_get_bus_k(br)) {
-          sprintf(net->error_string,"unable to construct covariance matrix");
+          sprintf(net->error_string,"unable to get neighbors of bus");
           net->error_flag = TRUE;
         }
         bus2 = BRANCH_get_bus_m(br);
-        if (!queued[BUS_get_index(bus2)]) {
+        dist = distances[BUS_get_index(bus1)] + (BRANCH_is_zero_impedance_line(br) ? 0 : 1);
+        if (!queued[BUS_get_index(bus2)] && dist <= spread) {
           neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
+          distances[BUS_get_index(bus2)] = dist;
           queued[BUS_get_index(bus2)] = TRUE;
           num_new++;
         }
+        else if (queued[BUS_get_index(bus2)] && dist < distances[BUS_get_index(bus2)])
+          distances[BUS_get_index(bus2)] = dist;
       }
       for (br = BUS_get_branch_m(bus1); br != NULL; br = BRANCH_get_next_m(br)) {
         if (bus1 != BRANCH_get_bus_m(br)) {
-          sprintf(net->error_string,"unable to construct covariance matrix");
+          sprintf(net->error_string,"unable to get neighbors of bus");
           net->error_flag = TRUE;
         }
         bus2 = BRANCH_get_bus_k(br);
-        if (!queued[BUS_get_index(bus2)]) {
+        dist = distances[BUS_get_index(bus1)] + (BRANCH_is_zero_impedance_line(br) ? 0 : 1);
+        if (!queued[BUS_get_index(bus2)] && dist <= spread) {
           neighbors[neighbors_total+num_new] = BUS_get_index(bus2);
+          distances[BUS_get_index(bus2)] = dist;
           queued[BUS_get_index(bus2)] = TRUE;
           num_new++;
         }
+        else if (queued[BUS_get_index(bus2)] && dist < distances[BUS_get_index(bus2)])
+          distances[BUS_get_index(bus2)] = dist;
       }
       neighbors_curr++;
     }
@@ -3502,6 +3515,11 @@ int NET_get_bus_neighbors(Net* net, Bus* bus, int spread, int* neighbors, char* 
     if (num_new == 0)
       break;
   }
+
+  // Clean up
+  free(distances);
+
+  // Distances
   return neighbors_total;
 }
 
@@ -7021,4 +7039,48 @@ void NET_propagate_data_in_time(Net* net, int start, int end) {
   // Facts
   for (i = 0; i < net->num_facts; i++)
     FACTS_propagate_data_in_time(FACTS_array_get(net->facts,i),start,end);
+}
+
+void NET_localize_gen_regulation(Net* net, int max_dist) {
+
+  // Local variables
+  char* queued;
+  int* neighbors;
+  int i;
+  Gen* gen;
+  Bus* bus;
+  Bus* reg_bus;
+  int num_neighbors;
+  BOOL local;
+  int j;
+  
+  // Check
+  if (!net)
+    return;
+
+  // Allocate arrays
+  ARRAY_alloc(queued,char,net->num_buses);
+  ARRAY_alloc(neighbors,int,net->num_buses);
+
+  // Process
+  for (i = 0; i < net->num_gens; i++) {
+    gen = NET_get_gen(net,i);
+    if (GEN_is_regulator(gen)) {
+      bus = GEN_get_bus(gen);
+      reg_bus = GEN_get_reg_bus(gen);
+      ARRAY_clear(queued,char,net->num_buses);
+      num_neighbors = NET_get_bus_neighbors(net,bus,max_dist,neighbors,queued);
+      local = FALSE;
+      for (j = 0; j < num_neighbors; j++) {
+        if (NET_get_bus(net,neighbors[j]) == reg_bus)
+          local = TRUE;
+      }
+      if (!local)
+        GEN_set_reg_bus(gen, bus); // force local
+    }
+  }
+
+  // Clean up
+  free(queued);
+  free(neighbors);
 }
