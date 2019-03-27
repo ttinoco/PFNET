@@ -14,6 +14,8 @@
 #include <math.h>
 #include "constr.h"
 
+#define CONSTR_HVDCPF_MINR 1e-5 // p.u.
+
 // Function prototypes
 Constr* CONSTR_HVDCPF_new(Net* net);
 void CONSTR_HVDCPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t);

@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2019, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -145,9 +145,11 @@ void CONSTR_HVDCPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Branches
   for(br = BUSDC_get_branch_k(busdc); br != NULL; br = BRANCHDC_get_next_k(br)) {
-  
+    
     // Branch data
     r = BRANCHDC_get_r(br); // p.u.
+    if (r < CONSTR_HVDCPF_MINR)
+      r = CONSTR_HVDCPF_MINR;
     
     //***********
     if (BUSDC_has_flags(BRANCHDC_get_bus_k(br),FLAG_VARS,BUSDC_VAR_V)) { // vk var

@@ -8,6 +8,7 @@ Unreleased
 * Ability to detect equivalent buses and merge them. 
 * Ability to update original network using merged network.
 * Routine for localizing gen regulation.
+* Added safeguard to constr_HVDCPF for zero resistance.
 
 Version 1.3.4
 -------------
