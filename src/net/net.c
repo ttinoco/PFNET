@@ -6836,6 +6836,7 @@ void NET_update_set_points(Net* net) {
 
   // Local variables
   Bus* bus;
+  ConvCSC* csc;
   int i;
   int t;
 
@@ -6843,7 +6844,7 @@ void NET_update_set_points(Net* net) {
   if (!net)
     return;
 
-  // Update
+  // Update bus v set
   for (i = 0; i < net->num_buses; i++) {
     bus = BUS_array_get(net->bus,i);
     if (BUS_is_v_set_regulated(bus)) {
@@ -6856,6 +6857,15 @@ void NET_update_set_points(Net* net) {
             BUS_set_v_min_reg(bus, BUS_get_v_set(bus,t));
         }
       }
+    }
+  }
+
+  // Update CSC DC P set
+  for (i = 0; i < net->num_csc_convs; i++) {
+    csc = CONVCSC_array_get(net->csc_conv,i);
+    if (CONVCSC_is_in_P_dc_mode(csc)) {
+      for (t = 0; t < net->num_periods; t++)
+        CONVCSC_set_P_dc_set(csc,CONVCSC_get_P_dc(csc,t),t);
     }
   }
 }

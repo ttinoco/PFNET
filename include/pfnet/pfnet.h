@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2019, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -23,6 +23,7 @@
 
 // Functions
 #include "func_GEN_COST.h"
+#include "func_GEN_RED.h"
 #include "func_LOAD_UTIL.h"
 #include "func_NETCON_COST.h"
 #include "func_REG_PHASE.h"
@@ -36,6 +37,7 @@
 #include "func_SP_CONTROLS.h"
 #include "func_VSC_DC_PSET.h"
 #include "func_CSC_DC_PSET.h"
+#include "func_CSC_DC_ISET.h"
 #include "func_FACTS_PSET.h"
 #include "func_FACTS_QSET.h"
 

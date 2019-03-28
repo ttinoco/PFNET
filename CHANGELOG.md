@@ -9,6 +9,9 @@ Unreleased
 * Ability to update original network using merged network.
 * Routine for localizing gen regulation.
 * Added safeguard to constr_HVDCPF for zero resistance.
+* Added generator P redispatch penalty function.
+* CSC_DC_ISET function.
+* Network "update_set_points" also updates CSC P_dc set.
 
 Version 1.3.4
 -------------

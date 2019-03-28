@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2019, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -53,7 +53,6 @@ void FUNC_REG_PQ_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   Gen* gen;
   int* Hphi_nnz;
   Mat* Hphi;
-  REAL dv;
 
   // Constr data
   Hphi = FUNC_get_Hphi(f);
@@ -71,22 +70,14 @@ void FUNC_REG_PQ_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
       continue;
     
     if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) { // Q var
-      
-      dv = GEN_get_Q_max(gen)-GEN_get_Q_min(gen); // p.u.
-      if (dv < FUNC_REG_PQ_PARAM)
-	dv = FUNC_REG_PQ_PARAM;
-      
+            
       MAT_set_i(Hphi,*Hphi_nnz,GEN_get_index_Q(gen,t));
       MAT_set_j(Hphi,*Hphi_nnz,GEN_get_index_Q(gen,t));
       (*Hphi_nnz)++;
     }
     
     if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) { // P var
-      
-      dv = GEN_get_P_max(gen)-GEN_get_P_min(gen); // p.u.
-      if (dv < FUNC_REG_PQ_PARAM)
-	dv = FUNC_REG_PQ_PARAM;
-      
+            
       MAT_set_i(Hphi,*Hphi_nnz,GEN_get_index_P(gen,t));
       MAT_set_j(Hphi,*Hphi_nnz,GEN_get_index_P(gen,t));
       (*Hphi_nnz)++;

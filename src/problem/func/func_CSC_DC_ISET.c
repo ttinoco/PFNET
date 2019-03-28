@@ -1,5 +1,5 @@
-/** @file func_CSC_DC_PSET.c
- *  @brief This file defines the data structure and routines associated with the function of type CSC_DC_PSET.
+/** @file func_CSC_DC_ISET.c
+ *  @brief This file defines the data structure and routines associated with the function of type CSC_DC_ISET.
  *
  * This file is part of PFNET.
  *
@@ -8,18 +8,18 @@
  * PFNET is released under the BSD 2-clause license.
  */
 
-#include <pfnet/func_CSC_DC_PSET.h>
+#include <pfnet/func_CSC_DC_ISET.h>
 
-Func* FUNC_CSC_DC_PSET_new(REAL weight, Net* net) {
+Func* FUNC_CSC_DC_ISET_new(REAL weight, Net* net) {
   Func* f = FUNC_new(weight,net);
-  FUNC_set_func_count_step(f,&FUNC_CSC_DC_PSET_count_step);
-  FUNC_set_func_analyze_step(f,&FUNC_CSC_DC_PSET_analyze_step);
-  FUNC_set_func_eval_step(f,&FUNC_CSC_DC_PSET_eval_step);
-  FUNC_set_name(f,"CSC DC power control");
+  FUNC_set_func_count_step(f,&FUNC_CSC_DC_ISET_count_step);
+  FUNC_set_func_analyze_step(f,&FUNC_CSC_DC_ISET_analyze_step);
+  FUNC_set_func_eval_step(f,&FUNC_CSC_DC_ISET_eval_step);
+  FUNC_set_name(f,"CSC DC current control");
   return f;
 }
 
-void FUNC_CSC_DC_PSET_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
+void FUNC_CSC_DC_ISET_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   ConvCSC* csc;
@@ -34,12 +34,12 @@ void FUNC_CSC_DC_PSET_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   
   // CSC converters
   for (csc = BUS_get_csc_conv(bus); csc != NULL; csc = CONVCSC_get_next_ac(csc)) {   
-    if (CONVCSC_is_in_P_dc_mode(csc) && CONVCSC_has_flags(csc,FLAG_VARS,CONVCSC_VAR_PDC))
+    if (CONVCSC_is_in_i_dc_mode(csc) && CONVCSC_has_flags(csc,FLAG_VARS,CONVCSC_VAR_PDC))
       (*Hphi_nnz)++;
   }
 }
 
-void FUNC_CSC_DC_PSET_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
+void FUNC_CSC_DC_ISET_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Local variables
   ConvCSC* csc;
@@ -56,15 +56,15 @@ void FUNC_CSC_DC_PSET_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // CSC converters
   for (csc = BUS_get_csc_conv(bus); csc != NULL; csc = CONVCSC_get_next_ac(csc)) {
-    if (CONVCSC_is_in_P_dc_mode(csc) && CONVCSC_has_flags(csc,FLAG_VARS,CONVCSC_VAR_PDC)) {
-      MAT_set_i(H,*Hphi_nnz,CONVCSC_get_index_P_dc(csc,t));
-      MAT_set_j(H,*Hphi_nnz,CONVCSC_get_index_P_dc(csc,t));
+    if (CONVCSC_is_in_i_dc_mode(csc) && CONVCSC_has_flags(csc,FLAG_VARS,CONVCSC_VAR_PDC)) {
+      MAT_set_i(H,*Hphi_nnz,CONVCSC_get_index_i_dc(csc,t));
+      MAT_set_j(H,*Hphi_nnz,CONVCSC_get_index_i_dc(csc,t));
       (*Hphi_nnz)++;
     }
   }
 }
 
-void FUNC_CSC_DC_PSET_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_values) {
+void FUNC_CSC_DC_ISET_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_values) {
 
   // Local variables
   ConvCSC* csc;
@@ -72,9 +72,9 @@ void FUNC_CSC_DC_PSET_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var
   REAL* gphi;
   REAL* Hphi;
   int* Hphi_nnz;
-  REAL P_dc;
-  REAL P_dc_set;
-  int index_P_dc;
+  REAL i_dc;
+  REAL i_dc_set;
+  int index_i_dc;
 
   // Constr data
   phi = FUNC_get_phi_ptr(f);
@@ -89,26 +89,26 @@ void FUNC_CSC_DC_PSET_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var
   // CSC converters
   for (csc = BUS_get_csc_conv(bus); csc != NULL; csc = CONVCSC_get_next_ac(csc)) {
 
-    // No P_dc_mode
-    if (!CONVCSC_is_in_P_dc_mode(csc))
+    // No i_dc_mode
+    if (!CONVCSC_is_in_i_dc_mode(csc))
       continue;
     
     // Set point
-    P_dc_set = CONVCSC_get_P_dc_set(csc,t);
+    i_dc_set = CONVCSC_get_i_dc_set(csc,t);
     
     if (CONVCSC_has_flags(csc,FLAG_VARS,CONVCSC_VAR_PDC)) {
 
       // Index
-      index_P_dc = CONVCSC_get_index_P_dc(csc,t);
+      index_i_dc = CONVCSC_get_index_i_dc(csc,t);
       
       // Value
-      P_dc = VEC_get(var_values,index_P_dc);
+      i_dc = VEC_get(var_values,index_i_dc);
       
       // phi
-      (*phi) += 0.5*pow(P_dc-P_dc_set,2.);
+      (*phi) += 0.5*pow(i_dc-i_dc_set,2.);
       
       // gphi
-      gphi[index_P_dc] = P_dc-P_dc_set;
+      gphi[index_i_dc] = i_dc-i_dc_set;
 
       // Hphi
       Hphi[*Hphi_nnz] = 1.;
@@ -117,10 +117,10 @@ void FUNC_CSC_DC_PSET_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var
     else {
       
       // Value
-      P_dc = CONVCSC_get_P_dc(csc,t);
+      i_dc = CONVCSC_get_i_dc(csc,t);
       
       // phi
-      (*phi) += 0.5*pow(P_dc-P_dc_set,2.);
+      (*phi) += 0.5*pow(i_dc-i_dc_set,2.);
     }
   }
 }

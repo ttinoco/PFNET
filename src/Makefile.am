@@ -141,6 +141,7 @@ problem_constr_hdr = $(inc_path)/constr_DC_FLOW_LIM.h \
 		     $(inc_path)/constr_CSC_EQ.h
 
 problem_func_src = problem/func/func_GEN_COST.c \
+                   problem/func/func_GEN_RED.c \
                    problem/func/func_LOAD_UTIL.c \
                    problem/func/func_NETCON_COST.c \
                    problem/func/func_REG_PHASE.c  \
@@ -154,10 +155,12 @@ problem_func_src = problem/func/func_GEN_COST.c \
                    problem/func/func_SP_CONTROLS.c \
                    problem/func/func_VSC_DC_PSET.c \
 		   problem/func/func_CSC_DC_PSET.c \
+                   problem/func/func_CSC_DC_ISET.c \
 	           problem/func/func_FACTS_PSET.c \
 		   problem/func/func_FACTS_QSET.c
 
 problem_func_hdr = $(inc_path)/func_GEN_COST.h \
+                   $(inc_path)/func_GEN_RED.h \
                    $(inc_path)/func_LOAD_UTIL.h \
 	           $(inc_path)/func_NETCON_COST.h \
 	           $(inc_path)/func_REG_PHASE.h \
@@ -171,6 +174,7 @@ problem_func_hdr = $(inc_path)/func_GEN_COST.h \
                    $(inc_path)/func_SP_CONTROLS.h \
                    $(inc_path)/func_VSC_DC_PSET.h \
                    $(inc_path)/func_CSC_DC_PSET.h \
+                   $(inc_path)/func_CSC_DC_ISET.h \
 		   $(inc_path)/func_FACTS_PSET.h \
 		   $(inc_path)/func_FACTS_QSET.h
 
