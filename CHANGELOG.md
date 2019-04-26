@@ -12,6 +12,7 @@ Unreleased
 * Added generator P redispatch penalty function.
 * CSC_DC_ISET function.
 * Network "update_set_points" also updates CSC P_dc set.
+* Network method for clipping switched shunt b.
 
 Version 1.3.4
 -------------

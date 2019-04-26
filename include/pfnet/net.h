@@ -231,6 +231,7 @@ Net* NET_new(int num_periods);
 char* NET_mark_reachable_dc_buses(Net* net, BusDC* dc_bus);
 void NET_propagate_data_in_time(Net* net, int start, int end);
 int NET_round_discrete_switched_shunts_b(Net* net, int t);
+void NET_clip_switched_shunts_b(Net* net, int t);
 
 void NET_set_base_power(Net* net, REAL base_power);
 void NET_set_branch_array(Net* net, Branch* branch, int num);

@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015, Tomas Tinoco De Rubira.
+ * Copyright (c) 2019, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -5789,6 +5789,22 @@ int NET_round_discrete_switched_shunts_b(Net* net, int t) {
       num += SHUNT_round_b(s,t);
   }
   return num;
+}
+
+void NET_clip_switched_shunts_b(Net* net, int t) {
+  int i;
+  Shunt* s;
+  if (!net)
+    return;
+  for (i = 0; i < net->num_shunts; i++) {
+    s = NET_get_shunt(net,i);
+    if (SHUNT_is_switched(s)) {
+      if (SHUNT_get_b(s,t) > SHUNT_get_b_max(s))
+        SHUNT_set_b(s,SHUNT_get_b_max(s),t);
+      if (SHUNT_get_b(s,t) < SHUNT_get_b_min(s))
+        SHUNT_set_b(s,SHUNT_get_b_min(s),t);
+    }          
+  }
 }
 
 void NET_set_base_power(Net* net, REAL base_power) {
