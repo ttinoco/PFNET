@@ -57,13 +57,13 @@ void CONT_apply(Cont* cont, Net* net) {
     // Generators
     for (go = cont->gen_outage; go != NULL; go = go->next) {
       gen = NET_get_gen(net,go->gen_index);
-      GEN_set_outage(gen,TRUE);
+      GEN_set_in_service(gen,FALSE);
     }
 
     // Branches
     for (bo = cont->br_outage; bo != NULL; bo = bo->next) {
       br = NET_get_branch(net,bo->br_index);
-      BRANCH_set_outage(br,TRUE);
+      BRANCH_set_in_service(br,FALSE);
     }
   }
 }
@@ -81,13 +81,13 @@ void CONT_clear(Cont* cont, Net* net) {
     // Generators
     for (go = cont->gen_outage; go != NULL; go = go->next) {
       gen = NET_get_gen(net,go->gen_index);
-      GEN_set_outage(gen,FALSE);
+      GEN_set_in_service(gen,TRUE);
     }
 
     // Branches
     for (bo = cont->br_outage; bo != NULL; bo = bo->next) {
       br = NET_get_branch(net,bo->br_index);
-      BRANCH_set_outage(br,FALSE);
+      BRANCH_set_in_service(br,TRUE);
     }
   }
 }

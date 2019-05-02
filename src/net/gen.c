@@ -27,7 +27,7 @@ struct Gen {
   char name[GEN_BUFFER_SIZE]; /**< @brief Generator name */
   
   // Flags
-  BOOL outage;         /**< @brief Flag for indicating that generator in on outage. */
+  BOOL in_service;     /**< @brief Flag for indicating generator is in service. */
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value. */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded. */
   char vars;           /**< @brief Flags for indicating which quantities should be treated as variables. */
@@ -176,7 +176,7 @@ void GEN_copy_from_gen(Gen* gen, Gen* other) {
   strcpy(gen->name,other->name);
 
   // Flags
-  gen->outage = other->outage;
+  gen->in_service = other->in_service;
   gen->fixed = other->fixed;
   gen->bounded = other->bounded;
   gen->sparse = other->sparse;
@@ -671,7 +671,7 @@ char* GEN_get_json_string(Gen* gen, char* output) {
   JSON_obj(temp,output,"reg_bus",gen->reg_bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",gen->num_periods,FALSE);
   JSON_str(temp,output,"name",gen->name,FALSE);
-  JSON_bool(temp,output,"outage",gen->outage,FALSE);
+  JSON_bool(temp,output,"in_service",gen->in_service,FALSE);
   JSON_array_float(temp,output,"P",gen->P,gen->num_periods,FALSE);
   JSON_float(temp,output,"P_max",gen->P_max,FALSE);
   JSON_float(temp,output,"P_min",gen->P_min,FALSE);
@@ -723,8 +723,6 @@ BOOL GEN_has_properties(void* vgen, char prop) {
     return FALSE;
   if ((prop & GEN_PROP_NOT_SLACK) && GEN_is_slack(gen))
     return FALSE;
-  if ((prop & GEN_PROP_NOT_OUT) && GEN_is_on_outage(gen))
-    return FALSE;
   if ((prop & GEN_PROP_P_ADJUST) && !GEN_is_P_adjustable(gen))
     return FALSE;
   return TRUE;
@@ -747,7 +745,7 @@ void GEN_init(Gen* gen, int num_periods) {
 
   ARRAY_clear(gen->name,char,GEN_BUFFER_SIZE);
   
-  gen->outage = FALSE;
+  gen->in_service = TRUE;
   gen->fixed = 0x00;
   gen->bounded = 0x00;
   gen->sparse = 0x00;
@@ -787,9 +785,9 @@ BOOL GEN_is_equal(Gen* gen, Gen* other) {
   return gen == other;
 }
 
-BOOL GEN_is_on_outage(Gen* gen) {
+BOOL GEN_is_in_service(Gen* gen) {
   if (gen)
-    return gen->outage;
+    return gen->in_service;
   else
     return FALSE;
 }
@@ -919,11 +917,11 @@ void GEN_set_reg_bus(Gen* gen, Bus* reg_bus) {
   }
 }
 
-void GEN_set_outage(Gen* gen, BOOL outage) {
+void GEN_set_in_service(Gen* gen, BOOL in_service) {
   if (gen) {
-    if (gen->outage != outage)
+    if (gen->in_service != in_service)
       NET_inc_state_tag(gen->net);
-    gen->outage = outage;
+    gen->in_service = in_service;
   }
 }
 

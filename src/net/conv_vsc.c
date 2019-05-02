@@ -28,6 +28,7 @@ struct ConvVSC {
   Bus* reg_bus;        /**< @brief AC bus regulated by this converters */
 
   // Flags
+  BOOL in_service;     /**< @brief Flag for indicating whether converter is in service */
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
   char vars;           /**< @brief Flags for indicating which quantities should be treated as variables */
@@ -166,6 +167,7 @@ void CONVVSC_copy_from_conv(ConvVSC* conv, ConvVSC* other) {
   strcpy(conv->name,other->name);
 
   // Flags
+  conv->in_service = other->in_service;
   conv->fixed = other->fixed;
   conv->bounded = other->bounded;
   conv->sparse = other->sparse;
@@ -380,6 +382,7 @@ char* CONVVSC_get_json_string(ConvVSC* conv, char* output) {
   JSON_start(output);
   JSON_int(temp,output,"index",conv->index,FALSE);
   JSON_str(temp,output,"name",conv->name,FALSE);
+  JSON_bool(temp,output,"in_service",conv->in_service,FALSE);
   JSON_int(temp,output,"num_periods",conv->num_periods,FALSE);
   JSON_obj(temp,output,"ac_bus",conv->ac_bus,BUS_get_index,FALSE);
   JSON_obj(temp,output,"dc_bus",conv->dc_bus,BUSDC_get_index,FALSE);
@@ -779,6 +782,7 @@ void CONVVSC_init(ConvVSC* conv, int num_periods) {
   conv->dc_bus = NULL;
   conv->reg_bus = NULL;
 
+  conv->in_service = TRUE;
   conv->fixed = 0x00;
   conv->bounded = 0x00;
   conv->sparse = 0x00;
@@ -814,6 +818,13 @@ void CONVVSC_init(ConvVSC* conv, int num_periods) {
   conv->next_ac = NULL;
   conv->next_dc = NULL;
   conv->reg_next = NULL;
+}
+
+BOOL CONVVSC_is_in_service(ConvVSC* conv) {
+  if (conv)
+    return conv->in_service;
+  else
+    return FALSE;
 }
 
 BOOL CONVVSC_is_equal(ConvVSC* conv, ConvVSC* other) {
@@ -945,6 +956,11 @@ void CONVVSC_propagate_data_in_time(ConvVSC* conv, int start, int end) {
       conv->P_dc[t] = conv->P_dc[start];
     }
   }
+}
+
+void CONVVSC_set_in_service(ConvVSC* conv, BOOL in_service) {
+  if (conv)
+    conv->in_service = in_service;
 }
 
 void CONVVSC_set_P_max(ConvVSC* conv, REAL P_max) {

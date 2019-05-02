@@ -65,7 +65,7 @@ struct Branch {
   REAL ratingC;      /**< @brief Thermal rating C (p.u. system base MVA) */
 
   // Flags
-  BOOL outage;           /**< @brief Flag for indicating that branch in on outage */
+  BOOL in_service;       /**< @brief Flag for indicating whether branch is in service */
   BOOL pos_ratio_v_sens; /**< @brief Flag for positive ratio-voltage sensitivity */
   char vars;             /**< @brief Flags for indicating which quantities should be treated as variables */
   char fixed;            /**< @brief Flags for indicating which quantities should be fixed to their current value */
@@ -258,7 +258,7 @@ void BRANCH_copy_from_branch(Branch* br, Branch* other, int mode) {
   br->ratingC = other->ratingC;
   
   // Flags
-  br->outage = other->outage;
+  br->in_service = other->in_service;
   br->pos_ratio_v_sens = other->pos_ratio_v_sens;
   br->fixed = other->fixed;
   br->bounded = other->bounded;
@@ -1301,7 +1301,7 @@ char* BRANCH_get_json_string(Branch* branch, char* output) {
   JSON_float(temp,output,"ratingA",branch->ratingA,FALSE);
   JSON_float(temp,output,"ratingB",branch->ratingB,FALSE);
   JSON_float(temp,output,"ratingC",branch->ratingC,FALSE);
-  JSON_bool(temp,output,"outage",branch->outage,FALSE);
+  JSON_bool(temp,output,"in_service",branch->in_service,FALSE);
   JSON_bool(temp,output,"pos_ratio_v_sens",branch->pos_ratio_v_sens,TRUE);
   JSON_end(output);
   
@@ -1348,8 +1348,6 @@ BOOL BRANCH_has_properties(void* vbr, char prop) {
   if ((prop & BRANCH_PROP_TAP_CHANGER_Q) && !BRANCH_is_tap_changer_Q(br))
     return FALSE;
   if ((prop & BRANCH_PROP_PHASE_SHIFTER) && !BRANCH_is_phase_shifter(br))
-    return FALSE;
-  if ((prop & BRANCH_PROP_NOT_OUT) && BRANCH_is_on_outage(br))
     return FALSE;
   return TRUE;
 }
@@ -1406,7 +1404,7 @@ void BRANCH_init(Branch* br, int num_periods) {
   br->ratingB = 0;
   br->ratingC = 0;
 
-  br->outage = FALSE;
+  br->in_service = TRUE;
   br->pos_ratio_v_sens = TRUE;
   br->vars = 0x00;
   br->fixed = 0x00;
@@ -1445,9 +1443,9 @@ BOOL BRANCH_is_equal(Branch* br, Branch* other) {
   return br == other;
 }
 
-BOOL BRANCH_is_on_outage(Branch* br) {
+BOOL BRANCH_is_in_service(Branch* br) {
   if (br)
-    return br->outage;
+    return br->in_service;
   else
     return FALSE;
 }
@@ -1713,11 +1711,11 @@ void BRANCH_set_pos_ratio_v_sens(Branch* br, BOOL flag) {
     br->pos_ratio_v_sens = flag;
 }
 
-void BRANCH_set_outage(Branch* br, BOOL outage) {
+void BRANCH_set_in_service(Branch* br, BOOL in_service) {
   if (br) {
-    if (br->outage != outage)
+    if (br->in_service != in_service)
       NET_inc_state_tag(br->net);
-    br->outage = outage;
+    br->in_service = in_service;
   }
 }
 
@@ -1874,10 +1872,6 @@ void BRANCH_power_flow_count(Branch* br, int* J_nnz, int* H_nnz, int t, BOOL km,
   if (!br || !J_nnz || !H_nnz)
     return;
 
-  // Outage
-  if (BRANCH_is_on_outage(br))
-    return;
-
   // Bus data
   bus[0] = BRANCH_get_bus_k(br);
   bus[1] = BRANCH_get_bus_m(br);
@@ -2022,10 +2016,6 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
 
   // Check
   if (!br || !J_nnz || !J || !H_nnz || !HP || !HQ) 
-    return;
-
-  // Outage
-  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data
@@ -2356,10 +2346,6 @@ void BRANCH_power_flow_eval(Branch* br, REAL* P, REAL* Q, int* J_nnz, REAL* J, i
 
   // Check
   if (!br || !P || !Q || !J_nnz || !J || !H_nnz || !HP || !HQ) 
-    return;
-
-  // Outage
-  if (BRANCH_is_on_outage(br))
     return;
 
   // Bus data

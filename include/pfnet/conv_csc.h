@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2019, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -145,6 +145,7 @@ BOOL CONVCSC_has_flags(void* vconv, char flag_type, unsigned char mask);
 BOOL CONVCSC_has_properties(void* conv, char prop);
 
 void CONVCSC_init(ConvCSC* conv, int num_periods);
+BOOL CONVCSC_is_in_service(ConvCSC* conv);
 BOOL CONVCSC_is_equal(ConvCSC* conv, ConvCSC* other);
 BOOL CONVCSC_is_inverter(ConvCSC* conv);
 BOOL CONVCSC_is_rectifier(ConvCSC* conv);
@@ -162,6 +163,7 @@ int CONVCSC_list_dc_len(ConvCSC* conv_list);
 ConvCSC* CONVCSC_new(int num_periods);
 void CONVCSC_propagate_data_in_time(ConvCSC* conv, int start, int end);
 
+void CONVCSC_set_in_service(ConvCSC* conv, BOOL in_service);
 void CONVCSC_set_ac_bus(ConvCSC* conv, Bus* bus);
 void CONVCSC_set_dc_bus(ConvCSC* conv, BusDC* bus);
 void CONVCSC_set_angle(ConvCSC* conv, REAL angle, int t);

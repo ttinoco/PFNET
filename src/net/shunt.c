@@ -38,10 +38,11 @@ struct Shunt {
   char num_b_values; /**< @brief Number of valid susceptances (p.u.) */
  
   // Flags
-  char vars;      /**< @brief Flags for indicating which quantities are treated as variables **/
-  char fixed;     /**< @brief Flags for indicating which quantities should be fixed to their current value */
-  char bounded;   /**< @brief Flags for indicating which quantities should be bounded */
-  char sparse;    /**< @brief Flags for indicating which control adjustments should be sparse */
+  BOOL in_service; /**< @brief Flag for indicating whether shunt is in service */
+  char vars;       /**< @brief Flags for indicating which quantities are treated as variables **/
+  char fixed;      /**< @brief Flags for indicating which quantities should be fixed to their current value */
+  char bounded;    /**< @brief Flags for indicating which quantities should be bounded */
+  char sparse;     /**< @brief Flags for indicating which control adjustments should be sparse */
   
   // Indices
   int index;      /**< @brief Shunt index */
@@ -166,6 +167,7 @@ void SHUNT_copy_from_shunt(Shunt* shunt, Shunt* other) {
   shunt->num_b_values = other->num_b_values;
 
   // Flags
+  shunt->in_service = other->in_service;
   shunt->fixed = other->fixed;
   shunt->bounded = other->bounded;
   shunt->sparse = other->sparse;
@@ -506,6 +508,7 @@ char* SHUNT_get_json_string(Shunt* shunt, char* output) {
   JSON_obj(temp,output,"reg_bus",shunt->reg_bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",shunt->num_periods,FALSE);
   JSON_str(temp,output,"name",shunt->name,FALSE);
+  JSON_bool(temp,output,"in_service",shunt->in_service,FALSE);
   JSON_int(temp,output,"type",shunt->type,FALSE);
   JSON_int(temp,output,"mode",shunt->mode,FALSE);
   JSON_float(temp,output,"g",shunt->g,FALSE);
@@ -572,6 +575,8 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
   shunt->b_min = 0;
   shunt->b_values = NULL;
   shunt->num_b_values = 0;
+
+  shunt->in_service = TRUE;
   shunt->vars = 0x00;
   shunt->fixed = 0x00;
   shunt->bounded = 0x00;
@@ -585,6 +590,13 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
 
   shunt->next = NULL;
   shunt->reg_next = NULL;
+}
+
+BOOL SHUNT_is_in_service(Shunt* shunt) {
+  if (shunt)
+    return shunt->in_service;
+  else
+    return FALSE;
 }
 
 BOOL SHUNT_is_equal(Shunt* shunt, Shunt* other) {
@@ -702,6 +714,11 @@ void SHUNT_set_sens_b_u_bound(Shunt* shunt, REAL value, int t) {
 void SHUNT_set_sens_b_l_bound(Shunt* shunt, REAL value, int t) {
   if (shunt && t >= 0 && t < shunt->num_periods)
     shunt->sens_b_l_bound[t] = value;
+}
+
+void SHUNT_set_in_service(Shunt* shunt, BOOL in_service) {
+  if (shunt)
+    shunt->in_service = in_service;
 }
 
 void SHUNT_set_type(Shunt* shunt, char type) {

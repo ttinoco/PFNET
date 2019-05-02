@@ -26,6 +26,7 @@ struct Vargen {
   char type;                     /**< @brief Variable generator type */
   
   // Flags
+  BOOL in_service;     /**< @brief Flag for indicating whether vargen is in service */
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
   char vars;           /**< @brief Flags for indicating which quantities should be treated as variables */
@@ -101,8 +102,7 @@ void VARGEN_array_show(Vargen* gen_array, int size, int t) {
 }
 
 void VARGEN_clear_sensitivities(Vargen* vargen) {
-
-  
+  // nothing
 }
 
 void VARGEN_clear_flags(Vargen* gen, char flag_type) {
@@ -144,6 +144,7 @@ void VARGEN_copy_from_vargen(Vargen* gen, Vargen* other) {
   gen->type = other->type;
 
   // Flags
+  gen->in_service = other->in_service;
   gen->fixed = other->fixed;
   gen->bounded = other->bounded;
   gen->sparse = other->sparse;
@@ -528,6 +529,7 @@ char* VARGEN_get_json_string(Vargen* gen, char* output) {
   JSON_obj(temp,output,"bus",gen->bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",gen->num_periods,FALSE);
   JSON_str(temp,output,"name",gen->name,FALSE);
+  JSON_bool(temp,output,"in_service",gen->in_service,FALSE);
   JSON_array_float(temp,output,"P",gen->P,gen->num_periods,FALSE);
   JSON_array_float(temp,output,"P_ava",gen->P_ava,gen->num_periods,FALSE)
   JSON_float(temp,output,"P_max",gen->P_max,FALSE);
@@ -586,10 +588,13 @@ void VARGEN_init(Vargen* gen, int num_periods) {
   gen->bus = NULL;
   gen->type = VARGEN_TYPE_WIND;
   ARRAY_clear(gen->name,char,VARGEN_BUFFER_SIZE);
+
+  gen->in_service = TRUE;
   gen->fixed = 0x00;
   gen->bounded = 0x00;
   gen->sparse = 0x00;
   gen->vars = 0x00;
+  
   gen->P_max = 0;
   gen->P_min = 0;
   gen->Q_max = 0;
@@ -628,6 +633,13 @@ BOOL VARGEN_is_solar(Vargen* gen) {
     return FALSE;
 }
 
+BOOL VARGEN_is_in_service(Vargen* gen) {
+  if (gen)
+    return gen->in_service;
+  else
+    return FALSE;
+}
+
 BOOL VARGEN_is_equal(Vargen* gen, Vargen* other) {
   return gen == other;
 }
@@ -656,6 +668,11 @@ Vargen* VARGEN_new(int num_periods) {
   }
   else
     return NULL;
+}
+
+void VARGEN_set_in_service(Vargen* gen, BOOL in_service) {
+  if (gen)
+    gen->in_service = in_service;
 }
 
 void VARGEN_set_name(Vargen* gen, char* name) {

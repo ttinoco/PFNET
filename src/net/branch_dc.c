@@ -30,6 +30,7 @@ struct BranchDC {
   REAL r;            /**< @brief Series resistance (p.u.) */
 
   // Flags
+  BOOL in_service;   /**< @brief Flag for indicating whether the branch is in service */
   char vars;         /**< @brief Flags for indicating which quantities should be treated as variables */
   char fixed;        /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;      /**< @brief Flags for indicating which quantities should be bounded */
@@ -114,6 +115,7 @@ void BRANCHDC_copy_from_dc_branch(BranchDC* br, BranchDC* other) {
   br->r = other->r;
 
   // Flags
+  br->in_service = other->in_service;
   br->fixed = other->fixed;
   br->bounded = other->bounded;
   br->sparse = other->sparse;
@@ -280,6 +282,7 @@ char* BRANCHDC_get_json_string(BranchDC* branch, char* output) {
   JSON_int(temp,output,"index",branch->index,FALSE);
   JSON_int(temp,output,"num_periods",branch->num_periods,FALSE);
   JSON_str(temp,output,"name",branch->name,FALSE);
+  JSON_bool(temp,output,"in_service",branch->in_service,FALSE);
   JSON_obj(temp,output,"bus_k",branch->bus_k,BUSDC_get_index,FALSE);
   JSON_obj(temp,output,"bus_m",branch->bus_m,BUSDC_get_index,FALSE);
   JSON_float(temp,output,"r",branch->r,TRUE);
@@ -393,7 +396,8 @@ void BRANCHDC_init(BranchDC* br, int num_periods) {
   br->bus_m = NULL;
 
   br->r = 0;
-  
+
+  br->in_service = TRUE;
   br->vars = 0x00;
   br->fixed = 0x00;
   br->bounded = 0x00;
@@ -404,6 +408,13 @@ void BRANCHDC_init(BranchDC* br, int num_periods) {
   br->next_k = NULL;
   br->next_m = NULL;
 };
+
+BOOL BRANCHDC_is_in_service(BranchDC* br) {
+  if (br)
+    return br->in_service;
+  else
+    return FALSE;
+}
 
 BOOL BRANCHDC_is_equal(BranchDC* br, BranchDC* other) {
   return br == other;
@@ -453,6 +464,11 @@ BranchDC* BRANCHDC_new(int num_periods) {
 
 void BRANCHDC_propagate_data_in_time(BranchDC* br, int start, int end) {
   // nothing
+}
+
+void BRANCHDC_set_in_service(BranchDC* br, BOOL in_service) {
+  if (br)
+    br->in_service = in_service;
 }
 
 void BRANCHDC_set_bus_k(BranchDC* br, BusDC* bus_k) {

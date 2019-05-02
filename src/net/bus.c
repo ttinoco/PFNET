@@ -51,6 +51,7 @@ struct Bus {
   REAL v_min_emer;    /**< @brief Emergency minimum voltage magnitude (p.u.) */
 
   // Flags
+  BOOL in_service;   /**< @brief Flag for indicating whether the bus is in service */
   BOOL slack;        /**< @brief Flag for indicating that the bus is a slack bus */
   BOOL star;         /**< @brief Flag for indicating that the bus is a star bus */
   char fixed;        /**< @brief Flags for indicating which quantities should be fixed to their current value */
@@ -650,6 +651,7 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate) {
     bus->v_min_emer = other->v_min_emer;
 
     // Flags
+    bus->in_service = other->in_service;
     bus->slack = (other->slack || (mode == -1 && BUS_equiv_has_slack(other)));
     bus->star = other->star;
     bus->fixed = other->fixed;
@@ -1114,7 +1116,7 @@ REAL BUS_get_total_gen_P(Bus* bus, int t) {
   if (!bus || t < 0 || t >= bus->num_periods)
     return 0;
   for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen)) {
-    if (!GEN_is_on_outage(gen))
+    if (GEN_is_in_service(gen))
       P += GEN_get_P(gen,t);
   }
   return P;
@@ -1126,7 +1128,7 @@ REAL BUS_get_total_gen_Q(Bus* bus, int t) {
   if (!bus || t < 0 || t >= bus->num_periods)
     return 0;
   for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen)) {
-    if (!GEN_is_on_outage(gen))
+    if (GEN_is_in_service(gen))
       Q += GEN_get_Q(gen,t);
   }
   return Q;
@@ -1138,7 +1140,7 @@ REAL BUS_get_total_gen_Q_max(Bus* bus) {
   if (!bus)
     return 0;
   for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen)) {
-    if (!GEN_is_on_outage(gen))
+    if (GEN_is_in_service(gen))
       Qmax += GEN_get_Q_max(gen);
   }
   return Qmax;
@@ -1150,7 +1152,7 @@ REAL BUS_get_total_gen_Q_min(Bus* bus) {
   if (!bus)
     return 0;
   for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen)) {
-    if (!GEN_is_on_outage(gen))
+    if (GEN_is_in_service(gen))
       Qmin += GEN_get_Q_min(gen);
   }
   return Qmin;
@@ -1162,7 +1164,7 @@ REAL BUS_get_total_reg_gen_Q(Bus* bus, int t) {
   if (!bus)
     return 0;
   for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen)) {
-    if (!GEN_is_on_outage(gen))
+    if (GEN_is_in_service(gen))
       Q += GEN_get_Q(gen,t);
   }
   return Q;
@@ -1174,7 +1176,7 @@ REAL BUS_get_total_reg_gen_Q_max(Bus* bus) {
   if (!bus)
     return 0;
   for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen)) {
-    if (!GEN_is_on_outage(gen))
+    if (GEN_is_in_service(gen))
       Qmax += GEN_get_Q_max(gen);
   }
   return Qmax;
@@ -1186,7 +1188,7 @@ REAL BUS_get_total_reg_gen_Q_min(Bus* bus) {
   if (!bus)
     return 0;
   for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen)) {
-    if (!GEN_is_on_outage(gen))
+    if (GEN_is_in_service(gen))
       Qmin += GEN_get_Q_min(gen);
   }
   return Qmin;
@@ -1197,8 +1199,10 @@ REAL BUS_get_total_load_P(Bus* bus, int t) {
   REAL P = 0;
   if (!bus || t < 0 || t >= bus->num_periods)
     return 0;
-  for (load = bus->load; load != NULL; load = LOAD_get_next(load))
-    P += LOAD_get_P(load,t);
+  for (load = bus->load; load != NULL; load = LOAD_get_next(load)) {
+    if (LOAD_is_in_service(load))
+        P += LOAD_get_P(load,t);
+  }
   return P;
 }
 
@@ -1207,8 +1211,10 @@ REAL BUS_get_total_load_Q(Bus* bus, int t) {
   REAL Q = 0;
   if (!bus || t < 0 || t >= bus->num_periods)
     return 0;
-  for (load = bus->load; load != NULL; load = LOAD_get_next(load))
-    Q += LOAD_get_Q(load,t);
+  for (load = bus->load; load != NULL; load = LOAD_get_next(load)) {
+    if (LOAD_is_in_service(load))
+        Q += LOAD_get_Q(load,t);
+  }
   return Q;
 }
 
@@ -1217,8 +1223,10 @@ REAL BUS_get_total_shunt_g(Bus* bus) {
   REAL g = 0;
   if (!bus)
     return 0;
-  for (shunt = bus->shunt; shunt != NULL; shunt = SHUNT_get_next(shunt))
-    g += SHUNT_get_g(shunt);
+  for (shunt = bus->shunt; shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+    if (SHUNT_is_in_service(shunt))
+      g += SHUNT_get_g(shunt);
+  }
   return g;
 }
 
@@ -1227,8 +1235,10 @@ REAL BUS_get_total_shunt_b(Bus* bus, int t) {
   REAL b = 0;
   if (!bus || t < 0 || t >= bus->num_periods)
     return 0;
-  for (shunt = bus->shunt; shunt != NULL; shunt = SHUNT_get_next(shunt))
-    b += SHUNT_get_b(shunt,t);
+  for (shunt = bus->shunt; shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+    if (SHUNT_is_in_service(shunt))
+      b += SHUNT_get_b(shunt,t);
+  }
   return b;
 }
 
@@ -1788,6 +1798,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_float(temp,output,"v_min_norm",bus->v_min_norm,FALSE);
   JSON_float(temp,output,"v_max_emer",bus->v_max_emer,FALSE);
   JSON_float(temp,output,"v_min_emer",bus->v_min_emer,FALSE);
+  JSON_bool(temp,output,"in_service",bus->in_service,FALSE);
   JSON_bool(temp,output,"slack",bus->slack,FALSE);
   JSON_bool(temp,output,"star",bus->star,FALSE);
   JSON_array_float(temp,output,"price",bus->price,bus->num_periods,FALSE);
@@ -1941,6 +1952,7 @@ void BUS_init(Bus* bus, int num_periods) {
   bus->v_max_emer = BUS_DEFAULT_V_MAX;
   bus->v_min_emer = BUS_DEFAULT_V_MIN;
 
+  bus->in_service = TRUE;
   bus->slack = FALSE;
   bus->star = FALSE;
   bus->fixed = 0x00;
@@ -2016,6 +2028,13 @@ void BUS_inject_Q(Bus* bus, REAL Q, int t) {
     bus->Q_mis[t] += Q; // p.u.
 }
 
+BOOL BUS_is_in_service(Bus* bus) {
+  if (bus)
+    return bus->in_service;
+  else
+    return FALSE;
+}
+
 BOOL BUS_is_equal(Bus* bus, Bus* other) {
   return bus == other;
 }
@@ -2024,7 +2043,7 @@ BOOL BUS_is_regulated_by_gen(Bus* bus) {
   Gen* gen;
   if (bus) {
     for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen)) {
-      if (!GEN_is_on_outage(gen))
+      if (GEN_is_in_service(gen))
         return TRUE;
     }
   }
@@ -2035,7 +2054,7 @@ BOOL BUS_is_regulated_by_tran(Bus* bus) {
   Branch* br;
   if (bus) {
     for (br = bus->reg_tran; br != NULL; br = BRANCH_get_reg_next(br)) {
-      if (!BRANCH_is_on_outage(br))
+      if (BRANCH_is_in_service(br))
         return TRUE;
     }
   }
@@ -2043,24 +2062,36 @@ BOOL BUS_is_regulated_by_tran(Bus* bus) {
 }
 
 BOOL BUS_is_regulated_by_shunt(Bus* bus) {
-  if (bus)
-    return bus->reg_shunt != NULL;
-  else
-    return FALSE;
+  Shunt* shunt;
+  if (bus) {
+    for (shunt = bus->reg_shunt; shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
+      if (SHUNT_is_in_service(shunt))
+        return TRUE;
+    }
+  }
+  return FALSE;
 }
 
 BOOL BUS_is_regulated_by_vsc_conv(Bus* bus) {
-  if (bus)
-    return bus->reg_vsc_conv != NULL;
-  else
-    return FALSE;
+  ConvVSC* conv;
+  if (bus) {
+    for (conv = bus->reg_vsc_conv; conv != NULL; conv = CONVVSC_get_reg_next(conv)) {
+      if (CONVVSC_is_in_service(conv))
+        return TRUE;
+    }
+  }
+  return FALSE;
 }
 
 BOOL BUS_is_regulated_by_facts(Bus* bus) {
-  if (bus)
-    return bus->reg_facts != NULL;
-  else
-    return FALSE;
+  Facts* facts;
+  if (bus) {
+    for (facts = bus->reg_facts; facts != NULL; facts = FACTS_get_reg_next(facts)) {
+      if (FACTS_is_in_service(facts))
+        return TRUE;
+    }
+  }
+  return FALSE;
 }
 
 BOOL BUS_is_v_set_regulated(Bus* bus) {
@@ -2235,6 +2266,11 @@ Bus* BUS_new(int num_periods) {
   }
   else
     return NULL;
+}
+
+void BUS_set_in_service(Bus* bus, BOOL in_service) {
+  if (bus)
+    bus->in_service = in_service;
 }
 
 void BUS_set_network(Bus* bus, void* net) {

@@ -294,15 +294,18 @@ BOOL REG_OBJ_is_candidate(char obj_type, void* obj) {
 
   // Gen
   if (obj_type == OBJ_GEN)
-    return GEN_has_flags((Gen*)obj,FLAG_VARS,GEN_VAR_Q) && !GEN_is_on_outage((Gen*)obj);
+    return (GEN_has_flags((Gen*)obj,FLAG_VARS,GEN_VAR_Q) &&
+            GEN_is_in_service((Gen*)obj));
 
   // VSC
   else if (obj_type == OBJ_CONVVSC)
-    return CONVVSC_has_flags((ConvVSC*)obj,FLAG_VARS,CONVVSC_VAR_Q);
+    return (CONVVSC_has_flags((ConvVSC*)obj,FLAG_VARS,CONVVSC_VAR_Q) &&
+            CONVVSC_is_in_service((ConvVSC*)obj));
 
   // FACTS
   else if (obj_type == OBJ_FACTS)
-    return FACTS_has_flags((Facts*)obj,FLAG_VARS,FACTS_VAR_Q);
+    return (FACTS_has_flags((Facts*)obj,FLAG_VARS,FACTS_VAR_Q) &&
+            FACTS_is_in_service((Facts*)obj));
 
   else
     return FALSE;

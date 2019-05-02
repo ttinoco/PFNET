@@ -25,6 +25,7 @@ struct Bat {
   char name[BAT_BUFFER_SIZE]; /**< @brief Battery name */
 
   // Flags
+  BOOL in_service;     /**< @brief Flag for indicating whether battery is in service */
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
   char vars;           /**< @brief Flags for indicating which quantities should be treated as variables */
@@ -94,6 +95,13 @@ Bat* BAT_array_new(int size, int num_periods) {
     return NULL;
 }
 
+BOOL BAT_is_in_service(Bat* bat) {
+  if (bat)
+    return bat->in_service;
+  else
+    return FALSE;
+}
+
 BOOL BAT_is_equal(Bat* bat, Bat* other) {
   return bat == other;
 }
@@ -107,8 +115,7 @@ void BAT_array_show(Bat* bat_array, int size, int t) {
 }
 
 void BAT_clear_sensitivities(Bat* bat) {
-
-
+  // nothing
 }
 
 void BAT_clear_flags(Bat* bat, char flag_type) {
@@ -149,6 +156,7 @@ void BAT_copy_from_bat(Bat* bat, Bat* other) {
   strcpy(bat->name,other->name);
 
   // Flags
+  bat->in_service = other->in_service;
   bat->fixed = other->fixed;
   bat->bounded = other->bounded;
   bat->sparse = other->sparse;
@@ -570,6 +578,7 @@ char* BAT_get_json_string(Bat* bat, char* output) {
   JSON_obj(temp,output,"bus",bat->bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",bat->num_periods,FALSE);
   JSON_str(temp,output,"name",bat->name,FALSE);
+  JSON_bool(temp,output,"in_service",bat->in_service,FALSE);
   JSON_array_float(temp,output,"P",bat->P,bat->num_periods,FALSE);
   JSON_float(temp,output,"P_max",bat->P_max,FALSE);
   JSON_float(temp,output,"P_min",bat->P_min,FALSE);
@@ -628,7 +637,8 @@ void BAT_init(Bat* bat, int num_periods) {
   ARRAY_clear(bat->name,char,BAT_BUFFER_SIZE);
   
   bat->bus = NULL;
-  
+
+  bat->in_service = TRUE;
   bat->fixed = 0x00;
   bat->bounded = 0x00;
   bat->sparse = 0x00;
@@ -679,6 +689,11 @@ Bat* BAT_new(int num_periods) {
   }
   else
     return NULL;
+}
+
+void BAT_set_in_service(Bat* bat, BOOL in_service) {
+  if (bat)
+    bat->in_service = in_service;
 }
 
 void BAT_set_name(Bat* bat, char* name) {

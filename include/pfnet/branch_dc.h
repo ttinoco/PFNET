@@ -74,6 +74,7 @@ BOOL BRANCHDC_has_flags(void* br, char flag_type, unsigned char mask);
 BOOL BRANCHDC_has_properties(void* br, char prop);
 
 void BRANCHDC_init(BranchDC* br, int num_periods);
+BOOL BRANCHDC_is_in_service(BranchDC* br);
 BOOL BRANCHDC_is_equal(BranchDC* br, BranchDC* other);
 
 BranchDC* BRANCHDC_list_k_add(BranchDC* k_br_list, BranchDC* br);
@@ -86,6 +87,7 @@ int BRANCHDC_list_m_len(BranchDC* m_br_list);
 BranchDC* BRANCHDC_new(int num_periods);
 void BRANCHDC_propagate_data_in_time(BranchDC* br, int start, int end);
 
+void BRANCHDC_set_in_service(BranchDC* br, BOOL in_service);
 void BRANCHDC_set_bus_k(BranchDC* br, BusDC* bus_k);
 void BRANCHDC_set_bus_m(BranchDC* br, BusDC* bus_m);
 int BRANCHDC_set_flags(void* vbr, char flag_type, unsigned char mask, int index);

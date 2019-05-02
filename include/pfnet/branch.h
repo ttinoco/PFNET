@@ -59,7 +59,6 @@
 #define BRANCH_PROP_TAP_CHANGER_V 0x02 /**< @brief Property: tap-changing transformer that regulates voltage */
 #define BRANCH_PROP_TAP_CHANGER_Q 0x04 /**< @brief Property: tap-changing transformer that regulates reactive flow */
 #define BRANCH_PROP_PHASE_SHIFTER 0x08 /**< @brief Property: phase-shiting transformer that regulates active flow */
-#define BRANCH_PROP_NOT_OUT 0x10       /**< @brief Property: branch not on outage */
 /** @} */
 
 // Constants
@@ -181,8 +180,8 @@ BOOL BRANCH_has_properties(void* br, char prop);
 BOOL BRANCH_has_y_correction(Branch* br);
 
 void BRANCH_init(Branch* br, int num_periods);
+BOOL BRANCH_is_in_service(Branch* br);
 BOOL BRANCH_is_equal(Branch* br, Branch* other);
-BOOL BRANCH_is_on_outage(Branch* br);
 BOOL BRANCH_is_fixed_tran(Branch* br);
 BOOL BRANCH_is_line(Branch* br);
 BOOL BRANCH_is_phase_shifter(Branch* br);
@@ -202,8 +201,8 @@ Branch* BRANCH_list_m_del(Branch* m_br_list, Branch* br);
 int BRANCH_list_m_len(Branch* m_br_list);
 Branch* BRANCH_new(int num_periods);
 void BRANCH_propagate_data_in_time(Branch* br, int start, int end);
+void BRANCH_set_in_service(Branch* br, BOOL in_service);
 void BRANCH_set_name(Branch* br, char* name);
-void BRANCH_set_outage(Branch* br, BOOL outage);
 void BRANCH_set_sens_P_u_bound(Branch* br, REAL value, int t);
 void BRANCH_set_sens_P_l_bound(Branch* br, REAL value, int t);
 void BRANCH_set_sens_ratio_u_bound(Branch* br, REAL value, int t);

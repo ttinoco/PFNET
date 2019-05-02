@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2019, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -28,6 +28,7 @@ struct ConvCSC {
   BusDC* dc_bus;       /**< @brief DC bus to which the converter is connected */
 
   // Flags
+  BOOL in_service;     /**< @brief Flag for indicating whether the converter is in service */
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
   char vars;           /**< @brief Flags for indicating which quantities should be treated as variables */
@@ -177,6 +178,7 @@ void CONVCSC_copy_from_conv(ConvCSC* conv, ConvCSC* other) {
   strcpy(conv->name,other->name);
 
   // Flags
+  conv->in_service = other->in_service;
   conv->fixed = other->fixed;
   conv->bounded = other->bounded;
   conv->sparse = other->sparse;
@@ -388,6 +390,7 @@ char* CONVCSC_get_json_string(ConvCSC* conv, char* output) {
   JSON_int(temp,output,"index",conv->index,FALSE);
   JSON_int(temp,output,"type",conv->type,FALSE);
   JSON_str(temp,output,"name",conv->name,FALSE);
+  JSON_bool(temp,output,"in_service",conv->in_service,FALSE);
   JSON_int(temp,output,"num_periods",conv->num_periods,FALSE);
   JSON_obj(temp,output,"ac_bus",conv->ac_bus,BUS_get_index,FALSE);
   JSON_obj(temp,output,"dc_bus",conv->dc_bus,BUSDC_get_index,FALSE);
@@ -908,6 +911,7 @@ void CONVCSC_init(ConvCSC* conv, int num_periods) {
   conv->ac_bus = NULL;
   conv->dc_bus = NULL;
 
+  conv->in_service = TRUE;
   conv->fixed = 0x00;
   conv->bounded = 0x00;
   conv->sparse = 0x00;
@@ -951,6 +955,13 @@ void CONVCSC_init(ConvCSC* conv, int num_periods) {
   
   conv->next_ac = NULL;
   conv->next_dc = NULL;
+}
+
+BOOL CONVCSC_is_in_service(ConvCSC* conv) {
+  if (conv)
+    return conv->in_service;
+  else
+    return FALSE;
 }
 
 BOOL CONVCSC_is_equal(ConvCSC* conv, ConvCSC* other) {
@@ -1076,6 +1087,11 @@ void CONVCSC_propagate_data_in_time(ConvCSC* conv, int start, int end) {
       conv->angle[t] = conv->angle[start];
     }
   }
+}
+
+void CONVCSC_set_in_service(ConvCSC* conv, BOOL in_service) {
+  if (conv)
+    conv->in_service = in_service;
 }
 
 void CONVCSC_set_ac_bus(ConvCSC* conv, Bus* bus) {

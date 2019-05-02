@@ -30,10 +30,11 @@ struct BusDC {
   REAL* v;        /**< @brief Voltage (p.u.) */
 
   // Flags
-  char fixed;     /**< @brief Flags for indicating which quantities should be fixed to their current value */
-  char bounded;   /**< @brief Flags for indicating which quantities should be bounded */
-  char sparse;    /**< @brief Flags for indicating which control adjustments should be sparse */
-  char vars;      /**< @brief Flags for indicating which quantities should be treated as variables */
+  BOOL in_service; /**< @brief Flag for indicating whether the bus is in service */
+  char fixed;      /**< @brief Flags for indicating which quantities should be fixed to their current value */
+  char bounded;    /**< @brief Flags for indicating which quantities should be bounded */
+  char sparse;     /**< @brief Flags for indicating which control adjustments should be sparse */
+  char vars;       /**< @brief Flags for indicating which quantities should be treated as variables */
 
   // Indices
   int index;      /**< @brief Bus index */
@@ -190,6 +191,7 @@ void BUSDC_copy_from_dc_bus(BusDC* bus, BusDC* other) {
   memcpy(bus->v,other->v,num_periods*sizeof(REAL));
 
   // Flags
+  bus->in_service = other->in_service;
   bus->fixed = other->fixed;
   bus->bounded = other->bounded;
   bus->sparse = other->sparse;
@@ -356,6 +358,7 @@ char* BUSDC_get_json_string(BusDC* bus, char* output) {
   JSON_int(temp,output,"index",bus->index,FALSE);
   JSON_int(temp,output,"number",bus->number,FALSE);
   JSON_str(temp,output,"name",bus->name,FALSE);
+  JSON_bool(temp,output,"in_service",bus->in_service,FALSE);
   JSON_int(temp,output,"num_periods",bus->num_periods,FALSE);
   JSON_float(temp,output,"v_base",bus->v_base,FALSE);
   JSON_array_float(temp,output,"v",bus->v,bus->num_periods,FALSE);
@@ -624,6 +627,7 @@ void BUSDC_init(BusDC* bus, int num_periods) {
 
   bus->index = -1;
 
+  bus->in_service = TRUE;
   bus->fixed = 0x00;
   bus->bounded = 0x00;
   bus->sparse = 0x00;
@@ -644,6 +648,13 @@ void BUSDC_init(BusDC* bus, int num_periods) {
   
   for (t = 0; t < bus->num_periods; t++)
     bus->v[t] = 1.;
+}
+
+BOOL BUSDC_is_in_service(BusDC* bus) {
+  if (bus)
+    return bus->in_service;
+  else
+    return FALSE;
 }
 
 BOOL BUSDC_is_equal(BusDC* bus, BusDC* other) {
@@ -721,6 +732,11 @@ void BUSDC_set_number(BusDC* bus, int number) {
 void BUSDC_set_network(BusDC* bus, void* net) {
   if (bus)
     bus->net = (Net*)net;
+}
+
+void BUSDC_set_in_service(BusDC* bus, BOOL in_service) {
+  if (bus)
+    bus->in_service = in_service;
 }
 
 void BUSDC_set_name(BusDC* bus, char* name) {
