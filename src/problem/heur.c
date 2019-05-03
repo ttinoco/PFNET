@@ -174,9 +174,9 @@ void HEUR_apply(Heur* h, Constr** cptrs, int cnum, Vec* var_values) {
 
   // Apply
   for (t = 0; t < NET_get_num_periods(h->net); t++) {
-    for (i = 0; i < NET_get_num_buses(h->net); i++)
+    for (i = 0; i < NET_get_num_buses(h->net,FALSE); i++)
       HEUR_apply_step(h,cptrs,cnum,NET_get_bus(h->net,i),NULL,t,var_values);
-    for (i = 0; i < NET_get_num_dc_buses(h->net); i++)
+    for (i = 0; i < NET_get_num_dc_buses(h->net,FALSE); i++)
       HEUR_apply_step(h,cptrs,cnum,NULL,NET_get_dc_bus(h->net,i),t,var_values);
   }
 }

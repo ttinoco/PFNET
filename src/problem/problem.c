@@ -119,15 +119,15 @@ void PROB_analyze(Prob* p) {
   
   // Count
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
-    for (k = 0; k < NET_get_num_buses(p->net)+NET_get_num_dc_buses(p->net); k++) {
+    for (k = 0; k < NET_get_num_buses(p->net,FALSE)+NET_get_num_dc_buses(p->net,FALSE); k++) {
 
-      if (k < NET_get_num_buses(p->net)) {
+      if (k < NET_get_num_buses(p->net,FALSE)) {
         bus = NET_get_bus(p->net,k);
         busdc = NULL;
       }
       else {
         bus = NULL;
-        busdc = NET_get_dc_bus(p->net,k-NET_get_num_buses(p->net));
+        busdc = NET_get_dc_bus(p->net,k-NET_get_num_buses(p->net,FALSE));
       }        
       
       // Constraints
@@ -164,15 +164,15 @@ void PROB_analyze(Prob* p) {
 
   // Analyze
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
-    for (k = 0; k < NET_get_num_buses(p->net)+NET_get_num_dc_buses(p->net); k++) {
+    for (k = 0; k < NET_get_num_buses(p->net,FALSE)+NET_get_num_dc_buses(p->net,FALSE); k++) {
       
-      if (k < NET_get_num_buses(p->net)) {
+      if (k < NET_get_num_buses(p->net,FALSE)) {
         bus = NET_get_bus(p->net,k);
         busdc = NULL;
       }
       else {
         bus = NULL;
-        busdc = NET_get_dc_bus(p->net,k-NET_get_num_buses(p->net));
+        busdc = NET_get_dc_bus(p->net,k-NET_get_num_buses(p->net,FALSE));
       }
       
       // Constraints
@@ -276,9 +276,9 @@ void PROB_apply_heuristics(Prob* p, Vec* point) {
 
   // Apply
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
-    for (i = 0; i < NET_get_num_buses(p->net); i++)
+    for (i = 0; i < NET_get_num_buses(p->net,FALSE); i++)
       HEUR_list_apply_step(p->heur,cptrs,cnum,NET_get_bus(p->net,i),NULL,t,x);
-    for (i = 0; i < NET_get_num_dc_buses(p->net); i++)
+    for (i = 0; i < NET_get_num_dc_buses(p->net,FALSE); i++)
       HEUR_list_apply_step(p->heur,cptrs,cnum,NULL,NET_get_dc_bus(p->net,i),t,x);
   }
 
@@ -352,15 +352,15 @@ void PROB_eval(Prob* p, Vec* point) {
 
   // Eval
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
-    for (k = 0; k < NET_get_num_buses(p->net)+NET_get_num_dc_buses(p->net); k++) {
+    for (k = 0; k < NET_get_num_buses(p->net,FALSE)+NET_get_num_dc_buses(p->net,FALSE); k++) {
       
-      if (k < NET_get_num_buses(p->net)) {
+      if (k < NET_get_num_buses(p->net,FALSE)) {
         bus = NET_get_bus(p->net,k);
         busdc = NULL;
       }
       else {
         bus = NULL;
-        busdc = NET_get_dc_bus(p->net,k-NET_get_num_buses(p->net));
+        busdc = NET_get_dc_bus(p->net,k-NET_get_num_buses(p->net,FALSE));
       }
       
       // Constraints
@@ -425,15 +425,15 @@ void PROB_store_sens(Prob* p, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Store sens
   for (t = 0; t < NET_get_num_periods(p->net); t++) {
-    for (k = 0; k < NET_get_num_buses(p->net)+NET_get_num_dc_buses(p->net); k++) {
+    for (k = 0; k < NET_get_num_buses(p->net,FALSE)+NET_get_num_dc_buses(p->net,FALSE); k++) {
 
-      if (k < NET_get_num_buses(p->net)) {
+      if (k < NET_get_num_buses(p->net,FALSE)) {
         bus = NET_get_bus(p->net,k);
         busdc = NULL;
       }
       else {
         bus = NULL;
-        busdc = NET_get_dc_bus(p->net,k-NET_get_num_buses(p->net));
+        busdc = NET_get_dc_bus(p->net,k-NET_get_num_buses(p->net,FALSE));
       }
       
       // Constraints

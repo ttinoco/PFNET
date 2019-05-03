@@ -802,7 +802,7 @@ Constr* CONSTR_new(Net* net) {
   c->data = NULL;
 
   // H_nnz
-  max_num = CONSTR_H_NNZ_MUL*NET_get_num_buses(c->net)*NET_get_num_periods(c->net);
+  max_num = CONSTR_H_NNZ_MUL*NET_get_num_buses(c->net,FALSE)*NET_get_num_periods(c->net);
   CONSTR_set_H_nnz(c,(int*)calloc(max_num,sizeof(int)),max_num);
   
   return c;
@@ -1020,9 +1020,9 @@ void CONSTR_count(Constr* c) {
   Net* net = CONSTR_get_network(c);
   CONSTR_clear(c);
   for (t = 0; t < NET_get_num_periods(net); t++) {
-    for (i = 0; i < NET_get_num_buses(net); i++)
+    for (i = 0; i < NET_get_num_buses(net,FALSE); i++)
       CONSTR_count_step(c,NET_get_bus(net,i),NULL,t);
-    for (i = 0; i < NET_get_num_dc_buses(net); i++)
+    for (i = 0; i < NET_get_num_dc_buses(net,FALSE); i++)
       CONSTR_count_step(c,NULL,NET_get_dc_bus(net,i),t);
   }
 }
@@ -1166,9 +1166,9 @@ void CONSTR_analyze(Constr* c) {
   Net* net = CONSTR_get_network(c);
   CONSTR_clear(c);
   for (t = 0; t < NET_get_num_periods(net); t++) {
-    for (i = 0; i < NET_get_num_buses(net); i++)
+    for (i = 0; i < NET_get_num_buses(net,FALSE); i++)
       CONSTR_analyze_step(c,NET_get_bus(net,i),NULL,t);
-    for (i = 0; i < NET_get_num_dc_buses(net); i++)
+    for (i = 0; i < NET_get_num_dc_buses(net,FALSE); i++)
       CONSTR_analyze_step(c,NULL,NET_get_dc_bus(net,i),t);
   }
   CONSTR_finalize_structure_of_Hessians(c);
@@ -1185,9 +1185,9 @@ void CONSTR_eval(Constr* c, Vec* v, Vec* ve) {
   Net* net = CONSTR_get_network(c);
   CONSTR_clear(c);
   for (t = 0; t < NET_get_num_periods(net); t++) {
-    for (i = 0; i < NET_get_num_buses(net); i++)
+    for (i = 0; i < NET_get_num_buses(net,FALSE); i++)
       CONSTR_eval_step(c,NET_get_bus(net,i),NULL,t,v,ve);
-    for (i = 0; i < NET_get_num_dc_buses(net); i++)
+    for (i = 0; i < NET_get_num_dc_buses(net,FALSE); i++)
       CONSTR_eval_step(c,NULL,NET_get_dc_bus(net,i),t,v,ve);
   }
 }
@@ -1223,9 +1223,9 @@ void CONSTR_store_sens(Constr* c, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
 
   // Store sensitivities
   for (t = 0; t < NET_get_num_periods(net); t++) {
-    for (i = 0; i < NET_get_num_buses(net); i++)
+    for (i = 0; i < NET_get_num_buses(net,FALSE); i++)
       CONSTR_store_sens_step(c,NET_get_bus(net,i),NULL,t,sA,sf,sGu,sGl);
-    for (i = 0; i < NET_get_num_dc_buses(net); i++)
+    for (i = 0; i < NET_get_num_dc_buses(net,FALSE); i++)
       CONSTR_store_sens_step(c,NULL,NET_get_dc_bus(net,i),t,sA,sf,sGu,sGl);
   }
 }

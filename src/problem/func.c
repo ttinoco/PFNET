@@ -337,9 +337,9 @@ void FUNC_count(Func* f) {
   Net* net = FUNC_get_network(f);
   FUNC_clear(f);
   for (t = 0; t < NET_get_num_periods(net); t++) {
-    for (i = 0; i < NET_get_num_buses(net); i++)
+    for (i = 0; i < NET_get_num_buses(net,FALSE); i++)
       FUNC_count_step(f,NET_get_bus(net,i),NULL,t);
-    for (i = 0; i < NET_get_num_dc_buses(net); i++)
+    for (i = 0; i < NET_get_num_dc_buses(net,FALSE); i++)
       FUNC_count_step(f,NULL,NET_get_dc_bus(net,i),t);
   }
 }
@@ -416,9 +416,9 @@ void FUNC_analyze(Func* f) {
   Net* net = FUNC_get_network(f);
   FUNC_clear(f);
   for (t = 0; t < NET_get_num_periods(net); t++) {
-    for (i = 0; i < NET_get_num_buses(net); i++)
+    for (i = 0; i < NET_get_num_buses(net,FALSE); i++)
       FUNC_analyze_step(f,NET_get_bus(net,i),NULL,t);
-    for (i = 0; i < NET_get_num_dc_buses(net); i++)
+    for (i = 0; i < NET_get_num_dc_buses(net,FALSE); i++)
       FUNC_analyze_step(f,NULL,NET_get_dc_bus(net,i),t);
   }
   FUNC_finalize_structure_of_Hessian(f);
@@ -435,9 +435,9 @@ void FUNC_eval(Func* f, Vec* values) {
   Net* net = FUNC_get_network(f);
   FUNC_clear(f);
   for (t = 0; t < NET_get_num_periods(net); t++) {
-    for (i = 0; i < NET_get_num_buses(net); i++)
+    for (i = 0; i < NET_get_num_buses(net,FALSE); i++)
       FUNC_eval_step(f,NET_get_bus(net,i),NULL,t,values);
-    for (i = 0; i < NET_get_num_dc_buses(net); i++)
+    for (i = 0; i < NET_get_num_dc_buses(net,FALSE); i++)
       FUNC_eval_step(f,NULL,NET_get_dc_bus(net,i),t,values);
   }
 }
