@@ -666,9 +666,9 @@ void JSON_PARSER_process_json_branch_array(Parser* p, Net* net, json_value* json
       else if (strcmp(key,"ratingC") == 0)
         BRANCH_set_ratingC(branch,val->u.dbl);
       
-      // outage
-      else if (strcmp(key,"outage") == 0)
-        BRANCH_set_outage(branch,val->u.boolean);
+      // in_service
+      else if (strcmp(key,"in_service") == 0)
+        BRANCH_set_in_service(branch,val->u.boolean);
 
       // pos_ratio_v_sens
       else if (strcmp(key,"pos_ratio_v_sens") == 0)
@@ -739,9 +739,9 @@ void JSON_PARSER_process_json_gen_array(Parser* p, Net* net, json_value* json_ge
       else if (strcmp(key,"name") == 0)
         GEN_set_name(gen,val->u.string.ptr);
 
-      // outage
-      else if (strcmp(key,"outage") == 0)
-        GEN_set_outage(gen,val->u.boolean);
+      // in_service
+      else if (strcmp(key,"in_service") == 0)
+        GEN_set_in_service(gen,val->u.boolean);
 
       // P
       else if (strcmp(key,"P") == 0) {

@@ -91,8 +91,8 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
     
-    // Outage
-    if (GEN_is_on_outage(gen))
+    // Out of service
+    if (!GEN_is_in_service(gen))
       continue;
     
     //*****************************
@@ -386,8 +386,8 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
     
-    // Outage
-    if (GEN_is_on_outage(gen))
+    // Out of service
+    if (!GEN_is_in_service(gen))
       continue;
     
     //*****************************
@@ -712,8 +712,8 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
     
-    // Outage
-    if (GEN_is_on_outage(gen))
+    // Out of service
+    if (!GEN_is_in_service(gen))
       continue;
     
     // Var values

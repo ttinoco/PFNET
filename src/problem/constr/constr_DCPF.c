@@ -45,8 +45,8 @@ void CONSTR_DCPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
     
-    // Outage
-    if (GEN_is_on_outage(gen))
+    // Out of service
+    if (!GEN_is_in_service(gen))
       continue;
     
     //*****************************
@@ -94,8 +94,8 @@ void CONSTR_DCPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    // Outage
-    if (BRANCH_is_on_outage(br))
+    // Out of service
+    if (!BRANCH_is_in_service(br))
       continue;
     
     // Bus data
@@ -167,8 +167,8 @@ void CONSTR_DCPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
     
-    // Outage
-    if (GEN_is_on_outage(gen))
+    // Out of service
+    if (!GEN_is_in_service(gen))
       continue;
     
     //*****************************
@@ -253,8 +253,8 @@ void CONSTR_DCPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    // Outage
-    if (BRANCH_is_on_outage(br))
+    // Out of service
+    if (!BRANCH_is_in_service(br))
       continue;
 
     // Bus data

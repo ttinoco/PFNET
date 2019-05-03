@@ -35,8 +35,8 @@ void FUNC_REG_PHASE_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    // Check outage
-    if (BRANCH_is_on_outage(br))
+    // Out of service
+    if (!BRANCH_is_in_service(br))
       continue;
     
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE)) // phase var
@@ -63,8 +63,8 @@ void FUNC_REG_PHASE_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
     
-    // Check outage
-    if (BRANCH_is_on_outage(br))
+    // Out of service
+    if (!BRANCH_is_in_service(br))
       continue;
     
     // Normalization factor
@@ -105,8 +105,8 @@ void FUNC_REG_PHASE_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_v
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
  
-    // Check outage
-    if (BRANCH_is_on_outage(br))
+    // Out of service
+    if (!BRANCH_is_in_service(br))
       continue;
     
     // Normalizatin factor

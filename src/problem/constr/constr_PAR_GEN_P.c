@@ -39,11 +39,11 @@ void CONSTR_PAR_GEN_P_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // Active power of slack generators
   if (BUS_is_slack(bus)) {
     for (gen1 = BUS_get_gen(bus); gen1 != NULL; gen1 = GEN_get_next(gen1)) {
-      if (!GEN_is_on_outage(gen1) && GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_P))
+      if (GEN_is_in_service(gen1) && GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_P))
         break;
     }
     for (gen2 = GEN_get_next(gen1); gen2 != NULL; gen2 = GEN_get_next(gen2)) {
-      if (!GEN_is_on_outage(gen2) && GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_P)) {
+      if (GEN_is_in_service(gen2) && GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_P)) {
         (*A_nnz)++;
         (*A_nnz)++;
         (*A_row)++;
@@ -75,11 +75,11 @@ void CONSTR_PAR_GEN_P_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // Active power of slack generators
   if (BUS_is_slack(bus)) {
     for (gen1 = BUS_get_gen(bus); gen1 != NULL; gen1 = GEN_get_next(gen1)) {
-      if (!GEN_is_on_outage(gen1) && GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_P))
+      if (GEN_is_in_service(gen1) && GEN_has_flags(gen1,FLAG_VARS,GEN_VAR_P))
         break;
     }
     for (gen2 = GEN_get_next(gen1); gen2 != NULL; gen2 = GEN_get_next(gen2)) {
-      if (!GEN_is_on_outage(gen2) && GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_P)) {
+      if (GEN_is_in_service(gen2) && GEN_has_flags(gen2,FLAG_VARS,GEN_VAR_P)) {
         VEC_set(b,*A_row,0.);
         MAT_set_i(A,*A_nnz,*A_row);
         MAT_set_j(A,*A_nnz,GEN_get_index_P(gen1,t));

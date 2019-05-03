@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2019, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -34,7 +34,7 @@ void FUNC_GEN_COST_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) && !GEN_is_on_outage(gen))
+    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) && GEN_is_in_service(gen))
       (*Hphi_nnz)++;
   }
 }
@@ -56,7 +56,7 @@ void FUNC_GEN_COST_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) && !GEN_is_on_outage(gen)) {
+    if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) && GEN_is_in_service(gen)) {
       MAT_set_i(Hphi,*Hphi_nnz,GEN_get_index_P(gen,t));
       MAT_set_j(Hphi,*Hphi_nnz,GEN_get_index_P(gen,t));
       (*Hphi_nnz)++;
@@ -91,8 +91,8 @@ void FUNC_GEN_COST_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_va
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
 
-    // Outage
-    if (GEN_is_on_outage(gen))
+    // Out of service
+    if (!GEN_is_in_service(gen))
       continue;
     
     // Cost coefficients

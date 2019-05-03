@@ -55,8 +55,8 @@ void CONSTR_AC_FLOW_LIM_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    // Check outage
-    if (BRANCH_is_on_outage(br))
+    // Check out of service
+    if (!BRANCH_is_in_service(br))
       continue;
 
     // Check zero rating
@@ -254,8 +254,8 @@ void CONSTR_AC_FLOW_LIM_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    // Check outage
-    if (BRANCH_is_on_outage(br))
+    // Check out of service
+    if (!BRANCH_is_in_service(br))
       continue;
     
     // Check zero rating
@@ -571,8 +571,8 @@ void CONSTR_AC_FLOW_LIM_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec*
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    // Check outage
-    if (BRANCH_is_on_outage(br))
+    // Check out of service
+    if (!BRANCH_is_in_service(br))
       continue;
 
     // Check zero rating
@@ -949,8 +949,8 @@ void CONSTR_AC_FLOW_LIM_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    // Check outage
-    if (BRANCH_is_on_outage(br))
+    // Check out of service
+    if (!BRANCH_is_in_service(br))
       continue;
     
     // Check zero rating

@@ -43,8 +43,8 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
     
-    // Outage
-    if (GEN_is_on_outage(gen))
+    // Out of service
+    if (!GEN_is_in_service(gen))
       continue;
     
     // Active power
@@ -66,20 +66,18 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    // Outage
-    if (BRANCH_is_on_outage(br))
+    // Out of service
+    if (!BRANCH_is_in_service(br))
       continue;
     
     // Tap ratio of tap-changing transformer
     if (BRANCH_is_tap_changer(br) &&
-        !BRANCH_is_on_outage(br) &&
         BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) &&
         BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_RATIO))
       (*Hphi_nnz)++;
 
     // Phase shift of phase-shifting transformer
     if (BRANCH_is_phase_shifter(br) &&
-        !BRANCH_is_on_outage(br) &&
         BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) &&
         BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_PHASE))
       (*Hphi_nnz)++;
@@ -115,8 +113,8 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
     
-    // Outage
-    if (GEN_is_on_outage(gen))
+    // Out of service
+    if (!GEN_is_in_service(gen))
       continue;
     
     // Active power
@@ -144,13 +142,12 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    // Outage
-    if (BRANCH_is_on_outage(br))
+    // Out of service
+    if (!BRANCH_is_in_service(br))
       continue;
 
     // Tap ratio of tap-changing transformer
     if (BRANCH_is_tap_changer(br) &&
-        !BRANCH_is_on_outage(br) &&
         BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) &&
         BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_RATIO)) {
       MAT_set_i(Hphi,*Hphi_nnz,BRANCH_get_index_ratio(br,t));
@@ -160,7 +157,6 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
     
     // Phase shift of phase-shifting transformer
     if (BRANCH_is_phase_shifter(br) &&
-        !BRANCH_is_on_outage(br) &&
         BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) &&
         BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_PHASE)) {
       MAT_set_i(Hphi,*Hphi_nnz,BRANCH_get_index_phase(br,t));
@@ -226,8 +222,8 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
     
-    // Outage
-    if (GEN_is_on_outage(gen))
+    // Out of service
+    if (!GEN_is_in_service(gen))
       continue;
     
     // Active power
@@ -291,13 +287,12 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    // Outage
-    if (BRANCH_is_on_outage(br))
+    // Out of service
+    if (!BRANCH_is_in_service(br))
       continue;
 
     // Tap ratio of tap-changing transformer
     if (BRANCH_is_tap_changer(br) &&
-        !BRANCH_is_on_outage(br) &&
         BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) &&
         BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_RATIO)) {
       
@@ -325,7 +320,6 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var
     
     // Phase shift of phase-shifting transformer
     if (BRANCH_is_phase_shifter(br) &&
-        !BRANCH_is_on_outage(br) &&
         BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE) &&
         BRANCH_has_flags(br,FLAG_SPARSE,BRANCH_VAR_PHASE)) {
       

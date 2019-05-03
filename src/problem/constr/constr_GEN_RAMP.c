@@ -38,8 +38,8 @@ void CONSTR_GEN_RAMP_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
     
-    // Outage
-    if (GEN_is_on_outage(gen))
+    // Out of service
+    if (!GEN_is_in_service(gen))
       continue;
     
     // Variable
@@ -77,8 +77,8 @@ void CONSTR_GEN_RAMP_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
     
-    // Outage
-    if (GEN_is_on_outage(gen))
+    // Out of service
+    if (!GEN_is_in_service(gen))
       continue;
     
     // Variables

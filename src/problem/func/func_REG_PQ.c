@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2019, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -35,8 +35,8 @@ void FUNC_REG_PQ_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
     
-    // Outage
-    if (GEN_is_on_outage(gen))
+    // Out of service
+    if (!GEN_is_in_service(gen))
       continue;
     
     if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) // Q var
@@ -65,8 +65,8 @@ void FUNC_REG_PQ_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
     
-    // Outage
-    if (GEN_is_on_outage(gen))
+    // Out of service
+    if (!GEN_is_in_service(gen))
       continue;
     
     if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_Q)) { // Q var
@@ -113,8 +113,8 @@ void FUNC_REG_PQ_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
     
-    // Outage
-    if (GEN_is_on_outage(gen))
+    // Out of service
+    if (!GEN_is_in_service(gen))
       continue;
     
     // Mid value

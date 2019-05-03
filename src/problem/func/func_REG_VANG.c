@@ -39,8 +39,8 @@ void FUNC_REG_VANG_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    // Outage
-    if (BRANCH_is_on_outage(br))
+    // Out of service
+    if (!BRANCH_is_in_service(br))
       continue;
   
     if (BUS_has_flags(BRANCH_get_bus_k(br),FLAG_VARS,BUS_VAR_VANG)) {
@@ -82,8 +82,8 @@ void FUNC_REG_VANG_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    // Outage
-    if (BRANCH_is_on_outage(br))
+    // Out of service
+    if (!BRANCH_is_in_service(br))
       continue;
     
     bus_k = BRANCH_get_bus_k(br);
@@ -150,8 +150,8 @@ void FUNC_REG_VANG_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_va
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    // Outage
-    if (BRANCH_is_on_outage(br))
+    // Out of service
+    if (!BRANCH_is_in_service(br))
       continue;
 
     bus_k = BRANCH_get_bus_k(br);

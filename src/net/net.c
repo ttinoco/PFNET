@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2019, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -2885,24 +2885,6 @@ void NET_clear_flags(Net* net) {
   net->num_sparse = 0;
 }
 
-void NET_clear_outages(Net* net) {
-
-  // Local vars
-  int i;
-
-  // No net
-  if (!net)
-    return;
-
-  // Generators
-  for (i = 0; i < net->num_gens; i++)
-    GEN_set_outage(NET_get_gen(net,i),FALSE);
-
-  // Branches
-  for (i = 0; i < net->num_branches; i++)
-    BRANCH_set_outage(NET_get_branch(net,i),FALSE);
-}
-
 void NET_clear_properties(Net* net) {
 
   // Local variables
@@ -4646,25 +4628,6 @@ int NET_get_num_branches(Net* net) {
     return 0;
 }
 
-int NET_get_num_branches_on_outage(Net* net) {
-  if (net)
-    return net->num_branches-NET_get_num_branches_not_on_outage(net);
-  else
-    return 0;
-}
-
-int NET_get_num_branches_not_on_outage(Net* net) {
-  int i;
-  int n = 0;
-  if (!net)
-    return 0;
-  for(i = 0; i < net->num_branches; i++) {
-    if (!BRANCH_is_on_outage(BRANCH_array_get(net->branch,i)))
-      n++;
-  }
-  return n;
-}
-
 int NET_get_num_fixed_trans(Net* net) {
   int i;
   int n = 0;
@@ -4754,25 +4717,6 @@ int NET_get_num_gens(Net* net) {
     return net->num_gens;
   else
     return 0;
-}
-
-int NET_get_num_gens_on_outage(Net* net) {
-  if (net)
-    return net->num_gens-NET_get_num_gens_not_on_outage(net);
-  else
-    return 0;
-}
-
-int NET_get_num_gens_not_on_outage(Net* net) {
-  int i;
-  int n = 0;
-  if (!net)
-    return 0;
-  for(i = 0; i < net->num_gens; i++) {
-    if (!GEN_is_on_outage(GEN_array_get(net->gen,i)))
-      n++;
-  }
-  return n;
 }
 
 int NET_get_num_reg_gens(Net* net) {
@@ -6503,6 +6447,10 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
   if (!net || !bus)
     return;
 
+  // Out of service
+  if (!BUS_is_in_service(bus))
+    return;
+  
   // Voltage magnitude
   if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) && var_values)
     v = VEC_get(var_values,BUS_get_index_v_mag(bus,t));
@@ -6539,17 +6487,17 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
     dv = v-BUS_get_v_max_reg(bus);
   if (v < BUS_get_v_min_reg(bus))
     dv = BUS_get_v_min_reg(bus)-v;
-  if (BUS_is_regulated_by_tran(bus)) { // false if all reg trans are on outage
+  if (BUS_is_regulated_by_tran(bus)) { // false if all reg trans are out of service
     if (dv > net->tran_v_vio[t])
       net->tran_v_vio[t] = dv;
   }
-  if (BUS_is_regulated_by_shunt(bus)) {
+  if (BUS_is_regulated_by_shunt(bus)) { // false if all reg shunts are out of service
     if (dv > net->shunt_v_vio[t])
       net->shunt_v_vio[t] = dv;
   }
 
   // Bus regulated by gen
-  if (BUS_is_regulated_by_gen(bus)) { // false if all reg gens are on outage
+  if (BUS_is_regulated_by_gen(bus)) { // false if all reg gens are out of service
 
     // Voltage set point deviation
     //****************************
@@ -6560,8 +6508,8 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
 
-    // Skip if gen on outage
-    if (GEN_is_on_outage(gen))
+    // Out of service
+    if (!GEN_is_in_service(gen))
       continue;
     
     // P Q
@@ -6609,6 +6557,10 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
 
   // Loads
   for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+
+    // Out of service
+    if (!LOAD_is_in_service(load))
+      continue;
     
     if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P) && var_values)
       P = VEC_get(var_values,LOAD_get_index_P(load,t));
@@ -6640,6 +6592,10 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
   
   // Batteries
   for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+
+    // Out of service
+    if (!BAT_is_in_service(bat))
+      continue;
     
     if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P) && var_values)
       P = VEC_get(var_values,BAT_get_index_Pc(bat,t))-VEC_get(var_values,BAT_get_index_Pd(bat,t));
@@ -6652,6 +6608,10 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
   
   // Variable generators
   for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+
+    // Out of service
+    if (!VARGEN_is_in_service(vargen))
+      continue;
     
     if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P) && var_values)
       P = VEC_get(var_values,VARGEN_get_index_P(vargen,t));
@@ -6669,6 +6629,10 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
   
   // Shunts
   for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+
+    // Out of service
+    if (!SHUNT_is_in_service(shunt))
+      continue;
     
     shunt_g = SHUNT_get_g(shunt);
     if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) && var_values)
@@ -6697,6 +6661,10 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
 
   // VSC converters
   for (vsc_conv = BUS_get_vsc_conv(bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_ac(vsc_conv)) {
+
+    // Out of service
+    if (!CONVVSC_is_in_service(vsc_conv))
+      continue;
     
     if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_P) && var_values)
       P = VEC_get(var_values,CONVVSC_get_index_P(vsc_conv,t));
@@ -6714,6 +6682,10 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
 
   // CSC converters
   for (csc_conv = BUS_get_csc_conv(bus); csc_conv != NULL; csc_conv = CONVCSC_get_next_ac(csc_conv)) {
+
+    // Out of service
+    if (!CONVCSC_is_in_service(csc_conv))
+      continue;
     
     if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_P) && var_values)
       P = VEC_get(var_values,CONVCSC_get_index_P(csc_conv,t));
@@ -6731,6 +6703,10 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
 
   //FACTS
   for (facts = BUS_get_facts_k(bus); facts != NULL; facts = FACTS_get_next_k(facts)) {
+
+    // Out of service
+    if (!FACTS_is_in_service(facts))
+      continue;
     
     if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P) && var_values)
       P = VEC_get(var_values,FACTS_get_index_P_k(facts,t));
@@ -6746,6 +6722,10 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
     BUS_inject_Q(bus,Q,t);
   }
   for (facts = BUS_get_facts_m(bus); facts != NULL; facts = FACTS_get_next_m(facts)) {
+
+    // Out of service
+    if (!FACTS_is_in_service(facts))
+      continue;
     
     if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P) && var_values)
       P = VEC_get(var_values,FACTS_get_index_P_m(facts,t));
@@ -6763,6 +6743,10 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
   
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
+
+    // Out of service
+    if (!BRANCH_is_in_service(br))
+      continue;
   
     // Branch data
     if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
@@ -6775,7 +6759,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
       phi = BRANCH_get_phase(br,t);
   
     // Tap ratios
-    if (BRANCH_is_tap_changer(br) && !BRANCH_is_on_outage(br)) {
+    if (BRANCH_is_tap_changer(br)) {
 
       // Tap ratio limit violations
       //***************************
@@ -6789,7 +6773,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
     }
 
     // Phase shifts
-    if (BRANCH_is_phase_shifter(br) && !BRANCH_is_on_outage(br)) {
+    if (BRANCH_is_phase_shifter(br)) {
       
       // Phase shift limit violations
       //*****************************
@@ -6803,7 +6787,9 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
     }
 
     // Branch flows
-    if (!BRANCH_is_on_outage(br) && !BRANCH_is_zero_impedance_line(br)) {
+    if (!BRANCH_is_zero_impedance_line(br) &&
+        BUS_is_in_service(BRANCH_get_bus_k(br)) &&
+        BUS_is_in_service(BRANCH_get_bus_m(br))) {
       BUS_inject_P(BRANCH_get_bus_k(br),-BRANCH_get_P_km(br,var_values,t),t);
       BUS_inject_Q(BRANCH_get_bus_k(br),-BRANCH_get_Q_km(br,var_values,t),t);
       BUS_inject_P(BRANCH_get_bus_m(br),-BRANCH_get_P_mk(br,var_values,t),t);

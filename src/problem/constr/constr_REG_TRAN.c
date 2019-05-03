@@ -45,8 +45,8 @@ void CONSTR_REG_TRAN_count_step(Constr* c, Bus* bus, BusDC* busdc, int tau) {
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    // Check outage
-    if (BRANCH_is_on_outage(br))
+    // Out of service
+    if (!BRANCH_is_in_service(br))
       continue;
     
     if (BRANCH_is_tap_changer_v(br)) {
@@ -190,8 +190,8 @@ void CONSTR_REG_TRAN_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int tau) {
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    // Check outage
-    if (BRANCH_is_on_outage(br))
+    // Out of service
+    if (!BRANCH_is_in_service(br))
       continue;
     
     if (BRANCH_is_tap_changer_v(br)) {
@@ -459,8 +459,8 @@ void CONSTR_REG_TRAN_eval_step(Constr* c, Bus* bus, BusDC* busdc, int tau, Vec* 
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    // Check outage
-    if (BRANCH_is_on_outage(br))
+    // Out of service
+    if (!BRANCH_is_in_service(br))
       continue;  
     
     if (BRANCH_is_tap_changer_v(br)) {
@@ -669,8 +669,8 @@ void CONSTR_REG_TRAN_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int tau,
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    // Check outage
-    if (BRANCH_is_on_outage(br))
+    // Out of service
+    if (!BRANCH_is_in_service(br))
       continue;
     
     if (BRANCH_is_tap_changer_v(br)) {

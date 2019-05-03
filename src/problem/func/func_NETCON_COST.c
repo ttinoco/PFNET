@@ -52,8 +52,8 @@ void FUNC_NETCON_COST_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
     
-    // Outage
-    if (GEN_is_on_outage(gen))
+    // Out of service
+    if (!GEN_is_in_service(gen))
       continue;
     
     if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
