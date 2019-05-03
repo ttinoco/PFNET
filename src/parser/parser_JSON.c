@@ -343,6 +343,10 @@ void JSON_PARSER_process_json_bus_array(Parser* p, Net* net, json_value* json_bu
         NET_bus_hash_name_add(net,bus);
       }
 
+      // in_service
+      else if (strcmp(key,"in_service") == 0)
+        BUS_set_in_service(bus,val->u.boolean);
+
       // v_base
       else if (strcmp(key,"v_base") == 0)
         BUS_set_v_base(bus,val->u.dbl);
@@ -850,6 +854,10 @@ void JSON_PARSER_process_json_vargen_array(Parser* p, Net* net, json_value* json
           VARGEN_set_bus(vargen,NET_get_bus(net,val->u.integer));
       }
 
+      // in_service
+      else if (strcmp(key,"in_service") == 0)
+        VARGEN_set_in_service(vargen,val->u.boolean);
+
       // name
       else if (strcmp(key,"name") == 0)
         VARGEN_set_name(vargen,val->u.string.ptr);
@@ -968,6 +976,10 @@ void JSON_PARSER_process_json_shunt_array(Parser* p, Net* net, json_value* json_
       // name
       else if (strcmp(key,"name") == 0)
         SHUNT_set_name(shunt,val->u.string.ptr);
+
+      // in_service
+      else if (strcmp(key,"in_service") == 0)
+        SHUNT_set_in_service(shunt,val->u.boolean);
       
       // g
       else if (strcmp(key,"g") == 0)
@@ -1203,6 +1215,10 @@ void JSON_PARSER_process_json_bat_array(Parser* p, Net* net, json_value* json_ba
       else if (strcmp(key,"name") == 0)
         BAT_set_name(bat,val->u.string.ptr);
 
+      // in_service
+      else if (strcmp(key,"in_service") == 0)
+        BAT_set_in_service(bat,val->u.boolean);
+
       // P
       else if (strcmp(key,"P") == 0) {
         for (k = 0; k < imin(BAT_get_num_periods(bat),val->u.array.length); k++)
@@ -1305,6 +1321,10 @@ void JSON_PARSER_process_json_bus_dc_array(Parser* p, Net* net, json_value* json
         NET_dc_bus_hash_name_add(net,bus);
       }
 
+      // in_service
+      else if (strcmp(key,"in_service") == 0)
+        BUSDC_set_in_service(bus,val->u.boolean);
+
       // v_base
       else if (strcmp(key,"v_base") == 0)
         BUSDC_set_v_base(bus,val->u.dbl);
@@ -1391,6 +1411,10 @@ void JSON_PARSER_process_json_branch_dc_array(Parser* p, Net* net, json_value* j
       if (strcmp(key,"name") == 0)
         BRANCHDC_set_name(br,val->u.string.ptr);
 
+      // in_service
+      else if (strcmp(key,"in_service") == 0)
+        BRANCHDC_set_in_service(br,val->u.boolean);
+
       // bus_k
       else if (strcmp(key,"bus_k") == 0) {
         if (val->type == json_integer)
@@ -1463,6 +1487,10 @@ void JSON_PARSER_process_json_conv_csc_array(Parser* p, Net* net, json_value* js
       // name
       else if (strcmp(key,"name") == 0)
         CONVCSC_set_name(conv,val->u.string.ptr);
+
+      // in_service
+      else if (strcmp(key,"in_service") == 0)
+        CONVCSC_set_in_service(conv,val->u.boolean);
 
       // ac_bus
       else if (strcmp(key,"ac_bus") == 0) {
@@ -1620,6 +1648,10 @@ void JSON_PARSER_process_json_conv_vsc_array(Parser* p, Net* net, json_value* js
       // name
       if (strcmp(key,"name") == 0)
         CONVVSC_set_name(conv,val->u.string.ptr);
+
+      // in_service
+      else if (strcmp(key,"in_service") == 0)
+        CONVVSC_set_in_service(conv,val->u.boolean);
       
       // ac_bus
       else if (strcmp(key,"ac_bus") == 0) {
@@ -1779,6 +1811,10 @@ void JSON_PARSER_process_json_facts_array(Parser* p, Net* net, json_value* json_
       // name
       else if (strcmp(key,"name") == 0)
         FACTS_set_name(facts,val->u.string.ptr);
+
+      // in_service
+      else if (strcmp(key,"in_service") == 0)
+        FACTS_set_in_service(facts,val->u.boolean);
 
       // mode_s
       else if (strcmp(key,"mode_s") == 0)
