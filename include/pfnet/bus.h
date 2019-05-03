@@ -299,7 +299,7 @@ int BUS_hash_name_len(Bus* bus_hash);
 void BUS_init(Bus* bus, int num_periods);
 void BUS_inject_P(Bus* bus, REAL P, int t);
 void BUS_inject_Q(Bus* bus, REAL Q, int t);
-BOOL BUS_is_in_service(Bus* bus);
+BOOL BUS_is_in_service(void* bus);
 BOOL BUS_is_equal(Bus* bus, Bus* other);
 BOOL BUS_is_regulated_by_gen(Bus* bus);
 BOOL BUS_is_regulated_by_tran(Bus* bus);

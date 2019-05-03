@@ -110,7 +110,7 @@ BusDC* BUSDC_hash_name_find(BusDC* bus_hash, char* name);
 int BUSDC_hash_name_len(BusDC* bus_hash);
 
 void BUSDC_init(BusDC* bus, int num_periods);
-BOOL BUSDC_is_in_service(BusDC* bus);
+BOOL BUSDC_is_in_service(void* bus);
 BOOL BUSDC_is_equal(BusDC* bus, BusDC* other);
 
 BusDC* BUSDC_new(int num_periods);

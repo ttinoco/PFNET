@@ -123,7 +123,7 @@ char* LOAD_get_json_string(Load* load, char* output);
 BOOL LOAD_has_flags(void* load, char flag_type, unsigned char mask);
 BOOL LOAD_has_properties(void* load, char prop);
 void LOAD_init(Load* load, int num_periods);
-BOOL LOAD_is_in_service(Load* load);
+BOOL LOAD_is_in_service(void* load);
 BOOL LOAD_is_equal(Load* load, Load* other);
 BOOL LOAD_is_P_adjustable(Load* load);
 BOOL LOAD_is_vdep(Load* load);

@@ -131,7 +131,7 @@ BOOL CONVVSC_has_flags(void* vconv, char flag_type, unsigned char mask);
 BOOL CONVVSC_has_properties(void* conv, char prop);
 
 void CONVVSC_init(ConvVSC* conv, int num_periods);
-BOOL CONVVSC_is_in_service(ConvVSC* conv);
+BOOL CONVVSC_is_in_service(void* conv);
 BOOL CONVVSC_is_equal(ConvVSC* conv, ConvVSC* other);
 BOOL CONVVSC_is_in_f_ac_mode(ConvVSC* conv);
 BOOL CONVVSC_is_in_v_ac_mode(ConvVSC* conv);

@@ -2767,6 +2767,8 @@ void NET_clear_error(Net* net) {
 }
 
 void NET_clear_flags(Net* net) {
+
+  // Locals
   Branch* br;
   Gen* gen;
   Bus* bus;
@@ -3010,6 +3012,10 @@ void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch
    *  
    *  Parameters
    *  ----------
+   *  net
+   *  other_net
+   *  bus_index_map 
+   *  branch_index_map
    *  mode : -1 (copy to merged net), 0 (one-to-one copy), 1 (copy from merged net)
    */
   
@@ -3195,7 +3201,7 @@ void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch
       bus = NET_get_bus(net,i);
       NET_bus_hash_number_add(net,bus);
       NET_bus_hash_name_add(net,bus);
-      if (mode == -1)
+      if (mode == -1) // to merged
         BUS_equiv_add_to_net(NET_bus_hash_number_find(other_net,BUS_get_number(bus)),net);
     }
     for (i = 0; i < net->num_dc_buses; i++) {
@@ -3275,7 +3281,7 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
   ARRAY_alloc(branch_index_map,int,net->num_branches);
   for (i = 0; i < net->num_branches; i++) {
     branch = NET_get_branch(net,i);
-    if (!merge_buses || !BRANCH_is_zero_impedance_line(branch)) {
+    if (!merge_buses || !BRANCH_is_zero_impedance_line(branch) || !BRANCH_is_in_service(branch)) {
       branch_index_map[i] = new_num_branches;
       new_num_branches++;
     }
@@ -3302,7 +3308,7 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
   for (i = 0; i < net->num_buses; i++) {
     
     bus = NET_get_bus(net,i);
-    new_bus = NET_get_bus(new_net,bus_index_map[i]); // possibly namy bus point to the same new_bus
+    new_bus = NET_get_bus(new_net,bus_index_map[i]); // possibly many buses point to the same new_bus
 
     // Oindex
     if (merge_buses)
@@ -3330,7 +3336,7 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
 
     // Connections branch_k
     for (branch = BUS_get_branch_k(bus); branch != NULL; branch = BRANCH_get_next_k(branch)) {
-      if (!merge_buses || !BRANCH_is_zero_impedance_line(branch)) {
+      if (!merge_buses || !BRANCH_is_zero_impedance_line(branch) || !BRANCH_is_in_service(branch)) {
         new_branch = NET_get_branch(new_net,branch_index_map[BRANCH_get_index(branch)]);
         if (merge_buses)
           BRANCH_set_oindex(new_branch, BRANCH_get_index(branch));
@@ -3340,7 +3346,7 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
 
     // Connections branch_m
     for (branch = BUS_get_branch_m(bus); branch != NULL; branch = BRANCH_get_next_m(branch)) {
-      if (!merge_buses || !BRANCH_is_zero_impedance_line(branch)) {
+      if (!merge_buses || !BRANCH_is_zero_impedance_line(branch) || !BRANCH_is_in_service(branch)) {
         new_branch = NET_get_branch(new_net,branch_index_map[BRANCH_get_index(branch)]);
         if (merge_buses)
           BRANCH_set_oindex(new_branch, BRANCH_get_index(branch));
@@ -3350,7 +3356,7 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
 
     // Connections reg_tran
     for (branch = BUS_get_reg_tran(bus); branch != NULL; branch = BRANCH_get_reg_next(branch)) {
-      if (!merge_buses || !BRANCH_is_zero_impedance_line(branch))
+      if (!merge_buses || !BRANCH_is_zero_impedance_line(branch) || !BRANCH_is_in_service(branch))
         BUS_add_reg_tran(new_bus,NET_get_branch(new_net,branch_index_map[BRANCH_get_index(branch)]));
     }
 
@@ -4491,62 +4497,80 @@ int NET_get_num_periods(Net* net) {
     return 0;
 }
 
-int NET_get_num_buses(Net* net) {
-  if (net)
+int NET_get_num_buses(Net* net, BOOL only_in_service) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  if (!only_in_service)
     return net->num_buses;
+  for (i = 0; i < net->num_buses; i++) {
+    if (BUS_is_in_service(BUS_array_get(net->bus,i)))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_buses_out_of_service(Net* net) {
+  if (net)
+    return net->num_buses-NET_get_num_buses(net,TRUE);
   else
     return 0;
 }
 
-int NET_get_num_slack_buses(Net* net) {
+int NET_get_num_slack_buses(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_buses; i++) {
-    if (BUS_is_slack(BUS_array_get(net->bus,i)))
+    if (BUS_is_slack(BUS_array_get(net->bus,i)) &&
+        (BUS_is_in_service(BUS_array_get(net->bus,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_star_buses(Net* net) {
+int NET_get_num_star_buses(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_buses; i++) {
-    if (BUS_is_star(BUS_array_get(net->bus,i)))
+    if (BUS_is_star(BUS_array_get(net->bus,i)) &&
+        (BUS_is_in_service(BUS_array_get(net->bus,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_buses_reg_by_gen(Net* net) {
+int NET_get_num_buses_reg_by_gen(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_buses; i++) {
-    if (BUS_is_regulated_by_gen(BUS_array_get(net->bus,i)))
+    if (BUS_is_regulated_by_gen(BUS_array_get(net->bus,i)) &&
+        (BUS_is_in_service(BUS_array_get(net->bus,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_buses_reg_by_tran(Net* net) {
+int NET_get_num_buses_reg_by_tran(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_buses; i++) {
-    if (BUS_is_regulated_by_tran(BUS_array_get(net->bus,i)))
+    if (BUS_is_regulated_by_tran(BUS_array_get(net->bus,i)) &&
+        (BUS_is_in_service(BUS_array_get(net->bus,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_buses_reg_by_tran_only(Net* net) {
+int NET_get_num_buses_reg_by_tran_only(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   Bus* bus;
@@ -4556,25 +4580,27 @@ int NET_get_num_buses_reg_by_tran_only(Net* net) {
     bus = BUS_array_get(net->bus,i);
     if (BUS_is_regulated_by_tran(bus) &&
         !BUS_is_regulated_by_gen(bus) &&
-        !BUS_is_regulated_by_shunt(bus))
+        !BUS_is_regulated_by_shunt(bus) &&
+        (BUS_is_in_service(BUS_array_get(net->bus,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_buses_reg_by_shunt(Net* net) {
+int NET_get_num_buses_reg_by_shunt(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_buses; i++) {
-    if (BUS_is_regulated_by_shunt(BUS_array_get(net->bus,i)))
+    if (BUS_is_regulated_by_shunt(BUS_array_get(net->bus,i)) &&
+        (BUS_is_in_service(BUS_array_get(net->bus,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_buses_reg_by_shunt_only(Net* net) {
+int NET_get_num_buses_reg_by_shunt_only(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   Bus* bus;
@@ -4584,31 +4610,34 @@ int NET_get_num_buses_reg_by_shunt_only(Net* net) {
     bus = BUS_array_get(net->bus,i);
     if (BUS_is_regulated_by_shunt(bus) &&
         !BUS_is_regulated_by_gen(bus) &&
-        !BUS_is_regulated_by_tran(bus))
+        !BUS_is_regulated_by_tran(bus) &&
+        (BUS_is_in_service(BUS_array_get(net->bus,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_buses_reg_by_vsc_conv(Net* net) {
+int NET_get_num_buses_reg_by_vsc_conv(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_buses; i++) {
-    if (BUS_is_regulated_by_vsc_conv(BUS_array_get(net->bus,i)))
+    if (BUS_is_regulated_by_vsc_conv(BUS_array_get(net->bus,i)) &&
+        (BUS_is_in_service(BUS_array_get(net->bus,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_buses_reg_by_facts(Net* net) {
+int NET_get_num_buses_reg_by_facts(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_buses; i++) {
-    if (BUS_is_regulated_by_facts(BUS_array_get(net->bus,i)))
+    if (BUS_is_regulated_by_facts(BUS_array_get(net->bus,i)) &&
+        (BUS_is_in_service(BUS_array_get(net->bus,i)) || !only_in_service))
       n++;
   }
   return n;
@@ -4621,330 +4650,498 @@ int NET_get_num_red_buses(Net* net) {
     return 0;
 }
 
-int NET_get_num_branches(Net* net) {
-  if (net)
+int NET_get_num_branches(Net* net, BOOL only_in_service) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  if (!only_in_service)
     return net->num_branches;
+  for (i = 0; i < net->num_branches; i++) {
+    if (BRANCH_is_in_service(BRANCH_array_get(net->branch,i)))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_branches_out_of_service(Net* net) {
+  if (net)
+    return net->num_branches-NET_get_num_branches(net,TRUE);
   else
     return 0;
 }
 
-int NET_get_num_fixed_trans(Net* net) {
+int NET_get_num_fixed_trans(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_branches; i++) {
-    if (BRANCH_is_fixed_tran(BRANCH_array_get(net->branch,i)))
+    if (BRANCH_is_fixed_tran(BRANCH_array_get(net->branch,i)) &&
+        (BRANCH_is_in_service(BRANCH_array_get(net->branch,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_lines(Net* net) {
+int NET_get_num_lines(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_branches; i++) {
-    if (BRANCH_is_line(BRANCH_array_get(net->branch,i)))
+    if (BRANCH_is_line(BRANCH_array_get(net->branch,i)) &&
+        (BRANCH_is_in_service(BRANCH_array_get(net->branch,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_zero_impedance_lines(Net* net) {
+int NET_get_num_zero_impedance_lines(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_branches; i++) {
-    if (BRANCH_is_zero_impedance_line(BRANCH_array_get(net->branch,i)))
+    if (BRANCH_is_zero_impedance_line(BRANCH_array_get(net->branch,i)) &&
+        (BRANCH_is_in_service(BRANCH_array_get(net->branch,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_phase_shifters(Net* net) {
+int NET_get_num_phase_shifters(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_branches; i++) {
-    if (BRANCH_is_phase_shifter(BRANCH_array_get(net->branch,i)))
+    if (BRANCH_is_phase_shifter(BRANCH_array_get(net->branch,i)) &&
+        (BRANCH_is_in_service(BRANCH_array_get(net->branch,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_tap_changers(Net* net) {
+int NET_get_num_tap_changers(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_branches; i++) {
-    if (BRANCH_is_tap_changer(BRANCH_array_get(net->branch,i)))
+    if (BRANCH_is_tap_changer(BRANCH_array_get(net->branch,i)) &&
+        (BRANCH_is_in_service(BRANCH_array_get(net->branch,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_tap_changers_v(Net* net) {
+int NET_get_num_tap_changers_v(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_branches; i++) {
-    if (BRANCH_is_tap_changer_v(BRANCH_array_get(net->branch,i)))
+    if (BRANCH_is_tap_changer_v(BRANCH_array_get(net->branch,i)) &&
+        (BRANCH_is_in_service(BRANCH_array_get(net->branch,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_tap_changers_Q(Net* net) {
+int NET_get_num_tap_changers_Q(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_branches; i++) {
-    if (BRANCH_is_tap_changer_Q(BRANCH_array_get(net->branch,i)))
+    if (BRANCH_is_tap_changer_Q(BRANCH_array_get(net->branch,i)) &&
+        (BRANCH_is_in_service(BRANCH_array_get(net->branch,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_gens(Net* net) {
-  if (net)
+int NET_get_num_gens(Net* net, BOOL only_in_service) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  if (!only_in_service)
     return net->num_gens;
+  for(i = 0; i < net->num_gens; i++) {
+    if (GEN_is_in_service(GEN_array_get(net->gen,i)))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_gens_out_of_service(Net* net) {
+  if (net)
+    return net->num_gens-NET_get_num_gens(net,TRUE);
   else
     return 0;
 }
 
-int NET_get_num_reg_gens(Net* net) {
+int NET_get_num_reg_gens(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for(i = 0; i < net->num_gens; i++) {
-    if (GEN_is_regulator(GEN_array_get(net->gen,i)))
+    if (GEN_is_regulator(GEN_array_get(net->gen,i)) &&
+        (GEN_is_in_service(GEN_array_get(net->gen,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_slack_gens(Net* net) {
+int NET_get_num_slack_gens(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for(i = 0; i < net->num_gens; i++) {
-    if (GEN_is_slack(GEN_array_get(net->gen,i)))
+    if (GEN_is_slack(GEN_array_get(net->gen,i)) &&
+        (GEN_is_in_service(GEN_array_get(net->gen,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_P_adjust_gens(Net* net) {
+int NET_get_num_P_adjust_gens(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for(i = 0; i < net->num_gens; i++) {
-    if (GEN_is_P_adjustable(GEN_array_get(net->gen,i)))
+    if (GEN_is_P_adjustable(GEN_array_get(net->gen,i)) &&
+        (GEN_is_in_service(GEN_array_get(net->gen,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_loads(Net* net) {
-  if (net)
+int NET_get_num_loads(Net* net, BOOL only_in_service) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  if (!only_in_service)
     return net->num_loads;
-  else
-    return 0;
-}
-
-int NET_get_num_P_adjust_loads(Net* net) {
-  int i;
-  int n = 0;
-  if (!net)
-    return 0;
   for(i = 0; i < net->num_loads; i++) {
-    if (LOAD_is_P_adjustable(LOAD_array_get(net->load,i)))
+    if (LOAD_is_in_service(LOAD_array_get(net->load,i)))
       n++;
   }
   return n;
 }
 
-int NET_get_num_vdep_loads(Net* net) {
+int NET_get_num_P_adjust_loads(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for(i = 0; i < net->num_loads; i++) {
-    if (LOAD_is_vdep(LOAD_array_get(net->load,i)))
+    if (LOAD_is_P_adjustable(LOAD_array_get(net->load,i)) &&
+        (LOAD_is_in_service(LOAD_array_get(net->load,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_shunts(Net* net) {
-  if (net)
+int NET_get_num_vdep_loads(Net* net, BOOL only_in_service) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  for(i = 0; i < net->num_loads; i++) {
+    if (LOAD_is_vdep(LOAD_array_get(net->load,i)) &&
+        (LOAD_is_in_service(LOAD_array_get(net->load,i)) || !only_in_service))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_shunts(Net* net, BOOL only_in_service) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  if (!only_in_service)
     return net->num_shunts;
+  for (i = 0; i < net->num_shunts; i++) {
+    if (SHUNT_is_in_service(SHUNT_array_get(net->shunt,i)))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_shunts_out_of_service(Net* net) {
+  if (net)
+    return net->num_shunts-NET_get_num_shunts(net,TRUE);
   else
     return 0;
 }
 
-int NET_get_num_fixed_shunts(Net* net) {
+int NET_get_num_fixed_shunts(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_shunts; i++) {
-    if (SHUNT_is_fixed(SHUNT_array_get(net->shunt,i)))
+    if (SHUNT_is_fixed(SHUNT_array_get(net->shunt,i)) &&
+        (SHUNT_is_in_service(SHUNT_array_get(net->shunt,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_switched_shunts(Net* net) {
+int NET_get_num_switched_shunts(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_shunts; i++) {
-    if (SHUNT_is_switched(SHUNT_array_get(net->shunt,i)))
+    if (SHUNT_is_switched(SHUNT_array_get(net->shunt,i)) &&
+        (SHUNT_is_in_service(SHUNT_array_get(net->shunt,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_switched_v_shunts(Net* net) {
+int NET_get_num_switched_v_shunts(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for (i = 0; i < net->num_shunts; i++) {
-    if (SHUNT_is_switched_v(SHUNT_array_get(net->shunt,i)))
+    if (SHUNT_is_switched_v(SHUNT_array_get(net->shunt,i)) &&
+        (SHUNT_is_in_service(SHUNT_array_get(net->shunt,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_vargens(Net* net) {
-  if (net)
+int NET_get_num_vargens(Net* net, BOOL only_in_service) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  if (!only_in_service)
     return net->num_vargens;
+  for (i = 0; i < net->num_vargens; i++) {
+    if (VARGEN_is_in_service(VARGEN_array_get(net->vargen,i)))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_vargens_out_of_service(Net* net) {
+  if (net)
+    return net->num_vargens-NET_get_num_vargens(net,TRUE);
   else
     return 0;
 }
 
-int NET_get_num_bats(Net* net) {
-  if (net)
+int NET_get_num_bats(Net* net, BOOL only_in_service) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  if (!only_in_service)
     return net->num_bats;
+  for (i = 0; i < net->num_bats; i++) {
+    if (BAT_is_in_service(BAT_array_get(net->bat,i)))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_bats_out_of_service(Net* net) {
+  if (net)
+    return net->num_bats-NET_get_num_bats(net,TRUE);
   else
     return 0;
 }
 
-int NET_get_num_csc_convs(Net* net) {
-  if (net)
+int NET_get_num_csc_convs(Net* net, BOOL only_in_service) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  if (!only_in_service)
     return net->num_csc_convs;
+  for (i = 0; i < net->num_csc_convs; i++) {
+    if (CONVCSC_is_in_service(CONVCSC_array_get(net->csc_conv,i)))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_csc_convs_out_of_service(Net* net) {
+  if (net)
+    return net->num_csc_convs-NET_get_num_csc_convs(net,TRUE);
   else
     return 0;
 }
 
-int NET_get_num_vsc_convs(Net* net) {
-  if (net)
+int NET_get_num_vsc_convs(Net* net, BOOL only_in_service) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  if (!only_in_service)
     return net->num_vsc_convs;
+  for (i = 0; i < net->num_vsc_convs; i++) {
+    if (CONVVSC_is_in_service(CONVVSC_array_get(net->vsc_conv,i)))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_vsc_convs_out_of_service(Net* net) {
+  if (net)
+    return net->num_vsc_convs-NET_get_num_vsc_convs(net,TRUE);
   else
     return 0;
 }
 
-int NET_get_num_vsc_convs_in_P_dc_mode(Net* net) {
+int NET_get_num_vsc_convs_in_P_dc_mode(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for(i = 0; i < net->num_vsc_convs; i++) {
-    if (CONVVSC_is_in_P_dc_mode(NET_get_vsc_conv(net,i)))
+    if (CONVVSC_is_in_P_dc_mode(NET_get_vsc_conv(net,i)) &&
+        (CONVVSC_is_in_service(CONVVSC_array_get(net->vsc_conv,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_vsc_convs_in_v_dc_mode(Net* net) {
+int NET_get_num_vsc_convs_in_v_dc_mode(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for(i = 0; i < net->num_vsc_convs; i++) {
-    if (CONVVSC_is_in_v_dc_mode(NET_get_vsc_conv(net,i)))
+    if (CONVVSC_is_in_v_dc_mode(NET_get_vsc_conv(net,i)) &&
+        (CONVVSC_is_in_service(CONVVSC_array_get(net->vsc_conv,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_vsc_convs_in_v_ac_mode(Net* net) {
+int NET_get_num_vsc_convs_in_v_ac_mode(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for(i = 0; i < net->num_vsc_convs; i++) {
-    if (CONVVSC_is_in_v_ac_mode(NET_get_vsc_conv(net,i)))
+    if (CONVVSC_is_in_v_ac_mode(NET_get_vsc_conv(net,i)) &&
+        (CONVVSC_is_in_service(CONVVSC_array_get(net->vsc_conv,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_vsc_convs_in_f_ac_mode(Net* net) {
+int NET_get_num_vsc_convs_in_f_ac_mode(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for(i = 0; i < net->num_vsc_convs; i++) {
-    if (CONVVSC_is_in_f_ac_mode(NET_get_vsc_conv(net,i)))
+    if (CONVVSC_is_in_f_ac_mode(NET_get_vsc_conv(net,i)) &&
+        (CONVVSC_is_in_service(CONVVSC_array_get(net->vsc_conv,i)) || !only_in_service))
       n++;
   }
   return n;
 }
 
-int NET_get_num_dc_buses(Net* net) {
-  if (net)
+int NET_get_num_dc_buses(Net* net, BOOL only_in_service) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  if (!only_in_service)
     return net->num_dc_buses;
-  else
-    return 0;
-}
-
-int NET_get_num_dc_branches(Net* net) {
-  if (net)
-    return net->num_dc_branches;
-  else
-    return 0;
-}
-
-int NET_get_num_facts(Net* net) {
-  if (net)
-    return net->num_facts;
-  else
-    return 0;
-}
-
-int NET_get_num_facts_in_normal_series_mode(Net* net) {
-  int i;
-  int n = 0;
-  if (!net)
-    return 0;
-  for(i = 0; i < net->num_facts; i++) {
-    if (FACTS_is_in_normal_series_mode(NET_get_facts(net,i)))
+  for (i = 0; i < net->num_dc_buses; i++) {
+    if (BUSDC_is_in_service(BUSDC_array_get(net->dc_bus,i)))
       n++;
   }
   return n;
 }
 
-int NET_get_num_reg_facts(Net* net) {
+int NET_get_num_dc_buses_out_of_service(Net* net) {
+  if (net)
+    return net->num_dc_buses-NET_get_num_dc_buses(net,TRUE);
+  else
+    return 0;
+}
+
+int NET_get_num_dc_branches(Net* net, BOOL only_in_service) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  if (!only_in_service)
+    return net->num_dc_branches;
+  for (i = 0; i < net->num_dc_branches; i++) {
+    if (BRANCHDC_is_in_service(BRANCHDC_array_get(net->dc_branch,i)))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_dc_branches_out_of_service(Net* net) {
+  if (net)
+    return net->num_dc_branches-NET_get_num_dc_branches(net,TRUE);
+  else
+    return 0;
+}
+
+int NET_get_num_facts(Net* net, BOOL only_in_service) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  if (!only_in_service)
+    return net->num_facts;
+  for (i = 0; i < net->num_facts; i++) {
+    if (FACTS_is_in_service(FACTS_array_get(net->facts,i)))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_facts_out_of_service(Net* net) {
+  if (net)
+    return net->num_facts-NET_get_num_facts(net,TRUE);
+  else
+    return 0;
+}
+
+int NET_get_num_facts_in_normal_series_mode(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;
   if (!net)
     return 0;
   for(i = 0; i < net->num_facts; i++) {
-    if (FACTS_is_regulator(FACTS_array_get(net->facts,i)))
+    if (FACTS_is_in_normal_series_mode(NET_get_facts(net,i)) &&
+        (FACTS_is_in_service(FACTS_array_get(net->facts,i)) || !only_in_service))
+      n++;
+  }
+  return n;
+}
+
+int NET_get_num_reg_facts(Net* net, BOOL only_in_service) {
+  int i;
+  int n = 0;
+  if (!net)
+    return 0;
+  for(i = 0; i < net->num_facts; i++) {
+    if (FACTS_is_regulator(FACTS_array_get(net->facts,i)) &&
+        (FACTS_is_in_service(FACTS_array_get(net->facts,i)) || !only_in_service))
       n++;
   }
   return n;
@@ -4985,7 +5182,8 @@ REAL NET_get_total_gen_P(Net* net, int t) {
   if (!net)
     return 0;
   for (i = 0; i < net->num_gens; i++) {
-    P += GEN_get_P(GEN_array_get(net->gen,i),t); // p.u.
+    if (GEN_is_in_service(GEN_array_get(net->gen,i)))
+      P += GEN_get_P(GEN_array_get(net->gen,i),t); // p.u.
   }
   return P*net->base_power; // MW
 }
@@ -4996,7 +5194,8 @@ REAL NET_get_total_gen_Q(Net* net, int t) {
   if (!net)
     return 0;
   for (i = 0; i < net->num_gens; i++) {
-    Q += GEN_get_Q(GEN_array_get(net->gen,i),t); // p.u.
+    if (GEN_is_in_service(GEN_array_get(net->gen,i)))
+      Q += GEN_get_Q(GEN_array_get(net->gen,i),t); // p.u.
   }
   return Q*net->base_power; // MVAr
 }
@@ -5007,7 +5206,8 @@ REAL NET_get_total_load_P(Net* net, int t) {
   if (!net)
     return 0;
   for (i = 0; i < net->num_loads; i++) {
-    P += LOAD_get_P(LOAD_array_get(net->load,i),t); // p.u.
+    if (LOAD_is_in_service(LOAD_array_get(net->load,i)))
+      P += LOAD_get_P(LOAD_array_get(net->load,i),t); // p.u.
   }
   return P*net->base_power; // MW
 }
@@ -5018,7 +5218,8 @@ REAL NET_get_total_load_Q(Net* net, int t) {
   if (!net)
     return 0;
   for (i = 0; i < net->num_loads; i++) {
-    Q += LOAD_get_Q(LOAD_array_get(net->load,i),t); // p.u.
+    if (LOAD_is_in_service(LOAD_array_get(net->load,i)))
+      Q += LOAD_get_Q(LOAD_array_get(net->load,i),t); // p.u.
   }
   return Q*net->base_power; // MVAr
 }
@@ -5729,7 +5930,7 @@ int NET_round_discrete_switched_shunts_b(Net* net, int t) {
     return num;
   for (i = 0; i < net->num_shunts; i++) {
     s = NET_get_shunt(net,i);
-    if (SHUNT_is_switched(s) && SHUNT_is_discrete(s))
+    if (SHUNT_is_switched(s) && SHUNT_is_discrete(s) && SHUNT_is_in_service(s))
       num += SHUNT_round_b(s,t);
   }
   return num;
@@ -5742,7 +5943,7 @@ void NET_clip_switched_shunts_b(Net* net, int t) {
     return;
   for (i = 0; i < net->num_shunts; i++) {
     s = NET_get_shunt(net,i);
-    if (SHUNT_is_switched(s)) {
+    if (SHUNT_is_switched(s) && SHUNT_is_in_service(s)) {
       if (SHUNT_get_b(s,t) > SHUNT_get_b_max(s))
         SHUNT_set_b(s,SHUNT_get_b_max(s),t);
       if (SHUNT_get_b(s,t) < SHUNT_get_b_min(s))
@@ -5976,6 +6177,7 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsi
   void* (*get_element)(void* array, int index);
   int (*set_flags)(void*,char,unsigned char,int);
   BOOL (*has_properties)(void*,char);
+  BOOL (*is_in_service)(void*);
 
   // Check
   if (!net)
@@ -5989,6 +6191,7 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsi
     get_element = &BUS_array_get;
     set_flags = &BUS_set_flags;
     has_properties = &BUS_has_properties;
+    is_in_service = &BUS_is_in_service;
     break;
   case OBJ_GEN:
     num = net->num_gens;
@@ -5996,6 +6199,7 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsi
     get_element = &GEN_array_get;
     set_flags = &GEN_set_flags;
     has_properties = &GEN_has_properties;
+    is_in_service = &GEN_is_in_service;
     break;
   case OBJ_LOAD:
     num = net->num_loads;
@@ -6003,6 +6207,7 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsi
     get_element = &LOAD_array_get;
     set_flags = &LOAD_set_flags;
     has_properties = &LOAD_has_properties;
+    is_in_service = &LOAD_is_in_service;
     break;
   case OBJ_BRANCH:
     num = net->num_branches;
@@ -6010,6 +6215,7 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsi
     get_element = &BRANCH_array_get;
     set_flags = &BRANCH_set_flags;
     has_properties = &BRANCH_has_properties;
+    is_in_service = &BRANCH_is_in_service;
     break;
   case OBJ_SHUNT:
     num = net->num_shunts;
@@ -6017,6 +6223,7 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsi
     get_element = &SHUNT_array_get;
     set_flags = &SHUNT_set_flags;
     has_properties = &SHUNT_has_properties;
+    is_in_service = &SHUNT_is_in_service;
     break;
   case OBJ_VARGEN:
     num = net->num_vargens;
@@ -6024,6 +6231,7 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsi
     get_element = &VARGEN_array_get;
     set_flags = &VARGEN_set_flags;
     has_properties = &VARGEN_has_properties;
+    is_in_service = &VARGEN_is_in_service;
     break;
   case OBJ_BAT:
     num = net->num_bats;
@@ -6031,6 +6239,7 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsi
     get_element = &BAT_array_get;
     set_flags = &BAT_set_flags;
     has_properties = &BAT_has_properties;
+    is_in_service = &BAT_is_in_service;
     break;
   case OBJ_CONVCSC:
     num = net->num_csc_convs;
@@ -6038,6 +6247,7 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsi
     get_element = &CONVCSC_array_get;
     set_flags = &CONVCSC_set_flags;
     has_properties = &CONVCSC_has_properties;
+    is_in_service = &CONVCSC_is_in_service;
     break;
   case OBJ_CONVVSC:
     num = net->num_vsc_convs;
@@ -6045,6 +6255,7 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsi
     get_element = &CONVVSC_array_get;
     set_flags = &CONVVSC_set_flags;
     has_properties = &CONVVSC_has_properties;
+    is_in_service = &CONVVSC_is_in_service;
     break;
   case OBJ_BUSDC:
     num = net->num_dc_buses;
@@ -6052,6 +6263,7 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsi
     get_element = &BUSDC_array_get;
     set_flags = &BUSDC_set_flags;
     has_properties = &BUSDC_has_properties;
+    is_in_service = &BUSDC_is_in_service;
     break;
   case OBJ_BRANCHDC:
     num = net->num_dc_branches;
@@ -6059,6 +6271,7 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsi
     get_element = &BRANCHDC_array_get;
     set_flags = &BRANCHDC_set_flags;
     has_properties = &BRANCHDC_has_properties;
+    is_in_service = &BRANCHDC_is_in_service;
     break;
   case OBJ_FACTS:
     num = net->num_facts;
@@ -6066,6 +6279,7 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsi
     get_element = &FACTS_array_get;
     set_flags = &FACTS_set_flags;
     has_properties = &FACTS_has_properties;
+    is_in_service = &FACTS_is_in_service;
     break;
   default:
     sprintf(net->error_string,"invalid object type");
@@ -6076,7 +6290,7 @@ void NET_set_flags(Net* net, char obj_type, char flag_mask, char prop_mask, unsi
   // Set flags
   for (i = 0; i < num; i++) {
     obj = get_element(array,i);
-    if (has_properties(obj,prop_mask)) {
+    if (is_in_service(obj) && has_properties(obj,prop_mask)) { // in service only!
       if (flag_mask & FLAG_VARS)
         net->num_vars = set_flags(obj,FLAG_VARS,val_mask,net->num_vars);
       if (flag_mask & FLAG_FIXED)
@@ -6250,7 +6464,7 @@ void NET_set_equiv_buses(Net* net) {
   // Set
   for (i = 0; i < net->num_branches; i++) {
     branch = NET_get_branch(net,i);
-    if (BRANCH_is_zero_impedance_line(branch))
+    if (BRANCH_is_zero_impedance_line(branch) && BRANCH_is_in_service(branch)) // in service only!
       BUS_equiv_make(BRANCH_get_bus_k(branch), BRANCH_get_bus_m(branch));
   }
 }
@@ -6268,57 +6482,84 @@ char* NET_get_show_components_str(Net* net, int output_level) {
   sprintf(out+strlen(out),"\nNetwork Components\n");
   sprintf(out+strlen(out),"------------------\n");
 
-  sprintf(out+strlen(out),"buses            : %d\n",NET_get_num_buses(net));
+  sprintf(out+strlen(out),"buses            : %d\n",NET_get_num_buses(net,FALSE)); // all
   if (output_level > 1) {
-    sprintf(out+strlen(out),"  slack          : %d\n",NET_get_num_slack_buses(net));
-    sprintf(out+strlen(out),"  reg by gen     : %d\n",NET_get_num_buses_reg_by_gen(net));
-    sprintf(out+strlen(out),"  reg by tran    : %d\n",NET_get_num_buses_reg_by_tran(net));
-    sprintf(out+strlen(out),"  reg by shunt   : %d\n",NET_get_num_buses_reg_by_shunt(net));
-    sprintf(out+strlen(out),"  star           : %d\n",NET_get_num_star_buses(net));
-  }
-
-  sprintf(out+strlen(out),"shunts           : %d\n",NET_get_num_shunts(net));
-  if (output_level > 1) {
-    sprintf(out+strlen(out),"  fixed          : %d\n",NET_get_num_fixed_shunts(net));
-    sprintf(out+strlen(out),"  switched       : %d\n",NET_get_num_switched_shunts(net));
-  }
-
-  sprintf(out+strlen(out),"branches         : %d\n",NET_get_num_branches(net));
-  if (output_level > 1) {
-    sprintf(out+strlen(out),"  lines          : %d\n",NET_get_num_lines(net));
-    sprintf(out+strlen(out),"  zi lines       : %d\n",NET_get_num_zero_impedance_lines(net));
-    sprintf(out+strlen(out),"  fixed trans    : %d\n",NET_get_num_fixed_trans(net));
-    sprintf(out+strlen(out),"  phase shifters : %d\n",NET_get_num_phase_shifters(net));
-    sprintf(out+strlen(out),"  tap changers v : %d\n",NET_get_num_tap_changers_v(net));
-    sprintf(out+strlen(out),"  tap changers Q : %d\n",NET_get_num_tap_changers_Q(net));
-  }
-
-  sprintf(out+strlen(out),"generators       : %d\n",NET_get_num_gens(net));
-  if (output_level > 1) {
-    sprintf(out+strlen(out),"  slack          : %d\n",NET_get_num_slack_gens(net));
-    sprintf(out+strlen(out),"  reg            : %d\n",NET_get_num_reg_gens(net));
+    sprintf(out+strlen(out),"  slack          : %d\n",NET_get_num_slack_buses(net,TRUE));
+    sprintf(out+strlen(out),"  reg by gen     : %d\n",NET_get_num_buses_reg_by_gen(net,TRUE));
+    sprintf(out+strlen(out),"  reg by tran    : %d\n",NET_get_num_buses_reg_by_tran(net,TRUE));
+    sprintf(out+strlen(out),"  reg by shunt   : %d\n",NET_get_num_buses_reg_by_shunt(net,TRUE));
+    sprintf(out+strlen(out),"  star           : %d\n",NET_get_num_star_buses(net,TRUE));
+    sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_buses_out_of_service(net));
   }
   
-  sprintf(out+strlen(out),"loads            : %d\n",NET_get_num_loads(net));
+  sprintf(out+strlen(out),"shunts           : %d\n",NET_get_num_shunts(net,FALSE)); // all
   if (output_level > 1) {
-    sprintf(out+strlen(out),"  P adjust       : %d\n",NET_get_num_P_adjust_loads(net));
+    sprintf(out+strlen(out),"  fixed          : %d\n",NET_get_num_fixed_shunts(net,TRUE));
+    sprintf(out+strlen(out),"  switched       : %d\n",NET_get_num_switched_shunts(net,TRUE));
+    sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_shunts_out_of_service(net));
   }
-  
-  sprintf(out+strlen(out),"vargens          : %d\n",NET_get_num_vargens(net));
-  sprintf(out+strlen(out),"batteries        : %d\n",NET_get_num_bats(net));
-  sprintf(out+strlen(out),"facts            : %d\n",NET_get_num_facts(net));
-  sprintf(out+strlen(out),"csc converters   : %d\n",NET_get_num_csc_convs(net));
 
-  sprintf(out+strlen(out),"vsc converters   : %d\n",NET_get_num_vsc_convs(net));
+  sprintf(out+strlen(out),"branches         : %d\n",NET_get_num_branches(net,FALSE)); // all
   if (output_level > 1) {
-    sprintf(out+strlen(out),"  P dc mode      : %d\n",NET_get_num_vsc_convs_in_P_dc_mode(net));
-    sprintf(out+strlen(out),"  v dc mode      : %d\n",NET_get_num_vsc_convs_in_v_dc_mode(net));
-    sprintf(out+strlen(out),"  v ac mode      : %d\n",NET_get_num_vsc_convs_in_v_ac_mode(net));
-    sprintf(out+strlen(out),"  f ac mode      : %d\n",NET_get_num_vsc_convs_in_f_ac_mode(net));
+    sprintf(out+strlen(out),"  lines          : %d\n",NET_get_num_lines(net,TRUE));
+    sprintf(out+strlen(out),"  zi lines       : %d\n",NET_get_num_zero_impedance_lines(net,TRUE));
+    sprintf(out+strlen(out),"  fixed trans    : %d\n",NET_get_num_fixed_trans(net,TRUE));
+    sprintf(out+strlen(out),"  phase shifters : %d\n",NET_get_num_phase_shifters(net,TRUE));
+    sprintf(out+strlen(out),"  tap changers v : %d\n",NET_get_num_tap_changers_v(net,TRUE));
+    sprintf(out+strlen(out),"  tap changers Q : %d\n",NET_get_num_tap_changers_Q(net,TRUE));
+    sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_branches_out_of_service(net));
+  }
+
+  sprintf(out+strlen(out),"generators       : %d\n",NET_get_num_gens(net,FALSE)); // all
+  if (output_level > 1) {
+    sprintf(out+strlen(out),"  slack          : %d\n",NET_get_num_slack_gens(net,TRUE));
+    sprintf(out+strlen(out),"  reg            : %d\n",NET_get_num_reg_gens(net,TRUE));
+    sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_gens_out_of_service(net));
   }
   
-  sprintf(out+strlen(out),"dc buses         : %d\n",NET_get_num_dc_buses(net));
-  sprintf(out+strlen(out),"dc branches      : %d\n",NET_get_num_dc_branches(net));
+  sprintf(out+strlen(out),"loads            : %d\n",NET_get_num_loads(net,FALSE)); // all
+  if (output_level > 1) {
+    sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_loads_out_of_service(net));
+  }
+  
+  sprintf(out+strlen(out),"vargens          : %d\n",NET_get_num_vargens(net,FALSE)); // all
+  if (output_level > 1) {
+    sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_vargens_out_of_service(net));
+  }
+  
+  sprintf(out+strlen(out),"batteries        : %d\n",NET_get_num_bats(net,FALSE)); // all
+  if (output_level > 1) {
+    sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_bats_out_of_service(net));
+  }
+  
+  sprintf(out+strlen(out),"facts            : %d\n",NET_get_num_facts(net,FALSE)); // all
+  if (output_level > 1) {
+    sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_facts_out_of_service(net));
+  }
+  
+  sprintf(out+strlen(out),"csc converters   : %d\n",NET_get_num_csc_convs(net,FALSE)); // all
+  if (output_level > 1) {
+    sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_csc_convs_out_of_service(net));
+  }
+
+  sprintf(out+strlen(out),"vsc converters   : %d\n",NET_get_num_vsc_convs(net,FALSE)); // all
+  if (output_level > 1) {
+    sprintf(out+strlen(out),"  P dc mode      : %d\n",NET_get_num_vsc_convs_in_P_dc_mode(net,TRUE));
+    sprintf(out+strlen(out),"  v dc mode      : %d\n",NET_get_num_vsc_convs_in_v_dc_mode(net,TRUE));
+    sprintf(out+strlen(out),"  v ac mode      : %d\n",NET_get_num_vsc_convs_in_v_ac_mode(net,TRUE));
+    sprintf(out+strlen(out),"  f ac mode      : %d\n",NET_get_num_vsc_convs_in_f_ac_mode(net,TRUE));
+    sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_vsc_convs_out_of_service(net));
+  }
+  
+  sprintf(out+strlen(out),"dc buses         : %d\n",NET_get_num_dc_buses(net,FALSE)); // all
+  if (output_level > 1) {
+    sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_dc_buses_out_of_service(net));
+  }
+  
+  sprintf(out+strlen(out),"dc branches      : %d\n",NET_get_num_dc_branches(net,FALSE)); // all
+  if (output_level > 1) {
+    sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_dc_branches_out_of_service(net));
+  }
 
   return out;
 }
@@ -6397,14 +6638,18 @@ void NET_update_properties(Net* net, Vec* values) {
   int i;
   int t;
 
+  // Check
+  if (!net)
+    return;
+
   // Clear
   NET_clear_properties(net);
 
   // Update
-  for (t = 0; t < NET_get_num_periods(net); t++) {
-    for (i = 0; i < NET_get_num_buses(net); i++)
+  for (t = 0; t < net->num_periods; t++) {
+    for (i = 0; i < net->num_buses; i++)
       NET_update_properties_step(net,NET_get_bus(net,i),NULL,t,values);
-    for (i = 0; i < NET_get_num_dc_buses(net); i++)
+    for (i = 0; i < net->num_dc_buses; i++)
       NET_update_properties_step(net,NULL,NET_get_dc_bus(net,i),t,values);
   }
 }
@@ -6787,9 +7032,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
     }
 
     // Branch flows
-    if (!BRANCH_is_zero_impedance_line(br) &&
-        BUS_is_in_service(BRANCH_get_bus_k(br)) &&
-        BUS_is_in_service(BRANCH_get_bus_m(br))) {
+    if (!BRANCH_is_zero_impedance_line(br)) { // branch is in service and so are its buses
       BUS_inject_P(BRANCH_get_bus_k(br),-BRANCH_get_P_km(br,var_values,t),t);
       BUS_inject_Q(BRANCH_get_bus_k(br),-BRANCH_get_Q_km(br,var_values,t),t);
       BUS_inject_P(BRANCH_get_bus_m(br),-BRANCH_get_P_mk(br,var_values,t),t);
@@ -6838,7 +7081,6 @@ void NET_update_set_points(Net* net) {
 
   // Local variables
   Bus* bus;
-  ConvCSC* csc;
   int i;
   int t;
 
@@ -6849,7 +7091,7 @@ void NET_update_set_points(Net* net) {
   // Update bus v set
   for (i = 0; i < net->num_buses; i++) {
     bus = BUS_array_get(net->bus,i);
-    if (BUS_is_v_set_regulated(bus)) {
+    if (BUS_is_v_set_regulated(bus) && BUS_is_in_service(bus)) {
       for (t = 0; t < net->num_periods; t++) {
         BUS_set_v_set(bus,BUS_get_v_mag(bus,t),t);
         if (BUS_is_regulated_by_shunt(bus) || BUS_is_regulated_by_tran(bus)) {
@@ -6859,15 +7101,6 @@ void NET_update_set_points(Net* net) {
             BUS_set_v_min_reg(bus, BUS_get_v_set(bus,t));
         }
       }
-    }
-  }
-
-  // Update CSC DC P set
-  for (i = 0; i < net->num_csc_convs; i++) {
-    csc = CONVCSC_array_get(net->csc_conv,i);
-    if (CONVCSC_is_in_P_dc_mode(csc)) {
-      for (t = 0; t < net->num_periods; t++)
-        CONVCSC_set_P_dc_set(csc,CONVCSC_get_P_dc(csc,t),t);
     }
   }
 }
@@ -6890,12 +7123,14 @@ void NET_update_reg_Q_participations(Net* net, int t) {
 
     bus = NET_get_bus(net, i);
     
-    if (BUS_is_v_set_regulated(bus)) {
+    if (BUS_is_v_set_regulated(bus) && BUS_is_in_service(bus)) {
 
       // Recompute total
       Q_total = 0;
-      for (REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus))
-        Q_total += REG_OBJ_get_Q(obj_type, obj, t);
+      for (REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus)) {
+        if (REG_OBJ_is_in_service(obj_type,obj))
+          Q_total += REG_OBJ_get_Q(obj_type,obj,t);
+      }
 
       // Safeguard
       if (0 <= Q_total && Q_total < eps)
@@ -6905,11 +7140,13 @@ void NET_update_reg_Q_participations(Net* net, int t) {
       
       // Find good participations
       for (REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus)) {
-        Q = REG_OBJ_get_Q(obj_type, obj, t);
-        if (Q/Q_total > 0.)
-          REG_OBJ_set_Q_par(obj_type,obj,Q/Q_total > 1.? 1. : Q/Q_total);
-        else
-          REG_OBJ_set_Q_par(obj_type,obj,eps);
+        if (REG_OBJ_is_in_service(obj_type,obj)) {
+          Q = REG_OBJ_get_Q(obj_type,obj,t);
+          if (Q/Q_total > 0.)
+            REG_OBJ_set_Q_par(obj_type,obj,Q/Q_total > 1.? 1. : Q/Q_total);
+          else
+            REG_OBJ_set_Q_par(obj_type,obj,eps);
+        }
       }
     }
   }
@@ -7035,7 +7272,7 @@ void NET_localize_gen_regulation(Net* net, int max_dist) {
   // Process
   for (i = 0; i < net->num_gens; i++) {
     gen = NET_get_gen(net,i);
-    if (GEN_is_regulator(gen)) {
+    if (GEN_is_regulator(gen) && GEN_is_in_service(gen)) {
       bus = GEN_get_bus(gen);
       reg_bus = GEN_get_reg_bus(gen);
       ARRAY_clear(queued,char,net->num_buses);

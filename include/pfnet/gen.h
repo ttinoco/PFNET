@@ -117,7 +117,7 @@ char* GEN_get_json_string(Gen* gen, char* output);
 BOOL GEN_has_flags(void* gen, char flag_type, unsigned char mask);
 BOOL GEN_has_properties(void* gen, char prop);
 void GEN_init(Gen* gen, int num_periods);
-BOOL GEN_is_in_service(Gen* gen);
+BOOL GEN_is_in_service(void* gen);
 BOOL GEN_is_equal(Gen* gen, Gen* other);
 BOOL GEN_is_P_adjustable(Gen* gen);
 BOOL GEN_is_regulator(Gen* gen);

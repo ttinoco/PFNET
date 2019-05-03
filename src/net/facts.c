@@ -1193,9 +1193,9 @@ BOOL FACTS_is_in_constant_series_v_mode(Facts* facts) {
     return FALSE;
 }
 
-BOOL FACTS_is_in_service(Facts* facts) {
+BOOL FACTS_is_in_service(void* facts) {
   if (facts)
-    return facts->in_service;
+    return ((Facts*)facts)->in_service;
   else
     return FALSE;
 }

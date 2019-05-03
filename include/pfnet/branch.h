@@ -180,7 +180,7 @@ BOOL BRANCH_has_properties(void* br, char prop);
 BOOL BRANCH_has_y_correction(Branch* br);
 
 void BRANCH_init(Branch* br, int num_periods);
-BOOL BRANCH_is_in_service(Branch* br);
+BOOL BRANCH_is_in_service(void* br);
 BOOL BRANCH_is_equal(Branch* br, Branch* other);
 BOOL BRANCH_is_fixed_tran(Branch* br);
 BOOL BRANCH_is_line(Branch* br);

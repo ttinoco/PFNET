@@ -592,9 +592,9 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
   shunt->reg_next = NULL;
 }
 
-BOOL SHUNT_is_in_service(Shunt* shunt) {
+BOOL SHUNT_is_in_service(void* shunt) {
   if (shunt)
-    return shunt->in_service;
+    return ((Shunt*)shunt)->in_service;
   else
     return FALSE;
 }

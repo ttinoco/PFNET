@@ -74,7 +74,7 @@ BOOL BRANCHDC_has_flags(void* br, char flag_type, unsigned char mask);
 BOOL BRANCHDC_has_properties(void* br, char prop);
 
 void BRANCHDC_init(BranchDC* br, int num_periods);
-BOOL BRANCHDC_is_in_service(BranchDC* br);
+BOOL BRANCHDC_is_in_service(void* br);
 BOOL BRANCHDC_is_equal(BranchDC* br, BranchDC* other);
 
 BranchDC* BRANCHDC_list_k_add(BranchDC* k_br_list, BranchDC* br);

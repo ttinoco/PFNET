@@ -145,7 +145,7 @@ BOOL CONVCSC_has_flags(void* vconv, char flag_type, unsigned char mask);
 BOOL CONVCSC_has_properties(void* conv, char prop);
 
 void CONVCSC_init(ConvCSC* conv, int num_periods);
-BOOL CONVCSC_is_in_service(ConvCSC* conv);
+BOOL CONVCSC_is_in_service(void* conv);
 BOOL CONVCSC_is_equal(ConvCSC* conv, ConvCSC* other);
 BOOL CONVCSC_is_inverter(ConvCSC* conv);
 BOOL CONVCSC_is_rectifier(ConvCSC* conv);

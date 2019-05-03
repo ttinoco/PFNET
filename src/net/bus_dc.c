@@ -321,7 +321,7 @@ int BUSDC_get_index(BusDC* bus) {
 
 int BUSDC_get_index_t(BusDC* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
-    return bus->index+t*NET_get_num_dc_buses(bus->net);
+    return bus->index+t*NET_get_num_dc_buses(bus->net,FALSE);
   else
     return -1;
 }
@@ -650,9 +650,9 @@ void BUSDC_init(BusDC* bus, int num_periods) {
     bus->v[t] = 1.;
 }
 
-BOOL BUSDC_is_in_service(BusDC* bus) {
+BOOL BUSDC_is_in_service(void* bus) {
   if (bus)
-    return bus->in_service;
+    return ((BusDC*)bus)->in_service;
   else
     return FALSE;
 }

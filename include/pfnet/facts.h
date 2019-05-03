@@ -154,7 +154,7 @@ BOOL FACTS_has_flags(void* facts, char flag_type, unsigned char mask);
 BOOL FACTS_has_properties(void* facts, char prop);
 void FACTS_init(Facts* facts, int num_periods);
 
-BOOL FACTS_is_in_service(Facts* facts);
+BOOL FACTS_is_in_service(void* facts);
 BOOL FACTS_is_equal(Facts* facts, Facts* other);
 BOOL FACTS_is_regulator(Facts* facts);
 BOOL FACTS_is_STATCOM(Facts* facts);

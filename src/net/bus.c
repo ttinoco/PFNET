@@ -804,7 +804,7 @@ int BUS_get_index(Bus* bus) {
 
 int BUS_get_index_t(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
-    return bus->index+t*NET_get_num_buses(bus->net);
+    return bus->index+t*NET_get_num_buses(bus->net,FALSE);
   else
     return -1;
 }
@@ -839,14 +839,14 @@ int* BUS_get_index_v_ang_array(Bus* bus) {
 
 int BUS_get_index_P(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
-    return bus->index + t*NET_get_num_buses(bus->net);
+    return bus->index + t*NET_get_num_buses(bus->net,FALSE);
   else
     return -1;
 }
 
 int BUS_get_index_Q(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
-    return bus->index + (t+bus->num_periods)*NET_get_num_buses(bus->net);
+    return bus->index + (t+bus->num_periods)*NET_get_num_buses(bus->net,FALSE);
   else
     return -1;
 }
@@ -2028,9 +2028,9 @@ void BUS_inject_Q(Bus* bus, REAL Q, int t) {
     bus->Q_mis[t] += Q; // p.u.
 }
 
-BOOL BUS_is_in_service(Bus* bus) {
+BOOL BUS_is_in_service(void* bus) {
   if (bus)
-    return bus->in_service;
+    return ((Bus*)bus)->in_service;
   else
     return FALSE;
 }

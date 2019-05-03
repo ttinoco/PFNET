@@ -98,7 +98,7 @@ char* VARGEN_get_json_string(Vargen* gen, char* output);
 BOOL VARGEN_has_flags(void* gen, char flag_type, unsigned char mask);
 BOOL VARGEN_has_properties(void* gen, char prop);
 void VARGEN_init(Vargen* gen, int num_periods);
-BOOL VARGEN_is_in_service(Vargen* gen);
+BOOL VARGEN_is_in_service(void* gen);
 BOOL VARGEN_is_wind(Vargen* gen);
 BOOL VARGEN_is_solar(Vargen* gen);
 BOOL VARGEN_is_equal(Vargen* gen, Vargen* other);

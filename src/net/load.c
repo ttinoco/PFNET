@@ -839,9 +839,9 @@ BOOL LOAD_is_equal(Load* load, Load* other) {
   return load == other;
 }
 
-BOOL LOAD_is_in_service(Load* load) {
+BOOL LOAD_is_in_service(void* load) {
   if (load)
-    return load->in_service;
+    return ((Load*)load)->in_service;
   else
     return FALSE;
 }

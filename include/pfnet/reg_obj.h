@@ -30,6 +30,7 @@ REAL REG_OBJ_get_Q(char obj_type, void* obj, int t);
 REAL REG_OBJ_get_Q_max(char obj_type, void* obj);
 REAL REG_OBJ_get_Q_min(char obj_type, void* obj);
 REAL REG_OBJ_get_Q_par(char obj_type, void* obj);
+BOOL REG_OBJ_is_in_service(char obj_type, void* obj);
 BOOL REG_OBJ_is_candidate(char obj_type, void* obj);
 int REG_OBJ_count_candidates(Bus* bus);
 

@@ -286,6 +286,28 @@ REAL REG_OBJ_get_Q_par(char obj_type, void* obj) {
     return 0.;
 }
 
+BOOL REG_OBJ_is_in_service(char obj_type, void* obj) {
+
+  // Check
+  if (!obj)
+    return FALSE;
+
+  // Gen
+  if (obj_type == OBJ_GEN)
+    return GEN_is_in_service((Gen*)obj);
+
+  // VSC
+  else if (obj_type == OBJ_CONVVSC)
+    return CONVVSC_is_in_service((ConvVSC*)obj);
+
+  // FACTS
+  else if (obj_type == OBJ_FACTS)
+    return FACTS_is_in_service((Facts*)obj);
+
+  else
+    return FALSE;
+}
+
 BOOL REG_OBJ_is_candidate(char obj_type, void* obj) {
 
   // Check

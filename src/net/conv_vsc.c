@@ -820,9 +820,9 @@ void CONVVSC_init(ConvVSC* conv, int num_periods) {
   conv->reg_next = NULL;
 }
 
-BOOL CONVVSC_is_in_service(ConvVSC* conv) {
+BOOL CONVVSC_is_in_service(void* conv) {
   if (conv)
-    return conv->in_service;
+    return ((ConvVSC*)conv)->in_service;
   else
     return FALSE;
 }

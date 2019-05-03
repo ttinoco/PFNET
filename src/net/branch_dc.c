@@ -409,9 +409,9 @@ void BRANCHDC_init(BranchDC* br, int num_periods) {
   br->next_m = NULL;
 };
 
-BOOL BRANCHDC_is_in_service(BranchDC* br) {
+BOOL BRANCHDC_is_in_service(void* br) {
   if (br)
-    return br->in_service;
+    return ((BranchDC*)br)->in_service;
   else
     return FALSE;
 }
