@@ -55,6 +55,9 @@ struct BusDC {
   // Hash
   UT_hash_handle hh_number; /**< @brief Handle for bus hash table based on numbers */
   UT_hash_handle hh_name;   /**< @brief Handle for bus hash table based on names */
+
+  // HVDC helper
+  int* di_index;
 };
 
 void BUSDC_add_branch_k(BusDC* bus, BranchDC* branch) {
@@ -98,6 +101,7 @@ void BUSDC_array_del(BusDC* bus_array, int size) {
       free(bus->v);
       free(bus->index_v);
       free(bus->P_mis);
+      free(bus->di_index);
       BUSDC_del_all_connections(bus);
     }
     free(bus_array);
@@ -319,13 +323,6 @@ int BUSDC_get_index(BusDC* bus) {
     return -1;
 }
 
-int BUSDC_get_index_t(BusDC* bus, int t) {
-  if (bus && t >= 0 && t < bus->num_periods)
-    return bus->index+t*NET_get_num_dc_buses(bus->net,FALSE);
-  else
-    return -1;
-}
-
 int BUSDC_get_index_v(BusDC* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     return bus->index_v[t];
@@ -541,6 +538,13 @@ void BUSDC_get_var_values(BusDC* bus, Vec* values, int code) {
   }
 }
 
+int BUSDC_get_di_index(BusDC* bus, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    return bus->di_index[t];
+  else
+    return -1;
+}
+
 BOOL BUSDC_has_flags(void* vbus, char flag_type, unsigned char mask) {
   BusDC* bus = (BusDC*)vbus;
   if (bus) {
@@ -645,6 +649,7 @@ void BUSDC_init(BusDC* bus, int num_periods) {
   ARRAY_zalloc(bus->index_v,int,T);
 
   ARRAY_zalloc(bus->P_mis,REAL,T);
+  ARRAY_zalloc(bus->di_index,int,T);
   
   for (t = 0; t < bus->num_periods; t++)
     bus->v[t] = 1.;
@@ -770,4 +775,9 @@ void BUSDC_set_var_values(BusDC* bus, Vec* values) {
     if (bus->vars & BUSDC_VAR_V)      // voltage (p.u.)
       bus->v[t] = VEC_get(values,bus->index_v[t]);
   }
+}
+
+void BUSDC_set_di_index(BusDC* bus, int idx, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    bus->di_index[t] = idx;
 }

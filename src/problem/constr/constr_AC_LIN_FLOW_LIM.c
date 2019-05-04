@@ -42,7 +42,7 @@ void CONSTR_AC_LIN_FLOW_LIM_init(Constr* c) {
 
   // Init
   net = CONSTR_get_network(c);
-  num = NET_get_num_branches(net)*NET_get_num_periods(net); // max number of LINE_FLOW results
+  num = NET_get_num_branches(net,FALSE)*NET_get_num_periods(net); // max number of LINE_FLOW results
   data = (Constr_AC_LIN_FLOW_LIM_Data*)malloc(sizeof(Constr_AC_LIN_FLOW_LIM_Data));
   data->results = (LF_Results**)malloc(sizeof(LF_Results*)*num);
   data->size = num;
@@ -75,7 +75,7 @@ void CONSTR_AC_LIN_FLOW_LIM_count_step(Constr* c, Bus* bus, BusDC* busdc, int t)
   data = (Constr_AC_LIN_FLOW_LIM_Data*)CONSTR_get_data(c);
 
   // Offset
-  offset = NET_get_num_branches(net)*t;
+  offset = NET_get_num_branches(net,FALSE)*t;
   
   // Check pointer
   if (!G_nnz || !G_row || !data || !bus) {
@@ -199,7 +199,7 @@ void CONSTR_AC_LIN_FLOW_LIM_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int 
   data = (Constr_AC_LIN_FLOW_LIM_Data*)CONSTR_get_data(c);
 
   // Offset
-  offset = NET_get_num_branches(net)*t;
+  offset = NET_get_num_branches(net,FALSE)*t;
   
   // Check pointer
   if (!G_nnz || !G_row || !data || !bus) {

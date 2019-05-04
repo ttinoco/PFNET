@@ -52,7 +52,7 @@ void CONSTR_LINPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   CONSTR_count_step(acpf,bus,busdc,t);
 
   // Done 
-  if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net)-1)) {
+  if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net,FALSE)-1)) {
     CONSTR_set_A_row(c,CONSTR_get_J_row(acpf));
     CONSTR_set_A_nnz(c,CONSTR_get_J_nnz(acpf));
   }
@@ -88,7 +88,7 @@ void CONSTR_LINPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   CONSTR_analyze_step(acpf,bus,busdc,t);
 
   // Done 
-  if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net)-1)) {
+  if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net,FALSE)-1)) {
     x0 = NET_get_var_values(net,CURRENT);
     CONSTR_eval(acpf,x0,NULL);
     J = CONSTR_get_J(acpf);

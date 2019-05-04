@@ -110,6 +110,8 @@ struct Bus {
   Net* net; /**< @brief Network. */
 
   // ACPF helpers
+  int* dP_index;
+  int* dQ_index;
   int* dPdw_index;
   int* dQdw_index;
   int* dPdv_index;
@@ -449,6 +451,8 @@ void BUS_array_del(Bus* bus_array, int size) {
       free(bus->sens_v_reg_by_shunt);
       free(bus->P_mis);
       free(bus->Q_mis);
+      free(bus->dP_index);
+      free(bus->dQ_index);
       free(bus->dPdw_index);
       free(bus->dQdw_index);
       free(bus->dPdv_index);
@@ -802,13 +806,6 @@ int BUS_get_index(Bus* bus) {
     return -1;
 }
 
-int BUS_get_index_t(Bus* bus, int t) {
-  if (bus && t >= 0 && t < bus->num_periods)
-    return bus->index+t*NET_get_num_buses(bus->net,FALSE);
-  else
-    return -1;
-}
-
 int BUS_get_index_v_mag(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     return bus->index_v_mag[t];
@@ -835,20 +832,6 @@ int* BUS_get_index_v_ang_array(Bus* bus) {
     return bus->index_v_ang;
   else
     return NULL;
-}
-
-int BUS_get_index_P(Bus* bus, int t) {
-  if (bus && t >= 0 && t < bus->num_periods)
-    return bus->index + t*NET_get_num_buses(bus->net,FALSE);
-  else
-    return -1;
-}
-
-int BUS_get_index_Q(Bus* bus, int t) {
-  if (bus && t >= 0 && t < bus->num_periods)
-    return bus->index + (t+bus->num_periods)*NET_get_num_buses(bus->net,FALSE);
-  else
-    return -1;
 }
 
 Bus* BUS_get_next(Bus* bus) {
@@ -2001,6 +1984,8 @@ void BUS_init(Bus* bus, int num_periods) {
 
   bus->net = NULL;
 
+  ARRAY_zalloc(bus->dP_index,int,T);
+  ARRAY_zalloc(bus->dQ_index,int,T);
   ARRAY_zalloc(bus->dPdw_index,int,T);
   ARRAY_zalloc(bus->dQdw_index,int,T);
   ARRAY_zalloc(bus->dPdv_index,int,T);
@@ -2518,6 +2503,20 @@ void BUS_propagate_data_in_time(Bus* bus, int start, int end) {
   }
 }
 
+int BUS_get_dP_index(Bus* bus, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    return bus->dP_index[t];
+  else
+    return -1;
+}
+
+int BUS_get_dQ_index(Bus* bus, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    return bus->dQ_index[t];
+  else
+    return -1;
+}
+
 int BUS_get_dPdw_index(Bus* bus, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     return bus->dPdw_index[t];
@@ -2565,6 +2564,16 @@ int BUS_get_dvdv_index(Bus* bus, int t) {
     return bus->dvdv_index[t];
   else
     return -1;
+}
+
+void BUS_set_dP_index(Bus* bus, int idx, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    bus->dP_index[t] = idx;
+}
+
+void BUS_set_dQ_index(Bus* bus, int idx, int t) {
+  if (bus && t >= 0 && t < bus->num_periods)
+    bus->dQ_index[t] = idx;
 }
 
 void BUS_set_dPdw_index(Bus* bus, int idx, int t) {

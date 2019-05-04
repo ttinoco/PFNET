@@ -76,7 +76,7 @@ void CONSTR_CFUNC_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   FUNC_count_step(data->func,bus,busdc,t);
 
   // Post-processing
-  if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net)-1)) {
+  if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net,FALSE)-1)) {
 
     // Extra vars
     if (strcmp(data->op,">=") == 0 || strcmp(data->op,"<=") == 0)
@@ -139,7 +139,7 @@ void CONSTR_CFUNC_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   FUNC_analyze_step(data->func,bus,busdc,t);
   
   // Post-processing
-  if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net)-1)) {
+  if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net,FALSE)-1)) {
 
     G = CONSTR_get_G(c);
     l = CONSTR_get_l(c);
@@ -225,7 +225,7 @@ void CONSTR_CFUNC_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* value
   FUNC_eval_step(data->func,bus,busdc,t,values);
   
   // Post-processing
-  if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net)-1)) {
+  if ((t == BUS_get_num_periods(bus)-1) && (BUS_get_index(bus) == NET_get_num_buses(net,FALSE)-1)) {
 
     f = VEC_get_data(CONSTR_get_f(c));
     J = MAT_get_data_array(CONSTR_get_J(c));

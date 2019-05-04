@@ -73,9 +73,10 @@ void CONSTR_REG_PF_SWITCH_allocate(Constr* c) {
   CONSTR_REG_PF_SWITCH_free(c);
   data = (Constr_REG_PF_SWITCH_Data*)malloc(sizeof(Constr_REG_PF_SWITCH_Data));
   ARRAY_zalloc(data->fix_flag,char,num_vars);
-  for (i = 0; i < NET_get_num_vsc_convs(net); i++) {
+  for (i = 0; i < NET_get_num_vsc_convs(net,FALSE); i++) {
     vsc = NET_get_vsc_conv(net,i);
-    if (CONVVSC_is_in_f_ac_mode(vsc) &&
+    if (CONVVSC_is_in_service(vsc) &&
+        CONVVSC_is_in_f_ac_mode(vsc) &&
         CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_P) &&
         CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_Q)) {
       for (t = 0; t < NET_get_num_periods(net); t++)

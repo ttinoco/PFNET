@@ -107,7 +107,7 @@ void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus,
             
           // Q at Qmin and v < v_set - check if free Q might help
           if (fabs(Q-Qmin) < fabs(Q-Qmax) && v < v_set) {
-            Q = Q - VEC_get(f,BUS_get_index_Q(REG_OBJ_get_bus(obj_type,obj),t)); // per unit (see constr_PF)
+            Q = Q - VEC_get(f,BUS_get_dQ_index(REG_OBJ_get_bus(obj_type,obj),t)); // per unit (see constr_PF)
             if (Qmin < Q) {
               fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] = FALSE; // Switch to Q free
               all_fixed = FALSE;
@@ -118,7 +118,7 @@ void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus,
             
           // Q at Qmax and v > v_set - check if free Q might help
           else if (fabs(Q-Qmax) < fabs(Q-Qmin) && v > v_set) { 
-            Q = Q - VEC_get(f,BUS_get_index_Q(REG_OBJ_get_bus(obj_type,obj),t)); // per unit (see constr_PF)
+            Q = Q - VEC_get(f,BUS_get_dQ_index(REG_OBJ_get_bus(obj_type,obj),t)); // per unit (see constr_PF)
             if (Q < Qmax) {
               fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] = FALSE; // Switch to Q free
               all_fixed = FALSE;
@@ -189,7 +189,7 @@ void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus,
           
         // Q at Qmin and v < v_set - check if free Q might help
         if (fabs(Q-Qmin) < fabs(Q-Qmax) && v < v_set) {
-          Q = Q - VEC_get(f,BUS_get_index_Q(REG_OBJ_get_bus(obj_type,obj),t)); // per unit (see constr_PF)
+          Q = Q - VEC_get(f,BUS_get_dQ_index(REG_OBJ_get_bus(obj_type,obj),t)); // per unit (see constr_PF)
           if (Qmin < Q) {
             fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] = FALSE; // Switch to Q free
             all_fixed = FALSE;
@@ -200,7 +200,7 @@ void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus,
           
         // Q at Qmax and v > v_set - check if free Q might help
         else if (fabs(Q-Qmax) < fabs(Q-Qmin) && v > v_set) { 
-          Q = Q - VEC_get(f,BUS_get_index_Q(REG_OBJ_get_bus(obj_type,obj),t)); // per unit (see constr_PF)
+          Q = Q - VEC_get(f,BUS_get_dQ_index(REG_OBJ_get_bus(obj_type,obj),t)); // per unit (see constr_PF)
           if (Q < Qmax) {
             fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] = FALSE; // Switch to Q free
             all_fixed = FALSE;
@@ -222,6 +222,6 @@ void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus,
   }
       
   // Update
-  if (BUS_get_index(bus) == NET_get_num_buses(net)-1 && t == NET_get_num_periods(net)-1)
+  if (BUS_get_index(bus) == NET_get_num_buses(net,FALSE)-1 && t == NET_get_num_periods(net)-1)
     CONSTR_analyze(pvpq);
 }

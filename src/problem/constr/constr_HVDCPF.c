@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2019, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -37,8 +37,19 @@ void CONSTR_HVDCPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   if (!A_nnz || !A_row || !busdc)
     return;
 
+  // Out of service
+  if (!BUSDC_is_in_service(busdc))
+    return;
+
+  // di index
+  BUSDC_set_di_index(busdc,*A_row,t);
+
   // VSC converters
   for (vsc_conv = BUSDC_get_vsc_conv(busdc); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_dc(vsc_conv)) {
+
+    // Out of service
+    if (!CONVVSC_is_in_service(vsc_conv))
+      return;
     
     //*****************************
     if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_PDC)) { // P_dc var
@@ -50,6 +61,10 @@ void CONSTR_HVDCPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // CSC converters
   for (csc_conv = BUSDC_get_csc_conv(busdc); csc_conv != NULL; csc_conv = CONVCSC_get_next_dc(csc_conv)) {
+
+    // Out of service
+    if (!CONVCSC_is_in_service(csc_conv))
+      return;
     
     //*****************************
     if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_PDC)) { // P_dc var
@@ -61,12 +76,15 @@ void CONSTR_HVDCPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Branches
   for(br = BUSDC_get_branch_k(busdc); br != NULL; br = BRANCHDC_get_next_k(br)) {
+
+    // Out of service
+    if (!BRANCHDC_is_in_service(br))
+      return;
     
     //***********
     if (BUSDC_has_flags(BRANCHDC_get_bus_k(br),FLAG_VARS,BUSDC_VAR_V)) { // vk var
 
       // A
-      (*A_nnz)++;
       (*A_nnz)++;
     }
 
@@ -75,6 +93,25 @@ void CONSTR_HVDCPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
       // A
       (*A_nnz)++;
+    }
+  }
+  for(br = BUSDC_get_branch_m(busdc); br != NULL; br = BRANCHDC_get_next_m(br)) {
+
+    // Out of service
+    if (!BRANCHDC_is_in_service(br))
+      return;
+    
+    //***********
+    if (BUSDC_has_flags(BRANCHDC_get_bus_m(br),FLAG_VARS,BUSDC_VAR_V)) { // vm var
+
+      // A
+      (*A_nnz)++;
+    }
+
+    //***********
+    if (BUSDC_has_flags(BRANCHDC_get_bus_k(br),FLAG_VARS,BUSDC_VAR_V)) { // vk var
+
+      // A
       (*A_nnz)++;
     }
   }
@@ -105,14 +142,22 @@ void CONSTR_HVDCPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   if (!A_nnz || !A_row || !busdc)
     return;
 
+  // Out of service
+  if (!BUSDC_is_in_service(busdc))
+    return;
+
   // VSC
   for (vsc_conv = BUSDC_get_vsc_conv(busdc); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_dc(vsc_conv)) {
+
+    // Out of service
+    if (!CONVVSC_is_in_service(vsc_conv))
+      return;
     
     //*****************************
     if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_PDC)) { // P_dc var
       
       // A
-      MAT_set_i(A,*A_nnz,BUSDC_get_index_t(busdc,t));
+      MAT_set_i(A,*A_nnz,*A_row);
       MAT_set_j(A,*A_nnz,CONVVSC_get_index_i_dc(vsc_conv,t)); // i_dc
       MAT_set_d(A,*A_nnz,1.);
       (*A_nnz)++;
@@ -120,18 +165,22 @@ void CONSTR_HVDCPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
     else {
       
       // b
-      VEC_add_to_entry(b,BUSDC_get_index_t(busdc,t),-CONVVSC_get_i_dc(vsc_conv,t));
+      VEC_add_to_entry(b,*A_row,-CONVVSC_get_i_dc(vsc_conv,t));
     }
   }
 
   // CSC
   for (csc_conv = BUSDC_get_csc_conv(busdc); csc_conv != NULL; csc_conv = CONVCSC_get_next_dc(csc_conv)) {
+
+    // Out of service
+    if (!CONVCSC_is_in_service(csc_conv))
+      return;
     
     //*****************************
     if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_PDC)) { // P_dc var
       
       // A
-      MAT_set_i(A,*A_nnz,BUSDC_get_index_t(busdc,t));
+      MAT_set_i(A,*A_nnz,*A_row);
       MAT_set_j(A,*A_nnz,CONVCSC_get_index_i_dc(csc_conv,t)); // i_dc
       MAT_set_d(A,*A_nnz,1.);
       (*A_nnz)++;
@@ -139,12 +188,16 @@ void CONSTR_HVDCPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
     else {
       
       // b
-      VEC_add_to_entry(b,BUSDC_get_index_t(busdc,t),-CONVCSC_get_i_dc(csc_conv,t));
+      VEC_add_to_entry(b,*A_row,-CONVCSC_get_i_dc(csc_conv,t));
     }
   }
 
   // Branches
   for(br = BUSDC_get_branch_k(busdc); br != NULL; br = BRANCHDC_get_next_k(br)) {
+
+    // Out of service
+    if (!BRANCHDC_is_in_service(br))
+      return;
     
     // Branch data
     r = BRANCHDC_get_r(br); // p.u.
@@ -155,35 +208,48 @@ void CONSTR_HVDCPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
     if (BUSDC_has_flags(BRANCHDC_get_bus_k(br),FLAG_VARS,BUSDC_VAR_V)) { // vk var
       
       // A
-      MAT_set_i(A,*A_nnz,BUSDC_get_index_t(BRANCHDC_get_bus_k(br),t)); // dik
+      MAT_set_i(A,*A_nnz,*A_row); // dikm
       MAT_set_j(A,*A_nnz,BUSDC_get_index_v(BRANCHDC_get_bus_k(br),t)); // vk
       MAT_set_d(A,*A_nnz,-1./r);
       (*A_nnz)++;
-
-      MAT_set_i(A,*A_nnz,BUSDC_get_index_t(BRANCHDC_get_bus_m(br),t)); // dim
-      MAT_set_j(A,*A_nnz,BUSDC_get_index_v(BRANCHDC_get_bus_k(br),t)); // vk
-      MAT_set_d(A,*A_nnz,1./r);
-      (*A_nnz)++;
-
-      
     }
     else {
 
       // b
-      VEC_add_to_entry(b,BUSDC_get_index_t(BRANCHDC_get_bus_k(br),t),BUSDC_get_v(BRANCHDC_get_bus_k(br),t)/r);
-      VEC_add_to_entry(b,BUSDC_get_index_t(BRANCHDC_get_bus_m(br),t),-BUSDC_get_v(BRANCHDC_get_bus_k(br),t)/r);
+      VEC_add_to_entry(b,*A_row,BUSDC_get_v(BRANCHDC_get_bus_k(br),t)/r);
     }
 
     //***********
     if (BUSDC_has_flags(BRANCHDC_get_bus_m(br),FLAG_VARS,BUSDC_VAR_V)) { // vm var
 
       // A
-      MAT_set_i(A,*A_nnz,BUSDC_get_index_t(BRANCHDC_get_bus_k(br),t)); // dik
+      MAT_set_i(A,*A_nnz,*A_row); // dikm
       MAT_set_j(A,*A_nnz,BUSDC_get_index_v(BRANCHDC_get_bus_m(br),t)); // vm
       MAT_set_d(A,*A_nnz,1./r);
       (*A_nnz)++;
+    }
+    else {
 
-      MAT_set_i(A,*A_nnz,BUSDC_get_index_t(BRANCHDC_get_bus_m(br),t)); // dim
+      // b
+      VEC_add_to_entry(b,*A_row,-BUSDC_get_v(BRANCHDC_get_bus_m(br),t)/r);
+    }
+  }
+  for(br = BUSDC_get_branch_m(busdc); br != NULL; br = BRANCHDC_get_next_m(br)) {
+
+    // Out of service
+    if (!BRANCHDC_is_in_service(br))
+      return;
+    
+    // Branch data
+    r = BRANCHDC_get_r(br); // p.u.
+    if (r < CONSTR_HVDCPF_MINR)
+      r = CONSTR_HVDCPF_MINR;
+    
+    //***********
+    if (BUSDC_has_flags(BRANCHDC_get_bus_m(br),FLAG_VARS,BUSDC_VAR_V)) { // vm var
+      
+      // A
+      MAT_set_i(A,*A_nnz,*A_row); // dimk
       MAT_set_j(A,*A_nnz,BUSDC_get_index_v(BRANCHDC_get_bus_m(br),t)); // vm
       MAT_set_d(A,*A_nnz,-1./r);
       (*A_nnz)++;
@@ -191,8 +257,22 @@ void CONSTR_HVDCPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
     else {
 
       // b
-      VEC_add_to_entry(b,BUSDC_get_index_t(BRANCHDC_get_bus_k(br),t),-BUSDC_get_v(BRANCHDC_get_bus_m(br),t)/r);
-      VEC_add_to_entry(b,BUSDC_get_index_t(BRANCHDC_get_bus_m(br),t),BUSDC_get_v(BRANCHDC_get_bus_m(br),t)/r);
+      VEC_add_to_entry(b,*A_row,BUSDC_get_v(BRANCHDC_get_bus_m(br),t)/r);
+    }
+
+    //***********
+    if (BUSDC_has_flags(BRANCHDC_get_bus_k(br),FLAG_VARS,BUSDC_VAR_V)) { // vk var
+
+      // A
+      MAT_set_i(A,*A_nnz,*A_row); // dimk
+      MAT_set_j(A,*A_nnz,BUSDC_get_index_v(BRANCHDC_get_bus_k(br),t)); // vk
+      MAT_set_d(A,*A_nnz,1./r);
+      (*A_nnz)++;
+    }
+    else {
+
+      // b
+      VEC_add_to_entry(b,*A_row,-BUSDC_get_v(BRANCHDC_get_bus_k(br),t)/r);
     }
   }
 

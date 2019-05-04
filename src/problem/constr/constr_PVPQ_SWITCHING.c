@@ -80,9 +80,9 @@ void CONSTR_PVPQ_SWITCHING_allocate(Constr* c) {
   CONSTR_PVPQ_SWITCHING_free(c);
   data = (Constr_PVPQ_SWITCHING_Data*)malloc(sizeof(Constr_PVPQ_SWITCHING_Data));
   ARRAY_zalloc(data->fix_flag,char,num_vars);
-  for (i = 0; i < NET_get_num_buses(net); i++) {
+  for (i = 0; i < NET_get_num_buses(net,FALSE); i++) {
     bus = NET_get_bus(net,i);
-    if (BUS_is_v_set_regulated(bus)) {
+    if (BUS_is_v_set_regulated(bus) && BUS_is_in_service(bus)) {
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
         for (t = 0; t < NET_get_num_periods(net); t++)
           data->fix_flag[BUS_get_index_v_mag(bus,t)] = TRUE; // reg v starts fixed

@@ -81,7 +81,6 @@ char BUSDC_get_flags_fixed(BusDC* bus);
 char BUSDC_get_flags_bounded(BusDC* bus);
 char BUSDC_get_flags_sparse(BusDC* bus);
 int BUSDC_get_index(BusDC* bus);
-int BUSDC_get_index_t(BusDC* bus, int t);
 int BUSDC_get_index_v(BusDC* bus, int t);
 char* BUSDC_get_json_string(BusDC* bus, char* output);
 int BUSDC_get_num_csc_convs(BusDC* bus);
@@ -97,6 +96,8 @@ REAL BUSDC_get_v_base(BusDC* bus);
 Vec* BUSDC_get_var_indices(void* bus, unsigned char var, int t_start, int t_end);
 char* BUSDC_get_var_info_string(BusDC* bus, int index);
 void BUSDC_get_var_values(BusDC* bus, Vec* values, int code);
+
+int BUSDC_get_di_index(BusDC* bus, int t);
 
 BOOL BUSDC_has_flags(void* vbus, char flag_type, unsigned char mask);
 BOOL BUSDC_has_properties(void* bus, char prop);
@@ -125,5 +126,7 @@ void BUSDC_set_network(BusDC* bus, void* net);
 void BUSDC_set_v(BusDC* bus, REAL v, int t);
 void BUSDC_set_v_base(BusDC* bus, REAL v_base);
 void BUSDC_set_var_values(BusDC* bus, Vec* values);
+
+void BUSDC_set_di_index(BusDC* bus, int idx, int t);
 
 #endif

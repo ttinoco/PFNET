@@ -49,27 +49,35 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // Check pointers
   if (!J_row || !J_nnz || !H_nnz || !bus)
     return;
+
+  // Out of service
+  if (!BUS_is_in_service(bus))
+    return;
+  
+  // dP, dQ indices
+  BUS_set_dP_index(bus,*J_row,t);
+  BUS_set_dQ_index(bus,*J_row+1,t);
   
   // Bus data
   var_w = BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG);
   var_v = BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG);
-  HP_nnz = H_nnz+BUS_get_index_P(bus,t);
-  HQ_nnz = H_nnz+BUS_get_index_Q(bus,t);
+  HP_nnz = H_nnz+*J_row;
+  HQ_nnz = H_nnz+*J_row+1;
 
   if (var_w) {
     
-    BUS_set_dPdw_index(bus,*J_nnz, t);
+    BUS_set_dPdw_index(bus,*J_nnz,t);
     (*J_nnz)++; // dPk/dwk
     
-    BUS_set_dQdw_index(bus,*J_nnz, t);
+    BUS_set_dQdw_index(bus,*J_nnz,t);
     (*J_nnz)++; // dQk/dwk
     
-    BUS_set_dwdw_index(bus,*HP_nnz, t);
+    BUS_set_dwdw_index(bus,*HP_nnz,t);
     (*HP_nnz)++;
     (*HQ_nnz)++; // dwkdwk
     
     if (var_v) {
-      BUS_set_dwdv_index(bus,*HP_nnz, t);
+      BUS_set_dwdv_index(bus,*HP_nnz,t);
       (*HP_nnz)++;
       (*HQ_nnz)++; // dwkdvk
     }
@@ -77,13 +85,13 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   
   if (var_v) {
     
-    BUS_set_dPdv_index(bus,*J_nnz, t);
+    BUS_set_dPdv_index(bus,*J_nnz,t);
     (*J_nnz)++; // dPk/dvk
     
-    BUS_set_dQdv_index(bus,*J_nnz, t);
+    BUS_set_dQdv_index(bus,*J_nnz,t);
     (*J_nnz)++; // dQk/dvk
     
-    BUS_set_dvdv_index(bus,*HP_nnz, t);
+    BUS_set_dvdv_index(bus,*HP_nnz,t);
     (*HP_nnz)++;
     (*HQ_nnz)++; // dvkdvk
   }
@@ -112,6 +120,10 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   
   // Variable generators
   for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+
+    // Out of service
+    if (!VARGEN_is_in_service(vargen))
+      continue;
     
     //*****************************
     if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) { // Pg var
@@ -130,6 +142,10 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   
   // Shunts
   for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+
+    // Out of service
+    if (!SHUNT_is_in_service(shunt))
+      continue;
     
     //*****************************
     if (var_v) { // vk var
@@ -158,6 +174,10 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   
   // Loads
   for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+
+    // Out of service
+    if (!LOAD_is_in_service(load))
+      continue;
     
     //*****************************
     if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) { // Pl var
@@ -176,6 +196,10 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   
   // Batteries
   for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+
+    // Out of service
+    if (!BAT_is_in_service(bat))
+      continue;
     
     //*****************************
     if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) { // Pc and Pd var
@@ -188,6 +212,10 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // VSC converters
   for (vsc_conv = BUS_get_vsc_conv(bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_ac(vsc_conv)) {
+
+    // Out of service
+    if (!CONVVSC_is_in_service(vsc_conv))
+      continue;
     
     //*****************************
     if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_P)) { // P var
@@ -206,6 +234,10 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // CSC converters
   for (csc_conv = BUS_get_csc_conv(bus); csc_conv != NULL; csc_conv = CONVCSC_get_next_ac(csc_conv)) {
+
+    // Out of service
+    if (!CONVCSC_is_in_service(csc_conv))
+      continue;
     
     //*****************************
     if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_P)) { // P var
@@ -224,6 +256,10 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // FACTS
   for (facts = BUS_get_facts_k(bus); facts != NULL; facts = FACTS_get_next_k(facts)) {
+
+    // Out of service
+    if (!FACTS_is_in_service(facts))
+      continue;
     
     //*****************************
     if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P)) { // P var
@@ -240,6 +276,10 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
     }
   }
   for (facts = BUS_get_facts_m(bus); facts != NULL; facts = FACTS_get_next_m(facts)) {
+
+    // Out of service
+    if (!FACTS_is_in_service(facts))
+      continue;
     
     //*****************************
     if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P)) { // P var
@@ -259,8 +299,10 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    HP_nnz = H_nnz+BUS_get_index_P(BRANCH_get_bus_k(br),t);
-    HQ_nnz = H_nnz+BUS_get_index_Q(BRANCH_get_bus_k(br),t);
+    // Out of service
+    if (!BRANCH_is_in_service(br))
+      continue;
+
     BRANCH_power_flow_count(br,
                             J_nnz,
                             HP_nnz,
@@ -268,9 +310,13 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
                             TRUE,  // Pkm, Qkm
                             TRUE); // ext_idx
     *HQ_nnz = *HP_nnz;
+  }
+  for (br = BUS_get_branch_m(bus); br != NULL; br = BRANCH_get_next_m(br)) {
+
+    // Out of service
+    if (!BRANCH_is_in_service(br))
+      continue;
     
-    HP_nnz = H_nnz+BUS_get_index_P(BRANCH_get_bus_m(br),t);
-    HQ_nnz = H_nnz+BUS_get_index_Q(BRANCH_get_bus_m(br),t);
     BRANCH_power_flow_count(br,
                             J_nnz,
                             HP_nnz,
@@ -320,9 +366,13 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   J_row = CONSTR_get_J_row_ptr(c);
   J_nnz = CONSTR_get_J_nnz_ptr(c);
   H_nnz = CONSTR_get_H_nnz(c);
-
+  
   // Check pointers
   if (!J_row || !J_nnz || !H_nnz || !H_array || !bus)
+    return;
+
+  // Out of service
+  if (!BUS_is_in_service(bus))
     return;
 
   // Bus data
@@ -330,8 +380,8 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   v_index = BUS_get_index_v_mag(bus,t);
   var_w = BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG);
   var_v = BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG);
-  P_index = BUS_get_index_P(bus,t);
-  Q_index = BUS_get_index_Q(bus,t);
+  P_index = *J_row;
+  Q_index = *J_row+1;
   HP_nnz = H_nnz+P_index;
   HQ_nnz = H_nnz+Q_index;
   HP = MAT_array_get(H_array,P_index);
@@ -411,6 +461,10 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   
   // Variable generators
   for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+
+    // Out of service
+    if (!VARGEN_is_in_service(vargen))
+      continue;
     
     //*****************************
     if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) { // Pg var
@@ -433,6 +487,10 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   
   // Shunts
   for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+
+    // Out of service
+    if (!SHUNT_is_in_service(shunt))
+      continue;
     
     //*****************************
     if (var_v) { // vk var
@@ -468,6 +526,10 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       
   // Loads
   for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+
+    // Out of service
+    if (!LOAD_is_in_service(load))
+      continue;
     
     //*****************************
     if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) { // Pl var
@@ -490,6 +552,10 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   
   // Batteries
   for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+
+    // Out of service
+    if (!BAT_is_in_service(bat))
+      continue;
     
     //*****************************
     if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {  // Pc and Pd var
@@ -507,6 +573,10 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // VSC converters
   for (vsc_conv = BUS_get_vsc_conv(bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_ac(vsc_conv)) {
+
+    // Out of service
+    if (!CONVVSC_is_in_service(vsc_conv))
+      continue;
     
     //*****************************
     if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_P)) { // P var
@@ -529,6 +599,10 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // CSC converters
   for (csc_conv = BUS_get_csc_conv(bus); csc_conv != NULL; csc_conv = CONVCSC_get_next_ac(csc_conv)) {
+
+    // Out of service
+    if (!CONVCSC_is_in_service(csc_conv))
+      continue;
     
     //*****************************
     if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_P)) { // P var
@@ -551,6 +625,10 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // FACTS
   for (facts = BUS_get_facts_k(bus); facts != NULL; facts = FACTS_get_next_k(facts)) {
+
+    // Out of service
+    if (!FACTS_is_in_service(facts))
+      continue;
     
     //*****************************
     if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P)) { // P var
@@ -571,6 +649,10 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
     }
   }
   for (facts = BUS_get_facts_m(bus); facts != NULL; facts = FACTS_get_next_m(facts)) {
+
+    // Out of service
+    if (!FACTS_is_in_service(facts))
+      continue;
     
     //*****************************
     if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P)) { // P var
@@ -594,8 +676,10 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    P_index = BUS_get_index_P(BRANCH_get_bus_k(br),t);
-    Q_index = BUS_get_index_Q(BRANCH_get_bus_k(br),t);
+    // Out of service
+    if (!BRANCH_is_in_service(br))
+      continue;
+
     BRANCH_power_flow_analyze(br,
                               J_nnz,
                               J,
@@ -608,9 +692,13 @@ void CONSTR_ACPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
                               TRUE,  // Pkm, Qkm
                               TRUE); // ext_idx
     *(H_nnz+Q_index) = *(H_nnz+P_index);
+  }
+  for (br = BUS_get_branch_m(bus); br != NULL; br = BRANCH_get_next_m(br)) {
 
-    P_index = BUS_get_index_P(BRANCH_get_bus_m(br),t);
-    Q_index = BUS_get_index_Q(BRANCH_get_bus_m(br),t);
+    // Out of service
+    if (!BRANCH_is_in_service(br))
+      continue;
+
     BRANCH_power_flow_analyze(br,
                               J_nnz,
                               J,
@@ -678,11 +766,15 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values
   if (!f || !J || !J_row || !J_nnz || !H_nnz || !bus)
     return;
 
+  // Out of service
+  if (!BUS_is_in_service(bus))
+    return;
+
   // Bus data
   var_w = BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG);
   var_v = BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG);
-  P_index = BUS_get_index_P(bus,t); // index in f for active power mismatch
-  Q_index = BUS_get_index_Q(bus,t); // index in f for reactive power mismatch
+  P_index = *J_row;   // index in f for active power mismatch
+  Q_index = *J_row+1; // index in f for reactive power mismatch
   HP = MAT_get_data_array(MAT_array_get(H_array,P_index));
   HQ = MAT_get_data_array(MAT_array_get(H_array,Q_index));
   HP_nnz = H_nnz+P_index;
@@ -749,6 +841,10 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values
   
   // Variable generators
   for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+
+    // Out of service
+    if (!VARGEN_is_in_service(vargen))
+      continue;
     
     // Var values
     if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P))
@@ -783,6 +879,10 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values
   
   // Shunts
   for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+
+    // Out of service
+    if (!SHUNT_is_in_service(shunt))
+      continue;
     
     // Values
     shunt_g = SHUNT_get_g(shunt);
@@ -829,6 +929,10 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values
   
   // Loads
   for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+
+    // Out of service
+    if (!LOAD_is_in_service(load))
+      continue;
     
     // Var values
     if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P))
@@ -863,6 +967,10 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values
   
   // Batteries
   for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+
+    // Out of service
+    if (!BAT_is_in_service(bat))
+      continue;
     
     // var values
     if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P))
@@ -887,6 +995,10 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values
   
   // VSC converters
   for (vsc_conv = BUS_get_vsc_conv(bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_ac(vsc_conv)) {
+
+    // Out of service
+    if (!CONVVSC_is_in_service(vsc_conv))
+      continue;
     
     // Var values
     if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_P))
@@ -921,6 +1033,10 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values
 
   // CSC converters
   for (csc_conv = BUS_get_csc_conv(bus); csc_conv != NULL; csc_conv = CONVCSC_get_next_ac(csc_conv)) {
+
+    // Out of service
+    if (!CONVCSC_is_in_service(csc_conv))
+      continue;
     
     // Var values
     if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_P))
@@ -955,6 +1071,10 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values
 
   // FACTS
   for (facts = BUS_get_facts_k(bus); facts != NULL; facts = FACTS_get_next_k(facts)) {
+
+    // Out of service
+    if (!FACTS_is_in_service(facts))
+      continue;
     
     // Var values
     if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P))
@@ -987,6 +1107,10 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values
     }
   }
   for (facts = BUS_get_facts_m(bus); facts != NULL; facts = FACTS_get_next_m(facts)) {
+
+    // Out of service
+    if (!FACTS_is_in_service(facts))
+      continue;
     
     // Var values
     if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P))
@@ -1021,9 +1145,11 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values
   
   // Branches
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
+
+    // Out of service
+    if (!BRANCH_is_in_service(br))
+      continue;
     
-    P_index = BUS_get_index_P(BRANCH_get_bus_k(br),t);
-    Q_index = BUS_get_index_Q(BRANCH_get_bus_k(br),t);
     BRANCH_power_flow_eval(br,
                            f+P_index,
                            f+Q_index,
@@ -1038,9 +1164,13 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values
                            TRUE,  // Pkm, Qkm
                            TRUE); // ext_idx
     *(H_nnz+Q_index) = *(H_nnz+P_index);
+  }
+  for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
-    P_index = BUS_get_index_P(BRANCH_get_bus_m(br),t);
-    Q_index = BUS_get_index_Q(BRANCH_get_bus_m(br),t);
+    // Out of service
+    if (!BRANCH_is_in_service(br))
+      continue;
+
     BRANCH_power_flow_eval(br,
                            f+P_index,
                            f+Q_index,
@@ -1063,7 +1193,25 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values
 }
 
 void CONSTR_ACPF_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* sA, Vec* sf, Vec* sGu, Vec* sGl) {
+
+  // Locals
+  int* J_row;
+
+  // Constr data
+  J_row = CONSTR_get_J_row_ptr(c);
+
+  // Check pointers
+  if (!J_row || !bus)
+    return;
+
+  // Out of service
+  if (!BUS_is_in_service(bus))
+    return;
   
-  BUS_set_sens_P_balance(bus,VEC_get(sf,BUS_get_index_P(bus,t)),t); // sens of P balance
-  BUS_set_sens_Q_balance(bus,VEC_get(sf,BUS_get_index_Q(bus,t)),t); // sens of Q balance
+  BUS_set_sens_P_balance(bus,VEC_get(sf,*J_row),t);   // sens of P balance
+  BUS_set_sens_Q_balance(bus,VEC_get(sf,*J_row+1),t); // sens of Q balance
+
+  // Rows
+  (*J_row)++;
+  (*J_row)++;
 }

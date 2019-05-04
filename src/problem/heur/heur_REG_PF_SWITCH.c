@@ -111,7 +111,7 @@ void HEUR_REG_PF_SWITCH_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus, 
                             
         // Q at Qmin - check if free Q moves up
         if (fabs(Q-Qmin) < fabs(Q-Qmax)) {
-          Q = Q - VEC_get(f,BUS_get_index_Q(CONVVSC_get_ac_bus(vsc),t)); // per unit (see constr_ACPF)
+          Q = Q - VEC_get(f,BUS_get_dQ_index(CONVVSC_get_ac_bus(vsc),t)); // per unit (see constr_ACPF)
           if (Qmin < Q) {
             fix_flag[CONVVSC_get_index_Q(vsc,t)] = FALSE; // Switch to Q free
             if (HEUR_REG_PF_SWITCH_DEBUG)
@@ -121,7 +121,7 @@ void HEUR_REG_PF_SWITCH_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus, 
             
         // Q at Qmax - check if free Q moves down
         else if (fabs(Q-Qmax) < fabs(Q-Qmin)) { 
-          Q = Q - VEC_get(f,BUS_get_index_Q(CONVVSC_get_ac_bus(vsc),t)); // per unit (see constr_ACPF)
+          Q = Q - VEC_get(f,BUS_get_dQ_index(CONVVSC_get_ac_bus(vsc),t)); // per unit (see constr_ACPF)
           if (Q < Qmax) {
             fix_flag[CONVVSC_get_index_Q(vsc,t)] = FALSE; // Switch to Q free
             if (HEUR_REG_PF_SWITCH_DEBUG)
@@ -133,6 +133,6 @@ void HEUR_REG_PF_SWITCH_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus, 
   }
   
   // Update
-  if (BUS_get_index(bus) == NET_get_num_buses(net)-1 && t == NET_get_num_periods(net)-1)
+  if (BUS_get_index(bus) == NET_get_num_buses(net,FALSE)-1 && t == NET_get_num_periods(net)-1)
     CONSTR_analyze(creg);
 }
