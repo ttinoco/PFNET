@@ -841,7 +841,7 @@ BOOL LOAD_is_equal(Load* load, Load* other) {
 
 BOOL LOAD_is_in_service(void* load) {
   if (load)
-    return ((Load*)load)->in_service;
+    return ((Load*)load)->in_service && BUS_is_in_service(((Load*)load)->bus);
   else
     return FALSE;
 }

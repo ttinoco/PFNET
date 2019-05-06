@@ -411,7 +411,9 @@ void BRANCHDC_init(BranchDC* br, int num_periods) {
 
 BOOL BRANCHDC_is_in_service(void* br) {
   if (br)
-    return ((BranchDC*)br)->in_service;
+    return (((BranchDC*)br)->in_service &&
+            BUSDC_is_in_service(((BranchDC*)br)->bus_k) &&
+            BUSDC_is_in_service(((BranchDC*)br)->bus_m));
   else
     return FALSE;
 }

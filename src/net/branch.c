@@ -1445,7 +1445,9 @@ BOOL BRANCH_is_equal(Branch* br, Branch* other) {
 
 BOOL BRANCH_is_in_service(void* br) {
   if (br)
-    return ((Branch*)br)->in_service;
+    return (((Branch*)br)->in_service &&
+            BUS_is_in_service(((Branch*)br)->bus_k) &&
+            BUS_is_in_service(((Branch*)br)->bus_m));
   else
     return FALSE;
 }

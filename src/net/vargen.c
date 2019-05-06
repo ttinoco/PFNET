@@ -635,7 +635,7 @@ BOOL VARGEN_is_solar(Vargen* gen) {
 
 BOOL VARGEN_is_in_service(void* gen) {
   if (gen)
-    return ((Vargen*)gen)->in_service;
+    return ((Vargen*)gen)->in_service && BUS_is_in_service(((Vargen*)gen)->bus);
   else
     return FALSE;
 }

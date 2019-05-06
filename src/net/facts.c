@@ -1195,7 +1195,10 @@ BOOL FACTS_is_in_constant_series_v_mode(Facts* facts) {
 
 BOOL FACTS_is_in_service(void* facts) {
   if (facts)
-    return ((Facts*)facts)->in_service;
+    return (((Facts*)facts)->in_service &&
+            BUS_is_in_service(((Facts*)facts)->bus_k) &&
+            (BUS_is_in_service(((Facts*)facts)->bus_m) ||
+             FACTS_is_series_link_disabled((Facts*)facts)));
   else
     return FALSE;
 }

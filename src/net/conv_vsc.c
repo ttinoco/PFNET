@@ -822,7 +822,9 @@ void CONVVSC_init(ConvVSC* conv, int num_periods) {
 
 BOOL CONVVSC_is_in_service(void* conv) {
   if (conv)
-    return ((ConvVSC*)conv)->in_service;
+    return (((ConvVSC*)conv)->in_service &&
+            BUS_is_in_service(((ConvVSC*)conv)->ac_bus) &&
+            BUSDC_is_in_service(((ConvVSC*)conv)->dc_bus));
   else
     return FALSE;
 }

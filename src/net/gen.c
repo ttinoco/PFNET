@@ -787,7 +787,7 @@ BOOL GEN_is_equal(Gen* gen, Gen* other) {
 
 BOOL GEN_is_in_service(void* gen) {
   if (gen)
-    return ((Gen*)gen)->in_service;
+    return ((Gen*)gen)->in_service && BUS_is_in_service(((Gen*)gen)->bus);
   else
     return FALSE;
 }

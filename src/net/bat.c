@@ -97,7 +97,7 @@ Bat* BAT_array_new(int size, int num_periods) {
 
 BOOL BAT_is_in_service(void* bat) {
   if (bat)
-    return ((Bat*)bat)->in_service;
+    return ((Bat*)bat)->in_service && BUS_is_in_service(((Bat*)bat)->bus);
   else
     return FALSE;
 }
