@@ -45,7 +45,9 @@ void CONSTR_REG_VSET_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
     return;
       
   // Bus is regulated
-  if (BUS_is_v_set_regulated(bus) && BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
+  if (BUS_is_v_set_regulated(bus) &&
+      BUS_is_in_service(bus) &&
+      BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
     
     // Regulating objects
     for(REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus))  {
@@ -139,7 +141,9 @@ void CONSTR_REG_VSET_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
     return;
       
   // Bus is regulated
-  if (BUS_is_v_set_regulated(bus) && BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
+  if (BUS_is_v_set_regulated(bus) &&
+      BUS_is_in_service(bus) &&
+      BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
         
     // Regulating objects
     for(REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus))  {
@@ -280,7 +284,9 @@ void CONSTR_REG_VSET_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* va
     return;
       
   // Bus is regulated
-  if (BUS_is_v_set_regulated(bus) && BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
+  if (BUS_is_v_set_regulated(bus) &&
+      BUS_is_in_service(bus) &&
+      BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
         
     // Regulating objects
     for(REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus))  {
@@ -380,7 +386,9 @@ void CONSTR_REG_VSET_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, V
     return;
 
   // Bus is regulated
-  if (BUS_is_v_set_regulated(bus) && BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
+  if (BUS_is_v_set_regulated(bus) &&
+      BUS_is_in_service(bus) &&
+      BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
         
     // Regulating objects
     for(REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus))  {

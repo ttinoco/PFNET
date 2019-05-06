@@ -46,6 +46,7 @@ void CONSTR_REG_PF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
     // Candidate
     if (CONVVSC_is_in_f_ac_mode(vsc) &&
+        CONVVSC_is_in_service(vsc) && 
         CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_P) &&
         CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_Q)) {
           
@@ -133,6 +134,7 @@ void CONSTR_REG_PF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
     // Candidate
     if (CONVVSC_is_in_f_ac_mode(vsc) &&
+        CONVVSC_is_in_service(vsc) &&
         CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_P) &&
         CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_Q)) {
 
@@ -283,6 +285,7 @@ void CONSTR_REG_PF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* valu
 
     // Candidate
     if (CONVVSC_is_in_f_ac_mode(vsc) &&
+        CONVVSC_is_in_service(vsc) &&
         CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_P) &&
         CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_Q)) {
       

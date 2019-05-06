@@ -48,6 +48,7 @@ void CONSTR_REG_PF_SWITCH_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   for (vsc = BUS_get_vsc_conv(bus); vsc != NULL; vsc = CONVVSC_get_next_ac(vsc)) {
     
     if (CONVVSC_is_in_f_ac_mode(vsc) &&
+        CONVVSC_is_in_service(vsc) &&
         CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_P) &&
         CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_Q)) {
       (*A_nnz) += 2;
@@ -116,6 +117,7 @@ void CONSTR_REG_PF_SWITCH_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t)
   for (vsc = BUS_get_vsc_conv(bus); vsc != NULL; vsc = CONVVSC_get_next_ac(vsc)) {
     
     if (CONVVSC_is_in_f_ac_mode(vsc) &&
+        CONVVSC_is_in_service(vsc) &&
         CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_P) &&
         CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_Q)) {
       

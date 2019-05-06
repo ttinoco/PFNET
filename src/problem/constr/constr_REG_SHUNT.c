@@ -44,6 +44,10 @@ void CONSTR_REG_SHUNT_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // Shunts
   //*******
   for (shunt = BUS_get_reg_shunt(bus); shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
+
+    // Out of service
+    if (!SHUNT_is_in_service(shunt))
+      continue;
     
     // Linear
     //*******
@@ -176,6 +180,10 @@ void CONSTR_REG_SHUNT_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // Shunts
   //*******
   for (shunt = BUS_get_reg_shunt(bus); shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
+
+    // Out of service
+    if (!SHUNT_is_in_service(shunt))
+      continue;
     
     // Hessians (NOTE ORDER!!!)
     Hvmin = MAT_array_get(H_array,*J_row);
@@ -420,6 +428,10 @@ void CONSTR_REG_SHUNT_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* v
   // Shunts
   //*******
   for (shunt = BUS_get_reg_shunt(bus); shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
+
+    // Out of service
+    if (!SHUNT_is_in_service(shunt))
+      continue;
     
     // v values
     if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG))
@@ -608,6 +620,10 @@ void CONSTR_REG_SHUNT_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, 
   // Shunts
   //*******
   for (shunt = BUS_get_reg_shunt(bus); shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
+
+    // Out of service
+    if (!SHUNT_is_in_service(shunt))
+      continue;
     
     lamCompVmin = VEC_get(sf,*J_row);
     (*J_row)++; // compVmin

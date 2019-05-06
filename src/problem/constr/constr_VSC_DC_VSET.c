@@ -40,7 +40,9 @@ void CONSTR_VSC_DC_VSET_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   for (conv = BUSDC_get_vsc_conv(busdc); conv !=NULL; conv = CONVVSC_get_next_dc(conv)) {
     
     // VSC converter with DC voltage mode
-    if (CONVVSC_is_in_v_dc_mode(conv) && BUSDC_has_flags(busdc,FLAG_VARS,BUSDC_VAR_V)) {
+    if (CONVVSC_is_in_v_dc_mode(conv) &&
+        CONVVSC_is_in_service(conv) &&
+        BUSDC_has_flags(busdc,FLAG_VARS,BUSDC_VAR_V)) {
       
       (*A_nnz) += 1;
       
@@ -73,7 +75,9 @@ void CONSTR_VSC_DC_VSET_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   for (conv = BUSDC_get_vsc_conv(busdc); conv !=NULL; conv = CONVVSC_get_next_dc(conv)) {
 
     // VSC converter with DC voltage mode
-    if (CONVVSC_is_in_v_dc_mode(conv) && BUSDC_has_flags(busdc,FLAG_VARS,BUSDC_VAR_V)) {
+    if (CONVVSC_is_in_v_dc_mode(conv) &&
+        CONVVSC_is_in_service(conv) &&
+        BUSDC_has_flags(busdc,FLAG_VARS,BUSDC_VAR_V)) {
         
       VEC_set(b,*A_row,CONVVSC_get_v_dc_set(conv,t));
       

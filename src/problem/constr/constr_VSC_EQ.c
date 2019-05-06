@@ -44,6 +44,10 @@ void CONSTR_VSC_EQ_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // VSC
   for (conv = BUSDC_get_vsc_conv(busdc); conv != NULL; conv = CONVVSC_get_next_dc(conv)) {
 
+    // Out of service
+    if (!CONVVSC_is_in_service(conv))
+      continue;
+
     // Linear
     //*******
     if (CONVVSC_has_flags(conv, FLAG_VARS, CONVVSC_VAR_P)) {
@@ -119,6 +123,10 @@ void CONSTR_VSC_EQ_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // VSC
   for (conv = BUSDC_get_vsc_conv(busdc); conv != NULL; conv = CONVVSC_get_next_dc(conv)) {
+
+    // Out of service
+    if (!CONVVSC_is_in_service(conv))
+      continue;
 
     // Linear
     //*******
@@ -220,6 +228,10 @@ void CONSTR_VSC_EQ_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* valu
   
   // VSC
   for (conv = BUSDC_get_vsc_conv(busdc); conv != NULL; conv = CONVVSC_get_next_dc(conv)) {
+
+    // Out of service
+    if (!CONVVSC_is_in_service(conv))
+      continue;
 
     // Nonlinear
     //**********

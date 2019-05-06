@@ -45,7 +45,7 @@ void CONSTR_PVPQ_SWITCHING_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) 
     return;
       
   // Regulated bus
-  if (BUS_is_v_set_regulated(bus)) {
+  if (BUS_is_v_set_regulated(bus) && BUS_is_in_service(bus)) {
     
     num = 0;
     
@@ -125,7 +125,7 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t
     return;
   
   // Regulated bus
-  if (BUS_is_v_set_regulated(bus)) {
+  if (BUS_is_v_set_regulated(bus) && BUS_is_in_service(bus)) {
 	
     // v var and fixed
     //****************
