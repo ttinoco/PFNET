@@ -76,7 +76,8 @@ void HEUR_REG_PF_SWITCH_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus, 
         
     if (CONVVSC_is_in_f_ac_mode(vsc) &&
         CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_P) &&
-        CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_Q)) {
+        CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_Q) &&
+        CONVVSC_is_in_service(vsc)) {
           
       Q = VEC_get(var_values,CONVVSC_get_index_Q(vsc,t)); // per unit
       Qmax = CONVVSC_get_Q_max(vsc);                      // per unit

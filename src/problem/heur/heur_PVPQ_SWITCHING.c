@@ -79,8 +79,9 @@ void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus,
   f = CONSTR_get_f(pf);
 
   // Candidate bus
-  if (BUS_is_v_set_regulated(bus) &&                 // regulated
-      BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {   // v mag is variable
+  if (BUS_is_v_set_regulated(bus) &&               // regulated
+      BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) && // v mag is variable
+      BUS_is_in_service(bus)) {                    // in service
       
     // Voltage magnitude and set point
     v = VEC_get(var_values,BUS_get_index_v_mag(bus,t));
