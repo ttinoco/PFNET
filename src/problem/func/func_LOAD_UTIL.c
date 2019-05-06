@@ -34,7 +34,7 @@ void FUNC_LOAD_UTIL_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Loads
   for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
-    if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P))
+    if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P) && LOAD_is_in_service(load))
       (*Hphi_nnz)++;
   }
 }
@@ -56,7 +56,7 @@ void FUNC_LOAD_UTIL_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Loads
   for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
-    if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
+    if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P) && LOAD_is_in_service(load)) {
       MAT_set_i(Hphi,*Hphi_nnz,LOAD_get_index_P(load,t));
       MAT_set_j(Hphi,*Hphi_nnz,LOAD_get_index_P(load,t));
       (*Hphi_nnz)++;
@@ -90,6 +90,10 @@ void FUNC_LOAD_UTIL_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_v
 
   // Loads
   for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+
+    // Out of service
+    if (!LOAD_is_in_service(load))
+      continue;
     
     Q0 = LOAD_get_util_coeff_Q0(load);
     Q1 = LOAD_get_util_coeff_Q1(load);

@@ -34,10 +34,10 @@ void FUNC_FACTS_QSET_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   
   // FACTS
   for (facts = BUS_get_facts_k(bus); facts !=NULL; facts = FACTS_get_next_k(facts)) {
-    if (FACTS_is_in_normal_series_mode(facts)) {     
-      if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_Q))
-        (*Hphi_nnz)++;
-    }
+    if (FACTS_is_in_normal_series_mode(facts) &&
+        FACTS_is_in_service(facts) && 
+        FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_Q))
+      (*Hphi_nnz)++;
   }
 }
 
@@ -58,12 +58,12 @@ void FUNC_FACTS_QSET_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
       
   // FACTS
   for (facts = BUS_get_facts_k(bus); facts !=NULL; facts = FACTS_get_next_k(facts)) {
-    if (FACTS_is_in_normal_series_mode(facts)) {     
-      if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_Q)) {
-        MAT_set_i(H,*Hphi_nnz,FACTS_get_index_Q_m(facts,t));
-        MAT_set_j(H,*Hphi_nnz,FACTS_get_index_Q_m(facts,t));
-        (*Hphi_nnz)++;
-      }
+    if (FACTS_is_in_normal_series_mode(facts) &&
+        FACTS_is_in_service(facts) &&
+        FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_Q)) {
+      MAT_set_i(H,*Hphi_nnz,FACTS_get_index_Q_m(facts,t));
+      MAT_set_j(H,*Hphi_nnz,FACTS_get_index_Q_m(facts,t));
+      (*Hphi_nnz)++;
     }
   }
 }
@@ -92,7 +92,7 @@ void FUNC_FACTS_QSET_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_
   // FACTS
   for (facts = BUS_get_facts_k(bus); facts !=NULL; facts = FACTS_get_next_k(facts)) {
     
-    if (FACTS_is_in_normal_series_mode(facts)) {
+    if (FACTS_is_in_normal_series_mode(facts) && FACTS_is_in_service(facts)) {
       
       // Set point
       Q_set = FACTS_get_Q_set(facts,t);

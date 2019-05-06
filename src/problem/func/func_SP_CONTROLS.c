@@ -34,6 +34,10 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   if (!Hphi_nnz || !bus)
     return;
 
+  // Out of service
+  if (!BUS_is_in_service(bus))
+    return;
+
   // Voltage mag of gen-regulated bus
   if (BUS_is_regulated_by_gen(bus) &&
       BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) &&
@@ -55,6 +59,10 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   
   // Shunts
   for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+
+    // Out of service
+    if (!SHUNT_is_in_service(shunt))
+      continue;
     
     // Susceptance of switched shunt device
     if (SHUNT_is_switched(shunt) &&
@@ -101,6 +109,10 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   if (!Hphi_nnz || !Hphi || !bus)
     return;
 
+  // Out of service
+  if (!BUS_is_in_service(bus))
+    return;
+
   // Voltage mag of gen-regulated bus
   if (BUS_is_regulated_by_gen(bus) &&
       BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) &&
@@ -128,6 +140,10 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   
   // Shunts
   for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+
+    // Out of service
+    if (!SHUNT_is_in_service(shunt))
+      continue;
     
     // Susceptance of switched shunt device
     if (SHUNT_is_switched(shunt) &&
@@ -190,6 +206,10 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var
 
   // Check pointers
   if (!phi || !gphi || !Hphi || !Hphi_nnz || !bus)
+    return;
+
+  // Out of service
+  if (!BUS_is_in_service(bus))
     return;
 
   // Voltage mag of gen-regulated bus
@@ -255,6 +275,10 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var
   
   // Shunts
   for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+
+    // Out of service
+    if (!SHUNT_is_in_service(shunt))
+      continue;
     
     // Susceptance of switched shunt device
     if (SHUNT_is_switched(shunt) &&

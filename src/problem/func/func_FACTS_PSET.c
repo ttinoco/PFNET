@@ -34,10 +34,11 @@ void FUNC_FACTS_PSET_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   
   // FACTS
   for (facts = BUS_get_facts_k(bus); facts !=NULL; facts = FACTS_get_next_k(facts)) {    
-    if (FACTS_is_in_normal_series_mode(facts) && FACTS_get_P_max_dc(facts) > 0.) {
-      if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P))
-        (*Hphi_nnz)++;
-    }
+    if (FACTS_is_in_normal_series_mode(facts) &&
+        FACTS_get_P_max_dc(facts) > 0. &&
+        FACTS_is_in_service(facts) &&
+        FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P))
+      (*Hphi_nnz)++;
   }
 }
 
@@ -58,12 +59,13 @@ void FUNC_FACTS_PSET_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
       
   // FACTS
   for (facts = BUS_get_facts_k(bus); facts !=NULL; facts = FACTS_get_next_k(facts)) {
-    if (FACTS_is_in_normal_series_mode(facts) && FACTS_get_P_max_dc(facts) > 0.) {
-      if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P)) {
-        MAT_set_i(H,*Hphi_nnz,FACTS_get_index_P_m(facts,t));
-        MAT_set_j(H,*Hphi_nnz,FACTS_get_index_P_m(facts,t));
-        (*Hphi_nnz)++;
-      }
+    if (FACTS_is_in_normal_series_mode(facts) &&
+        FACTS_get_P_max_dc(facts) > 0. &&
+        FACTS_is_in_service(facts) &&
+        FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P)) {
+      MAT_set_i(H,*Hphi_nnz,FACTS_get_index_P_m(facts,t));
+      MAT_set_j(H,*Hphi_nnz,FACTS_get_index_P_m(facts,t));
+      (*Hphi_nnz)++;
     }
   }
 }
@@ -92,7 +94,7 @@ void FUNC_FACTS_PSET_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_
   // FACTS
   for (facts = BUS_get_facts_k(bus); facts !=NULL; facts = FACTS_get_next_k(facts)) {
     
-    if (FACTS_is_in_normal_series_mode(facts) && FACTS_get_P_max_dc(facts) > 0.) {
+    if (FACTS_is_in_normal_series_mode(facts) && FACTS_get_P_max_dc(facts) > 0. && FACTS_is_in_service(facts)) {
       
       // Set point
       P_set = FACTS_get_P_set(facts,t);

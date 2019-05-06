@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2019, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -34,7 +34,9 @@ void FUNC_VSC_DC_PSET_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   
   // VSC converters
   for (vsc = BUS_get_vsc_conv(bus); vsc != NULL; vsc = CONVVSC_get_next_ac(vsc)) {   
-    if (CONVVSC_is_in_P_dc_mode(vsc) && CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_P))
+    if (CONVVSC_is_in_P_dc_mode(vsc) &&
+        CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_P) &&
+        CONVVSC_is_in_service(vsc))
       (*Hphi_nnz)++;
   }
 }
@@ -56,7 +58,9 @@ void FUNC_VSC_DC_PSET_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // VSC converters
   for (vsc = BUS_get_vsc_conv(bus); vsc != NULL; vsc = CONVVSC_get_next_ac(vsc)) {
-    if (CONVVSC_is_in_P_dc_mode(vsc) && CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_P)) {
+    if (CONVVSC_is_in_P_dc_mode(vsc) &&
+        CONVVSC_has_flags(vsc,FLAG_VARS,CONVVSC_VAR_P) &&
+        CONVVSC_is_in_service(vsc)) {
       MAT_set_i(H,*Hphi_nnz,CONVVSC_get_index_P(vsc,t));
       MAT_set_j(H,*Hphi_nnz,CONVVSC_get_index_P(vsc,t));
       (*Hphi_nnz)++;
@@ -91,6 +95,10 @@ void FUNC_VSC_DC_PSET_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var
 
     // No P_dc_mode
     if (!CONVVSC_is_in_P_dc_mode(vsc))
+      continue;
+
+    // Out of service
+    if (!CONVVSC_is_in_service(vsc))
       continue;
     
     // Set point

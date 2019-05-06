@@ -49,13 +49,14 @@ void FUNC_NETCON_COST_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var
   if (!phi || !gphi || !bus)
     return;
 
+  // Out of service
+  if (!BUS_is_in_service(bus))
+    return;
+
   // Generators
   for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-    
-    // Out of service
     if (!GEN_is_in_service(gen))
       continue;
-    
     if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P)) {
       (*phi) -= price*VEC_get(var_values,GEN_get_index_P(gen,t));
       gphi[GEN_get_index_P(gen,t)] = -price;
@@ -66,6 +67,8 @@ void FUNC_NETCON_COST_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var
 
   // Variable generators
   for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+    if (!VARGEN_is_in_service(vargen))
+      continue;
     if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P)) {
       (*phi) -= price*VEC_get(var_values,VARGEN_get_index_P(vargen,t));
       gphi[VARGEN_get_index_P(vargen,t)] = -price;
@@ -76,6 +79,8 @@ void FUNC_NETCON_COST_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var
   
   // Loads
   for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+    if (!LOAD_is_in_service(load))
+      continue;
     if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P)) {
       (*phi) += price*VEC_get(var_values,LOAD_get_index_P(load,t));
       gphi[LOAD_get_index_P(load,t)] = price;
@@ -86,6 +91,8 @@ void FUNC_NETCON_COST_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var
   
   // Battery charging
   for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+    if (!BAT_is_in_service(bat))
+      continue;
     if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) {
       (*phi) += price*VEC_get(var_values,BAT_get_index_Pc(bat,t));
       (*phi) -= price*VEC_get(var_values,BAT_get_index_Pd(bat,t));

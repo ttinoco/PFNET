@@ -32,6 +32,10 @@ void FUNC_REG_VANG_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   if (!Hphi_nnz || !bus)
     return;
 
+  // Out of service
+  if (!BUS_is_in_service(bus))
+    return;
+
   // Bus
   if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VANG))
     (*Hphi_nnz)++; // w and w
@@ -70,6 +74,10 @@ void FUNC_REG_VANG_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Check pointers
   if (!Hphi_nnz || !Hphi || !bus)
+    return;
+
+  // Out of service
+  if (!BUS_is_in_service(bus))
     return;
 
   // Bus
@@ -132,6 +140,10 @@ void FUNC_REG_VANG_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_va
   
   // Check pointers
   if (!phi || !gphi || !Hphi || !Hphi_nnz || !bus)
+    return;
+
+  // Out of service
+  if (!BUS_is_in_service(bus))
     return;
 
   // Bus

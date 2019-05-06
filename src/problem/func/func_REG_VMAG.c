@@ -31,6 +31,10 @@ void FUNC_REG_VMAG_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   if (!Hphi_nnz || !bus)
     return;
 
+  // Out of service
+  if (!BUS_is_in_service(bus))
+    return;
+
   if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) // v var
     (*Hphi_nnz)++;
 }
@@ -47,6 +51,10 @@ void FUNC_REG_VMAG_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // Check pointers
   if (!Hphi_nnz || !Hphi || !bus)
+    return;
+
+  // Out of service
+  if (!BUS_is_in_service(bus))
     return;
 
   if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
@@ -76,6 +84,10 @@ void FUNC_REG_VMAG_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_va
 
   // Check pointers
   if (!phi || !gphi || !Hphi || !Hphi_nnz || !bus)
+    return;
+
+  // Out of service
+  if (!BUS_is_in_service(bus))
     return;
 
   // Set point
