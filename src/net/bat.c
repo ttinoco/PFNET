@@ -10,6 +10,7 @@
 
 #include <pfnet/bat.h>
 #include <pfnet/bus.h>
+#include <pfnet/net.h>
 #include <pfnet/array.h>
 #include <pfnet/json_macros.h>
 
@@ -51,6 +52,9 @@ struct Bat {
   int* index_Pc;       /**< @brief charging power index */
   int* index_Pd;       /**< @brief discharging power index */
   int* index_E;        /**< @brief energy level index */
+
+  // Network
+  Net* net; /**< @brief Network. */
 
   // List
   Bat* next;           /**< @brief List of batteries connected to a bus */
@@ -661,6 +665,8 @@ void BAT_init(Bat* bat, int num_periods) {
   ARRAY_zalloc(bat->index_Pc,int,T);
   ARRAY_zalloc(bat->index_Pd,int,T);
   ARRAY_zalloc(bat->index_E,int,T);
+
+  bat->net = NULL;
   
   bat->next = NULL;
 }
@@ -692,8 +698,16 @@ Bat* BAT_new(int num_periods) {
 }
 
 void BAT_set_in_service(Bat* bat, BOOL in_service) {
-  if (bat)
+  if (bat) {
+    if (bat->in_service != in_service)
+      NET_inc_state_tag(bat->net);
     bat->in_service = in_service;
+  }
+}
+
+void BAT_set_network(Bat* bat, void* net) {
+  if (bat)
+    bat->net = (Net*)net;
 }
 
 void BAT_set_name(Bat* bat, char* name) {

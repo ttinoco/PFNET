@@ -740,8 +740,11 @@ void BUSDC_set_network(BusDC* bus, void* net) {
 }
 
 void BUSDC_set_in_service(BusDC* bus, BOOL in_service) {
-  if (bus)
+  if (bus) {
+    if (bus->in_service != in_service)
+      NET_inc_state_tag(bus->net);
     bus->in_service = in_service;
+  }
 }
 
 void BUSDC_set_name(BusDC* bus, char* name) {

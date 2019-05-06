@@ -101,6 +101,7 @@ Bat* BAT_list_del(Bat* bat_list, Bat* bat);
 int BAT_list_len(Bat* bat_list);
 Bat* BAT_new(int num_periods);
 void BAT_propagate_data_in_time(Bat* bat, int start, int end);
+void BAT_set_network(Bat* bat, void* net);
 void BAT_set_in_service(Bat* bat, BOOL in_service);
 void BAT_set_name(Bat* bat, char* name);
 void BAT_set_bus(Bat* bat, Bus* bus);

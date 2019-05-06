@@ -11,6 +11,7 @@
 #include <pfnet/conv_vsc.h>
 #include <pfnet/bus.h>
 #include <pfnet/bus_dc.h>
+#include <pfnet/net.h>
 #include <pfnet/array.h>
 #include <pfnet/json_macros.h>
 
@@ -67,6 +68,9 @@ struct ConvVSC {
   int* index_Q;        /**< @brief Reactive power injection index */
   int* index_P_dc;     /**< @brief DC power injection index */
   int* index_i_dc;     /**< @brief DC current injection index */
+
+  // Network
+  Net* net; /**< @brief Network. */
   
   // List
   ConvVSC* next_ac;       /**< @brief List of converters connected to an AC bus */
@@ -814,6 +818,8 @@ void CONVVSC_init(ConvVSC* conv, int num_periods) {
 
   conv->loss_coeff_A = 0;
   conv->loss_coeff_B = 0;
+
+  conv->net = NULL;
   
   conv->next_ac = NULL;
   conv->next_dc = NULL;
@@ -961,8 +967,16 @@ void CONVVSC_propagate_data_in_time(ConvVSC* conv, int start, int end) {
 }
 
 void CONVVSC_set_in_service(ConvVSC* conv, BOOL in_service) {
-  if (conv)
+  if (conv) {
+    if (conv->in_service != in_service)
+      NET_inc_state_tag(conv->net);
     conv->in_service = in_service;
+  }
+}
+
+void CONVVSC_set_network(ConvVSC* conv, void* net) {
+  if (conv)
+    conv->net = (Net*)net;
 }
 
 void CONVVSC_set_P_max(ConvVSC* conv, REAL P_max) {

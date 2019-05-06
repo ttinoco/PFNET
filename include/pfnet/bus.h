@@ -324,6 +324,8 @@ void BUS_list_del(Bus* bus_list);
 
 Bus* BUS_new(int num_periods);
 void BUS_propagate_data_in_time(Bus* bus, int start, int end);
+
+void BUS_set_network(Bus* bus, void* net);
 void BUS_set_in_service(Bus* bus, BOOL in_service);
 void BUS_set_area(Bus* bus, int area);
 void BUS_set_zone(Bus* bus, int zone);

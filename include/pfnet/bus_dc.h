@@ -117,6 +117,7 @@ BOOL BUSDC_is_equal(BusDC* bus, BusDC* other);
 BusDC* BUSDC_new(int num_periods);
 void BUSDC_propagate_data_in_time(BusDC* bus, int start, int end);
 
+void BUSDC_set_network(BusDC* bus, void* net);
 int BUSDC_set_flags(void* bus, char flag_type, unsigned char mask, int index);
 void BUSDC_set_in_service(BusDC* bus, BOOL in_service);
 void BUSDC_set_index(BusDC* bus, int index);

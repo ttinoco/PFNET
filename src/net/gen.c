@@ -61,19 +61,14 @@ struct Gen {
   REAL* sens_P_l_bound;  /**< @brief Sensitivity of active power lower bound. */
   REAL* sens_Q_u_bound;  /**< @brief Sensitivity of reactive power upper bound. */
   REAL* sens_Q_l_bound;  /**< @brief Sensitivity of reactive power lower bound. */
-
+  
   // Network
   Net* net; /**< @brief Network. */
-
+  
   // List
   Gen* next;     /**< @brief List of generators connected to a bus. */
   Gen* reg_next; /**< @brief List of generators regulating a bus. */
 };
-
-void GEN_set_network(Gen* gen, void* net) {
-  if (gen)
-    gen->net = (Net*)net;
-}
 
 void* GEN_array_get(void* gen_array, int index) {
   if (gen_array)
@@ -973,6 +968,11 @@ void GEN_set_Q_min(Gen* gen, REAL Q_min) {
 void GEN_set_Q_par(Gen* gen, REAL Q_par) {
   if (gen)  
     gen->Q_par = Q_par;
+}
+
+void GEN_set_network(Gen* gen, void* net) {
+  if (gen)
+    gen->net = (Net*)net;
 }
 
 int GEN_set_flags(void* vgen, char flag_type, unsigned char mask, int index) {

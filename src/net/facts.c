@@ -11,6 +11,7 @@
 #include <pfnet/facts.h>
 #include <pfnet/bus.h>
 #include <pfnet/array.h>
+#include <pfnet/net.h>
 #include <pfnet/json_macros.h>
 
 struct Facts {
@@ -84,6 +85,9 @@ struct Facts {
   int* index_Q_sh;     /**< @brief Index of reactive power injected by shunt converter. */
   int* index_Q_s;      /**< @brief Index of active power injected by series converter. */
   int* index_P_dc;     /**< @brief Index of DC power transferred from shunt to series converter. */
+
+  // Network
+  Net* net; /**< @brief Network. */
 
   // List
   Facts* reg_next;       /**< @brief List of facts devices regulating a bus voltage magnitude */
@@ -1130,6 +1134,8 @@ void FACTS_init(Facts* facts, int num_periods) {
   facts->g = 0;
   facts->b = 0;
 
+  facts->net = NULL;
+
   facts->reg_next = NULL;
   facts->next_k = NULL;
   facts->next_m = NULL;
@@ -1266,8 +1272,16 @@ Facts* FACTS_new(int num_periods) {
 }
 
 void FACTS_set_in_service(Facts* facts, BOOL in_service) {
-  if (facts)
+  if (facts) {
+    if (facts->in_service != in_service)
+      NET_inc_state_tag(facts->net);
     facts->in_service = in_service;
+  }
+}
+
+void FACTS_set_network(Facts* facts, void* net) {
+  if (facts)
+    facts->net = (Net*)net;
 }
 
 void FACTS_set_name(Facts* facts, char* name) {

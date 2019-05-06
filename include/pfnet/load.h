@@ -132,6 +132,8 @@ Load* LOAD_list_del(Load* load_list, Load* load);
 int LOAD_list_len(Load* load_list);
 Load* LOAD_new(int num_periods);
 void LOAD_propagate_data_in_time(Load* load, int start, int end);
+
+void LOAD_set_network(Load* load, void* net);
 void LOAD_set_name(Load* load, char* name);
 void LOAD_set_in_service(Load* load, BOOL in_service);
 void LOAD_set_target_power_factor(Load* load, REAL pf);

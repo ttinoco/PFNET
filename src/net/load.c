@@ -11,6 +11,7 @@
 #include <pfnet/load.h>
 #include <pfnet/bus.h>
 #include <pfnet/array.h>
+#include <pfnet/net.h>
 #include <pfnet/json_macros.h>
 
 struct Load {
@@ -65,6 +66,9 @@ struct Load {
   // Sensitivities
   REAL* sens_P_u_bound;  /**< @brief Sensitivity of active power upper bound */
   REAL* sens_P_l_bound;  /**< @brief Sensitivity of active power lower bound */
+
+  // Network
+  Net* net; /**< @brief Network. */
 
   // List
   Load* next;           /**< @brief List of loads connected to a bus */
@@ -831,6 +835,8 @@ void LOAD_init(Load* load, int num_periods) {
   load->comp_cb = 0.;
 
   load->target_power_factor = 1.;
+
+  load->net = NULL;
   
   load->next = NULL;
 }
@@ -957,8 +963,16 @@ void LOAD_set_bus(Load* load, Bus* bus) {
 }
 
 void LOAD_set_in_service(Load* load, BOOL in_service) {
-  if (load)
+  if (load) {
+    if (load->in_service != in_service)
+      NET_inc_state_tag(load->net);
     load->in_service = in_service;
+  }
+}
+
+void LOAD_set_network(Load* load, void* net) {
+  if (load)
+    load->net = (Net*)net;
 }
 
 void LOAD_set_index(Load* load, int index) { 

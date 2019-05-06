@@ -10,6 +10,7 @@
 
 #include <pfnet/shunt.h>
 #include <pfnet/bus.h>
+#include <pfnet/net.h>
 #include <pfnet/array.h>
 #include <pfnet/json_macros.h>
 
@@ -51,6 +52,9 @@ struct Shunt {
   // Sensitivities
   REAL* sens_b_u_bound; /**< @brief Sensitivity of susceptance upper bound */
   REAL* sens_b_l_bound; /**< @brief Sensitivity of susceptance lower bound */
+
+  // Network
+  Net* net; /**< @brief Network. */
 
   // List
   Shunt* next;     /**< @brief List of shunts connceted to a bus */
@@ -588,6 +592,8 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
   ARRAY_zalloc(shunt->sens_b_u_bound,REAL,T);
   ARRAY_zalloc(shunt->sens_b_l_bound,REAL,T);
 
+  shunt->net = NULL;
+
   shunt->next = NULL;
   shunt->reg_next = NULL;
 }
@@ -717,8 +723,16 @@ void SHUNT_set_sens_b_l_bound(Shunt* shunt, REAL value, int t) {
 }
 
 void SHUNT_set_in_service(Shunt* shunt, BOOL in_service) {
-  if (shunt)
+  if (shunt) {
+    if (shunt->in_service != in_service)
+      NET_inc_state_tag(shunt->net);
     shunt->in_service = in_service;
+  }
+}
+
+void SHUNT_set_network(Shunt* shunt, void* net) {
+  if (shunt)
+    shunt->net = (Net*)net;
 }
 
 void SHUNT_set_type(Shunt* shunt, char type) {

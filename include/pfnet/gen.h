@@ -56,8 +56,6 @@ typedef struct Gen Gen;
 typedef struct Bus Bus;
 
 // Prototypes
-void GEN_set_network(Gen* gen, void* net);
-
 void GEN_array_del(Gen* gen_array, int size);
 void* GEN_array_get(void* gen_array, int index);
 Gen* GEN_array_new(int size, int num_periods);
@@ -139,6 +137,7 @@ void GEN_set_sens_Q_l_bound(Gen* gen, REAL value, int t);
 void GEN_set_cost_coeff_Q0(Gen* gen, REAL q);
 void GEN_set_cost_coeff_Q1(Gen* gen, REAL q);
 void GEN_set_cost_coeff_Q2(Gen* gen, REAL q);
+void GEN_set_network(Gen* gen, void* net);
 void GEN_set_bus(Gen* gen, Bus* bus);
 void GEN_set_reg_bus(Gen* gen, Bus* reg_bus);
 void GEN_set_index(Gen* gen, int index);

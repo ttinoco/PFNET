@@ -11,6 +11,7 @@
 #include <pfnet/conv_csc.h>
 #include <pfnet/bus.h>
 #include <pfnet/bus_dc.h>
+#include <pfnet/net.h>
 #include <pfnet/array.h>
 #include <pfnet/json_macros.h>
 
@@ -77,6 +78,9 @@ struct ConvCSC {
   int* index_i_dc;     /**< @brief DC current injection index */
   int* index_ratio;    /**< @brief Commutating transformer turns ratio index */
   int* index_angle;    /**< @brief Ignition delay or extinction advance angle index */
+
+  // Network
+  Net* net; /**< @brief Network. */
   
   // List
   ConvCSC* next_ac;       /**< @brief List of converters connected to an AC bus */
@@ -952,6 +956,8 @@ void CONVCSC_init(ConvCSC* conv, int num_periods) {
   ARRAY_zalloc(conv->index_i_dc,int,T);
   ARRAY_zalloc(conv->index_ratio,int,T);
   ARRAY_zalloc(conv->index_angle,int,T);
+
+  conv->net = NULL;
   
   conv->next_ac = NULL;
   conv->next_dc = NULL;
@@ -1092,8 +1098,16 @@ void CONVCSC_propagate_data_in_time(ConvCSC* conv, int start, int end) {
 }
 
 void CONVCSC_set_in_service(ConvCSC* conv, BOOL in_service) {
-  if (conv)
+  if (conv) {
+    if (conv->in_service != in_service)
+      NET_inc_state_tag(conv->net);
     conv->in_service = in_service;
+  }
+}
+
+void CONVCSC_set_network(ConvCSC* conv, void* net) {
+  if (conv)
+    conv->net = (Net*)net;
 }
 
 void CONVCSC_set_ac_bus(ConvCSC* conv, Bus* bus) {

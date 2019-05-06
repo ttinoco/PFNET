@@ -10,6 +10,7 @@
 
 #include <pfnet/branch_dc.h>
 #include <pfnet/bus_dc.h>
+#include <pfnet/net.h>
 #include <pfnet/array.h>
 #include <pfnet/json_macros.h>
 
@@ -38,6 +39,9 @@ struct BranchDC {
 
   // Indices
   int index;         /**< @brief Branch index */
+
+  // Network
+  Net* net; /**< @brief Network. */
 
   // List
   BranchDC* next_k;     /**< @brief List of branches connected to a bus on the "k" side */
@@ -405,6 +409,8 @@ void BRANCHDC_init(BranchDC* br, int num_periods) {
 
   br->index = -1;
 
+  br->net = NULL;
+
   br->next_k = NULL;
   br->next_m = NULL;
 };
@@ -469,8 +475,16 @@ void BRANCHDC_propagate_data_in_time(BranchDC* br, int start, int end) {
 }
 
 void BRANCHDC_set_in_service(BranchDC* br, BOOL in_service) {
-  if (br)
+  if (br) {
+    if (br->in_service != in_service)
+      NET_inc_state_tag(br->net);
     br->in_service = in_service;
+  }
+}
+
+void BRANCHDC_set_network(BranchDC* br, void* net) {
+  if (br)
+    br->net = (Net*)net;
 }
 
 void BRANCHDC_set_bus_k(BranchDC* br, BusDC* bus_k) {

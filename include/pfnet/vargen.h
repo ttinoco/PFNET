@@ -107,6 +107,8 @@ Vargen* VARGEN_list_del(Vargen* gen_list, Vargen* gen);
 int VARGEN_list_len(Vargen* gen_list);
 Vargen* VARGEN_new(int num_periods);
 void VARGEN_propagate_data_in_time(Vargen* gen, int start, int end);
+
+void VARGEN_set_network(Vargen* gen, void* net);
 void VARGEN_set_in_service(Vargen* gen, BOOL in_service);
 void VARGEN_set_name(Vargen* gen, char* name);
 void VARGEN_set_type(Vargen* gen, int type);

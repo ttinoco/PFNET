@@ -122,6 +122,8 @@ int SHUNT_list_reg_len(Shunt* reg_shunt_list);
 Shunt* SHUNT_new(int num_periods);
 void SHUNT_propagate_data_in_time(Shunt* shunt, int start, int end);
 int SHUNT_round_b(Shunt* shunt, int t);
+
+void SHUNT_set_network(Shunt* shunt, void* net);
 void SHUNT_set_in_service(Shunt* shunt, BOOL in_service);
 void SHUNT_set_sens_b_u_bound(Shunt* shunt, REAL value, int t);
 void SHUNT_set_sens_b_l_bound(Shunt* shunt, REAL value, int t);

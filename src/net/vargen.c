@@ -10,6 +10,7 @@
 
 #include <pfnet/vargen.h>
 #include <pfnet/bus.h>
+#include <pfnet/net.h>
 #include <pfnet/array.h>
 #include <pfnet/json_macros.h>
 
@@ -48,6 +49,9 @@ struct Vargen {
   int index;           /**< @brief Generator index */
   int* index_P;        /**< @brief Active power index */
   int* index_Q;        /**< @brief Reactive power index */
+
+  // Network
+  Net* net; /**< @brief Network. */
 
   // List
   Vargen* next;        /**< @brief List of variable generators connected to a bus */
@@ -615,6 +619,8 @@ void VARGEN_init(Vargen* gen, int num_periods) {
   ARRAY_zalloc(gen->Q,REAL,T);
   ARRAY_zalloc(gen->index_P,int,T);
   ARRAY_zalloc(gen->index_Q,int,T);
+
+  gen->net = NULL;
   
   gen->next = NULL;
 }
@@ -671,8 +677,16 @@ Vargen* VARGEN_new(int num_periods) {
 }
 
 void VARGEN_set_in_service(Vargen* gen, BOOL in_service) {
-  if (gen)
+  if (gen) {
+    if (gen->in_service != in_service)
+      NET_inc_state_tag(gen->net);
     gen->in_service = in_service;
+  }
+}
+
+void VARGEN_set_network(Vargen* gen, void* net) {
+  if (gen)
+    gen->net = (Net*)net;
 }
 
 void VARGEN_set_name(Vargen* gen, char* name) {

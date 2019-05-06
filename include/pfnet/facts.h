@@ -179,6 +179,7 @@ int FACTS_list_reg_len(Facts* facts_list);
 Facts* FACTS_new(int num_periods);
 void FACTS_propagate_data_in_time(Facts* facts, int start, int end);
 
+void FACTS_set_network(Facts* facts, void* net);
 void FACTS_set_in_service(Facts* facts, BOOL in_service);
 void FACTS_set_name(Facts* facts, char* name);
 void FACTS_set_reg_bus(Facts* facts, Bus* bus);

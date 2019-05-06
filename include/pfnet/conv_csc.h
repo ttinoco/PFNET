@@ -163,6 +163,7 @@ int CONVCSC_list_dc_len(ConvCSC* conv_list);
 ConvCSC* CONVCSC_new(int num_periods);
 void CONVCSC_propagate_data_in_time(ConvCSC* conv, int start, int end);
 
+void CONVCSC_set_network(ConvCSC* conv, void* net);
 void CONVCSC_set_in_service(ConvCSC* conv, BOOL in_service);
 void CONVCSC_set_ac_bus(ConvCSC* conv, Bus* bus);
 void CONVCSC_set_dc_bus(ConvCSC* conv, BusDC* bus);

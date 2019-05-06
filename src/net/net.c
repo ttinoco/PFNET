@@ -5975,6 +5975,7 @@ void NET_set_branch_array(Net* net, Branch* branch, int num) {
 }
 
 void NET_set_load_array(Net* net, Load* load, int num) {
+  int i;
   if (net) {
 
     // Clear
@@ -5983,10 +5984,15 @@ void NET_set_load_array(Net* net, Load* load, int num) {
     // Set
     net->load = load;
     net->num_loads = num;
+
+    // Network
+    for (i = 0; i < net->num_loads; i++)
+      LOAD_set_network(LOAD_array_get(net->load,i), net);
   }
 }
 
 void NET_set_shunt_array(Net* net, Shunt* shunt, int num) {
+  int i;
   if (net) {
 
     // Clear
@@ -5995,6 +6001,10 @@ void NET_set_shunt_array(Net* net, Shunt* shunt, int num) {
     // Set
     net->shunt = shunt;
     net->num_shunts = num;
+
+    // Network
+    for (i = 0; i < net->num_shunts; i++)
+      SHUNT_set_network(SHUNT_array_get(net->shunt,i), net);
   }
 }
 
@@ -6033,6 +6043,7 @@ void NET_set_gen_array(Net* net, Gen* gen, int num) {
 }
 
 void NET_set_vargen_array(Net* net, Vargen* gen, int num) {
+  int i;
   if (net) {
 
     // Clear
@@ -6041,10 +6052,15 @@ void NET_set_vargen_array(Net* net, Vargen* gen, int num) {
     // Set
     net->vargen = gen;
     net->num_vargens = num;
+
+    // Network
+    for (i = 0; i < net->num_vargens; i++)
+      VARGEN_set_network(VARGEN_array_get(net->vargen,i), net);
   }
 }
 
 void NET_set_bat_array(Net* net, Bat* bat, int num) {
+  int i;
   if (net) {
 
     // Clear
@@ -6053,10 +6069,15 @@ void NET_set_bat_array(Net* net, Bat* bat, int num) {
     // Set
     net->bat = bat;
     net->num_bats = num;
+
+    // Network
+    for (i = 0; i < net->num_bats; i++)
+      BAT_set_network(BAT_array_get(net->bat,i), net);
   }
 }
 
 void NET_set_csc_conv_array(Net* net, ConvCSC* conv, int num) {
+  int i;
   if (net) {
 
     // Clear
@@ -6065,10 +6086,15 @@ void NET_set_csc_conv_array(Net* net, ConvCSC* conv, int num) {
     // Set
     net->csc_conv = conv;
     net->num_csc_convs = num;
+
+    // Network
+    for (i = 0; i < net->num_csc_convs; i++)
+      CONVCSC_set_network(CONVCSC_array_get(net->csc_conv,i), net);
   }
 }
 
 void NET_set_vsc_conv_array(Net* net, ConvVSC* conv, int num) {
+  int i;
   if (net) {
 
     // Clear
@@ -6077,6 +6103,10 @@ void NET_set_vsc_conv_array(Net* net, ConvVSC* conv, int num) {
     // Set
     net->vsc_conv = conv;
     net->num_vsc_convs = num;
+
+    // Network
+    for (i = 0; i < net->num_vsc_convs; i++)
+      CONVVSC_set_network(CONVVSC_array_get(net->vsc_conv,i), net);
   }
 }
 
@@ -6098,6 +6128,7 @@ void NET_set_dc_bus_array(Net* net, BusDC* bus, int num) {
 }
 
 void NET_set_dc_branch_array(Net* net, BranchDC* branch, int num) {
+  int i;
   if (net) {
 
     // Clear
@@ -6106,10 +6137,15 @@ void NET_set_dc_branch_array(Net* net, BranchDC* branch, int num) {
     // Set
     net->dc_branch = branch;
     net->num_dc_branches = num;
+
+    // Network
+    for (i = 0; i < net->num_dc_branches; i++)
+      BRANCHDC_set_network(BRANCHDC_array_get(net->dc_branch,i), net);
   }
 }
 
 void NET_set_facts_array(Net* net, Facts* facts, int num) {
+  int i;
   if (net) {
 
     // Clear
@@ -6118,6 +6154,10 @@ void NET_set_facts_array(Net* net, Facts* facts, int num) {
     // Set
     net->facts = facts;
     net->num_facts = num;
+
+    // Network
+    for (i = 0; i < net->num_facts; i++)
+      FACTS_set_network(FACTS_array_get(net->facts,i), net);
   }
 }
 

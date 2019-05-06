@@ -2254,8 +2254,11 @@ Bus* BUS_new(int num_periods) {
 }
 
 void BUS_set_in_service(Bus* bus, BOOL in_service) {
-  if (bus)
+  if (bus) {
+    if (bus->in_service != in_service)
+      NET_inc_state_tag(bus->net);
     bus->in_service = in_service;
+  }
 }
 
 void BUS_set_network(Bus* bus, void* net) {

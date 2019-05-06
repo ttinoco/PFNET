@@ -87,6 +87,7 @@ int BRANCHDC_list_m_len(BranchDC* m_br_list);
 BranchDC* BRANCHDC_new(int num_periods);
 void BRANCHDC_propagate_data_in_time(BranchDC* br, int start, int end);
 
+void BRANCHDC_set_network(BranchDC* br, void* net);
 void BRANCHDC_set_in_service(BranchDC* br, BOOL in_service);
 void BRANCHDC_set_bus_k(BranchDC* br, BusDC* bus_k);
 void BRANCHDC_set_bus_m(BranchDC* br, BusDC* bus_m);

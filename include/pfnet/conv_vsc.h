@@ -151,6 +151,7 @@ int CONVVSC_list_reg_len(ConvVSC* conv_list);
 ConvVSC* CONVVSC_new(int num_periods);
 void CONVVSC_propagate_data_in_time(ConvVSC* conv, int start, int end);
 
+void CONVVSC_set_network(ConvVSC* conv, void* net);
 void CONVVSC_set_in_service(ConvVSC* conv, BOOL in_service);
 void CONVVSC_set_ac_bus(ConvVSC* conv, Bus* bus);
 void CONVVSC_set_dc_bus(ConvVSC* conv, BusDC* bus);

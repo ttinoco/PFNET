@@ -97,11 +97,6 @@ struct Branch {
   Branch* next_m;     /**< @brief List of branches connected to a bus in the "m" side */
 };
 
-void BRANCH_set_network(Branch* br, void* net) {
-  if (br)
-    br->net = (Net*)net;
-}
-
 void* BRANCH_array_get(void* br_array, int index) {
   if (br_array)
     return (void*)&(((Branch*)br_array)[index]);
@@ -2688,4 +2683,9 @@ int BRANCH_get_oindex(Branch* br) {
 void BRANCH_set_oindex(Branch* br, int oindex) {
   if (br)
     br->oindex = oindex;
+}
+
+void BRANCH_set_network(Branch* br, void* net) {
+  if (br)
+    br->net = (Net*)net;
 }
