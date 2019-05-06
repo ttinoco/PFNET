@@ -635,7 +635,7 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate) {
     strcpy(bus->alt_name,other->alt_name);
 
     // Oindex
-    if (mode == 0)
+    if (mode == 0) // one-to-one
       bus->oindex = other->oindex;
     
     bus->area = other->area;
