@@ -328,7 +328,7 @@ void CONSTR_ACPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
     
   // Rows
   (*J_row)++;
-  (*J_row)++;  
+  (*J_row)++;
 }
 
 
@@ -1165,7 +1165,7 @@ void CONSTR_ACPF_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* values
                            TRUE); // ext_idx
     *(H_nnz+Q_index) = *(H_nnz+P_index);
   }
-  for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
+  for (br = BUS_get_branch_m(bus); br != NULL; br = BRANCH_get_next_m(br)) {
 
     // Out of service
     if (!BRANCH_is_in_service(br))

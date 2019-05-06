@@ -41,6 +41,10 @@ void CONSTR_BAT_DYN_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Batteries
   for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+
+    // Out of service
+    if (!BAT_is_in_service(bat))
+      return;
     
     // Variables
     if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_E) && BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) { // E and P
@@ -87,6 +91,10 @@ void CONSTR_BAT_DYN_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       
   // Batteries
   for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+
+    // Out of service
+    if (!BAT_is_in_service(bat))
+      return;
     
     // Variables
     if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_E) && BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P)) { // E and P
