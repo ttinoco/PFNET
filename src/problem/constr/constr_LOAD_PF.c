@@ -37,6 +37,10 @@ void CONSTR_LOAD_PF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Loads
   for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+
+    // Out of service
+    if (!LOAD_is_in_service(load))
+      continue;
     
     // Variables
     if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P) && LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) {
@@ -70,6 +74,10 @@ void CONSTR_LOAD_PF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Loads
   for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+
+    // Out of service
+    if (!LOAD_is_in_service(load))
+      continue;
     
     // Variables
     if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P) && LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) {
@@ -81,9 +89,9 @@ void CONSTR_LOAD_PF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
       MAT_set_i(A,*A_nnz,*A_row);
       MAT_set_j(A,*A_nnz,LOAD_get_index_P(load,t));
       if (LOAD_get_P(load,t)*LOAD_get_Q(load,t) >= 0)
-	MAT_set_d(A,*A_nnz,-factor);
+        MAT_set_d(A,*A_nnz,-factor);
       else
-	MAT_set_d(A,*A_nnz,factor);
+        MAT_set_d(A,*A_nnz,factor);
       (*A_nnz)++;
       
       // A

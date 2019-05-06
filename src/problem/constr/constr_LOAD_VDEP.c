@@ -39,6 +39,10 @@ void CONSTR_LOAD_VDEP_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Loads
   for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+
+    // Out of service
+    if (!LOAD_is_in_service(load))
+      continue;
     
     // P and Q var
     if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P|LOAD_VAR_Q)) {
@@ -90,6 +94,10 @@ void CONSTR_LOAD_VDEP_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // Loads
   for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+
+    // Out of service
+    if (!LOAD_is_in_service(load))
+      continue;
     
     // P and Q var
     if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P|LOAD_VAR_Q)) {
@@ -170,6 +178,10 @@ void CONSTR_LOAD_VDEP_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* v
 
   // Loads
   for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+
+    // Out of service
+    if (!LOAD_is_in_service(load))
+      continue;
 	
     // P and Q var
     if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P|LOAD_VAR_Q)) {

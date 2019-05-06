@@ -49,7 +49,7 @@ void CONSTR_HVDCPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
     // Out of service
     if (!CONVVSC_is_in_service(vsc_conv))
-      return;
+      continue;
     
     //*****************************
     if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_PDC)) { // P_dc var
@@ -64,7 +64,7 @@ void CONSTR_HVDCPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
     // Out of service
     if (!CONVCSC_is_in_service(csc_conv))
-      return;
+      continue;
     
     //*****************************
     if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_PDC)) { // P_dc var
@@ -79,7 +79,7 @@ void CONSTR_HVDCPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
     // Out of service
     if (!BRANCHDC_is_in_service(br))
-      return;
+      continue;
     
     //***********
     if (BUSDC_has_flags(BRANCHDC_get_bus_k(br),FLAG_VARS,BUSDC_VAR_V)) { // vk var
@@ -99,7 +99,7 @@ void CONSTR_HVDCPF_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
     // Out of service
     if (!BRANCHDC_is_in_service(br))
-      return;
+      continue;
     
     //***********
     if (BUSDC_has_flags(BRANCHDC_get_bus_m(br),FLAG_VARS,BUSDC_VAR_V)) { // vm var
@@ -151,7 +151,7 @@ void CONSTR_HVDCPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
     // Out of service
     if (!CONVVSC_is_in_service(vsc_conv))
-      return;
+      continue;
     
     //*****************************
     if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_PDC)) { // P_dc var
@@ -174,7 +174,7 @@ void CONSTR_HVDCPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
     // Out of service
     if (!CONVCSC_is_in_service(csc_conv))
-      return;
+      continue;
     
     //*****************************
     if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_PDC)) { // P_dc var
@@ -197,7 +197,7 @@ void CONSTR_HVDCPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
     // Out of service
     if (!BRANCHDC_is_in_service(br))
-      return;
+      continue;
     
     // Branch data
     r = BRANCHDC_get_r(br); // p.u.
@@ -238,7 +238,7 @@ void CONSTR_HVDCPF_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
     // Out of service
     if (!BRANCHDC_is_in_service(br))
-      return;
+      continue;
     
     // Branch data
     r = BRANCHDC_get_r(br); // p.u.
