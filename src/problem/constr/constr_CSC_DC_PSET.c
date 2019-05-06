@@ -40,7 +40,9 @@ void CONSTR_CSC_DC_PSET_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   for (conv = BUS_get_csc_conv(bus); conv !=NULL; conv = CONVCSC_get_next_ac(conv)) {
     
     // CSC converter with DC Power mode
-    if (CONVCSC_is_in_P_dc_mode(conv) && CONVCSC_has_flags(conv,FLAG_VARS,CONVCSC_VAR_PDC)) {
+    if (CONVCSC_is_in_P_dc_mode(conv) &&
+        CONVCSC_has_flags(conv,FLAG_VARS,CONVCSC_VAR_PDC) &&
+        CONVCSC_is_in_service(conv)) {
 
       (*A_nnz) += 1;
       
@@ -73,7 +75,9 @@ void CONSTR_CSC_DC_PSET_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   for (conv = BUS_get_csc_conv(bus); conv !=NULL; conv = CONVCSC_get_next_ac(conv)) {
 
     // CSC converter with DC Power mode
-    if (CONVCSC_is_in_P_dc_mode(conv) && CONVCSC_has_flags(conv,FLAG_VARS,CONVCSC_VAR_PDC)) {
+    if (CONVCSC_is_in_P_dc_mode(conv) &&
+        CONVCSC_has_flags(conv,FLAG_VARS,CONVCSC_VAR_PDC) &&
+        CONVCSC_is_in_service(conv)) {
       
       VEC_set(b,*A_row,CONVCSC_get_P_dc_set(conv,t));
       

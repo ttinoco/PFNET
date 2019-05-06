@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2019, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -40,7 +40,9 @@ void CONSTR_CSC_DC_ISET_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   for (conv = BUS_get_csc_conv(bus); conv !=NULL; conv = CONVCSC_get_next_ac(conv)) {
     
     // CSC converter with DC current mode
-    if (CONVCSC_is_in_i_dc_mode(conv) && CONVCSC_has_flags(conv,FLAG_VARS,CONVCSC_VAR_PDC)) {
+    if (CONVCSC_is_in_i_dc_mode(conv) &&
+        CONVCSC_has_flags(conv,FLAG_VARS,CONVCSC_VAR_PDC) &&
+        CONVCSC_is_in_service(conv)) {
 
       (*A_nnz) += 1;
       
@@ -73,7 +75,9 @@ void CONSTR_CSC_DC_ISET_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   for (conv = BUS_get_csc_conv(bus); conv !=NULL; conv = CONVCSC_get_next_ac(conv)) {
 
     // CSC converter with DC current mode
-    if (CONVCSC_is_in_i_dc_mode(conv) && CONVCSC_has_flags(conv,FLAG_VARS,CONVCSC_VAR_PDC)) {
+    if (CONVCSC_is_in_i_dc_mode(conv) &&
+        CONVCSC_has_flags(conv,FLAG_VARS,CONVCSC_VAR_PDC) &&
+        CONVCSC_is_in_service(conv)) {
       
       VEC_set(b,*A_row,CONVCSC_get_i_dc_set(conv,t));
       

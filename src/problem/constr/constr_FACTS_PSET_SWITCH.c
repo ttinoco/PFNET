@@ -41,6 +41,7 @@ void CONSTR_FACTS_PSET_SWITCH_count_step(Constr* c, Bus* bus, BusDC* busdc, int 
 
     if (FACTS_is_in_normal_series_mode(facts) &&
         FACTS_get_P_max_dc(facts) > 0. &&
+        FACTS_is_in_service(facts) &&
         FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P)) {
       (*A_nnz) += 1;
       (*A_row) += 1;
@@ -72,6 +73,7 @@ void CONSTR_FACTS_PSET_SWITCH_analyze_step(Constr* c, Bus* bus, BusDC* busdc, in
 
     if (FACTS_is_in_normal_series_mode(facts) &&
         FACTS_get_P_max_dc(facts) > 0. &&
+        FACTS_is_in_service(facts) &&
         FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P)) {
             
       VEC_set(b,*A_row,FACTS_get_P_set(facts,t));

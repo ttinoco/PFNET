@@ -46,6 +46,10 @@ void CONSTR_FACTS_EQ_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // FACTS
   for (facts = BUS_get_facts_k(bus); facts != NULL; facts = FACTS_get_next_k(facts)) {
 
+    // Out of service
+    if (!FACTS_is_in_service(facts))
+      continue;
+
     // Facts which are not regulating voltage
     if (FACTS_has_flags(facts, FLAG_VARS, FACTS_VAR_Q) && !FACTS_is_regulator(facts)) {
 
@@ -273,6 +277,10 @@ void CONSTR_FACTS_EQ_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
 
   // FACTS
   for (facts = BUS_get_facts_k(bus); facts != NULL; facts = FACTS_get_next_k(facts)) {
+
+    // Out of service
+    if (!FACTS_is_in_service(facts))
+      continue;
 
     // Facts which are not regulating voltage
     if (FACTS_has_flags(facts, FLAG_VARS, FACTS_VAR_Q) && !FACTS_is_regulator(facts)) {
@@ -747,6 +755,10 @@ void CONSTR_FACTS_EQ_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* va
 
   // FACTS
   for (facts = BUS_get_facts_k(bus); facts != NULL; facts = FACTS_get_next_k(facts)) {
+
+    // Out of service
+    if (!FACTS_is_in_service(facts))
+      continue;
 
     if (FACTS_has_flags(facts, FLAG_VARS, FACTS_VAR_P | FACTS_VAR_Q)) {
 

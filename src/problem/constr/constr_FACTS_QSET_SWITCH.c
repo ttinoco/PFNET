@@ -39,7 +39,9 @@ void CONSTR_FACTS_QSET_SWITCH_count_step(Constr* c, Bus* bus, BusDC* busdc, int 
   // FACTS
   for (facts = BUS_get_facts_k(bus); facts !=NULL; facts = FACTS_get_next_k(facts)) {
     
-    if (FACTS_is_in_normal_series_mode(facts) && FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_Q)) {
+    if (FACTS_is_in_normal_series_mode(facts) &&
+        FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_Q) &&
+        FACTS_is_in_service(facts)) {
       
       (*A_nnz) += 1;
       (*A_row) += 1;
@@ -69,7 +71,9 @@ void CONSTR_FACTS_QSET_SWITCH_analyze_step(Constr* c, Bus* bus, BusDC* busdc, in
   // FACTS
   for (facts = BUS_get_facts_k(bus); facts !=NULL; facts = FACTS_get_next_k(facts)) {
     
-    if (FACTS_is_in_normal_series_mode(facts) && FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_Q)) {
+    if (FACTS_is_in_normal_series_mode(facts) &&
+        FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_Q) &&
+        FACTS_is_in_service(facts)) {
       
       VEC_set(b,*A_row,FACTS_get_Q_set(facts,t));
       
