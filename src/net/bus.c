@@ -543,14 +543,14 @@ BOOL BUS_check(Bus* bus, BOOL verbose) {
   }
 
   // Reg gen number
-  if (BUS_is_regulated_by_gen(bus) && BUS_get_num_reg_gens(bus) < 1) {
+  if (BUS_is_regulated_by_gen(bus) && BUS_get_num_reg_gens(bus,TRUE) < 1) {
     bus_ok = FALSE;
     if (verbose)
       fprintf(stderr,"reg-by-gen bus has no regulating generators\n");
   }
 
   // Reg tran
-  if (BUS_is_regulated_by_tran(bus) && BUS_get_num_reg_trans(bus) < 1) {
+  if (BUS_is_regulated_by_tran(bus) && BUS_get_num_reg_trans(bus,TRUE) < 1) {
     bus_ok = FALSE;
     if (verbose)
       fprintf(stderr,"reg-by-tran bus has no regulating transformer\n");
@@ -883,86 +883,170 @@ int BUS_get_num_periods(Bus* bus) {
     return 0;
 }
 
-int BUS_get_num_gens(Bus* bus) {
-  if (bus)
-    return GEN_list_len(bus->gen);
+int BUS_get_num_gens(Bus* bus, BOOL only_in_service) {
+  Gen* gen;
+  int n = 0;
+  if (bus) {
+    for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen)) {
+      if (GEN_is_in_service(gen) || !only_in_service)
+        n++;
+    }
+    return n;
+  }
   else
     return 0;
 }
 
-int BUS_get_num_loads(Bus* bus) {
-  if (bus)
-    return LOAD_list_len(bus->load);
+int BUS_get_num_loads(Bus* bus, BOOL only_in_service) {
+  Load* load;
+  int n = 0;
+  if (bus) {
+    for (load = bus->load; load != NULL; load = LOAD_get_next(load)) {
+      if (LOAD_is_in_service(load) || !only_in_service)
+        n++;
+    }
+    return n;
+  }
   else
     return 0;
 }
 
-int BUS_get_num_reg_gens(Bus* bus) {
-  if (bus)
-    return GEN_list_reg_len(bus->reg_gen);
+int BUS_get_num_reg_gens(Bus* bus, BOOL only_in_service) {
+  Gen* gen;
+  int n = 0;
+  if (bus) {
+    for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen)) {
+      if (GEN_is_in_service(gen) || !only_in_service)
+        n++;
+    }
+    return n;
+  }
   else
     return 0;
 }
 
-int BUS_get_num_reg_trans(Bus* bus) {
-  if (bus)
-    return BRANCH_list_reg_len(bus->reg_tran);
+int BUS_get_num_reg_trans(Bus* bus, BOOL only_in_service) {
+  Branch* br;
+  int n = 0;
+  if (bus) {
+    for (br = bus->reg_tran; br != NULL; br = BRANCH_get_reg_next(br)) {
+      if (BRANCH_is_in_service(br) || !only_in_service)
+        n++;
+    }
+    return n;
+  }
   else
     return 0;
 }
 
-int BUS_get_num_shunts(Bus* bus) {
-  if (bus)
-    return SHUNT_list_len(bus->shunt);
+int BUS_get_num_shunts(Bus* bus, BOOL only_in_service) {
+  Shunt* s;
+  int n = 0;
+  if (bus) {
+    for (s = bus->shunt; s != NULL; s = SHUNT_get_next(s)) {
+      if (SHUNT_is_in_service(s) || !only_in_service)
+        n++;
+    }
+    return n;
+  }
   else
     return 0;
 }
 
-int BUS_get_num_reg_shunts(Bus* bus) {
-  if (bus)
-    return SHUNT_list_reg_len(bus->reg_shunt);
+int BUS_get_num_reg_shunts(Bus* bus, BOOL only_in_service) {
+  Shunt* s;
+  int n = 0;
+  if (bus) {
+    for (s = bus->reg_shunt; s != NULL; s = SHUNT_get_reg_next(s)) {
+      if (SHUNT_is_in_service(s) || !only_in_service)
+        n++;
+    }
+    return n;
+  }
   else
     return 0;
 }
 
-int BUS_get_num_vargens(Bus* bus) {
-  if (bus)
-    return VARGEN_list_len(bus->vargen);
+int BUS_get_num_vargens(Bus* bus, BOOL only_in_service) {
+  Vargen* gen;
+  int n = 0;
+  if (bus) {
+    for (gen = bus->vargen; gen != NULL; gen = VARGEN_get_next(gen)) {
+      if (VARGEN_is_in_service(gen) || !only_in_service)
+        n++;
+    }
+    return n;
+  }
   else
     return 0;
 }
 
-int BUS_get_num_bats(Bus* bus) {
-  if (bus)
-    return BAT_list_len(bus->bat);
+int BUS_get_num_bats(Bus* bus, BOOL only_in_service) {
+  Bat* bat;
+  int n = 0;
+  if (bus) {
+    for (bat = bus->bat; bat != NULL; bat = BAT_get_next(bat)) {
+      if (BAT_is_in_service(bat) || !only_in_service)
+        n++;
+    }
+    return n;
+  }
   else
     return 0;
 }
 
-int BUS_get_num_csc_convs(Bus* bus) {
-  if (bus)
-    return CONVCSC_list_ac_len(bus->csc_conv);
+int BUS_get_num_csc_convs(Bus* bus, BOOL only_in_service) {
+  ConvCSC* conv;
+  int n = 0;
+  if (bus) {
+    for (conv = bus->csc_conv; conv != NULL; conv = CONVCSC_get_next_ac(conv)) {
+      if (CONVCSC_is_in_service(conv) || !only_in_service)
+        n++;
+    }
+    return n;
+  }
   else
     return 0;
 }
 
-int BUS_get_num_vsc_convs(Bus* bus) {
-  if (bus)
-    return CONVVSC_list_ac_len(bus->vsc_conv);
+int BUS_get_num_vsc_convs(Bus* bus, BOOL only_in_service) {
+  ConvVSC* conv;
+  int n = 0;
+  if (bus) {
+    for (conv = bus->vsc_conv; conv != NULL; conv = CONVVSC_get_next_ac(conv)) {
+      if (CONVVSC_is_in_service(conv) || !only_in_service)
+        n++;
+    }
+    return n;
+  }
   else
     return 0;
 }
 
-int BUS_get_num_reg_vsc_convs(Bus* bus) {
-  if (bus)
-    return CONVVSC_list_reg_len(bus->reg_vsc_conv);
+int BUS_get_num_reg_vsc_convs(Bus* bus, BOOL only_in_service) {
+  ConvVSC* conv;
+  int n = 0;
+  if (bus) {
+    for (conv = bus->reg_vsc_conv; conv != NULL; conv = CONVVSC_get_reg_next(conv)) {
+      if (CONVVSC_is_in_service(conv) || !only_in_service)
+        n++;
+    }
+    return n;
+  }
   else
     return 0;
 }
 
-int BUS_get_num_reg_facts(Bus* bus) {
-  if (bus)
-    return FACTS_list_reg_len(bus->reg_facts);
+int BUS_get_num_reg_facts(Bus* bus, BOOL only_in_service) {
+  Facts* f;
+  int n = 0;
+  if (bus) {
+    for (f = bus->reg_facts; f != NULL; f = FACTS_get_reg_next(f)) {
+      if (FACTS_is_in_service(f) || !only_in_service)
+        n++;
+    }
+    return n;
+  }
   else
     return 0;
 }
@@ -2485,10 +2569,10 @@ void BUS_show(Bus* bus, int t) {
          BUS_get_number(bus),
          BUS_is_slack(bus),
          BUS_is_regulated_by_gen(bus),
-         BUS_get_num_gens(bus),
-         BUS_get_num_reg_gens(bus),
-         BUS_get_num_loads(bus),
-         BUS_get_num_shunts(bus));
+         BUS_get_num_gens(bus,FALSE),
+         BUS_get_num_reg_gens(bus,FALSE),
+         BUS_get_num_loads(bus,FALSE),
+         BUS_get_num_shunts(bus,FALSE));
 }
 
 void BUS_propagate_data_in_time(Bus* bus, int start, int end) {

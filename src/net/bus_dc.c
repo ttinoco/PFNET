@@ -373,16 +373,30 @@ char* BUSDC_get_json_string(BusDC* bus, char* output) {
   return output;
 }
 
-int BUSDC_get_num_csc_convs(BusDC* bus) {
-  if (bus)
-    return CONVCSC_list_dc_len(bus->csc_conv);
+int BUSDC_get_num_csc_convs(BusDC* bus, BOOL only_in_service) {
+  ConvCSC* conv;
+  int n = 0;
+  if (bus) {
+    for (conv = bus->csc_conv; conv != NULL; conv = CONVCSC_get_next_dc(conv)) {
+      if (CONVCSC_is_in_service(conv) || !only_in_service)
+        n++;
+    }
+    return n;
+  }
   else
     return 0;
 }
 
-int BUSDC_get_num_vsc_convs(BusDC* bus) {
-  if (bus)
-    return CONVVSC_list_dc_len(bus->vsc_conv);
+int BUSDC_get_num_vsc_convs(BusDC* bus, BOOL only_in_service) {
+  ConvVSC* conv;
+  int n = 0;
+  if (bus) {
+    for (conv = bus->vsc_conv; conv != NULL; conv = CONVVSC_get_next_dc(conv)) {
+      if (CONVVSC_is_in_service(conv) || !only_in_service)
+        n++;
+    }
+    return n;
+  }
   else
     return 0;
 }

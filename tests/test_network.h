@@ -116,46 +116,46 @@ static char* test_net_fixed() {
   int num = 0;
   Parser* parser;
   Net* net;
-
+  
   printf("test_net_fixed ... ");
 
   parser = PARSER_new_for_file(test_case);
   net = PARSER_parse(parser,test_case,1);
 
   Assert("error - bad number of buses",NET_get_num_buses(net,FALSE) > 0);
-  Assert("error - wrong number of variables",NET_get_num_fixed(net) == num);
+  Assert("error - wrong number of fixed",NET_get_num_fixed(net) == num);
 
   NET_set_flags(net,OBJ_BUS,FLAG_FIXED,BUS_PROP_REG_BY_GEN,BUS_VAR_VMAG);
   num += NET_get_num_buses_reg_by_gen(net,TRUE);
-  Assert("error - wrong number of variables",NET_get_num_fixed(net) == num);
+  Assert("error - wrong number of fixed",NET_get_num_fixed(net) == num);
   
   NET_set_flags(net,OBJ_BUS,FLAG_FIXED,BUS_PROP_REG_BY_GEN,BUS_VAR_VMAG);
   num += 0;
-  Assert("error - wrong number of variables",NET_get_num_fixed(net) == num);
+  Assert("error - wrong number of fixed",NET_get_num_fixed(net) == num);
 
   NET_set_flags(net,OBJ_GEN,FLAG_FIXED,GEN_PROP_SLACK,GEN_VAR_P);
   num += NET_get_num_slack_gens(net,TRUE);
-  Assert("error - wrong number of variables",NET_get_num_fixed(net) == num);
+  Assert("error - wrong number of fixed",NET_get_num_fixed(net) == num);
 
   NET_set_flags(net,OBJ_GEN,FLAG_FIXED,GEN_PROP_SLACK,GEN_VAR_Q);
   num += NET_get_num_slack_gens(net,TRUE);
-  Assert("error - wrong number of variables",NET_get_num_fixed(net) == num);
+  Assert("error - wrong number of fixed",NET_get_num_fixed(net) == num);
 
   NET_set_flags(net,OBJ_BRANCH,FLAG_FIXED,BRANCH_PROP_PHASE_SHIFTER,BRANCH_VAR_PHASE);
   num += NET_get_num_phase_shifters(net,TRUE);
-  Assert("error - wrong number of variables",NET_get_num_fixed(net) == num);
+  Assert("error - wrong number of fixed",NET_get_num_fixed(net) == num);
 
   NET_set_flags(net,OBJ_BRANCH,FLAG_FIXED,BRANCH_PROP_PHASE_SHIFTER,BRANCH_VAR_PHASE);
   num += 0;
-  Assert("error - wrong number of variables",NET_get_num_fixed(net) == num);
+  Assert("error - wrong number of fixed",NET_get_num_fixed(net) == num);
 
   NET_set_flags(net,OBJ_BRANCH,FLAG_FIXED,BRANCH_PROP_TAP_CHANGER,BRANCH_VAR_RATIO);
   num += NET_get_num_tap_changers(net,TRUE);
-  Assert("error - wrong number of variables",NET_get_num_fixed(net) == num);
+  Assert("error - wrong number of fixed",NET_get_num_fixed(net) == num);
 
   NET_set_flags(net,OBJ_SHUNT,FLAG_FIXED,SHUNT_PROP_SWITCHED_V,SHUNT_VAR_SUSC);
-  num += NET_get_num_switched_shunts(net,TRUE);
-  Assert("error - wrong number of variables",NET_get_num_fixed(net) == num);
+  num += NET_get_num_switched_v_shunts(net,TRUE);
+  Assert("error - wrong number of fixed",NET_get_num_fixed(net) == num);
 
   NET_del(net);
   PARSER_del(parser);

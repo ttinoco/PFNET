@@ -55,7 +55,7 @@ static char* test_constr_FIX() {
          2*NET_get_num_gens(net,TRUE) +
          NET_get_num_tap_changers(net,TRUE) +
          NET_get_num_phase_shifters(net,TRUE) +
-         NET_get_num_switched_shunts(net,TRUE));
+         NET_get_num_switched_v_shunts(net,TRUE));
 
   Assert("error - empty network",num > 0);
   Assert("error - wrong number of variables",num == NET_get_num_vars(net));
@@ -170,8 +170,8 @@ static char* test_constr_PAR_GEN_P() {
   for (i = 0; i < NET_get_num_buses(net,FALSE); i++) {
     bus = NET_get_bus(net,i);
     if (BUS_is_slack(bus) && BUS_is_in_service(bus)) {
-      num += BUS_get_num_gens(bus)-1;
-      nnz += 2*(BUS_get_num_gens(bus)-1);
+      num += BUS_get_num_gens(bus,TRUE)-1;
+      nnz += 2*(BUS_get_num_gens(bus,TRUE)-1);
     }
   }
 
@@ -292,8 +292,8 @@ static char* test_constr_PVPQ_SWITCHING() {
   for (i = 0; i < NET_get_num_buses(net,FALSE); i++) {
     bus = NET_get_bus(net,i);
     if (BUS_is_regulated_by_gen(bus) && BUS_is_in_service(bus)) {
-      num += BUS_get_num_reg_gens(bus);
-      nnz += BUS_get_num_reg_gens(bus)*(BUS_get_num_reg_gens(bus)+1);
+      num += BUS_get_num_reg_gens(bus,TRUE);
+      nnz += BUS_get_num_reg_gens(bus,TRUE)*(BUS_get_num_reg_gens(bus,TRUE)+1);
     }       
   }
 
@@ -422,7 +422,7 @@ static char* test_constr_ACPF() {
                                    NET_get_num_reg_gens(net,TRUE)+
                                    NET_get_num_tap_changers(net,TRUE)+
                                    NET_get_num_phase_shifters(net,TRUE)+
-                                   NET_get_num_switched_shunts(net,TRUE)));
+                                   NET_get_num_switched_v_shunts(net,TRUE)));
 
   x = NET_get_var_values(net,CURRENT);
 
@@ -435,7 +435,7 @@ static char* test_constr_ACPF() {
                    NET_get_num_branches(net,TRUE)*8 +
                    NET_get_num_tap_changers(net,TRUE)*4 +
                    NET_get_num_phase_shifters(net,TRUE)*4 +
-                   NET_get_num_switched_shunts(net,TRUE)*1 +
+                   NET_get_num_switched_v_shunts(net,TRUE)*1 +
                    NET_get_num_slack_gens(net,TRUE) +
                    NET_get_num_reg_gens(net,TRUE));
 
@@ -443,7 +443,7 @@ static char* test_constr_ACPF() {
                      NET_get_num_branches(net,TRUE)*12 +
                      NET_get_num_tap_changers(net,TRUE)*9 +
                      NET_get_num_phase_shifters(net,TRUE)*10 +
-                     NET_get_num_switched_shunts(net,TRUE)*1);
+                     NET_get_num_switched_v_shunts(net,TRUE)*1);
 		     
   CONSTR_count(c);
   
@@ -569,7 +569,7 @@ static char* test_constr_REG_VSET() {
   for (i = 0; i < NET_get_num_buses(net,FALSE); i++) {
     bus = NET_get_bus(net,i);
     if (BUS_is_regulated_by_gen(bus) && BUS_is_in_service(bus))
-      num_Jnnz += 4*BUS_get_num_reg_gens(bus);
+      num_Jnnz += 4*BUS_get_num_reg_gens(bus,TRUE);
   }
 
   Assert("error - bad Annz counter",CONSTR_get_A_nnz(c) == 0);
@@ -765,7 +765,7 @@ static char* test_constr_REG_SHUNT() {
                 SHUNT_PROP_SWITCHED_V,
                 SHUNT_VAR_SUSC);
   
-  num_vars = (NET_get_num_buses_reg_by_shunt(net,TRUE)+NET_get_num_switched_shunts(net,TRUE));
+  num_vars = (NET_get_num_buses_reg_by_shunt(net,TRUE)+NET_get_num_switched_v_shunts(net,TRUE));
   Assert("error - invalid number of varibles",num_vars == NET_get_num_vars(net));
 
   x = NET_get_var_values(net,CURRENT);
@@ -775,7 +775,7 @@ static char* test_constr_REG_SHUNT() {
   
   c = CONSTR_REG_SHUNT_new(net);
 
-  num = NET_get_num_switched_shunts(net,TRUE);
+  num = NET_get_num_switched_v_shunts(net,TRUE);
   num_Annz = 3*num;
   num_Jnnz = 10*num;
   num_extra_vars = 4*num;
