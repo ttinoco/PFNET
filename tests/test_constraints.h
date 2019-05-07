@@ -27,7 +27,7 @@ static char* test_constr_FIX() {
   parser = PARSER_new_for_file(test_case);
   net = PARSER_parse(parser,test_case,1);
   Assert("error - unable to get parser",parser != NULL);
-  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
+  Assert("error - invalid number of buses",NET_get_num_buses(net,FALSE) > 0);
 
   // Set flags
   NET_set_flags(net,OBJ_BUS,
@@ -51,11 +51,11 @@ static char* test_constr_FIX() {
                 SHUNT_PROP_SWITCHED_V,
                 SHUNT_VAR_SUSC);
 
-  num = (2*NET_get_num_buses(net) +
-         2*NET_get_num_gens(net) +
-         NET_get_num_tap_changers(net) +
-         NET_get_num_phase_shifters(net) +
-         NET_get_num_switched_shunts(net));
+  num = (2*NET_get_num_buses(net,TRUE) +
+         2*NET_get_num_gens(net,TRUE) +
+         NET_get_num_tap_changers(net,TRUE) +
+         NET_get_num_phase_shifters(net,TRUE) +
+         NET_get_num_switched_shunts(net,TRUE));
 
   Assert("error - empty network",num > 0);
   Assert("error - wrong number of variables",num == NET_get_num_vars(net));
@@ -129,7 +129,7 @@ static char* test_constr_PAR_GEN_P() {
   parser = PARSER_new_for_file(test_case);
   net = PARSER_parse(parser,test_case,1);
   Assert("error - unable to get parser",parser != NULL);
-  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
+  Assert("error - invalid number of buses",NET_get_num_buses(net,FALSE) > 0);
 
   // Set flags
   NET_set_flags(net,
@@ -155,10 +155,10 @@ static char* test_constr_PAR_GEN_P() {
   
   Assert("error - empty network",NET_get_num_vars(net) > 0);
   Assert("error - wrong number of variables",
-         NET_get_num_vars(net) == (NET_get_num_buses(net)-NET_get_num_buses_reg_by_gen(net)+
-                                   NET_get_num_buses(net)-NET_get_num_slack_buses(net)+
-                                   NET_get_num_slack_gens(net)+
-                                   NET_get_num_reg_gens(net)));
+         NET_get_num_vars(net) == (NET_get_num_buses(net,TRUE)-NET_get_num_buses_reg_by_gen(net,TRUE)+
+                                   NET_get_num_buses(net,TRUE)-NET_get_num_slack_buses(net,TRUE)+
+                                   NET_get_num_slack_gens(net,TRUE)+
+                                   NET_get_num_reg_gens(net,TRUE)));
 
   x = NET_get_var_values(net,CURRENT);
 
@@ -167,9 +167,9 @@ static char* test_constr_PAR_GEN_P() {
 
   num = 0;
   nnz = 0;
-  for (i = 0; i < NET_get_num_buses(net); i++) {
+  for (i = 0; i < NET_get_num_buses(net,FALSE); i++) {
     bus = NET_get_bus(net,i);
-    if (BUS_is_slack(bus)) {
+    if (BUS_is_slack(bus) && BUS_is_in_service(bus)) {
       num += BUS_get_num_gens(bus)-1;
       nnz += 2*(BUS_get_num_gens(bus)-1);
     }
@@ -251,7 +251,7 @@ static char* test_constr_PVPQ_SWITCHING() {
   parser = PARSER_new_for_file(test_case);
   net = PARSER_parse(parser,test_case,1);
   Assert("error - unable to get parser",parser != NULL);
-  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
+  Assert("error - invalid number of buses",NET_get_num_buses(net,FALSE) > 0);
 
   // Set flags
   NET_set_flags(net,
@@ -277,10 +277,10 @@ static char* test_constr_PVPQ_SWITCHING() {
   
   Assert("error - empty network",NET_get_num_vars(net) > 0);
   Assert("error - wrong number of variables",
-         NET_get_num_vars(net) == (NET_get_num_buses(net)+
-                                   NET_get_num_buses(net)-NET_get_num_slack_buses(net)+
-                                   NET_get_num_slack_gens(net)+
-                                   NET_get_num_reg_gens(net)));
+         NET_get_num_vars(net) == (NET_get_num_buses(net,TRUE)+
+                                   NET_get_num_buses(net,TRUE)-NET_get_num_slack_buses(net,TRUE)+
+                                   NET_get_num_slack_gens(net,TRUE)+
+                                   NET_get_num_reg_gens(net,TRUE)));
 
   x = NET_get_var_values(net,CURRENT);
 
@@ -289,9 +289,9 @@ static char* test_constr_PVPQ_SWITCHING() {
 
   num = 0;
   nnz = 0;
-  for (i = 0; i < NET_get_num_buses(net); i++) {
+  for (i = 0; i < NET_get_num_buses(net,FALSE); i++) {
     bus = NET_get_bus(net,i);
-    if (BUS_is_regulated_by_gen(bus)) {
+    if (BUS_is_regulated_by_gen(bus) && BUS_is_in_service(bus)) {
       num += BUS_get_num_reg_gens(bus);
       nnz += BUS_get_num_reg_gens(bus)*(BUS_get_num_reg_gens(bus)+1);
     }       
@@ -376,7 +376,7 @@ static char* test_constr_ACPF() {
   parser = PARSER_new_for_file(test_case);
   net = PARSER_parse(parser,test_case,1);
   Assert("error - unable to get parser",parser != NULL);
-  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
+  Assert("error - invalid number of buses",NET_get_num_buses(net,FALSE) > 0);
 
   // Set variables
   NET_set_flags(net,
@@ -417,12 +417,12 @@ static char* test_constr_ACPF() {
 
   Assert("error - empty network",NET_get_num_vars(net) > 0);
   Assert("error - wrong number of variables",
-         NET_get_num_vars(net) == (2*NET_get_num_buses(net)+
-                                   NET_get_num_slack_gens(net)+
-                                   NET_get_num_reg_gens(net)+
-                                   NET_get_num_tap_changers(net)+
-                                   NET_get_num_phase_shifters(net)+
-                                   NET_get_num_switched_shunts(net)));
+         NET_get_num_vars(net) == (2*NET_get_num_buses(net,TRUE)+
+                                   NET_get_num_slack_gens(net,TRUE)+
+                                   NET_get_num_reg_gens(net,TRUE)+
+                                   NET_get_num_tap_changers(net,TRUE)+
+                                   NET_get_num_phase_shifters(net,TRUE)+
+                                   NET_get_num_switched_shunts(net,TRUE)));
 
   x = NET_get_var_values(net,CURRENT);
 
@@ -431,19 +431,19 @@ static char* test_constr_ACPF() {
 
   c = CONSTR_ACPF_new(net);
   
-  Jnnz_computed = (NET_get_num_buses(net)*4 +
-                   NET_get_num_branches(net)*8 +
-                   NET_get_num_tap_changers(net)*4 +
-                   NET_get_num_phase_shifters(net)*4 +
-                   NET_get_num_switched_shunts(net)*1 +
-                   NET_get_num_slack_gens(net) +
-                   NET_get_num_reg_gens(net));
+  Jnnz_computed = (NET_get_num_buses(net,TRUE)*4 +
+                   NET_get_num_branches(net,TRUE)*8 +
+                   NET_get_num_tap_changers(net,TRUE)*4 +
+                   NET_get_num_phase_shifters(net,TRUE)*4 +
+                   NET_get_num_switched_shunts(net,TRUE)*1 +
+                   NET_get_num_slack_gens(net,TRUE) +
+                   NET_get_num_reg_gens(net,TRUE));
 
-  Hnnz_computed = 2*(NET_get_num_buses(net)*3 +
-                     NET_get_num_branches(net)*12 +
-                     NET_get_num_tap_changers(net)*9 +
-                     NET_get_num_phase_shifters(net)*10 +
-                     NET_get_num_switched_shunts(net)*1);
+  Hnnz_computed = 2*(NET_get_num_buses(net,TRUE)*3 +
+                     NET_get_num_branches(net,TRUE)*12 +
+                     NET_get_num_tap_changers(net,TRUE)*9 +
+                     NET_get_num_phase_shifters(net,TRUE)*10 +
+                     NET_get_num_switched_shunts(net,TRUE)*1);
 		     
   CONSTR_count(c);
   
@@ -485,8 +485,8 @@ static char* test_constr_ACPF() {
 
   Assert("error - NULL f",f != NULL);
   Assert("error - NULL J",J != NULL);
-  Assert("error - bad f size", VEC_get_size(f) == 2*NET_get_num_buses(net));
-  Assert("error - bad J size", MAT_get_size1(J) == 2*NET_get_num_buses(net));
+  Assert("error - bad f size", VEC_get_size(f) == 2*NET_get_num_buses(net,TRUE));
+  Assert("error - bad J size", MAT_get_size1(J) == 2*NET_get_num_buses(net,TRUE));
   Assert("error - bad J size", MAT_get_size2(J) == NET_get_num_vars(net));
   Assert("error - bad J size", MAT_get_nnz(J) == Jnnz_computed);
   Assert("error - bad H size", MAT_get_size1(H) == NET_get_num_vars(net));
@@ -527,7 +527,7 @@ static char* test_constr_REG_VSET() {
   parser = PARSER_new_for_file(test_case);
   net = PARSER_parse(parser,test_case,1);
   Assert("error - unable to get parser",parser != NULL);
-  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
+  Assert("error - invalid number of buses",NET_get_num_buses(net,FALSE) > 0);
 
   // Set variables
   NET_set_flags(net,
@@ -551,9 +551,9 @@ static char* test_constr_REG_VSET() {
                 GEN_PROP_REG,
                 GEN_VAR_Q);
   
-  num_vars = (2*NET_get_num_buses(net)-NET_get_num_slack_buses(net)+
-              NET_get_num_slack_gens(net)+
-              NET_get_num_reg_gens(net));
+  num_vars = (2*NET_get_num_buses(net,TRUE)-NET_get_num_slack_buses(net,TRUE)+
+              NET_get_num_slack_gens(net,TRUE)+
+              NET_get_num_reg_gens(net,TRUE));
   Assert("error - invalid number of varibles",num_vars == NET_get_num_vars(net));
 
   x = NET_get_var_values(net,CURRENT);
@@ -563,12 +563,12 @@ static char* test_constr_REG_VSET() {
 
   c = CONSTR_REG_VSET_new(net);
 
-  num = NET_get_num_reg_gens(net);
+  num = NET_get_num_reg_gens(net,TRUE);
   num_Annz = 3*num;
   num_Jnnz = 0;
-  for (i = 0; i < NET_get_num_buses(net); i++) {
+  for (i = 0; i < NET_get_num_buses(net,FALSE); i++) {
     bus = NET_get_bus(net,i);
-    if (BUS_is_regulated_by_gen(bus))
+    if (BUS_is_regulated_by_gen(bus) && BUS_is_in_service(bus))
       num_Jnnz += 4*BUS_get_num_reg_gens(bus);
   }
 
@@ -645,7 +645,7 @@ static char* test_constr_REG_TRAN() {
   parser = PARSER_new_for_file(test_case);
   net = PARSER_parse(parser,test_case,1);
   Assert("error - unable to get parser",parser != NULL);
-  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
+  Assert("error - invalid number of buses",NET_get_num_buses(net,FALSE) > 0);
 
   // Set variables
   NET_set_flags(net,
@@ -659,7 +659,7 @@ static char* test_constr_REG_TRAN() {
                 BRANCH_PROP_TAP_CHANGER_V,
                 BRANCH_VAR_RATIO);
   
-  num_vars = (NET_get_num_buses_reg_by_tran(net)+NET_get_num_tap_changers_v(net));
+  num_vars = (NET_get_num_buses_reg_by_tran(net,TRUE)+NET_get_num_tap_changers_v(net,TRUE));
   Assert("error - invalid number of varibles",num_vars == NET_get_num_vars(net));
 
   x = NET_get_var_values(net,CURRENT);
@@ -669,7 +669,7 @@ static char* test_constr_REG_TRAN() {
   
   c = CONSTR_REG_TRAN_new(net);
 
-  num = NET_get_num_tap_changers_v(net);
+  num = NET_get_num_tap_changers_v(net,TRUE);
   num_Annz = 3*num;
   num_Jnnz = 10*num;
   num_extra_vars = 4*num;
@@ -751,7 +751,7 @@ static char* test_constr_REG_SHUNT() {
   parser = PARSER_new_for_file(test_case);
   net = PARSER_parse(parser,test_case,1);
   Assert("error - unable to get parser",parser != NULL);
-  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
+  Assert("error - invalid number of buses",NET_get_num_buses(net,FALSE) > 0);
 
   // Set variables
   NET_set_flags(net,
@@ -765,7 +765,7 @@ static char* test_constr_REG_SHUNT() {
                 SHUNT_PROP_SWITCHED_V,
                 SHUNT_VAR_SUSC);
   
-  num_vars = (NET_get_num_buses_reg_by_shunt(net)+NET_get_num_switched_shunts(net));
+  num_vars = (NET_get_num_buses_reg_by_shunt(net,TRUE)+NET_get_num_switched_shunts(net,TRUE));
   Assert("error - invalid number of varibles",num_vars == NET_get_num_vars(net));
 
   x = NET_get_var_values(net,CURRENT);
@@ -775,7 +775,7 @@ static char* test_constr_REG_SHUNT() {
   
   c = CONSTR_REG_SHUNT_new(net);
 
-  num = NET_get_num_switched_shunts(net);
+  num = NET_get_num_switched_shunts(net,TRUE);
   num_Annz = 3*num;
   num_Jnnz = 10*num;
   num_extra_vars = 4*num;

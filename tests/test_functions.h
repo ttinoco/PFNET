@@ -26,11 +26,11 @@ static char* test_func_GEN_COST() {
   
   // Set flags
   NET_set_flags(net,OBJ_GEN,
-		FLAG_VARS,
-		GEN_PROP_ANY,
-		GEN_VAR_P);
+                FLAG_VARS,
+                GEN_PROP_ANY,
+                GEN_VAR_P);
   
-  Assert("error - wrong number of variables",NET_get_num_gens(net) == NET_get_num_vars(net));
+  Assert("error - wrong number of variables",NET_get_num_gens(net,TRUE) == NET_get_num_vars(net));
 
   x = NET_get_var_values(net,CURRENT);
 

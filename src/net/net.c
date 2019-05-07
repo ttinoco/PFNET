@@ -4836,6 +4836,13 @@ int NET_get_num_loads(Net* net, BOOL only_in_service) {
   return n;
 }
 
+int NET_get_num_loads_out_of_service(Net* net) {
+  if (net)
+    return net->num_loads-NET_get_num_loads(net,TRUE);
+  else
+    return 0;
+}
+
 int NET_get_num_P_adjust_loads(Net* net, BOOL only_in_service) {
   int i;
   int n = 0;

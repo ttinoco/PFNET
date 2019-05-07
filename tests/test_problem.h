@@ -23,7 +23,7 @@ static char* test_problem_basic() {
   parser = PARSER_new_for_file(test_case);
   net = PARSER_parse(parser,test_case,1);
 
-  Assert("error - invalid number of buses",NET_get_num_buses(net) > 0);
+  Assert("error - invalid number of buses",NET_get_num_buses(net,FALSE) > 0);
 
   p = PROB_new(net);
   
@@ -31,31 +31,31 @@ static char* test_problem_basic() {
 
   // Set variables
   NET_set_flags(net,
-		OBJ_BUS,
-		FLAG_VARS,
-		BUS_PROP_NOT_REG_BY_GEN,
-		BUS_VAR_VMAG);
+                OBJ_BUS,
+                FLAG_VARS,
+                BUS_PROP_NOT_REG_BY_GEN,
+                BUS_VAR_VMAG);
   NET_set_flags(net,
-		OBJ_BUS,
-		FLAG_VARS,
-		BUS_PROP_NOT_SLACK,
-		BUS_VAR_VANG);
+                OBJ_BUS,
+                FLAG_VARS,
+                BUS_PROP_NOT_SLACK,
+                BUS_VAR_VANG);
   NET_set_flags(net,
-		OBJ_GEN,
-		FLAG_VARS,
-		GEN_PROP_SLACK,
-		GEN_VAR_P|GEN_VAR_Q);
+                OBJ_GEN,
+                FLAG_VARS,
+                GEN_PROP_SLACK,
+                GEN_VAR_P|GEN_VAR_Q);
   NET_set_flags(net,
-		OBJ_GEN,
-		FLAG_VARS,
-		GEN_PROP_REG,
-		GEN_VAR_Q);
+                OBJ_GEN,
+                FLAG_VARS,
+                GEN_PROP_REG,
+                GEN_VAR_Q);
 
   Assert("error - wrong number of vars",
-	 NET_get_num_vars(net) == (NET_get_num_buses(net)-NET_get_num_buses_reg_by_gen(net) +
-				   NET_get_num_buses(net)-NET_get_num_slack_buses(net)+
-				   NET_get_num_slack_gens(net)+
-				   NET_get_num_reg_gens(net)));
+         NET_get_num_vars(net) == (NET_get_num_buses(net,TRUE)-NET_get_num_buses_reg_by_gen(net,TRUE) +
+                                   NET_get_num_buses(net,TRUE)-NET_get_num_slack_buses(net,TRUE)+
+                                   NET_get_num_slack_gens(net,TRUE)+
+                                   NET_get_num_reg_gens(net,TRUE)));
 
   PROB_add_constr(p,CONSTR_ACPF_new(net));
   PROB_add_constr(p,CONSTR_PAR_GEN_P_new(net));
