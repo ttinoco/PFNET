@@ -2110,6 +2110,8 @@ BOOL BUS_is_equal(Bus* bus, Bus* other) {
 
 BOOL BUS_is_regulated_by_gen(Bus* bus) {
   Gen* gen;
+  if (!BUS_is_in_service(bus))
+    return FALSE;
   if (bus) {
     for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen)) {
       if (GEN_is_in_service(gen))
@@ -2121,6 +2123,8 @@ BOOL BUS_is_regulated_by_gen(Bus* bus) {
 
 BOOL BUS_is_regulated_by_tran(Bus* bus) {
   Branch* br;
+  if (!BUS_is_in_service(bus))
+    return FALSE;
   if (bus) {
     for (br = bus->reg_tran; br != NULL; br = BRANCH_get_reg_next(br)) {
       if (BRANCH_is_in_service(br))
@@ -2132,6 +2136,8 @@ BOOL BUS_is_regulated_by_tran(Bus* bus) {
 
 BOOL BUS_is_regulated_by_shunt(Bus* bus) {
   Shunt* shunt;
+  if (!BUS_is_in_service(bus))
+    return FALSE;
   if (bus) {
     for (shunt = bus->reg_shunt; shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
       if (SHUNT_is_in_service(shunt))
@@ -2143,6 +2149,8 @@ BOOL BUS_is_regulated_by_shunt(Bus* bus) {
 
 BOOL BUS_is_regulated_by_vsc_conv(Bus* bus) {
   ConvVSC* conv;
+  if (!BUS_is_in_service(bus))
+    return FALSE;
   if (bus) {
     for (conv = bus->reg_vsc_conv; conv != NULL; conv = CONVVSC_get_reg_next(conv)) {
       if (CONVVSC_is_in_service(conv))
@@ -2154,6 +2162,8 @@ BOOL BUS_is_regulated_by_vsc_conv(Bus* bus) {
 
 BOOL BUS_is_regulated_by_facts(Bus* bus) {
   Facts* facts;
+  if (!BUS_is_in_service(bus))
+    return FALSE;
   if (bus) {
     for (facts = bus->reg_facts; facts != NULL; facts = FACTS_get_reg_next(facts)) {
       if (FACTS_is_in_service(facts))
