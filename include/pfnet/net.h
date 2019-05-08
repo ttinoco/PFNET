@@ -236,6 +236,7 @@ REAL NET_get_vargen_corr_value(Net* net);
 char* NET_get_json_string(Net* net);
 BOOL NET_has_error(Net* net);
 Net* NET_new(int num_periods);
+void NET_make_all_in_service(Net* net);
 char* NET_mark_reachable_dc_buses(Net* net, BusDC* dc_bus);
 void NET_propagate_data_in_time(Net* net, int start, int end);
 int NET_round_discrete_switched_shunts_b(Net* net, int t);

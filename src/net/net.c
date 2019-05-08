@@ -2705,7 +2705,6 @@ BOOL NET_check(Net* net, BOOL verbose) {
 
   // Overall
   return (base_ok & bus_ok);
-
 }
 
 void NET_clear_data(Net* net) {
@@ -5866,6 +5865,64 @@ BOOL NET_has_error(Net* net) {
     return net->error_flag;
   else
     return FALSE;
+}
+
+void NET_make_all_in_service(Net* net ) {
+
+  // Local vars
+  int i;
+
+  // No net
+  if (!net)
+    return;
+
+  // Bat
+  for (i = 0; i < net->num_bats; i++)
+    BAT_set_in_service(NET_get_bat(net,i),TRUE);
+
+  // Branch
+  for (i = 0; i < net->num_branches; i++)
+    BRANCH_set_in_service(NET_get_branch(net,i),TRUE);
+
+  // Branch DC
+  for (i = 0; i < net->num_dc_branches; i++)
+    BRANCHDC_set_in_service(NET_get_dc_branch(net,i),TRUE);
+
+  // Bus
+  for (i = 0; i < net->num_buses; i++)
+    BUS_set_in_service(NET_get_bus(net,i),TRUE);
+
+  // Bus DC
+  for (i = 0; i < net->num_dc_buses; i++)
+    BUSDC_set_in_service(NET_get_dc_bus(net,i),TRUE);
+
+  // Conv CSC
+  for (i = 0; i < net->num_csc_convs; i++)
+    CONVCSC_set_in_service(NET_get_csc_conv(net,i),TRUE);
+
+  // Conv VSC
+  for (i = 0; i < net->num_vsc_convs; i++)
+    CONVVSC_set_in_service(NET_get_vsc_conv(net,i),TRUE);
+
+  // Facts
+  for (i = 0; i < net->num_facts; i++)
+    FACTS_set_in_service(NET_get_facts(net,i),TRUE);
+
+  // Gen
+  for (i = 0; i < net->num_gens; i++)
+    GEN_set_in_service(NET_get_gen(net,i),TRUE);
+
+  // Load
+  for (i = 0; i < net->num_loads; i++)
+    LOAD_set_in_service(NET_get_load(net,i),TRUE);
+
+  // Shunts
+  for (i = 0; i < net->num_shunts; i++)
+    SHUNT_set_in_service(NET_get_shunt(net,i),TRUE);
+
+  // Vargen
+  for (i = 0; i < net->num_vargens; i++)
+    VARGEN_set_in_service(NET_get_vargen(net,i),TRUE);
 }
 
 char* NET_mark_reachable_dc_buses(Net* net, BusDC* seed_bus) {
