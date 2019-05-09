@@ -13,6 +13,7 @@ Unreleased
 * CSC_DC_ISET function.
 * Network "update_set_points" also updates CSC P_dc set.
 * Network method for clipping switched shunt b.
+* Support for components being in or out of service.
 
 Version 1.3.4
 -------------
