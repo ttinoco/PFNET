@@ -4549,7 +4549,7 @@ int NET_get_num_buses_reg_by_gen(Net* net, BOOL only_in_service) {
   if (!net)
     return 0;
   for (i = 0; i < net->num_buses; i++) {
-    if (BUS_is_regulated_by_gen(BUS_array_get(net->bus,i)) &&
+    if (BUS_is_regulated_by_gen(BUS_array_get(net->bus,i), only_in_service) &&
         (BUS_is_in_service(BUS_array_get(net->bus,i)) || !only_in_service))
       n++;
   }
@@ -4562,7 +4562,7 @@ int NET_get_num_buses_reg_by_tran(Net* net, BOOL only_in_service) {
   if (!net)
     return 0;
   for (i = 0; i < net->num_buses; i++) {
-    if (BUS_is_regulated_by_tran(BUS_array_get(net->bus,i)) &&
+    if (BUS_is_regulated_by_tran(BUS_array_get(net->bus,i), only_in_service) &&
         (BUS_is_in_service(BUS_array_get(net->bus,i)) || !only_in_service))
       n++;
   }
@@ -4577,9 +4577,9 @@ int NET_get_num_buses_reg_by_tran_only(Net* net, BOOL only_in_service) {
     return 0;
   for (i = 0; i < net->num_buses; i++) {
     bus = BUS_array_get(net->bus,i);
-    if (BUS_is_regulated_by_tran(bus) &&
-        !BUS_is_regulated_by_gen(bus) &&
-        !BUS_is_regulated_by_shunt(bus) &&
+    if (BUS_is_regulated_by_tran(bus, only_in_service) &&
+        !BUS_is_regulated_by_gen(bus, only_in_service) &&
+        !BUS_is_regulated_by_shunt(bus, only_in_service) &&
         (BUS_is_in_service(BUS_array_get(net->bus,i)) || !only_in_service))
       n++;
   }
@@ -4592,7 +4592,7 @@ int NET_get_num_buses_reg_by_shunt(Net* net, BOOL only_in_service) {
   if (!net)
     return 0;
   for (i = 0; i < net->num_buses; i++) {
-    if (BUS_is_regulated_by_shunt(BUS_array_get(net->bus,i)) &&
+    if (BUS_is_regulated_by_shunt(BUS_array_get(net->bus,i), only_in_service) &&
         (BUS_is_in_service(BUS_array_get(net->bus,i)) || !only_in_service))
       n++;
   }
@@ -4607,9 +4607,9 @@ int NET_get_num_buses_reg_by_shunt_only(Net* net, BOOL only_in_service) {
     return 0;
   for (i = 0; i < net->num_buses; i++) {
     bus = BUS_array_get(net->bus,i);
-    if (BUS_is_regulated_by_shunt(bus) &&
-        !BUS_is_regulated_by_gen(bus) &&
-        !BUS_is_regulated_by_tran(bus) &&
+    if (BUS_is_regulated_by_shunt(bus, only_in_service) &&
+        !BUS_is_regulated_by_gen(bus, only_in_service) &&
+        !BUS_is_regulated_by_tran(bus, only_in_service) &&
         (BUS_is_in_service(BUS_array_get(net->bus,i)) || !only_in_service))
       n++;
   }
@@ -4622,7 +4622,7 @@ int NET_get_num_buses_reg_by_vsc_conv(Net* net, BOOL only_in_service) {
   if (!net)
     return 0;
   for (i = 0; i < net->num_buses; i++) {
-    if (BUS_is_regulated_by_vsc_conv(BUS_array_get(net->bus,i)) &&
+    if (BUS_is_regulated_by_vsc_conv(BUS_array_get(net->bus,i), only_in_service) &&
         (BUS_is_in_service(BUS_array_get(net->bus,i)) || !only_in_service))
       n++;
   }
@@ -4635,7 +4635,7 @@ int NET_get_num_buses_reg_by_facts(Net* net, BOOL only_in_service) {
   if (!net)
     return 0;
   for (i = 0; i < net->num_buses; i++) {
-    if (BUS_is_regulated_by_facts(BUS_array_get(net->bus,i)) &&
+    if (BUS_is_regulated_by_facts(BUS_array_get(net->bus,i), only_in_service) &&
         (BUS_is_in_service(BUS_array_get(net->bus,i)) || !only_in_service))
       n++;
   }
@@ -6835,17 +6835,17 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
       dv = v-BUS_get_v_max_reg(bus);
     if (v < BUS_get_v_min_reg(bus))
       dv = BUS_get_v_min_reg(bus)-v;
-    if (BUS_is_regulated_by_tran(bus)) { // false if all reg trans are out of service
+    if (BUS_is_regulated_by_tran(bus,TRUE)) { // false if all reg trans are out of service
       if (dv > net->tran_v_vio[t])
         net->tran_v_vio[t] = dv;
     }
-    if (BUS_is_regulated_by_shunt(bus)) { // false if all reg shunts are out of service
+    if (BUS_is_regulated_by_shunt(bus,TRUE)) { // false if all reg shunts are out of service
       if (dv > net->shunt_v_vio[t])
         net->shunt_v_vio[t] = dv;
     }
     
     // Bus regulated by gen
-    if (BUS_is_regulated_by_gen(bus)) { // false if all reg gens are out of service
+    if (BUS_is_regulated_by_gen(bus,TRUE)) { // false if all reg gens are out of service
       
       // Voltage set point deviation
       //****************************
@@ -7195,10 +7195,10 @@ void NET_update_set_points(Net* net) {
   // Update bus v set
   for (i = 0; i < net->num_buses; i++) {
     bus = BUS_array_get(net->bus,i);
-    if (BUS_is_v_set_regulated(bus) && BUS_is_in_service(bus)) {
+    if (BUS_is_v_set_regulated(bus,TRUE) && BUS_is_in_service(bus)) {
       for (t = 0; t < net->num_periods; t++) {
         BUS_set_v_set(bus,BUS_get_v_mag(bus,t),t);
-        if (BUS_is_regulated_by_shunt(bus) || BUS_is_regulated_by_tran(bus)) {
+        if (BUS_is_regulated_by_shunt(bus,TRUE) || BUS_is_regulated_by_tran(bus,TRUE)) {
           if (BUS_get_v_set(bus,t) > BUS_get_v_max_reg(bus))
             BUS_set_v_max_reg(bus, BUS_get_v_set(bus,t));
           if (BUS_get_v_set(bus,t) < BUS_get_v_min_reg(bus))
@@ -7227,7 +7227,7 @@ void NET_update_reg_Q_participations(Net* net, int t) {
 
     bus = NET_get_bus(net, i);
     
-    if (BUS_is_v_set_regulated(bus) && BUS_is_in_service(bus)) {
+    if (BUS_is_v_set_regulated(bus,TRUE) && BUS_is_in_service(bus)) {
 
       // Recompute total
       Q_total = 0;

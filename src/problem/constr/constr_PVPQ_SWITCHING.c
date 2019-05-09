@@ -45,7 +45,7 @@ void CONSTR_PVPQ_SWITCHING_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) 
     return;
       
   // Regulated bus
-  if (BUS_is_v_set_regulated(bus) && BUS_is_in_service(bus)) {
+  if (BUS_is_v_set_regulated(bus,TRUE) && BUS_is_in_service(bus)) {
     
     num = 0;
     
@@ -82,7 +82,7 @@ void CONSTR_PVPQ_SWITCHING_allocate(Constr* c) {
   ARRAY_zalloc(data->fix_flag,char,num_vars);
   for (i = 0; i < NET_get_num_buses(net,FALSE); i++) {
     bus = NET_get_bus(net,i);
-    if (BUS_is_v_set_regulated(bus) && BUS_is_in_service(bus)) {
+    if (BUS_is_v_set_regulated(bus,TRUE) && BUS_is_in_service(bus)) {
       if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
         for (t = 0; t < NET_get_num_periods(net); t++)
           data->fix_flag[BUS_get_index_v_mag(bus,t)] = TRUE; // reg v starts fixed
@@ -125,7 +125,7 @@ void CONSTR_PVPQ_SWITCHING_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t
     return;
   
   // Regulated bus
-  if (BUS_is_v_set_regulated(bus) && BUS_is_in_service(bus)) {
+  if (BUS_is_v_set_regulated(bus,TRUE) && BUS_is_in_service(bus)) {
 	
     // v var and fixed
     //****************

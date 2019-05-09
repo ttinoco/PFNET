@@ -291,7 +291,7 @@ static char* test_constr_PVPQ_SWITCHING() {
   nnz = 0;
   for (i = 0; i < NET_get_num_buses(net,FALSE); i++) {
     bus = NET_get_bus(net,i);
-    if (BUS_is_regulated_by_gen(bus) && BUS_is_in_service(bus)) {
+    if (BUS_is_regulated_by_gen(bus,TRUE) && BUS_is_in_service(bus)) {
       num += BUS_get_num_reg_gens(bus,TRUE);
       nnz += BUS_get_num_reg_gens(bus,TRUE)*(BUS_get_num_reg_gens(bus,TRUE)+1);
     }       
@@ -568,7 +568,7 @@ static char* test_constr_REG_VSET() {
   num_Jnnz = 0;
   for (i = 0; i < NET_get_num_buses(net,FALSE); i++) {
     bus = NET_get_bus(net,i);
-    if (BUS_is_regulated_by_gen(bus) && BUS_is_in_service(bus))
+    if (BUS_is_regulated_by_gen(bus,TRUE) && BUS_is_in_service(bus))
       num_Jnnz += 4*BUS_get_num_reg_gens(bus,TRUE);
   }
 

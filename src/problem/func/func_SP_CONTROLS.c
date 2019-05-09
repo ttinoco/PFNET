@@ -39,7 +39,7 @@ void FUNC_SP_CONTROLS_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
     return;
 
   // Voltage mag of gen-regulated bus
-  if (BUS_is_regulated_by_gen(bus) &&
+  if (BUS_is_regulated_by_gen(bus,TRUE) &&
       BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) &&
       BUS_has_flags(bus,FLAG_SPARSE,BUS_VAR_VMAG))
     (*Hphi_nnz)++;
@@ -114,7 +114,7 @@ void FUNC_SP_CONTROLS_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
     return;
 
   // Voltage mag of gen-regulated bus
-  if (BUS_is_regulated_by_gen(bus) &&
+  if (BUS_is_regulated_by_gen(bus,TRUE) &&
       BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) &&
       BUS_has_flags(bus,FLAG_SPARSE,BUS_VAR_VMAG)) {
     MAT_set_i(Hphi,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
@@ -213,7 +213,7 @@ void FUNC_SP_CONTROLS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var
     return;
 
   // Voltage mag of gen-regulated bus
-  if (BUS_is_regulated_by_gen(bus) &&
+  if (BUS_is_regulated_by_gen(bus,TRUE) &&
       BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) &&
       BUS_has_flags(bus,FLAG_SPARSE,BUS_VAR_VMAG)) {
     

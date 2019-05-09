@@ -45,7 +45,7 @@ void CONSTR_REG_VSET_count_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
     return;
       
   // Bus is regulated
-  if (BUS_is_v_set_regulated(bus) &&
+  if (BUS_is_v_set_regulated(bus,TRUE) &&
       BUS_is_in_service(bus) &&
       BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
     
@@ -141,7 +141,7 @@ void CONSTR_REG_VSET_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
     return;
       
   // Bus is regulated
-  if (BUS_is_v_set_regulated(bus) &&
+  if (BUS_is_v_set_regulated(bus,TRUE) &&
       BUS_is_in_service(bus) &&
       BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
         
@@ -284,7 +284,7 @@ void CONSTR_REG_VSET_eval_step(Constr* c, Bus* bus, BusDC* busdc, int t, Vec* va
     return;
       
   // Bus is regulated
-  if (BUS_is_v_set_regulated(bus) &&
+  if (BUS_is_v_set_regulated(bus,TRUE) &&
       BUS_is_in_service(bus) &&
       BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
         
@@ -386,7 +386,7 @@ void CONSTR_REG_VSET_store_sens_step(Constr* c, Bus* bus, BusDC* busdc, int t, V
     return;
 
   // Bus is regulated
-  if (BUS_is_v_set_regulated(bus) &&
+  if (BUS_is_v_set_regulated(bus,TRUE) &&
       BUS_is_in_service(bus) &&
       BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
         

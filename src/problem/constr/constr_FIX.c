@@ -185,10 +185,7 @@ void CONSTR_FIX_analyze_step(Constr* c, Bus* bus, BusDC* busdc, int t) {
   // Voltage magnitude (V_MAG)
   if (BUS_has_flags(bus,FLAG_FIXED,BUS_VAR_VMAG) &&
       BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
-    if (BUS_is_regulated_by_gen(bus))
-      VEC_set(b,*A_row,BUS_get_v_set(bus,t));
-    else
-      VEC_set(b,*A_row,BUS_get_v_mag(bus,t));
+    VEC_set(b,*A_row,BUS_get_v_mag(bus,t));
     MAT_set_i(A,*A_nnz,*A_row);
     MAT_set_j(A,*A_nnz,BUS_get_index_v_mag(bus,t));
     MAT_set_d(A,*A_nnz,1.);

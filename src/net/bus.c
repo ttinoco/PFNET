@@ -543,14 +543,14 @@ BOOL BUS_check(Bus* bus, BOOL verbose) {
   }
 
   // Reg gen number
-  if (BUS_is_regulated_by_gen(bus) && BUS_get_num_reg_gens(bus,TRUE) < 1) {
+  if (BUS_is_regulated_by_gen(bus,FALSE) && BUS_get_num_reg_gens(bus,FALSE) < 1) {
     bus_ok = FALSE;
     if (verbose)
       fprintf(stderr,"reg-by-gen bus has no regulating generators\n");
   }
 
   // Reg tran
-  if (BUS_is_regulated_by_tran(bus) && BUS_get_num_reg_trans(bus,TRUE) < 1) {
+  if (BUS_is_regulated_by_tran(bus,FALSE) && BUS_get_num_reg_trans(bus,FALSE) < 1) {
     bus_ok = FALSE;
     if (verbose)
       fprintf(stderr,"reg-by-tran bus has no regulating transformer\n");
@@ -644,7 +644,7 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate) {
     // Voltage
     bus->v_base = other->v_base;
 
-    if (BUS_is_v_set_regulated(other) || !BUS_is_v_set_regulated(bus))
+    if (BUS_is_v_set_regulated(other,FALSE) || !BUS_is_v_set_regulated(bus,FALSE))
       memcpy(bus->v_set,other->v_set,num_periods*sizeof(REAL));
     
     bus->v_max_reg = other->v_max_reg;
@@ -1927,15 +1927,15 @@ BOOL BUS_has_properties(void* vbus, char prop) {
     return FALSE;
   if ((prop & BUS_PROP_SLACK) && !BUS_is_slack(bus))
     return FALSE;
-  if ((prop & BUS_PROP_VSET_REG) && !BUS_is_v_set_regulated(bus))
+  if ((prop & BUS_PROP_VSET_REG) && !BUS_is_v_set_regulated(bus,TRUE))
     return FALSE;
-  if ((prop & BUS_PROP_REG_BY_GEN) && !BUS_is_regulated_by_gen(bus))
+  if ((prop & BUS_PROP_REG_BY_GEN) && !BUS_is_regulated_by_gen(bus,TRUE))
     return FALSE;
-  if ((prop & BUS_PROP_REG_BY_TRAN) && !BUS_is_regulated_by_tran(bus))
+  if ((prop & BUS_PROP_REG_BY_TRAN) && !BUS_is_regulated_by_tran(bus,TRUE))
     return FALSE;
-  if ((prop & BUS_PROP_REG_BY_SHUNT) && !BUS_is_regulated_by_shunt(bus))
+  if ((prop & BUS_PROP_REG_BY_SHUNT) && !BUS_is_regulated_by_shunt(bus,TRUE))
     return FALSE;
-  if ((prop & BUS_PROP_NOT_REG_BY_GEN) && BUS_is_regulated_by_gen(bus))
+  if ((prop & BUS_PROP_NOT_REG_BY_GEN) && BUS_is_regulated_by_gen(bus,TRUE))
     return FALSE;
   if ((prop & BUS_PROP_NOT_SLACK) && BUS_is_slack(bus))
     return FALSE;
@@ -2108,75 +2108,65 @@ BOOL BUS_is_equal(Bus* bus, Bus* other) {
   return bus == other;
 }
 
-BOOL BUS_is_regulated_by_gen(Bus* bus) {
+BOOL BUS_is_regulated_by_gen(Bus* bus, BOOL only_in_service) {
   Gen* gen;
-  if (!BUS_is_in_service(bus))
-    return FALSE;
   if (bus) {
     for (gen = bus->reg_gen; gen != NULL; gen = GEN_get_reg_next(gen)) {
-      if (GEN_is_in_service(gen))
+      if (GEN_is_in_service(gen) || !only_in_service)
         return TRUE;
     }
   }
   return FALSE;
 }
 
-BOOL BUS_is_regulated_by_tran(Bus* bus) {
+BOOL BUS_is_regulated_by_tran(Bus* bus, BOOL only_in_service) {
   Branch* br;
-  if (!BUS_is_in_service(bus))
-    return FALSE;
   if (bus) {
     for (br = bus->reg_tran; br != NULL; br = BRANCH_get_reg_next(br)) {
-      if (BRANCH_is_in_service(br))
+      if (BRANCH_is_in_service(br) || !only_in_service)
         return TRUE;
     }
   }
   return FALSE;
 }
 
-BOOL BUS_is_regulated_by_shunt(Bus* bus) {
+BOOL BUS_is_regulated_by_shunt(Bus* bus, BOOL only_in_service) {
   Shunt* shunt;
-  if (!BUS_is_in_service(bus))
-    return FALSE;
   if (bus) {
     for (shunt = bus->reg_shunt; shunt != NULL; shunt = SHUNT_get_reg_next(shunt)) {
-      if (SHUNT_is_in_service(shunt))
+      if (SHUNT_is_in_service(shunt) || !only_in_service)
         return TRUE;
     }
   }
   return FALSE;
 }
 
-BOOL BUS_is_regulated_by_vsc_conv(Bus* bus) {
+BOOL BUS_is_regulated_by_vsc_conv(Bus* bus, BOOL only_in_service) {
   ConvVSC* conv;
-  if (!BUS_is_in_service(bus))
-    return FALSE;
   if (bus) {
     for (conv = bus->reg_vsc_conv; conv != NULL; conv = CONVVSC_get_reg_next(conv)) {
-      if (CONVVSC_is_in_service(conv))
+      if (CONVVSC_is_in_service(conv) || !only_in_service)
         return TRUE;
     }
   }
   return FALSE;
 }
 
-BOOL BUS_is_regulated_by_facts(Bus* bus) {
+BOOL BUS_is_regulated_by_facts(Bus* bus, BOOL only_in_service) {
   Facts* facts;
-  if (!BUS_is_in_service(bus))
-    return FALSE;
   if (bus) {
     for (facts = bus->reg_facts; facts != NULL; facts = FACTS_get_reg_next(facts)) {
-      if (FACTS_is_in_service(facts))
+      if (FACTS_is_in_service(facts) || !only_in_service)
         return TRUE;
     }
   }
   return FALSE;
 }
 
-BOOL BUS_is_v_set_regulated(Bus* bus) {
-  return (BUS_is_regulated_by_gen(bus) ||
-          BUS_is_regulated_by_vsc_conv(bus) ||
-          BUS_is_regulated_by_facts(bus));
+BOOL BUS_is_v_set_regulated(Bus* bus, BOOL only_in_service) {
+  return (BUS_is_regulated_by_gen(bus, only_in_service) ||
+          BUS_is_regulated_by_vsc_conv(bus, only_in_service) ||
+          BUS_is_regulated_by_facts(bus, only_in_service));
 }
 
 BOOL BUS_is_slack(Bus* bus) {
@@ -2578,7 +2568,7 @@ void BUS_show(Bus* bus, int t) {
   printf("bus %d\t%d\t%d\t%d\t%d\t%d\t%d\n",
          BUS_get_number(bus),
          BUS_is_slack(bus),
-         BUS_is_regulated_by_gen(bus),
+         BUS_is_regulated_by_gen(bus,FALSE),
          BUS_get_num_gens(bus,FALSE),
          BUS_get_num_reg_gens(bus,FALSE),
          BUS_get_num_loads(bus,FALSE),
