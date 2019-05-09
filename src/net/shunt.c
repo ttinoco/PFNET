@@ -53,6 +53,9 @@ struct Shunt {
   REAL* sens_b_u_bound; /**< @brief Sensitivity of susceptance upper bound */
   REAL* sens_b_l_bound; /**< @brief Sensitivity of susceptance lower bound */
 
+  // Transformer
+  Branch* xfmr; /**< @brief Transformer associated with fixed shunt */
+
   // Network
   Net* net; /**< @brief Network. */
 
@@ -593,9 +596,17 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
   ARRAY_zalloc(shunt->sens_b_l_bound,REAL,T);
 
   shunt->net = NULL;
+  shunt->xfmr = NULL;
 
   shunt->next = NULL;
   shunt->reg_next = NULL;
+}
+
+BOOL SHUNT_is_part_of_transformer(Shunt* shunt) {
+  if (shunt)
+    return shunt->xfmr != NULL;
+  else
+    return FALSE;
 }
 
 BOOL SHUNT_is_in_service(void* shunt) {
@@ -860,6 +871,11 @@ void SHUNT_set_var_values(Shunt* shunt, Vec* values) {
     if (shunt->vars & SHUNT_VAR_SUSC) // shunt susceptance (p.u.)
       shunt->b[t] = VEC_get(values,shunt->index_b[t]); 
   }
+}
+
+void SHUNT_set_xfmr(Shunt* shunt, Branch* xfmr) {
+  if (shunt)
+    shunt->xfmr = xfmr;
 }
 
 void SHUNT_show(Shunt* shunt, int t) { 
