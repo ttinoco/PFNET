@@ -182,8 +182,22 @@ void HEUR_apply(Heur* h, Constr** cptrs, int cnum, Vec* var_values) {
 }
 
 void HEUR_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus, BusDC* busdc, int t, Vec* var_values) {
-  if (h && h->func_apply_step)
+  if (h && h->func_apply_step && HEUR_is_safe_to_apply(h, var_values))
     (*(h->func_apply_step))(h,cptrs,cnum,bus,busdc,t,var_values);
+}
+
+BOOL HEUR_is_safe_to_apply(Heur* h, Vec* var_values) {
+  if (h) {
+    if (NET_get_num_vars(h->net) <= VEC_get_size(var_values))
+      return TRUE;
+    else {
+      sprintf(h->error_string,"heuristic is not safe to apply");
+      h->error_flag = TRUE;
+      return FALSE;
+    }
+  }
+  else
+    return FALSE;    
 }
 
 void HEUR_clear_error(Heur * h) {

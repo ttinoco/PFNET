@@ -48,6 +48,8 @@ void HEUR_clear(Heur* h);
 void HEUR_apply(Heur* h, Constr** cptrs, int cnum, Vec* var_values);
 void HEUR_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus, BusDC* busdc, int t, Vec* var_values);
 
+BOOL HEUR_is_safe_to_apply(Heur* h, Vec* var_values);
+
 void HEUR_clear_error(Heur * h);
 BOOL HEUR_has_error(Heur* h);
 char* HEUR_get_error_string(Heur* h);
