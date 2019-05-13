@@ -670,6 +670,8 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate) {
     // skip index
     memcpy(bus->index_v_mag,other->index_v_mag,num_periods*sizeof(int));
     memcpy(bus->index_v_ang,other->index_v_ang,num_periods*sizeof(int));
+    memcpy(bus->dP_index,other->dP_index,num_periods*sizeof(int));
+    memcpy(bus->dQ_index,other->dQ_index,num_periods*sizeof(int));
 
     // Slack regulation fix
     if (mode == -1 && bus->slack) { // to merged
@@ -1893,7 +1895,9 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_array_float(temp,output,"sens_v_ang_l_bound",bus->sens_v_ang_l_bound,bus->num_periods,FALSE);
   JSON_array_float(temp,output,"sens_v_set_reg",bus->sens_v_set_reg,bus->num_periods,FALSE);
   JSON_array_float(temp,output,"sens_v_reg_by_tran",bus->sens_v_reg_by_tran,bus->num_periods,FALSE);
-  JSON_array_float(temp,output,"sens_v_reg_by_shunt",bus->sens_v_reg_by_shunt,bus->num_periods,TRUE);
+  JSON_array_float(temp,output,"sens_v_reg_by_shunt",bus->sens_v_reg_by_shunt,bus->num_periods,FALSE);
+  JSON_array_int(temp,output,"dP_index",bus->dP_index,bus->num_periods,FALSE);
+  JSON_array_int(temp,output,"dQ_index",bus->dQ_index,bus->num_periods,TRUE);
   JSON_end(output);
   
   // Resize

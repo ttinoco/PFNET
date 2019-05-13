@@ -520,6 +520,18 @@ void JSON_PARSER_process_json_bus_array(Parser* p, Net* net, json_value* json_bu
         for (k = 0; k < imin(BUS_get_num_periods(bus),val->u.array.length); k++)
           BUS_set_sens_v_reg_by_shunt(bus,val->u.array.values[k]->u.dbl,k);
       }
+
+      // dP_index
+      else if (strcmp(key,"dP_index") == 0) {
+        for (k = 0; k < imin(BUS_get_num_periods(bus),val->u.array.length); k++)
+          BUS_set_dP_index(bus,val->u.array.values[k]->u.integer,k);
+      }
+
+      // dQ_index
+      else if (strcmp(key,"dQ_index") == 0) {
+        for (k = 0; k < imin(BUS_get_num_periods(bus),val->u.array.length); k++)
+          BUS_set_dQ_index(bus,val->u.array.values[k]->u.integer,k);
+      }
     }
   }
 }
@@ -1357,6 +1369,12 @@ void JSON_PARSER_process_json_bus_dc_array(Parser* p, Net* net, json_value* json
       else if (strcmp(key,"branches_m") == 0) {
         for (k = 0; k < val->u.array.length; k++)
           BUSDC_add_branch_m(bus,NET_get_dc_branch(net,val->u.array.values[k]->u.integer));
+      }
+
+      // di_index
+      else if (strcmp(key,"di_index") == 0) {
+        for (k = 0; k < imin(BUSDC_get_num_periods(bus),val->u.array.length); k++)
+          BUSDC_set_di_index(bus,val->u.array.values[k]->u.integer,k);
       }
     }
   }

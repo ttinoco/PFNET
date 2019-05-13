@@ -204,6 +204,7 @@ void BUSDC_copy_from_dc_bus(BusDC* bus, BusDC* other) {
   // Indices
   // skip index
   memcpy(bus->index_v,other->index_v,num_periods*sizeof(int));
+  memcpy(bus->di_index,other->di_index,num_periods*sizeof(int));
 
   // Connections
   // skip connections
@@ -362,7 +363,8 @@ char* BUSDC_get_json_string(BusDC* bus, char* output) {
   JSON_list_int(temp,output,"branches_k",bus,BranchDC,BUSDC_get_branch_k,BRANCHDC_get_index,BRANCHDC_get_next_k,FALSE);
   JSON_list_int(temp,output,"branches_m",bus,BranchDC,BUSDC_get_branch_m,BRANCHDC_get_index,BRANCHDC_get_next_m,FALSE);
   JSON_list_int(temp,output,"csc_converters",bus,ConvCSC,BUSDC_get_csc_conv,CONVCSC_get_index,CONVCSC_get_next_dc,FALSE);
-  JSON_list_int(temp,output,"vsc_converters",bus,ConvVSC,BUSDC_get_vsc_conv,CONVVSC_get_index,CONVVSC_get_next_dc,TRUE);
+  JSON_list_int(temp,output,"vsc_converters",bus,ConvVSC,BUSDC_get_vsc_conv,CONVVSC_get_index,CONVVSC_get_next_dc,FALSE);
+  JSON_array_int(temp,output,"di_index",bus->di_index,bus->num_periods,TRUE);
   JSON_end(output);
   
   // Resize
