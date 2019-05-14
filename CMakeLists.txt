@@ -70,6 +70,24 @@ else()
   set(HAVE_RAW_PARSER 0)
 endif()
 
+# Add epc-parser if available
+if(EXISTS $ENV{EPC_PARSER}/src/EPC_parser.c)
+  include_directories($ENV{EPC_PARSER}/include)
+  set(epc_parser_source $ENV{EPC_PARSER}/src/EPC_net.c
+                        $ENV{EPC_PARSER}/src/EPC_parser.c)
+  target_sources(pfnet PUBLIC ${epc_parser_source})
+  target_sources(pfnet_static PUBLIC ${epc_parser_source})
+  message("epc-parser enabled.")
+  # install epc-parser headers also
+  install(DIRECTORY $ENV{EPC_PARSER}/include/
+          DESTINATION include
+          FILES_MATCHING PATTERN "*.h")
+  set(HAVE_EPC_PARSER 1)  # need to set it to 1 so that the dummy parser in pfnet does not conflict
+else()
+  message("epc-parser not enabled.")
+  set(HAVE_EPC_PARSER 0)
+endif()
+
 # Add checks needed to produce pfnet_config.h
 INCLUDE (CheckIncludeFiles)
 INCLUDE (CheckTypeSize)

@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2019, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -20,6 +20,7 @@
 #include "parser_ART.h"
 #include "parser_RAW.h"
 #include "parser_JSON.h"
+#include "parser_EPC.h"
 
 // Functions
 #include "func_GEN_COST.h"

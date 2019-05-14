@@ -9,9 +9,9 @@
 
 #include "unit.h"
 #include "test_network.h"
-#include "test_constraints.h"
-#include "test_functions.h"
-#include "test_problem.h"
+//#include "test_constraints.h"
+//#include "test_functions.h"
+//#include "test_problem.h"
 
 int tests_run = 0;
 char* test_case = NULL;
@@ -19,8 +19,9 @@ char* test_case = NULL;
 static char * all_tests() {
 
   // Network
-  run_test(test_net_new);
   run_test(test_net_load);
+  /*
+  run_test(test_net_new);
   run_test(test_net_check);
   run_test(test_net_variables);
   run_test(test_net_fixed);
@@ -41,6 +42,7 @@ static char * all_tests() {
 
   // Problem
   run_test(test_problem_basic);
+  */
   
   return 0;
 }

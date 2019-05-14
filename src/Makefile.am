@@ -11,6 +11,9 @@ nobase_nodist_include_HEADERS = $(inc_path)/pfnet_config.h
 # Libraries
 lib_LTLIBRARIES = libpfnet.la
 
+# Additional sources
+nodist_libpfnet_la_SOURCES = 
+
 # PFNET sources and headers (note all headers are in $PFNET/include/pfnet)
 math_src = math/matrix.c \
            math/vector.c
@@ -57,6 +60,7 @@ parser_src = parser/parser.c \
              parser/parser_CSV.c \
              parser/parser_MAT.c \
              parser/parser_RAW.c \
+             parser/parser_EPC.c \
              parser/parser_JSON.c
 
 parser_hdr = $(inc_path)/parser.h \
@@ -64,6 +68,7 @@ parser_hdr = $(inc_path)/parser.h \
              $(inc_path)/parser_CSV.h \
              $(inc_path)/parser_MAT.h \
              $(inc_path)/parser_RAW.h \
+             $(inc_path)/parser_EPC.h \
              $(inc_path)/parser_JSON.h
 
 problem_src = problem/constr.c \
@@ -219,6 +224,15 @@ if HAS_RAW_PARSER
 raw_inc_path = @raw_dir@/include
 raw_src = @raw_dir@/src/RAW_parser.c \
 	  @raw_dir@/src/RAW_net.c
-nodist_libpfnet_la_SOURCES = $(raw_src)
+nodist_libpfnet_la_SOURCES += $(raw_src)
 libpfnet_la_CFLAGS +=  -I$(raw_inc_path)
+endif
+
+# Epc parser
+if HAS_EPC_PARSER
+epc_inc_path = @epc_dir@/include
+epc_src = @epc_dir@/src/EPC_parser.c \
+	  @epc_dir@/src/EPC_net.c
+nodist_libpfnet_la_SOURCES += $(epc_src)
+libpfnet_la_CFLAGS +=  -I$(epc_inc_path)
 endif

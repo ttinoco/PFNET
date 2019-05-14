@@ -28,6 +28,15 @@ AC_CHECK_FILES([$RAW_PARSER/src/RAW_parser.c],
 	[AC_DEFINE([HAVE_RAW_PARSER],[0],[Define to 0 if you do not have the raw parser library.])
 	 AM_CONDITIONAL(HAS_RAW_PARSER,false)])
 
+# Checks for epc parser
+AC_SUBST(epctop_srcdir,$EPC_PARSER)
+AC_CHECK_FILES([$EPC_PARSER/src/EPC_parser.c],
+	[AC_DEFINE([HAVE_EPC_PARSER],[1],[Define to 1 if you have the epc parser library.])
+	 AM_CONDITIONAL(HAS_EPC_PARSER,true)
+	 AC_SUBST(epc_dir,$EPC_PARSER)],
+	[AC_DEFINE([HAVE_EPC_PARSER],[0],[Define to 0 if you do not have the epc parser library.])
+	 AM_CONDITIONAL(HAS_EPC_PARSER,false)])
+
 # Checks for other header files.
 AC_CHECK_HEADERS([stddef.h stdint.h stdlib.h string.h])
 

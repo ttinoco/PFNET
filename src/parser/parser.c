@@ -3,7 +3,7 @@
  *
  * This file is part of PFNET.
  *
- * Copyright (c) 2015-2017, Tomas Tinoco De Rubira.
+ * Copyright (c) 2015, Tomas Tinoco De Rubira.
  *
  * PFNET is released under the BSD 2-clause license.
  */
@@ -12,6 +12,8 @@
 #include <pfnet/parser_MAT.h>
 #include <pfnet/parser_ART.h>
 #include <pfnet/parser_RAW.h>
+#include <pfnet/parser_JSON.h>
+#include <pfnet/parser_EPC.h>
 
 struct Parser {
 
@@ -37,7 +39,7 @@ Parser* PARSER_new(void) {
   
   p->error_flag = FALSE;
   strcpy(p->error_string,"");
-  
+
   p->data = NULL;
   
   p->func_init = NULL;
@@ -62,6 +64,10 @@ Parser* PARSER_new_for_file(char* f) {
     return MAT_PARSER_new();
   if (strcmp(ext+1,"art") == 0)
     return ART_PARSER_new();
+  if (strcmp(ext+1,"json") == 0)
+    return JSON_PARSER_new();
+  if (strcmp(ext+1,"epc") == 0)
+    return EPC_PARSER_new();
   return NULL;
 }
 

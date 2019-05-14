@@ -11,21 +11,6 @@
 #include <pfnet/parser.h>
 #include <pfnet/net.h>
 
-static char* test_net_new() {
-
-  Net* net;
-
-  printf("test_net_new ... ");
-
-  net = NET_new(1);
-
-  Assert("error - failed to create net",net != NULL);
-
-  NET_del(net);
-  printf("ok\n");
-  return 0;
-}
-
 static char* test_net_load() {
   
   Parser* parser;
@@ -38,10 +23,31 @@ static char* test_net_load() {
   Assert("error - unable to get parser",parser != NULL);
   Assert(PARSER_get_error_string(parser),!PARSER_has_error(parser));
   Assert("error - failed to parse case",!PARSER_has_error(parser));
-  Assert("error - invalid number of buses",NET_get_num_buses(net,FALSE) > 0);
+  //Assert("error - invalid number of buses",NET_get_num_buses(net,FALSE) > 0);
+
+  //PARSER_set(parser, "output_level", 3);
+  
+  // DEBUG
+  PARSER_show(parser);
 
   NET_del(net);
   PARSER_del(parser);
+  printf("ok\n");
+  return 0;
+}
+
+/*
+static char* test_net_new() {
+
+  Net* net;
+
+  printf("test_net_new ... ");
+
+  net = NET_new(1);
+
+  Assert("error - failed to create net",net != NULL);
+
+  NET_del(net);
   printf("ok\n");
   return 0;
 }
@@ -280,3 +286,4 @@ static char* test_net_init_point() {
   return 0;
 }
 
+*/
