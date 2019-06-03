@@ -14,6 +14,14 @@
 build/
 __pycache__/
 *.tar.gz
+CMakeCache.txt
+CMakeFiles/
+CTestTestfile.cmake
+cmake_install.cmake
+install_manifest.txt
+libpfnet.dll
+pfnet_static_tests.exe
+pfnet_tests.exe
 
 # PyCharm Project Files
 .idea/*

@@ -90,4 +90,7 @@
 /* Define to 0 if you do not have the raw-parser library. */
 #cmakedefine HAVE_RAW_PARSER @HAVE_RAW_PARSER@
 
+/* Define to 0 if you do not have the epc-parser library. */
+#cmakedefine HAVE_EPC_PARSER @HAVE_EPC_PARSER@
+
 #endif
