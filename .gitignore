@@ -1,6 +1,7 @@
 # General
 *.[oa]
 *.raw
+*.epc
 *~
 *.out
 *.so.*

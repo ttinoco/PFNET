@@ -11,8 +11,7 @@
 #include <pfnet/array.h>
 #include <pfnet/func_REG_VAR.h>
 
-struct Func_REG_VAR_Data {
-  
+struct Func_REG_VAR_Data {  
   REAL* x0; // center
   REAL* w;  // weights
   int num_vars;

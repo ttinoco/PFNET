@@ -14,6 +14,7 @@ Unreleased
 * Network "update_set_points" also updates CSC P_dc set.
 * Network method for clipping switched shunt b.
 * Support for components being in or out of service.
+* Added "v_set_refrence" boolean parameter to FUNC_REG_VMAG.
 
 Version 1.3.4
 -------------
