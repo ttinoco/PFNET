@@ -15,7 +15,8 @@ Unreleased
 * Network method for clipping switched shunt b.
 * Support for components being in or out of service.
 * Link to PSLF epc parser.
-
+* Added "v_set_refrence" boolean parameter to FUNC_REG_VMAG.
+ 
 Version 1.3.4
 -------------
 * Updated parser init/free routines to make parser params work.

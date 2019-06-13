@@ -10,13 +10,32 @@
 
 #include <pfnet/func_REG_VMAG.h>
 
+struct Func_REG_VMAG_Data {
+  BOOL v_set_ref;
+};
+
 Func* FUNC_REG_VMAG_new(REAL weight, Net* net) {
   Func* f = FUNC_new(weight,net);
+  FUNC_set_func_init(f,&FUNC_REG_VMAG_init);
   FUNC_set_func_count_step(f,&FUNC_REG_VMAG_count_step);
   FUNC_set_func_analyze_step(f,&FUNC_REG_VMAG_analyze_step);
   FUNC_set_func_eval_step(f,&FUNC_REG_VMAG_eval_step);
+  FUNC_set_func_free(f,&FUNC_REG_VMAG_free);
+  FUNC_set_func_set_parameter(f,&FUNC_REG_VMAG_set_parameter);
   FUNC_set_name(f,"voltage magnitude regularization");
+  FUNC_init(f);
   return f;
+}
+
+void FUNC_REG_VMAG_init(Func* f) {
+
+  // Local variables
+  Func_REG_VMAG_Data* data;
+  
+  // Init
+  data = (Func_REG_VMAG_Data*)malloc(sizeof(Func_REG_VMAG_Data));
+  data->v_set_ref = TRUE;
+  FUNC_set_data(f,data);
 }
 
 void FUNC_REG_VMAG_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
@@ -73,25 +92,30 @@ void FUNC_REG_VMAG_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_va
   int* Hphi_nnz;
   int index_v_mag;
   REAL v;
-  REAL vt;
+  REAL vref;
   REAL dv = FUNC_REG_VMAG_PARAM;
+  Func_REG_VMAG_Data* data;
 
   // Func data
   phi = FUNC_get_phi_ptr(f);
   gphi = VEC_get_data(FUNC_get_gphi(f));
   Hphi = MAT_get_data_array(FUNC_get_Hphi(f));
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
+  data = (Func_REG_VMAG_Data*)FUNC_get_data(f);
 
   // Check pointers
-  if (!phi || !gphi || !Hphi || !Hphi_nnz || !bus)
+  if (!phi || !gphi || !Hphi || !Hphi_nnz || !bus || !data)
     return;
 
   // Out of service
   if (!BUS_is_in_service(bus))
     return;
 
-  // Set point
-  vt = BUS_get_v_set(bus,t);
+  // Reference
+  if (data->v_set_ref || BUS_is_v_set_regulated(bus,TRUE))
+    vref = BUS_get_v_set(bus,t);
+  else
+    vref = BUS_get_v_mag(bus,t);
   
   if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) { // v var
     
@@ -102,10 +126,10 @@ void FUNC_REG_VMAG_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_va
     v = VEC_get(var_values,index_v_mag);
 
     // phi
-    (*phi) += 0.5*pow((v-vt)/dv,2.);
+    (*phi) += 0.5*pow((v-vref)/dv,2.);
     
     // gphi
-    gphi[index_v_mag] = (v-vt)/(dv*dv);
+    gphi[index_v_mag] = (v-vref)/(dv*dv);
     
     // Hphi
     Hphi[*Hphi_nnz] = 1./(dv*dv);
@@ -117,6 +141,38 @@ void FUNC_REG_VMAG_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_va
     v = BUS_get_v_mag(bus,t);
     
     // phi
-    (*phi) += 0.5*pow((v-vt)/dv,2.);
+    (*phi) += 0.5*pow((v-vref)/dv,2.);
   }
+}
+
+void FUNC_REG_VMAG_free(Func* f) {
+
+  // Local variables
+  Func_REG_VMAG_Data* data;
+
+  // Get data
+  data = (Func_REG_VMAG_Data*)FUNC_get_data(f);
+
+  // Free
+  if (data)
+    free(data);
+
+  // Set data
+  FUNC_set_data(f,NULL);
+}
+
+void FUNC_REG_VMAG_set_parameter(Func* f, char* key, void* value) {
+
+  // Local variables
+  Func_REG_VMAG_Data* data = (Func_REG_VMAG_Data*)FUNC_get_data(f);
+
+  // Check
+  if (!data)
+    return;
+
+  // Set 
+  if (strcmp(key,"v_set_reference") == 0) 
+    data->v_set_ref = *(BOOL*)value;
+  else // unknown
+    FUNC_set_error(f,"invalid parameter");
 }

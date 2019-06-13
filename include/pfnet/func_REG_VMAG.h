@@ -16,10 +16,16 @@
 
 #define FUNC_REG_VMAG_PARAM 0.2
 
+// Data
+typedef struct Func_REG_VMAG_Data Func_REG_VMAG_Data;
+
 // Function prototypes
 Func* FUNC_REG_VMAG_new(REAL weight, Net* net);
+void FUNC_REG_VMAG_init(Func* f);
 void FUNC_REG_VMAG_count_step(Func* f, Bus* bus, BusDC* busdc, int t);
 void FUNC_REG_VMAG_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t);
 void FUNC_REG_VMAG_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_values);
+void FUNC_REG_VMAG_free(Func* f);
+void FUNC_REG_VMAG_set_parameter(Func* f, char* key, void* value);
 
 #endif
