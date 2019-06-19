@@ -178,7 +178,7 @@ void LOAD_copy_from_load(Load* load, Load* other) {
   strcpy(load->name,other->name);
 
   // Flags
-  load->in_service = other->in_service;
+  LOAD_set_in_service(load,LOAD_is_in_service(other));
   load->fixed = other->fixed;
   load->bounded = other->bounded;
   load->sparse = other->sparse;
@@ -734,7 +734,7 @@ char* LOAD_get_json_string(Load* load, char* output) {
   JSON_obj(temp,output,"bus",load->bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",load->num_periods,FALSE);
   JSON_str(temp,output,"name",load->name,FALSE);
-  JSON_bool(temp,output,"in_service",load->in_service,FALSE);
+  JSON_bool(temp,output,"in_service",LOAD_is_in_service(load),FALSE);
   JSON_array_float(temp,output,"P",load->P,load->num_periods,FALSE);
   JSON_array_float(temp,output,"P_max",load->P_max,load->num_periods,FALSE);
   JSON_array_float(temp,output,"P_min",load->P_min,load->num_periods,FALSE);

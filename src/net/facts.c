@@ -203,7 +203,7 @@ void FACTS_copy_from_facts(Facts* facts, Facts* other) {
   strcpy(facts->name,other->name);
 
   // Flags
-  facts->in_service = other->in_service;
+  FACTS_set_in_service(facts,FACTS_is_in_service(other));
   facts->fixed = other->fixed;
   facts->bounded = other->bounded;
   facts->sparse = other->sparse;
@@ -998,7 +998,7 @@ char* FACTS_get_json_string(Facts* facts, char* output) {
   JSON_int(temp,output,"index",facts->index,FALSE);
   JSON_int(temp,output,"num_periods",facts->num_periods,FALSE);
   JSON_str(temp,output,"name",facts->name,FALSE);
-  JSON_bool(temp,output,"in_service",facts->in_service,FALSE);
+  JSON_bool(temp,output,"in_service",FACTS_is_in_service(facts),FALSE);
   JSON_obj(temp,output,"bus_k",facts->bus_k,BUS_get_index,FALSE);
   JSON_obj(temp,output,"bus_m",facts->bus_m,BUS_get_index,FALSE);
   JSON_obj(temp,output,"reg_bus",facts->reg_bus,BUS_get_index,FALSE);

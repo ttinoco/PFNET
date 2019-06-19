@@ -174,7 +174,7 @@ void SHUNT_copy_from_shunt(Shunt* shunt, Shunt* other) {
   shunt->num_b_values = other->num_b_values;
 
   // Flags
-  shunt->in_service = other->in_service;
+  SHUNT_set_in_service(shunt,SHUNT_is_in_service(other));
   shunt->fixed = other->fixed;
   shunt->bounded = other->bounded;
   shunt->sparse = other->sparse;
@@ -515,7 +515,7 @@ char* SHUNT_get_json_string(Shunt* shunt, char* output) {
   JSON_obj(temp,output,"reg_bus",shunt->reg_bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",shunt->num_periods,FALSE);
   JSON_str(temp,output,"name",shunt->name,FALSE);
-  JSON_bool(temp,output,"in_service",shunt->in_service,FALSE);
+  JSON_bool(temp,output,"in_service",SHUNT_is_in_service(shunt),FALSE);
   JSON_int(temp,output,"type",shunt->type,FALSE);
   JSON_int(temp,output,"mode",shunt->mode,FALSE);
   JSON_float(temp,output,"g",shunt->g,FALSE);

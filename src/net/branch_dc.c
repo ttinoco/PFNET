@@ -119,7 +119,7 @@ void BRANCHDC_copy_from_dc_branch(BranchDC* br, BranchDC* other) {
   br->r = other->r;
 
   // Flags
-  br->in_service = other->in_service;
+  BRANCHDC_set_in_service(br,BRANCHDC_is_in_service(other));
   br->fixed = other->fixed;
   br->bounded = other->bounded;
   br->sparse = other->sparse;
@@ -286,7 +286,7 @@ char* BRANCHDC_get_json_string(BranchDC* branch, char* output) {
   JSON_int(temp,output,"index",branch->index,FALSE);
   JSON_int(temp,output,"num_periods",branch->num_periods,FALSE);
   JSON_str(temp,output,"name",branch->name,FALSE);
-  JSON_bool(temp,output,"in_service",branch->in_service,FALSE);
+  JSON_bool(temp,output,"in_service",BRANCHDC_is_in_service(branch),FALSE);
   JSON_obj(temp,output,"bus_k",branch->bus_k,BUSDC_get_index,FALSE);
   JSON_obj(temp,output,"bus_m",branch->bus_m,BUSDC_get_index,FALSE);
   JSON_float(temp,output,"r",branch->r,TRUE);

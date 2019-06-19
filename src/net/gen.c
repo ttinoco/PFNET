@@ -171,7 +171,7 @@ void GEN_copy_from_gen(Gen* gen, Gen* other) {
   strcpy(gen->name,other->name);
 
   // Flags
-  gen->in_service = other->in_service;
+  GEN_set_in_service(gen,GEN_is_in_service(other));
   gen->fixed = other->fixed;
   gen->bounded = other->bounded;
   gen->sparse = other->sparse;
@@ -666,7 +666,7 @@ char* GEN_get_json_string(Gen* gen, char* output) {
   JSON_obj(temp,output,"reg_bus",gen->reg_bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",gen->num_periods,FALSE);
   JSON_str(temp,output,"name",gen->name,FALSE);
-  JSON_bool(temp,output,"in_service",gen->in_service,FALSE);
+  JSON_bool(temp,output,"in_service",GEN_is_in_service(gen),FALSE);
   JSON_array_float(temp,output,"P",gen->P,gen->num_periods,FALSE);
   JSON_float(temp,output,"P_max",gen->P_max,FALSE);
   JSON_float(temp,output,"P_min",gen->P_min,FALSE);

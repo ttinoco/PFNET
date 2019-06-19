@@ -148,7 +148,7 @@ void VARGEN_copy_from_vargen(Vargen* gen, Vargen* other) {
   gen->type = other->type;
 
   // Flags
-  gen->in_service = other->in_service;
+  VARGEN_set_in_service(gen,VARGEN_is_in_service(other));
   gen->fixed = other->fixed;
   gen->bounded = other->bounded;
   gen->sparse = other->sparse;
@@ -533,7 +533,7 @@ char* VARGEN_get_json_string(Vargen* gen, char* output) {
   JSON_obj(temp,output,"bus",gen->bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",gen->num_periods,FALSE);
   JSON_str(temp,output,"name",gen->name,FALSE);
-  JSON_bool(temp,output,"in_service",gen->in_service,FALSE);
+  JSON_bool(temp,output,"in_service",VARGEN_is_in_service(gen),FALSE);
   JSON_array_float(temp,output,"P",gen->P,gen->num_periods,FALSE);
   JSON_array_float(temp,output,"P_ava",gen->P_ava,gen->num_periods,FALSE)
   JSON_float(temp,output,"P_max",gen->P_max,FALSE);
