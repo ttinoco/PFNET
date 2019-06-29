@@ -253,7 +253,7 @@ void BRANCH_copy_from_branch(Branch* br, Branch* other, int mode) {
   br->ratingC = other->ratingC;
   
   // Flags
-  BRANCH_set_in_service(br,BRANCH_is_in_service(other));
+  br->in_service = other->in_service;
   br->pos_ratio_v_sens = other->pos_ratio_v_sens;
   br->fixed = other->fixed;
   br->bounded = other->bounded;
@@ -1296,7 +1296,7 @@ char* BRANCH_get_json_string(Branch* branch, char* output) {
   JSON_float(temp,output,"ratingA",branch->ratingA,FALSE);
   JSON_float(temp,output,"ratingB",branch->ratingB,FALSE);
   JSON_float(temp,output,"ratingC",branch->ratingC,FALSE);
-  JSON_bool(temp,output,"in_service",BRANCH_is_in_service(branch),FALSE);
+  JSON_bool(temp,output,"in_service",branch->in_service,FALSE);
   JSON_bool(temp,output,"pos_ratio_v_sens",branch->pos_ratio_v_sens,TRUE);
   JSON_end(output);
   
@@ -1709,7 +1709,7 @@ void BRANCH_set_pos_ratio_v_sens(Branch* br, BOOL flag) {
 }
 
 void BRANCH_set_in_service(Branch* br, BOOL in_service) {
-  if (br) {
+  if (br && BUS_is_in_service(br->bus_k) && BUS_is_in_service(br->bus_m)) {
     if (br->in_service != in_service)
       NET_inc_state_tag(br->net);
     br->in_service = in_service;

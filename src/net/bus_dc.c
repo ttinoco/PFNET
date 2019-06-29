@@ -195,7 +195,7 @@ void BUSDC_copy_from_dc_bus(BusDC* bus, BusDC* other) {
   memcpy(bus->v,other->v,num_periods*sizeof(REAL));
 
   // Flags
-  BUSDC_set_in_service(bus,BUSDC_is_in_service(other));
+  bus->in_service = other->in_service;
   bus->fixed = other->fixed;
   bus->bounded = other->bounded;
   bus->sparse = other->sparse;
@@ -356,7 +356,7 @@ char* BUSDC_get_json_string(BusDC* bus, char* output) {
   JSON_int(temp,output,"index",bus->index,FALSE);
   JSON_int(temp,output,"number",bus->number,FALSE);
   JSON_str(temp,output,"name",bus->name,FALSE);
-  JSON_bool(temp,output,"in_service",BUSDC_is_in_service(bus),FALSE);
+  JSON_bool(temp,output,"in_service",bus->in_service,FALSE);
   JSON_int(temp,output,"num_periods",bus->num_periods,FALSE);
   JSON_float(temp,output,"v_base",bus->v_base,FALSE);
   JSON_array_float(temp,output,"v",bus->v,bus->num_periods,FALSE);
@@ -756,29 +756,11 @@ void BUSDC_set_network(BusDC* bus, void* net) {
 }
 
 void BUSDC_set_in_service(BusDC* bus, BOOL in_service) {
-
-  // Local vars
-  ConvCSC* csc_conv;
-  ConvVSC* vsc_conv;
-  BranchDC* branch;
-
-  // Check
-  if (!bus)
-    return;
-
-  // Check
-  if (bus->in_service != in_service) {
-    NET_inc_state_tag(bus->net);
-    for (csc_conv = bus->csc_conv; csc_conv != NULL; csc_conv = CONVCSC_get_next_dc(csc_conv))
-      CONVCSC_set_in_service(csc_conv,FALSE);
-    for (vsc_conv = bus->vsc_conv; vsc_conv != NULL; vsc_conv = CONVVSC_get_next_dc(vsc_conv))
-      CONVVSC_set_in_service(vsc_conv,FALSE);
-    for (branch = bus->branch_k; branch != NULL; branch = BRANCHDC_get_next_k(branch))
-      BRANCHDC_set_in_service(branch,FALSE);
-    for (branch = bus->branch_m; branch != NULL; branch = BRANCHDC_get_next_m(branch))
-      BRANCHDC_set_in_service(branch,FALSE);
+  if (bus) {
+    if (bus->in_service != in_service)
+      NET_inc_state_tag(bus->net);
+    bus->in_service = in_service;
   }
-  bus->in_service = in_service;
 }
 
 void BUSDC_set_name(BusDC* bus, char* name) {

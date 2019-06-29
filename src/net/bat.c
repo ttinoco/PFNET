@@ -160,7 +160,7 @@ void BAT_copy_from_bat(Bat* bat, Bat* other) {
   strcpy(bat->name,other->name);
 
   // Flags
-  BAT_set_in_service(bat,BAT_is_in_service(other));
+  bat->in_service = other->in_service;
   bat->fixed = other->fixed;
   bat->bounded = other->bounded;
   bat->sparse = other->sparse;
@@ -582,7 +582,7 @@ char* BAT_get_json_string(Bat* bat, char* output) {
   JSON_obj(temp,output,"bus",bat->bus,BUS_get_index,FALSE);
   JSON_int(temp,output,"num_periods",bat->num_periods,FALSE);
   JSON_str(temp,output,"name",bat->name,FALSE);
-  JSON_bool(temp,output,"in_service",BAT_is_in_service(bat),FALSE);
+  JSON_bool(temp,output,"in_service",bat->in_service,FALSE);
   JSON_array_float(temp,output,"P",bat->P,bat->num_periods,FALSE);
   JSON_float(temp,output,"P_max",bat->P_max,FALSE);
   JSON_float(temp,output,"P_min",bat->P_min,FALSE);
@@ -698,7 +698,7 @@ Bat* BAT_new(int num_periods) {
 }
 
 void BAT_set_in_service(Bat* bat, BOOL in_service) {
-  if (bat) {
+  if (bat && BUS_is_in_service(bat->bus)) {
     if (bat->in_service != in_service)
       NET_inc_state_tag(bat->net);
     bat->in_service = in_service;

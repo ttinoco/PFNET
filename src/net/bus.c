@@ -655,7 +655,7 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate) {
     bus->v_min_emer = other->v_min_emer;
 
     // Flags
-    BUS_set_in_service(bus,BUS_is_in_service(other));
+    bus->in_service = other->in_service;
     bus->slack = (other->slack || (mode == -1 && BUS_equiv_has_slack(other)));
     bus->star = other->star;
     bus->fixed = other->fixed;
@@ -1867,7 +1867,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_float(temp,output,"v_min_norm",bus->v_min_norm,FALSE);
   JSON_float(temp,output,"v_max_emer",bus->v_max_emer,FALSE);
   JSON_float(temp,output,"v_min_emer",bus->v_min_emer,FALSE);
-  JSON_bool(temp,output,"in_service",BUS_is_in_service(bus),FALSE);
+  JSON_bool(temp,output,"in_service",bus->in_service,FALSE);
   JSON_bool(temp,output,"slack",bus->slack,FALSE);
   JSON_bool(temp,output,"star",bus->star,FALSE);
   JSON_array_float(temp,output,"price",bus->price,bus->num_periods,FALSE);
@@ -2342,49 +2342,11 @@ Bus* BUS_new(int num_periods) {
 }
 
 void BUS_set_in_service(Bus* bus, BOOL in_service) {
-
-  // Local vars
-  Gen* gen;
-  Load* load;
-  Shunt* shunt;
-  Branch* branch;
-  Vargen* vargen;
-  Bat* bat;
-  ConvCSC* csc_conv;
-  ConvVSC* vsc_conv;
-  Facts* facts;
-
-  // Check
-  if (!bus)
-    return;
-
-  // Change
-  if (bus->in_service != in_service) {
-    NET_inc_state_tag(bus->net);
-    for (gen = bus->gen; gen != NULL; gen = GEN_get_next(gen))
-      GEN_set_in_service(gen,FALSE);
-    for (load = bus->load; load != NULL; load = LOAD_get_next(load))
-      LOAD_set_in_service(load,FALSE);
-    for (shunt = bus->shunt; shunt != NULL; shunt = SHUNT_get_next(shunt))
-      SHUNT_set_in_service(shunt,FALSE);
-    for (branch = bus->branch_k; branch != NULL; branch = BRANCH_get_next_k(branch))
-      BRANCH_set_in_service(branch,FALSE);
-    for (branch = bus->branch_m; branch != NULL; branch = BRANCH_get_next_m(branch))
-      BRANCH_set_in_service(branch,FALSE);
-    for (vargen = bus->vargen; vargen != NULL; vargen = VARGEN_get_next(vargen))
-      VARGEN_set_in_service(vargen,FALSE);
-    for (bat = bus->bat; bat != NULL; bat = BAT_get_next(bat))
-      BAT_set_in_service(bat,FALSE);
-    for (csc_conv = bus->csc_conv; csc_conv != NULL; csc_conv = CONVCSC_get_next_ac(csc_conv))
-      CONVCSC_set_in_service(csc_conv,FALSE);
-    for (vsc_conv = bus->vsc_conv; vsc_conv != NULL; vsc_conv = CONVVSC_get_next_ac(vsc_conv))
-      CONVVSC_set_in_service(vsc_conv,FALSE);
-    for (facts = bus->facts_k; facts != NULL; facts = FACTS_get_next_k(facts))
-      FACTS_set_in_service(facts,FALSE);
-    for (facts = bus->facts_m; facts != NULL; facts = FACTS_get_next_m(facts))
-      FACTS_set_in_service(facts,FALSE);
+  if (bus) {
+    if (bus->in_service != in_service)
+      NET_inc_state_tag(bus->net);
+    bus->in_service = in_service;
   }
-  bus->in_service = in_service;
 }
 
 void BUS_set_network(Bus* bus, void* net) {

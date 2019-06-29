@@ -171,7 +171,7 @@ void CONVVSC_copy_from_conv(ConvVSC* conv, ConvVSC* other) {
   strcpy(conv->name,other->name);
 
   // Flags
-  CONVVSC_set_in_service(conv,CONVVSC_is_in_service(other));
+  conv->in_service = other->in_service;
   conv->fixed = other->fixed;
   conv->bounded = other->bounded;
   conv->sparse = other->sparse;
@@ -386,7 +386,7 @@ char* CONVVSC_get_json_string(ConvVSC* conv, char* output) {
   JSON_start(output);
   JSON_int(temp,output,"index",conv->index,FALSE);
   JSON_str(temp,output,"name",conv->name,FALSE);
-  JSON_bool(temp,output,"in_service",CONVVSC_is_in_service(conv),FALSE);
+  JSON_bool(temp,output,"in_service",conv->in_service,FALSE);
   JSON_int(temp,output,"num_periods",conv->num_periods,FALSE);
   JSON_obj(temp,output,"ac_bus",conv->ac_bus,BUS_get_index,FALSE);
   JSON_obj(temp,output,"dc_bus",conv->dc_bus,BUSDC_get_index,FALSE);
@@ -967,7 +967,7 @@ void CONVVSC_propagate_data_in_time(ConvVSC* conv, int start, int end) {
 }
 
 void CONVVSC_set_in_service(ConvVSC* conv, BOOL in_service) {
-  if (conv) {
+  if (conv && BUS_is_in_service(conv->ac_bus) && BUSDC_is_in_service(conv->dc_bus)) {
     if (conv->in_service != in_service)
       NET_inc_state_tag(conv->net);
     conv->in_service = in_service;
