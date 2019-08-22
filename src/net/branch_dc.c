@@ -475,7 +475,7 @@ void BRANCHDC_propagate_data_in_time(BranchDC* br, int start, int end) {
 }
 
 void BRANCHDC_set_in_service(BranchDC* br, BOOL in_service) {
-  if (br) {
+  if (br && BUSDC_is_in_service(br->bus_k) && BUSDC_is_in_service(br->bus_m)) {
     if (br->in_service != in_service)
       NET_inc_state_tag(br->net);
     br->in_service = in_service;

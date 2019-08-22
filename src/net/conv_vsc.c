@@ -967,7 +967,7 @@ void CONVVSC_propagate_data_in_time(ConvVSC* conv, int start, int end) {
 }
 
 void CONVVSC_set_in_service(ConvVSC* conv, BOOL in_service) {
-  if (conv) {
+  if (conv && BUS_is_in_service(conv->ac_bus) && BUSDC_is_in_service(conv->dc_bus)) {
     if (conv->in_service != in_service)
       NET_inc_state_tag(conv->net);
     conv->in_service = in_service;

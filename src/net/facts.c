@@ -1272,7 +1272,8 @@ Facts* FACTS_new(int num_periods) {
 }
 
 void FACTS_set_in_service(Facts* facts, BOOL in_service) {
-  if (facts) {
+  if (facts && BUS_is_in_service(facts->bus_k) &&
+      (BUS_is_in_service(facts->bus_m) || FACTS_is_series_link_disabled(facts))) {
     if (facts->in_service != in_service)
       NET_inc_state_tag(facts->net);
     facts->in_service = in_service;

@@ -913,7 +913,7 @@ void GEN_set_reg_bus(Gen* gen, Bus* reg_bus) {
 }
 
 void GEN_set_in_service(Gen* gen, BOOL in_service) {
-  if (gen) {
+  if (gen && BUS_is_in_service(gen->bus)) {
     if (gen->in_service != in_service)
       NET_inc_state_tag(gen->net);
     gen->in_service = in_service;

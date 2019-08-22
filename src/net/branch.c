@@ -1709,7 +1709,7 @@ void BRANCH_set_pos_ratio_v_sens(Branch* br, BOOL flag) {
 }
 
 void BRANCH_set_in_service(Branch* br, BOOL in_service) {
-  if (br) {
+  if (br && BUS_is_in_service(br->bus_k) && BUS_is_in_service(br->bus_m)) {
     if (br->in_service != in_service)
       NET_inc_state_tag(br->net);
     br->in_service = in_service;

@@ -963,7 +963,7 @@ void LOAD_set_bus(Load* load, Bus* bus) {
 }
 
 void LOAD_set_in_service(Load* load, BOOL in_service) {
-  if (load) {
+  if (load && BUS_is_in_service(load->bus)) {
     if (load->in_service != in_service)
       NET_inc_state_tag(load->net);
     load->in_service = in_service;

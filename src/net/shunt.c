@@ -734,7 +734,7 @@ void SHUNT_set_sens_b_l_bound(Shunt* shunt, REAL value, int t) {
 }
 
 void SHUNT_set_in_service(Shunt* shunt, BOOL in_service) {
-  if (shunt) {
+  if (shunt && BUS_is_in_service(shunt->bus)) {
     if (shunt->in_service != in_service)
       NET_inc_state_tag(shunt->net);
     shunt->in_service = in_service;

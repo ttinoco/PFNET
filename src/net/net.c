@@ -5876,6 +5876,14 @@ void NET_make_all_in_service(Net* net ) {
   if (!net)
     return;
 
+  // Bus
+  for (i = 0; i < net->num_buses; i++)
+    BUS_set_in_service(NET_get_bus(net,i),TRUE);
+
+  // Bus DC
+  for (i = 0; i < net->num_dc_buses; i++)
+    BUSDC_set_in_service(NET_get_dc_bus(net,i),TRUE);
+
   // Bat
   for (i = 0; i < net->num_bats; i++)
     BAT_set_in_service(NET_get_bat(net,i),TRUE);
@@ -5887,14 +5895,6 @@ void NET_make_all_in_service(Net* net ) {
   // Branch DC
   for (i = 0; i < net->num_dc_branches; i++)
     BRANCHDC_set_in_service(NET_get_dc_branch(net,i),TRUE);
-
-  // Bus
-  for (i = 0; i < net->num_buses; i++)
-    BUS_set_in_service(NET_get_bus(net,i),TRUE);
-
-  // Bus DC
-  for (i = 0; i < net->num_dc_buses; i++)
-    BUSDC_set_in_service(NET_get_dc_bus(net,i),TRUE);
 
   // Conv CSC
   for (i = 0; i < net->num_csc_convs; i++)

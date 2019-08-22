@@ -698,7 +698,7 @@ Bat* BAT_new(int num_periods) {
 }
 
 void BAT_set_in_service(Bat* bat, BOOL in_service) {
-  if (bat) {
+  if (bat && BUS_is_in_service(bat->bus)) {
     if (bat->in_service != in_service)
       NET_inc_state_tag(bat->net);
     bat->in_service = in_service;
