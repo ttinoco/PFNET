@@ -26,18 +26,14 @@ static char* test_net_load() {
   Assert("error - unable to get parser",parser != NULL);
   Assert(PARSER_get_error_string(parser),!PARSER_has_error(parser));
   Assert("error - failed to parse case",!PARSER_has_error(parser));
-  //Assert("error - invalid number of buses",NET_get_num_buses(net,FALSE) > 0);
+  Assert("error - invalid number of buses",NET_get_num_buses(net,FALSE) > 0);
     
-  // DEBUG
-  PARSER_show(parser);
-
   NET_del(net);
   PARSER_del(parser);
   printf("ok\n");
   return 0;
 }
 
-/*
 static char* test_net_new() {
 
   Net* net;
@@ -286,5 +282,3 @@ static char* test_net_init_point() {
   printf("ok\n");
   return 0;
 }
-
-*/
