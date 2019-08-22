@@ -19,8 +19,8 @@ char* test_case = NULL;
 static char * all_tests() {
 
   // Network
-  run_test(test_net_load);
   run_test(test_net_new);
+  run_test(test_net_load);
   run_test(test_net_check);
   run_test(test_net_variables);
   run_test(test_net_fixed);

@@ -11,29 +11,6 @@
 #include <pfnet/parser.h>
 #include <pfnet/net.h>
 
-static char* test_net_load() {
-  
-  Parser* parser;
-  Net* net;
-
-  printf("test_net_load ... ");
-
-  parser = PARSER_new_for_file(test_case);
-
-  PARSER_set(parser, "output_level", 3);
-  
-  net = PARSER_parse(parser,test_case,1);
-  Assert("error - unable to get parser",parser != NULL);
-  Assert(PARSER_get_error_string(parser),!PARSER_has_error(parser));
-  Assert("error - failed to parse case",!PARSER_has_error(parser));
-  Assert("error - invalid number of buses",NET_get_num_buses(net,FALSE) > 0);
-    
-  NET_del(net);
-  PARSER_del(parser);
-  printf("ok\n");
-  return 0;
-}
-
 static char* test_net_new() {
 
   Net* net;
@@ -45,6 +22,26 @@ static char* test_net_new() {
   Assert("error - failed to create net",net != NULL);
 
   NET_del(net);
+  printf("ok\n");
+  return 0;
+}
+
+static char* test_net_load() {
+  
+  Parser* parser;
+  Net* net;
+
+  printf("test_net_load ... ");
+
+  parser = PARSER_new_for_file(test_case);
+  net = PARSER_parse(parser,test_case,1);
+  Assert("error - unable to get parser",parser != NULL);
+  Assert(PARSER_get_error_string(parser),!PARSER_has_error(parser));
+  Assert("error - failed to parse case",!PARSER_has_error(parser));
+  Assert("error - invalid number of buses",NET_get_num_buses(net,FALSE) > 0);
+    
+  NET_del(net);
+  PARSER_del(parser);
   printf("ok\n");
   return 0;
 }
