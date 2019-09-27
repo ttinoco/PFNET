@@ -105,7 +105,9 @@ CHECK_INCLUDE_FILES("strings.h"  HAVE_STRING_H)
 CHECK_INCLUDE_FILES("memory.h"  HAVE_MEMORY_H)
 CHECK_INCLUDE_FILES("sys/stat.h"  HAVE_SYS_STAT_H)
 CHECK_INCLUDE_FILES("sys/types.h"  HAVE_SYS_TYPES_H)
-CHECK_INCLUDE_FILES("unistd.h"  HAVE_UNISTD_H)
+if (UNIX)
+  CHECK_INCLUDE_FILES("unistd.h"  HAVE_UNISTD_H)
+endif (UNIX)
 
 # Checks for typedefs, structures, and compiler characteristics.
 CHECK_INCLUDE_FILES("inttypes.h" HAVE_INTTYPES_H)
