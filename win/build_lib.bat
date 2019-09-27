@@ -1,3 +1,5 @@
-cmake -DCMAKE_INSTALL_PREFIX=.\build -G"MinGW Makefiles" -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=TRUE .
-mingw32-make -j
-mingw32-make install
+mkdir build
+cd build
+cmake -G"Visual Studio 14 2015" .. -A x64
+cmake --build . --config Release
+
