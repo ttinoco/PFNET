@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT([PFNET], [1.3.4], [ttinoco5687@gmail.com])
+AC_INIT([PFNET], [1.3.5], [ttinoco5687@gmail.com])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_SRCDIR([src/net/net.c])
 AC_CONFIG_HEADERS([include/pfnet/pfnet_config.h])

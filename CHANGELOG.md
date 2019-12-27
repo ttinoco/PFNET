@@ -1,5 +1,5 @@
-Unreleased
-----------
+Version 1.3.5
+-------------
 * Constant current constraint for CSC HVDC.
 * Net update reg Q participations.
 * In update set points, changed reg_by_gen to v_set_regulated.
