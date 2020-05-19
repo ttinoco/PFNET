@@ -38,7 +38,7 @@
 #define GEN_PROP_NOT_REG 0x04   /**< @brief Property: non-regulating generator */
 #define GEN_PROP_NOT_SLACK 0x08 /**< @brief Property: non-slack generator */
 #define GEN_PROP_P_ADJUST 0x20  /**< @brief Property: P adjustable (Pmin < Pmax) */
-#define GEN_PROP_REDISP 0x03    /**< @brief Property: P re-dispatchable */
+#define GEN_PROP_REDISP 0x40    /**< @brief Property: P re-dispatchable */
 /** @} */
 
 // Constants
