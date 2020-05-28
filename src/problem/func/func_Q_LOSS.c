@@ -267,7 +267,6 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
             Hphi[*Hphi_nnz] = 2 * v;
             (*Hphi_nnz)++;
 
-
             tot_b += VEC_get(var_values,SHUNT_get_index_b(shunt,t));
         }
         else{
