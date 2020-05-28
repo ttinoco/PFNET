@@ -171,10 +171,10 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
     if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_Q)) {
 
       // phi
-      (*phi) -= LOAD_get_index_Q(load,t);
+      (*phi) -= VEC_get(var_values,LOAD_get_index_Q(load,t));
 
       // gphi
-      gphi[index_P] = -1.0;
+      gphi[LOAD_get_index_Q(load,t)] = -1.0;
 
     }
 
