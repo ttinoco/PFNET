@@ -93,6 +93,9 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
   // Local variables
   Branch* br;
   Shunt* shunt;
+  Gen* gen;
+  Load* load;
+  Vargen* vargen;
   REAL* phi;
   REAL* gphi;
   REAL* Hphi;
@@ -303,7 +306,7 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
   // Hessian for bus
   if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)){
     // Hphi
-    Hphi_data[Hphi_nnz] = 2 * tot_b
-    Hphi_nnz += 1
+    Hphi[*Hphi_nnz] = 2 * tot_b;
+    (*Hphi_nnz)++;
   }
 }
