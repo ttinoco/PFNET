@@ -103,6 +103,7 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
   int index_v_mag;
   REAL v;
   REAL tot_b=0.0;
+  REAL gphi_vmag=0.0;
 
   // Func data
   phi = FUNC_get_phi_ptr(f);
@@ -189,6 +190,17 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
     }
   }
 
+  // Bus voltage
+  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
+
+      index_v_mag = BUS_get_index_v_mag(bus,t);
+      v = VEC_get(var_values,index_v_mag);
+  }
+  else {
+      v = BUS_get_v_mag(bus,t);
+  }
+
+
   // Branches_k
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
@@ -198,14 +210,11 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
 
     if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
 
-      index_v_mag = BUS_get_index_v_mag(bus,t);
-      v = VEC_get(var_values,index_v_mag);
-
       // phi
       (*phi) += BRANCH_get_b_k(br) * pow(v, 2.);
 
       // gphi
-      gphi[index_v_mag] += 2.* BRANCH_get_b_k(br) * v;
+      gphi_vmag += 2.* BRANCH_get_b_k(br) * v;
 
       tot_b += BRANCH_get_b_k(br);
       }
@@ -213,7 +222,7 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
     else {
 
       // phi
-      (*phi) += BRANCH_get_b_k(br) * pow(BUS_get_v_mag(bus,t), 2.);
+      (*phi) += BRANCH_get_b_k(br) * pow(v, 2.);
 
       }
   }
@@ -227,21 +236,18 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
 
     if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
 
-      index_v_mag = BUS_get_index_v_mag(bus,t);
-      v = VEC_get(var_values,index_v_mag);
-
       // phi
       (*phi) += BRANCH_get_b_m(br) * pow(v, 2.);
 
       // gphi
-      gphi[index_v_mag] += 2.* BRANCH_get_b_m(br) * v;
+      gphi_vmag += 2.* BRANCH_get_b_m(br) * v;
 
       tot_b += BRANCH_get_b_m(br);
     }
     else {
 
       // phi
-      (*phi) += BRANCH_get_b_m(br) * pow(BUS_get_v_mag(bus,t), 2.);
+      (*phi) += BRANCH_get_b_m(br) * pow(v, 2.);
     }
   }
 
@@ -254,20 +260,17 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
     if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) { // b var
         if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {  // V var
 
-            index_v_mag = BUS_get_index_v_mag(bus,t);
-            v = VEC_get(var_values,index_v_mag);
-
             // phi
             (*phi) += VEC_get(var_values,SHUNT_get_index_b(shunt,t)) * pow(v,2.);
 
-            // gphi
+            // gphi > shunt
             gphi[SHUNT_get_index_b(shunt,t)] = pow(v,2.);
 
-            // gphi
-            gphi[index_v_mag] += 2 * VEC_get(var_values,SHUNT_get_index_b(shunt,t)) * v;
+            // gphi > vmag
+            gphi_vmag += 2. * VEC_get(var_values,SHUNT_get_index_b(shunt,t)) * v;
 
-            // Hphi
-            Hphi[*Hphi_nnz] = 2 * v;
+            // Hphi > shunt
+            Hphi[*Hphi_nnz] = 2. * v;
             (*Hphi_nnz)++;
 
             tot_b += VEC_get(var_values,SHUNT_get_index_b(shunt,t));
@@ -275,10 +278,10 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
         else{
 
              // phi
-            (*phi) += VEC_get(var_values,SHUNT_get_index_b(shunt,t)) * pow(BUS_get_v_mag(bus,t),2.);
+            (*phi) += VEC_get(var_values,SHUNT_get_index_b(shunt,t)) * pow(v,2.);
 
             // gphi
-            gphi[SHUNT_get_index_b(shunt,t)] = pow(BUS_get_v_mag(bus,t),2.);
+            gphi[SHUNT_get_index_b(shunt,t)] = pow(v,2.);
         }
     }
     else{  // b const
@@ -291,22 +294,26 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
             (*phi) += SHUNT_get_b(shunt,t) * pow(v,2.);
 
             // gphi
-            gphi[index_v_mag] += 2 * SHUNT_get_b(shunt,t) * v;
+            gphi_vmag += 2. * SHUNT_get_b(shunt,t) * v;
 
             tot_b += SHUNT_get_b(shunt,t);
         }
         else{
 
             // phi
-            (*phi) += SHUNT_get_b(shunt,t) * pow(BUS_get_v_mag(bus,t),2.);
+            (*phi) += SHUNT_get_b(shunt,t) * pow(v,2.);
         }
     }
   }
 
   // Hessian for bus
   if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)){
+
+    // gphi
+    gphi[index_v_mag] = gphi_vmag
+
     // Hphi
-    Hphi[*Hphi_nnz] = 2 * tot_b;
+    Hphi[*Hphi_nnz] = 2. * tot_b;
     (*Hphi_nnz)++;
   }
 }
