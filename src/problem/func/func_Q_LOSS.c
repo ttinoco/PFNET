@@ -37,14 +37,19 @@ void FUNC_Q_LOSS_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
     return;
 
   // Bus
-  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG))  //V var
-    (*Hphi_nnz)++;
+  if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
 
-    // Shunts
-  for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
-    if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) && SHUNT_is_in_service(shunt)) // b var
+      //V var
       (*Hphi_nnz)++;
-  }
+
+      // Shunts
+      for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+        if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) &&
+            SHUNT_is_in_service(shunt)) // b & v var
+
+          (*Hphi_nnz)++;
+      }
+    }
 }
 
 void FUNC_Q_LOSS_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
@@ -58,6 +63,7 @@ void FUNC_Q_LOSS_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   Hphi = FUNC_get_Hphi(f);
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
+
   // Check pointers
   if (!Hphi_nnz || !Hphi || !bus)
     return;
@@ -68,24 +74,27 @@ void FUNC_Q_LOSS_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
   // v var
   if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
-    MAT_set_i(Hphi,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
-    MAT_set_j(Hphi,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
-    (*Hphi_nnz)++;
-  }
 
-  // Shunts
-  for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
-
-    if (!SHUNT_is_in_service(shunt))
-      continue;
-
-    if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) { //d2phi/dbdv
-
-      MAT_set_i(Hphi,*Hphi_nnz,SHUNT_get_index_b(shunt,t));
+      // Hphi  >> v & v
+      MAT_set_i(Hphi,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
       MAT_set_j(Hphi,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
       (*Hphi_nnz)++;
+
+      // Shunts
+      for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+
+        if (!SHUNT_is_in_service(shunt))
+          continue;
+
+        if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
+
+          // v & b
+          MAT_set_i(Hphi,*Hphi_nnz,SHUNT_get_index_b(shunt,t));
+          MAT_set_j(Hphi,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
+          (*Hphi_nnz)++;
+        }
+      }
     }
-  }
 }
 
 void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_values) {
@@ -110,6 +119,7 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
   gphi = VEC_get_data(FUNC_get_gphi(f));
   Hphi = MAT_get_data_array(FUNC_get_Hphi(f));
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
+
 
   // Check pointers
   if (!phi || !gphi || !Hphi || !Hphi_nnz || !bus)
@@ -186,7 +196,7 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
     else {
 
       // phi
-      (*phi) -= LOAD_get_Q(load,t);;
+      (*phi) -= LOAD_get_Q(load,t);
     }
   }
 
@@ -199,7 +209,6 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
   else {
       v = BUS_get_v_mag(bus,t);
   }
-
 
   // Branches_k
   for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
@@ -258,50 +267,37 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
       continue;
 
     if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) { // b var
-        if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {  // V var
 
-            // phi
-            (*phi) += VEC_get(var_values,SHUNT_get_index_b(shunt,t)) * pow(v,2.);
+        // phi
+        (*phi) += VEC_get(var_values,SHUNT_get_index_b(shunt,t)) * pow(v,2.);
 
-            // gphi > shunt
-            gphi[SHUNT_get_index_b(shunt,t)] = pow(v,2.);
+        // gphi > shunt
+        gphi[SHUNT_get_index_b(shunt,t)] = pow(v,2.);
 
-            // gphi > vmag
-            gphi_vmag += 2. * VEC_get(var_values,SHUNT_get_index_b(shunt,t)) * v;
 
-            // Hphi > shunt
-            Hphi[*Hphi_nnz] = 2. * v;
-            (*Hphi_nnz)++;
+            if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {  // V var
 
-            tot_b += VEC_get(var_values,SHUNT_get_index_b(shunt,t));
-        }
-        else{
+                 // gphi > vmag
+                gphi_vmag += 2. * VEC_get(var_values,SHUNT_get_index_b(shunt,t)) * v;
 
-             // phi
-            (*phi) += VEC_get(var_values,SHUNT_get_index_b(shunt,t)) * pow(v,2.);
+                // Hphi > v & b
+                Hphi[*Hphi_nnz] = 2. * v;
+                (*Hphi_nnz)++;
 
-            // gphi
-            gphi[SHUNT_get_index_b(shunt,t)] = pow(v,2.);
-        }
+                tot_b += VEC_get(var_values,SHUNT_get_index_b(shunt,t));
+            }
+
     }
     else{  // b const
+
+        // phi
+        (*phi) += SHUNT_get_b(shunt,t) * pow(v,2.);
+
         if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {  // V var
-
-            index_v_mag = BUS_get_index_v_mag(bus,t);
-            v = VEC_get(var_values,index_v_mag);
-
-            // phi
-            (*phi) += SHUNT_get_b(shunt,t) * pow(v,2.);
-
             // gphi
             gphi_vmag += 2. * SHUNT_get_b(shunt,t) * v;
 
             tot_b += SHUNT_get_b(shunt,t);
-        }
-        else{
-
-            // phi
-            (*phi) += SHUNT_get_b(shunt,t) * pow(v,2.);
         }
     }
   }
@@ -310,7 +306,7 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
   if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)){
 
     // gphi
-    gphi[index_v_mag] = gphi_vmag
+    gphi[index_v_mag] = gphi_vmag;
 
     // Hphi
     Hphi[*Hphi_nnz] = 2. * tot_b;
