@@ -1,5 +1,5 @@
 /** @file func_Q_LOSS.h
- *  @brief This file lists the constants and routines associated with the function of type NETCON_COST.
+ *  @brief This file lists the constants and routines associated with the function of type Q_LOSS.
  *
  * This file is part of PFNET.
  *
@@ -13,8 +13,6 @@
 
 #include <math.h>
 #include "func.h"
-
-								
 
 // Function prototypes
 Func* FUNC_Q_LOSS_new(REAL weight, Net* net);
