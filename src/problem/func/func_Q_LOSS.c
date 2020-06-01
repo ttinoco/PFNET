@@ -45,8 +45,9 @@ void FUNC_Q_LOSS_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
       // Shunts
       for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
         if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) &&
-            SHUNT_is_in_service(shunt)) // b & v var
+            SHUNT_is_in_service(shunt))
 
+          // b & v var
           (*Hphi_nnz)++;
       }
     }
