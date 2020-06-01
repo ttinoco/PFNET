@@ -64,7 +64,6 @@ void FUNC_Q_LOSS_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   Hphi = FUNC_get_Hphi(f);
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
 
-
   // Check pointers
   if (!Hphi_nnz || !Hphi || !bus)
     return;
@@ -120,7 +119,6 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
   gphi = VEC_get_data(FUNC_get_gphi(f));
   Hphi = MAT_get_data_array(FUNC_get_Hphi(f));
   Hphi_nnz = FUNC_get_Hphi_nnz_ptr(f);
-
 
   // Check pointers
   if (!phi || !gphi || !Hphi || !Hphi_nnz || !bus)
