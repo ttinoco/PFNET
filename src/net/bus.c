@@ -54,6 +54,7 @@ struct Bus {
   BOOL in_service;   /**< @brief Flag for indicating whether the bus is in service */
   BOOL slack;        /**< @brief Flag for indicating that the bus is a slack bus */
   BOOL star;         /**< @brief Flag for indicating that the bus is a star bus */
+  BOOL in_subsys;   /**< @brief Flag for indicating whether the bus is in subsystem */
   char fixed;        /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;      /**< @brief Flags for indicating which quantities should be bounded */
   char sparse;       /**< @brief Flags for indicating which control adjustments should be sparse */
@@ -119,7 +120,7 @@ struct Bus {
   int* dwdw_index;
   int* dwdv_index;
   int* dvdv_index;
-  
+
   // Lists
   Bus* next;   /**< @brief List of buses */
   Node* equiv; /**< @brief List of equivalent buses */
@@ -603,7 +604,7 @@ void BUS_clear_mismatches(Bus* bus) {
 
 void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate) {
   /** Copies data from another bus except index, hash info, and connections.
-   * 
+   *
    *  Parameters
    *  -----------
    *  mode: -1 (to merged), 0 (one-to-one), 1 (from merged)
@@ -630,14 +631,14 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate) {
 
     bus->number = other->number;
     strcpy(bus->name,other->name);
-    
+
     bus->alt_number = other->alt_number;
     strcpy(bus->alt_name,other->alt_name);
 
     // Oindex
     if (mode == 0) // one-to-one
       bus->oindex = other->oindex;
-    
+
     bus->area = other->area;
     bus->zone = other->zone;
 
@@ -646,7 +647,7 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate) {
 
     if (BUS_is_v_set_regulated(other,FALSE) || !BUS_is_v_set_regulated(bus,FALSE))
       memcpy(bus->v_set,other->v_set,num_periods*sizeof(REAL));
-    
+
     bus->v_max_reg = other->v_max_reg;
     bus->v_min_reg = other->v_min_reg;
     bus->v_max_norm = other->v_max_norm;
@@ -662,6 +663,7 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate) {
     bus->bounded = other->bounded;
     bus->sparse = other->sparse;
     bus->vars = other->vars;
+    bus->in_subsys = other->in_subsys;
 
     // Price
     memcpy(bus->price,other->price,num_periods*sizeof(REAL));
@@ -687,13 +689,13 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate) {
 
     // Hash
     // skip hash
-    
+
     // Network
     // skip network
-    
+
     // ACPF helpers
     // skip helpers
-    
+
     // List
     // skip next
   }
@@ -1405,7 +1407,7 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
     return;
 
   for (t = 0; t < bus->num_periods; t++) {
-    
+
     // Voltage magnitude
     if (bus->vars & BUS_VAR_VMAG) {
       switch (code) {
@@ -1432,7 +1434,7 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
     // Voltage angle
     if (bus->vars & BUS_VAR_VANG) {
       switch(code) {
-	
+
       case UPPER_LIMITS:
         VEC_set(values,bus->index_v_ang[t],BUS_INF_V_ANG);
         break;
@@ -1827,7 +1829,7 @@ REAL BUS_get_quantity(Bus* bus, int qtype, int t) {
 }
 
 char* BUS_get_json_string(Bus* bus, char* output) {
-  
+
   // Local variables
   char temp[BUS_JSON_BUFFER_SIZE];
   char* output_start;
@@ -1845,7 +1847,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
     resize = TRUE;
   }
   output_start = output;
-  
+
   // Write
   JSON_start(output);
   JSON_int(temp,output,"index",bus->index,FALSE);
@@ -1870,6 +1872,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_bool(temp,output,"in_service",bus->in_service,FALSE);
   JSON_bool(temp,output,"slack",bus->slack,FALSE);
   JSON_bool(temp,output,"star",bus->star,FALSE);
+  JSON_bool(temp,output,"in_subsys",bus->in_service,FALSE);
   JSON_array_float(temp,output,"price",bus->price,bus->num_periods,FALSE);
   JSON_list_int(temp,output,"generators",bus,Gen,BUS_get_gen,GEN_get_index,GEN_get_next,FALSE);
   JSON_list_int(temp,output,"reg_generators",bus,Gen,BUS_get_reg_gen,GEN_get_index,GEN_get_reg_next,FALSE);
@@ -1899,7 +1902,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_array_int(temp,output,"dP_index",bus->dP_index,bus->num_periods,FALSE);
   JSON_array_int(temp,output,"dQ_index",bus->dQ_index,bus->num_periods,TRUE);
   JSON_end(output);
-  
+
   // Resize
   if (resize)
     output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
@@ -2026,6 +2029,7 @@ void BUS_init(Bus* bus, int num_periods) {
   bus->in_service = TRUE;
   bus->slack = FALSE;
   bus->star = FALSE;
+  bus->in_subsys = TRUE;
   bus->fixed = 0x00;
   bus->bounded = 0x00;
   bus->sparse = 0x00;
@@ -2081,7 +2085,7 @@ void BUS_init(Bus* bus, int num_periods) {
   ARRAY_zalloc(bus->dwdw_index,int,T);
   ARRAY_zalloc(bus->dwdv_index,int,T);
   ARRAY_zalloc(bus->dvdv_index,int,T);
-  
+
   for (t = 0; t < bus->num_periods; t++) {
     bus->v_mag[t] = 1.;
     bus->v_set[t] = 1.;
@@ -2107,6 +2111,14 @@ BOOL BUS_is_in_service(void* bus) {
   else
     return FALSE;
 }
+
+BOOL BUS_is_in_subsys(void* bus) {
+  if (bus)
+    return ((Bus*)bus)->in_subsys;
+  else
+    return FALSE;
+}
+
 
 BOOL BUS_is_equal(Bus* bus, Bus* other) {
   return bus == other;
@@ -2346,6 +2358,13 @@ void BUS_set_in_service(Bus* bus, BOOL in_service) {
     if (bus->in_service != in_service)
       NET_inc_state_tag(bus->net);
     bus->in_service = in_service;
+  }
+}
+
+void BUS_set_in_subsys(Bus* bus, BOOL in_subsys) {
+  if (bus) {
+    if (bus->in_subsys != in_subsys)
+    bus->in_subsys = in_subsys;
   }
 }
 
