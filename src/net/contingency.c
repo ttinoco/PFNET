@@ -27,7 +27,7 @@ struct Branch_outage {
 struct Load_outage {
   int load_index;
   struct Load_outage* next;
-}
+};
 
 // Types
 typedef struct Gen_outage Gen_outage;
@@ -76,6 +76,7 @@ void CONT_apply(Cont* cont, Net* net) {
     for (bo = cont->br_outage; bo != NULL; bo = bo->next) {
       br = NET_get_branch(net,bo->br_index);
       BRANCH_set_in_service(br,FALSE);
+    }
 
     // Loads
     for (lo = cont->load_outage; lo != NULL; lo = lo->next) {
@@ -107,6 +108,7 @@ void CONT_clear(Cont* cont, Net* net) {
     for (bo = cont->br_outage; bo != NULL; bo = bo->next) {
       br = NET_get_branch(net,bo->br_index);
       BRANCH_set_in_service(br,TRUE);
+    }
 
     // Loads
     for (lo = cont->load_outage; lo != NULL; lo = lo->next) {
