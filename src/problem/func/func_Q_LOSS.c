@@ -39,9 +39,6 @@ void FUNC_Q_LOSS_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   // Bus
   if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
 
-      //V var
-      (*Hphi_nnz)++;
-
       // Shunts
       for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
         if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) &&
@@ -50,6 +47,9 @@ void FUNC_Q_LOSS_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
           // b & v var
           (*Hphi_nnz)++;
       }
+
+      //V var
+      (*Hphi_nnz)++;
     }
 }
 
@@ -75,11 +75,6 @@ void FUNC_Q_LOSS_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   // v var
   if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {
 
-      // Hphi  >> v & v
-      MAT_set_i(Hphi,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
-      MAT_set_j(Hphi,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
-      (*Hphi_nnz)++;
-
       // Shunts
       for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
 
@@ -94,6 +89,12 @@ void FUNC_Q_LOSS_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
           (*Hphi_nnz)++;
         }
       }
+
+      // Hphi  >> v & v
+      MAT_set_i(Hphi, *Hphi_nnz, BUS_get_index_v_mag(bus, t));
+      MAT_set_j(Hphi, *Hphi_nnz, BUS_get_index_v_mag(bus, t));
+      (*Hphi_nnz)++;
+
     }
 }
 
