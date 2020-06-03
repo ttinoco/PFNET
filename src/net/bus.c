@@ -1872,7 +1872,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_bool(temp,output,"in_service",bus->in_service,FALSE);
   JSON_bool(temp,output,"slack",bus->slack,FALSE);
   JSON_bool(temp,output,"star",bus->star,FALSE);
-  JSON_bool(temp,output,"in_subsys",bus->in_service,FALSE);
+  JSON_bool(temp,output,"in_subsys",bus->in_subsys,FALSE);
   JSON_array_float(temp,output,"price",bus->price,bus->num_periods,FALSE);
   JSON_list_int(temp,output,"generators",bus,Gen,BUS_get_gen,GEN_get_index,GEN_get_next,FALSE);
   JSON_list_int(temp,output,"reg_generators",bus,Gen,BUS_get_reg_gen,GEN_get_index,GEN_get_reg_next,FALSE);
