@@ -398,7 +398,7 @@ char* CONT_get_json_string(Cont* cont) {
     indices[num] = bo->br_index;
     num++;
   }
-  JSON_array_int(temp,output,"branch_outages",indices,num,TRUE);
+  JSON_array_int(temp,output,"branch_outages",indices,num,FALSE);
   free(indices);
 
   // Load outages
