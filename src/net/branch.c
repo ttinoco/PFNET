@@ -679,7 +679,8 @@ void BRANCH_compute_flows(Branch* br, Vec* var_values, int t, REAL* flows) {
   REAL b_km;
   REAL g_mk;
   REAL b_mk;
-  
+  REAL y;
+
   // Shunt conductance and susceptance
   REAL g_k_sh;
   REAL b_k_sh;
@@ -690,6 +691,9 @@ void BRANCH_compute_flows(Branch* br, Vec* var_values, int t, REAL* flows) {
   REAL v_k_tap_squared;
   REAL v_m_tap_squared;
   REAL v_k_v_m_tap;
+  REAL wk_wm_ph_th;  // wk - wm - phsh - theta_brn
+  REAL wm_wk_ph_th;  // wm - wk + phsh - theta_brn
+  REAL theta_brn;        // atan2(brn.b/brn.g)
   REAL theta_km;
   REAL theta_mk;
 
@@ -749,6 +753,10 @@ void BRANCH_compute_flows(Branch* br, Vec* var_values, int t, REAL* flows) {
   v_k_v_m_tap = a_km*a_mk*v_k*v_m;
   theta_km = w_k-w_m-phi;
   theta_mk = w_m-w_k+phi;
+  theta_brn = atan2(b_km, g_km);
+  wk_wm_ph_th = w_k-w_m-phi-theta_brn;  // wk - wm - phi - theta_brn
+  wm_wk_ph_th = w_m-w_k+phi-theta_brn;  // wm - wk + phi - theta_brn
+  y = sqrt(pow(b_km, 2) + pow(g_km, 2));
 
   // Calculate series elements
   // P_km_series = a_km^2*v_k^2*g_km - a_km*a_mk*v_k*v_m*( g_km*cos(w_k-w_m-phi) + b_km*sin(w_k-w_m-phi))
@@ -766,6 +774,12 @@ void BRANCH_compute_flows(Branch* br, Vec* var_values, int t, REAL* flows) {
   // Q_mk_series = -a_mk^2*v_m^2*b_mk - a_mk*a_km*v_k*v_m*( g_mk*sin(w_k-w_m+phi) - b_mk*cos(w_k-w_m+phi))
   flows[BRANCH_Q_MK_SERIES] = (-v_m_tap_squared*b_mk -
                                v_k_v_m_tap*( g_mk*sin(theta_mk) - b_mk*cos(theta_mk)));
+
+  // P_loss = a_km^2*v_k^2*g_km + v_m^2*g_km - a_km*v_m*v_k*y(cos(w_k-w_m-phi-theta_brn) + cos(w_m-w_k+phi-theta_brn)) 
+  flows[BRANCH_P_LOSS] = pow(a_km,2)*pow(v_k,2)*g_km + pow(v_m,2)*g_km - a_km*v_k*v_m*y*(cos(wk_wm_ph_th) + cos(wm_wk_ph_th));
+
+  // Q_loss = - a_km^2*v_k^2*b_km - v_m^2*b_km - a_km*v_m*v_k*y(sin(w_k-w_m-phi-theta_brn) + sin(w_m-w_k+phi-theta_brn)) 
+  flows[BRANCH_Q_LOSS] = -pow(a_km,2)*pow(v_k, 2)*b_km - pow(v_m,2)*b_km - a_km*v_k*v_m*y*(sin(wk_wm_ph_th) + sin(wm_wk_ph_th));
 
   // Calculate shunt elements
   // P_k_shunt = v_k^2*a_km^2*g_k_sh
@@ -930,6 +944,40 @@ REAL BRANCH_get_Q_mk(Branch* br, Vec* var_values, int t) {
   }
   else
     return 0;
+}
+
+REAL BRANCH_get_P_loss(Branch* br, Vec* var_values, int t) {
+    /** Gets the real power loss I^2 r.
+     *  P_loss = (a_km^2*v_k^2*g_km +
+                  v_m^2*g_km -
+                  a_km*v_m*v_k*y(cos(w_k-w_m-phi-theta_brn) + cos(w_m-w_k+phi-theta_brn)))
+     */
+
+    REAL flows[BRANCH_FLOW_SIZE];
+
+    if (br) {
+        BRANCH_compute_flows(br, var_values, t, flows);
+        return flows[BRANCH_P_LOSS];
+    }
+    else
+        return 0;
+}
+
+REAL BRANCH_get_Q_loss(Branch* br, Vec* var_values, int t) {
+    /** Gets the reactive power loss in the branch.
+     *  Q_loss = (- a_km^2*v_k^2*b_km -
+                    v_m^2*b_km -
+                    a_km*v_m*v_k*y(sin(w_k-w_m-phi-theta_brn) + sin(w_m-w_k+phi-theta_brn)))
+     */
+
+    REAL flows[BRANCH_FLOW_SIZE];
+
+    if (br) {
+        BRANCH_compute_flows(br, var_values, t, flows);
+        return flows[BRANCH_Q_LOSS];
+    }
+    else
+        return 0;
 }
 
 REAL BRANCH_get_P_km_series(Branch* br, Vec* var_values, int t) {

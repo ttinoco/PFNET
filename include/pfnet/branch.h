@@ -37,6 +37,8 @@
 #define BRANCH_P_M_SHUNT 10     /**< @brief Type: real power flow on the shunt element from 'm' */
 #define BRANCH_Q_M_SHUNT 11     /**< @brief Type: reactive power flow on the shunt element from 'm' */
 #define BRANCH_FLOW_SIZE 12     /**< @brief Type: the number of branch flows for a single branch including both directions */
+#define BRANCH_Q_LOSS 13        /**< @brief Type: Reactive power loss in the branch I2x */
+#define BRANCH_P_LOSS 14        /**< @brief Type: Active power loss in the branch I2r */
 
 // Variables
 /** \defgroup branch_vars Branch Variable Masks
@@ -159,6 +161,8 @@ REAL BRANCH_get_P_km_series(Branch* br, Vec* var_values, int t);
 REAL BRANCH_get_Q_km_series(Branch* br, Vec* var_values, int t);
 REAL BRANCH_get_P_mk_series(Branch* br, Vec* var_values, int t);
 REAL BRANCH_get_Q_mk_series(Branch* br, Vec* var_values, int t);
+REAL BRANCH_get_Q_loss(Branch* br, Vec* var_values, int t);
+REAL BRANCH_get_P_loss(Branch* br, Vec* var_values, int t);
 REAL BRANCH_get_P_k_shunt(Branch* br, Vec* var_values, int t);
 REAL BRANCH_get_Q_k_shunt(Branch* br, Vec* var_values, int t);
 REAL BRANCH_get_P_m_shunt(Branch* br, Vec* var_values, int t);
