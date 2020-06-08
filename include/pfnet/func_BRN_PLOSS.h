@@ -1,5 +1,5 @@
-/** @file func_BRN_QLOSS.h
- *  @brief This file lists the constants and routines associated with the function of type BRN_QLOSS.
+/** @file func_BRN_PLOSS.h
+ *  @brief This file lists the constants and routines associated with the function of type BRN_PLOSS.
  *
  * This file is part of PFNET.
  *
