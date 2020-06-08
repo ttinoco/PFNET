@@ -32,8 +32,8 @@ void FUNC_Q_LOSS_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   if (!Hphi_nnz || !bus)
     return;
 
-  // Out of service or bus not in subsys
-  if (!BUS_is_in_service(bus) || !BUS_is_in_subsys(bus))
+  // Out of service
+  if (!BUS_is_in_service(bus))
     return;
 
   // Bus
@@ -69,8 +69,8 @@ void FUNC_Q_LOSS_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
   if (!Hphi_nnz || !Hphi || !bus)
     return;
 
-  // Out of service or bus not in subsys
-  if (!BUS_is_in_service(bus) || !BUS_is_in_subsys(bus))
+  // Out of service
+  if (!BUS_is_in_service(bus))
     return;
 
   // v var
@@ -125,8 +125,8 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
   if (!phi || !gphi || !Hphi || !Hphi_nnz || !bus)
     return;
 
-  // Out of service or bus not in subsys
-  if (!BUS_is_in_service(bus) || !BUS_is_in_subsys(bus))
+  // Out of service
+  if (!BUS_is_in_service(bus))
     return;
 
   // Generators
