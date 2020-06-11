@@ -13,4 +13,4 @@ find . -name m4 -type d -exec rm -rf {} +
 find . -name Makefile.in -delete
 find . -name missing -delete
 find . -name test-driver -delete
-
+rm -r build
