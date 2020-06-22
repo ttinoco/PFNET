@@ -1,3 +1,5 @@
+#! /bin/bash
+
 ./clean.sh
 ./autogen.sh
 ./configure --prefix="$PWD/build"
@@ -6,4 +8,3 @@ make
 make check
 make install
 make dist
-yes | cp pfnet*.gz ../PFNET.py/lib

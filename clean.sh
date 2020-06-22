@@ -1,3 +1,5 @@
+#! /bin/bash
+
 echo "cleaning PFNET ..."
 find . -name \*~ -delete
 find . -name aclocal.m4 -delete
