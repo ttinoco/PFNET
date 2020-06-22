@@ -2448,6 +2448,12 @@ void BUS_set_v_min_emer(Bus* bus, REAL v_min_emer) {
 void BUS_set_slack_flag(Bus* bus, BOOL slack) {
   if (bus)
     bus->slack = slack;
+  if (slack) {
+    Gen* gen;
+    for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+      GEN_set_redispatchable(gen, TRUE);
+    }
+  }
 }
 
 void BUS_set_star_flag(Bus* bus, BOOL star) {

@@ -38,6 +38,7 @@
 #define GEN_PROP_NOT_REG 0x04   /**< @brief Property: non-regulating generator */
 #define GEN_PROP_NOT_SLACK 0x08 /**< @brief Property: non-slack generator */
 #define GEN_PROP_P_ADJUST 0x20  /**< @brief Property: P adjustable (Pmin < Pmax) */
+#define GEN_PROP_REDISP 0x40    /**< @brief Property: P re-dispatchable */
 /** @} */
 
 // Constants
@@ -120,6 +121,7 @@ BOOL GEN_is_equal(Gen* gen, Gen* other);
 BOOL GEN_is_P_adjustable(Gen* gen);
 BOOL GEN_is_regulator(Gen* gen);
 BOOL GEN_is_slack(Gen* gen);
+BOOL GEN_is_redispatchable(Gen* gen);
 Gen* GEN_list_add(Gen* gen_list, Gen* gen);
 Gen* GEN_list_del(Gen* gen_list, Gen* gen);
 int GEN_list_len(Gen* gen_list);
@@ -129,6 +131,7 @@ int GEN_list_reg_len(Gen* reg_gen_list);
 Gen* GEN_new(int num_periods);
 void GEN_propagate_data_in_time(Gen* gen, int start, int end);
 void GEN_set_in_service(Gen* gen, BOOL in_service);
+void GEN_set_redispatchable(Gen* gen, BOOL redisp);
 void GEN_set_name(Gen* gen, char* name);
 void GEN_set_sens_P_u_bound(Gen* gen, REAL value, int t);
 void GEN_set_sens_P_l_bound(Gen* gen, REAL value, int t);

@@ -32,7 +32,8 @@ struct Gen {
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded. */
   char vars;           /**< @brief Flags for indicating which quantities should be treated as variables. */
   char sparse;         /**< @brief Flags for indicating which control adjustments should be sparse. */
-  
+  BOOL redispatchable; /**< @brief Flag for indicating generator is redispatchable. */
+
   // Active power
   REAL* P;             /**< @brief Generator active power production (p.u. system base power). */
   REAL P_max;          /**< @brief Maximum generator active power production (p.u.). */
@@ -176,6 +177,7 @@ void GEN_copy_from_gen(Gen* gen, Gen* other) {
   gen->bounded = other->bounded;
   gen->sparse = other->sparse;
   gen->vars = other->vars;
+  gen->redispatchable = other->redispatchable;
 
   // Active power
   memcpy(gen->P,other->P,num_periods*sizeof(REAL));
@@ -720,6 +722,8 @@ BOOL GEN_has_properties(void* vgen, char prop) {
     return FALSE;
   if ((prop & GEN_PROP_P_ADJUST) && !GEN_is_P_adjustable(gen))
     return FALSE;
+  if ((prop & GEN_PROP_REDISP) && !GEN_is_redispatchable(gen))
+    return FALSE;
   return TRUE;
 }
 
@@ -745,6 +749,7 @@ void GEN_init(Gen* gen, int num_periods) {
   gen->bounded = 0x00;
   gen->sparse = 0x00;
   gen->vars = 0x00;
+  gen->redispatchable = FALSE;
   
   gen->dP_max = 0;
   gen->P_max = 0;
@@ -804,6 +809,13 @@ BOOL GEN_is_regulator(Gen* gen) {
 BOOL GEN_is_slack(Gen* gen) {
   if (gen)
     return BUS_is_slack(gen->bus);
+  else
+    return FALSE;
+}
+
+BOOL GEN_is_redispatchable(Gen* gen) {
+  if (gen)
+    return gen->redispatchable;
   else
     return FALSE;
 }
@@ -918,6 +930,11 @@ void GEN_set_in_service(Gen* gen, BOOL in_service) {
       NET_inc_state_tag(gen->net);
     gen->in_service = in_service;
   }
+}
+
+void GEN_set_redispatchable(Gen* gen, BOOL redisp) {
+  if (gen && gen->in_service) 
+    gen->redispatchable = redisp;
 }
 
 void GEN_set_index(Gen* gen, int index) {
