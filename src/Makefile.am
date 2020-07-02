@@ -12,7 +12,7 @@ nobase_nodist_include_HEADERS = $(inc_path)/pfnet_config.h
 lib_LTLIBRARIES = libpfnet.la
 
 # Additional sources
-nodist_libpfnet_la_SOURCES = 
+nodist_libpfnet_la_SOURCES =
 
 # PFNET sources and headers (note all headers are in $PFNET/include/pfnet)
 math_src = math/matrix.c \
@@ -22,8 +22,8 @@ math_hdr = $(inc_path)/matrix.h \
            $(inc_path)/vector.h
 
 net_src = net/bat.c \
-	  net/branch.c \
-	  net/bus.c \
+          net/branch.c \
+          net/bus.c \
           net/contingency.c \
           net/gen.c \
           net/load.c \
@@ -111,7 +111,7 @@ problem_constr_src = problem/constr/constr_DC_FLOW_LIM.c \
                      problem/constr/constr_CSC_DC_VSET.c \
                      problem/constr/constr_CSC_DC_PSET.c \
                      problem/constr/constr_CSC_DC_ISET.c \
-                     problem/constr/constr_CSC_EQ.c 
+                     problem/constr/constr_CSC_EQ.c
 
 problem_constr_hdr = $(inc_path)/constr_DC_FLOW_LIM.h \
                      $(inc_path)/constr_AC_FLOW_LIM.h \
@@ -132,18 +132,18 @@ problem_constr_hdr = $(inc_path)/constr_DC_FLOW_LIM.h \
                      $(inc_path)/constr_CFUNC.h \
                      $(inc_path)/constr_LOAD_VDEP.h \
                      $(inc_path)/constr_VSC_DC_VSET.h \
-		     $(inc_path)/constr_VSC_DC_PSET.h \
-		     $(inc_path)/constr_VSC_EQ.h \
-		     $(inc_path)/constr_HVDCPF.h \
-		     $(inc_path)/constr_REG_PF_SWITCH.h \
-		     $(inc_path)/constr_REG_PF.h \
-		     $(inc_path)/constr_FACTS_EQ.h \
-		     $(inc_path)/constr_FACTS_PSET_SWITCH.h \
-		     $(inc_path)/constr_FACTS_QSET_SWITCH.h \
+                     $(inc_path)/constr_VSC_DC_PSET.h \
+                     $(inc_path)/constr_VSC_EQ.h \
+                     $(inc_path)/constr_HVDCPF.h \
+                     $(inc_path)/constr_REG_PF_SWITCH.h \
+                     $(inc_path)/constr_REG_PF.h \
+                     $(inc_path)/constr_FACTS_EQ.h \
+                     $(inc_path)/constr_FACTS_PSET_SWITCH.h \
+                     $(inc_path)/constr_FACTS_QSET_SWITCH.h \
                      $(inc_path)/constr_CSC_DC_VSET.h \
-		     $(inc_path)/constr_CSC_DC_PSET.h \
-		     $(inc_path)/constr_CSC_DC_ISET.h \
-		     $(inc_path)/constr_CSC_EQ.h
+                     $(inc_path)/constr_CSC_DC_PSET.h \
+                     $(inc_path)/constr_CSC_DC_ISET.h \
+                     $(inc_path)/constr_CSC_EQ.h
 
 problem_func_src = problem/func/func_GEN_COST.c \
                    problem/func/func_GEN_RED.c \
@@ -159,20 +159,21 @@ problem_func_src = problem/func/func_GEN_COST.c \
                    problem/func/func_SLIM_VMAG.c  \
                    problem/func/func_SP_CONTROLS.c \
                    problem/func/func_VSC_DC_PSET.c \
-		   problem/func/func_CSC_DC_PSET.c \
+                   problem/func/func_CSC_DC_PSET.c \
                    problem/func/func_CSC_DC_ISET.c \
-	           problem/func/func_FACTS_PSET.c \
-		   problem/func/func_FACTS_QSET.c
+                   problem/func/func_FACTS_PSET.c \
+                   problem/func/func_FACTS_QSET.c \
+                   problem/func/func_Q_LOSS.c
 
 problem_func_hdr = $(inc_path)/func_GEN_COST.h \
                    $(inc_path)/func_GEN_RED.h \
                    $(inc_path)/func_LOAD_UTIL.h \
-	           $(inc_path)/func_NETCON_COST.h \
-	           $(inc_path)/func_REG_PHASE.h \
-	           $(inc_path)/func_REG_PQ.h \
-	           $(inc_path)/func_REG_RATIO.h \
-	           $(inc_path)/func_REG_SUSC.h \
-		   $(inc_path)/func_REG_VANG.h \
+                   $(inc_path)/func_NETCON_COST.h \
+                   $(inc_path)/func_REG_PHASE.h \
+                   $(inc_path)/func_REG_PQ.h \
+                   $(inc_path)/func_REG_RATIO.h \
+                   $(inc_path)/func_REG_SUSC.h \
+                   $(inc_path)/func_REG_VANG.h \
                    $(inc_path)/func_REG_VMAG.h \
                    $(inc_path)/func_REG_VAR.h \
                    $(inc_path)/func_SLIM_VMAG.h \
@@ -180,8 +181,9 @@ problem_func_hdr = $(inc_path)/func_GEN_COST.h \
                    $(inc_path)/func_VSC_DC_PSET.h \
                    $(inc_path)/func_CSC_DC_PSET.h \
                    $(inc_path)/func_CSC_DC_ISET.h \
-		   $(inc_path)/func_FACTS_PSET.h \
-		   $(inc_path)/func_FACTS_QSET.h
+                   $(inc_path)/func_FACTS_PSET.h \
+                   $(inc_path)/func_FACTS_QSET.h \
+                   $(inc_path)/func_Q_LOSS.h
 
 problem_heur_src = problem/heur/heur_PVPQ_SWITCHING.c \
                    problem/heur/heur_REG_PF_SWITCH.c
@@ -204,7 +206,7 @@ other_hdr = $(inc_path)/array.h $(inc_path)/constants.h $(inc_path)/flag_types.h
             $(inc_path)/list.h $(inc_path)/obj_types.h $(inc_path)/types.h \
             $(inc_path)/uthash.h $(inc_path)/pfnet.h
 
-# All sources 
+# All sources
 libpfnet_la_SOURCES = $(math_src) $(net_src) $(parser_src) $(problem_src) \
                       $(problem_constr_src) $(problem_func_src) $(problem_heur_src) \
                       $(utils_src)
@@ -223,7 +225,7 @@ pkginclude_HEADERS = $(math_hdr) $(net_hdr) $(parser_hdr) $(problem_hdr) \
 if HAS_RAW_PARSER
 raw_inc_path = @raw_dir@/include
 raw_src = @raw_dir@/src/RAW_parser.c \
-	  @raw_dir@/src/RAW_net.c
+          @raw_dir@/src/RAW_net.c
 nodist_libpfnet_la_SOURCES += $(raw_src)
 libpfnet_la_CFLAGS +=  -I$(raw_inc_path)
 endif
@@ -232,7 +234,7 @@ endif
 if HAS_EPC_PARSER
 epc_inc_path = @epc_dir@/include
 epc_src = @epc_dir@/src/EPC_parser.c \
-	  @epc_dir@/src/EPC_net.c
+          @epc_dir@/src/EPC_net.c
 nodist_libpfnet_la_SOURCES += $(epc_src)
 libpfnet_la_CFLAGS +=  -I$(epc_inc_path)
 endif
