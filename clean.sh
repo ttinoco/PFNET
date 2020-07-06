@@ -9,6 +9,7 @@ find . -name configure -delete
 find . -name config.status -delete
 find . -name config.log -delete
 find . -name depcomp -delete
+find . -name disconnect -delete
 find . -name install-sh -delete
 find . -name ltmain.sh -delete
 find . -name m4 -type d -exec rm -rf {} +
