@@ -41,6 +41,7 @@
 #include "func_CSC_DC_ISET.h"
 #include "func_FACTS_PSET.h"
 #include "func_FACTS_QSET.h"
+#include "func_Q_LOSS.h"
 
 // Constraints
 #include "constr_ACPF.h"
