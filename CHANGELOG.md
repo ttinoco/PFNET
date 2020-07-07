@@ -16,7 +16,10 @@ Unreleased
 * Support for components being in or out of service.
 * Link to PSLF epc parser.
 * Added "v_set_refrence" boolean parameter to FUNC_REG_VMAG.
-* Added load outage to contingency
+* Added "is_redispatchable" property for Generators.
+* Added FUNC_GEN_RED to perform generation redispatch.
+* Added FUNC_Q_LOSS for minimizing reactive power loss for the entire system.
+* Added load outage as a contingency structure.
 
 Version 1.3.4
 -------------
