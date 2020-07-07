@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5.0)
 project(PFNET)
 enable_testing()
 
-set(PFNET_VERSION 1.3.4)
+set(PFNET_VERSION 1.3.6)
 set(PFNET_PACKAGE "pfnet")
 set(PFNET_NAME "PFNET")
 set(PFNET_STRING "${PFNET_NAME} ${PFNET_VERSION}")
@@ -14,14 +14,14 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)  # so that cmake builds with rpath alre
 set(CMAKE_INSTALL_RPATH "@loader_path")  # for relocatable libraries
 
 option(PFNET_DEBUG "set to ON to enable PFNET debug definition" OFF)
-
+s
 set(M_LIB,"")
 if (UNIX)
   find_library(M_LIB m)
   set(CMAKE_REQUIRED_INCLUDES math.h)
   set(CMAKE_REQUIRED_LIBRARIES m)
 endif (UNIX)
-
+s
 # Find PFNET source files
 file(GLOB_RECURSE pfnet_source src/*.c)
 

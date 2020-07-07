@@ -19,5 +19,6 @@ find . -name Makefile.in -delete
 find . -name Makefile -delete
 find . -name missing -delete
 find . -name test-driver -delete
+find . -name libtool -delete
 find . -name libpfnet* -delete
-rm -r build
+rm -rf build

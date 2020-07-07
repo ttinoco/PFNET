@@ -1,5 +1,5 @@
-Unreleased
-----------
+Version 1.3.6
+-------------
 * Constant current constraint for CSC HVDC.
 * Net update reg Q participations.
 * In update set points, changed reg_by_gen to v_set_regulated.
@@ -20,6 +20,7 @@ Unreleased
 * Added FUNC_GEN_RED to perform generation redispatch.
 * Added FUNC_Q_LOSS for minimizing reactive power loss for the entire system.
 * Added load outage as a contingency structure.
+* Updated build scripts including Cmake build with Windows C build tools.
 
 Version 1.3.4
 -------------
