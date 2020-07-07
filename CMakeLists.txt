@@ -6,8 +6,8 @@ set(PFNET_VERSION 1.3.4)
 set(PFNET_PACKAGE "pfnet")
 set(PFNET_NAME "PFNET")
 set(PFNET_STRING "${PFNET_NAME} ${PFNET_VERSION}")
-set(PFNET_BUGREPORT "ttinoco5687@gmail.com")
-set(PFNET_URL "https://github.com/ttinoco/PFNET")
+set(PFNET_BUGREPORT "awigington@epri.com")
+set(PFNET_URL "https://github.com/romcon/PFNET")
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS YES CACHE BOOL "Export all symbols")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)  # so that cmake builds with rpath already added

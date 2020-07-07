@@ -23,9 +23,16 @@ struct Branch_outage {
   struct Branch_outage* next;
 };
 
+// Load outage
+struct Load_outage {
+  int load_index;
+  struct Load_outage* next;
+};
+
 // Types
 typedef struct Gen_outage Gen_outage;
 typedef struct Branch_outage Branch_outage;
+typedef struct Load_outage Load_outage;
 
 // Contingency
 struct Cont {
@@ -41,6 +48,9 @@ struct Cont {
 
   // Branch outages
   Branch_outage* br_outage;         /**< @brief List of branch outages */
+
+  // Load outages
+  Load_outage* load_outage;         /**< @brief List of load outages */
 };
 
 
@@ -49,8 +59,10 @@ void CONT_apply(Cont* cont, Net* net) {
   // Local variables
   Gen_outage* go;
   Branch_outage* bo;
+  Load_outage* lo;
   Gen* gen;
   Branch* br;
+  Load* load;
 
   if (cont) {
 
@@ -65,6 +77,12 @@ void CONT_apply(Cont* cont, Net* net) {
       br = NET_get_branch(net,bo->br_index);
       BRANCH_set_in_service(br,FALSE);
     }
+
+    // Loads
+    for (lo = cont->load_outage; lo != NULL; lo = lo->next) {
+      load = NET_get_load(net,lo->load_index);
+      LOAD_set_in_service(load,FALSE);
+    }
   }
 }
 
@@ -73,8 +91,10 @@ void CONT_clear(Cont* cont, Net* net) {
   // Local variables
   Gen_outage* go;
   Branch_outage* bo;
+  Load_outage* lo;
   Gen* gen;
   Branch* br;
+  Load* load;
 
   if (cont) {
 
@@ -89,6 +109,12 @@ void CONT_clear(Cont* cont, Net* net) {
       br = NET_get_branch(net,bo->br_index);
       BRANCH_set_in_service(br,TRUE);
     }
+
+    // Loads
+    for (lo = cont->load_outage; lo != NULL; lo = lo->next) {
+      load = NET_get_load(net,lo->load_index);
+      LOAD_set_in_service(load,TRUE);
+    }
   }
 }
 
@@ -98,6 +124,7 @@ void CONT_init(Cont* cont) {
     strcpy(cont->output_string,"");
     cont->gen_outage = NULL;
     cont->br_outage = NULL;
+    cont->load_outage = NULL;
   }
 }
 
@@ -105,6 +132,7 @@ void CONT_del(Cont* cont) {
   if (cont){
     LIST_map(Gen_outage,cont->gen_outage,go,next,{free(go);});
     LIST_map(Branch_outage,cont->br_outage,bo,next,{free(bo);});
+    LIST_map(Load_outage,cont->load_outage,lo,next,{free(lo);});
     free(cont);
   }
 }
@@ -136,16 +164,26 @@ int CONT_get_num_branch_outages(Cont* cont) {
     return 0;
 }
 
+int CONT_get_num_load_outages(Cont* cont) {
+  int len;
+  if (cont) {
+    LIST_len(Load_outage,cont->load_outage,next,len);
+    return len;
+  }
+  else
+    return 0;
+}
+
 int* CONT_get_branch_outages(Cont* cont) {
 
   // Local variables
   int* outages;
   Branch_outage* bo;
   int i;
-  
+
   // Allocate
   outages = (int*)malloc(sizeof(int)*CONT_get_num_branch_outages(cont));
-  
+
   // Fill
   i = 0;
   for (bo = cont->br_outage; bo != NULL; bo = bo->next) {
@@ -163,14 +201,35 @@ int* CONT_get_gen_outages(Cont* cont) {
   int* outages;
   Gen_outage* go;
   int i;
-  
+
   // Allocate
   outages = (int*)malloc(sizeof(int)*CONT_get_num_gen_outages(cont));
-  
+
   // Fill
   i = 0;
   for (go = cont->gen_outage; go != NULL; go = go->next) {
     outages[i] = go->gen_index;
+    i++;
+  }
+
+  // Return
+  return outages;
+}
+
+int* CONT_get_load_outages(Cont* cont) {
+
+  // Local variables
+  int* outages;
+  Load_outage* lo;
+  int i;
+
+  // Allocate
+  outages = (int*)malloc(sizeof(int)*CONT_get_num_load_outages(cont));
+
+  // Fill
+  i = 0;
+  for (lo = cont->load_outage; lo != NULL; lo = lo->next) {
+    outages[i] = lo->load_index;
     i++;
   }
 
@@ -183,7 +242,7 @@ void CONT_add_gen_outage(Cont* cont, int gen_index) {
   if (cont) {
     for (go = cont->gen_outage; go != NULL; go = go->next) {
       if (go->gen_index == gen_index)
-    	return;
+        return;
     }
     go = (Gen_outage*)malloc(sizeof(Gen_outage));
     go->gen_index = gen_index;
@@ -197,12 +256,26 @@ void CONT_add_branch_outage(Cont* cont, int br_index) {
   if (cont) {
     for (bo = cont->br_outage; bo != NULL; bo = bo->next) {
       if (bo->br_index == br_index)
-	return;
+        return;
     }
     bo = (Branch_outage*)malloc(sizeof(Branch_outage));
     bo->br_index = br_index;
     bo->next = NULL;
     LIST_add(Branch_outage,cont->br_outage,bo,next);
+  }
+}
+
+void CONT_add_load_outage(Cont* cont, int load_index) {
+  Load_outage* lo;
+  if (cont) {
+    for (lo = cont->load_outage; lo != NULL; lo = lo->next) {
+      if (lo->load_index == load_index)
+        return;
+    }
+    lo = (Load_outage*)malloc(sizeof(Load_outage));
+    lo->load_index = load_index;
+    lo->next = NULL;
+    LIST_add(Load_outage,cont->load_outage,lo,next);
   }
 }
 
@@ -228,6 +301,17 @@ BOOL CONT_has_branch_outage(Cont* cont, int br_index) {
   return FALSE;
 }
 
+BOOL CONT_has_load_outage(Cont* cont, int load_index) {
+  Load_outage* lo;
+  if (!cont)
+    return FALSE;
+  for (lo = cont->load_outage; lo != NULL; lo = lo->next) {
+    if (load_index == lo->load_index)
+      return TRUE;
+  }
+  return FALSE;
+}
+
 Cont* CONT_new(void) {
   Cont* cont = (Cont*)malloc(sizeof(Cont));
   CONT_init(cont);
@@ -238,6 +322,7 @@ char* CONT_get_show_str(Cont* cont) {
 
   Gen_outage* go;
   Branch_outage* bo;
+  Load_outage* lo;
   char* out;
 
   if (!cont)
@@ -252,6 +337,9 @@ char* CONT_get_show_str(Cont* cont) {
   sprintf(out+strlen(out),"\nBranch outages\n");
   for (bo = cont->br_outage; bo != NULL; bo = bo->next)
     sprintf(out+strlen(out),"index %d\n",bo->br_index);
+  sprintf(out+strlen(out),"\nLoad outages\n");
+  for (lo = cont->load_outage; lo != NULL; lo = lo->next)
+    sprintf(out+strlen(out),"index %d\n",lo->load_index);
 
   return out;
 }
@@ -266,6 +354,7 @@ char* CONT_get_json_string(Cont* cont) {
   // Local vars
   Gen_outage* go;
   Branch_outage* bo;
+  Load_outage* lo;
   char* output;
   char* output_start;
   char temp[CONT_JSON_BUFFER_SIZE];
@@ -309,7 +398,20 @@ char* CONT_get_json_string(Cont* cont) {
     indices[num] = bo->br_index;
     num++;
   }
-  JSON_array_int(temp,output,"branch_outages",indices,num,TRUE);
+  JSON_array_int(temp,output,"branch_outages",indices,num,FALSE);
+  free(indices);
+
+  // Load outages
+  num = 0;
+  for (lo = cont->load_outage; lo != NULL; lo = lo->next)
+    num++;
+  indices = (int*)malloc(num*sizeof(int));
+  num = 0;
+  for (lo = cont->load_outage; lo != NULL; lo = lo->next) {
+    indices[num] = lo->load_index;
+    num++;
+  }
+  JSON_array_int(temp,output,"load_outages",indices,num,TRUE);
   free(indices);
 
   // End
