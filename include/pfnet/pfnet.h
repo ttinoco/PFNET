@@ -42,6 +42,7 @@
 #include "func_FACTS_PSET.h"
 #include "func_FACTS_QSET.h"
 #include "func_Q_LOSS.h"
+#include "func_P_LOSS.h"
 
 // Constraints
 #include "constr_ACPF.h"
