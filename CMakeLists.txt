@@ -2,12 +2,12 @@ cmake_minimum_required(VERSION 3.5.0)
 project(PFNET)
 enable_testing()
 
-set(PFNET_VERSION 1.3.4)
+set(PFNET_VERSION 1.3.6)
 set(PFNET_PACKAGE "pfnet")
 set(PFNET_NAME "PFNET")
 set(PFNET_STRING "${PFNET_NAME} ${PFNET_VERSION}")
-set(PFNET_BUGREPORT "ttinoco5687@gmail.com")
-set(PFNET_URL "https://github.com/ttinoco/PFNET")
+set(PFNET_BUGREPORT "awigington@epri.com")
+set(PFNET_URL "https://github.com/romcon/PFNET")
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS YES CACHE BOOL "Export all symbols")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)  # so that cmake builds with rpath already added
@@ -133,6 +133,7 @@ install(TARGETS pfnet pfnet_static
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         RUNTIME DESTINATION lib)
+
 # Install header files
 install(DIRECTORY include/
         DESTINATION include

@@ -1,3 +1,5 @@
+#! /bin/bash
+
 echo "cleaning PFNET ..."
 find . -name \*~ -delete
 find . -name aclocal.m4 -delete
@@ -17,4 +19,6 @@ find . -name Makefile.in -delete
 find . -name Makefile -delete
 find . -name missing -delete
 find . -name test-driver -delete
+find . -name libtool -delete
 find . -name libpfnet* -delete
+rm -rf build

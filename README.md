@@ -10,4 +10,7 @@ BSD 2-clause license.
 
 ## Documentation
 
-The documentation for this library can be found in <http://pfnet.readthedocs.io/>.
+For EPRI developers, see the guides documentation in <https://github.com/romcon/guides/wiki/Low-Level-Stack#pfnet>.
+
+Version 1.3.4 documentation for this library can be found online <http://pfnet.readthedocs.io/>.
+But, it is preferred that you build the documentation using Doxygen (prerequisite) by going to the docs folder and running `doxygen Doxyfile`, which will create html and latex pdf.

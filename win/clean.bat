@@ -9,8 +9,3 @@ rmdir /s /q %~dp0build
 rmdir /s /q %~dp0CMakeFiles
 del /s /f %~dp0*.dll
 del /s /f %~dp0*.a
-
-
-
-
-

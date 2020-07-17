@@ -1,11 +1,11 @@
-Unreleased
-----------
+Version 1.3.6
+-------------
 * Constant current constraint for CSC HVDC.
 * Net update reg Q participations.
 * In update set points, changed reg_by_gen to v_set_regulated.
 * Branch num ratios.
 * Branch method to check whether it has zero impedance.
-* Ability to detect equivalent buses and merge them. 
+* Ability to detect equivalent buses and merge them.
 * Ability to update original network using merged network.
 * Routine for localizing gen regulation.
 * Added safeguard to constr_HVDCPF for zero resistance.
@@ -16,7 +16,12 @@ Unreleased
 * Support for components being in or out of service.
 * Link to PSLF epc parser.
 * Added "v_set_refrence" boolean parameter to FUNC_REG_VMAG.
- 
+* Added "is_redispatchable" property for Generators.
+* Added FUNC_GEN_RED to perform generation redispatch.
+* Added FUNC_Q_LOSS for minimizing reactive power loss for the entire system.
+* Added load outage as a contingency structure.
+* Updated build scripts including Cmake build with Windows C build tools.
+
 Version 1.3.4
 -------------
 * Updated parser init/free routines to make parser params work.
@@ -45,7 +50,7 @@ Version 1.3.4
 * Added bus property BUS_PROP_VSET_REG and "is_v_set_regulated" method.
 * CSC converters for HVDC.
 * FACTS devices.
-* Extended count/analyze/eval framework (and added safeguards to existing constr/func/heur) to loop through ac and then dc buses. 
+* Extended count/analyze/eval framework (and added safeguards to existing constr/func/heur) to loop through ac and then dc buses.
 * Added regulating object interface.
 * Added constraint for VSC DC voltage control (CONSTR_VSC_DC_VSET).
 * Added constraint for VSC DC power control (CONSTR_VSC_DC_PSET).
