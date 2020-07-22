@@ -47,6 +47,9 @@ struct Gen {
   REAL Q_min;          /**< @brief Minimum generator reactive power production (p.u.). */
   REAL Q_par;          /**< @brief Generator reactive power participation factor (unitless). */
 
+  // MVA base 
+  REAL mva_base;       /**< @brief MVA base of generator (MVA). */
+
   // Cost
   REAL cost_coeff_Q0;  /**< @brief Generator cost coefficient (constant term, units of $/hr ). */
   REAL cost_coeff_Q1;  /**< @brief Generator cost coefficient (linear term, units of $/(hr p.u.) ). */
@@ -476,6 +479,13 @@ REAL GEN_get_Q_min(Gen* gen) {
 REAL GEN_get_Q_par(Gen* gen) {
   if (gen)
     return gen->Q_par;
+  else
+    return 0;
+}
+
+REAL GEN_get_mva_base(Gen* gen) {
+  if (gen)
+    return gen->mva_base;
   else
     return 0;
 }
@@ -980,6 +990,11 @@ void GEN_set_Q_max(Gen* gen, REAL Q_max) {
 void GEN_set_Q_min(Gen* gen, REAL Q_min) {
   if (gen)  
     gen->Q_min = Q_min;
+}
+
+void GEN_set_mva_base(Gen* gen, REAL mva_base) {
+  if (gen)  
+    gen->mva_base = mva_base;
 }
 
 void GEN_set_Q_par(Gen* gen, REAL Q_par) {

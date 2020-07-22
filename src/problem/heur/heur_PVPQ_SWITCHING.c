@@ -220,6 +220,9 @@ void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus,
           printf("HEUR PVPQ: fix reg bus %d\n", BUS_get_number(bus));
       }
     }
+  
+    // Update Q_participation
+    BUS_update_reg_Q_participations(bus, t);
   }
       
   // Update

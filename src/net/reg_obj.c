@@ -198,6 +198,28 @@ int REG_OBJ_get_index_Q(char obj_type, void* obj, int t) {
     return -1;
 }
 
+int REG_OBJ_get_index_P(char obj_type, void* obj, int t) {
+
+  // Check
+  if (!obj)
+    return -1;
+
+  // Gen
+  if (obj_type == OBJ_GEN)
+    return GEN_get_index_P((Gen*)obj,t);
+      
+  // VSC
+  else if (obj_type == OBJ_CONVVSC)
+    return CONVVSC_get_index_P((ConvVSC*)obj,t);
+
+  // FACTS
+  else if (obj_type == OBJ_FACTS)
+    return FACTS_get_index_P_dc((Facts*)obj,t);
+
+  else
+    return -1;
+}
+
 REAL REG_OBJ_get_Q(char obj_type, void* obj, int t) {
 
   // Check
@@ -215,6 +237,28 @@ REAL REG_OBJ_get_Q(char obj_type, void* obj, int t) {
   // FACTS
   else if (obj_type == OBJ_FACTS)
     return FACTS_get_Q_sh((Facts*)obj,t);
+
+  else
+    return 0.;
+}
+
+REAL REG_OBJ_get_P(char obj_type, void* obj, int t) {
+
+  // Check
+  if (!obj)
+    return 0.;
+  
+  // Gen
+  if (obj_type == OBJ_GEN)
+    return GEN_get_P((Gen*)obj,t);
+      
+  // VSC
+  else if (obj_type == OBJ_CONVVSC)
+    return CONVVSC_get_P((ConvVSC*)obj,t);
+
+  // FACTS
+  else if (obj_type == OBJ_FACTS)
+    return FACTS_get_P_dc((Facts*)obj,t);
 
   else
     return 0.;
@@ -259,6 +303,28 @@ REAL REG_OBJ_get_Q_min(char obj_type, void* obj) {
   // FACTS
   else if (obj_type == OBJ_FACTS)
     return FACTS_get_Q_min_sh((Facts*)obj);
+
+  else
+    return 0.;
+}
+
+REAL REG_OBJ_get_mva_base(char obj_type, void* obj) {
+
+  // Check
+  if (!obj)
+    return 0.;
+
+  // Gen
+  if (obj_type == OBJ_GEN)
+    return GEN_get_mva_base((Gen*)obj);
+      
+  // VSC
+  else if (obj_type == OBJ_CONVVSC)
+    return CONVVSC_get_P_max((ConvVSC*)obj);
+
+  // FACTS
+  else if (obj_type == OBJ_FACTS)
+    return FACTS_get_P_max_dc((Facts*)obj);
 
   else
     return 0.;

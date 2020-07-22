@@ -7211,48 +7211,17 @@ void NET_update_set_points(Net* net) {
 
 void NET_update_reg_Q_participations(Net* net, int t) {
 
-  void* obj;
-  char obj_type;
-  REAL Q_total;
-  REAL Q;
+  // Local variables
   Bus* bus;
   int i;
-  REAL eps = 1e-4;
   
   // Check
   if (!net)
     return;
 
   for (i = 0; i < net->num_buses; i++) {
-
     bus = NET_get_bus(net, i);
-    
-    if (BUS_is_v_set_regulated(bus,TRUE) && BUS_is_in_service(bus)) {
-
-      // Recompute total
-      Q_total = 0;
-      for (REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus)) {
-        if (REG_OBJ_is_in_service(obj_type,obj))
-          Q_total += REG_OBJ_get_Q(obj_type,obj,t);
-      }
-
-      // Safeguard
-      if (0 <= Q_total && Q_total < eps)
-        Q_total = eps;
-      if (0 >= Q_total && Q_total > -eps)
-        Q_total = -eps;
-      
-      // Find good participations
-      for (REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus)) {
-        if (REG_OBJ_is_in_service(obj_type,obj)) {
-          Q = REG_OBJ_get_Q(obj_type,obj,t);
-          if (Q/Q_total > 0.)
-            REG_OBJ_set_Q_par(obj_type,obj,Q/Q_total > 1.? 1. : Q/Q_total);
-          else
-            REG_OBJ_set_Q_par(obj_type,obj,eps);
-        }
-      }
-    }
+    BUS_update_reg_Q_participations(bus, t);
   }
 }
 
