@@ -34,6 +34,7 @@ REAL REG_OBJ_get_mva_base(char obj_type, void* obj);
 REAL REG_OBJ_get_Q_par(char obj_type, void* obj);
 BOOL REG_OBJ_is_in_service(char obj_type, void* obj);
 BOOL REG_OBJ_is_candidate(char obj_type, void* obj);
+BOOL REG_OBJ_is_fixed(char obj_type, void* obj);
 int REG_OBJ_count_candidates(Bus* bus);
 
 #endif
