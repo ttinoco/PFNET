@@ -2745,15 +2745,15 @@ void BUS_update_reg_Q_participations(Bus* bus, int t) {
     // Recompute total
     P_total = 0;
     for (REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus)) {
-      if (REG_OBJ_is_in_service(obj_type,obj) && REG_OBJ_is_candidate(obj_type,obj))
+      if (REG_OBJ_is_in_service(obj_type,obj) && !REG_OBJ_is_fixed(obj_type,obj))
         P_total += REG_OBJ_get_P(obj_type,obj,t);
     }
 
-    // P_total == 0, Use MVA_base
+    // if P_total == 0, Use MVA_base
     if (P_total == 0.) {
       flag_P_tot_0 = 1;
       for (REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus)) {
-        if (REG_OBJ_is_in_service(obj_type,obj) && REG_OBJ_is_candidate(obj_type,obj))
+        if (REG_OBJ_is_in_service(obj_type,obj) && !REG_OBJ_is_fixed(obj_type,obj))
           P_total += REG_OBJ_get_mva_base(obj_type,obj);
       }
     }

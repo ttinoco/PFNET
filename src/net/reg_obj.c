@@ -399,6 +399,32 @@ BOOL REG_OBJ_is_candidate(char obj_type, void* obj) {
     return FALSE;
 }
 
+
+BOOL REG_OBJ_is_fixed(char obj_type, void* obj) {
+
+  // Check
+  if (!obj)
+    return FALSE;
+
+  // Gen
+  if (obj_type == OBJ_GEN)
+    return (GEN_has_flags((Gen*)obj,FLAG_FIXED,GEN_VAR_Q) &&
+            GEN_is_in_service((Gen*)obj));
+
+  // VSC
+  else if (obj_type == OBJ_CONVVSC)
+    return (CONVVSC_has_flags((ConvVSC*)obj,FLAG_FIXED,CONVVSC_VAR_Q) &&
+            CONVVSC_is_in_service((ConvVSC*)obj));
+
+  // FACTS
+  else if (obj_type == OBJ_FACTS)
+    return (FACTS_has_flags((Facts*)obj,FLAG_FIXED,FACTS_VAR_Q) &&
+            FACTS_is_in_service((Facts*)obj));
+
+  else
+    return FALSE;
+}
+
 int REG_OBJ_count_candidates(Bus* bus) {
   char obj_type;
   void* obj;
