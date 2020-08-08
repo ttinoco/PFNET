@@ -53,6 +53,38 @@ void REG_OBJ_next(char* obj_type, void** obj, Bus* bus) {
   }
 }
 
+void OBJ_next(char* obj_type, void** obj) {
+
+  // Gen
+  if (*obj_type == OBJ_GEN) {
+    if (*obj && GEN_get_next((Gen*)(*obj)))
+      *obj = GEN_get_next((Gen*)(*obj));
+    else
+      *obj = NULL;
+  }
+  
+  // VSC
+  else if (*obj_type == OBJ_CONVVSC) {
+    if (*obj && CONVVSC_get_next_ac((ConvVSC*)(*obj)))
+      *obj = CONVVSC_get_next_ac((ConvVSC*)(*obj));
+    else
+      *obj = NULL;
+  }
+
+  // FACTS
+  else if (*obj_type == OBJ_FACTS) {
+    if (*obj && FACTS_get_next_k((Facts*)(*obj)))
+      *obj = FACTS_get_next_k((Facts*)(*obj));
+    else
+      *obj = NULL;
+  }
+
+  // Unknown
+  else {
+    *obj = NULL;
+  }
+}
+
 void REG_OBJ_init(char* obj_type, void** obj, Bus* bus) {
 
   *obj_type = OBJ_GEN;
@@ -71,6 +103,34 @@ void REG_OBJ_init(char* obj_type, void** obj, Bus* bus) {
     *obj_type = OBJ_FACTS;
     if (BUS_get_reg_facts(bus))
       *obj = BUS_get_reg_facts(bus);
+  }
+}
+
+void OBJ_init(char* obj_type, void** obj, Bus* bus) {
+
+  // Gen
+  if (*obj_type == OBJ_GEN) {
+    if (BUS_get_gen(bus))
+      *obj = BUS_get_gen(bus);
+    else
+      *obj = NULL;
+  }    
+  
+  // VSC
+  else if (*obj_type == OBJ_CONVVSC) {
+    if (BUS_get_vsc_conv(bus))
+      *obj = BUS_get_vsc_conv(bus);
+  }
+
+  // FACTS
+  else if (*obj_type == OBJ_FACTS) {
+    if (BUS_get_facts_k(bus))
+      *obj = BUS_get_facts_k(bus);
+  }
+
+  // Unknown
+  else {
+    *obj = NULL;
   }
 }
 
@@ -330,6 +390,29 @@ REAL REG_OBJ_get_mva_base(char obj_type, void* obj) {
     return 0.;
 }
 
+REAL REG_OBJ_get_rmpct(char obj_type, void* obj) {
+
+  // Check
+  if (!obj)
+    return 0.;
+
+  // Gen
+  if (obj_type == OBJ_GEN)
+    return GEN_get_rmpct((Gen*)obj);
+      
+  // VSC
+  else if (obj_type == OBJ_CONVVSC)
+    return CONVVSC_get_rmpct((ConvVSC*)obj);
+
+  // FACTS
+  else if (obj_type == OBJ_FACTS)
+    return FACTS_get_rmpct((Facts*)obj);
+
+  else {
+    return 0.;
+  }
+}
+
 REAL REG_OBJ_get_Q_par(char obj_type, void* obj) {
 
   // Check
@@ -393,32 +476,6 @@ BOOL REG_OBJ_is_candidate(char obj_type, void* obj) {
   // FACTS
   else if (obj_type == OBJ_FACTS)
     return (FACTS_has_flags((Facts*)obj,FLAG_VARS,FACTS_VAR_Q) &&
-            FACTS_is_in_service((Facts*)obj));
-
-  else
-    return FALSE;
-}
-
-
-BOOL REG_OBJ_is_fixed(char obj_type, void* obj) {
-
-  // Check
-  if (!obj)
-    return FALSE;
-
-  // Gen
-  if (obj_type == OBJ_GEN)
-    return (GEN_has_flags((Gen*)obj,FLAG_FIXED,GEN_VAR_Q) &&
-            GEN_is_in_service((Gen*)obj));
-
-  // VSC
-  else if (obj_type == OBJ_CONVVSC)
-    return (CONVVSC_has_flags((ConvVSC*)obj,FLAG_FIXED,CONVVSC_VAR_Q) &&
-            CONVVSC_is_in_service((ConvVSC*)obj));
-
-  // FACTS
-  else if (obj_type == OBJ_FACTS)
-    return (FACTS_has_flags((Facts*)obj,FLAG_FIXED,FACTS_VAR_Q) &&
             FACTS_is_in_service((Facts*)obj));
 
   else

@@ -7214,6 +7214,7 @@ void NET_update_reg_Q_participations(Net* net, int t) {
   // Local variables
   Bus* bus;
   int i;
+  char* fix_flag=NULL;
   
   // Check
   if (!net)
@@ -7221,7 +7222,7 @@ void NET_update_reg_Q_participations(Net* net, int t) {
 
   for (i = 0; i < net->num_buses; i++) {
     bus = NET_get_bus(net, i);
-    BUS_update_reg_Q_participations(bus, t);
+    BUS_update_reg_Q_participations(bus, t, fix_flag);
   }
 }
 

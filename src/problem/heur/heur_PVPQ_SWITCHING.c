@@ -35,6 +35,7 @@ void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus,
   REAL Qmax;
   REAL Qmin;
   int i;
+  Bus* b;
 
   char obj_type;
   void* obj;
@@ -130,7 +131,7 @@ void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus,
         }	    
           
         // Q is free: Qmax violation
-        else if (Q >= Qmax) {
+        else if (Q > Qmax) {
             
           // Switch to Q fixed
           REG_OBJ_set_Q(obj_type,obj,Qmax,t);
@@ -140,7 +141,7 @@ void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus,
         }
           
         // Q is free: Qmin violation
-        else if (Q <= Qmin) {
+        else if (Q < Qmin) {
             
           // Switch to Q fixed
           REG_OBJ_set_Q(obj_type,obj,Qmin,t);
@@ -222,7 +223,14 @@ void HEUR_PVPQ_SWITCHING_apply_step(Heur* h, Constr** cptrs, int cnum, Bus* bus,
     }
   
     // Update Q_participation
-    BUS_update_reg_Q_participations(bus, t);
+    i = -1; 
+    for (REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus)) {
+      b = REG_OBJ_get_bus(obj_type,obj);
+      if (BUS_get_index(b) != i) {
+        i = BUS_get_index(b);
+        BUS_update_reg_Q_participations(b, t, fix_flag);
+      }
+    }
   }
       
   // Update

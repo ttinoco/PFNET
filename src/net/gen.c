@@ -45,7 +45,8 @@ struct Gen {
   REAL* Q;             /**< @brief Generator reactive power production (p.u. system base power). */
   REAL Q_max;          /**< @brief Maximum generator reactive power production (p.u.). */
   REAL Q_min;          /**< @brief Minimum generator reactive power production (p.u.). */
-  REAL Q_par;          /**< @brief Generator reactive power participation factor (unitless). */
+  REAL Q_par;          /**< @brief Generator reactive power participation factor of generators connected at the same bus (unitless). */
+  REAL rmpct;          /**< @brief Plant reactive power participation factor (percent). */
 
   // MVA base 
   REAL mva_base;       /**< @brief MVA base of generator (MVA). */
@@ -194,6 +195,10 @@ void GEN_copy_from_gen(Gen* gen, Gen* other) {
   gen->Q_max = other->Q_max;
   gen->Q_min = other->Q_min;
   gen->Q_par = other->Q_par;
+  gen->rmpct = other->rmpct;
+
+  // MVA base
+   gen->mva_base = other->mva_base;
 
   // Cost coefficients
   gen->cost_coeff_Q0 = other->cost_coeff_Q0;
@@ -483,11 +488,24 @@ REAL GEN_get_Q_par(Gen* gen) {
     return 0;
 }
 
-REAL GEN_get_mva_base(Gen* gen) {
+REAL GEN_get_rmpct(Gen* gen) {
   if (gen)
-    return gen->mva_base;
+    return gen->rmpct;
   else
     return 0;
+}
+
+REAL GEN_get_mva_base(Gen* gen) {
+  if (gen){
+    printf("Source %f \n", gen->mva_base);
+    return gen->mva_base;
+  }
+    
+  else
+  {
+    printf("Not found");
+    return 0;
+  }
 }
 
 REAL* GEN_get_P_array(Gen* gen) {
@@ -688,6 +706,8 @@ char* GEN_get_json_string(Gen* gen, char* output) {
   JSON_float(temp,output,"Q_max",gen->Q_max,FALSE);
   JSON_float(temp,output,"Q_min",gen->Q_min,FALSE);
   JSON_float(temp,output,"Q_par",gen->Q_par,FALSE);
+  JSON_float(temp,output,"rmpct",gen->rmpct,FALSE);
+  JSON_float(temp,output,"Mbase",gen->mva_base,FALSE);
   JSON_float(temp,output,"cost_coeff_Q0",gen->cost_coeff_Q0,FALSE);
   JSON_float(temp,output,"cost_coeff_Q1",gen->cost_coeff_Q1,FALSE);
   JSON_float(temp,output,"cost_coeff_Q2",gen->cost_coeff_Q2,TRUE);
@@ -769,7 +789,10 @@ void GEN_init(Gen* gen, int num_periods) {
   gen->Q_max = 0;
   gen->Q_min = 0;
   gen->Q_par = 1.;
-  
+  gen->rmpct = 100.;
+
+  gen->mva_base = 100.;
+
   gen->cost_coeff_Q0 = 0;
   gen->cost_coeff_Q1 = 2000.;
   gen->cost_coeff_Q2 = 100.;
@@ -1000,6 +1023,21 @@ void GEN_set_mva_base(Gen* gen, REAL mva_base) {
 void GEN_set_Q_par(Gen* gen, REAL Q_par) {
   if (gen)  
     gen->Q_par = Q_par;
+}
+
+void GEN_set_rmpct(Gen* gen, REAL rmpct) {
+
+  // Local variable
+  Bus* bus;
+  Gen* g;
+  
+  if (gen) { 
+    bus = GEN_get_bus(gen);
+    // Change for all generators at the same bus
+    for (g = BUS_get_gen(bus); g != NULL; g = GEN_get_next(g)) {
+      g->rmpct = rmpct;   
+    }
+  }
 }
 
 void GEN_set_network(Gen* gen, void* net) {
