@@ -62,7 +62,6 @@ void OBJ_next(char* obj_type, void** obj) {
   if (*obj_type == OBJ_GEN) {
     if (*obj && GEN_get_next((Gen*)(*obj)))
       *obj = GEN_get_next((Gen*)(*obj));
-    
     else {
       bus = GEN_get_bus((Gen*)(*obj));
       
@@ -107,6 +106,7 @@ void OBJ_next(char* obj_type, void** obj) {
   // Unknown
   else {
     *obj = NULL;
+    *obj_type = OBJ_UNKNOWN;
   }
 }
 
@@ -134,28 +134,24 @@ void REG_OBJ_init(char* obj_type, void** obj, Bus* bus) {
 void OBJ_init(char* obj_type, void** obj, Bus* bus) {
 
   // Gen
-  if (*obj_type == OBJ_GEN) {
-    if (BUS_get_gen(bus))
-      *obj = BUS_get_gen(bus);
-    else
-      *obj = NULL;
-  }    
+  *obj_type = OBJ_GEN;
+  if (BUS_get_gen(bus))
+    *obj = BUS_get_gen(bus);
+  else
+    *obj = NULL; 
   
   // VSC
-  else if (*obj_type == OBJ_CONVVSC) {
+  if (!(*obj)) {
+    *obj_type == OBJ_CONVVSC;
     if (BUS_get_vsc_conv(bus))
       *obj = BUS_get_vsc_conv(bus);
   }
 
   // FACTS
-  else if (*obj_type == OBJ_FACTS) {
+  if (!(*obj)) {
+    *obj_type == OBJ_FACTS;
     if (BUS_get_facts_k(bus))
       *obj = BUS_get_facts_k(bus);
-  }
-
-  // Unknown
-  else {
-    *obj = NULL;
   }
 }
 
