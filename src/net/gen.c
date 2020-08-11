@@ -497,13 +497,11 @@ REAL GEN_get_rmpct(Gen* gen) {
 
 REAL GEN_get_mva_base(Gen* gen) {
   if (gen){
-    printf("Source %f \n", gen->mva_base);
     return gen->mva_base;
   }
     
   else
   {
-    printf("Not found");
     return 0;
   }
 }
