@@ -29,10 +29,17 @@ struct Load_outage {
   struct Load_outage* next;
 };
 
+// Shunt outage
+struct Shunt_outage {
+  int shunt_index;
+  struct Shunt_outage* next;
+};
+
 // Types
 typedef struct Gen_outage Gen_outage;
 typedef struct Branch_outage Branch_outage;
 typedef struct Load_outage Load_outage;
+typedef struct Shunt_outage Shunt_outage;
 
 // Contingency
 struct Cont {
@@ -51,8 +58,10 @@ struct Cont {
 
   // Load outages
   Load_outage* load_outage;         /**< @brief List of load outages */
-};
 
+  // Shunt outages
+  Shunt_outage* shunt_outage;       /**< @brief List of shunt outages */
+};
 
 void CONT_apply(Cont* cont, Net* net) {
 
@@ -60,9 +69,11 @@ void CONT_apply(Cont* cont, Net* net) {
   Gen_outage* go;
   Branch_outage* bo;
   Load_outage* lo;
+  Shunt_outage* so;
   Gen* gen;
   Branch* br;
   Load* load;
+  Shunt* shunt;
 
   if (cont) {
 
@@ -83,6 +94,12 @@ void CONT_apply(Cont* cont, Net* net) {
       load = NET_get_load(net,lo->load_index);
       LOAD_set_in_service(load,FALSE);
     }
+
+    // Shunts
+    for (so = cont->shunt_outage; so != NULL; so = so->next) {
+      shunt = NET_get_shunt(net,so->shunt_index);
+      SHUNT_set_in_service(load,FALSE);
+    }
   }
 }
 
@@ -92,9 +109,11 @@ void CONT_clear(Cont* cont, Net* net) {
   Gen_outage* go;
   Branch_outage* bo;
   Load_outage* lo;
+  Shunt_outage* so;
   Gen* gen;
   Branch* br;
   Load* load;
+  Shunt* shunt;
 
   if (cont) {
 
@@ -115,6 +134,12 @@ void CONT_clear(Cont* cont, Net* net) {
       load = NET_get_load(net,lo->load_index);
       LOAD_set_in_service(load,TRUE);
     }
+
+    // Shunts
+    for (so = cont->shunt_outage; so != NULL; so = so->next) {
+      shunt = NET_get_shunt(net,so->shunt_index);
+      SHUNT_set_in_service(load,TRUE);
+    }
   }
 }
 
@@ -125,6 +150,7 @@ void CONT_init(Cont* cont) {
     cont->gen_outage = NULL;
     cont->br_outage = NULL;
     cont->load_outage = NULL;
+    cont->shunt_outage = NULL;
   }
 }
 
@@ -133,6 +159,7 @@ void CONT_del(Cont* cont) {
     LIST_map(Gen_outage,cont->gen_outage,go,next,{free(go);});
     LIST_map(Branch_outage,cont->br_outage,bo,next,{free(bo);});
     LIST_map(Load_outage,cont->load_outage,lo,next,{free(lo);});
+    LIST_map(Shunt_outage,cont->shunt_outage,so,next,{free(so);});
     free(cont);
   }
 }
@@ -168,6 +195,16 @@ int CONT_get_num_load_outages(Cont* cont) {
   int len;
   if (cont) {
     LIST_len(Load_outage,cont->load_outage,next,len);
+    return len;
+  }
+  else
+    return 0;
+}
+
+int CONT_get_num_shunt_outages(Cont* cont) {
+  int len;
+  if (cont) {
+    LIST_len(Shunt_outage,cont->shunt_outage,next,len);
     return len;
   }
   else
@@ -237,6 +274,27 @@ int* CONT_get_load_outages(Cont* cont) {
   return outages;
 }
 
+int* CONT_get_shunt_outages(Cont* cont) {
+
+  // Local variables
+  int* outages;
+  Shunt_outage* so;
+  int i;
+
+  // Allocate
+  outages = (int*)malloc(sizeof(int)*CONT_get_num_shunt_outages(cont));
+
+  // Fill
+  i = 0;
+  for (so = cont->shunt_outage; so != NULL; so = so->next) {
+    outages[i] = so->shunt_index;
+    i++;
+  }
+
+  // Return
+  return outages;
+}
+
 void CONT_add_gen_outage(Cont* cont, int gen_index) {
   Gen_outage* go;
   if (cont) {
@@ -279,6 +337,20 @@ void CONT_add_load_outage(Cont* cont, int load_index) {
   }
 }
 
+void CONT_add_shunt_outage(Cont* cont, int shunt_index) {
+  Shunt_outage* so;
+  if (cont) {
+    for (so = cont->shunt_outage; so != NULL; so = so->next) {
+      if (so->shunt_index == shunt_index)
+        return;
+    }
+    so = (Shunt_outage*)malloc(sizeof(Shunt_outage));
+    so->shunt_index = shunt_index;
+    so->next = NULL;
+    LIST_add(Shunt_outage,cont->shunt_outage,so,next);
+  }
+}
+
 BOOL CONT_has_gen_outage(Cont* cont, int gen_index) {
   Gen_outage* go;
   if (!cont)
@@ -312,6 +384,17 @@ BOOL CONT_has_load_outage(Cont* cont, int load_index) {
   return FALSE;
 }
 
+BOOL CONT_has_shunt_outage(Cont* cont, int shunt_index) {
+  Shunt_outage* so;
+  if (!cont)
+    return FALSE;
+  for (so = cont->shunt_outage; so != NULL; so = so->next) {
+    if (shunt_index == so->shunt_index)
+      return TRUE;
+  }
+  return FALSE;
+}
+
 Cont* CONT_new(void) {
   Cont* cont = (Cont*)malloc(sizeof(Cont));
   CONT_init(cont);
@@ -323,6 +406,7 @@ char* CONT_get_show_str(Cont* cont) {
   Gen_outage* go;
   Branch_outage* bo;
   Load_outage* lo;
+  Shunt_outage* so;
   char* out;
 
   if (!cont)
@@ -340,6 +424,9 @@ char* CONT_get_show_str(Cont* cont) {
   sprintf(out+strlen(out),"\nLoad outages\n");
   for (lo = cont->load_outage; lo != NULL; lo = lo->next)
     sprintf(out+strlen(out),"index %d\n",lo->load_index);
+  sprintf(out+strlen(out),"\nShunt outages\n");
+  for (so = cont->shunt_outage; so != NULL; so = so->next)
+    sprintf(out+strlen(out),"index %d\n",so->shunt_index);
 
   return out;
 }
@@ -355,6 +442,7 @@ char* CONT_get_json_string(Cont* cont) {
   Gen_outage* go;
   Branch_outage* bo;
   Load_outage* lo;
+  Shunt_outage* so;
   char* output;
   char* output_start;
   char temp[CONT_JSON_BUFFER_SIZE];
@@ -411,7 +499,20 @@ char* CONT_get_json_string(Cont* cont) {
     indices[num] = lo->load_index;
     num++;
   }
-  JSON_array_int(temp,output,"load_outages",indices,num,TRUE);
+  JSON_array_int(temp,output,"load_outages",indices,num,FALSE);
+  free(indices);
+
+  // Shunt outages
+  num = 0;
+  for (so = cont->shunt_outage; so != NULL; so = so->next)
+    num++;
+  indices = (int*)malloc(num*sizeof(int));
+  num = 0;
+  for (so = cont->shunt_outage; so != NULL; so = so->next) {
+    indices[num] = so->shunt_index;
+    num++;
+  }
+  JSON_array_int(temp,output,"shunt_outages",indices,num,TRUE);
   free(indices);
 
   // End

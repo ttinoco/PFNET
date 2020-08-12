@@ -21,6 +21,7 @@ Version 1.3.6
 * Added FUNC_Q_LOSS for minimizing reactive power loss for the entire system.
 * Added load outage as a contingency structure.
 * Updated build scripts including Cmake build with Windows C build tools.
+* Added shunt outage as a contingency structure.
 
 Version 1.3.4
 -------------
