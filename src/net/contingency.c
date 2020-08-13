@@ -98,7 +98,7 @@ void CONT_apply(Cont* cont, Net* net) {
     // Shunts
     for (so = cont->shunt_outage; so != NULL; so = so->next) {
       shunt = NET_get_shunt(net,so->shunt_index);
-      SHUNT_set_in_service(load,FALSE);
+      SHUNT_set_in_service(shunt,FALSE);
     }
   }
 }
@@ -138,7 +138,7 @@ void CONT_clear(Cont* cont, Net* net) {
     // Shunts
     for (so = cont->shunt_outage; so != NULL; so = so->next) {
       shunt = NET_get_shunt(net,so->shunt_index);
-      SHUNT_set_in_service(load,TRUE);
+      SHUNT_set_in_service(shunt,TRUE);
     }
   }
 }
