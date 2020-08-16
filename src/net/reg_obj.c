@@ -513,3 +513,28 @@ int REG_OBJ_count_candidates(Bus* bus) {
   }
   return num;
 }
+
+BOOL REG_OBJ_is_regulator(char obj_type, void* obj) {
+
+  // Check
+  if (!obj)
+    return FALSE;
+
+  // Gen
+  if (obj_type == OBJ_GEN)
+    return (GEN_is_regulator((Gen*)obj) &&
+            GEN_is_in_service((Gen*)obj));
+
+  // VSC
+  else if (obj_type == OBJ_CONVVSC)
+    return (CONVVSC_get_Q_max((ConvVSC*)obj) > CONVVSC_get_Q_min((ConvVSC*)obj) &&
+            CONVVSC_is_in_service((ConvVSC*)obj));
+
+  // FACTS
+  else if (obj_type == OBJ_FACTS)
+    return (FACTS_get_Q_max_sh((Facts*)obj) > FACTS_get_Q_min_sh((Facts*)obj) &&
+            FACTS_is_in_service((Facts*)obj));
+
+  else
+    return FALSE;
+}

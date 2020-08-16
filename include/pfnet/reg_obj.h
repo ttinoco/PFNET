@@ -39,4 +39,6 @@ BOOL REG_OBJ_is_in_service(char obj_type, void* obj);
 BOOL REG_OBJ_is_candidate(char obj_type, void* obj);
 int REG_OBJ_count_candidates(Bus* bus);
 
+BOOL REG_OBJ_is_regulator(char obj_type, void* obj);
+
 #endif

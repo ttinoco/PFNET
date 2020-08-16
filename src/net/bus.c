@@ -2758,13 +2758,13 @@ void BUS_update_reg_Q_participations(Bus* bus, int t, char* fix_flag) {
       
     if (pvpq_flag) {
       // ignore fixed regulator
-      if (fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)])
+      if (fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] || !REG_OBJ_is_candidate(obj_type,obj))
         continue;
     }
 
     else {
       // Consider all in-service regulators
-      if (!REG_OBJ_is_in_service(obj_type,obj))
+      if (!REG_OBJ_is_regulator(obj_type,obj))
         continue;
     } 
 
@@ -2778,13 +2778,13 @@ void BUS_update_reg_Q_participations(Bus* bus, int t, char* fix_flag) {
 
       if (pvpq_flag) {
         // ignore fixed regulator
-        if (fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)])
+        if (fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] || !REG_OBJ_is_candidate(obj_type,obj))
           continue;
       }
 
       else {
         // Consider all in-service regulators
-        if (!REG_OBJ_is_in_service(obj_type,obj))
+        if (!REG_OBJ_is_regulator(obj_type,obj))
           continue;
       }
 
@@ -2806,13 +2806,13 @@ void BUS_update_reg_Q_participations(Bus* bus, int t, char* fix_flag) {
 
     if (pvpq_flag) {
       // ignore fixed regulator
-      if (fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)]) 
+      if (fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] || !REG_OBJ_is_candidate(obj_type,obj)) 
         continue;
     }
 
     else {
       // Consider all in-service regulators
-      if (!REG_OBJ_is_in_service(obj_type,obj))
+      if (!REG_OBJ_is_regulator(obj_type,obj))
         continue;
     }
         
