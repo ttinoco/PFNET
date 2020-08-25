@@ -164,7 +164,7 @@ problem_func_src = problem/func/func_GEN_COST.c \
                    problem/func/func_FACTS_PSET.c \
                    problem/func/func_FACTS_QSET.c \
                    problem/func/func_Q_LOSS.c   \
-                   problem/func/func_P_LOSS.c   \
+                   problem/func/func_P_LOSS.c
 
 problem_func_hdr = $(inc_path)/func_GEN_COST.h \
                    $(inc_path)/func_GEN_RED.h \
