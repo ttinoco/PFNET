@@ -25,7 +25,7 @@ struct Gen {
 
   // Properties
   char name[GEN_BUFFER_SIZE]; /**< @brief Generator name */
-  
+
   // Flags
   BOOL in_service;     /**< @brief Flag for indicating generator is in service. */
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value. */
@@ -48,7 +48,7 @@ struct Gen {
   REAL Q_par;          /**< @brief Generator reactive power participation factor of generators connected at the same bus (unitless). */
   REAL rmpct;          /**< @brief Plant reactive power participation factor (percent). */
 
-  // MVA base 
+  // MVA base
   REAL mva_base;       /**< @brief MVA base of generator (MVA). */
 
   // Cost
@@ -66,10 +66,10 @@ struct Gen {
   REAL* sens_P_l_bound;  /**< @brief Sensitivity of active power lower bound. */
   REAL* sens_Q_u_bound;  /**< @brief Sensitivity of reactive power upper bound. */
   REAL* sens_Q_l_bound;  /**< @brief Sensitivity of reactive power lower bound. */
-  
+
   // Network
   Net* net; /**< @brief Network. */
-  
+
   // List
   Gen* next;     /**< @brief List of generators connected to a bus. */
   Gen* reg_next; /**< @brief List of generators regulating a bus. */
@@ -78,7 +78,7 @@ struct Gen {
 void* GEN_array_get(void* gen_array, int index) {
   if (gen_array)
     return (void*)&(((Gen*)gen_array)[index]);
-  else 
+  else
     return NULL;
 }
 
@@ -100,7 +100,7 @@ void GEN_array_del(Gen* gen_array, int size) {
       GEN_set_reg_bus(gen,NULL);
     }
     free(gen_array);
-  }  
+  }
 }
 
 Gen* GEN_array_new(int size, int num_periods) {
@@ -121,7 +121,7 @@ Gen* GEN_array_new(int size, int num_periods) {
 void GEN_array_show(Gen* gen_array, int size, int t) {
   int i;
   if (gen_array) {
-    for (i = 0; i < size; i++) 
+    for (i = 0; i < size; i++)
       GEN_show(&(gen_array[i]),t);
   }
 }
@@ -198,7 +198,7 @@ void GEN_copy_from_gen(Gen* gen, Gen* other) {
   gen->rmpct = other->rmpct;
 
   // MVA base
-   gen->mva_base = other->mva_base;
+  gen->mva_base = other->mva_base;
 
   // Cost coefficients
   gen->cost_coeff_Q0 = other->cost_coeff_Q0;
@@ -217,7 +217,7 @@ void GEN_copy_from_gen(Gen* gen, Gen* other) {
   memcpy(gen->sens_Q_l_bound,other->sens_Q_l_bound,num_periods*sizeof(REAL));
 
   // List
-  // skip next 
+  // skip next
 }
 
 char GEN_get_flags_vars(Gen* gen) {
@@ -348,7 +348,7 @@ REAL GEN_get_P_cost(Gen* gen, int t) {
 
 REAL GEN_get_P_cost_for(Gen* gen, REAL P) {
   if (gen)
-    return (gen->cost_coeff_Q0 + 
+    return (gen->cost_coeff_Q0 +
 	    gen->cost_coeff_Q1*P +
 	    gen->cost_coeff_Q2*pow(P,2.)); // $/hr
   else
@@ -428,35 +428,35 @@ Gen* GEN_get_reg_next(Gen* gen) {
 REAL GEN_get_P(Gen* gen, int t) {
   if (gen && t >= 0 && t < gen->num_periods)
     return gen->P[t];
-  else 
+  else
     return 0;
 }
 
 REAL GEN_get_dP_max(Gen* gen) {
   if (gen)
     return gen->dP_max;
-  else 
+  else
     return 0;
 }
 
 REAL GEN_get_P_max(Gen* gen) {
   if (gen)
     return gen->P_max;
-  else 
+  else
     return 0;
 }
 
 REAL GEN_get_P_min(Gen* gen) {
   if (gen)
     return gen->P_min;
-  else 
+  else
     return 0;
 }
 
 REAL GEN_get_P_prev(Gen* gen) {
   if (gen)
     return gen->P_prev;
-  else 
+  else
     return 0;
 }
 
@@ -496,14 +496,10 @@ REAL GEN_get_rmpct(Gen* gen) {
 }
 
 REAL GEN_get_mva_base(Gen* gen) {
-  if (gen){
+  if (gen)
     return gen->mva_base;
-  }
-    
   else
-  {
     return 0;
-  }
 }
 
 REAL* GEN_get_P_array(Gen* gen) {
@@ -524,14 +520,14 @@ void GEN_get_var_values(Gen* gen, Vec* values, int code) {
 
   // Local vars
   int t;
-  
+
   // No gen
   if (!gen)
     return;
 
   // Time loop
   for (t = 0; t < gen->num_periods; t++) {
-    
+
     if (gen->vars & GEN_VAR_P) { // active power
       switch(code) {
 
@@ -710,7 +706,7 @@ char* GEN_get_json_string(Gen* gen, char* output) {
   JSON_float(temp,output,"cost_coeff_Q1",gen->cost_coeff_Q1,FALSE);
   JSON_float(temp,output,"cost_coeff_Q2",gen->cost_coeff_Q2,TRUE);
   JSON_end(output);
-  
+
   // Resize
   if (resize)
     output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
@@ -743,7 +739,7 @@ BOOL GEN_has_properties(void* vgen, char prop) {
   if ((prop & GEN_PROP_SLACK) && !GEN_is_slack(gen))
     return FALSE;
   if ((prop & GEN_PROP_REG) && !GEN_is_regulator(gen))
-    return FALSE;    
+    return FALSE;
   if ((prop & GEN_PROP_NOT_REG) && GEN_is_regulator(gen))
     return FALSE;
   if ((prop & GEN_PROP_NOT_SLACK) && GEN_is_slack(gen))
@@ -766,24 +762,24 @@ void GEN_init(Gen* gen, int num_periods) {
 
   T = num_periods;
   gen->num_periods = num_periods;
-        
+
   gen->bus = NULL;
   gen->reg_bus = NULL;
 
   ARRAY_clear(gen->name,char,GEN_BUFFER_SIZE);
-  
+
   gen->in_service = TRUE;
   gen->fixed = 0x00;
   gen->bounded = 0x00;
   gen->sparse = 0x00;
   gen->vars = 0x00;
   gen->redispatchable = FALSE;
-  
+
   gen->dP_max = 0;
   gen->P_max = 0;
   gen->P_min = 0;
   gen->P_prev = 0;
-    
+
   gen->Q_max = 0;
   gen->Q_min = 0;
   gen->Q_par = 1.;
@@ -794,7 +790,7 @@ void GEN_init(Gen* gen, int num_periods) {
   gen->cost_coeff_Q0 = 0;
   gen->cost_coeff_Q1 = 2000.;
   gen->cost_coeff_Q2 = 100.;
-  
+
   gen->index = -1;
 
   ARRAY_zalloc(gen->P,REAL,T);
@@ -807,7 +803,7 @@ void GEN_init(Gen* gen, int num_periods) {
   ARRAY_zalloc(gen->sens_Q_l_bound,REAL,T);
 
   gen->net = NULL;
-  
+
   gen->next = NULL;
   gen->reg_next = NULL;
 }
@@ -964,7 +960,7 @@ void GEN_set_in_service(Gen* gen, BOOL in_service) {
 }
 
 void GEN_set_redispatchable(Gen* gen, BOOL redisp) {
-  if (gen && gen->in_service) 
+  if (gen && gen->in_service)
     gen->redispatchable = redisp;
 }
 
@@ -1009,17 +1005,17 @@ void GEN_set_Q_max(Gen* gen, REAL Q_max) {
 }
 
 void GEN_set_Q_min(Gen* gen, REAL Q_min) {
-  if (gen)  
+  if (gen)
     gen->Q_min = Q_min;
 }
 
 void GEN_set_mva_base(Gen* gen, REAL mva_base) {
-  if (gen)  
+  if (gen)
     gen->mva_base = mva_base;
 }
 
 void GEN_set_Q_par(Gen* gen, REAL Q_par) {
-  if (gen)  
+  if (gen)
     gen->Q_par = Q_par;
 }
 
@@ -1028,12 +1024,12 @@ void GEN_set_rmpct(Gen* gen, REAL rmpct) {
   // Local variable
   Bus* bus;
   Gen* g;
-  
-  if (gen) { 
+
+  if (gen) {
     bus = GEN_get_bus(gen);
     // Change for all generators at the same bus
     for (g = BUS_get_gen(bus); g != NULL; g = GEN_get_next(g)) {
-      g->rmpct = rmpct;   
+      g->rmpct = rmpct;
     }
   }
 }
@@ -1083,14 +1079,14 @@ int GEN_set_flags(void* vgen, char flag_type, unsigned char mask, int index) {
     (*flags_ptr) |= GEN_VAR_Q;
     index += gen->num_periods;
   }
-  return index;  
+  return index;
 }
 
 void GEN_set_var_values(Gen* gen, Vec* values) {
- 
+
   // Local vars
   int t;
- 
+
   // No gen
   if (!gen)
     return;
@@ -1124,4 +1120,3 @@ void GEN_propagate_data_in_time(Gen* gen, int start, int end) {
     }
   }
 }
-
