@@ -701,7 +701,7 @@ char* GEN_get_json_string(Gen* gen, char* output) {
   JSON_float(temp,output,"Q_min",gen->Q_min,FALSE);
   JSON_float(temp,output,"Q_par",gen->Q_par,FALSE);
   JSON_float(temp,output,"rmpct",gen->rmpct,FALSE);
-  JSON_float(temp,output,"Mbase",gen->mva_base,FALSE);
+  JSON_float(temp,output,"Sbase",gen->mva_base,FALSE);
   JSON_float(temp,output,"cost_coeff_Q0",gen->cost_coeff_Q0,FALSE);
   JSON_float(temp,output,"cost_coeff_Q1",gen->cost_coeff_Q1,FALSE);
   JSON_float(temp,output,"cost_coeff_Q2",gen->cost_coeff_Q2,TRUE);
