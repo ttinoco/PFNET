@@ -17,7 +17,7 @@
 #include "vector.h"
 
 // Variables
-/** \defgroup gen_vars Generator Variable Masks 
+/** \defgroup gen_vars Generator Variable Masks
  *  @{
  */
 #define GEN_VAR_P 0x01    /**< @brief Variable: generator active power */
@@ -29,7 +29,7 @@
 #define GEN_INF_Q 1e8 /**< @brief Infinite reactive power */
 
 // Properties
-/** \defgroup gen_props Generator Property Masks 
+/** \defgroup gen_props Generator Property Masks
  *  @{
  */
 #define GEN_PROP_ANY 0x00       /**< @brief Property: any */

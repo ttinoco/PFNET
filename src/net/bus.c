@@ -2746,41 +2746,44 @@ void BUS_update_reg_Q_participations(Bus* bus, int t, char* fix_flag) {
   if (!BUS_is_in_service(bus))
     return;
 
+  // Skip if not connected potential regulating objects
+  OBJ_init(&obj_type,&obj,bus);
+  if (obj == NULL)
+    return;
+  else
+    obj = NULL;
+
   if (fix_flag)
-    pvpq_flag = 1;   // Check if the regulator is fixed first
+    pvpq_flag = 1;  // Check if the regulator is fixed first
   else
     pvpq_flag = 0;  // Calculate for all in service regulators
 
   // Recompute total
   P_total = 0;
-  for (OBJ_init(&obj_type,&obj,bus); obj != NULL; OBJ_next(&obj_type,&obj)) {
-
+  for (OBJ_init(&obj_type,&obj,bus); obj != NULL; OBJ_next(&obj_type,&obj,bus)) {
     if (pvpq_flag) {
       // ignore fixed regulator
       if (fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] || !REG_OBJ_is_candidate(obj_type,obj))
         continue;
     }
-
     else {
       // Consider all in-service regulators
       if (!REG_OBJ_is_regulator(obj_type,obj))
         continue;
     }
-
     P_total += REG_OBJ_get_P(obj_type,obj,t);
   }
 
   // if P_total == 0, Use MVA_base
   if (P_total == 0) {
     use_mva_base = 1;
-    for (OBJ_init(&obj_type,&obj,bus); obj != NULL; OBJ_next(&obj_type,&obj)) {
+    for (OBJ_init(&obj_type,&obj,bus); obj != NULL; OBJ_next(&obj_type,&obj,bus)) {
 
       if (pvpq_flag) {
         // ignore fixed regulator
         if (fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] || !REG_OBJ_is_candidate(obj_type,obj))
           continue;
       }
-
       else {
         // Consider all in-service regulators
         if (!REG_OBJ_is_regulator(obj_type,obj))
@@ -2801,14 +2804,13 @@ void BUS_update_reg_Q_participations(Bus* bus, int t, char* fix_flag) {
     P_total = -eps;
 
   // Update Q_par
-  for (OBJ_init(&obj_type,&obj,bus); obj != NULL; OBJ_next(&obj_type,&obj))  {
+  for (OBJ_init(&obj_type,&obj,bus); obj != NULL; OBJ_next(&obj_type,&obj,bus))  {
 
     if (pvpq_flag) {
       // ignore fixed regulator
       if (fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] || !REG_OBJ_is_candidate(obj_type,obj))
         continue;
     }
-
     else {
       // Consider all in-service regulators
       if (!REG_OBJ_is_regulator(obj_type,obj))
@@ -2823,6 +2825,6 @@ void BUS_update_reg_Q_participations(Bus* bus, int t, char* fix_flag) {
     rmpct = REG_OBJ_get_rmpct(obj_type,obj);
 
     Q_par = fabs(P/P_total) * rmpct / 100.;   // rmpct in percent, convert to fraction
-    REG_OBJ_set_Q_par(obj_type,obj, Q_par > 1.? 1. : Q_par);
+    REG_OBJ_set_Q_par(obj_type, obj, Q_par > 1.? 1. : Q_par);
   }
 }

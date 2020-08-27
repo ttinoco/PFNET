@@ -19,7 +19,7 @@
 #include "facts.h"
 
 void REG_OBJ_next(char* obj_type, void** obj, Bus* bus);
-void OBJ_next(char* obj_type, void** obj);
+void OBJ_next(char* obj_type, void** obj, Bus* bus);
 void REG_OBJ_init(char* obj_type, void** obj, Bus* bus);
 void OBJ_init(char* obj_type, void** obj, Bus* bus);
 void REG_OBJ_disable(char obj_type, void* obj);

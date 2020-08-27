@@ -53,45 +53,41 @@ void REG_OBJ_next(char* obj_type, void** obj, Bus* bus) {
   }
 }
 
-void OBJ_next(char* obj_type, void** obj) {
-
-  // Local variables
-  Bus* bus;
+void OBJ_next(char* obj_type, void** obj, Bus* bus) {
 
   // Gen
   if (*obj_type == OBJ_GEN) {
-    if (*obj && GEN_get_next((Gen*)(*obj)))
+    if (*obj && GEN_get_next((Gen*)(*obj))) {
       *obj = GEN_get_next((Gen*)(*obj));
+    }
     else {
-      bus = GEN_get_bus((Gen*)(*obj));
-
       if (BUS_get_vsc_conv(bus)) {
-        *obj_type = OBJ_CONVVSC;            // Continue with VSC
+        *obj_type = OBJ_CONVVSC;         // Continue with VSC
         *obj = BUS_get_reg_vsc_conv(bus);
       }
-
       else if (BUS_get_facts_k(bus)) {
         *obj_type = OBJ_FACTS;           // Continue with FACTS
         *obj = BUS_get_facts_k(bus);
-        }
-      else
+      }
+      else {
         *obj = NULL;           // Terminate if there are no VSC or FACTS at the bus
+      }
     }
   }
 
   // VSC
   else if (*obj_type == OBJ_CONVVSC) {
-    if (*obj && CONVVSC_get_next_ac((ConvVSC*)(*obj)))
+    if (*obj && CONVVSC_get_next_ac((ConvVSC*)(*obj))) {
       *obj = CONVVSC_get_next_ac((ConvVSC*)(*obj));
-
+    }
     else {
-      bus = GEN_get_bus((Gen*)(*obj));
       if (BUS_get_facts_k(bus)) {
         *obj_type = OBJ_FACTS;           // Continue with FACTS
         *obj = BUS_get_facts_k(bus);
       }
-      else
+      else {
         *obj = NULL;           // Terminate if there are FACTS at the bus
+      }
     }
   }
 
@@ -232,7 +228,7 @@ void REG_OBJ_show(char obj_type, void* obj) {
 
   // Unknown
   else
-    printf("UNKONWN\n");
+    printf("UNKNOWN\n");
 }
 
 Bus* REG_OBJ_get_bus(char obj_type, void* obj) {
