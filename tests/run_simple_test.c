@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
   printf("test_net_load ... ");
 
   parser = PARSER_new_for_file(test_case);
-  net = PARSER_parse(parser, test_case, 1);
+  net = PARSER_parse(parser, test_case, 10);
 
   NET_check(net, 1);
   NET_show_components(net, 2);
