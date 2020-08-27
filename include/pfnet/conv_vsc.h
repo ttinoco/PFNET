@@ -111,6 +111,7 @@ REAL CONVVSC_get_P_min(ConvVSC* conv);
 REAL CONVVSC_get_Q_max(ConvVSC* conv);
 REAL CONVVSC_get_Q_min(ConvVSC* conv);
 REAL CONVVSC_get_Q_par(ConvVSC* conv);
+REAL CONVVSC_get_rmpct(ConvVSC* conv);
 REAL CONVVSC_get_loss_coeff_A(ConvVSC* conv);
 REAL CONVVSC_get_loss_coeff_B(ConvVSC* conv);
 REAL CONVVSC_get_target_power_factor(ConvVSC* conv);
@@ -169,6 +170,7 @@ void CONVVSC_set_P_min(ConvVSC* conv, REAL P_min);
 void CONVVSC_set_Q_max(ConvVSC* conv, REAL Q_max);
 void CONVVSC_set_Q_min(ConvVSC* conv, REAL Q_min);
 void CONVVSC_set_Q_par(ConvVSC* conv, REAL Q_par);
+void CONVVSC_set_rmpct(ConvVSC* conv, REAL rmpct);
 void CONVVSC_set_loss_coeff_A(ConvVSC* conv, REAL A);
 void CONVVSC_set_loss_coeff_B(ConvVSC* conv, REAL B);
 

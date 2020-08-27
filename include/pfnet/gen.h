@@ -17,7 +17,7 @@
 #include "vector.h"
 
 // Variables
-/** \defgroup gen_vars Generator Variable Masks 
+/** \defgroup gen_vars Generator Variable Masks
  *  @{
  */
 #define GEN_VAR_P 0x01    /**< @brief Variable: generator active power */
@@ -29,7 +29,7 @@
 #define GEN_INF_Q 1e8 /**< @brief Infinite reactive power */
 
 // Properties
-/** \defgroup gen_props Generator Property Masks 
+/** \defgroup gen_props Generator Property Masks
  *  @{
  */
 #define GEN_PROP_ANY 0x00       /**< @brief Property: any */
@@ -108,6 +108,8 @@ REAL GEN_get_P_min(Gen* gen);
 REAL GEN_get_Q_max(Gen* gen);
 REAL GEN_get_Q_min(Gen* gen);
 REAL GEN_get_Q_par(Gen* gen);
+REAL GEN_get_rmpct(Gen* gen);
+REAL GEN_get_mva_base(Gen* gen);
 void GEN_get_var_values(Gen* gen, Vec* values, int code);
 char* GEN_get_var_info_string(Gen* gen, int index);
 int GEN_get_num_vars(void* gen, unsigned char var, int t_start, int t_end);
@@ -152,7 +154,9 @@ void GEN_set_P_prev(Gen* gen, REAL P);
 void GEN_set_Q(Gen* gen, REAL Q, int t);
 void GEN_set_Q_max(Gen* gen, REAL Q);
 void GEN_set_Q_min(Gen* gen, REAL Q);
-void GEN_set_Q_par(Gen* gen, REAL Q);
+void GEN_set_Q_par(Gen* gen, REAL Q_par);
+void GEN_set_rmpct(Gen* gen, REAL rmpct);
+void GEN_set_mva_base(Gen* gen, REAL mva_base);
 int GEN_set_flags(void* gen, char flag_type, unsigned char mask, int index);
 void GEN_set_var_values(Gen* gen, Vec* values);
 void GEN_show(Gen* gen, int t);

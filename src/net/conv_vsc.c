@@ -55,6 +55,7 @@ struct ConvVSC {
   REAL Q_max;          /**< @brief Maximum reactive power injection into AC bus (p.u.) */
   REAL Q_min;          /**< @brief Minimum reactive power injection into AC bus (p.u.) */
   REAL Q_par;          /**< @brief Converter reactive power participation factor (unitless) */
+  REAL rmpct;          /**< @brief Plant Converter reactive power participation factor (Percent) */
 
   // Power factor
   REAL target_power_factor; /**< @brief Target power factor */
@@ -197,6 +198,7 @@ void CONVVSC_copy_from_conv(ConvVSC* conv, ConvVSC* other) {
   conv->Q_max = other->Q_max;
   conv->Q_min = other->Q_min;
   conv->Q_par = other->Q_par;
+  conv->rmpct = other->rmpct;
 
   // Power factor
   conv->target_power_factor = other->target_power_factor;
@@ -405,6 +407,7 @@ char* CONVVSC_get_json_string(ConvVSC* conv, char* output) {
   JSON_float(temp,output,"Q_max",conv->Q_max,FALSE);
   JSON_float(temp,output,"Q_min",conv->Q_min,FALSE);
   JSON_float(temp,output,"Q_par",conv->Q_par,FALSE);
+  JSON_float(temp,output,"rmpct",conv->rmpct,FALSE);
   JSON_float(temp,output,"target_power_factor",conv->target_power_factor,TRUE);
   JSON_end(output);
   
@@ -557,6 +560,13 @@ REAL CONVVSC_get_Q_min(ConvVSC* conv) {
 REAL CONVVSC_get_Q_par(ConvVSC* conv) {
   if (conv)
     return conv->Q_par;
+  else
+    return 0;
+}
+
+REAL CONVVSC_get_rmpct(ConvVSC* conv) {
+  if (conv)
+    return conv->rmpct;
   else
     return 0;
 }
@@ -807,6 +817,7 @@ void CONVVSC_init(ConvVSC* conv, int num_periods) {
   conv->Q_max = 0;
   conv->Q_min = 0;
   conv->Q_par = 1.;
+  conv->rmpct = 100.;
 
   conv->target_power_factor = 1.;
   
@@ -1002,6 +1013,20 @@ void CONVVSC_set_Q_min(ConvVSC* conv, REAL Q_min) {
 void CONVVSC_set_Q_par(ConvVSC* conv, REAL Q_par) {
   if (conv)
     conv->Q_par = Q_par;
+}
+
+void CONVVSC_set_rmpct(ConvVSC* conv, REAL rmpct) {
+
+  // Local variables
+  Bus* bus;
+  ConvVSC* vsc;
+  if (conv) {
+    bus = CONVVSC_get_ac_bus(conv);
+    // Change for all converters at the same bus
+    for (vsc = BUS_get_vsc_conv(bus); vsc != NULL; vsc = CONVVSC_get_next_ac(vsc)) { 
+      vsc->rmpct = rmpct;
+    }
+  }
 }
 
 void CONVVSC_set_ac_bus(ConvVSC* conv, Bus* bus) {
