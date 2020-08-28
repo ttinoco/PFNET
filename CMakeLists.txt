@@ -19,7 +19,7 @@ set(M_LIB,"")
 if (UNIX)
   find_library(M_LIB m)
   set(CMAKE_REQUIRED_INCLUDES math.h)
-  set(CMAKE_REQUIRED_LIBRARIES m)
+set(CMAKE_REQUIRED_LIBRARIES m)
 endif (UNIX)
 
 # Find PFNET source files
@@ -32,20 +32,13 @@ add_library(pfnet SHARED ${pfnet_source})
 add_library(pfnet_static STATIC ${pfnet_source})
 set_property(TARGET pfnet_static PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-# PFNET tests
-file(GLOB_RECURSE pfnet_test_source tests/*.c)
-
-# Test dynamic library
-add_executable(pfnet_tests ${pfnet_test_source})
-add_test(run_pfnet_tests pfnet_tests ${PFNET_SOURCE_DIR}/data/ieee14.mat)
-#target_link_libraries(pfnet_tests pfnet m)
-target_link_libraries(pfnet_tests pfnet ${M_LIB})
-
-# Test static library
-add_executable(pfnet_static_tests ${pfnet_test_source})
+# Test executables
+add_executable(pfnet_tests tests/run_tests.c)
+add_executable(pfnet_simple_test tests/run_simple_test.c)
 add_test(run_pfnet_static_tests pfnet_static_tests ${PFNET_SOURCE_DIR}/data/ieee14.mat)
-#target_link_libraries(pfnet_static_tests pfnet_static m)
-target_link_libraries(pfnet_static_tests pfnet_static ${M_LIB})
+#target_link_libraries(pfnet_tests pfnet_static m)
+target_link_libraries(pfnet_tests pfnet_static ${M_LIB})
+target_link_libraries(pfnet_simple_test pfnet_static ${M_LIB})
 
 # Set the debug flag
 if(PFNET_DEBUG)
