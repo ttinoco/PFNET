@@ -10,9 +10,11 @@ nobase_nodist_include_HEADERS = $(inc_path)/pfnet_config.h
 
 # Libraries
 lib_LTLIBRARIES = libpfnet.la
+noinst_LIBRARIES = libpfnet.a
 
 # Additional sources
 nodist_libpfnet_la_SOURCES =
+nodist_libpfnet_a_SOURCES =
 
 # PFNET sources and headers (note all headers are in $PFNET/include/pfnet)
 math_src = math/matrix.c \
@@ -163,7 +165,8 @@ problem_func_src = problem/func/func_GEN_COST.c \
                    problem/func/func_CSC_DC_ISET.c \
                    problem/func/func_FACTS_PSET.c \
                    problem/func/func_FACTS_QSET.c \
-                   problem/func/func_Q_LOSS.c
+                   problem/func/func_Q_LOSS.c   \
+                   problem/func/func_P_LOSS.c
 
 problem_func_hdr = $(inc_path)/func_GEN_COST.h \
                    $(inc_path)/func_GEN_RED.h \
@@ -183,7 +186,8 @@ problem_func_hdr = $(inc_path)/func_GEN_COST.h \
                    $(inc_path)/func_CSC_DC_ISET.h \
                    $(inc_path)/func_FACTS_PSET.h \
                    $(inc_path)/func_FACTS_QSET.h \
-                   $(inc_path)/func_Q_LOSS.h
+                   $(inc_path)/func_Q_LOSS.h   \
+                   $(inc_path)/func_P_LOSS.h
 
 problem_heur_src = problem/heur/heur_PVPQ_SWITCHING.c \
                    problem/heur/heur_REG_PF_SWITCH.c
@@ -210,11 +214,15 @@ other_hdr = $(inc_path)/array.h $(inc_path)/constants.h $(inc_path)/flag_types.h
 libpfnet_la_SOURCES = $(math_src) $(net_src) $(parser_src) $(problem_src) \
                       $(problem_constr_src) $(problem_func_src) $(problem_heur_src) \
                       $(utils_src)
+libpfnet_a_SOURCES = $(math_src) $(net_src) $(parser_src) $(problem_src) \
+                     $(problem_constr_src) $(problem_func_src) $(problem_heur_src) \
+                     $(utils_src)
 
 # Have to move back a directory $PFNET/include/pfnet/*.h
 libpfnet_la_CFLAGS = -I$(inc_path)/..
 libpfnet_la_LDFLAGS = -shared
 libpfnet_la_LIBADD = -lm
+libpfnet_a_CFLAGS = -I$(inc_path)/..
 
 # All headers
 pkginclude_HEADERS = $(math_hdr) $(net_hdr) $(parser_hdr) $(problem_hdr) \
@@ -228,6 +236,8 @@ raw_src = @raw_dir@/src/RAW_parser.c \
           @raw_dir@/src/RAW_net.c
 nodist_libpfnet_la_SOURCES += $(raw_src)
 libpfnet_la_CFLAGS +=  -I$(raw_inc_path)
+nodist_libpfnet_a_SOURCES += $(raw_src)
+libpfnet_a_CFLAGS +=  -I$(raw_inc_path)
 endif
 
 # Epc parser
@@ -237,4 +247,6 @@ epc_src = @epc_dir@/src/EPC_parser.c \
           @epc_dir@/src/EPC_net.c
 nodist_libpfnet_la_SOURCES += $(epc_src)
 libpfnet_la_CFLAGS +=  -I$(epc_inc_path)
+nodist_libpfnet_a_SOURCES += $(epc_src)
+libpfnet_a_CFLAGS +=  -I$(epc_inc_path)
 endif

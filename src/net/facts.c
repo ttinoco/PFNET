@@ -48,6 +48,7 @@ struct Facts {
   REAL* Q_s;           /**< @brief Reactive power provided by series converter (p.u.) */
   REAL* P_dc;          /**< @brief DC power exchanged from shunt to series converter (p.u.) */
   REAL Q_par;          /**< @brief Reactive power participation factor of shunt converter for regulating bus voltage magnitude (unitless) */
+  REAL rmpct;          /**< @brief Plant Reactive power participation factor of shunt converter for regulating bus voltage magnitude (percent) */
 
   // Set points 
   REAL* P_set;          /**< @brief Active power set-point at the "m" bus (p.u.) */
@@ -228,6 +229,7 @@ void FACTS_copy_from_facts(Facts* facts, Facts* other) {
   memcpy(facts->Q_s,other->Q_s,num_periods*sizeof(REAL));
   memcpy(facts->P_dc,other->P_dc,num_periods*sizeof(REAL));
   facts->Q_par = other->Q_par;
+  facts->rmpct = other->rmpct;
 
   // Set points
   memcpy(facts->P_set,other->P_set,num_periods*sizeof(REAL));
@@ -678,6 +680,13 @@ REAL FACTS_get_Q_par(Facts* facts) {
     return 0;
 }
 
+REAL FACTS_get_rmpct(Facts* facts) {
+  if (facts)
+    return facts->rmpct;
+  else
+    return 0;
+}
+
 REAL FACTS_get_Q_max_s(Facts* facts) {
   if (facts)
     return facts->Q_max_s;
@@ -1012,6 +1021,7 @@ char* FACTS_get_json_string(Facts* facts, char* output) {
   JSON_array_float(temp,output,"Q_s",facts->Q_s,facts->num_periods,FALSE);
   JSON_array_float(temp,output,"P_dc",facts->P_dc,facts->num_periods,FALSE);
   JSON_float(temp,output,"Q_par",facts->Q_par,FALSE);
+  JSON_float(temp,output,"rmpct",facts->rmpct,FALSE);
   JSON_array_float(temp,output,"P_set",facts->P_set,facts->num_periods,FALSE);
   JSON_array_float(temp,output,"Q_set",facts->Q_set,facts->num_periods,FALSE);
 
@@ -1105,6 +1115,7 @@ void FACTS_init(Facts* facts, int num_periods) {
   ARRAY_zalloc(facts->Q_s,REAL,T);
   ARRAY_zalloc(facts->P_dc,REAL,T);
   facts->Q_par = 1.;
+  facts->rmpct = 100.;
 
   ARRAY_zalloc(facts->P_set,REAL,T);
   ARRAY_zalloc(facts->Q_set,REAL,T);
@@ -1386,6 +1397,26 @@ void FACTS_set_P_dc(Facts* facts, REAL P, int t) {
 void FACTS_set_Q_par(Facts* facts, REAL Q_par) {
   if (facts)
     facts->Q_par = Q_par;
+}
+
+void FACTS_set_rmpct(Facts* facts, REAL rmpct) {
+
+  // Local variables
+  Facts* f;
+  Bus* bus;
+
+  if (facts) {
+    bus = FACTS_get_bus_k(facts);
+    // Change rmpct for all parallel FACTS
+    for (f=BUS_get_facts_k(bus); f !=NULL; f = FACTS_get_next_k(f)) {
+      f->rmpct = rmpct;
+    }
+    
+    bus = FACTS_get_bus_m(facts);
+    for (f=BUS_get_facts_m(bus); f !=NULL; f = FACTS_get_next_m(f)) {
+      f->rmpct = rmpct;
+    }
+  }
 }
 
 void FACTS_set_P_set(Facts* facts, REAL P, int t) {

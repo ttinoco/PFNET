@@ -21,6 +21,10 @@ Version 1.3.6
 * Added FUNC_Q_LOSS for minimizing reactive power loss for the entire system.
 * Added load outage as a contingency structure.
 * Updated build scripts including Cmake build with Windows C build tools.
+* Added FUNC_P_LOSS for minimizaing active power loss for the entire system.
+* Added "rmpct" parameter to all regulating unit components: Gen, VSC, FACTS.
+* Added NET_update_reg_Q_participations and BUS_update_reg_Q_participations to update regulating Q participaptions based on RMPCT * (P/sum(P)).
+* Modified HEUR_PVPQ_SWITCHING_apply_step to update Q participations based on remaining devices that have reactive power capability.
 * Added shunt outage as a contingency structure.
 
 Version 1.3.4

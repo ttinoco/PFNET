@@ -119,7 +119,7 @@ struct Bus {
   int* dwdw_index;
   int* dwdv_index;
   int* dvdv_index;
-  
+
   // Lists
   Bus* next;   /**< @brief List of buses */
   Node* equiv; /**< @brief List of equivalent buses */
@@ -603,7 +603,7 @@ void BUS_clear_mismatches(Bus* bus) {
 
 void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate) {
   /** Copies data from another bus except index, hash info, and connections.
-   * 
+   *
    *  Parameters
    *  -----------
    *  mode: -1 (to merged), 0 (one-to-one), 1 (from merged)
@@ -630,14 +630,14 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate) {
 
     bus->number = other->number;
     strcpy(bus->name,other->name);
-    
+
     bus->alt_number = other->alt_number;
     strcpy(bus->alt_name,other->alt_name);
 
     // Oindex
     if (mode == 0) // one-to-one
       bus->oindex = other->oindex;
-    
+
     bus->area = other->area;
     bus->zone = other->zone;
 
@@ -646,7 +646,7 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate) {
 
     if (BUS_is_v_set_regulated(other,FALSE) || !BUS_is_v_set_regulated(bus,FALSE))
       memcpy(bus->v_set,other->v_set,num_periods*sizeof(REAL));
-    
+
     bus->v_max_reg = other->v_max_reg;
     bus->v_min_reg = other->v_min_reg;
     bus->v_max_norm = other->v_max_norm;
@@ -687,13 +687,13 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate) {
 
     // Hash
     // skip hash
-    
+
     // Network
     // skip network
-    
+
     // ACPF helpers
     // skip helpers
-    
+
     // List
     // skip next
   }
@@ -1405,7 +1405,7 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
     return;
 
   for (t = 0; t < bus->num_periods; t++) {
-    
+
     // Voltage magnitude
     if (bus->vars & BUS_VAR_VMAG) {
       switch (code) {
@@ -1432,7 +1432,7 @@ void BUS_get_var_values(Bus* bus, Vec* values, int code) {
     // Voltage angle
     if (bus->vars & BUS_VAR_VANG) {
       switch(code) {
-	
+
       case UPPER_LIMITS:
         VEC_set(values,bus->index_v_ang[t],BUS_INF_V_ANG);
         break;
@@ -1827,7 +1827,7 @@ REAL BUS_get_quantity(Bus* bus, int qtype, int t) {
 }
 
 char* BUS_get_json_string(Bus* bus, char* output) {
-  
+
   // Local variables
   char temp[BUS_JSON_BUFFER_SIZE];
   char* output_start;
@@ -1845,7 +1845,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
     resize = TRUE;
   }
   output_start = output;
-  
+
   // Write
   JSON_start(output);
   JSON_int(temp,output,"index",bus->index,FALSE);
@@ -1899,7 +1899,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_array_int(temp,output,"dP_index",bus->dP_index,bus->num_periods,FALSE);
   JSON_array_int(temp,output,"dQ_index",bus->dQ_index,bus->num_periods,TRUE);
   JSON_end(output);
-  
+
   // Resize
   if (resize)
     output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
@@ -2081,7 +2081,7 @@ void BUS_init(Bus* bus, int num_periods) {
   ARRAY_zalloc(bus->dwdw_index,int,T);
   ARRAY_zalloc(bus->dwdv_index,int,T);
   ARRAY_zalloc(bus->dvdv_index,int,T);
-  
+
   for (t = 0; t < bus->num_periods; t++) {
     bus->v_mag[t] = 1.;
     bus->v_set[t] = 1.;
@@ -2728,4 +2728,103 @@ void BUS_set_P_mis(Bus* bus, REAL mis, int t) {
 void BUS_set_Q_mis(Bus* bus, REAL mis, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     bus->Q_mis[t] = mis;
+}
+
+void BUS_update_reg_Q_participations(Bus* bus, int t, char* fix_flag) {
+
+  // Local variables
+  void* obj;
+  char obj_type;
+  REAL P_total;
+  REAL P;
+  REAL eps = 1e-4;
+  REAL Q_par;
+  REAL rmpct;
+  int use_mva_base;
+  int pvpq_flag;
+
+  if (!BUS_is_in_service(bus))
+    return;
+
+  // Skip if not connected potential regulating objects
+  OBJ_init(&obj_type,&obj,bus);
+  if (obj == NULL)
+    return;
+  else
+    obj = NULL;
+
+  if (fix_flag)
+    pvpq_flag = 1;  // Check if the regulator is fixed first
+  else
+    pvpq_flag = 0;  // Calculate for all in service regulators
+
+  // Recompute total
+  P_total = 0;
+  for (OBJ_init(&obj_type,&obj,bus); obj != NULL; OBJ_next(&obj_type,&obj,bus)) {
+    if (pvpq_flag) {
+      // ignore fixed regulator
+      if (fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] || !REG_OBJ_is_candidate(obj_type,obj))
+        continue;
+    }
+    else {
+      // Consider all in-service regulators
+      if (!REG_OBJ_is_regulator(obj_type,obj))
+        continue;
+    }
+    P_total += REG_OBJ_get_P(obj_type,obj,t);
+  }
+
+  // if P_total == 0, Use MVA_base
+  if (P_total == 0) {
+    use_mva_base = 1;
+    for (OBJ_init(&obj_type,&obj,bus); obj != NULL; OBJ_next(&obj_type,&obj,bus)) {
+
+      if (pvpq_flag) {
+        // ignore fixed regulator
+        if (fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] || !REG_OBJ_is_candidate(obj_type,obj))
+          continue;
+      }
+      else {
+        // Consider all in-service regulators
+        if (!REG_OBJ_is_regulator(obj_type,obj))
+          continue;
+      }
+
+      P_total += REG_OBJ_get_mva_base(obj_type,obj);
+    }
+  }
+  else {
+    use_mva_base = 0;
+  }
+
+  // Safeguard
+  if (0 <= P_total && P_total < eps)
+    P_total = eps;
+  if (0 >= P_total && P_total > -eps)
+    P_total = -eps;
+
+  // Update Q_par
+  for (OBJ_init(&obj_type,&obj,bus); obj != NULL; OBJ_next(&obj_type,&obj,bus))  {
+
+    if (pvpq_flag) {
+      // ignore fixed regulator
+      if (fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] || !REG_OBJ_is_candidate(obj_type,obj))
+        continue;
+    }
+    else {
+      // Consider all in-service regulators
+      if (!REG_OBJ_is_regulator(obj_type,obj))
+        continue;
+    }
+
+    if (use_mva_base == 0)
+      P = REG_OBJ_get_P(obj_type,obj,t);
+    else
+      P = REG_OBJ_get_mva_base(obj_type,obj);
+
+    rmpct = REG_OBJ_get_rmpct(obj_type,obj);
+
+    Q_par = fabs(P/P_total) * rmpct / 100.;   // rmpct in percent, convert to fraction
+    REG_OBJ_set_Q_par(obj_type, obj, Q_par > 1.? 1. : Q_par);
+  }
 }

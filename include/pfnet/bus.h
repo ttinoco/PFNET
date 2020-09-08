@@ -387,4 +387,5 @@ void BUS_set_dvdv_index(Bus* bus, int idx, int t);
 int BUS_get_oindex(Bus* bus);
 void BUS_set_oindex(Bus* bus, int oindex);
 
+void BUS_update_reg_Q_participations(Bus* bus, int t, char* fix_flags);
 #endif

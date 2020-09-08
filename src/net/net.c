@@ -115,15 +115,15 @@ unsigned long int NET_get_state_tag(Net* net) {
 
 void NET_add_buses(Net* net, Bus** bus_ptr_array, int size) {
   /** Adds buses to the network. The entire bus array is
-   * relocated, the data is copied (except flags for the new buses), 
+   * relocated, the data is copied (except flags for the new buses),
    * and the bus connections are stolen.
    */
-  
+
   // Local variables
   Bus* bus_src;
   Bus* bus_dst;
   Bus* bus;
-  Bus* old_bus_array; 
+  Bus* old_bus_array;
   int old_num_buses;
   int num;
   int index;
@@ -168,7 +168,7 @@ void NET_add_buses(Net* net, Bus** bus_ptr_array, int size) {
 
     // Copy data (except index, hash info, and connections)
     BUS_copy_from_bus(bus_dst,bus_src,0,FALSE);
-    
+
     // Clear flags
     if (i >= old_num_buses) {
       BUS_clear_flags(bus_dst,FLAG_VARS);
@@ -184,7 +184,7 @@ void NET_add_buses(Net* net, Bus** bus_ptr_array, int size) {
     // Connections - reg gen
     while (BUS_get_reg_gen(bus_src))
       GEN_set_reg_bus(BUS_get_reg_gen(bus_src),bus_dst);
-    
+
     // Connection - branch k
     while (BUS_get_branch_k(bus_src))
       BRANCH_set_bus_k(BUS_get_branch_k(bus_src),bus_dst);
@@ -220,7 +220,7 @@ void NET_add_buses(Net* net, Bus** bus_ptr_array, int size) {
     // Connections - csc conv
     while (BUS_get_csc_conv(bus_src))
       CONVCSC_set_ac_bus(BUS_get_csc_conv(bus_src),bus_dst);
-    
+
     // Connections - vsc conv
     while (BUS_get_vsc_conv(bus_src))
       CONVVSC_set_ac_bus(BUS_get_vsc_conv(bus_src),bus_dst);
@@ -246,7 +246,7 @@ void NET_add_buses(Net* net, Bus** bus_ptr_array, int size) {
 
   // Update hash
   NET_update_hash_tables(net);
-  
+
   // Delete old buses
   BUS_array_del(old_bus_array,old_num_buses);
 }
@@ -254,9 +254,9 @@ void NET_add_buses(Net* net, Bus** bus_ptr_array, int size) {
 void NET_del_buses(Net* net, Bus** bus_ptr_array, int size) {
   /** Removes buses from the network. The entire bus array is
    * relocated, the data is copied, and the bus connections are set.
-   * Network flags are cleared. 
+   * Network flags are cleared.
    */
-  
+
   // Local variables
   Bus* bus_src;
   Bus* bus_dst;
@@ -358,35 +358,35 @@ void NET_del_buses(Net* net, Bus** bus_ptr_array, int size) {
       // Connections - reg gen
       while (BUS_get_reg_gen(bus_src))
         GEN_set_reg_bus(BUS_get_reg_gen(bus_src),bus_dst);
-      
+
       // Connection - branch k
       while (BUS_get_branch_k(bus_src))
         BRANCH_set_bus_k(BUS_get_branch_k(bus_src),bus_dst);
-      
+
       // Connection - branch m
       while (BUS_get_branch_m(bus_src))
         BRANCH_set_bus_m(BUS_get_branch_m(bus_src),bus_dst);
-      
+
       // Connection - reg tran
       while (BUS_get_reg_tran(bus_src))
         BRANCH_set_reg_bus(BUS_get_reg_tran(bus_src),bus_dst);
-      
+
       // Connections - shunt
       while (BUS_get_shunt(bus_src))
         SHUNT_set_bus(BUS_get_shunt(bus_src),bus_dst);
-      
+
       // Connections - reg shunt
       while (BUS_get_reg_shunt(bus_src))
         SHUNT_set_reg_bus(BUS_get_reg_shunt(bus_src),bus_dst);
-      
+
       // Connections - Load
       while (BUS_get_load(bus_src))
         LOAD_set_bus(BUS_get_load(bus_src),bus_dst);
-      
+
       // Connections - vargen
       while (BUS_get_vargen(bus_src))
         VARGEN_set_bus(BUS_get_vargen(bus_src),bus_dst);
-      
+
       // Connections - bat
       while (BUS_get_bat(bus_src))
         BAT_set_bus(BUS_get_bat(bus_src),bus_dst);
@@ -398,7 +398,7 @@ void NET_del_buses(Net* net, Bus** bus_ptr_array, int size) {
       // Connections - vsc conv
       while (BUS_get_vsc_conv(bus_src))
         CONVVSC_set_ac_bus(BUS_get_vsc_conv(bus_src),bus_dst);
-      
+
       // Connections - reg vsc conv
       while (BUS_get_reg_vsc_conv(bus_src))
         CONVVSC_set_reg_bus(BUS_get_reg_vsc_conv(bus_src),bus_dst);
@@ -406,15 +406,15 @@ void NET_del_buses(Net* net, Bus** bus_ptr_array, int size) {
       // Connection - facts k
       while (BUS_get_facts_k(bus_src))
         FACTS_set_bus_k(BUS_get_facts_k(bus_src),bus_dst);
-      
+
       // Connection - facts m
       while (BUS_get_facts_m(bus_src))
         FACTS_set_bus_m(BUS_get_facts_m(bus_src),bus_dst);
-      
+
       // Connection - reg facts
       while (BUS_get_reg_facts(bus_src))
         FACTS_set_reg_bus(BUS_get_reg_facts(bus_src),bus_dst);
-      
+
       index++;
     }
   }
@@ -434,10 +434,10 @@ void NET_del_buses(Net* net, Bus** bus_ptr_array, int size) {
 
 void NET_add_branches(Net* net, Branch** br_ptr_array, int size) {
   /** Adds branches to the network. The entire branch array is
-   * relocated, the data is copied (except flags for the new branches), 
+   * relocated, the data is copied (except flags for the new branches),
    * and the bus connections are stolen.
    */
-  
+
   // Local variables
   Branch* br_src;
   Branch* br_dst;
@@ -468,7 +468,7 @@ void NET_add_branches(Net* net, Branch** br_ptr_array, int size) {
     else
       br_ptr_array[i] = NULL;                      // clear to ignore below
   }
-  
+
   // New branches
   net->branch = NULL;
   net->num_branches = 0;
@@ -498,13 +498,13 @@ void NET_add_branches(Net* net, Branch** br_ptr_array, int size) {
       BRANCH_clear_flags(br_dst,FLAG_BOUNDED);
       BRANCH_clear_flags(br_dst,FLAG_SPARSE);
     }
-    
+
     // Save old connections
     bus_k = BRANCH_get_bus_k(br_src);
     bus_m = BRANCH_get_bus_m(br_src);
     reg_bus = BRANCH_get_reg_bus(br_src);
 
-    // Clear connections bus - old branch 
+    // Clear connections bus - old branch
     BRANCH_set_bus_k(br_src,NULL);      // also removes branch from bus->branches_k list
     BRANCH_set_bus_m(br_src,NULL);      // also removes branch from bus->branches_m list
     BRANCH_set_reg_bus(br_src,NULL);    // also removes branch from bus->reg_trans list
@@ -524,9 +524,9 @@ void NET_add_branches(Net* net, Branch** br_ptr_array, int size) {
 void NET_del_branches(Net* net, Branch** br_ptr_array, int size) {
   /** Removes branches from the network. The entire branch array is
    * relocated, the data is copied, and the bus connections are set.
-   * Network flags are cleared. 
+   * Network flags are cleared.
    */
-  
+
   // Local variables
   Branch* br_src;
   Branch* br_dst;
@@ -599,17 +599,17 @@ void NET_del_branches(Net* net, Branch** br_ptr_array, int size) {
       bus_k = BRANCH_get_bus_k(br_src);
       bus_m = BRANCH_get_bus_m(br_src);
       reg_bus = BRANCH_get_reg_bus(br_src);
-      
-      // Clear connections bus - old branch 
+
+      // Clear connections bus - old branch
       BRANCH_set_bus_k(br_src,NULL);   // also removes branch from bus->branches_k list
       BRANCH_set_bus_m(br_src,NULL);   // also removes branch from bus->branches_m list
       BRANCH_set_reg_bus(br_src,NULL); // also removes branch from bus->reg_trans list
-      
+
       // Add connections bus - new branch
       BRANCH_set_bus_k(br_dst,bus_k);      // also adds branch to bus->branches_k list
       BRANCH_set_bus_m(br_dst,bus_m);      // also adds branch to bus->branches_m list
       BRANCH_set_reg_bus(br_dst,reg_bus);  // also adds branch to bus->reg_trans list
-      
+
       index++;
     }
   }
@@ -626,10 +626,10 @@ void NET_del_branches(Net* net, Branch** br_ptr_array, int size) {
 
 void NET_add_gens(Net* net, Gen** gen_ptr_array, int size) {
   /** Adds generators to the network. The entire generator array is
-   * relocated, the data is copied (except flags for the new gens), 
+   * relocated, the data is copied (except flags for the new gens),
    * and the bus connections are stolen.
    */
-  
+
   // Local variables
   Gen* gen_src;
   Gen* gen_dst;
@@ -658,8 +658,8 @@ void NET_add_gens(Net* net, Gen** gen_ptr_array, int size) {
       num++;
     else
       gen_ptr_array[i] = NULL;                      // clear to ignore below
-  }    
-  
+  }
+
   // New gens
   net->gen = NULL;
   net->num_gens = 0;
@@ -668,7 +668,7 @@ void NET_add_gens(Net* net, Gen** gen_ptr_array, int size) {
   // Copy data and steal connections
   index = 0;
   for (i = 0; i < old_num_gens+size; i++) {
-    
+
     if (i < old_num_gens)
       gen_src = GEN_array_get(old_gen_array,i);
     else
@@ -689,12 +689,12 @@ void NET_add_gens(Net* net, Gen** gen_ptr_array, int size) {
       GEN_clear_flags(gen_dst,FLAG_BOUNDED);
       GEN_clear_flags(gen_dst,FLAG_SPARSE);
     }
-    
+
     // Save old connections
     bus = GEN_get_bus(gen_src);
     reg_bus = GEN_get_reg_bus(gen_src);
 
-    // Clear connections bus - old gen 
+    // Clear connections bus - old gen
     GEN_set_bus(gen_src,NULL);         // also removes gen from bus->gens list
     GEN_set_reg_bus(gen_src,NULL);     // also removes gen from bus->reg_gens list
 
@@ -712,9 +712,9 @@ void NET_add_gens(Net* net, Gen** gen_ptr_array, int size) {
 void NET_del_gens(Net* net, Gen** gen_ptr_array, int size) {
   /** Removes generators from the network. The entire generator array is
    * relocated, the data is copied, and the bus connections are set.
-   * Network flags are cleared. 
+   * Network flags are cleared.
    */
-  
+
   // Local variables
   Gen* gen_src;
   Gen* gen_dst;
@@ -782,17 +782,17 @@ void NET_del_gens(Net* net, Gen** gen_ptr_array, int size) {
       GEN_copy_from_gen(gen_dst,gen_src);
 
       // Save old connections
-      bus = GEN_get_bus(gen_src);        
+      bus = GEN_get_bus(gen_src);
       reg_bus = GEN_get_reg_bus(gen_src);
-      
-      // Clear connections bus - old gen 
+
+      // Clear connections bus - old gen
       GEN_set_bus(gen_src,NULL);         // also removes gen from bus->gens list
       GEN_set_reg_bus(gen_src,NULL);     // also removes gen from bus->reg_gens list
-      
+
       // Add connections bus - new gen
       GEN_set_bus(gen_dst,bus);          // also adds gen to bus->gens list
       GEN_set_reg_bus(gen_dst,reg_bus);  // also adds gen to bus->reg_gens list
-      
+
       index++;
     }
   }
@@ -809,10 +809,10 @@ void NET_del_gens(Net* net, Gen** gen_ptr_array, int size) {
 
 void NET_add_loads(Net* net, Load** load_ptr_array, int size) {
   /** Adds loads to the network. The entire load array is
-   * relocated, the data is copied (except flags for the new loads), 
+   * relocated, the data is copied (except flags for the new loads),
    * and the bus connections are stolen.
    */
-  
+
   // Local variables
   Load* load_src;
   Load* load_dst;
@@ -871,7 +871,7 @@ void NET_add_loads(Net* net, Load** load_ptr_array, int size) {
       LOAD_clear_flags(load_dst,FLAG_BOUNDED);
       LOAD_clear_flags(load_dst,FLAG_SPARSE);
     }
-    
+
     // Save old connections
     bus = LOAD_get_bus(load_src);
 
@@ -891,9 +891,9 @@ void NET_add_loads(Net* net, Load** load_ptr_array, int size) {
 void NET_del_loads(Net* net, Load** load_ptr_array, int size) {
   /** Removes loads from the network. The entire load array is
    * relocated, the data is copied, and the bus connections are set.
-   * Network flags are cleared. 
+   * Network flags are cleared.
    */
-  
+
   // Local variables
   Load* load_src;
   Load* load_dst;
@@ -944,7 +944,7 @@ void NET_del_loads(Net* net, Load** load_ptr_array, int size) {
     if (delete[i]) {
 
       load = LOAD_array_get(old_load_array,i);
-      
+
       // Clear connections bus - "load to be deleted"
       LOAD_set_bus(load,NULL); // also removes load from bus->loads list
     }
@@ -960,13 +960,13 @@ void NET_del_loads(Net* net, Load** load_ptr_array, int size) {
 
       // Save old connections
       bus = LOAD_get_bus(load_src);
-      
-      // Clear connections bus - old load 
+
+      // Clear connections bus - old load
       LOAD_set_bus(load_src,NULL);       // also removes load from bus->loads list
-      
+
       // Add connections bus - new load
       LOAD_set_bus(load_dst,bus);        // also adds load to bus->loads list
-      
+
       index++;
     }
   }
@@ -983,10 +983,10 @@ void NET_del_loads(Net* net, Load** load_ptr_array, int size) {
 
 void NET_add_shunts(Net* net, Shunt** shunt_ptr_array, int size) {
   /** Adds shunts to the network. The entire shunt array is
-   * relocated, the data is copied (except flags for the new shunts), 
+   * relocated, the data is copied (except flags for the new shunts),
    * and the bus connections are stolen.
    */
-  
+
   // Local variables
   Shunt* shunt_src;
   Shunt* shunt_dst;
@@ -1046,12 +1046,12 @@ void NET_add_shunts(Net* net, Shunt** shunt_ptr_array, int size) {
       SHUNT_clear_flags(shunt_dst,FLAG_BOUNDED);
       SHUNT_clear_flags(shunt_dst,FLAG_SPARSE);
     }
-    
+
     // Save old connections
-    bus = SHUNT_get_bus(shunt_src);        
+    bus = SHUNT_get_bus(shunt_src);
     reg_bus = SHUNT_get_reg_bus(shunt_src);
 
-    // Clear connections bus - old shunt 
+    // Clear connections bus - old shunt
     SHUNT_set_bus(shunt_src,NULL);         // also removes shunt from bus->shunts list
     SHUNT_set_reg_bus(shunt_src,NULL);     // also removes shunt from bus->reg_shunts list
 
@@ -1069,9 +1069,9 @@ void NET_add_shunts(Net* net, Shunt** shunt_ptr_array, int size) {
 void NET_del_shunts(Net* net, Shunt** shunt_ptr_array, int size) {
   /** Removes shunts from the network. The entire shunt array is
    * relocated, the data is copied, and the bus connections are set.
-   * Network flags are cleared. 
+   * Network flags are cleared.
    */
-  
+
   // Local variables
   Shunt* shunt_src;
   Shunt* shunt_dst;
@@ -1123,7 +1123,7 @@ void NET_del_shunts(Net* net, Shunt** shunt_ptr_array, int size) {
     if (delete[i]) {
 
       shunt = SHUNT_array_get(old_shunt_array,i);
-      
+
       // Clear connections bus - "shunt to be deleted"
       SHUNT_set_bus(shunt,NULL);     // also removes shunt from bus->shunts list
       SHUNT_set_reg_bus(shunt,NULL); // also removes shunt from bus->reg_shunts list
@@ -1137,19 +1137,19 @@ void NET_del_shunts(Net* net, Shunt** shunt_ptr_array, int size) {
 
       // Copy data
       SHUNT_copy_from_shunt(shunt_dst,shunt_src);
-      
+
       // Save old connections
-      bus = SHUNT_get_bus(shunt_src);        
+      bus = SHUNT_get_bus(shunt_src);
       reg_bus = SHUNT_get_reg_bus(shunt_src);
-      
-      // Clear connections bus - old shunt 
+
+      // Clear connections bus - old shunt
       SHUNT_set_bus(shunt_src,NULL);         // also removes shunt from bus->shunts list
       SHUNT_set_reg_bus(shunt_src,NULL);     // also removes shunt from bus->reg_shunts list
-      
+
       // Add connections bus - new shunt
       SHUNT_set_bus(shunt_dst,bus);          // also adds shunt to bus->shunts list
       SHUNT_set_reg_bus(shunt_dst,reg_bus);  // also adds shunt to bus->reg_shunts list
-      
+
       index++;
     }
   }
@@ -1166,10 +1166,10 @@ void NET_del_shunts(Net* net, Shunt** shunt_ptr_array, int size) {
 
 void NET_add_bats(Net* net, Bat** bat_ptr_array, int size) {
   /** Adds batteries to the network. The entire battery array is
-   * relocated, the data is copied (except flags for the new batteries), 
+   * relocated, the data is copied (except flags for the new batteries),
    * and the bus connections are stolen.
    */
-  
+
   // Local variables
   Bat* bat_src;
   Bat* bat_dst;
@@ -1228,7 +1228,7 @@ void NET_add_bats(Net* net, Bat** bat_ptr_array, int size) {
       BAT_clear_flags(bat_dst,FLAG_BOUNDED);
       BAT_clear_flags(bat_dst,FLAG_SPARSE);
     }
-    
+
     // Save old connections
     bus = BAT_get_bus(bat_src);
 
@@ -1248,9 +1248,9 @@ void NET_add_bats(Net* net, Bat** bat_ptr_array, int size) {
 void NET_del_bats(Net* net, Bat** bat_ptr_array, int size) {
   /** Removes batteries from the network. The entire battery array is
    * relocated, the data is copied, and the bus connections are set.
-   * Network flags are cleared. 
+   * Network flags are cleared.
    */
-  
+
   // Local variables
   Bat* bat_src;
   Bat* bat_dst;
@@ -1301,7 +1301,7 @@ void NET_del_bats(Net* net, Bat** bat_ptr_array, int size) {
     if (delete[i]) {
 
       bat = BAT_array_get(old_bat_array,i);
-      
+
       // Clear connections bus - "bat to be deleted"
       BAT_set_bus(bat,NULL); // also removes bat from bus->bats list
     }
@@ -1317,13 +1317,13 @@ void NET_del_bats(Net* net, Bat** bat_ptr_array, int size) {
 
       // Save old connections
       bus = BAT_get_bus(bat_src);
-      
-      // Clear connections bus - old bat 
+
+      // Clear connections bus - old bat
       BAT_set_bus(bat_src,NULL);       // also removes bat from bus->bats list
-      
+
       // Add connections bus - new bat
       BAT_set_bus(bat_dst,bus);        // also adds bat to bus->bats list
-      
+
       index++;
     }
   }
@@ -1340,10 +1340,10 @@ void NET_del_bats(Net* net, Bat** bat_ptr_array, int size) {
 
 void NET_add_vargens(Net* net, Vargen** gen_ptr_array, int size) {
   /** Adds var generators to the network. The entire var generator array is
-   * relocated, the data is copied (except flags for the new var generators), 
+   * relocated, the data is copied (except flags for the new var generators),
    * and the bus connections are stolen.
    */
-  
+
   // Local variables
   Vargen* gen_src;
   Vargen* gen_dst;
@@ -1402,7 +1402,7 @@ void NET_add_vargens(Net* net, Vargen** gen_ptr_array, int size) {
       VARGEN_clear_flags(gen_dst,FLAG_BOUNDED);
       VARGEN_clear_flags(gen_dst,FLAG_SPARSE);
     }
-    
+
     // Save old connections
     bus = VARGEN_get_bus(gen_src);
 
@@ -1422,9 +1422,9 @@ void NET_add_vargens(Net* net, Vargen** gen_ptr_array, int size) {
 void NET_del_vargens(Net* net, Vargen** gen_ptr_array, int size) {
   /** Removes var generators from the network. The entire var generator array is
    * relocated, the data is copied, and the bus connections are set.
-   * Network flags are cleared. 
+   * Network flags are cleared.
    */
-  
+
   // Local variables
   Vargen* gen_src;
   Vargen* gen_dst;
@@ -1444,7 +1444,7 @@ void NET_del_vargens(Net* net, Vargen** gen_ptr_array, int size) {
   // Old var generators
   old_gen_array = net->vargen;
   old_num_vargens = net->num_vargens;
-  
+
   // Count unique and mark for deletion
   num = 0;
   ARRAY_zalloc(delete,char,net->num_vargens);
@@ -1475,7 +1475,7 @@ void NET_del_vargens(Net* net, Vargen** gen_ptr_array, int size) {
     if (delete[i]) {
 
       gen = VARGEN_array_get(old_gen_array,i);
-      
+
       // Clear connections bus - "vargen to be deleted"
       VARGEN_set_bus(gen,NULL); // also removes vargen from bus->vargens list
     }
@@ -1491,13 +1491,13 @@ void NET_del_vargens(Net* net, Vargen** gen_ptr_array, int size) {
 
       // Save old connections
       bus = VARGEN_get_bus(gen_src);
-      
-      // Clear connections bus - old vargen 
+
+      // Clear connections bus - old vargen
       VARGEN_set_bus(gen_src,NULL);       // also removes vargen from bus->vargens list
-      
+
       // Add connections bus - new vargen
       VARGEN_set_bus(gen_dst,bus);        // also adds vargen to bus->vargens list
-      
+
       index++;
     }
   }
@@ -1514,10 +1514,10 @@ void NET_del_vargens(Net* net, Vargen** gen_ptr_array, int size) {
 
 void NET_add_csc_convs(Net* net, ConvCSC** conv_ptr_array, int size) {
   /** Adds CSC converters to the network. The entire converter array is
-   *  relocated, the data is copied (except flags for the new converters), 
+   *  relocated, the data is copied (except flags for the new converters),
    *  and the bus connections are stolen.
    */
-  
+
   // Local variables
   ConvCSC* conv_src;
   ConvCSC* conv_dst;
@@ -1577,7 +1577,7 @@ void NET_add_csc_convs(Net* net, ConvCSC** conv_ptr_array, int size) {
       CONVCSC_clear_flags(conv_dst,FLAG_BOUNDED);
       CONVCSC_clear_flags(conv_dst,FLAG_SPARSE);
     }
-    
+
     // Save old connections
     bus = CONVCSC_get_ac_bus(conv_src);
     dc_bus = CONVCSC_get_dc_bus(conv_src);
@@ -1600,9 +1600,9 @@ void NET_add_csc_convs(Net* net, ConvCSC** conv_ptr_array, int size) {
 void NET_del_csc_convs(Net* net, ConvCSC** conv_ptr_array, int size) {
   /** Removes CSC converters from the network. The entire converter array is
    *  relocated, the data is copied, and the bus connections are set.
-   *  Network flags are cleared. 
+   *  Network flags are cleared.
    */
-  
+
   // Local variables
   ConvCSC* conv_src;
   ConvCSC* conv_dst;
@@ -1654,7 +1654,7 @@ void NET_del_csc_convs(Net* net, ConvCSC** conv_ptr_array, int size) {
     if (delete[i]) {
 
       conv = CONVCSC_array_get(old_conv_array,i);
-      
+
       // Clear connections bus - "conv to be deleted"
       CONVCSC_set_ac_bus(conv,NULL); // also removes conv from bus->conv list
       CONVCSC_set_dc_bus(conv,NULL); // also removes conv from dc_bus->conv list
@@ -1672,15 +1672,15 @@ void NET_del_csc_convs(Net* net, ConvCSC** conv_ptr_array, int size) {
       // Save old connections
       bus = CONVCSC_get_ac_bus(conv_src);
       dc_bus = CONVCSC_get_dc_bus(conv_src);
-      
-      // Clear connections bus - old conv 
+
+      // Clear connections bus - old conv
       CONVCSC_set_ac_bus(conv_src,NULL);       // also removes conv from bus->convs list
       CONVCSC_set_dc_bus(conv_src,NULL);
-      
+
       // Add connections bus - new conv
       CONVCSC_set_ac_bus(conv_dst,bus);        // also adds conv to bus->convs list
       CONVCSC_set_dc_bus(conv_dst,dc_bus);
-      
+
       index++;
     }
   }
@@ -1697,10 +1697,10 @@ void NET_del_csc_convs(Net* net, ConvCSC** conv_ptr_array, int size) {
 
 void NET_add_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size) {
   /** Adds VSC converters to the network. The entire converter array is
-   *  relocated, the data is copied (except flags for the new converters), 
+   *  relocated, the data is copied (except flags for the new converters),
    *  and the bus connections are stolen.
    */
-  
+
   // Local variables
   ConvVSC* conv_src;
   ConvVSC* conv_dst;
@@ -1761,7 +1761,7 @@ void NET_add_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size) {
       CONVVSC_clear_flags(conv_dst,FLAG_BOUNDED);
       CONVVSC_clear_flags(conv_dst,FLAG_SPARSE);
     }
-    
+
     // Save old connections
     bus = CONVVSC_get_ac_bus(conv_src);
     reg_bus = CONVVSC_get_reg_bus(conv_src);
@@ -1787,9 +1787,9 @@ void NET_add_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size) {
 void NET_del_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size) {
   /** Removes VSC converters from the network. The entire converter array is
    *  relocated, the data is copied, and the bus connections are set.
-   *  Network flags are cleared. 
+   *  Network flags are cleared.
    */
-  
+
   // Local variables
   ConvVSC* conv_src;
   ConvVSC* conv_dst;
@@ -1842,7 +1842,7 @@ void NET_del_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size) {
     if (delete[i]) {
 
       conv = CONVVSC_array_get(old_conv_array,i);
-      
+
       // Clear connections bus - "conv to be deleted"
       CONVVSC_set_ac_bus(conv,NULL);  // also removes conv from bus->convs list
       CONVVSC_set_reg_bus(conv,NULL);
@@ -1862,17 +1862,17 @@ void NET_del_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size) {
       bus = CONVVSC_get_ac_bus(conv_src);
       reg_bus = CONVVSC_get_reg_bus(conv_src);
       dc_bus = CONVVSC_get_dc_bus(conv_src);
-      
-      // Clear connections bus - old conv 
+
+      // Clear connections bus - old conv
       CONVVSC_set_ac_bus(conv_src,NULL);       // also removes conv from bus->convs list
       CONVVSC_set_reg_bus(conv_src,NULL);
       CONVVSC_set_dc_bus(conv_src,NULL);
-      
+
       // Add connections bus - new conv
       CONVVSC_set_ac_bus(conv_dst,bus);        // also adds conv to bus->convs list
       CONVVSC_set_reg_bus(conv_dst,reg_bus);
       CONVVSC_set_dc_bus(conv_dst,dc_bus);
-      
+
       index++;
     }
   }
@@ -1889,15 +1889,15 @@ void NET_del_vsc_convs(Net* net, ConvVSC** conv_ptr_array, int size) {
 
 void NET_add_dc_buses(Net* net, BusDC** bus_ptr_array, int size) {
   /** Adds dc buses to the network. The entire bus array is
-   *  relocated, the data is copied (except flags for the new buses), 
+   *  relocated, the data is copied (except flags for the new buses),
    *  and the bus connections are stolen.
    */
-  
+
   // Local variables
   BusDC* bus_src;
   BusDC* bus_dst;
   BusDC* bus;
-  BusDC* old_bus_array; 
+  BusDC* old_bus_array;
   int old_num_buses;
   int num;
   int index;
@@ -1942,7 +1942,7 @@ void NET_add_dc_buses(Net* net, BusDC** bus_ptr_array, int size) {
 
     // Copy data (except index, hash info, and connections)
     BUSDC_copy_from_dc_bus(bus_dst,bus_src);
-    
+
     // Clear flags
     if (i >= old_num_buses)
       BUSDC_clear_flags(bus_dst,FLAG_ALL);
@@ -1958,7 +1958,7 @@ void NET_add_dc_buses(Net* net, BusDC** bus_ptr_array, int size) {
     // Connections - csc conv
     while (BUSDC_get_csc_conv(bus_src))
       CONVCSC_set_dc_bus(BUSDC_get_csc_conv(bus_src),bus_dst);
-    
+
     // Connections - vsc conv
     while (BUSDC_get_vsc_conv(bus_src))
       CONVVSC_set_dc_bus(BUSDC_get_vsc_conv(bus_src),bus_dst);
@@ -1976,9 +1976,9 @@ void NET_add_dc_buses(Net* net, BusDC** bus_ptr_array, int size) {
 void NET_del_dc_buses(Net* net, BusDC** bus_ptr_array, int size) {
   /** Removes dc buses from the network. The entire bus array is
    *  relocated, the data is copied, and the bus connections are set.
-   *  Network flags are cleared. 
+   *  Network flags are cleared.
    */
-  
+
   // Local variables
   BusDC* bus_src;
   BusDC* bus_dst;
@@ -2028,7 +2028,7 @@ void NET_del_dc_buses(Net* net, BusDC** bus_ptr_array, int size) {
     if (delete[i]) {
 
       bus = BUSDC_array_get(old_bus_array,i);
-      
+
       // Clear connections
       while (BUSDC_get_branch_k(bus))
         BRANCHDC_set_bus_k(BUSDC_get_branch_k(bus),NULL);
@@ -2039,20 +2039,20 @@ void NET_del_dc_buses(Net* net, BusDC** bus_ptr_array, int size) {
       while (BUSDC_get_vsc_conv(bus))
         CONVVSC_set_dc_bus(BUSDC_get_vsc_conv(bus),NULL);
     }
-    
+
     // Keep
     else {
-      
+
       bus_src = BUSDC_array_get(old_bus_array,i);
       bus_dst = NET_get_dc_bus(net,index);
 
       // Copy data (except index, hash info, and connections)
       BUSDC_copy_from_dc_bus(bus_dst,bus_src);
-      
+
       // Connection - branch k
       while (BUSDC_get_branch_k(bus_src))
         BRANCHDC_set_bus_k(BUSDC_get_branch_k(bus_src),bus_dst);
-      
+
       // Connection - branch m
       while (BUSDC_get_branch_m(bus_src))
         BRANCHDC_set_bus_m(BUSDC_get_branch_m(bus_src),bus_dst);
@@ -2060,11 +2060,11 @@ void NET_del_dc_buses(Net* net, BusDC** bus_ptr_array, int size) {
       // Connections - csc conv
       while (BUSDC_get_csc_conv(bus_src))
         CONVCSC_set_dc_bus(BUSDC_get_csc_conv(bus_src),bus_dst);
-            
+
       // Connections - vsc conv
       while (BUSDC_get_vsc_conv(bus_src))
         CONVVSC_set_dc_bus(BUSDC_get_vsc_conv(bus_src),bus_dst);
-      
+
       index++;
     }
   }
@@ -2084,10 +2084,10 @@ void NET_del_dc_buses(Net* net, BusDC** bus_ptr_array, int size) {
 
 void NET_add_dc_branches(Net* net, BranchDC** br_ptr_array, int size) {
   /** Adds DC branches to the network. The entire branch array is
-   *  relocated, the data is copied (except flags for the new branches), 
+   *  relocated, the data is copied (except flags for the new branches),
    *  and the bus connections are stolen.
    */
-  
+
   // Local variables
   BranchDC* br_src;
   BranchDC* br_dst;
@@ -2117,7 +2117,7 @@ void NET_add_dc_branches(Net* net, BranchDC** br_ptr_array, int size) {
     else
       br_ptr_array[i] = NULL;                      // clear to ignore below
   }
-  
+
   // New branches
   net->dc_branch = NULL;
   net->num_dc_branches = 0;
@@ -2143,12 +2143,12 @@ void NET_add_dc_branches(Net* net, BranchDC** br_ptr_array, int size) {
     // Clear flags
     if (i >= old_num_branches)
       BRANCHDC_clear_flags(br_dst,FLAG_ALL);
-    
+
     // Save old connections
     bus_k = BRANCHDC_get_bus_k(br_src);
     bus_m = BRANCHDC_get_bus_m(br_src);
 
-    // Clear connections bus - old branch 
+    // Clear connections bus - old branch
     BRANCHDC_set_bus_k(br_src,NULL);      // also removes branch from bus->branches_k list
     BRANCHDC_set_bus_m(br_src,NULL);      // also removes branch from bus->branches_m list
 
@@ -2166,9 +2166,9 @@ void NET_add_dc_branches(Net* net, BranchDC** br_ptr_array, int size) {
 void NET_del_dc_branches(Net* net, BranchDC** br_ptr_array, int size) {
   /** Removes DC branches from the network. The entire branch array is
    *  relocated, the data is copied, and the bus connections are set.
-   *  Network flags are cleared. 
+   *  Network flags are cleared.
    */
-  
+
   // Local variables
   BranchDC* br_src;
   BranchDC* br_dst;
@@ -2238,15 +2238,15 @@ void NET_del_dc_branches(Net* net, BranchDC** br_ptr_array, int size) {
       // Save old connections
       bus_k = BRANCHDC_get_bus_k(br_src);
       bus_m = BRANCHDC_get_bus_m(br_src);
-      
-      // Clear connections bus - old branch 
+
+      // Clear connections bus - old branch
       BRANCHDC_set_bus_k(br_src,NULL);   // also removes branch from bus->branches_k list
       BRANCHDC_set_bus_m(br_src,NULL);   // also removes branch from bus->branches_m list
-      
+
       // Add connections bus - new branch
       BRANCHDC_set_bus_k(br_dst,bus_k);      // also adds branch to bus->branches_k list
       BRANCHDC_set_bus_m(br_dst,bus_m);      // also adds branch to bus->branches_m list
-      
+
       index++;
     }
   }
@@ -2263,10 +2263,10 @@ void NET_del_dc_branches(Net* net, BranchDC** br_ptr_array, int size) {
 
 void NET_add_facts(Net* net, Facts** f_ptr_array, int size) {
   /** Adds facts devices to the network. The entire facts array is
-   *  relocated, the data is copied (except flags for the new facts), 
+   *  relocated, the data is copied (except flags for the new facts),
    *  and the bus connections are stolen.
    */
-  
+
   // Local variables
   Facts* f_src;
   Facts* f_dst;
@@ -2297,7 +2297,7 @@ void NET_add_facts(Net* net, Facts** f_ptr_array, int size) {
     else
       f_ptr_array[i] = NULL;                        // clear to ignore below
   }
-  
+
   // New facts
   net->facts = NULL;
   net->num_facts = 0;
@@ -2327,7 +2327,7 @@ void NET_add_facts(Net* net, Facts** f_ptr_array, int size) {
       FACTS_clear_flags(f_dst,FLAG_BOUNDED);
       FACTS_clear_flags(f_dst,FLAG_SPARSE);
     }
-    
+
     // Save old connections
     bus_k = FACTS_get_bus_k(f_src);
     bus_m = FACTS_get_bus_m(f_src);
@@ -2353,9 +2353,9 @@ void NET_add_facts(Net* net, Facts** f_ptr_array, int size) {
 void NET_del_facts(Net* net, Facts** f_ptr_array, int size) {
   /** Removes facts from the network. The entire facts array is
    *  relocated, the data is copied, and the bus connections are set.
-   *  Network flags are cleared. 
+   *  Network flags are cleared.
    */
-  
+
   // Local variables
   Facts* f_src;
   Facts* f_dst;
@@ -2394,7 +2394,7 @@ void NET_del_facts(Net* net, Facts** f_ptr_array, int size) {
         f_ptr_array[i] = NULL;
     }
   }
-  
+
   // New facts
   net->facts = NULL;
   net->num_facts = 0;
@@ -2428,24 +2428,24 @@ void NET_del_facts(Net* net, Facts** f_ptr_array, int size) {
       bus_k = FACTS_get_bus_k(f_src);
       bus_m = FACTS_get_bus_m(f_src);
       reg_bus = FACTS_get_reg_bus(f_src);
-      
+
       // Clear connections bus - old facts
       FACTS_set_bus_k(f_src,NULL);   // also removes facts from bus->facts_k list
       FACTS_set_bus_m(f_src,NULL);   // also removes facts from bus->facts_m list
       FACTS_set_reg_bus(f_src,NULL); // also removes facts from bus->reg_facts list
-      
+
       // Add connections bus - new facts
       FACTS_set_bus_k(f_dst,bus_k);      // also adds facts to bus->facts_k list
       FACTS_set_bus_m(f_dst,bus_m);      // also adds facts to bus->facts_m list
       FACTS_set_reg_bus(f_dst,reg_bus);  // also adds facts to bus->reg_facts list
-      
+
       index++;
     }
   }
 
   // Delete old facts
   FACTS_array_del(old_f_array,old_num_facts);
-  
+
   // Delete delete flags
   free(delete);
 
@@ -2462,7 +2462,7 @@ void NET_add_red_bus(Net* net, Bus* bus) {
 }
 
 void NET_add_vargens_from_params(Net* net, Bus* bus_list, REAL power_capacity, REAL power_base, REAL power_std, REAL corr_radius, REAL corr_value) {
-  
+
   // Local variables
   REAL total_load_P;
   REAL max_total_load_P;
@@ -2528,7 +2528,7 @@ void NET_add_vargens_from_params(Net* net, Bus* bus_list, REAL power_capacity, R
 }
 
 void NET_add_batteries_from_params(Net* net, Bus* bus_list, REAL power_capacity,  REAL energy_capacity, REAL eta_c, REAL eta_d) {
-  
+
   // Local variables
   REAL total_load_P;
   REAL max_total_load_P;
@@ -2550,7 +2550,7 @@ void NET_add_batteries_from_params(Net* net, Bus* bus_list, REAL power_capacity,
     net->error_flag = TRUE;
     return;
   }
-  
+
   // Clear
   BAT_array_del(net->bat,net->num_bats);
   net->bat = NULL;
@@ -3008,16 +3008,16 @@ void NET_clear_sensitivities(Net* net) {
 
 void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch_index_map, int mode) {
   /** Copies data from another network except topological information.
-   *  
+   *
    *  Parameters
    *  ----------
    *  net
    *  other_net
-   *  bus_index_map 
+   *  bus_index_map
    *  branch_index_map
    *  mode : -1 (copy to merged net), 0 (one-to-one copy), 1 (copy from merged net)
    */
-  
+
   // Local variables
   Bus* bus = NULL;
   Bus* other_bus = NULL;
@@ -3064,7 +3064,7 @@ void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch
     for (i = 0; i < other_net->num_branches; i++)
       branch_index_map[i] = i;
   }
-  
+
   // Buses
   for (i = 0; i < other_net->num_buses; i++) {
     other_bus = NET_get_bus(other_net,i);
@@ -3086,21 +3086,21 @@ void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch
   }
 
   // Generators
-  for (i = 0; i < net->num_gens; i++) {  
+  for (i = 0; i < net->num_gens; i++) {
     gen = NET_get_gen(net,i);
     other_gen = NET_get_gen(other_net,i);
     GEN_copy_from_gen(gen,other_gen);
   }
 
   // Var generators
-  for (i = 0; i < net->num_vargens; i++) {  
+  for (i = 0; i < net->num_vargens; i++) {
     vargen = NET_get_vargen(net,i);
     other_vargen = NET_get_vargen(other_net,i);
     VARGEN_copy_from_vargen(vargen,other_vargen);
   }
-  
+
   // Shunts
-  for (i = 0; i < net->num_shunts; i++) { 
+  for (i = 0; i < net->num_shunts; i++) {
     shunt = NET_get_shunt(net,i);
     other_shunt = NET_get_shunt(other_net,i);
     SHUNT_copy_from_shunt(shunt,other_shunt);
@@ -3142,14 +3142,14 @@ void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch
   }
 
   // DC branches
-  for (i = 0; i < net->num_dc_branches; i++) {  
+  for (i = 0; i < net->num_dc_branches; i++) {
     dc_branch = NET_get_dc_branch(net,i);
     other_dc_branch = NET_get_dc_branch(other_net,i);
     BRANCHDC_copy_from_dc_branch(dc_branch,other_dc_branch);
   }
 
   // Facts
-  for (i = 0; i < net->num_facts; i++) {  
+  for (i = 0; i < net->num_facts; i++) {
     facts = NET_get_facts(net,i);
     other_facts = NET_get_facts(other_net,i);
     FACTS_copy_from_facts(facts,other_facts);
@@ -3167,22 +3167,22 @@ void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch
     net->bus_hash_name = NULL;
     net->dc_bus_hash_number = NULL;
     net->dc_bus_hash_name = NULL;
-    
+
     // Error
     net->error_flag = other_net->error_flag;
     strcpy(net->error_string, other_net->error_string);
-    
+
     // Output
     strcpy(net->output_string, other_net->output_string);
-    
+
     // Base power
     net->base_power = other_net->base_power;
-    
+
     // Num flags
     net->num_vars = other_net->num_vars;
     net->num_fixed = other_net->num_fixed;
     net->num_bounded = other_net->num_bounded;
-    net->num_sparse = other_net->num_sparse;  
+    net->num_sparse = other_net->num_sparse;
 
     // Red buses
     BUS_list_del(net->red_bus);
@@ -3213,7 +3213,7 @@ void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch
   // Clear flags
   if (mode != 0) // from merged or to merged
     NET_clear_flags(net);
-    
+
   // Clean up
   if (cleanup_bus_im)
     free(bus_index_map);
@@ -3224,7 +3224,7 @@ void NET_copy_from_net(Net* net, Net* other_net, int* bus_index_map, int* branch
 Net* NET_get_copy(Net* net, BOOL merge_buses) {
   /** Gets deep copy of network.
    */
-  
+
   // Local variables
   Net* new_net = NULL;
   Bus* bus = NULL;
@@ -3245,7 +3245,7 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
   int i;
 
   int* bus_index_map;    // original net to new net
-  int* branch_index_map; // original net to new net 
+  int* branch_index_map; // original net to new net
   int new_num_buses;
   int new_num_branches;
   Node* node;
@@ -3253,7 +3253,7 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
   // Check
   if (!net)
     return new_net;
-  
+
   // Equiv buses
   if (merge_buses)
     NET_set_equiv_buses(net);
@@ -3287,7 +3287,7 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
     else
       branch_index_map[i] = -1;
   }
-  
+
   // Allocate
   new_net = NET_new(net->num_periods);
   NET_set_bus_array(new_net,BUS_array_new(new_num_buses,net->num_periods),new_num_buses);
@@ -3302,17 +3302,17 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
   NET_set_dc_bus_array(new_net,BUSDC_array_new(net->num_dc_buses,net->num_periods), net->num_dc_buses);
   NET_set_dc_branch_array(new_net,BRANCHDC_array_new(net->num_dc_branches,net->num_periods), net->num_dc_branches);
   NET_set_facts_array(new_net,FACTS_array_new(net->num_facts,net->num_periods), net->num_facts);
-  
+
   // Buses
   for (i = 0; i < net->num_buses; i++) {
-    
+
     bus = NET_get_bus(net,i);
     new_bus = NET_get_bus(new_net,bus_index_map[i]); // possibly many buses point to the same new_bus
 
     // Oindex
     if (merge_buses)
       BUS_set_oindex(new_bus, BUS_get_index(bus));
-    
+
     // Connections gen
     for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen))
       BUS_add_gen(new_bus,NET_get_gen(new_net,GEN_get_index(gen)));
@@ -3414,7 +3414,7 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
     for (vsc_conv = BUSDC_get_vsc_conv(dc_bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_dc(vsc_conv))
       BUSDC_add_vsc_conv(new_dc_bus,NET_get_vsc_conv(new_net,CONVVSC_get_index(vsc_conv)));
   }
-  
+
   // Copy rest of data
   NET_copy_from_net(new_net,
                     net,
@@ -3425,7 +3425,7 @@ Net* NET_get_copy(Net* net, BOOL merge_buses) {
   // Clean up
   free(bus_index_map);
   free(branch_index_map);
-  
+
   // Return
   return new_net;
 }
@@ -3658,13 +3658,32 @@ Mat* NET_create_vargen_P_sigma(Net* net, int spread, REAL corr) {
 void NET_del(Net* net) {
   if (net) {
     NET_clear_data(net);
+
+    // Free properties because, clear data calls reinitialize
+    free(net->bus_v_max);
+    free(net->bus_v_min);
+    free(net->bus_v_vio);
+    free(net->bus_P_mis);
+    free(net->bus_Q_mis);
+    free(net->gen_P_cost);
+    free(net->gen_v_dev);
+    free(net->gen_Q_vio);
+    free(net->gen_P_vio);
+    free(net->tran_v_vio);
+    free(net->tran_r_vio);
+    free(net->tran_p_vio);
+    free(net->shunt_v_vio);
+    free(net->shunt_b_vio);
+    free(net->load_P_util);
+    free(net->load_P_vio);
+
     free(net);
   }
 }
 
 Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
-  /** Extracts subnetwork containing the specified AC buses, 
-   *  and any embedded HVDC components and net. 
+  /** Extracts subnetwork containing the specified AC buses,
+   *  and any embedded HVDC components and net.
    */
 
   // Local variables
@@ -3683,7 +3702,7 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   ConvVSC* vsc_conv1;
   BusDC* dc_bus;
   BranchDC* dc_br;
-  
+
   char* keep_bus;
   char* keep_dc_bus;
   char* delete_br;
@@ -3704,7 +3723,7 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   ConvVSC** del_vsc_conv_ptr_array;
   BusDC** del_dc_bus_ptr_array;
   BranchDC** del_dc_br_ptr_array;
-  
+
   int num_del_bus;
   int num_del_br;
   int num_del_gen;
@@ -3757,9 +3776,9 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
 
   // Mark buses to keep
   for (i = 0; i < size; i++) {
-    
+
     bus = bus_ptr_array[i];
-    
+
     // No bus
     if (!bus)
       continue;
@@ -3767,8 +3786,8 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
     // Not on network
     if (bus != NET_get_bus(net, BUS_get_index(bus)))
       continue;
-    
-    keep_bus[BUS_get_index(bus)] = 1;	
+
+    keep_bus[BUS_get_index(bus)] = 1;
   }
 
   // Fill del ptr arrays (AC)
@@ -3783,7 +3802,7 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   num_del_csc_conv = 0;
   num_del_vsc_conv = 0;
   for (i = 0; i < new_net->num_buses; i++) {
-    
+
     bus = NET_get_bus(new_net,i);
 
     if (keep_bus[BUS_get_index(bus)])
@@ -3822,7 +3841,7 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
       del_vargen_ptr_array[num_del_vargen] = vargen;
       num_del_vargen++;
     }
-   
+
     // Branches k
     for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
       if (!delete_br[BRANCH_get_index(br)]) {
@@ -3859,7 +3878,7 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
       }
     }
 
-    // CSC 
+    // CSC
     for (csc_conv = BUS_get_csc_conv(bus); csc_conv != NULL; csc_conv = CONVCSC_get_next_ac(csc_conv)) {
       delete_csc[CONVCSC_get_index(csc_conv)] = 1;
       del_csc_conv_ptr_array[num_del_csc_conv] = csc_conv;
@@ -3876,7 +3895,7 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
 
   // More CSC to del
   for (i = 0; i < new_net->num_csc_convs; i++) {
-    
+
     csc_conv = NET_get_csc_conv(new_net,i);
 
     // Known to be deleted
@@ -3920,7 +3939,7 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
 
   // More VSC to del
   for (i = 0; i < new_net->num_vsc_convs; i++) {
-    
+
     vsc_conv = NET_get_vsc_conv(new_net,i);
 
     // Known to be deleted
@@ -3966,7 +3985,7 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   num_del_dc_bus = 0;
   num_del_dc_br = 0;
   for (i = 0; i < new_net->num_dc_buses; i++) {
-    
+
     dc_bus = NET_get_dc_bus(new_net,i);
 
     if (keep_dc_bus[BUSDC_get_index(dc_bus)])
@@ -3994,7 +4013,7 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
       }
     }
   }
-  
+
   // Delete components
   NET_del_buses(new_net, del_bus_ptr_array, num_del_bus);
   NET_del_branches(new_net, del_br_ptr_array, num_del_br);
@@ -4031,10 +4050,10 @@ Net* NET_extract_subnet(Net* net, Bus** bus_ptr_array, int size) {
   free(del_vsc_conv_ptr_array);
   free(del_dc_bus_ptr_array);
   free(del_dc_br_ptr_array);
-  
+
   // Clear flags
   NET_clear_flags(net);
-  
+
   // Return
   return new_net;
 }
@@ -5153,7 +5172,6 @@ int NET_get_num_reg_facts(Net* net, BOOL only_in_service) {
   return n;
 }
 
-
 int NET_get_num_bounded(Net* net) {
   if (net)
     return net->num_bounded;
@@ -5290,13 +5308,13 @@ Vec* NET_get_var_values(Net* net, int code) {
   // Facts
   for (i = 0; i < net->num_facts; i++)
     FACTS_get_var_values(FACTS_array_get(net->facts,i),values,code);
-  
+
   // Return
   return values;
 }
 
 char* NET_get_var_info_string(Net* net, int index) {
-  
+
   // Local variables
   char* info;
   int i;
@@ -5339,7 +5357,7 @@ char* NET_get_var_info_string(Net* net, int index) {
     if (info)
       return info;
   }
-  
+
   // Variable generators
   for (i = 0; i < net->num_vargens; i++) {
     info = VARGEN_get_var_info_string(VARGEN_array_get(net->vargen,i),index);
@@ -5390,7 +5408,7 @@ char* NET_get_var_info_string(Net* net, int index) {
   }
 
   // Return
-  return NULL;  
+  return NULL;
 }
 
 Mat* NET_get_var_projection(Net* net, char obj_type, char prop_mask, unsigned char var, int t_start, int t_end) {
@@ -5831,7 +5849,7 @@ char* NET_get_json_string(Net* net) {
   // Output
   output = (char*)malloc(sizeof(char)*max_size);
   output_start = output;
-  
+
   // Write
   JSON_start(output);
   JSON_int(temp,output,"num_periods",net->num_periods,FALSE);
@@ -5852,7 +5870,7 @@ char* NET_get_json_string(Net* net) {
   JSON_list_json(temp,output,"redundant_buses",net->red_bus,Bus,BUS_get_json_string,BUS_get_next,TRUE);
 
   JSON_end(output);
-  
+
   // Resize
   output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
 
@@ -5942,14 +5960,14 @@ char* NET_mark_reachable_dc_buses(Net* net, BusDC* seed_bus) {
   ARRAY_zalloc(processed,char,net->num_dc_buses);
 
   reachable[BUSDC_get_index(seed_bus)] = 1; // seed
-  
+
   while (!done) {
 
     done = TRUE;
     for (i = 0; i < net->num_dc_buses; i++) { // inefficient - use queue
 
       if (reachable[i] && !processed[i]) {
-        
+
         bus = NET_get_dc_bus(net, i);
 
         processed[i] = 1;
@@ -5958,22 +5976,22 @@ char* NET_mark_reachable_dc_buses(Net* net, BusDC* seed_bus) {
           if (!reachable[BUSDC_get_index(adj_bus)]) {
             reachable[BUSDC_get_index(adj_bus)] = 1;
             done = FALSE;
-          }          
+          }
         }
         for (br = BUSDC_get_branch_m(bus); br != NULL; br = BRANCHDC_get_next_m(br)) {
           adj_bus = BRANCHDC_get_bus_k(br);
           if (!reachable[BUSDC_get_index(adj_bus)]) {
             reachable[BUSDC_get_index(adj_bus)] = 1;
             done = FALSE;
-          }          
+          }
         }
-      }      
-    }    
+      }
+    }
   }
 
   free(processed);
 
-  return reachable;  
+  return reachable;
 }
 
 Net* NET_new(int num_periods) {
@@ -6012,7 +6030,7 @@ void NET_clip_switched_shunts_b(Net* net, int t) {
         SHUNT_set_b(s,SHUNT_get_b_max(s),t);
       if (SHUNT_get_b(s,t) < SHUNT_get_b_min(s))
         SHUNT_set_b(s,SHUNT_get_b_min(s),t);
-    }          
+    }
   }
 }
 
@@ -6027,7 +6045,7 @@ void NET_set_branch_array(Net* net, Branch* branch, int num) {
 
     // Clear
     BRANCH_array_del(net->branch, net->num_branches);
-    
+
     // Set
     net->branch = branch;
     net->num_branches = num;
@@ -6129,7 +6147,7 @@ void NET_set_bat_array(Net* net, Bat* bat, int num) {
 
     // Clear
     BAT_array_del(net->bat, net->num_bats);
-    
+
     // Set
     net->bat = bat;
     net->num_bats = num;
@@ -6242,7 +6260,7 @@ void NET_set_vargen_buses(Net* net, Bus* bus_list) {
   while (i < net->num_vargens && bus) {
     gen = VARGEN_array_get(net->vargen,i);
     VARGEN_set_bus(gen,bus); // also removes old connection
-    BUS_add_vargen(bus,gen); 
+    BUS_add_vargen(bus,gen);
     bus = BUS_get_next(bus);
     i++;
   }
@@ -6595,7 +6613,7 @@ char* NET_get_show_components_str(Net* net, int output_level) {
     sprintf(out+strlen(out),"  star           : %d\n",NET_get_num_star_buses(net,TRUE));
     sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_buses_out_of_service(net));
   }
-  
+
   sprintf(out+strlen(out),"shunts           : %d\n",NET_get_num_shunts(net,FALSE)); // all
   if (output_level > 1) {
     sprintf(out+strlen(out),"  fixed          : %d\n",NET_get_num_fixed_shunts(net,TRUE));
@@ -6620,27 +6638,27 @@ char* NET_get_show_components_str(Net* net, int output_level) {
     sprintf(out+strlen(out),"  reg            : %d\n",NET_get_num_reg_gens(net,TRUE));
     sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_gens_out_of_service(net));
   }
-  
+
   sprintf(out+strlen(out),"loads            : %d\n",NET_get_num_loads(net,FALSE)); // all
   if (output_level > 1) {
     sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_loads_out_of_service(net));
   }
-  
+
   sprintf(out+strlen(out),"vargens          : %d\n",NET_get_num_vargens(net,FALSE)); // all
   if (output_level > 1) {
     sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_vargens_out_of_service(net));
   }
-  
+
   sprintf(out+strlen(out),"batteries        : %d\n",NET_get_num_bats(net,FALSE)); // all
   if (output_level > 1) {
     sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_bats_out_of_service(net));
   }
-  
+
   sprintf(out+strlen(out),"facts            : %d\n",NET_get_num_facts(net,FALSE)); // all
   if (output_level > 1) {
     sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_facts_out_of_service(net));
   }
-  
+
   sprintf(out+strlen(out),"csc converters   : %d\n",NET_get_num_csc_convs(net,FALSE)); // all
   if (output_level > 1) {
     sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_csc_convs_out_of_service(net));
@@ -6654,12 +6672,12 @@ char* NET_get_show_components_str(Net* net, int output_level) {
     sprintf(out+strlen(out),"  f ac mode      : %d\n",NET_get_num_vsc_convs_in_f_ac_mode(net,TRUE));
     sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_vsc_convs_out_of_service(net));
   }
-  
+
   sprintf(out+strlen(out),"dc buses         : %d\n",NET_get_num_dc_buses(net,FALSE)); // all
   if (output_level > 1) {
     sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_dc_buses_out_of_service(net));
   }
-  
+
   sprintf(out+strlen(out),"dc branches      : %d\n",NET_get_num_dc_branches(net,FALSE)); // all
   if (output_level > 1) {
     sprintf(out+strlen(out),"  out of service : %d\n",NET_get_num_dc_branches_out_of_service(net));
@@ -6798,13 +6816,13 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
 
   // In Service
   if (BUS_is_in_service(bus)) {
-  
+
     // Voltage magnitude
     if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG) && var_values)
       v = VEC_get(var_values,BUS_get_index_v_mag(bus,t));
     else
       v = BUS_get_v_mag(bus,t);
-    
+
     // Maximum and minimum voltage magnitudes
     //***************************************
     if (net->bus_v_max[t] == 0 && net->bus_v_min[t] == 0) {
@@ -6817,7 +6835,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
       if (v < net->bus_v_min[t])
         net->bus_v_min[t] = v;
     }
-    
+
     // Normal voltage magnitude limit violations
     //******************************************
     dv = 0;
@@ -6827,7 +6845,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
       dv = BUS_get_v_min_norm(bus)-v;
     if (dv > net->bus_v_vio[t])
       net->bus_v_vio[t] = dv;
-    
+
     // Regulation voltage magntiude limit violations
     //**********************************************
     dv = 0;
@@ -6843,23 +6861,23 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
       if (dv > net->shunt_v_vio[t])
         net->shunt_v_vio[t] = dv;
     }
-    
+
     // Bus regulated by gen
     if (BUS_is_regulated_by_gen(bus,TRUE)) { // false if all reg gens are out of service
-      
+
       // Voltage set point deviation
       //****************************
       if (fabs(v-BUS_get_v_set(bus,t)) > net->gen_v_dev[t])
         net->gen_v_dev[t] = fabs(v-BUS_get_v_set(bus,t));
     }
-    
+
     // Generators
     for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
-      
+
       // Out of service
       if (!GEN_is_in_service(gen))
         continue;
-      
+
       // P Q
       if (GEN_has_flags(gen,FLAG_VARS,GEN_VAR_P) && var_values)
         P = VEC_get(var_values,GEN_get_index_P(gen,t));
@@ -6869,18 +6887,18 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
         Q = VEC_get(var_values,GEN_get_index_Q(gen,t));
       else
         Q = GEN_get_Q(gen,t);
-      
+
       // Injections
       BUS_inject_P(bus,P,t);
       BUS_inject_Q(bus,Q,t);
-      
+
       // Active power generation cost
       //*****************************
       net->gen_P_cost[t] += GEN_get_P_cost_for(gen,P);
-      
+
       // Reacive power of regulator
       if (GEN_is_regulator(gen) && !GEN_is_slack(gen)) {
-        
+
         // Reactive power limit violations
         //********************************
         dQ = 0;
@@ -6891,7 +6909,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
         if (dQ > net->gen_Q_vio[t])
           net->gen_Q_vio[t] = dQ;
       }
-      
+
       // Active power limit violations
       //******************************
       dP = 0;
@@ -6909,7 +6927,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
       // Out of service
       if (!LOAD_is_in_service(load))
         continue;
-    
+
       if (LOAD_has_flags(load,FLAG_VARS,LOAD_VAR_P) && var_values)
         P = VEC_get(var_values,LOAD_get_index_P(load,t));
       else
@@ -6918,15 +6936,15 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
         Q = VEC_get(var_values,LOAD_get_index_Q(load,t));
       else
         Q = LOAD_get_Q(load,t);
-    
+
       // Injections
       BUS_inject_P(bus,-P,t);
       BUS_inject_Q(bus,-Q,t);
-    
+
       // Active power consumption utility
       //*********************************
       net->load_P_util[t] += LOAD_get_P_util_for(load,P);
-    
+
       // Active power limit violations
       //******************************
       dP = 0;
@@ -6937,30 +6955,30 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
       if (dP > net->load_P_vio[t])
         net->load_P_vio[t] = dP;
     }
-  
+
     // Batteries
     for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
 
       // Out of service
       if (!BAT_is_in_service(bat))
         continue;
-    
+
       if (BAT_has_flags(bat,FLAG_VARS,BAT_VAR_P) && var_values)
         P = VEC_get(var_values,BAT_get_index_Pc(bat,t))-VEC_get(var_values,BAT_get_index_Pd(bat,t));
       else
         P = BAT_get_P(bat,t);
-    
+
       // Injections
       BUS_inject_P(bus,-P,t);
     }
-  
+
     // Variable generators
     for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
 
       // Out of service
       if (!VARGEN_is_in_service(vargen))
         continue;
-    
+
       if (VARGEN_has_flags(vargen,FLAG_VARS,VARGEN_VAR_P) && var_values)
         P = VEC_get(var_values,VARGEN_get_index_P(vargen,t));
       else
@@ -6969,32 +6987,32 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
         Q = VEC_get(var_values,VARGEN_get_index_Q(vargen,t));
       else
         Q = VARGEN_get_Q(vargen,t);
-    
+
       // Injections
       BUS_inject_P(bus,P,t);
       BUS_inject_Q(bus,Q,t);
     }
-  
+
     // Shunts
     for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
 
       // Out of service
       if (!SHUNT_is_in_service(shunt))
         continue;
-    
+
       shunt_g = SHUNT_get_g(shunt);
       if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC) && var_values)
         shunt_b = VEC_get(var_values,SHUNT_get_index_b(shunt,t));
       else
         shunt_b = SHUNT_get_b(shunt,t);
-    
+
       // Flows
       BUS_inject_P(bus,-shunt_g*v*v,t);
       BUS_inject_Q(bus,shunt_b*v*v,t);
-    
+
       // Switched shunts
       if (SHUNT_is_switched_v(shunt)) {
-      
+
         // Switched shunt susceptance violations
         //**************************************
         shunt_db = 0;
@@ -7013,7 +7031,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
       // Out of service
       if (!CONVVSC_is_in_service(vsc_conv))
         continue;
-    
+
       if (CONVVSC_has_flags(vsc_conv,FLAG_VARS,CONVVSC_VAR_P) && var_values)
         P = VEC_get(var_values,CONVVSC_get_index_P(vsc_conv,t));
       else
@@ -7022,7 +7040,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
         Q = VEC_get(var_values,CONVVSC_get_index_Q(vsc_conv,t));
       else
         Q = CONVVSC_get_Q(vsc_conv,t);
-    
+
       // Injections
       BUS_inject_P(bus,P,t);
       BUS_inject_Q(bus,Q,t);
@@ -7034,7 +7052,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
       // Out of service
       if (!CONVCSC_is_in_service(csc_conv))
         continue;
-    
+
       if (CONVCSC_has_flags(csc_conv,FLAG_VARS,CONVCSC_VAR_P) && var_values)
         P = VEC_get(var_values,CONVCSC_get_index_P(csc_conv,t));
       else
@@ -7043,7 +7061,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
         Q = VEC_get(var_values,CONVCSC_get_index_Q(csc_conv,t));
       else
         Q = CONVCSC_get_Q(csc_conv,t);
-    
+
       // Injections
       BUS_inject_P(bus,P,t);
       BUS_inject_Q(bus,Q,t);
@@ -7055,7 +7073,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
       // Out of service
       if (!FACTS_is_in_service(facts))
         continue;
-    
+
       if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P) && var_values)
         P = VEC_get(var_values,FACTS_get_index_P_k(facts,t));
       else
@@ -7064,7 +7082,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
         Q = VEC_get(var_values,FACTS_get_index_Q_k(facts,t));
       else
         Q = FACTS_get_Q_k(facts,t);
-    
+
       // Injections
       BUS_inject_P(bus,P,t);
       BUS_inject_Q(bus,Q,t);
@@ -7074,7 +7092,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
       // Out of service
       if (!FACTS_is_in_service(facts))
         continue;
-    
+
       if (FACTS_has_flags(facts,FLAG_VARS,FACTS_VAR_P) && var_values)
         P = VEC_get(var_values,FACTS_get_index_P_m(facts,t));
       else
@@ -7088,14 +7106,14 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
       BUS_inject_P(bus,P,t);
       BUS_inject_Q(bus,Q,t);
     }
-  
+
     // Branches
     for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
 
       // Out of service
       if (!BRANCH_is_in_service(br))
         continue;
-  
+
       // Branch data
       if (BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO) && var_values)
         a = VEC_get(var_values,BRANCH_get_index_ratio(br,t));
@@ -7105,7 +7123,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
         phi = VEC_get(var_values,BRANCH_get_index_phase(br,t));
       else
         phi = BRANCH_get_phase(br,t);
-  
+
       // Tap ratios
       if (BRANCH_is_tap_changer(br)) {
 
@@ -7122,7 +7140,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
 
       // Phase shifts
       if (BRANCH_is_phase_shifter(br)) {
-      
+
         // Phase shift limit violations
         //*****************************
         dphi = 0;
@@ -7143,7 +7161,7 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
       }
     }
   }
-    
+
   // Power mismatches
   if (BUS_get_index(bus) == net->num_buses-1) {
 
@@ -7167,9 +7185,9 @@ void NET_update_properties_step(Net* net, Bus* bus, BusDC* busdc, int t, Vec* va
           BUS_set_P_mis((Bus*)NODE_get_item(node),P,t);
           BUS_set_Q_mis((Bus*)NODE_get_item(node),Q,t);
         }
-      }      
+      }
     }
-    
+
     // Max mismatches
     BUS_array_get_max_mismatches(net->bus,
                                  net->num_buses,
@@ -7211,48 +7229,18 @@ void NET_update_set_points(Net* net) {
 
 void NET_update_reg_Q_participations(Net* net, int t) {
 
-  void* obj;
-  char obj_type;
-  REAL Q_total;
-  REAL Q;
+  // Local variables
   Bus* bus;
   int i;
-  REAL eps = 1e-4;
-  
+  char* fix_flag=NULL;
+
   // Check
   if (!net)
     return;
 
   for (i = 0; i < net->num_buses; i++) {
-
     bus = NET_get_bus(net, i);
-    
-    if (BUS_is_v_set_regulated(bus,TRUE) && BUS_is_in_service(bus)) {
-
-      // Recompute total
-      Q_total = 0;
-      for (REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus)) {
-        if (REG_OBJ_is_in_service(obj_type,obj))
-          Q_total += REG_OBJ_get_Q(obj_type,obj,t);
-      }
-
-      // Safeguard
-      if (0 <= Q_total && Q_total < eps)
-        Q_total = eps;
-      if (0 >= Q_total && Q_total > -eps)
-        Q_total = -eps;
-      
-      // Find good participations
-      for (REG_OBJ_init(&obj_type,&obj,bus); obj != NULL; REG_OBJ_next(&obj_type,&obj,bus)) {
-        if (REG_OBJ_is_in_service(obj_type,obj)) {
-          Q = REG_OBJ_get_Q(obj_type,obj,t);
-          if (Q/Q_total > 0.)
-            REG_OBJ_set_Q_par(obj_type,obj,Q/Q_total > 1.? 1. : Q/Q_total);
-          else
-            REG_OBJ_set_Q_par(obj_type,obj,eps);
-        }
-      }
-    }
+    BUS_update_reg_Q_participations(bus, t, fix_flag);
   }
 }
 
@@ -7310,7 +7298,7 @@ void NET_propagate_data_in_time(Net* net, int start, int end) {
   // Branches
   for (i = 0; i < net->num_branches; i++)
     BRANCH_propagate_data_in_time(BRANCH_array_get(net->branch,i),start,end);
-  
+
   // Generators
   for (i = 0; i < net->num_gens; i++)
     GEN_propagate_data_in_time(GEN_array_get(net->gen,i),start,end);
@@ -7364,7 +7352,7 @@ void NET_localize_gen_regulation(Net* net, int max_dist) {
   int num_neighbors;
   BOOL local;
   int j;
-  
+
   // Check
   if (!net)
     return;
