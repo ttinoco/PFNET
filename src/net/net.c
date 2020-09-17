@@ -2612,7 +2612,8 @@ Bus* NET_bus_hash_number_find(Net* net, int number) {
 
 void NET_bus_hash_name_add(Net* net, Bus* bus) {
   if (net)
-    net->bus_hash_name = BUS_hash_name_add(net->bus_hash_name,bus);
+    if (!NET_bus_hash_name_find(net, BUS_get_name(bus)))
+      net->bus_hash_name = BUS_hash_name_add(net->bus_hash_name,bus);
 }
 
 Bus* NET_bus_hash_name_find(Net* net, char* name) {
@@ -2642,7 +2643,8 @@ BusDC* NET_dc_bus_hash_number_find(Net* net, int number) {
 
 void NET_dc_bus_hash_name_add(Net* net, BusDC* bus) {
   if (net)
-    net->dc_bus_hash_name = BUSDC_hash_name_add(net->dc_bus_hash_name,bus);
+    if (!NET_dc_bus_hash_name_find(net, BUSDC_get_name(bus)))
+      net->dc_bus_hash_name = BUSDC_hash_name_add(net->dc_bus_hash_name,bus);
 }
 
 BusDC* NET_dc_bus_hash_name_find(Net* net, char* name) {
