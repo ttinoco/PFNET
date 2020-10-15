@@ -26,6 +26,7 @@ struct Bat {
   char name[BAT_BUFFER_SIZE]; /**< @brief Battery name */
 
   // Flags
+  short int pre_cont_status; /**< @brief Flag for indicating whether the battery was in service before applying the contingency */
   BOOL in_service;     /**< @brief Flag for indicating whether battery is in service */
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
@@ -160,6 +161,7 @@ void BAT_copy_from_bat(Bat* bat, Bat* other) {
   strcpy(bat->name,other->name);
 
   // Flags
+  bat->pre_cont_status = other->pre_cont_status;
   bat->in_service = other->in_service;
   bat->fixed = other->fixed;
   bat->bounded = other->bounded;
@@ -189,6 +191,13 @@ void BAT_copy_from_bat(Bat* bat, Bat* other) {
 
   // List
   // skip next
+}
+
+short int BAT_get_pre_cont_status(void* bat) {
+  if (bat)
+    return ((Bat*)bat)->pre_cont_status;
+  else
+    return 0;
 }
 
 char BAT_get_flags_vars(Bat* bat) {
@@ -642,6 +651,7 @@ void BAT_init(Bat* bat, int num_periods) {
   
   bat->bus = NULL;
 
+  bat->pre_cont_status = PRE_CONT_UNSET;
   bat->in_service = TRUE;
   bat->fixed = 0x00;
   bat->bounded = 0x00;
@@ -695,6 +705,11 @@ Bat* BAT_new(int num_periods) {
   }
   else
     return NULL;
+}
+
+void BAT_set_pre_cont_status(Bat* bat, short int pre_cont_status) {
+  if (bat && BUS_is_in_service(bat->bus))
+    bat->pre_cont_status = pre_cont_status;
 }
 
 void BAT_set_in_service(Bat* bat, BOOL in_service) {

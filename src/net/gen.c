@@ -27,6 +27,7 @@ struct Gen {
   char name[GEN_BUFFER_SIZE]; /**< @brief Generator name */
 
   // Flags
+  short int pre_cont_status; /**< @brief Flag for indicating whether the generator was in service before applying the contingency */
   BOOL in_service;     /**< @brief Flag for indicating generator is in service. */
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value. */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded. */
@@ -176,6 +177,7 @@ void GEN_copy_from_gen(Gen* gen, Gen* other) {
   strcpy(gen->name,other->name);
 
   // Flags
+  gen->pre_cont_status = other->pre_cont_status;
   gen->in_service = other->in_service;
   gen->fixed = other->fixed;
   gen->bounded = other->bounded;
@@ -218,6 +220,13 @@ void GEN_copy_from_gen(Gen* gen, Gen* other) {
 
   // List
   // skip next
+}
+
+short int GEN_get_pre_cont_status(void* gen) {
+  if (gen)
+    return ((Gen*)gen)->pre_cont_status;
+  else
+    return 0;
 }
 
 char GEN_get_flags_vars(Gen* gen) {
@@ -768,6 +777,7 @@ void GEN_init(Gen* gen, int num_periods) {
 
   ARRAY_clear(gen->name,char,GEN_BUFFER_SIZE);
 
+  gen->pre_cont_status = PRE_CONT_UNSET;
   gen->in_service = TRUE;
   gen->fixed = 0x00;
   gen->bounded = 0x00;
@@ -949,6 +959,11 @@ void GEN_set_reg_bus(Gen* gen, Bus* reg_bus) {
     gen->reg_bus = reg_bus;
     BUS_add_reg_gen(gen->reg_bus,gen);
   }
+}
+
+void GEN_set_pre_cont_status(Gen* gen, short int pre_cont_status) {
+  if (gen && BUS_is_in_service(gen->bus))
+    gen->pre_cont_status = pre_cont_status;
 }
 
 void GEN_set_in_service(Gen* gen, BOOL in_service) {

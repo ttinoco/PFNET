@@ -26,6 +26,7 @@ struct Load {
   char name[LOAD_BUFFER_SIZE]; /**< @brief Load name */
   
   // Flags
+  short int pre_cont_status;   /**< @brief Flag for indicating whether the load was in service before applying the contingency */
   BOOL in_service;     /**< @brief Flag for indicating whether load is in service */
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
@@ -178,6 +179,7 @@ void LOAD_copy_from_load(Load* load, Load* other) {
   strcpy(load->name,other->name);
 
   // Flags
+  load->pre_cont_status = other->pre_cont_status;
   load->in_service = other->in_service;
   load->fixed = other->fixed;
   load->bounded = other->bounded;
@@ -221,6 +223,13 @@ void LOAD_copy_from_load(Load* load, Load* other) {
 
   // List
   // skip next
+}
+
+short int LOAD_get_pre_cont_status(void* load) {
+  if (load)
+    return ((Load*)load)->pre_cont_status;
+  else
+    return 0;
 }
 
 char LOAD_get_flags_vars(Load* load) {
@@ -804,6 +813,7 @@ void LOAD_init(Load* load, int num_periods) {
   
   load->bus = NULL;
 
+  load->pre_cont_status = PRE_CONT_UNSET;
   load->in_service = TRUE;
   load->fixed = 0x00;
   load->bounded = 0x00;
@@ -960,6 +970,11 @@ void LOAD_set_bus(Load* load, Bus* bus) {
     load->bus = bus;
     BUS_add_load(load->bus,load);
   }
+}
+
+void LOAD_set_pre_cont_status(Load* load, short int pre_cont_status) {
+  if (load && BUS_is_in_service(load->bus))
+    load->pre_cont_status = pre_cont_status;
 }
 
 void LOAD_set_in_service(Load* load, BOOL in_service) {

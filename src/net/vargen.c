@@ -27,6 +27,7 @@ struct Vargen {
   char type;                     /**< @brief Variable generator type */
   
   // Flags
+  short int pre_cont_status;   /**< @brief Flag for indicating whether the vargen was in service before applying the contingency */
   BOOL in_service;     /**< @brief Flag for indicating whether vargen is in service */
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
@@ -148,6 +149,7 @@ void VARGEN_copy_from_vargen(Vargen* gen, Vargen* other) {
   gen->type = other->type;
 
   // Flags
+  gen->pre_cont_status = other->pre_cont_status;
   gen->in_service = other->in_service;
   gen->fixed = other->fixed;
   gen->bounded = other->bounded;
@@ -173,6 +175,13 @@ void VARGEN_copy_from_vargen(Vargen* gen, Vargen* other) {
 
   // List
   // skip next    
+}
+
+short int VARGEN_get_pre_cont_status(void* gen) {
+  if (gen)
+    return ((Vargen*)gen)->pre_cont_status;
+  else
+    return 0;
 }
 
 char VARGEN_get_flags_vars(Vargen* gen) {
@@ -593,6 +602,7 @@ void VARGEN_init(Vargen* gen, int num_periods) {
   gen->type = VARGEN_TYPE_WIND;
   ARRAY_clear(gen->name,char,VARGEN_BUFFER_SIZE);
 
+  gen->pre_cont_status = PRE_CONT_UNSET;
   gen->in_service = TRUE;
   gen->fixed = 0x00;
   gen->bounded = 0x00;
@@ -674,6 +684,11 @@ Vargen* VARGEN_new(int num_periods) {
   }
   else
     return NULL;
+}
+
+void VARGEN_set_pre_cont_status(Vargen* gen, short int pre_cont_status) {
+  if (gen && BUS_is_in_service(gen->bus))
+    gen->pre_cont_status = pre_cont_status;
 }
 
 void VARGEN_set_in_service(Vargen* gen, BOOL in_service) {

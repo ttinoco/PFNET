@@ -39,6 +39,7 @@ struct Shunt {
   char num_b_values; /**< @brief Number of valid susceptances (p.u.) */
  
   // Flags
+  short int pre_cont_status;   /**< @brief Flag for indicating whether the shunt was in service before applying the contingency */
   BOOL in_service; /**< @brief Flag for indicating whether shunt is in service */
   char vars;       /**< @brief Flags for indicating which quantities are treated as variables **/
   char fixed;      /**< @brief Flags for indicating which quantities should be fixed to their current value */
@@ -174,6 +175,7 @@ void SHUNT_copy_from_shunt(Shunt* shunt, Shunt* other) {
   shunt->num_b_values = other->num_b_values;
 
   // Flags
+  shunt->pre_cont_status = other->pre_cont_status;
   shunt->in_service = other->in_service;
   shunt->fixed = other->fixed;
   shunt->bounded = other->bounded;
@@ -190,6 +192,13 @@ void SHUNT_copy_from_shunt(Shunt* shunt, Shunt* other) {
 
   // List
   // skip next
+}
+
+short int SHUNT_get_pre_cont_status(void* shunt) {
+  if (shunt)
+    return ((Shunt*)shunt)->pre_cont_status;
+  else
+    return 0;
 }
 
 REAL SHUNT_get_sens_b_u_bound(Shunt* shunt, int t) {
@@ -583,6 +592,7 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
   shunt->b_values = NULL;
   shunt->num_b_values = 0;
 
+  shunt->pre_cont_status = PRE_CONT_UNSET;
   shunt->in_service = TRUE;
   shunt->vars = 0x00;
   shunt->fixed = 0x00;
@@ -731,6 +741,11 @@ void SHUNT_set_sens_b_u_bound(Shunt* shunt, REAL value, int t) {
 void SHUNT_set_sens_b_l_bound(Shunt* shunt, REAL value, int t) {
   if (shunt && t >= 0 && t < shunt->num_periods)
     shunt->sens_b_l_bound[t] = value;
+}
+
+void SHUNT_set_pre_cont_status(Shunt* shunt, short int pre_cont_status) {
+  if (shunt && BUS_is_in_service(shunt->bus))
+    shunt->pre_cont_status = pre_cont_status;
 }
 
 void SHUNT_set_in_service(Shunt* shunt, BOOL in_service) {

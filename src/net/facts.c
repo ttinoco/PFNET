@@ -28,6 +28,7 @@ struct Facts {
   char name[FACTS_BUFFER_SIZE]; /**< @brief Facts name */
   
   // Flags
+  short int pre_cont_status;   /**< @brief Flag for indicating whether the FACTS was in service before applying the contingency */
   BOOL in_service;     /**< @brief Flag for indicating whether FACTS is in service */
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
@@ -204,6 +205,7 @@ void FACTS_copy_from_facts(Facts* facts, Facts* other) {
   strcpy(facts->name,other->name);
 
   // Flags
+  facts->pre_cont_status = other->pre_cont_status;
   facts->in_service = other->in_service;
   facts->fixed = other->fixed;
   facts->bounded = other->bounded;
@@ -264,6 +266,13 @@ void FACTS_copy_from_facts(Facts* facts, Facts* other) {
   
   // List
   // skip next
+}
+
+short int FACTS_get_pre_cont_status(void* facts) {
+  if (facts)
+    return ((Facts*)facts)->pre_cont_status;
+  else
+    return 0;
 }
 
 char FACTS_get_flags_vars(Facts* facts) {
@@ -1093,6 +1102,7 @@ void FACTS_init(Facts* facts, int num_periods) {
   facts->bus_m = NULL;
   facts->reg_bus = NULL;
 
+  facts->pre_cont_status = PRE_CONT_UNSET;
   facts->in_service = TRUE;
   facts->fixed = 0x00;
   facts->bounded = 0x00;
@@ -1280,6 +1290,12 @@ Facts* FACTS_new(int num_periods) {
   }
   else
     return NULL;
+}
+
+void FACTS_set_pre_cont_status(Facts* facts, short int pre_cont_status) {
+  if (facts && BUS_is_in_service(facts->bus_k) &&
+      (BUS_is_in_service(facts->bus_m) || FACTS_is_series_link_disabled(facts)))
+    facts->pre_cont_status = pre_cont_status;
 }
 
 void FACTS_set_in_service(Facts* facts, BOOL in_service) {

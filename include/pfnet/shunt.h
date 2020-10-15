@@ -68,6 +68,7 @@ void SHUNT_array_show(Shunt* shunt_array, int size, int t);
 void SHUNT_clear_sensitivities(Shunt* shunt);
 void SHUNT_clear_flags(Shunt* shunt, char flag_type);
 void SHUNT_copy_from_shunt(Shunt* shunt, Shunt* other);
+short int SHUNT_get_pre_cont_status(Shunt* shunt);
 
 char SHUNT_get_flags_vars(Shunt* shunt);
 char SHUNT_get_flags_fixed(Shunt* shunt);
@@ -126,6 +127,7 @@ void SHUNT_propagate_data_in_time(Shunt* shunt, int start, int end);
 int SHUNT_round_b(Shunt* shunt, int t);
 
 void SHUNT_set_network(Shunt* shunt, void* net);
+void SHUNT_set_pre_cont_status(Shunt* shunt, short int pre_cont_status);
 void SHUNT_set_in_service(Shunt* shunt, BOOL in_service);
 void SHUNT_set_sens_b_u_bound(Shunt* shunt, REAL value, int t);
 void SHUNT_set_sens_b_l_bound(Shunt* shunt, REAL value, int t);

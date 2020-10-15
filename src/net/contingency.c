@@ -10,6 +10,7 @@
 
 #include <pfnet/contingency.h>
 #include <pfnet/json_macros.h>
+#include <pfnet/net.h>
 
 // Gen outage
 struct Gen_outage {
@@ -35,11 +36,18 @@ struct Shunt_outage {
   struct Shunt_outage* next;
 };
 
+// Bus outage
+struct Bus_outage {
+  int bus_index;
+  struct Bus_outage* next;
+};
+
 // Types
 typedef struct Gen_outage Gen_outage;
 typedef struct Branch_outage Branch_outage;
 typedef struct Load_outage Load_outage;
 typedef struct Shunt_outage Shunt_outage;
+typedef struct Bus_outage Bus_outage;
 
 // Contingency
 struct Cont {
@@ -61,6 +69,9 @@ struct Cont {
 
   // Shunt outages
   Shunt_outage* shunt_outage;       /**< @brief List of shunt outages */
+
+  // Bus outages
+  Bus_outage* bus_outage;           /**< @brief List of bus outages */
 };
 
 void CONT_apply(Cont* cont, Net* net) {
@@ -70,10 +81,17 @@ void CONT_apply(Cont* cont, Net* net) {
   Branch_outage* bo;
   Load_outage* lo;
   Shunt_outage* so;
+  Bus_outage* buso;
   Gen* gen;
   Branch* br;
   Load* load;
   Shunt* shunt;
+  Bus* bus;
+  Vargen* vargen;
+  Bat* bat;
+  ConvCSC* csc_conv;
+  ConvVSC* vsc_conv;
+  Facts* facts;
 
   if (cont) {
 
@@ -100,6 +118,134 @@ void CONT_apply(Cont* cont, Net* net) {
       shunt = NET_get_shunt(net,so->shunt_index);
       SHUNT_set_in_service(shunt,FALSE);
     }
+
+    // Buses
+    for (buso = cont->bus_outage; buso != NULL; buso = buso->next) {
+      bus = NET_get_bus(net,buso->bus_index);
+
+      // Connections - gen
+      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+        if (GEN_get_pre_cont_status(gen) == PRE_CONT_UNSET) {
+          if (GEN_is_in_service(gen))
+            GEN_set_pre_cont_status(gen, PRE_CONT_ONLINE);
+          else
+            GEN_set_pre_cont_status(gen, PRE_CONT_OFFLINE);
+        }
+        GEN_set_in_service(gen,FALSE);
+      }
+
+      // Connection - branch k
+      for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
+        if (BRANCH_get_pre_cont_status(br) == PRE_CONT_UNSET) {
+          if (BRANCH_is_in_service(br))
+            BRANCH_set_pre_cont_status(br, PRE_CONT_ONLINE);
+          else
+            BRANCH_set_pre_cont_status(br, PRE_CONT_OFFLINE);
+        }
+        BRANCH_set_in_service(br,FALSE);
+      }
+
+      // Connection - branch m
+      for (br = BUS_get_branch_m(bus); br != NULL; br = BRANCH_get_next_m(br)) {
+        if (BRANCH_get_pre_cont_status(br) == PRE_CONT_UNSET) {
+          if (BRANCH_is_in_service(br))
+            BRANCH_set_pre_cont_status(br, PRE_CONT_ONLINE);
+          else
+            BRANCH_set_pre_cont_status(br, PRE_CONT_OFFLINE);
+        }
+        BRANCH_set_in_service(br,FALSE);
+      }
+
+      // Connections - shunt
+      for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+        if (SHUNT_get_pre_cont_status(shunt) == PRE_CONT_UNSET) {
+          if (SHUNT_is_in_service(shunt))
+            SHUNT_set_pre_cont_status(shunt, PRE_CONT_ONLINE);
+          else
+            SHUNT_set_pre_cont_status(shunt, PRE_CONT_OFFLINE);
+        }
+        SHUNT_set_in_service(shunt,FALSE);
+      }
+
+      // Connections - Load
+      for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+        if (LOAD_get_pre_cont_status(load) == PRE_CONT_UNSET) {
+          if (LOAD_is_in_service(load))
+            LOAD_set_pre_cont_status(load, PRE_CONT_ONLINE);
+          else
+            LOAD_set_pre_cont_status(load, PRE_CONT_OFFLINE);
+        }
+        LOAD_set_in_service(load,FALSE);
+      }
+
+      // Connections - vargen
+      for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+        if (VARGEN_get_pre_cont_status(vargen) == PRE_CONT_UNSET) {
+          if (VARGEN_is_in_service(vargen))
+            VARGEN_set_pre_cont_status(vargen, PRE_CONT_ONLINE);
+          else
+            VARGEN_set_pre_cont_status(vargen, PRE_CONT_OFFLINE);
+        }
+        VARGEN_set_in_service(vargen,FALSE);
+      }
+
+      // Connections - bat
+      for (bat = BUS_get_bat(bus); bat != NULL; bat =BAT_get_next(bat)) {
+        if (BAT_get_pre_cont_status(bat) == PRE_CONT_UNSET) {
+          if (BAT_is_in_service(bat))
+            BAT_set_pre_cont_status(bat, PRE_CONT_ONLINE);
+          else
+            BAT_set_pre_cont_status(bat, PRE_CONT_OFFLINE);
+        }
+        BAT_set_in_service(bat,FALSE);
+      }
+
+      // Connections - csc conv
+      for (csc_conv = BUS_get_csc_conv(bus); csc_conv != NULL; csc_conv =CONVCSC_get_next_ac(csc_conv)) {
+        if (CONVCSC_get_pre_cont_status(csc_conv) == PRE_CONT_UNSET) {
+          if (CONVCSC_is_in_service(csc_conv))
+            CONVCSC_set_pre_cont_status(csc_conv, PRE_CONT_ONLINE);
+          else
+            CONVCSC_set_pre_cont_status(csc_conv, PRE_CONT_OFFLINE);
+        }
+        CONVCSC_set_in_service(csc_conv,FALSE);
+      }
+
+      // Connections - vsc conv
+      for (vsc_conv = BUS_get_vsc_conv(bus); vsc_conv != NULL; vsc_conv =CONVVSC_get_next_ac(vsc_conv)) {
+        if (CONVVSC_get_pre_cont_status(vsc_conv) == PRE_CONT_UNSET) {
+          if (CONVVSC_is_in_service(vsc_conv))
+            CONVVSC_set_pre_cont_status(vsc_conv, PRE_CONT_ONLINE);
+          else
+            CONVVSC_set_pre_cont_status(vsc_conv, PRE_CONT_OFFLINE);
+        }
+        CONVVSC_set_in_service(vsc_conv,FALSE);
+      }
+
+      // Connection - facts k
+      for (facts = BUS_get_facts_k(bus); facts != NULL; facts =FACTS_get_next_k(facts)) {
+        if (FACTS_get_pre_cont_status(facts) == PRE_CONT_UNSET) {
+          if (FACTS_is_in_service(facts))
+            FACTS_set_pre_cont_status(facts, PRE_CONT_ONLINE);
+          else
+            FACTS_set_pre_cont_status(facts, PRE_CONT_OFFLINE);
+        }
+        FACTS_set_in_service(facts,FALSE);
+      }
+
+      // Connection - facts m
+      for (facts = BUS_get_facts_m(bus); facts != NULL; facts =FACTS_get_next_m(facts)) {
+        if (FACTS_get_pre_cont_status(facts) == PRE_CONT_UNSET) {
+          if (FACTS_is_in_service(facts))
+            FACTS_set_pre_cont_status(facts, PRE_CONT_ONLINE);
+          else
+            FACTS_set_pre_cont_status(facts, PRE_CONT_OFFLINE);
+        }
+        FACTS_set_in_service(facts,FALSE);
+      }
+
+      BUS_set_in_service(bus,FALSE);
+    }
   }
 }
 
@@ -110,10 +256,17 @@ void CONT_clear(Cont* cont, Net* net) {
   Branch_outage* bo;
   Load_outage* lo;
   Shunt_outage* so;
+  Bus_outage* buso;
   Gen* gen;
   Branch* br;
   Load* load;
   Shunt* shunt;
+  Bus* bus;
+  Vargen* vargen;
+  Bat* bat;
+  ConvCSC* csc_conv;
+  ConvVSC* vsc_conv;
+  Facts* facts;
 
   if (cont) {
 
@@ -140,6 +293,133 @@ void CONT_clear(Cont* cont, Net* net) {
       shunt = NET_get_shunt(net,so->shunt_index);
       SHUNT_set_in_service(shunt,TRUE);
     }
+
+    // Buses
+    for (buso = cont->bus_outage; buso != NULL; buso = buso->next) {
+      bus = NET_get_bus(net,buso->bus_index);
+      BUS_set_in_service(bus,TRUE);
+
+      // Connections - gen
+      for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+        if (GEN_get_pre_cont_status(gen) != PRE_CONT_UNSET) {
+          if (GEN_get_pre_cont_status(gen) == PRE_CONT_ONLINE)
+            GEN_set_in_service(gen,TRUE);
+          else if (GEN_get_pre_cont_status(gen) == PRE_CONT_OFFLINE)
+            GEN_set_in_service(gen,FALSE);
+          GEN_set_pre_cont_status(gen,PRE_CONT_UNSET);
+        }
+      }
+
+      // Connection - branch k
+      for (br = BUS_get_branch_k(bus); br != NULL; br = BRANCH_get_next_k(br)) {
+        if (BRANCH_get_pre_cont_status(br) != PRE_CONT_UNSET) {
+          if (BRANCH_get_pre_cont_status(br) == PRE_CONT_ONLINE)
+            BRANCH_set_in_service(br,TRUE);
+          else if (BRANCH_get_pre_cont_status(br) == PRE_CONT_OFFLINE)
+            BRANCH_set_in_service(br,FALSE);
+          BRANCH_set_pre_cont_status(br,PRE_CONT_UNSET);
+        }
+      }
+
+      // Connection - branch m
+      for (br = BUS_get_branch_m(bus); br != NULL; br = BRANCH_get_next_m(br)) {
+        if (BRANCH_get_pre_cont_status(br) != PRE_CONT_UNSET) {
+          if (BRANCH_get_pre_cont_status(br) == PRE_CONT_ONLINE)
+            BRANCH_set_in_service(br,TRUE);
+          else if (BRANCH_get_pre_cont_status(br) == PRE_CONT_OFFLINE)
+            BRANCH_set_in_service(br,FALSE);
+          BRANCH_set_pre_cont_status(br,PRE_CONT_UNSET);
+        }
+      }
+
+      // Connections - shunt
+      for (shunt = BUS_get_shunt(bus); shunt != NULL; shunt = SHUNT_get_next(shunt)) {
+        if (SHUNT_get_pre_cont_status(shunt) != PRE_CONT_UNSET) {
+          if (SHUNT_get_pre_cont_status(shunt) == PRE_CONT_ONLINE)
+            SHUNT_set_in_service(shunt,TRUE);
+          else if (SHUNT_get_pre_cont_status(shunt) == PRE_CONT_OFFLINE)
+            SHUNT_set_in_service(shunt,FALSE);
+          SHUNT_set_pre_cont_status(shunt,PRE_CONT_UNSET);
+        }
+      }
+
+      // Connections - Load
+      for (load = BUS_get_load(bus); load != NULL; load = LOAD_get_next(load)) {
+        if (LOAD_get_pre_cont_status(load) != PRE_CONT_UNSET) {
+          if (LOAD_get_pre_cont_status(load) == PRE_CONT_ONLINE)
+            LOAD_set_in_service(load,TRUE);
+          else if (LOAD_get_pre_cont_status(load) == PRE_CONT_OFFLINE)
+            LOAD_set_in_service(load,FALSE);
+          LOAD_set_pre_cont_status(load,PRE_CONT_UNSET);
+        }
+      }
+
+      // Connections - vargen
+      for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)) {
+        if (VARGEN_get_pre_cont_status(vargen) != PRE_CONT_UNSET) {
+          if (VARGEN_get_pre_cont_status(vargen) == PRE_CONT_ONLINE)
+            VARGEN_set_in_service(vargen,TRUE);
+          else if (VARGEN_get_pre_cont_status(vargen) == PRE_CONT_OFFLINE)
+            VARGEN_set_in_service(vargen,FALSE);
+          VARGEN_set_pre_cont_status(vargen,PRE_CONT_UNSET);
+        }
+      }
+
+      // Connections - bat
+      for (bat = BUS_get_bat(bus); bat != NULL; bat = BAT_get_next(bat)) {
+        if (BAT_get_pre_cont_status(bat) != PRE_CONT_UNSET) {
+          if (BAT_get_pre_cont_status(bat) == PRE_CONT_ONLINE)
+            BAT_set_in_service(bat,TRUE);
+          else if (BAT_get_pre_cont_status(bat) == PRE_CONT_OFFLINE)
+            BAT_set_in_service(bat,FALSE);
+          BAT_set_pre_cont_status(bat,PRE_CONT_UNSET);
+        }
+      }
+
+      // Connections - csc conv
+      for (csc_conv = BUS_get_csc_conv(bus); csc_conv != NULL; csc_conv = CONVCSC_get_next_ac(csc_conv)) {
+        if (CONVCSC_get_pre_cont_status(csc_conv) != PRE_CONT_UNSET) {
+          if (CONVCSC_get_pre_cont_status(csc_conv) == PRE_CONT_ONLINE)
+            CONVCSC_set_in_service(csc_conv,TRUE);
+          else if (CONVCSC_get_pre_cont_status(csc_conv) == PRE_CONT_OFFLINE)
+            CONVCSC_set_in_service(csc_conv,FALSE);
+          CONVCSC_set_pre_cont_status(csc_conv,PRE_CONT_UNSET);
+        }
+      }
+
+      // Connections - vsc conv
+      for (vsc_conv = BUS_get_vsc_conv(bus); vsc_conv != NULL; vsc_conv = CONVVSC_get_next_ac(vsc_conv)) {
+        if (CONVVSC_get_pre_cont_status(vsc_conv) != PRE_CONT_UNSET) {
+          if (CONVVSC_get_pre_cont_status(vsc_conv) == PRE_CONT_ONLINE)
+            CONVVSC_set_in_service(vsc_conv,TRUE);
+          else if (CONVVSC_get_pre_cont_status(vsc_conv) == PRE_CONT_OFFLINE)
+            CONVVSC_set_in_service(vsc_conv,FALSE);
+          CONVVSC_set_pre_cont_status(vsc_conv,PRE_CONT_UNSET);
+        }
+      }
+
+      // Connection - facts k
+      for (facts = BUS_get_facts_k(bus); facts != NULL; facts = FACTS_get_next_k(facts)) {
+        if (FACTS_get_pre_cont_status(facts) != PRE_CONT_UNSET) {
+          if (FACTS_get_pre_cont_status(facts) == PRE_CONT_ONLINE)
+            FACTS_set_in_service(facts,TRUE);
+          else if (FACTS_get_pre_cont_status(facts) == PRE_CONT_OFFLINE)
+            FACTS_set_in_service(facts,FALSE);
+          FACTS_set_pre_cont_status(facts,PRE_CONT_UNSET);
+        }
+      }
+
+      // Connection - facts m
+      for (facts = BUS_get_facts_m(bus); facts != NULL; facts = FACTS_get_next_m(facts)) {
+        if (FACTS_get_pre_cont_status(facts) != PRE_CONT_UNSET) {
+          if (FACTS_get_pre_cont_status(facts) == PRE_CONT_ONLINE)
+            FACTS_set_in_service(facts,TRUE);
+          else if (FACTS_get_pre_cont_status(facts) == PRE_CONT_OFFLINE)
+            FACTS_set_in_service(facts,FALSE);
+          FACTS_set_pre_cont_status(facts,PRE_CONT_UNSET);
+        }
+      }
+    }
   }
 }
 
@@ -151,6 +431,7 @@ void CONT_init(Cont* cont) {
     cont->br_outage = NULL;
     cont->load_outage = NULL;
     cont->shunt_outage = NULL;
+    cont->bus_outage = NULL;
   }
 }
 
@@ -160,6 +441,7 @@ void CONT_del(Cont* cont) {
     LIST_map(Branch_outage,cont->br_outage,bo,next,{free(bo);});
     LIST_map(Load_outage,cont->load_outage,lo,next,{free(lo);});
     LIST_map(Shunt_outage,cont->shunt_outage,so,next,{free(so);});
+    LIST_map(Bus_outage,cont->bus_outage,buso,next,{free(buso);});
     free(cont);
   }
 }
@@ -205,6 +487,16 @@ int CONT_get_num_shunt_outages(Cont* cont) {
   int len;
   if (cont) {
     LIST_len(Shunt_outage,cont->shunt_outage,next,len);
+    return len;
+  }
+  else
+    return 0;
+}
+
+int CONT_get_num_bus_outages(Cont* cont) {
+  int len;
+  if (cont) {
+    LIST_len(Bus_outage,cont->bus_outage,next,len);
     return len;
   }
   else
@@ -295,6 +587,27 @@ int* CONT_get_shunt_outages(Cont* cont) {
   return outages;
 }
 
+int* CONT_get_bus_outages(Cont* cont) {
+
+  // Local variables
+  int* outages;
+  Bus_outage* buso;
+  int i;
+
+  // Allocate
+  outages = (int*)malloc(sizeof(int)*CONT_get_num_bus_outages(cont));
+
+  // Fill
+  i = 0;
+  for (buso = cont->bus_outage; buso != NULL; buso = buso->next) {
+    outages[i] = buso->bus_index;
+    i++;
+  }
+
+  // Return
+  return outages;
+}
+
 void CONT_add_gen_outage(Cont* cont, int gen_index) {
   Gen_outage* go;
   if (cont) {
@@ -351,6 +664,20 @@ void CONT_add_shunt_outage(Cont* cont, int shunt_index) {
   }
 }
 
+void CONT_add_bus_outage(Cont* cont, int bus_index) {
+  Bus_outage* buso;
+  if (cont) {
+    for (buso = cont->bus_outage; buso != NULL; buso = buso->next) {
+      if (buso->bus_index == bus_index)
+        return;
+    }
+    buso = (Bus_outage*)malloc(sizeof(Bus_outage));
+    buso->bus_index = bus_index;
+    buso->next = NULL;
+    LIST_add(Bus_outage,cont->bus_outage,buso,next);
+  }
+}
+
 BOOL CONT_has_gen_outage(Cont* cont, int gen_index) {
   Gen_outage* go;
   if (!cont)
@@ -395,6 +722,17 @@ BOOL CONT_has_shunt_outage(Cont* cont, int shunt_index) {
   return FALSE;
 }
 
+BOOL CONT_has_bus_outage(Cont* cont, int bus_index) {
+  Bus_outage* buso;
+  if (!cont)
+    return FALSE;
+  for (buso = cont->bus_outage; buso != NULL; buso = buso->next) {
+    if (bus_index == buso->bus_index)
+      return TRUE;
+  }
+  return FALSE;
+}
+
 Cont* CONT_new(void) {
   Cont* cont = (Cont*)malloc(sizeof(Cont));
   CONT_init(cont);
@@ -407,6 +745,7 @@ char* CONT_get_show_str(Cont* cont) {
   Branch_outage* bo;
   Load_outage* lo;
   Shunt_outage* so;
+  Bus_outage* buso;
   char* out;
 
   if (!cont)
@@ -427,6 +766,8 @@ char* CONT_get_show_str(Cont* cont) {
   sprintf(out+strlen(out),"\nShunt outages\n");
   for (so = cont->shunt_outage; so != NULL; so = so->next)
     sprintf(out+strlen(out),"index %d\n",so->shunt_index);
+  for (buso = cont->bus_outage; buso != NULL; buso = buso->next)
+    sprintf(out+strlen(out),"index %d\n",buso->bus_index);
 
   return out;
 }
@@ -443,6 +784,7 @@ char* CONT_get_json_string(Cont* cont) {
   Branch_outage* bo;
   Load_outage* lo;
   Shunt_outage* so;
+  Bus_outage* buso;
   char* output;
   char* output_start;
   char temp[CONT_JSON_BUFFER_SIZE];
@@ -512,7 +854,20 @@ char* CONT_get_json_string(Cont* cont) {
     indices[num] = so->shunt_index;
     num++;
   }
-  JSON_array_int(temp,output,"shunt_outages",indices,num,TRUE);
+  JSON_array_int(temp,output,"shunt_outages",indices,num,FALSE);
+  free(indices);
+
+  // Bus outages
+  num = 0;
+  for (buso = cont->bus_outage; buso != NULL; buso = buso->next)
+    num++;
+  indices = (int*)malloc(num*sizeof(int));
+  num = 0;
+  for (buso = cont->bus_outage; buso != NULL; buso = buso->next) {
+    indices[num] = buso->bus_index;
+    num++;
+  }
+  JSON_array_int(temp,output,"bus_outages",indices,num,TRUE);
   free(indices);
 
   // End

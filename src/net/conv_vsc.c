@@ -29,6 +29,7 @@ struct ConvVSC {
   Bus* reg_bus;        /**< @brief AC bus regulated by this converters */
 
   // Flags
+  short int pre_cont_status;   /**< @brief Flag for indicating whether the converter was in service before applying the contingency */
   BOOL in_service;     /**< @brief Flag for indicating whether converter is in service */
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
@@ -172,6 +173,7 @@ void CONVVSC_copy_from_conv(ConvVSC* conv, ConvVSC* other) {
   strcpy(conv->name,other->name);
 
   // Flags
+  conv->pre_cont_status = other->pre_cont_status;
   conv->in_service = other->in_service;
   conv->fixed = other->fixed;
   conv->bounded = other->bounded;
@@ -215,6 +217,13 @@ void CONVVSC_copy_from_conv(ConvVSC* conv, ConvVSC* other) {
     
   // List
   // skip next
+}
+
+short int CONVVSC_get_pre_cont_status(void* conv) {
+  if (conv)
+    return ((ConvVSC*)conv)->pre_cont_status;
+  else
+    return 0;
 }
 
 Bus* CONVVSC_get_ac_bus(ConvVSC* conv) {
@@ -796,6 +805,7 @@ void CONVVSC_init(ConvVSC* conv, int num_periods) {
   conv->dc_bus = NULL;
   conv->reg_bus = NULL;
 
+  conv->pre_cont_status = PRE_CONT_UNSET;
   conv->in_service = TRUE;
   conv->fixed = 0x00;
   conv->bounded = 0x00;
@@ -975,6 +985,11 @@ void CONVVSC_propagate_data_in_time(ConvVSC* conv, int start, int end) {
       conv->P_dc[t] = conv->P_dc[start];
     }
   }
+}
+
+void CONVVSC_set_pre_cont_status(ConvVSC* conv, short int pre_cont_status) {
+  if (conv && BUS_is_in_service(conv->ac_bus) && BUSDC_is_in_service(conv->dc_bus))
+    conv->pre_cont_status = pre_cont_status;
 }
 
 void CONVVSC_set_in_service(ConvVSC* conv, BOOL in_service) {

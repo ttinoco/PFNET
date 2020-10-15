@@ -65,6 +65,7 @@ struct Branch {
   REAL ratingC;      /**< @brief Thermal rating C (p.u. system base MVA) */
 
   // Flags
+  short int pre_cont_status;   /**< @brief Flag for indicating whether the branch was in service before applying the contingency */
   BOOL in_service;       /**< @brief Flag for indicating whether branch is in service */
   BOOL pos_ratio_v_sens; /**< @brief Flag for positive ratio-voltage sensitivity */
   char vars;             /**< @brief Flags for indicating which quantities should be treated as variables */
@@ -253,6 +254,7 @@ void BRANCH_copy_from_branch(Branch* br, Branch* other, int mode) {
   br->ratingC = other->ratingC;
   
   // Flags
+  br->pre_cont_status = other->pre_cont_status;
   br->in_service = other->in_service;
   br->pos_ratio_v_sens = other->pos_ratio_v_sens;
   br->fixed = other->fixed;
@@ -276,6 +278,13 @@ void BRANCH_copy_from_branch(Branch* br, Branch* other, int mode) {
   
   // List
   // skip next
+}
+
+short int BRANCH_get_pre_cont_status(void* br) {
+  if (br)
+    return ((Branch*)br)->pre_cont_status;
+  else
+    return 0;
 }
 
 char BRANCH_get_flags_vars(Branch* br) {
@@ -1399,6 +1408,7 @@ void BRANCH_init(Branch* br, int num_periods) {
   br->ratingB = 0;
   br->ratingC = 0;
 
+  br->pre_cont_status = PRE_CONT_UNSET;
   br->in_service = TRUE;
   br->pos_ratio_v_sens = TRUE;
   br->vars = 0x00;
@@ -1706,6 +1716,11 @@ void BRANCH_set_num_ratios(Branch* br, int num) {
 void BRANCH_set_pos_ratio_v_sens(Branch* br, BOOL flag) {
   if (br)
     br->pos_ratio_v_sens = flag;
+}
+
+void BRANCH_set_pre_cont_status(Branch* br, short int pre_cont_status) {
+  if (br && BUS_is_in_service(br->bus_k) && BUS_is_in_service(br->bus_m))
+    br->pre_cont_status = pre_cont_status;
 }
 
 void BRANCH_set_in_service(Branch* br, BOOL in_service) {
