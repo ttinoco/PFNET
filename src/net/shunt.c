@@ -182,6 +182,9 @@ void SHUNT_copy_from_shunt(Shunt* shunt, Shunt* other) {
   shunt->sparse = other->sparse;
   shunt->vars = other->vars;
 
+  // Transformer
+  shunt->xfmr = other->xfmr;
+
   // Indices
   // skip index
   memcpy(shunt->index_b,other->index_b,num_periods*sizeof(int));
