@@ -98,24 +98,48 @@ void CONT_apply(Cont* cont, Net* net) {
     // Generators
     for (go = cont->gen_outage; go != NULL; go = go->next) {
       gen = NET_get_gen(net,go->gen_index);
+      if (GEN_get_pre_cont_status(gen) == PRE_CONT_UNSET) {
+        if (GEN_is_in_service(gen))
+          GEN_set_pre_cont_status(gen, PRE_CONT_ONLINE);
+        else
+          GEN_set_pre_cont_status(gen, PRE_CONT_OFFLINE);
+      }
       GEN_set_in_service(gen,FALSE);
     }
 
     // Branches
     for (bo = cont->br_outage; bo != NULL; bo = bo->next) {
       br = NET_get_branch(net,bo->br_index);
+      if (BRANCH_get_pre_cont_status(br) == PRE_CONT_UNSET) {
+        if (BRANCH_is_in_service(br))
+          BRANCH_set_pre_cont_status(br, PRE_CONT_ONLINE);
+        else
+          BRANCH_set_pre_cont_status(br, PRE_CONT_OFFLINE);
+      }
       BRANCH_set_in_service(br,FALSE);
     }
 
     // Loads
     for (lo = cont->load_outage; lo != NULL; lo = lo->next) {
       load = NET_get_load(net,lo->load_index);
+      if (LOAD_get_pre_cont_status(load) == PRE_CONT_UNSET) {
+        if (LOAD_is_in_service(load))
+          LOAD_set_pre_cont_status(load, PRE_CONT_ONLINE);
+        else
+          LOAD_set_pre_cont_status(load, PRE_CONT_OFFLINE);
+      }
       LOAD_set_in_service(load,FALSE);
     }
 
     // Shunts
     for (so = cont->shunt_outage; so != NULL; so = so->next) {
       shunt = NET_get_shunt(net,so->shunt_index);
+      if (SHUNT_get_pre_cont_status(shunt) == PRE_CONT_UNSET) {
+        if (SHUNT_is_in_service(shunt))
+          SHUNT_set_pre_cont_status(shunt, PRE_CONT_ONLINE);
+        else
+          SHUNT_set_pre_cont_status(shunt, PRE_CONT_OFFLINE);
+      }
       SHUNT_set_in_service(shunt,FALSE);
     }
 
@@ -273,25 +297,49 @@ void CONT_clear(Cont* cont, Net* net) {
     // Generators
     for (go = cont->gen_outage; go != NULL; go = go->next) {
       gen = NET_get_gen(net,go->gen_index);
-      GEN_set_in_service(gen,TRUE);
+      if (GEN_get_pre_cont_status(gen) != PRE_CONT_UNSET) {
+        if (GEN_get_pre_cont_status(gen) == PRE_CONT_ONLINE)
+          GEN_set_in_service(gen,TRUE);
+        else if (GEN_get_pre_cont_status(gen) == PRE_CONT_OFFLINE)
+          GEN_set_in_service(gen,FALSE);
+        GEN_set_pre_cont_status(gen,PRE_CONT_UNSET);
+      }
     }
 
     // Branches
     for (bo = cont->br_outage; bo != NULL; bo = bo->next) {
       br = NET_get_branch(net,bo->br_index);
-      BRANCH_set_in_service(br,TRUE);
+      if (BRANCH_get_pre_cont_status(br) != PRE_CONT_UNSET) {
+        if (BRANCH_get_pre_cont_status(br) == PRE_CONT_ONLINE)
+          BRANCH_set_in_service(br,TRUE);
+        else if (BRANCH_get_pre_cont_status(br) == PRE_CONT_OFFLINE)
+          BRANCH_set_in_service(br,FALSE);
+        BRANCH_set_pre_cont_status(br,PRE_CONT_UNSET);
+      }
     }
 
     // Loads
     for (lo = cont->load_outage; lo != NULL; lo = lo->next) {
       load = NET_get_load(net,lo->load_index);
-      LOAD_set_in_service(load,TRUE);
+      if (LOAD_get_pre_cont_status(load) != PRE_CONT_UNSET) {
+        if (LOAD_get_pre_cont_status(load) == PRE_CONT_ONLINE)
+          LOAD_set_in_service(load,TRUE);
+        else if (LOAD_get_pre_cont_status(load) == PRE_CONT_OFFLINE)
+          LOAD_set_in_service(load,FALSE);
+        LOAD_set_pre_cont_status(load,PRE_CONT_UNSET);
+      }
     }
 
     // Shunts
     for (so = cont->shunt_outage; so != NULL; so = so->next) {
       shunt = NET_get_shunt(net,so->shunt_index);
-      SHUNT_set_in_service(shunt,TRUE);
+      if (SHUNT_get_pre_cont_status(shunt) != PRE_CONT_UNSET) {
+        if (SHUNT_get_pre_cont_status(shunt) == PRE_CONT_ONLINE)
+          SHUNT_set_in_service(shunt,TRUE);
+        else if (SHUNT_get_pre_cont_status(shunt) == PRE_CONT_OFFLINE)
+          SHUNT_set_in_service(shunt,FALSE);
+        SHUNT_set_pre_cont_status(shunt,PRE_CONT_UNSET);
+      }
     }
 
     // Buses
