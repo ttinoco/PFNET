@@ -68,6 +68,7 @@ void FACTS_array_show(Facts* facts_array, int num, int t);
 void FACTS_clear_sensitivities(Facts* facts); 
 void FACTS_clear_flags(Facts* facts, char flag_type);
 void FACTS_copy_from_facts(Facts* facts, Facts* other);
+short int FACTS_get_pre_cont_status(Facts* facts);
 
 char FACTS_get_flags_vars(Facts* facts);
 char FACTS_get_flags_fixed(Facts* facts);
@@ -181,6 +182,7 @@ Facts* FACTS_new(int num_periods);
 void FACTS_propagate_data_in_time(Facts* facts, int start, int end);
 
 void FACTS_set_network(Facts* facts, void* net);
+void FACTS_set_pre_cont_status(Facts* facts, short int pre_cont_status);
 void FACTS_set_in_service(Facts* facts, BOOL in_service);
 void FACTS_set_name(Facts* facts, char* name);
 void FACTS_set_reg_bus(Facts* facts, Bus* bus);

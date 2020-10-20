@@ -26,6 +26,8 @@ Version 1.3.6
 * Added "rmpct" parameter to all regulating unit components: Gen, VSC, FACTS.
 * Added NET_update_reg_Q_participations and BUS_update_reg_Q_participations to update regulating Q participaptions based on RMPCT * (P/sum(P)).
 * Modified HEUR_PVPQ_SWITCHING_apply_step to update Q participations based on remaining devices that have reactive power capability.
+* Added shunt outage as a contingency structure.
+* Added bus outage as a contingency structure.
 
 Version 1.3.4
 -------------

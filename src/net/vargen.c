@@ -25,26 +25,27 @@ struct Vargen {
   // Properties
   char name[VARGEN_BUFFER_SIZE]; /**< @brief Variable generator name */
   char type;                     /**< @brief Variable generator type */
-  
+
   // Flags
+  short int pre_cont_status;   /**< @brief Flag for indicating whether the vargen was in service before applying the contingency */
   BOOL in_service;     /**< @brief Flag for indicating whether vargen is in service */
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
   char vars;           /**< @brief Flags for indicating which quantities should be treated as variables */
   char sparse;         /**< @brief Flags for indicating which control adjustments should be sparse */
-  
+
   // Active power
   REAL* P;             /**< @brief Variable generator active power after curtailments (p.u. system base power) */
   REAL* P_ava;         /**< @brief Variable generator available active power (p.u. system base power) */
   REAL P_max;          /**< @brief Maximum variable generator active power (p.u.) */
   REAL P_min;          /**< @brief Minimum variable generator active power (p.u.) */
   REAL* P_std;         /**< @brief Standard deviation of active power (p.u. system base power) */
-  
+
   // Reactive power
   REAL* Q;             /**< @brief Variable generator reactive power (p.u. system base power) */
   REAL Q_max;          /**< @brief Maximum variable generator reactive power (p.u.) */
-  REAL Q_min;          /**< @brief Minimum variable generator reactive power (p.u.) */ 
-  
+  REAL Q_min;          /**< @brief Minimum variable generator reactive power (p.u.) */
+
   // Indices
   int index;           /**< @brief Generator index */
   int* index_P;        /**< @brief Active power index */
@@ -60,14 +61,14 @@ struct Vargen {
 void* VARGEN_array_get(void* gen_array, int index) {
   if (gen_array)
     return (void*)&(((Vargen*)gen_array)[index]);
-  else 
+  else
     return NULL;
 }
 
 void VARGEN_array_del(Vargen* gen_array, int size) {
   int i;
   Vargen* gen;
-  if (gen_array) {    
+  if (gen_array) {
     for (i = 0; i < size; i++) {
       gen = &(gen_array[i]);
       free(gen->P);
@@ -79,7 +80,7 @@ void VARGEN_array_del(Vargen* gen_array, int size) {
       VARGEN_set_bus(gen,NULL);
     }
     free(gen_array);
-  }  
+  }
 }
 
 Vargen* VARGEN_array_new(int size, int num_periods) {
@@ -100,7 +101,7 @@ Vargen* VARGEN_array_new(int size, int num_periods) {
 void VARGEN_array_show(Vargen* gen_array, int size, int t) {
   int i;
   if (gen_array) {
-    for (i = 0; i < size; i++) 
+    for (i = 0; i < size; i++)
       VARGEN_show(&(gen_array[i]),t);
   }
 }
@@ -123,7 +124,7 @@ void VARGEN_clear_flags(Vargen* gen, char flag_type) {
 }
 
 void VARGEN_copy_from_vargen(Vargen* gen, Vargen* other) {
-  
+
   // Local variables
   int num_periods;
 
@@ -148,6 +149,7 @@ void VARGEN_copy_from_vargen(Vargen* gen, Vargen* other) {
   gen->type = other->type;
 
   // Flags
+  gen->pre_cont_status = other->pre_cont_status;
   gen->in_service = other->in_service;
   gen->fixed = other->fixed;
   gen->bounded = other->bounded;
@@ -172,7 +174,14 @@ void VARGEN_copy_from_vargen(Vargen* gen, Vargen* other) {
   memcpy(gen->index_Q,other->index_Q,num_periods*sizeof(int));
 
   // List
-  // skip next    
+  // skip next
+}
+
+short int VARGEN_get_pre_cont_status(Vargen* gen) {
+  if (gen)
+    return ((Vargen*)gen)->pre_cont_status;
+  else
+    return 0;
 }
 
 char VARGEN_get_flags_vars(Vargen* gen) {
@@ -276,14 +285,14 @@ Vargen* VARGEN_get_next(Vargen* gen) {
 REAL VARGEN_get_P(Vargen* gen, int t) {
   if (gen && t >= 0 && t < gen->num_periods)
     return gen->P[t];
-  else 
+  else
     return 0;
 }
 
 REAL VARGEN_get_P_ava(Vargen* gen, int t) {
   if (gen && t >= 0 && t < gen->num_periods)
     return gen->P_ava[t];
-  else 
+  else
     return 0;
 }
 
@@ -318,42 +327,42 @@ REAL* VARGEN_get_Q_array(Vargen* gen) {
 REAL VARGEN_get_P_max(Vargen* gen) {
   if (gen)
     return gen->P_max;
-  else 
+  else
     return 0;
 }
 
 REAL VARGEN_get_P_min(Vargen* gen) {
   if (gen)
     return gen->P_min;
-  else 
+  else
     return 0;
 }
 
 REAL VARGEN_get_P_std(Vargen* gen, int t) {
   if (gen && t >= 0 && t < gen->num_periods)
     return gen->P_std[t];
-  else 
+  else
     return 0;
 }
 
 REAL VARGEN_get_Q(Vargen* gen, int t) {
   if (gen && t >= 0 && t < gen->num_periods)
     return gen->Q[t];
-  else 
+  else
     return 0;
 }
 
 REAL VARGEN_get_Q_max(Vargen* gen) {
   if (gen)
     return gen->Q_max;
-  else 
+  else
     return 0;
 }
 
 REAL VARGEN_get_Q_min(Vargen* gen) {
   if (gen)
     return gen->Q_min;
-  else 
+  else
     return 0;
 }
 
@@ -372,7 +381,7 @@ void VARGEN_get_var_values(Vargen* gen, Vec* values, int code) {
     // active power
     if (gen->vars & VARGEN_VAR_P) {
       switch(code) {
-	
+
       case UPPER_LIMITS:
 	if (gen->bounded & VARGEN_VAR_P)
 	  VEC_set(values,gen->index_P[t],gen->P_ava[t]);
@@ -391,7 +400,7 @@ void VARGEN_get_var_values(Vargen* gen, Vec* values, int code) {
 	VEC_set(values,gen->index_P[t],gen->P[t]);
       }
     }
-    
+
     // reactive power
     if (gen->vars & VARGEN_VAR_Q) {
       switch(code) {
@@ -435,7 +444,7 @@ char* VARGEN_get_var_info_string(Vargen* gen, int index) {
 	     "variable generator:%d:active power:%d",gen->index,index-gen->index_P[0]);
     return info;
   }
-  
+
   // Reactive power
   if ((gen->vars & VARGEN_VAR_Q) &&
       index >= gen->index_Q[0] &&
@@ -512,7 +521,7 @@ char* VARGEN_get_json_string(Vargen* gen, char* output) {
   // Local variables
   char temp[VARGEN_JSON_BUFFER_SIZE];
   char* output_start;
-  BOOL resize;  
+  BOOL resize;
 
   // No gen
   if (!gen)
@@ -543,7 +552,7 @@ char* VARGEN_get_json_string(Vargen* gen, char* output) {
   JSON_float(temp,output,"Q_max",gen->Q_max,FALSE);
   JSON_float(temp,output,"Q_min",gen->Q_min,TRUE);
   JSON_end(output);
-  
+
   // Resize
   if (resize)
     output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
@@ -578,7 +587,7 @@ BOOL VARGEN_has_properties(void* vgen, char prop) {
 }
 
 void VARGEN_init(Vargen* gen, int num_periods) {
-  
+
   // Local variables
   int T;
 
@@ -593,17 +602,18 @@ void VARGEN_init(Vargen* gen, int num_periods) {
   gen->type = VARGEN_TYPE_WIND;
   ARRAY_clear(gen->name,char,VARGEN_BUFFER_SIZE);
 
+  gen->pre_cont_status = PRE_CONT_UNSET;
   gen->in_service = TRUE;
   gen->fixed = 0x00;
   gen->bounded = 0x00;
   gen->sparse = 0x00;
   gen->vars = 0x00;
-  
+
   gen->P_max = 0;
   gen->P_min = 0;
   gen->Q_max = 0;
   gen->Q_min = 0;
-  
+
   gen->index = -1;
 
   gen->P = NULL;
@@ -621,7 +631,7 @@ void VARGEN_init(Vargen* gen, int num_periods) {
   ARRAY_zalloc(gen->index_Q,int,T);
 
   gen->net = NULL;
-  
+
   gen->next = NULL;
 }
 
@@ -674,6 +684,11 @@ Vargen* VARGEN_new(int num_periods) {
   }
   else
     return NULL;
+}
+
+void VARGEN_set_pre_cont_status(Vargen* gen, short int pre_cont_status) {
+  if (gen && BUS_is_in_service(gen->bus))
+    gen->pre_cont_status = pre_cont_status;
 }
 
 void VARGEN_set_in_service(Vargen* gen, BOOL in_service) {
@@ -790,21 +805,21 @@ int VARGEN_set_flags(void* vgen, char flag_type, unsigned char mask, int index) 
     (*flags_ptr) |= VARGEN_VAR_Q;
     index += gen->num_periods;
   }
-  return index;  
+  return index;
 }
 
 void VARGEN_set_var_values(Vargen* gen, Vec* values) {
 
   // Local vars
   int t;
-  
+
   // No vargen
   if (!gen)
     return;
 
   // Time loop
   for (t = 0; t < gen->num_periods; t++) {
-    
+
     if (gen->vars & VARGEN_VAR_P) // active power (p.u.)
       gen->P[t] = VEC_get(values,gen->index_P[t]);
     if (gen->vars & VARGEN_VAR_Q) // reactive power (p.u.)
@@ -833,4 +848,3 @@ void VARGEN_propagate_data_in_time(Vargen* gen, int start, int end) {
     }
   }
 }
-

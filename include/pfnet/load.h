@@ -62,6 +62,7 @@ void LOAD_array_show(Load* load_array, int num, int t);
 void LOAD_clear_sensitivities(Load* load); 
 void LOAD_clear_flags(Load* load, char flag_type);
 void LOAD_copy_from_load(Load* load, Load* other);
+short int LOAD_get_pre_cont_status(Load* load);
 
 char LOAD_get_flags_vars(Load* load);
 char LOAD_get_flags_fixed(Load* load);
@@ -135,6 +136,7 @@ void LOAD_propagate_data_in_time(Load* load, int start, int end);
 
 void LOAD_set_network(Load* load, void* net);
 void LOAD_set_name(Load* load, char* name);
+void LOAD_set_pre_cont_status(Load* load, short int pre_cont_status);
 void LOAD_set_in_service(Load* load, BOOL in_service);
 void LOAD_set_target_power_factor(Load* load, REAL pf);
 void LOAD_set_sens_P_u_bound(Load* load, REAL value, int t);

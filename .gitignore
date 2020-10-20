@@ -17,6 +17,7 @@ __pycache__/
 CMakeCache.txt
 CMakeFiles/
 CTestTestfile.cmake
+CMakeSettings.json
 cmake_install.cmake
 install_manifest.txt
 libpfnet.dll
@@ -25,6 +26,9 @@ pfnet_tests.exe
 
 # PyCharm Project Files
 .idea/*
+
+# visual studio project files
+.vs/*
 
 # Tests
 tests/*.out

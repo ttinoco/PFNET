@@ -15,7 +15,7 @@
 #include <pfnet/json_macros.h>
 
 struct Shunt {
-  
+
   // Bus
   Bus* bus;          /**< @brief Bus where the shunt is connected */
   Bus* reg_bus;      /**< @brief Bus regulated by this shunt */
@@ -37,14 +37,15 @@ struct Shunt {
   REAL b_min;        /**< @brief Minimum susceptance (p.u.) */
   REAL* b_values;    /**< @brief Array of valid susceptances (p.u.) */
   char num_b_values; /**< @brief Number of valid susceptances (p.u.) */
- 
+
   // Flags
+  short int pre_cont_status;   /**< @brief Flag for indicating whether the shunt was in service before applying the contingency */
   BOOL in_service; /**< @brief Flag for indicating whether shunt is in service */
   char vars;       /**< @brief Flags for indicating which quantities are treated as variables **/
   char fixed;      /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;    /**< @brief Flags for indicating which quantities should be bounded */
   char sparse;     /**< @brief Flags for indicating which control adjustments should be sparse */
-  
+
   // Indices
   int index;      /**< @brief Shunt index */
   int* index_b;    /**< @brief Susceptance index */
@@ -64,7 +65,7 @@ struct Shunt {
   Shunt* reg_next; /**< @brief List of shunts regulated the same bus */
 };
 
-void* SHUNT_array_get(void* shunt_array, int index) { 
+void* SHUNT_array_get(void* shunt_array, int index) {
   if (shunt_array)
     return (void*)&(((Shunt*)shunt_array)[index]);
   else
@@ -89,7 +90,7 @@ void SHUNT_array_del(Shunt* shunt_array, int size) {
   }
 }
 
-Shunt* SHUNT_array_new(int size, int num_periods) { 
+Shunt* SHUNT_array_new(int size, int num_periods) {
   int i;
   if (num_periods > 0) {
     Shunt* shunt_array = (Shunt*)malloc(sizeof(Shunt)*size);
@@ -104,10 +105,10 @@ Shunt* SHUNT_array_new(int size, int num_periods) {
     return NULL;
 }
 
-void SHUNT_array_show(Shunt* shunt_array, int size, int t) { 
+void SHUNT_array_show(Shunt* shunt_array, int size, int t) {
   int i;
   if (shunt_array) {
-    for (i = 0; i < size; i++) 
+    for (i = 0; i < size; i++)
       SHUNT_show(&(shunt_array[i]),t);
   }
 }
@@ -174,6 +175,7 @@ void SHUNT_copy_from_shunt(Shunt* shunt, Shunt* other) {
   shunt->num_b_values = other->num_b_values;
 
   // Flags
+  shunt->pre_cont_status = other->pre_cont_status;
   shunt->in_service = other->in_service;
   shunt->fixed = other->fixed;
   shunt->bounded = other->bounded;
@@ -193,6 +195,13 @@ void SHUNT_copy_from_shunt(Shunt* shunt, Shunt* other) {
 
   // List
   // skip next
+}
+
+short int SHUNT_get_pre_cont_status(Shunt* shunt) {
+  if (shunt)
+    return ((Shunt*)shunt)->pre_cont_status;
+  else
+    return 0;
 }
 
 REAL SHUNT_get_sens_b_u_bound(Shunt* shunt, int t) {
@@ -395,7 +404,7 @@ void SHUNT_get_var_values(Shunt* shunt, Vec* values, int code) {
 
   // Time loop
   for (t = 0; t < shunt->num_periods; t++) {
-    
+
     if (shunt->vars & SHUNT_VAR_SUSC) { // susceptance
       switch(code) {
 
@@ -527,7 +536,7 @@ char* SHUNT_get_json_string(Shunt* shunt, char* output) {
   JSON_float(temp,output,"b_min",shunt->b_min,FALSE);
   JSON_array_float(temp,output,"b_values",shunt->b_values,shunt->num_b_values,TRUE);
   JSON_end(output);
-  
+
   // Output
   if (resize)
     output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
@@ -566,7 +575,7 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
 
   // Local vars
   int T;
-  
+
   // No gen
   if (!shunt)
     return;
@@ -577,7 +586,7 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
   shunt->type = SHUNT_TYPE_FIXED;
   shunt->mode = SHUNT_MODE_CONT;
   ARRAY_clear(shunt->name,char,SHUNT_BUFFER_SIZE);
-  
+
   shunt->bus = NULL;
   shunt->reg_bus = NULL;
   shunt->g = 0;
@@ -586,6 +595,7 @@ void SHUNT_init(Shunt* shunt, int num_periods) {
   shunt->b_values = NULL;
   shunt->num_b_values = 0;
 
+  shunt->pre_cont_status = PRE_CONT_UNSET;
   shunt->in_service = TRUE;
   shunt->vars = 0x00;
   shunt->fixed = 0x00;
@@ -698,7 +708,7 @@ int SHUNT_list_reg_len(Shunt* reg_shunt_list) {
   return len;
 }
 
-Shunt* SHUNT_new(int num_periods) { 
+Shunt* SHUNT_new(int num_periods) {
   if (num_periods > 0) {
     Shunt* shunt = (Shunt*)malloc(sizeof(Shunt));
     SHUNT_init(shunt,num_periods);
@@ -734,6 +744,11 @@ void SHUNT_set_sens_b_u_bound(Shunt* shunt, REAL value, int t) {
 void SHUNT_set_sens_b_l_bound(Shunt* shunt, REAL value, int t) {
   if (shunt && t >= 0 && t < shunt->num_periods)
     shunt->sens_b_l_bound[t] = value;
+}
+
+void SHUNT_set_pre_cont_status(Shunt* shunt, short int pre_cont_status) {
+  if (shunt && BUS_is_in_service(shunt->bus))
+    shunt->pre_cont_status = pre_cont_status;
 }
 
 void SHUNT_set_in_service(Shunt* shunt, BOOL in_service) {
@@ -790,17 +805,17 @@ void SHUNT_set_reg_bus(Shunt* shunt, Bus* reg_bus) {
   }
 }
 
-void SHUNT_set_index(Shunt* shunt, int index) { 
+void SHUNT_set_index(Shunt* shunt, int index) {
   if (shunt)
     shunt->index = index;
 }
 
-void SHUNT_set_g(Shunt* shunt, REAL g) { 
+void SHUNT_set_g(Shunt* shunt, REAL g) {
   if (shunt)
     shunt->g = g;
 }
 
-void SHUNT_set_b(Shunt* shunt, REAL b, int t) { 
+void SHUNT_set_b(Shunt* shunt, REAL b, int t) {
   if (shunt && t >= 0 && t < shunt->num_periods)
     shunt->b[t] = b;
 }
@@ -872,7 +887,7 @@ void SHUNT_set_var_values(Shunt* shunt, Vec* values) {
   for (t = 0; t < shunt->num_periods; t++) {
 
     if (shunt->vars & SHUNT_VAR_SUSC) // shunt susceptance (p.u.)
-      shunt->b[t] = VEC_get(values,shunt->index_b[t]); 
+      shunt->b[t] = VEC_get(values,shunt->index_b[t]);
   }
 }
 
@@ -881,7 +896,7 @@ void SHUNT_set_xfmr(Shunt* shunt, Branch* xfmr) {
     shunt->xfmr = xfmr;
 }
 
-void SHUNT_show(Shunt* shunt, int t) { 
+void SHUNT_show(Shunt* shunt, int t) {
   if (shunt)
     printf("shunt %d\t%d\n",
            BUS_get_number(shunt->bus),
