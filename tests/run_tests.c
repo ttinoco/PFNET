@@ -26,6 +26,7 @@ static char * all_tests() {
   run_test(test_net_fixed);
   run_test(test_net_properties);
   run_test(test_net_init_point);
+  run_test(test_net_indexes);
 
   // Constraints
   run_test(test_constr_FIX);
@@ -41,7 +42,7 @@ static char * all_tests() {
 
   // Problem
   run_test(test_problem_basic);
-  
+
   return 0;
 }
 
@@ -55,7 +56,7 @@ int main(int argc, char **argv) {
     printf("usage: run_tests test_case\n");
     return -1;
   }
-  
+
   // Get case
   test_case = argv[1];
 

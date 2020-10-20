@@ -62,6 +62,7 @@ void VARGEN_array_show(Vargen* gen_array, int size, int t);
 void VARGEN_clear_sensitivities(Vargen* vargen);
 void VARGEN_clear_flags(Vargen* gen, char flag_type);
 void VARGEN_copy_from_vargen(Vargen* vargen, Vargen* other);
+short int VARGEN_get_pre_cont_status(Vargen* gen);
 
 char VARGEN_get_flags_vars(Vargen* gen);
 char VARGEN_get_flags_fixed(Vargen* gen);
@@ -109,6 +110,7 @@ Vargen* VARGEN_new(int num_periods);
 void VARGEN_propagate_data_in_time(Vargen* gen, int start, int end);
 
 void VARGEN_set_network(Vargen* gen, void* net);
+void VARGEN_set_pre_cont_status(Vargen* gen, short int pre_cont_status);
 void VARGEN_set_in_service(Vargen* gen, BOOL in_service);
 void VARGEN_set_name(Vargen* gen, char* name);
 void VARGEN_set_type(Vargen* gen, int type);

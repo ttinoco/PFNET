@@ -64,6 +64,7 @@ void GEN_array_show(Gen* gen_array, int size, int t);
 void GEN_clear_sensitivities(Gen* gen);
 void GEN_clear_flags(Gen* gen, char flag_type);
 void GEN_copy_from_gen(Gen* gen, Gen* other);
+short int GEN_get_pre_cont_status(Gen* gen);
 
 char GEN_get_flags_vars(Gen* gen);
 char GEN_get_flags_fixed(Gen* gen);
@@ -132,6 +133,7 @@ Gen* GEN_list_reg_del(Gen* reg_gen_list, Gen* reg_gen);
 int GEN_list_reg_len(Gen* reg_gen_list);
 Gen* GEN_new(int num_periods);
 void GEN_propagate_data_in_time(Gen* gen, int start, int end);
+void GEN_set_pre_cont_status(Gen* gen, short int pre_cont_status);
 void GEN_set_in_service(Gen* gen, BOOL in_service);
 void GEN_set_redispatchable(Gen* gen, BOOL redisp);
 void GEN_set_name(Gen* gen, char* name);

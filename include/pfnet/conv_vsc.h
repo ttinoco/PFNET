@@ -72,6 +72,7 @@ void CONVVSC_clear_flags(ConvVSC* conv, char flag_mask);
 void CONVVSC_clear_sensitivities(ConvVSC* conv);
 
 void CONVVSC_copy_from_conv(ConvVSC* conv, ConvVSC* other);
+short int CONVVSC_get_pre_cont_status(ConvVSC* conv);
 
 Bus* CONVVSC_get_ac_bus(ConvVSC* conv);
 BusDC* CONVVSC_get_dc_bus(ConvVSC* conv);
@@ -153,6 +154,7 @@ ConvVSC* CONVVSC_new(int num_periods);
 void CONVVSC_propagate_data_in_time(ConvVSC* conv, int start, int end);
 
 void CONVVSC_set_network(ConvVSC* conv, void* net);
+void CONVVSC_set_pre_cont_status(ConvVSC* conv, short int pre_cont_status);
 void CONVVSC_set_in_service(ConvVSC* conv, BOOL in_service);
 void CONVVSC_set_ac_bus(ConvVSC* conv, Bus* bus);
 void CONVVSC_set_dc_bus(ConvVSC* conv, BusDC* bus);

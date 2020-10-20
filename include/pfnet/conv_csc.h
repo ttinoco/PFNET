@@ -76,6 +76,7 @@ void CONVCSC_clear_flags(ConvCSC* conv, char flag_mask);
 void CONVCSC_clear_sensitivities(ConvCSC* conv);
 
 void CONVCSC_copy_from_conv(ConvCSC* conv, ConvCSC* other);
+short int CONVCSC_get_pre_cont_status(ConvCSC* conv);
 
 Bus* CONVCSC_get_ac_bus(ConvCSC* conv);
 BusDC* CONVCSC_get_dc_bus(ConvCSC* conv);
@@ -145,6 +146,7 @@ BOOL CONVCSC_has_flags(void* vconv, char flag_type, unsigned char mask);
 BOOL CONVCSC_has_properties(void* conv, char prop);
 
 void CONVCSC_init(ConvCSC* conv, int num_periods);
+void CONVCSC_set_pre_cont_status(ConvCSC* conv, short int pre_cont_status);
 BOOL CONVCSC_is_in_service(void* conv);
 BOOL CONVCSC_is_equal(ConvCSC* conv, ConvCSC* other);
 BOOL CONVCSC_is_inverter(ConvCSC* conv);
