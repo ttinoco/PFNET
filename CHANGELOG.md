@@ -1,5 +1,6 @@
 Version 1.3.6
 -------------
+* Added additional index checks with tests.
 * Constant current constraint for CSC HVDC.
 * Net update reg Q participations.
 * In update set points, changed reg_by_gen to v_set_regulated.
