@@ -38,8 +38,8 @@
 
 // Pre contingency status
 #define PRE_CONT_UNSET -1         /**< @brief Pre contingency flag of the component is not set */
-#define PRE_CONT_ONLINE 1         /**< @brief Component was online pre contingency */
 #define PRE_CONT_OFFLINE 0        /**< @brief Component was offline pre contingency */
+#define PRE_CONT_ONLINE 1         /**< @brief Component was online pre contingency */
 
 // Net
 typedef struct Net Net;

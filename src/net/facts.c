@@ -20,13 +20,13 @@ struct Facts {
   Bus* bus_k;          /**< @brief Bus connected to "k" side */
   Bus* bus_m;          /**< @brief Bus connected to "m" side */
   Bus* reg_bus;        /**< @brief Bus regulated by this FACTS device */
-  
+
   // Times
   int num_periods;     /**< @brief Number of time periods. */
 
   // Properties
   char name[FACTS_BUFFER_SIZE]; /**< @brief Facts name */
-  
+
   // Flags
   short int pre_cont_status;   /**< @brief Flag for indicating whether the FACTS was in service before applying the contingency */
   BOOL in_service;     /**< @brief Flag for indicating whether FACTS is in service */
@@ -37,13 +37,13 @@ struct Facts {
 
   // Series mode
   char mode_s;         /**< @brief Series link mode (bypass, constant impedance, constant voltage) */
-  
+
   // Interface
   REAL* P_k;           /**< @brief Active power injected into the "k" bus (p.u.) */
-  REAL* Q_k;           /**< @brief Reactive power injected into the "k" bus (p.u.) */ 
+  REAL* Q_k;           /**< @brief Reactive power injected into the "k" bus (p.u.) */
   REAL* P_m;           /**< @brief Active power injected into the "m" bus (p.u.) */
   REAL* Q_m;           /**< @brief Reactive power injected into the "m" bus (p.u.) */
-  
+
   // Converters
   REAL* Q_sh;          /**< @brief Reactive power provided by shunt converter (p.u.) */
   REAL* Q_s;           /**< @brief Reactive power provided by series converter (p.u.) */
@@ -51,7 +51,7 @@ struct Facts {
   REAL Q_par;          /**< @brief Reactive power participation factor of shunt converter for regulating bus voltage magnitude (unitless) */
   REAL rmpct;          /**< @brief Plant Reactive power participation factor of shunt converter for regulating bus voltage magnitude (percent) */
 
-  // Set points 
+  // Set points
   REAL* P_set;          /**< @brief Active power set-point at the "m" bus (p.u.) */
   REAL* Q_set;          /**< @brief Reactive power set-point at the "m" bus (p.u.) */
 
@@ -65,7 +65,7 @@ struct Facts {
   REAL P_max_dc;       /**< @brief Maximum DC power transfer (p.u.) */
   REAL v_min_m;        /**< @brief Minimum voltage magnitude for bus "m" (p.u.) */
   REAL v_max_m;        /**< @brief Maximum voltage magnitude for bus "m" (p.u.) */
-  
+
   // Series voltage
   REAL* v_mag_s;       /**< @brief Series voltage magnitude (p.u.) */
   REAL* v_ang_s;       /**< @brief Series voltage angel (radians wrt bus_k voltage angle) */
@@ -74,7 +74,7 @@ struct Facts {
   // Series admittance set-point
   REAL g;              /**< @brief Conductance set-point for constant impedance mode (p.u.) */
   REAL b;              /**< @brief Susceptance set-point for constant impedance mode (p.u.) */
-  
+
   // Indices
   int index;           /**< @brief Facts index */
   int* index_v_mag_s;  /**< @brief Series voltage magnitude index */
@@ -97,8 +97,8 @@ struct Facts {
   Facts* next_m;         /**< @brief List of facts devices connected to a bus on the "m" side */
 };
 
-void* FACTS_array_get(void* facts_array, int index) { 
-  if (facts_array) 
+void* FACTS_array_get(void* facts_array, int index) {
+  if (facts_array)
     return (void*)&(((Facts*)facts_array)[index]);
   else
     return NULL;
@@ -135,10 +135,10 @@ void FACTS_array_del(Facts* facts_array, int size) {
       FACTS_set_reg_bus(facts,NULL);
     }
     free(facts_array);
-  }  
+  }
 }
 
-Facts* FACTS_array_new(int size, int num_periods) { 
+Facts* FACTS_array_new(int size, int num_periods) {
   int i;
   if (num_periods > 0) {
     Facts* facts_array = (Facts*)malloc(sizeof(Facts)*size);
@@ -153,10 +153,10 @@ Facts* FACTS_array_new(int size, int num_periods) {
     return NULL;
 }
 
-void FACTS_array_show(Facts* facts_array, int size, int t) { 
+void FACTS_array_show(Facts* facts_array, int size, int t) {
   int i;
   if (facts_array) {
-    for (i = 0; i < size; i++) 
+    for (i = 0; i < size; i++)
       FACTS_show(&(facts_array[i]),t);
   }
 }
@@ -263,12 +263,12 @@ void FACTS_copy_from_facts(Facts* facts, Facts* other) {
   memcpy(facts->index_Q_s,other->index_Q_s,num_periods*sizeof(int));
   memcpy(facts->index_Q_sh,other->index_Q_sh,num_periods*sizeof(int));
   memcpy(facts->index_P_dc,other->index_P_dc,num_periods*sizeof(int));
-  
+
   // List
   // skip next
 }
 
-short int FACTS_get_pre_cont_status(void* facts) {
+short int FACTS_get_pre_cont_status(Facts* facts) {
   if (facts)
     return ((Facts*)facts)->pre_cont_status;
   else
@@ -760,10 +760,10 @@ REAL FACTS_get_v_max_m(Facts* facts) {
 }
 
 void FACTS_get_var_values(Facts* facts, Vec* values, int code) {
- 
+
   // Local vars
   int t;
- 
+
   // No laod
   if (!facts)
     return;
@@ -773,7 +773,7 @@ void FACTS_get_var_values(Facts* facts, Vec* values, int code) {
 
     if (facts->vars & FACTS_VAR_VMAG_S) { // series voltage magnitude
       switch(code) {
- 
+
       case UPPER_LIMITS:
         if (facts->bounded & FACTS_VAR_VMAG_S)
           VEC_set(values,facts->index_v_mag_s[t],facts->v_max_s);
@@ -792,14 +792,14 @@ void FACTS_get_var_values(Facts* facts, Vec* values, int code) {
         VEC_set(values,facts->index_v_mag_s[t],facts->v_mag_s[t]);
       }
     }
-    
+
     if (facts->vars & FACTS_VAR_VANG_S) { // series voltage angle
       switch(code) {
 
       case UPPER_LIMITS:
         VEC_set(values,facts->index_v_ang_s[t],FACTS_INF_VANG_S);
         break;
-        
+
       case LOWER_LIMITS:
         VEC_set(values,facts->index_v_ang_s[t],-FACTS_INF_VANG_S);
         break;
@@ -1010,7 +1010,7 @@ char* FACTS_get_json_string(Facts* facts, char* output) {
     resize = TRUE;
   }
   output_start = output;
-  
+
   // Write
   JSON_start(output);
   JSON_int(temp,output,"index",facts->index,FALSE);
@@ -1050,9 +1050,9 @@ char* FACTS_get_json_string(Facts* facts, char* output) {
 
   JSON_float(temp,output,"g",facts->g,FALSE);
   JSON_float(temp,output,"b",facts->b,TRUE);
-  
+
   JSON_end(output);
-  
+
   // Resize
   if (resize)
     output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
@@ -1097,7 +1097,7 @@ void FACTS_init(Facts* facts, int num_periods) {
   T = num_periods;
   facts->num_periods = num_periods;
   ARRAY_clear(facts->name,char,FACTS_BUFFER_SIZE);
-  
+
   facts->bus_k = NULL;
   facts->bus_m = NULL;
   facts->reg_bus = NULL;
@@ -1108,7 +1108,7 @@ void FACTS_init(Facts* facts, int num_periods) {
   facts->bounded = 0x00;
   facts->sparse = 0x00;
   facts->vars = 0x00;
-      
+
   facts->index = -1;
 
   ARRAY_zalloc(facts->v_mag_s,REAL,T);
@@ -1138,8 +1138,8 @@ void FACTS_init(Facts* facts, int num_periods) {
   facts->i_max_sh = 0.;
   facts->P_max_dc = 0.;
   facts->v_min_m = 1.;
-  facts->v_max_m = 1.;  
-  
+  facts->v_max_m = 1.;
+
   ARRAY_zalloc(facts->index_v_mag_s,int,T);
   ARRAY_zalloc(facts->index_v_ang_s,int,T);
   ARRAY_zalloc(facts->index_P_k,int,T);
@@ -1350,17 +1350,17 @@ void FACTS_set_reg_bus(Facts* facts, Bus* bus) {
   }
 }
 
-void FACTS_set_index(Facts* facts, int index) { 
+void FACTS_set_index(Facts* facts, int index) {
   if (facts)
     facts->index = index;
 }
 
-void FACTS_set_v_mag_s(Facts* facts, REAL v_mag, int t) { 
+void FACTS_set_v_mag_s(Facts* facts, REAL v_mag, int t) {
   if (facts && t >= 0 && t < facts->num_periods)
     facts->v_mag_s[t] = v_mag;
 }
 
-void FACTS_set_v_ang_s(Facts* facts, REAL v_ang, int t) { 
+void FACTS_set_v_ang_s(Facts* facts, REAL v_ang, int t) {
   if (facts && t >= 0 && t < facts->num_periods)
     facts->v_ang_s[t] = v_ang;
 }
@@ -1427,7 +1427,7 @@ void FACTS_set_rmpct(Facts* facts, REAL rmpct) {
     for (f=BUS_get_facts_k(bus); f !=NULL; f = FACTS_get_next_k(f)) {
       f->rmpct = rmpct;
     }
-    
+
     bus = FACTS_get_bus_m(facts);
     for (f=BUS_get_facts_m(bus); f !=NULL; f = FACTS_get_next_m(f)) {
       f->rmpct = rmpct;
@@ -1590,7 +1590,7 @@ void FACTS_set_var_values(Facts* facts, Vec* values) {
     if (facts->vars & FACTS_VAR_P) { // active power (p.u.)
       facts->P_k[t] = VEC_get(values,facts->index_P_k[t]);
       facts->P_m[t] = VEC_get(values,facts->index_P_m[t]);
-      facts->P_dc[t] = VEC_get(values,facts->index_P_dc[t]);      
+      facts->P_dc[t] = VEC_get(values,facts->index_P_dc[t]);
     }
 
     if (facts->vars & FACTS_VAR_P) { // reactive power (p.u.)
@@ -1602,7 +1602,7 @@ void FACTS_set_var_values(Facts* facts, Vec* values) {
   }
 }
 
-void FACTS_show(Facts* facts, int t) { 
+void FACTS_show(Facts* facts, int t) {
   if (facts)
     printf("facts %d\t%d\t%d\n",
            BUS_get_number(facts->bus_k),

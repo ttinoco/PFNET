@@ -18,7 +18,7 @@ struct Bat {
 
   // Bus
   Bus* bus;            /**< @brief Bus to which the battery is connected */
- 
+
   // Times
   int num_periods;   /**< @brief Number of time periods. */
 
@@ -47,7 +47,7 @@ struct Bat {
   REAL E_init;         /**< @brief Initial battery energy level (p.u. system base power times time unit) */
   REAL E_final;        /**< @brief Battery energy level at the end of last period (p.u. system base power times time unit) */
   REAL E_max;          /**< @brief Maximum energy level (p.u. times time unit) */
-  
+
   // Indices
   int index;           /**< @brief Battery index */
   int* index_Pc;       /**< @brief charging power index */
@@ -61,8 +61,8 @@ struct Bat {
   Bat* next;           /**< @brief List of batteries connected to a bus */
 };
 
-void* BAT_array_get(void* bat_array, int index) { 
-  if (bat_array) 
+void* BAT_array_get(void* bat_array, int index) {
+  if (bat_array)
     return (void*)&(((Bat*)bat_array)[index]);
   else
     return NULL;
@@ -82,10 +82,10 @@ void BAT_array_del(Bat* bat_array, int size) {
       BAT_set_bus(bat,NULL);
     }
     free(bat_array);
-  }  
+  }
 }
 
-Bat* BAT_array_new(int size, int num_periods) { 
+Bat* BAT_array_new(int size, int num_periods) {
   int i;
   if (num_periods > 0) {
     Bat* bat_array = (Bat*)malloc(sizeof(Bat)*size);
@@ -111,10 +111,10 @@ BOOL BAT_is_equal(Bat* bat, Bat* other) {
   return bat == other;
 }
 
-void BAT_array_show(Bat* bat_array, int size, int t) { 
+void BAT_array_show(Bat* bat_array, int size, int t) {
   int i;
   if (bat_array) {
-    for (i = 0; i < size; i++) 
+    for (i = 0; i < size; i++)
       BAT_show(&(bat_array[i]),t);
   }
 }
@@ -137,7 +137,7 @@ void BAT_clear_flags(Bat* bat, char flag_type) {
 }
 
 void BAT_copy_from_bat(Bat* bat, Bat* other) {
-  
+
   // Local variables
   int num_periods;
 
@@ -193,7 +193,7 @@ void BAT_copy_from_bat(Bat* bat, Bat* other) {
   // skip next
 }
 
-short int BAT_get_pre_cont_status(void* bat) {
+short int BAT_get_pre_cont_status(Bat* bat) {
   if (bat)
     return ((Bat*)bat)->pre_cont_status;
   else
@@ -336,14 +336,14 @@ REAL BAT_get_P(Bat* bat, int t) {
 REAL BAT_get_P_max(Bat* bat) {
   if (bat)
     return bat->P_max;
-  else 
+  else
     return 0;
 }
 
 REAL BAT_get_P_min(Bat* bat) {
   if (bat)
     return bat->P_min;
-  else 
+  else
     return 0;
 }
 
@@ -357,21 +357,21 @@ REAL BAT_get_E(Bat* bat, int t) {
 REAL BAT_get_E_init(Bat* bat) {
   if (bat)
     return bat->E_init;
-  else 
+  else
     return 0;
 }
 
 REAL BAT_get_E_final(Bat* bat) {
   if (bat)
     return bat->E_final;
-  else 
+  else
     return 0;
 }
 
 REAL BAT_get_E_max(Bat* bat) {
   if (bat)
     return bat->E_max;
-  else 
+  else
     return 0;
 }
 
@@ -390,10 +390,10 @@ REAL BAT_get_eta_d(Bat* bat) {
 }
 
 void BAT_get_var_values(Bat* bat, Vec* values, int code) {
- 
+
   // Local vars
   int t;
- 
+
   // No bat
   if (!bat)
     return;
@@ -432,7 +432,7 @@ void BAT_get_var_values(Bat* bat, Vec* values, int code) {
 	  VEC_set(values,bat->index_Pc[t],bat->P[t]);
 	  VEC_set(values,bat->index_Pd[t],0.);
 	}
-	else {	  
+	else {
 	  VEC_set(values,bat->index_Pc[t],0.);
 	  VEC_set(values,bat->index_Pd[t],-bat->P[t]);
 	}
@@ -526,7 +526,7 @@ int BAT_get_num_vars(void* vbat, unsigned char var, int t_start, int t_end) {
   dt = t_end-t_start+1;
   if ((var & BAT_VAR_P) && (bat->vars & BAT_VAR_P))
     num_vars += 2*dt;
-  if ((var & BAT_VAR_E) && (bat->vars & BAT_VAR_E)) 
+  if ((var & BAT_VAR_E) && (bat->vars & BAT_VAR_E))
     num_vars += dt;
   return num_vars;
 }
@@ -602,7 +602,7 @@ char* BAT_get_json_string(Bat* bat, char* output) {
   JSON_float(temp,output,"E_final",bat->E_final,FALSE);
   JSON_float(temp,output,"E_max",bat->E_max,TRUE);
   JSON_end(output);
-  
+
   // Resize
   if (resize)
     output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
@@ -635,20 +635,20 @@ BOOL BAT_has_properties(void* vbat, char prop) {
   return TRUE;
 }
 
-void BAT_init(Bat* bat, int num_periods) { 
+void BAT_init(Bat* bat, int num_periods) {
 
   // Local vars
   int T;
-  
+
   // No gen
   if (!bat)
     return;
-  
+
   T = num_periods;
   bat->num_periods = num_periods;
 
   ARRAY_clear(bat->name,char,BAT_BUFFER_SIZE);
-  
+
   bat->bus = NULL;
 
   bat->pre_cont_status = PRE_CONT_UNSET;
@@ -657,17 +657,17 @@ void BAT_init(Bat* bat, int num_periods) {
   bat->bounded = 0x00;
   bat->sparse = 0x00;
   bat->vars = 0x00;
-   
+
   bat->P_max = 0;
   bat->P_min = 0;
-  
+
   bat->E_init = 0;
   bat->E_final = 0;
   bat->E_max = 0;
-  
+
   bat->eta_c = 1.;
   bat->eta_d = 1.;
-  
+
   bat->index = -1;
 
   ARRAY_zalloc(bat->P,REAL,T);
@@ -677,7 +677,7 @@ void BAT_init(Bat* bat, int num_periods) {
   ARRAY_zalloc(bat->index_E,int,T);
 
   bat->net = NULL;
-  
+
   bat->next = NULL;
 }
 
@@ -741,12 +741,12 @@ void BAT_set_bus(Bat* bat, Bus* bus) {
   }
 }
 
-void BAT_set_index(Bat* bat, int index) { 
+void BAT_set_index(Bat* bat, int index) {
   if (bat)
     bat->index = index;
 }
 
-void BAT_set_P(Bat* bat, REAL P, int t) { 
+void BAT_set_P(Bat* bat, REAL P, int t) {
   if (bat && t >= 0 && t < bat->num_periods)
     bat->P[t] = P;
 }
@@ -761,7 +761,7 @@ void BAT_set_P_min(Bat* bat, REAL P_min) {
     bat->P_min = P_min;
 }
 
-void BAT_set_E(Bat* bat, REAL E, int t) { 
+void BAT_set_E(Bat* bat, REAL E, int t) {
   if (bat && t >= 0 && t < bat->num_periods)
     bat->E[t] = E;
 }
@@ -781,12 +781,12 @@ void BAT_set_E_max(Bat* bat, REAL E) {
     bat->E_max = E;
 }
 
-void BAT_set_eta_c(Bat* bat, REAL eta_c) { 
+void BAT_set_eta_c(Bat* bat, REAL eta_c) {
   if (bat)
     bat->eta_c = eta_c;
 }
 
-void BAT_set_eta_d(Bat* bat, REAL eta_d) { 
+void BAT_set_eta_d(Bat* bat, REAL eta_d) {
   if (bat)
     bat->eta_d = eta_d;
 }
@@ -833,18 +833,18 @@ int BAT_set_flags(void* vbat, char flag_type, unsigned char mask, int index) {
     (*flags_ptr) |= BAT_VAR_E;
     index += bat->num_periods;
   }
-  return index;  
+  return index;
 }
 
 void BAT_set_var_values(Bat* bat, Vec* values) {
 
   // Local vars
   int t;
-  
+
   // No bat
   if (!bat)
     return;
-  
+
   // Time loop
   for (t = 0; t < bat->num_periods; t++) {
 
@@ -855,7 +855,7 @@ void BAT_set_var_values(Bat* bat, Vec* values) {
   }
 }
 
-void BAT_show(Bat* bat, int t) { 
+void BAT_show(Bat* bat, int t) {
   if (bat)
     printf("bat %d\t%d\n",
 	   BUS_get_number(bat->bus),
@@ -875,4 +875,3 @@ void BAT_propagate_data_in_time(Bat* bat, int start, int end) {
     }
   }
 }
-

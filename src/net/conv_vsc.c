@@ -16,13 +16,13 @@
 #include <pfnet/json_macros.h>
 
 struct ConvVSC {
-  
+
   // Properties
   char name[CONVVSC_BUFFER_SIZE]; /**< @brief Converter name */
-  
+
   // Times
   int num_periods;     /**< @brief Number of time periods. */
-  
+
   // Buses
   Bus* ac_bus;         /**< @brief AC bus to which the converter is connected */
   BusDC* dc_bus;       /**< @brief DC bus to which the converter is connected */
@@ -35,13 +35,13 @@ struct ConvVSC {
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
   char vars;           /**< @brief Flags for indicating which quantities should be treated as variables */
   char sparse;         /**< @brief Flags for indicating which control adjustments should be sparse */
-  
+
   // Control
   char mode_ac;        /**< @brief AC control mode */
   char mode_dc;        /**< @brief DC control mode */
   REAL* P_dc_set;      /**< @brief DC power set point (p.u. system base power) */
   REAL* v_dc_set;      /**< @brief DC voltage set point (p.u.) */
-  
+
   // AC injections
   REAL* P;             /**< @brief Active power injection into AC bus (p.u. system base power) */
   REAL* Q;             /**< @brief Reactive power injection into AC bus (p.u. system base power) */
@@ -63,7 +63,7 @@ struct ConvVSC {
 
   // DC injections
   REAL* P_dc;          /**< @brief Power injection into DC bus (p.u. system base power) */
-    
+
   // Indices
   int index;           /**< @brief Converter index */
   int* index_P;        /**< @brief Active power injection index */
@@ -73,7 +73,7 @@ struct ConvVSC {
 
   // Network
   Net* net; /**< @brief Network. */
-  
+
   // List
   ConvVSC* next_ac;       /**< @brief List of converters connected to an AC bus */
   ConvVSC* next_dc;       /**< @brief List of converters connected to a DC bus */
@@ -100,17 +100,17 @@ void CONVVSC_array_del(ConvVSC* conv_array, int size) {
       CONVVSC_set_reg_bus(conv,NULL);
     }
     free(conv_array);
-  }  
+  }
 }
 
-void* CONVVSC_array_get(void* conv_array, int index) { 
-  if (conv_array) 
+void* CONVVSC_array_get(void* conv_array, int index) {
+  if (conv_array)
     return (void*)&(((ConvVSC*)conv_array)[index]);
   else
     return NULL;
 }
 
-ConvVSC* CONVVSC_array_new(int size, int num_periods) { 
+ConvVSC* CONVVSC_array_new(int size, int num_periods) {
   int i;
   if (num_periods > 0) {
     ConvVSC* conv_array = (ConvVSC*)malloc(sizeof(ConvVSC)*size);
@@ -185,7 +185,7 @@ void CONVVSC_copy_from_conv(ConvVSC* conv, ConvVSC* other) {
   conv->mode_dc = other->mode_dc;
   memcpy(conv->P_dc_set,other->P_dc_set,num_periods*sizeof(REAL));
   memcpy(conv->v_dc_set,other->v_dc_set,num_periods*sizeof(REAL));
-  
+
   // AC injections
   memcpy(conv->P,other->P,num_periods*sizeof(REAL));
   memcpy(conv->Q,other->Q,num_periods*sizeof(REAL));
@@ -214,12 +214,12 @@ void CONVVSC_copy_from_conv(ConvVSC* conv, ConvVSC* other) {
   memcpy(conv->index_Q,other->index_Q,num_periods*sizeof(int));
   memcpy(conv->index_P_dc,other->index_P_dc,num_periods*sizeof(int));
   memcpy(conv->index_i_dc,other->index_i_dc,num_periods*sizeof(int));
-    
+
   // List
   // skip next
 }
 
-short int CONVVSC_get_pre_cont_status(void* conv) {
+short int CONVVSC_get_pre_cont_status(ConvVSC* conv) {
   if (conv)
     return ((ConvVSC*)conv)->pre_cont_status;
   else
@@ -292,14 +292,14 @@ REAL CONVVSC_get_loss_coeff_B(ConvVSC* conv) {
 REAL CONVVSC_get_v_dc_set(ConvVSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
     return conv->v_dc_set[t];
-  else 
+  else
     return 1.;
 }
 
 REAL CONVVSC_get_P_dc_set(ConvVSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
     return conv->P_dc_set[t];
-  else 
+  else
     return 0;
 }
 
@@ -392,7 +392,7 @@ char* CONVVSC_get_json_string(ConvVSC* conv, char* output) {
     resize = TRUE;
   }
   output_start = output;
-  
+
   // Write
   JSON_start(output);
   JSON_int(temp,output,"index",conv->index,FALSE);
@@ -419,7 +419,7 @@ char* CONVVSC_get_json_string(ConvVSC* conv, char* output) {
   JSON_float(temp,output,"rmpct",conv->rmpct,FALSE);
   JSON_float(temp,output,"target_power_factor",conv->target_power_factor,TRUE);
   JSON_end(output);
-  
+
   // Resize
   if (resize)
     output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
@@ -513,28 +513,28 @@ char CONVVSC_get_obj_type(void* conv) {
 REAL CONVVSC_get_P(ConvVSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
     return conv->P[t];
-  else 
+  else
     return 0;
 }
 
 REAL CONVVSC_get_Q(ConvVSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
     return conv->Q[t];
-  else 
+  else
     return 0;
 }
 
 REAL CONVVSC_get_P_dc(ConvVSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
     return conv->P_dc[t];
-  else 
+  else
     return 0;
 }
 
 REAL CONVVSC_get_i_dc(ConvVSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
     return conv->P_dc[t]/(BUSDC_get_v(conv->dc_bus,t));
-  else 
+  else
     return 0;
 }
 
@@ -652,7 +652,7 @@ Vec* CONVVSC_get_var_indices(void* vconv, unsigned char var, int t_start, int t_
       offset += 2;
     }
   }
-  
+
   return indices;
 }
 
@@ -660,7 +660,7 @@ char* CONVVSC_get_var_info_string(ConvVSC* conv, int index) {
 
   // Local variables
   char* info;
-  
+
   //Check
   if (!conv)
     return NULL;
@@ -710,10 +710,10 @@ char* CONVVSC_get_var_info_string(ConvVSC* conv, int index) {
 }
 
 void CONVVSC_get_var_values(ConvVSC* conv, Vec* values, int code) {
- 
+
   // Local vars
   int t;
- 
+
   // No laod
   if (!conv)
     return;
@@ -723,21 +723,21 @@ void CONVVSC_get_var_values(ConvVSC* conv, Vec* values, int code) {
 
     if (conv->vars & CONVVSC_VAR_P) { // active power
       switch(code) {
-      
+
       case UPPER_LIMITS:
         if (conv->bounded & CONVVSC_VAR_P)
           VEC_set(values,conv->index_P[t],conv->P_max);
         else
           VEC_set(values,conv->index_P[t],CONVVSC_INF_P);
         break;
-      
+
       case LOWER_LIMITS:
         if (conv->bounded & CONVVSC_VAR_P)
           VEC_set(values,conv->index_P[t],conv->P_min);
         else
           VEC_set(values,conv->index_P[t],-CONVVSC_INF_P);
         break;
-      
+
       default:
         VEC_set(values,conv->index_P[t],conv->P[t]);
       }
@@ -745,21 +745,21 @@ void CONVVSC_get_var_values(ConvVSC* conv, Vec* values, int code) {
 
     if (conv->vars & CONVVSC_VAR_Q) { // reactive power
       switch(code) {
-      
+
       case UPPER_LIMITS:
         if (conv->bounded & CONVVSC_VAR_Q)
           VEC_set(values,conv->index_Q[t],conv->Q_max);
         else
           VEC_set(values,conv->index_Q[t],CONVVSC_INF_Q);
         break;
-      
+
       case LOWER_LIMITS:
         if (conv->bounded & CONVVSC_VAR_Q)
           VEC_set(values,conv->index_Q[t],conv->Q_min);
         else
           VEC_set(values,conv->index_Q[t],-CONVVSC_INF_Q);
         break;
-      
+
       default:
         VEC_set(values,conv->index_Q[t],conv->Q[t]);
       }
@@ -767,17 +767,17 @@ void CONVVSC_get_var_values(ConvVSC* conv, Vec* values, int code) {
 
     if (conv->vars & CONVVSC_VAR_PDC) { // DC power
       switch(code) {
-        
+
       case UPPER_LIMITS:
         VEC_set(values,conv->index_P_dc[t],CONVVSC_INF_PDC);
         VEC_set(values,conv->index_i_dc[t],CONVVSC_INF_PDC);
         break;
-        
+
       case LOWER_LIMITS:
         VEC_set(values,conv->index_P_dc[t],-CONVVSC_INF_PDC);
         VEC_set(values,conv->index_i_dc[t],-CONVVSC_INF_PDC);
         break;
-        
+
       default:
         VEC_set(values,conv->index_P_dc[t],conv->P_dc[t]);
         VEC_set(values,conv->index_i_dc[t],conv->P_dc[t]/(BUSDC_get_v(conv->dc_bus,t)));
@@ -791,13 +791,13 @@ void CONVVSC_init(ConvVSC* conv, int num_periods) {
 
   // Local variables
   int T;
-  
+
   // No conv
   if (!conv)
     return;
 
   ARRAY_clear(conv->name,char,CONVVSC_BUFFER_SIZE);
-  
+
   T = num_periods;
   conv->num_periods = num_periods;
 
@@ -830,7 +830,7 @@ void CONVVSC_init(ConvVSC* conv, int num_periods) {
   conv->rmpct = 100.;
 
   conv->target_power_factor = 1.;
-  
+
   conv->index = -1;
   ARRAY_zalloc(conv->index_P,int,T);
   ARRAY_zalloc(conv->index_Q,int,T);
@@ -841,7 +841,7 @@ void CONVVSC_init(ConvVSC* conv, int num_periods) {
   conv->loss_coeff_B = 0;
 
   conv->net = NULL;
-  
+
   conv->next_ac = NULL;
   conv->next_dc = NULL;
   conv->reg_next = NULL;
@@ -1038,7 +1038,7 @@ void CONVVSC_set_rmpct(ConvVSC* conv, REAL rmpct) {
   if (conv) {
     bus = CONVVSC_get_ac_bus(conv);
     // Change for all converters at the same bus
-    for (vsc = BUS_get_vsc_conv(bus); vsc != NULL; vsc = CONVVSC_get_next_ac(vsc)) { 
+    for (vsc = BUS_get_vsc_conv(bus); vsc != NULL; vsc = CONVVSC_get_next_ac(vsc)) {
       vsc->rmpct = rmpct;
     }
   }
@@ -1130,7 +1130,7 @@ int CONVVSC_set_flags(void* vconv, char flag_type, unsigned char mask, int index
   return index;
 }
 
-void CONVVSC_set_index(ConvVSC* conv, int index) { 
+void CONVVSC_set_index(ConvVSC* conv, int index) {
   if (conv)
     conv->index = index;
 }

@@ -222,7 +222,7 @@ void GEN_copy_from_gen(Gen* gen, Gen* other) {
   // skip next
 }
 
-short int GEN_get_pre_cont_status(void* gen) {
+short int GEN_get_pre_cont_status(Gen* gen) {
   if (gen)
     return ((Gen*)gen)->pre_cont_status;
   else
