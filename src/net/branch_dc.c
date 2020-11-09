@@ -31,6 +31,7 @@ struct BranchDC {
   REAL r;            /**< @brief Series resistance (p.u.) */
 
   // Flags
+  BOOL pre_cont_status; /**< @brief Flag for indicating whether the branch was in service before applying the contingency */
   BOOL in_service;   /**< @brief Flag for indicating whether the branch is in service */
   char vars;         /**< @brief Flags for indicating which quantities should be treated as variables */
   char fixed;        /**< @brief Flags for indicating which quantities should be fixed to their current value */
@@ -119,6 +120,7 @@ void BRANCHDC_copy_from_dc_branch(BranchDC* br, BranchDC* other) {
   br->r = other->r;
 
   // Flags
+  br->pre_cont_status = other->pre_cont_status;
   br->in_service = other->in_service;
   br->fixed = other->fixed;
   br->bounded = other->bounded;
@@ -401,6 +403,7 @@ void BRANCHDC_init(BranchDC* br, int num_periods) {
 
   br->r = 0;
 
+  br->pre_cont_status = PRE_CONT_UNSET;
   br->in_service = TRUE;
   br->vars = 0x00;
   br->fixed = 0x00;

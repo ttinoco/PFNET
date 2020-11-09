@@ -17,7 +17,7 @@
 #include "vector.h"
 
 // Variables
-/** \defgroup bat_vars Battery Variable Masks 
+/** \defgroup bat_vars Battery Variable Masks
  *  @{
  */
 #define BAT_VAR_P 0x01    /**< @brief Variable: battery charing/discharging power */
@@ -29,7 +29,7 @@
 #define BAT_INF_E 1e8 /**< @brief Infinite energy level */
 
 // Properties
-/** \defgroup bat_props Battery Property Masks 
+/** \defgroup bat_props Battery Property Masks
  *  @{
  */
 #define BAT_PROP_ANY 0x00     /**< @brief Property: any */
@@ -57,6 +57,7 @@ void BAT_array_show(Bat* bat_array, int size, int t);
 void BAT_clear_sensitivities(Bat* bat);
 void BAT_clear_flags(Bat* bat, char flag_type);
 void BAT_copy_from_bat(Bat* bat, Bat* other);
+short int BAT_get_pre_cont_status(Bat* bat);
 
 char BAT_get_flags_vars(Bat* bat);
 char BAT_get_flags_fixed(Bat* bat);
@@ -101,6 +102,7 @@ Bat* BAT_list_del(Bat* bat_list, Bat* bat);
 int BAT_list_len(Bat* bat_list);
 Bat* BAT_new(int num_periods);
 void BAT_propagate_data_in_time(Bat* bat, int start, int end);
+void BAT_set_pre_cont_status(Bat* bat, short int pre_cont_status);
 void BAT_set_network(Bat* bat, void* net);
 void BAT_set_in_service(Bat* bat, BOOL in_service);
 void BAT_set_name(Bat* bat, char* name);

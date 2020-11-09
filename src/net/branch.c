@@ -65,6 +65,7 @@ struct Branch {
   REAL ratingC;      /**< @brief Thermal rating C (p.u. system base MVA) */
 
   // Flags
+  short int pre_cont_status;   /**< @brief Flag for indicating whether the branch was in service before applying the contingency */
   BOOL in_service;       /**< @brief Flag for indicating whether branch is in service */
   BOOL pos_ratio_v_sens; /**< @brief Flag for positive ratio-voltage sensitivity */
   char vars;             /**< @brief Flags for indicating which quantities should be treated as variables */
@@ -184,12 +185,12 @@ void BRANCH_clear_sensitivities(Branch* br) {
 
 void BRANCH_copy_from_branch(Branch* br, Branch* other, int mode) {
   /** Copies data from another branch except index and connections.
-   * 
+   *
    *  Parameters
    *  -----------
    *  mode: -1 (to merged), 0 (one-to-one), 1 (from merged)
    */
-  
+
   // Local variables
   int num_periods;
 
@@ -232,7 +233,7 @@ void BRANCH_copy_from_branch(Branch* br, Branch* other, int mode) {
   br->ratio_max = other->ratio_max;
   br->ratio_min = other->ratio_min;
   br->num_ratios = other->num_ratios;
-  
+
   // Phase shift
   memcpy(br->phase,other->phase,num_periods*sizeof(REAL));
   br->phase_max = other->phase_max;
@@ -251,20 +252,21 @@ void BRANCH_copy_from_branch(Branch* br, Branch* other, int mode) {
   br->ratingA = other->ratingA;
   br->ratingB = other->ratingB;
   br->ratingC = other->ratingC;
-  
+
   // Flags
+  br->pre_cont_status = other->pre_cont_status;
   br->in_service = other->in_service;
   br->pos_ratio_v_sens = other->pos_ratio_v_sens;
   br->fixed = other->fixed;
   br->bounded = other->bounded;
   br->sparse = other->sparse;
   br->vars = other->vars;
-  
+
   // Indices
   // skip index
   memcpy(br->index_ratio,other->index_ratio,num_periods*sizeof(int));
   memcpy(br->index_phase,other->index_phase,num_periods*sizeof(int));
-  
+
   // Sensitivities
   memcpy(br->sens_P_u_bound,other->sens_P_u_bound,num_periods*sizeof(REAL));
   memcpy(br->sens_P_l_bound,other->sens_P_l_bound,num_periods*sizeof(REAL));
@@ -273,9 +275,16 @@ void BRANCH_copy_from_branch(Branch* br, Branch* other, int mode) {
   memcpy(br->sens_phase_u_bound,other->sens_phase_u_bound,num_periods*sizeof(REAL));
   memcpy(br->sens_phase_l_bound,other->sens_phase_l_bound,num_periods*sizeof(REAL));
   memcpy(br->sens_i_mag_u_bound,other->sens_i_mag_u_bound,num_periods*sizeof(REAL));
-  
+
   // List
   // skip next
+}
+
+short int BRANCH_get_pre_cont_status(Branch* br) {
+  if (br)
+    return ((Branch*)br)->pre_cont_status;
+  else
+    return 0;
 }
 
 char BRANCH_get_flags_vars(Branch* br) {
@@ -651,29 +660,29 @@ REAL BRANCH_get_Q_min(Branch* br) {
 void BRANCH_compute_flows(Branch* br, Vec* var_values, int t, REAL* flows) {
   /** Compute the flows in this branch's pi model equivalent
    *  including the flow from the bus, the flow in the shunt elements,
-   *  and the flow in the series element. These values are returned in 
+   *  and the flow in the series element. These values are returned in
    *  the 'flows' argument.
    */
-    
+
   // Buses
   Bus* bus_k;
   Bus* bus_m;
-  
+
   // Voltage magnitudes
   REAL v_k;
   REAL v_m;
-  
+
   // Voltage angles
   REAL w_k;
   REAL w_m;
-  
+
   // Phase shift
   REAL phi;
-  
+
   // Tap ratios
   REAL a_km;
   REAL a_mk = 1.;
-  
+
   // Series conductance and susceptance
   REAL g_km;
   REAL b_km;
@@ -762,15 +771,15 @@ void BRANCH_compute_flows(Branch* br, Vec* var_values, int t, REAL* flows) {
   // P_km_series = a_km^2*v_k^2*g_km - a_km*a_mk*v_k*v_m*( g_km*cos(w_k-w_m-phi) + b_km*sin(w_k-w_m-phi))
   flows[BRANCH_P_KM_SERIES] = (v_k_tap_squared*g_km -
                                v_k_v_m_tap*( g_km*cos(theta_km) + b_km*sin(theta_km)));
-  
+
   // Q_km_series = -a_km^2*v_k^2*b_km - a_km*a_mk*v_k*v_m*( g_km*sin(w_k-w_m-phi) - b_km*cos(w_k-w_m-phi))
   flows[BRANCH_Q_KM_SERIES] = (-v_k_tap_squared*b_km -
                                v_k_v_m_tap*( g_km*sin(theta_km) - b_km*cos(theta_km)));
-  
+
   // P_mk_series = a_mk^2*v_m^2*g_mk - a_mk*a_km*v_k*v_m*( g_mk*cos(w_k-w_m+phi) + b_mk*sin(w_k-w_m+phi))
   flows[BRANCH_P_MK_SERIES] = (v_m_tap_squared*g_mk -
                                v_k_v_m_tap*( g_mk*cos(theta_mk) + b_mk*sin(theta_mk)));
-  
+
   // Q_mk_series = -a_mk^2*v_m^2*b_mk - a_mk*a_km*v_k*v_m*( g_mk*sin(w_k-w_m+phi) - b_mk*cos(w_k-w_m+phi))
   flows[BRANCH_Q_MK_SERIES] = (-v_m_tap_squared*b_mk -
                                v_k_v_m_tap*( g_mk*sin(theta_mk) - b_mk*cos(theta_mk)));
@@ -797,13 +806,13 @@ void BRANCH_compute_flows(Branch* br, Vec* var_values, int t, REAL* flows) {
   // Total flows from the given bus
   // P_km = P_km_series + P_k_shunt
   flows[BRANCH_P_KM] = flows[BRANCH_P_KM_SERIES] + flows[BRANCH_P_K_SHUNT];
-  
+
   // Q_km = Q_km_series + Q_k_shunt
   flows[BRANCH_Q_KM] = flows[BRANCH_Q_KM_SERIES] + flows[BRANCH_Q_K_SHUNT];
-  
+
   // P_mk = P_mk_series + P_m_shunt
   flows[BRANCH_P_MK] = flows[BRANCH_P_MK_SERIES] + flows[BRANCH_P_M_SHUNT];
-  
+
   // Q_mk = Q_mk_series + Q_m_shunt
   flows[BRANCH_Q_MK] = flows[BRANCH_Q_MK_SERIES] + flows[BRANCH_Q_M_SHUNT];
 }
@@ -832,7 +841,7 @@ REAL BRANCH_get_i_km_mag(Branch* br, Vec* var_values, int t, REAL eps) {
 }
 
 REAL BRANCH_get_i_mk_mag(Branch* br, Vec* var_values, int t, REAL eps) {
-  
+
   REAL flows[BRANCH_FLOW_SIZE];
   REAL R_mk;
   REAL I_mk;
@@ -890,7 +899,7 @@ REAL BRANCH_get_P_km(Branch* br, Vec* var_values, int t) {
   /** Gets the real power flow measured at bus "k" towards bus "m".
    *  P_km = P_km_series + P_k_shunt
    */
-  
+
   REAL flows[BRANCH_FLOW_SIZE];
 
   if (br) {
@@ -905,9 +914,9 @@ REAL BRANCH_get_Q_km(Branch* br, Vec* var_values, int t) {
   /** Gets the reactive power flow measured at bus "k" towards bus "m".
    *  Q_km = Q_km_series + Q_k_shunt
    */
-  
+
   REAL flows[BRANCH_FLOW_SIZE];
-  
+
   if (br) {
     BRANCH_compute_flows(br,var_values,t,flows);
     return flows[BRANCH_Q_KM];
@@ -922,7 +931,7 @@ REAL BRANCH_get_P_mk(Branch* br, Vec* var_values, int t) {
    */
 
   REAL flows[BRANCH_FLOW_SIZE];
-  
+
   if (br) {
     BRANCH_compute_flows(br,var_values,t,flows);
     return flows[BRANCH_P_MK];
@@ -935,7 +944,7 @@ REAL BRANCH_get_Q_mk(Branch* br, Vec* var_values, int t) {
   /** Gets the reactive power flow measured at bus "m" towards bus "k".
    *  Q_mk = Q_mk_series + Q_m_shunt
    */
-  
+
   REAL flows[BRANCH_FLOW_SIZE];
 
   if (br) {
@@ -984,7 +993,7 @@ REAL BRANCH_get_P_km_series(Branch* br, Vec* var_values, int t) {
   /** Gets the real power flow across the series element from bus "k" to bus "m".
    *  P_km_series = a_km^2*v_k^2*g_km - a_km*a_mk*v_k*v_m*( g_km*cos(w_k-w_m-phi) + b_km*sin(w_k-w_m-phi))
    */
-  
+
   REAL flows[BRANCH_FLOW_SIZE];
 
   if (br) {
@@ -999,7 +1008,7 @@ REAL BRANCH_get_Q_km_series(Branch* br, Vec* var_values, int t) {
   /** Gets the reactive power flow across the series element from bus "k" to bus "m".
    *  Q_km_series = -a_km^2*v_k^2*b_km - a_km*a_mk*v_k*v_m*( g_km*sin(w_k-w_m-phi) - b_km*cos(w_k-w_m-phi))
    */
-  
+
   REAL flows[BRANCH_FLOW_SIZE];
 
   if (br) {
@@ -1014,7 +1023,7 @@ REAL BRANCH_get_P_mk_series(Branch* br, Vec* var_values, int t) {
   /** Gets the real power flow across the series element from bus "m" to bus "k".
    *  P_mk_series = -a_mk^2*v_m^2*g_mk - a_mk*a_km*v_k*v_m*( g_mk*cos(w_k-w_m+phi) + b_mk*sin(w_k-w_m+phi))
    */
-  
+
   REAL flows[BRANCH_FLOW_SIZE];
 
   if (br) {
@@ -1029,9 +1038,9 @@ REAL BRANCH_get_Q_mk_series(Branch* br, Vec* var_values, int t) {
   /** Gets the real power flow across the series element from bus "m" to bus "k".
    *  Q_mk_series = -a_mk^2*v_m^2*b_mk - a_mk*a_km*v_k*v_m*( g_mk*sin(w_k-w_m+phi) - b_mk*cos(w_k-w_m+phi))
    */
-  
+
   REAL flows[BRANCH_FLOW_SIZE];
-  
+
   if (br) {
     BRANCH_compute_flows(br,var_values,t,flows);
     return flows[BRANCH_Q_MK_SERIES];
@@ -1044,9 +1053,9 @@ REAL BRANCH_get_P_k_shunt(Branch* br, Vec* var_values, int t) {
   /** Gets the real power flow to the shunt element from bus "k".
    *  P_k_shunt = v_k^2*a_km^2*g_k_sh
    */
-  
+
   REAL flows[BRANCH_FLOW_SIZE];
-  
+
   if (br) {
     BRANCH_compute_flows(br,var_values,t,flows);
     return flows[BRANCH_P_K_SHUNT];
@@ -1059,9 +1068,9 @@ REAL BRANCH_get_Q_k_shunt(Branch* br, Vec* var_values, int t) {
   /** Gets the reactive power flow to the shunt element from bus "k".
    *  Q_k_shunt = v_k^2*a_km^2*b_k_sh
    */
-  
+
   REAL flows[BRANCH_FLOW_SIZE];
-  
+
   if (br) {
     BRANCH_compute_flows(br,var_values,t,flows);
     return flows[BRANCH_Q_K_SHUNT];
@@ -1074,7 +1083,7 @@ REAL BRANCH_get_P_m_shunt(Branch* br, Vec* var_values, int t) {
   /** Gets the real power flow to the shunt element from bus "m".
    *  P_m_shunt = v_m^2*a_mk^2*g_m_sh
    */
-  
+
   REAL flows[BRANCH_FLOW_SIZE];
 
   if (br) {
@@ -1089,7 +1098,7 @@ REAL BRANCH_get_Q_m_shunt(Branch* br, Vec* var_values, int t) {
   /** Gets the reactive power flow to the shunt element from bus "m".
    *  Q_m_shunt = v_m^2*a_mk^2*b_m_sh
    */
-  
+
   REAL flows[BRANCH_FLOW_SIZE];
 
   if (br) {
@@ -1122,8 +1131,8 @@ REAL BRANCH_get_ratingC(Branch* br) {
 }
 
 REAL BRANCH_get_P_km_DC(Branch* br, int t) {
-  /** Active power flow (DC approx) from bus "k" to bus "m". 
-   *  P_km_DC = -b (w_k - w_m - Phi_km) 
+  /** Active power flow (DC approx) from bus "k" to bus "m".
+   *  P_km_DC = -b (w_k - w_m - Phi_km)
    */
 
   if (br && t >= 0 && t < br->num_periods) {
@@ -1135,9 +1144,9 @@ REAL BRANCH_get_P_km_DC(Branch* br, int t) {
     return 0;
 }
 
-// 
+//
 REAL BRANCH_get_P_mk_DC(Branch* br, int t) {
-  /** Active power flow (DC approx) from bus "m" to bus "k". 
+  /** Active power flow (DC approx) from bus "m" to bus "k".
    *  P_mk_DC = -b (w_m - w_m - Phi_km)
    */
 
@@ -1164,7 +1173,7 @@ void BRANCH_get_var_values(Branch* br, Vec* values, int code) {
 
     if (br->vars & BRANCH_VAR_RATIO) { // taps ratio
       switch(code) {
-	
+
       case UPPER_LIMITS:
         if (br->bounded & BRANCH_VAR_RATIO)
           VEC_set(values,br->index_ratio[t],br->ratio_max);
@@ -1316,7 +1325,7 @@ char* BRANCH_get_json_string(Branch* branch, char* output) {
     resize = TRUE;
   }
   output_start = output;
-  
+
   // Write
   JSON_start(output);
   JSON_int(temp,output,"index",branch->index,FALSE);
@@ -1347,7 +1356,7 @@ char* BRANCH_get_json_string(Branch* branch, char* output) {
   JSON_bool(temp,output,"in_service",branch->in_service,FALSE);
   JSON_bool(temp,output,"pos_ratio_v_sens",branch->pos_ratio_v_sens,TRUE);
   JSON_end(output);
-  
+
   // Resize
   if (resize)
     output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
@@ -1447,6 +1456,7 @@ void BRANCH_init(Branch* br, int num_periods) {
   br->ratingB = 0;
   br->ratingC = 0;
 
+  br->pre_cont_status = PRE_CONT_UNSET;
   br->in_service = TRUE;
   br->pos_ratio_v_sens = TRUE;
   br->vars = 0x00;
@@ -1756,6 +1766,11 @@ void BRANCH_set_pos_ratio_v_sens(Branch* br, BOOL flag) {
     br->pos_ratio_v_sens = flag;
 }
 
+void BRANCH_set_pre_cont_status(Branch* br, short int pre_cont_status) {
+  if (br && BUS_is_in_service(br->bus_k) && BUS_is_in_service(br->bus_m))
+    br->pre_cont_status = pre_cont_status;
+}
+
 void BRANCH_set_in_service(Branch* br, BOOL in_service) {
   if (br && BUS_is_in_service(br->bus_k) && BUS_is_in_service(br->bus_m)) {
     if (br->in_service != in_service)
@@ -1901,7 +1916,7 @@ void BRANCH_propagate_data_in_time(Branch* br, int start, int end) {
 void BRANCH_power_flow_count(Branch* br, int* J_nnz, int* H_nnz, int t, BOOL km, BOOL ext_idx) {
   /** Counts nnz of power flow Jacobian (P and Q) as well as nnz of power flow Hessian (P or Q).
    *  When "ext_idx" is true, the routine uses externally-computed indices for dPkdwk, dQkdwk,
-   *  dPkdvk, dQkdvk, dwkdwk, dwkdvk, and dvkdvk to reduce number of nnz. 
+   *  dPkdvk, dQkdvk, dwkdwk, dwkdvk, and dvkdvk to reduce number of nnz.
    */
 
   // Local variables
@@ -1924,7 +1939,7 @@ void BRANCH_power_flow_count(Branch* br, int* J_nnz, int* H_nnz, int t, BOOL km,
     var_v[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VMAG);
     var_w[k] = BUS_has_flags(bus[k],FLAG_VARS,BUS_VAR_VANG);
   }
-  
+
   // Branch data
   var_a = BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_RATIO);
   var_phi = BRANCH_has_flags(br,FLAG_VARS,BRANCH_VAR_PHASE);
@@ -1947,98 +1962,98 @@ void BRANCH_power_flow_count(Branch* br, int* J_nnz, int* H_nnz, int t, BOOL km,
       (*J_nnz)++; // Pkm/dwk
       (*J_nnz)++; // Qkm/dwk
     }
-    
+
     // H
     if (!ext_idx) {
       (*H_nnz)++;   // wk and wk
-      if (var_v[k]) 
+      if (var_v[k])
         (*H_nnz)++; // wk and vk
     }
-    if (var_w[m]) 
+    if (var_w[m])
       (*H_nnz)++; // wk and wm
-    if (var_v[m]) 
+    if (var_v[m])
       (*H_nnz)++; // wk and vm
-    if (var_a)    
+    if (var_a)
       (*H_nnz)++; // wk and a
-    if (var_phi)  
+    if (var_phi)
       (*H_nnz)++; // wk and phi
   }
-  
+
   //**********
   if (var_v[k]) { // vk var
-    
+
     // J
     if (!ext_idx) {
       (*J_nnz)++; // Pkm/dvk
       (*J_nnz)++; // Qkm/dvk
     }
-    
+
     // H
     if (!ext_idx)
       (*H_nnz)++;   // vk and vk
-    if (var_w[m]) 
+    if (var_w[m])
       (*H_nnz)++; // vk and wm
-    if (var_v[m]) 
+    if (var_v[m])
       (*H_nnz)++; // vk and vm
-    if (var_a)    
+    if (var_a)
       (*H_nnz)++; // vk and a
-    if (var_phi)  
+    if (var_phi)
       (*H_nnz)++; // vk and phi
   }
-  
+
   //***********
   if (var_w[m]) { // wm var
-    
+
     // J
     (*J_nnz)++; // Pkm/dwm
     (*J_nnz)++; // Qkm/dwm
-    
+
     // H
     (*H_nnz)++;   // wm and wm
     if (var_v[m])
       (*H_nnz)++; // wm and vm
-    if (var_a)     
+    if (var_a)
       (*H_nnz)++; // wm and a
-    if (var_phi)    
+    if (var_phi)
       (*H_nnz)++; // wm and phi
   }
-  
+
   //***********
   if (var_v[m]) { // vm var
-    
+
     // J
     (*J_nnz)++; // Pkm/dvm
     (*J_nnz)++; // Qkm/dvm
-    
+
     // H
     // no vm and vm
-    if (var_a)   
+    if (var_a)
       (*H_nnz)++; // vm and a
-    if (var_phi) 
+    if (var_phi)
       (*H_nnz)++; // vm and phi
   }
-  
+
   //********
   if (var_a) { // a var
-    
+
     // J
     (*J_nnz)++; // Pkm/da
     (*J_nnz)++; // Qkm/da
-    
+
     // H
-    if (k == 0)  
-      (*H_nnz)++; // a and a (important check k==0) 
-    if (var_phi) 
+    if (k == 0)
+      (*H_nnz)++; // a and a (important check k==0)
+    if (var_phi)
       (*H_nnz)++; // a and phi
   }
-  
+
   //**********
   if (var_phi) { // phi var
-    
+
     // J
     (*J_nnz)++; // Pkm/dphi
     (*J_nnz)++; // Qkm/dphi
-    
+
     // H
     (*H_nnz)++; // phi and phi
   }
@@ -2060,7 +2075,7 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
   int m;
 
   // Check
-  if (!br || !J_nnz || !J || !H_nnz || !HP || !HQ) 
+  if (!br || !J_nnz || !J || !H_nnz || !HP || !HQ)
     return;
 
   // Bus data
@@ -2088,21 +2103,21 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
     k = 1;
     m = 0;
   }
-  
+
   //***********
   if (var_w[k]) { // wk var
-    
+
     // J
     if (!ext_idx) {
       MAT_set_i(J,*J_nnz,index_P);
       MAT_set_j(J,*J_nnz,w_index[k]);
       (*J_nnz)++; // Pkm/dwk
-    
+
       MAT_set_i(J,*J_nnz,index_Q);
       MAT_set_j(J,*J_nnz,w_index[k]);
       (*J_nnz)++; // Qkm/dwk
     }
-    
+
     // H
     if (!ext_idx) {
 
@@ -2117,7 +2132,7 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
 
         MAT_set_i(HP,*H_nnz,w_index[k]);
         MAT_set_j(HP,*H_nnz,v_index[k]);
-	
+
         MAT_set_i(HQ,*H_nnz,w_index[k]);
         MAT_set_j(HQ,*H_nnz,v_index[k]);
         (*H_nnz)++; // wk and vk
@@ -2127,7 +2142,7 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
 
       MAT_set_i(HP,*H_nnz,w_index[k]);
       MAT_set_j(HP,*H_nnz,w_index[m]);
-      
+
       MAT_set_i(HQ,*H_nnz,w_index[k]);
       MAT_set_j(HQ,*H_nnz,w_index[m]);
       (*H_nnz)++; // wk and wm
@@ -2136,7 +2151,7 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
 
       MAT_set_i(HP,*H_nnz,w_index[k]);
       MAT_set_j(HP,*H_nnz,v_index[m]);
-      
+
       MAT_set_i(HQ,*H_nnz,w_index[k]);
       MAT_set_j(HQ,*H_nnz,v_index[m]);
       (*H_nnz)++; // wk and vm
@@ -2145,12 +2160,12 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
 
       MAT_set_i(HP,*H_nnz,w_index[k]);
       MAT_set_j(HP,*H_nnz,a_index);
-      
+
       MAT_set_i(HQ,*H_nnz,w_index[k]);
       MAT_set_j(HQ,*H_nnz,a_index);
       (*H_nnz)++; // wk and a
     }
-    if (var_phi) { 
+    if (var_phi) {
 
       MAT_set_i(HP,*H_nnz,w_index[k]);
       MAT_set_j(HP,*H_nnz,phi_index);
@@ -2160,21 +2175,21 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
       (*H_nnz)++; // wk and phi
     }
   }
-  
+
   //***********
   if (var_v[k]) { // vk var
-    
+
     // J
     if (!ext_idx) {
       MAT_set_i(J,*J_nnz,index_P);
       MAT_set_j(J,*J_nnz,v_index[k]);
       (*J_nnz)++; // Pkm/dvk
-    
+
       MAT_set_i(J,*J_nnz,index_Q);
       MAT_set_j(J,*J_nnz,v_index[k]);
       (*J_nnz)++; // Qkm/dvk
     }
-    
+
     // H
     if (!ext_idx) {
 
@@ -2185,7 +2200,7 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
       MAT_set_j(HQ,*H_nnz,v_index[k]);
       (*H_nnz)++;    // vk and vk
     }
-    if (var_w[m]) { 
+    if (var_w[m]) {
 
       MAT_set_i(HP,*H_nnz,v_index[k]);
       MAT_set_j(HP,*H_nnz,w_index[m]);
@@ -2198,7 +2213,7 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
 
       MAT_set_i(HP,*H_nnz,v_index[k]);
       MAT_set_j(HP,*H_nnz,v_index[m]);
-      
+
       MAT_set_i(HQ,*H_nnz,v_index[k]);
       MAT_set_j(HQ,*H_nnz,v_index[m]);
       (*H_nnz)++; // vk and vm
@@ -2207,7 +2222,7 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
 
       MAT_set_i(HP,*H_nnz,v_index[k]);
       MAT_set_j(HP,*H_nnz,a_index);
-      
+
       MAT_set_i(HQ,*H_nnz,v_index[k]);
       MAT_set_j(HQ,*H_nnz,a_index);
       (*H_nnz)++; // vk and a
@@ -2216,7 +2231,7 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
 
       MAT_set_i(HP,*H_nnz,v_index[k]);
       MAT_set_j(HP,*H_nnz,phi_index);
-      
+
       MAT_set_i(HQ,*H_nnz,v_index[k]);
       MAT_set_j(HQ,*H_nnz,phi_index);
       (*H_nnz)++; // vk and phi
@@ -2225,16 +2240,16 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
 
   //***********
   if (var_w[m]) { // wm var
-    
+
     // J
     MAT_set_i(J,*J_nnz,index_P);
     MAT_set_j(J,*J_nnz,w_index[m]);
     (*J_nnz)++; // Pkm/dwm
-    
+
     MAT_set_i(J,*J_nnz,index_Q);
     MAT_set_j(J,*J_nnz,w_index[m]);
     (*J_nnz)++; // Qkm/dwm
-    
+
     // H
     MAT_set_i(HP,*H_nnz,w_index[m]);
     MAT_set_j(HP,*H_nnz,w_index[m]);
@@ -2242,7 +2257,7 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
     MAT_set_i(HQ,*H_nnz,w_index[m]);
     MAT_set_j(HQ,*H_nnz,w_index[m]);
     (*H_nnz)++;   // wm and wm
-    
+
     if (var_v[m]) {
 
       MAT_set_i(HP,*H_nnz,w_index[m]);
@@ -2265,13 +2280,13 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
 
       MAT_set_i(HP,*H_nnz,w_index[m]);
       MAT_set_j(HP,*H_nnz,phi_index);
-      
+
       MAT_set_i(HQ,*H_nnz,w_index[m]);
       MAT_set_j(HQ,*H_nnz,phi_index);
       (*H_nnz)++; // wm and phi
     }
   }
-  
+
   //***********
   if (var_v[m]) { // vm var
 
@@ -2279,11 +2294,11 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
     MAT_set_i(J,*J_nnz,index_P);
     MAT_set_j(J,*J_nnz,v_index[m]);
     (*J_nnz)++; // Pkm/dvm
-    
+
     MAT_set_i(J,*J_nnz,index_Q);
     MAT_set_j(J,*J_nnz,v_index[m]);
     (*J_nnz)++; // Qkm/dvm
-    
+
     // H
     // no vm and vm
     if (var_a) {
@@ -2299,25 +2314,25 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
 
       MAT_set_i(HP,*H_nnz,v_index[m]);
       MAT_set_j(HP,*H_nnz,phi_index);
-      
+
       MAT_set_i(HQ,*H_nnz,v_index[m]);
       MAT_set_j(HQ,*H_nnz,phi_index);
       (*H_nnz)++; // vm and phi
     }
   }
-  
+
   //********
   if (var_a) { // a var
-    
+
     // J
     MAT_set_i(J,*J_nnz,index_P);
     MAT_set_j(J,*J_nnz,a_index);
     (*J_nnz)++; // Pkm/da
-    
+
     MAT_set_i(J,*J_nnz,index_Q);
     MAT_set_j(J,*J_nnz,a_index);
     (*J_nnz)++; // Qkm/da
-    
+
     // H
     if (k == 0) {
 
@@ -2332,29 +2347,29 @@ void BRANCH_power_flow_analyze(Branch* br, int* J_nnz, Mat* J, int index_P, int 
 
       MAT_set_i(HP,*H_nnz,a_index);
       MAT_set_j(HP,*H_nnz,phi_index);
-      
+
       MAT_set_i(HQ,*H_nnz,a_index);
       MAT_set_j(HQ,*H_nnz,phi_index);
       (*H_nnz)++; // a and phi
     }
   }
-  
+
   //**********
   if (var_phi) { // phi var
-    
+
     // J
     MAT_set_i(J,*J_nnz,index_P);
     MAT_set_j(J,*J_nnz,phi_index);
     (*J_nnz)++; // Pkm/dphi
-    
+
     MAT_set_i(J,*J_nnz,index_Q);
     MAT_set_j(J,*J_nnz,phi_index);
     (*J_nnz)++; // Qkm/dphi
-    
+
     // H
     MAT_set_i(HP,*H_nnz,phi_index);
     MAT_set_j(HP,*H_nnz,phi_index);
-    
+
     MAT_set_i(HQ,*H_nnz,phi_index);
     MAT_set_j(HQ,*H_nnz,phi_index);
     (*H_nnz)++; // phi and phi
@@ -2390,7 +2405,7 @@ void BRANCH_power_flow_eval(Branch* br, REAL* P, REAL* Q, int* J_nnz, REAL* J, i
   REAL Q_kk;
 
   // Check
-  if (!br || !P || !Q || !J_nnz || !J || !H_nnz || !HP || !HQ) 
+  if (!br || !P || !Q || !J_nnz || !J || !H_nnz || !HP || !HQ)
     return;
 
   // Bus data
@@ -2450,12 +2465,12 @@ void BRANCH_power_flow_eval(Branch* br, REAL* P, REAL* Q, int* J_nnz, REAL* J, i
    *  P_km =  a_km^2*v_k^2*(g_km + gsh_km) - a_km*a_mk*v_k*v_m*( g_km*cos(theta) + b_km*sin(theta) )
    *  Q_km = -a_km^2*v_k^2*(b_km + bsh_km) - a_km*a_mk*v_k*v_m*( g_km*sin(theta) - b_km*cos(theta) )
    */
-  
+
   // Parts of the branch flow dependent on both vk, vm and the angles
   // (note that a == a_mk*a_km regardless of the direction since the other direction will always will always be 1)
   P_km = -mul*a*v[k]*v[m]*(g*cos(w[k]-w[m]-phi_temp)+b*sin(w[k]-w[m]-phi_temp));
   Q_km = -mul*a*v[k]*v[m]*(g*sin(w[k]-w[m]-phi_temp)-b*cos(w[k]-w[m]-phi_temp));
-  
+
   // Parts of the branch flow dependent on only vk^2
   P_kk =  mul*a_temp*a_temp*(g_sh+g)*v[k]*v[k];
   Q_kk = -mul*a_temp*a_temp*(b_sh+b)*v[k]*v[k];
@@ -2473,18 +2488,18 @@ void BRANCH_power_flow_eval(Branch* br, REAL* P, REAL* Q, int* J_nnz, REAL* J, i
     if (!ext_idx) {
       J[*J_nnz] = -Q_km;
       (*J_nnz)++; // Pkm/dwk
-      
+
       J[*J_nnz] = P_km;
       (*J_nnz)++; // Qkm/dwk
     }
     else {
       J[BUS_get_dPdw_index(bus[k],t)] += -Q_km;
       // Pkm/dwk
-      
+
       J[BUS_get_dQdw_index(bus[k],t)] += P_km;
       // Qkm/dwk
     }
-    
+
     // H
     if (!ext_idx) {
       HP[*H_nnz] = -P_km;
@@ -2530,23 +2545,23 @@ void BRANCH_power_flow_eval(Branch* br, REAL* P, REAL* Q, int* J_nnz, REAL* J, i
 
   //************
   if (var_v[k]) { // vk var
-    
+
     // J
     if (!ext_idx) {
       J[*J_nnz] = 2.*P_kk/v[k] + P_km/v[k];
       (*J_nnz)++; // Pkm/dvk
-      
+
       J[*J_nnz] = 2.*Q_kk/v[k] + Q_km/v[k];
       (*J_nnz)++; // Qkm/dvk
     }
     else {
       J[BUS_get_dPdv_index(bus[k],t)] += 2.*P_kk/v[k] + P_km/v[k];
       // Pkm/dvk
-      
+
       J[BUS_get_dQdv_index(bus[k],t)] += 2.*Q_kk/v[k] + Q_km/v[k];
       // Qkm/dvk
     }
-        
+
     // H
     if (!ext_idx) {
       HP[*H_nnz] = 2.*P_kk/(v[k]*v[k]);
@@ -2579,17 +2594,17 @@ void BRANCH_power_flow_eval(Branch* br, REAL* P, REAL* Q, int* J_nnz, REAL* J, i
       (*H_nnz)++; // vk and phi
     }
   }
-  
+
   //***********
   if (var_w[m]) { // wm var
-    
+
     // J
     J[*J_nnz] = Q_km;
     (*J_nnz)++; // Pkm/dwm
-    
+
     J[*J_nnz] = -P_km;
     (*J_nnz)++; // Qkm/dwm
-    
+
     // H
     HP[*H_nnz] = -P_km;
     HQ[*H_nnz] = -Q_km;
@@ -2610,17 +2625,17 @@ void BRANCH_power_flow_eval(Branch* br, REAL* P, REAL* Q, int* J_nnz, REAL* J, i
       (*H_nnz)++; // wm and phi
     }
   }
-  
+
   //***********
   if (var_v[m]) { // vm var
-    
+
     // J
     J[*J_nnz] = P_km/v[m];
     (*J_nnz)++; // dPkm/dvm
-    
-    J[*J_nnz] = Q_km/v[m]; 
+
+    J[*J_nnz] = Q_km/v[m];
     (*J_nnz)++; // dQkm/dvm
-    
+
     // H
     // no vm and vm
     if (var_a) {
@@ -2634,17 +2649,17 @@ void BRANCH_power_flow_eval(Branch* br, REAL* P, REAL* Q, int* J_nnz, REAL* J, i
       (*H_nnz)++; // vm and phi
     }
   }
-  
+
   //********
   if (var_a) { // a var
-    
+
     // J
     J[*J_nnz] = indicator_a*(2.*P_kk/a) + P_km/a;
     (*J_nnz)++; // dPkm/da
-    
+
     J[*J_nnz] = indicator_a*(2.*Q_kk/a) + Q_km/a;
     (*J_nnz)++; // dQkm/da
-    
+
     // H
     if (k == 0) {
       HP[*H_nnz] = P_kk*2./(a*a);
@@ -2657,17 +2672,17 @@ void BRANCH_power_flow_eval(Branch* br, REAL* P, REAL* Q, int* J_nnz, REAL* J, i
       (*H_nnz)++; // a and phi
     }
   }
-  
+
   //**********
   if (var_phi) { // phi var
-    
+
     // J
     J[*J_nnz] = indicator_phi*Q_km;
     (*J_nnz)++; // dPkm/dphi
-    
+
     J[*J_nnz] = -indicator_phi*P_km;
     (*J_nnz)++; // dQkm/dphi
-    
+
     // H
     HP[*H_nnz] = -P_km;
     HQ[*H_nnz] = -Q_km;
@@ -2676,7 +2691,7 @@ void BRANCH_power_flow_eval(Branch* br, REAL* P, REAL* Q, int* J_nnz, REAL* J, i
 }
 
 Mat* BRANCH_power_flow_Jacobian(Branch* br, Vec* x, int t, BOOL km) {
-  
+
   int J_nnz;
   int H_nnz;
   int num_vars = 0;
@@ -2708,7 +2723,7 @@ Mat* BRANCH_power_flow_Jacobian(Branch* br, Vec* x, int t, BOOL km) {
   J_nnz = 0;
   H_nnz = 0;
   BRANCH_power_flow_analyze(br, &J_nnz, J, 0, 1, &H_nnz, HP, HQ, t, km, FALSE);
-  
+
   J_nnz = 0;
   H_nnz = 0;
   BRANCH_power_flow_eval(br, &P, &Q, &J_nnz, MAT_get_data_array(J), &H_nnz,
@@ -2718,7 +2733,7 @@ Mat* BRANCH_power_flow_Jacobian(Branch* br, Vec* x, int t, BOOL km) {
   MAT_del(HP);
   MAT_del(HQ);
 
-  return J;  
+  return J;
 }
 
 int BRANCH_get_oindex(Branch* br) {

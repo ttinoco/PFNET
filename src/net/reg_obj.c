@@ -24,7 +24,7 @@ void REG_OBJ_next(char* obj_type, void** obj, Bus* bus) {
         *obj = BUS_get_reg_vsc_conv(bus);
     }
   }
-  
+
   // VSC
   else if (*obj_type == OBJ_CONVVSC) {
     if (*obj && CONVVSC_get_reg_next((ConvVSC*)(*obj)))
@@ -53,14 +53,67 @@ void REG_OBJ_next(char* obj_type, void** obj, Bus* bus) {
   }
 }
 
+void OBJ_next(char* obj_type, void** obj, Bus* bus) {
+
+  // Gen
+  if (*obj_type == OBJ_GEN) {
+    if (*obj && GEN_get_next((Gen*)(*obj))) {
+      *obj = GEN_get_next((Gen*)(*obj));
+    }
+    else {
+      if (BUS_get_vsc_conv(bus)) {
+        *obj_type = OBJ_CONVVSC;         // Continue with VSC
+        *obj = BUS_get_reg_vsc_conv(bus);
+      }
+      else if (BUS_get_facts_k(bus)) {
+        *obj_type = OBJ_FACTS;           // Continue with FACTS
+        *obj = BUS_get_facts_k(bus);
+      }
+      else {
+        *obj = NULL;           // Terminate if there are no VSC or FACTS at the bus
+      }
+    }
+  }
+
+  // VSC
+  else if (*obj_type == OBJ_CONVVSC) {
+    if (*obj && CONVVSC_get_next_ac((ConvVSC*)(*obj))) {
+      *obj = CONVVSC_get_next_ac((ConvVSC*)(*obj));
+    }
+    else {
+      if (BUS_get_facts_k(bus)) {
+        *obj_type = OBJ_FACTS;           // Continue with FACTS
+        *obj = BUS_get_facts_k(bus);
+      }
+      else {
+        *obj = NULL;           // Terminate if there are FACTS at the bus
+      }
+    }
+  }
+
+  // FACTS
+  else if (*obj_type == OBJ_FACTS) {
+    if (*obj && FACTS_get_next_k((Facts*)(*obj)))
+      *obj = FACTS_get_next_k((Facts*)(*obj));
+    else
+      *obj = NULL;
+  }
+
+  // Unknown
+  else {
+    *obj = NULL;
+    *obj_type = OBJ_UNKNOWN;
+  }
+}
+
 void REG_OBJ_init(char* obj_type, void** obj, Bus* bus) {
 
   *obj_type = OBJ_GEN;
   if (BUS_get_reg_gen(bus))
     *obj = BUS_get_reg_gen(bus);
   else
-    *obj = NULL;    
-  
+    *obj = NULL;
+
   if (!(*obj)) {
     *obj_type = OBJ_CONVVSC;
     if (BUS_get_reg_vsc_conv(bus))
@@ -74,6 +127,30 @@ void REG_OBJ_init(char* obj_type, void** obj, Bus* bus) {
   }
 }
 
+void OBJ_init(char* obj_type, void** obj, Bus* bus) {
+
+  // Gen
+  *obj_type = OBJ_GEN;
+  if (BUS_get_gen(bus))
+    *obj = BUS_get_gen(bus);
+  else
+    *obj = NULL;
+
+  // VSC
+  if (!(*obj)) {
+    *obj_type = OBJ_CONVVSC;
+    if (BUS_get_vsc_conv(bus))
+      *obj = BUS_get_vsc_conv(bus);
+  }
+
+  // FACTS
+  if (!(*obj)) {
+    *obj_type = OBJ_FACTS;
+    if (BUS_get_facts_k(bus))
+      *obj = BUS_get_facts_k(bus);
+  }
+}
+
 void REG_OBJ_disable(char obj_type, void* obj) {
 
   // Check
@@ -83,7 +160,7 @@ void REG_OBJ_disable(char obj_type, void* obj) {
   // Gen
   if (obj_type == OBJ_GEN)
     GEN_set_reg_bus((Gen*)obj,NULL);
-      
+
   // VSC
   else if (obj_type == OBJ_CONVVSC)
     CONVVSC_set_reg_bus((ConvVSC*)obj,NULL);
@@ -98,11 +175,11 @@ void REG_OBJ_set_Q(char obj_type, void* obj, REAL Q, int t) {
   // Check
   if (!obj)
     return;
-  
+
   // Gen
   if (obj_type == OBJ_GEN)
     GEN_set_Q((Gen*)obj,Q,t);
-      
+
   // VSC
   else if (obj_type == OBJ_CONVVSC)
     CONVVSC_set_Q((ConvVSC*)obj,Q,t);
@@ -117,11 +194,11 @@ void REG_OBJ_set_Q_par(char obj_type, void* obj, REAL Q_par) {
   // Check
   if (!obj)
     return;
-  
+
   // Gen
   if (obj_type == OBJ_GEN)
     GEN_set_Q_par((Gen*)obj,Q_par);
-      
+
   // VSC
   else if (obj_type == OBJ_CONVVSC)
     CONVVSC_set_Q_par((ConvVSC*)obj,Q_par);
@@ -136,11 +213,11 @@ void REG_OBJ_show(char obj_type, void* obj) {
   // Check
   if (!obj)
     return;
-  
+
   // Gen
   if (obj_type == OBJ_GEN)
     printf("GEN %d\n", GEN_get_index((Gen*)obj));
-      
+
   // VSC
   else if (obj_type == OBJ_CONVVSC)
     printf("CONVVSC %d\n", CONVVSC_get_index((ConvVSC*)obj));
@@ -151,7 +228,7 @@ void REG_OBJ_show(char obj_type, void* obj) {
 
   // Unknown
   else
-    printf("UNKONWN\n");
+    printf("UNKNOWN\n");
 }
 
 Bus* REG_OBJ_get_bus(char obj_type, void* obj) {
@@ -159,11 +236,11 @@ Bus* REG_OBJ_get_bus(char obj_type, void* obj) {
   // Check
   if (!obj)
     return NULL;
-  
+
   // Gen
   if (obj_type == OBJ_GEN)
     return GEN_get_bus((Gen*)obj);
-      
+
   // VSC
   else if (obj_type == OBJ_CONVVSC)
     return CONVVSC_get_ac_bus((ConvVSC*)obj);
@@ -185,7 +262,7 @@ int REG_OBJ_get_index_Q(char obj_type, void* obj, int t) {
   // Gen
   if (obj_type == OBJ_GEN)
     return GEN_get_index_Q((Gen*)obj,t);
-      
+
   // VSC
   else if (obj_type == OBJ_CONVVSC)
     return CONVVSC_get_index_Q((ConvVSC*)obj,t);
@@ -198,16 +275,38 @@ int REG_OBJ_get_index_Q(char obj_type, void* obj, int t) {
     return -1;
 }
 
+int REG_OBJ_get_index_P(char obj_type, void* obj, int t) {
+
+  // Check
+  if (!obj)
+    return -1;
+
+  // Gen
+  if (obj_type == OBJ_GEN)
+    return GEN_get_index_P((Gen*)obj,t);
+
+  // VSC
+  else if (obj_type == OBJ_CONVVSC)
+    return CONVVSC_get_index_P((ConvVSC*)obj,t);
+
+  // FACTS
+  else if (obj_type == OBJ_FACTS)
+    return FACTS_get_index_P_dc((Facts*)obj,t);
+
+  else
+    return -1;
+}
+
 REAL REG_OBJ_get_Q(char obj_type, void* obj, int t) {
 
   // Check
   if (!obj)
     return 0.;
-  
+
   // Gen
   if (obj_type == OBJ_GEN)
     return GEN_get_Q((Gen*)obj,t);
-      
+
   // VSC
   else if (obj_type == OBJ_CONVVSC)
     return CONVVSC_get_Q((ConvVSC*)obj,t);
@@ -215,6 +314,28 @@ REAL REG_OBJ_get_Q(char obj_type, void* obj, int t) {
   // FACTS
   else if (obj_type == OBJ_FACTS)
     return FACTS_get_Q_sh((Facts*)obj,t);
+
+  else
+    return 0.;
+}
+
+REAL REG_OBJ_get_P(char obj_type, void* obj, int t) {
+
+  // Check
+  if (!obj)
+    return 0.;
+
+  // Gen
+  if (obj_type == OBJ_GEN)
+    return GEN_get_P((Gen*)obj,t);
+
+  // VSC
+  else if (obj_type == OBJ_CONVVSC)
+    return CONVVSC_get_P((ConvVSC*)obj,t);
+
+  // FACTS
+  else if (obj_type == OBJ_FACTS)
+    return FACTS_get_P_dc((Facts*)obj,t);
 
   else
     return 0.;
@@ -229,7 +350,7 @@ REAL REG_OBJ_get_Q_max(char obj_type, void* obj) {
   // Gen
   if (obj_type == OBJ_GEN)
     return GEN_get_Q_max((Gen*)obj);
-      
+
   // VSC
   else if (obj_type == OBJ_CONVVSC)
     return CONVVSC_get_Q_max((ConvVSC*)obj);
@@ -251,7 +372,7 @@ REAL REG_OBJ_get_Q_min(char obj_type, void* obj) {
   // Gen
   if (obj_type == OBJ_GEN)
     return GEN_get_Q_min((Gen*)obj);
-      
+
   // VSC
   else if (obj_type == OBJ_CONVVSC)
     return CONVVSC_get_Q_min((ConvVSC*)obj);
@@ -264,6 +385,51 @@ REAL REG_OBJ_get_Q_min(char obj_type, void* obj) {
     return 0.;
 }
 
+REAL REG_OBJ_get_mva_base(char obj_type, void* obj) {
+
+  // Check
+  if (!obj)
+    return 0.;
+
+  // Gen
+  if (obj_type == OBJ_GEN)
+    return GEN_get_mva_base((Gen*)obj);
+
+  // VSC
+  else if (obj_type == OBJ_CONVVSC)
+    return CONVVSC_get_P_max((ConvVSC*)obj);
+
+  // FACTS
+  else if (obj_type == OBJ_FACTS)
+    return FACTS_get_P_max_dc((Facts*)obj);
+
+  else
+    return 0.;
+}
+
+REAL REG_OBJ_get_rmpct(char obj_type, void* obj) {
+
+  // Check
+  if (!obj)
+    return 0.;
+
+  // Gen
+  if (obj_type == OBJ_GEN)
+    return GEN_get_rmpct((Gen*)obj);
+
+  // VSC
+  else if (obj_type == OBJ_CONVVSC)
+    return CONVVSC_get_rmpct((ConvVSC*)obj);
+
+  // FACTS
+  else if (obj_type == OBJ_FACTS)
+    return FACTS_get_rmpct((Facts*)obj);
+
+  else {
+    return 0.;
+  }
+}
+
 REAL REG_OBJ_get_Q_par(char obj_type, void* obj) {
 
   // Check
@@ -273,7 +439,7 @@ REAL REG_OBJ_get_Q_par(char obj_type, void* obj) {
   // Gen
   if (obj_type == OBJ_GEN)
     return GEN_get_Q_par((Gen*)obj);
-      
+
   // VSC
   else if (obj_type == OBJ_CONVVSC)
     return CONVVSC_get_Q_par((ConvVSC*)obj);
@@ -342,4 +508,29 @@ int REG_OBJ_count_candidates(Bus* bus) {
       num += 1;
   }
   return num;
+}
+
+BOOL REG_OBJ_is_regulator(char obj_type, void* obj) {
+
+  // Check
+  if (!obj)
+    return FALSE;
+
+  // Gen
+  if (obj_type == OBJ_GEN)
+    return (GEN_is_regulator((Gen*)obj) &&
+            GEN_is_in_service((Gen*)obj));
+
+  // VSC
+  else if (obj_type == OBJ_CONVVSC)
+    return (CONVVSC_get_Q_max((ConvVSC*)obj) > CONVVSC_get_Q_min((ConvVSC*)obj) &&
+            CONVVSC_is_in_service((ConvVSC*)obj));
+
+  // FACTS
+  else if (obj_type == OBJ_FACTS)
+    return (FACTS_get_Q_max_sh((Facts*)obj) > FACTS_get_Q_min_sh((Facts*)obj) &&
+            FACTS_is_in_service((Facts*)obj));
+
+  else
+    return FALSE;
 }

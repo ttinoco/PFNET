@@ -51,6 +51,9 @@ void FUNC_Q_LOSS_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
       //V var
       (*Hphi_nnz)++;
 
+      // v var
+      (*Hphi_nnz)++;
+    
     }
 }
 
@@ -84,7 +87,7 @@ void FUNC_Q_LOSS_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
 
         if (SHUNT_has_flags(shunt,FLAG_VARS,SHUNT_VAR_SUSC)) {
 
-          // v & b
+          // b & v
           MAT_set_i(Hphi,*Hphi_nnz,SHUNT_get_index_b(shunt,t));
           MAT_set_j(Hphi,*Hphi_nnz,BUS_get_index_v_mag(bus,t));
           (*Hphi_nnz)++;
@@ -95,6 +98,7 @@ void FUNC_Q_LOSS_analyze_step(Func* f, Bus* bus, BusDC* busdc, int t) {
       MAT_set_i(Hphi, *Hphi_nnz, BUS_get_index_v_mag(bus, t));
       MAT_set_j(Hphi, *Hphi_nnz, BUS_get_index_v_mag(bus, t));
       (*Hphi_nnz)++;
+
     }
 }
 
@@ -112,8 +116,8 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
   int* Hphi_nnz;
   int index_v_mag;
   REAL v;
-  REAL tot_b=0.0;
-  REAL gphi_vmag=0.0;
+  REAL tot_b = 0.0;
+  REAL gphi_vmag = 0.0;
 
   // Func data
   phi = FUNC_get_phi_ptr(f);
@@ -154,7 +158,7 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
   // Variable generators
   for (vargen = BUS_get_vargen(bus); vargen != NULL; vargen = VARGEN_get_next(vargen)){
 
-        // Out of service
+    // Out of service
     if (!VARGEN_is_in_service(vargen))
       continue;
 
@@ -294,6 +298,7 @@ void FUNC_Q_LOSS_eval_step(Func* f, Bus* bus, BusDC* busdc, int t, Vec* var_valu
         (*phi) += SHUNT_get_b(shunt,t) * pow(v,2.);
 
         if (BUS_has_flags(bus,FLAG_VARS,BUS_VAR_VMAG)) {  // V var
+
             // gphi
             gphi_vmag += 2. * SHUNT_get_b(shunt,t) * v;
 

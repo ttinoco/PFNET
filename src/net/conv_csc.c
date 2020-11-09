@@ -16,11 +16,11 @@
 #include <pfnet/json_macros.h>
 
 struct ConvCSC {
-  
+
   // Properties
   char type;           /**< @brief Converter type (rectifier or inverter) */
   char name[CONVCSC_BUFFER_SIZE]; /**< @brief Converter name */
-  
+
   // Times
   int num_periods;     /**< @brief Number of time periods. */
 
@@ -29,18 +29,19 @@ struct ConvCSC {
   BusDC* dc_bus;       /**< @brief DC bus to which the converter is connected */
 
   // Flags
+  short int pre_cont_status;   /**< @brief Flag for indicating whether the converter was in service before applying the contingency */
   BOOL in_service;     /**< @brief Flag for indicating whether the converter is in service */
   char fixed;          /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;        /**< @brief Flags for indicating which quantities should be bounded */
   char vars;           /**< @brief Flags for indicating which quantities should be treated as variables */
   char sparse;         /**< @brief Flags for indicating which control adjustments should be sparse */
-  
+
   // Control
   char mode_dc;        /**< @brief Control mode */
   REAL* P_dc_set;      /**< @brief DC power set point (p.u. system base power) */
   REAL* i_dc_set;      /**< @brief DC current set point (p.u.) */
   REAL* v_dc_set;      /**< @brief DC voltage set point (p.u.) */
-  
+
   // AC injections
   REAL* P;             /**< @brief Active power injection into AC bus (p.u. system base power) */
   REAL* Q;             /**< @brief Rective power injection into AC bus (p.u. system base power) */
@@ -50,22 +51,22 @@ struct ConvCSC {
 
   // Bridges
   int num_bridges;    /**< @brief Number of bridges in series */
-  
+
   // Commutating capacitor
-  REAL x_cap;          /**< @brief Commutating capacitor reactance as seen by each individual bridge (p.u.) */ 
-  
+  REAL x_cap;          /**< @brief Commutating capacitor reactance as seen by each individual bridge (p.u.) */
+
   // Commutating transformer
   REAL x;              /**< @brief Commutating transformer reactance as seen by each individual bridge (p.u.) */
   REAL r;              /**< @brief Commutating transformer resistance as seen by each individual bridge (p.u.) */
   REAL* ratio;         /**< @brief Commutating transformer turns ratio (p.u.) */
   REAL ratio_max;      /**< @brief Maximum commutating transformer turns ratio (p.u.) */
   REAL ratio_min;      /**< @brief Minimum commutating transformer turns ratio (p.u.) */
-  
+
   // Angle
   REAL* angle;         /**< @brief Ignition delay angle for rectifier or extinction advance angle for inverter (radians) */
   REAL angle_max;      /**< @brief Nominal maximum angle (radians) */
   REAL angle_min;      /**< @brief Minimum steady-state angle (radians) */
-  
+
   // Base voltages
   REAL v_base_p;       /**< @brief Primary side bus base AC voltage (kilovolts) */
   REAL v_base_s;       /**< @brief Secondary side bus base AC voltage (kilovolts) */
@@ -81,7 +82,7 @@ struct ConvCSC {
 
   // Network
   Net* net; /**< @brief Network. */
-  
+
   // List
   ConvCSC* next_ac;       /**< @brief List of converters connected to an AC bus */
   ConvCSC* next_dc;       /**< @brief List of converters connected to a DC bus */
@@ -111,17 +112,17 @@ void CONVCSC_array_del(ConvCSC* conv_array, int size) {
       CONVCSC_set_dc_bus(conv,NULL);
     }
     free(conv_array);
-  }  
+  }
 }
 
-void* CONVCSC_array_get(void* conv_array, int index) { 
-  if (conv_array) 
+void* CONVCSC_array_get(void* conv_array, int index) {
+  if (conv_array)
     return (void*)&(((ConvCSC*)conv_array)[index]);
   else
     return NULL;
 }
 
-ConvCSC* CONVCSC_array_new(int size, int num_periods) { 
+ConvCSC* CONVCSC_array_new(int size, int num_periods) {
   int i;
   if (num_periods > 0) {
     ConvCSC* conv_array = (ConvCSC*)malloc(sizeof(ConvCSC)*size);
@@ -182,6 +183,7 @@ void CONVCSC_copy_from_conv(ConvCSC* conv, ConvCSC* other) {
   strcpy(conv->name,other->name);
 
   // Flags
+  conv->pre_cont_status = other->pre_cont_status;
   conv->in_service = other->in_service;
   conv->fixed = other->fixed;
   conv->bounded = other->bounded;
@@ -193,7 +195,7 @@ void CONVCSC_copy_from_conv(ConvCSC* conv, ConvCSC* other) {
   memcpy(conv->P_dc_set,other->P_dc_set,num_periods*sizeof(REAL));
   memcpy(conv->i_dc_set,other->i_dc_set,num_periods*sizeof(REAL));
   memcpy(conv->v_dc_set,other->v_dc_set,num_periods*sizeof(REAL));
-  
+
   // AC injections
   memcpy(conv->P,other->P,num_periods*sizeof(REAL));
   memcpy(conv->Q,other->Q,num_periods*sizeof(REAL));
@@ -222,7 +224,7 @@ void CONVCSC_copy_from_conv(ConvCSC* conv, ConvCSC* other) {
   // Base voltages
   conv->v_base_p = other->v_base_p;
   conv->v_base_s = other->v_base_s;
-  
+
   // Indices
   // skip index
   memcpy(conv->index_P,other->index_P,num_periods*sizeof(int));
@@ -231,9 +233,16 @@ void CONVCSC_copy_from_conv(ConvCSC* conv, ConvCSC* other) {
   memcpy(conv->index_i_dc,other->index_i_dc,num_periods*sizeof(int));
   memcpy(conv->index_ratio,other->index_ratio,num_periods*sizeof(int));
   memcpy(conv->index_angle,other->index_angle,num_periods*sizeof(int));
-    
+
   // List
   // skip next
+}
+
+short int CONVCSC_get_pre_cont_status(ConvCSC* conv) {
+  if (conv)
+    return ((ConvCSC*)conv)->pre_cont_status;
+  else
+    return 0;
 }
 
 Bus* CONVCSC_get_ac_bus(ConvCSC* conv) {
@@ -388,7 +397,7 @@ char* CONVCSC_get_json_string(ConvCSC* conv, char* output) {
     resize = TRUE;
   }
   output_start = output;
-  
+
   // Write
   JSON_start(output);
   JSON_int(temp,output,"index",conv->index,FALSE);
@@ -418,7 +427,7 @@ char* CONVCSC_get_json_string(ConvCSC* conv, char* output) {
   JSON_float(temp,output,"v_base_p",conv->v_base_p,FALSE);
   JSON_float(temp,output,"v_base_s",conv->v_base_s,TRUE);
   JSON_end(output);
-  
+
   // Resize
   if (resize)
     output = (char*)realloc(output_start,sizeof(char)*(strlen(output_start)+1)); // +1 important!
@@ -509,63 +518,63 @@ char CONVCSC_get_obj_type(void* conv) {
 REAL CONVCSC_get_P(ConvCSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
     return conv->P[t];
-  else 
+  else
     return 0;
 }
 
 REAL CONVCSC_get_P_dc(ConvCSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
     return conv->P_dc[t];
-  else 
+  else
     return 0;
 }
 
 REAL CONVCSC_get_i_dc(ConvCSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
     return conv->P_dc[t]/(BUSDC_get_v(conv->dc_bus,t));
-  else 
+  else
     return 0;
 }
 
 REAL CONVCSC_get_P_dc_set(ConvCSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
     return conv->P_dc_set[t];
-  else 
+  else
     return 0;
 }
 
 REAL CONVCSC_get_v_dc_set(ConvCSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
     return conv->v_dc_set[t];
-  else 
+  else
     return 0;
 }
 
 REAL CONVCSC_get_i_dc_set(ConvCSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
     return conv->i_dc_set[t];
-  else 
+  else
     return 0;
 }
 
 REAL CONVCSC_get_Q(ConvCSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
     return conv->Q[t];
-  else 
+  else
     return 0;
 }
 
 REAL CONVCSC_get_ratio(ConvCSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
     return conv->ratio[t];
-  else 
+  else
     return 0;
 }
 
 REAL CONVCSC_get_angle(ConvCSC* conv, int t) {
   if (conv && t >= 0 && t < conv->num_periods)
     return conv->angle[t];
-  else 
+  else
     return 0;
 }
 
@@ -717,7 +726,7 @@ Vec* CONVCSC_get_var_indices(void* vconv, unsigned char var, int t_start, int t_
       offset++;
     }
   }
-  
+
   return indices;
 }
 
@@ -795,10 +804,10 @@ char* CONVCSC_get_var_info_string(ConvCSC* conv, int index) {
 }
 
 void CONVCSC_get_var_values(ConvCSC* conv, Vec* values, int code) {
- 
+
   // Local vars
   int t;
- 
+
   // No conv
   if (!conv)
     return;
@@ -901,7 +910,7 @@ void CONVCSC_init(ConvCSC* conv, int num_periods) {
 
   // Local variables
   int T;
-  
+
   // No conv
   if (!conv)
     return;
@@ -915,6 +924,7 @@ void CONVCSC_init(ConvCSC* conv, int num_periods) {
   conv->ac_bus = NULL;
   conv->dc_bus = NULL;
 
+  conv->pre_cont_status = PRE_CONT_UNSET;
   conv->in_service = TRUE;
   conv->fixed = 0x00;
   conv->bounded = 0x00;
@@ -941,7 +951,7 @@ void CONVCSC_init(ConvCSC* conv, int num_periods) {
   ARRAY_zalloc(conv->ratio,REAL,T);
   conv->ratio_max = 1.;
   conv->ratio_min = 1.;
-  
+
   ARRAY_zalloc(conv->angle,REAL,T);
   conv->angle_max = 0;
   conv->angle_min = 0;
@@ -958,7 +968,7 @@ void CONVCSC_init(ConvCSC* conv, int num_periods) {
   ARRAY_zalloc(conv->index_angle,int,T);
 
   conv->net = NULL;
-  
+
   conv->next_ac = NULL;
   conv->next_dc = NULL;
 }
@@ -1097,6 +1107,11 @@ void CONVCSC_propagate_data_in_time(ConvCSC* conv, int start, int end) {
   }
 }
 
+void CONVCSC_set_pre_cont_status(ConvCSC* conv, short int pre_cont_status) {
+  if (conv && BUS_is_in_service(conv->ac_bus) && BUSDC_is_in_service(conv->dc_bus))
+    conv->pre_cont_status = pre_cont_status;
+}
+
 void CONVCSC_set_in_service(ConvCSC* conv, BOOL in_service) {
   if (conv && BUS_is_in_service(conv->ac_bus) && BUSDC_is_in_service(conv->dc_bus)) {
     if (conv->in_service != in_service)
@@ -1221,7 +1236,7 @@ void CONVCSC_set_i_dc_set(ConvCSC* conv, REAL i, int t) {
     conv->i_dc_set[t] = i;
 }
 
-void CONVCSC_set_index(ConvCSC* conv, int index) { 
+void CONVCSC_set_index(ConvCSC* conv, int index) {
   if (conv)
     conv->index = index;
 }

@@ -20,7 +20,7 @@ struct Parser {
   // Error
   BOOL error_flag;                        /**< @brief Parser error flag */
   char error_string[PARSER_BUFFER_SIZE];  /**< @brief Parser error string */
-  
+
   // Data
   void * data; /**< @brief Parser data */
 
@@ -34,14 +34,14 @@ struct Parser {
 };
 
 Parser* PARSER_new(void) {
-  
+
   Parser* p = (Parser*)malloc(sizeof(Parser));
-  
+
   p->error_flag = FALSE;
   strcpy(p->error_string,"");
 
   p->data = NULL;
-  
+
   p->func_init = NULL;
   p->func_parse = NULL;
   p->func_set = NULL;
@@ -90,23 +90,23 @@ Net* PARSER_parse(Parser* p, char* f, int n) {
 
 void PARSER_set(Parser* p, char* key, REAL value) {
   if (p && p->func_set)
-    (*(p->func_set))(p,key,value);    
+    (*(p->func_set))(p,key,value);
 }
 
 void PARSER_show(Parser* p) {
   if (p && p->func_show)
-    (*(p->func_show))(p);    
+    (*(p->func_show))(p);
 }
 
 void PARSER_write(Parser* p, Net* net, char* f) {
   if (p && p->func_write)
-    (*(p->func_write))(p,net,f);    
+    (*(p->func_write))(p,net,f);
 }
 
 void PARSER_del(Parser* p) {
   if (p) {
     if (p->func_free)
-      (*(p->func_free))(p,TRUE);    
+      (*(p->func_free))(p,TRUE);
     free(p);
   }
 }
@@ -161,7 +161,6 @@ void PARSER_set_func_parse(Parser* p, Net* (*func)(Parser* p, char* f, int n)) {
     p->func_parse = func;
 }
 
-
 void PARSER_set_func_set(Parser* p, void (*func)(Parser* p, char* key, REAL v)) {
   if (p)
     p->func_set = func;
@@ -181,5 +180,3 @@ void PARSER_set_func_free(Parser* p, void (*func)(Parser* p, BOOL del_parser)) {
   if (p)
     p->func_free = func;
 }
-
-

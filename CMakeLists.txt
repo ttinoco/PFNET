@@ -2,12 +2,12 @@ cmake_minimum_required(VERSION 3.5.0)
 project(PFNET)
 enable_testing()
 
-set(PFNET_VERSION 1.3.4)
+set(PFNET_VERSION 1.3.6)
 set(PFNET_PACKAGE "pfnet")
 set(PFNET_NAME "PFNET")
 set(PFNET_STRING "${PFNET_NAME} ${PFNET_VERSION}")
-set(PFNET_BUGREPORT "ttinoco5687@gmail.com")
-set(PFNET_URL "https://github.com/ttinoco/PFNET")
+set(PFNET_BUGREPORT "awigington@epri.com")
+set(PFNET_URL "https://github.com/romcon/PFNET")
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS YES CACHE BOOL "Export all symbols")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)  # so that cmake builds with rpath already added
@@ -19,7 +19,7 @@ set(M_LIB,"")
 if (UNIX)
   find_library(M_LIB m)
   set(CMAKE_REQUIRED_INCLUDES math.h)
-  set(CMAKE_REQUIRED_LIBRARIES m)
+set(CMAKE_REQUIRED_LIBRARIES m)
 endif (UNIX)
 
 # Find PFNET source files
@@ -32,20 +32,13 @@ add_library(pfnet SHARED ${pfnet_source})
 add_library(pfnet_static STATIC ${pfnet_source})
 set_property(TARGET pfnet_static PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-# PFNET tests
-file(GLOB_RECURSE pfnet_test_source tests/*.c)
-
-# Test dynamic library
-add_executable(pfnet_tests ${pfnet_test_source})
-add_test(run_pfnet_tests pfnet_tests ${PFNET_SOURCE_DIR}/data/ieee14.mat)
-#target_link_libraries(pfnet_tests pfnet m)
-target_link_libraries(pfnet_tests pfnet ${M_LIB})
-
-# Test static library
-add_executable(pfnet_static_tests ${pfnet_test_source})
+# Test executables
+add_executable(pfnet_tests tests/run_tests.c)
+add_executable(pfnet_simple_test tests/run_simple_test.c)
 add_test(run_pfnet_static_tests pfnet_static_tests ${PFNET_SOURCE_DIR}/data/ieee14.mat)
-#target_link_libraries(pfnet_static_tests pfnet_static m)
-target_link_libraries(pfnet_static_tests pfnet_static ${M_LIB})
+#target_link_libraries(pfnet_tests pfnet_static m)
+target_link_libraries(pfnet_tests pfnet_static ${M_LIB})
+target_link_libraries(pfnet_simple_test pfnet_static ${M_LIB})
 
 # Set the debug flag
 if(PFNET_DEBUG)
@@ -133,6 +126,7 @@ install(TARGETS pfnet pfnet_static
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         RUNTIME DESTINATION lib)
+
 # Install header files
 install(DIRECTORY include/
         DESTINATION include

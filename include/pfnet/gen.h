@@ -17,7 +17,7 @@
 #include "vector.h"
 
 // Variables
-/** \defgroup gen_vars Generator Variable Masks 
+/** \defgroup gen_vars Generator Variable Masks
  *  @{
  */
 #define GEN_VAR_P 0x01    /**< @brief Variable: generator active power */
@@ -29,7 +29,7 @@
 #define GEN_INF_Q 1e8 /**< @brief Infinite reactive power */
 
 // Properties
-/** \defgroup gen_props Generator Property Masks 
+/** \defgroup gen_props Generator Property Masks
  *  @{
  */
 #define GEN_PROP_ANY 0x00       /**< @brief Property: any */
@@ -38,6 +38,7 @@
 #define GEN_PROP_NOT_REG 0x04   /**< @brief Property: non-regulating generator */
 #define GEN_PROP_NOT_SLACK 0x08 /**< @brief Property: non-slack generator */
 #define GEN_PROP_P_ADJUST 0x20  /**< @brief Property: P adjustable (Pmin < Pmax) */
+#define GEN_PROP_REDISP 0x40    /**< @brief Property: P re-dispatchable */
 /** @} */
 
 // Constants
@@ -63,6 +64,7 @@ void GEN_array_show(Gen* gen_array, int size, int t);
 void GEN_clear_sensitivities(Gen* gen);
 void GEN_clear_flags(Gen* gen, char flag_type);
 void GEN_copy_from_gen(Gen* gen, Gen* other);
+short int GEN_get_pre_cont_status(Gen* gen);
 
 char GEN_get_flags_vars(Gen* gen);
 char GEN_get_flags_fixed(Gen* gen);
@@ -107,6 +109,8 @@ REAL GEN_get_P_min(Gen* gen);
 REAL GEN_get_Q_max(Gen* gen);
 REAL GEN_get_Q_min(Gen* gen);
 REAL GEN_get_Q_par(Gen* gen);
+REAL GEN_get_rmpct(Gen* gen);
+REAL GEN_get_mva_base(Gen* gen);
 void GEN_get_var_values(Gen* gen, Vec* values, int code);
 char* GEN_get_var_info_string(Gen* gen, int index);
 int GEN_get_num_vars(void* gen, unsigned char var, int t_start, int t_end);
@@ -120,6 +124,7 @@ BOOL GEN_is_equal(Gen* gen, Gen* other);
 BOOL GEN_is_P_adjustable(Gen* gen);
 BOOL GEN_is_regulator(Gen* gen);
 BOOL GEN_is_slack(Gen* gen);
+BOOL GEN_is_redispatchable(Gen* gen);
 Gen* GEN_list_add(Gen* gen_list, Gen* gen);
 Gen* GEN_list_del(Gen* gen_list, Gen* gen);
 int GEN_list_len(Gen* gen_list);
@@ -128,7 +133,9 @@ Gen* GEN_list_reg_del(Gen* reg_gen_list, Gen* reg_gen);
 int GEN_list_reg_len(Gen* reg_gen_list);
 Gen* GEN_new(int num_periods);
 void GEN_propagate_data_in_time(Gen* gen, int start, int end);
+void GEN_set_pre_cont_status(Gen* gen, short int pre_cont_status);
 void GEN_set_in_service(Gen* gen, BOOL in_service);
+void GEN_set_redispatchable(Gen* gen, BOOL redisp);
 void GEN_set_name(Gen* gen, char* name);
 void GEN_set_sens_P_u_bound(Gen* gen, REAL value, int t);
 void GEN_set_sens_P_l_bound(Gen* gen, REAL value, int t);
@@ -149,7 +156,9 @@ void GEN_set_P_prev(Gen* gen, REAL P);
 void GEN_set_Q(Gen* gen, REAL Q, int t);
 void GEN_set_Q_max(Gen* gen, REAL Q);
 void GEN_set_Q_min(Gen* gen, REAL Q);
-void GEN_set_Q_par(Gen* gen, REAL Q);
+void GEN_set_Q_par(Gen* gen, REAL Q_par);
+void GEN_set_rmpct(Gen* gen, REAL rmpct);
+void GEN_set_mva_base(Gen* gen, REAL mva_base);
 int GEN_set_flags(void* gen, char flag_type, unsigned char mask, int index);
 void GEN_set_var_values(Gen* gen, Vec* values);
 void GEN_show(Gen* gen, int t);

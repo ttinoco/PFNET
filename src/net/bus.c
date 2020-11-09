@@ -2467,6 +2467,12 @@ void BUS_set_v_min_emer(Bus* bus, REAL v_min_emer) {
 void BUS_set_slack_flag(Bus* bus, BOOL slack) {
   if (bus)
     bus->slack = slack;
+  if (slack) {
+    Gen* gen;
+    for (gen = BUS_get_gen(bus); gen != NULL; gen = GEN_get_next(gen)) {
+      GEN_set_redispatchable(gen, TRUE);
+    }
+  }
 }
 
 void BUS_set_star_flag(Bus* bus, BOOL star) {
@@ -2741,4 +2747,103 @@ void BUS_set_P_mis(Bus* bus, REAL mis, int t) {
 void BUS_set_Q_mis(Bus* bus, REAL mis, int t) {
   if (bus && t >= 0 && t < bus->num_periods)
     bus->Q_mis[t] = mis;
+}
+
+void BUS_update_reg_Q_participations(Bus* bus, int t, char* fix_flag) {
+
+  // Local variables
+  void* obj;
+  char obj_type;
+  REAL P_total;
+  REAL P;
+  REAL eps = 1e-4;
+  REAL Q_par;
+  REAL rmpct;
+  int use_mva_base;
+  int pvpq_flag;
+
+  if (!BUS_is_in_service(bus))
+    return;
+
+  // Skip if not connected potential regulating objects
+  OBJ_init(&obj_type,&obj,bus);
+  if (obj == NULL)
+    return;
+  else
+    obj = NULL;
+
+  if (fix_flag)
+    pvpq_flag = 1;  // Check if the regulator is fixed first
+  else
+    pvpq_flag = 0;  // Calculate for all in service regulators
+
+  // Recompute total
+  P_total = 0;
+  for (OBJ_init(&obj_type,&obj,bus); obj != NULL; OBJ_next(&obj_type,&obj,bus)) {
+    if (pvpq_flag) {
+      // ignore fixed regulator
+      if (fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] || !REG_OBJ_is_candidate(obj_type,obj))
+        continue;
+    }
+    else {
+      // Consider all in-service regulators
+      if (!REG_OBJ_is_regulator(obj_type,obj))
+        continue;
+    }
+    P_total += REG_OBJ_get_P(obj_type,obj,t);
+  }
+
+  // if P_total == 0, Use MVA_base
+  if (P_total == 0) {
+    use_mva_base = 1;
+    for (OBJ_init(&obj_type,&obj,bus); obj != NULL; OBJ_next(&obj_type,&obj,bus)) {
+
+      if (pvpq_flag) {
+        // ignore fixed regulator
+        if (fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] || !REG_OBJ_is_candidate(obj_type,obj))
+          continue;
+      }
+      else {
+        // Consider all in-service regulators
+        if (!REG_OBJ_is_regulator(obj_type,obj))
+          continue;
+      }
+
+      P_total += REG_OBJ_get_mva_base(obj_type,obj);
+    }
+  }
+  else {
+    use_mva_base = 0;
+  }
+
+  // Safeguard
+  if (0 <= P_total && P_total < eps)
+    P_total = eps;
+  if (0 >= P_total && P_total > -eps)
+    P_total = -eps;
+
+  // Update Q_par
+  for (OBJ_init(&obj_type,&obj,bus); obj != NULL; OBJ_next(&obj_type,&obj,bus))  {
+
+    if (pvpq_flag) {
+      // ignore fixed regulator
+      if (fix_flag[REG_OBJ_get_index_Q(obj_type,obj,t)] || !REG_OBJ_is_candidate(obj_type,obj))
+        continue;
+    }
+    else {
+      // Consider all in-service regulators
+      if (!REG_OBJ_is_regulator(obj_type,obj))
+        continue;
+    }
+
+    if (use_mva_base == 0)
+      P = REG_OBJ_get_P(obj_type,obj,t);
+    else
+      P = REG_OBJ_get_mva_base(obj_type,obj);
+
+    rmpct = REG_OBJ_get_rmpct(obj_type,obj);
+
+    Q_par = fabs(P/P_total) * rmpct / 100.;   // rmpct in percent, convert to fraction
+    REG_OBJ_set_Q_par(obj_type, obj, Q_par > 1.? 1. : Q_par);
+  }
 }

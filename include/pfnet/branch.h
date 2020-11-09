@@ -91,6 +91,7 @@ void BRANCH_array_show(Branch* br, int size, int t);
 void BRANCH_clear_sensitivities(Branch* br);
 void BRANCH_clear_flags(Branch* br, char flag_type);
 void BRANCH_copy_from_branch(Branch* br, Branch* other, int mode);
+short int BRANCH_get_pre_cont_status(Branch* br);
 
 char BRANCH_get_flags_vars(Branch* br);
 char BRANCH_get_flags_fixed(Branch* br);
@@ -205,6 +206,7 @@ Branch* BRANCH_list_m_del(Branch* m_br_list, Branch* br);
 int BRANCH_list_m_len(Branch* m_br_list);
 Branch* BRANCH_new(int num_periods);
 void BRANCH_propagate_data_in_time(Branch* br, int start, int end);
+void BRANCH_set_pre_cont_status(Branch* br, short int pre_cont_status);
 void BRANCH_set_in_service(Branch* br, BOOL in_service);
 void BRANCH_set_name(Branch* br, char* name);
 void BRANCH_set_sens_P_u_bound(Branch* br, REAL value, int t);
