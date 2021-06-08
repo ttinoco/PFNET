@@ -1,3 +1,7 @@
+Version 1.3.7
+-------------
+* Added support for slack generators regulating remote buses and not include generators as slacks unless they are regulating.
+
 Version 1.3.6
 -------------
 * Added additional index checks with tests.
