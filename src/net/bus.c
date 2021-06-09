@@ -2029,7 +2029,7 @@ void BUS_init(Bus* bus, int num_periods) {
   bus->in_service = TRUE;
   bus->slack = FALSE;
   bus->star = FALSE;
-  bus->in_subsys = TRUE;
+  bus->in_subsys = FALSE;
   bus->fixed = 0x00;
   bus->bounded = 0x00;
   bus->sparse = 0x00;

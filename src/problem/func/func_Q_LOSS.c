@@ -48,9 +48,6 @@ void FUNC_Q_LOSS_count_step(Func* f, Bus* bus, BusDC* busdc, int t) {
           (*Hphi_nnz)++;
       }
 
-      //V var
-      (*Hphi_nnz)++;
-
       // v var
       (*Hphi_nnz)++;
     
