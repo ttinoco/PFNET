@@ -844,8 +844,12 @@ BOOL GEN_is_regulator(Gen* gen) {
 }
 
 BOOL GEN_is_slack(Gen* gen) {
-  if (gen)
-    return BUS_is_slack(gen->bus);
+  if (gen) {
+    if (BUS_is_equal(gen->bus, gen->reg_bus))
+      return BUS_is_slack(gen->bus) && GEN_is_regulator(gen);
+    else 
+      return BUS_is_slack(gen->bus) && BUS_is_regulated_by_gen(gen->reg_bus, TRUE) && GEN_is_regulator(gen);
+  }
   else
     return FALSE;
 }
