@@ -297,6 +297,7 @@ void BUS_init(Bus* bus, int num_periods);
 void BUS_inject_P(Bus* bus, REAL P, int t);
 void BUS_inject_Q(Bus* bus, REAL Q, int t);
 BOOL BUS_is_in_service(void* bus);
+BOOL BUS_is_in_subsys(void* bus);
 BOOL BUS_is_equal(Bus* bus, Bus* other);
 BOOL BUS_is_regulated_by_gen(Bus* bus, BOOL only_in_service);
 BOOL BUS_is_regulated_by_tran(Bus* bus, BOOL only_in_service);
@@ -327,6 +328,7 @@ void BUS_propagate_data_in_time(Bus* bus, int start, int end);
 
 void BUS_set_network(Bus* bus, void* net);
 void BUS_set_in_service(Bus* bus, BOOL in_service);
+void BUS_set_in_subsys(Bus* bus, BOOL in_subsys);
 void BUS_set_area(Bus* bus, int area);
 void BUS_set_zone(Bus* bus, int zone);
 void BUS_set_network(Bus* bus, void* net);

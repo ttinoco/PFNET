@@ -1,6 +1,8 @@
 Version 1.3.7
 -------------
 * Added support for slack generators regulating remote buses and not include generators as slacks unless they are regulating.
+* Adding in_subsys flag with (BUS_is_in_subsys and BUS_set_is_insubsys) to buses in order to define a subsystem for use in conjunction with P,Q loss functions.
+* Adding FUNC_BRN_QLOSS and FUNC_BRN_PLOSS and with updated FUNC_Q_LOSS that add functionality for defining Branch P and Q loss minimization functions.
 
 Version 1.3.6
 -------------

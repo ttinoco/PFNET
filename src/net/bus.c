@@ -54,6 +54,7 @@ struct Bus {
   BOOL in_service;   /**< @brief Flag for indicating whether the bus is in service */
   BOOL slack;        /**< @brief Flag for indicating that the bus is a slack bus */
   BOOL star;         /**< @brief Flag for indicating that the bus is a star bus */
+  BOOL in_subsys;   /**< @brief Flag for indicating whether the bus is in subsystem */
   char fixed;        /**< @brief Flags for indicating which quantities should be fixed to their current value */
   char bounded;      /**< @brief Flags for indicating which quantities should be bounded */
   char sparse;       /**< @brief Flags for indicating which control adjustments should be sparse */
@@ -662,6 +663,7 @@ void BUS_copy_from_bus(Bus* bus, Bus* other, int mode, BOOL propagate) {
     bus->bounded = other->bounded;
     bus->sparse = other->sparse;
     bus->vars = other->vars;
+    bus->in_subsys = other->in_subsys;
 
     // Price
     memcpy(bus->price,other->price,num_periods*sizeof(REAL));
@@ -1870,6 +1872,7 @@ char* BUS_get_json_string(Bus* bus, char* output) {
   JSON_bool(temp,output,"in_service",bus->in_service,FALSE);
   JSON_bool(temp,output,"slack",bus->slack,FALSE);
   JSON_bool(temp,output,"star",bus->star,FALSE);
+  JSON_bool(temp,output,"in_subsys",bus->in_subsys,FALSE);
   JSON_array_float(temp,output,"price",bus->price,bus->num_periods,FALSE);
   JSON_list_int(temp,output,"generators",bus,Gen,BUS_get_gen,GEN_get_index,GEN_get_next,FALSE);
   JSON_list_int(temp,output,"reg_generators",bus,Gen,BUS_get_reg_gen,GEN_get_index,GEN_get_reg_next,FALSE);
@@ -2026,6 +2029,7 @@ void BUS_init(Bus* bus, int num_periods) {
   bus->in_service = TRUE;
   bus->slack = FALSE;
   bus->star = FALSE;
+  bus->in_subsys = FALSE;
   bus->fixed = 0x00;
   bus->bounded = 0x00;
   bus->sparse = 0x00;
@@ -2107,6 +2111,14 @@ BOOL BUS_is_in_service(void* bus) {
   else
     return FALSE;
 }
+
+BOOL BUS_is_in_subsys(void* bus) {
+  if (bus)
+    return ((Bus*)bus)->in_subsys;
+  else
+    return FALSE;
+}
+
 
 BOOL BUS_is_equal(Bus* bus, Bus* other) {
   return bus == other;
@@ -2346,6 +2358,13 @@ void BUS_set_in_service(Bus* bus, BOOL in_service) {
     if (bus->in_service != in_service)
       NET_inc_state_tag(bus->net);
     bus->in_service = in_service;
+  }
+}
+
+void BUS_set_in_subsys(Bus* bus, BOOL in_subsys) {
+  if (bus) {
+    if (bus->in_subsys != in_subsys)
+    bus->in_subsys = in_subsys;
   }
 }
 

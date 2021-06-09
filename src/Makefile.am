@@ -165,8 +165,10 @@ problem_func_src = problem/func/func_GEN_COST.c \
                    problem/func/func_CSC_DC_ISET.c \
                    problem/func/func_FACTS_PSET.c \
                    problem/func/func_FACTS_QSET.c \
-                   problem/func/func_Q_LOSS.c   \
-                   problem/func/func_P_LOSS.c
+                   problem/func/func_Q_LOSS.c  \
+                   problem/func/func_P_LOSS.c  \
+                   problem/func/func_BRN_QLOSS.c \
+                   problem/func/func_BRN_PLOSS.c
 
 problem_func_hdr = $(inc_path)/func_GEN_COST.h \
                    $(inc_path)/func_GEN_RED.h \
@@ -187,7 +189,9 @@ problem_func_hdr = $(inc_path)/func_GEN_COST.h \
                    $(inc_path)/func_FACTS_PSET.h \
                    $(inc_path)/func_FACTS_QSET.h \
                    $(inc_path)/func_Q_LOSS.h   \
-                   $(inc_path)/func_P_LOSS.h
+                   $(inc_path)/func_P_LOSS.h   \
+                   $(inc_path)/func_BRN_QLOSS.h \
+                   $(inc_path)/func_BRN_PLOSS.h 
 
 problem_heur_src = problem/heur/heur_PVPQ_SWITCHING.c \
                    problem/heur/heur_REG_PF_SWITCH.c
