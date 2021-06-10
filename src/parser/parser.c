@@ -28,6 +28,7 @@ struct Parser {
   void (*func_init)(Parser* p, BOOL init_params);   /**< @brief Initialization function */
   Net* (*func_parse)(Parser* p, char* f, int n);    /**< @brief Parsing function */
   void (*func_set)(Parser* p, char* key, REAL v);   /**< @brief Configuring function */
+  void* (*func_get_setting)(Parser* p, char* key);  /**< @brief Get setting option function */
   void (*func_show)(Parser* p);                     /**< @brief Showing function */
   void (*func_write)(Parser* p, Net* net, char* f); /**< @brief Writing function */
   void (*func_free)(Parser* p, BOOL del_parser);    /**< @brief Cleaning function */
@@ -45,6 +46,7 @@ Parser* PARSER_new(void) {
   p->func_init = NULL;
   p->func_parse = NULL;
   p->func_set = NULL;
+  p->func_get_setting = NULL;
   p->func_show = NULL;
   p->func_write = NULL;
   p->func_free = NULL;
@@ -91,6 +93,16 @@ Net* PARSER_parse(Parser* p, char* f, int n) {
 void PARSER_set(Parser* p, char* key, REAL value) {
   if (p && p->func_set)
     (*(p->func_set))(p,key,value);
+}
+
+void* PARSER_get_setting(Parser* p, char* key) {
+  void* vp;
+  if (p && p->func_get_setting) {
+    vp = (*(p->func_get_setting))(p,key);
+    return vp;
+  }
+  else
+    return NULL;
 }
 
 void PARSER_show(Parser* p) {
@@ -164,6 +176,11 @@ void PARSER_set_func_parse(Parser* p, Net* (*func)(Parser* p, char* f, int n)) {
 void PARSER_set_func_set(Parser* p, void (*func)(Parser* p, char* key, REAL v)) {
   if (p)
     p->func_set = func;
+}
+
+void PARSER_set_func_get_setting(Parser* p, void* (*func)(Parser* p, char* key)) {
+  if (p)
+    p->func_get_setting = func;
 }
 
 void PARSER_set_func_show(Parser* p, void (*func)(Parser* p)) {
